@@ -174,11 +174,12 @@ rooms:
 
   signpost_junction:
     title: "Signpost Junction"
-    description: "A junction where a dirt track branches west off the main road. A battered wooden signpost stands at the fork, its carved arms pointing: south to Thornhaven, and west along a track labeled 'SCENIC ROUTE — NOT MAINTAINED'. The main road is back to the east."
+    description: "A junction where a dirt track branches west off the main road. A battered wooden signpost stands at the fork, its carved arms pointing: south to Thornhaven, west along a track labeled 'SCENIC ROUTE — NOT MAINTAINED', and north to the Blood Arena. The main road is back to the east."
     exits:
       e: world_road_north
       s: world_road_south
       w: meadow_side_path
+      n: blood_arena:arena_gates
 
   dawn_rest_point:
     title: "Dawn Rest Point"

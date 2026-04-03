@@ -63,7 +63,7 @@ class GmcpEventHandler(
                     players,
                     guildSystem,
                 )
-                gmcpEmitter.sendRoomInfo(sid, room)
+                gmcpEmitter.sendRoomInfo(sid, room, pvpEnabled = world.isZonePvpEnabled(room.id.zone))
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendRoomItems(sid, items.itemsInRoom(player.roomId))

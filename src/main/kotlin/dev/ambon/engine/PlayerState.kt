@@ -86,6 +86,10 @@ data class PlayerState(
     var learnedAbilityIds: MutableSet<String> = mutableSetOf(),
     /** Class names this player has unlocked (original class + any multi-class unlocks). */
     var unlockedClasses: MutableSet<String> = mutableSetOf(),
+    /** Cumulative PvP kills. */
+    var pvpKills: Int = 0,
+    /** Cumulative PvP deaths. */
+    var pvpDeaths: Int = 0,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -190,6 +194,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         learnedAbilityIds = learnedAbilityIds.toMutableSet(),
         // Auto-populate original class if unlockedClasses is empty (new/migrated characters).
         unlockedClasses = unlockedClasses.ifEmpty { setOf(playerClass) }.toMutableSet(),
+        pvpKills = pvpKills,
+        pvpDeaths = pvpDeaths,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -234,6 +240,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         dungeonsCompleted = dungeonsCompleted,
         learnedAbilityIds = learnedAbilityIds.toSet(),
         unlockedClasses = unlockedClasses.toSet(),
+        pvpKills = pvpKills,
+        pvpDeaths = pvpDeaths,
     )
 }
 

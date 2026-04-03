@@ -81,7 +81,25 @@ class CombatSystem(
 
     private val defenseByPlayer = mutableMapOf<SessionId, Int>()
 
-    fun isInCombat(sessionId: SessionId): Boolean = playerTarget.containsKey(sessionId)
+    // --- PvP combat state ---
+
+    /** Tracks active PvP fights: player -> opponent session. */
+    private val pvpTarget = mutableMapOf<SessionId, SessionId>()
+
+    /** PvP combat tick timing per attacker. */
+    private data class PvpCombatState(
+        val attackerSid: SessionId,
+        val targetSid: SessionId,
+        var nextTickAtMs: Long,
+    )
+
+    private val pvpCombatStates = mutableMapOf<SessionId, PvpCombatState>()
+
+    /** Zone start room lookup, wired by GameEngine after construction. */
+    var zoneStartRoomLookup: (String) -> RoomId? = { _ -> null }
+
+    fun isInCombat(sessionId: SessionId): Boolean =
+        playerTarget.containsKey(sessionId) || pvpTarget.containsKey(sessionId)
 
     fun isMobInCombat(mobId: MobId): Boolean = activeMobs.containsKey(mobId)
 
@@ -161,15 +179,247 @@ class CombatSystem(
         }
         threatTable.remapSession(oldSid, newSid)
         defenseByPlayer.remapKey(oldSid, newSid)
+
+        // Remap PvP combat state
+        val pvpOpponent = pvpTarget.remove(oldSid)
+        if (pvpOpponent != null) {
+            pvpTarget[newSid] = pvpOpponent
+            if (pvpTarget[pvpOpponent] == oldSid) {
+                pvpTarget[pvpOpponent] = newSid
+            }
+        }
+        val pvpState = pvpCombatStates.remove(oldSid)
+        if (pvpState != null) {
+            pvpCombatStates[newSid] = pvpState.copy(attackerSid = newSid)
+        }
+        for ((sid, state) in pvpCombatStates) {
+            if (state.targetSid == oldSid) {
+                pvpCombatStates[sid] = state.copy(targetSid = newSid)
+            }
+        }
     }
 
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         removePlayerFromCombat(sessionId)
+        endPvpCombat(sessionId)
         defenseByPlayer.remove(sessionId)
     }
 
     fun endCombatFor(sessionId: SessionId) {
         removePlayerFromCombat(sessionId)
+    }
+
+    // --- PvP combat API ---
+
+    fun isInPvpCombat(sessionId: SessionId): Boolean = pvpTarget.containsKey(sessionId)
+
+    fun getPvpOpponent(sessionId: SessionId): SessionId? = pvpTarget[sessionId]
+
+    suspend fun startPvpCombat(
+        attackerSid: SessionId,
+        targetSid: SessionId,
+    ): String? {
+        val attacker = players.get(attackerSid) ?: return ERR_NOT_CONNECTED
+        val target = players.get(targetSid) ?: return "That player is not available."
+
+        if (attackerSid == targetSid) return "You cannot attack yourself."
+        if (target.isStaff) return "You cannot attack staff members."
+        if (attacker.roomId != target.roomId) return "${'$'}{target.name} is not here."
+        if (pvpTarget[attackerSid] != null) return "You are already in PvP combat."
+        if (playerTarget[attackerSid] != null) return "You are already in combat."
+        if (target.hp <= 0) return "${'$'}{target.name} is already defeated."
+
+        val now = clock.millis()
+
+        pvpTarget[attackerSid] = targetSid
+        pvpCombatStates[attackerSid] = PvpCombatState(
+            attackerSid = attackerSid,
+            targetSid = targetSid,
+            nextTickAtMs = now + config.tickMillis,
+        )
+        dirtyNotifier.playerVitalsDirty(attackerSid)
+        dirtyNotifier.playerCombatDirty(attackerSid)
+
+        // If the target is not already fighting back, auto-engage them
+        if (pvpTarget[targetSid] == null && playerTarget[targetSid] == null) {
+            pvpTarget[targetSid] = attackerSid
+            pvpCombatStates[targetSid] = PvpCombatState(
+                attackerSid = targetSid,
+                targetSid = attackerSid,
+                nextTickAtMs = now + config.tickMillis,
+            )
+            dirtyNotifier.playerVitalsDirty(targetSid)
+            dirtyNotifier.playerCombatDirty(targetSid)
+        }
+
+        outbound.send(OutboundEvent.SendText(attackerSid, "You attack ${'$'}{target.name}!"))
+        outbound.send(OutboundEvent.SendText(targetSid, "${'$'}{attacker.name} attacks you!"))
+        broadcastToRoom(
+            players,
+            outbound,
+            attacker.roomId,
+            "${'$'}{attacker.name} attacks ${'$'}{target.name}!",
+            exclude1 = attackerSid,
+            exclude2 = targetSid,
+        )
+
+        return null
+    }
+
+    fun endPvpCombat(sessionId: SessionId) {
+        val opponentSid = pvpTarget.remove(sessionId)
+        pvpCombatStates.remove(sessionId)
+        dirtyNotifier.playerVitalsDirty(sessionId)
+        dirtyNotifier.playerCombatDirty(sessionId)
+
+        if (opponentSid != null && pvpTarget[opponentSid] == sessionId) {
+            pvpTarget.remove(opponentSid)
+            pvpCombatStates.remove(opponentSid)
+            dirtyNotifier.playerVitalsDirty(opponentSid)
+            dirtyNotifier.playerCombatDirty(opponentSid)
+        }
+    }
+
+    suspend fun fleePvp(sessionId: SessionId): String? {
+        val targetSid = pvpTarget[sessionId] ?: return "You are not in PvP combat."
+        val targetName = players.get(targetSid)?.name ?: "your opponent"
+
+        endPvpCombat(sessionId)
+        outbound.send(OutboundEvent.SendText(sessionId, "You flee from $targetName."))
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+        return null
+    }
+
+    @Suppress("CyclomaticComplexity", "LongMethod")
+    suspend fun tickPvpCombat(maxPerTick: Int = 20): Int {
+        val now = clock.millis()
+        var ran = 0
+
+        val entries = pvpCombatStates.values.toList()
+        for (state in entries) {
+            if (ran >= maxPerTick) break
+            if (now < state.nextTickAtMs) continue
+
+            val attacker = players.get(state.attackerSid)
+            val target = players.get(state.targetSid)
+            if (attacker == null || target == null) {
+                endPvpCombat(state.attackerSid)
+                continue
+            }
+            if (attacker.roomId != target.roomId) {
+                endPvpCombat(state.attackerSid)
+                outbound.send(OutboundEvent.SendText(state.attackerSid, "${'$'}{target.name} is no longer here."))
+                outbound.send(OutboundEvent.SendPrompt(state.attackerSid))
+                continue
+            }
+
+            val stunned = statusEffects?.hasPlayerEffect(state.attackerSid, "stun") == true
+            if (!stunned) {
+                val attackerStats = resolvePlayerStats(attacker, items, statusEffects)
+                val attackerEquip = items.equipmentBonuses(state.attackerSid)
+                val strBonus = PlayerState.statBonus(
+                    attackerStats[config.bindings.meleeDamageStat],
+                    config.bindings.meleeDamageDivisor,
+                )
+                val roll = rollRange(rng, config.minDamage, config.maxDamage)
+                val rawDamage = roll + attackerEquip.attack + strBonus
+                val targetEquip = items.equipmentBonuses(state.targetSid)
+                val preClampDamage = rawDamage - targetEquip.armor
+                var effectiveDamage = preClampDamage.coerceAtLeast(1)
+
+                if (statusEffects != null) {
+                    effectiveDamage = statusEffects.absorbPlayerDamage(state.targetSid, effectiveDamage)
+                }
+
+                target.takeDamage(effectiveDamage)
+                dirtyNotifier.playerVitalsDirty(state.targetSid)
+
+                outbound.send(
+                    OutboundEvent.SendText(state.attackerSid, "You hit ${'$'}{target.name} for $effectiveDamage damage."),
+                )
+                outbound.send(
+                    OutboundEvent.SendText(state.targetSid, "${'$'}{attacker.name} hits you for $effectiveDamage damage!"),
+                )
+                onCombatEvent(
+                    state.attackerSid,
+                    CombatEvent.MeleeHit(
+                        targetName = target.name,
+                        targetId = null,
+                        damage = effectiveDamage,
+                        sourceIsPlayer = true,
+                    ),
+                )
+
+                if (target.hp <= 0) {
+                    handlePvpDeath(
+                        killerSid = state.attackerSid,
+                        killerName = attacker.name,
+                        loserSid = state.targetSid,
+                        loserName = target.name,
+                        loser = target,
+                    )
+                    ran++
+                    continue
+                }
+            } else {
+                outbound.send(OutboundEvent.SendText(state.attackerSid, "You are stunned and cannot act!"))
+            }
+
+            state.nextTickAtMs = now + config.tickMillis
+            outbound.send(OutboundEvent.SendPrompt(state.attackerSid))
+            ran++
+        }
+        return ran
+    }
+
+    private suspend fun handlePvpDeath(
+        killerSid: SessionId,
+        killerName: String,
+        loserSid: SessionId,
+        loserName: String,
+        loser: PlayerState,
+    ) {
+        endPvpCombat(loserSid)
+
+        outbound.send(OutboundEvent.SendText(loserSid, "You have been slain by $killerName!"))
+        outbound.send(OutboundEvent.SendText(killerSid, "You have defeated $loserName!"))
+        broadcastToRoom(
+            players,
+            outbound,
+            loser.roomId,
+            "$loserName has been slain by $killerName!",
+            exclude1 = killerSid,
+            exclude2 = loserSid,
+        )
+
+        players.get(killerSid)?.let {
+            it.pvpKills += 1
+            dirtyNotifier.playerVitalsDirty(killerSid)
+        }
+        loser.pvpDeaths += 1
+
+        onCombatEvent(
+            loserSid,
+            CombatEvent.Death(killerName = killerName, killerIsPlayer = true),
+        )
+
+        statusEffects?.removeAllFromPlayer(loserSid)
+
+        onPlayerDeath(loserSid)
+
+        // Respawn at zone start room with full HP/mana
+        val loserZone = loser.roomId.zone
+        val startRoom = zoneStartRoomLookup(loserZone)
+        if (startRoom != null) {
+            loser.roomId = startRoom
+        }
+        loser.hp = loser.maxHp
+        loser.mana = loser.maxMana
+        dirtyNotifier.playerVitalsDirty(loserSid)
+
+        outbound.send(OutboundEvent.SendText(loserSid, "You respawn at the arena gates."))
+        outbound.send(OutboundEvent.SendPrompt(loserSid))
+        outbound.send(OutboundEvent.SendPrompt(killerSid))
     }
 
     suspend fun onMobRemovedExternally(mobId: MobId) {

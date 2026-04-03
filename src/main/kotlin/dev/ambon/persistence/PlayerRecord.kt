@@ -74,6 +74,10 @@ data class PlayerRecord(
     val learnedAbilityIds: Set<String> = emptySet(),
     /** Class names this player has unlocked (original class + any multi-class unlocks). */
     val unlockedClasses: Set<String> = emptySet(),
+    /** Cumulative PvP kills. */
+    val pvpKills: Int = 0,
+    /** Cumulative PvP deaths. */
+    val pvpDeaths: Int = 0,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.
