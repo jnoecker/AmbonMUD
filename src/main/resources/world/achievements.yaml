@@ -50,7 +50,7 @@ achievements:
     hidden: false
     criteria:
       - type: kill
-        targetId: ""
+        targetId: "sea_cliffs:corsair_captain"
         count: 1
         description: "Kill the Corsair Captain"
     rewards:
