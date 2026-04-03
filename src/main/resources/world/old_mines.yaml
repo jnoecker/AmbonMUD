@@ -187,6 +187,7 @@ mobs:
     goldMax: 0
     quests:
       - lost_expedition
+      - lost_expedition_deeper
     dialogue:
       root:
         text: "Thank the gods — a living face! I'm Hadrik, with the Thornhaven Scholars' Expedition. The others went deeper and never came back. I've been trapped here for days. Please — can you help me recover our supply ledger? It's in the old supply chamber further in. The scholars back in Thornhaven need to know what happened."
@@ -227,6 +228,19 @@ quests:
     rewards:
       xp: 700
       gold: 15
+
+  lost_expedition_deeper:
+    name: "The Lost Expedition — Deeper Still"
+    description: "The lead scholar and the rest of the expedition went further east — into the goblin warrens beneath the Thornwood. Recover the expedition notes from Chieftain Grak's hoard and bring them back to Hadrik."
+    giver: survivor_hadrik
+    objectives:
+      - type: collect
+        targetKey: goblin_warrens:expedition_notes
+        count: 1
+        description: "Recover the expedition notes from Chieftain Grak's hoard"
+    rewards:
+      xp: 600
+      gold: 20
 
 # ─── Rooms ────────────────────────────────────────────────────────────────────
 
@@ -353,6 +367,7 @@ rooms:
 
   wardens_vault:
     title: "Warden's Vault"
-    description: "The original mine supervisor's vault: a stone-walled strongroom that served as the mine's repository for assay records and ore samples. The walls are natural rock here, uncut, and a rich gemstone formation is visible in the far wall. A rough tunnel at the back continues deeper — the original plan called for a connection to the cavern systems beneath the Thornwood, though it was never finished."
+    description: "The original mine supervisor's vault: a stone-walled strongroom that served as the mine's repository for assay records and ore samples. The walls are natural rock here, uncut, and a rich gemstone formation is visible in the far wall. A rough tunnel at the back continues east — whoever cut it was heading toward the cavern systems beneath the Thornwood Forest."
     exits:
       w: foremans_chamber
+      e: goblin_warrens:mine_connection
