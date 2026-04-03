@@ -118,10 +118,11 @@ rooms:
 
   world_road_north:
     title: "Crossroads Path — Northern Stretch"
-    description: "A well-worn road cuts through low grassy hills. The stone arch of the World Gate is still visible behind you to the north. Far ahead to the south the tops of Thornhaven's walls catch the midday light. A wooden signpost leans slightly, pointing south: 'THORNHAVEN — 1 LEAGUE'."
+    description: "A well-worn road cuts through low grassy hills. The stone arch of the World Gate is still visible behind you to the north. Far ahead to the south the tops of Thornhaven's walls catch the midday light. A wooden signpost leans slightly, pointing south: 'THORNHAVEN — 1 LEAGUE'. A dirt track branches off to the west."
     exits:
       n: world_gate
       s: rolling_hills
+      w: signpost_junction
 
   rolling_hills:
     title: "Rolling Hills"
@@ -139,11 +140,12 @@ rooms:
 
   meadow_crossing:
     title: "Meadow Crossing"
-    description: "The road dips into a broad meadow bright with wildflowers. A creek too narrow to need a bridge trickles across the path. Wild rabbits watch you pass with idle curiosity. The pleasant weather and open sky make this an ideal rest spot."
+    description: "The road dips into a broad meadow bright with wildflowers. A creek too narrow to need a bridge trickles across the path. Wild rabbits watch you pass with idle curiosity. The pleasant weather and open sky make this an ideal rest spot. A flat stone platform is visible to the east."
     exits:
       n: rolling_hills
       s: old_waystation
       w: meadow_side_path
+      e: dawn_rest_point
 
   meadow_side_path:
     title: "Meadow Side Path"
@@ -174,15 +176,15 @@ rooms:
 
   signpost_junction:
     title: "Signpost Junction"
-    description: "A junction where a dirt track branches west off the main road. A battered wooden signpost stands at the fork, its carved arms pointing: south to Thornhaven, north to the World Gate, and west along a track labeled 'SCENIC ROUTE — NOT MAINTAINED'. The main road continues in both directions."
+    description: "A junction where a dirt track branches west off the main road. A battered wooden signpost stands at the fork, its carved arms pointing: south to Thornhaven, and west along a track labeled 'SCENIC ROUTE — NOT MAINTAINED'. The main road is back to the east."
     exits:
-      n: world_road_north
+      e: world_road_north
       s: world_road_south
       w: meadow_side_path
 
   dawn_rest_point:
     title: "Dawn Rest Point"
-    description: "A flat stone platform beside the road where travelers stop to watch the sunrise. At dawn, the sky to the east turns rose gold and amber, and the distant sea glints far to the southeast like hammered copper. At night the stars are extraordinary here, undimmed by city lights. The road continues north and south."
+    description: "A flat stone platform beside the road where travelers stop to watch the sunrise. At dawn, the sky to the east turns rose gold and amber, and the distant sea glints far to the southeast like hammered copper. At night the stars are extraordinary here, undimmed by city lights. The meadow crossing is back to the west, and the rolling hills lie to the north."
     exits:
       n: rolling_hills
-      s: meadow_crossing
+      w: meadow_crossing
