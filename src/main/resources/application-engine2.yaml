@@ -1,6 +1,8 @@
 # Engine 2 profile for multi-instance local testing.
 # Run with: ./gradlew runEngine2
-# Owns: noecker_resume, low_training_mines, low_training_barrens
+# Owns: sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen,
+#        thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns,
+#        celestial_peak, dungeon_of_echoes
 # gRPC server: 9092  |  metrics: 9192
 ambonmud:
   mode: ENGINE
@@ -8,9 +10,16 @@ ambonmud:
     enabled: true
     engineId: engine-2
     zones:
-      - noecker_resume
-      - low_training_mines
-      - low_training_barrens
+      - sea_cliffs
+      - sunken_temple
+      - ruined_fortress
+      - shadowmere_fen
+      - thornhaven_sewers
+      - haunted_manor
+      - barrens_wastes
+      - frost_caverns
+      - celestial_peak
+      - dungeon_of_echoes
     advertiseHost: localhost
     registry:
       type: STATIC
@@ -19,18 +28,30 @@ ambonmud:
           host: localhost
           port: 9091
           zones:
-            - tutorial_glade
-            - ambon_hub
-            - demo_ruins
-            - low_training_marsh
-            - low_training_highlands
+            - crossroads_path
+            - thornhaven_city
+            - thornwood_forest
+            - farmer_fields
+            - cobblestone_road
+            - highland_trails
+            - old_mines
+            - marsh_of_fog
+            - goblin_warrens
+            - dark_barrows
         - engineId: engine-2
           host: localhost
           port: 9092
           zones:
-            - noecker_resume
-            - low_training_mines
-            - low_training_barrens
+            - sea_cliffs
+            - sunken_temple
+            - ruined_fortress
+            - shadowmere_fen
+            - thornhaven_sewers
+            - haunted_manor
+            - barrens_wastes
+            - frost_caverns
+            - celestial_peak
+            - dungeon_of_echoes
   grpc:
     server:
       port: 9092

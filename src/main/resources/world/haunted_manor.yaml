@@ -1,0 +1,310 @@
+zone: haunted_manor
+startRoom: manor_road
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  ectoplasm:
+    displayName: "a glob of ectoplasm"
+    keyword: ectoplasm
+    description: "A translucent, faintly glowing substance left behind when a restless spirit is dispersed. Cold to the touch and slightly sticky."
+    basePrice: 15
+
+  spectral_chain:
+    displayName: "a spectral chain link"
+    keyword: chain
+    description: "A single link of chain that flickers between solid and translucent. Taken from an animated suit of armour."
+    basePrice: 18
+
+  lords_signet:
+    displayName: "Lord Ashworth's signet ring"
+    keyword: signet
+    description: "A heavy gold ring bearing the Ashworth family crest — a raven perched on a crescent moon. The ghost of Lady Elara will recognise this."
+    basePrice: 0
+
+  ghost_blade:
+    displayName: "the Phantom Blade"
+    keyword: blade
+    slot: hand
+    damage: 11
+    basePrice: 390
+    description: "A longsword that shimmers between solid steel and translucent mist. Strikes with the cold of the grave."
+
+  phantom_mantle:
+    displayName: "a phantom mantle"
+    keyword: mantle
+    slot: body
+    armor: 6
+    basePrice: 360
+    description: "A cloak of shimmering grey fabric that seems to drift independent of the wind. Wearing it makes you feel slightly less substantial."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  restless_spirit:
+    name: "a restless spirit"
+    room: entrance_hall
+    tier: standard
+    level: 5
+    respawnSeconds: 90
+    xpReward: 35
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: ectoplasm
+        chance: 0.5
+
+  animated_armor:
+    name: "an animated suit of armour"
+    room: grand_staircase
+    tier: standard
+    level: 6
+    respawnSeconds: 120
+    xpReward: 42
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: spectral_chain
+        chance: 0.4
+
+  poltergeist:
+    name: "a poltergeist"
+    room: dining_hall
+    tier: standard
+    level: 6
+    respawnSeconds: 120
+    xpReward: 40
+    behavior:
+      template: wander_aggro
+
+  spectral_hound:
+    name: "a spectral hound"
+    room: overgrown_garden
+    tier: elite
+    level: 6
+    respawnSeconds: 300
+    xpReward: 70
+    behavior:
+      template: wander_aggro
+
+  spectral_lord:
+    name: "Lord Ashworth's Shade"
+    room: master_bedroom
+    tier: boss
+    level: 7
+    respawnSeconds: 900
+    xpReward: 200
+    goldMin: 70
+    goldMax: 140
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: lords_signet
+        chance: 1.0
+      - itemId: ghost_blade
+        chance: 0.45
+      - itemId: phantom_mantle
+        chance: 0.35
+    dialogue:
+      root:
+        text: "...You enter MY house. My house. I built this. I built all of this. And she — she won't leave. Won't let me rest. Won't let any of us rest. Do you know what it's like to die and never stop dying?"
+        choices:
+          - text: "Elara sent me. She wants peace."
+            next: elara_info
+          - text: "We're putting you to rest."
+            next: defiance
+          - text: "We'll go."
+            next: farewell
+      elara_info:
+        text: "Peace. She speaks of peace while she chains us all to this place with her grief. I was lord here. I am lord here. The only peace is oblivion — and I won't go quietly."
+        choices:
+          - text: "Then we fight."
+            next: farewell
+          - text: "We'll leave."
+            next: farewell
+      defiance:
+        text: "Rest. Everyone wants to put me to rest. Come then — try. I've had centuries to prepare."
+        choices:
+          - text: "Now."
+            next: farewell
+      farewell:
+        text: "..."
+
+  manor_ghost:
+    name: "Lady Elara's Ghost"
+    room: cellar
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - the_restless_dead
+    dialogue:
+      root:
+        text: "Oh... you can see me. Most can't, or won't. I am — was — Lady Elara Ashworth. My husband built this manor. When the curse took him, it took everything. He rages upstairs, trapped in his own madness. If someone could... end his torment... bring me his signet ring as proof... perhaps we could all finally rest."
+        choices:
+          - text: "I'll help you."
+            next: quest_accept
+          - text: "What happened here?"
+            next: backstory
+          - text: "Goodbye."
+            next: farewell
+      backstory:
+        text: "We were happy once. Then he found something in the cellar — an old artefact, buried beneath the foundations. After that... the cold came. The whispers. He changed. The servants fled or died. I stayed because I loved him. And then I died too, and here I've been ever since. Waiting."
+        choices:
+          - text: "I'll end this."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "Thank you. He's in the master bedroom above. He was a good man once — remember that when you face him. Bring me his signet ring and I can break the cycle."
+        choices:
+          - text: "I'll return."
+            next: farewell
+      farewell:
+        text: "Be careful. The house remembers its master's anger."
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  the_restless_dead:
+    name: "The Restless Dead"
+    description: "Lady Elara's ghost has been trapped in Ashworth Manor since a curse consumed her husband. Defeat Lord Ashworth's shade in the master bedroom and bring his signet ring to Elara so she can break the cycle."
+    giver: manor_ghost
+    objectives:
+      - type: collect
+        targetKey: lords_signet
+        count: 1
+        description: "Recover Lord Ashworth's signet ring"
+    rewards:
+      xp: 900
+      gold: 40
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  manor_road:
+    title: "Haunted Manor — Forest Road"
+    description: "A narrow track branches east from the moonlit glade into a part of the forest that feels distinctly wrong. The trees grow closer together, their branches intertwining overhead to block most of the light. Dead leaves carpet the ground year-round. An overgrown estate garden is visible through the trees ahead. The glade is back to the west."
+    exits:
+      w: thornwood_forest:moonlit_glade
+      e: overgrown_garden
+
+  overgrown_garden:
+    title: "Overgrown Garden"
+    description: "What was once a formal garden has gone entirely to seed. Stone paths crack under invasive roots, topiary figures have grown into monstrous shapes, and a fountain stands dry and green with algae. Spectral hounds patrol the grounds — translucent, silver-grey, and hostile. The manor gates loom ahead to the east. The forest road is back west."
+    exits:
+      w: manor_road
+      e: manor_gates
+
+  manor_gates:
+    title: "Manor Gates"
+    description: "Wrought-iron gates stand permanently open, their hinges rusted solid. The Ashworth family crest — a raven on a crescent moon — is worked into the ironwork, now barely recognisable under corrosion. The manor's entrance hall is through the front door ahead to the north. The garden stretches back to the west."
+    exits:
+      w: overgrown_garden
+      n: entrance_hall
+
+  entrance_hall:
+    title: "Entrance Hall"
+    description: "A wide, high-ceilinged foyer with a chequerboard marble floor and a chandelier that sways in a wind that doesn't exist. Portraits on the walls have darkened beyond recognition. Restless spirits drift through the space, their forms barely visible against the dust-filled light. The grand staircase rises ahead to the north; doors lead east and west."
+    exits:
+      s: manor_gates
+      n: grand_staircase
+      e: east_wing
+      w: west_wing
+
+  grand_staircase:
+    title: "Grand Staircase"
+    description: "A sweeping double staircase of dark wood, its banisters carved with ravens and moons. An animated suit of armour stands guard on the landing — plate and chainmail moving without any body inside, sword raised. The entrance hall is back south; the dining hall lies to the west; the upper landing is above."
+    exits:
+      s: entrance_hall
+      w: dining_hall
+      u: upper_landing
+
+  west_wing:
+    title: "West Wing — Drawing Room"
+    description: "A formal sitting room where dust sheets cover furniture that no one has used in decades. A cold fireplace dominates one wall, and a family portrait above it has been slashed — whether by blade or by claw is impossible to say. The entrance hall is back to the east; the kitchen lies to the south."
+    exits:
+      e: entrance_hall
+      s: kitchen
+
+  east_wing:
+    title: "East Wing — Library"
+    description: "Floor-to-ceiling bookshelves line every wall, their contents mouldering. Books lie open on reading stands, pages turning slowly by themselves. The library has an oppressive silence — sound seems to die a few feet from its source. The entrance hall is back to the west; the servants' quarters are to the south."
+    exits:
+      w: entrance_hall
+      s: servants_quarters
+
+  dining_hall:
+    title: "Dining Hall"
+    description: "A long oak table set for a dinner that was never eaten. Silver cutlery, crystal glasses, and china plates sit in perfect arrangement, covered in a thick layer of dust. A poltergeist haunts this room, hurling objects at anyone who disturbs the settings. The grand staircase is back to the east."
+    exits:
+      e: grand_staircase
+
+  kitchen:
+    title: "Kitchen"
+    description: "A large service kitchen with stone counters, iron ranges, and copper pots still hanging from ceiling hooks. Everything is covered in a thin layer of frost despite the season. A trapdoor in the floor leads down to the cellar. The drawing room is back to the north."
+    exits:
+      n: west_wing
+      d: cellar
+
+  servants_quarters:
+    title: "Servants' Quarters"
+    description: "A cramped corridor of small rooms where the manor's servants once lived. The doors hang open, the beds are stripped, and personal effects lie scattered as though the occupants left in great haste. An old trunk against the far wall may still hold something. The library is back to the north."
+    features:
+      servants_trunk:
+        type: CONTAINER
+        displayName: "an old trunk"
+        keyword: trunk
+        initialState: closed
+        resetWithZone: true
+        items:
+          - ectoplasm
+    exits:
+      n: east_wing
+
+  cellar:
+    title: "Manor Cellar"
+    description: "A cold stone cellar beneath the kitchen, lined with wine racks and storage crates. At the far end, Lady Elara's ghost drifts in a slow, sad orbit of a particular flagstone — the one her husband pried up before the curse began. The cellar is peaceful in a way the rest of the manor is not. The kitchen is back above."
+    exits:
+      u: kitchen
+
+  upper_landing:
+    title: "Upper Landing"
+    description: "The top of the grand staircase opens onto a wide landing with doors in three directions. The master bedroom lies to the north — the door is closed and a faint blue-white light seeps from beneath it. The attic stairs climb further above. The staircase leads back down."
+    exits:
+      d: grand_staircase
+      n: master_bedroom
+      u: attic
+
+  master_bedroom:
+    title: "Master Bedroom"
+    description: "A large, cold room dominated by a four-poster bed draped in moth-eaten curtains. Lord Ashworth's shade drifts here — a tall, gaunt figure wreathed in spectral light, pacing the room in an endless circuit of rage and confusion. The temperature is well below freezing despite the season. The landing is back to the south."
+    exits:
+      s: upper_landing
+
+  attic:
+    title: "Manor Attic"
+    description: "A dusty, raftered space beneath the manor's peaked roof. Trunks of old clothing, furniture draped in sheets, and stacks of mouldering documents fill the space. A locked chest sits in the far corner, somehow untouched by the dust and decay that coats everything else. The upper landing is back below."
+    features:
+      attic_chest:
+        type: CONTAINER
+        displayName: "a locked chest"
+        keyword: chest
+        initialState: closed
+        resetWithZone: false
+        items:
+          - spectral_chain
+          - ectoplasm
+    exits:
+      d: upper_landing

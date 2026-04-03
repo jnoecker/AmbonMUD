@@ -1,0 +1,273 @@
+zone: goblin_warrens
+startRoom: mine_connection
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  goblin_tooth_necklace:
+    displayName: "a goblin tooth necklace"
+    keyword: necklace
+    description: "A crude necklace strung with goblin teeth. Unpleasant to look at but worth a few coins to the right buyer."
+    basePrice: 12
+
+  expedition_notes:
+    displayName: "the expedition notes"
+    keyword: notes
+    description: "A leather-bound journal of field notes from the Thornhaven scholarly expedition. Survivor Hadrik will want these."
+    basePrice: 0
+
+  chieftain_crown:
+    displayName: "Chieftain Grak's crown"
+    keyword: crown
+    slot: head
+    armor: 5
+    basePrice: 300
+    description: "A battered iron crown studded with mismatched gems. Grak wore it constantly and clearly considered it magnificent."
+
+  chieftain_axe:
+    displayName: "Chieftain Grak's axe"
+    keyword: axe
+    slot: hand
+    damage: 9
+    basePrice: 350
+    description: "A broad-bladed battle axe notched from heavy use. Balance is poor but the weight behind the blow is not."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  goblin_scout:
+    name: "a goblin scout"
+    room: upper_warrens
+    tier: standard
+    level: 4
+    respawnSeconds: 90
+    xpReward: 25
+    goldMin: 2
+    goldMax: 8
+    behavior:
+      template: patrol_aggro
+      params:
+        patrolRoute:
+          - upper_warrens
+          - goblin_hall
+          - mess_hall
+          - warrens_crossroads
+          - mess_hall
+          - goblin_hall
+
+  goblin_warrior:
+    name: "a goblin warrior"
+    room: goblin_hall
+    tier: standard
+    level: 5
+    respawnSeconds: 90
+    xpReward: 30
+    goldMin: 3
+    goldMax: 12
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: goblin_tooth_necklace
+        chance: 0.3
+
+  goblin_shaman:
+    name: "a goblin shaman"
+    room: shaman_quarters
+    tier: standard
+    level: 5
+    respawnSeconds: 180
+    xpReward: 40
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: goblin_tooth_necklace
+        chance: 0.5
+
+  kobold_trapper:
+    name: "a kobold trapper"
+    room: kobold_den
+    tier: standard
+    level: 4
+    respawnSeconds: 90
+    xpReward: 25
+    behavior:
+      template: wander_aggro
+
+  dire_rat:
+    name: "a dire rat"
+    room: dire_rat_nest
+    tier: standard
+    level: 4
+    respawnSeconds: 60
+    xpReward: 20
+    behavior:
+      template: wander_aggro
+
+  chieftain_grak:
+    name: "Chieftain Grak"
+    room: chieftain_throne_room
+    tier: boss
+    level: 7
+    respawnSeconds: 600
+    xpReward: 200
+    goldMin: 50
+    goldMax: 100
+    behavior:
+      template: coward
+      params:
+        fleeHpPercent: 20
+        fleeMessage: "Grak not finished with you! Run now — come back with MORE!"
+    drops:
+      - itemId: chieftain_crown
+        chance: 0.4
+      - itemId: chieftain_axe
+        chance: 0.35
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+# (The Lost Expedition step 3 is given by survivor_hadrik in old_mines —
+#  the expedition_notes item here is its collect target.)
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  mine_connection:
+    title: "Goblin Warrens — Mine Connection"
+    description: "A rough tunnel that connects the Old Mines to the natural cave system beneath Thornwood Forest. The stonework of the mines gives way to raw earth and goblin-carved walls covered in crude pictograms. The mines are back to the west. The goblin-dug passage descends south."
+    exits:
+      w: old_mines:wardens_vault
+      s: upper_warrens
+
+  upper_warrens:
+    title: "Upper Warrens"
+    description: "The entry level of the goblin settlement: a wide cave with a high, soot-darkened ceiling and a permanent haze of cook-fire smoke. Goblins move quickly and purposefully through here. A watchtower platform is bolted to the east wall. The tunnel north leads back to the mines; the main hall is south."
+    exits:
+      n: mine_connection
+      e: sentry_post
+      s: goblin_hall
+
+  sentry_post:
+    title: "Sentry Post"
+    description: "A carved alcove with a narrow ledge overlooking the upper warrens. Crude weapons lean against the wall. A rope ladder climbs to the watchtower above. The upper warrens are back to the west."
+    exits:
+      w: upper_warrens
+      u: goblin_watchtower
+
+  goblin_watchtower:
+    title: "Goblin Watchtower"
+    description: "A precarious platform of lashed timber lodged in a crack near the cave roof. From here you can see almost the entire upper level of the warrens laid out below. Several crossbow bolts are lodged in the ceiling from previous excitement. The sentry post rope ladder descends below."
+    exits:
+      d: sentry_post
+
+  goblin_hall:
+    title: "Goblin Hall"
+    description: "The social and military hub of the warrens: a broad, torch-lit cavern where goblins argue, sharpen weapons, and prepare for raids. Trophies from surface raids hang from iron hooks — mostly adventuring gear and the occasional human boot. The hall branches in every direction."
+    exits:
+      n: upper_warrens
+      e: barracks
+      w: shaman_quarters
+      s: mess_hall
+
+  barracks:
+    title: "Goblin Barracks"
+    description: "A long chamber lined with sleeping platforms of bundled straw. The smell of unwashed goblin is overwhelming. Weapons and shields are racked along the walls in a surprisingly organised fashion — someone runs a tight warrens. The kobold quarters are below."
+    exits:
+      w: goblin_hall
+      s: kobold_den
+
+  kobold_den:
+    title: "Kobold Den"
+    description: "A lower cave where the kobolds live — cramped even by goblin standards, every wall carved with the small, precise pictograms kobolds use for record-keeping. Kobold trappers maintain a collection of pressure-plate designs spread across the floor. The barracks are back above to the north."
+    exits:
+      n: barracks
+
+  shaman_quarters:
+    title: "Shaman's Quarters"
+    description: "A carved-out chamber reeking of burnt herbs and something sharper, chemical. Bones, fetishes, and vials of glowing liquid cover every surface. The goblin shaman paces here, muttering something rhythmic and occasionally gesticulating at the wall. The main hall is east; a ritual pit descends below."
+    exits:
+      e: goblin_hall
+      s: ritual_pit
+
+  ritual_pit:
+    title: "Ritual Pit"
+    description: "A circular depression in the rock floor, its walls carved with spiraling patterns that seem to move in firelight. A fire burns at the center with no visible fuel. Whatever the shamans do here, it leaves a residue of heat and unease. The shaman's quarters are back above."
+    exits:
+      n: shaman_quarters
+
+  mess_hall:
+    title: "Mess Hall"
+    description: "A cavernous kitchen and eating area where something is always boiling in an enormous iron pot. The goblins eat here in rotating shifts. Dire rats have nested under the serving platforms and are treated as pets — or as a backup food supply. The main hall is north; the warrens crossroads lie south."
+    exits:
+      n: goblin_hall
+      s: warrens_crossroads
+      e: rat_pit
+
+  rat_pit:
+    title: "Rat Pit"
+    description: "A fighting pit where goblins bet on dire rat combat. The floor is blood-stained and the smell is extraordinary. A particularly enormous dire rat prowls the pit rim, clearly the current champion. The mess hall is back to the west."
+    exits:
+      w: mess_hall
+
+  warrens_crossroads:
+    title: "Warrens Crossroads"
+    description: "A four-way junction deep in the settlement where the main tunnels converge. The walls are covered in overlapping layers of goblin graffiti. Four passages branch off: north back to the mess hall, south toward the chieftain's domain, east into a suspicious-smelling passage, and west into a dark side den."
+    exits:
+      n: mess_hall
+      s: chieftain_approach
+      e: secret_passage
+      w: dire_rat_nest
+
+  dire_rat_nest:
+    title: "Dire Rat Nest"
+    description: "A dark side passage matted with gnawed debris and dire rat fur. The rats here are larger than the pit specimens and considerably less friendly. The warrens crossroads are back to the east."
+    exits:
+      e: warrens_crossroads
+
+  secret_passage:
+    title: "Secret Passage"
+    description: "A tunnel that doesn't appear on any goblin map — too straight and well-cut to be goblin work. It runs east and down, smelling of soil and old burial-mound rot. Whoever cut this passage was connecting the warrens to something much older. The crossroads are back to the west."
+    exits:
+      w: warrens_crossroads
+      e: dark_barrows:goblin_tunnel
+
+  chieftain_approach:
+    title: "Chieftain's Approach"
+    description: "A passage deliberately made imposing: torches mounted on skulls, war trophies on spikes, and a ceiling carved with the names of enemies Grak claims to have defeated personally. The list is implausibly long. The crossroads are back north; the throne antechamber lies ahead south."
+    exits:
+      n: warrens_crossroads
+      s: throne_antechamber
+
+  throne_antechamber:
+    title: "Throne Antechamber"
+    description: "The last room before the chieftain's presence. Two goblin guards normally stand here — their absence is notable. The hoard room is to the east, where Grak stores his valuables. The throne room itself is through the great bone-inlaid door to the south."
+    exits:
+      n: chieftain_approach
+      e: chieftain_hoard
+      s: chieftain_throne_room
+
+  chieftain_hoard:
+    title: "Chieftain's Hoard"
+    description: "A side room packed with Chieftain Grak's accumulated plunder: cracked armour sets, dented weapons, sacks of coin, and in the corner, a sealed expedition chest bearing the crest of the Thornhaven Scholars' Guild — clearly taken from the expedition that came through."
+    features:
+      expedition_chest:
+        type: CONTAINER
+        displayName: "an expedition chest"
+        keyword: chest
+        initialState: closed
+        resetWithZone: false
+        items:
+          - expedition_notes
+    exits:
+      w: throne_antechamber
+
+  chieftain_throne_room:
+    title: "Chieftain Grak's Throne Room"
+    description: "A vaulted cave dominated by a throne of welded iron and stolen timber, draped in furs and hung about with trophies. Chieftain Grak occupies it with an air of absolute self-satisfaction. He is large for a goblin and armed with an axe nearly as wide as he is. The antechamber is back to the north."
+    exits:
+      n: throne_antechamber

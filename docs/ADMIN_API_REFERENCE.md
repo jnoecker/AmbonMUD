@@ -99,7 +99,7 @@ List all **online** players (summary view).
     "level": 7,
     "playerClass": "MAGE",
     "race": "ELF",
-    "room": "ambon_hub:town_square",
+    "room": "crossroads_path:town_square",
     "isOnline": true,
     "isStaff": true,
     "hp": 85,
@@ -128,7 +128,7 @@ Detailed view of a single player. Checks online players first, falls back to per
   "level": 7,
   "playerClass": "MAGE",
   "race": "ELF",
-  "room": "ambon_hub:town_square",
+  "room": "crossroads_path:town_square",
   "isOnline": true,
   "isStaff": true,
   "hp": 85,
@@ -139,8 +139,8 @@ Detailed view of a single player. Checks online players first, falls back to per
   "gold": 230,
   "stats": { "strength": 8, "intelligence": 16, "wisdom": 14 },
   "activeTitle": "Archmage",
-  "activeQuestIds": ["tutorial_glade:first_quest"],
-  "completedQuestIds": ["tutorial_glade:intro"],
+  "activeQuestIds": ["thornhaven_city:first_quest"],
+  "completedQuestIds": ["thornhaven_city:intro"],
   "achievementIds": ["first_kill", "explorer_10"]
 }
 ```
@@ -168,7 +168,7 @@ List all loaded zones with activity counts.
 ```json
 [
   {
-    "name": "ambon_hub",
+    "name": "crossroads_path",
     "roomCount": 12,
     "playersOnline": 2,
     "mobsAlive": 5
@@ -182,10 +182,10 @@ All rooms in a zone with exits and current occupants.
 
 ```json
 {
-  "name": "ambon_hub",
+  "name": "crossroads_path",
   "rooms": [
     {
-      "id": "ambon_hub:town_square",
+      "id": "crossroads_path:town_square",
       "title": "Town Square",
       "exits": ["north", "south", "east"],
       "players": ["Lexa"],
@@ -205,17 +205,17 @@ Full detail for a single room, including description, media, map coordinates, an
 
 ```json
 {
-  "id": "ambon_hub:town_square",
+  "id": "crossroads_path:town_square",
   "title": "Town Square",
   "description": "A bustling square at the heart of town...",
   "exits": [
-    { "direction": "north", "target": "ambon_hub:market" },
-    { "direction": "east", "target": "ambon_hub:tavern" }
+    { "direction": "north", "target": "crossroads_path:market" },
+    { "direction": "east", "target": "crossroads_path:tavern" }
   ],
   "players": ["Lexa"],
   "mobs": [
     {
-      "id": "ambon_hub:guard_1",
+      "id": "crossroads_path:guard_1",
       "name": "Town Guard",
       "hp": 50,
       "maxHp": 50,
@@ -248,9 +248,9 @@ List all active mob instances. Optionally filter by zone.
 ```json
 [
   {
-    "id": "ambon_hub:guard_1",
+    "id": "crossroads_path:guard_1",
     "name": "Town Guard",
-    "roomId": "ambon_hub:town_square",
+    "roomId": "crossroads_path:town_square",
     "hp": 50,
     "maxHp": 50,
     "templateKey": "town_guard",
@@ -259,7 +259,7 @@ List all active mob instances. Optionally filter by zone.
     "armor": 5,
     "image": "/images/mobs/guard.png",
     "questIds": [],
-    "spawnRoomId": "ambon_hub:town_square"
+    "spawnRoomId": "crossroads_path:town_square"
   }
 ]
 ```
@@ -340,10 +340,10 @@ All loaded quest definitions.
 ```json
 [
   {
-    "id": "tutorial_glade:first_quest",
+    "id": "thornhaven_city:first_quest",
     "name": "A Hero's Beginning",
     "description": "Prove yourself by defeating the training dummies.",
-    "giverMobId": "tutorial_glade:mentor",
+    "giverMobId": "thornhaven_city:mentor",
     "completionType": "auto",
     "objectives": [
       {
@@ -408,7 +408,7 @@ All loaded shop definitions with their item inventories.
   {
     "id": "general_store",
     "name": "General Store",
-    "roomId": "ambon_hub:market",
+    "roomId": "crossroads_path:market",
     "items": [
       {
         "id": "health_potion",
@@ -448,7 +448,7 @@ All item templates (from world YAML definitions).
     "consumable": false,
     "basePrice": 100,
     "image": "/images/items/iron_sword.png",
-    "spawnRoom": "ambon_hub:armory"
+    "spawnRoom": "crossroads_path:armory"
   }
 ]
 ```

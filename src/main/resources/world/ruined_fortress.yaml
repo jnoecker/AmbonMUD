@@ -1,0 +1,287 @@
+zone: ruined_fortress
+startRoom: fortress_approach
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  iron_order_badge:
+    displayName: "an Iron Order badge"
+    keyword: badge
+    description: "A pressed-iron badge stamped with the crossed-hammer mark of the Iron Order. Carries faction significance."
+    basePrice: 15
+
+  free_swords_token:
+    displayName: "a Free Swords token"
+    keyword: token
+    description: "A rough-cut coin marked with a broken chain. Free Swords fighters carry these as recognition markers."
+    basePrice: 12
+
+  ancient_seal:
+    displayName: "the ancient order's seal"
+    keyword: seal
+    description: "A circular stone disc engraved with geometric patterns and a central star. Extraordinarily old. Commander Thane was hiding it in his vault."
+    basePrice: 0
+
+  vault_key:
+    displayName: "Commander Thane's vault key"
+    keyword: key
+    description: "A heavy iron key stripped from Commander Thane. Opens the vault in the fortress keep."
+    basePrice: 0
+
+  iron_order_sword:
+    displayName: "an Iron Order sword"
+    keyword: sword
+    slot: hand
+    damage: 10
+    basePrice: 340
+    description: "A regulation Iron Order longsword, well-maintained and stamped with the order's mark near the hilt."
+
+  iron_order_plate:
+    displayName: "Iron Order plate"
+    keyword: plate
+    slot: body
+    armor: 6
+    basePrice: 380
+    description: "A breastplate of the Iron Order, dented but structurally sound. Offers serious protection."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  iron_order_guard:
+    name: "an Iron Order guard"
+    room: outer_courtyard
+    tier: standard
+    level: 6
+    respawnSeconds: 120
+    xpReward: 45
+    goldMin: 5
+    goldMax: 15
+    faction: iron_order
+    behavior:
+      template: patrol_aggro
+      params:
+        patrolRoute:
+          - outer_courtyard
+          - fortress_gate
+          - east_rampart
+          - outer_courtyard
+    drops:
+      - itemId: iron_order_badge
+        chance: 0.5
+
+  free_sword_rebel:
+    name: "a Free Swords rebel"
+    room: ruined_barracks
+    tier: standard
+    level: 6
+    respawnSeconds: 120
+    xpReward: 40
+    goldMin: 4
+    goldMax: 12
+    faction: free_swords
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: free_swords_token
+        chance: 0.5
+
+  gargoyle:
+    name: "a gargoyle"
+    room: west_tower
+    tier: elite
+    level: 7
+    respawnSeconds: 300
+    xpReward: 75
+    behavior:
+      template: aggro_guard
+
+  iron_golem:
+    name: "an iron golem"
+    room: keep_interior
+    tier: elite
+    level: 7
+    respawnSeconds: 300
+    xpReward: 80
+    behavior:
+      template: aggro_guard
+
+  commander_thane:
+    name: "Commander Thane"
+    room: commanders_hall
+    tier: boss
+    level: 8
+    respawnSeconds: 900
+    xpReward: 220
+    goldMin: 80
+    goldMax: 150
+    faction: iron_order
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: vault_key
+        chance: 1.0
+      - itemId: iron_order_sword
+        chance: 0.4
+      - itemId: iron_order_plate
+        chance: 0.35
+
+  rebel_contact:
+    name: "Rebel Contact Sera"
+    room: rebel_contact_post
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - celestial_reckoning_p1
+    dialogue:
+      root:
+        text: "Keep your voice down. I'm Sera — Free Swords intelligence. We have reason to believe Thane has something old locked in his vault. Something that predates the Iron Order by centuries. A seal of some kind. We need it out of his hands. Interested?"
+        choices:
+          - text: "What's so important about the seal?"
+            next: seal_info
+          - text: "I'll get it."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      seal_info:
+        text: "Honestly? We don't know exactly. Our scholars think it's connected to something at the Celestial Peak — old wards, old power. The Iron Order collecting it can't be good. Thane has the vault key. Defeat him and bring the seal to me."
+        choices:
+          - text: "I'll get it."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "Good. Thane's in his command post above the keep hall. The Iron Order faction system works in our favour — killing their people raises your standing with us. Keep that in mind."
+        choices:
+          - text: "Understood."
+            next: farewell
+      farewell:
+        text: "Move quietly. The Iron Order patrols the full courtyard."
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  celestial_reckoning_p1:
+    name: "The Celestial Reckoning — The Seal"
+    description: "A rebel contact speaks of an ancient seal hidden in Commander Thane's vault. Defeat Thane, take his vault key, and retrieve the seal — it may be the key to understanding the threat building at the Celestial Peak."
+    giver: rebel_contact
+    objectives:
+      - type: collect
+        targetKey: ancient_seal
+        count: 1
+        description: "Recover the ancient seal from Thane's vault"
+    rewards:
+      xp: 800
+      gold: 30
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  fortress_approach:
+    title: "Ruined Fortress — Approach Road"
+    description: "The cobblestone road south ends here at the edge of the fortress grounds. The structure ahead is old and partially collapsed but still formidable: high stone walls, an intact gatehouse, and the Iron Order's crossed-hammer banner flying from the keep tower. Free Swords rebels have encamped in the ruins to the west. The road back north leads toward the cobblestone road junction."
+    exits:
+      n: cobblestone_road:ruined_southroad
+      e: fortress_gate
+      w: rebel_camp
+
+  rebel_camp:
+    title: "Free Swords Rebel Camp"
+    description: "A ragged camp of tents and salvaged timber pressed against the outer fortress wall. The Free Swords fighters here are ragged but determined, their camp ringed with lookout posts. A quiet corner to the west serves as a meeting point for trusted contacts. The approach road is to the east."
+    exits:
+      e: fortress_approach
+      w: rebel_contact_post
+
+  rebel_contact_post:
+    title: "Rebel Contact's Post"
+    description: "A quiet corner of the rebel camp where a Free Swords contact keeps watch and meets with trusted allies. The contact has intelligence about what's inside the fortress — and a specific interest in what Thane has hidden in his vault."
+    exits:
+      e: rebel_camp
+
+  fortress_gate:
+    title: "Fortress Gate"
+    description: "The main gate of the fortress: a heavy iron portcullis between twin towers, currently raised. The Iron Order controls entry here. Guards check the approach road and the outer courtyard. The approach road is back west; the outer courtyard lies inside to the east."
+    exits:
+      w: fortress_approach
+      e: outer_courtyard
+
+  outer_courtyard:
+    title: "Outer Courtyard"
+    description: "A broad cobbled yard inside the fortress walls where Iron Order guards drill and patrol in rotating shifts. The keep rises on the north side; the east rampart extends along the wall. Ruined barracks lie to the south where rebel forces have dug in. A well in the courtyard center still functions."
+    exits:
+      w: fortress_gate
+      n: keep_entrance
+      e: east_rampart
+      s: ruined_barracks
+
+  east_rampart:
+    title: "East Rampart"
+    description: "The eastern wall-walk, running the full length of the fortress's east face. Arrow slits look out over the scrubland beyond. Iron Order guards patrol this level, and the view from the end gives a clear sight line to the Cobblestone Road. The courtyard is back to the west; the west tower is accessible to the north."
+    exits:
+      w: outer_courtyard
+      n: west_tower
+
+  west_tower:
+    title: "West Tower"
+    description: "A squat corner tower at the fortress's northwest angle, its upper level open to the sky. A gargoyle has colonised the tower top and does not welcome company. The carved stone figures on the walls are older than the Iron Order — this structure predates the current occupation significantly. The rampart leads back south."
+    exits:
+      s: east_rampart
+
+  ruined_barracks:
+    title: "Ruined Barracks"
+    description: "The fortress's original barracks wing, its roof long since collapsed. Free Swords rebels have taken shelter in the standing sections, converting the rubble into defensible positions. They are hostile to Iron Order sympathisers and neutral to everyone else — unless provoked. The courtyard is back north."
+    exits:
+      n: outer_courtyard
+
+  keep_entrance:
+    title: "Keep Entrance"
+    description: "The main doors of the fortress keep: double-layered iron on a stone threshold, currently standing open at the Iron Order's direction. A carved lintel above the door bears the geometric pattern of the original builders — different in style from anything in Thornhaven. The courtyard is south; the keep interior lies north."
+    exits:
+      s: outer_courtyard
+      n: keep_interior
+
+  keep_interior:
+    title: "Keep Interior"
+    description: "The main hall of the keep: a long, high-ceilinged space with arrow-slit windows and a central firepit. An iron golem stands guard at the far end — built by the original occupants and still functional, now serving whoever controls the fortress. Stairs lead up to the commander's level. The entrance is back south."
+    exits:
+      s: keep_entrance
+      u: commanders_hall
+
+  commanders_hall:
+    title: "Commander's Hall"
+    description: "The keep's upper level where Commander Thane has established his command post. Maps, orders, and correspondence cover every surface. Thane himself occupies the room with the absolute conviction of a man who believes he's on the right side of history. A heavy door in the far wall leads to his personal vault. The keep interior is below."
+    exits:
+      d: keep_interior
+      n:
+        to: thanes_vault
+        door:
+          initialState: locked
+          keyItemId: vault_key
+          keyConsumed: false
+          resetWithZone: false
+
+  thanes_vault:
+    title: "Thane's Vault"
+    description: "A stone strongroom behind Commander Thane's hall, its walls thick enough to muffle sound from outside. Iron-bound chests line the walls. On a stone plinth in the center, wrapped in oilcloth, sits an object that clearly predates everything else in the fortress — a carved stone disc that seems to absorb the torchlight rather than reflect it."
+    features:
+      seal_plinth:
+        type: CONTAINER
+        displayName: "a stone plinth"
+        keyword: plinth
+        initialState: open
+        resetWithZone: false
+        items:
+          - ancient_seal
+    exits:
+      s: commanders_hall
