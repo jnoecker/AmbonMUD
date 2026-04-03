@@ -151,6 +151,7 @@ object WorldLoader {
 
             val imageDefaults = file.image
             val audioDefaults = file.audio
+            val zoneGraphical = file.graphical
 
             // First pass per file: create room shells, detect collisions
             for ((rawId, rf) in file.rooms) {
@@ -173,6 +174,7 @@ object WorldLoader {
                         video = rf.video?.let { "$videosBase$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
                         ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "$audioBase$it" },
+                        graphical = zoneGraphical,
                     )
             }
 

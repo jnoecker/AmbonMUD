@@ -147,12 +147,6 @@ internal fun Application.ambonMUDWebModule(
         )
 
         staticResources(
-            remotePath = "/terminal",
-            basePackage = "web-terminal",
-            index = "index.html",
-        )
-
-        staticResources(
             remotePath = "/",
             basePackage = "web-v3",
             index = "index.html",
