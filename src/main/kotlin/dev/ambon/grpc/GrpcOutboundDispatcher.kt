@@ -7,6 +7,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 
 private val log = KotlinLogging.logger {}
 
@@ -43,8 +45,25 @@ class GrpcOutboundDispatcher(
     }
 
     fun stop() {
+        // Drain remaining events before cancelling, so goodbye messages reach players.
+        runBlocking {
+            var drained = 0
+            withTimeoutOrNull(DRAIN_TIMEOUT_MS) {
+                while (true) {
+                    val event = outbound.asReceiveChannel().tryReceive().getOrNull() ?: break
+                    dispatch(event)
+                    drained++
+                }
+            }
+            if (drained > 0) log.info { "Drained $drained remaining outbound events before shutdown" }
+        }
         cancelJobWithTimeout(job, GrpcTimeouts.STOP_TIMEOUT_MS, "GrpcOutboundDispatcher job")
         log.info { "GrpcOutboundDispatcher stopped" }
+    }
+
+    companion object {
+        /** Maximum time to spend draining remaining events during shutdown. */
+        const val DRAIN_TIMEOUT_MS = 2_000L
     }
 
     private suspend fun dispatch(event: OutboundEvent) {

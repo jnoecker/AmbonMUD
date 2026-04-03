@@ -20,6 +20,9 @@ import dev.ambon.grpc.proto.SessionRedirectProto
 import dev.ambon.grpc.proto.SetAnsiProto
 import dev.ambon.grpc.proto.ShowAnsiDemoProto
 import dev.ambon.grpc.proto.ShowLoginScreenProto
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val log = KotlinLogging.logger {}
 
 /** Converts domain [InboundEvent] to [InboundEventProto]. */
 fun InboundEvent.toProto(): InboundEventProto =
@@ -55,7 +58,10 @@ fun InboundEventProto.toDomain(): InboundEvent? {
                 gmcpPackage = gmcpReceived.gmcpPackage,
                 jsonData = gmcpReceived.jsonData,
             )
-        else -> null
+        else -> {
+            log.warn { "Unknown inbound event case: $eventCase (sessionId=$sessionId)" }
+            null
+        }
     }
 }
 
@@ -111,7 +117,10 @@ fun OutboundEventProto.toDomain(): OutboundEvent? {
                 gmcpPackage = gmcpData.gmcpPackage,
                 jsonData = gmcpData.jsonData,
             )
-        else -> null
+        else -> {
+            log.warn { "Unknown outbound event case: $eventCase (sessionId=$sessionId)" }
+            null
+        }
     }
 }
 

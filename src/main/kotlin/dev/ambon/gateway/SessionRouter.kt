@@ -94,7 +94,7 @@ class SessionRouter(
             }
         }
         // Fallback: round-robin
-        val idx = roundRobinIndex.getAndIncrement() % orderedEngineIds.size
+        val idx = Math.floorMod(roundRobinIndex.getAndIncrement(), orderedEngineIds.size)
         val engineId = orderedEngineIds[idx]
         sessionToEngine[sessionId] = engineId
         log.debug { "Assigned session $sessionId to engine $engineId (round-robin)" }
@@ -151,9 +151,13 @@ class SessionRouter(
                 channel.send(proto)
             }
         } catch (e: TimeoutCancellationException) {
-            log.warn { "Engine $engineId gRPC channel unresponsive for ${GrpcTimeouts.FORWARD_SEND_TIMEOUT_MS}ms" }
+            log.warn {
+                "Engine $engineId gRPC channel unresponsive for ${GrpcTimeouts.FORWARD_SEND_TIMEOUT_MS}ms; " +
+                    "dropping ${event::class.simpleName} for session $sessionId"
+            }
             throw IllegalStateException(
-                "Engine $engineId gRPC channel did not accept event within ${GrpcTimeouts.FORWARD_SEND_TIMEOUT_MS}ms",
+                "Engine $engineId gRPC channel did not accept ${event::class.simpleName} " +
+                    "for session $sessionId within ${GrpcTimeouts.FORWARD_SEND_TIMEOUT_MS}ms",
                 e,
             )
         }
@@ -184,7 +188,11 @@ class SessionRouter(
 
         val result = channel.trySend(event.toProto())
         if (result.isFailure) {
-            log.warn { "Engine $engineId gRPC channel full or closed; dropping ${event::class.simpleName}" }
+            val reason = if (result.isClosed) "closed" else "full"
+            log.warn {
+                "Engine $engineId gRPC channel $reason; dropping ${event::class.simpleName} " +
+                    "for session $sessionId"
+            }
         }
 
         if (result.isSuccess && event is InboundEvent.Disconnected) {
