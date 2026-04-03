@@ -62,7 +62,8 @@ data class AppConfig(
         require(server.inboundBudgetMs < server.tickMillis) { "ambonMUD.server.inboundBudgetMs must be < tickMillis" }
 
         require(world.resources.all { it.isNotBlank() }) { "ambonMUD.world.resources entries must be non-blank" }
-        world.startRoom?.let { sr ->
+        require(world.startRoom != null) { "ambonMUD.world.startRoom must be configured" }
+        world.startRoom.let { sr ->
             require(sr.contains(':')) { "ambonMUD.world.startRoom must be in 'zone:room' format, got '$sr'" }
         }
 
@@ -108,9 +109,13 @@ data class AppConfig(
         require(engine.regen.regenAmount > 0) { "ambonMUD.engine.regen.regenAmount must be > 0" }
 
         require(engine.equipment.slots.isNotEmpty()) { "ambonMUD.engine.equipment.slots must not be empty" }
-        for ((id, _) in engine.equipment.slots) {
+        val slotOrders = mutableSetOf<Int>()
+        for ((id, slot) in engine.equipment.slots) {
             require(id == id.trim().lowercase()) {
                 "ambonMUD.engine.equipment.slots key '$id' must be lowercase with no surrounding whitespace"
+            }
+            require(slotOrders.add(slot.order)) {
+                "ambonMUD.engine.equipment.slots: duplicate order ${slot.order} for slot '$id'"
             }
         }
 
@@ -211,7 +216,9 @@ data class AppConfig(
 
         require(progression.maxLevel > 0) { "ambonMUD.progression.maxLevel must be > 0" }
         require(progression.xp.baseXp > 0L) { "ambonMUD.progression.xp.baseXp must be > 0" }
-        require(progression.xp.exponent > 0.0) { "ambonMUD.progression.xp.exponent must be > 0" }
+        require(progression.xp.exponent >= 1.0) {
+            "ambonMUD.progression.xp.exponent must be >= 1.0 to ensure XP requirements increase with level"
+        }
         require(progression.xp.linearXp >= 0L) { "ambonMUD.progression.xp.linearXp must be >= 0" }
         require(progression.xp.multiplier >= 0.0) { "ambonMUD.progression.xp.multiplier must be >= 0" }
         require(progression.xp.defaultKillXp >= 0L) { "ambonMUD.progression.xp.defaultKillXp must be >= 0" }
@@ -395,6 +402,15 @@ data class AppConfig(
         require(engine.worldTime.dayHour in 0..23) { "ambonMUD.engine.worldTime.dayHour must be 0..23" }
         require(engine.worldTime.duskHour in 0..23) { "ambonMUD.engine.worldTime.duskHour must be 0..23" }
         require(engine.worldTime.nightHour in 0..23) { "ambonMUD.engine.worldTime.nightHour must be 0..23" }
+        require(engine.worldTime.dawnHour < engine.worldTime.dayHour) {
+            "ambonMUD.engine.worldTime.dawnHour (${engine.worldTime.dawnHour}) must be < dayHour (${engine.worldTime.dayHour})"
+        }
+        require(engine.worldTime.dayHour < engine.worldTime.duskHour) {
+            "ambonMUD.engine.worldTime.dayHour (${engine.worldTime.dayHour}) must be < duskHour (${engine.worldTime.duskHour})"
+        }
+        require(engine.worldTime.duskHour < engine.worldTime.nightHour) {
+            "ambonMUD.engine.worldTime.duskHour (${engine.worldTime.duskHour}) must be < nightHour (${engine.worldTime.nightHour})"
+        }
         require(engine.weather.minTransitionMs > 0L) { "ambonMUD.engine.weather.minTransitionMs must be > 0" }
         require(engine.weather.maxTransitionMs >= engine.weather.minTransitionMs) {
             "ambonMUD.engine.weather.maxTransitionMs must be >= minTransitionMs"
@@ -414,9 +430,21 @@ data class AppConfig(
         val factionIds = engine.factions.definitions.keys
         for ((factionId, def) in engine.factions.definitions) {
             for (enemyId in def.enemies) {
-                if (enemyId !in factionIds) {
-                    warnConfig("faction '$factionId' references enemy '$enemyId' which is not defined in factions.definitions")
+                require(enemyId in factionIds) {
+                    "faction '$factionId' references enemy '$enemyId' which is not defined in factions.definitions"
                 }
+            }
+        }
+
+        // Sharding / instancing interdependency checks
+        if (sharding.enabled) {
+            require(redis.enabled) {
+                "ambonMUD.redis.enabled must be true when sharding.enabled=true (sharding requires Redis)"
+            }
+        }
+        if (sharding.instancing.enabled) {
+            require(sharding.enabled) {
+                "ambonMUD.sharding.enabled must be true when sharding.instancing.enabled=true"
             }
         }
 
