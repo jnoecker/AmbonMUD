@@ -622,7 +622,10 @@ class AbilitySystem(
         level: Int,
         learnedCount: Int,
         interval: Int,
-    ): Int = (level / interval - learnedCount).coerceAtLeast(0)
+    ): Int {
+        if (interval <= 0) return 0
+        return (level / interval - learnedCount).coerceAtLeast(0)
+    }
 
     /**
      * Returns abilities available to learn at [className]'s trainer for a player at [level]

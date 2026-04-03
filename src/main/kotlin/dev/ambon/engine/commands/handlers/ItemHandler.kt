@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.config.SkillPointsConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
@@ -26,6 +27,7 @@ class ItemHandler(
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val progression: PlayerProgression = PlayerProgression(),
     private val housingSystem: HousingSystem? = null,
+    private val skillPointsConfig: SkillPointsConfig = SkillPointsConfig(),
 ) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
@@ -292,11 +294,10 @@ class ItemHandler(
             outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 
             if (abilitySystem != null) {
-                val interval = 2 // default; trainer handler uses config-based value
                 val available = abilitySystem.availableSkillPoints(
                     level = result.newLevel,
                     learnedCount = player.learnedAbilityIds.size,
-                    interval = interval,
+                    interval = skillPointsConfig.interval,
                 )
                 if (available > 0) {
                     val pointWord = if (available == 1) "skill point" else "skill points"
