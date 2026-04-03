@@ -22,9 +22,13 @@ name: Refresh Demo World
 #   GitHub variables:
 #     AWS_REGION              AWS region (default: us-east-1)
 
+# AUTO-REFRESH PAUSED: automatic world refresh is disabled while the Eryndal world
+# rewrite is in progress. Re-enable by restoring the repository_dispatch trigger below.
+# To re-enable, add back:
+#   repository_dispatch:
+#     types: [refresh-world]
+
 on:
-  repository_dispatch:
-    types: [refresh-world]
   workflow_dispatch:
 
 concurrency:
