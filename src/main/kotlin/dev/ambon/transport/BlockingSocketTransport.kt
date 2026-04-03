@@ -11,6 +11,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.ServerSocket
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
 
 private val log = KotlinLogging.logger {}
@@ -26,11 +27,13 @@ class BlockingSocketTransport(
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
     private val socketBacklog: Int = 256,
+    private val maxConnections: Int = 5000,
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val sessionDispatcher: CoroutineContext = Dispatchers.IO,
 ) : Transport {
     private var serverSocket: ServerSocket? = null
     private var acceptJob: Job? = null
+    private val activeConnections = AtomicInteger(0)
 
     override suspend fun start() {
         serverSocket = ServerSocket(port, socketBacklog)
@@ -39,35 +42,52 @@ class BlockingSocketTransport(
             scope.launch(Dispatchers.IO) {
                 while (isActive) {
                     val sock = serverSocket!!.accept()
-                    sock.tcpNoDelay = true
-                    val sessionId = sessionIdFactory()
-                    log.debug { "New telnet connection: remoteAddress=${sock.remoteSocketAddress} sessionId=$sessionId" }
-                    val outboundQueue = Channel<OutboundFrame>(capacity = sessionOutboundQueueCapacity)
-                    val session =
-                        NetworkSession(
-                            sessionId = sessionId,
-                            socket = sock,
-                            inbound = inbound,
-                            outboundQueue = outboundQueue,
-                            onDisconnected = { outboundRouter.unregister(sessionId) },
-                            scope = scope,
-                            onOutboundFrameWritten = { enqueuedAt -> outboundRouter.onSessionQueueFrameConsumed(sessionId, enqueuedAt) },
-                            maxLineLen = maxLineLen,
-                            maxNonPrintablePerLine = maxNonPrintablePerLine,
-                            maxInboundBackpressureFailures = maxInboundBackpressureFailures,
-                            metrics = metrics,
-                            dispatcher = sessionDispatcher,
-                        )
-                    outboundRouter.register(
-                        sessionId = sessionId,
-                        queue = outboundQueue,
-                        queueCapacity = sessionOutboundQueueCapacity,
-                        transport = "telnet",
-                        defaultAnsiEnabled = false,
-                    ) { reason ->
-                        session.closeNow(reason)
+                    if (activeConnections.get() >= maxConnections) {
+                        log.warn { "Connection limit reached ($maxConnections), rejecting: ${sock.remoteSocketAddress}" }
+                        runCatching { sock.close() }
+                        continue
                     }
-                    session.start()
+                    activeConnections.incrementAndGet()
+                    try {
+                        sock.tcpNoDelay = true
+                        val sessionId = sessionIdFactory()
+                        log.debug { "New telnet connection: remoteAddress=${sock.remoteSocketAddress} sessionId=$sessionId" }
+                        val outboundQueue = Channel<OutboundFrame>(capacity = sessionOutboundQueueCapacity)
+                        val session =
+                            NetworkSession(
+                                sessionId = sessionId,
+                                socket = sock,
+                                inbound = inbound,
+                                outboundQueue = outboundQueue,
+                                onDisconnected = {
+                                    activeConnections.decrementAndGet()
+                                    outboundRouter.unregister(sessionId)
+                                },
+                                scope = scope,
+                                onOutboundFrameWritten = { enqueuedAt ->
+                                    outboundRouter.onSessionQueueFrameConsumed(sessionId, enqueuedAt)
+                                },
+                                maxLineLen = maxLineLen,
+                                maxNonPrintablePerLine = maxNonPrintablePerLine,
+                                maxInboundBackpressureFailures = maxInboundBackpressureFailures,
+                                metrics = metrics,
+                                dispatcher = sessionDispatcher,
+                            )
+                        outboundRouter.register(
+                            sessionId = sessionId,
+                            queue = outboundQueue,
+                            queueCapacity = sessionOutboundQueueCapacity,
+                            transport = "telnet",
+                            defaultAnsiEnabled = false,
+                        ) { reason ->
+                            session.closeNow(reason)
+                        }
+                        session.start()
+                    } catch (e: Exception) {
+                        activeConnections.decrementAndGet()
+                        log.warn(e) { "Failed to set up telnet session, closing socket: ${sock.remoteSocketAddress}" }
+                        runCatching { sock.close() }
+                    }
                 }
             }
     }

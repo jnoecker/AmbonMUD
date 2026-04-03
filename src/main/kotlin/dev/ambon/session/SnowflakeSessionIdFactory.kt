@@ -66,20 +66,22 @@ class SnowflakeSessionIdFactory(
                 // now == lastSecond: same second, normal increment — no action needed
             }
 
-            // Sequence overflow: release the lock, sleep briefly, then re-check.
+            // Sequence overflow: wait until the clock advances to the next second.
+            // Multiple threads may enter this branch concurrently (via wait releasing
+            // the monitor). Only the first thread to wake after the clock advances
+            // resets seq; subsequent threads see lastSecond already updated and skip
+            // the reset, picking up the current seq value instead.
             if (seq > 0xFFFF) {
                 log.warn { "Sequence overflow at second=$lastSecond — waiting for clock to advance" }
                 onSequenceOverflow()
                 val overflowSecond = lastSecond
-                while (true) {
-                    // Release the lock while sleeping so other callers are not blocked.
+                while (lastSecond == overflowSecond) {
                     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
                     (this as java.lang.Object).wait(1)
                     val nowAfterWait = clockSeconds()
-                    if (nowAfterWait > overflowSecond) {
+                    if (nowAfterWait > lastSecond) {
                         lastSecond = nowAfterWait
                         seq = 0
-                        break
                     }
                 }
             }

@@ -94,6 +94,7 @@ object ServerInfrastructure {
             maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
             maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
             socketBacklog = config.transport.telnet.socketBacklog,
+            maxConnections = config.transport.telnet.maxConnections,
             metrics = metrics,
             sessionDispatcher = sessionDispatcher,
         )
