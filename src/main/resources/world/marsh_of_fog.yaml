@@ -1,0 +1,328 @@
+zone: marsh_of_fog
+startRoom: western_bog
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  bog_root:
+    displayName: "a bog root"
+    keyword: root
+    description: "A gnarled root dug from the waterlogged soil of the marsh. Marshy, pungent, and medicinally valuable to those who know how to use it."
+    basePrice: 12
+
+  nightshade_flower:
+    displayName: "a nightshade flower"
+    keyword: nightshade
+    description: "A small, dark-petalled flower that only blooms deep in the marsh. Toxic in large quantities; invaluable in small ones."
+    basePrice: 18
+
+  muck_crystal:
+    displayName: "a muck crystal"
+    keyword: crystal
+    description: "A cloudy crystal precipitated from the mineral-rich bog water. Strange energy hums faintly within it."
+    basePrice: 20
+
+  swamp_slime:
+    displayName: "a glob of swamp slime"
+    keyword: slime
+    description: "A viscous, foul-smelling substance harvested from marsh creatures. Some alchemists will pay for it."
+    basePrice: 8
+
+  wraith_essence:
+    displayName: "a vial of wraith essence"
+    keyword: essence
+    description: "A sealed vial of dark mist that swirls on its own. Obtained from a marsh wraith. Alchemically significant."
+    basePrice: 35
+
+# ─── Gathering Nodes ──────────────────────────────────────────────────────────
+
+gatheringNodes:
+  bog_root_cluster:
+    displayName: "a bog root cluster"
+    keyword: roots
+    skill: herbalism
+    skillRequired: 2
+    room: leech_hollow
+    respawnSeconds: 180
+    xpReward: 15
+    yields:
+      - itemId: bog_root
+        minQuantity: 1
+        maxQuantity: 2
+
+  nightshade_patch:
+    displayName: "a nightshade patch"
+    keyword: nightshade
+    skill: herbalism
+    skillRequired: 3
+    room: nightshade_clearing
+    respawnSeconds: 300
+    xpReward: 25
+    yields:
+      - itemId: nightshade_flower
+        minQuantity: 1
+        maxQuantity: 1
+
+  muck_crystal_formation:
+    displayName: "a muck crystal formation"
+    keyword: crystals
+    skill: mining
+    skillRequired: 2
+    room: deep_mire
+    respawnSeconds: 360
+    xpReward: 22
+    yields:
+      - itemId: muck_crystal
+        minQuantity: 1
+        maxQuantity: 1
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  bog_leech:
+    name: "a bog leech"
+    room: leech_hollow
+    tier: standard
+    level: 3
+    respawnSeconds: 60
+    xpReward: 18
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: swamp_slime
+        chance: 0.6
+
+  will_o_wisp:
+    name: "a will-o'-wisp"
+    room: wisp_clearing
+    tier: standard
+    level: 4
+    respawnSeconds: 120
+    xpReward: 25
+
+  fungal_hulk:
+    name: "a fungal hulk"
+    room: fungal_dell
+    tier: standard
+    level: 4
+    respawnSeconds: 180
+    xpReward: 30
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: swamp_slime
+        chance: 0.4
+
+  marsh_wraith:
+    name: "a marsh wraith"
+    room: wraith_grounds
+    tier: elite
+    level: 5
+    respawnSeconds: 300
+    xpReward: 55
+    drops:
+      - itemId: wraith_essence
+        chance: 0.5
+
+  swamp_serpent:
+    name: "a swamp serpent"
+    room: serpent_waterway
+    tier: standard
+    level: 4
+    respawnSeconds: 120
+    xpReward: 28
+    behavior:
+      template: wander_aggro
+
+  hedge_witch_mossfoot:
+    name: "Hedge Witch Mossfoot"
+    room: mossfoot_hut
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - witchs_request
+    dialogue:
+      root:
+        text: "Hmm. A visitor who didn't get lost in the bog. Either you're skilled or lucky, and I find both interesting. I am Mossfoot. I have use of three things from this marsh — and I'll make it worth your trouble."
+        choices:
+          - text: "What do you need?"
+            next: herb_request
+          - text: "What can you tell me about the marsh?"
+            next: marsh_lore
+          - text: "Goodbye."
+            next: farewell
+      herb_request:
+        text: "Two bog roots from the leech hollow — you'll find them growing at the water's edge. And one nightshade flower from the deep clearing east of the fungal dell. Difficult to reach, but the path is passable if you're careful."
+        choices:
+          - text: "I'll gather them."
+            next: farewell
+          - text: "What's in the eastern fen?"
+            next: eastern_lore
+      marsh_lore:
+        text: "The Marsh of Fog is older than Thornhaven. The fog is natural — mineral vapour from the bog water. The wraiths are not natural. Something in the eastern barrows has been bleeding darkness into the fens for years. I study it. I haven't solved it."
+        choices:
+          - text: "What do you need?"
+            next: herb_request
+          - text: "Goodbye."
+            next: farewell
+      eastern_lore:
+        text: "The eastern fen borders the Dark Barrows — ancient burial mounds, very old, not wholesome. I wouldn't recommend it unless you're well-prepared. Whatever is in those barrows is active."
+        choices:
+          - text: "I'll gather the herbs."
+            next: farewell
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Mind your step. The bog has moods."
+
+# ─── Shops ────────────────────────────────────────────────────────────────────
+
+shops:
+  mossfoot_herbs:
+    name: "Mossfoot's Herb Trade"
+    room: mossfoot_hut
+    items:
+      - bog_root
+      - nightshade_flower
+      - muck_crystal
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  witchs_request:
+    name: "The Witch's Request"
+    description: "Hedge Witch Mossfoot needs rare herbs from the marsh: two bog roots from the leech hollow and one nightshade flower from the deep clearing to the east. Gather them and return to her."
+    giver: hedge_witch_mossfoot
+    objectives:
+      - type: collect
+        targetKey: bog_root
+        count: 2
+        description: "Gather 2 bog roots from the leech hollow"
+      - type: collect
+        targetKey: nightshade_flower
+        count: 1
+        description: "Gather 1 nightshade flower from the nightshade clearing"
+    rewards:
+      xp: 600
+      gold: 25
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  western_bog:
+    title: "Western Bog — Edge of the Marsh"
+    description: "The cobblestone road dissolves into wet clay here, and the fog begins in earnest: a low white mist that clings to the ground and blurs distances. The smell is heavy with peat and standing water. Thornhaven is back to the west along the road. The bog path continues east."
+    exits:
+      w: cobblestone_road:fog_threshold
+      e: bog_trail
+
+  bog_trail:
+    title: "Bog Trail"
+    description: "A raised path of packed earth and old planks winds through the marsh. The fog is thicker here, and sounds carry strangely — a splash somewhere to the south, something rustling to the north. Mossfoot's hut is through the reeds to the north. The main bog opens to the east, and the leech hollow lies south."
+    exits:
+      w: western_bog
+      n: mossfoot_hut
+      e: open_marsh
+      s: leech_hollow
+
+  mossfoot_hut:
+    title: "Mossfoot's Hut"
+    description: "A low stone-and-turf structure perched on a dry hummock above the bog. Bundles of dried herbs hang from every beam. Glass jars of dark liquid line the single shelf. Hedge Witch Mossfoot moves around the space with complete assurance. Type 'list' to browse her herbs."
+    exits:
+      s: bog_trail
+
+  leech_hollow:
+    title: "Leech Hollow"
+    description: "A murky basin where the bog water pools deepest. The surface is calm but something moves beneath it. Bog leeches hunt in the shallows here, propelled by slow undulations. Bog roots grow thickly along the waterline, their knobbed tips just above the surface."
+    exits:
+      n: bog_trail
+      e: wisp_clearing
+      s: deep_mire
+
+  wisp_clearing:
+    title: "Wisp Clearing"
+    description: "A patch of open fog where lights drift in slow, purposeless patterns — will-o'-wisps, pulsing cold blue-green. They drift toward anything warm with unnerving patience. The leech hollow is back to the west."
+    exits:
+      w: leech_hollow
+
+  deep_mire:
+    title: "Deep Mire"
+    description: "The deepest part of the open bog: soft ground that flexes underfoot, dark water in every low spot, and mineral crystals visible in the exposed peat bank. The fog is so thick here that visibility drops to a few feet. The leech hollow is north; the wraith grounds are south; the serpent waterway is east."
+    exits:
+      n: leech_hollow
+      s: wraith_grounds
+      e: serpent_waterway
+
+  wraith_grounds:
+    title: "Wraith Grounds"
+    description: "A stretch of fog-shrouded bog where marsh wraiths manifest — translucent figures that drift between the reeds and seem to be looking for something they lost long ago. The air is several degrees colder than the rest of the marsh. The deep mire is back to the north."
+    exits:
+      n: deep_mire
+
+  serpent_waterway:
+    title: "Serpent Waterway"
+    description: "A slow channel of dark water threading through the eastern bog. Swamp serpents glide between the reed banks. The channel smells of mud and scale. The deep mire is back to the west; the eastern fen edge lies further east."
+    exits:
+      w: deep_mire
+      e: eastern_fen_edge
+
+  eastern_fen_edge:
+    title: "Eastern Fen Edge"
+    description: "The marsh thins here at its eastern boundary, giving way to firmer, darker ground. The fog lifts slightly, and through the gaps you can see standing stones and low earthen mounds on the horizon to the east — the Dark Barrows, grim and quiet. The serpent waterway is back to the west."
+    exits:
+      w: serpent_waterway
+      e: dark_barrows:barrow_approach
+
+  open_marsh:
+    title: "Open Marsh"
+    description: "A broad expanse of open bog where the reeds grow tall and the sky is a white disc in the fog. The ground squelches underfoot. The bog trail is back to the west; a boggy inlet lies north; and the twisted tree line is to the east."
+    exits:
+      w: bog_trail
+      n: boggy_inlet
+      e: twisted_trees
+
+  boggy_inlet:
+    title: "Boggy Inlet"
+    description: "A finger of open water pushing north into the bog, its banks bright with marsh vegetation. Small birds pick insects from the surface. It is oddly peaceful here despite the general atmosphere of the marsh. The open marsh is back to the south."
+    exits:
+      s: open_marsh
+
+  twisted_trees:
+    title: "Twisted Trees"
+    description: "A stand of willow and alder bent into contorted shapes by years of fog and wind. The light barely penetrates. Something in the upper branches watches without making sound. The open marsh is to the west; the fungal dell lies south; a path through the darkening trees leads east toward barrow territory."
+    exits:
+      w: open_marsh
+      s: fungal_dell
+      e: dark_barrows_path
+
+  dark_barrows_path:
+    title: "Dark Barrows Path"
+    description: "A barely-visible track through the eastern margin of the marsh, heading toward the Dark Barrows. The ground is firmer here but the fog clings. The twisted trees are back to the west."
+    exits:
+      w: twisted_trees
+      e: dark_barrows:barrow_approach
+
+  fungal_dell:
+    title: "Fungal Dell"
+    description: "A sunken hollow where enormous fungi have colonized every surface: shelves of bracket fungus up the trunks, caps as wide as shields across the floor, and networks of pale mycelium threading through the soil. Fungal hulks move ponderously through the dell. The twisted trees are back to the north; the nightshade clearing is to the east."
+    exits:
+      n: twisted_trees
+      e: nightshade_clearing
+
+  nightshade_clearing:
+    title: "Nightshade Clearing"
+    description: "A small clearing in the deep marsh where nightshade plants grow thick: dark stems, dark leaves, and small dark flowers that seem to absorb light rather than reflect it. The clearing has an atmosphere of concentrated quiet. The fungal dell is back to the west."
+    exits:
+      w: fungal_dell

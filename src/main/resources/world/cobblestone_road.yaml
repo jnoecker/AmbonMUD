@@ -169,12 +169,14 @@ rooms:
     description: "The road begins to climb here, the cobblestones giving way to packed earth and exposed rock. The highlands are visible ahead: grey stone ridges draped in heather, with a narrow trail winding up between them. The road crossing is back to the south."
     exits:
       s: road_crossing
+      n: highland_trails:trail_entrance
 
   fog_threshold:
     title: "Fog Threshold"
     description: "The road east deteriorates from cobblestone to clay, and low-lying mist begins to pool between the trees on either side. The air smells of mud and still water. Experienced travellers know this is where the road to the Marsh of Fog begins. The crossing is back to the west."
     exits:
       w: road_crossing
+      e: marsh_of_fog:western_bog
 
   ruined_southroad:
     title: "Ruined South Road"
