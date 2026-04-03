@@ -249,9 +249,7 @@ object WorldLoader {
                     }
 
                 val level = mf.level ?: 1
-                if (level < 1) {
-                    throw WorldLoadException("Mob '${mobId.value}' level must be >= 1 (got $level)")
-                }
+                requireAtLeast(level, 1, "Mob '${mobId.value}'", "level")
                 val steps = level - 1
 
                 val resolvedHp = mf.hp ?: (tier.baseHp + steps * tier.hpPerLevel)
@@ -280,23 +278,18 @@ object WorldLoader {
                         )
                     }
 
-                if (resolvedHp < 1) throw WorldLoadException("Mob '${mobId.value}' resolved hp must be >= 1")
-                if (resolvedMinDamage < 1) {
-                    throw WorldLoadException("Mob '${mobId.value}' resolved minDamage must be >= 1")
-                }
+                val mobCtx = "Mob '${mobId.value}'"
+                requireAtLeast(resolvedHp, 1, mobCtx, "resolved hp")
+                requireAtLeast(resolvedMinDamage, 1, mobCtx, "resolved minDamage")
                 if (resolvedMaxDamage < resolvedMinDamage) {
                     throw WorldLoadException(
                         "Mob '${mobId.value}' resolved maxDamage ($resolvedMaxDamage) must be >= " +
                             "minDamage ($resolvedMinDamage)",
                     )
                 }
-                if (resolvedArmor < 0) throw WorldLoadException("Mob '${mobId.value}' resolved armor must be >= 0")
-                if (resolvedXpReward < 0L) {
-                    throw WorldLoadException("Mob '${mobId.value}' resolved xpReward must be >= 0")
-                }
-                if (resolvedGoldMin < 0L) {
-                    throw WorldLoadException("Mob '${mobId.value}' resolved goldMin must be >= 0")
-                }
+                requireAtLeast(resolvedArmor, 0, mobCtx, "resolved armor")
+                requireAtLeast(resolvedXpReward, 0L, mobCtx, "resolved xpReward")
+                requireAtLeast(resolvedGoldMin, 0L, mobCtx, "resolved goldMin")
                 if (resolvedGoldMax < resolvedGoldMin) {
                     throw WorldLoadException(
                         "Mob '${mobId.value}' resolved goldMax ($resolvedGoldMax) must be >= " +
@@ -360,15 +353,12 @@ object WorldLoader {
                 }
                 val slot = slotRaw?.let { parseItemSlot(itemId, it) }
 
+                val itemCtx = "Item '${itemId.value}'"
                 val damage = itemFile.damage
-                if (damage < 0) {
-                    throw WorldLoadException("Item '${itemId.value}' damage cannot be negative")
-                }
+                requireAtLeast(damage, 0, itemCtx, "damage")
 
                 val armor = itemFile.armor
-                if (armor < 0) {
-                    throw WorldLoadException("Item '${itemId.value}' armor cannot be negative")
-                }
+                requireAtLeast(armor, 0, itemCtx, "armor")
 
                 for ((statKey, statVal) in itemFile.stats) {
                     if (statVal < 0) {
@@ -383,12 +373,8 @@ object WorldLoader {
 
                 val onUse =
                     itemFile.onUse?.also { effect ->
-                        if (effect.healHp < 0) {
-                            throw WorldLoadException("Item '${itemId.value}' onUse.healHp cannot be negative")
-                        }
-                        if (effect.grantXp < 0L) {
-                            throw WorldLoadException("Item '${itemId.value}' onUse.grantXp cannot be negative")
-                        }
+                        requireAtLeast(effect.healHp, 0, itemCtx, "onUse.healHp")
+                        requireAtLeast(effect.grantXp, 0L, itemCtx, "onUse.grantXp")
                         if (!effect.hasEffect()) {
                             throw WorldLoadException(
                                 "Item '${itemId.value}' onUse must define at least one positive effect",
@@ -397,9 +383,7 @@ object WorldLoader {
                     }
 
                 val basePrice = itemFile.basePrice
-                if (basePrice < 0) {
-                    throw WorldLoadException("Item '${itemId.value}' basePrice cannot be negative")
-                }
+                requireAtLeast(basePrice, 0, itemCtx, "basePrice")
 
                 val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
                 val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
@@ -498,9 +482,7 @@ object WorldLoader {
                     "Quest '$questId' giver cannot be blank"
                 }
                 val completionType = questFile.completionType.trim().lowercase().ifEmpty { "auto" }
-                if (questFile.objectives.isEmpty()) {
-                    throw WorldLoadException("Quest '$questId' must have at least one objective")
-                }
+                requireNotEmpty(questFile.objectives, "Quest '$questId'", "objective")
                 val objectives =
                     questFile.objectives.mapIndexed { index, obj ->
                         val objectiveType = obj.type.trim().lowercase()
@@ -513,11 +495,7 @@ object WorldLoader {
                             "Quest '$questId' objective #${index + 1} targetKey cannot be blank"
                         }
                         val targetId = qualifyId(zone, targetKeyRaw)
-                        if (obj.count < 1) {
-                            throw WorldLoadException(
-                                "Quest '$questId' objective #${index + 1} count must be >= 1",
-                            )
-                        }
+                        requireAtLeast(obj.count, 1, "Quest '$questId' objective #${index + 1}", "count")
                         QuestObjectiveDef(
                             type = objectiveType,
                             targetId = targetId,
@@ -545,19 +523,12 @@ object WorldLoader {
                     "Gathering node '$nodeId' displayName cannot be blank"
                 }
                 val skill = parseCraftingSkill(nodeFile.skill, "Gathering node '$nodeId'")
-                if (nodeFile.skillRequired < 1) {
-                    throw WorldLoadException("Gathering node '$nodeId' skillRequired must be >= 1")
-                }
-                if (nodeFile.yields.isEmpty()) {
-                    throw WorldLoadException("Gathering node '$nodeId' must have at least one yield")
-                }
+                val nodeCtx = "Gathering node '$nodeId'"
+                requireAtLeast(nodeFile.skillRequired, 1, nodeCtx, "skillRequired")
+                requireNotEmpty(nodeFile.yields, nodeCtx, "yield")
                 val yields = nodeFile.yields.mapIndexed { index, yieldFile ->
                     val itemId = normalizeItemId(zone, yieldFile.itemId)
-                    if (yieldFile.minQuantity < 1) {
-                        throw WorldLoadException(
-                            "Gathering node '$nodeId' yield #${index + 1} minQuantity must be >= 1",
-                        )
-                    }
+                    requireAtLeast(yieldFile.minQuantity, 1, "$nodeCtx yield #${index + 1}", "minQuantity")
                     if (yieldFile.maxQuantity < yieldFile.minQuantity) {
                         throw WorldLoadException(
                             "Gathering node '$nodeId' yield #${index + 1} maxQuantity must be >= minQuantity",
@@ -571,11 +542,7 @@ object WorldLoader {
                 }
                 val rareYields = nodeFile.rareYields.mapIndexed { index, rareFile ->
                     val itemId = normalizeItemId(zone, rareFile.itemId)
-                    if (rareFile.quantity < 1) {
-                        throw WorldLoadException(
-                            "Gathering node '$nodeId' rareYield #${index + 1} quantity must be >= 1",
-                        )
-                    }
+                    requireAtLeast(rareFile.quantity, 1, "$nodeCtx rareYield #${index + 1}", "quantity")
                     if (rareFile.dropChance <= 0.0 || rareFile.dropChance > 1.0) {
                         throw WorldLoadException(
                             "Gathering node '$nodeId' rareYield #${index + 1} dropChance must be in (0.0, 1.0]",
@@ -613,25 +580,16 @@ object WorldLoader {
                     "Recipe '$recipeId' displayName cannot be blank"
                 }
                 val skill = parseCraftingSkill(recipeFile.skill, "Recipe '$recipeId'")
-                if (recipeFile.skillRequired < 1) {
-                    throw WorldLoadException("Recipe '$recipeId' skillRequired must be >= 1")
-                }
-                if (recipeFile.materials.isEmpty()) {
-                    throw WorldLoadException("Recipe '$recipeId' must have at least one material")
-                }
+                val recipeCtx = "Recipe '$recipeId'"
+                requireAtLeast(recipeFile.skillRequired, 1, recipeCtx, "skillRequired")
+                requireNotEmpty(recipeFile.materials, recipeCtx, "material")
                 val materials = recipeFile.materials.mapIndexed { index, matFile ->
                     val itemId = normalizeItemId(zone, matFile.itemId)
-                    if (matFile.quantity < 1) {
-                        throw WorldLoadException(
-                            "Recipe '$recipeId' material #${index + 1} quantity must be >= 1",
-                        )
-                    }
+                    requireAtLeast(matFile.quantity, 1, "$recipeCtx material #${index + 1}", "quantity")
                     MaterialRequirement(itemId = itemId, quantity = matFile.quantity)
                 }
                 val outputItemId = normalizeItemId(zone, recipeFile.outputItemId)
-                if (recipeFile.outputQuantity < 1) {
-                    throw WorldLoadException("Recipe '$recipeId' outputQuantity must be >= 1")
-                }
+                requireAtLeast(recipeFile.outputQuantity, 1, recipeCtx, "outputQuantity")
                 val stationType = recipeFile.station?.let { raw ->
                     parseCraftingStationType(raw, "Recipe '$recipeId'")
                 }
@@ -667,25 +625,20 @@ object WorldLoader {
                         )
                     }
                 }.toMap()
-                if (roomTemplates.isEmpty()) {
-                    throw WorldLoadException("Dungeon '$dungeonId' must have at least one roomTemplates entry")
-                }
+                val dungeonCtx = "Dungeon '$dungeonId'"
+                requireNotEmpty(roomTemplates.entries, dungeonCtx, "roomTemplates entry")
                 if (df.roomCountMin > df.roomCountMax) {
                     throw WorldLoadException(
                         "Dungeon '$dungeonId' roomCountMin (${df.roomCountMin}) must be <= roomCountMax (${df.roomCountMax})",
                     )
                 }
-                if (df.roomCountMin < 3) {
-                    throw WorldLoadException("Dungeon '$dungeonId' roomCountMin must be >= 3 (entrance + at least 1 room + boss)")
-                }
+                requireAtLeast(df.roomCountMin, 3, dungeonCtx, "roomCountMin")
                 val mobPools = DungeonMobPoolDef(
                     common = df.mobPools.common,
                     elite = df.mobPools.elite,
                     boss = df.mobPools.boss,
                 )
-                if (mobPools.boss.isEmpty()) {
-                    throw WorldLoadException("Dungeon '$dungeonId' must have at least one boss mob in mobPools")
-                }
+                requireNotEmpty(mobPools.boss, dungeonCtx, "boss mob in mobPools")
                 val lootTables = df.lootTables.map { (diffKey, lt) ->
                     val diff = DungeonDifficulty.fromName(diffKey)
                         ?: throw WorldLoadException("Dungeon '$dungeonId' unknown difficulty '$diffKey'")
@@ -913,8 +866,8 @@ object WorldLoader {
 
     private fun validateFileBasics(file: WorldFile) {
         val zone = requireNonBlank(file.zone) { "World zone cannot be blank" }
-        if (file.lifespan != null && file.lifespan < 0L) {
-            throw WorldLoadException("Zone '$zone' lifespan must be >= 0")
+        if (file.lifespan != null) {
+            requireAtLeast(file.lifespan, 0L, "Zone '$zone'", "lifespan")
         }
 
         if (file.rooms.isEmpty()) throw WorldLoadException("Zone '$zone' has no rooms")
@@ -1200,6 +1153,20 @@ object WorldLoader {
         val trimmed = value.trim()
         if (trimmed.isEmpty()) throw WorldLoadException(lazyMessage())
         return trimmed
+    }
+
+    private fun requireAtLeast(value: Int, min: Int, context: String, field: String): Int {
+        if (value < min) throw WorldLoadException("$context $field must be >= $min (got $value)")
+        return value
+    }
+
+    private fun requireAtLeast(value: Long, min: Long, context: String, field: String): Long {
+        if (value < min) throw WorldLoadException("$context $field must be >= $min (got $value)")
+        return value
+    }
+
+    private fun requireNotEmpty(collection: Collection<*>, context: String, what: String) {
+        if (collection.isEmpty()) throw WorldLoadException("$context must have at least one $what")
     }
 
     /**
