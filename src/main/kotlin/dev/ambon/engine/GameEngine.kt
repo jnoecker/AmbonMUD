@@ -790,6 +790,7 @@ class GameEngine(
         combatSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
         combatSystem.onXpGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "xp", amount, source) }
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
+        combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
         statusEffectSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
 
         questSystem.onQuestCompleted = { sid, questId ->
@@ -1737,6 +1738,43 @@ class GameEngine(
             else -> mgr.reloadAll()
         }
         return result.summary()
+    }
+
+    /**
+     * Cleans up cross-system state when a player dies.
+     * Unlike disconnect, the player remains connected — only active game state
+     * that should not survive death is cleared.
+     */
+    private suspend fun cleanupOnPlayerDeath(sessionId: SessionId) {
+        // End active trades (return escrowed items/gold)
+        tradeSystem.cancelForPlayer(sessionId)
+
+        // End active duels
+        val endedDuel = duelSystem.endDuel(sessionId)
+        if (endedDuel != null) {
+            val other = if (endedDuel.player1 == sessionId) endedDuel.player2 else endedDuel.player1
+            outbound.send(
+                OutboundEvent.SendInfo(other, "Your duel opponent has died. Duel ended."),
+            )
+        }
+
+        // Dismiss active pets
+        petSystem.dismissAll(sessionId)
+
+        // Clear status effects (stop DOTs ticking on a corpse)
+        statusEffectSystem.removeAllFromPlayer(sessionId)
+
+        // Reset ability cooldowns
+        abilitySystem.clearCooldowns(sessionId)
+
+        // End active dialogue conversations
+        dialogueSystem.endConversation(sessionId)
+
+        // Leave group (dead players should not receive XP sharing)
+        groupSystem.leave(sessionId)
+
+        // Remove from dungeon instance
+        dungeonManager.removePlayer(sessionId)
     }
 
     private suspend fun onCombatMobRemoved(
