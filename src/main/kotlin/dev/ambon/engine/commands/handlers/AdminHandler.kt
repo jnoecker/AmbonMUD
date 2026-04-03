@@ -390,8 +390,15 @@ class AdminHandler(
         val mob = mobs.get(mobId)
         if (mob == null) {
             me.possessedMobId = null
+            val returnRoom = me.prePossessRoomId ?: me.roomId
             me.prePossessRoomId = null
-            outbound.send(OutboundEvent.SendError(sessionId, "The mob you were possessing no longer exists."))
+            setInvisible(sessionId, me, false)
+            gmcpEmitter?.sendStaffPossessionState(sessionId, false, null)
+            if (me.roomId != returnRoom) {
+                players.moveTo(sessionId, returnRoom)
+                ctx.sendLook(sessionId)
+            }
+            outbound.send(OutboundEvent.SendError(sessionId, "The mob you were possessing no longer exists. Returning to your body."))
             outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
