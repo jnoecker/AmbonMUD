@@ -216,7 +216,7 @@ data class AppConfig(
             if (def.effectType.isBlank()) warnConfig("statusEffect '$key' effectType is blank")
             if (def.durationMs <= 0L) warnConfig("statusEffect '$key' durationMs is ${def.durationMs}, expected > 0")
             if (def.tickIntervalMs < 0L) warnConfig("statusEffect '$key' tickIntervalMs is ${def.tickIntervalMs}, expected >= 0")
-            if (def.maxStacks < 1) warnConfig("statusEffect '$key' maxStacks is ${def.maxStacks}, expected >= 1")
+            require(def.maxStacks >= 1) { "statusEffect '$key' maxStacks is ${def.maxStacks}, must be >= 1" }
         }
 
         require(progression.maxLevel > 0) { "ambonMUD.progression.maxLevel must be > 0" }
