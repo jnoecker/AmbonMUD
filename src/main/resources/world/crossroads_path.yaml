@@ -33,37 +33,35 @@ mobs:
     goldMin: 0
     goldMax: 0
     dialogue:
-      greeting: "Halt, traveller! Welcome to Eryndal. If you're heading into Thornhaven, the road south will take you straight to the north gate. I'd recommend speaking to the innkeeper first — the Tarnished Flagon is hard to miss."
-      nodes:
-        root:
-          text: "What would you like to know?"
-          choices:
-            - text: "What quest brings you here?"
-              next: quest_intro
-            - text: "Tell me about Thornhaven."
-              next: about_thornhaven
-            - text: "Goodbye."
-              next: farewell
-        quest_intro:
-          text: "Actually — I wonder if you'd do me a favour. I have a letter for Innkeeper Mira. She's the proprietor of the Tarnished Flagon in Thornhaven. Could you deliver it? Consider it your first errand in Eryndal."
-          choices:
-            - text: "I'll deliver it."
-              next: accept_quest
-            - text: "Maybe later."
-              next: farewell
-        accept_quest:
-          text: "Much appreciated. The letter's right here. Head south to Thornhaven, find the Tarnished Flagon, and hand it to Mira. She'll be glad to see you."
-          action: quest_give
-          choices:
-            - text: "I'll be on my way."
-              next: farewell
-        about_thornhaven:
-          text: "Thornhaven's a frontier city — sitting right on the edge of the settled lands and the wild places beyond. Everything you need is there: trainers, a bank, shops, even a dungeon finder if that's your sort of thing. City center is south through the gate."
-          choices:
-            - text: "Goodbye."
-              next: farewell
-        farewell:
-          text: "Safe roads, adventurer."
+      root:
+        text: "Halt, traveller! Welcome to Eryndal. If you're heading into Thornhaven, the road south will take you straight to the north gate. I'd recommend speaking to the innkeeper first — the Tarnished Flagon is hard to miss. What would you like to know?"
+        choices:
+          - text: "What quest brings you here?"
+            next: quest_intro
+          - text: "Tell me about Thornhaven."
+            next: about_thornhaven
+          - text: "Goodbye."
+            next: farewell
+      quest_intro:
+        text: "Actually — I wonder if you'd do me a favour. I have a letter for Innkeeper Mira. She's the proprietor of the Tarnished Flagon in Thornhaven. Could you deliver it? Consider it your first errand in Eryndal."
+        choices:
+          - text: "I'll deliver it."
+            next: accept_quest
+            action: quest_give
+          - text: "Maybe later."
+            next: farewell
+      accept_quest:
+        text: "Much appreciated. The letter's right here. Head south to Thornhaven, find the Tarnished Flagon, and hand it to Mira. She'll be glad to see you."
+        choices:
+          - text: "I'll be on my way."
+            next: farewell
+      about_thornhaven:
+        text: "Thornhaven's a frontier city — sitting right on the edge of the settled lands and the wild places beyond. Everything you need is there: trainers, a bank, shops, even a dungeon finder if that's your sort of thing. City center is south through the gate."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Safe roads, adventurer."
 
   road_sparrow:
     name: "a road sparrow"

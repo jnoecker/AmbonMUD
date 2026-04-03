@@ -2,7 +2,7 @@
 
 Welcome! This guide takes you from zero to productive on the AmbonMUD codebase in minimal time.
 
-**What is AmbonMUD?** A production-grade, tick-based MUD (Multi-User Dungeon) server in Kotlin with telnet + WebSocket transports, YAML-defined world content, class-based character progression, 102 class-specific abilities, real-time combat, and three deployment modes (STANDALONE, ENGINE, GATEWAY) for horizontal scaling.
+**What is AmbonMUD?** A production-grade, tick-based MUD (Multi-User Dungeon) server in Kotlin with telnet + WebSocket transports, YAML-defined world content, class-based character progression, 121 class-specific abilities, real-time combat, and three deployment modes (STANDALONE, ENGINE, GATEWAY) for horizontal scaling.
 
 ---
 
@@ -169,9 +169,9 @@ src/main/resources/
 ├── application.yaml             # Runtime config
 ├── db/migration/                # Flyway SQL migrations (Postgres)
 ├── world/                       # Zone YAML files
-│   ├── tutorial_glade.yaml
-│   ├── ambon_hub.yaml
-│   └── ... (14 YAML files: 12 zones + player sprites + sprites data)
+│   ├── thornhaven_city.yaml
+│   ├── crossroads_path.yaml
+│   └── ... (23 YAML files: 20 zones + achievements + player_sprites + sprites)
 ├── web/                         # Legacy static web client
 └── web-v3/                      # Current static web client bundle
 
@@ -444,7 +444,7 @@ Serializable DTO; same fields as `PlayerState` plus timestamps.
 
 **File:** `src/main/kotlin/dev/ambon/engine/abilities/AbilitySystem.kt`
 
-- **102 abilities** across 4 classes (25+ per class, levels 1–50)
+- **121 abilities** across 4 classes (25+ per class, levels 1–50)
 - Mana pool; mana cost deducted on cast
 - Per-ability cooldowns (tracked per-session)
 - Auto-learned on level-up (based on class and level)

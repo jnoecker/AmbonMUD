@@ -17,7 +17,7 @@ Dungeon templates live inside regular zone YAML files as a `dungeon:` section. T
 A dungeon zone file has the same top-level structure as any zone file, plus a `dungeon:` section:
 
 ```yaml
-zone: sunken_crypt
+zone: dungeon_of_echoes
 startRoom: portal_chamber
 lifespan: 0
 
@@ -47,7 +47,7 @@ rooms:
     title: "Dungeon Portal Chamber"
     description: "Players enter the dungeon from here."
     exits:
-      u: ambon_hub:hall_of_portals    # connect to the hub or another zone
+      u: crossroads_path:crossroads    # connect to the hub or another zone
   mob_templates:
     title: "Dungeon Mob Templates"
     description: "Internal room for dungeon mob template definitions."
@@ -280,7 +280,7 @@ Players choose difficulty when entering: `dungeon enter crypt normal` (defaults 
 
 ## Complete Example
 
-See `src/main/resources/world/sunken_crypt.yaml` for the full reference dungeon ("The Sunken Crypt"):
+See `src/main/resources/world/dungeon_of_echoes.yaml` for the full reference dungeon:
 - 4 mob types across 3 tiers (2 common, 1 elite, 1 boss)
 - 10 room template variants (4 corridor, 3 chamber, 2 treasure, 1 boss)
 - 4 difficulty tiers with scaled rewards
