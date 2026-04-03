@@ -29,11 +29,11 @@ ambonmud:
       #  - engineId: engine-1
       #    host: localhost
       #    port: 9091
-      #    zones: [ambon_hub, demo_ruins]
+      #    zones: [crossroads_path, thornhaven_city, thornwood_forest]
       #  - engineId: engine-2
       #    host: localhost
       #    port: 9092
-      #    zones: [noecker_resume]
+      #    zones: [sea_cliffs, sunken_temple, ruined_fortress]
     handoff:
       ackTimeoutMs: 2000
     # Redis player-location index for O(1) cross-engine tell routing.
@@ -97,7 +97,7 @@ ambonmud:
     inboundBudgetMs: 30
 
   world:
-    startRoom: "ambon_hub:hall_of_portals"
+    startRoom: "thornhaven_city:new_arrivals_hall"
     resources: []
 
   persistence:
@@ -619,6 +619,70 @@ ambonmud:
           shieldAmount: 0
           maxStacks: 1
           tickIntervalMs: 0
+          strMod: 0
+          dexMod: 0
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        camouflage_stance:
+          displayName: Camouflage
+          effectType: STAT_BUFF
+          durationMs: 4000
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          shieldAmount: 0
+          maxStacks: 1
+          tickIntervalMs: 0
+          strMod: 0
+          dexMod: 4
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        hunters_mark:
+          displayName: Hunter's Mark
+          effectType: STAT_DEBUFF
+          durationMs: 10000
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          shieldAmount: 0
+          maxStacks: 1
+          tickIntervalMs: 0
+          strMod: -2
+          dexMod: -2
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        natures_grasp:
+          displayName: Nature's Grasp
+          effectType: ROOT
+          durationMs: 4000
+          stackBehavior: NONE
+          tickMinValue: 0
+          tickMaxValue: 0
+          shieldAmount: 0
+          maxStacks: 1
+          tickIntervalMs: 0
+          strMod: 0
+          dexMod: 0
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        nature_bond_hot:
+          displayName: Nature Bond
+          effectType: HOT
+          durationMs: 8000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          shieldAmount: 0
+          maxStacks: 1
           strMod: 0
           dexMod: 0
           conMod: 0
@@ -2468,6 +2532,206 @@ ambonmud:
           description: The ultimate rogue ability—become the shadow itself.
           image: 5da18c4bb24ad009372c1feacb9b9a24bb7df1f45af581c3db9fe519060f575b.png
           requiredClass: "ROGUE"
+        # ── Ranger abilities ─────────────────────────────────────────────────
+        arrow_shot:
+          displayName: Arrow Shot
+          manaCost: 5
+          cooldownMs: 0
+          levelRequired: 1
+          targetType: enemy
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 3
+            maxDamage: 7
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 30.0
+            margin: 8.0
+            damagePerLevel: 1.2
+          description: A swift ranged shot aimed at a single target.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        hunters_mark_ability:
+          displayName: Hunter's Mark
+          manaCost: 8
+          cooldownMs: 15000
+          levelRequired: 2
+          targetType: enemy
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: hunters_mark
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 20.0
+            margin: 5.0
+          description: Mark an enemy as prey. Weakens their defenses and makes them easier to hit.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        camouflage:
+          displayName: Camouflage
+          manaCost: 10
+          cooldownMs: 30000
+          levelRequired: 3
+          targetType: self
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: camouflage_stance
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 0.0
+            margin: 0.0
+          description: Blend into your surroundings, boosting your dodge chance for a short time.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        volley:
+          displayName: Volley
+          manaCost: 14
+          cooldownMs: 10000
+          levelRequired: 4
+          targetType: enemy
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 2
+            maxDamage: 5
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 25.0
+            margin: 6.0
+            damagePerLevel: 0.8
+          description: Fire a volley of arrows that strikes all enemies in the room.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        track:
+          displayName: Track
+          manaCost: 6
+          cooldownMs: 20000
+          levelRequired: 5
+          targetType: self
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: camouflage_stance
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 0.0
+            margin: 0.0
+          description: Read the tracks and signs of nearby creatures, heightening your awareness.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        natures_grasp_ability:
+          displayName: Nature's Grasp
+          manaCost: 15
+          cooldownMs: 25000
+          levelRequired: 6
+          targetType: enemy
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: natures_grasp
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 30.0
+            margin: 8.0
+          description: Thorny vines erupt from the ground, rooting an enemy in place.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        summon_hawk:
+          displayName: Summon Hawk
+          manaCost: 20
+          cooldownMs: 60000
+          levelRequired: 7
+          targetType: self
+          effect:
+            type: SUMMON_PET
+            petTemplateKey: ranger_hawk
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 0.0
+            margin: 0.0
+          description: Call your hawk companion to fight alongside you.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        eagle_eye:
+          displayName: Eagle Eye
+          manaCost: 18
+          cooldownMs: 12000
+          levelRequired: 8
+          targetType: enemy
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 6
+            maxDamage: 14
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 40.0
+            margin: 12.0
+            damagePerLevel: 2.0
+          description: A precision shot with a high critical multiplier. Aim true.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        rain_of_arrows:
+          displayName: Rain of Arrows
+          manaCost: 28
+          cooldownMs: 45000
+          levelRequired: 9
+          targetType: enemy
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 4
+            maxDamage: 10
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 45.0
+            margin: 10.0
+            damagePerLevel: 1.5
+          description: Fill the sky with arrows. Heavy AoE; long cooldown.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+        nature_bond:
+          displayName: Nature Bond
+          manaCost: 35
+          cooldownMs: 90000
+          levelRequired: 10
+          targetType: all_allies
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 20
+            maxHeal: 35
+            minDamage: 0
+            maxDamage: 0
+            flatThreat: 0.0
+            margin: 0.0
+            healPerLevel: 2.0
+          description: Channel primal nature magic to restore health to your entire party.
+          image: demo/DefaultAbility.png
+          requiredClass: "RANGER"
+
+    pets:
+      definitions:
+        ranger_hawk:
+          name: "a trained hawk"
+          description: "A keen-eyed hawk that fights alongside the ranger with swift talons."
+          hp: 25
+          minDamage: 2
+          maxDamage: 6
+          armor: 0
+          image: demo/DefaultMob.png
+        spectral_wisp:
+          name: "a spectral wisp"
+          description: "A glowing mote of ghost-light that orbits you protectively. It was once something more."
+          hp: 15
+          minDamage: 1
+          maxDamage: 4
+          armor: 0
+          image: demo/DefaultMob.png
 
     crafting:
       maxSkillLevel: 100
@@ -2640,6 +2904,19 @@ ambonmud:
             that the best fight is the one your enemy never sees coming.
           primaryStat: DEX
           image: 63ecfccf76fda545693522fa5c1c207cd9b0340d7ebd5fb4c5a054962d9cb41e.png
+        RANGER:
+          displayName: Ranger
+          hpPerLevel: 6
+          manaPerLevel: 8
+          description: A nature-attuned hunter of the wilds.
+          backstory: Rangers are the unsung wardens of the frontier — part scout, part predator,
+            part naturalist. They roam the wild places where civilization ends and the unknown
+            begins, reading tracks, marking prey, and surviving by instinct as much as skill.
+            A ranger's bond with nature is not mystical in the way of clerics, but primal and
+            hard-won. They keep a hawk companion, strike from cover with bow and blade, and know
+            that the best way to win a fight is to see the enemy before the enemy sees you.
+          primaryStat: DEX
+          image: demo/DefaultAbility.png
         SWARM:
           displayName: Swarm
           hpPerLevel: 2
@@ -2706,6 +2983,34 @@ ambonmud:
             INT: 0
             WIS: 1
             CHA: 1
+        HALF_ORC:
+          displayName: Half-Orc
+          description: Fierce and resilient, with orcish blood.
+          backstory: ""
+          traits: []
+          abilities: []
+          image: ""
+          statMods:
+            STR: 3
+            DEX: 0
+            CON: 2
+            INT: -1
+            WIS: -1
+            CHA: -2
+        GNOME:
+          displayName: Gnome
+          description: Clever, curious, and surprisingly tenacious.
+          backstory: ""
+          traits: []
+          abilities: []
+          image: ""
+          statMods:
+            STR: -2
+            DEX: 1
+            CON: -1
+            INT: 2
+            WIS: 1
+            CHA: 0
 
     stats:
       definitions:
@@ -2759,11 +3064,12 @@ ambonmud:
         xpBonusPerPoint: 0.005
 
     classStartRooms:
-      WARRIOR: tutorial_glade:warrior_barracks
-      MAGE: tutorial_glade:mage_study
-      CLERIC: tutorial_glade:cleric_chapel
-      ROGUE: tutorial_glade:rogue_hideout
-      SWARM: labyrinth:cell_00_00
+      WARRIOR: thornhaven_city:new_arrivals_hall
+      MAGE: thornhaven_city:new_arrivals_hall
+      CLERIC: thornhaven_city:new_arrivals_hall
+      ROGUE: thornhaven_city:new_arrivals_hall
+      RANGER: thornhaven_city:new_arrivals_hall
+      SWARM: thornhaven_city:new_arrivals_hall
 
     characterCreation:
       startingGold: 0
@@ -2928,6 +3234,28 @@ ambonmud:
           description: "A small walled garden with patches of herbs and a bubbling fountain. The air smells of lavender."
           cost: 800
           safe: true
+    factions:
+      killPenalty: 5
+      killBonus: 3
+      definitions:
+        iron_order:
+          name: "The Iron Order"
+          description: "A ruthless mercenary company that holds the Ruined Fortress. They answer to coin, not conscience."
+          enemies: [free_swords]
+        free_swords:
+          name: "The Free Swords"
+          description: "Rebel fighters opposing the Iron Order's occupation of the Ruined Fortress."
+          enemies: [iron_order]
+        shadowmere_cult:
+          name: "The Shadowmere Cult"
+          description: "Devotees of the consuming shadow spreading through the eastern fens."
+          enemies: [silver_flame]
+        silver_flame:
+          name: "Order of the Silver Flame"
+          description: "Paladins dedicated to purifying the Shadowmere curse and driving back the darkness."
+          enemies: [shadowmere_cult]
+      questRewards: {}
+
     commands:
       entries:
         help:

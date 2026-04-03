@@ -1,0 +1,274 @@
+zone: barrens_wastes
+startRoom: wastes_edge
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  scorpion_barb:
+    displayName: "a scorpion barb"
+    keyword: barb
+    description: "A curved, hollow stinger from a dust scorpion. Alchemists extract a useful venom from these."
+    basePrice: 18
+
+  sand_crystal:
+    displayName: "a sand crystal"
+    keyword: crystal
+    description: "A translucent crystal formed from superheated sand, found only in the deepest parts of the Barrens. Faintly warm."
+    basePrice: 22
+
+  marauder_bounty_proof:
+    displayName: "a marauder's bounty mark"
+    keyword: mark
+    description: "A branded leather armband taken from a slain wasteland marauder. Proof of the kill for Bounty Master Kira."
+    basePrice: 0
+
+  wyrm_fang_blade:
+    displayName: "a wyrm-fang blade"
+    keyword: blade
+    slot: hand
+    damage: 13
+    basePrice: 460
+    description: "A heavy, curved sword forged from the fang of a sand wyrm. The edge never dulls and the blade radiates dry heat."
+
+  wyrm_scale_armor:
+    displayName: "wyrm-scale armour"
+    keyword: armor
+    slot: body
+    armor: 8
+    basePrice: 480
+    description: "A breastplate fashioned from interlocking sand wyrm scales. Extraordinarily tough and resistant to heat."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  dust_scorpion:
+    name: "a dust scorpion"
+    room: cracked_flats
+    tier: standard
+    level: 7
+    respawnSeconds: 120
+    xpReward: 50
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: scorpion_barb
+        chance: 0.5
+
+  sand_lurker:
+    name: "a sand lurker"
+    room: dried_riverbed
+    tier: standard
+    level: 7
+    respawnSeconds: 120
+    xpReward: 48
+    behavior:
+      template: wander_aggro
+
+  wasteland_marauder:
+    name: "a wasteland marauder"
+    room: abandoned_outpost
+    tier: standard
+    level: 8
+    respawnSeconds: 120
+    xpReward: 55
+    goldMin: 10
+    goldMax: 30
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: marauder_bounty_proof
+        chance: 0.8
+
+  venomfang_scorpion:
+    name: "a venomfang scorpion"
+    room: scorpion_den
+    tier: elite
+    level: 8
+    respawnSeconds: 300
+    xpReward: 95
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: scorpion_barb
+        chance: 0.8
+
+  sand_wyrm:
+    name: "the Sand Wyrm"
+    room: sand_wyrm_lair
+    tier: boss
+    level: 9
+    respawnSeconds: 900
+    xpReward: 300
+    goldMin: 100
+    goldMax: 200
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: wyrm_fang_blade
+        chance: 0.45
+      - itemId: wyrm_scale_armor
+        chance: 0.35
+    dialogue:
+      root:
+        text: "The ground trembles. A massive, segmented form erupts from the sand — eyeless, armoured, and hungry. The Sand Wyrm has ruled these wastes for longer than anyone has kept records. It does not negotiate."
+        choices:
+          - text: "Fight."
+            next: farewell
+      farewell:
+        text: "The wyrm coils, ready to strike."
+
+  bounty_master_kira:
+    name: "Bounty Master Kira"
+    room: bounty_camp
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - wasteland_bounty
+    dialogue:
+      root:
+        text: "You look capable. Good — I need capable. I'm Kira, and I run the bounty board out here. The wasteland marauders have been raiding caravans from the abandoned outpost to the east. I need their numbers thinned. Kill three and bring me proof — their branded armbands will do."
+        choices:
+          - text: "I'll deal with the marauders."
+            next: quest_accept
+          - text: "What is this place?"
+            next: about_barrens
+          - text: "Goodbye."
+            next: farewell
+      about_barrens:
+        text: "The Barrens. Scrubland, dust, and things that want to kill you. Beyond the World Gate, before the real wilderness starts. Marauders settled in an old outpost and started hitting trade routes. The Sand Wyrm's been seen to the south — avoid it unless you've a death wish. And there are ruins out east that nobody's explored in a generation."
+        choices:
+          - text: "I'll take the bounty."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "That's the spirit. The marauders camp at the abandoned outpost — east past the dust bowl. Bring me three of their branded armbands and I'll pay up."
+        choices:
+          - text: "I'll be back."
+            next: farewell
+      farewell:
+        text: "Watch for scorpions. They like to bury in the sand."
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  wasteland_bounty:
+    name: "Wasteland Bounty: Marauder Cull"
+    description: "Bounty Master Kira needs the wasteland marauders at the abandoned outpost thinned out. Kill three and bring back their branded armbands as proof."
+    giver: bounty_master_kira
+    objectives:
+      - type: collect
+        targetKey: marauder_bounty_proof
+        count: 3
+        description: "Collect 3 marauder bounty marks"
+    rewards:
+      xp: 1200
+      gold: 80
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  wastes_edge:
+    title: "Barrens Wastes — Southern Edge"
+    description: "Beyond the World Gate the road vanishes into scrubland and dust. The change is abrupt — green gives way to brown, soft earth to cracked clay, and the temperature rises noticeably. The Barrens stretch north and east: a flat, sun-blasted expanse of dry ground, sparse brush, and heat haze. The World Gate is back to the south."
+    exits:
+      s: crossroads_path:world_gate
+      n: cracked_flats
+      e: dust_bowl
+
+  cracked_flats:
+    title: "Cracked Flats"
+    description: "A broad expanse of cracked clay baked to ceramic hardness by the sun. Dust scorpions skitter across the surface, their carapaces blending with the pale ground. Heat waves distort the horizon. A dried riverbed cuts through the landscape to the north. The edge of the wastes is back south; the bounty camp is to the west."
+    exits:
+      s: wastes_edge
+      n: dried_riverbed
+      w: bounty_camp
+
+  dust_bowl:
+    title: "Dust Bowl"
+    description: "A depression in the landscape where the wind concentrates dust into choking clouds. Visibility drops to a few paces. The dust gets in everything — eyes, mouth, gear. Something moves in the murk, low to the ground. The wastes edge is back west; an abandoned outpost is visible to the east."
+    exits:
+      w: wastes_edge
+      e: abandoned_outpost
+
+  bounty_camp:
+    title: "Bounty Camp"
+    description: "A tough, practical camp of canvas tents and firebreaks set up at the edge of the Barrens. Bounty Master Kira operates from a folding table covered in wanted posters and territorial maps. A notice board is nailed to a post — the first organised presence in the wasteland. The flats stretch east."
+    exits:
+      e: cracked_flats
+
+  dried_riverbed:
+    title: "Dried Riverbed"
+    description: "A wide channel of smooth stones and cracked mud that hasn't seen water in years. Sand lurkers have colonised the deeper sections, hiding in the shade of the eroded banks. The riverbed runs roughly east toward bleached bones visible in the distance. The cracked flats are back south."
+    exits:
+      s: cracked_flats
+      e: bleached_bones
+      n: wind_worn_cliffs
+
+  bleached_bones:
+    title: "Bleached Bones"
+    description: "The riverbed widens here around the skeletal remains of enormous creatures — ancient bones bleached white by centuries of sun. Whether these are the remains of wyrms, dragons, or something else is impossible to say. The scale is sobering. The riverbed continues west; a scorpion den lies to the south."
+    exits:
+      w: dried_riverbed
+      s: scorpion_den
+
+  scorpion_den:
+    title: "Scorpion Den"
+    description: "A rocky hollow honeycombed with burrows where venomfang scorpions have established a colony. The ground is littered with shed carapaces, old kills, and the distinctive curved tracks of large scorpions. A venomfang scorpion guards the largest entrance with territorial aggression. The bones are back to the north."
+    exits:
+      n: bleached_bones
+
+  wind_worn_cliffs:
+    title: "Wind-Worn Cliffs"
+    description: "Low sandstone cliffs eroded into bizarre shapes by centuries of wind. The formations create natural shelters and ambush points. The view from the cliff-top reveals the wyrm's territory to the north — disturbed ground and sand mounds marking its hunting range. The riverbed is back to the south."
+    exits:
+      s: dried_riverbed
+      n: wyrm_territory
+
+  abandoned_outpost:
+    title: "Abandoned Outpost"
+    description: "The ruins of a border outpost — thick walls of sunbaked brick, collapsed watchtowers, and a courtyard open to the elements. Wasteland marauders have occupied the standing structures, using the defensible position as a base for raiding caravans on the trade road. The dust bowl is back to the west."
+    exits:
+      w: dust_bowl
+      e: buried_ruins
+
+  buried_ruins:
+    title: "Buried Ruins"
+    description: "Half-swallowed by the encroaching sand, the remains of a much older settlement protrude from the dunes. Carved stonework of a style predating Thornhaven by centuries is visible where the wind has swept the sand clear. A stone chest sits exposed in a cleared excavation pit. The outpost is back to the west."
+    features:
+      excavation_chest:
+        type: CONTAINER
+        displayName: "a stone chest"
+        keyword: chest
+        initialState: closed
+        resetWithZone: false
+        items:
+          - sand_crystal
+          - sand_crystal
+    exits:
+      w: abandoned_outpost
+
+  wyrm_territory:
+    title: "Wyrm Territory"
+    description: "The ground here is disturbed — massive furrows ploughed through the hard-packed sand, sand mounds heaped in irregular patterns, and the remains of large animals picked clean. The Sand Wyrm hunts this stretch of wasteland. Its lair lies north — a wide crater in the earth from which a low rumbling can be felt through the ground. The cliffs are back to the south."
+    exits:
+      s: wind_worn_cliffs
+      n: sand_wyrm_lair
+
+  sand_wyrm_lair:
+    title: "Sand Wyrm Lair"
+    description: "A massive crater in the desert floor, its sides smooth and slick from the constant passage of the Sand Wyrm's armoured body. The creature itself lies coiled at the center — a segmented, eyeless horror the length of a city street, its mandibles working slowly. The air vibrates with its subterranean rumble. The wyrm territory is back to the south."
+    exits:
+      s: wyrm_territory

@@ -24,6 +24,8 @@ class CraftingHandler(
     private val craftingSkillRegistry: CraftingSkillRegistry? = null,
     private val gatheringRegistry: GatheringRegistry? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val onItemCrafted: (suspend (SessionId) -> Unit)? = null,
+    private val onItemGathered: (suspend (SessionId, String) -> Unit)? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
@@ -97,6 +99,7 @@ class CraftingHandler(
                         quantity = totalQuantity,
                         rareFind = r.rareItemsGathered.isNotEmpty(),
                     )
+                    onItemGathered?.invoke(sessionId, r.node.skill)
                     notifyNewDiscoveries(sessionId, me, cs)
                     emitCraftingSkills(sessionId, me)
                 }
@@ -174,6 +177,7 @@ class CraftingHandler(
                         quantity = r.quantityProduced,
                         quality = r.quality.name.lowercase(),
                     )
+                    onItemCrafted?.invoke(sessionId)
                     notifyNewDiscoveries(sessionId, me, cs)
                     emitCraftingSkills(sessionId, me)
                 }

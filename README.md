@@ -164,22 +164,30 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 **World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
 
-**Current Zones (15 zone files):**
+**Current Zones (23 YAML files — 20 zones + 3 data files):**
 | Zone | Description |
 |------|-------------|
-| `ambon_hub` | Central hub connecting all zones |
-| `tutorial_glade` | Starting area for new players |
-| `demo_ruins` | Ancient ruins with varied content |
-| `noecker_resume` | Resume showcase zone |
-| `low_training_marsh` | Low-level training zone (marsh) |
-| `low_training_highlands` | Low-level training zone (highlands) |
-| `low_training_mines` | Low-level training zone (mines) |
-| `low_training_barrens` | Low-level training zone (barrens) |
-| `labyrinth` | High-level maze zone; home of the SWARM load-test class |
-| `achievements` | Achievement trigger zone |
-| `celestial_sanctum` | High-level zone |
-| `crafting_workshop` | Crafting and gathering zone |
-| `sunken_crypt` | Procedural dungeon: The Sunken Crypt (portal + mob templates) |
+| `crossroads_path` | Central crossroads connecting all zones |
+| `thornhaven_city` | Main city hub with shops, trainers, and services |
+| `thornwood_forest` | Forested wilderness with gathering nodes |
+| `farmer_fields` | Farmland area outside the city |
+| `cobblestone_road` | Road connecting city to wilderness |
+| `highland_trails` | Highland paths with crafting resources |
+| `old_mines` | Abandoned mines with ore deposits |
+| `marsh_of_fog` | Foggy marshland with herb gathering |
+| `goblin_warrens` | Goblin-infested tunnels |
+| `dark_barrows` | Undead burial grounds |
+| `sea_cliffs` | Coastal cliffs with sea creatures |
+| `sunken_temple` | Underwater temple ruins |
+| `ruined_fortress` | Crumbling fortress with tough encounters |
+| `shadowmere_fen` | Dark swamp with shadow creatures |
+| `thornhaven_sewers` | City sewers beneath Thornhaven |
+| `haunted_manor` | Ghost-infested manor house |
+| `barrens_wastes` | Desolate wasteland |
+| `frost_caverns` | Icy caves with frost creatures |
+| `celestial_peak` | Endgame mountain summit |
+| `dungeon_of_echoes` | Procedural dungeon with scaling difficulty |
+| `achievements` | Achievement definitions |
 | `player_sprites` | Player sprite data for the canvas client |
 | `sprites` | Achievement sprite definitions |
 

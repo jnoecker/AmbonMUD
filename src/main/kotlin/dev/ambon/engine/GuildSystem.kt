@@ -30,6 +30,8 @@ class GuildSystem(
     private val gmcpEmitter: GmcpEmitter? = null,
     private val rankConfig: GuildRanksConfig = GuildRanksConfig(),
 ) : GameSystem {
+    /** Invoked after a guild is successfully created; used by AchievementSystem. */
+    var onGuildCreated: (suspend (SessionId) -> Unit)? = null
     private val guildsById = mutableMapOf<String, GuildRecord>()
     private val pendingInvites = mutableMapOf<SessionId, PendingGuildInvite>()
 
@@ -111,6 +113,7 @@ class GuildSystem(
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Guild '$trimName' [$trimTag] founded!"))
         broadcastGuildGmcp(record)
+        onGuildCreated?.invoke(sessionId)
         return null
     }
 

@@ -1,0 +1,373 @@
+zone: old_mines
+startRoom: mine_entrance
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  iron_ore:
+    displayName: "a chunk of iron ore"
+    keyword: ore
+    description: "Heavy raw iron ore pried from the vein. Worth smelting at the forge."
+    basePrice: 15
+
+  copper_ore:
+    displayName: "a lump of copper ore"
+    keyword: copper
+    description: "A lump of greenish-tinged copper ore. Softer than iron but valuable to crafters."
+    basePrice: 12
+
+  silver_ore:
+    displayName: "a nugget of silver ore"
+    keyword: silver
+    description: "A rough nugget of silver ore streaked with bright veins. Sought by jewellers and alchemists alike."
+    basePrice: 25
+
+  raw_gemstone:
+    displayName: "a raw gemstone"
+    keyword: gem
+    description: "An uncut gemstone, cloudy and rough, still glittering with latent value. A jeweller could work wonders with it."
+    basePrice: 30
+
+  foreman_key:
+    displayName: "the foreman's key"
+    keyword: key
+    description: "A heavy iron key looped with a tag reading 'VAULT'. The Mine Foreman carried this."
+    basePrice: 0
+
+  expedition_supply_ledger:
+    displayName: "an expedition supply ledger"
+    keyword: ledger
+    description: "A water-stained ledger recording the expedition's supplies and route into the mine. Survivor Hadrik will recognize it."
+    basePrice: 0
+
+  miners_helmet:
+    displayName: "a miner's helmet"
+    keyword: helmet
+    slot: head
+    armor: 2
+    basePrice: 45
+    description: "A battered iron helmet with a rusted candleholder on the brow. Solid protection."
+
+# ─── Gathering Nodes ──────────────────────────────────────────────────────────
+
+gatheringNodes:
+  iron_ore_seam:
+    displayName: "an iron ore seam"
+    keyword: seam
+    skill: mining
+    skillRequired: 1
+    room: iron_seam
+    respawnSeconds: 180
+    xpReward: 18
+    yields:
+      - itemId: iron_ore
+        minQuantity: 1
+        maxQuantity: 2
+
+  copper_ore_pocket:
+    displayName: "a copper ore pocket"
+    keyword: pocket
+    skill: mining
+    skillRequired: 1
+    room: copper_pocket
+    respawnSeconds: 180
+    xpReward: 15
+    yields:
+      - itemId: copper_ore
+        minQuantity: 1
+        maxQuantity: 2
+
+  silver_ore_vein:
+    displayName: "a silver ore vein"
+    keyword: vein
+    skill: mining
+    skillRequired: 2
+    room: silver_vein
+    respawnSeconds: 240
+    xpReward: 25
+    yields:
+      - itemId: silver_ore
+        minQuantity: 1
+        maxQuantity: 1
+
+  gemstone_formation:
+    displayName: "a gemstone formation"
+    keyword: formation
+    skill: mining
+    skillRequired: 3
+    room: wardens_vault
+    respawnSeconds: 360
+    xpReward: 35
+    yields:
+      - itemId: raw_gemstone
+        minQuantity: 1
+        maxQuantity: 1
+    rareYields:
+      - itemId: raw_gemstone
+        quantity: 1
+        dropChance: 0.3
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  mine_goblin:
+    name: "a mine goblin"
+    room: mine_corridor_a
+    tier: standard
+    level: 3
+    respawnSeconds: 90
+    xpReward: 20
+    goldMin: 2
+    goldMax: 8
+    behavior:
+      template: wander_aggro
+
+  kobold_digger:
+    name: "a kobold digger"
+    room: cave_junction
+    tier: standard
+    level: 3
+    respawnSeconds: 90
+    xpReward: 18
+    behavior:
+      template: wander_aggro
+
+  giant_rat:
+    name: "a giant rat"
+    room: deeper_shaft
+    tier: standard
+    level: 2
+    respawnSeconds: 60
+    xpReward: 12
+    behavior:
+      template: wander_aggro
+
+  stone_lurker:
+    name: "a stone lurker"
+    room: flooded_passage
+    tier: standard
+    level: 4
+    respawnSeconds: 180
+    xpReward: 35
+    drops:
+      - itemId: raw_gemstone
+        chance: 0.2
+
+  mine_foreman:
+    name: "Mine Foreman Droth"
+    room: foremans_chamber
+    tier: elite
+    level: 5
+    respawnSeconds: 600
+    xpReward: 80
+    goldMin: 20
+    goldMax: 50
+    drops:
+      - itemId: foreman_key
+        chance: 1.0
+      - itemId: miners_helmet
+        chance: 0.4
+
+  survivor_hadrik:
+    name: "Survivor Hadrik"
+    room: survivors_hollow
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - lost_expedition
+      - lost_expedition_deeper
+    dialogue:
+      root:
+        text: "Thank the gods — a living face! I'm Hadrik, with the Thornhaven Scholars' Expedition. The others went deeper and never came back. I've been trapped here for days. Please — can you help me recover our supply ledger? It's in the old supply chamber further in. The scholars back in Thornhaven need to know what happened."
+        choices:
+          - text: "I'll find the ledger."
+            next: quest_accept
+          - text: "What happened to the expedition?"
+            next: expedition_info
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "Bless you. The old supply chamber is somewhere deeper in — past the cave junction and into the rubble areas. Watch out for the mine goblins; they've gotten bold since the expedition came in."
+        choices:
+          - text: "I'll be back."
+            next: farewell
+      expedition_info:
+        text: "We came from Thornhaven to survey the Old Mines — silver and gem deposits, according to old records. We found them, all right. But the deeper tunnels are full of goblins and something worse. The foreman's vault at the bottom holds our survey documents. I think they went for those."
+        choices:
+          - text: "I'll find the ledger."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Be careful. The goblins know these tunnels better than we do."
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  lost_expedition:
+    name: "The Lost Expedition"
+    description: "Survivor Hadrik needs you to recover the expedition's supply ledger from somewhere in the deeper mine chambers. Find the ledger and return it to him."
+    giver: survivor_hadrik
+    objectives:
+      - type: collect
+        targetKey: expedition_supply_ledger
+        count: 1
+        description: "Recover the expedition supply ledger"
+    rewards:
+      xp: 700
+      gold: 15
+
+  lost_expedition_deeper:
+    name: "The Lost Expedition — Deeper Still"
+    description: "The lead scholar and the rest of the expedition went further east — into the goblin warrens beneath the Thornwood. Recover the expedition notes from Chieftain Grak's hoard and bring them back to Hadrik."
+    giver: survivor_hadrik
+    objectives:
+      - type: collect
+        targetKey: goblin_warrens:expedition_notes
+        count: 1
+        description: "Recover the expedition notes from Chieftain Grak's hoard"
+    rewards:
+      xp: 600
+      gold: 20
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  mine_entrance:
+    title: "Old Mines — Entrance"
+    description: "A rough-hewn arch of old timber frames the mine entrance, deep in the mountain above the highland trails. The air inside is cold and smells of stone dust and old lamp oil. The cave descends from the highlands above via a shaft. A short corridor leads south into the mine proper."
+    exits:
+      u: highland_trails:summit_approach
+      s: mine_corridor_a
+
+  mine_corridor_a:
+    title: "Mine Corridor — Upper Level"
+    description: "A broad timber-shored corridor lit by old lanterns that somehow still burn. The walls have been worked flat by a generation of miners. Iron ore seams are plainly visible in the east wall. Mine goblins have taken up residence here since the expedition disturbed them. The entrance is north; the main cave junction is south."
+    exits:
+      n: mine_entrance
+      e: iron_seam
+      s: cave_junction
+
+  iron_seam:
+    title: "Iron Seam"
+    description: "A side chamber where a rich iron ore seam runs along the entire length of the wall. Old chisel marks show where the original miners worked it. The seam is still largely untapped — whoever comes back with the right tools will do well here."
+    exits:
+      w: mine_corridor_a
+
+  cave_junction:
+    title: "Cave Junction"
+    description: "A natural cavern where three mine tunnels meet. The original mining crew marked each passage with painted symbols: a circle for copper to the east, a crescent for silver to the west, and a chevron pointing south toward the deeper workings. Kobold diggers patrol the junction, chipping at the walls in imitation of mining."
+    exits:
+      n: mine_corridor_a
+      e: copper_pocket
+      w: silver_vein
+      s: deeper_shaft
+
+  copper_pocket:
+    title: "Copper Pocket"
+    description: "A cramped side-cut where a pocket of copper ore was found and hastily excavated. The walls still show the green-tinged copper bloom. The floor is slick with mineral water seeping from above. The junction is back to the west."
+    exits:
+      w: cave_junction
+
+  silver_vein:
+    title: "Silver Vein"
+    description: "A beautifully lit side chamber where a silver ore vein runs at eye level, catching the lantern light with a faint shimmer. The original miners built a proper platform to work from — it still stands, barely. The silver is clearly premium quality. The junction is back to the east."
+    exits:
+      e: cave_junction
+
+  deeper_shaft:
+    title: "Deeper Shaft"
+    description: "The main shaft drops here, shored with heavy timbers, descending into the mountain's heart. The air grows colder and damper. Giant rats have nested in the debris on the floor. Survivor Hadrik's camp is visible in a hollow to the east. The shaft continues south toward the rubble chamber."
+    exits:
+      n: cave_junction
+      e: survivors_hollow
+      s: rubble_chamber
+
+  survivors_hollow:
+    title: "Survivor's Hollow"
+    description: "A shallow alcove in the shaft wall, just large enough for a bedroll and a small fire. Someone has been living here for several days — makeshift torch holders, a blanket, a half-eaten ration. Survivor Hadrik huddles here, exhausted but alert. The main shaft is back to the west."
+    exits:
+      w: deeper_shaft
+
+  rubble_chamber:
+    title: "Rubble Chamber"
+    description: "A wide chamber where part of the ceiling collapsed long ago, filling the floor with broken stone. Someone has cleared a path through the rubble to the east. An old supply chest sits half-buried under a fallen beam in the corner."
+    features:
+      supply_chest:
+        type: CONTAINER
+        displayName: "an old supply chest"
+        keyword: chest
+        initialState: closed
+        resetWithZone: true
+        items:
+          - expedition_supply_ledger
+    exits:
+      n: deeper_shaft
+      e: mine_shaft_lower
+      s: support_chamber
+
+  mine_shaft_lower:
+    title: "Mine Shaft — Lower Level"
+    description: "The main shaft continues its descent. The timbers here are older and less reliable. A flooded passage drops away further below, its surface dark and still. The rubble chamber is back to the west."
+    exits:
+      w: rubble_chamber
+      s: flooded_passage
+
+  support_chamber:
+    title: "Support Chamber"
+    description: "An internal chamber where the mine's structural timbers were maintained. Old tools hang on pegs alongside rusted support brackets. A heavy iron lever is mounted on the south wall with a brass plate reading 'VAULT DOOR'. Someone has greased it recently."
+    features:
+      vault_lever:
+        type: LEVER
+        displayName: "a heavy iron lever"
+        keyword: lever
+        initialState: up
+        resetWithZone: true
+    exits:
+      n: rubble_chamber
+
+  flooded_passage:
+    title: "Flooded Passage"
+    description: "A tunnel where groundwater has pooled ankle-deep. The water is cold and carries a faint sulphur smell. Stone lurkers lurk at the edge of the lantern light, their grey bodies nearly indistinguishable from the rock. The shaft rises to the north; the collapsed run continues south."
+    exits:
+      n: mine_shaft_lower
+      s: collapsed_run
+
+  collapsed_run:
+    title: "Collapsed Run"
+    description: "A long section of tunnel where the walls have partially buckled inward. The footing is treacherous — every step shifts broken stone. At the far end the passage clears and opens into a final chamber. The flooded passage is back to the north."
+    exits:
+      n: flooded_passage
+      s: foremans_chamber
+
+  foremans_chamber:
+    title: "Foreman's Chamber"
+    description: "The mine foreman's command post at the deepest accessible level. Mine Foreman Droth has claimed it as his own territory, barricading the original furniture into a defensive ring. A heavy iron door in the east wall leads to the vault — locked. The vault lever in the support chamber above controls it. The collapsed run is back to the north."
+    exits:
+      n: collapsed_run
+      e:
+        to: wardens_vault
+        door:
+          initialState: locked
+          keyItemId: foreman_key
+          keyConsumed: false
+          resetWithZone: false
+
+  wardens_vault:
+    title: "Warden's Vault"
+    description: "The original mine supervisor's vault: a stone-walled strongroom that served as the mine's repository for assay records and ore samples. The walls are natural rock here, uncut, and a rich gemstone formation is visible in the far wall. A rough tunnel at the back continues east — whoever cut it was heading toward the cavern systems beneath the Thornwood Forest."
+    exits:
+      w: foremans_chamber
+      e: goblin_warrens:mine_connection

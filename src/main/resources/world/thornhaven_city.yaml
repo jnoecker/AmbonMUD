@@ -1,0 +1,1238 @@
+zone: thornhaven_city
+startRoom: new_arrivals_hall
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  # General store — starter gear
+  worn_sword:
+    displayName: "a worn iron sword"
+    keyword: sword
+    slot: hand
+    damage: 3
+    basePrice: 20
+    description: "A short-bladed sword with a well-worn grip. Still serviceable."
+
+  battered_staff:
+    displayName: "a battered oak staff"
+    keyword: staff
+    slot: hand
+    damage: 2
+    basePrice: 15
+    description: "A gnarled oak staff, nicked and scratched from long use."
+
+  hunting_bow:
+    displayName: "a hunting bow"
+    keyword: bow
+    slot: hand
+    damage: 3
+    basePrice: 20
+    description: "A simple recurve bow strung with gut. Good for the road."
+
+  rusty_dagger:
+    displayName: "a rusty dagger"
+    keyword: dagger
+    slot: hand
+    damage: 2
+    basePrice: 10
+    description: "A short blade mottled with rust. Still sharp at the tip."
+
+  leather_cap:
+    displayName: "a leather cap"
+    keyword: cap
+    slot: head
+    armor: 1
+    basePrice: 15
+    description: "A simple cap of boiled leather. Modest protection."
+
+  padded_vest:
+    displayName: "a padded vest"
+    keyword: vest
+    slot: body
+    armor: 1
+    basePrice: 25
+    description: "Thick cloth padding sewn into a close-fitting vest."
+
+  minor_healing_potion:
+    displayName: "a minor healing potion"
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 15
+    basePrice: 50
+    description: "A small vial of cherry-red liquid. Restores a modest amount of health."
+
+  clarity_potion:
+    displayName: "a clarity potion"
+    keyword: clarity
+    consumable: true
+    onUse:
+      healHp: 5
+    basePrice: 75
+    description: "A silver-blue draught that steadies the mind and eases the spirit."
+
+  # Market items available for upgrade purchase
+  iron_sword:
+    displayName: "an iron sword"
+    keyword: sword
+    slot: hand
+    damage: 5
+    basePrice: 80
+    description: "A standard issue iron sword, sturdy and well-balanced."
+
+  oak_staff:
+    displayName: "an oak staff"
+    keyword: staff
+    slot: hand
+    damage: 3
+    basePrice: 60
+    description: "A polished staff of dense oak, engraved with simple runes."
+
+  short_bow:
+    displayName: "a short bow"
+    keyword: bow
+    slot: hand
+    damage: 5
+    basePrice: 80
+    description: "A compact bow light enough to carry all day."
+
+  silver_dagger:
+    displayName: "a silver-tipped dagger"
+    keyword: dagger
+    slot: hand
+    damage: 4
+    basePrice: 70
+    description: "A sleek dagger with a silver point — effective against the undead."
+
+  iron_helm:
+    displayName: "an iron helm"
+    keyword: helm
+    slot: head
+    armor: 2
+    basePrice: 60
+    description: "A plain iron helm dented by use but solid enough."
+
+  chainmail_vest:
+    displayName: "a chainmail vest"
+    keyword: chainmail
+    slot: body
+    armor: 3
+    basePrice: 120
+    description: "Interlocked rings of iron sewn onto leather backing."
+
+  leather_bracers:
+    displayName: "leather bracers"
+    keyword: bracers
+    slot: hand
+    armor: 1
+    basePrice: 35
+    description: "Strapped leather vambraces that protect the forearms."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  innkeeper_mira:
+    name: "Innkeeper Mira"
+    room: tarnished_flagon_inn
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome to the Tarnished Flagon — the finest inn in Thornhaven, and the only one! Will you be setting up a recall point here?"
+        choices:
+          - text: "Set this inn as my recall point."
+            next: confirm_recall
+            action: set_recall
+          - text: "Tell me about recall."
+            next: explain_recall
+          - text: "Goodbye."
+            next: farewell
+      confirm_recall:
+        text: "Done! The Tarnished Flagon is your home away from home. Type 'recall' anywhere in the world to return here."
+        choices:
+          - text: "Thanks, Mira."
+            next: farewell
+      explain_recall:
+        text: "Your recall point is your anchor in the world. Type 'recall' at any time and you'll be whisked back here instantly — very handy when you're lost or in trouble."
+        choices:
+          - text: "Set this inn as my recall point."
+            next: confirm_recall
+            action: set_recall
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Safe travels, adventurer. The door's always open."
+
+  banker_theron:
+    name: "Banker Theron"
+    room: thornhaven_bank
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Good day. The Thornhaven Bank is at your service. Deposits, withdrawals, item storage — all handled with complete discretion."
+        choices:
+          - text: "How does the bank work?"
+            next: explain_bank
+          - text: "Goodbye."
+            next: farewell
+      explain_bank:
+        text: "Deposit gold with 'bank deposit <amount>' and withdraw with 'bank withdraw <amount>'. Store items with 'bank deposit <item>'. Check your balance with 'bank balance'. Your assets are safe no matter what happens to you in the field."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Good day to you."
+
+  auctioneer_brant:
+    name: "Auctioneer Brant"
+    room: auction_hall
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Step right up! Eryndal's premier auction house. List your wares, browse the offerings — everything's on the table!"
+        choices:
+          - text: "How do I use the auction house?"
+            next: explain_auction
+          - text: "Goodbye."
+            next: farewell
+      explain_auction:
+        text: "'auction list' browses current listings. 'auction sell <item> <price>' lists something of your own. 'auction buy <listing#>' purchases it. 'auction cancel' pulls your listing."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "May your bids be profitable!"
+
+  mail_clerk_oswin:
+    name: "Mail Clerk Oswin"
+    room: post_office
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Thornhaven Post — I handle all correspondence. Need to send word to someone, or check if anything has arrived for you?"
+        choices:
+          - text: "How do I send and read mail?"
+            next: explain_mail
+          - text: "Goodbye."
+            next: farewell
+      explain_mail:
+        text: "'mail list' shows your inbox. 'mail read <#>' reads a message. 'mail send <player> <message>' composes one. 'mail delete <#>' discards it. Messages wait here until you return."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "I'll keep the letters safe. Safe travels."
+
+  guild_registrar:
+    name: "Guild Registrar Edda"
+    room: guild_registry
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "The Thornhaven Guild Registry. Looking to found a guild, or manage one you already lead?"
+        choices:
+          - text: "How do guilds work?"
+            next: explain_guild
+          - text: "Goodbye."
+            next: farewell
+      explain_guild:
+        text: "'guild create <name>' founds a new guild. 'guild invite <player>' recruits members. 'guild promote' and 'guild demote' manage ranks. 'guild roster' lists members. Use 'gchat' to speak in your guild channel."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "May your guild stand long."
+
+  arena_master:
+    name: "Arena Master Koryn"
+    room: arena_district
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome to the Thornhaven Arena! The finest venue for honourable combat in the realm. Ready to test your blade?"
+        choices:
+          - text: "How does dueling work?"
+            next: explain_duel
+          - text: "Tell me about the leaderboards."
+            next: explain_leaderboard
+          - text: "Goodbye."
+            next: farewell
+      explain_duel:
+        text: "'duel challenge <name>' challenges another player. They accept with 'duel accept'. The duel ends when one of you falls — no death penalty, just honour."
+        choices:
+          - text: "Tell me about the leaderboards."
+            next: explain_leaderboard
+          - text: "Goodbye."
+            next: farewell
+      explain_leaderboard:
+        text: "Type 'leaderboard' to see who stands tallest in Eryndal. The Trophy Hall nearby records legendary deeds permanently with 'halloffame'."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Fight well. Fight with honour."
+
+  old_grimly:
+    name: "Old Grimly"
+    room: grimlys_study
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Ah, another brave soul. Sit down. Old Grimly knows the way into places the sane avoid. The Dungeon of Echoes — you've heard of it?"
+        choices:
+          - text: "Tell me about the Dungeon of Echoes."
+            next: explain_dungeon
+          - text: "How do I enter?"
+            next: how_to_enter
+          - text: "Goodbye."
+            next: farewell
+      explain_dungeon:
+        text: "The Dungeon of Echoes is a labyrinth that reshapes itself for every party. No two runs alike. Mobs scale to your level, boss lurking at the end. Two difficulties: standard and hard."
+        choices:
+          - text: "How do I enter?"
+            next: how_to_enter
+          - text: "Goodbye."
+            next: farewell
+      how_to_enter:
+        text: "Right here in this study — type 'dungeon enter dungeon_of_echoes' for a standard run. Add 'hard' at the end for the hard version. You'll return here when you finish or flee."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Mind the shadows, friend. They have teeth."
+
+  trainer_captain_varek:
+    name: "Captain Varek"
+    room: warrior_training_hall
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Warrior. I am Captain Varek. Skill points are yours to spend — spend them well. Type 'train list' to see what I can teach you."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "'train list' shows available abilities. 'train learn <ability>' spends a skill point. You earn points as you level. At level 10 you may also unlock a second class with 'train unlock'."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Train hard. Train every day."
+
+  trainer_archmage_solen:
+    name: "Archmage Solen"
+    room: mage_library
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Ah, a seeker of arcane knowledge. I am Archmage Solen. Magic is not bestowed — it is earned. Type 'train list' to see what I offer."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "Skill points are the currency of knowledge. 'train list' shows available spells. 'train learn <spell>' spends one point. Master every spell before you consider a second vocation."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Knowledge is the only power that endures."
+
+  trainer_high_priest_aldric:
+    name: "High Priest Aldric"
+    room: cleric_chapel
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Blessings upon you. I am High Priest Aldric. The light heals those who serve faithfully. Use 'train list' to see which prayers I can teach."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "Each skill point spent here is a prayer answered. 'train list' shows available blessings and rites. 'train learn <ability>' invests a point. The divine rewards devotion."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "May the light walk with you always."
+
+  trainer_shade:
+    name: "Shadow"
+    room: rogue_den
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "...You found me. Most don't. That's promising. I'm called Shade. I teach those with quick hands and quiet feet. 'train list' if you're serious."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Tell me about the sewers."
+            next: sewer_hint
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "'train list' shows my curriculum. 'train learn <skill>' costs a skill point. Master everything I offer and you'll reach places others can't. Like the sewers beneath Thornhaven."
+        choices:
+          - text: "Tell me about the sewers."
+            next: sewer_hint
+          - text: "Goodbye."
+            next: farewell
+      sewer_hint:
+        text: "Thornhaven sits on old tunnels. Very old. Very interesting. Prove yourself — reach the right skill level — and maybe I'll show you where the grate is."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Don't let them see you leave."
+
+  trainer_forester_lenna:
+    name: "Forester Lenna"
+    room: ranger_outpost
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Easy now. Name's Lenna. I range the Thornwood and beyond. Ranger looking to sharpen up? Type 'train list' — I've got plenty to teach."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "'train list' shows available abilities. 'train learn <ability>' spends a skill point. Rangers can mark prey, summon a hawk, read the land. You'll find me in Thornwood Forest as well, if you're out that way."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Track true. Come back alive."
+
+  shopkeeper_dolvan:
+    name: "Dolvan the Merchant"
+    room: general_store
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome! Best gear in Thornhaven, fair prices. Type 'list' to browse, 'buy <item>' to purchase."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Come back when your purse is full."
+
+  recipe_merchant_sylva:
+    name: "Sylva the Recipe Merchant"
+    room: crafting_quarter
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Looking to learn a craft? I deal in recipes for smithing and alchemy. Type 'list' to browse."
+        choices:
+          - text: "How does crafting work?"
+            next: explain_crafting
+          - text: "Goodbye."
+            next: farewell
+      explain_crafting:
+        text: "Gather materials out in the world — herbs, ores, and more. Bring them to the forge, alchemy lab, or workbench depending on the recipe. Use 'craft <recipe>' to create the item. Your skills improve with each attempt."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "May your crafts come out quality!"
+
+  archivist_tessara:
+    name: "Archivist Tessara"
+    room: chroniclers_archive
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Ah — a visitor. Welcome to the Chronicler's Archive. I am Tessara, keeper of the Deep Record. Most adventurers run straight for the dungeons, but you... you have the look of someone who wants to understand how things work. This archive contains everything I've learned about the fabric of our world — its structure, its rules, and the forces that hold it together. What would you like to know?"
+        choices:
+          - text: "Tell me about Eryndal — the world itself."
+            next: about_world
+          - text: "How does combat work here?"
+            next: about_combat
+          - text: "Tell me about the classes and abilities."
+            next: about_classes
+          - text: "I'm curious about the deeper architecture."
+            next: about_architecture
+          - text: "What about scalability and load testing?"
+            next: about_scaling
+          - text: "How configurable is everything?"
+            next: about_config
+          - text: "Goodbye, Tessara."
+            next: farewell
+
+      # ─── The World ──────────────────────────────────────────────────────
+      about_world:
+        text: "Eryndal is composed of twenty distinct zones — from the Crossroads Path where most travellers arrive, through Thornhaven City where we stand now, into the Thornwood Forest, the Farmer Fields, the Goblin Warrens, the Dark Barrows, the Sea Cliffs, the Sunken Temple, and far beyond to the Celestial Peak where the Elder Dragon waits. Each zone is defined in its own manuscript — what the scholars call 'YAML files' — describing every room, mob, item, shop, quest, trainer, and gathering node. New zones can be added without touching the machinery of the world itself. Simply write the manuscript and the world absorbs it on next awakening."
+        choices:
+          - text: "Tell me about the zones in more detail."
+            next: about_zones
+          - text: "How do quests and achievements work?"
+            next: about_quests
+          - text: "What about the living world — time, weather, seasons?"
+            next: about_living_world
+          - text: "Back to the main topics."
+            next: root
+
+      about_zones:
+        text: "There are twenty zones in the world today. Crossroads Path is where most journeys begin. Thornhaven City is the hub — shops, banks, trainers, guilds, the auction house, the arena. Beyond the walls you'll find the Thornwood Forest, Farmer Fields, Cobblestone Road, Highland Trails, Old Mines, the Marsh of Fog, and the Goblin Warrens. Deeper still lie the Dark Barrows, Sea Cliffs, Sunken Temple, Ruined Fortress, Shadowmere Fen, the Thornhaven Sewers beneath our feet, the Haunted Manor, the Barrens Wastes, the Frost Caverns, the Celestial Peak, and the procedural Dungeon of Echoes. Cross-zone exits link them together seamlessly. Each zone has its own lifespan — a reset timer that restores mobs and items periodically."
+        choices:
+          - text: "Tell me about the Dungeon of Echoes."
+            next: about_dungeons
+          - text: "Back to the main topics."
+            next: root
+
+      about_dungeons:
+        text: "The Dungeon of Echoes is a procedural labyrinth — no two runs are alike. It generates a random layout of rooms, populates them with level-scaled mobs, and places a boss at the end. There are multiple difficulty tiers: standard and hard, each with different loot tables. Your whole party enters together — mobs scale to the average party level. Kill the boss to complete the run and earn rewards. Dungeon templates are defined in YAML too, so new dungeons can be added just by writing a template with room themes, mob pools, boss definitions, and loot tables."
+        choices:
+          - text: "Tell me about quests and achievements."
+            next: about_quests
+          - text: "Back to the main topics."
+            next: root
+
+      about_quests:
+        text: "Quests are given by NPCs through dialogue — talk to them, choose the right option, and you'll receive objectives. Kill mobs, collect items, visit locations, complete dungeons — all trackable through your quest log. Achievements are broader milestones: kill a hundred goblins, reach level ten, complete a dungeon with a full party, craft your first item. There are over thirty achievements across categories — combat, exploration, social, crafting. Completing them earns XP, gold, and sometimes titles you can display."
+        choices:
+          - text: "What about the living world — time, weather, seasons?"
+            next: about_living_world
+          - text: "Back to the main topics."
+            next: root
+
+      about_living_world:
+        text: "Eryndal has a day-night cycle — dawn, morning, afternoon, dusk, evening, and night — each with its own ambient feel. Weather shifts dynamically per zone: clear skies, clouds, rain, storms, fog, snow. And the world observes seasonal events tied to real dates — festivals, gatherings, special world flags that change NPC behavior or open hidden areas. All of this is configurable: the length of a day, weather transition probabilities, event dates and durations. The 'time' command shows you the current state of the world."
+        choices:
+          - text: "Back to the main topics."
+            next: root
+
+      # ─── Combat ─────────────────────────────────────────────────────────
+      about_combat:
+        text: "Combat in Eryndal is real-time and tick-based. The world heartbeat pulses every hundred milliseconds — ten times per second. When you engage a foe, damage is calculated each round using your attributes, equipment, and abilities. There's a dodge mechanic based on your stats, armor reduces incoming damage, and a threat system determines who the mob attacks in a group. Status effects layer on top: damage over time, healing over time, stuns, roots, shields, stat buffs and debuffs. Each effect ticks independently."
+        choices:
+          - text: "Tell me about the threat system."
+            next: about_threat
+          - text: "How do status effects work?"
+            next: about_status_effects
+          - text: "What about groups and parties?"
+            next: about_groups
+          - text: "Back to the main topics."
+            next: root
+
+      about_threat:
+        text: "Every mob maintains a threat table — an invisible ledger of who has angered it and by how much. Dealing damage adds threat. Healing a party member adds threat. Some abilities generate extra threat, others reduce it. The mob always attacks whoever sits at the top of its threat table. Warriors can taunt to seize aggro; rogues can fade to shed it. In a well-coordinated party, the warrior holds the mob's attention while others deal damage and heal from safety. If the highest-threat player flees, the mob switches to the next on the list."
+        choices:
+          - text: "What about groups and parties?"
+            next: about_groups
+          - text: "Back to the main topics."
+            next: root
+
+      about_status_effects:
+        text: "Status effects are the hidden language of combat. A poison is a damage-over-time effect that ticks every few seconds. A regeneration blessing heals over time. A stun locks you in place — you can't act, you can't flee. A root pins your feet but leaves your hands free to fight. Shields absorb incoming damage until they break. Buffs raise your stats; debuffs lower them. Effects stack, expire, and interact. A cleric's dispel can strip a poison. A mage's frost can root a fleeing enemy. Over a hundred abilities in the system use these building blocks in different combinations."
+        choices:
+          - text: "Tell me about the ability system."
+            next: about_abilities
+          - text: "Back to the main topics."
+            next: root
+
+      about_groups:
+        text: "Adventuring parties hold up to five members. Invite others with 'group invite', and they accept to join. XP is shared among the group with a bonus per member — the more you bring, the better the reward per kill. Groups are essential for dungeons, where mobs scale to the average party level. Communication is easy: 'gtell' sends a message to your group only. If someone falls, the rest carry on — or flee together. The party leader can kick members or disband the group."
+        choices:
+          - text: "Tell me about guilds."
+            next: about_guilds
+          - text: "Back to the main topics."
+            next: root
+
+      # ─── Classes and Abilities ──────────────────────────────────────────
+      about_classes:
+        text: "There are five classes in Eryndal: Warrior, Mage, Cleric, Rogue, and Ranger. Each has its own ability tree — over a hundred abilities total across all classes. Warriors wield steel and fury. Mages command arcane destruction. Clerics channel divine healing and protection. Rogues strike from shadows with precision. Rangers blend nature magic with ranged combat. You choose your class at character creation, but the path doesn't end there."
+        choices:
+          - text: "How do I learn abilities?"
+            next: about_training
+          - text: "Tell me about multi-classing."
+            next: about_multiclass
+          - text: "How does the ability system work under the surface?"
+            next: about_abilities
+          - text: "Back to the main topics."
+            next: root
+
+      about_training:
+        text: "Abilities are learned from class trainers — like Captain Varek for warriors, or Archmage Solen for mages, right here in Thornhaven's Trainers' Hall. You spend skill points to learn them. You earn one skill point every two levels. Visit your trainer and type 'train list' to see what's available at your current level. 'train learn <ability>' to spend the point. Choose wisely — your points are limited, and each ability shapes how you fight."
+        choices:
+          - text: "Tell me about multi-classing."
+            next: about_multiclass
+          - text: "Back to the main topics."
+            next: root
+
+      about_multiclass:
+        text: "At level ten, a new path opens. You can visit any other class trainer and type 'train unlock' to take on a second class — for a gold cost. Once unlocked, that trainer's ability list becomes available to you. You'll still earn skill points at the same rate, so you must choose how to divide them. A warrior who unlocks cleric can learn healing. A mage who unlocks rogue can learn stealth. The combinations are yours to discover. But remember: breadth costs depth. A focused specialist will outperform a dilettante."
+        choices:
+          - text: "How does the ability system work under the surface?"
+            next: about_abilities
+          - text: "Back to the main topics."
+            next: root
+
+      about_abilities:
+        text: "Every ability is defined as pure data — name, mana cost, cooldown, damage formula, status effects applied, class restriction, level requirement. The engine reads these definitions and translates them into action. Abilities can deal direct damage, apply status effects, heal, summon pets, generate threat, or combine several of these. Cooldowns are tracked per player. Mana is consumed on cast. The system is entirely data-driven: adding a new spell means writing a configuration entry, not changing the engine's code. There are over a hundred abilities defined today, and the system can absorb more without limit."
+        choices:
+          - text: "Tell me about pets."
+            next: about_pets
+          - text: "Back to the main topics."
+            next: root
+
+      about_pets:
+        text: "Certain abilities summon companions — pets that follow you between rooms and fight at your side. A ranger's hawk, a mage's familiar. Pets are session-bound: they exist while you're connected and vanish when you leave. They scale to your level, attack your current target, and can be named with 'pet name'. Pet templates are defined in the configuration alongside abilities — the summon ability references a template, and the engine brings it to life."
+        choices:
+          - text: "Back to the main topics."
+            next: root
+
+      # ─── Guilds and Social ──────────────────────────────────────────────
+      about_guilds:
+        text: "Guilds are player-created organizations with a hierarchy of ranks. Found one with 'guild create', invite members, promote or demote officers. Each guild has a message of the day, a roster, and a private chat channel via 'gchat'. Guild data persists independently — in YAML files or a PostgreSQL database, depending on the world's configuration. The guild registrar Edda handles the paperwork right here in Thornhaven."
+        choices:
+          - text: "What about friends and mail?"
+            next: about_friends
+          - text: "Tell me about the economy."
+            next: about_economy
+          - text: "Back to the main topics."
+            next: root
+
+      about_friends:
+        text: "You can maintain a friends list — 'friend add <name>' to remember someone, 'friend list' to see who's online. And if a friend is away, the post office handles mail. Send letters with 'mail send <player> <message>' and they'll be waiting when the recipient returns. Mail persists across sessions. It's a small thing, but it keeps the world feeling connected even when your companions aren't here."
+        choices:
+          - text: "Tell me about the economy."
+            next: about_economy
+          - text: "Back to the main topics."
+            next: root
+
+      about_economy:
+        text: "Gold flows through Eryndal in many ways. Mobs drop it. Quests reward it. You spend it in shops, at trainers, and on guild creation. The bank stores it safely — Banker Theron holds your deposits. The auction house lets players trade items for gold on the open market. Direct player-to-player trading is supported too, with a confirmation flow so nobody gets cheated. And there's crafting: gather materials, combine them at stations, and sell the results. Enchanting adds magical properties to items for additional value. The whole economy is configurable — item prices, gold drop ranges, bank rules — all tunable without changing the engine."
+        choices:
+          - text: "Tell me about crafting in detail."
+            next: about_crafting
+          - text: "What about player housing?"
+            next: about_housing
+          - text: "Back to the main topics."
+            next: root
+
+      about_crafting:
+        text: "Crafting starts with gathering. Nodes are scattered across zones — ore veins, herb patches, timber stands. Gather materials, then bring them to the right station: the forge for metalwork, the alchemy lab for potions, the workbench for leather and cloth. Recipes define what you can make. Your crafting skill improves with each attempt. You can specialize in a discipline for bonus quality. Rare yields and recipe discovery add excitement. And enchanting layers on top: use an enchanting table to imbue items with stat bonuses. All recipes, stations, and enchantments are defined in configuration files."
+        choices:
+          - text: "What about factions and reputation?"
+            next: about_factions
+          - text: "Back to the main topics."
+            next: root
+
+      about_factions:
+        text: "The world's factions remember how you treat them. Kill their enemies, complete their quests, and your standing rises — from Hated through Hostile, Unfriendly, Neutral, Friendly, Honored, to Revered. Kill their members and it drops. Some factions are natural enemies: raising standing with one lowers it with another. Faction definitions, relationships, and mob affiliations are all configured in YAML. The 'reputation' command shows where you stand."
+        choices:
+          - text: "Back to the main topics."
+            next: root
+
+      about_housing:
+        text: "Player housing gives you a personal room in the world. Expand it, furnish it, describe it however you like. A vault stores items with a capacity limit. You control access — invite friends, lock the door, kick unwanted visitors. Housing state persists with your character. It's your corner of Eryndal."
+        choices:
+          - text: "Back to the main topics."
+            next: root
+
+      # ─── Architecture ───────────────────────────────────────────────────
+      about_architecture:
+        text: "Ah — you want to look behind the curtain. Very well. The world runs on what the old texts call a 'tick-based event loop.' Ten times per second, the engine processes everything: commands, combat rounds, mob AI, status effect ticks, regen, weather transitions, quest checks. All of it runs on a single thread — deliberately. One thread means no race conditions, no locks, no synchronization bugs. The engine is deterministic: given the same inputs, it produces the same outputs every time. This is the core principle — keep the heart simple and correct."
+        choices:
+          - text: "How do transports work — telnet and web?"
+            next: about_transports
+          - text: "Tell me about the event bus system."
+            next: about_event_bus
+          - text: "How does persistence work?"
+            next: about_persistence
+          - text: "What about the GMCP protocol?"
+            next: about_gmcp
+          - text: "Tell me about deployment modes."
+            next: about_deployment
+          - text: "Back to the main topics."
+            next: root
+
+      about_transports:
+        text: "The world accepts visitors through two gates: telnet and WebSocket. Telnet is the classic MUD interface — text in, text out, with protocol negotiation for terminal size, type, and GMCP structured data. The telnet transport uses JDK 21 virtual threads, so thousands of connections cost almost nothing in system resources. WebSocket powers the browser client — a PixiJS canvas with React panels, battle scenes, spell targeting, and a quickbar. Both transports produce the same internal events. The engine doesn't know or care which gate you entered through."
+        choices:
+          - text: "Tell me about the event bus system."
+            next: about_event_bus
+          - text: "What about GMCP?"
+            next: about_gmcp
+          - text: "Back to the main topics."
+            next: root
+
+      about_event_bus:
+        text: "Transports and engine communicate through an event bus — an abstraction layer with interchangeable implementations. InboundEvents flow from transport to engine: a player connected, a line was typed, a GMCP packet arrived. OutboundEvents flow back: text to display, prompts, GMCP data, disconnect commands. In single-process mode, these are simple in-memory channels. In distributed mode, they can be Redis pub/sub streams or gRPC bidirectional streams. The engine code is identical regardless — it reads from InboundBus and writes to OutboundBus without knowing what's underneath."
+        choices:
+          - text: "How does persistence work?"
+            next: about_persistence
+          - text: "Tell me about deployment modes."
+            next: about_deployment
+          - text: "Back to the main topics."
+            next: root
+
+      about_persistence:
+        text: "Player data flows through a layered chain. At the top sits a write-coalescing layer — it batches rapid changes so the engine doesn't write to storage on every tick. Below that, an optional Redis cache provides fast reads for frequently accessed data. At the bottom, the durable store: either YAML flat files — one per player, with atomic writes — or a PostgreSQL database with Flyway-managed migrations. The backend is selectable at startup with a single configuration flag. Guild data follows the same pattern. The engine never touches storage directly — it works through a repository interface, and the layers beneath are invisible to it."
+        choices:
+          - text: "Tell me about deployment modes."
+            next: about_deployment
+          - text: "What about metrics and observability?"
+            next: about_metrics
+          - text: "Back to the main topics."
+            next: root
+
+      about_gmcp:
+        text: "GMCP — the Generic MUD Communication Protocol — is how the world sends structured data to smart clients. Over twenty-five package families flow over both telnet and WebSocket: character stats, room info, inventory, equipment, skill lists, quest updates, group status, guild data, auction listings, weather, time of day, combat events, map data, and more. The browser client uses GMCP to populate every panel you see — health bars, maps, skill buttons. It's all machine-readable JSON beneath the surface. Adding a new GMCP package means defining the data shape and registering it — no transport changes needed."
+        choices:
+          - text: "Tell me about the event bus system."
+            next: about_event_bus
+          - text: "Back to the main topics."
+            next: root
+
+      about_deployment:
+        text: "The world can run in three modes. Standalone is the simplest — everything in one process, no dependencies beyond the JVM. Engine mode runs the authoritative game loop with a gRPC server; Gateway mode runs the transports with a gRPC client that connects to one or more engines. In split mode, you can run many gateways pointing at the same engine — scaling connection handling independently of game logic. And then there's zone-based sharding."
+        choices:
+          - text: "Tell me about zone sharding."
+            next: about_sharding
+          - text: "How does the gRPC layer work?"
+            next: about_grpc
+          - text: "Back to the main topics."
+            next: root
+
+      about_sharding:
+        text: "Zone-based sharding partitions the game world across multiple engine processes. Each engine owns a set of zones and is authoritative for the mobs, items, and players within them. A zone registry — static or Redis-backed — maps zones to engines. When a player walks through a cross-zone exit, a handoff protocol transfers their serialized state to the destination engine with an ACK-based timeout and rollback on failure. Cross-zone commands like 'tell', 'gossip', and 'who' route through an inter-engine message bus. A Redis player location index enables O(1) routing for targeted messages. Gateways connect to multiple engines and redirect sessions transparently. Hot zones can even be instanced — layered copies with load-balanced selection and auto-scaling based on capacity thresholds."
+        choices:
+          - text: "What about the production infrastructure?"
+            next: about_infrastructure
+          - text: "Back to the main topics."
+            next: root
+
+      about_grpc:
+        text: "The gRPC layer is the bridge between gateways and engines. Bidirectional streaming carries inbound and outbound events with the same semantics as the local bus — Connected, Disconnected, LineReceived, SendText, SendPrompt, and all the rest. Protobuf definitions in the source describe every event type. Session IDs are globally unique via a Snowflake-style allocator, and gateway IDs are leased to prevent collisions. Gateways reconnect with exponential backoff if an engine goes down. The mapping between proto messages and internal events lives in a single ProtoMapper file."
+        choices:
+          - text: "Tell me about zone sharding."
+            next: about_sharding
+          - text: "Back to the main topics."
+            next: root
+
+      about_infrastructure:
+        text: "The production infrastructure runs on AWS ECS Fargate, defined entirely as code using CDK. A single deployment command provisions everything: VPC, RDS PostgreSQL, ElastiCache Redis, EFS for world mutations, Network Load Balancer for telnet, Application Load Balancer for WebSocket, Cloud Map service discovery, Fargate services with auto-scaling, CloudWatch alarms, and optional Route 53 DNS with TLS certificates. The whole stack is parameterized by topology — standalone versus engine-gateway split — and by tier: hobby at roughly four to five dollars a month, moderate, or full production with high availability. Docker containers auto-populate their engine identity from the ECS task hostname."
+        choices:
+          - text: "Back to the main topics."
+            next: root
+
+      about_metrics:
+        text: "The world exposes its vital signs through Prometheus metrics — over fifty gauges and counters covering engine tick duration, combat rounds per second, outbound frame rates, persistence flush latency, login funnel throughput, GC pauses, session counts, and more. A dedicated metrics HTTP endpoint serves them for scraping. Grafana dashboards visualize the data in real time. In split deployments, each engine and gateway has its own metrics port. The system uses Micrometer under the surface, so adding a new metric is a single line of code."
+        choices:
+          - text: "Back to the main topics."
+            next: root
+
+      # ─── Scaling ────────────────────────────────────────────────────────
+      about_scaling:
+        text: "Ah, the scaling story — my favourite chapter. The world was designed with a principle the old architects called 'scale the edge, protect the core.' The engine tick loop stays single-threaded and authoritative — no parallelism in game logic means no race conditions and no synchronization bugs. All the scaling happens at the edges: transport, persistence, inter-process communication. This was built in six phases over time, each one adding a new capability without breaking what came before."
+        choices:
+          - text: "Tell me about the six scaling phases."
+            next: scaling_phases
+          - text: "What were the load test results?"
+            next: about_load_tests
+          - text: "What are the current bottlenecks?"
+            next: about_bottlenecks
+          - text: "What are the scaling tradeoffs?"
+            next: about_tradeoffs
+          - text: "Back to the main topics."
+            next: root
+
+      scaling_phases:
+        text: "Phase One introduced the event bus abstraction — clean interfaces replacing raw channels, creating the seam where local transport could later be swapped for remote. Phase Two added the async persistence worker with write-coalescing, decoupling engine tick latency from disk writes. Phase Three brought Redis as optional cache and pub/sub. Phase Four split the runtime into Engine and Gateway over gRPC for horizontal session ingress. Phase Five implemented zone-based engine sharding with handoff, inter-engine messaging, and zone instancing. Phase Six delivered the full production cloud infrastructure on AWS. Each phase was an incremental addition — Standalone mode kept working at every step."
+        choices:
+          - text: "What were the load test results?"
+            next: about_load_tests
+          - text: "What are the current bottlenecks?"
+            next: about_bottlenecks
+          - text: "Back to the main topics."
+            next: root
+
+      about_load_tests:
+        text: "Two formal load tests were conducted against a single Standalone instance. The first sustained seventy concurrent players with engine tick p99 under four milliseconds against a hundred-millisecond budget — zero tick overruns, forty megabytes of heap, under one percent CPU. The second pushed to a hundred and fifty concurrent players. Tick p99 spiked to fifteen milliseconds during the initial login burst, then settled to three milliseconds steady-state. Brief tick overruns appeared during ramp — about two hundredths per second — then vanished. Eight hundred outbound frames per second at peak. Forty megabytes heap. Two percent CPU. All one hundred fifty players logged in cleanly."
+        choices:
+          - text: "What about the login funnel?"
+            next: about_login_funnel
+          - text: "What are the current bottlenecks?"
+            next: about_bottlenecks
+          - text: "Back to the main topics."
+            next: root
+
+      about_login_funnel:
+        text: "The login path has its own tunable limits. A semaphore caps how many sessions can simultaneously be in the name-lookup, password-hash, world-entry funnel — a hundred and fifty by default. Beyond that, new arrivals get an immediate 'server busy' message rather than silently timing out. Password hashing uses BCrypt on a dedicated thread pool — eight threads by default — isolated from normal I/O so that a login storm can't starve socket handling. At cost-ten BCrypt, sustained throughput is roughly thirty to eighty logins per second. At that rate, a hundred fifty simultaneous connections clear the funnel in two to five seconds."
+        choices:
+          - text: "What are the current bottlenecks?"
+            next: about_bottlenecks
+          - text: "Back to the main topics."
+            next: root
+
+      about_bottlenecks:
+        text: "The clearest pressure point today is the regen subsystem — unlike combat, which caps processing per tick, regen iterates every active player unconditionally. At a hundred fifty players it consumed about three milliseconds per tick. Still comfortable against the hundred-millisecond budget, but it will grow linearly. The login burst spike is noticeable but transient. Outbound backpressure correctly sheds slow WebSocket clients during peak combat — a handful of disconnects per second, by design. Persistence flush latency doubles from a hundred fifty to three hundred milliseconds at higher player counts, but it's off the critical path. GC pressure trends upward but remains sub-millisecond."
+        choices:
+          - text: "What are the scaling tradeoffs?"
+            next: about_tradeoffs
+          - text: "Back to the main topics."
+            next: root
+
+      about_tradeoffs:
+        text: "Every design has tradeoffs, and the architects were honest about theirs. First: determinism over raw parallelism — single-threaded game logic means fewer bugs but finite tick budget per engine shard. Second: eventual persistence over sync-on-every-change — write-behind batching gives lower tick jitter at the cost of a bounded durability window on crash. Third: optional infrastructure — Redis and PostgreSQL are feature flags, not requirements, which keeps small deployments lightweight but adds conditional wiring complexity. Fourth: edge scaling first — gateways and sharding came before engine parallelism, giving practical horizontal scale while keeping the core simple."
+        choices:
+          - text: "Tell me about the six scaling phases."
+            next: scaling_phases
+          - text: "Back to the main topics."
+            next: root
+
+      # ─── Configuration ──────────────────────────────────────────────────
+      about_config:
+        text: "Almost everything in this world is configurable without changing the engine itself. The master configuration — what the scholars call 'application.yaml' — governs every aspect of the system. I could spend days walking you through it. What area interests you?"
+        choices:
+          - text: "Server and network settings."
+            next: config_server
+          - text: "Combat and ability tuning."
+            next: config_combat
+          - text: "Mob tiers and spawn rules."
+            next: config_mobs
+          - text: "Persistence and database options."
+            next: config_persistence
+          - text: "World content — the YAML zone format."
+            next: config_world
+          - text: "Runtime overrides and hot-reload."
+            next: config_runtime
+          - text: "Back to the main topics."
+            next: root
+
+      config_server:
+        text: "Telnet port, WebSocket port, deployment mode, gRPC settings, metrics port — all configurable. The sharding section defines engine IDs, zone assignments, registry type, handoff timeouts, and instance scaling thresholds. Redis connection, Postgres connection, thread pool sizes — all in the same file. Login limits and BCrypt thread count too. You can even override any setting at runtime from the command line: pass '-Pconfig.ambonmud.server.telnetPort=5000' and it takes effect immediately."
+        choices:
+          - text: "Persistence and database options."
+            next: config_persistence
+          - text: "Back to configuration topics."
+            next: about_config
+
+      config_combat:
+        text: "The combat section tunes tick intervals, max combats per tick to prevent tick starvation, damage formulas, dodge calculations, XP curves, death penalties. Ability definitions live in the same config — each spell's damage, mana cost, cooldown, status effects, class restriction, and level requirement. Status effect definitions too: effect type, duration, tick interval, magnitude, stacking rules. The entire ability and effect system is data-driven — new spells and effects are added as configuration entries."
+        choices:
+          - text: "Mob tiers and spawn rules."
+            next: config_mobs
+          - text: "Back to configuration topics."
+            next: about_config
+
+      config_mobs:
+        text: "Mob tiers — weak, standard, elite, and boss — define base HP, damage, armor, XP reward, and gold drop ranges, all with per-level scaling formulas. Per-mob overrides in zone YAML can replace any computed value. Behavior trees assign AI patterns: guards, patrollers, wanderers, cowards, aggressive variants. Respawn timers work per-mob or per-zone. Drop tables define item chances. Every number is tunable — raise boss HP, increase gold drops, adjust the XP curve — all without touching the engine."
+        choices:
+          - text: "Combat and ability tuning."
+            next: config_combat
+          - text: "Back to configuration topics."
+            next: about_config
+
+      config_persistence:
+        text: "A single flag — 'persistence.backend' — switches between YAML flat files and PostgreSQL. YAML uses atomic writes: data goes to a temporary file first, then replaces the original. Zero dependencies, perfect for development. PostgreSQL uses Flyway-managed migrations — twenty-six migration scripts bring the schema from empty to current. Redis sits in front as an optional L2 cache with graceful degradation — if Redis goes away, the system keeps running from the primary store. Write coalescing and flush intervals are configurable too."
+        choices:
+          - text: "Runtime overrides and hot-reload."
+            next: config_runtime
+          - text: "Back to configuration topics."
+            next: about_config
+
+      config_world:
+        text: "The zone YAML format is a complete contract. Each file declares a zone name, start room, optional lifespan, and then maps of rooms, mobs, items, shops, trainers, gathering nodes, and recipes. Rooms have titles, descriptions, exits, optional crafting stations, and optional images. Mobs have names, tiers, levels, drops, dialogue trees, behavior trees, quests, faction affiliations. Items have display names, equipment slots, damage, armor, consumable properties, and enchantments. The world loader validates everything on startup — malformed YAML is caught before a single player connects."
+        choices:
+          - text: "Back to configuration topics."
+            next: about_config
+
+      config_runtime:
+        text: "Any configuration value can be overridden at launch via command-line properties — no need to edit files. Change the telnet port, switch persistence backends, enable debug logging for a specific package, adjust combat tuning — all from the command line. Zone YAML changes take effect on the next server start. The world validates all content at boot time, so errors are caught early. For ongoing operation, Prometheus metrics let you observe the effects of tuning in real time."
+        choices:
+          - text: "Back to the main topics."
+            next: root
+
+      farewell:
+        text: "Come back any time, adventurer. The Deep Record is always open to the curious. May your journeys be guided by understanding as much as by courage."
+
+# ─── Shops ────────────────────────────────────────────────────────────────────
+
+shops:
+  general_store:
+    name: "Dolvan's General Supplies"
+    room: general_store
+    items:
+      - worn_sword
+      - battered_staff
+      - hunting_bow
+      - rusty_dagger
+      - leather_cap
+      - padded_vest
+      - minor_healing_potion
+      - clarity_potion
+      - iron_sword
+      - oak_staff
+      - short_bow
+      - silver_dagger
+      - iron_helm
+      - chainmail_vest
+      - leather_bracers
+
+# ─── Trainers ─────────────────────────────────────────────────────────────────
+
+trainers:
+  warrior_trainer:
+    name: "Captain Varek"
+    class: WARRIOR
+    room: warrior_training_hall
+
+  mage_trainer:
+    name: "Archmage Solen"
+    class: MAGE
+    room: mage_library
+
+  cleric_trainer:
+    name: "High Priest Aldric"
+    class: CLERIC
+    room: cleric_chapel
+
+  rogue_trainer:
+    name: "Shadow"
+    class: ROGUE
+    room: rogue_den
+
+  ranger_trainer:
+    name: "Forester Lenna"
+    class: RANGER
+    room: ranger_outpost
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  new_arrivals_hall:
+    title: "New Arrivals Hall"
+    description: "A vaulted stone hall with high arched windows and the smell of fresh bread drifting in from somewhere nearby. A notice board on the wall is pinned with maps, wanted posters, and a cheerful message: 'Welcome to Thornhaven — the last stop before adventure.' A clerk waves new arrivals toward the great iron doors to the south, which open onto the city."
+    exits:
+      s: city_center
+      n: north_gate
+
+  north_gate:
+    title: "Thornhaven — North Gate"
+    description: "The north gate of Thornhaven stands open day and night, its ironwood doors worn smooth by centuries of traffic. The road north winds uphill through rolling country before disappearing into the distance. A bored-looking guard leans against the arch. A beaten footpath curves east toward the Thornwood treeline. The city lies to the south."
+    exits:
+      s: new_arrivals_hall
+      n: crossroads_path:world_road_south
+      e: thornwood_forest:forest_road
+
+  city_center:
+    title: "City Center"
+    description: "The beating heart of Thornhaven: a broad cobblestone plaza where half a dozen streets converge. A central fountain burbles steadily, its basin cluttered with coin offerings. Merchants, adventurers, and city folk jostle past in every direction. The smell of roasting meat and forge smoke hangs in the air. A carved stone archway to the northeast leads to the Chronicler's Archive."
+    exits:
+      n: new_arrivals_hall
+      e: east_district
+      w: west_district
+      s: south_square
+      u: chroniclers_archive
+
+  chroniclers_archive:
+    title: "The Chronicler's Archive"
+    description: "A circular chamber of pale stone and warm lamplight, lined floor to ceiling with books, scrolls, and clockwork models of arcane mechanisms. Crystalline orreries rotate slowly overhead, tracing patterns that seem to map something larger than mere stars. At the center, an elderly woman sits at an enormous desk strewn with diagrams and open tomes. A brass plaque on the desk reads: 'Archivist Tessara — Keeper of the Deep Record.' The city center lies back through the archway below."
+    exits:
+      d: city_center
+
+  east_district:
+    title: "East District"
+    description: "A quieter street lined with civic buildings. The bank's stone facade stands to the north, its polished brass sign catching the light. The crafting quarter's chimneys puff lazy smoke to the east. Trade Row with its shops and auction hall lies to the south. The city center is back to the west."
+    exits:
+      w: city_center
+      n: thornhaven_bank
+      e: crafting_quarter
+      s: trade_row
+
+  west_district:
+    title: "West District"
+    description: "A warm, lamp-lit lane leading to the inn district. The Tarnished Flagon's hanging sign creaks overhead to the north, and the guild registry's carved oak door stands to the west. The Trainers' Hall is through the archway to the south. The city center lies east."
+    exits:
+      e: city_center
+      n: tarnished_flagon_inn
+      w: guild_registry
+      s: trainers_hall
+
+  south_square:
+    title: "South Square"
+    description: "A wide open space at the southern end of the city. The arena district's stone walls and crowd noise are audible to the east. A narrow alley leads south toward the post office and Old Grimly's study. Trophy Hall's carved stone facade stands to the west. A rusted iron grate in the cobblestones below leads to the old tunnels beneath the city."
+    exits:
+      n: city_center
+      e: arena_district
+      s: post_office
+      w: trophy_hall
+      d: lower_city_alley
+
+  trade_row:
+    title: "Trade Row"
+    description: "A bustling commercial street south of the east district. Stalls and storefronts compete for attention: the general store's open front glows warmly to the north, and the auction hall's bright lanterns draw a steady crowd to the east. The south gate arch leads out to the farming fields beyond the city wall."
+    exits:
+      n: east_district
+      w: general_store
+      e: auction_hall
+      s: farmer_fields:north_fields
+
+  tarnished_flagon_inn:
+    title: "The Tarnished Flagon Inn"
+    description: "A low-beamed common room with mismatched chairs and a crackling hearthfire. Dried herbs hang from the rafters and the smell of wood smoke and barley fills the air. Innkeeper Mira stands behind the bar with a ready smile. A faded sign reads: 'Set your recall here — this hearth is always burning.' The door leads back to the west district."
+    bank: true
+    exits:
+      s: west_district
+
+  thornhaven_bank:
+    title: "Thornhaven Bank"
+    description: "A hushed chamber of polished marble and iron grillwork. Tellers work behind heavy brass bars, and a perpetual low hum suggests coin changing hands somewhere out of sight. Banker Theron nods in professional greeting from behind the main counter. The east district is through the south door."
+    bank: true
+    exits:
+      s: east_district
+
+  guild_registry:
+    title: "Guild Registry"
+    description: "A formal chamber with shelves of leather-bound ledgers and guild charters behind glass. The guild registrar, Edda, looks up from her desk with practiced efficiency. The west district is through the door to the east."
+    exits:
+      e: west_district
+
+  general_store:
+    title: "Dolvan's General Supplies"
+    description: "A cramped but well-organized shop with gear hanging from every hook and shelf. Swords, staves, bows, and potions crowd the narrow aisles. Dolvan the Merchant stands behind a wooden counter, ready to haggle. Type 'list' to see available wares."
+    exits:
+      e: trade_row
+
+  auction_hall:
+    title: "Thornhaven Auction Hall"
+    description: "A high-vaulted hall with tiered benches and a raised podium where Auctioneer Brant holds court. Chalk boards list current lots. The clamour of competitive bidding fills the room. The east arch opens onto the cobblestone road that runs away from the city. Type 'auction list' to browse current listings."
+    exits:
+      w: trade_row
+      e: cobblestone_road:west_junction
+
+  post_office:
+    title: "Post Office"
+    description: "A tidy stone room with pigeonhole shelving covering every wall. Mail Clerk Oswin moves between the racks with practiced efficiency, sorting letters with a speed that suggests decades of practice. 'mail list' to check your inbox."
+    exits:
+      n: south_square
+      s: grimlys_study
+
+  trophy_hall:
+    title: "Trophy Hall"
+    description: "A solemn hall with torches casting warm light on bronze plaques and glass cases. The names of Eryndal's greatest champions are inscribed in stone, and a perpetual scroll of leaderboard standings updates itself by some enchantment at the far end. Type 'leaderboard' or 'halloffame' to see who stands tallest."
+    exits:
+      e: south_square
+
+  grimlys_study:
+    title: "Old Grimly's Study"
+    description: "A cramped, aromatic room thick with candle smoke and the smell of old maps. Rolled charts spill off every surface, pinned with cryptic notations. Old Grimly himself occupies a threadbare armchair, surrounded by papers and the faint odor of adventure. Type 'dungeon enter dungeon_of_echoes' to descend into the Dungeon of Echoes."
+    exits:
+      n: post_office
+
+  # ─── Trainers' Hall wing ─────────────────────────────────────────────────
+
+  trainers_hall:
+    title: "Trainers' Hall"
+    description: "A wide corridor carved from pale stone, lined with five arched doorways. Each doorway bears a carved emblem: sword, staff, crook, blade, and bow. This is where Thornhaven's finest teachers receive their students. The west district is back through the main entrance to the north."
+    exits:
+      n: west_district
+      e: warrior_training_hall
+      w: cleric_chapel
+      s: mage_library
+      u: rogue_den
+      d: ranger_outpost
+
+  warrior_training_hall:
+    title: "Warrior Training Hall"
+    description: "A broad practice floor of packed earth, lined with weapons racks and training dummies scarred by countless blows. Banners depicting crossed swords hang from the beams. Captain Varek stands at the far end, arms crossed, watching with appraising eyes."
+    exits:
+      w: trainers_hall
+
+  mage_library:
+    title: "The Arcane Library"
+    description: "Floor-to-ceiling shelves of spellbooks and scrolls, dimly lit by hovering orbs of pale blue light. The air smells of ozone and dusty paper. Archmage Solen stands at a reading lectern, a tome open before him, though his eyes are already on you."
+    exits:
+      n: trainers_hall
+
+  cleric_chapel:
+    title: "Chapel of the Divine Light"
+    description: "A serene room with high windows that fill it with warm afternoon light regardless of the hour. Stone benches face a simple altar bearing a chalice and a candle. High Priest Aldric kneels in brief prayer before rising to greet you."
+    exits:
+      e: trainers_hall
+
+  rogue_den:
+    title: "The Hidden Den"
+    description: "A low-ceilinged room accessible only through a recessed doorway disguised as a bookshelf. The lighting is deliberately poor, the shadows deliberate. A figure leans against the far wall — Shadow, known only as Shade — watching you with unreadable eyes."
+    exits:
+      d: trainers_hall
+
+  ranger_outpost:
+    title: "Ranger's Outpost"
+    description: "A functional, unpretentious room that smells of pine resin and leather. Maps of the Thornwood and surrounding wilds cover one wall. Tracking tools and hunting equipment hang in neat rows. Forester Lenna stands at the map table, marking something with a grease pencil."
+    exits:
+      u: trainers_hall
+
+  # ─── Crafting Quarter ────────────────────────────────────────────────────
+
+  crafting_quarter:
+    title: "Crafting Quarter"
+    description: "A bustling workshop district where the clang of hammers and the hiss of boiling alchemical reagents fill the air. Three specialist rooms branch off a central hub: the forge to the north, the alchemy lab to the east, and the tailor's workbench to the west. Sylva the Recipe Merchant holds court in the center, her satchel bulging with scrolls."
+    exits:
+      w: east_district
+      n: forge_room
+      e: alchemy_lab
+      s: tailors_workbench
+
+  forge_room:
+    title: "The Forge"
+    description: "A sweltering room dominated by a roaring stone forge and a wide anvil scarred by countless blows. Coal bins line one wall, tool racks the other. The heat is intense but the crafting opportunities are unparalleled. Type 'craft <recipe>' here to smith metal goods."
+    station: FORGE
+    exits:
+      s: crafting_quarter
+
+  alchemy_lab:
+    title: "Alchemy Laboratory"
+    description: "A cool, well-lit room with long stone benches covered in glass apparatus, bubbling retorts, and neatly labelled jars. The smell is complicated: part herb garden, part chemistry. This is where potions and salves are made. Type 'craft <recipe>' here to brew alchemical concoctions."
+    station: ALCHEMY_TABLE
+    exits:
+      w: crafting_quarter
+
+  tailors_workbench:
+    title: "Tailor's Workbench"
+    description: "A bright, airy room with wide windows and a long central workbench covered in bolts of cloth, spools of thread, and half-finished garments. A tailor's dummy stands in the corner wearing something ambitious. Type 'craft <recipe>' here for leatherwork and cloth goods."
+    station: WORKBENCH
+    exits:
+      n: crafting_quarter
+
+  # ─── Arena District ───────────────────────────────────────────────────────
+
+  arena_district:
+    title: "Arena District"
+    description: "An open courtyard of stamped earth bordered by tiered stone spectator benches. The Arena Master stands near the center, ready to officiate any duel. The air has the electric quality of a crowd waiting for a show. Challenge another player with 'duel challenge <name>'."
+    exits:
+      w: south_square
+      s: dueling_grounds
+
+  dueling_grounds:
+    title: "Dueling Grounds"
+    description: "The arena's inner pit: a circular earthen floor chalked with a dueling circle and surrounded by a low wooden rail. Whatever happens here stays here — the Arena Master's rules prohibit unsanctioned violence. North leads back to the district entrance."
+    exits:
+      n: arena_district
+
+  lower_city_alley:
+    title: "Lower City Alley"
+    description: "A narrow service passage beneath the south square, dimly lit by a single torch mounted in a corroded bracket. The walls are old stone — much older than the buildings above — and the air smells of damp earth. A heavy iron grate in the floor has been recently forced open, revealing a rusted ladder descending into the sewer tunnels below. The south square is back above."
+    exits:
+      u: south_square
+      d: thornhaven_sewers:sewer_entrance

@@ -357,14 +357,14 @@ Full snapshot of inventory and equipped items. Sent on login and after any inven
 {
   "inventory": [
     {
-      "id": "tutorial_glade:short_sword#3",
+      "id": "thornhaven_city:short_sword#3",
       "name": "Short Sword",
       "slot": "MAIN_HAND",
       "damage": 8,
       "armor": 0
     },
     {
-      "id": "tutorial_glade:health_potion#7",
+      "id": "thornhaven_city:health_potion#7",
       "name": "Health Potion",
       "slot": null,
       "damage": 0,
@@ -410,7 +410,7 @@ Sent immediately when the player picks up an item (ground → inventory).
 
 ```json
 {
-  "id": "tutorial_glade:iron_shield#12",
+  "id": "thornhaven_city:iron_shield#12",
   "name": "Iron Shield",
   "slot": "OFF_HAND",
   "damage": 0,
@@ -428,7 +428,7 @@ Sent immediately when an item leaves the player's inventory (dropped, sold, cons
 
 ```json
 {
-  "id": "tutorial_glade:health_potion#7",
+  "id": "thornhaven_city:health_potion#7",
   "name": "Health Potion"
 }
 ```
@@ -600,13 +600,13 @@ Sent on login, every time the player moves to a new room, and in response to the
 
 ```json
 {
-  "id": "tutorial_glade:clearing",
+  "id": "thornhaven_city:market_square",
   "title": "Sunlit Clearing",
   "description": "A wide meadow bathed in afternoon light. Wildflowers dot the tall grass.",
-  "zone": "tutorial_glade",
+  "zone": "thornhaven_city",
   "exits": {
-    "north": "tutorial_glade:forest_path",
-    "east":  "tutorial_glade:stream_bank"
+    "north": "thornhaven_city:main_street",
+    "east":  "thornhaven_city:east_gate"
   },
   "image": "/images/rooms/clearing.png",
   "music": "forest_theme",
@@ -676,12 +676,12 @@ Full snapshot of mobs currently in the room. Sent on login and after any mob ent
 ```json
 [
   {
-    "id": "tutorial_glade:wolf#2",
-    "name": "Grey Wolf",
-    "description": "A lean grey wolf with watchful eyes.",
+    "id": "thornhaven_city:guard#2",
+    "name": "City Guard",
+    "description": "A watchful guard in polished chainmail.",
     "hp": 28,
     "maxHp": 40,
-    "image": "/images/mobs/wolf.png"
+    "image": "/images/mobs/guard.png"
   }
 ]
 ```
@@ -704,12 +704,12 @@ Sent immediately to all players in a room when a mob spawns or wanders in. Same 
 
 ```json
 {
-  "id": "tutorial_glade:wolf#2",
-  "name": "Grey Wolf",
-  "description": "A lean grey wolf with watchful eyes.",
+  "id": "thornhaven_city:guard#2",
+  "name": "City Guard",
+  "description": "A watchful guard in polished chainmail.",
   "hp": 40,
   "maxHp": 40,
-  "image": "/images/mobs/wolf.png"
+  "image": "/images/mobs/guard.png"
 }
 ```
 
@@ -721,12 +721,12 @@ Sent once per tick to all players in a room when a mob's HP changes (combat dama
 
 ```json
 {
-  "id": "tutorial_glade:wolf#2",
-  "name": "Grey Wolf",
-  "description": "A lean grey wolf with watchful eyes.",
+  "id": "thornhaven_city:guard#2",
+  "name": "City Guard",
+  "description": "A watchful guard in polished chainmail.",
   "hp": 12,
   "maxHp": 40,
-  "image": "/images/mobs/wolf.png"
+  "image": "/images/mobs/guard.png"
 }
 ```
 
@@ -737,7 +737,7 @@ Sent once per tick to all players in a room when a mob's HP changes (combat dama
 Sent immediately to all players in the room when a mob dies or wanders out.
 
 ```json
-{ "id": "tutorial_glade:wolf#2" }
+{ "id": "thornhaven_city:guard#2" }
 ```
 
 ---
@@ -749,7 +749,7 @@ Full snapshot of items on the room floor. Sent after an item is dropped, picked 
 ```json
 [
   {
-    "id": "tutorial_glade:iron_key#5",
+    "id": "thornhaven_city:iron_key#5",
     "name": "Iron Key",
     "description": "A heavy iron key.",
     "image": "/images/items/iron_key.png"
@@ -835,11 +835,11 @@ Sent when the player enters or exits combat, and once per tick while in combat. 
 
 ```json
 {
-  "targetId": "tutorial_glade:wolf#2",
-  "targetName": "Grey Wolf",
+  "targetId": "thornhaven_city:guard#2",
+  "targetName": "City Guard",
   "targetHp": 22,
   "targetMaxHp": 40,
-  "targetImage": "/images/mobs/wolf.png"
+  "targetImage": "/images/mobs/guard.png"
 }
 ```
 
@@ -860,8 +860,8 @@ Sent immediately for each combat event (hit, dodge, heal, DoT tick, kill, death,
 ```json
 {
   "type": "meleeHit",
-  "targetName": "Grey Wolf",
-  "targetId": "tutorial_glade:wolf#2",
+  "targetName": "City Guard",
+  "targetId": "thornhaven_city:guard#2",
   "damage": 14,
   "sourceIsPlayer": true
 }
@@ -911,7 +911,7 @@ Sent immediately when the player gains XP, gold, or levels up. Drives floating p
 {
   "type": "xp",
   "amount": 150,
-  "source": "Grey Wolf"
+  "source": "City Guard"
 }
 ```
 
@@ -933,7 +933,7 @@ Metadata about mobs in the room — level, tier, and interaction markers (quest,
 ```json
 [
   {
-    "id": "tutorial_glade:merchant#1",
+    "id": "thornhaven_city:guard#1",
     "level": 10,
     "tier": "normal",
     "questGiver": true,
@@ -1100,7 +1100,7 @@ Full friends list snapshot. Sent on login and on `friend list`.
 
 ```json
 [
-  { "name": "Thornveil", "online": true, "level": 15, "zone": "tutorial_glade" },
+  { "name": "Thornveil", "online": true, "level": 15, "zone": "thornhaven_city" },
   { "name": "Silkwind", "online": false, "level": null, "zone": null }
 ]
 ```
@@ -1144,7 +1144,7 @@ Sent when a player enters a shop or uses the `list` command at a shop.
   "sellMultiplier": 0.5,
   "items": [
     {
-      "id": "tutorial_glade:health_potion",
+      "id": "thornhaven_city:health_potion",
       "name": "Health Potion",
       "keyword": "potion",
       "description": "Restores 20 HP.",
@@ -1370,11 +1370,11 @@ After the WebSocket connection is established, the server automatically sends `C
 ```
 ← {"gmcp":"Char.StatusVars","data":{"hp":"HP","maxHp":"Max HP","mana":"Mana","maxMana":"Max Mana","level":"Level","xp":"XP"}}
 ← {"gmcp":"Char.Vitals","data":{"hp":100,"maxHp":100,"mana":80,"maxMana":80,"level":3,"xp":1800,"xpIntoLevel":800,"xpToNextLevel":1000,"gold":0,"inCombat":false}}
-← {"gmcp":"Room.Info","data":{"id":"tutorial_glade:spawn","title":"Mossy Steps","description":"...","zone":"tutorial_glade","exits":{"north":"tutorial_glade:clearing"}}}
+← {"gmcp":"Room.Info","data":{"id":"thornhaven_city:market_square","title":"Mossy Steps","description":"...","zone":"thornhaven_city","exits":{"north":"thornhaven_city:main_street"}}}
 ← {"gmcp":"Char.Name","data":{"name":"Ambuoroko","race":"ELF","class":"MAGE","level":3}}
 ← {"gmcp":"Char.Items.List","data":{"inventory":[],"equipment":{"HEAD":null,"NECK":null,"CHEST":null,"HANDS":null,"WAIST":null,"LEGS":null,"FEET":null,"MAIN_HAND":null,"OFF_HAND":null}}}
 ← {"gmcp":"Room.Players","data":[]}
-← {"gmcp":"Room.Mobs","data":[{"id":"tutorial_glade:wolf#1","name":"Grey Wolf","hp":40,"maxHp":40}]}
+← {"gmcp":"Room.Mobs","data":[{"id":"thornhaven_city:guard#1","name":"City Guard","hp":40,"maxHp":40}]}
 ← {"gmcp":"Room.Items","data":[]}
 ← {"gmcp":"Char.Skills","data":[...]}
 ← {"gmcp":"Char.StatusEffects","data":[]}
@@ -1385,7 +1385,7 @@ After the WebSocket connection is established, the server automatically sends `C
 ### WebSocket combat tick
 
 ```
-← {"gmcp":"Room.UpdateMob","data":{"id":"tutorial_glade:wolf#1","name":"Grey Wolf","hp":22,"maxHp":40}}
+← {"gmcp":"Room.UpdateMob","data":{"id":"thornhaven_city:guard#1","name":"City Guard","hp":22,"maxHp":40}}
 ← {"gmcp":"Char.Vitals","data":{"hp":72,"maxHp":100,"mana":58,"maxMana":80,"level":3,"xp":1800,"xpIntoLevel":800,"xpToNextLevel":1000,"gold":0,"inCombat":true}}
 ```
 
@@ -1403,13 +1403,13 @@ Zone topology as a graph of rooms and connections. Enables clients to render a p
 
 ```json
 {
-  "zone": "tutorial_glade",
+  "zone": "thornhaven_city",
   "rooms": [
     {
-      "id":   "tutorial_glade:spawn",
+      "id":   "thornhaven_city:market_square",
       "title": "Mossy Steps",
       "x": 0, "y": 0,
-      "exits": { "north": "tutorial_glade:clearing" }
+      "exits": { "north": "thornhaven_city:main_street" }
     }
   ]
 }

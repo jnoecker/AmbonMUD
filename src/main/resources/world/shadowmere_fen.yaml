@@ -1,0 +1,313 @@
+zone: shadowmere_fen
+startRoom: barrow_passage
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  shadow_dust:
+    displayName: "a pinch of shadow dust"
+    keyword: dust
+    description: "Fine black powder that seems to drink in the light around it. Left behind by shadow creatures. Useful in dark alchemy."
+    basePrice: 18
+
+  fen_essence:
+    displayName: "a vial of fen essence"
+    keyword: essence
+    description: "A thick, luminous liquid distilled from the corrupted fen. Alchemists value its unusual properties."
+    basePrice: 22
+
+  cursed_idol:
+    displayName: "a cursed idol"
+    keyword: idol
+    description: "A small stone figure carved in the likeness of something not quite human. The surface is warm despite the cold fen air, and it seems to pulse faintly when held. Scholar Vex will want to see this."
+    basePrice: 0
+
+  shadow_thistle:
+    displayName: "a shadow thistle"
+    keyword: thistle
+    description: "A thorny plant that grows only in shadow-corrupted ground. Its deep purple flowers are prized by alchemists for warding draughts."
+    basePrice: 20
+
+  heralds_blade:
+    displayName: "the Shadow Herald's blade"
+    keyword: blade
+    slot: hand
+    damage: 12
+    basePrice: 420
+    description: "A long, curved sword of blackened iron that trails wisps of shadow when swung. The Shadow Herald wielded this for centuries."
+
+  fen_shroud:
+    displayName: "a fen shroud"
+    keyword: shroud
+    slot: body
+    armor: 7
+    basePrice: 400
+    description: "A cloak woven from fen-mist and shadow, unnervingly light. It shifts and flows as though alive, offering protection that defies its apparent fragility."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  shadow_creep:
+    name: "a shadow creep"
+    room: shadow_fen_edge
+    tier: standard
+    level: 6
+    respawnSeconds: 120
+    xpReward: 45
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: shadow_dust
+        chance: 0.5
+
+  cursed_wisp:
+    name: "a cursed wisp"
+    room: wailing_pool
+    tier: standard
+    level: 6
+    respawnSeconds: 120
+    xpReward: 42
+    behavior:
+      template: wander_aggro
+
+  fen_specter:
+    name: "a fen specter"
+    room: shadow_fen_depths
+    tier: standard
+    level: 7
+    respawnSeconds: 120
+    xpReward: 50
+    behavior:
+      template: aggro_guard
+
+  twisted_shambler:
+    name: "a twisted shambler"
+    room: corrupted_grove
+    tier: elite
+    level: 7
+    respawnSeconds: 300
+    xpReward: 85
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: fen_essence
+        chance: 0.6
+
+  shadow_herald:
+    name: "the Shadow Herald"
+    room: shadow_heralds_sanctum
+    tier: boss
+    level: 8
+    respawnSeconds: 900
+    xpReward: 250
+    goldMin: 90
+    goldMax: 170
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: heralds_blade
+        chance: 0.45
+      - itemId: fen_shroud
+        chance: 0.35
+    dialogue:
+      root:
+        text: "You have followed the corruption this far. Impressive. Foolish, but impressive. I am what remains when the shadow takes root — the herald of what is coming. The seal, the medallion, the wards — all of it crumbles. The Celestial Peak will fall."
+        choices:
+          - text: "What do you know about the Celestial Peak?"
+            next: peak_info
+          - text: "We're ending this."
+            next: defiance
+          - text: "We'll leave."
+            next: farewell
+      peak_info:
+        text: "The wards placed by the old order are failing. The seals they scattered across this land were meant to hold something at bay. Your scholars collect trinkets. The Iron Order hoards relics. None of them understand what is waking. I am merely... the announcement."
+        choices:
+          - text: "Then we stop you first."
+            next: defiance
+          - text: "We'll go."
+            next: farewell
+      defiance:
+        text: "Stopping me changes nothing. But come. Let us see what the living are worth."
+        choices:
+          - text: "Now."
+            next: farewell
+      farewell:
+        text: "..."
+
+  scholar_vex:
+    name: "Scholar Vex"
+    room: scholars_camp
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - shadow_corruption
+    dialogue:
+      root:
+        text: "Stay close — this fen is not what it was. I'm Vex, Scholars' Guild, following up on Timon's work at the Sunken Temple. The corruption here traces back to Vaelthos and something older. There's a cursed idol on a twisted altar deeper in. I need it for analysis. Can you retrieve it?"
+        choices:
+          - text: "I'll find the idol."
+            next: quest_accept
+          - text: "What's causing the corruption?"
+            next: corruption_info
+          - text: "Goodbye."
+            next: farewell
+      corruption_info:
+        text: "Vaelthos was experimenting with shadow magic drawn from something beneath the Celestial Peak. When he was destroyed, his work didn't stop — it spread. This fen is saturated with it. The idol on the altar is a focal point. Removing it might slow the spread."
+        choices:
+          - text: "I'll get the idol."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "Thank you. The twisted altar is south and east of here — through the corrupted grove. Be careful. The things in this fen are drawn to the idol's power."
+        choices:
+          - text: "I'll return with it."
+            next: farewell
+      farewell:
+        text: "Watch your step. The ground shifts in places."
+
+# ─── Gathering Nodes ──────────────────────────────────────────────────────────
+
+gatheringNodes:
+  shadow_thistle_patch:
+    displayName: "a shadow thistle patch"
+    keyword: thistle
+    skill: herbalism
+    skillRequired: 3
+    room: corrupted_grove
+    respawnSeconds: 240
+    xpReward: 25
+    yields:
+      - itemId: shadow_thistle
+        minQuantity: 1
+        maxQuantity: 2
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  shadow_corruption:
+    name: "The Shadow Corruption"
+    description: "Scholar Vex needs the cursed idol from the twisted altar deep in the Shadowmere Fen. Removing it may slow the shadow corruption spreading from Vaelthos's experiments."
+    giver: scholar_vex
+    objectives:
+      - type: collect
+        targetKey: cursed_idol
+        count: 1
+        description: "Recover the cursed idol from the twisted altar"
+    rewards:
+      xp: 1000
+      gold: 45
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  barrow_passage:
+    title: "Shadowmere Fen — Barrow Passage"
+    description: "The passage from the Dark Barrows opens onto sodden ground and a sky choked with grey-green haze. The air tastes of rot and something metallic. The fen stretches ahead to the east — a flat expanse of dark water, twisted trees, and ground that moves underfoot. The barrows are behind you to the west."
+    exits:
+      w: dark_barrows:vaelthos_chamber
+      e: shadow_fen_edge
+
+  shadow_fen_edge:
+    title: "Shadow Fen — Western Edge"
+    description: "The fen proper begins here: ankle-deep black water, tussocks of dead grass, and a pervasive sense of wrongness. Shadow creeps drift between the stunted trees, trailing dark mist. The ground is unreliable — test every step. Paths lead deeper into the fen in several directions."
+    exits:
+      w: barrow_passage
+      n: haunted_willows
+      e: fen_crossing
+      s: murk_crossing
+
+  haunted_willows:
+    title: "Haunted Willows"
+    description: "A grove of ancient willows whose branches trail in the dark water like grasping fingers. The trees are leafless and grey, but they move — slowly, purposefully — in a wind you cannot feel. Faint sounds drift through the canopy: whispers, distant laughter, the creak of wood under strain. The fen edge is back to the south."
+    exits:
+      s: shadow_fen_edge
+
+  murk_crossing:
+    title: "Murk Crossing"
+    description: "A stretch of fen where the water deepens to knee-height and the footing becomes treacherous. Submerged roots and hidden holes make every step a gamble. Something pale moves beneath the surface. A wailing pool lies to the east. The fen edge is back north."
+    exits:
+      n: shadow_fen_edge
+      e: wailing_pool
+
+  wailing_pool:
+    title: "Wailing Pool"
+    description: "A broad pool of water so dark it looks like liquid shadow. Cursed wisps orbit the pool's surface in slow, mournful patterns, their light cold and blue-white. The sound that gives the pool its name rises and falls at irregular intervals — not wind, not animal, but something trapped beneath the water. The murk crossing is back to the west."
+    exits:
+      w: murk_crossing
+
+  fen_crossing:
+    title: "Fen Crossing"
+    description: "A relatively dry hummock of ground at the fen's center, offering a brief respite from the waterlogged terrain. Paths branch in several directions: north to a camp visible through the haze, south to a grove of twisted trees, and east deeper into the shadow-saturated depths."
+    exits:
+      w: shadow_fen_edge
+      n: scholars_camp
+      s: corrupted_grove
+      e: shadow_fen_depths
+
+  scholars_camp:
+    title: "Scholar Vex's Camp"
+    description: "A small, carefully maintained camp on an elevated patch of dry ground. Scholar Vex has set up research materials under a waterproof tarp: specimen jars, notebooks, and what looks like containment wards scratched into flat stones. The camp is well-chosen — defensible and dry. The fen crossing is back to the south."
+    exits:
+      s: fen_crossing
+
+  corrupted_grove:
+    title: "Corrupted Grove"
+    description: "A stand of trees so deeply shadow-corrupted that they've turned black from root to crown. The bark weeps dark sap and the ground beneath them is soft and warm. Shadow thistles grow in thick patches among the roots — the only thing that thrives here. A twisted shambler patrols the grove. A path leads east toward a stone structure visible through the trees."
+    exits:
+      n: fen_crossing
+      e: twisted_altar_path
+
+  twisted_altar_path:
+    title: "Twisted Altar Path"
+    description: "A raised causeway of cracked flagstones leading through the worst of the corruption toward a stone structure ahead. The stones underfoot are carved with symbols that glow faintly — old wards, now failing. The air grows colder with every step east. The corrupted grove is back to the west."
+    exits:
+      w: corrupted_grove
+      e: twisted_altar
+
+  twisted_altar:
+    title: "Twisted Altar"
+    description: "A stone platform in a clearing where the corruption is most intense. An altar of dark stone dominates the center, its surface carved with geometric patterns that hurt to look at. On the altar sits a small stone idol, pulsing with shadow energy. This is a focal point — the corruption in the fen radiates from this spot. The path leads back west."
+    features:
+      altar_surface:
+        type: CONTAINER
+        displayName: "the twisted altar"
+        keyword: altar
+        initialState: open
+        resetWithZone: false
+        items:
+          - cursed_idol
+    exits:
+      w: twisted_altar_path
+
+  shadow_fen_depths:
+    title: "Shadow Fen Depths"
+    description: "The deepest part of the fen, where the shadow corruption is so thick it dims the sky to near-darkness even at midday. Fen specters drift through the murk, their forms barely distinguishable from the ambient shadow. The ground here is cold and hard — frozen by whatever force sustains this place. A passage south leads toward something luminous and wrong."
+    exits:
+      w: fen_crossing
+      s: herald_approach
+
+  herald_approach:
+    title: "Shadow Herald's Approach"
+    description: "The fen gives way here to bare stone — a natural shelf of rock rising from the waterline, swept clean by forces that have nothing to do with weather. The air ahead pulses with cold light. Something ancient and powerful occupies the sanctum to the east. The fen depths are back to the north."
+    exits:
+      n: shadow_fen_depths
+      e: shadow_heralds_sanctum
+
+  shadow_heralds_sanctum:
+    title: "Shadow Herald's Sanctum"
+    description: "A natural cavern at the fen's eastern extremity, its walls coated in crystallised shadow that refracts cold light in all directions. The Shadow Herald drifts at the center — a towering figure of darkness given form, its eyes burning with pale fire. The cavern narrows to a sealed passage at its far end, the stone carved with star-patterns identical to those found on the ancient seals. Whatever lies beyond is not yet accessible."
+    exits:
+      w: herald_approach

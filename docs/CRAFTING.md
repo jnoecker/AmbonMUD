@@ -124,22 +124,21 @@ Crafting skills are stored per-player as a JSON map in `PlayerRecord.craftingSki
 
 Gather cooldowns are runtime-only (`PlayerState.gatherCooldownUntilMs`) and reset on logout.
 
-## Crafting Workshop Zone
+## Crafting in the World
 
-The `crafting_workshop` zone provides a starter crafting area:
+Crafting content — gathering nodes, crafting stations, and recipe vendors — is distributed across multiple world zones rather than concentrated in a single dedicated area. Players discover gathering nodes and crafting stations as they explore:
 
-| Room | Contents |
-|------|----------|
-| Entrance | Hub with directional signage |
-| Mine Tunnel (north) | Copper vein (skill 1), iron vein (skill 15) |
-| Herb Garden (east) | Wildflower patch (skill 1), healing herbs (skill 15) |
-| Forge Room (west) | Station: `forge` — smithing bonus |
-| Alchemy Lab | Station: `alchemy_table` — alchemy bonus |
-| Supply Shop (south) | NPC merchant selling raw materials |
+| Zone | Crafting Content |
+|------|-----------------|
+| `thornwood_forest` | Herb gathering nodes, basic alchemy ingredients |
+| `highland_trails` | Mining nodes, ore deposits |
+| `old_mines` | Rich mining veins, forge stations |
+| `marsh_of_fog` | Rare herb nodes, alchemy tables |
+| `sea_cliffs` | Fishing nodes, scattered gathering |
+| `shadowmere_fen` | Advanced gathering nodes |
+| `frost_caverns` | High-level mining and rare materials |
 
-**Starter recipes:**
-- **Smithing:** Copper Sword (3 copper ore, skill 1), Copper Helm (4 copper ore, skill 5), Iron Sword (3 iron + 1 copper ore, skill 20)
-- **Alchemy:** Minor Healing Potion (2 wildflower, skill 1), Strength Elixir (2 healing herb + 1 wildflower, skill 20)
+Crafting stations (e.g., `forge`, `alchemy_table`, `enchanting_table`) are placed in rooms throughout these zones. Check room descriptions for available stations.
 
 ## Specialization
 

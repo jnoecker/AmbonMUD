@@ -1,0 +1,257 @@
+zone: dark_barrows
+startRoom: barrow_approach
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  barrow_shard:
+    displayName: "a barrow shard"
+    keyword: shard
+    description: "A fragment of ancient burial-mound stone, still faintly warm with old enchantment. Worth something to the right buyer."
+    basePrice: 20
+
+  grave_fang:
+    displayName: "a grave hound fang"
+    keyword: fang
+    description: "A curved fang from a grave hound, still sharp. Alchemists use them in protective concoctions."
+    basePrice: 15
+
+  spectral_essence:
+    displayName: "a vial of spectral essence"
+    keyword: essence
+    description: "Bottled residue of a spectral knight — faintly luminous and cold to the touch. Rare and valuable."
+    basePrice: 40
+
+  banshee_wail_crystal:
+    displayName: "a banshee wail crystal"
+    keyword: crystal
+    description: "A crystal that still vibrates with the resonance of a banshee's last cry. Touching it raises the hairs on your arm."
+    basePrice: 35
+
+  vaelthos_staff:
+    displayName: "Vaelthos's staff"
+    keyword: staff
+    slot: hand
+    damage: 10
+    basePrice: 320
+    description: "A bone-and-iron staff wrapped in preserved skin, humming with necromantic energy. Powerful and unsettling."
+
+  vaelthos_grimoire:
+    displayName: "Vaelthos's grimoire"
+    keyword: grimoire
+    slot: body
+    armor: 4
+    basePrice: 250
+    description: "A robe-weight grimoire bound to the body like armour — dark leather covered in stitched runes that provide surprising protection."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  barrow_wight:
+    name: "a barrow wight"
+    room: wight_hollow
+    tier: standard
+    level: 5
+    respawnSeconds: 90
+    xpReward: 40
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: barrow_shard
+        chance: 0.4
+
+  grave_hound:
+    name: "a grave hound"
+    room: hound_run
+    tier: standard
+    level: 5
+    respawnSeconds: 90
+    xpReward: 35
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: grave_fang
+        chance: 0.5
+
+  spectral_knight:
+    name: "a spectral knight"
+    room: knights_hall
+    tier: elite
+    level: 6
+    respawnSeconds: 300
+    xpReward: 70
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: spectral_essence
+        chance: 0.5
+
+  banshee:
+    name: "a banshee"
+    room: banshee_hollow
+    tier: standard
+    level: 6
+    respawnSeconds: 180
+    xpReward: 50
+    drops:
+      - itemId: banshee_wail_crystal
+        chance: 0.45
+
+  necromancer_vaelthos:
+    name: "Necromancer Vaelthos"
+    room: vaelthos_chamber
+    tier: boss
+    level: 7
+    respawnSeconds: 900
+    xpReward: 200
+    goldMin: 80
+    goldMax: 150
+    drops:
+      - itemId: vaelthos_staff
+        chance: 0.5
+      - itemId: vaelthos_grimoire
+        chance: 0.4
+      - itemId: barrow_shard
+        chance: 1.0
+    dialogue:
+      root:
+        text: "...Visitors. How quaint. I haven't had visitors since I sealed the outer gates. You're either very skilled or very foolish — perhaps both. I am Vaelthos. These barrows are my laboratory. Whatever brought you here, I suggest you leave before I decide you're more useful as a specimen."
+        choices:
+          - text: "What are you researching?"
+            next: research_info
+          - text: "We're here to stop you."
+            next: defiance
+          - text: "We'll be going now."
+            next: farewell
+      research_info:
+        text: "The dead remember things the living cannot. Every wight, every knight here was someone once — and the imprint of that someone persists. I am mapping that persistence. The Shadowmere Cult thinks I work for them. I do not. I work for knowledge. Now, if you don't mind, leave me to it."
+        choices:
+          - text: "We can't let this continue."
+            next: defiance
+          - text: "We'll go."
+            next: farewell
+      defiance:
+        text: "Then we have nothing further to discuss. I suppose I will be adding you to my collection after all."
+        choices:
+          - text: "Prepare yourself."
+            next: farewell
+      farewell:
+        text: "Do not come back."
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  barrow_approach:
+    title: "Dark Barrows — Approach"
+    description: "The eastern fen gives way here to firmer, darker ground. The fog thins and reveals a landscape of low earthen mounds stretching north as far as you can see — ancient burial sites, old enough that no one remembers who or what was buried in them. The marsh is back to the west, and a narrow track winds south through the marsh fringe. The outer mounds lie ahead to the north."
+    exits:
+      w: marsh_of_fog:eastern_fen_edge
+      s: marsh_of_fog:dark_barrows_path
+      n: outer_mounds
+
+  outer_mounds:
+    title: "Outer Mounds"
+    description: "The outermost ring of the barrow field: dozens of low earthen mounds in irregular rows, their surfaces cracked and sunken with age. The air smells of turned earth and something older. Wights prowl the western mounds; grave hounds range east. The deeper barrows lie north through a weathered stone gate."
+    exits:
+      s: barrow_approach
+      e: wight_hollow
+      w: hound_run
+      n: barrow_gate
+
+  wight_hollow:
+    title: "Wight Hollow"
+    description: "A deeper section among the outer mounds where the earth has subsided into a shallow bowl. Barrow wights drift here, drawn to the hollow like water to a drain. Their motion is purposeless but their attention snaps onto the living immediately. The outer mounds are back to the west."
+    exits:
+      w: outer_mounds
+
+  hound_run:
+    title: "Hound Run"
+    description: "A long, flat approach between two rows of mounds that grave hounds have made their territory. They have worn a circuit of bare earth between the mounds, circling perpetually in the dim light. The outer mounds are to the east; a sunken barrow lies south."
+    exits:
+      e: outer_mounds
+      s: sunken_barrow
+
+  sunken_barrow:
+    title: "Sunken Barrow"
+    description: "One of the larger burial mounds has partially collapsed, leaving a hollow you can stand in. The interior walls are dressed stone covered in carved spiral patterns — much older craftsmanship than the mounds above. Whatever was buried here has long since risen. A junction in the deeper site lies to the east."
+    exits:
+      n: hound_run
+      e: barrow_crossroads
+
+  barrow_gate:
+    title: "Barrow Gate"
+    description: "A stone arch of ancient construction, its surface covered in worn carvings that may once have been words of warding. The gate stands open — it has not been closed in centuries. The outer mounds are to the south; the inner barrows begin beyond the arch to the north."
+    exits:
+      s: outer_mounds
+      n: inner_barrows
+
+  inner_barrows:
+    title: "Inner Barrows"
+    description: "The heart of the barrow field: older, larger mounds arranged in a deliberate pattern around a central space. The air is colder here and the darkness deeper despite the hour. Vaelthos has done something to this place — the shadows behave differently here, thicker, directed. Passages branch east and west; the barrow crossroads are further south."
+    exits:
+      s: barrow_crossroads
+      n: barrow_gate
+      e: spectral_hall
+      w: ritual_chamber
+
+  spectral_hall:
+    title: "Spectral Hall"
+    description: "A long, low burial chamber beneath the largest inner mound, accessed by a stone stairway. Spectral knights drift between the stone biers — the ghosts of whoever stood guard in life, still standing guard in death. They attack with the muscle memory of trained soldiers. The inner barrows are back to the west; a narrow passage continues east."
+    exits:
+      w: inner_barrows
+      e: banshee_hollow
+      n: knights_hall
+
+  knights_hall:
+    title: "Knights' Hall"
+    description: "A vaulted burial hall where the greatest warriors of the barrow culture were interred. Their armour still stands on iron frames in alcoves along the walls — magnificent and terrible. One spectral knight patrols the full length of the hall without rest. The spectral hall is back to the south."
+    exits:
+      s: spectral_hall
+
+  banshee_hollow:
+    title: "Banshee Hollow"
+    description: "A rough-walled cave east of the spectral hall that no one has shaped or decorated. The sound here is wrong: frequencies just outside normal hearing that set your teeth on edge. A banshee inhabits the space, its wail held just below audibility — so far. The spectral hall is back to the west."
+    exits:
+      w: spectral_hall
+
+  ritual_chamber:
+    title: "Ritual Chamber"
+    description: "A circular chamber that was clearly used for burial rites. A stone altar at the center bears fresh ash and fresh offerings — Vaelthos has been using this for his own work. His notes are scratched into the walls alongside the original carvings. A rough passage north leads toward the goblin warrens connection."
+    exits:
+      e: inner_barrows
+      n: goblin_tunnel
+
+  goblin_tunnel:
+    title: "Goblin Tunnel"
+    description: "A connecting passage where old stonework gives way to goblin-cut earth. Someone on the warrens side broke through into the barrow system and, presumably, found more than they bargained for. Scratched goblin script on the walls of the junction reads something like 'DO NOT GO EAST'. The ritual chamber is south; the goblin warrens passage continues west."
+    exits:
+      s: ritual_chamber
+      w: goblin_warrens:secret_passage
+
+  barrow_crossroads:
+    title: "Barrow Crossroads"
+    description: "A junction of several barrow-site paths. A crumbling stone marker at the center may once have provided directions. South lies the approach to Vaelthos's inner sanctum; the sunken barrow is to the west; the inner barrows are north. The site feels watched."
+    exits:
+      n: inner_barrows
+      w: sunken_barrow
+      s: vaelthos_approach
+
+  vaelthos_approach:
+    title: "Vaelthos's Approach"
+    description: "The final passage before Vaelthos's sanctum. The stonework here is recent — he has reshaped this section himself. Runes on the walls shift visibly; the temperature drops several degrees per step. A thick silence has replaced the ambient sounds of the barrow. Whatever is ahead takes this seriously."
+    exits:
+      n: barrow_crossroads
+      s: vaelthos_chamber
+
+  vaelthos_chamber:
+    title: "Vaelthos's Chamber"
+    description: "A vast natural cave that Vaelthos has converted into a necromantic laboratory. Specimen slabs, shelves of reagents, and standing arrays of warded bones fill the floor. The dead stand in ordered rows at the walls, waiting. Vaelthos himself occupies a raised platform at the center, watching your entrance with cold interest. The approach is back to the north."
+    exits:
+      n: vaelthos_approach
+      e: shadowmere_fen:barrow_passage
