@@ -406,20 +406,19 @@ class WorldLoaderTest {
     }
 
     @Test
-    fun `loads tutorial glade zone with all rooms mobs and items`() {
+    fun `loads thornhaven city zone with all rooms mobs and items`() {
         val world =
             WorldLoader.loadFromResources(
-                listOf("world/tutorial_glade.yaml"),
-                zoneFilter = setOf("tutorial_glade"),
+                listOf("world/thornhaven_city.yaml"),
+                zoneFilter = setOf("thornhaven_city"),
             )
 
         // Verify structural correctness without pinning exact counts that break
         // whenever content is added or removed.
-        assertEquals(RoomId("tutorial_glade:awakening_clearing"), world.startRoom)
+        assertEquals(RoomId("thornhaven_city:new_arrivals_hall"), world.startRoom)
         assertTrue(world.rooms.isNotEmpty(), "Expected at least one room")
         assertTrue(world.mobSpawns.isNotEmpty(), "Expected at least one mob spawn")
         assertTrue(world.itemSpawns.isNotEmpty(), "Expected at least one item spawn")
-        assertEquals(30L, world.zoneLifespansMinutes["tutorial_glade"])
     }
 
     @Test
@@ -521,15 +520,14 @@ class WorldLoaderTest {
         fun `production world loads via WorldFactory defaults`() {
             val world = WorldFactory.demoWorld(resources = productionZones)
             assertTrue(world.rooms.isNotEmpty())
-            // Spot-check the cross-zone wiring that was broken in #142:
-            // ambon_hub:blank_arches -> NORTH -> low_training_marsh:reedwalk_landing
+            // Spot-check hub zone and cross-zone wiring:
             assertTrue(
-                world.rooms.containsKey(RoomId("low_training_marsh:reedwalk_landing")),
-                "Expected low_training_marsh:reedwalk_landing to be loaded",
+                world.rooms.containsKey(RoomId("thornhaven_city:new_arrivals_hall")),
+                "Expected thornhaven_city:new_arrivals_hall to be loaded",
             )
             assertTrue(
-                world.rooms.containsKey(RoomId("ambon_hub:blank_arches")),
-                "Expected ambon_hub:blank_arches to be loaded",
+                world.rooms.containsKey(RoomId("crossroads_path:world_road_south")),
+                "Expected crossroads_path:world_road_south to be loaded",
             )
         }
 
@@ -575,7 +573,7 @@ class WorldLoaderTest {
                     startRoom = startRoom,
                 )
             assertTrue(world.rooms.isNotEmpty())
-            assertEquals(RoomId("ambon_hub:hall_of_portals"), world.startRoom)
+            assertEquals(RoomId("thornhaven_city:new_arrivals_hall"), world.startRoom)
         }
     }
 

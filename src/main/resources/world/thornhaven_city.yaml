@@ -1,0 +1,800 @@
+zone: thornhaven_city
+startRoom: new_arrivals_hall
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  # General store — starter gear
+  worn_sword:
+    displayName: "a worn iron sword"
+    keyword: sword
+    slot: hand
+    damage: 3
+    basePrice: 20
+    description: "A short-bladed sword with a well-worn grip. Still serviceable."
+
+  battered_staff:
+    displayName: "a battered oak staff"
+    keyword: staff
+    slot: hand
+    damage: 2
+    basePrice: 15
+    description: "A gnarled oak staff, nicked and scratched from long use."
+
+  hunting_bow:
+    displayName: "a hunting bow"
+    keyword: bow
+    slot: hand
+    damage: 3
+    basePrice: 20
+    description: "A simple recurve bow strung with gut. Good for the road."
+
+  rusty_dagger:
+    displayName: "a rusty dagger"
+    keyword: dagger
+    slot: hand
+    damage: 2
+    basePrice: 10
+    description: "A short blade mottled with rust. Still sharp at the tip."
+
+  leather_cap:
+    displayName: "a leather cap"
+    keyword: cap
+    slot: head
+    armor: 1
+    basePrice: 15
+    description: "A simple cap of boiled leather. Modest protection."
+
+  padded_vest:
+    displayName: "a padded vest"
+    keyword: vest
+    slot: body
+    armor: 1
+    basePrice: 25
+    description: "Thick cloth padding sewn into a close-fitting vest."
+
+  minor_healing_potion:
+    displayName: "a minor healing potion"
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 15
+    basePrice: 50
+    description: "A small vial of cherry-red liquid. Restores a modest amount of health."
+
+  clarity_potion:
+    displayName: "a clarity potion"
+    keyword: clarity
+    consumable: true
+    onUse:
+      healHp: 5
+    basePrice: 75
+    description: "A silver-blue draught that steadies the mind and eases the spirit."
+
+  # Market items available for upgrade purchase
+  iron_sword:
+    displayName: "an iron sword"
+    keyword: sword
+    slot: hand
+    damage: 5
+    basePrice: 80
+    description: "A standard issue iron sword, sturdy and well-balanced."
+
+  oak_staff:
+    displayName: "an oak staff"
+    keyword: staff
+    slot: hand
+    damage: 3
+    basePrice: 60
+    description: "A polished staff of dense oak, engraved with simple runes."
+
+  short_bow:
+    displayName: "a short bow"
+    keyword: bow
+    slot: hand
+    damage: 5
+    basePrice: 80
+    description: "A compact bow light enough to carry all day."
+
+  silver_dagger:
+    displayName: "a silver-tipped dagger"
+    keyword: dagger
+    slot: hand
+    damage: 4
+    basePrice: 70
+    description: "A sleek dagger with a silver point — effective against the undead."
+
+  iron_helm:
+    displayName: "an iron helm"
+    keyword: helm
+    slot: head
+    armor: 2
+    basePrice: 60
+    description: "A plain iron helm dented by use but solid enough."
+
+  chainmail_vest:
+    displayName: "a chainmail vest"
+    keyword: chainmail
+    slot: body
+    armor: 3
+    basePrice: 120
+    description: "Interlocked rings of iron sewn onto leather backing."
+
+  leather_bracers:
+    displayName: "leather bracers"
+    keyword: bracers
+    slot: hand
+    armor: 1
+    basePrice: 35
+    description: "Strapped leather vambraces that protect the forearms."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  innkeeper_mira:
+    name: "Innkeeper Mira"
+    room: tarnished_flagon_inn
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome to the Tarnished Flagon — the finest inn in Thornhaven, and the only one! Will you be setting up a recall point here?"
+        choices:
+          - text: "Set this inn as my recall point."
+            next: confirm_recall
+            action: set_recall
+          - text: "Tell me about recall."
+            next: explain_recall
+          - text: "Goodbye."
+            next: farewell
+      confirm_recall:
+        text: "Done! The Tarnished Flagon is your home away from home. Type 'recall' anywhere in the world to return here."
+        choices:
+          - text: "Thanks, Mira."
+            next: farewell
+      explain_recall:
+        text: "Your recall point is your anchor in the world. Type 'recall' at any time and you'll be whisked back here instantly — very handy when you're lost or in trouble."
+        choices:
+          - text: "Set this inn as my recall point."
+            next: confirm_recall
+            action: set_recall
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Safe travels, adventurer. The door's always open."
+
+  banker_theron:
+    name: "Banker Theron"
+    room: thornhaven_bank
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Good day. The Thornhaven Bank is at your service. Deposits, withdrawals, item storage — all handled with complete discretion."
+        choices:
+          - text: "How does the bank work?"
+            next: explain_bank
+          - text: "Goodbye."
+            next: farewell
+      explain_bank:
+        text: "Deposit gold with 'bank deposit <amount>' and withdraw with 'bank withdraw <amount>'. Store items with 'bank deposit <item>'. Check your balance with 'bank balance'. Your assets are safe no matter what happens to you in the field."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Good day to you."
+
+  auctioneer_brant:
+    name: "Auctioneer Brant"
+    room: auction_hall
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Step right up! Eryndal's premier auction house. List your wares, browse the offerings — everything's on the table!"
+        choices:
+          - text: "How do I use the auction house?"
+            next: explain_auction
+          - text: "Goodbye."
+            next: farewell
+      explain_auction:
+        text: "'auction list' browses current listings. 'auction sell <item> <price>' lists something of your own. 'auction buy <listing#>' purchases it. 'auction cancel' pulls your listing."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "May your bids be profitable!"
+
+  mail_clerk_oswin:
+    name: "Mail Clerk Oswin"
+    room: post_office
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Thornhaven Post — I handle all correspondence. Need to send word to someone, or check if anything has arrived for you?"
+        choices:
+          - text: "How do I send and read mail?"
+            next: explain_mail
+          - text: "Goodbye."
+            next: farewell
+      explain_mail:
+        text: "'mail list' shows your inbox. 'mail read <#>' reads a message. 'mail send <player> <message>' composes one. 'mail delete <#>' discards it. Messages wait here until you return."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "I'll keep the letters safe. Safe travels."
+
+  guild_registrar:
+    name: "Guild Registrar Edda"
+    room: guild_registry
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "The Thornhaven Guild Registry. Looking to found a guild, or manage one you already lead?"
+        choices:
+          - text: "How do guilds work?"
+            next: explain_guild
+          - text: "Goodbye."
+            next: farewell
+      explain_guild:
+        text: "'guild create <name>' founds a new guild. 'guild invite <player>' recruits members. 'guild promote' and 'guild demote' manage ranks. 'guild roster' lists members. Use 'gchat' to speak in your guild channel."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "May your guild stand long."
+
+  arena_master:
+    name: "Arena Master Koryn"
+    room: arena_district
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome to the Thornhaven Arena! The finest venue for honourable combat in the realm. Ready to test your blade?"
+        choices:
+          - text: "How does dueling work?"
+            next: explain_duel
+          - text: "Tell me about the leaderboards."
+            next: explain_leaderboard
+          - text: "Goodbye."
+            next: farewell
+      explain_duel:
+        text: "'duel challenge <name>' challenges another player. They accept with 'duel accept'. The duel ends when one of you falls — no death penalty, just honour."
+        choices:
+          - text: "Tell me about the leaderboards."
+            next: explain_leaderboard
+          - text: "Goodbye."
+            next: farewell
+      explain_leaderboard:
+        text: "Type 'leaderboard' to see who stands tallest in Eryndal. The Trophy Hall nearby records legendary deeds permanently with 'halloffame'."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Fight well. Fight with honour."
+
+  old_grimly:
+    name: "Old Grimly"
+    room: grimlys_study
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Ah, another brave soul. Sit down. Old Grimly knows the way into places the sane avoid. The Dungeon of Echoes — you've heard of it?"
+        choices:
+          - text: "Tell me about the Dungeon of Echoes."
+            next: explain_dungeon
+          - text: "How do I enter?"
+            next: how_to_enter
+          - text: "Goodbye."
+            next: farewell
+      explain_dungeon:
+        text: "The Dungeon of Echoes is a labyrinth that reshapes itself for every party. No two runs alike. Mobs scale to your level, boss lurking at the end. Two difficulties: standard and hard."
+        choices:
+          - text: "How do I enter?"
+            next: how_to_enter
+          - text: "Goodbye."
+            next: farewell
+      how_to_enter:
+        text: "Right here in this study — type 'dungeon enter dungeon_of_echoes' for a standard run. Add 'hard' at the end for the hard version. You'll return here when you finish or flee."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Mind the shadows, friend. They have teeth."
+
+  trainer_captain_varek:
+    name: "Captain Varek"
+    room: warrior_training_hall
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Warrior. I am Captain Varek. Skill points are yours to spend — spend them well. Type 'train list' to see what I can teach you."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "'train list' shows available abilities. 'train learn <ability>' spends a skill point. You earn points as you level. At level 10 you may also unlock a second class with 'train unlock'."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Train hard. Train every day."
+
+  trainer_archmage_solen:
+    name: "Archmage Solen"
+    room: mage_library
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Ah, a seeker of arcane knowledge. I am Archmage Solen. Magic is not bestowed — it is earned. Type 'train list' to see what I offer."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "Skill points are the currency of knowledge. 'train list' shows available spells. 'train learn <spell>' spends one point. Master every spell before you consider a second vocation."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Knowledge is the only power that endures."
+
+  trainer_high_priest_aldric:
+    name: "High Priest Aldric"
+    room: cleric_chapel
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Blessings upon you. I am High Priest Aldric. The light heals those who serve faithfully. Use 'train list' to see which prayers I can teach."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "Each skill point spent here is a prayer answered. 'train list' shows available blessings and rites. 'train learn <ability>' invests a point. The divine rewards devotion."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "May the light walk with you always."
+
+  trainer_shade:
+    name: "Shadow"
+    room: rogue_den
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "...You found me. Most don't. That's promising. I'm called Shade. I teach those with quick hands and quiet feet. 'train list' if you're serious."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Tell me about the sewers."
+            next: sewer_hint
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "'train list' shows my curriculum. 'train learn <skill>' costs a skill point. Master everything I offer and you'll reach places others can't. Like the sewers beneath Thornhaven."
+        choices:
+          - text: "Tell me about the sewers."
+            next: sewer_hint
+          - text: "Goodbye."
+            next: farewell
+      sewer_hint:
+        text: "Thornhaven sits on old tunnels. Very old. Very interesting. Prove yourself — reach the right skill level — and maybe I'll show you where the grate is."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Don't let them see you leave."
+
+  trainer_forester_lenna:
+    name: "Forester Lenna"
+    room: ranger_outpost
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Easy now. Name's Lenna. I range the Thornwood and beyond. Ranger looking to sharpen up? Type 'train list' — I've got plenty to teach."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "Goodbye."
+            next: farewell
+      training_info:
+        text: "'train list' shows available abilities. 'train learn <ability>' spends a skill point. Rangers can mark prey, summon a hawk, read the land. You'll find me in Thornwood Forest as well, if you're out that way."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Track true. Come back alive."
+
+  shopkeeper_dolvan:
+    name: "Dolvan the Merchant"
+    room: general_store
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome! Best gear in Thornhaven, fair prices. Type 'list' to browse, 'buy <item>' to purchase."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Come back when your purse is full."
+
+  recipe_merchant_sylva:
+    name: "Sylva the Recipe Merchant"
+    room: crafting_quarter
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Looking to learn a craft? I deal in recipes for smithing and alchemy. Type 'list' to browse."
+        choices:
+          - text: "How does crafting work?"
+            next: explain_crafting
+          - text: "Goodbye."
+            next: farewell
+      explain_crafting:
+        text: "Gather materials out in the world — herbs, ores, and more. Bring them to the forge, alchemy lab, or workbench depending on the recipe. Use 'craft <recipe>' to create the item. Your skills improve with each attempt."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "May your crafts come out quality!"
+
+# ─── Shops ────────────────────────────────────────────────────────────────────
+
+shops:
+  general_store:
+    name: "Dolvan's General Supplies"
+    room: general_store
+    items:
+      - worn_sword
+      - battered_staff
+      - hunting_bow
+      - rusty_dagger
+      - leather_cap
+      - padded_vest
+      - minor_healing_potion
+      - clarity_potion
+      - iron_sword
+      - oak_staff
+      - short_bow
+      - silver_dagger
+      - iron_helm
+      - chainmail_vest
+      - leather_bracers
+
+# ─── Trainers ─────────────────────────────────────────────────────────────────
+
+trainers:
+  warrior_trainer:
+    name: "Captain Varek"
+    class: WARRIOR
+    room: warrior_training_hall
+
+  mage_trainer:
+    name: "Archmage Solen"
+    class: MAGE
+    room: mage_library
+
+  cleric_trainer:
+    name: "High Priest Aldric"
+    class: CLERIC
+    room: cleric_chapel
+
+  rogue_trainer:
+    name: "Shadow"
+    class: ROGUE
+    room: rogue_den
+
+  ranger_trainer:
+    name: "Forester Lenna"
+    class: RANGER
+    room: ranger_outpost
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  new_arrivals_hall:
+    title: "New Arrivals Hall"
+    description: "A vaulted stone hall with high arched windows and the smell of fresh bread drifting in from somewhere nearby. A notice board on the wall is pinned with maps, wanted posters, and a cheerful message: 'Welcome to Thornhaven — the last stop before adventure.' A clerk waves new arrivals toward the great iron doors to the south, which open onto the city."
+    exits:
+      s: city_center
+      n: north_gate
+
+  north_gate:
+    title: "Thornhaven — North Gate"
+    description: "The north gate of Thornhaven stands open day and night, its ironwood doors worn smooth by centuries of traffic. The road north winds uphill through rolling country before disappearing into the distance. A bored-looking guard leans against the arch. The city lies to the south."
+    exits:
+      s: new_arrivals_hall
+      n: crossroads_path:world_road_south
+
+  city_center:
+    title: "City Center"
+    description: "The beating heart of Thornhaven: a broad cobblestone plaza where half a dozen streets converge. A central fountain burbles steadily, its basin cluttered with coin offerings. Merchants, adventurers, and city folk jostle past in every direction. The smell of roasting meat and forge smoke hangs in the air."
+    exits:
+      n: new_arrivals_hall
+      e: east_district
+      w: west_district
+      s: south_square
+
+  east_district:
+    title: "East District"
+    description: "A quieter street lined with civic buildings. The bank's stone facade stands to the north, its polished brass sign catching the light. The crafting quarter's chimneys puff lazy smoke to the east. Trade Row with its shops and auction hall lies to the south. The city center is back to the west."
+    exits:
+      w: city_center
+      n: thornhaven_bank
+      e: crafting_quarter
+      s: trade_row
+
+  west_district:
+    title: "West District"
+    description: "A warm, lamp-lit lane leading to the inn district. The Tarnished Flagon's hanging sign creaks overhead to the north, and the guild registry's carved oak door stands to the west. The Trainers' Hall is through the archway to the south. The city center lies east."
+    exits:
+      e: city_center
+      n: tarnished_flagon_inn
+      w: guild_registry
+      s: trainers_hall
+
+  south_square:
+    title: "South Square"
+    description: "A wide open space at the southern end of the city. The arena district's stone walls and crowd noise are audible to the east. A narrow alley leads south toward the post office and Old Grimly's study. Trophy Hall's carved stone facade stands to the west."
+    exits:
+      n: city_center
+      e: arena_district
+      s: post_office
+      w: trophy_hall
+
+  trade_row:
+    title: "Trade Row"
+    description: "A bustling commercial street south of the east district. Stalls and storefronts compete for attention: the general store's open front glows warmly to the north, and the auction hall's bright lanterns draw a steady crowd to the east."
+    exits:
+      n: east_district
+      w: general_store
+      e: auction_hall
+
+  tarnished_flagon_inn:
+    title: "The Tarnished Flagon Inn"
+    description: "A low-beamed common room with mismatched chairs and a crackling hearthfire. Dried herbs hang from the rafters and the smell of wood smoke and barley fills the air. Innkeeper Mira stands behind the bar with a ready smile. A faded sign reads: 'Set your recall here — this hearth is always burning.' The door leads back to the west district."
+    bank: true
+    exits:
+      s: west_district
+
+  thornhaven_bank:
+    title: "Thornhaven Bank"
+    description: "A hushed chamber of polished marble and iron grillwork. Tellers work behind heavy brass bars, and a perpetual low hum suggests coin changing hands somewhere out of sight. Banker Theron nods in professional greeting from behind the main counter. The east district is through the south door."
+    bank: true
+    exits:
+      s: east_district
+
+  guild_registry:
+    title: "Guild Registry"
+    description: "A formal chamber with shelves of leather-bound ledgers and guild charters behind glass. The guild registrar, Edda, looks up from her desk with practiced efficiency. The west district is through the door to the east."
+    exits:
+      e: west_district
+
+  general_store:
+    title: "Dolvan's General Supplies"
+    description: "A cramped but well-organized shop with gear hanging from every hook and shelf. Swords, staves, bows, and potions crowd the narrow aisles. Dolvan the Merchant stands behind a wooden counter, ready to haggle. Type 'list' to see available wares."
+    exits:
+      e: trade_row
+
+  auction_hall:
+    title: "Thornhaven Auction Hall"
+    description: "A high-vaulted hall with tiered benches and a raised podium where Auctioneer Brant holds court. Chalk boards list current lots. The clamour of competitive bidding fills the room. Type 'auction list' to browse current listings."
+    exits:
+      w: trade_row
+
+  post_office:
+    title: "Post Office"
+    description: "A tidy stone room with pigeonhole shelving covering every wall. Mail Clerk Oswin moves between the racks with practiced efficiency, sorting letters with a speed that suggests decades of practice. 'mail list' to check your inbox."
+    exits:
+      n: south_square
+      s: grimlys_study
+
+  trophy_hall:
+    title: "Trophy Hall"
+    description: "A solemn hall with torches casting warm light on bronze plaques and glass cases. The names of Eryndal's greatest champions are inscribed in stone, and a perpetual scroll of leaderboard standings updates itself by some enchantment at the far end. Type 'leaderboard' or 'halloffame' to see who stands tallest."
+    exits:
+      e: south_square
+
+  grimlys_study:
+    title: "Old Grimly's Study"
+    description: "A cramped, aromatic room thick with candle smoke and the smell of old maps. Rolled charts spill off every surface, pinned with cryptic notations. Old Grimly himself occupies a threadbare armchair, surrounded by papers and the faint odor of adventure. Type 'dungeon enter dungeon_of_echoes' to descend into the Dungeon of Echoes."
+    exits:
+      n: post_office
+
+  # ─── Trainers' Hall wing ─────────────────────────────────────────────────
+
+  trainers_hall:
+    title: "Trainers' Hall"
+    description: "A wide corridor carved from pale stone, lined with five arched doorways. Each doorway bears a carved emblem: sword, staff, crook, blade, and bow. This is where Thornhaven's finest teachers receive their students. The west district is back through the main entrance to the north."
+    exits:
+      n: west_district
+      e: warrior_training_hall
+      w: cleric_chapel
+      s: mage_library
+      u: rogue_den
+      d: ranger_outpost
+
+  warrior_training_hall:
+    title: "Warrior Training Hall"
+    description: "A broad practice floor of packed earth, lined with weapons racks and training dummies scarred by countless blows. Banners depicting crossed swords hang from the beams. Captain Varek stands at the far end, arms crossed, watching with appraising eyes."
+    exits:
+      w: trainers_hall
+
+  mage_library:
+    title: "The Arcane Library"
+    description: "Floor-to-ceiling shelves of spellbooks and scrolls, dimly lit by hovering orbs of pale blue light. The air smells of ozone and dusty paper. Archmage Solen stands at a reading lectern, a tome open before him, though his eyes are already on you."
+    exits:
+      n: trainers_hall
+
+  cleric_chapel:
+    title: "Chapel of the Divine Light"
+    description: "A serene room with high windows that fill it with warm afternoon light regardless of the hour. Stone benches face a simple altar bearing a chalice and a candle. High Priest Aldric kneels in brief prayer before rising to greet you."
+    exits:
+      e: trainers_hall
+
+  rogue_den:
+    title: "The Hidden Den"
+    description: "A low-ceilinged room accessible only through a recessed doorway disguised as a bookshelf. The lighting is deliberately poor, the shadows deliberate. A figure leans against the far wall — Shadow, known only as Shade — watching you with unreadable eyes."
+    exits:
+      d: trainers_hall
+
+  ranger_outpost:
+    title: "Ranger's Outpost"
+    description: "A functional, unpretentious room that smells of pine resin and leather. Maps of the Thornwood and surrounding wilds cover one wall. Tracking tools and hunting equipment hang in neat rows. Forester Lenna stands at the map table, marking something with a grease pencil."
+    exits:
+      u: trainers_hall
+
+  # ─── Crafting Quarter ────────────────────────────────────────────────────
+
+  crafting_quarter:
+    title: "Crafting Quarter"
+    description: "A bustling workshop district where the clang of hammers and the hiss of boiling alchemical reagents fill the air. Three specialist rooms branch off a central hub: the forge to the north, the alchemy lab to the east, and the tailor's workbench to the west. Sylva the Recipe Merchant holds court in the center, her satchel bulging with scrolls."
+    exits:
+      w: east_district
+      n: forge_room
+      e: alchemy_lab
+      s: tailors_workbench
+
+  forge_room:
+    title: "The Forge"
+    description: "A sweltering room dominated by a roaring stone forge and a wide anvil scarred by countless blows. Coal bins line one wall, tool racks the other. The heat is intense but the crafting opportunities are unparalleled. Type 'craft <recipe>' here to smith metal goods."
+    station: FORGE
+    exits:
+      s: crafting_quarter
+
+  alchemy_lab:
+    title: "Alchemy Laboratory"
+    description: "A cool, well-lit room with long stone benches covered in glass apparatus, bubbling retorts, and neatly labelled jars. The smell is complicated: part herb garden, part chemistry. This is where potions and salves are made. Type 'craft <recipe>' here to brew alchemical concoctions."
+    station: ALCHEMY_TABLE
+    exits:
+      w: crafting_quarter
+
+  tailors_workbench:
+    title: "Tailor's Workbench"
+    description: "A bright, airy room with wide windows and a long central workbench covered in bolts of cloth, spools of thread, and half-finished garments. A tailor's dummy stands in the corner wearing something ambitious. Type 'craft <recipe>' here for leatherwork and cloth goods."
+    station: WORKBENCH
+    exits:
+      n: crafting_quarter
+
+  # ─── Arena District ───────────────────────────────────────────────────────
+
+  arena_district:
+    title: "Arena District"
+    description: "An open courtyard of stamped earth bordered by tiered stone spectator benches. The Arena Master stands near the center, ready to officiate any duel. The air has the electric quality of a crowd waiting for a show. Challenge another player with 'duel challenge <name>'."
+    exits:
+      w: south_square
+      s: dueling_grounds
+
+  dueling_grounds:
+    title: "Dueling Grounds"
+    description: "The arena's inner pit: a circular earthen floor chalked with a dueling circle and surrounded by a low wooden rail. Whatever happens here stays here — the Arena Master's rules prohibit unsanctioned violence. North leads back to the district entrance."
+    exits:
+      n: arena_district

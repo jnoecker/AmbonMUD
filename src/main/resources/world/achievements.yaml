@@ -1,7 +1,9 @@
 achievements:
-  combat/first_blood:
+  # ─── Combat ───────────────────────────────────────────────────────────────
+
+  first_blood:
     displayName: "First Blood"
-    description: "Kill your first enemy."
+    description: "Kill your first enemy in Eryndal."
     category: combat
     hidden: false
     criteria:
@@ -12,52 +14,203 @@ achievements:
     rewards:
       xp: 50
 
-  combat/beetle_exterminator:
-    displayName: "Beetle Exterminator"
-    description: "Defeat 5 beetle swarms."
+  wolf_hunter:
+    displayName: "Wolf Hunter"
+    description: "Prove yourself against the wolves of Thornwood."
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: "demo_ruins:beetle_swarm"
-        count: 5
-        description: "Kill 5 beetle swarms"
+        targetId: ""
+        count: 10
+        description: "Kill 10 stray wolves"
     rewards:
-      xp: 200
-      gold: 25
-      title: "Beetle Slayer"
+      xp: 300
+      gold: 50
 
-  combat/spider_hunter:
-    displayName: "Spider Hunter"
-    description: "Defeat 5 cave spiders."
+  chieftain_slayer:
+    displayName: "Chieftain Slayer"
+    description: "Strike down Chieftain Grak in the heart of his warrens."
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: "demo_ruins:cave_spider"
-        count: 5
-        description: "Kill 5 cave spiders"
+        targetId: ""
+        count: 1
+        description: "Kill Chieftain Grak"
     rewards:
-      xp: 200
-      gold: 25
-      title: "Spider Hunter"
+      xp: 600
+      gold: 100
+      title: "Goblin Bane"
 
-  milestone/level_5:
-    displayName: "Seasoned Adventurer"
-    description: "Reach level 5."
+  corsair_hunter:
+    displayName: "Corsair Hunter"
+    description: "Defeat the pirate captain terrorising the Sea Cliffs."
+    category: combat
+    hidden: false
+    criteria:
+      - type: kill
+        targetId: ""
+        count: 1
+        description: "Kill the Corsair Captain"
+    rewards:
+      xp: 500
+      gold: 150
+
+  barrow_breaker:
+    displayName: "Barrow Breaker"
+    description: "Destroy Necromancer Vaelthos and end his dark research."
+    category: combat
+    hidden: false
+    criteria:
+      - type: kill
+        targetId: ""
+        count: 1
+        description: "Kill Necromancer Vaelthos"
+    rewards:
+      xp: 1000
+      gold: 200
+      title: "Barrow Breaker"
+
+  dragon_slayer:
+    displayName: "Dragonslayer"
+    description: "Slay Elder Dragon Auranthos atop the Celestial Peak."
+    category: combat
+    hidden: false
+    criteria:
+      - type: kill
+        targetId: ""
+        count: 1
+        description: "Kill Elder Dragon Auranthos"
+    rewards:
+      xp: 3000
+      gold: 500
+      title: "Dragonslayer"
+
+  # ─── Exploration / Dungeons ───────────────────────────────────────────────
+
+  echo_diver:
+    displayName: "Echo Diver"
+    description: "Complete a run through the Dungeon of Echoes."
+    category: combat
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: ""
+        count: 1
+        description: "Complete a Dungeon of Echoes run"
+    rewards:
+      xp: 500
+      title: "Echo Diver"
+
+  # ─── Crafting / Gathering ─────────────────────────────────────────────────
+
+  master_crafter:
+    displayName: "Master Crafter"
+    description: "Craft 20 items at the forges and benches of Eryndal."
     category: class
     hidden: false
     criteria:
-      - type: reach_level
-        count: 5
-        description: "Reach level 5"
+      - type: quest_complete
+        targetId: ""
+        count: 1
+        description: "Craft 20 items (stub — wired in a later phase)"
+    rewards:
+      xp: 400
+      title: "Artisan"
+
+  herb_collector:
+    displayName: "Hedge Witch's Friend"
+    description: "Gather 10 herbs from the wilds of Eryndal."
+    category: class
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: ""
+        count: 1
+        description: "Gather 10 herbs (stub — wired in a later phase)"
+    rewards:
+      xp: 200
+      gold: 30
+
+  ore_miner:
+    displayName: "Deep Delver"
+    description: "Mine 10 ore from the depths of Eryndal."
+    category: class
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: ""
+        count: 1
+        description: "Gather 10 ore (stub — wired in a later phase)"
+    rewards:
+      xp: 200
+      gold: 30
+
+  # ─── Group / Social ───────────────────────────────────────────────────────
+
+  full_party:
+    displayName: "Strength in Numbers"
+    description: "Complete a dungeon with a full adventuring party."
+    category: social
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: ""
+        count: 1
+        description: "Complete a dungeon with a full group (stub — wired in a later phase)"
+    rewards:
+      xp: 600
+      title: "Party Leader"
+
+  bounty_hunter:
+    displayName: "Bounty Hunter"
+    description: "Complete 5 bounty quests from the Barrens notice board."
+    category: social
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: ""
+        count: 1
+        description: "Complete 5 bounty quests (stub — wired in Phase 7)"
+    rewards:
+      xp: 800
+      gold: 200
+      title: "Bounty Hunter"
+
+  loyal_companion:
+    displayName: "Loyal Companion"
+    description: "Earn the trust of the ghost of Haunted Manor."
+    category: social
+    hidden: true
+    criteria:
+      - type: quest_complete
+        targetId: ""
+        count: 1
+        description: "Unlock the spectral wisp pet (stub — wired in Phase 7)"
+    rewards:
+      xp: 700
+      title: "Ghost Friend"
+
+  guild_founder:
+    displayName: "Guild Founder"
+    description: "Establish a guild at the Thornhaven Guild Registry."
+    category: social
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: ""
+        count: 1
+        description: "Create a guild (stub — wired in a later phase)"
     rewards:
       xp: 300
-      title: "Adventurer"
+      title: "Founder"
 
-  milestone/level_10:
-    displayName: "Veteran"
-    description: "Reach level 10."
+  # ─── Milestone ────────────────────────────────────────────────────────────
+
+  max_level:
+    displayName: "Level Ten"
+    description: "Reach level 10 and stand among Eryndal's elite."
     category: class
     hidden: false
     criteria:
@@ -67,31 +220,3 @@ achievements:
     rewards:
       xp: 1000
       title: "Veteran"
-
-  quests/ruins_helper:
-    displayName: "Ruins Helper"
-    description: "Complete the beetle culling quest."
-    category: social
-    hidden: false
-    criteria:
-      - type: quest_complete
-        targetId: "demo_ruins:cull_the_beetles"
-        count: 1
-        description: "Complete Cull the Beetles"
-    rewards:
-      xp: 150
-      title: "Helper"
-
-  combat/secret_slayer:
-    displayName: "?????"
-    description: "You have uncovered a secret."
-    category: combat
-    hidden: true
-    criteria:
-      - type: kill
-        targetId: "demo_ruins:ancient_golem"
-        count: 1
-        description: "Defeat the ancient golem"
-    rewards:
-      xp: 500
-      title: "Golem Slayer"
