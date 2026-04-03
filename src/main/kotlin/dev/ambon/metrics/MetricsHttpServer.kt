@@ -19,15 +19,16 @@ class MetricsHttpServer(
     private val port: Int,
     private val registry: PrometheusMeterRegistry,
     private val endpoint: String = "/metrics",
+    private val host: String = "0.0.0.0",
 ) {
     private var engine: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
 
     fun start() {
         engine =
-            embeddedServer(Netty, port = port) {
+            embeddedServer(Netty, port = port, host = host) {
                 metricsModule(registry, endpoint)
             }.start(wait = false)
-        log.info { "Metrics HTTP server started on port $port (endpoint=$endpoint)" }
+        log.info { "Metrics HTTP server started on $host:$port (endpoint=$endpoint)" }
     }
 
     fun stop() {
