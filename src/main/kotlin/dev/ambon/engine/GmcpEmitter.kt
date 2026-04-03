@@ -352,6 +352,9 @@ class GmcpEmitter(
                     effectType = a.effect.toEffectType(),
                     classRestriction = a.requiredClass,
                     image = a.image,
+                    prerequisites = a.prerequisites.map { it.value },
+                    tree = a.tree,
+                    tier = a.tier,
                 )
             },
         )
@@ -611,6 +614,9 @@ class GmcpEmitter(
                         targetType = a.targetType,
                         effectType = a.effect.toEffectType(),
                         image = a.image,
+                        prerequisites = a.prerequisites.map { it.value },
+                        tree = a.tree,
+                        tier = a.tier,
                     )
                 },
             ),
@@ -1810,6 +1816,9 @@ class GmcpEmitter(
         val effectType: String,
         val classRestriction: String?,
         val image: String? = null,
+        val prerequisites: List<String> = emptyList(),
+        val tree: String = "",
+        val tier: Int = 0,
     )
 
     private data class TrainerAbilityPayload(
@@ -1822,6 +1831,9 @@ class GmcpEmitter(
         val targetType: String,
         val effectType: String,
         val image: String? = null,
+        val prerequisites: List<String> = emptyList(),
+        val tree: String = "",
+        val tier: Int = 0,
     )
 
     private data class TrainerListPayload(
