@@ -93,4 +93,20 @@ class ThreatTable {
             ?.toSet() ?: emptySet()
 
     fun hasMobEntry(mobId: MobId): Boolean = tables.containsKey(mobId)
+
+    /**
+     * Removes threat entries for mobs that no longer exist in the world.
+     * Call periodically (e.g. every 60s) to prevent unbounded growth from
+     * respawning mobs whose threat entries were not cleaned up by combat.
+     *
+     * @param isMobAlive returns true if the mob still exists in the MobRegistry
+     * @return the number of stale mob entries removed
+     */
+    fun removeStaleEntries(isMobAlive: (MobId) -> Boolean): Int {
+        val stale = tables.keys.filter { !isMobAlive(it) }
+        for (mobId in stale) {
+            tables.remove(mobId)
+        }
+        return stale.size
+    }
 }

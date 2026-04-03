@@ -564,6 +564,13 @@ class CombatSystem(
         }
     }
 
+    /**
+     * Removes threat table entries for mobs that no longer exist in the
+     * MobRegistry.  Call periodically to prevent unbounded growth.
+     */
+    fun cleanupStaleThreatEntries(): Int =
+        threatTable.removeStaleEntries { mobId -> mobs.get(mobId) != null }
+
     private fun threatMultiplier(player: PlayerState): Double =
         classRegistry?.get(player.playerClass)?.threatMultiplier ?: 1.0
 
