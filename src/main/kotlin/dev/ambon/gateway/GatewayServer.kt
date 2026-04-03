@@ -28,6 +28,7 @@ import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.grpc.ClientInterceptor
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.lettuce.core.SetArgs
@@ -113,6 +114,11 @@ class GatewayServer(
     private lateinit var webTransport: KtorWebSocketTransport
 
     private var leaseManager: GatewayIdLeaseManager? = null
+
+    private val grpcClientAuthInterceptor: ClientInterceptor? =
+        config.grpc.sharedSecret.takeIf { it.isNotBlank() }?.let { secret ->
+            dev.ambon.grpc.GrpcClientAuthInterceptor(sharedSecret = secret)
+        }
 
     private val streamLostDisconnectReason = "Disconnected: engine connection lost. Please reconnect."
     private val localControlDeliveryDisconnectReason = "Disconnected: gateway outbound queue stalled."
@@ -205,7 +211,10 @@ class GatewayServer(
         val managedChannel =
             ManagedChannelBuilder
                 .forAddress(config.grpc.client.engineHost, config.grpc.client.enginePort)
-                .usePlaintext()
+                .apply {
+                    if (config.grpc.allowPlaintext) usePlaintext()
+                    grpcClientAuthInterceptor?.let { intercept(it) }
+                }
                 .build()
         singleManagedChannel = managedChannel
 
@@ -311,7 +320,10 @@ class GatewayServer(
         val managedChannel =
             ManagedChannelBuilder
                 .forAddress(entry.host, entry.port)
-                .usePlaintext()
+                .apply {
+                    if (config.grpc.allowPlaintext) usePlaintext()
+                    grpcClientAuthInterceptor?.let { intercept(it) }
+                }
                 .build()
 
         val protoChannel = Channel<InboundEventProto>(capacity = config.server.inboundChannelCapacity)

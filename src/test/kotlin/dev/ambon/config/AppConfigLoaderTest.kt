@@ -398,6 +398,50 @@ class AppConfigLoaderTest {
     }
 
     @Test
+    fun `grpc validation rejects blank shared secret in ENGINE mode`() {
+        val invalid = AppConfig(mode = DeploymentMode.ENGINE, grpc = GrpcConfig(sharedSecret = ""))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `grpc validation rejects blank shared secret in GATEWAY mode`() {
+        val invalid = AppConfig(
+            mode = DeploymentMode.GATEWAY,
+            grpc = GrpcConfig(sharedSecret = ""),
+        )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `grpc validation accepts non-blank shared secret in ENGINE mode`() {
+        val config = AppConfig(
+            mode = DeploymentMode.ENGINE,
+            grpc = GrpcConfig(sharedSecret = "my-secret"),
+            world = WorldConfig(startRoom = "zone:room"),
+        )
+        config.validated()
+    }
+
+    @Test
+    fun `grpc shared secret not required in STANDALONE mode`() {
+        val config = AppConfig(
+            mode = DeploymentMode.STANDALONE,
+            grpc = GrpcConfig(sharedSecret = ""),
+            world = WorldConfig(startRoom = "zone:room"),
+        )
+        config.validated()
+    }
+
+    @Test
+    fun `grpc validation rejects non-positive timestampToleranceMs`() {
+        val invalid = AppConfig(
+            mode = DeploymentMode.ENGINE,
+            grpc = GrpcConfig(sharedSecret = "secret", timestampToleranceMs = 0L),
+        )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
     fun `env-var normalised path overrides persistence backend`() {
         // Regression for #320: AMBONMUD_PERSISTENCE_BACKEND was silently ignored because
         // Hoplite normalises env vars to ambonmud.persistence.backend but the root field
