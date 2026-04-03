@@ -23,6 +23,7 @@ class EngineGrpcServer(
     outbound: OutboundBus,
     scope: CoroutineScope,
     metrics: GameMetrics = GameMetrics.noop(),
+    controlPlaneSendTimeoutMs: Long = GrpcTimeouts.DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
     private val gracefulShutdownTimeoutMs: Long = DEFAULT_GRACEFUL_SHUTDOWN_TIMEOUT_MS,
     private val forceShutdownTimeoutMs: Long = DEFAULT_FORCE_SHUTDOWN_TIMEOUT_MS,
 ) {
@@ -32,7 +33,13 @@ class EngineGrpcServer(
     }
 
     private val serviceImpl = EngineServiceImpl(inbound = inbound, outbound = outbound, scope = scope)
-    private val dispatcher = GrpcOutboundDispatcher(outbound = outbound, serviceImpl = serviceImpl, scope = scope, metrics = metrics)
+    private val dispatcher = GrpcOutboundDispatcher(
+        outbound = outbound,
+        serviceImpl = serviceImpl,
+        scope = scope,
+        metrics = metrics,
+        controlPlaneSendTimeoutMs = controlPlaneSendTimeoutMs,
+    )
 
     private val server: Server =
         ServerBuilder

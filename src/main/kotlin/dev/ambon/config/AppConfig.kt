@@ -1648,6 +1648,8 @@ data class LoggingConfig(
 
 data class GrpcServerConfig(
     val port: Int = 9090,
+    /** Control-plane send timeout in ms. Increase for WAN/VPN scenarios. */
+    val controlPlaneSendTimeoutMs: Long = 2_000L,
 )
 
 data class GrpcClientConfig(
