@@ -94,6 +94,7 @@ import java.time.Clock
 private val log = KotlinLogging.logger {}
 
 private const val AUTH_TOKEN_EXPIRY_DAYS = 60
+private const val THREAT_CLEANUP_INTERVAL_MS = 60_000L
 
 @OptIn(ExperimentalStdlibApi::class)
 private fun sha256Hex(input: String): String =
@@ -1159,6 +1160,7 @@ class GameEngine(
             }
 
             var tickDebtMs = 0L
+            var lastThreatCleanupMs = clock.millis()
             while (isActive) {
                 val tickStart = clock.millis()
                 val tickSample = Timer.start()
@@ -1253,6 +1255,12 @@ class GameEngine(
                     val regenSample = Timer.start()
                     regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
                     regenSample.stop(metrics.regenTickTimer)
+
+                    // Periodic threat table cleanup — sweep stale mob entries every 60s
+                    if (tickStart - lastThreatCleanupMs >= THREAT_CLEANUP_INTERVAL_MS) {
+                        lastThreatCleanupMs = tickStart
+                        combatSystem.cleanupStaleThreatEntries()
+                    }
 
                     // Tick duel combat
                     tickDuels()

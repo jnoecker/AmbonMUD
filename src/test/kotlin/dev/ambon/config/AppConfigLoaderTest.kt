@@ -263,4 +263,16 @@ class AppConfigLoaderTest {
         )
         assertEquals(PersistenceBackend.POSTGRES, config.persistence.backend)
     }
+
+    @Test
+    fun `validated rejects sessionOutboundQueueCapacity exceeding upper bound`() {
+        val invalid = AppConfig(server = ServerConfig(sessionOutboundQueueCapacity = 100_001))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validated accepts sessionOutboundQueueCapacity at upper bound`() {
+        val valid = AppConfig(server = ServerConfig(sessionOutboundQueueCapacity = 100_000))
+        valid.validated() // should not throw
+    }
 }

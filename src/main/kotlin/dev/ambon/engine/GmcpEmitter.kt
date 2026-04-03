@@ -62,7 +62,17 @@ class GmcpEmitter(
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
-    private val lastZoneBySession = mutableMapOf<SessionId, String>()
+
+    /**
+     * Tracks the last zone seen by each session so we only emit zone-change GMCP
+     * when the player actually moves to a new zone.  Bounded with LRU eviction
+     * as a safety net against orphaned sessions that somehow bypass [forgetSession].
+     */
+    private val lastZoneBySession: MutableMap<SessionId, String> =
+        object : LinkedHashMap<SessionId, String>(128, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<SessionId, String>): Boolean =
+                size > MAX_ZONE_CACHE_ENTRIES
+        }
 
     /** Returns true if the zone changed (or is first seen) for this session. */
     fun trackZoneChange(sessionId: SessionId, zone: String): Boolean {
@@ -2272,6 +2282,9 @@ class GmcpEmitter(
     )
 
     private companion object {
+        /** Upper bound for the zone-tracking LRU cache (well above any realistic session count). */
+        const val MAX_ZONE_CACHE_ENTRIES = 10_000
+
         const val CHAR_STATUS_VARS_JSON =
             """{"hp":"HP","maxHp":"Max HP","mana":"Mana","maxMana":"Max Mana","level":"Level","xp":"XP"}"""
         const val CORE_PING_JSON = "{}"
