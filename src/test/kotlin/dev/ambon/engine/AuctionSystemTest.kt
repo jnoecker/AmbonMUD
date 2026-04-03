@@ -10,9 +10,13 @@ import dev.ambon.test.MutableClock
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Path
+import kotlin.io.path.exists
 
 class AuctionSystemTest {
     private val clock = MutableClock(1000L)
@@ -170,6 +174,65 @@ class AuctionSystemTest {
             val expired = auction.expireListings()
 
             assertEquals(0, expired.size)
+            assertEquals(1, auction.allListings().size)
+        }
+    }
+
+    @Nested
+    inner class Persistence {
+        @Test
+        fun `atomic write persists listings and survives reload`(
+            @TempDir tempDir: Path,
+        ) {
+            val persistPath = tempDir.resolve("auction_listings.json")
+            val persistedAuction = AuctionSystem(
+                items = items,
+                clock = clock,
+                listingDurationMs = 60_000L,
+                persistPath = persistPath,
+            )
+            giveSword(sid1)
+            persistedAuction.postListing(sid1, "Player1", "sword", 100)
+
+            assertTrue(persistPath.exists(), "Persist file should exist after posting")
+
+            // Reload into a fresh AuctionSystem to verify data survives
+            val reloaded = AuctionSystem(
+                items = items,
+                clock = clock,
+                listingDurationMs = 60_000L,
+                persistPath = persistPath,
+            )
+            reloaded.loadPersistedListings()
+            assertEquals(1, reloaded.allListings().size)
+            assertEquals("Player1", reloaded.allListings().first().sellerName)
+            assertEquals(100L, reloaded.allListings().first().price)
+        }
+
+        @Test
+        fun `no temp files left after successful persist`(
+            @TempDir tempDir: Path,
+        ) {
+            val persistPath = tempDir.resolve("auction_listings.json")
+            val persistedAuction = AuctionSystem(
+                items = items,
+                clock = clock,
+                listingDurationMs = 60_000L,
+                persistPath = persistPath,
+            )
+            giveSword(sid1)
+            persistedAuction.postListing(sid1, "Player1", "sword", 100)
+
+            // Verify no .tmp files remain in the directory
+            val tmpFiles = tempDir.toFile().listFiles { f -> f.name.endsWith(".tmp") }
+            assertTrue(tmpFiles.isNullOrEmpty(), "No .tmp files should remain after atomic write")
+        }
+
+        @Test
+        fun `persist file not created when no persist path configured`() {
+            // Default auction (no persistPath) should not throw
+            giveSword(sid1)
+            auction.postListing(sid1, "Player1", "sword", 100)
             assertEquals(1, auction.allListings().size)
         }
     }

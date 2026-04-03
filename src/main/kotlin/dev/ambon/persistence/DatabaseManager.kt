@@ -21,6 +21,9 @@ class DatabaseManager(
                 password = config.password
                 maximumPoolSize = config.maxPoolSize
                 minimumIdle = config.minimumIdle
+                maxLifetime = 1_800_000L // 30 min
+                connectionTimeout = 30_000L // 30 sec
+                idleTimeout = 600_000L // 10 min
             }
         hikariDataSource = HikariDataSource(hikariConfig)
         database = Database.connect(hikariDataSource)
