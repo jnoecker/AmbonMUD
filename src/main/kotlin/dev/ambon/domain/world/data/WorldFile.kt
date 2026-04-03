@@ -4,6 +4,8 @@ data class WorldFile(
     val zone: String,
     val lifespan: Long? = null,
     val startRoom: String,
+    /** Whether this zone has custom graphical assets (rooms, mobs, items with real images). */
+    val graphical: Boolean = false,
     val image: ZoneImageDefaults? = null,
     val audio: ZoneAudioDefaults? = null,
     val rooms: Map<String, RoomFile>,

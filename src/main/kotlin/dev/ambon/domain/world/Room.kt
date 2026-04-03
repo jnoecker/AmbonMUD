@@ -27,4 +27,6 @@ data class Room(
     val mapX: Int = 0,
     /** Precomputed minimap Y coordinate (assigned by WorldLoader BFS). */
     val mapY: Int = 0,
+    /** Whether this room's zone has custom graphical assets (non-placeholder images). */
+    val graphical: Boolean = false,
 )
