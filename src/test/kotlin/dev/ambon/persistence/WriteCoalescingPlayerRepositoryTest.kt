@@ -194,6 +194,57 @@ class WriteCoalescingPlayerRepositoryTest {
             assertEquals(1, flushed)
             assertEquals(0, repo.dirtyCount())
         }
+
+    @Test
+    fun `evict flushes dirty record and removes from cache`() =
+        runTest {
+            val delegate = InMemoryPlayerRepository()
+            val repo = WriteCoalescingPlayerRepository(delegate)
+
+            val record = delegate.create(PlayerCreationRequest("Frank", startRoom, 1000L, "hash", false))
+            repo.save(record.copy(roomId = RoomId("zone:updated")))
+            assertEquals(1, repo.dirtyCount())
+
+            repo.evict(record.id)
+
+            // Dirty record should have been flushed to delegate
+            val fromDelegate = delegate.findById(record.id)
+            assertNotNull(fromDelegate)
+            assertEquals(RoomId("zone:updated"), fromDelegate!!.roomId)
+
+            // Cache should be empty — next lookup goes to delegate
+            assertEquals(0, repo.dirtyCount())
+            assertEquals(0, repo.cachedCount())
+        }
+
+    @Test
+    fun `evict does not remove cache when new dirty write arrives during flush`() =
+        runTest {
+            val delegate = BlockingSaveRepository(InMemoryPlayerRepository())
+            val repo = WriteCoalescingPlayerRepository(delegate)
+            val record = delegate.create(PlayerCreationRequest("Grace", startRoom, 1000L, "hash", false))
+
+            repo.save(record.copy(roomId = RoomId("zone:v1")))
+
+            val saveStarted = CompletableDeferred<Unit>()
+            val allowSaveToFinish = CompletableDeferred<Unit>()
+            delegate.blockNextSave(started = saveStarted, proceed = allowSaveToFinish)
+
+            val evictJob = async { repo.evict(record.id) }
+            saveStarted.await()
+
+            // While evict is flushing, a new save arrives
+            repo.save(record.copy(roomId = RoomId("zone:v2")))
+
+            allowSaveToFinish.complete(Unit)
+            evictJob.await()
+
+            // The new dirty write should prevent eviction
+            assertEquals(1, repo.dirtyCount())
+            assertEquals(1, repo.cachedCount())
+            val cached = repo.findById(record.id)
+            assertEquals(RoomId("zone:v2"), cached!!.roomId)
+        }
 }
 
 private class SaveCountingRepository(
