@@ -153,6 +153,7 @@ class GmcpEmitter(
                 mapY = room.mapY,
                 housing = isHousing,
                 housingOwner = housingOwner,
+                graphical = room.graphical,
             ),
         )
     }
@@ -1723,6 +1724,7 @@ class GmcpEmitter(
         val mapY: Int = 0,
         val housing: Boolean = false,
         val housingOwner: String? = null,
+        val graphical: Boolean = false,
     )
 
     private data class ItemPayload(
