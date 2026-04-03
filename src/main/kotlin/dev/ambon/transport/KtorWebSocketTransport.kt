@@ -174,7 +174,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     val outboundQueue = Channel<OutboundFrame>(capacity = sessionOutboundQueueCapacity)
     val disconnected = AtomicBoolean(false)
     val disconnectReason = AtomicReference("EOF")
-    var inboundBackpressureFailures = 0
+    val backpressureTracker = InboundBackpressureTracker(maxInboundBackpressureFailures)
 
     fun noteDisconnectReason(reason: String) {
         if (reason.isBlank()) return
@@ -257,16 +257,8 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
                     }
                     val lines = sanitizeIncomingLines(text, maxLineLen, maxNonPrintablePerLine)
                     for (line in lines) {
-                        val sent = inbound.trySend(InboundEvent.LineReceived(sessionId, line)).isSuccess
-                        if (sent) {
-                            inboundBackpressureFailures = 0
+                        backpressureTracker.sendLineOrThrow(inbound, sessionId, line, metrics) {
                             metrics.onInboundLineWs()
-                            continue
-                        }
-                        inboundBackpressureFailures++
-                        metrics.onInboundBackpressureFailure()
-                        if (inboundBackpressureFailures >= maxInboundBackpressureFailures) {
-                            throw InboundBackpressure("inbound backpressure")
                         }
                     }
                 }
