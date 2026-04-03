@@ -39,6 +39,7 @@ import dev.ambon.engine.commands.handlers.LeaderboardHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
+import dev.ambon.engine.commands.handlers.PrestigeHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ReputationHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
@@ -504,6 +505,8 @@ class GameEngine(
             getMobEffects = { mobId -> statusEffectSystem.activeMobEffects(mobId) },
             commandEntries = engineConfig.commands.entries,
             emotePresets = engineConfig.emotePresets.presets,
+            prestigeAvailableXp = { player -> prestigeSystem.availableXp(player) },
+            prestigeNextCost = { rank -> prestigeSystem.xpCostForNextRank(rank) },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -687,6 +690,11 @@ class GameEngine(
                 config = engineConfig.leaderboard,
             )
         }
+
+    private val prestigeSystem: PrestigeSystem = PrestigeSystem(
+        config = engineConfig.prestige,
+        progression = progression,
+    )
 
     private var lastTimePeriod: TimePeriod = worldTimeSystem.period()
 
@@ -1101,8 +1109,14 @@ class GameEngine(
                 skillPointsConfig = engineConfig.skillPoints,
                 multiclassConfig = engineConfig.multiclass,
                 markVitalsDirty = ::markVitalsDirty,
+                prestigeSkillPointBonus = { rank -> prestigeSystem.accumulatedSkillPointBonus(rank) },
             ),
             LeaderboardHandler(ctx = ctx),
+            PrestigeHandler(
+                ctx = ctx,
+                prestigeSystem = prestigeSystem,
+                progression = progression,
+            ),
             UiHandler(
                 ctx = ctx,
                 onPhase = phaseCallback,
@@ -1854,6 +1868,7 @@ class GameEngine(
             level = level,
             learnedCount = p?.learnedAbilityIds?.size ?: 0,
             interval = interval,
+            prestigeBonus = prestigeSystem.accumulatedSkillPointBonus(p?.prestigeLevel ?: 0),
         )
         if (available > 0) {
             val pointWord = if (available == 1) "skill point" else "skill points"

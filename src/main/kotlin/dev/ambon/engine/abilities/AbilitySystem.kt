@@ -617,14 +617,16 @@ class AbilitySystem(
     /**
      * Returns the number of skill points available to spend for a player at [level]
      * who has already learned [learnedCount] abilities, given the configured [interval].
+     * An optional [prestigeBonus] adds extra skill points from prestige perks.
      */
     fun availableSkillPoints(
         level: Int,
         learnedCount: Int,
         interval: Int,
+        prestigeBonus: Int = 0,
     ): Int {
         if (interval <= 0) return 0
-        return (level / interval - learnedCount).coerceAtLeast(0)
+        return (level / interval - learnedCount + prestigeBonus).coerceAtLeast(0)
     }
 
     /**
@@ -662,6 +664,7 @@ class AbilitySystem(
         unlockedClasses: Set<String>,
         skillPointInterval: Int,
         learnedIds: Set<String> = emptySet(),
+        prestigeBonus: Int = 0,
     ): String? {
         val ability = registry.get(abilityId) ?: return "Unknown ability '${abilityId.value}'."
         val learned = learnedAbilities.getOrPut(sessionId) { mutableSetOf() }
@@ -684,7 +687,7 @@ class AbilitySystem(
         if (ability.levelRequired > level) {
             return "You need to be level ${ability.levelRequired} to learn ${ability.displayName}."
         }
-        val available = availableSkillPoints(level, learned.size, skillPointInterval)
+        val available = availableSkillPoints(level, learned.size, skillPointInterval, prestigeBonus)
         if (available <= 0) return "You have no skill points available. Level up to earn more."
         learned.add(abilityId)
         return null

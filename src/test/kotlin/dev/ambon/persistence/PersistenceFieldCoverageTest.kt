@@ -126,6 +126,8 @@ class PersistenceFieldCoverageTest {
                 dungeonsCompleted = 5,
                 learnedAbilityIds = setOf("fireball", "ice_shard"),
                 unlockedClasses = setOf("MAGE"),
+                prestigeLevel = 3,
+                prestigeXpSpent = 1_750_000L,
             )
 
         @BeforeAll
