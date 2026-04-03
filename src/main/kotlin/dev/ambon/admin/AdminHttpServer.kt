@@ -42,6 +42,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.options
 import io.ktor.server.routing.post
@@ -936,100 +937,80 @@ internal fun Application.adminModule(
         }
 
         // ── Abilities ───────────────────────────────────────────────────────
-        get("/api/abilities") {
-            if (abilityRegistry == null) {
-                call.respondJsonError(HttpStatusCode.NotImplemented, "Ability registry not configured")
-                return@get
-            }
-            val dtos = abilityRegistry.all().sortedBy { it.displayName }.map { it.toAbilityDto() }
-            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
-        }
-
-        get("/api/abilities/{id}") {
-            if (abilityRegistry == null) {
-                call.respondJsonError(HttpStatusCode.NotImplemented, "Ability registry not configured")
-                return@get
-            }
-            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val ability = abilityRegistry.get(AbilityId(id))
-            if (ability == null) {
-                call.respond(HttpStatusCode.NotFound)
-                return@get
-            }
-            call.respondText(json.writeValueAsString(ability.toAbilityDto()), ContentType.Application.Json)
-        }
+        registryListRoute(
+            path = "/api/abilities",
+            registry = abilityRegistry,
+            label = "Ability",
+            json = json,
+            allFn = { abilityRegistry!!.all() },
+            sortKey = { it.displayName },
+            toDto = { it.toAbilityDto() },
+        )
+        registryDetailRoute(
+            path = "/api/abilities/{id}",
+            registry = abilityRegistry,
+            label = "Ability",
+            json = json,
+            lookupFn = { id -> abilityRegistry!!.get(AbilityId(id)) },
+            toDto = { it.toAbilityDto() },
+        )
 
         // ── Status Effects ──────────────────────────────────────────────────
-        get("/api/effects") {
-            if (statusEffectRegistry == null) {
-                call.respondJsonError(HttpStatusCode.NotImplemented, "Status effect registry not configured")
-                return@get
-            }
-            val dtos = statusEffectRegistry.all().sortedBy { it.displayName }.map { it.toEffectDto() }
-            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
-        }
-
-        get("/api/effects/{id}") {
-            if (statusEffectRegistry == null) {
-                call.respondJsonError(HttpStatusCode.NotImplemented, "Status effect registry not configured")
-                return@get
-            }
-            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val effect = statusEffectRegistry.get(StatusEffectId(id))
-            if (effect == null) {
-                call.respond(HttpStatusCode.NotFound)
-                return@get
-            }
-            call.respondText(json.writeValueAsString(effect.toEffectDto()), ContentType.Application.Json)
-        }
+        registryListRoute(
+            path = "/api/effects",
+            registry = statusEffectRegistry,
+            label = "Status effect",
+            json = json,
+            allFn = { statusEffectRegistry!!.all() },
+            sortKey = { it.displayName },
+            toDto = { it.toEffectDto() },
+        )
+        registryDetailRoute(
+            path = "/api/effects/{id}",
+            registry = statusEffectRegistry,
+            label = "Status effect",
+            json = json,
+            lookupFn = { id -> statusEffectRegistry!!.get(StatusEffectId(id)) },
+            toDto = { it.toEffectDto() },
+        )
 
         // ── Quests ──────────────────────────────────────────────────────────
-        get("/api/quests") {
-            if (questRegistry == null) {
-                call.respondJsonError(HttpStatusCode.NotImplemented, "Quest registry not configured")
-                return@get
-            }
-            val dtos = questRegistry.all().sortedBy { it.id }.map { it.toQuestDto() }
-            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
-        }
-
-        get("/api/quests/{id}") {
-            if (questRegistry == null) {
-                call.respondJsonError(HttpStatusCode.NotImplemented, "Quest registry not configured")
-                return@get
-            }
-            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val quest = questRegistry.get(id)
-            if (quest == null) {
-                call.respond(HttpStatusCode.NotFound)
-                return@get
-            }
-            call.respondText(json.writeValueAsString(quest.toQuestDto()), ContentType.Application.Json)
-        }
+        registryListRoute(
+            path = "/api/quests",
+            registry = questRegistry,
+            label = "Quest",
+            json = json,
+            allFn = { questRegistry!!.all() },
+            sortKey = { it.id },
+            toDto = { it.toQuestDto() },
+        )
+        registryDetailRoute(
+            path = "/api/quests/{id}",
+            registry = questRegistry,
+            label = "Quest",
+            json = json,
+            lookupFn = { id -> questRegistry!!.get(id) },
+            toDto = { it.toQuestDto() },
+        )
 
         // ── Achievements ────────────────────────────────────────────────────
-        get("/api/achievements") {
-            if (achievementRegistry == null) {
-                call.respondJsonError(HttpStatusCode.NotImplemented, "Achievement registry not configured")
-                return@get
-            }
-            val dtos = achievementRegistry.all().sortedBy { it.id }.map { it.toAchievementDto() }
-            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
-        }
-
-        get("/api/achievements/{id}") {
-            if (achievementRegistry == null) {
-                call.respondJsonError(HttpStatusCode.NotImplemented, "Achievement registry not configured")
-                return@get
-            }
-            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val ach = achievementRegistry.get(id)
-            if (ach == null) {
-                call.respond(HttpStatusCode.NotFound)
-                return@get
-            }
-            call.respondText(json.writeValueAsString(ach.toAchievementDto()), ContentType.Application.Json)
-        }
+        registryListRoute(
+            path = "/api/achievements",
+            registry = achievementRegistry,
+            label = "Achievement",
+            json = json,
+            allFn = { achievementRegistry!!.all() },
+            sortKey = { it.id },
+            toDto = { it.toAchievementDto() },
+        )
+        registryDetailRoute(
+            path = "/api/achievements/{id}",
+            registry = achievementRegistry,
+            label = "Achievement",
+            json = json,
+            lookupFn = { id -> achievementRegistry!!.get(id) },
+            toDto = { it.toAchievementDto() },
+        )
 
         // ── Shops ───────────────────────────────────────────────────────────
         get("/api/shops") {
@@ -1325,6 +1306,60 @@ private fun String.esc(): String =
         .replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
+
+// --- Registry route helpers ---
+
+/**
+ * Registers a GET route that lists all items from a nullable registry,
+ * sorted by [sortKey] and mapped to DTOs via [toDto].
+ * Returns 501 if the registry is null.
+ */
+private fun <D, S : Comparable<S>> Route.registryListRoute(
+    path: String,
+    registry: Any?,
+    label: String,
+    json: ObjectMapper,
+    allFn: () -> Collection<D>,
+    sortKey: (D) -> S,
+    toDto: (D) -> Any,
+) {
+    get(path) {
+        if (registry == null) {
+            call.respondJsonError(HttpStatusCode.NotImplemented, "$label registry not configured")
+            return@get
+        }
+        val dtos = allFn().sortedBy(sortKey).map(toDto)
+        call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
+    }
+}
+
+/**
+ * Registers a GET route that looks up a single item by the `{id}` path parameter
+ * using [lookupFn]. Returns 501 if the registry is null, 400 if `{id}` is missing,
+ * 404 if not found.
+ */
+private fun <D> Route.registryDetailRoute(
+    path: String,
+    registry: Any?,
+    label: String,
+    json: ObjectMapper,
+    lookupFn: (String) -> D?,
+    toDto: (D) -> Any,
+) {
+    get(path) {
+        if (registry == null) {
+            call.respondJsonError(HttpStatusCode.NotImplemented, "$label registry not configured")
+            return@get
+        }
+        val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+        val item = lookupFn(id)
+        if (item == null) {
+            call.respond(HttpStatusCode.NotFound)
+            return@get
+        }
+        call.respondText(json.writeValueAsString(toDto(item)), ContentType.Application.Json)
+    }
+}
 
 // --- JSON error helper ---
 
