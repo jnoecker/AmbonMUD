@@ -132,7 +132,8 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
+                val levelBonus = levelScaledDamageBonus(effect.damagePerLevel, player.level)
+                val baseDamage = rollRange(rng, effect.damage.min + levelBonus, effect.damage.max + levelBonus)
                 applySpellDamage(sessionId, mob, ability, baseDamage, intBonus)
             }
             is AbilityEffect.AreaDamage -> {
@@ -153,8 +154,9 @@ class AbilitySystem(
                 }
 
                 deductManaAndCooldown(sessionId, player, ability, now)
+                val levelBonus = levelScaledDamageBonus(effect.damagePerLevel, player.level)
                 for (m in targetMobs) {
-                    val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
+                    val baseDamage = rollRange(rng, effect.damage.min + levelBonus, effect.damage.max + levelBonus)
                     applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
                 }
             }
@@ -206,7 +208,8 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
+                val levelBonus = levelScaledHealBonus(effect.healPerLevel, player.level)
+                val healAmount = rollRange(rng, effect.minHeal + levelBonus, effect.maxHeal + levelBonus)
                 val healed = applyHeal(sessionId, player, healAmount, dirtyNotifier)
                 if (healed > 0) {
                     combat.addHealingThreat(sessionId, healed)
@@ -292,7 +295,8 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
+                val levelBonus = levelScaledHealBonus(effect.healPerLevel, player.level)
+                val healAmount = rollRange(rng, effect.minHeal + levelBonus, effect.maxHeal + levelBonus)
                 val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
                 if (healed > 0) {
                     combat.addHealingThreat(sessionId, healed)
@@ -397,15 +401,17 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
+                val levelBonus = levelScaledDamageBonus(effect.damagePerLevel, player.level)
                 for (m in targetMobs) {
-                    val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
+                    val baseDamage = rollRange(rng, effect.damage.min + levelBonus, effect.damage.max + levelBonus)
                     applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
                 }
             }
             is AbilityEffect.AreaDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
+                val levelBonus = levelScaledDamageBonus(effect.damagePerLevel, player.level)
                 for (m in targetMobs) {
-                    val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
+                    val baseDamage = rollRange(rng, effect.damage.min + levelBonus, effect.damage.max + levelBonus)
                     applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
                 }
             }
@@ -450,9 +456,10 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
+                val levelBonus = levelScaledHealBonus(effect.healPerLevel, player.level)
                 for (targetSid in groupMembers) {
                     val target = players.get(targetSid) ?: continue
-                    val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
+                    val healAmount = rollRange(rng, effect.minHeal + levelBonus, effect.maxHeal + levelBonus)
                     val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
                     if (healed > 0) {
                         combat.addHealingThreat(sessionId, healed)
@@ -533,6 +540,14 @@ class AbilitySystem(
         return null
     }
 
+    /** Returns extra damage added per level of scaling. */
+    private fun levelScaledDamageBonus(damagePerLevel: Double, level: Int): Int =
+        (damagePerLevel * level).toInt()
+
+    /** Returns extra healing added per level of scaling. */
+    private fun levelScaledHealBonus(healPerLevel: Double, level: Int): Int =
+        (healPerLevel * level).toInt()
+
     private suspend fun applySpellDamage(
         sessionId: SessionId,
         mob: MobState,
@@ -586,6 +601,74 @@ class AbilitySystem(
     fun knownAbilities(sessionId: SessionId): List<AbilityDefinition> {
         val known = learnedAbilities[sessionId] ?: return emptyList()
         return known.mapNotNull { registry.get(it) }.sortedBy { it.levelRequired }
+    }
+
+    /**
+     * Loads abilities from a persisted set of ability IDs. Called on login instead of
+     * [syncAbilities] so players only have abilities they explicitly chose at a trainer.
+     */
+    fun loadAbilities(
+        sessionId: SessionId,
+        learnedIds: Set<String>,
+    ) {
+        learnedAbilities[sessionId] = learnedIds.map { AbilityId(it) }.toMutableSet()
+    }
+
+    /**
+     * Returns the number of skill points available to spend for a player at [level]
+     * who has already learned [learnedCount] abilities, given the configured [interval].
+     */
+    fun availableSkillPoints(
+        level: Int,
+        learnedCount: Int,
+        interval: Int,
+    ): Int {
+        if (interval <= 0) return 0
+        return (level / interval - learnedCount).coerceAtLeast(0)
+    }
+
+    /**
+     * Returns abilities available to learn at [className]'s trainer for a player at [level]
+     * who has not yet learned the IDs in [learnedIds].
+     */
+    fun trainableAbilities(
+        className: String,
+        level: Int,
+        learnedIds: Set<String>,
+    ): List<AbilityDefinition> =
+        registry.abilitiesForClass(className)
+            .filter { it.levelRequired <= level && it.id.value !in learnedIds }
+            .sortedBy { it.levelRequired }
+
+    /**
+     * Attempts to learn [abilityId] for the session. Returns null on success, or an error message.
+     * Updates the in-memory learned set; caller is responsible for persisting to [PlayerState].
+     *
+     * @param unlockedClasses the set of class names the player has unlocked
+     * @param level current player level (for skill point calculation)
+     * @param skillPointInterval from config — points earned every N levels
+     */
+    fun learnAbility(
+        sessionId: SessionId,
+        abilityId: AbilityId,
+        level: Int,
+        unlockedClasses: Set<String>,
+        skillPointInterval: Int,
+    ): String? {
+        val ability = registry.get(abilityId) ?: return "Unknown ability '${abilityId.value}'."
+        val learned = learnedAbilities.getOrPut(sessionId) { mutableSetOf() }
+        if (abilityId in learned) return "You already know ${ability.displayName}."
+        val requiredClass = ability.requiredClass
+        if (requiredClass != null && !unlockedClasses.any { it.equals(requiredClass, ignoreCase = true) }) {
+            return "You have not unlocked the ${requiredClass.lowercase().replaceFirstChar { it.uppercaseChar() }} class."
+        }
+        if (ability.levelRequired > level) {
+            return "You need to be level ${ability.levelRequired} to learn ${ability.displayName}."
+        }
+        val available = availableSkillPoints(level, learned.size, skillPointInterval)
+        if (available <= 0) return "You have no skill points available. Level up to earn more."
+        learned.add(abilityId)
+        return null
     }
 
     fun cooldownRemainingMs(

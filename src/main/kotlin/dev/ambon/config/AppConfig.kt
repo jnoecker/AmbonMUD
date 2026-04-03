@@ -946,6 +946,8 @@ data class EngineConfig(
     /** How long to hold a disconnected player's session before full logout (ms). 0 disables. */
     val sessionResumeGracePeriodMs: Long = 90_000,
     val leaderboard: LeaderboardConfig = LeaderboardConfig(),
+    val skillPoints: SkillPointsConfig = SkillPointsConfig(),
+    val multiclass: MulticlassConfig = MulticlassConfig(),
 )
 
 data class NavigationConfig(
@@ -1517,6 +1519,26 @@ data class AbilityEffectConfig(
     val margin: Double = 10.0,
     val petTemplateKey: String = "",
     val durationMs: Long = 0L,
+    /** Added damage per player level for DIRECT_DAMAGE and AREA_DAMAGE effects. */
+    val damagePerLevel: Double = 0.0,
+    /** Added healing per player level for DIRECT_HEAL effects. */
+    val healPerLevel: Double = 0.0,
+)
+
+data class SkillPointsConfig(
+    /** Player gains 1 skill point every this many levels. Must be >= 1. */
+    val interval: Int = 2,
+) {
+    init {
+        require(interval >= 1) { "skillPoints.interval must be >= 1, got $interval" }
+    }
+}
+
+data class MulticlassConfig(
+    /** Minimum player level required to unlock an additional class. */
+    val minLevel: Int = 10,
+    /** Gold cost to unlock a new class at a trainer. */
+    val goldCost: Long = 500L,
 )
 
 data class StatusEffectEngineConfig(

@@ -196,6 +196,7 @@ class HotReloadManagerTest {
             players = players,
             outbound = outbound,
             shopRegistry = shopRegistry,
+            trainerRegistry = TrainerRegistry(),
             gatheringRegistry = gatheringRegistry,
             craftingRegistry = craftingRegistry,
             questRegistry = questRegistry,

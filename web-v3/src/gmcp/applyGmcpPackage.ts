@@ -58,6 +58,8 @@ import type {
   StatusEffect,
   StatusVarLabels,
   TradeState,
+  TrainerAbility,
+  TrainerData,
   UiFeedback,
   Vitals,
   WhoPlayer,
@@ -135,6 +137,8 @@ interface GmcpContext {
   setTradeState: Dispatch<SetStateAction<TradeState | null>>;
   setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
+  setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
+  setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1552,6 +1556,47 @@ export function applyGmcpPackage(
               : [],
           })),
       );
+      break;
+    }
+
+    case "Trainer.List": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const abilities: TrainerAbility[] = Array.isArray(packet.abilities)
+        ? packet.abilities
+            .filter((a): a is Record<string, unknown> => typeof a === "object" && a !== null)
+            .map((a) => ({
+              id: typeof a.id === "string" ? a.id : "",
+              name: typeof a.name === "string" ? a.name : "",
+              description: typeof a.description === "string" ? a.description : "",
+              levelRequired: safeNumber(a.levelRequired, 1),
+              manaCost: safeNumber(a.manaCost),
+              cooldownMs: safeNumber(a.cooldownMs),
+              targetType: typeof a.targetType === "string" ? a.targetType : "ENEMY",
+              effectType: typeof a.effectType === "string" ? a.effectType : "DIRECT_DAMAGE",
+              image: typeof a.image === "string" ? a.image : null,
+            }))
+        : [];
+      const trainer: TrainerData = {
+        trainerId: typeof packet.trainerId === "string" ? packet.trainerId : "",
+        name: typeof packet.name === "string" ? packet.name : "Trainer",
+        className: typeof packet.class === "string" ? packet.class : "",
+        image: typeof packet.image === "string" ? packet.image : null,
+        classUnlocked: packet.classUnlocked === true,
+        availableSkillPoints: safeNumber(packet.availableSkillPoints),
+        multiclassMinLevel: safeNumber(packet.multiclassMinLevel, 10),
+        multiclassGoldCost: safeNumber(packet.multiclassGoldCost, 500),
+        abilities,
+      };
+      ctx.setTrainer(trainer);
+      break;
+    }
+
+    case "Char.Classes": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const unlockedClasses: string[] = Array.isArray(packet.unlockedClasses)
+        ? packet.unlockedClasses.filter((c): c is string => typeof c === "string")
+        : [];
+      ctx.setUnlockedClasses(unlockedClasses);
       break;
     }
 

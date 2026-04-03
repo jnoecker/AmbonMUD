@@ -442,7 +442,7 @@ Sent immediately when an item leaves the player's inventory (dropped, sold, cons
 
 ### `Char.Skills`
 
-Full ability list. Sent on login, when a new ability is learned (level-up), and when a cooldown starts or expires.
+Full ability list. Sent on login, when a new ability is learned (via trainer), and when a cooldown starts or expires. Only contains abilities the player has explicitly learned — abilities must be unlocked at a class trainer by spending skill points.
 
 ```json
 [
@@ -1189,6 +1189,81 @@ Sent when the player leaves a shop context.
 
 ---
 
+### `Trainer.List`
+
+Sent when a player uses `train list` (or just `train`) at a class trainer. Contains the trainer's metadata, skill point balance, and available learnable abilities.
+
+Subscribe with `"Trainer 1"`.
+
+```json
+{
+  "trainerId": "warrior_trainer",
+  "name": "Captain Varek",
+  "class": "WARRIOR",
+  "image": null,
+  "classUnlocked": true,
+  "availableSkillPoints": 3,
+  "multiclassMinLevel": 10,
+  "multiclassGoldCost": 500,
+  "abilities": [
+    {
+      "id": "power_strike",
+      "name": "Power Strike",
+      "description": "A mighty blow that deals extra melee damage.",
+      "levelRequired": 1,
+      "manaCost": 10,
+      "cooldownMs": 5000,
+      "targetType": "ENEMY",
+      "effectType": "DIRECT_DAMAGE",
+      "image": "/images/abilities/power_strike.png"
+    }
+  ]
+}
+```
+
+| Field                  | Type               | Notes |
+|------------------------|--------------------|-------|
+| `trainerId`            | string             | Trainer registry key |
+| `name`                 | string             | Trainer display name |
+| `class`                | string             | The class this trainer teaches |
+| `image`                | string\|null       | Trainer portrait image URL |
+| `classUnlocked`        | boolean            | Whether this class is unlocked for the player |
+| `availableSkillPoints` | int                | Points the player can spend right now |
+| `multiclassMinLevel`   | int                | Minimum level to unlock a new class |
+| `multiclassGoldCost`   | long               | Gold cost to unlock a new class |
+| `abilities[]`          | array              | Abilities available to learn at this trainer |
+| `abilities[].id`       | string             | Ability ID (for `train learn <id>`) |
+| `abilities[].levelRequired` | int           | Minimum player level to learn |
+| `abilities[].manaCost` | int                | Mana consumed when cast |
+| `abilities[].cooldownMs` | long             | Full cooldown duration in milliseconds |
+| `abilities[].targetType` | string           | `SELF`, `ENEMY`, `ALLY`, `ALL_ENEMIES`, `ALL_ALLIES` |
+| `abilities[].effectType` | string           | `DIRECT_DAMAGE`, `AREA_DAMAGE`, `DIRECT_HEAL`, `BUFF`, `DEBUFF` |
+| `abilities[].image`    | string\|null       | Ability sprite image URL |
+
+When `classUnlocked` is `false`, `abilities` is an empty array. The client should show an unlock prompt instead.
+
+---
+
+### `Char.Classes`
+
+Sent on login and whenever the player unlocks a new class via `train unlock`.
+
+Subscribe with `"Char.Classes 1"`.
+
+```json
+{
+  "originalClass": "WARRIOR",
+  "unlockedClasses": ["WARRIOR", "MAGE"]
+}
+```
+
+| Field             | Type            | Notes |
+|-------------------|-----------------|-------|
+| `originalClass`   | string          | The class the character was created with |
+| `unlockedClasses` | array of string | All classes the player has unlocked (always includes `originalClass`) |
+
+---
+
 ### `Server.Assets`
 
 Sent on login. Contains resolved URLs for global asset files (sprites, images). Payload is a map of asset keys to URL paths.
@@ -1250,6 +1325,8 @@ These packages are coalesced — if the same session is marked dirty multiple ti
 | `Friends.Offline`    | Friend logged out |
 | `Shop.List`          | Player enters shop / `list` command |
 | `Shop.Close`         | Player leaves shop context |
+| `Trainer.List`       | Player uses `train` / `train list` at a trainer |
+| `Char.Classes`       | Login / player unlocks a new class |
 | `Server.Assets`      | Login |
 
 ---
@@ -1419,6 +1496,8 @@ Notifies the client when the character's active display title changes (set via t
 | `Friends.Offline`     | → S→C     | Immediate |
 | `Shop.List`           | → S→C     | Immediate |
 | `Shop.Close`          | → S→C     | Immediate |
+| `Trainer.List`        | → S→C     | Immediate |
+| `Char.Classes`        | → S→C     | Login / class unlock |
 | `Server.Assets`       | → S→C     | Login only |
 | `World.Map`           | → S→C     | **Planned** |
 | `Admin.Status`        | → S→C     | **Planned** (staff only) |

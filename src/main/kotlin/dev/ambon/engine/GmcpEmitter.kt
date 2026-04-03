@@ -564,6 +564,64 @@ class GmcpEmitter(
     }
 
     /**
+     * Sends the `Trainer.List` GMCP package for the trainer in the current room.
+     */
+    suspend fun sendTrainerList(
+        sessionId: SessionId,
+        trainer: dev.ambon.domain.world.TrainerDefinition,
+        abilities: List<AbilityDefinition>,
+        availableSkillPoints: Int,
+        classUnlocked: Boolean,
+        multiclassConfig: dev.ambon.config.MulticlassConfig,
+    ) {
+        emit(
+            sessionId,
+            "Trainer.List",
+            TrainerListPayload(
+                trainerId = trainer.id,
+                name = trainer.name,
+                className = trainer.className,
+                image = trainer.image,
+                classUnlocked = classUnlocked,
+                availableSkillPoints = availableSkillPoints,
+                multiclassMinLevel = multiclassConfig.minLevel,
+                multiclassGoldCost = multiclassConfig.goldCost,
+                abilities = abilities.map { a ->
+                    TrainerAbilityPayload(
+                        id = a.id.value,
+                        name = a.displayName,
+                        description = a.description,
+                        levelRequired = a.levelRequired,
+                        manaCost = a.manaCost,
+                        cooldownMs = a.cooldownMs,
+                        targetType = a.targetType,
+                        effectType = a.effect.toEffectType(),
+                        image = a.image,
+                    )
+                },
+            ),
+            supportCheck = "Trainer",
+        )
+    }
+
+    /** Sends `Char.Classes` with the player's unlocked classes. */
+    suspend fun sendCharClasses(
+        sessionId: SessionId,
+        unlockedClasses: Set<String>,
+        originalClass: String,
+    ) {
+        emit(
+            sessionId,
+            "Char.Classes",
+            CharClassesPayload(
+                originalClass = originalClass,
+                unlockedClasses = unlockedClasses.toList(),
+            ),
+            supportCheck = "Char.Classes",
+        )
+    }
+
+    /**
      * Sends the full character GMCP state: status vars, vitals, name, items,
      * skills, status effects, achievements, and group info. Called on login
      * and when a client negotiates GMCP support.
@@ -593,6 +651,7 @@ class GmcpEmitter(
         sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         sendCharAchievements(sessionId, player, achievementRegistry)
         sendCharSprites(sessionId, player)
+        sendCharClasses(sessionId, player.unlockedClasses.ifEmpty { setOf(player.playerClass) }, player.playerClass)
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
     }
@@ -1727,6 +1786,35 @@ class GmcpEmitter(
         val effectType: String,
         val classRestriction: String?,
         val image: String? = null,
+    )
+
+    private data class TrainerAbilityPayload(
+        val id: String,
+        val name: String,
+        val description: String,
+        val levelRequired: Int,
+        val manaCost: Int,
+        val cooldownMs: Long,
+        val targetType: String,
+        val effectType: String,
+        val image: String? = null,
+    )
+
+    private data class TrainerListPayload(
+        val trainerId: String,
+        val name: String,
+        @get:JsonProperty("class") val className: String,
+        val image: String?,
+        val classUnlocked: Boolean,
+        val availableSkillPoints: Int,
+        val multiclassMinLevel: Int,
+        val multiclassGoldCost: Long,
+        val abilities: List<TrainerAbilityPayload>,
+    )
+
+    private data class CharClassesPayload(
+        val originalClass: String,
+        val unlockedClasses: List<String>,
     )
 
     private data class CharNamePayload(
