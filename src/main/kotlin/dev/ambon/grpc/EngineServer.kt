@@ -82,6 +82,14 @@ class EngineServer(
     private val inbound: InboundBus = LocalInboundBus(capacity = config.server.inboundChannelCapacity)
     private val outbound: OutboundBus = LocalOutboundBus(capacity = config.server.outboundChannelCapacity)
 
+    private val grpcAuthInterceptor: GrpcServerAuthInterceptor? =
+        config.grpc.sharedSecret.takeIf { it.isNotBlank() }?.let { secret ->
+            GrpcServerAuthInterceptor(
+                sharedSecret = secret,
+                timestampToleranceMs = config.grpc.timestampToleranceMs,
+            )
+        }
+
     private val grpcServer =
         EngineGrpcServer(
             port = config.grpc.server.port,
@@ -90,6 +98,7 @@ class EngineServer(
             scope = scope,
             metrics = gameMetrics,
             controlPlaneSendTimeoutMs = config.grpc.server.controlPlaneSendTimeoutMs,
+            serverAuthInterceptor = grpcAuthInterceptor,
         )
 
     private val items = ItemRegistry()
