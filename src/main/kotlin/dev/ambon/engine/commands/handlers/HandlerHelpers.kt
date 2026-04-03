@@ -599,8 +599,11 @@ internal fun resolveLockable(
 
 /**
  * Attempts a cross-zone move to [targetRoomId]. If [onCrossZoneMove] is available,
- * suppresses auto-prompt, invokes the callback, and returns true.
+ * invokes the callback and then suppresses auto-prompt, returning true.
  * Otherwise returns false (caller should send a fallback error).
+ *
+ * Auto-prompt is suppressed *after* the callback completes so that if the
+ * callback throws, the router's default prompt delivery still fires.
  */
 internal suspend fun attemptCrossZoneMove(
     sessionId: SessionId,
@@ -609,8 +612,8 @@ internal suspend fun attemptCrossZoneMove(
     suppressAutoPrompt: () -> Unit,
 ): Boolean {
     if (onCrossZoneMove != null) {
-        suppressAutoPrompt()
         onCrossZoneMove.invoke(sessionId, targetRoomId)
+        suppressAutoPrompt()
         return true
     }
     return false

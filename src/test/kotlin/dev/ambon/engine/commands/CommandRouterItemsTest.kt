@@ -408,4 +408,109 @@ class CommandRouterItemsTest {
             val outs = h.drain()
             assertTrue(outs.any { it is OutboundEvent.SendError && it.text.contains("not here") })
         }
+
+    // ---- State-blocking tests (combat) ----
+
+    @Test
+    fun `wear blocked during combat`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(30L)
+            h.loginPlayer(sid, "Fighter1")
+
+            // Spawn a mob in the start room and start combat
+            val mob = dev.ambon.domain.mob.MobState(
+                id = dev.ambon.domain.ids.MobId("test:rat"),
+                name = "rat",
+                roomId = h.world.startRoom,
+            )
+            h.mobs.upsert(mob)
+            h.combat.startCombat(sid, "rat")
+            h.drain()
+
+            h.router.handle(sid, Command.Wear("sword"))
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("combat") },
+                "Expected combat block error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `drop blocked during combat`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(31L)
+            h.loginPlayer(sid, "Fighter2")
+
+            val mob = dev.ambon.domain.mob.MobState(
+                id = dev.ambon.domain.ids.MobId("test:rat"),
+                name = "rat",
+                roomId = h.world.startRoom,
+            )
+            h.mobs.upsert(mob)
+            h.combat.startCombat(sid, "rat")
+            h.drain()
+
+            h.router.handle(sid, Command.Drop("sword"))
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("combat") },
+                "Expected combat block error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `give blocked during combat`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(32L)
+            h.loginPlayer(sid, "Fighter3")
+
+            val mob = dev.ambon.domain.mob.MobState(
+                id = dev.ambon.domain.ids.MobId("test:rat"),
+                name = "rat",
+                roomId = h.world.startRoom,
+            )
+            h.mobs.upsert(mob)
+            h.combat.startCombat(sid, "rat")
+            h.drain()
+
+            h.router.handle(sid, Command.Give("sword", "Someone"))
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("combat") },
+                "Expected combat block error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `use allowed during combat`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(33L)
+            h.loginPlayer(sid, "Fighter4")
+
+            val mob = dev.ambon.domain.mob.MobState(
+                id = dev.ambon.domain.ids.MobId("test:rat"),
+                name = "rat",
+                roomId = h.world.startRoom,
+            )
+            h.mobs.upsert(mob)
+            h.combat.startCombat(sid, "rat")
+            h.drain()
+
+            // Use should NOT be blocked by combat (potions)
+            h.router.handle(sid, Command.Use("potion"))
+
+            val outs = h.drain()
+            // Should get "not carrying" error, NOT a combat block error
+            assertTrue(
+                outs.none { it is OutboundEvent.SendError && it.text.contains("combat") },
+                "Use should not be blocked by combat. got=$outs",
+            )
+        }
 }

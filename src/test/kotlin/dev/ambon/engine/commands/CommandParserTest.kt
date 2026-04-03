@@ -652,4 +652,61 @@ class CommandParserTest {
     fun `home alias parses as house status`() {
         assertEquals(Command.House.Status, CommandParser.parse("home"))
     }
+
+    // ---- Input length limit ----
+
+    @Test
+    fun `rejects input exceeding max length`() {
+        val longInput = "a".repeat(CommandParser.MAX_INPUT_LENGTH + 1)
+        val result = CommandParser.parse(longInput)
+        assertTrue(result is Command.Invalid, "Expected Invalid for oversized input, got=$result")
+        val invalid = result as Command.Invalid
+        assertTrue(invalid.usage!!.contains("too long"), "Expected 'too long' in usage, got=${invalid.usage}")
+    }
+
+    @Test
+    fun `accepts input at max length`() {
+        val maxInput = "a".repeat(CommandParser.MAX_INPUT_LENGTH)
+        val result = CommandParser.parse(maxInput)
+        assertTrue(
+            result !is Command.Invalid || !(result as Command.Invalid).usage!!.contains("too long"),
+            "Input at exactly max length should not be rejected for length",
+        )
+    }
+
+    // ---- Auction sell price validation ----
+
+    @Test
+    fun `auction sell rejects zero price`() {
+        val result = CommandParser.parse("auction sell sword 0")
+        assertTrue(result is Command.Invalid, "Expected Invalid for zero price, got=$result")
+        assertTrue((result as Command.Invalid).usage!!.contains("greater than zero"))
+    }
+
+    @Test
+    fun `auction sell rejects negative price`() {
+        val result = CommandParser.parse("auction sell sword -5")
+        // Negative numbers won't parse via toLongOrNull when preceded by space, but just in case:
+        assertTrue(result is Command.Invalid, "Expected Invalid for negative price, got=$result")
+    }
+
+    @Test
+    fun `auction sell rejects price exceeding cap`() {
+        val overMax = CommandParser.MAX_AUCTION_PRICE + 1
+        val result = CommandParser.parse("auction sell sword $overMax")
+        assertTrue(result is Command.Invalid, "Expected Invalid for price exceeding cap, got=$result")
+        assertTrue((result as Command.Invalid).usage!!.contains("cannot exceed"))
+    }
+
+    @Test
+    fun `auction sell accepts valid price`() {
+        val result = CommandParser.parse("auction sell sword 100")
+        assertEquals(Command.AuctionSell("sword", 100), result)
+    }
+
+    @Test
+    fun `auction sell accepts price at cap`() {
+        val result = CommandParser.parse("auction sell sword ${CommandParser.MAX_AUCTION_PRICE}")
+        assertEquals(Command.AuctionSell("sword", CommandParser.MAX_AUCTION_PRICE), result)
+    }
 }
