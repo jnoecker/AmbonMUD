@@ -79,7 +79,7 @@ achievements:
     hidden: false
     criteria:
       - type: kill
-        targetId: ""
+        targetId: "celestial_peak:elder_dragon_auranthos"
         count: 1
         description: "Kill Elder Dragon Auranthos"
     rewards:
