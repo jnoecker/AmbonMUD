@@ -605,12 +605,7 @@ object CommandParser {
 
         // tell: "tell <target> <msg>" or "t <target> <msg>"
         matchPrefix(line, listOf("tell", "t")) { rest ->
-            val parts = rest.split(Regex("\\s+"), limit = 2)
-            if (parts.size < 2) return@matchPrefix Command.Invalid(line, "tell <target> <msg>")
-
-            val target = parts[0]
-            val msg = parts[1].trim()
-            if (msg.isEmpty()) Command.Unknown(line) else Command.Tell(target, msg)
+            parseTargetMessage(rest, line, "tell <target> <msg>") { target, msg -> Command.Tell(target, msg) }
         }?.let { return it }
 
         // look <dir> / look <target> / l <dir> / l <target>
@@ -806,11 +801,7 @@ object CommandParser {
         }?.let { return it }
 
         matchPrefix(line, listOf("whisper", "wh")) { rest ->
-            val parts = rest.split(Regex("\\s+"), limit = 2)
-            if (parts.size < 2) return@matchPrefix Command.Invalid(line, "whisper <target> <msg>")
-            val target = parts[0]
-            val msg = parts[1].trim()
-            if (msg.isEmpty()) Command.Invalid(line, "whisper <target> <msg>") else Command.Whisper(target, msg)
+            parseTargetMessage(rest, line, "whisper <target> <msg>") { target, msg -> Command.Whisper(target, msg) }
         }?.let { return it }
 
         // shout: "shout <msg>" or "sh <msg>"
@@ -1254,6 +1245,23 @@ object CommandParser {
             "dungeon leave", "dungeon exit" -> Command.DungeonLeave
             else -> Command.Unknown(line)
         }
+    }
+
+    /**
+     * Parses a "<target> <message>" string from [rest].
+     * Returns [Command.Invalid] when the target or message is missing, else delegates to [ctor].
+     */
+    private inline fun parseTargetMessage(
+        rest: String,
+        line: String,
+        usage: String,
+        ctor: (String, String) -> Command,
+    ): Command {
+        val parts = rest.split(Regex("\\s+"), limit = 2)
+        if (parts.size < 2) return Command.Invalid(line, usage)
+        val target = parts[0]
+        val msg = parts[1].trim()
+        return if (msg.isEmpty()) Command.Invalid(line, usage) else ctor(target, msg)
     }
 
     /** Matches [aliases] prefix; returns Invalid(usage) if rest is blank, else [ctor](rest). */
