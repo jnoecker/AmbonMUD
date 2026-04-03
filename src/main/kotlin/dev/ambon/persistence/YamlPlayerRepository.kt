@@ -32,6 +32,11 @@ class YamlPlayerRepository(
     // In-memory name→id index.  Built lazily on first findByName call (one-time directory scan),
     // then kept up-to-date by save() and create().  Eliminates repeated full-directory scans.
     private val nameIndex = ConcurrentHashMap<String, Long>()
+
+    // In-memory authTokenHash→id index.  Populated alongside nameIndex so that
+    // findByAuthTokenHash is O(1) instead of scanning every YAML file.
+    private val authTokenIndex = ConcurrentHashMap<String, Long>()
+
     private val nameIndexReady = AtomicBoolean(false)
     private val createLock = ReentrantLock()
 
@@ -67,17 +72,13 @@ class YamlPlayerRepository(
             }
         }
 
-    // Note: linear scan of all player files. Acceptable for dev/small servers
-    // using the YAML backend. Postgres uses an indexed column lookup.
     override suspend fun findByAuthTokenHash(hash: String): PlayerRecord? {
         if (hash.isBlank()) return null
         return withContext(Dispatchers.IO) {
             metrics.timedLoad {
-                val dir = playersDir
-                if (!dir.exists()) return@timedLoad null
-                dir.listDirectoryEntries("*.yaml").firstNotNullOfOrNull { path ->
-                    readRecord(path)?.takeIf { it.authTokenHash == hash }
-                }
+                ensureNameIndexReady()
+                val id = authTokenIndex[hash] ?: return@timedLoad null
+                readRecord(pathFor(id))
             }
         }
     }
@@ -153,6 +154,9 @@ class YamlPlayerRepository(
                 } else {
                     nameIndex[key] = id
                 }
+                if (record.authTokenHash.isNotEmpty()) {
+                    authTokenIndex[record.authTokenHash] = id
+                }
             }
             // Guard against a stale or missing next_player_id.txt falling behind actual file IDs.
             if (maxSeenId >= nextId.get()) {
@@ -200,5 +204,23 @@ class YamlPlayerRepository(
     private fun writePlayer(record: PlayerRecord) {
         atomicWriteText(pathFor(record.id.value), mapper.writeValueAsString(record))
         nameIndex[record.name.lowercase()] = record.id.value
+        updateAuthTokenIndex(record)
+    }
+
+    /**
+     * Keeps [authTokenIndex] in sync after a player write.  Removes any stale entry
+     * that previously pointed to this player's ID (handles token rotation / revocation)
+     * and inserts the new mapping if the record carries a non-empty hash.
+     */
+    private fun updateAuthTokenIndex(record: PlayerRecord) {
+        val id = record.id.value
+        // Remove any existing entry that maps *to* this player ID.  This is necessary when
+        // the token hash changed (rotation) or was cleared (revocation).  ConcurrentHashMap
+        // iteration is safe under concurrent reads; the scan is bounded by the number of
+        // players who have ever issued a token — typically a small fraction of the population.
+        authTokenIndex.entries.removeIf { it.value == id }
+        if (record.authTokenHash.isNotEmpty()) {
+            authTokenIndex[record.authTokenHash] = id
+        }
     }
 }
