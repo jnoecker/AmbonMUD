@@ -12,17 +12,20 @@ name: Deploy Demo
 #   GitHub variables:
 #     AWS_REGION              AWS region (default: us-east-1)
 
+# AUTO-DEPLOY PAUSED: automatic deployment is disabled while the Eryndal world
+# rewrite is in progress. Re-enable by restoring the workflow_run trigger below.
+# To re-enable, add back:
+#   workflow_run:
+#     workflows: [CI]
+#     types: [completed]
+#     branches: [main]
+
 on:
   workflow_dispatch:
     inputs:
       image-tag:
         description: "Docker image tag (git SHA) to deploy. Defaults to HEAD of main."
         required: false
-
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
 
 concurrency:
   group: deploy-demo
