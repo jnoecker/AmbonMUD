@@ -1,5 +1,7 @@
 package dev.ambon.engine.events
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.AchievementRegistry
@@ -32,6 +34,8 @@ class GmcpEventHandler(
     private val logger: KLogger,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
+    private val gmcpJson = jacksonObjectMapper()
+
     suspend fun onGmcpReceived(ev: InboundEvent.GmcpReceived) {
         metrics.onGmcpHandlerEvent()
         val sid = ev.sessionId
@@ -104,13 +108,12 @@ class GmcpEventHandler(
         return match?.groupValues?.get(1)
     }
 
-    private fun parseGmcpPackageList(json: String): List<String> {
-        val content = json.trim().removePrefix("[").removeSuffix("]")
-        if (content.isBlank()) return emptyList()
-        return content
-            .split(",")
-            .map { it.trim().removeSurrounding("\"").trim() }
-            .map { it.substringBefore(' ') }
-            .filter { it.isNotBlank() }
-    }
+    private fun parseGmcpPackageList(jsonData: String): List<String> =
+        try {
+            val entries: List<String> = gmcpJson.readValue(jsonData)
+            entries.map { it.trim().substringBefore(' ') }.filter { it.isNotBlank() }
+        } catch (e: Exception) {
+            logger.warn { "Failed to parse GMCP package list as JSON array, ignoring: ${e.message}" }
+            emptyList()
+        }
 }
