@@ -7,34 +7,43 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.GuildSystem
+import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.ShopRegistry
+import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
+import dev.ambon.engine.commands.handlers.DuelHandler
+import dev.ambon.engine.commands.handlers.DungeonHandler
 import dev.ambon.engine.commands.handlers.EnchantHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.GuildHandler
+import dev.ambon.engine.commands.handlers.HousingHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
+import dev.ambon.engine.commands.handlers.TradeHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.crafting.EnchantSystem
 import dev.ambon.engine.crafting.GatheringRegistry
+import dev.ambon.engine.dungeon.DungeonManager
+import dev.ambon.engine.dungeon.DungeonRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.PlayerLocationIndex
@@ -72,6 +81,11 @@ internal fun buildTestRouter(
     petSystem: PetSystem? = null,
     enchantSystem: EnchantSystem? = null,
     bankConfig: BankConfig? = null,
+    duelSystem: DuelSystem? = null,
+    tradeSystem: TradeSystem? = null,
+    dungeonManager: DungeonManager? = null,
+    dungeonRegistry: DungeonRegistry? = null,
+    housingSystem: HousingSystem? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -110,6 +124,10 @@ internal fun buildTestRouter(
         petSystem?.let { PetHandler(ctx = ctx, petSystem = it) },
         enchantSystem?.let { EnchantHandler(ctx = ctx, enchantSystem = it) },
         bankConfig?.let { BankHandler(ctx = ctx, bankConfig = it) },
+        DuelHandler(ctx = ctx, duelSystem = duelSystem, combatSystem = combat),
+        tradeSystem?.let { TradeHandler(ctx = ctx, tradeSystem = it) },
+        DungeonHandler(ctx = ctx, dungeonManager = dungeonManager, dungeonRegistry = dungeonRegistry, groupSystem = groupSystem),
+        housingSystem?.let { HousingHandler(ctx = ctx, housingSystem = it) },
         AdminHandler(
             ctx = ctx,
             onShutdown = onShutdown,
