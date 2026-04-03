@@ -101,8 +101,15 @@ class DungeonManager(
             playerInstances[sid] = instanceId
         }
 
-        // Spawn mobs
-        spawnDungeonMobs(instance)
+        // Spawn mobs — if this fails, clean up the partially-created instance
+        // (rooms already added to the World, player mappings already registered).
+        try {
+            spawnDungeonMobs(instance)
+        } catch (e: Exception) {
+            log.error(e) { "Failed to spawn mobs for dungeon instance $instanceId, cleaning up" }
+            destroyInstance(instanceId)
+            throw e
+        }
 
         log.info { "Dungeon instance created: id=$instanceId template=${template.name} difficulty=$difficulty rooms=${layout.rooms.size}" }
         return instance
