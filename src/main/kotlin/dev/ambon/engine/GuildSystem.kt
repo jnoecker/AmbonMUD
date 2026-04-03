@@ -387,10 +387,9 @@ class GuildSystem(
             appendLine("=== ${guild.name} [${guild.tag}] ===")
             appendLine("Members (${guild.members.size}/$maxSize):")
             for ((memberId, rank) in guild.members.entries.sortedByDescending { rankConfig.rankLevel(it.value) }) {
-                val sid = players.findSessionByPlayerId(memberId)
-                val onlineName = if (sid != null) players.get(sid)?.name else null
-                val nameStr = onlineName ?: "(offline #${memberId.value})"
-                val onlineMarker = if (onlineName != null) " *" else ""
+                val (sid, resolvedName) = resolveMemberStatus(memberId)
+                val nameStr = resolvedName ?: "(offline #${memberId.value})"
+                val onlineMarker = if (sid != null) " *" else ""
                 append("  [${rank.padEnd(7)}] $nameStr$onlineMarker")
                 if (memberId == guild.leaderId) append(" (Leader)")
                 appendLine()
@@ -405,8 +404,7 @@ class GuildSystem(
     }
 
     suspend fun info(sessionId: SessionId): String? = withMembership(sessionId) { _, guild ->
-        val leaderSid = players.findSessionByPlayerId(guild.leaderId)
-        val leaderName = if (leaderSid != null) players.get(leaderSid)?.name else null
+        val leaderName = resolveGuildMemberName(guild.leaderId)
 
         val lines = buildString {
             appendLine("Guild: ${guild.name} [${guild.tag}]")
@@ -479,10 +477,10 @@ class GuildSystem(
 
     private suspend fun buildMemberInfoList(guild: GuildRecord): List<GuildMemberInfo> =
         guild.members.entries.map { (memberId, rank) ->
-            val sid = players.findSessionByPlayerId(memberId)
+            val (sid, resolvedName) = resolveMemberStatus(memberId)
             val online = sid != null
             val ps = if (sid != null) players.get(sid) else null
-            val name = ps?.name ?: players.findOfflinePlayerName(memberId) ?: "(unknown)"
+            val name = resolvedName ?: "(unknown)"
             GuildMemberInfo(name = name, rank = rank, online = online, level = ps?.level)
         }
 
@@ -523,10 +521,18 @@ class GuildSystem(
         }
     }
 
-    private suspend fun resolveGuildMemberName(playerId: PlayerId): String? {
+    /**
+     * Returns the [SessionId] (if online) and resolved display name for a guild member.
+     * Falls back to the offline player name, or `null` if no name can be resolved.
+     */
+    private suspend fun resolveMemberStatus(playerId: PlayerId): Pair<SessionId?, String?> {
         val sid = players.findSessionByPlayerId(playerId)
-        return if (sid != null) players.get(sid)?.name else players.findOfflinePlayerName(playerId)
+        val name = if (sid != null) players.get(sid)?.name else players.findOfflinePlayerName(playerId)
+        return sid to name
     }
+
+    private suspend fun resolveGuildMemberName(playerId: PlayerId): String? =
+        resolveMemberStatus(playerId).second
 
     private fun pruneExpiredInvites() {
         pendingInvites.removeExpired(clock.millis()) { it.expiresAtMs }
