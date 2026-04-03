@@ -21,9 +21,9 @@ achievements:
     hidden: false
     criteria:
       - type: kill
-        targetId: ""
+        targetId: "thornwood_forest:stray_wolf"
         count: 10
-        description: "Kill 10 stray wolves"
+        description: "Kill 10 stray wolves in Thornwood Forest"
     rewards:
       xp: 300
       gold: 50
@@ -35,7 +35,7 @@ achievements:
     hidden: false
     criteria:
       - type: kill
-        targetId: ""
+        targetId: "goblin_warrens:chieftain_grak"
         count: 1
         description: "Kill Chieftain Grak"
     rewards:
@@ -64,7 +64,7 @@ achievements:
     hidden: false
     criteria:
       - type: kill
-        targetId: ""
+        targetId: "dark_barrows:necromancer_vaelthos"
         count: 1
         description: "Kill Necromancer Vaelthos"
     rewards:
