@@ -257,6 +257,7 @@ rooms:
 
   field_road_south:
     title: "Field Road — South End"
-    description: "The cart track narrows here as the farmland gives way to rougher scrub. The smell of salt is faint but unmistakable on the southern breeze — the sea cliffs are out that way, though the road is not yet maintained this far. The south meadow is back to the north."
+    description: "The cart track narrows here as the farmland gives way to rougher scrub. The smell of salt is faint but unmistakable on the southern breeze, and the distant sound of waves carries on the wind. The Sea Cliffs are a short walk further south. The south meadow is back to the north."
     exits:
       n: south_meadow
+      s: sea_cliffs:cliff_road

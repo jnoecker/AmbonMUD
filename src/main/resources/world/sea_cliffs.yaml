@@ -1,0 +1,307 @@
+zone: sea_cliffs
+startRoom: cliff_road
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  sea_kelp:
+    displayName: "a strand of sea kelp"
+    keyword: kelp
+    description: "Thick, rubbery kelp harvested from a submerged bed. Alchemists use it as a stabiliser in aquatic potions."
+    basePrice: 10
+
+  pearl_shard:
+    displayName: "a pearl shard"
+    keyword: pearl
+    description: "A fragment of natural pearl pried from a tidal pool shell. Still lustrous and worth a jeweller's attention."
+    basePrice: 25
+
+  salt_crystal:
+    displayName: "a salt crystal"
+    keyword: salt
+    description: "A chunky crystal of sea salt scraped from a tidal flat. Pure, clean, and useful in both cooking and alchemy."
+    basePrice: 12
+
+  corsair_insignia:
+    displayName: "the corsair's insignia"
+    keyword: insignia
+    description: "A brass badge bearing the skull-and-anchor mark of the corsair crew. Proof of the captain's defeat."
+    basePrice: 0
+
+  corsairs_cutlass:
+    displayName: "the corsair's cutlass"
+    keyword: cutlass
+    slot: hand
+    damage: 9
+    basePrice: 310
+    description: "A beautifully balanced cutlass with a gold-inlaid guard. The corsair captain kept this one sharp."
+
+  corsairs_coat:
+    displayName: "the corsair's coat"
+    keyword: coat
+    slot: body
+    armor: 4
+    basePrice: 230
+    description: "A heavy oilskin coat stiffened with hidden armour plates. Practical and imposing — corsair-issue quality."
+
+  crab_claw:
+    displayName: "a giant crab claw"
+    keyword: claw
+    description: "A claw broken from a giant crab. Heavy and oddly beautiful. Someone will buy it."
+    basePrice: 12
+
+# ─── Gathering Nodes ──────────────────────────────────────────────────────────
+
+gatheringNodes:
+  kelp_bed:
+    displayName: "a kelp bed"
+    keyword: kelp
+    skill: herbalism
+    skillRequired: 2
+    room: kelp_cove
+    respawnSeconds: 180
+    xpReward: 15
+    yields:
+      - itemId: sea_kelp
+        minQuantity: 1
+        maxQuantity: 2
+
+  pearl_bed:
+    displayName: "a pearl bed"
+    keyword: pearls
+    skill: mining
+    skillRequired: 2
+    room: tidal_pool
+    respawnSeconds: 240
+    xpReward: 20
+    yields:
+      - itemId: pearl_shard
+        minQuantity: 1
+        maxQuantity: 1
+    rareYields:
+      - itemId: pearl_shard
+        quantity: 1
+        dropChance: 0.25
+
+  salt_deposit:
+    displayName: "a salt deposit"
+    keyword: salt
+    skill: mining
+    skillRequired: 1
+    room: salt_flats
+    respawnSeconds: 180
+    xpReward: 12
+    yields:
+      - itemId: salt_crystal
+        minQuantity: 1
+        maxQuantity: 2
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  cliff_harpy:
+    name: "a cliff harpy"
+    room: harpy_ridge
+    tier: standard
+    level: 5
+    respawnSeconds: 120
+    xpReward: 40
+    behavior:
+      template: wander_aggro
+
+  sea_raider:
+    name: "a sea raider"
+    room: sea_raider_camp
+    tier: standard
+    level: 5
+    respawnSeconds: 90
+    xpReward: 35
+    goldMin: 5
+    goldMax: 18
+    behavior:
+      template: wander_aggro
+
+  giant_crab:
+    name: "a giant crab"
+    room: crab_shore
+    tier: standard
+    level: 5
+    respawnSeconds: 120
+    xpReward: 30
+    drops:
+      - itemId: crab_claw
+        chance: 0.5
+
+  tide_elemental:
+    name: "a tide elemental"
+    room: tidal_platform
+    tier: standard
+    level: 6
+    respawnSeconds: 180
+    xpReward: 45
+
+  corsair_captain:
+    name: "the Corsair Captain"
+    room: raider_cove
+    tier: elite
+    level: 6
+    respawnSeconds: 600
+    xpReward: 120
+    goldMin: 30
+    goldMax: 60
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: corsair_insignia
+        chance: 1.0
+      - itemId: corsairs_cutlass
+        chance: 0.4
+      - itemId: corsairs_coat
+        chance: 0.35
+
+  merchant_davan:
+    name: "Merchant Davan"
+    room: cliff_overlook
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - corsairs_bounty
+    dialogue:
+      root:
+        text: "You there! Thank the tides — a capable-looking face. I'm Davan, a coastal merchant. Those corsairs in the cove below boarded my vessel and stripped it clean. Their captain is down there in the raider's cove. If you deal with him and bring back his insignia as proof, I'll make it worth your while."
+        choices:
+          - text: "I'll deal with the corsair captain."
+            next: quest_accept
+          - text: "What's in it for me?"
+            next: reward_info
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "Excellent. The raider cove is southeast — down from the camp. The captain won't flee. He's too arrogant for that. Bring me his insignia."
+        choices:
+          - text: "I'll be back."
+            next: farewell
+      reward_info:
+        text: "Everything I have on me, which admittedly isn't much since they took my cargo. But gold and good will from a merchant with contacts up and down the coast. Deal?"
+        choices:
+          - text: "Fair enough. I'll do it."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Stay well clear of the cliffside — the harpies have been bold lately."
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  corsairs_bounty:
+    name: "The Corsair's Bounty"
+    description: "Merchant Davan was robbed by the corsairs camped at the Sea Cliffs. Defeat the Corsair Captain in the raider cove and bring back his insignia as proof."
+    giver: merchant_davan
+    objectives:
+      - type: collect
+        targetKey: corsair_insignia
+        count: 1
+        description: "Collect the corsair captain's insignia"
+    rewards:
+      xp: 800
+      gold: 60
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  cliff_road:
+    title: "Sea Cliffs — Cliff Road"
+    description: "The rutted cart track from the Farmer Fields ends here where the land begins its final descent toward the coast. The smell of salt hits you at once, and the sound of waves is constant beneath everything else. The fields are back to the north; the coastal cliffs begin to the south."
+    exits:
+      n: farmer_fields:field_road_south
+      s: cliff_overlook
+
+  cliff_overlook:
+    title: "Cliff Overlook"
+    description: "A flat promontory at the cliff edge with an extraordinary view south: grey-green sea stretching to the horizon, white foam at the base of the cliffs far below, and — on a clear day — the dark silhouette of what must be ancient ruins offshore to the south. Merchant Davan stands here looking agitated. The road is north; the coastal path descends south; a harpy-haunted ridge lies east; the raider camp is to the west."
+    exits:
+      n: cliff_road
+      s: coastal_path
+      e: harpy_ridge
+      w: sea_raider_camp
+
+  harpy_ridge:
+    title: "Harpy Ridge"
+    description: "A jagged outcropping of cliff-top rock where cliff harpies have established a colony. The noise — screaming, cackling, the crack of wings — is extraordinary. Nesting material and the bones of small animals litter the rock. Standing on the edge you can see the sea in three directions. The overlook is back to the west."
+    exits:
+      w: cliff_overlook
+
+  sea_raider_camp:
+    title: "Sea Raider Camp"
+    description: "A camp of battered tents and salvaged ship timber on the clifftop. Sea raiders lounge around fire pits, sharpening weapons and passing around a clay bottle. Below, their boats are beached in a cove visible through gaps in the cliff face. The overlook is east; a steep path descends south to the raider's cove."
+    exits:
+      e: cliff_overlook
+      s: raider_cove
+
+  raider_cove:
+    title: "Raider Cove"
+    description: "A sheltered cove at cliff base, accessible only from above or by sea. Corsair longboats are beached in a neat line. The Corsair Captain holds court here among crates of stolen cargo. The cliffside path leads back up to the north."
+    exits:
+      n: sea_raider_camp
+
+  coastal_path:
+    title: "Coastal Path"
+    description: "A rough track that hugs the cliff edge, slick with spray and sea-wind. The drop to the left is vertiginous. Tide elementals form in the heavier surf below and sometimes crest the cliff face. The overlook is back north; the tidal platform lies south; a narrow path descends east toward the crab-covered shore."
+    exits:
+      n: cliff_overlook
+      s: tidal_platform
+      e: crab_shore
+      w: kelp_cove
+
+  kelp_cove:
+    title: "Kelp Cove"
+    description: "A narrow inlet where kelp grows thick in the surge zone. The water is dark green and the smell is strongly marine. Gulls pick over the kelp beds at low tide. The coastal path is back to the east."
+    exits:
+      e: coastal_path
+
+  crab_shore:
+    title: "Crab Shore"
+    description: "A rocky shore of exposed reef at the base of the lesser cliff. Giant crabs patrol the rock pools with proprietary confidence. The footing is treacherous: barnacles and weed-covered stone. The coastal path is back west; tidal pools lie to the south."
+    exits:
+      w: coastal_path
+      s: tidal_pool
+
+  tidal_pool:
+    title: "Tidal Pool"
+    description: "Deep, still pools left by the receding tide, each a miniature world of anemones, small fish, and pearl-bearing molluscs. The pearl beds here are visible at low tide — cloudy spheres visible in the deeper shells. Giant crabs guard the richest pools jealously. The crab shore is back to the north."
+    exits:
+      n: crab_shore
+
+  tidal_platform:
+    title: "Tidal Platform"
+    description: "A broad flat shelf of sea-washed rock where the tide has polished the stone glass-smooth. Tide elementals coalesce here from the spray, flickering in and out of solidity with the wave rhythm. At the southern edge the rock dips below water at high tide — but at low tide a path is visible toward a structure offshore. The coastal path is back north; salt flats spread to the east."
+    exits:
+      n: coastal_path
+      s: low_tide_path
+      e: salt_flats
+
+  salt_flats:
+    title: "Salt Flats"
+    description: "A stretch of low rock where salt has crystallised in thick white deposits as the sea retreats. The crystals crunch underfoot and the air tastes of pure brine. Gatherers come here for alchemical salt when the tide allows. The tidal platform is back to the west."
+    exits:
+      w: tidal_platform
+
+  low_tide_path:
+    title: "Low-Tide Path"
+    description: "A causeway of sea-smoothed rock that emerges from the water at low tide, running south from the tidal platform toward a partially submerged structure offshore. The path is just passable on foot for a few hours either side of low tide. The ruins ahead are old — much older than Thornhaven. The tidal platform is back to the north."
+    exits:
+      n: tidal_platform
+      s: sunken_temple:tidal_approach
