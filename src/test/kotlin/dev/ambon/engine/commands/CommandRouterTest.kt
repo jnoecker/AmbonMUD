@@ -168,7 +168,7 @@ class CommandRouterTest {
             val outs = h.drain()
 
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("can't go that way", ignoreCase = true) },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("can't go that way", ignoreCase = true) },
                 "Expected blocked movement message. got=$outs",
             )
             assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")

@@ -503,12 +503,12 @@ class AdminHandler(
         }
         val to = room.exits[cmd.dir]
         if (to == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
+            outbound.send(OutboundEvent.SendError(sessionId, "You can't go that way."))
             outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         if (!world.rooms.containsKey(to)) {
-            outbound.send(OutboundEvent.SendText(sessionId, "That exit leads to an unloaded zone."))
+            outbound.send(OutboundEvent.SendError(sessionId, "That exit leads to an unloaded zone."))
             outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
