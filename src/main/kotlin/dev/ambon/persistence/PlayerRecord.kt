@@ -56,6 +56,8 @@ data class PlayerRecord(
     val discoveredRecipes: Set<String> = emptySet(),
     val craftingSpecialization: String? = null,
     val factionStandings: Map<String, Int> = emptyMap(),
+    /** Secondary currency balances (e.g. quest_points, honor, crafting_tokens). */
+    val currencies: Map<String, Long> = emptyMap(),
     val friendsList: Set<String> = emptySet(),
     val bankGold: Long = 0L,
     val bankItems: List<ItemInstance> = emptyList(),
@@ -82,6 +84,10 @@ data class PlayerRecord(
     val pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
     val pvpDeaths: Int = 0,
+    /** Whether screen-reader accessibility mode is enabled. */
+    val screenReaderEnabled: Boolean = false,
+    /** Player-written custom description visible when others look at them. */
+    val description: String = "",
 ) {
     /**
      * Applies legacy migration fixes after deserialization.
@@ -110,6 +116,10 @@ data class PlayerRecord(
         // Normalize equippedItems keys to lowercase
         val normalizedEquipped = record.equippedItems.normalizeKeys()
         if (normalizedEquipped != record.equippedItems) record = record.copy(equippedItems = normalizedEquipped)
+
+        // Normalize currencies keys to lowercase
+        val normalizedCurrencies = record.currencies.normalizeKeys()
+        if (normalizedCurrencies != record.currencies) record = record.copy(currencies = normalizedCurrencies)
 
         return record
     }

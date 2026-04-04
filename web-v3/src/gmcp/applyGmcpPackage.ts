@@ -981,6 +981,13 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Quest.Global": {
+      // Global competitive quest status — data contains active, objective,
+      // targetCount, playerProgress, leaderboard, etc.
+      // Full UI panel for global quests to be implemented in a future PR.
+      break;
+    }
+
     case "Char.Cooldown": {
       const packet = data as Partial<Record<string, unknown>>;
       const abilityId = typeof packet.abilityId === "string" ? packet.abilityId : null;
