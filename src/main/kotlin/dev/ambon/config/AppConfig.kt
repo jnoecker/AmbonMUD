@@ -133,6 +133,7 @@ data class AppConfig(
         validateEngineWeather()
         validateEngineEnchanting()
         validateEngineFactions()
+        validateEngineGlobalQuests()
     }
 
     private fun validateEngineMob() {
@@ -350,6 +351,32 @@ data class AppConfig(
                 require(enemyId in factionIds) {
                     "faction '$factionId' references enemy '$enemyId' which is not defined in factions.definitions"
                 }
+            }
+        }
+    }
+
+    private fun validateEngineGlobalQuests() {
+        if (!engine.globalQuests.enabled) return
+        val gq = engine.globalQuests
+        gq.intervalMs.requirePositive("ambonMUD.engine.globalQuests.intervalMs")
+        gq.durationMs.requirePositive("ambonMUD.engine.globalQuests.durationMs")
+        gq.announceIntervalMs.requirePositive("ambonMUD.engine.globalQuests.announceIntervalMs")
+        require(gq.minPlayersOnline >= 1) {
+            "ambonMUD.engine.globalQuests.minPlayersOnline must be >= 1, got ${gq.minPlayersOnline}"
+        }
+        require(gq.rewardGoldFirst >= 0) { "ambonMUD.engine.globalQuests.rewardGoldFirst must be >= 0" }
+        require(gq.rewardGoldSecond >= 0) { "ambonMUD.engine.globalQuests.rewardGoldSecond must be >= 0" }
+        require(gq.rewardGoldThird >= 0) { "ambonMUD.engine.globalQuests.rewardGoldThird must be >= 0" }
+        require(gq.rewardXpFirst >= 0) { "ambonMUD.engine.globalQuests.rewardXpFirst must be >= 0" }
+        require(gq.rewardXpSecond >= 0) { "ambonMUD.engine.globalQuests.rewardXpSecond must be >= 0" }
+        require(gq.rewardXpThird >= 0) { "ambonMUD.engine.globalQuests.rewardXpThird must be >= 0" }
+        require(gq.objectives.isNotEmpty()) { "ambonMUD.engine.globalQuests.objectives must not be empty" }
+        for ((i, obj) in gq.objectives.withIndex()) {
+            require(obj.targetCount > 0) {
+                "ambonMUD.engine.globalQuests.objectives[$i].targetCount must be > 0"
+            }
+            require(obj.description.isNotBlank()) {
+                "ambonMUD.engine.globalQuests.objectives[$i].description must be non-blank"
             }
         }
     }
@@ -1142,6 +1169,7 @@ data class EngineConfig(
     val skillPoints: SkillPointsConfig = SkillPointsConfig(),
     val multiclass: MulticlassConfig = MulticlassConfig(),
     val prestige: PrestigeConfig = PrestigeConfig(),
+    val globalQuests: GlobalQuestsConfig = GlobalQuestsConfig(),
 )
 
 data class NavigationConfig(
@@ -1257,6 +1285,7 @@ data class CommandsConfig(
             "quest_abandon" to CommandMetadata("quest abandon <name>", "Abandon a quest", "quests", requiresTarget = true),
             "accept" to CommandMetadata("accept <quest>", "Accept a quest from an NPC", "quests", requiresTarget = true),
             "achievements" to CommandMetadata("achievements/ach", "View achievements", "quests"),
+            "gquest" to CommandMetadata("gquest/gq/global", "View active global quest status", "quests"),
             "group_invite" to CommandMetadata("group invite <player>", "Invite to your group", "groups", requiresTarget = true),
             "group_accept" to CommandMetadata("group accept", "Accept a group invite", "groups"),
             "group_leave" to CommandMetadata("group leave", "Leave your group", "groups"),
@@ -1736,6 +1765,47 @@ data class MulticlassConfig(
     val minLevel: Int = 10,
     /** Gold cost to unlock a new class at a trainer. */
     val goldCost: Long = 500L,
+)
+
+data class GlobalQuestObjectiveConfig(
+    /** Objective type: "kill", "gather", or "craft". */
+    val type: String = "kill",
+    /** Number of actions required to complete the objective. */
+    val targetCount: Int = 25,
+    /** Human-readable description shown to players. */
+    val description: String = "",
+)
+
+data class GlobalQuestsConfig(
+    /** Whether global competitive quests are enabled. */
+    val enabled: Boolean = true,
+    /** Interval between quests in milliseconds (default 2 hours). */
+    val intervalMs: Long = 7_200_000L,
+    /** Duration of each quest in milliseconds (default 30 minutes). */
+    val durationMs: Long = 1_800_000L,
+    /** Interval between progress announcements in milliseconds (default 5 minutes). */
+    val announceIntervalMs: Long = 300_000L,
+    /** Minimum number of online players required to start a quest. */
+    val minPlayersOnline: Int = 2,
+    /** Gold reward for 1st place. */
+    val rewardGoldFirst: Long = 2000L,
+    /** Gold reward for 2nd place. */
+    val rewardGoldSecond: Long = 1000L,
+    /** Gold reward for 3rd place. */
+    val rewardGoldThird: Long = 500L,
+    /** XP reward for 1st place. */
+    val rewardXpFirst: Long = 5000L,
+    /** XP reward for 2nd place. */
+    val rewardXpSecond: Long = 2500L,
+    /** XP reward for 3rd place. */
+    val rewardXpThird: Long = 1000L,
+    /** Available objective templates; one is chosen at random when a quest starts. */
+    val objectives: List<GlobalQuestObjectiveConfig> = listOf(
+        GlobalQuestObjectiveConfig(type = "kill", targetCount = 25, description = "Slay 25 creatures"),
+        GlobalQuestObjectiveConfig(type = "kill", targetCount = 50, description = "Slay 50 creatures"),
+        GlobalQuestObjectiveConfig(type = "gather", targetCount = 15, description = "Gather 15 resources"),
+        GlobalQuestObjectiveConfig(type = "craft", targetCount = 10, description = "Craft 10 items"),
+    ),
 )
 
 data class StatusEffectEngineConfig(
