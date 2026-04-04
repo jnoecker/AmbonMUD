@@ -78,6 +78,7 @@ object PlayersTable : Table("players") {
     val prestigeXpSpent = long("prestige_xp_spent").default(0L)
     val pvpKills = integer("pvp_kills").default(0)
     val pvpDeaths = integer("pvp_deaths").default(0)
+    val dailyQuestData = text("daily_quest_data").default("{}")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -130,6 +131,7 @@ object PlayersTable : Table("players") {
             prestigeXpSpent = row[prestigeXpSpent],
             pvpKills = row[pvpKills],
             pvpDeaths = row[pvpDeaths],
+            dailyQuestData = row[dailyQuestData],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -181,5 +183,6 @@ object PlayersTable : Table("players") {
         statement[prestigeXpSpent] = record.prestigeXpSpent
         statement[pvpKills] = record.pvpKills
         statement[pvpDeaths] = record.pvpDeaths
+        statement[dailyQuestData] = record.dailyQuestData
     }
 }
