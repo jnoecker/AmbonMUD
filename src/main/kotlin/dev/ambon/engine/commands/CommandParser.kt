@@ -437,6 +437,9 @@ sealed interface Command {
 
         /** `train unlock` — pay gold to unlock the class taught by this trainer. */
         data object Unlock : Train
+
+        /** `train reset` — pay gold to reset all learned abilities and refund skill points. */
+        data object Reset : Train
     }
 
     // ---- Leaderboard commands ----
@@ -1190,6 +1193,7 @@ object CommandParser {
                     if (kw.isEmpty()) Command.Invalid(line, "train learn <ability>") else Command.Train.Learn(kw)
                 }
                 "unlock" -> Command.Train.Unlock
+                "reset", "respec" -> Command.Train.Reset
                 else -> Command.Train.Learn(rest.trim())
             }
         }?.let { return it }

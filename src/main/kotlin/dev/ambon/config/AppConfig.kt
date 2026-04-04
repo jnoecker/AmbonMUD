@@ -1141,6 +1141,7 @@ data class EngineConfig(
     val leaderboard: LeaderboardConfig = LeaderboardConfig(),
     val skillPoints: SkillPointsConfig = SkillPointsConfig(),
     val multiclass: MulticlassConfig = MulticlassConfig(),
+    val respec: RespecConfig = RespecConfig(),
     val prestige: PrestigeConfig = PrestigeConfig(),
 )
 
@@ -1728,6 +1729,20 @@ data class SkillPointsConfig(
 ) {
     init {
         require(interval >= 1) { "skillPoints.interval must be >= 1, got $interval" }
+    }
+}
+
+data class RespecConfig(
+    /** Whether the respec system is enabled. */
+    val enabled: Boolean = true,
+    /** Gold cost to reset all learned abilities. Must be >= 0. */
+    val goldCost: Long = 1000L,
+    /** Cooldown between respecs in milliseconds. 0 disables cooldown. */
+    val cooldownMs: Long = 3_600_000L,
+) {
+    init {
+        require(goldCost >= 0) { "respec.goldCost must be >= 0, got $goldCost" }
+        require(cooldownMs >= 0) { "respec.cooldownMs must be >= 0, got $cooldownMs" }
     }
 }
 
