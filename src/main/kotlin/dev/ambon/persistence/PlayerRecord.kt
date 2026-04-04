@@ -82,6 +82,8 @@ data class PlayerRecord(
     val pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
     val pvpDeaths: Int = 0,
+    /** JSON blob tracking daily/weekly quest progress, completions, and streak. */
+    val dailyQuestData: String = "{}",
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

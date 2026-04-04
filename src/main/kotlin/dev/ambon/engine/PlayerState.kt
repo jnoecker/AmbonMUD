@@ -12,6 +12,7 @@ import dev.ambon.domain.quest.QuestState
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerId
 import dev.ambon.persistence.PlayerRecord
+import dev.ambon.persistence.jsonMapper
 
 data class PlayerState(
     val sessionId: SessionId,
@@ -94,6 +95,8 @@ data class PlayerState(
     var pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
     var pvpDeaths: Int = 0,
+    /** Daily/weekly quest tracking state. */
+    var dailyQuestState: DailyQuestState = DailyQuestState(),
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -119,6 +122,29 @@ data class PlayerState(
             "unlockedAchievementIds=$unlockedAchievementIds, activeTitle=$activeTitle, " +
             "createdAtEpochMs=$createdAtEpochMs, passwordHash=<redacted>)"
 }
+
+/**
+ * Tracks a player's daily and weekly quest progress, completions, and streak.
+ * Serialized as a JSON blob into [dev.ambon.persistence.PlayerRecord.dailyQuestData].
+ */
+data class DailyQuestState(
+    /** ISO date of last daily reset, e.g. "2026-04-03". */
+    var lastDailyResetDate: String = "",
+    /** ISO date of last weekly reset. */
+    var lastWeeklyResetDate: String = "",
+    /** Indices of today's daily quests the player has completed. */
+    var dailyCompletions: MutableSet<Int> = mutableSetOf(),
+    /** Indices of this week's weekly quests the player has completed. */
+    var weeklyCompletions: MutableSet<Int> = mutableSetOf(),
+    /** Progress count per daily quest index. */
+    var dailyProgress: MutableMap<Int, Int> = mutableMapOf(),
+    /** Progress count per weekly quest index. */
+    var weeklyProgress: MutableMap<Int, Int> = mutableMapOf(),
+    /** Number of consecutive days the player completed all dailies. */
+    var streakDays: Int = 0,
+    /** ISO date the streak was last extended. */
+    var lastStreakDate: String = "",
+)
 
 /** Increases HP by [amount], clamped to [maxHp]. Returns `true` if HP actually changed. */
 fun PlayerState.healHp(amount: Int): Boolean {
@@ -202,6 +228,9 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
+        dailyQuestState = runCatching {
+            jsonMapper.readValue(dailyQuestData, DailyQuestState::class.java)
+        }.getOrDefault(DailyQuestState()),
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -250,6 +279,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
+        dailyQuestData = jsonMapper.writeValueAsString(dailyQuestState),
     )
 }
 

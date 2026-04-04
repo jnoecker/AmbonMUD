@@ -748,4 +748,21 @@ class CommandParserTest {
     fun `prestige with unknown subcommand defaults to PrestigeInfo`() {
         assertEquals(Command.PrestigeInfo, CommandParser.parse("prestige perks"))
     }
+
+    // ---------- daily / weekly quests ----------
+
+    @Test
+    fun `daily parses to DailyQuests`() {
+        assertEquals(Command.DailyQuests, CommandParser.parse("daily"))
+    }
+
+    @Test
+    fun `dailies alias parses to DailyQuests`() {
+        assertEquals(Command.DailyQuests, CommandParser.parse("dailies"))
+    }
+
+    @Test
+    fun `weekly parses to WeeklyQuests`() {
+        assertEquals(Command.WeeklyQuests, CommandParser.parse("weekly"))
+    }
 }

@@ -3374,6 +3374,25 @@ ambonmud:
           amount: 2
           description: "+2 All Stats"
 
+    dailyQuests:
+      enabled: true
+      resetHourUtc: 0
+      dailySlots: 3
+      weeklySlots: 1
+      streakBonusPercent: 10
+      streakMaxDays: 7
+      dailyPool:
+        - { type: kill, targetCount: 10, description: "Slay 10 creatures", goldReward: 200, xpReward: 500 }
+        - { type: kill, targetCount: 20, description: "Slay 20 creatures", goldReward: 400, xpReward: 1000 }
+        - { type: gather, targetCount: 5, description: "Gather 5 resources", goldReward: 150, xpReward: 300 }
+        - { type: dungeon, targetCount: 1, description: "Complete a dungeon", goldReward: 500, xpReward: 1500 }
+        - { type: craft, targetCount: 3, description: "Craft 3 items", goldReward: 250, xpReward: 600 }
+        - { type: pvpKill, targetCount: 3, description: "Defeat 3 players in PvP", goldReward: 300, xpReward: 800 }
+      weeklyPool:
+        - { type: kill, targetCount: 100, description: "Slay 100 creatures", goldReward: 2000, xpReward: 5000 }
+        - { type: dungeon, targetCount: 5, description: "Complete 5 dungeons", goldReward: 3000, xpReward: 8000 }
+        - { type: craft, targetCount: 15, description: "Craft 15 items", goldReward: 1500, xpReward: 4000 }
+
     classes:
       definitions:
         WARRIOR:

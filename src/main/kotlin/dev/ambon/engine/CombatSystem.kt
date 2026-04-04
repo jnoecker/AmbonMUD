@@ -60,6 +60,9 @@ class CombatSystem(
     /** Callback for player death cleanup; wired by GameEngine after construction. */
     var onPlayerDeath: suspend (SessionId) -> Unit = { _ -> }
 
+    /** Callback for PvP kill events; wired by GameEngine after construction. */
+    var onPvpKill: suspend (SessionId) -> Unit = { _ -> }
+
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
         val mobId: MobId,
@@ -396,6 +399,7 @@ class CombatSystem(
             it.pvpKills += 1
             dirtyNotifier.playerVitalsDirty(killerSid)
         }
+        onPvpKill(killerSid)
         loser.pvpDeaths += 1
 
         onCombatEvent(
