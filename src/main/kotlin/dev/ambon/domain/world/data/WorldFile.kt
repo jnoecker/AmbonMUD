@@ -19,6 +19,7 @@ data class WorldFile(
     val gatheringNodes: Map<String, GatheringNodeFile> = emptyMap(),
     val recipes: Map<String, RecipeFile> = emptyMap(),
     val dungeon: DungeonFile? = null,
+    val puzzles: Map<String, PuzzleFile> = emptyMap(),
 )
 
 data class TrainerFile(
