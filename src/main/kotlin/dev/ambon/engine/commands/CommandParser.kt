@@ -330,6 +330,12 @@ sealed interface Command {
 
     data object WeeklyQuests : Command
 
+    data object QuestAuto : Command
+
+    data object QuestAutoInfo : Command
+
+    data object QuestAutoAbandon : Command
+
     data object AchievementList : Command
 
     data class TitleSet(
@@ -538,6 +544,11 @@ sealed interface Command {
     /** Read a sign. */
     data class ReadSign(
         val keyword: String,
+    ) : Command
+
+    /** Answer a riddle puzzle: "answer <text>". */
+    data class Answer(
+        val text: String,
     ) : Command
 
     /** `describe <text>` — set your custom character description. */
@@ -1131,6 +1142,9 @@ object CommandParser {
             }
         }?.let { return it }
 
+        // answer <text> — answer a riddle puzzle
+        requiredArg(line, listOf("answer"), "answer <text>", { Command.Answer(it) })?.let { return it }
+
         // pull <lever>
         requiredArg(line, listOf("pull"), "pull <lever>", { Command.Pull(it) })?.let { return it }
 
@@ -1198,7 +1212,19 @@ object CommandParser {
         matchPrefix(line, listOf("daily", "dailies")) { Command.DailyQuests }?.let { return it }
         matchPrefix(line, listOf("weekly")) { Command.WeeklyQuests }?.let { return it }
 
-        // quest subcommands: "quest log", "quest info <name>", "quest abandon <name>"
+        // bounty subcommands: "bounty", "bounty info", "bounty abandon"
+        matchPrefix(line, listOf("bounty")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.QuestAuto
+            when (rest.split(Regex("\\s+"), limit = 2)[0].lowercase()) {
+                "info" -> Command.QuestAutoInfo
+                "abandon" -> Command.QuestAutoAbandon
+                else -> Command.QuestAuto
+            }
+        }?.let { return it }
+
+        // quest subcommands: "quest log", "quest info <name>", "quest abandon <name>",
+        // "quest auto" / "quest auto info" / "quest auto abandon",
+        // "quest request" as alias for "quest auto"
         // also "quests" as alias for "quest log"
         matchPrefix(line, listOf("quest", "quests")) { rest ->
             if (rest.isEmpty()) return@matchPrefix Command.QuestLog
@@ -1212,6 +1238,14 @@ object CommandParser {
                 "abandon" -> {
                     val hint = parts.getOrNull(1)?.trim() ?: ""
                     if (hint.isEmpty()) Command.Invalid(line, "quest abandon <quest-name>") else Command.QuestAbandon(hint)
+                }
+                "auto", "request" -> {
+                    val sub = parts.getOrNull(1)?.trim()?.lowercase() ?: ""
+                    when {
+                        sub == "info" -> Command.QuestAutoInfo
+                        sub == "abandon" -> Command.QuestAutoAbandon
+                        else -> Command.QuestAuto
+                    }
                 }
                 else -> Command.QuestLog
             }

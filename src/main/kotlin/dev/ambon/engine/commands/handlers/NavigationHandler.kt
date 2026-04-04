@@ -28,6 +28,7 @@ class NavigationHandler(
     private val housingSystem: HousingSystem? = null,
     private val guildHallSystem: GuildHallSystem? = null,
     private val onPlayerMoved: (suspend (SessionId, RoomId) -> Unit)? = null,
+    private val puzzleSystem: dev.ambon.engine.PuzzleSystem? = null,
 ) : CommandHandler {
     private val ctx = ctx
     private val world = ctx.world
@@ -83,6 +84,7 @@ class NavigationHandler(
             val from = me.roomId
             val room = world.rooms[from] ?: return
             val to = room.exits[cmd.dir]
+                ?: puzzleSystem?.getUnlockedExitTarget(from, cmd.dir)
 
             if (to == null) {
                 outbound.send(OutboundEvent.SendError(sessionId, "You can't go that way."))
@@ -304,7 +306,18 @@ class NavigationHandler(
 
     private suspend fun handleExits(sessionId: SessionId) {
         withPlayerAndRoom(sessionId, players, world) { _, r ->
-            outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
+            val puzzleExits = puzzleSystem?.unlockedExitsForRoom(r.id) ?: emptyMap()
+            if (puzzleExits.isEmpty()) {
+                outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
+            } else {
+                val allDirs = r.exits.keys + puzzleExits.keys
+                val exitsStr = if (allDirs.isEmpty()) {
+                    "Exits: none"
+                } else {
+                    "Exits: " + allDirs.sorted().joinToString(", ") { it.name.lowercase() }
+                }
+                outbound.send(OutboundEvent.SendInfo(sessionId, exitsStr))
+            }
         }
     }
 

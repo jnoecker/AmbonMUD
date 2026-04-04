@@ -827,4 +827,30 @@ class WorldLoaderTest {
         val world = dev.ambon.test.TestWorlds.okSmall
         assertFalse(world.isZonePvpEnabled("ok_small"), "Expected ok_small to NOT have PvP enabled")
     }
+
+    @Test
+    fun `loads puzzles from a zone file`() {
+        val world = dev.ambon.test.TestWorlds.okPuzzles
+        val puzzles = world.puzzleDefinitions
+        assertTrue(puzzles.isNotEmpty(), "Expected at least one puzzle")
+
+        val riddle = puzzles.first { it.id == "ok_puzzles:sphinx_riddle" }
+        assertEquals(dev.ambon.domain.puzzle.PuzzleType.RIDDLE, riddle.type)
+        assertEquals(RoomId("ok_puzzles:entrance"), riddle.roomId)
+        assertEquals("ok_puzzles:sphinx", riddle.mobId)
+        assertTrue(riddle.acceptableAnswers.contains("mountain"))
+
+        val sequence = puzzles.first { it.id == "ok_puzzles:lever_sequence" }
+        assertEquals(dev.ambon.domain.puzzle.PuzzleType.SEQUENCE, sequence.type)
+        assertEquals(3, sequence.steps.size)
+    }
+
+    @Test
+    fun `puzzle with unlock_exit reward parses direction and target`() {
+        val world = dev.ambon.test.TestWorlds.okPuzzles
+        val riddle = world.puzzleDefinitions.first { it.id == "ok_puzzles:sphinx_riddle" }
+        val reward = riddle.reward as dev.ambon.domain.puzzle.PuzzleReward.UnlockExit
+        assertEquals(Direction.NORTH, reward.direction)
+        assertEquals(RoomId("ok_puzzles:hidden_room"), reward.targetRoom)
+    }
 }

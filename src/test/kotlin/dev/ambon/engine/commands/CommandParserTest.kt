@@ -857,6 +857,48 @@ class CommandParserTest {
         assertEquals(Command.WeeklyQuests, CommandParser.parse("weekly"))
     }
 
+    // ── Auto-quest / bounty commands ─────────────────────────────────────
+
+    @Test
+    fun `bounty parses to QuestAuto`() {
+        assertEquals(Command.QuestAuto, CommandParser.parse("bounty"))
+    }
+
+    @Test
+    fun `bounty info parses to QuestAutoInfo`() {
+        assertEquals(Command.QuestAutoInfo, CommandParser.parse("bounty info"))
+    }
+
+    @Test
+    fun `bounty abandon parses to QuestAutoAbandon`() {
+        assertEquals(Command.QuestAutoAbandon, CommandParser.parse("bounty abandon"))
+    }
+
+    @Test
+    fun `quest auto parses to QuestAuto`() {
+        assertEquals(Command.QuestAuto, CommandParser.parse("quest auto"))
+    }
+
+    @Test
+    fun `quest auto info parses to QuestAutoInfo`() {
+        assertEquals(Command.QuestAutoInfo, CommandParser.parse("quest auto info"))
+    }
+
+    @Test
+    fun `quest auto abandon parses to QuestAutoAbandon`() {
+        assertEquals(Command.QuestAutoAbandon, CommandParser.parse("quest auto abandon"))
+    }
+
+    @Test
+    fun `quest request parses to QuestAuto`() {
+        assertEquals(Command.QuestAuto, CommandParser.parse("quest request"))
+    }
+
+    @Test
+    fun `quest request info parses to QuestAutoInfo`() {
+        assertEquals(Command.QuestAutoInfo, CommandParser.parse("quest request info"))
+    }
+
     // ── Global quest commands ───────────────────────────────────────────
 
     @Test

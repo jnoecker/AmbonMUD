@@ -3412,6 +3412,17 @@ ambonmud:
         - { type: dungeon, targetCount: 5, description: "Complete 5 dungeons", goldReward: 3000, xpReward: 8000 }
         - { type: craft, targetCount: 15, description: "Craft 15 items", goldReward: 1500, xpReward: 4000 }
 
+    autoQuests:
+      enabled: true
+      timeLimitMs: 600000
+      cooldownMs: 60000
+      rewardGoldBase: 50
+      rewardGoldPerLevel: 10
+      rewardXpBase: 100
+      rewardXpPerLevel: 25
+      killCountMin: 3
+      killCountMax: 8
+
     globalQuests:
       enabled: true
       intervalMs: 7200000
