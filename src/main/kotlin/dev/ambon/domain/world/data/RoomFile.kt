@@ -17,6 +17,8 @@ data class RoomFile(
     val station: String? = null,
     /** True if this room has a bank NPC (enables deposit/withdraw commands). */
     val bank: Boolean = false,
+    /** True if this room is a tavern (enables gambling commands). */
+    val tavern: Boolean = false,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */
