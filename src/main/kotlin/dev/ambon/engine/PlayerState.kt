@@ -96,6 +96,8 @@ data class PlayerState(
     var pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
     var pvpDeaths: Int = 0,
+    /** Whether screen-reader accessibility mode is enabled. */
+    var screenReaderEnabled: Boolean = false,
     /** Player-written custom description visible when others look at them. */
     var description: String = "",
 ) {
@@ -206,6 +208,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
+        screenReaderEnabled = screenReaderEnabled,
         description = description,
     )
 
@@ -255,6 +258,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
+        screenReaderEnabled = screenReaderEnabled,
         description = description,
     )
 }
