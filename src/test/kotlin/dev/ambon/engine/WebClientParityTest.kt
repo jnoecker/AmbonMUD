@@ -105,6 +105,8 @@ class WebClientParityTest {
             "Help" to "help",
             "AnsiOn" to "ansi",
             "AnsiOff" to "ansi",
+            "ScreenReaderOn" to "screenreader",
+            "ScreenReaderOff" to "screenreader",
             "Colors" to "colors",
             "Clear" to "clear",
             "Quit" to "quit",

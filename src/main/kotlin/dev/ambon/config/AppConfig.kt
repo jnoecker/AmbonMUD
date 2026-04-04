@@ -1322,6 +1322,7 @@ data class CommandsConfig(
             "friend" to CommandMetadata("friend list | add <player> | remove <player>", "Manage your friends list", "social"),
             "mail" to CommandMetadata("mail list | read <n> | send <player> | delete <n>", "Manage mail", "social"),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),
+            "screenreader" to CommandMetadata("screenreader [on/off]", "Toggle screen reader mode", "utility"),
             "colors" to CommandMetadata("colors", "Preview ANSI color palette", "utility"),
             "clear" to CommandMetadata("clear", "Clear the terminal", "utility"),
             "quit" to CommandMetadata("quit/exit", "Disconnect", "utility"),
