@@ -11,19 +11,19 @@ items:
     keyword: pelt
     description: A greasy, foul-smelling pelt stripped from a giant sewer rat. Has some value to tanners who don't ask questions.
     basePrice: 8
-    image: 9ed3ef36874ef6741a83a6cd1b07a24b9e09c1dbd9e0b100b725d8b599aa61ac.png
+    image: 3b1cc846e2333d13639d156795c58142c34984522023f61d3865faabde46ac1b.png
   deserter_tag:
     displayName: a deserter's identification tag
     keyword: tag
     description: A stamped metal tag from a city guard who went absent without leave. The city watch might pay for these.
     basePrice: 12
-    image: e6ca4dfa4aff85974d1cf8f23bede7a4ba83ea3af5b9a9c0cf86d1e48db8656d.png
+    image: 30abead00837b28dc5ea3d37bb5e83fdfc8a8381e7e7c9e76388446444c3b1c8.png
   troll_tooth:
     displayName: a sewer troll tooth
     keyword: tooth
     description: A heavy, curved tooth pried from a sewer troll. Alchemists grind these into strengthening compounds.
     basePrice: 25
-    image: 2d97e4680bf9cc79ba28cefc52df16a3aedb12168a9e88b447c91462d7354537.png
+    image: 9befcbfb71e182d7420a4e963e55c0a3015b1d52b987de1249f286e452390e47.png
   stolen_shipment:
     displayName: a stolen merchant shipment
     keyword: shipment
@@ -46,7 +46,7 @@ items:
     armor: 5
     basePrice: 310
     description: Hardened leather armour treated with waterproofing oils. Designed for fighting in confined, wet spaces.
-    image: 9b7a804f645118976bfe32c23f8f27c6178a41d43fb3224a5ec5be8b7a444809.png
+    image: 3f3d1670e8f4cb06c53a39887f8118361934ec22404f6bd5679b6292060323e2.png
   lockpick_set:
     displayName: a lockpick set
     keyword: lockpick
@@ -62,7 +62,7 @@ items:
       healHp: 5
     basePrice: 40
     description: A small glass vial that shatters on impact, releasing a cloud of choking grey smoke. Useful for disengagement.
-    image: 6126ccf2631a7f92e5ab32ba00e5ba745ad2c850031863c2dbb72693e601a040.png
+    image: fa818a95ee9fe029b4a43e2220380b0e492034daf0a6272bcbfb7f68160c935c.png
   smuggled_blade:
     displayName: a smuggled blade
     keyword: blade
@@ -70,7 +70,7 @@ items:
     damage: 6
     basePrice: 180
     description: A serviceable sword of foreign manufacture, smuggled past the city tariffs. No maker's mark.
-    image: 8e1d1670f9d79f7f374ceacecbf492fd28119b6bf0d5b5d7d6be488ba26c03d9.png
+    image: ae2f057e172c6ece156af90394771ef05eb56ba4423970c08d7d61ad77c85254.png
 mobs:
   sewer_rat:
     name: a sewer rat
@@ -81,7 +81,7 @@ mobs:
     xpReward: 15
     behavior:
       template: wander_aggro
-    image: d746882f19045b573580a4aea9ceacb4a4bee7421a34cb19130c16efa7e4f3fe.png
+    image: 4f67983aea877b808f2aaa6560c830d7ccbbfcdfdd439c472e0c19b69af63f18.png
   giant_sewer_rat:
     name: a giant sewer rat
     room: east_channel
@@ -94,7 +94,7 @@ mobs:
     drops:
       - itemId: rat_pelt
         chance: 0.5
-    image: cc497fe114a84968bff5ce02e361feb8d21735c796209695662c1d3e9b9463f3.png
+    image: 7625a71a608823acb5c373e1ba1881277aec07bd868b6d1b5533fc801177e21d.png
   deserter_soldier:
     name: a deserter soldier
     room: deserter_camp
@@ -109,7 +109,7 @@ mobs:
     drops:
       - itemId: deserter_tag
         chance: 0.4
-    image: 31584704f7adff66261c31f7cdd14820db1e554d426a74629fd16bd3e9168c91.png
+    image: ac29abdc3c51ae6ad567873bc1d7a379be24c7bdc67e3ab37c0b17e0b555af08.png
   sewer_rogue:
     name: a sewer rogue
     room: rogue_run
@@ -126,7 +126,7 @@ mobs:
           - rogue_run
           - deep_sewer
           - rogue_run
-    image: 1c13ed886be4103bd6825498817e5f7fdb87c41184f9df52c67ae88cfa6b4a87.png
+    image: 7cba653326df450486b0e5eb612f382688b47355b6b7e3f2ea1bcc00d3e0106d.png
   sewer_troll:
     name: a sewer troll
     room: trolls_lair
@@ -145,7 +145,7 @@ mobs:
         chance: 0.4
       - itemId: sewer_leathers
         chance: 0.35
-    image: 9bdbb94ea927f4cf0821f0066059a80ca8e4fdd6f1a494efa7df231d955bb714.png
+    image: 34d69b61d7b65c2c9cd4355e27dd231f1ed4a7fa6134d68876708ba759b80c69.png
   the_fence:
     name: the Fence
     room: fences_den
@@ -175,7 +175,7 @@ mobs:
             next: farewell
       farewell:
         text: You were never here.
-    image: bd07ed17e4c0b05fed591ab77411dbf08c827076f2f7bd716740231ed2fb3eb5.png
+    image: 2954e738f686d79bc9a2bc8a1298e19656defac5f5849c8ec38b8e08b919c29f.png
   informant_nax:
     name: Informant Nax
     room: fences_den
@@ -217,7 +217,7 @@ mobs:
             next: farewell
       farewell:
         text: Keep your head down. The rogues don't like strangers.
-    image: eeebe380843c564f42f91fd37f771624a9122e6fcb81a973a9cad48ea62f5691.png
+    image: 5a14b86a066e0de3ef7ac7842abc8763b68e772b9ffd211ada0fdeb1d7ae524b.png
 shops:
   fences_goods:
     name: The Fence's Goods

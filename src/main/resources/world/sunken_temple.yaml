@@ -12,27 +12,27 @@ items:
     description: A barnacle-encrusted iron key on a corroded ring. The stone guardian was carrying it. It must open
       something deep in the temple.
     basePrice: 0
-    image: 5cf94e9e88d92f13030d6a97019090b6fa24fac6ac36e1a9b715e7075af513a3.png
+    image: e074cca73225050b3e8579f2d33bd839744cccce2cd6a877f50cc34b40784ccd.png
   temple_medallion:
     displayName: the temple medallion
     keyword: medallion
     description: A disc of dark metal engraved with a star-pattern and inlaid with sea-glass. Whoever placed it in the
       offering chamber considered it sacred. Scholar Timon will recognise it.
     basePrice: 0
-    image: 78b876abcbfbd491a3542d9e88c06936989d3f02ea507dadf05e1c3ca3a29f1d.png
+    image: 16fac421341412c7a23d85f760ca112de7b55dce9c14e9cc696f80ed2f612177.png
   ancient_codex:
     displayName: an ancient codex
     keyword: codex
     description: A waterlogged book of pressed sea-cloth whose text has survived the flooding. Written in a script no one in
       Thornhaven reads — worth considerable gold to the Scholars' Guild.
     basePrice: 75
-    image: b0adf4c621d1c62269feadbb7c8934e67f4e8f33b80bffc79d062960a2849565.png
+    image: 066fa5fb9b19c47e7f6d2fa9bc734bb020c71c45d0056e9aa134993f6a770423.png
   drowned_trinket:
     displayName: a drowned trinket
     keyword: trinket
     description: A small ornamental piece recovered from a drowned acolyte — corroded but identifiable as devotional jewellery.
     basePrice: 15
-    image: e857ffd6e3d568e562e162d4e2c30066a959378ae3ae1b60df9892d35b00c680.png
+    image: 369ff52e02f5f16557131980c4a696b643a7125a00d276c34f3132204a12184c.png
   revenant_scepter:
     displayName: the Elder Revenant's scepter
     keyword: scepter
@@ -40,7 +40,7 @@ items:
     damage: 11
     basePrice: 380
     description: A scepter of ancient iron wrapped in sea-glass and silver wire, thrumming faintly with residual divine power.
-    image: 7304596200616f33e094fc1969e2190a92d4e91a6effbe8d705c610500c0e295.png
+    image: 3ff623c5181af4b757892796ce9fc3dc5387221987ecc8a75809f89af54d0043.png
   revenant_shroud:
     displayName: the Elder Revenant's shroud
     keyword: shroud
@@ -49,7 +49,7 @@ items:
     basePrice: 290
     description: A garment that is somehow dry despite its long immersion — the cloth is ancient but undamaged, and the
       enchantments woven through it still hold.
-    image: 3b3c3a369efcfdce6a59fcd1146a4feb650fbe5fbd4fe4544de83cde472ed926.png
+    image: 8f5fa5978b38eeaa3bdec02e2092b0715d5d943b263ad05b7ef3520d9d7ca170.png
 mobs:
   temple_skeleton:
     name: a temple skeleton
@@ -60,7 +60,7 @@ mobs:
     xpReward: 38
     behavior:
       template: wander_aggro
-    image: efa6029b39aa4ae943cd646f811775dc27c481b0440fba9128f66ea4acb5dd8f.png
+    image: 1ed295d0dde61e62bc21db0054fe38a9a5a511822e47ab2ea3be24ec7c0d6ce2.png
   dark_cultist:
     name: a dark cultist
     room: west_side_chapel
@@ -70,7 +70,7 @@ mobs:
     xpReward: 42
     behavior:
       template: aggro_guard
-    image: 00b06c93480e019781917a37ed8f2061f2a9eb9d921113da2ac3da54a209140f.png
+    image: 83ec0e6e2b1baf50f67150837786f594a3c95ee90216bc4fca84204e5e96aeb1.png
   drowned_acolyte:
     name: a drowned acolyte
     room: drowned_chamber
@@ -83,7 +83,7 @@ mobs:
     drops:
       - itemId: drowned_trinket
         chance: 0.5
-    image: d13195db1f25f4aa3a1eb6049a21fa93d88cf3a18a22aba6415a195ff1c6e2ab.png
+    image: 4bda7a06bfcaba3744d04f6d805e4e08bf9b8a4f320d31f365372d85b0c09f51.png
   stone_guardian:
     name: a stone guardian
     room: submerged_vault
@@ -96,7 +96,7 @@ mobs:
     drops:
       - itemId: sanctum_key
         chance: 1
-    image: 8708d5730e6aa286fda014ab7420185460832fd125796eb7dcbb9c81b563cf1a.png
+    image: b974d13a5bcbebfeaee845ebb42520ea53c0d49f7d84eae99cd0fca2e9594450.png
   elder_revenant:
     name: the Elder Revenant
     room: revenant_chamber
@@ -139,7 +139,7 @@ mobs:
             next: farewell
       farewell:
         text: ...
-    image: 935c9713584510fe146be714990f64577cbe9b556c095c93e7484bf88da0f427.png
+    image: 72c374fa92d738ef4265241f16d5cc07640d5fd77732ee88535e0859c2c5b243.png
   scholar_timon:
     name: Scholar Timon
     room: temple_outer_steps
@@ -182,7 +182,7 @@ mobs:
             next: farewell
       farewell:
         text: Be careful in there. And watch your footing on the wet stone.
-    image: f1e4b26ef5229e1717f15f537b7966758673038c1e05a2b7a559896008dca272.png
+    image: ea67faafd582b5b3f5632d9280e603623c6fc93ea819490572c200e10fcf818a.png
 quests:
   stolen_relic:
     name: The Stolen Relic

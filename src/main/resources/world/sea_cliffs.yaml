@@ -11,25 +11,25 @@ items:
     keyword: kelp
     description: Thick, rubbery kelp harvested from a submerged bed. Alchemists use it as a stabiliser in aquatic potions.
     basePrice: 10
-    image: 1a9800f9fabbf59b46966f8f17ea99953f1f2d193230db6b76c01f65940fd247.png
+    image: f9caec14daac6842fde8fcfd064c8fe049639ecf2655914acccda47a149f9169.png
   pearl_shard:
     displayName: a pearl shard
     keyword: pearl
     description: A fragment of natural pearl pried from a tidal pool shell. Still lustrous and worth a jeweller's attention.
     basePrice: 25
-    image: 710a658be69174e82a52fe786d9c66099bd38b8e7d10c5c9a70b63d5cd48ae12.png
+    image: 62c17573b53a4eecfe579072db8ae4c8ad8428b4263047b666f5e86d099d14c0.png
   salt_crystal:
     displayName: a salt crystal
     keyword: salt
     description: A chunky crystal of sea salt scraped from a tidal flat. Pure, clean, and useful in both cooking and alchemy.
     basePrice: 12
-    image: 51cde9e069e6275af95f6a060957f402e4cc931e78424209e5fd9aeba801df4b.png
+    image: 2106180c2a673e0379997772c27a5cf86acf463ea3d713188cb99674ca97992f.png
   corsair_insignia:
     displayName: the corsair's insignia
     keyword: insignia
     description: A brass badge bearing the skull-and-anchor mark of the corsair crew. Proof of the captain's defeat.
     basePrice: 0
-    image: 01aa62586f6dd2eb09976989a456a5df1b8c44a863ceb18bf54792ad436b78f4.png
+    image: fd6ff8bd548e892b83d992d15f02d66ab671cedcc86efd0d921ab6c9076940ba.png
   corsairs_cutlass:
     displayName: the corsair's cutlass
     keyword: cutlass
@@ -37,7 +37,7 @@ items:
     damage: 9
     basePrice: 310
     description: A beautifully balanced cutlass with a gold-inlaid guard. The corsair captain kept this one sharp.
-    image: 799a9fc33f3935b62774717760b666d10413637b31fdffef8d23980e9e87d023.png
+    image: d05fe9f1d599b308881b22eda29e8a7e2b4606c8f999e1bd0ae90134f89290e3.png
   corsairs_coat:
     displayName: the corsair's coat
     keyword: coat
@@ -45,13 +45,13 @@ items:
     armor: 4
     basePrice: 230
     description: A heavy oilskin coat stiffened with hidden armour plates. Practical and imposing — corsair-issue quality.
-    image: 29bf37a1bd212d6f7f3768d305bf145470dc39dafe9766dc8b28ce97c87eb8e7.png
+    image: e12205aafd7fe252bb8c7f313174d5f13e6feaa7eeb474a05893bdb87859e831.png
   crab_claw:
     displayName: a giant crab claw
     keyword: claw
     description: A claw broken from a giant crab. Heavy and oddly beautiful. Someone will buy it.
     basePrice: 12
-    image: 24a626cdfdd9b5ecd5add0c3534708841d15c7579afdead63362974495f0c365.png
+    image: ce410e42a2ce54ed3f0063d1fcfbc0c49f09a9726d2a15f48bf8a470183e607e.png
 gatheringNodes:
   kelp_bed:
     displayName: a kelp bed
@@ -103,7 +103,7 @@ mobs:
     xpReward: 40
     behavior:
       template: wander_aggro
-    image: be3de402121324717c90bfc2a5b3e6a2e57a3d1f4fb75d042ddeae728f005da8.png
+    image: ecbfb1b0533c7f38f4f1d30f5a58d206628a64722cd72eba2a09222985e552ce.png
   sea_raider:
     name: a sea raider
     room: sea_raider_camp
@@ -115,7 +115,7 @@ mobs:
     goldMax: 18
     behavior:
       template: wander_aggro
-    image: 74c6eb4834e49810cc69452338c661e644d53cf55af617742c2c30472d570447.png
+    image: 593cf122da181cbd1563e35a774b5682f05b5cc3bea7091ce8caa761817afc4f.png
   giant_crab:
     name: a giant crab
     room: crab_shore
@@ -126,7 +126,7 @@ mobs:
     drops:
       - itemId: crab_claw
         chance: 0.5
-    image: 54db1d1fe9e5a0bb522eb87344cda8e00ad5d8b59c2552429a618e9ec132cace.png
+    image: 3e27e202553a308ffe1d3c76e90ee4d9452fac7a3bf50bc5e41462de70bd5f78.png
   tide_elemental:
     name: a tide elemental
     room: tidal_platform
@@ -134,7 +134,7 @@ mobs:
     level: 6
     respawnSeconds: 180
     xpReward: 45
-    image: 4b14ead18beb09ac4402e6ce200643f0d475e6d9bb7f91ca5913f7d4990b8f12.png
+    image: 68ad68df96b5307ccf20932df8d75b972b37be4e32af2dec131f9ec9a85a6542.png
   corsair_captain:
     name: the Corsair Captain
     room: raider_cove
@@ -153,7 +153,7 @@ mobs:
         chance: 0.4
       - itemId: corsairs_coat
         chance: 0.35
-    image: 4cabe548b279b211f2b7b16d583e56e2e300a7d4a5a8daaf8e35c49fa67fad8b.png
+    image: c2efb4567e4c30e8b211ad16e817f37ae9103b384a38aab6e546dce44ea28cf6.png
   merchant_davan:
     name: Merchant Davan
     room: cliff_overlook
@@ -195,7 +195,7 @@ mobs:
             next: farewell
       farewell:
         text: Stay well clear of the cliffside — the harpies have been bold lately.
-    image: 8c14c589855170c7ad4f7ba6060b693c3f338cb3896af11383be838f66c4e47d.png
+    image: 3e5a781a756e21fb0793ccce13ff92bb2476ab53b32edf1577319fb398001185.png
 quests:
   corsairs_bounty:
     name: The Corsair's Bounty

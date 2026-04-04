@@ -147,7 +147,7 @@ mobs:
           - text: How does it scale?
             next: scaling
           - text: Impressive. Thanks.
-    image: 232c6768cf9c2c1835f26b15866497dc1a5a1b1de194717833cfb80b74c4e6ad.png
+    image: cb2417c7f383074e0c6a2aa0047c6e849567359004ed877f8b1de2a79a59d57d.png
   impostor_syndrome:
     name: an Impostor Syndrome Wisp
     room: lobby
@@ -160,7 +160,7 @@ mobs:
         fleeHpPercent: 70
         fleeMessage: The wisp shrieks, 'You probably don't belong here either!' and vanishes through the wall.
     respawnSeconds: 120
-    image: bbdc0f328bf77d680b1ccf338d577394af85575ec442b8df27bb2b91f85d1945.png
+    image: aab5077156736a6f78f6a4b2b49870674c480f0290dbf26e3347b5eb87e185e4.png
   memory_leak:
     name: a Memory Leak
     room: proteus_bay
@@ -171,7 +171,7 @@ mobs:
       params:
         aggroMessage: The leak oozes toward your heap space and latches on!
     respawnSeconds: 90
-    image: 42286a407c2cd1a7bfe1aeb4d42eb34ecab615147dcac1da8d61c9bef0d41c5f.png
+    image: e99d8b7bdd162f974ef5f9d0c179b2ce5917ae801399a99642f997431ddc3afa.png
   null_pointer_exception:
     name: a NullPointerException
     room: juola_lab
@@ -183,7 +183,7 @@ mobs:
       params:
         aggroMessage: 'Exception in thread "main": java.lang.NullPointerException at line 42!'
     respawnSeconds: 120
-    image: 685bb1ee020ba5e8da0398ff59a69e915e2f772e878e2d3b5cd4d051e503a06e.png
+    image: 33609f7a986e6e4471c5beca3581a4cbde8d3800515b6ce2553ba7b1d6c4a6d0.png
   scope_creep:
     name: a Scope Creep
     room: freelance_hq
@@ -194,7 +194,7 @@ mobs:
       params:
         aggroMessage: "'Could we add just one more feature? It will only take a minute. Two minutes tops.'"
     respawnSeconds: 60
-    image: 50b5f2dc4c17e89121bbb40b22cce80f76641b187ae5f9de3456f79fb0ccc3fd.png
+    image: 621dc218ec03ac7d1240ae3c9e9976ab0bb3fb8fe14819e6b57c695be6c6fbe2.png
   legacy_monolith:
     name: the Legacy Monolith
     room: migration_bridge
@@ -207,7 +207,7 @@ mobs:
       params:
         aggroMessage: "THE MONOLITH AWAKENS. ESTIMATED DEPLOY TIME: FOUR HOURS. DO NOT INTERRUPT THE PROCESS."
     respawnSeconds: 300
-    image: 293a426ecda946881c1ec9b5e7f7a79b9ce47d2a10902bab5a7a60a3ccea3b95.png
+    image: 3c8dd240fd48e6ebf3cf22a3adcca70dd3a3ee3cf2ec242dc4e0027e27db0b06.png
   fda_auditor:
     name: an FDA Compliance Auditor
     room: fda_archive
@@ -218,7 +218,7 @@ mobs:
       params:
         aggroMessage: "'I need to see your audit trail. ALL of it. Where is the audit trail?!'"
     respawnSeconds: 150
-    image: 9dcd58d90694ea48a253d0e852d87de0a6746a4c78389a8b740733b022692e32.png
+    image: b85a79b02237be28acea3bd65d722aae4e68a4915b311f2f57df52a60f55e20b.png
   runaway_lambda:
     name: a Runaway Lambda
     room: lambda_shrine
@@ -229,7 +229,7 @@ mobs:
     behavior:
       template: wander
     respawnSeconds: 30
-    image: c81343cb34d4e669dd1caf38fa6371dc4e3a37ba7fc903ae492b0fc7129ea829.png
+    image: 93e6fe3f033920e58fc01e57f8a02d5d794e9bbfd08b842b1a3853ff7af55899.png
   budget_committee:
     name: a Budget Committee
     room: savings_vault
@@ -241,7 +241,7 @@ mobs:
       params:
         aggroMessage: "'That hundred-thousand-a-month savings? We have some follow-up questions.'"
     respawnSeconds: 120
-    image: 5b8ae36ba36a52a63acd1792f2eeb39673d8b6d64ff45901ee12517b1fd3163a.png
+    image: 10ba539aabcb0905700f8457bd87aa134461c4b7355e7f2dcd5024ed079ac311.png
   phone_screen:
     name: a Technical Phone Screen
     room: karat_studio
@@ -252,7 +252,7 @@ mobs:
       params:
         aggroMessage: "'Quick: implement a thread-safe LRU cache. Fifteen minutes. No hints. I'm timing you.'"
     respawnSeconds: 90
-    image: ccf9a02e7862b53a29b8e42e112b0726c571c24e1d2de127ac35782ed9020872.png
+    image: 55a4d9d8a2b13dc9b807c2f0c3628a229250f43a9dc8af7406fd463a84e8a1ad.png
   stack_overflow_error:
     name: a Stack Overflow Error
     room: gatech_annex
@@ -264,7 +264,7 @@ mobs:
       params:
         aggroMessage: "Segmentation fault (core dumped). Stack trace: [infinite recursion in progress]"
     respawnSeconds: 180
-    image: d9a319221f064cd9601d6a35f5370250fac06df6869bb413ee89ea55baf064bb.png
+    image: 598454448b02207961c5d1f40d94e176a1a899b1b1930802f250e8e63178a518.png
 items:
   lambda_arrow:
     displayName: a Lambda Arrow
@@ -273,7 +273,7 @@ items:
     damage: 2
     basePrice: 18
     room: lambda_shrine
-    image: 66a6fd9c21a6eb6a0fba70200997d3f7bc920563e5559cae12870accb451b49b.png
+    image: 505a1ea5e54567ee595b43f5db8035222c92a2cb645f410c7989f7436dfc9b00.png
   ci_cd_wrench:
     displayName: a CI/CD Wrench
     description: "Reduced deployment time by 60%. Turn it left: pipeline improves. Turn it right: someone requests another stage."
@@ -281,7 +281,7 @@ items:
     damage: 2
     basePrice: 15
     room: pipeline_bay
-    image: 66e9873fbcba4cac368f5bb054e69d4bf71ebb8788259db7ac777f477a1ef4a2.png
+    image: afead7d9b46a1952e20fe5e23da94d62841db8c613c1d48c5606831aeb0c0a24.png
   type_safe_compiler:
     displayName: a Type-Safe Compiler
     description: Refuses to let you swing it incorrectly. Kotlin-forged; catches your runtime errors before they hurt anyone.
@@ -289,7 +289,7 @@ items:
     damage: 3
     basePrice: 30
     room: gatech_annex
-    image: 6bb24c0c58c22b3345b7114835097cfe24f63cf9aa53468cb28943d56ca90653.png
+    image: feaab5976b8fcd88f74ffb8583df40249acbf39303012202aad0a00083706f4a.png
   well_architected_shield:
     displayName: a Well-Architected Shield
     description: "Five pillars embossed on the face: Operational Excellence, Security, Reliability, Performance Efficiency,
@@ -298,7 +298,7 @@ items:
     armor: 3
     basePrice: 35
     room: migration_bridge
-    image: c224dfb7b92308fab79541920e791b94b5934e25a4b16b8fe2fb4c433b2f26f6.png
+    image: 70d5a00b900097296b280ce32dfb1f52a56b0beead0931028d31b491100e8514.png
   aws_cert_badge:
     displayName: an AWS Certification Badge
     description: "Stamped: 'Solutions Architect – Associate, Aug 2023'. It hums softly when you start drawing box-and-arrow
@@ -309,7 +309,7 @@ items:
       CON: 1
     basePrice: 25
     room: cloud_platform
-    image: 577d9c324a087e205cce69075780ad95c4904cfd1a7903b8325157abc203e9c1.png
+    image: bb0cb4b9143939bdeea937a1fc2730eb477505031e0204188866ff4d7ea7e5a1.png
   valedictorian_medal:
     displayName: a Valedictorian Medal
     description: Summa cum laude. Valedictorian in Computer Science, Mathematics, and Liberal Arts at Duquesne University.
@@ -320,7 +320,7 @@ items:
       CON: 1
     basePrice: 20
     room: education_wing
-    image: cab1247fdb15c37d7fbefe85ac478e534779ec0737924e3c3b3a29fe5139011a.png
+    image: b790f0345fc7b828e89fffbd394882b16ba0b417c0076d9d2d5ce843d0cf9057.png
   code_review_coffee:
     displayName: a Code Review Coffee
     keyword: coffee
@@ -330,7 +330,7 @@ items:
       healHp: 15
     basePrice: 12
     room: war_room
-    image: c1d1e05488d10fea43c8b1699376028b3d44a7d0402343b0743e7b28f8500c4b.png
+    image: cb0e66d847321c57a1885ad7c400c61564d80b001fbe1b1ae4fdc4b1c552f7d0.png
   unit_test_suite:
     displayName: a Unit Test Suite
     keyword: potion
@@ -340,47 +340,47 @@ items:
       healHp: 10
     basePrice: 8
     room: freelance_hq
-    image: 6ba214b0d0d15520347ccef46469f7d3eadc106fbab269a960193eadd3f3ba5c.png
+    image: 30c690bdac66c6b4124f5fafd7efc812c70a8837649b3c5dcf2ecc405bb4309d.png
   patent_scroll:
     displayName: a Patent Scroll
     description: Authorship Technologies — US-11605055-B2 and US-10657494-B2. It crackles faintly and smells of peer review
       and legal fees.
     basePrice: 5
     room: patent_annex
-    image: 5334044dac3f6cf97d6f0a42bfcb4f9bfb72e5e465968ddf10b3e6124f05c503.png
+    image: 40d52780148e5c076ff4561efdc70787ff5fe51d50568738c3169e6ea26c4d6e.png
   cost_savings_coin:
     displayName: a Cost-Savings Coin
     description: Heavy gold, stamped '$100K/month'. Earned by replacing expensive data sources with smarter, cheaper ones at
       Signifyd.
     basePrice: 50
     room: savings_vault
-    image: 34ed338f708ec3d226fe02ab92f60fb78ef33e4f4c85042ad13babfd519b1bc8.png
+    image: 81b96769ff930ea0a7ccbe2a046c54830e8e866783ccfb8b517a39a98e922a54.png
   jgaap_sourcebook:
     displayName: a JGAAP Sourcebook
     description: "Open-source forensic authorship analysis. Margin note: 'Every methodology must be reproducible or it
       doesn't count.'"
     basePrice: 8
     room: juola_lab
-    image: 733f2e28c1e2e7f12aa2e11f22cffab35a520f9d9317732d5b4da3944125332c.png
+    image: dc4da6ef33bc17673f0bf9b01e666e66822b8ba4d987e0d2523b7d1d305c5014.png
   audit_trail:
     displayName: an Immutable Audit Trail
     description: A tamper-evident ledger. Timestamped, cross-referenced, and defensible under Daubert admissibility standards.
     basePrice: 10
     room: fda_archive
-    image: fb6762df6bbbcb2527bdafa07f9df7fb29dc9edf9bb4bb9f51c8deaf5a1415a9.png
+    image: 9c1d284d4542dd6e42e3e2e2ce3389c19c1a4cd2e1f3ae2dacf574098896d318.png
   observability_compass:
     displayName: an Observability Compass
     description: Points toward structured logs, distributed traces, and the root cause you missed the first three times.
     basePrice: 15
     room: war_room
-    image: 1d23bf006f4baa434ea855a451bec714c9d51d20916a69dfbc79e4e6ed681117.png
+    image: 3b9e85e3e9da4371aeccb9d3f42a8dc8b506eb01543b07e01fa1597c7470f01e.png
   interview_rubric:
     displayName: an Interview Rubric
     description: "Three thousand interviews condensed into calibrated checkboxes: tradeoffs, communication clarity,
       production readiness."
     basePrice: 8
     room: karat_studio
-    image: dc5c2633ebfc1dff306b6fbcf3db2dfb37bbfba0ad1ab4ffca2fd83e2bc6fd0a.png
+    image: 34f6e32d4ad80bfe768a81cd12319598859bc3867690e0057e6912697173fecb.png
 shops:
   career_services:
     name: Career Services Desk

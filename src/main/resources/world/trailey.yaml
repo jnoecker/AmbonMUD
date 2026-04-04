@@ -21,7 +21,7 @@ mobs:
       params:
         aggroMessage: The HOA Inspector materializes from behind an approved shrub, clipboard already raised. 'NOTICE OF
           VIOLATION — your PRESENCE is non-compliant with section 4.7.2 of the community guidelines!'
-    image: 9bc81a42b8d9398bc643a25007f9dd461989b4a65df06fe383dc3566b330bc6c.png
+    image: ff15ae9051606b88912aaad1a6afda688b5b7804277d797868c4f2b111cbdb3b.png
   beige_neighbor:
     name: a beige neighbor
     room: cul_de_sac
@@ -33,7 +33,7 @@ mobs:
     respawnSeconds: 90
     behavior:
       template: wander
-    image: c52ce64ee3ffcc6add51826097d3244165cc4f4586a530518ce31903710ab74f.png
+    image: cf18b7ca7c5784b51a9cde4ff8d81320eaf22af278dce1c4c2caa98eb34acdd5.png
   lawn_mower_bot:
     name: an aggressive robotic lawn mower
     room: yard_upper
@@ -48,7 +48,7 @@ mobs:
       params:
         aggroMessage: The robotic lawn mower pivots sharply, blades spinning at full speed, and targets your ankles. The HOA
           programmed it for zero tolerance.
-    image: 2e03998f46a2007e6d60ce12d3670047caf510b5c37fa9bc8eaeaccc00294e8d.png
+    image: be0bfef006fab82e9e1c0f7e4b8165aeefb7158488c76cf61ea96052e3acb4a0.png
   bounced_squirrel:
     name: a repeatedly bounced squirrel
     room: trampoline
@@ -60,7 +60,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: c0aa05edb2cb45fe2d24b4ed7496c841b235d3957f2310a0040c31285291a3c1.png
+    image: 25e8872574580334f9ca71d355d2aec345239a363cf77a1015044a0c1cdc5398.png
   spy_drone:
     name: a surveillance drone
     room: foyer
@@ -74,7 +74,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: The drone's camera snaps to your face. A cheerful recognition chime plays. Then it fires.
-    image: 60517717fbca4e60cc0d41a7974495a157ce2dba57c75e2abd6c5d5a214ab74d.png
+    image: f9113ee2757d0dfeb85dfc8b7b2ee7b8089f8f9ac6ecd52dde046f587582ddb8.png
   laser_sentinel:
     name: a laser sentinel mk. II
     room: hall
@@ -89,7 +89,7 @@ mobs:
       params:
         aggroMessage: The sentinel's targeting laser sweeps the floor and settles on your center mass. A lock-on beep confirms.
           It does not fire a warning shot.
-    image: 581390ff788446e6f9388f3e545c24d982f137da2b37be119540e9d337c3e3f3.png
+    image: 74c1ff77ad77f499a232263336a634248aae12a9c92dfb6dab6214424313809b.png
   makeup_mannequin:
     name: an animated cosmetics mannequin
     room: haileys_parlor
@@ -104,7 +104,7 @@ mobs:
       params:
         aggroMessage: The mannequin turns its perfectly made-up face toward you and opens its glossy lips in a silent scream.
           Then it attacks with surprising precision.
-    image: e63bf5bf698f48b4629c8262d7b3c82603c09e588b0a0ca460e2481a3bcf0008.png
+    image: dfaed1070a1233687a3a7cf04d397c0622a6be7800de5c466193e8fd60c4d0fa.png
   perfume_cloud:
     name: a sentient perfume cloud
     room: haileys_dressing
@@ -119,7 +119,7 @@ mobs:
       params:
         aggroMessage: The perfume cloud drifts toward you with alarming intentionality. The scent is overwhelming — 'Midnight
           Blossoms' — and the damage is significant.
-    image: ec7e635457b39f2b6a126e5b4732985a6865ecdecaec2d0804d49cc0dcb4f023.png
+    image: 42be2d93cf3264683ec3900c9d95aaca4d272aaf62aed471ec4c6fcd2eeaf82b.png
   balance_beam_automaton:
     name: the Balance Beam Automaton
     room: haileys_gym
@@ -135,7 +135,7 @@ mobs:
       params:
         aggroMessage: The Balance Beam Automaton sticks a perfect landing and pivots to face you. It executes a round-off
           back-handspring as a warning. You should take the warning seriously.
-    image: 9d6b7febffeeeb9ebe85a855f65bc81c53d405161299043508fb19c89136a305.png
+    image: d3f4592f5faf1d46db6b46245a60d69f1f2e129416bbb56405a7f0505ce63713.png
   robot_deer:
     name: a mechanical deer target
     room: trevors_range
@@ -147,7 +147,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: ed7fb6934f054abfcfd2f57b430afde331ddb683189beba60c286d111111fd8b.png
+    image: 323d985c27e02987c695d85fe24d2bd445345d549aee024f2b79a3a3d4f4f142.png
   robot_duck:
     name: a mechanical duck target
     room: trevors_range
@@ -159,7 +159,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: 7c699896455dbda44f866371954ca804e90199b0bc25483fae1ae4d850c9a0a2.png
+    image: dec484e0c2ce2ab4f7f35d55694d518737309f882703b28dbaf923a045c4e4a5.png
   robot_wolf:
     name: the Alpha Wolf-Bot Mark VII
     room: trevors_armory
@@ -177,7 +177,7 @@ mobs:
       params:
         aggroMessage: The Alpha Wolf-Bot's eyes blaze red. It bares a mouthful of articulated steel teeth and LUNGES with the
           hydraulic force of eight hundred pounds per square inch!
-    image: d0247a3c746650b6757cc38d7994b91895bdb470ba3ea35586c9cd2e9e6b7f5f.png
+    image: 33fd5eb78ff9a9356c9a2c54d7533cb6628575922612e5de87cdddb17ab5c460.png
   inflate_goon:
     name: Big Biff, the Roughhousing Inflate-O-Goon
     room: trevors_roughhousing
@@ -193,7 +193,7 @@ mobs:
         aggroMessage: Big Biff BOUNCES off the foam wall with his entire body! He takes the hit like it's nothing — in fact, he
           seems to be GETTING BIGGER. Each blow inflates him further. His eyes go wide. He is enormous now. He is VAST.
           He is sweating. He is—
-    image: 8a38a081ebb650c274231505f5b71f2371c614a14b1538363790e61fb552c865.png
+    image: 93b316715fd72d090753348f84c38b84cd792598683a108f06605e276a71d942.png
   humpty_dumpty:
     name: Humpty Dumpty, the Uncracked Sovereign
     room: humpty_cracked
@@ -212,7 +212,7 @@ mobs:
         aggroMessage: HUMPTY DUMPTY HAD A GREAT FALL — and then reassembled himself while all the king's horses watched
           helplessly! He looms above you from the Wall, cracks spreading and sealing, grinning with absolutely unearned
           confidence. He LEAPS!
-    image: 281c6c1ce6fd059a7efb35f2a7569ed40654be8c36e28e9e992b3744bd9e11f7.png
+    image: 952bd6c18cf5158af299c0e7946fabde05cdf8a45d7984b0ce31a570971699ff.png
   humpty_shell_piece:
     name: a reassembling shell fragment
     room: humpty_arena
@@ -227,7 +227,7 @@ mobs:
       params:
         aggroMessage: The shell fragment skitters across the floor toward you, cracking and reforming as it moves. It is very
           focused on the task.
-    image: c3b4e3be04321895b2d9502b87169c2c71a17b838c2c5d2d949caacad5f65b9c.png
+    image: 25af4650e8f39540fe493d68c9847aeb2d0ca6d41bf1f39faf39fb0edd346625.png
 items:
   hoa_violation_notice:
     displayName: an HOA violation notice
@@ -237,7 +237,7 @@ items:
       atmospheric non-beige-ness.' It is terrifyingly thorough."
     room: cul_de_sac
     basePrice: 0
-    image: bf92d22034602a9237b48ee43c921eea861f55d23eec08a4cad98c05440791ea.png
+    image: 7b8ecb8f7f1ec96f7d328a04f1144d42b9de8c7fc765f0ec928e33ce9952a723.png
   spy_watch:
     displayName: a classified spy smartwatch
     keyword: watch
@@ -248,7 +248,7 @@ items:
     armor: 4
     room: foyer
     basePrice: 85
-    image: 6e2ffb3fdef1c8a24a3b8f81782bf34d90f0ed3e395136ef2d0a01bac4121235.png
+    image: 4ce897f6aa4bf707d5a902a08802115d73f4d6264c6164cefb1ad04f865c21ef.png
   spy_gadget_pen:
     displayName: a spy gadget pen
     keyword: pen
@@ -260,7 +260,7 @@ items:
       healHp: 25
     room: hall
     basePrice: 50
-    image: 131a6a9972aad129925b85783a5c968931f8db3dd597aa7793397adf485fa260.png
+    image: 1b7a9fef795acf7cc5c8e5b3e95e657a441fafe7026620f79b2750354df00213.png
   makeup_compact:
     displayName: a professional makeup compact
     keyword: compact
@@ -272,7 +272,7 @@ items:
       healHp: 15
     room: haileys_parlor
     basePrice: 35
-    image: 1035b03b9c4fdc3a1c4e216a836c884c93f3c9bdacdc0c1ed6562b5b8540eced.png
+    image: 908ea83f303a7bdd2b24e6ecafd69a51449efc2648e996c55488fd74f4b37a8e.png
   luxury_perfume:
     displayName: a bottle of Midnight Blossoms perfume
     keyword: perfume
@@ -284,7 +284,7 @@ items:
       healHp: 30
     room: haileys_dressing
     basePrice: 60
-    image: 375cdd3b45e73e6b69b1786048c2221367bb72e6d9638dceddad2ddd64608810.png
+    image: f97436b9f0853026238f387802ad5b9c12f60906df036a914240c1ff80030ba5.png
   competition_leotard:
     displayName: Hailey's competition leotard
     keyword: leotard
@@ -295,7 +295,7 @@ items:
     armor: 5
     room: haileys_gym
     basePrice: 90
-    image: 863df9aef85a8e36c430f931d609eb5948f4fa3bf5d2b98d25f54de2468038bb.png
+    image: 2b8984df30863a2c20c569177921cda7bce33e772011d2f3da9d990c224aa63f.png
   paintball_marker:
     displayName: Trevor's tactical paintball marker
     keyword: marker
@@ -306,7 +306,7 @@ items:
     damage: 11
     room: trevors_range
     basePrice: 75
-    image: 813f137ed7c977c59761aba49ae91e9e604e7bb63729578f81364c9f0b74cc59.png
+    image: 3030d31a7fef0b7661f1cf418ebbf46686102375ec5634dacb9d3e065bd20206.png
   robot_spring_coil:
     displayName: a precision robot spring coil
     keyword: coil
@@ -314,7 +314,7 @@ items:
       Trevor's mechanical targets. Trevor made it. It is better than it needs to be. That is on purpose.
     room: trevors_armory
     basePrice: 25
-    image: 7f36d99b0694810fa97bf347378cb5fd20486b0479fe79dde1c42fdebd685ead.png
+    image: f662c137a696c8d349f7439001aab158385f6a1b66f2fba7ffbde7d1d6457a0d.png
   deflated_remnant:
     displayName: a deflated Biff remnant
     keyword: remnant
@@ -323,7 +323,7 @@ items:
       'BIFF WAS HERE.'"
     room: trevors_roughhousing
     basePrice: 10
-    image: bd27ac33ae4f3b93487de5342922562ba74e1b0b01d0607252bc94943a9a60e3.png
+    image: f9cedd4bd50506ca03bae2cce284448093a0f91d7986b5b2d89d4396bad74b24.png
   humpty_shell_fragment:
     displayName: a fragment of Humpty's shell
     keyword: fragment
@@ -332,7 +332,7 @@ items:
       something."
     room: humpty_arena
     basePrice: 150
-    image: 504bf478ba36575887e5e41940c8070f39c6db9031324e71366b2880c69a16a6.png
+    image: d3e3df8691f47da14cbf02f1ed9446ec65a2a8e73c4dda426ec3c27f57067a3e.png
 shops:
   spy_supply_depot:
     name: The Foyer Supply Depot

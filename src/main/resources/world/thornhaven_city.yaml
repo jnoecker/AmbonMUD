@@ -13,7 +13,7 @@ items:
     damage: 3
     basePrice: 20
     description: A short-bladed sword with a well-worn grip. Still serviceable.
-    image: 1ced150585fbc0efc2e57acf24889bf6a60fbbbbdf2c86fe23de17448fab0ee3.png
+    image: fa9482c94d3274a483f50b650d842e0e13b4d1eda4fa1d44af71365a9833bee0.png
   battered_staff:
     displayName: a battered oak staff
     keyword: staff
@@ -21,7 +21,7 @@ items:
     damage: 2
     basePrice: 15
     description: A gnarled oak staff, nicked and scratched from long use.
-    image: 265dd6cbf50ec0d90069c0fffde6ff784b17080005d6370e333f7f9f281f6396.png
+    image: 933892e0bbc7df9f27847605e32256b23b67435c1b3a256e0b7ea09e48ac2119.png
   hunting_bow:
     displayName: a hunting bow
     keyword: bow
@@ -29,7 +29,7 @@ items:
     damage: 3
     basePrice: 20
     description: A simple recurve bow strung with gut. Good for the road.
-    image: 3954f9f0072a4f5f1c7c78eb2d0c5937b989fe757d2687da91d1a00eb39eafb4.png
+    image: af9d6f62135983e375a8177b0dde37b0570daaad0c8c89d758ba5b686a4d6589.png
   rusty_dagger:
     displayName: a rusty dagger
     keyword: dagger
@@ -37,7 +37,7 @@ items:
     damage: 2
     basePrice: 10
     description: A short blade mottled with rust. Still sharp at the tip.
-    image: e6b55a948badd5440e40e2145add76525383d315393aee51a7e7aaecf167a4a0.png
+    image: 4964b3f108faf8af3503b9cf219fa75eb2b6ac7b0f050a4e5fa8bd4fe2c92585.png
   leather_cap:
     displayName: a leather cap
     keyword: cap
@@ -45,7 +45,7 @@ items:
     armor: 1
     basePrice: 15
     description: A simple cap of boiled leather. Modest protection.
-    image: 820f65592354224ca7373217596bffb57887234c71b091b30ff7ede5a1ab5268.png
+    image: c66c79b5f1d62e15c335ac5920e8a27bb36c25a8e14def4e9e5efbfb6f70b369.png
   padded_vest:
     displayName: a padded vest
     keyword: vest
@@ -53,7 +53,7 @@ items:
     armor: 1
     basePrice: 25
     description: Thick cloth padding sewn into a close-fitting vest.
-    image: bd1fc3a4cdf4a38f8b653a9d8ed1c128686abe4be13e4592ad5e3b67379395b6.png
+    image: 1a44f2fcc144c94f194f93f50005a3719e4b73aa546125e881bf1aa85fe34f8d.png
   minor_healing_potion:
     displayName: a minor healing potion
     keyword: potion
@@ -62,7 +62,7 @@ items:
       healHp: 15
     basePrice: 50
     description: A small vial of cherry-red liquid. Restores a modest amount of health.
-    image: 1d780d9d5190aa318893628d3e252899cca7fc10cfa508ce624b87b95f959cae.png
+    image: 0f111efcb79ef1934d6c8895bb40ba89f4f99b2223dd1e055f4ff5b7b8d5bb01.png
   clarity_potion:
     displayName: a clarity potion
     keyword: clarity
@@ -71,7 +71,7 @@ items:
       healHp: 5
     basePrice: 75
     description: A silver-blue draught that steadies the mind and eases the spirit.
-    image: b04d1971cdc5c43be50744b7b9241f453f14a529c5cf508241a45a521f41fa99.png
+    image: b41374657e0b2cdff69437edc95a707b833ca51cbfcbc74c5d677b97dd962577.png
   iron_sword:
     displayName: an iron sword
     keyword: sword
@@ -79,7 +79,7 @@ items:
     damage: 5
     basePrice: 80
     description: A standard issue iron sword, sturdy and well-balanced.
-    image: 550466ac6caf06241d1cc576b49cca34e066bce57daef5df43d19513f6ed6697.png
+    image: 3d7742111c2930aee9a758ad841012ba20eba27274a4cdb5b7ebba8b1536cb08.png
   oak_staff:
     displayName: an oak staff
     keyword: staff
@@ -87,7 +87,7 @@ items:
     damage: 3
     basePrice: 60
     description: A polished staff of dense oak, engraved with simple runes.
-    image: 44c5d9eff5f0ab80c423fb958105a15e83b4b0df96032e616825b87f6deb8a8c.png
+    image: 89b9a27863f053d4dc8a384f76569240454aa9ee4b2ef3d2843220790c9a9d2b.png
   short_bow:
     displayName: a short bow
     keyword: bow
@@ -95,7 +95,7 @@ items:
     damage: 5
     basePrice: 80
     description: A compact bow light enough to carry all day.
-    image: 2ac2a359aaa7990b476583193023f7628032ff3fc162a0018b6c14f3cd486c5a.png
+    image: c4901ba39d6b0ab90641a471abca2852ae2acf484ebc0aac6470ea05e42ebb66.png
   silver_dagger:
     displayName: a silver-tipped dagger
     keyword: dagger
@@ -103,7 +103,7 @@ items:
     damage: 4
     basePrice: 70
     description: A sleek dagger with a silver point — effective against the undead.
-    image: 03d3921be0c2d953ca64b365067828fb35883b3cc2606312cd2fd9963720f605.png
+    image: 7d8dd71d129f898b283396b9dad20a3f4eee20d1e0b47a36bbe8893e1699caf0.png
   iron_helm:
     displayName: an iron helm
     keyword: helm
@@ -111,7 +111,7 @@ items:
     armor: 2
     basePrice: 60
     description: A plain iron helm dented by use but solid enough.
-    image: ab20e2e5d302180b29a038f6abe8d7f853f3536ceae6b066c21f3ca141703a20.png
+    image: 9e0bc63d39f0d1e689ec4949c7da87a108e12accee48b7f798c94639b666a35d.png
   chainmail_vest:
     displayName: a chainmail vest
     keyword: chainmail
@@ -119,7 +119,7 @@ items:
     armor: 3
     basePrice: 120
     description: Interlocked rings of iron sewn onto leather backing.
-    image: 044aba68f0a7e6cd7d82eb129e55db6a5934a93131b20b643bcf40c15ca1d95f.png
+    image: c46654d4d6d5f2dd2925166267a7725cd2e2bf35c77545d37ac102b45907d02b.png
   leather_bracers:
     displayName: leather bracers
     keyword: bracers
@@ -127,7 +127,7 @@ items:
     armor: 1
     basePrice: 35
     description: Strapped leather vambraces that protect the forearms.
-    image: fb1bf3c844e951218d8907b20cd7067088bf113b23d744799001950348ab221a.png
+    image: 7155960cbd7889af5f2cabc3dfd01a6a64935ff5b5a9ba8e41bbf234f8ade64d.png
 mobs:
   innkeeper_mira:
     name: Innkeeper Mira
@@ -168,7 +168,7 @@ mobs:
             next: farewell
       farewell:
         text: Safe travels, adventurer. The door's always open.
-    image: a90913607c4689ecbe12952532f91d6c568025cd83b6757517da3d22982424bf.png
+    image: d40c6820ab335058135fcf9a84dd00493f068f630341dee27ac708b87f182ae6.png
   banker_theron:
     name: Banker Theron
     room: thornhaven_bank
@@ -198,7 +198,7 @@ mobs:
             next: farewell
       farewell:
         text: Good day to you.
-    image: 2b142bb892632a4d672fe83784531d32e3e0e18b4fff1e62d9dce5f4c61df540.png
+    image: 4e392978d3ff1de526d1d09217b46792cfd5f744a02a28541d9e234f98b23fdc.png
   auctioneer_brant:
     name: Auctioneer Brant
     room: auction_hall
@@ -226,7 +226,7 @@ mobs:
             next: farewell
       farewell:
         text: May your bids be profitable!
-    image: 539640efdcb120517b4de19dd1966ff3fb514308487a98cdf50ccd2ba8c2fe83.png
+    image: 1c5023bab81629285798700ba230fd1d98f15ca5767a914ac735772e28d17fa2.png
   mail_clerk_oswin:
     name: Mail Clerk Oswin
     room: post_office
@@ -255,7 +255,7 @@ mobs:
             next: farewell
       farewell:
         text: I'll keep the letters safe. Safe travels.
-    image: 3bb225c7a95172845c74ea333f56564fb9ab65d254af38cd2b8c067d203b14b9.png
+    image: 6b17732d389cfbf6016655c9f0c15df515948416d94d08fa945e40a4c904d746.png
   guild_registrar:
     name: Guild Registrar Edda
     room: guild_registry
@@ -283,7 +283,7 @@ mobs:
             next: farewell
       farewell:
         text: May your guild stand long.
-    image: 98487d7c5f5b54edd7882aee151767ea87cfb0325c326a43fe4e664ece974b44.png
+    image: ccaa30ba34c8e59ae1c6b4240cac13a9fbab4b36d7ee586653a1208f868e254c.png
   arena_master:
     name: Arena Master Koryn
     room: arena_district
@@ -321,7 +321,7 @@ mobs:
             next: farewell
       farewell:
         text: Fight well. Fight with honour.
-    image: 7ba38614de38142d22181098ce1c1b4dc22296a011dc6c10ff0d955ef574fd75.png
+    image: 5f80a2cc4144c8f0f5e97806772e620f23ea4bd99124f7fd55f0d0f9b341fa91.png
   old_grimly:
     name: Old Grimly
     room: grimlys_study
@@ -360,7 +360,7 @@ mobs:
             next: farewell
       farewell:
         text: Mind the shadows, friend. They have teeth.
-    image: 87e462c2a5864e2854767c59231bc45d9ab4201ce8e13cc06e8501c1b4a0ffc7.png
+    image: 7af27c3276a81b6aefa99fbf14e05f9497b3993c3f7d4b5d331450d11cdacc9a.png
   trainer_captain_varek:
     name: Captain Varek
     room: warrior_training_hall
@@ -389,7 +389,7 @@ mobs:
             next: farewell
       farewell:
         text: Train hard. Train every day.
-    image: db5cb7ec906ee231526c8c294aefbb3f42b98ca3340d29493c6b4bceb218ee5d.png
+    image: cdaf01eaf981774383527afd8b6d7b4035d055f90308ac220f355e2370af6435.png
   trainer_archmage_solen:
     name: Archmage Solen
     room: mage_library
@@ -418,7 +418,7 @@ mobs:
             next: farewell
       farewell:
         text: Knowledge is the only power that endures.
-    image: 84d844c020d036cabd8f604405945343346fe0ce7f530d6202a5df8cad0d5e4b.png
+    image: 38d09f3bd592d1068f91105b331f37c6ffb10432cdbd93f2744beff5b47103b1.png
   trainer_high_priest_aldric:
     name: High Priest Aldric
     room: cleric_chapel
@@ -447,7 +447,7 @@ mobs:
             next: farewell
       farewell:
         text: May the light walk with you always.
-    image: e9ebf292ec074b0fcb76eaf6e15c86f6400bcd3aabcb30f487decd78ca35349c.png
+    image: 68e03e8b779e0c050eff4131053fd3770158aea36ec30d5d2ae819a1ef21da8a.png
   trainer_shade:
     name: Shadow
     room: rogue_den
@@ -486,7 +486,7 @@ mobs:
             next: farewell
       farewell:
         text: Don't let them see you leave.
-    image: 8f0b8abd2b378832f95b8e1ddd79e22c786a2a2dd4e7bd4fc0fb80abdd5f2172.png
+    image: c29221e7f6dcbcc2f04c7a1bfeddf7c3a50bd2b9e4dbba9d3b35a452bc091be9.png
   trainer_forester_lenna:
     name: Forester Lenna
     room: ranger_outpost
@@ -515,7 +515,7 @@ mobs:
             next: farewell
       farewell:
         text: Track true. Come back alive.
-    image: 196c0173453f8976af6bb5ec2e7f07085fb0142e57a9e4e129bffd0edfbd01ec.png
+    image: 0cb2a1b08237b714ebc138b8bd2449fc5ff0d7a1e5ea342fe58dc0b8f11891a6.png
   shopkeeper_dolvan:
     name: Dolvan the Merchant
     room: general_store
@@ -535,7 +535,7 @@ mobs:
             next: farewell
       farewell:
         text: Come back when your purse is full.
-    image: 77adc3439e634742728031f6f6f28a5290a91b0dc3dd120c05818299ac44f4e1.png
+    image: d904d266336f448a464f0f3a21038ffe25006ffa43f5386ae1c9295cf7bb0ddc.png
   recipe_merchant_sylva:
     name: Sylva the Recipe Merchant
     room: crafting_quarter
@@ -563,7 +563,7 @@ mobs:
             next: farewell
       farewell:
         text: May your crafts come out quality!
-    image: e223fbe83ca8136171b10662fc0d943ab54b0da0b5367dde875d3d6092c6025c.png
+    image: 6de84e9103a09d71c9522033657eb11dcd95252dd2dc21715840d29ed43c8765.png
   archivist_tessara:
     name: Archivist Tessara
     room: chroniclers_archive
@@ -1129,7 +1129,7 @@ mobs:
       farewell:
         text: Come back any time, adventurer. The Deep Record is always open to the curious. May your journeys be guided by
           understanding as much as by courage.
-    image: 90b3fb2a7dcaeeb69eb915d88e771f2e0e3223257384ee6e72448dd30727de75.png
+    image: 8a15492c292c2e5c9ca5b83421e897fe1924082484ade3e593e7e8be325dfa93.png
 shops:
   general_store:
     name: Dolvan's General Supplies

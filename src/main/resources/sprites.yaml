@@ -1,0 +1,6 @@
+base_player:
+  displayName: base_player
+  description: A spectre of a player, more of a placeholder than a real sprite.
+  category: general
+  sortOrder: 0
+  image: player_sprites/base_player.png

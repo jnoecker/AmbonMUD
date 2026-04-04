@@ -14,7 +14,7 @@ mobs:
     respawnSeconds: 180
     behavior:
       template: wander
-    image: 1dbc61faf508e7d2793e31581f3422c788978b71ba1f34d3114be0236ecdf1d2.png
+    image: 1c57e4f6ba9de4853b191e5dfcc13229bb8c8af890cbb33c0f4eac196046b2d2.png
   mountain_hawk:
     name: a mountain hawk
     room: mountain_path
@@ -23,7 +23,7 @@ mobs:
     respawnSeconds: 240
     behavior:
       template: wander
-    image: cdffc3673dc7b7097c3945954600cdcf1e2c0615efb7898cfc92bbf1c28f0585.png
+    image: 8f64ae5ec955c883bca8107fda59708a1be211c7db608578772bffcea8a31c57.png
   red_hen:
     name: a plump red hen
     room: coop_henhouse
@@ -35,7 +35,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: e0e35d4b293e015e76cc91a08e1d118af3ede5f3bbce7205545bb0e7b51a89d0.png
+    image: 4ba89175eb6228a941262b3beb10494ce0b81d0ce0468aa335b0ca2a732fe530.png
   white_hen:
     name: a fluffy white hen
     room: coop_outer_run
@@ -47,7 +47,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: 6829439a84257d520b51c062c74513e0ee4be9dfee2796c6c15bb09eb557fd6d.png
+    image: 6c26ec08dad393597ffc7a0e354239fe58f99d4792b4e047b3359edc7843e9b1.png
   mallard_duck:
     name: a waddling mallard duck
     room: coop_duck_pond
@@ -59,7 +59,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: fa020ab67fb7f6645e6ac31adba0fd14afca26159c40e749dfe9292ba8d9c5d0.png
+    image: 77cf11b0c7e86732f877e108496bf807e8d294227902c65dd77496fb616870d9.png
   pekin_duck:
     name: a white Pekin duck
     room: coop_duck_nook
@@ -71,7 +71,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: fbd3b88e50db5791a9d4bcfd59dad244e3a0761b868e88a02c6ed41eb42e13d2.png
+    image: c8df1ba5f19275898c6a14ea7052b43f2caa8a109a9a139a62bd0ab3922579e4.png
   gobbler:
     name: a gobbling bronze turkey
     room: coop_turkey_hall
@@ -80,7 +80,7 @@ mobs:
     respawnSeconds: 90
     behavior:
       template: wander
-    image: 5210b490b26cf7f3ebcb6a8010e6330f9831a7707d79c192d2babc3115640711.png
+    image: eb367ff09976f106b93ad734870f98ef941c06db35ba238d121ef9dc43bc5e06.png
   hen_turkey:
     name: a speckled turkey hen
     room: coop_turkey_roost
@@ -89,7 +89,7 @@ mobs:
     respawnSeconds: 90
     behavior:
       template: wander
-    image: b3ffd56dac6549bf198de614fa14e9ca9f9ab692ef1caa3f2050670f2227c78c.png
+    image: f4772ad8248998c2b70cf362cea0d48210fb5544a2b3ee3dac14a2cad09c3de9.png
   royal_rooster:
     name: the Royal Rooster, Lord of the Coop
     room: coop_rooster_den
@@ -100,7 +100,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: The Royal Rooster puffs up, spreads his magnificent wings, and CROWS with ear-splitting authority!
-    image: d4fc7161f46075c7e37ee57ebd49a91967b97c21b5c861b672ad1ee1b3d8cc78.png
+    image: aa869cd0543c9464865d3c27cf852364ff5368f0b14f6dfa6e49de0ffa4b4bda.png
   royal_cook:
     name: the Royal Cook
     room: kitchen_main
@@ -111,7 +111,7 @@ mobs:
     respawnSeconds: 300
     behavior:
       template: wander
-    image: 67a31cd869e39269cc2d5aadd8e09ee7a7a2ff2f21c4fa47f10ac8305c86ed96.png
+    image: 43341b6b593335cabc0b109bd73511942c06ffcddefefe4d6ebeae2286163b80.png
   castle_servant:
     name: a loyal castle servant
     room: servant_quarters
@@ -122,7 +122,7 @@ mobs:
     respawnSeconds: 300
     behavior:
       template: wander
-    image: d33fe0a6f8cd4c09980a6ae9df09daf3e7d2cc9a8e19318f9d2b556913baec01.png
+    image: 9e579a3f9d9c10b6982618a97396667a1068abebebca1e47285116f15e9c2970.png
   creeper:
     name: a hissing Creeper
     room: peanut_nether
@@ -133,7 +133,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: Ssssssss...
-    image: a2788a2ad2b940cbeead0242a698bb8284ee1a196f470178c8badb45543e9584.png
+    image: 24de8105c3d8553bd7e33cd4282337da013ab2e45e5249e404016897df6f8181.png
   rocket_car:
     name: a rocket-powered arena car
     room: peanut_rocket_arena
@@ -142,7 +142,7 @@ mobs:
     respawnSeconds: 120
     behavior:
       template: wander
-    image: 031d685be5ee85822a64e53fe7384d4a99b6770faf801984bd9c2c5928e97435.png
+    image: c6c8ffb0a971724cb118476ccff10619b4a9f1f75178f95ff75fb16f5e0b5d63.png
   divine_guardian:
     name: a divine guardian of Olympus
     room: peanut_olympus
@@ -153,7 +153,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: The guardian raises its golden spear! 'None may pass without the King's seal!'
-    image: d3dd19852c24fe51afd3f7d5dc599efaa03464368e5d5badb517627d9d88383b.png
+    image: fe4681594be57a92ac0e8e617bca274c6c9d69056dba3eb8b264de2c641f5e4a.png
   penguin_guard:
     name: a waddling penguin guard
     room: braelynn_penguin_palace
@@ -162,7 +162,7 @@ mobs:
     respawnSeconds: 120
     behavior:
       template: wander
-    image: 2b7c96273946b75e6a3fbcc261a28dec4a21ff25c0d1a4dc65e4ba7479401995.png
+    image: c53c9e46abd4929c724a98c4677c9dff228e52b87b2839c10a7b710bd7e54494.png
   baby_penguin:
     name: an adorable baby penguin
     room: braelynn_penguin_nursery
@@ -174,7 +174,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: acb04cc2b2167080ddbe0effef027a03519d839de0e35d989aca72f451e9a0f1.png
+    image: 54d1da96bb01bebfc8bf67490029b58d5aa6081ea306b64eff77ef2cbef3fd62.png
   stuffie_guardian:
     name: a magical giant stuffed bear
     room: braelynn_stuffie_grove
@@ -185,7 +185,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: The stuffed bear's button eyes glow fierce gold! 'These stuffies are MINE to protect!'
-    image: 3e4895a1fea765f9a4a15f6a29e7a3345e0d02f5eba085beb080c049ddcb24f5.png
+    image: d345faa81fc98c23ba8131ab6e07e3140788cee8534bd40a31d12c0295b2052e.png
   roblox_noob:
     name: a friendly Roblox noob
     room: braelynn_roblox_plaza
@@ -197,7 +197,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: c780d19d9ccce0c08c8528f0656f13dc36e542cf5b22e0c3a0cac9c4671d1fbd.png
+    image: 0cf0be7460dcbe01c130d75c1104467bd71e9d31be06ca15ff241d8005323237.png
 items:
   royal_egg:
     displayName: a golden royal egg
@@ -209,7 +209,7 @@ items:
       healHp: 20
     room: coop_egg_vault
     basePrice: 25
-    image: e1c2dc21b58e43893f0221344ca690b770c97987d7a9d9afe21dddece7e569c3.png
+    image: 9747ed2d498e9097ce5dc8671ac8276665ef9f54f6ffb52f99f3fd54aed4031c.png
   rooster_feather:
     displayName: a magnificent tail feather
     keyword: feather
@@ -217,7 +217,7 @@ items:
       gold at the tip. A symbol of the Kingdom of PBrae.
     room: coop_rooster_den
     basePrice: 10
-    image: d6f09d2f1ba3657525c23dc1b958ebad0821443e89fc723afbb21bb548fc8451.png
+    image: ed7bc28ccd29aab1d9bd161f3b2fbc02e525edd6a116b167deb616415c76a490.png
   mountain_herb:
     displayName: a sprig of mountain herb
     keyword: herb
@@ -228,7 +228,7 @@ items:
       healHp: 8
     room: mountain_path
     basePrice: 12
-    image: 15ea06a9919b163dd5895ac8f67136c132f146a9f8daf1b11fd84f3d23710a56.png
+    image: 37306f5cf027502d9fc6d43cf49f0654479cabd9d15105f8e0aa4e2765b95e0e.png
   minecraft_diamond:
     displayName: a glittering Minecraft diamond
     keyword: diamond
@@ -236,7 +236,7 @@ items:
       light and throws tiny rainbow prisms on the walls.
     room: peanut_diamond_mine
     basePrice: 50
-    image: 6e4ee8b18b976afa81008ec530b45e1eb2a7a7a1b0abee11f626868b76b48783.png
+    image: f847d3fd95b9d57804084a8b8d1b06a2d06e0104a014f2c031d29760c4253c87.png
   rocket_boost:
     displayName: a rocket boost canister
     keyword: canister
@@ -247,7 +247,7 @@ items:
       healHp: 15
     room: peanut_rocket_arena
     basePrice: 20
-    image: 180a010a0b5cf8598524eb0aaed23d165ea3b7d39386b3d2a244291e0a7f5408.png
+    image: b3bd0976fb550f8a9e5e328205b9573c1006d74c8d768876a1b760f9f2755827.png
   smite_coin:
     displayName: a divine Smite gold coin
     keyword: coin
@@ -255,7 +255,7 @@ items:
       angle. Clearly minted on Mount Olympus.
     room: peanut_olympus
     basePrice: 100
-    image: b79374492db840865212029cbd51e33eb6aa98fdbec32ef22a3135a9f25b7951.png
+    image: 03c9046c9dbd387760620e7dafb9f40f34bf2e6ec0e4db04591050af1e445632.png
   penguin_plushie:
     displayName: a soft penguin plushie
     keyword: plushie
@@ -265,7 +265,7 @@ items:
     armor: 1
     room: braelynn_penguin_nursery
     basePrice: 30
-    image: 248f325068a3ac40bf043bfef476e5d4e0d41e16b2aa8da5c09e0a8274ec30a3.png
+    image: d5959ce717feb1b92ffac910b0f08f2a96e71a3d5aff65bb8a4ce4a5200c6772.png
   royal_goblet:
     displayName: the Royal Goblet of PBrae
     keyword: goblet
@@ -273,7 +273,7 @@ items:
       with a crown motif. The vessel of the kingdom.
     room: braelynn_throne
     basePrice: 150
-    image: 3251036b8914a677fa333c68abb088dd54c4569ba68e81b99f25c25aafbacb38.png
+    image: f946e360e8b9abe3d74d325d6dff0914d5792b2f4a1ced982c3f44885dcbfa36.png
 shops:
   castle_market:
     name: The Castle PBrae Market Stall

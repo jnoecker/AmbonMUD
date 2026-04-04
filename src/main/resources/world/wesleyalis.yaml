@@ -14,7 +14,7 @@ mobs:
     respawnSeconds: 120
     behavior:
       template: wander
-    image: 4907901fcf36d1aa17638828a0cd2d62331c82b04dadedd826c253382094d577.png
+    image: 114d3f59f5db9170b733d3a948afa82eccd616523482719cdc1313fc679fee93.png
   jewel_chameleon:
     name: a jewel-toned chameleon
     room: gravel_road_2
@@ -26,7 +26,7 @@ mobs:
     respawnSeconds: 90
     behavior:
       template: wander
-    image: ad4d2d60e3bab68318c4d1e6f75c6bbd53519f9d647ee128084c91a97d786f02.png
+    image: 9fa6fd597448fb1097a3cdca13a0e5227002b4cc903e8fe4dffdc3a66ba0051f.png
   glowing_firefly:
     name: a glowing firefly
     room: landing
@@ -38,7 +38,7 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander
-    image: 5f16b93a29d4dd3e111c46d817b014b4a74f0a1ab2a98e2e917aaf458a285c10.png
+    image: 60676404a6b80300c9e6e6cb30d53273f4e27ca69999bd0cb74045fe6e91bb0a.png
   worker_bee:
     name: a prehistoric giant worker bee
     room: prehistoric_apiary
@@ -53,7 +53,7 @@ mobs:
       params:
         aggroMessage: The prehistoric bee's wings thunder like a helicopter rotor! It fixes you with six enormous compound eyes
           and charges!
-    image: d30ef894c208a53622bfd8ec3dbe6c4296a9d2d6d273ec06684ddc895e1fbacf.png
+    image: 14678713c3017fd695dbfd2ae41c0e477a8f836cc94a9e84b0cfd49640e82a4a.png
   queen_bee:
     name: the Prehistoric Queen Bee, Ancient Mother of the Swarm
     room: prehistoric_apiary
@@ -71,7 +71,7 @@ mobs:
       params:
         aggroMessage: The floor vibrates with a deep HUMMMMM. The Queen is larger than a horse. She is ancient. She is not
           pleased to see you.
-    image: 512ada5e0cb84e495977fb0a833400818c86b374738806f23bf562daff002418.png
+    image: 3634b99342c03b8b925391fc15ec62e93f6b4bda12b96a9d7e94933bb5759917.png
   velociraptor:
     name: a hunting velociraptor
     room: jungle_deep
@@ -85,7 +85,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: The velociraptor tilts its head sideways, makes a chittering sound, and charges with alarming speed!
-    image: 485fbbdf1f8afe70fb3b7bb5e2ee6e5aa957177fa4f8b2ba7209d4bd84fa264f.png
+    image: 1a502cb57d6ce09ce19313c01fab16790069d29f27d665e04603e41d58b7507e.png
   triceratops:
     name: a massive triceratops
     room: jungle_deep
@@ -100,7 +100,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: The triceratops SNORTS and lowers its three-horned head. The ground shakes as it charges!
-    image: 03fd2017efccf2d7fd042cb24c3dc5105ad8d09044cbc2e9ba9286517965bfcd.png
+    image: 43357ef67dbda8f5c0c8fba607cef9a36bd014238e35a204cb630df7ae05e23c.png
   pterodactyl:
     name: a swooping pterodactyl
     room: jungle_canopy
@@ -114,7 +114,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: The pterodactyl shrieks and dives from the canopy with talons spread wide!
-    image: cecb98ac2c4847b04bb7596c0b439062dd7d43b7ad4b559a2c27ef1e35e89912.png
+    image: 7098c8eaf2fcb8a8d4cda07f79491192894929e4476e7f4ec022822fa2012f58.png
   living_painting:
     name: a painting that isn't quite still
     room: gallery_living_art
@@ -128,7 +128,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: The figure in the painting steps forward out of its frame, trailing streaks of vivid paint behind it!
-    image: 4def18bfe2cf26733416172bbafa73562b96b4038183d8e7cb548a1a25f3d787.png
+    image: 4d3891d52294a9463f8d2a02c26ab90cd5345cf045ed9a6b9a7e6e36600f64a4.png
   pixel_t_rex:
     name: a pixelated T-Rex
     room: pixel_realm
@@ -142,7 +142,7 @@ mobs:
       template: aggro_guard
       params:
         aggroMessage: SKREE-WOOM! The pixelated T-Rex stomps forward, its low-res jaws snapping in chunky 16-bit chomps!
-    image: 4378441fe5358f318e988f300ca2b908c265ae7b348e30376a7750893e0cd265.png
+    image: 2f08c5df20535cbddedb82a2714a56ca4f230810c14c5e5928faa516a50a97b9.png
   code_sprite:
     name: a rogue code sprite
     room: pixel_realm
@@ -154,7 +154,7 @@ mobs:
     respawnSeconds: 90
     behavior:
       template: wander
-    image: 2c561c308295ba344d415f361f30b936ecbde085cc87bef9f55c22abf644fc13.png
+    image: 0c333d3e60af38c4c4d8eb64cd262e4a11af34084ed96b17a1e33055798cd1d7.png
   godzilla:
     name: Godzilla, King of the Monsters
     room: godzilla_arena
@@ -172,7 +172,7 @@ mobs:
       params:
         aggroMessage: The earth shakes. Then shakes again. Then — with a roar that rattles your bones — GODZILLA rises above the
           city skyline of Wesley's imagination!
-    image: 716cca659e117dfff9b90932844ae5ffc23f823055f9a9bb328b40dec9930599.png
+    image: e9d85e92d3ca3ea179724a092e144108bec353f293134ec0a06d1c058a0793f7.png
   stuffed_dragon_guardian:
     name: the Great Stuffed Dragon Guardian
     room: stuffie_wonderland
@@ -184,7 +184,7 @@ mobs:
       params:
         aggroMessage: The enormous stuffed dragon opens its plush jaws and makes the BEST roaring noise it can manage, which is
           actually quite impressive!
-    image: 5c6ee3b4bdcd385203c92d62dbf40a933ec748400a31d00e5d447faa426bba46.png
+    image: b6e5560ca830f92480356223c423642ecbfea5f5e40a218a0590498e67ecb385.png
   chaos_toddler_spirit:
     name: a tiny chaos toddler spirit
     room: tantrum_wasteland
@@ -199,7 +199,7 @@ mobs:
       params:
         aggroMessage: The tiny spirit SCREAMS with the force of a thousand denied crackers! It begins throwing stuffed animals
           with uncanny accuracy!
-    image: 0bd3f58fe6255ab8d0ae2ee4e1a2c21d77961be35c129b45cc337574b32e90c3.png
+    image: d57f8b032741284954363a6e6060d6f4451899beceef5848eca65daea9b21f96.png
   royal_parent:
     name: a Royal Servant Parent
     room: basement_main
@@ -210,7 +210,7 @@ mobs:
     respawnSeconds: 300
     behavior:
       template: wander
-    image: 3f04127f253873e436b29cc0295b8bc026f1b32db33f2ded9390527620f94e2b.png
+    image: a98f8db120abb2b190a61acabbd6d07f60237e7bb66c1075da0df108274fd32d.png
 items:
   prehistoric_honey:
     displayName: a jar of prehistoric honey
@@ -222,7 +222,7 @@ items:
       healHp: 35
     room: prehistoric_apiary
     basePrice: 40
-    image: 010402002cd16a33c6b7c23ca81d97859749f04dd9c55e086d5a82eace569b4b.png
+    image: 404fbffb7be1116c917c7197f31c94b525dc6376fb5d1078e12f75abb642d5c9.png
   bee_stinger_sword:
     displayName: a prehistoric bee stinger sword
     keyword: stinger
@@ -233,7 +233,7 @@ items:
     armor: 1
     room: prehistoric_apiary
     basePrice: 120
-    image: eadc04c436a3598cbe815d955fc0b1b6468938a7c460619f9e6ad411121d3ad8.png
+    image: e6e4b9bdc7b88cff0d03b3d5dc4446f29160cfa7a3d5641ff6b5f33690025ce8.png
   wesleys_art_brush:
     displayName: Wesley's enchanted art brush
     keyword: brush
@@ -243,7 +243,7 @@ items:
     armor: 2
     room: wesleys_art_workshop
     basePrice: 60
-    image: f7aa12dbbec79d608926e048e917760dae768e725791625d4e1b71d6a37890ce.png
+    image: e7f8f9673b8539788e895b0d24b8ba7be9b18d01ea89b15f96af569c8523c33b.png
   monster_trading_card:
     displayName: a holographic monster trading card
     keyword: card
@@ -251,7 +251,7 @@ items:
       moves slightly when you tilt it. On the back: '5000 ATK / 4000 DEF — WESLEY THE ARTIST.'"
     room: gallery_living_art
     basePrice: 80
-    image: 823cade1636de7e8c9c72474fbce8fb25141a94446fd3bb35c7a7dcc358f0644.png
+    image: 214868889966534a69077ee9eeac9bbf147e8e34f224395c7b79d2c98bfd9abc.png
   pixel_gem:
     displayName: a chunky pixel gem
     keyword: gem
@@ -259,7 +259,7 @@ items:
       satisfying blocky way. Unmistakably from Wesley's Pixel Realm.
     room: pixel_realm
     basePrice: 45
-    image: cb1bae096e851f3147202db4a3ccc5b6cc0e32b350c069cd0458af51ae48edcc.png
+    image: 2168e45c7e7f77d735c0d85038388fe99cc2ed4baf1e169d2b5c687498ededbe.png
   aurora_rainbow_stuffie:
     displayName: a rainbow stuffed unicorn
     keyword: unicorn
@@ -270,7 +270,7 @@ items:
       healHp: 15
     room: stuffie_wonderland
     basePrice: 25
-    image: 8562f617f0640609272f0a9ab11455fb57d491256bc9e5566fb7f65dfd5a5353.png
+    image: d88e3880319c38fda7db936f78111f4abeed973c67a990df7c13c99e8aea1de0.png
   glitter_crown:
     displayName: a glitter crown
     keyword: crown
@@ -280,7 +280,7 @@ items:
     armor: 3
     room: auroras_entrance
     basePrice: 35
-    image: 72cb917ecd39e7d3302aa3206ab351c8a4a905226eba356f1ee8e78dba0de3c0.png
+    image: 3f36fc5721be804beff104fb4b8141121c7b4f19735e984e60b99346cd9d6c14.png
   jungle_orchid:
     displayName: a luminous jungle orchid
     keyword: orchid
@@ -291,7 +291,7 @@ items:
       healHp: 20
     room: jungle_deep
     basePrice: 30
-    image: 6c284cd61e1c87216ee1596a3049c6ecf48e2e50e04a2e09e555d7c2f10ff090.png
+    image: 89d300ad958f6f3741b23306392bdcfdeffc7632890a3b837970073bf967d44a.png
 shops:
   landing_supply_post:
     name: The Treehouse Landing Supply Post

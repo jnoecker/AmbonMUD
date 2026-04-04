@@ -12,20 +12,20 @@ items:
     description: A perfectly clear crystal of pure ice that doesn't melt at room temperature. The cold it radiates is
       magical in origin.
     basePrice: 20
-    image: 9856343d3efdce9085a88ae79ebef3c2a19fff04d1b3fc91ec0d1f029f5073b5.png
+    image: d63bedc33f07f3eb4dea6a08a785137e091a1177e720563b8ff40e3c47ca1912.png
   spider_silk_shard:
     displayName: a shard of ice-spider silk
     keyword: silk
     description: A rigid strand of silk frozen solid by the ice spider that spun it. Crafters use it in enchanted thread.
     basePrice: 15
-    image: 8215e4c9642047ee06ed74d1f5c925f68e2859e0dd0c6510581342c5d196547a.png
+    image: d8cd0acbb60b24baaa262c130004a38ac0af799e667d4fcde153ece54c45e443.png
   ancient_frost_ward:
     displayName: an ancient frost ward
     keyword: ward
     description: A stone tablet inscribed with ward-glyphs that radiate intense cold. Part of the old protective network
       mentioned in the Scholars' Guild texts. Hermit Jorek has been searching for this.
     basePrice: 0
-    image: 441f294560e934729089b08e25c21f362eec9c93ed9b70d1864d440948380056.png
+    image: adfac30ee7f69b4088d6846d854a3a439d59b54c3f35aa2f90c9e301dd5fdc3d.png
   frost_fang:
     displayName: the Frost Wyrm's fang
     keyword: fang
@@ -34,7 +34,7 @@ items:
     basePrice: 450
     description: A dagger-length fang of crystallised ice, sharp as steel and colder than anything natural. Torn from the
       Frost Wyrm's jaw.
-    image: f54e72a9aad4c5b3f70137091ec38457c2e447732e90a083cf0e5a2390f2bca4.png
+    image: 6e5f39cb297c69a58f353491081dffe32f04ae65d5c6b96f7dbc44607ee38604.png
   glacial_plate:
     displayName: glacial plate armour
     keyword: plate
@@ -43,13 +43,13 @@ items:
     basePrice: 470
     description: Armour forged from compressed glacial ice and bound with silver wire. It never melts and provides
       extraordinary protection.
-    image: 5214aaba5bb33440ccd29213fbb274b80523bc14378775f336c53aeb8cdb8377.png
+    image: 380a58642ffce14cb4a0fda46282042187dd005623c4fc81ff5e994a0caf677e.png
   glacial_ore:
     displayName: a chunk of glacial ore
     keyword: ore
     description: Dense, blue-veined ore found only in glacial formations. Smiths prize it for frost-resistant alloys.
     basePrice: 28
-    image: d9c11a1fe5327d31aac58bfce2abbd33321ce01fd561b25b36f15567b0513b2e.png
+    image: ca4b56e20e08a3f531cba854352e2a79a6ae0644a4395e38378573c3a2affcf7.png
 mobs:
   frost_bat:
     name: a frost bat
@@ -60,7 +60,7 @@ mobs:
     xpReward: 25
     behavior:
       template: wander_aggro
-    image: a78ae635d4310e28d6170bd4f19e2550364aa094484e30da3cdbed01f2e1fed7.png
+    image: 60caf11d6371d0d7c72f7aa7f5417841c88e16f15bf162129717ffd2acb4f660.png
   ice_spider:
     name: an ice spider
     room: frost_spider_nest
@@ -73,7 +73,7 @@ mobs:
     drops:
       - itemId: spider_silk_shard
         chance: 0.5
-    image: cc59430b385810ddc4aa7acd8824bd5855d218c104ae75d57b7bb006c41a1468.png
+    image: 268f7a12e4cd7036c564546bd05d3b0e1da42ae625143243fc1bc8b87dbae52d.png
   frost_elemental:
     name: a frost elemental
     room: glacial_chamber
@@ -86,7 +86,7 @@ mobs:
     drops:
       - itemId: frost_crystal
         chance: 0.5
-    image: 79a7f71213c7ed961c3b1c171ed5ecd7e2aba5c59422732deae55558c7624cf4.png
+    image: 992ff2788c3e5cd7d569fa50e44676ad9880d6ade12134e8a887ce04e14ece77.png
   glacial_sentinel:
     name: a glacial sentinel
     room: ancient_ice_shrine
@@ -99,7 +99,7 @@ mobs:
     drops:
       - itemId: frost_crystal
         chance: 0.8
-    image: 21fd6195a8531b0fc0ef53fc89479669f7019e33375f3cf7cfae5aca0f2ebd98.png
+    image: 75842e4a209ab2d1aea6c29d56b358ea858935f6be7b097435abb7107f51f672.png
   frost_wyrm:
     name: the Frost Wyrm
     room: frost_wyrms_den
@@ -126,7 +126,7 @@ mobs:
             next: farewell
       farewell:
         text: The temperature plummets. Frost forms on your weapon.
-    image: 1899095509e65a3fa3221e9a5c3edd8e161d4c4495517dc338acfc2bb919a4c9.png
+    image: ce932b927ff774cb90806c31fe2fa4683fde91f2d3fc94d9015f1a5e952570a5.png
   hermit_jorek:
     name: Hermit Jorek
     room: frozen_pass
@@ -171,7 +171,7 @@ mobs:
             next: farewell
       farewell:
         text: Bundle up. It gets worse the deeper you go.
-    image: 2ac8b99c0d09943f6312aebfaeeb261dd78bb274c35d89d379b26fef65864848.png
+    image: 36f06c6586321a805b90a3d4e939a7258f6ff47b072da2fbb00010e4464866a8.png
 gatheringNodes:
   glacial_crystal_vein:
     displayName: a glacial crystal vein

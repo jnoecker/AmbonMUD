@@ -63,7 +63,7 @@ mobs:
             next: farewell
       farewell:
         text: Safe roads, adventurer.
-    image: 738c3a07e2e74be011d535c565a48df3976aeba783f8306f94c30e287f8db7e4.png
+    image: f228115ee7b23f380964f161319d258c9c3e117ae1d30510feeb1327dd55b488.png
   road_sparrow:
     name: a road sparrow
     room: rolling_hills
@@ -71,7 +71,7 @@ mobs:
     level: 1
     respawnSeconds: 120
     xpReward: 5
-    image: 2935542688fd9df35f5df2f8c2c30f6e3b66a73e43fcd1eafd7bcd40a29a8f3b.png
+    image: d217e4d2674e6037aae927b70ff9e634afa24468f944df243f6d8c19bba3bedb.png
   wild_rabbit:
     name: a wild rabbit
     room: meadow_crossing

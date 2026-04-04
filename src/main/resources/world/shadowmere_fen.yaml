@@ -12,7 +12,7 @@ items:
     description: Fine black powder that seems to drink in the light around it. Left behind by shadow creatures. Useful in
       dark alchemy.
     basePrice: 18
-    image: 80bfbedecf7ae24fee0b7a4185b7013f58fc38bf9f665637b2ee2157631f0ffb.png
+    image: 4159a72f8fd808592971f6308103047ead14deed5344abb65ec0bb25d227c490.png
   fen_essence:
     displayName: a vial of fen essence
     keyword: essence
@@ -25,14 +25,14 @@ items:
     description: A small stone figure carved in the likeness of something not quite human. The surface is warm despite the
       cold fen air, and it seems to pulse faintly when held. Scholar Vex will want to see this.
     basePrice: 0
-    image: 363b27d880f05c466bbe53ad7fa66a4579c02da7300be97795ef33edb84cff81.png
+    image: 9f10ee2e562f547eff1445974d60f4f24e36e7ee69d80da869bc144932e33395.png
   shadow_thistle:
     displayName: a shadow thistle
     keyword: thistle
     description: A thorny plant that grows only in shadow-corrupted ground. Its deep purple flowers are prized by alchemists
       for warding draughts.
     basePrice: 20
-    image: b50cf32a7c24f0ebe5325e4091556e2ac2536a7427aa3470f0194a1e07a8278c.png
+    image: 264e9474653af76ceb4abfb3ccfe469322a19dc9a86d87b53e3b9c4e3003b28c.png
   heralds_blade:
     displayName: the Shadow Herald's blade
     keyword: blade
@@ -41,7 +41,7 @@ items:
     basePrice: 420
     description: A long, curved sword of blackened iron that trails wisps of shadow when swung. The Shadow Herald wielded
       this for centuries.
-    image: f2a2c13d2ce28526dc6824dfdd1ec8da99b75241816e459fd36f290c842cf2cb.png
+    image: 2be5f6e5010349ff69e3ffeb22076197b3d453f2e3236017b71da9ff60516feb.png
   fen_shroud:
     displayName: a fen shroud
     keyword: shroud
@@ -50,7 +50,7 @@ items:
     basePrice: 400
     description: A cloak woven from fen-mist and shadow, unnervingly light. It shifts and flows as though alive, offering
       protection that defies its apparent fragility.
-    image: 0b83e238f70480eac0e3657ddb8d7ed33c4cdbe7d43b62eb30fd5b603b37d032.png
+    image: 61df8eb05f4a9bc201be30a13f3f729a98709e07ec94b39a33423a0555b01311.png
 mobs:
   shadow_creep:
     name: a shadow creep
@@ -64,7 +64,7 @@ mobs:
     drops:
       - itemId: shadow_dust
         chance: 0.5
-    image: 6eff64c0fdcdae4ac86e9ddc1e55234a3216a314cacc982c1e204ef802d86b10.png
+    image: c7377c13a346e52da4f731fbe3739688835e527b42e83f08ad051c729886417c.png
   cursed_wisp:
     name: a cursed wisp
     room: wailing_pool
@@ -74,7 +74,7 @@ mobs:
     xpReward: 42
     behavior:
       template: wander_aggro
-    image: 3fc1c0cf55c512a952e11fbd878b2ef3d4597202641417b3a9db7a38958d789d.png
+    image: ba69a29600fdc846f910dd6b2df4e2c4ff712481a8d7022ce2b2ceec18756a30.png
   fen_specter:
     name: a fen specter
     room: shadow_fen_depths
@@ -84,7 +84,7 @@ mobs:
     xpReward: 50
     behavior:
       template: aggro_guard
-    image: b103ca0d8e1506b8d740da4f81bc68d78f17555d5154c0b22e16e40a2295e967.png
+    image: 45bbbae11214880ced25ca3e4cb265b76eec74d2534d77fe8b8d2cff8e496482.png
   twisted_shambler:
     name: a twisted shambler
     room: corrupted_grove
@@ -97,7 +97,7 @@ mobs:
     drops:
       - itemId: fen_essence
         chance: 0.6
-    image: a2df1dc99ef32f0411e4ee9cda8cfc1d1413ccda33bac3b848474a14841392cb.png
+    image: 031bb7bbb965c9b7fcf34226226b22cf6d0f315820f586ce11169f0d5b57c7c6.png
   shadow_herald:
     name: the Shadow Herald
     room: shadow_heralds_sanctum
@@ -142,7 +142,7 @@ mobs:
             next: farewell
       farewell:
         text: ...
-    image: d83b6dd654decdfa5ca4438b6d0f924018e0cf769108269ebf5ee8ed9021420e.png
+    image: 1e6b52448c19d05650666551737f65e77b98954b61952487af414aba5eed3c68.png
   scholar_vex:
     name: Scholar Vex
     room: scholars_camp
@@ -185,7 +185,7 @@ mobs:
             next: farewell
       farewell:
         text: Watch your step. The ground shifts in places.
-    image: 1b8c84a56f9eefd943407fa7954a974b50375e84efa922e6b018bc584b72dbe5.png
+    image: dcc47cd23f449f6c45baade0ce81146e7d0b3157231c82b92987530936901d04.png
 gatheringNodes:
   shadow_thistle_patch:
     displayName: a shadow thistle patch

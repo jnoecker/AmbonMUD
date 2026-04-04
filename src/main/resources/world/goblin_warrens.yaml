@@ -11,13 +11,13 @@ items:
     keyword: necklace
     description: A crude necklace strung with goblin teeth. Unpleasant to look at but worth a few coins to the right buyer.
     basePrice: 12
-    image: 41618fbca6e2f8e0c97425e45e2492f50d0b803305c52acbd6f9077507f20c9c.png
+    image: 761f644b7168782667dbea85767784c60e1a26ff5f2795c8ca0be4caf45bbfaf.png
   expedition_notes:
     displayName: the expedition notes
     keyword: notes
     description: A leather-bound journal of field notes from the Thornhaven scholarly expedition. Survivor Hadrik will want these.
     basePrice: 0
-    image: c9774bc9519d0c192cb6a269023e08a1e2ae38ab3502e3d59b65a6fa9a6f8ccb.png
+    image: ba9e8958f7df457d2c6cc154567fdcac04f295ae9115f677a1c02a1136942260.png
   chieftain_crown:
     displayName: Chieftain Grak's crown
     keyword: crown
@@ -25,7 +25,7 @@ items:
     armor: 5
     basePrice: 300
     description: A battered iron crown studded with mismatched gems. Grak wore it constantly and clearly considered it magnificent.
-    image: ade4a2971965958a9ff428a2e8a07fba32cd0b8c15191e4bdbfe1af7e4b3c99c.png
+    image: 91bbc8dc1f246439a0dc00cd203eaadfec45f9bd614ce5a0d91c787dbd92d037.png
   chieftain_axe:
     displayName: Chieftain Grak's axe
     keyword: axe
@@ -33,7 +33,7 @@ items:
     damage: 9
     basePrice: 350
     description: A broad-bladed battle axe notched from heavy use. Balance is poor but the weight behind the blow is not.
-    image: 0ee8e34a766cc89e6cfe7a64520f12ec25a2afa962b4f0356fd4fe4fc5129293.png
+    image: 4491e47eae2557663165198013f7611d1b4b9ee7bdbe3dce7f43699e2a429e1d.png
 mobs:
   goblin_scout:
     name: a goblin scout
@@ -54,7 +54,7 @@ mobs:
           - warrens_crossroads
           - mess_hall
           - goblin_hall
-    image: 5b48912fe71766a4ca5e7f50bee20bf2821ddbc5b406412cef993d21a656d9fe.png
+    image: e6f65bd1393825752fed12d4c6ed082cf8a084218b47d5806a71b4316c11ed99.png
   goblin_warrior:
     name: a goblin warrior
     room: goblin_hall
@@ -69,7 +69,7 @@ mobs:
     drops:
       - itemId: goblin_tooth_necklace
         chance: 0.3
-    image: e1a820a386950660c9ef17991948bab72af473ffdc96ed91ca41cba47cad094d.png
+    image: 71dd842786216e880b6e5d329dc5928e04a200fddf67a196d552e20bc8adeb57.png
   goblin_shaman:
     name: a goblin shaman
     room: shaman_quarters
@@ -82,7 +82,7 @@ mobs:
     drops:
       - itemId: goblin_tooth_necklace
         chance: 0.5
-    image: a1d3199794aefeed9fbc3a5d620ac8532c6db74316d33b6b23b0c6b9c52a6fe2.png
+    image: 98cb1db3c70140f1790159df44063da00382c1216f72f077bba6da44a6ed1765.png
   kobold_trapper:
     name: a kobold trapper
     room: kobold_den
@@ -92,7 +92,7 @@ mobs:
     xpReward: 25
     behavior:
       template: wander_aggro
-    image: 25de5b7c16cad5e2a8aeb4cb13a4239bd4028f634d05cf33234cc3b3bbe10519.png
+    image: 42aaf197b9b295c3bf5a7f3a9ee97edbb0a243fb58ce2d2d94eb3e1edce93c95.png
   dire_rat:
     name: a dire rat
     room: dire_rat_nest
@@ -102,7 +102,7 @@ mobs:
     xpReward: 20
     behavior:
       template: wander_aggro
-    image: d9ddf81a04d0835fea39dce86ab0e8314883a5ba78bc7a40b4ab290075c417f2.png
+    image: 9b6da105e07a41687a8e6d8d6e393ec4f5969bc593bc7134be79fbb6ddc9242d.png
   chieftain_grak:
     name: Chieftain Grak
     room: chieftain_throne_room
@@ -122,7 +122,7 @@ mobs:
         chance: 0.4
       - itemId: chieftain_axe
         chance: 0.35
-    image: b5b716947fc4ae36045604325e9105676306f766f568d8d3ffed8e9db701085b.png
+    image: da8dd693bdef93f276cf482db57abe82e3db7b4ff7803dcefc6cb6c0f2edb851.png
 rooms:
   mine_connection:
     title: Goblin Warrens — Mine Connection

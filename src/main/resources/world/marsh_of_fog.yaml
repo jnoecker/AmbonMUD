@@ -12,32 +12,32 @@ items:
     description: A gnarled root dug from the waterlogged soil of the marsh. Marshy, pungent, and medicinally valuable to
       those who know how to use it.
     basePrice: 12
-    image: 98619604780ddafa80a9867fd225420cb5af5c7032d0e842fca44d1e37c12692.png
+    image: e4f3b97e5b7a327b153b96eb2d0944724dbd16bdcc8bf27c48081ad97455f1db.png
   nightshade_flower:
     displayName: a nightshade flower
     keyword: nightshade
     description: A small, dark-petalled flower that only blooms deep in the marsh. Toxic in large quantities; invaluable in
       small ones.
     basePrice: 18
-    image: 287018a5b694eb78c1067c64113ab4dbc1458273fada43f29bd1e1dee5dde98c.png
+    image: ce8b7fc81f1e10c189c0de0dbd4d35dad4e847f2ff012ac832f79a0e7db4aa46.png
   muck_crystal:
     displayName: a muck crystal
     keyword: crystal
     description: A cloudy crystal precipitated from the mineral-rich bog water. Strange energy hums faintly within it.
     basePrice: 20
-    image: 79d1f173dfdfdcc17b87e817847a9c4a818dad4021b5fe4d26aeaa1dab00b828.png
+    image: fd8a9c49e43e298398404db048b3f6ab1a30c9121564dd135bcaa1d4fb24d16b.png
   swamp_slime:
     displayName: a glob of swamp slime
     keyword: slime
     description: A viscous, foul-smelling substance harvested from marsh creatures. Some alchemists will pay for it.
     basePrice: 8
-    image: fcdb35d293ad66555f30083f0d0af82bed03ff88a01bd0bd851ba77717a4c3e2.png
+    image: d0e2129b06667fa3169ac11c3626e3a62efb52f38b2ca222dde0bab5667507ed.png
   wraith_essence:
     displayName: a vial of wraith essence
     keyword: essence
     description: A sealed vial of dark mist that swirls on its own. Obtained from a marsh wraith. Alchemically significant.
     basePrice: 35
-    image: 8a0aaec8403c6d1442601f627065462df67a9b2c77318c26614bce6b192a5c4d.png
+    image: 0b16ffe39e40268831188bd4f20d58547918699acda0daa9454216fa69b90c3f.png
 gatheringNodes:
   bog_root_cluster:
     displayName: a bog root cluster
@@ -88,7 +88,7 @@ mobs:
     drops:
       - itemId: swamp_slime
         chance: 0.6
-    image: 159ea97423cf7a130a4bb6aa94c5a96e8cdec4c58851b3cfa27f9076061b45df.png
+    image: f803996cfddceffa1077d4157409f1071748e45dc984abefd4e3bdf7dc53870f.png
   will_o_wisp:
     name: a will-o'-wisp
     room: wisp_clearing
@@ -96,7 +96,7 @@ mobs:
     level: 4
     respawnSeconds: 120
     xpReward: 25
-    image: f7c2b3d8855740c8bf13ca69ffa3bbdc27678506c887c34d5680238f99d89ef6.png
+    image: 73b1e29b6e708b2acafc000d80b3651d05f668dbf98af4c3dde562b78502039f.png
   fungal_hulk:
     name: a fungal hulk
     room: fungal_dell
@@ -109,7 +109,7 @@ mobs:
     drops:
       - itemId: swamp_slime
         chance: 0.4
-    image: 46d391fa698f4e5f09e524c094050f2eacec875a591ead493b122e9c7c0034df.png
+    image: 9c7952a6d6cbef8c16e69158f31b85303471200114fc3c454e728f49ea57497f.png
   marsh_wraith:
     name: a marsh wraith
     room: wraith_grounds
@@ -120,7 +120,7 @@ mobs:
     drops:
       - itemId: wraith_essence
         chance: 0.5
-    image: 90e178efbee93acd1b95fcaa1958b22787eaeea01bbb8fa7a30ad8ca66974415.png
+    image: ffbe6c003ab106dd77806e17d0f77253291a787c341d1c28a036cd8cf13fe81b.png
   swamp_serpent:
     name: a swamp serpent
     room: serpent_waterway
@@ -130,7 +130,7 @@ mobs:
     xpReward: 28
     behavior:
       template: wander_aggro
-    image: 0409fb4373aaf9fb98e2323ef422d98d4b51eda596e187548a57fc2832157b13.png
+    image: 88d51212880133f6793d7873d974ee65c88c2adc66c17e685e420b86d04ada39.png
   hedge_witch_mossfoot:
     name: Hedge Witch Mossfoot
     room: mossfoot_hut
@@ -182,7 +182,7 @@ mobs:
             next: farewell
       farewell:
         text: Mind your step. The bog has moods.
-    image: c81b504ee2769db8958d5228c0ee33a1000b8e60039b2392e6b85880ec146766.png
+    image: 248dcd573a4f54c66d800b859eee17d3592242aa6b0ad286dd7820e234a9cadf.png
 shops:
   mossfoot_herbs:
     name: Mossfoot's Herb Trade

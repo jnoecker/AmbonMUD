@@ -3497,7 +3497,7 @@ ambonmud:
             a wall of iron and fury.
           primaryStat: STR
           threatMultiplier: 1.5
-          image: ebaab845a6a18207f86d7577fb3071ccd6ae9a7cb312c2b9a5d761ef3ba03ed9.png
+          image: 5325057101c4e000b0854fea8b9da6655272297a04d3e18b0b479d46fea868c6.jpg
         MAGE:
           displayName: Mage
           hpPerLevel: 4
@@ -3510,7 +3510,7 @@ ambonmud:
             entire groups of enemies. The path of the mage is one of relentless
             study and dangerous experimentation.
           primaryStat: INT
-          image: 8ba98003d76a0cd554ffda85fdeffe38215382a0ef993b0d185c7ecbd6c5e0f6.png
+          image: f41032e0bc1f4aaec240467d2fcdf4184191fc8bb8490a32d6bef09bf6675efa.jpg
         CLERIC:
           displayName: Cleric
           hpPerLevel: 6
@@ -3523,7 +3523,7 @@ ambonmud:
             clerics stand as both shield and sanctuary, their blessings turning
             the tide when all seems lost.
           primaryStat: WIS
-          image: b8c101fe6db2390a2204bf6318960917ae1e6b40d01ed0fe68f986af1ee8526f.png
+          image: 15dece12b449ac8e9f186810fb41b9cb219ee7552a47a7060e5eedf0b2c4338c.jpg
         ROGUE:
           displayName: Rogue
           hpPerLevel: 5
@@ -3536,7 +3536,7 @@ ambonmud:
             when a blade finds its mark between the ribs. Their guild teaches
             that the best fight is the one your enemy never sees coming.
           primaryStat: DEX
-          image: 63ecfccf76fda545693522fa5c1c207cd9b0340d7ebd5fb4c5a054962d9cb41e.png
+          image: eba3ce4241934d8403d7bf035a243a564b5a6ef3625f17d03ad2d59e29c4c1cb.jpg
         RANGER:
           displayName: Ranger
           hpPerLevel: 6
@@ -3551,19 +3551,13 @@ ambonmud:
             blade, and know that the best way to win a fight is to see the enemy
             before the enemy sees you.
           primaryStat: DEX
-          image: demo/DefaultAbility.png
-        SWARM:
-          displayName: Swarm
-          hpPerLevel: 2
-          manaPerLevel: 3
-          description: A debug class for load testing.
-          selectable: false
-          image: 73253fe294c7617953d627b6da458dfdd8ab833293164ce1247c9136b0fa9b1d.png
+          image: fe4f9f0363c75c4c7b7e6c5b886e79a1e2e034f5e0caa17b19de478d643a538e.jpg
     races:
       definitions:
         HUMAN:
           displayName: Human
           description: Versatile and adaptable.
+          image: b4c2cc2352798f7f6fb1ca8b9f2c8e2eba89d10eef76283ea09243783d630ce9.jpg
           statMods:
             STR: 1
             DEX: 0
@@ -3574,6 +3568,7 @@ ambonmud:
         ELF:
           displayName: Elf
           description: Graceful and magically attuned.
+          image: 340f053ec86097b70f4113374601356014cc589c196acca861553acd577a1c88.jpg
           statMods:
             STR: -1
             DEX: 2
@@ -3584,6 +3579,7 @@ ambonmud:
         DWARF:
           displayName: Dwarf
           description: Tough and resilient.
+          image: 18d309f09c9df1079996519dc6215d67363821d5a2f37e5346c1dcd10175a090.jpg
           statMods:
             STR: 1
             DEX: -1
@@ -3594,6 +3590,7 @@ ambonmud:
         HALFLING:
           displayName: Halfling
           description: Quick and charming.
+          image: 798005c2860c2d58f05e082beefead022d0d158ef3307f23b8ba6ac268cbba2c.jpg
           statMods:
             STR: -2
             DEX: 2
@@ -3604,6 +3601,7 @@ ambonmud:
         HALF_ORC:
           displayName: Half-Orc
           description: Fierce and resilient, with orcish blood.
+          image: 053fba8ef2d87265a7542dc3c5e4c859128bf4abb30db437ed617d0692e9c76a.jpg
           statMods:
             STR: 3
             DEX: 0
@@ -3614,6 +3612,7 @@ ambonmud:
         GNOME:
           displayName: Gnome
           description: Clever, curious, and surprisingly tenacious.
+          image: f70bc9a37fb38505dad2398476ed7f28e536e62fadd40260439054a45b51e303.jpg
           statMods:
             STR: -2
             DEX: 1

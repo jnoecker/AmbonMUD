@@ -11,37 +11,37 @@ items:
     keyword: flower
     description: A small bloom with bright petals, still fresh from the meadow. Herbalists prize these.
     basePrice: 5
-    image: 382febb4fbb7b69b4faadd4a985f40c99e1d669b31b7a1db71251b4ef9869c4d.png
+    image: 8edd680ac78e18cf4df0aecf4e46fd70c4c107b6fcde7ab4b0a0ef30e9a40cc6.png
   forest_mushroom:
     displayName: a forest mushroom
     keyword: mushroom
     description: A thick-capped mushroom found in the shaded dell. Useful in potions and cooking.
     basePrice: 8
-    image: fe1c3844cfd3b71ba500d426e9ec483fcee4846cb6ee19111d02cc6b521af0a0.png
+    image: 421eb908ced638dcf61df5b3c7c9fa6201b88254e86ed616b222916f86192746.png
   birch_bark:
     displayName: a strip of birch bark
     keyword: bark
     description: Peeled from a riverside birch. Surprisingly useful in alchemical preparations.
     basePrice: 6
-    image: bed672d95b5e0717a43313995dd1bedc8760c151ed476556599bfedc2e56d101.png
+    image: 1503c91dfe1753e09a5150868a95cf0e5c0af061ca65c0b85dbd0658841b1b75.png
   wolf_pelt:
     displayName: a wolf pelt
     keyword: pelt
     description: A thick grey-brown pelt stripped from a Thornwood wolf. Fetches a fair price at market.
     basePrice: 8
-    image: 53a1efa8b4452f7f18d837c716529d0bf72ff33419fc59d71f5ff45ea9665d5c.png
+    image: a799797c110b9fc19b31e590f741f6676412db9ca4fbbd166b9c6ec690932ceb.png
   spider_silk:
     displayName: a strand of spider silk
     keyword: silk
     description: Thick, unusually strong silk from a cave spider. Weavers and alchemists both want it.
     basePrice: 10
-    image: 8d9e7d35f918c256882dc9ca6ac468dac163b53888c77313f1f4c557cd8c0db0.png
+    image: 360b95d9d3c8c4831de4db137c96f26539d9b2446a407c99d30f8c824b3b84ae.png
   bear_hide:
     displayName: a bear hide
     keyword: hide
     description: A heavy hide from a Thornwood bear. Good leather stock if properly cured.
     basePrice: 20
-    image: 908ec177f957d64305b5be9f266c8135db20047ddc315f1d7b2db3065fd07b1d.png
+    image: 71d49c1438d0d75bc8800118ddabbfcdf8bd33fd8270cc4c259be5f341ad5f45.png
 gatheringNodes:
   wildflower_patch:
     displayName: a wildflower patch
@@ -92,7 +92,7 @@ mobs:
     drops:
       - itemId: wolf_pelt
         chance: 0.5
-    image: c563de77a209083c26706d7f0fb0a44a97bed0bc2d820bb22cd160bc0f431c95.png
+    image: 73a0d83a2a3771ea3df33c03a1b8e1f551d75b88c44e6a85bc006bcaaf6224b9.png
   territorial_hare:
     name: a territorial hare
     room: berry_thicket
@@ -100,7 +100,7 @@ mobs:
     level: 1
     respawnSeconds: 60
     xpReward: 5
-    image: f840e63888742e183d916d78ba4d31d2dc7f967f0b091c975ce2ba6e64498716.png
+    image: 5fd292de1c3ec40a801a0871e9b236a21013bf4fc1c929f2bf800c0b746f3d5e.png
   scrappy_fox:
     name: a scrappy fox
     room: forest_clearing
@@ -108,7 +108,7 @@ mobs:
     level: 2
     respawnSeconds: 120
     xpReward: 8
-    image: 244760e31f76280eb0065fd2f9c00ea21080842ad283074fef9b49e1d2f00c0f.png
+    image: 057292526ed15c299df35dd410b670d1ef2784b79385cdaee594dbb416b96ae3.png
   forest_bandit:
     name: a forest bandit
     room: bandit_camp
@@ -120,7 +120,7 @@ mobs:
     goldMax: 15
     behavior:
       template: wander_aggro
-    image: a248558b6c16439f98c8fbdb9dca887f2dee9b69115efd3dae7a922ece23fefa.png
+    image: a08abd305f9e2b944da92d10c4e9add65a94b6133eeb8fd57144834a03f198c2.png
   cave_spider:
     name: a cave spider
     room: spider_cavern
@@ -131,7 +131,7 @@ mobs:
     drops:
       - itemId: spider_silk
         chance: 0.5
-    image: 4e76e631c55a88a1088237aa9292da0251b45294c4386c45956cb840a1f133f3.png
+    image: 6749423e9c43ca4ac6004af88f60695884830db113b8c8bacc0b6d2736177a09.png
   mother_bear:
     name: a mother bear
     room: mothers_hollow
@@ -144,7 +144,7 @@ mobs:
     drops:
       - itemId: bear_hide
         chance: 0.8
-    image: b051fad12debfb3a2fbb0d9c47eb17ea24566b501204bd6279807f39d182f49f.png
+    image: 6a98b5ca4def08a899d49703d52dec6de0e77b7acd3a9b5f0b7a78b23566b138.png
   forester_lenna_forest:
     name: Forester Lenna
     room: forest_outpost
@@ -177,7 +177,7 @@ mobs:
             next: farewell
       farewell:
         text: Track true. I'll be here when you return.
-    image: 69b6b9f022fb3d1ae0f34d29eeb6e923002c8c14fa52a51629f0ad137a84a293.png
+    image: bff00cf0f02e533646c32eb10f1816df147bd971ec0f0ed2ceee919810f9f43e.png
 quests:
   bandit_problem:
     name: The Bandit Problem

@@ -12,20 +12,20 @@ items:
     description: A translucent, faintly glowing substance left behind when a restless spirit is dispersed. Cold to the touch
       and slightly sticky.
     basePrice: 15
-    image: 7318c3303721a5a10d84b6ed49811fc5883819110926ec70355c0e2c58c740e7.png
+    image: 9403737348c4fdb98882d1fff6f36e63ef9ce8437daec7d0f1872fada287018b.png
   spectral_chain:
     displayName: a spectral chain link
     keyword: chain
     description: A single link of chain that flickers between solid and translucent. Taken from an animated suit of armour.
     basePrice: 18
-    image: 95a263f4d449d9ea28ef2f8b79bde51d30ea335d5d8d2004749885c704182631.png
+    image: b03349290a48c06a4b76d98278205e8ce10d2efaa2c33bf1688e9b8580cec673.png
   lords_signet:
     displayName: Lord Ashworth's signet ring
     keyword: signet
     description: A heavy gold ring bearing the Ashworth family crest — a raven perched on a crescent moon. The ghost of Lady
       Elara will recognise this.
     basePrice: 0
-    image: 3b3acee586e14a8dc22149f605b15018da7cfc958d9e84bc4daf78defe240024.png
+    image: f3ee30799592fb3dd0f95759d37ad99834bea9517446ac52e76ad80885e67ea4.png
   ghost_blade:
     displayName: the Phantom Blade
     keyword: blade
@@ -33,7 +33,7 @@ items:
     damage: 11
     basePrice: 390
     description: A longsword that shimmers between solid steel and translucent mist. Strikes with the cold of the grave.
-    image: b45a835a723743d7dea31d174fe0d973133d2acacc739fb25fd09914082c78e3.png
+    image: b2ab1d650dde407e59c0e74081d1a160babfbb59ba57821c234e0c982d41bc87.png
   phantom_mantle:
     displayName: a phantom mantle
     keyword: mantle
@@ -42,7 +42,7 @@ items:
     basePrice: 360
     description: A cloak of shimmering grey fabric that seems to drift independent of the wind. Wearing it makes you feel
       slightly less substantial.
-    image: ca1573dc2eaf51871e7bc33066767b95158fcaac65834720fe201f226f3675dc.png
+    image: d5f20856d13318217449deb465138108fbb69e5a01765994be8423ee8c699512.png
 mobs:
   restless_spirit:
     name: a restless spirit
@@ -56,7 +56,7 @@ mobs:
     drops:
       - itemId: ectoplasm
         chance: 0.5
-    image: a978d1e9c34afbc269448602ddab0b3eaa36479ce1e5ff9bba49a23e2320e434.png
+    image: 150f71ef6b2da206ddebb299ebbcfd723505864980a67c39f0c0b7479ad41dec.png
   animated_armor:
     name: an animated suit of armour
     room: grand_staircase
@@ -69,7 +69,7 @@ mobs:
     drops:
       - itemId: spectral_chain
         chance: 0.4
-    image: bf612d504a38a3f8778efc66f9cb8d55729efe33da91ece82d527b533d69aca5.png
+    image: fd425e373d444e4f7c0a31e0c299b421ef72a3487fd7508c82e147e54d7e01e1.png
   poltergeist:
     name: a poltergeist
     room: dining_hall
@@ -79,7 +79,7 @@ mobs:
     xpReward: 40
     behavior:
       template: wander_aggro
-    image: 16329003399f9aba1ed2b62a6ceecf6cd07cf880fe3e73504729a1a0a6acf242.png
+    image: beb77ca7f8c4ae7265b74dff5dbac82bfadf82c9042514eded497d184144e751.png
   spectral_hound:
     name: a spectral hound
     room: overgrown_garden
@@ -89,7 +89,7 @@ mobs:
     xpReward: 70
     behavior:
       template: wander_aggro
-    image: 15907ad6c422ae3c8513017437bed86097d14caea601fc54e584a552a7b1c9b1.png
+    image: 909c2c2da7801e45a0d96a250bea13a468dfe1026e4329315dbeb46684d26714.png
   spectral_lord:
     name: Lord Ashworth's Shade
     room: master_bedroom
@@ -134,7 +134,7 @@ mobs:
             next: farewell
       farewell:
         text: ...
-    image: 6d78e7944f3533343d53caf66f7e172aa59a719903d4667a4bf2745bad9dfc50.png
+    image: 987f35b629fde7aee12751b2a2a271985497e6e71df8466f6e42dcb1400545f8.png
   manor_ghost:
     name: Lady Elara's Ghost
     room: cellar
@@ -177,7 +177,7 @@ mobs:
             next: farewell
       farewell:
         text: Be careful. The house remembers its master's anger.
-    image: 6deab1a85b0e36b2e7d55f67cfec4a413cdb14292991a457583398d639d2e08c.png
+    image: d5129268ae9dda476b913e8922d8505180a36a7ed85f62b58d4bbc28d3ca45b7.png
 quests:
   the_restless_dead:
     name: The Restless Dead

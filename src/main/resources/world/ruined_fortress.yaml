@@ -11,26 +11,26 @@ items:
     keyword: badge
     description: A pressed-iron badge stamped with the crossed-hammer mark of the Iron Order. Carries faction significance.
     basePrice: 15
-    image: 2071de955e35381fb6af2cb98044c8223781adb0bfe9079683a842a88008d445.png
+    image: 4ea7a29e0714fb4bca9c019939ffd0d0760b5661c116ec4c64149eb9350d5976.png
   free_swords_token:
     displayName: a Free Swords token
     keyword: token
     description: A rough-cut coin marked with a broken chain. Free Swords fighters carry these as recognition markers.
     basePrice: 12
-    image: 96fd7c869f8d024ce85da5a7fc1f068914771d5d4a0e75b53eb991e93a0b1235.png
+    image: 4ff94d1e23056a72a623c9f3d54acc688e3a53756f7295be92b6000418796469.png
   ancient_seal:
     displayName: the ancient order's seal
     keyword: seal
     description: A circular stone disc engraved with geometric patterns and a central star. Extraordinarily old. Commander
       Thane was hiding it in his vault.
     basePrice: 0
-    image: f8a37ebeb8aaf97c8dccfb94413c4f9c20b4a0a1ca0dd1aa59f2aa4e6cfa0b87.png
+    image: 9505d21ad061463e8d10143de694250da03c3de7387a2e1c5f046a1c552e9dd5.png
   vault_key:
     displayName: Commander Thane's vault key
     keyword: key
     description: A heavy iron key stripped from Commander Thane. Opens the vault in the fortress keep.
     basePrice: 0
-    image: a872400014ce76513af7e2e9eb042372371671a7774d83c2ff6d938b90ba64f3.png
+    image: 8af2a2db5d31c0fd04696d153bef1e9067469b80f035040e4da4905fe6baee25.png
   iron_order_sword:
     displayName: an Iron Order sword
     keyword: sword
@@ -38,7 +38,7 @@ items:
     damage: 10
     basePrice: 340
     description: A regulation Iron Order longsword, well-maintained and stamped with the order's mark near the hilt.
-    image: a42fd44ba05eb16e956055c2679bc3c9a1e60d7e1b407023727dafa3e9fd9dca.png
+    image: a735bf5d55379adcc25790760107a8b26ccc9d4798214d6dbac285097e7ecb58.png
   iron_order_plate:
     displayName: Iron Order plate
     keyword: plate
@@ -46,7 +46,7 @@ items:
     armor: 6
     basePrice: 380
     description: A breastplate of the Iron Order, dented but structurally sound. Offers serious protection.
-    image: eadf3e85268c3f5860db1aad0b898fb5dfe935ce91d73af4ee4ab8640f7384d7.png
+    image: 5e3fe5bb23e6669937ea382c4d8ab43fcc46d68590623f3196b85ec3c225dae5.png
 mobs:
   iron_order_guard:
     name: an Iron Order guard
@@ -69,7 +69,7 @@ mobs:
     drops:
       - itemId: iron_order_badge
         chance: 0.5
-    image: 79f175b741b0b5bb7aa21f5edf2c2fd6405835c5d85208621ae0f39fb870fd10.png
+    image: 9c3a4dac70d6154bc7949aaffe8be3797398669acae74f76bec9c9bf4f044e04.png
   free_sword_rebel:
     name: a Free Swords rebel
     room: ruined_barracks
@@ -85,7 +85,7 @@ mobs:
     drops:
       - itemId: free_swords_token
         chance: 0.5
-    image: 1a983fb2c55c0716e4ef79f2e73413c1558b9699d990b67443bef6dfa416ebac.png
+    image: 1caee3ad2558a66d7f6ad3ec7022e9203f87d832dac1ec63cd7b8ccd0b8a7f5e.png
   gargoyle:
     name: a gargoyle
     room: west_tower
@@ -95,7 +95,7 @@ mobs:
     xpReward: 75
     behavior:
       template: aggro_guard
-    image: d07ea2c5e7d6841dbcc5f95ca9acec7df4badcaffc620e0cbd443b4e3ad1847b.png
+    image: 0546d9026f8d902d24a7645b66ae07f28e275d38fe5552531a377f5440cec917.png
   iron_golem:
     name: an iron golem
     room: keep_interior
@@ -105,7 +105,7 @@ mobs:
     xpReward: 80
     behavior:
       template: aggro_guard
-    image: 0bc71d8dd8deeba0cb47492b143573dedf173c4001d7cbbdb34bbce449f14241.png
+    image: dfa2be032d0959cb781326f9ddb0a13323ec1688bc551e039f4d4476f9ef4a52.png
   commander_thane:
     name: Commander Thane
     room: commanders_hall
@@ -125,7 +125,7 @@ mobs:
         chance: 0.4
       - itemId: iron_order_plate
         chance: 0.35
-    image: ac53c1cee64f9afc64f39573e38203ba91ab8a9250919eba0f606758d108e945.png
+    image: dc776cbada4a2ead86c7824d22dd521e4bcb1a01c3f93253c26fe3abb3ff92d6.png
   rebel_contact:
     name: Rebel Contact Sera
     room: rebel_contact_post
@@ -168,7 +168,7 @@ mobs:
             next: farewell
       farewell:
         text: Move quietly. The Iron Order patrols the full courtyard.
-    image: 22b03cbc2421df6f52bb7c25548d3192544e1502f3aea5384a079e4447d97df1.png
+    image: 1d209515b6866feef1402ce73935595d27e9f0f91c1f11f0970df2cc38097952.png
 quests:
   celestial_reckoning_p1:
     name: The Celestial Reckoning — The Seal

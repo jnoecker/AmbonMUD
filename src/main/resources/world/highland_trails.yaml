@@ -11,25 +11,25 @@ items:
     keyword: herb
     description: A hardy plant that grows in rocky soil above the treeline. Valued by herbalists for its resilience.
     basePrice: 12
-    image: 7af5b4c1f5bd88435d4094e39c3278f0f84e3f0642b4b969eeacac7b4fb185e2.png
+    image: 320386ed848e0125103238daef7f0df785ad92df0fc52fcc27168cd3a22258ce.png
   iron_ore:
     displayName: a chunk of iron ore
     keyword: ore
     description: A heavy lump of raw iron ore pried from the hillside rock. Needs smelting before it is useful.
     basePrice: 15
-    image: bbae23e26ac7b5974d9fdaf434adfcd540835d91c65a73cc028161a282ea8b7b.png
+    image: 4ba6c212c7a9419a1c686f361ba700dae8c4b08356f81153608bee33bbe5bcf6.png
   troll_hide:
     displayName: a troll hide
     keyword: hide
     description: Thick, greenish hide from a cave troll. Leatherworkers prize it for its unusual durability.
     basePrice: 25
-    image: 7d5d0a2a9384cd61d6b4e590e54f5e6fb8bb61701db0357f19efbc3398629664.png
+    image: 0e71dad230805b1bafa43eb5b3e7ce3b18648c5aa3b1c0b2158695356628e3dd.png
   eagle_feather:
     displayName: a stone eagle feather
     keyword: feather
     description: A large primary feather from a stone eagle, stiff and grey-streaked. Fletchers pay well for these.
     basePrice: 15
-    image: 28d3349ad51defb8d780a75823851af2beb1589034d5afeca462f25636a295d4.png
+    image: cf0eb0333fa6cc450d673065af583c8a60650e8e8e7526431490b6f9fbcedab7.png
 gatheringNodes:
   mountain_herb_patch:
     displayName: a mountain herb patch
@@ -63,7 +63,7 @@ mobs:
     level: 2
     respawnSeconds: 120
     xpReward: 10
-    image: dead9f5e849bea109825b3f78e3cc789a00da11a79a8f52f88a3dd62e5657c2a.png
+    image: 6b7f5849a8519c8008e6660a9bd821164fffcafbecc8ff76caa43a0bec46060d.png
   highland_bandit:
     name: a highland bandit
     room: trail_crossing
@@ -75,7 +75,7 @@ mobs:
     goldMax: 20
     behavior:
       template: wander_aggro
-    image: aa217ce3df0465429fbefe9decdde27038ac659f53f32624cf783415bd87a58d.png
+    image: 65e11b098cd64a121237796606c61d9deeb7e4088a1e528ff914ab80f17d257f.png
   cave_troll:
     name: a cave troll
     room: highland_pass
@@ -86,7 +86,7 @@ mobs:
     drops:
       - itemId: troll_hide
         chance: 0.7
-    image: b6e9e05d7938b7a11d424993405ab182ca4edb26ee01c8b8a621dac9a73ad4fd.png
+    image: 881ab84e03d124a2ce8227b5d64ad4f776eeafb950e259903ba1c9f34a6bba11.png
   stone_eagle:
     name: a stone eagle
     room: summit_approach
@@ -97,7 +97,7 @@ mobs:
     drops:
       - itemId: eagle_feather
         chance: 0.6
-    image: 394fbbcd2503af9d59872b7d22bb44fced1d467890e405aef6ed8b9190540307.png
+    image: 74a14363abbbda1268da4bb2d75b77538bc736d909a137ec7a277c9f30e8caab.png
 rooms:
   trail_entrance:
     title: Highland Trailhead — Entrance

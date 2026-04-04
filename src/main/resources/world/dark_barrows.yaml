@@ -12,21 +12,25 @@ items:
     description: A fragment of ancient burial-mound stone, still faintly warm with old enchantment. Worth something to the
       right buyer.
     basePrice: 20
+    image: 82ca7ce4aa9780f1c8fe0bf40f798cd6beb9aa43a93af63e4ba9a1b207a3ac52.png
   grave_fang:
     displayName: a grave hound fang
     keyword: fang
     description: A curved fang from a grave hound, still sharp. Alchemists use them in protective concoctions.
     basePrice: 15
+    image: d5dd3786f57e59db5bacfcaa2572738b7616007efabe914643fc349c91a0a6d0.png
   spectral_essence:
     displayName: a vial of spectral essence
     keyword: essence
     description: Bottled residue of a spectral knight — faintly luminous and cold to the touch. Rare and valuable.
     basePrice: 40
+    image: fea00e27217529cde13ecfa617cee2550de4f5050ef200e97513a26f17aa5c6b.png
   banshee_wail_crystal:
     displayName: a banshee wail crystal
     keyword: crystal
     description: A crystal that still vibrates with the resonance of a banshee's last cry. Touching it raises the hairs on your arm.
     basePrice: 35
+    image: dbf3584e7684f197bd9b6531b756ce33b9aa19ba06600f5687c73cc029655cdc.png
   vaelthos_staff:
     displayName: Vaelthos's staff
     keyword: staff
@@ -34,6 +38,7 @@ items:
     damage: 10
     basePrice: 320
     description: A bone-and-iron staff wrapped in preserved skin, humming with necromantic energy. Powerful and unsettling.
+    image: 5cd0883d5992ec8d2a2001b74257fe8aab75d8ee149a022309bc4af174b83419.png
   vaelthos_grimoire:
     displayName: Vaelthos's grimoire
     keyword: grimoire
@@ -42,6 +47,7 @@ items:
     basePrice: 250
     description: A robe-weight grimoire bound to the body like armour — dark leather covered in stitched runes that provide
       surprising protection.
+    image: ecdc6b875aea910ee3a05a8672babb40b15cdba5a7497c75917159fe7f111844.png
 mobs:
   barrow_wight:
     name: a barrow wight
@@ -55,6 +61,7 @@ mobs:
     drops:
       - itemId: barrow_shard
         chance: 0.4
+    image: b65be85bac3062a2b55919762a025e93aeea0e81f019e6891836294761a487b4.png
   grave_hound:
     name: a grave hound
     room: hound_run
@@ -67,6 +74,7 @@ mobs:
     drops:
       - itemId: grave_fang
         chance: 0.5
+    image: f4367be3acb8e76cca369394eca9c2e225e52e6c39ee0619ae0bc8f87aaa78fb.png
   spectral_knight:
     name: a spectral knight
     room: knights_hall
@@ -79,6 +87,7 @@ mobs:
     drops:
       - itemId: spectral_essence
         chance: 0.5
+    image: b3a46e2206d83129fb492f36e1d80a9df57983816b1e43b0ba5b347bb339b274.png
   banshee:
     name: a banshee
     room: banshee_hollow
@@ -89,6 +98,7 @@ mobs:
     drops:
       - itemId: banshee_wail_crystal
         chance: 0.45
+    image: e7acc1c242429378e464ffb80e34137ec2ca5504714e9d9b0f803c414726f046.png
   necromancer_vaelthos:
     name: Necromancer Vaelthos
     room: vaelthos_chamber
@@ -133,6 +143,7 @@ mobs:
             next: farewell
       farewell:
         text: Do not come back.
+    image: f1671ad3097a6bd2a19ec6718c65871aaff26b51d46234e3e516f27eca4c74ca.png
 rooms:
   barrow_approach:
     title: Dark Barrows — Approach
@@ -144,6 +155,7 @@ rooms:
       w: marsh_of_fog:eastern_fen_edge
       s: marsh_of_fog:dark_barrows_path
       n: outer_mounds
+    image: 44e401df6a3f1d36907fcb8a0f6231638a6bf1012f5bf9c63b57bb2c6eceaa61.jpg
   outer_mounds:
     title: Outer Mounds
     description: "The outermost ring of the barrow field: dozens of low earthen mounds in irregular rows, their surfaces
@@ -154,6 +166,7 @@ rooms:
       e: wight_hollow
       w: hound_run
       n: barrow_gate
+    image: 9f263c011b53cebeab55a1c7e1890af2e43245bcb8f7e19d5078ef2a55789ba3.jpg
   wight_hollow:
     title: Wight Hollow
     description: A deeper section among the outer mounds where the earth has subsided into a shallow bowl. Barrow wights
@@ -161,6 +174,7 @@ rooms:
       the living immediately. The outer mounds are back to the west.
     exits:
       w: outer_mounds
+    image: e92c03b8ecff50a1244b102082a1505354bc6a611c1e9c163b8c2412ec1b4953.jpg
   hound_run:
     title: Hound Run
     description: A long, flat approach between two rows of mounds that grave hounds have made their territory. They have
@@ -169,6 +183,7 @@ rooms:
     exits:
       e: outer_mounds
       s: sunken_barrow
+    image: 380e96b5515c639967b0d927b7b1900b0161ab5c36d949f6a1e48987a4165d30.jpg
   sunken_barrow:
     title: Sunken Barrow
     description: One of the larger burial mounds has partially collapsed, leaving a hollow you can stand in. The interior
@@ -177,6 +192,7 @@ rooms:
     exits:
       n: hound_run
       e: barrow_crossroads
+    image: 4339e661714853f00211f7e93eed9445b1fe3d4ce2d430087f5ba961d3791436.jpg
   barrow_gate:
     title: Barrow Gate
     description: A stone arch of ancient construction, its surface covered in worn carvings that may once have been words of
@@ -185,6 +201,7 @@ rooms:
     exits:
       s: outer_mounds
       n: inner_barrows
+    image: 5321e64a95f64a738d7457a302e0fd85326ba8b0ae0d4f3812e82284a1ef5c88.jpg
   inner_barrows:
     title: Inner Barrows
     description: "The heart of the barrow field: older, larger mounds arranged in a deliberate pattern around a central
@@ -196,6 +213,7 @@ rooms:
       n: barrow_gate
       e: spectral_hall
       w: ritual_chamber
+    image: a01268eea8f3e303a664500d7906acfd388b9ff76ee2311c4f4fe48cfbf7d443.jpg
   spectral_hall:
     title: Spectral Hall
     description: A long, low burial chamber beneath the largest inner mound, accessed by a stone stairway. Spectral knights
@@ -206,6 +224,7 @@ rooms:
       w: inner_barrows
       e: banshee_hollow
       n: knights_hall
+    image: 62338b6573013c13e434c305789f8335308349136957bba6bec485c1da7900fe.jpg
   knights_hall:
     title: Knights' Hall
     description: A vaulted burial hall where the greatest warriors of the barrow culture were interred. Their armour still
@@ -213,6 +232,7 @@ rooms:
       length of the hall without rest. The spectral hall is back to the south.
     exits:
       s: spectral_hall
+    image: ec89daafe9d97d912143515eb86dab4b40cc9ee4fe3c8550c0642f86eed305e2.jpg
   banshee_hollow:
     title: Banshee Hollow
     description: "A rough-walled cave east of the spectral hall that no one has shaped or decorated. The sound here is
@@ -220,6 +240,7 @@ rooms:
       held just below audibility — so far. The spectral hall is back to the west."
     exits:
       w: spectral_hall
+    image: f84a54d46d74fffb3d97289bbb0718b5868f9773afa461ff926f6abb23e358bb.jpg
   ritual_chamber:
     title: Ritual Chamber
     description: A circular chamber that was clearly used for burial rites. A stone altar at the center bears fresh ash and
@@ -228,6 +249,7 @@ rooms:
     exits:
       e: inner_barrows
       n: goblin_tunnel
+    image: d304bc17bdc75dd83f18b0b029f50953ca94cdf7dce307e96fb64b71a0bc39ed.jpg
   goblin_tunnel:
     title: Goblin Tunnel
     description: A connecting passage where old stonework gives way to goblin-cut earth. Someone on the warrens side broke
@@ -237,6 +259,7 @@ rooms:
     exits:
       s: ritual_chamber
       w: goblin_warrens:secret_passage
+    image: f019570dedeb7f59d965f019dadd13ff077a556a0db8b76572600471b629f9fb.jpg
   barrow_crossroads:
     title: Barrow Crossroads
     description: A junction of several barrow-site paths. A crumbling stone marker at the center may once have provided
@@ -246,6 +269,7 @@ rooms:
       n: inner_barrows
       w: sunken_barrow
       s: vaelthos_approach
+    image: 02957fc535393096212ecfbc67d9686ac5d9645fdf54a235b82e3ece8083399a.jpg
   vaelthos_approach:
     title: Vaelthos's Approach
     description: The final passage before Vaelthos's sanctum. The stonework here is recent — he has reshaped this section
@@ -254,6 +278,7 @@ rooms:
     exits:
       n: barrow_crossroads
       s: vaelthos_chamber
+    image: 2700f4a2b695882335fdef0464db455f886c00b1ed903bfe3957c54c07368721.jpg
   vaelthos_chamber:
     title: Vaelthos's Chamber
     description: A vast natural cave that Vaelthos has converted into a necromantic laboratory. Specimen slabs, shelves of
@@ -263,4 +288,5 @@ rooms:
     exits:
       n: vaelthos_approach
       e: shadowmere_fen:barrow_passage
+    image: b21b7cd33cf6799251b708308504aec84555740bf40c56546f734edddd6b9b94.jpg
 graphical: true

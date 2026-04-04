@@ -11,38 +11,38 @@ items:
     keyword: ore
     description: Heavy raw iron ore pried from the vein. Worth smelting at the forge.
     basePrice: 15
-    image: 423028ba2ca80ca77b3be8bc405809f75d3d2cb71b895f8b89816edabbfe535e.png
+    image: 5ce4595e839782278ade96844b8a49d8d9af720b16f8f369fdc388060a6d2d81.png
   copper_ore:
     displayName: a lump of copper ore
     keyword: copper
     description: A lump of greenish-tinged copper ore. Softer than iron but valuable to crafters.
     basePrice: 12
-    image: 05e3c4a861c6d936ec6cabad47096907360df42aebfc28868ae0eda57d9de99e.png
+    image: 5ff1b30c98fd3f4ea1f453fa09725e8e8f5223268a7c0848554fd6933585be81.png
   silver_ore:
     displayName: a nugget of silver ore
     keyword: silver
     description: A rough nugget of silver ore streaked with bright veins. Sought by jewellers and alchemists alike.
     basePrice: 25
-    image: 7a581fe09cd3d6317488cc47c0b97ce7e0013489db90f7c0ce892966094e521a.png
+    image: f0d5b1a5468368d4ef2e7996cbda8d4a4c76d39fd5b5caaee143bd8024e6a964.png
   raw_gemstone:
     displayName: a raw gemstone
     keyword: gem
     description: An uncut gemstone, cloudy and rough, still glittering with latent value. A jeweller could work wonders with it.
     basePrice: 30
-    image: 9a24382704aab4c17a7661483cc7d2e515b113a156792f78965f233baea215ac.png
+    image: 1d0fd510920c49988f1e854f0b43623b9bb7ff550b38be589b4bb8e2f9480205.png
   foreman_key:
     displayName: the foreman's key
     keyword: key
     description: A heavy iron key looped with a tag reading 'VAULT'. The Mine Foreman carried this.
     basePrice: 0
-    image: a32c685682830e6808f57cfcbe21fdb8e52e88131b780fa5c89fec0261162b4e.png
+    image: 2320870281769db62129009ffea76f6f0ebbffd24fb3e35bf00ed6609749c2be.png
   expedition_supply_ledger:
     displayName: an expedition supply ledger
     keyword: ledger
     description: A water-stained ledger recording the expedition's supplies and route into the mine. Survivor Hadrik will
       recognize it.
     basePrice: 0
-    image: 86c2c842e5b159e8b904bd7f7f3583f9b53696dd51b51b7702520a944cae7cc8.png
+    image: 6515a3099236a73c227b875f834995407b6d762c8f091a70a21ed0275582683e.png
   miners_helmet:
     displayName: a miner's helmet
     keyword: helmet
@@ -50,7 +50,7 @@ items:
     armor: 2
     basePrice: 45
     description: A battered iron helmet with a rusted candleholder on the brow. Solid protection.
-    image: c1a4cc25ad9dfaf43d30795bb4046677eb6248fa303bdb2f2fb1870ec0d33db0.png
+    image: 6aad94ae051100dfea5f17ea236eaa13ff7e1b74453045791a2098f7644ef503.png
 gatheringNodes:
   iron_ore_seam:
     displayName: an iron ore seam
@@ -116,7 +116,7 @@ mobs:
     goldMax: 8
     behavior:
       template: wander_aggro
-    image: 48a7853df49ba8686ea4005c24520b5996060454f7a1ba73a5a4e09011d50970.png
+    image: 1b1c583dafcc540704410d9f701e70d7b106aede73075c2cc97ab3cf5300701b.png
   kobold_digger:
     name: a kobold digger
     room: cave_junction
@@ -126,7 +126,7 @@ mobs:
     xpReward: 18
     behavior:
       template: wander_aggro
-    image: cd170c6e2dad565d8f14e048ba3d47a503eeb676734dee3b9347ae3b2ee19214.png
+    image: 2ab49aaf723088ae8ca8060933ba0aef0f1cf6d514f1f3ca6bc0be3cefc64223.png
   giant_rat:
     name: a giant rat
     room: deeper_shaft
@@ -136,7 +136,7 @@ mobs:
     xpReward: 12
     behavior:
       template: wander_aggro
-    image: 58b57149d97efc3735d0ce139ed657eaa362b0a12bb5b25acfad487ae6a08f12.png
+    image: de770215de3ba7d878a2171510c36e8be46086afa62f7ad5dde1d7af28d506b9.png
   stone_lurker:
     name: a stone lurker
     room: flooded_passage
@@ -147,7 +147,7 @@ mobs:
     drops:
       - itemId: raw_gemstone
         chance: 0.2
-    image: b35dc0d4340043f90011563a1982dfe4ca57f947bfd26c2c7dba57da23c4a52a.png
+    image: eb8f602268b84dffcc73f968431cb2f3e5ffa2be79ebf072b6c193faa03213ae.png
   mine_foreman:
     name: Mine Foreman Droth
     room: foremans_chamber
@@ -162,7 +162,7 @@ mobs:
         chance: 1
       - itemId: miners_helmet
         chance: 0.4
-    image: 708a31555e6ed844f20d4cb15842b66f8abc1860698260b803c17a08c2cf4f9f.png
+    image: e377eaa09d5c93df7294f5b7e6a2dd070d82ade9202b4f826632c65e0d588bc2.png
   survivor_hadrik:
     name: Survivor Hadrik
     room: survivors_hollow
@@ -206,7 +206,7 @@ mobs:
             next: farewell
       farewell:
         text: Be careful. The goblins know these tunnels better than we do.
-    image: 2d8e2748490f670802bd6fcb1dbeb2de0d93b4c5252af8819345d68c6ae14a99.png
+    image: f843522fe01d577796119022175256315285dd815f5bf898227a85b2302687cd.png
 quests:
   lost_expedition:
     name: The Lost Expedition
