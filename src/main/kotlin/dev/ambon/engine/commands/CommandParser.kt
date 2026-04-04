@@ -129,6 +129,8 @@ sealed interface Command {
 
     data object Reputation : Command
 
+    data object Currencies : Command
+
     // ---- Pet commands ----
 
     data object PetStatus : Command
@@ -1337,6 +1339,7 @@ object CommandParser {
             "list", "shop" -> Command.ShopList
             "craftskills", "professions", "prof" -> Command.CraftSkills
             "reputation", "rep", "factions", "standing", "standings" -> Command.Reputation
+            "currencies", "currency", "wallet" -> Command.Currencies
             "dungeon leave", "dungeon exit" -> Command.DungeonLeave
             else -> Command.Unknown(line)
         }
