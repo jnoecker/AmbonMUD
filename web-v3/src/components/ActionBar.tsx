@@ -7,6 +7,7 @@ import {
   EquipmentIcon,
   WearingIcon,
   ChatBubbleIcon,
+  BankIcon,
   CraftingIcon,
   HousingIcon,
   MailIcon,
@@ -203,6 +204,7 @@ export function ActionBar({
     { panel: "crafting", label: "Crafting", icon: <CraftingIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "mail", label: "Mail", icon: <MailIcon className="action-bar-btn-icon" />, requiresProfile: true, badge: mailUnreadCount > 0 ? mailUnreadCount : undefined },
     { panel: "housing", label: "Housing", icon: <HousingIcon className="action-bar-btn-icon" />, requiresProfile: true },
+    { panel: "bank", label: "Bank", icon: <BankIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "help", label: "Help", icon: <HelpIcon className="action-bar-btn-icon" />, requiresProfile: false },
   ];

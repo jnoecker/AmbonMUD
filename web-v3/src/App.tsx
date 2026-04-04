@@ -20,6 +20,7 @@ import { MailPanel } from "./components/panels/MailPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
 import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
+import { BankPanel } from "./components/panels/BankPanel";
 import { CommandPalette } from "./components/CommandPalette";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
@@ -50,6 +51,7 @@ import type {
   CombatLogMessage,
   CombatTarget,
   CommandEntry,
+  CurrencyBalance,
   CraftingNode,
   CraftingRecipe,
   CraftingResult,
@@ -57,6 +59,7 @@ import type {
   DialogueState,
   EmotePreset,
   EquipmentSlotDef,
+  FactionStanding,
   FriendEntry,
   FriendNotification,
   GainEvent,
@@ -96,8 +99,13 @@ import type {
   UiFeedback,
   Vitals,
   WhoPlayer,
+  WorldEvent,
+  WorldTime,
+  WorldWeather,
   ZoneInstances,
   LeaderboardData,
+  PetState,
+  BankState,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
@@ -245,9 +253,16 @@ function App() {
   const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]); // GMCP Auction.List data for future panel
   void auctionListings; // suppress unused-var lint until auction panel is built
   const [leaderboard, setLeaderboard] = useState<Record<string, LeaderboardData>>({});
+  const [factions, setFactions] = useState<FactionStanding[]>([]);
+  const [currencies, setCurrencies] = useState<CurrencyBalance[]>([]);
   const [trainer, setTrainer] = useState<TrainerData | null>(null);
   const [unlockedClasses, setUnlockedClasses] = useState<string[]>([]);
   void unlockedClasses; // stored for future character sheet multi-class display
+  const [worldTime, setWorldTime] = useState<WorldTime | null>(null);
+  const [worldWeather, setWorldWeather] = useState<WorldWeather | null>(null);
+  const [worldEvents, setWorldEvents] = useState<WorldEvent[]>([]);
+  const [petState, setPetState] = useState<PetState | null>(null);
+  const [bankState, setBankState] = useState<BankState | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -401,6 +416,8 @@ function App() {
     setHousing(null);
     setTradeState(null);
     setAuctionListings([]);
+    setPetState(null);
+    setBankState(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
@@ -494,6 +511,7 @@ function App() {
           setTradeState,
           setAuctionListings,
           setLeaderboard,
+          setCurrencies,
           setTrainer: (value) => {
             setTrainer(value);
             // Auto-open trainer popout when trainer data arrives
@@ -502,6 +520,12 @@ function App() {
             }
           },
           setUnlockedClasses,
+          setWorldTime,
+          setWorldWeather,
+          setWorldEvents,
+          setPetState,
+          setFactions,
+          setBankState,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -844,6 +868,8 @@ function App() {
         ? "Quests"
       : activePopout === "housing"
         ? "Housing"
+      : activePopout === "bank"
+        ? "Bank"
         : "";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -1148,6 +1174,12 @@ function App() {
             groupInfo={groupInfo}
             activeTitle={whoPlayers.find((p) => p.name === character.name)?.title ?? null}
             spriteList={spriteList}
+            currencies={currencies}
+            factions={factions}
+            petState={petState}
+            worldTime={worldTime}
+            worldWeather={worldWeather}
+            worldEvents={worldEvents}
             onDismissQuestNotification={(id) => {
               setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
             }}
@@ -1357,6 +1389,13 @@ function App() {
         {activePopout === "leaderboard" && (
           <LeaderboardPanel
             leaderboard={leaderboard}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+          />
+        )}
+
+        {activePopout === "bank" && (
+          <BankPanel
+            bankState={bankState}
             onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}

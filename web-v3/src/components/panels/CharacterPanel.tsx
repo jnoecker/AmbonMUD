@@ -1,8 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
-import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
+import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, FactionStanding, GroupInfo, GuildInfo, PetState, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
+import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
-type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score";
+type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions";
+
+function factionTierClass(tier: string): "positive" | "neutral" | "negative" {
+  switch (tier) {
+    case "Friendly":
+    case "Honored":
+    case "Revered":
+      return "positive";
+    case "Unfriendly":
+    case "Hostile":
+    case "Hated":
+      return "negative";
+    default:
+      return "neutral";
+  }
+}
 
 interface CharacterPanelProps {
   connected: boolean;
@@ -27,6 +42,12 @@ interface CharacterPanelProps {
   groupInfo: GroupInfo;
   activeTitle: string | null;
   spriteList: SpriteList;
+  currencies: CurrencyBalance[];
+  factions: FactionStanding[];
+  petState: PetState | null;
+  worldTime: WorldTime | null;
+  worldWeather: WorldWeather | null;
+  worldEvents: WorldEvent[];
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -58,6 +79,12 @@ export function CharacterPanel({
   groupInfo,
   activeTitle,
   spriteList,
+  currencies,
+  factions,
+  petState,
+  worldTime,
+  worldWeather,
+  worldEvents,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -322,6 +349,19 @@ export function CharacterPanel({
             >
               <ScoreTabIcon className="detail-tab-icon" />
             </button>
+            {factions.length > 0 && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeDetailTab === "factions"}
+                aria-label="Factions"
+                title="Factions"
+                className={`character-detail-tab ${activeDetailTab === "factions" ? "character-detail-tab-active" : ""}`}
+                onClick={() => setActiveDetailTab("factions")}
+              >
+                <FactionsTabIcon className="detail-tab-icon" />
+              </button>
+            )}
           </div>
 
           <div className="character-detail-body">
@@ -633,12 +673,126 @@ export function CharacterPanel({
                         </div>
                       )}
                     </div>
+                    {currencies.length > 0 && (
+                      <div className="score-currencies">
+                        <p className="score-currencies-label">Currencies</p>
+                        <dl className="score-currencies-grid">
+                          {currencies.map((c) => (
+                            <div key={c.id}>
+                              <dt title={c.abbreviation}>{c.name}</dt>
+                              <dd>{c.balance.toLocaleString()}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    )}
                   </div>
+                )}
+              </section>
+            )}
+
+            {activeDetailTab === "factions" && (
+              <section
+                key="factions"
+                className="character-detail-panel character-detail-panel-flip character-factions"
+                role="tabpanel"
+                aria-label="Factions"
+              >
+                {factions.length === 0 ? (
+                  <p className="empty-note">No faction standings yet.</p>
+                ) : (
+                  <ul className="factions-list">
+                    {factions.map((f) => (
+                      <li key={f.id} className="faction-item">
+                        <div className="faction-header">
+                          <span className="faction-name">{f.name}</span>
+                          <span className={`faction-tier faction-tier-${factionTierClass(f.tier)}`}>{f.tier}</span>
+                        </div>
+                        <div className="faction-rep-row">
+                          <div className="meter-track faction-rep-track">
+                            <span
+                              className={`meter-fill faction-rep-fill faction-rep-fill-${factionTierClass(f.tier)}`}
+                              style={{ width: `${Math.min(100, Math.max(0, ((f.reputation + 1000) / 2000) * 100))}%` }}
+                            />
+                          </div>
+                          <span className="faction-rep-value">{f.reputation}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </section>
             )}
           </div>
         </article>
+
+        {hasCharacterProfile && petState?.active && (
+          <article className="subpanel character-pet-subpanel">
+            <div className="pet-header-row">
+              {petState.image && (
+                <img
+                  src={petState.image}
+                  alt={petState.name ?? "Pet"}
+                  className="pet-thumbnail"
+                />
+              )}
+              <div className="pet-header-text">
+                <p className="pet-name">{petState.name ?? "Pet"}</p>
+                {petState.hp != null && petState.maxHp != null && (
+                  <Bar
+                    label="HP"
+                    tone="hp"
+                    value={petState.hp}
+                    max={Math.max(1, petState.maxHp)}
+                    text={`${petState.hp} / ${petState.maxHp}`}
+                  />
+                )}
+              </div>
+            </div>
+            <dl className="stat-grid pet-stat-grid">
+              {petState.minDamage != null && petState.maxDamage != null && (
+                <div><dt>Damage</dt><dd>{petState.minDamage}&ndash;{petState.maxDamage}</dd></div>
+              )}
+              {petState.armor != null && (
+                <div><dt>Armor</dt><dd>{petState.armor}</dd></div>
+              )}
+            </dl>
+            <div className="pet-actions">
+              <button
+                type="button"
+                className="soft-button pet-dismiss-btn"
+                onClick={() => onCommand("pet dismiss")}
+              >
+                Dismiss
+              </button>
+            </div>
+          </article>
+        )}
+
+        {hasCharacterProfile && (worldTime || worldWeather || worldEvents.length > 0) && (
+          <article className="subpanel world-atmosphere-subpanel">
+            <p className="world-atmosphere-heading">World</p>
+            {worldTime && (
+              <div className="world-atmosphere-row">
+                <span className="world-atmosphere-icon" aria-hidden="true">{periodIcon(worldTime.period)}</span>
+                <span className="world-atmosphere-label">{periodLabel(worldTime.period)}</span>
+                <span className="world-atmosphere-value">{String(worldTime.hour).padStart(2, "0")}:{String(worldTime.minute).padStart(2, "0")}</span>
+              </div>
+            )}
+            {worldWeather && worldWeather.weather !== "CLEAR" && (
+              <div className="world-atmosphere-row" title={worldWeather.description}>
+                <span className="world-atmosphere-icon" aria-hidden="true">{weatherIcon(worldWeather.weather)}</span>
+                <span className="world-atmosphere-label">{weatherLabel(worldWeather.weather)}</span>
+              </div>
+            )}
+            {worldEvents.length > 0 && worldEvents.map((evt) => (
+              <div key={evt.id} className="world-atmosphere-row world-atmosphere-event" title={evt.description}>
+                <span className="world-atmosphere-icon world-atmosphere-event-icon" aria-hidden="true">&#x2726;</span>
+                <span className="world-atmosphere-label">{evt.name}</span>
+              </div>
+            ))}
+          </article>
+        )}
 
         {hasCharacterProfile && (
           <div className="character-logout-row">
@@ -650,4 +804,47 @@ export function CharacterPanel({
       </div>
     </section>
   );
+}
+
+function periodIcon(period: string): string {
+  switch (period) {
+    case "DAWN": return "☼";
+    case "DAY": return "☀";
+    case "DUSK": return "☽";
+    case "NIGHT": return "☾";
+    default: return "☀";
+  }
+}
+
+function periodLabel(period: string): string {
+  switch (period) {
+    case "DAWN": return "Dawn";
+    case "DAY": return "Day";
+    case "DUSK": return "Dusk";
+    case "NIGHT": return "Night";
+    default: return period;
+  }
+}
+
+function weatherIcon(weather: string): string {
+  switch (weather) {
+    case "RAIN": return "☂";
+    case "STORM": return "⚡";
+    case "FOG": return "☁";
+    case "SNOW": return "❄";
+    case "WIND": return "☴";
+    default: return "";
+  }
+}
+
+function weatherLabel(weather: string): string {
+  switch (weather) {
+    case "CLEAR": return "Clear";
+    case "RAIN": return "Rain";
+    case "STORM": return "Storm";
+    case "FOG": return "Fog";
+    case "SNOW": return "Snow";
+    case "WIND": return "Wind";
+    default: return weather;
+  }
 }
