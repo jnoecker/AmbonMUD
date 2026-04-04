@@ -37,6 +37,8 @@ class UiHandler(
         router.on<Command.Quit> { sid, _ -> outbound.send(OutboundEvent.Close(sid, "Goodbye!")) }
         router.on<Command.AnsiOn> { sid, _ -> handleAnsiOn(sid) }
         router.on<Command.AnsiOff> { sid, _ -> handleAnsiOff(sid) }
+        router.on<Command.ScreenReaderOn> { sid, _ -> handleScreenReaderToggle(sid, true) }
+        router.on<Command.ScreenReaderOff> { sid, _ -> handleScreenReaderToggle(sid, false) }
         router.on<Command.Clear> { sid, _ ->
             outbound.send(OutboundEvent.ClearScreen(sid))
         }
@@ -63,6 +65,16 @@ class UiHandler(
         outbound.send(OutboundEvent.SetAnsi(sessionId, false))
         players.setAnsiEnabled(sessionId, false)
         outbound.send(OutboundEvent.SendInfo(sessionId, "ANSI disabled"))
+    }
+
+    private suspend fun handleScreenReaderToggle(sessionId: SessionId, requestedOn: Boolean) {
+        val me = players.get(sessionId) ?: return
+        // "screenreader" (bare) maps to ScreenReaderOn; if already on, toggle off
+        val enabled = if (requestedOn) !me.screenReaderEnabled else false
+        outbound.send(OutboundEvent.SetScreenReader(sessionId, enabled))
+        players.setScreenReaderEnabled(sessionId, enabled)
+        val status = if (enabled) "enabled" else "disabled"
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Screen reader mode $status."))
     }
 
     private suspend fun handlePhase(

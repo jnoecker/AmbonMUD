@@ -490,6 +490,46 @@ class CommandParserTest {
         assertEquals(Command.Guild.Decline, CommandParser.parse("guild reject"))
     }
 
+    // ---- Guild Hall ----
+
+    @Test
+    fun `parses guild hall`() {
+        assertEquals(Command.Guild.Hall, CommandParser.parse("guild hall"))
+    }
+
+    @Test
+    fun `parses guild hall buy`() {
+        assertEquals(Command.Guild.HallBuy, CommandParser.parse("guild hall buy"))
+        assertEquals(Command.Guild.HallBuy, CommandParser.parse("guild hall purchase"))
+    }
+
+    @Test
+    fun `parses guild hall expand with template`() {
+        assertEquals(Command.Guild.HallExpand("vault"), CommandParser.parse("guild hall expand vault"))
+        assertEquals(Command.Guild.HallExpand("training_room"), CommandParser.parse("guild hall expand training_room"))
+    }
+
+    @Test
+    fun `guild hall expand without template is Invalid`() {
+        assertTrue(CommandParser.parse("guild hall expand") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses guild hall enter`() {
+        assertEquals(Command.Guild.HallEnter, CommandParser.parse("guild hall enter"))
+    }
+
+    @Test
+    fun `parses guild hall leave`() {
+        assertEquals(Command.Guild.HallLeave, CommandParser.parse("guild hall leave"))
+        assertEquals(Command.Guild.HallLeave, CommandParser.parse("guild hall exit"))
+    }
+
+    @Test
+    fun `guild hall with unknown subcommand returns Hall`() {
+        assertEquals(Command.Guild.Hall, CommandParser.parse("guild hall unknown"))
+    }
+
     // ---- Crafting & Gathering ----
 
     @Test
@@ -529,6 +569,15 @@ class CommandParserTest {
         assertEquals(Command.CraftSkills, CommandParser.parse("craftskills"))
         assertEquals(Command.CraftSkills, CommandParser.parse("professions"))
         assertEquals(Command.CraftSkills, CommandParser.parse("prof"))
+    }
+
+    // -------- currencies command --------
+
+    @Test
+    fun `parses currencies command aliases`() {
+        assertEquals(Command.Currencies, CommandParser.parse("currencies"))
+        assertEquals(Command.Currencies, CommandParser.parse("currency"))
+        assertEquals(Command.Currencies, CommandParser.parse("wallet"))
     }
 
     // -------- friend commands --------
@@ -716,6 +765,48 @@ class CommandParserTest {
         assertEquals(Command.AuctionSell("sword", CommandParser.MAX_AUCTION_PRICE), result)
     }
 
+    // ---- Lottery / gambling command parsing ----
+
+    @Test
+    fun `lottery parses as LotteryInfo`() {
+        assertEquals(Command.LotteryInfo, CommandParser.parse("lottery"))
+        assertEquals(Command.LotteryInfo, CommandParser.parse("lottery info"))
+        assertEquals(Command.LotteryInfo, CommandParser.parse("lottery status"))
+    }
+
+    @Test
+    fun `lottery buy parses count`() {
+        assertEquals(Command.LotteryBuy(1), CommandParser.parse("lottery buy"))
+        assertEquals(Command.LotteryBuy(3), CommandParser.parse("lottery buy 3"))
+        assertEquals(Command.LotteryBuy(10), CommandParser.parse("lottery buy 10"))
+    }
+
+    @Test
+    fun `lottery buy rejects invalid count`() {
+        assertTrue(CommandParser.parse("lottery buy 0") is Command.Invalid)
+        assertTrue(CommandParser.parse("lottery buy -1") is Command.Invalid)
+        assertTrue(CommandParser.parse("lottery buy abc") is Command.Invalid)
+    }
+
+    @Test
+    fun `lottery rejects unknown subcommand`() {
+        assertTrue(CommandParser.parse("lottery foo") is Command.Invalid)
+    }
+
+    @Test
+    fun `gamble parses amount`() {
+        assertEquals(Command.Gamble(100), CommandParser.parse("gamble 100"))
+        assertEquals(Command.Gamble(50), CommandParser.parse("dice 50"))
+    }
+
+    @Test
+    fun `gamble rejects missing or invalid amount`() {
+        assertTrue(CommandParser.parse("gamble") is Command.Invalid)
+        assertTrue(CommandParser.parse("gamble abc") is Command.Invalid)
+        assertTrue(CommandParser.parse("gamble 0") is Command.Invalid)
+        assertTrue(CommandParser.parse("gamble -5") is Command.Invalid)
+    }
+
     @Test
     fun `petition parses keyword`() {
         assertEquals(Command.Petition("peanut"), CommandParser.parse("petition peanut"))
@@ -789,5 +880,50 @@ class CommandParserTest {
     @Test
     fun `quest request info parses to QuestAutoInfo`() {
         assertEquals(Command.QuestAutoInfo, CommandParser.parse("quest request info"))
+    }
+
+    // ── Global quest commands ───────────────────────────────────────────
+
+    @Test
+    fun `gquest parses to GlobalQuestInfo`() {
+        assertEquals(Command.GlobalQuestInfo, CommandParser.parse("gquest"))
+    }
+
+    @Test
+    fun `gq parses to GlobalQuestInfo`() {
+        assertEquals(Command.GlobalQuestInfo, CommandParser.parse("gq"))
+    }
+
+    @Test
+    fun `global parses to GlobalQuestInfo`() {
+        assertEquals(Command.GlobalQuestInfo, CommandParser.parse("global"))
+    }
+
+    // ---- Describe ----
+
+    @Test
+    fun `describe with text parses to Describe`() {
+        assertEquals(Command.Describe("A tall elf."), CommandParser.parse("describe A tall elf."))
+    }
+
+    @Test
+    fun `describe clear parses to DescribeClear`() {
+        assertEquals(Command.DescribeClear, CommandParser.parse("describe clear"))
+        assertEquals(Command.DescribeClear, CommandParser.parse("describe CLEAR"))
+    }
+
+    @Test
+    fun `describe check with player name parses to DescribeCheck`() {
+        assertEquals(Command.DescribeCheck("Alice"), CommandParser.parse("describe check Alice"))
+    }
+
+    @Test
+    fun `describe without text is Invalid`() {
+        assertTrue(CommandParser.parse("describe") is Command.Invalid)
+    }
+
+    @Test
+    fun `describe check without player name is Invalid`() {
+        assertTrue(CommandParser.parse("describe check") is Command.Invalid)
     }
 }
