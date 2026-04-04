@@ -793,6 +793,20 @@ ambonmud:
     economy:
       buyMultiplier: 1.0
       sellMultiplier: 0.5
+    lottery:
+      enabled: true
+      ticketCost: 100
+      drawingIntervalMs: 3600000
+      jackpotSeedGold: 500
+      jackpotPercentFromTickets: 80
+      maxTicketsPerPlayer: 10
+    gambling:
+      enabled: true
+      diceMinBet: 10
+      diceMaxBet: 10000
+      diceWinMultiplier: 2.0
+      diceWinChance: 0.45
+      cooldownMs: 5000
     group:
       maxSize: 5
       inviteTimeoutMs: 60000

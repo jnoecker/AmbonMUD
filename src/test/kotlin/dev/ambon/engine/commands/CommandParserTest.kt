@@ -716,6 +716,48 @@ class CommandParserTest {
         assertEquals(Command.AuctionSell("sword", CommandParser.MAX_AUCTION_PRICE), result)
     }
 
+    // ---- Lottery / gambling command parsing ----
+
+    @Test
+    fun `lottery parses as LotteryInfo`() {
+        assertEquals(Command.LotteryInfo, CommandParser.parse("lottery"))
+        assertEquals(Command.LotteryInfo, CommandParser.parse("lottery info"))
+        assertEquals(Command.LotteryInfo, CommandParser.parse("lottery status"))
+    }
+
+    @Test
+    fun `lottery buy parses count`() {
+        assertEquals(Command.LotteryBuy(1), CommandParser.parse("lottery buy"))
+        assertEquals(Command.LotteryBuy(3), CommandParser.parse("lottery buy 3"))
+        assertEquals(Command.LotteryBuy(10), CommandParser.parse("lottery buy 10"))
+    }
+
+    @Test
+    fun `lottery buy rejects invalid count`() {
+        assertTrue(CommandParser.parse("lottery buy 0") is Command.Invalid)
+        assertTrue(CommandParser.parse("lottery buy -1") is Command.Invalid)
+        assertTrue(CommandParser.parse("lottery buy abc") is Command.Invalid)
+    }
+
+    @Test
+    fun `lottery rejects unknown subcommand`() {
+        assertTrue(CommandParser.parse("lottery foo") is Command.Invalid)
+    }
+
+    @Test
+    fun `gamble parses amount`() {
+        assertEquals(Command.Gamble(100), CommandParser.parse("gamble 100"))
+        assertEquals(Command.Gamble(50), CommandParser.parse("dice 50"))
+    }
+
+    @Test
+    fun `gamble rejects missing or invalid amount`() {
+        assertTrue(CommandParser.parse("gamble") is Command.Invalid)
+        assertTrue(CommandParser.parse("gamble abc") is Command.Invalid)
+        assertTrue(CommandParser.parse("gamble 0") is Command.Invalid)
+        assertTrue(CommandParser.parse("gamble -5") is Command.Invalid)
+    }
+
     @Test
     fun `petition parses keyword`() {
         assertEquals(Command.Petition("peanut"), CommandParser.parse("petition peanut"))

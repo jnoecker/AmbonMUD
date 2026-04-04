@@ -40,6 +40,9 @@ class GmcpWebContractTest {
             // Server emits this for the sprite selection system (#706);
             // web handler to be added when the sprite picker panel is built.
             "Char.Sprites",
+            // Lottery.Info: web client lottery panel not yet implemented.
+            // Server emits jackpot/ticket data for the lottery system (#905).
+            "Lottery.Info",
         )
 
         /**
