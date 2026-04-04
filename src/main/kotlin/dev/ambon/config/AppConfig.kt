@@ -133,6 +133,8 @@ data class AppConfig(
         validateEngineWeather()
         validateEngineEnchanting()
         validateEngineFactions()
+        validateEngineLottery()
+        validateEngineGambling()
     }
 
     private fun validateEngineMob() {
@@ -352,6 +354,28 @@ data class AppConfig(
                 }
             }
         }
+    }
+
+    private fun validateEngineLottery() {
+        if (!engine.lottery.enabled) return
+        require(engine.lottery.ticketCost > 0) { "ambonMUD.engine.lottery.ticketCost must be > 0" }
+        require(engine.lottery.drawingIntervalMs > 0) { "ambonMUD.engine.lottery.drawingIntervalMs must be > 0" }
+        require(engine.lottery.jackpotSeedGold >= 0) { "ambonMUD.engine.lottery.jackpotSeedGold must be >= 0" }
+        require(engine.lottery.jackpotPercentFromTickets in 0..100) {
+            "ambonMUD.engine.lottery.jackpotPercentFromTickets must be in 0..100"
+        }
+        require(engine.lottery.maxTicketsPerPlayer > 0) { "ambonMUD.engine.lottery.maxTicketsPerPlayer must be > 0" }
+    }
+
+    private fun validateEngineGambling() {
+        if (!engine.gambling.enabled) return
+        require(engine.gambling.diceMinBet > 0) { "ambonMUD.engine.gambling.diceMinBet must be > 0" }
+        require(engine.gambling.diceMaxBet >= engine.gambling.diceMinBet) {
+            "ambonMUD.engine.gambling.diceMaxBet must be >= diceMinBet"
+        }
+        require(engine.gambling.diceWinMultiplier > 0.0) { "ambonMUD.engine.gambling.diceWinMultiplier must be > 0" }
+        require(engine.gambling.diceWinChance in 0.0..1.0) { "ambonMUD.engine.gambling.diceWinChance must be in 0.0..1.0" }
+        require(engine.gambling.cooldownMs >= 0) { "ambonMUD.engine.gambling.cooldownMs must be >= 0" }
     }
 
     private fun validateProgression() {
@@ -638,6 +662,27 @@ data class LoginConfig(
 data class EconomyConfig(
     val buyMultiplier: Double = 1.0,
     val sellMultiplier: Double = 0.5,
+)
+
+data class LotteryConfig(
+    val enabled: Boolean = true,
+    val ticketCost: Long = 100L,
+    val drawingIntervalMs: Long = 3_600_000L,
+    val jackpotSeedGold: Long = 500L,
+    /** Percentage of ticket sales added to the jackpot (0–100). */
+    val jackpotPercentFromTickets: Int = 80,
+    val maxTicketsPerPlayer: Int = 10,
+)
+
+data class GamblingConfig(
+    val enabled: Boolean = true,
+    val diceMinBet: Long = 10L,
+    val diceMaxBet: Long = 10_000L,
+    val diceWinMultiplier: Double = 2.0,
+    /** Probability of winning a dice roll (0.0–1.0). */
+    val diceWinChance: Double = 0.45,
+    /** Cooldown between gamble attempts in milliseconds. */
+    val cooldownMs: Long = 5_000L,
 )
 
 data class CraftingConfig(
@@ -1142,6 +1187,8 @@ data class EngineConfig(
     val skillPoints: SkillPointsConfig = SkillPointsConfig(),
     val multiclass: MulticlassConfig = MulticlassConfig(),
     val prestige: PrestigeConfig = PrestigeConfig(),
+    val lottery: LotteryConfig = LotteryConfig(),
+    val gambling: GamblingConfig = GamblingConfig(),
 )
 
 data class NavigationConfig(
@@ -1321,6 +1368,8 @@ data class CommandsConfig(
             "sprite" to CommandMetadata("sprite list | set <id> | default", "Manage your character sprite", "progression"),
             "friend" to CommandMetadata("friend list | add <player> | remove <player>", "Manage your friends list", "social"),
             "mail" to CommandMetadata("mail list | read <n> | send <player> | delete <n>", "Manage mail", "social"),
+            "lottery" to CommandMetadata("lottery [info] | lottery buy [count]", "View or buy lottery tickets", "social"),
+            "gamble" to CommandMetadata("gamble/dice <amount>", "Roll the dice at a tavern", "social"),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),
             "colors" to CommandMetadata("colors", "Preview ANSI color palette", "utility"),
             "clear" to CommandMetadata("clear", "Clear the terminal", "utility"),
