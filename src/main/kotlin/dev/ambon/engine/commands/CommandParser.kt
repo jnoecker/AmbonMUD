@@ -441,6 +441,9 @@ sealed interface Command {
 
         /** `train unlock` — pay gold to unlock the class taught by this trainer. */
         data object Unlock : Train
+
+        /** `train reset` — pay gold to reset all learned abilities and refund skill points. */
+        data object Reset : Train
     }
 
     // ---- Leaderboard commands ----
@@ -500,6 +503,19 @@ sealed interface Command {
     /** Read a sign. */
     data class ReadSign(
         val keyword: String,
+    ) : Command
+
+    /** `describe <text>` — set your custom character description. */
+    data class Describe(
+        val text: String,
+    ) : Command
+
+    /** `describe clear` — remove your custom character description. */
+    data object DescribeClear : Command
+
+    /** `describe check <player>` — staff command to view another player's description. */
+    data class DescribeCheck(
+        val targetName: String,
     ) : Command
 
     data class Unknown(
@@ -1162,6 +1178,21 @@ object CommandParser {
             }
         }?.let { return it }
 
+        // describe clear / describe check <player> / describe <text>
+        matchPrefix(line, listOf("describe")) { rest ->
+            val trimmed = rest.trim()
+            when {
+                trimmed.isEmpty() -> Command.Invalid(line, "describe <text>  or  describe clear")
+                trimmed.equals("clear", ignoreCase = true) -> Command.DescribeClear
+                trimmed.equals("check", ignoreCase = true) -> Command.Invalid(line, "describe check <player>")
+                trimmed.startsWith("check ", ignoreCase = true) -> {
+                    val name = trimmed.removePrefix("check").trim()
+                    if (name.isEmpty()) Command.Invalid(line, "describe check <player>") else Command.DescribeCheck(name)
+                }
+                else -> Command.Describe(trimmed)
+            }
+        }?.let { return it }
+
         // gender <option>
         requiredArg(line, listOf("gender"), "gender <option>", { Command.SetGender(it) })?.let { return it }
 
@@ -1194,6 +1225,7 @@ object CommandParser {
                     if (kw.isEmpty()) Command.Invalid(line, "train learn <ability>") else Command.Train.Learn(kw)
                 }
                 "unlock" -> Command.Train.Unlock
+                "reset", "respec" -> Command.Train.Reset
                 else -> Command.Train.Learn(rest.trim())
             }
         }?.let { return it }

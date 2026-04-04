@@ -1109,6 +1109,8 @@ class GameEngine(
                 trainerRegistry = trainerRegistry,
                 skillPointsConfig = engineConfig.skillPoints,
                 multiclassConfig = engineConfig.multiclass,
+                respecConfig = engineConfig.respec,
+                clock = clock,
                 markVitalsDirty = ::markVitalsDirty,
                 prestigeSkillPointBonus = { rank -> prestigeSystem.accumulatedSkillPointBonus(rank) },
             ),

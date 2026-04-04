@@ -79,6 +79,7 @@ object PlayersTable : Table("players") {
     val pvpKills = integer("pvp_kills").default(0)
     val pvpDeaths = integer("pvp_deaths").default(0)
     val screenReaderEnabled = bool("screen_reader_enabled").default(false)
+    val description = text("description").default("")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -132,6 +133,7 @@ object PlayersTable : Table("players") {
             pvpKills = row[pvpKills],
             pvpDeaths = row[pvpDeaths],
             screenReaderEnabled = row[screenReaderEnabled],
+            description = row[description],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -184,5 +186,6 @@ object PlayersTable : Table("players") {
         statement[pvpKills] = record.pvpKills
         statement[pvpDeaths] = record.pvpDeaths
         statement[screenReaderEnabled] = record.screenReaderEnabled
+        statement[description] = record.description
     }
 }

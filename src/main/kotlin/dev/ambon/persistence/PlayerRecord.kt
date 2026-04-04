@@ -84,6 +84,8 @@ data class PlayerRecord(
     val pvpDeaths: Int = 0,
     /** Whether screen-reader accessibility mode is enabled. */
     val screenReaderEnabled: Boolean = false,
+    /** Player-written custom description visible when others look at them. */
+    val description: String = "",
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

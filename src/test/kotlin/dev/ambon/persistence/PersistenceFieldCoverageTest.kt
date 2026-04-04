@@ -131,6 +131,7 @@ class PersistenceFieldCoverageTest {
                 pvpKills = 12,
                 pvpDeaths = 3,
                 screenReaderEnabled = true,
+                description = "A tall warrior with a scar across the left cheek.",
             )
 
         @BeforeAll
