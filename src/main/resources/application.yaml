@@ -3867,6 +3867,13 @@ ambonmud:
           enemies: [shadowmere_cult]
       questRewards: {}
 
+    bank:
+      maxItems: 50
+
+    leaderboard:
+      refreshIntervalMs: 300000
+      topN: 10
+
     currencies:
       honorPerPvpKill: 10
       tokensPerCraft: 1
@@ -4187,6 +4194,9 @@ ambonmud:
         alchemy:
           displayName: Alchemy
           type: crafting
+        enchanting:
+          displayName: Enchanting
+          type: crafting
     craftingStationTypes:
       stationTypes:
         forge:
@@ -4195,6 +4205,8 @@ ambonmud:
           displayName: Alchemy Table
         workbench:
           displayName: Workbench
+        enchanting_table:
+          displayName: Enchanting Table
     effectTypes:
       types:
         dot:
@@ -4247,6 +4259,10 @@ ambonmud:
           displayName: Self
         ally:
           displayName: Ally
+        all_enemies:
+          displayName: All Enemies
+        all_allies:
+          displayName: All Allies
     stackBehaviors:
       behaviors:
         refresh:
