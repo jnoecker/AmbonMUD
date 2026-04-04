@@ -64,6 +64,8 @@ data class PlayerState(
     var discoveredRecipes: MutableSet<String> = mutableSetOf(),
     var craftingSpecialization: String? = null,
     var factionStandings: MutableMap<String, Int> = mutableMapOf(),
+    /** Secondary currency balances (e.g. quest_points, honor, crafting_tokens). */
+    var currencies: MutableMap<String, Long> = mutableMapOf(),
     /** Epoch-ms timestamp after which gathering is available again. Runtime-only; not persisted. */
     var gatherCooldownUntilMs: Long = 0L,
     /** Epoch-ms of last command input. Runtime-only; used for idle calculation. */
@@ -189,6 +191,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         discoveredRecipes = discoveredRecipes.toMutableSet(),
         craftingSpecialization = craftingSpecialization,
         factionStandings = factionStandings.toMutableMap(),
+        currencies = currencies.toMutableMap(),
         friendsList = friendsList.toMutableSet(),
         bankGold = bankGold,
         bankItems = bankItems.toMutableList(),
@@ -238,6 +241,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         discoveredRecipes = discoveredRecipes.toSet(),
         craftingSpecialization = craftingSpecialization,
         factionStandings = factionStandings.toMap(),
+        currencies = currencies.toMap(),
         friendsList = friendsList.toSet(),
         bankGold = bankGold,
         bankItems = bankItems.toList(),
