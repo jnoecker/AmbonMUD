@@ -78,3 +78,6 @@ src/main/resources/web-v3/
 # IAM policy files and trust docs contain account IDs — generate locally, never commit
 infra/iam/
 ecr-trust.json
+
+# Arcanum settings (contains R2 credentials)
+.arcanum/

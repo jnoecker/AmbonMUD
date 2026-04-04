@@ -212,7 +212,7 @@ mobs:
     goldMax: 0
     dialogue:
       root:
-        text: Step right up! Eryndal's premier auction house. List your wares, browse the offerings — everything's on the table!
+        text: Step right up! Auringold's premier auction house. List your wares, browse the offerings — everything's on the table!
         choices:
           - text: How do I use the auction house?
             next: explain_auction
@@ -314,7 +314,7 @@ mobs:
           - text: Goodbye.
             next: farewell
       explain_leaderboard:
-        text: Type 'leaderboard' to see who stands tallest in Eryndal. The Trophy Hall nearby records legendary deeds
+        text: Type 'leaderboard' to see who stands tallest in Auringold. The Trophy Hall nearby records legendary deeds
           permanently with 'halloffame'.
         choices:
           - text: Goodbye.
@@ -582,7 +582,7 @@ mobs:
           This archive contains everything I've learned about the fabric of our world — its structure, its rules, and
           the forces that hold it together. What would you like to know?
         choices:
-          - text: Tell me about Eryndal — the world itself.
+          - text: Tell me about Auringold — the world itself.
             next: about_world
           - text: How does combat work here?
             next: about_combat
@@ -597,7 +597,7 @@ mobs:
           - text: Goodbye, Tessara.
             next: farewell
       about_world:
-        text: Eryndal is composed of twenty distinct zones — from the Crossroads Path where most travellers arrive, through
+        text: Auringold is composed of twenty distinct zones — from the Crossroads Path where most travellers arrive, through
           Thornhaven City where we stand now, into the Thornwood Forest, the Farmer Fields, the Goblin Warrens, the Dark
           Barrows, the Sea Cliffs, the Sunken Temple, and far beyond to the Celestial Peak where the Elder Dragon waits.
           Each zone is defined in its own manuscript — what the scholars call 'YAML files' — describing every room, mob,
@@ -649,7 +649,7 @@ mobs:
           - text: Back to the main topics.
             next: root
       about_living_world:
-        text: "Eryndal has a day-night cycle — dawn, morning, afternoon, dusk, evening, and night — each with its own ambient
+        text: "Auringold has a day-night cycle — dawn, morning, afternoon, dusk, evening, and night — each with its own ambient
           feel. Weather shifts dynamically per zone: clear skies, clouds, rain, storms, fog, snow. And the world
           observes seasonal events tied to real dates — festivals, gatherings, special world flags that change NPC
           behavior or open hidden areas. All of this is configurable: the length of a day, weather transition
@@ -658,7 +658,7 @@ mobs:
           - text: Back to the main topics.
             next: root
       about_combat:
-        text: "Combat in Eryndal is real-time and tick-based. The world heartbeat pulses every hundred milliseconds — ten times
+        text: "Combat in Auringold is real-time and tick-based. The world heartbeat pulses every hundred milliseconds — ten times
           per second. When you engage a foe, damage is calculated each round using your attributes, equipment, and
           abilities. There's a dodge mechanic based on your stats, armor reduces incoming damage, and a threat system
           determines who the mob attacks in a group. Status effects layer on top: damage over time, healing over time,
@@ -707,7 +707,7 @@ mobs:
           - text: Back to the main topics.
             next: root
       about_classes:
-        text: "There are five classes in Eryndal: Warrior, Mage, Cleric, Rogue, and Ranger. Each has its own ability tree — over
+        text: "There are five classes in Auringold: Warrior, Mage, Cleric, Rogue, and Ranger. Each has its own ability tree — over
           a hundred abilities total across all classes. Warriors wield steel and fury. Mages command arcane destruction.
           Clerics channel divine healing and protection. Rogues strike from shadows with precision. Rangers blend nature
           magic with ranged combat. You choose your class at character creation, but the path doesn't end there."
@@ -785,7 +785,7 @@ mobs:
           - text: Back to the main topics.
             next: root
       about_economy:
-        text: "Gold flows through Eryndal in many ways. Mobs drop it. Quests reward it. You spend it in shops, at trainers, and
+        text: "Gold flows through Auringold in many ways. Mobs drop it. Quests reward it. You spend it in shops, at trainers, and
           on guild creation. The bank stores it safely — Banker Theron holds your deposits. The auction house lets
           players trade items for gold on the open market. Direct player-to-player trading is supported too, with a
           confirmation flow so nobody gets cheated. And there's crafting: gather materials, combine them at stations,
@@ -822,7 +822,7 @@ mobs:
       about_housing:
         text: Player housing gives you a personal room in the world. Expand it, furnish it, describe it however you like. A
           vault stores items with a capacity limit. You control access — invite friends, lock the door, kick unwanted
-          visitors. Housing state persists with your character. It's your corner of Eryndal.
+          visitors. Housing state persists with your character. It's your corner of Auringold.
         choices:
           - text: Back to the main topics.
             next: root
@@ -1319,7 +1319,7 @@ rooms:
     image: 0841cb12353c17a041bc1b1b14d8e2a95fb0f0466eca5363f000a37a52aaa2a9.jpg
   trophy_hall:
     title: Trophy Hall
-    description: A solemn hall with torches casting warm light on bronze plaques and glass cases. The names of Eryndal's
+    description: A solemn hall with torches casting warm light on bronze plaques and glass cases. The names of Auringold's
       greatest champions are inscribed in stone, and a perpetual scroll of leaderboard standings updates itself by some
       enchantment at the far end. Type 'leaderboard' or 'halloffame' to see who stands tallest.
     exits:

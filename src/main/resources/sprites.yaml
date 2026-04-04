@@ -1,6 +1,834 @@
-base_player:
-  displayName: base_player
-  description: A spectre of a player, more of a placeholder than a real sprite.
+HUMAN_base_t1:
+  displayName: Human (Novice)
   category: general
   sortOrder: 0
-  image: player_sprites/base_player.png
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: minLevel
+      level: 1
+  image: player_sprites/HUMAN_base_t1.png
+ELF_base_t1:
+  displayName: Elf (Novice)
+  category: general
+  sortOrder: 10
+  requirements:
+    - type: race
+      race: ELF
+    - type: minLevel
+      level: 1
+  image: player_sprites/ELF_base_t1.png
+DWARF_base_t1:
+  displayName: Dwarf (Novice)
+  category: general
+  sortOrder: 20
+  requirements:
+    - type: race
+      race: DWARF
+    - type: minLevel
+      level: 1
+  image: player_sprites/DWARF_base_t1.png
+HALFLING_base_t1:
+  displayName: Halfling (Novice)
+  category: general
+  sortOrder: 30
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: minLevel
+      level: 1
+  image: player_sprites/HALFLING_base_t1.png
+HALF_ORC_base_t1:
+  displayName: Half-Orc (Novice)
+  category: general
+  sortOrder: 40
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: minLevel
+      level: 1
+  image: player_sprites/HALF_ORC_base_t1.png
+GNOME_base_t1:
+  displayName: Gnome (Novice)
+  category: general
+  sortOrder: 50
+  requirements:
+    - type: race
+      race: GNOME
+    - type: minLevel
+      level: 1
+  image: player_sprites/GNOME_base_t1.png
+HUMAN_WARRIOR_t5:
+  displayName: Human Warrior (Adept)
+  category: general
+  sortOrder: 60
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 5
+  image: player_sprites/HUMAN_WARRIOR_t5.png
+HUMAN_MAGE_t5:
+  displayName: Human Mage (Adept)
+  category: general
+  sortOrder: 70
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 5
+  image: player_sprites/HUMAN_MAGE_t5.png
+HUMAN_CLERIC_t5:
+  displayName: Human Cleric (Adept)
+  category: general
+  sortOrder: 80
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 5
+  image: player_sprites/HUMAN_CLERIC_t5.png
+HUMAN_ROGUE_t5:
+  displayName: Human Rogue (Adept)
+  category: general
+  sortOrder: 90
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 5
+  image: player_sprites/HUMAN_ROGUE_t5.png
+HUMAN_RANGER_t5:
+  displayName: Human Ranger (Adept)
+  category: general
+  sortOrder: 100
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 5
+  image: player_sprites/HUMAN_RANGER_t5.png
+ELF_WARRIOR_t5:
+  displayName: Elf Warrior (Adept)
+  category: general
+  sortOrder: 110
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 5
+  image: player_sprites/ELF_WARRIOR_t5.png
+ELF_MAGE_t5:
+  displayName: Elf Mage (Adept)
+  category: general
+  sortOrder: 120
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 5
+  image: player_sprites/ELF_MAGE_t5.png
+ELF_CLERIC_t5:
+  displayName: Elf Cleric (Adept)
+  category: general
+  sortOrder: 130
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 5
+  image: player_sprites/ELF_CLERIC_t5.png
+ELF_ROGUE_t5:
+  displayName: Elf Rogue (Adept)
+  category: general
+  sortOrder: 140
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 5
+  image: player_sprites/ELF_ROGUE_t5.png
+ELF_RANGER_t5:
+  displayName: Elf Ranger (Adept)
+  category: general
+  sortOrder: 150
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 5
+  image: player_sprites/ELF_RANGER_t5.png
+DWARF_WARRIOR_t5:
+  displayName: Dwarf Warrior (Adept)
+  category: general
+  sortOrder: 160
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 5
+  image: player_sprites/DWARF_WARRIOR_t5.png
+DWARF_MAGE_t5:
+  displayName: Dwarf Mage (Adept)
+  category: general
+  sortOrder: 170
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 5
+  image: player_sprites/DWARF_MAGE_t5.png
+DWARF_CLERIC_t5:
+  displayName: Dwarf Cleric (Adept)
+  category: general
+  sortOrder: 180
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 5
+  image: player_sprites/DWARF_CLERIC_t5.png
+DWARF_ROGUE_t5:
+  displayName: Dwarf Rogue (Adept)
+  category: general
+  sortOrder: 190
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 5
+  image: player_sprites/DWARF_ROGUE_t5.png
+DWARF_RANGER_t5:
+  displayName: Dwarf Ranger (Adept)
+  category: general
+  sortOrder: 200
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 5
+  image: player_sprites/DWARF_RANGER_t5.png
+HALFLING_WARRIOR_t5:
+  displayName: Halfling Warrior (Adept)
+  category: general
+  sortOrder: 210
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALFLING_WARRIOR_t5.png
+HALFLING_MAGE_t5:
+  displayName: Halfling Mage (Adept)
+  category: general
+  sortOrder: 220
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALFLING_MAGE_t5.png
+HALFLING_CLERIC_t5:
+  displayName: Halfling Cleric (Adept)
+  category: general
+  sortOrder: 230
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALFLING_CLERIC_t5.png
+HALFLING_ROGUE_t5:
+  displayName: Halfling Rogue (Adept)
+  category: general
+  sortOrder: 240
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALFLING_ROGUE_t5.png
+HALFLING_RANGER_t5:
+  displayName: Halfling Ranger (Adept)
+  category: general
+  sortOrder: 250
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALFLING_RANGER_t5.png
+HALF_ORC_WARRIOR_t5:
+  displayName: Half-Orc Warrior (Adept)
+  category: general
+  sortOrder: 260
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALF_ORC_WARRIOR_t5.png
+HALF_ORC_MAGE_t5:
+  displayName: Half-Orc Mage (Adept)
+  category: general
+  sortOrder: 270
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALF_ORC_MAGE_t5.png
+HALF_ORC_CLERIC_t5:
+  displayName: Half-Orc Cleric (Adept)
+  category: general
+  sortOrder: 280
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALF_ORC_CLERIC_t5.png
+HALF_ORC_ROGUE_t5:
+  displayName: Half-Orc Rogue (Adept)
+  category: general
+  sortOrder: 290
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALF_ORC_ROGUE_t5.png
+HALF_ORC_RANGER_t5:
+  displayName: Half-Orc Ranger (Adept)
+  category: general
+  sortOrder: 300
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 5
+  image: player_sprites/HALF_ORC_RANGER_t5.png
+GNOME_WARRIOR_t5:
+  displayName: Gnome Warrior (Adept)
+  category: general
+  sortOrder: 310
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 5
+  image: player_sprites/GNOME_WARRIOR_t5.png
+GNOME_MAGE_t5:
+  displayName: Gnome Mage (Adept)
+  category: general
+  sortOrder: 320
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 5
+  image: player_sprites/GNOME_MAGE_t5.png
+GNOME_CLERIC_t5:
+  displayName: Gnome Cleric (Adept)
+  category: general
+  sortOrder: 330
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 5
+  image: player_sprites/GNOME_CLERIC_t5.png
+GNOME_ROGUE_t5:
+  displayName: Gnome Rogue (Adept)
+  category: general
+  sortOrder: 340
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 5
+  image: player_sprites/GNOME_ROGUE_t5.png
+GNOME_RANGER_t5:
+  displayName: Gnome Ranger (Adept)
+  category: general
+  sortOrder: 350
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 5
+  image: player_sprites/GNOME_RANGER_t5.png
+HUMAN_WARRIOR_t10:
+  displayName: Human Warrior (Awakened)
+  category: general
+  sortOrder: 360
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 10
+  image: player_sprites/HUMAN_WARRIOR_t10.png
+HUMAN_MAGE_t10:
+  displayName: Human Mage (Awakened)
+  category: general
+  sortOrder: 370
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 10
+  image: player_sprites/HUMAN_MAGE_t10.png
+HUMAN_CLERIC_t10:
+  displayName: Human Cleric (Awakened)
+  category: general
+  sortOrder: 380
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 10
+  image: player_sprites/HUMAN_CLERIC_t10.png
+HUMAN_ROGUE_t10:
+  displayName: Human Rogue (Awakened)
+  category: general
+  sortOrder: 390
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 10
+  image: player_sprites/HUMAN_ROGUE_t10.png
+HUMAN_RANGER_t10:
+  displayName: Human Ranger (Awakened)
+  category: general
+  sortOrder: 400
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 10
+  image: player_sprites/HUMAN_RANGER_t10.png
+ELF_WARRIOR_t10:
+  displayName: Elf Warrior (Awakened)
+  category: general
+  sortOrder: 410
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 10
+  image: player_sprites/ELF_WARRIOR_t10.png
+ELF_MAGE_t10:
+  displayName: Elf Mage (Awakened)
+  category: general
+  sortOrder: 420
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 10
+  image: player_sprites/ELF_MAGE_t10.png
+ELF_CLERIC_t10:
+  displayName: Elf Cleric (Awakened)
+  category: general
+  sortOrder: 430
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 10
+  image: player_sprites/ELF_CLERIC_t10.png
+ELF_ROGUE_t10:
+  displayName: Elf Rogue (Awakened)
+  category: general
+  sortOrder: 440
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 10
+  image: player_sprites/ELF_ROGUE_t10.png
+ELF_RANGER_t10:
+  displayName: Elf Ranger (Awakened)
+  category: general
+  sortOrder: 450
+  requirements:
+    - type: race
+      race: ELF
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 10
+  image: player_sprites/ELF_RANGER_t10.png
+DWARF_WARRIOR_t10:
+  displayName: Dwarf Warrior (Awakened)
+  category: general
+  sortOrder: 460
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 10
+  image: player_sprites/DWARF_WARRIOR_t10.png
+DWARF_MAGE_t10:
+  displayName: Dwarf Mage (Awakened)
+  category: general
+  sortOrder: 470
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 10
+  image: player_sprites/DWARF_MAGE_t10.png
+DWARF_CLERIC_t10:
+  displayName: Dwarf Cleric (Awakened)
+  category: general
+  sortOrder: 480
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 10
+  image: player_sprites/DWARF_CLERIC_t10.png
+DWARF_ROGUE_t10:
+  displayName: Dwarf Rogue (Awakened)
+  category: general
+  sortOrder: 490
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 10
+  image: player_sprites/DWARF_ROGUE_t10.png
+DWARF_RANGER_t10:
+  displayName: Dwarf Ranger (Awakened)
+  category: general
+  sortOrder: 500
+  requirements:
+    - type: race
+      race: DWARF
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 10
+  image: player_sprites/DWARF_RANGER_t10.png
+HALFLING_WARRIOR_t10:
+  displayName: Halfling Warrior (Awakened)
+  category: general
+  sortOrder: 510
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALFLING_WARRIOR_t10.png
+HALFLING_MAGE_t10:
+  displayName: Halfling Mage (Awakened)
+  category: general
+  sortOrder: 520
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALFLING_MAGE_t10.png
+HALFLING_CLERIC_t10:
+  displayName: Halfling Cleric (Awakened)
+  category: general
+  sortOrder: 530
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALFLING_CLERIC_t10.png
+HALFLING_ROGUE_t10:
+  displayName: Halfling Rogue (Awakened)
+  category: general
+  sortOrder: 540
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALFLING_ROGUE_t10.png
+HALFLING_RANGER_t10:
+  displayName: Halfling Ranger (Awakened)
+  category: general
+  sortOrder: 550
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALFLING_RANGER_t10.png
+HALF_ORC_WARRIOR_t10:
+  displayName: Half-Orc Warrior (Awakened)
+  category: general
+  sortOrder: 560
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALF_ORC_WARRIOR_t10.png
+HALF_ORC_MAGE_t10:
+  displayName: Half-Orc Mage (Awakened)
+  category: general
+  sortOrder: 570
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALF_ORC_MAGE_t10.png
+HALF_ORC_CLERIC_t10:
+  displayName: Half-Orc Cleric (Awakened)
+  category: general
+  sortOrder: 580
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALF_ORC_CLERIC_t10.png
+HALF_ORC_ROGUE_t10:
+  displayName: Half-Orc Rogue (Awakened)
+  category: general
+  sortOrder: 590
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALF_ORC_ROGUE_t10.png
+HALF_ORC_RANGER_t10:
+  displayName: Half-Orc Ranger (Awakened)
+  category: general
+  sortOrder: 600
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 10
+  image: player_sprites/HALF_ORC_RANGER_t10.png
+GNOME_WARRIOR_t10:
+  displayName: Gnome Warrior (Awakened)
+  category: general
+  sortOrder: 610
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: WARRIOR
+    - type: minLevel
+      level: 10
+  image: player_sprites/GNOME_WARRIOR_t10.png
+GNOME_MAGE_t10:
+  displayName: Gnome Mage (Awakened)
+  category: general
+  sortOrder: 620
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: MAGE
+    - type: minLevel
+      level: 10
+  image: player_sprites/GNOME_MAGE_t10.png
+GNOME_CLERIC_t10:
+  displayName: Gnome Cleric (Awakened)
+  category: general
+  sortOrder: 630
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: CLERIC
+    - type: minLevel
+      level: 10
+  image: player_sprites/GNOME_CLERIC_t10.png
+GNOME_ROGUE_t10:
+  displayName: Gnome Rogue (Awakened)
+  category: general
+  sortOrder: 640
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: ROGUE
+    - type: minLevel
+      level: 10
+  image: player_sprites/GNOME_ROGUE_t10.png
+GNOME_RANGER_t10:
+  displayName: Gnome Ranger (Awakened)
+  category: general
+  sortOrder: 650
+  requirements:
+    - type: race
+      race: GNOME
+    - type: class
+      playerClass: RANGER
+    - type: minLevel
+      level: 10
+  image: player_sprites/GNOME_RANGER_t10.png
+HUMAN_base_tstaff:
+  displayName: Human (Staff)
+  category: staff
+  sortOrder: 660
+  requirements:
+    - type: race
+      race: HUMAN
+    - type: staff
+  image: player_sprites/HUMAN_base_tstaff.png
+ELF_base_tstaff:
+  displayName: Elf (Staff)
+  category: staff
+  sortOrder: 670
+  requirements:
+    - type: race
+      race: ELF
+    - type: staff
+  image: player_sprites/ELF_base_tstaff.png
+DWARF_base_tstaff:
+  displayName: Dwarf (Staff)
+  category: staff
+  sortOrder: 680
+  requirements:
+    - type: race
+      race: DWARF
+    - type: staff
+  image: player_sprites/DWARF_base_tstaff.png
+HALFLING_base_tstaff:
+  displayName: Halfling (Staff)
+  category: staff
+  sortOrder: 690
+  requirements:
+    - type: race
+      race: HALFLING
+    - type: staff
+  image: player_sprites/HALFLING_base_tstaff.png
+HALF_ORC_base_tstaff:
+  displayName: Half-Orc (Staff)
+  category: staff
+  sortOrder: 700
+  requirements:
+    - type: race
+      race: HALF_ORC
+    - type: staff
+  image: player_sprites/HALF_ORC_base_tstaff.png
+GNOME_base_tstaff:
+  displayName: Gnome (Staff)
+  category: staff
+  sortOrder: 710
+  requirements:
+    - type: race
+      race: GNOME
+    - type: staff
+  image: player_sprites/GNOME_base_tstaff.png

@@ -1,6 +1,6 @@
-# Eryndal: A Base World Plan
+# Auringold: A Base World Plan
 
-This document is the design plan for **Eryndal**, a new base world for AmbonMUD. All existing
+This document is the design plan for **Auringold**, a new base world for AmbonMUD. All existing
 Ambon-lore-specific zones (ambon_hub, noecker_resume, tutorial_glade, low_training_*, celestial_sanctum,
 sunken_crypt, demo_ruins, crafting_workshop, labyrinth) will be **deleted entirely** and replaced
 with a clean set of 20 new zone files. Nothing is adapted from the old zones — every file starts
@@ -49,7 +49,7 @@ boss mobs, and quest items.
 
 ## World Overview
 
-**Name:** The Realm of Eryndal  
+**Name:** The Realm of Auringold  
 **Hub City:** Thornhaven — a frontier city at the crossroads of civilization and wilderness  
 **Tone:** Classic heroic fantasy. Think AD&D second edition: taverns, dungeons, merchants, ancient
 curses, and the thrill of going from zero to legend. Ambon's Surreal Gentle Magic aesthetic still
@@ -212,7 +212,7 @@ Layout: A winding road approaching Thornhaven from the north. Characters land at
 Features:
 - **Tutorial quest "A Traveler's Welcome"** — four steps leading to Thornhaven and the first trainer visit
 - Rich atmospheric room descriptions showcasing the day/night sky and weather descriptions
-- Signpost with brief Eryndal lore (one paragraph; no walls of text)
+- Signpost with brief Auringold lore (one paragraph; no walls of text)
 - No mobs harder than tier: weak
 
 #### 4. `thornwood_forest`
@@ -443,7 +443,7 @@ Features:
 #### 19. `celestial_peak`
 **Level range:** 8–10  
 **Rooms:** ~16  
-**Purpose:** Summit of Eryndal's highest mountain. End-game combat, legendary gear, final boss.
+**Purpose:** Summit of Auringold's highest mountain. End-game combat, legendary gear, final boss.
 
 Mobs: `celestial_guardian`, `storm_elemental`, `divine_construct`, `fallen_angel`, `Elder Dragon Auranthos` (final boss)
 
@@ -672,7 +672,7 @@ All existing world zone files will be deleted as part of Phase 1. None of their 
 - `noecker_resume.yaml`
 
 **Files to keep (data definitions, not world zones):**
-- `achievements.yaml` — will be rewritten for Eryndal achievement IDs
+- `achievements.yaml` — will be rewritten for Auringold achievement IDs
 - `sprites.yaml`, `player_sprites.yaml` — unchanged; sprite system is world-agnostic
 
 **Config changes required:**
@@ -734,7 +734,7 @@ Deliverables:
 - Add dungeon template stubs for `dungeon_of_echoes`
 - Delete all old zone files listed above
 - Copy `demo/Default*.png` to `src/main/resources/world/images/demo/`
-- Rewrite `achievements.yaml` with the 15 Eryndal achievement IDs as stubs. Fields that reference
+- Rewrite `achievements.yaml` with the 15 Auringold achievement IDs as stubs. Fields that reference
   not-yet-written zone content (mob IDs, quest IDs, item IDs) use empty strings `""` — the engine
   will log warnings for unresolved references but continue running, which is acceptable during
   development. Each subsequent phase PR wires up the achievements for that phase's zones.
@@ -784,7 +784,7 @@ Deliverables:
 - `celestial_peak.yaml` with two-phase Auranthos boss
 - Full dungeon template YAML for `dungeon_of_echoes`
 - Final `achievements.yaml` with all 15 achievement triggers wired to correct zone/mob IDs
-- Update README demo section with Eryndal world overview
+- Update README demo section with Auringold world overview
 - Smoke-test full levels 1–10 playthrough
 
 **Demo checkpoint:** Complete world playable end-to-end. All four quest chains completable.

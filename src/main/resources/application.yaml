@@ -3557,7 +3557,42 @@ ambonmud:
         HUMAN:
           displayName: Human
           description: Versatile and adaptable.
-          image: b4c2cc2352798f7f6fb1ca8b9f2c8e2eba89d10eef76283ea09243783d630ce9.jpg
+          backstory: >-
+            Humans emerged from the scattered tribes of the Second Age, when the
+            great dragons still ruled the skies and the elder races held
+            dominion over vast territories. Unlike their longer-lived cousins,
+            humans possessed an insatiable drive to explore, conquer, and remake
+            the world around them. This restless ambition, born from their brief
+            lifespans, became both their greatest strength and most dangerous
+            weakness.
+
+
+            Where elves perfected singular crafts over centuries and dwarves
+            inherited the mastery of their ancestors, humans learned to adapt
+            and improvise. They became merchants who could haggle in a dozen
+            tongues, warriors who blended fighting styles from every corner of
+            the realm, and scholars who synthesized knowledge from all cultures
+            they encountered. Their cities became melting pots where foreign
+            customs merged with local traditions, creating ever-evolving
+            societies that other races found both fascinating and unsettling.
+
+
+            The human capacity for both creation and destruction is legendary.
+            They built the great trade routes that connected distant continents,
+            established academies of learning that welcomed all races, and
+            forged alliances that ended ancient wars. Yet they also unleashed
+            the Sorcerer Wars that scarred the northern reaches, and their
+            hunger for expansion has displaced countless communities throughout
+            history.
+
+
+            What truly sets humans apart is their ability to inspire and be
+            inspired. A human leader can unite fractured tribes against
+            impossible odds, while a human artist might capture beauty in ways
+            that move even the stoic mountain folk to tears. They burn bright
+            and brief, leaving marks upon the world that outlast their fleeting
+            lives, forever changing the destiny of all who encounter them.
+          image: 998c63f20327943a2a55d6d103816cf718c5e170315c1dbfde46245bf69374f4.jpg
           statMods:
             STR: 1
             DEX: 0
@@ -3565,10 +3600,68 @@ ambonmud:
             INT: 0
             WIS: 0
             CHA: 1
+          bodyDescription: Lean athletic build with smooth pale to deep brown skin tones,
+            completely flat chest with no gendered features, expressive oval
+            face with bright eyes ranging from brown to blue to green, flowing
+            hair in natural shades of black, brown, blonde or auburn that moves
+            with subtle life-like animation, limbs proportioned for agility and
+            endurance with calloused hands that speak of varied experience.
+          staffPrompt: A towering androgynous human figure wreathed in cascading golden
+            light, their form shifting between states of pure energy and solid
+            matter as reality bends around them. Countless swirling galaxies
+            orbit their head like a cosmic crown while their eyes blaze with the
+            light of newborn stars, and their outstretched hands command streams
+            of liquid starlight that reshape the very fabric of existence. Their
+            robes appear to be woven from the aurora itself, constantly shifting
+            through every color of the spectrum while leaving trails of luminous
+            particles that form temporary constellations in the air. The ground
+            beneath them cracks and reforms with each breath, revealing glimpses
+            of infinite other worlds, as waves of pure creative force pulse
+            outward from their being. Their presence suggests infinite potential
+            made manifest, the ultimate expression of adaptability transcended
+            into godhood.
         ELF:
           displayName: Elf
           description: Graceful and magically attuned.
-          image: 340f053ec86097b70f4113374601356014cc589c196acca861553acd577a1c88.jpg
+          backstory: >-
+            The Elves emerged from the twilight between worlds during the First
+            Convergence, when the boundaries between the material realm and the
+            Feywild grew thin as gossamer threads. Born of starlight and ancient
+            magic, they are the children of Aethermoon, the wandering celestial
+            body that appears only during the most potent magical conjunctions.
+            Their society reflects this ethereal origin—fluid, cyclical, and
+            deeply intertwined with the ebb and flow of arcane energies.
+
+
+            Elven settlements exist in harmony with natural ley lines, their
+            crystalline spires and living wood architecture channeling raw magic
+            to sustain their communities. They measure time not in years but in
+            the Great Turnings—vast cycles marked by the convergence of
+            celestial events and the blooming of the Worldtree's silver leaves.
+            To an Elf, a human lifetime is but a season's breath, leading to
+            their reputation for seeming aloof and distant when dealing with
+            shorter-lived races.
+
+
+            Their bodies are living conduits for magical energy, granting them
+            supernatural grace and an intuitive understanding of arcane forces,
+            but this same attunement makes them physically fragile compared to
+            more earthbound peoples. An Elf's bones are hollow like a bird's,
+            filled with crystalline formations that resonate with magical
+            frequencies. Their luminous eyes can perceive the weave of magic
+            itself, seeing spells as cascading ribbons of colored light and
+            detecting enchantments like others might notice a familiar scent.
+
+
+            Elven culture revolves around the pursuit of perfection through
+            patient mastery—whether in spellcraft, artistry, or the elegant
+            martial traditions of the Moonblade Dancers. They believe that true
+            understanding comes only through centuries of contemplation and
+            practice, making them both revered teachers and frustratingly
+            methodical allies. Their memory spans millennia, and they serve as
+            living libraries of ancient knowledge, though they share their
+            wisdom sparingly with those they deem unworthy of such gifts.
+          image: 400487b7fd2117c7406eeadf071ba5d4a0db232509bcc3f2919fa7c75f235301.jpg
           statMods:
             STR: -1
             DEX: 2
@@ -3576,10 +3669,103 @@ ambonmud:
             INT: 1
             WIS: 0
             CHA: 0
+          bodyDescription: Tall, ethereally slender figure with completely flat chest and
+            no gendered features, possessing hollow bird-like bones visible as
+            faint crystalline formations that shimmer beneath translucent,
+            pearl-luminescent skin. Angular, otherworldly face with large
+            luminous eyes that swirl with cascading ribbons of magical light,
+            shifting between silver, violet, and starlight blue depending on
+            magical currents. Long, flowing hair that appears to be spun from
+            moonbeams and starlight, seeming to move with its own ethereal
+            breeze and occasionally sparkling with tiny motes of arcane energy.
+          staffPrompt: A towering androgynous elven deity wreathed in cascading auroras of
+            silver and gold light, their elongated limbs flowing like liquid
+            starlight as arcane sigils orbit their crown in perfect geometric
+            patterns. Ancient runes burn along their translucent skin while
+            their eyes blaze with the accumulated wisdom of millennia, twin
+            galaxies swirling within their gaze. Ethereal robes woven from pure
+            magical energy ripple and shift between dimensions, trailing cosmic
+            dust and floating flower petals that bloom and wither in endless
+            cycles. Their outstretched hands command reality itself, bending
+            space around them as they hover above a mandala of pure crystallized
+            magic that rotates beneath their feet. The very air shimmers with
+            divine authority as waves of celestial power pulse outward from
+            their form, causing nearby matter to briefly phase between material
+            and spiritual planes.
         DWARF:
           displayName: Dwarf
           description: Tough and resilient.
-          image: 18d309f09c9df1079996519dc6215d67363821d5a2f37e5346c1dcd10175a090.jpg
+          backstory: >-
+            **The Khazad-Mor: Children of Stone and Fire**
+
+
+            Born from the heart of mountains and forged in the depths of the
+            earth, the dwarves are a people whose very essence reflects the
+            unyielding stone from which they emerged. Legend speaks of their
+            creation by Moradin the Forgefather, who carved the first dwarves
+            from living granite and breathed into them the fires of the world's
+            core, granting them strength that rivals iron and endurance that
+            outlasts the ages.
+
+
+            For millennia, dwarven civilization has thrived in vast underground
+            kingdoms called the Khaz-Ankor, sprawling networks of halls, mines,
+            and forges that honeycomb the world's greatest mountain ranges.
+            These subterranean realms are marvels of engineering, where massive
+            stone pillars support cathedral-sized chambers lit by pools of
+            molten metal and rivers of lava channeled through masterful
+            stonework. The greatest of these cities, Khaz-a-Karak, is said to
+            delve twenty levels deep, its lowest chambers reaching toward the
+            planet's molten heart.
+
+
+            Dwarven society revolves around the twin pillars of clan and craft.
+            Each dwarf belongs to a clan that traces its lineage back thousands
+            of years, with clan names often reflecting their ancestral
+            profession or the mountain peak they first called home. The
+            Ironforge clan masters metalwork, the Stonebeards excel in
+            architecture and mining, while the Goldbraids have produced
+            generations of merchants and traders. These clans are bound by the
+            Khazad-Dum, an ancient code of honor that emphasizes loyalty,
+            craftsmanship, and the repayment of debts—both grudges and favors.
+
+
+            The physical resilience of dwarves is legendary. Their compact,
+            muscular frames are perfectly adapted for life underground, with
+            broad shoulders for wielding heavy tools and picks, and sturdy legs
+            that never tire on mountain paths or in deep mine shafts. Their
+            bones are dense as stone, their skin tough as leather, and their
+            lungs capable of working in the thin air of high peaks or the
+            dust-filled atmosphere of deep excavations. This constitution comes
+            at the cost of agility—their solid build makes them steady but slow,
+            methodical rather than graceful.
+
+
+            While dwarves possess keen minds for engineering, mathematics, and
+            geological knowledge, they tend toward practical rather than
+            abstract thinking. Their wisdom comes from generations of
+            accumulated experience, passed down through apprenticeships and clan
+            teachings. However, their blunt honesty, stubborn pride, and
+            suspicion of outsiders often creates friction with other races.
+            Dwarves say what they mean without flourish or diplomacy, viewing
+            elaborate courtesies as wasteful deception.
+
+
+            The Great Sundering, a cataclysmic event that collapsed many
+            mountain ranges three centuries ago, devastated numerous dwarven
+            kingdoms and scattered many clans to the surface world. These
+            displaced dwarves carry with them an unquenchable desire to reclaim
+            their ancestral homes and restore the glory of the deep roads. They
+            work as miners, smiths, and craftsmen in surface settlements, always
+            saving coin and resources for the day they can return to the
+            mountains and rebuild what was lost.
+
+
+            In their hearts burns an eternal flame—part forge-fire, part
+            homesickness—that drives them to create works of lasting beauty and
+            unmatched durability, ensuring that even if kingdoms fall and
+            mountains crumble, the legacy of dwarven hands will endure forever.
+          image: e8d1e3681ad331f8c67633d8a92dac5cb22ef4c6c5034dd5462b398065fe8ddc.jpg
           statMods:
             STR: 1
             DEX: -1
@@ -3587,10 +3773,83 @@ ambonmud:
             INT: 0
             WIS: 1
             CHA: -2
+          bodyDescription: Stocky, powerfully built figure with dense musculature and a
+            completely flat chest with no gendered features, standing roughly
+            four and a half feet tall with proportionally broad shoulders and
+            thick limbs. Skin has a weathered, stone-like texture with a grayish
+            or earth-toned complexion that seems to shimmer faintly with
+            embedded mineral flecks, while thick, coarse hair grows in elaborate
+            braids from both head and face in rich browns, coppers, or
+            iron-grays. Deep-set eyes glow with an inner amber or orange light
+            like banked coals, and the overall physique radiates solidity and
+            endurance with hands and feet that appear almost carved from living
+            rock.
         HALFLING:
           displayName: Halfling
           description: Quick and charming.
-          image: 798005c2860c2d58f05e082beefead022d0d158ef3307f23b8ba6ac268cbba2c.jpg
+          backstory: >-
+            The halflings of the Emerald Valleys are a people shaped by
+            countless generations of adaptation and survival. Where larger folk
+            stumble through brambles, halflings slip between thorns like
+            shadows. Where others tire from endless journeys, halflings press
+            onward with an inexplicable lightness of spirit that seems to
+            sustain them when provisions fail.
+
+
+            Their diminutive stature, rarely exceeding four feet in height,
+            conceals a remarkable agility born from lives spent navigating the
+            hidden paths between towering grasses and ancient root systems.
+            Halfling children learn to move silently through undergrowth before
+            they can properly walk on cobblestones, their bare feet reading the
+            language of earth and leaf with uncanny precision. This natural
+            grace extends beyond mere physical prowess—halflings possess an
+            intuitive understanding of timing, whether slipping past a dozing
+            giant or knowing precisely when to interrupt a heated argument with
+            a perfectly timed jest.
+
+
+            Their society revolves around the sacred concept of the "Traveling
+            Hearth"—the belief that home exists not in buildings of stone and
+            timber, but in the bonds between companions who share the road.
+            Halfling communities are fluid, ever-changing networks of extended
+            families, adopted kin, and cherished friends who may scatter across
+            continents but always maintain invisible threads of connection. When
+            halflings meet after long separations, they participate in the
+            Ritual of Shared Stories, where each traveler contributes tales of
+            their journeys, weaving their experiences into the collective memory
+            of their people.
+
+
+            This emphasis on connection has gifted halflings with an almost
+            supernatural charm. They possess an uncanny ability to find common
+            ground with the most disparate individuals, often serving as
+            mediators, diplomats, and beloved innkeepers throughout the realm.
+            Their laughter is said to ease tensions that have simmered for
+            years, and their genuine interest in others' welfare makes them
+            natural confidants and trusted allies.
+
+
+            Yet beneath their jovial exterior lies a core of quiet wisdom earned
+            through hardship. Halflings remember the Great Wandering, when their
+            ancestral lands were consumed by an expanding desert, forcing entire
+            populations to seek new homes. Those who survived did so not through
+            strength of arms, but through cleverness, cooperation, and an
+            unshakeable optimism that insisted better days lay just beyond the
+            next hill. This history taught them that while they may lack the raw
+            power of larger races, their true strength lies in adaptability,
+            community, and the profound understanding that even the mightiest
+            oak can be felled by patient roots working together.
+
+
+            Modern halflings carry these lessons forward, their bodies
+            reflecting their heritage: quick reflexes honed by necessity,
+            constitutions tested by lean times and long roads, and hearts large
+            enough to embrace both friend and stranger with equal warmth. They
+            are living proof that greatness often comes in small packages, and
+            that sometimes the most profound journeys are taken not by those who
+            stride boldly forward, but by those who dance gracefully between the
+            steps of giants.
+          image: 12fbf49c705f7376f63f07f1ffba31ce00c4acb7df6161a693bc47f209767ed1.jpg
           statMods:
             STR: -2
             DEX: 2
@@ -3598,10 +3857,93 @@ ambonmud:
             INT: 0
             WIS: 1
             CHA: 1
+          bodyDescription: Compact humanoid figure standing three and a half to four feet
+            tall with a completely flat chest and no gendered features,
+            possessing a lean but sturdy build optimized for agility and
+            endurance. Warm olive or golden-tan skin with a naturally weathered
+            texture from outdoor living, complemented by expressive amber or
+            hazel eyes that sparkle with mischief and wisdom. Thick, curly hair
+            in earthy tones of chestnut, honey-brown, or copper that grows wild
+            and untamed, with notably large, bare feet bearing tough, calloused
+            soles perfectly adapted for silent movement across varied terrain.
+          staffPrompt: A transcendent halfling deity hovering three feet above crystalline
+            ground, their compact form radiating blinding golden aurora that
+            warps reality in spiraling fractals around them, thick curly hair
+            now flowing like liquid starlight in impossible colors of molten
+            copper and celestial amber. Massive bare feet leave glowing
+            footprints that bloom into miniature galaxies, while their weathered
+            olive skin pulses with veins of pure cosmic energy and their eyes
+            blaze like twin supernovas containing swirling nebulae. Seven
+            blazing halos of different metals orbit their head at varying
+            speeds, casting shadows that reveal glimpses of infinite parallel
+            dimensions, as streams of crystalline light pour from their
+            outstretched palms to weave the fabric of space-time itself. The air
+            around them shimmers with heat distortion and floating runes of
+            ancient power, while their mischievous smile holds the weight of
+            eons and the promise of reality-altering pranks that reshape entire
+            planes of existence.
         HALF_ORC:
           displayName: Half-Orc
           description: Fierce and resilient, with orcish blood.
-          image: 053fba8ef2d87265a7542dc3c5e4c859128bf4abb30db437ed617d0692e9c76a.jpg
+          backstory: >-
+            Born of two worlds yet fully accepted by neither, half-orcs embody
+            the eternal struggle between civilization and savagery that rages
+            within their very blood. These children of unlikely unions between
+            humans and orcs carry the physical might and primal instincts of
+            their orcish heritage alongside the adaptability and cunning of
+            their human lineage.
+
+
+            Most half-orcs trace their origins to the turbulent borderlands
+            where human settlements clash with orcish tribes, born from unions
+            forged in conquest, desperation, or the rare instance of genuine
+            affection that transcends racial hatred. Some emerge from the great
+            slave markets of the eastern kingdoms, where captured humans and
+            orcs were forced together in brutal circumstances. Others descend
+            from mercenary companies where strength mattered more than
+            bloodline, and bonds formed in the crucible of battle.
+
+
+            Standing taller and broader than most humans, half-orcs possess the
+            pronounced canine teeth, sloped foreheads, and coarse hair of their
+            orcish parentage, though tempered by human features that often
+            create a startling, fierce beauty. Their skin ranges from dusky
+            olive to deep green-gray, and their eyes burn with an inner fire
+            that speaks to the constant war between their dual natures.
+
+
+            Half-orc society, such as it exists, centers around proving one's
+            worth through deed rather than birth. They form loose brotherhoods
+            and sisterhoods bound by shared understanding of rejection and the
+            need to forge their own paths. Many gravitate toward professions
+            where their natural strength and ferocity are assets: mercenary
+            work, gladiatorial combat, frontier exploration, or service in
+            military units that prize results over prejudice.
+
+
+            The half-orc code of honor emphasizes personal strength, loyalty to
+            chosen family over blood relations, and the belief that respect must
+            be earned through action. They view weakness—particularly emotional
+            vulnerability—as a luxury they cannot afford, leading many to
+            cultivate reputations for stoicism and barely contained violence.
+            Yet beneath this harsh exterior often beats a heart capable of
+            profound loyalty and unexpected tenderness toward those who have
+            earned their trust.
+
+
+            Spiritually, half-orcs often find themselves drawn to deities of
+            war, survival, and redemption, seeing in these divine figures a
+            reflection of their own struggles against a world that views them
+            with suspicion. Their prayers are often wordless roars of
+            determination, and their offerings consist of scars earned in
+            honorable combat or trophies taken from defeated enemies.
+
+
+            In the greater world, half-orcs serve as living reminders that
+            strength and honor can emerge from the most unlikely circumstances,
+            and that sometimes the greatest heroes are those who must fight
+            hardest simply to prove they deserve to exist.
+          image: 6469fa7e5aa6306cda54f843ff5f48fca92b6a95489166ac5a9a34093dfe5b6f.jpg
           statMods:
             STR: 3
             DEX: 0
@@ -3609,10 +3951,75 @@ ambonmud:
             INT: -1
             WIS: -1
             CHA: -2
+          bodyDescription: Powerfully built humanoid standing seven feet tall with broad
+            shoulders and thick, muscular limbs, featuring dusky olive to deep
+            green-gray skin with a rough, weathered texture. Completely flat
+            chest with no gendered features, angular face dominated by a sloped
+            forehead, pronounced lower canine teeth jutting upward, and burning
+            amber or deep red eyes that seem to smolder with inner fire. Coarse,
+            dark hair grows in thick patches across the scalp and jawline, while
+            the overall physique radiates raw physical power and barely
+            contained primal energy.
+          staffPrompt: A towering twelve-foot divine half-orc radiates cosmic fury, their
+            olive-green skin now bearing veins of molten gold that pulse with
+            celestial fire while crackling energy arcs between their massive
+            tusks. Ancient runic scars blaze across their mountainous frame as
+            reality itself seems to bend around their overwhelming presence,
+            with fragments of shattered worlds orbiting their broad shoulders
+            like a crown of destruction. Their burning amber eyes have become
+            twin supernovas that pierce through dimensional barriers, while
+            their coarse hair flows like liquid starlight and their breath
+            manifests as streams of pure creation and annihilation. Primal
+            cosmic forces swirl around their androgynous form in spirals of
+            golden lightning and shadow, with each movement causing
+            gravitational distortions that ripple through the fabric of
+            existence itself.
         GNOME:
           displayName: Gnome
           description: Clever, curious, and surprisingly tenacious.
-          image: f70bc9a37fb38505dad2398476ed7f28e536e62fadd40260439054a45b51e303.jpg
+          backstory: >-
+            The gnomes emerged from the deep places of the world during the Age
+            of Stone, when the first dwarven picks struck veins of precious
+            metals and accidentally broke through into vast networks of
+            crystalline caverns. These diminutive folk had dwelled for millennia
+            in chambers lit by phosphorescent fungi and heated by natural
+            thermal vents, developing an intimate understanding of the earth's
+            hidden mechanisms. Their ancestors were master tinkers and
+            gem-cutters who learned to coax music from crystals and craft
+            clockwork marvels powered by underground streams.
+
+
+            Gnomish society revolves around the concept of "Kythara" – the great
+            interconnected puzzle of existence. They believe every phenomenon,
+            from the migration patterns of cave beetles to the alignment of
+            celestial bodies, represents a piece of this cosmic riddle. Their
+            communities are organized into Research Circles, each dedicated to
+            unraveling different aspects of Kythara through experimentation,
+            observation, and inspired tinkering.
+
+
+            Standing barely three feet tall, gnomes possess an almost
+            supernatural persistence when pursuing their intellectual passions.
+            Their laboratories and workshops overflow with half-completed
+            inventions, meticulously documented failures, and breakthrough
+            discoveries that often revolutionize understanding of magical
+            theory. While their small frames make them unsuited for heavy labor
+            and their intense focus sometimes leads to absent-minded mishaps,
+            their keen intellects and patient wisdom have earned them positions
+            as advisors, scholars, and innovators across many cultures.
+
+
+            Gnomes measure success not by wealth or conquest, but by the
+            elegance of solutions discovered and knowledge preserved. They
+            maintain vast underground libraries carved into living rock, where
+            crystalline storage devices hold thousands of years of accumulated
+            learning. Their greatest heroes are not warriors but inventors whose
+            creations solved seemingly impossible problems – like Millicent
+            Gearspring, whose self-winding time pieces allowed surface dwellers
+            to coordinate activities across vast distances, or Bramblebeard the
+            Illuminator, whose improved lamp designs made deep mining safer for
+            all underground folk.
+          image: ff66c524f2af2dcc8ea797e98418a5407dd407cd619a96471d0e4e48bf20bfa9.jpg
           statMods:
             STR: -2
             DEX: 1
@@ -3620,6 +4027,32 @@ ambonmud:
             INT: 2
             WIS: 1
             CHA: 0
+          bodyDescription: Diminutive humanoid frame standing barely three feet tall with
+            a completely flat chest and no gendered features, possessing
+            naturally luminescent pale skin that glows faintly with soft
+            blue-white phosphorescence from millennia of underground adaptation.
+            Large, bright amber or crystal-clear eyes dominate an angular face
+            with sharp, inquisitive features and slightly pointed ears, while
+            wild tufts of silver-white or pale copper hair seem to crackle with
+            static energy from constant exposure to crystalline formations.
+            Nimble, long-fingered hands end in slightly luminescent fingertips
+            that pulse gently when touching metal or stone.
+          staffPrompt: A towering twenty-foot gnome of impossible cosmic intellect hovers
+            suspended in crystalline mathematical frameworks that bend space
+            itself, their luminescent skin now blazing with constellation
+            patterns of pure starlight while fragments of reality orbit their
+            form like living equations. Ancient amber eyes have become swirling
+            galaxies containing the blueprints of creation, radiating beams of
+            golden architect-light that reshape matter with each glance, while
+            their wild hair transforms into cascading streams of liquid mercury
+            embedded with floating geometric solids and spinning astrolabes.
+            Nimble fingers stretch impossibly long, each digit crowned with
+            miniature suns that pulse in harmony with the fundamental
+            frequencies of existence, trailing luminous formulae and alchemical
+            symbols that rewrite the laws of physics in their wake. A massive
+            halo of interlocked gears, crystalline prisms, and floating
+            libraries circles overhead, casting shadows that reveal hidden
+            truths about the universe's deepest mysteries.
     equipment:
       slots:
         head:
@@ -3878,41 +4311,6 @@ ambonmud:
       ROGUE: thornhaven_city:new_arrivals_hall
       RANGER: thornhaven_city:new_arrivals_hall
       SWARM: thornhaven_city:new_arrivals_hall
-    achievementCategories:
-      categories:
-        combat:
-          displayName: Combat
-        exploration:
-          displayName: Exploration
-        social:
-          displayName: Social
-        crafting:
-          displayName: Crafting
-        class:
-          displayName: Class
-    achievementCriterionTypes:
-      types:
-        kill:
-          displayName: Kill
-          progressFormat: "{current}/{required}"
-        reach_level:
-          displayName: Reach Level
-          progressFormat: level {current}/{required}
-        quest_complete:
-          displayName: Quest Complete
-          progressFormat: "{current}/{required}"
-    questObjectiveTypes:
-      types:
-        kill:
-          displayName: Kill
-        collect:
-          displayName: Collect
-    questCompletionTypes:
-      types:
-        auto:
-          displayName: Automatic
-        npc_turn_in:
-          displayName: NPC Turn-In
     lottery:
       enabled: true
       ticketCost: 100
@@ -4184,6 +4582,41 @@ ambonmud:
           displayName: Crafting Tokens
           abbreviation: CT
           description: Earned from crafting activities
+    achievementCategories:
+      categories:
+        combat:
+          displayName: Combat
+        exploration:
+          displayName: Exploration
+        social:
+          displayName: Social
+        crafting:
+          displayName: Crafting
+        class:
+          displayName: Class
+    achievementCriterionTypes:
+      types:
+        kill:
+          displayName: Kill
+          progressFormat: "{current}/{required}"
+        reach_level:
+          displayName: Reach Level
+          progressFormat: level {current}/{required}
+        quest_complete:
+          displayName: Quest Complete
+          progressFormat: "{current}/{required}"
+    questObjectiveTypes:
+      types:
+        kill:
+          displayName: Kill
+        collect:
+          displayName: Collect
+    questCompletionTypes:
+      types:
+        auto:
+          displayName: Automatic
+        npc_turn_in:
+          displayName: NPC Turn-In
   progression:
     maxLevel: 50
     xp:
@@ -4239,7 +4672,11 @@ ambonmud:
       instanceId: ""
       sharedSecret: CHANGE_ME
   images:
-    baseUrl: https://eryndal.ambon.dev/
+    baseUrl: https://auringold.ambon.dev/
+    spriteLevelTiers:
+      - 10
+      - 5
+      - 1
     globalAssets:
       compass_rose: e201e29796fd12881e521ea892c6d97e56d362d6bd443cdd5b494029314814d4.png
       direction_marker: 829a44129781d086ef03b8c317ec1db699add28e68cc83363b47ee760d73d58a.png
@@ -4254,6 +4691,6 @@ ambonmud:
       minimap_unexplored: 97875d65ca8d97a0e84229b02f16ba06c23fca3a0a627fa6e5bffe9d6ccccef8.png
       map_background: 1dac3f33448349e9e4d69d02eff5c16b0bf9d17a480693aa61bd8f6351aea37c.jpg
   videos:
-    baseUrl: https://eryndal.ambon.dev/
+    baseUrl: https://auringold.ambon.dev/
   audio:
-    baseUrl: https://eryndal.ambon.dev/
+    baseUrl: https://auringold.ambon.dev/

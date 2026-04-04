@@ -36,7 +36,7 @@ items:
     armor: 10
     basePrice: 650
     description: A breastplate fashioned from Elder Dragon scales, each one the size of a dinner plate. The most formidable
-      armour in Eryndal.
+      armour in Auringold.
     image: ffa7d135c966ab7a67d64a8b68d362db69c20556e674e876e9a5a6fe87c0962c.png
 mobs:
   celestial_wisp:
@@ -282,7 +282,7 @@ rooms:
   elder_shrine:
     title: Elder Shrine
     description: "A devotional space carved by the old order at the mountain's heart. The shrine is simple — a stone altar
-      bearing the geometric star-pattern found on every seal and ward in Eryndal. The inscription reads: 'We who watch.
+      bearing the geometric star-pattern found on every seal and ward in Auringold. The inscription reads: 'We who watch.
       We who ward. We who will not be forgotten.' The words glow faintly. The approach is south; the celestial bridge
       lies north."
     exits:
@@ -359,9 +359,9 @@ rooms:
   celestial_apex:
     title: Celestial Apex
     description: "Beyond the throne, a small chamber opens at the absolute summit of the peak. The dome is open here — true
-      sky above, wind and stars and the vast sweep of Eryndal below. A final inscription is carved into the floor: 'The
+      sky above, wind and stars and the vast sweep of Auringold below. A final inscription is carved into the floor: 'The
       ward is broken. The reckoning begins. What sleeps beneath will wake. May those who come after us be stronger than
-      we were.' The view from the apex encompasses the entire world of Eryndal — every zone, every road, every forest
+      we were.' The view from the apex encompasses the entire world of Auringold — every zone, every road, every forest
       and sea visible from this single, extraordinary vantage point. The throne room is back to the south."
     exits:
       s: celestial_throne

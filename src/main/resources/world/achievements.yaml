@@ -1,7 +1,7 @@
 achievements:
   first_blood:
     displayName: First Blood
-    description: Kill your first enemy in Eryndal.
+    description: Kill your first enemy in Auringold.
     category: combat
     hidden: false
     criteria:
@@ -94,7 +94,7 @@ achievements:
       title: Echo Diver
   master_crafter:
     displayName: Master Crafter
-    description: Craft 20 items at the forges and benches of Eryndal.
+    description: Craft 20 items at the forges and benches of Auringold.
     category: class
     hidden: false
     criteria:
@@ -107,7 +107,7 @@ achievements:
       title: Artisan
   herb_collector:
     displayName: Hedge Witch's Friend
-    description: Gather 10 herbs from the wilds of Eryndal.
+    description: Gather 10 herbs from the wilds of Auringold.
     category: class
     hidden: false
     criteria:
@@ -120,7 +120,7 @@ achievements:
       gold: 30
   ore_miner:
     displayName: Deep Delver
-    description: Mine 10 ore from the depths of Eryndal.
+    description: Mine 10 ore from the depths of Auringold.
     category: class
     hidden: false
     criteria:
@@ -186,7 +186,7 @@ achievements:
       title: Founder
   max_level:
     displayName: Level Ten
-    description: Reach level 10 and stand among Eryndal's elite.
+    description: Reach level 10 and stand among Auringold's elite.
     category: class
     hidden: false
     criteria:

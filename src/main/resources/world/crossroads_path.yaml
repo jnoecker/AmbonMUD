@@ -29,7 +29,7 @@ mobs:
     goldMax: 0
     dialogue:
       root:
-        text: Halt, traveller! Welcome to Eryndal. If you're heading into Thornhaven, the road south will take you straight to
+        text: Halt, traveller! Welcome to Auringold. If you're heading into Thornhaven, the road south will take you straight to
           the north gate. I'd recommend speaking to the innkeeper first — the Tarnished Flagon is hard to miss. What
           would you like to know?
         choices:
@@ -41,7 +41,7 @@ mobs:
             next: farewell
       quest_intro:
         text: Actually — I wonder if you'd do me a favour. I have a letter for Innkeeper Mira. She's the proprietor of the
-          Tarnished Flagon in Thornhaven. Could you deliver it? Consider it your first errand in Eryndal.
+          Tarnished Flagon in Thornhaven. Could you deliver it? Consider it your first errand in Auringold.
         choices:
           - text: I'll deliver it.
             next: accept_quest
@@ -92,7 +92,7 @@ mobs:
 quests:
   travelers_welcome:
     name: A Traveler's Welcome
-    description: Waypost Guard Edmon has asked you to prove yourself in Eryndal. Head to Thornwood Forest east of Thornhaven
+    description: Waypost Guard Edmon has asked you to prove yourself in Auringold. Head to Thornwood Forest east of Thornhaven
       and kill three stray wolves. It is a simple task, but it marks you as someone who takes initiative.
     giver: waypost_guard
     objectives:
