@@ -1071,6 +1071,31 @@ class GmcpEmitter(
         emit(sessionId, "Auction.List", listings)
     }
 
+    // ---------- lottery ----------
+
+    data class LotteryInfoPayload(
+        val jackpot: Long,
+        val totalTickets: Int,
+        val playerTickets: Int,
+        val nextDrawingMs: Long,
+    )
+
+    suspend fun sendLotteryInfo(
+        sessionId: SessionId,
+        info: LotteryInfo,
+    ) {
+        emit(
+            sessionId,
+            "Lottery.Info",
+            LotteryInfoPayload(
+                jackpot = info.jackpot,
+                totalTickets = info.totalTickets,
+                playerTickets = info.playerTickets,
+                nextDrawingMs = info.nextDrawingMs,
+            ),
+        )
+    }
+
     // ---------- pets ----------
 
     data class PetStatePayload(
@@ -1178,6 +1203,22 @@ class GmcpEmitter(
         standings: List<FactionStandingPayload>,
     ) {
         emit(sessionId, "Char.Factions", standings)
+    }
+
+    // ---------- currencies ----------
+
+    data class CurrencyBalancePayload(
+        val id: String,
+        val name: String,
+        val abbreviation: String,
+        val balance: Long,
+    )
+
+    suspend fun sendCharCurrencies(
+        sessionId: SessionId,
+        currencies: List<CurrencyBalancePayload>,
+    ) {
+        emit(sessionId, "Char.Currencies", currencies)
     }
 
     // ---------- room features ----------
@@ -1431,6 +1472,34 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- guild hall ----------
+
+    data class GuildHallRoomPayload(
+        val id: String,
+        val template: String,
+        val title: String,
+    )
+
+    suspend fun sendGuildHall(
+        sessionId: SessionId,
+        guildName: String,
+        rooms: List<GuildHallRoomPayload>,
+        membersInHall: Int,
+        maxRooms: Int,
+    ) {
+        emit(
+            sessionId,
+            "Guild.Hall",
+            GuildHallGmcpPayload(
+                guildName = guildName,
+                rooms = rooms.map { GuildHallRoomGmcpEntry(it.id, it.template, it.title) },
+                membersInHall = membersInHall,
+                maxRooms = maxRooms,
+            ),
+            supportCheck = "Guild.Info",
+        )
+    }
+
     // ---------- shop ----------
 
     suspend fun sendShopList(
@@ -1482,6 +1551,7 @@ class GmcpEmitter(
         level: Int? = null,
         race: String? = null,
         playerClass: String? = null,
+        playerDescription: String? = null,
     ) {
         emit(
             sessionId,
@@ -1494,6 +1564,7 @@ class GmcpEmitter(
                 level = level,
                 race = race,
                 playerClass = playerClass,
+                playerDescription = playerDescription,
             ),
             supportCheck = "Room.Info",
         )
@@ -1992,6 +2063,19 @@ class GmcpEmitter(
         val message: String,
     )
 
+    private data class GuildHallGmcpPayload(
+        val guildName: String,
+        val rooms: List<GuildHallRoomGmcpEntry>,
+        val membersInHall: Int,
+        val maxRooms: Int,
+    )
+
+    private data class GuildHallRoomGmcpEntry(
+        val id: String,
+        val template: String,
+        val title: String,
+    )
+
     private data class DialogueChoicePayload(
         val index: Int,
         val text: String,
@@ -2297,6 +2381,7 @@ class GmcpEmitter(
         val level: Int? = null,
         val race: String? = null,
         @get:JsonProperty("class") val playerClass: String? = null,
+        val playerDescription: String? = null,
     )
 
     // ---------- shop payloads ----------

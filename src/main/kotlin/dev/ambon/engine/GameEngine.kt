@@ -25,6 +25,7 @@ import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.CraftingHandler
+import dev.ambon.engine.commands.handlers.CurrencyHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.DuelHandler
 import dev.ambon.engine.commands.handlers.DungeonHandler
@@ -37,6 +38,7 @@ import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.HousingHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.LeaderboardHandler
+import dev.ambon.engine.commands.handlers.LotteryHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
@@ -228,6 +230,7 @@ class GameEngine(
                 housingSystem?.onPlayerLogin(sid)
                 sendHousingGmcp(sid)
                 guildSystem?.onPlayerLogin(sid)
+                guildHallSystem?.onPlayerLogin(sid)
                 friendsSystem.onPlayerLogin(sid)
                 sendQuestListGmcp(sid)
                 markStatsDirty(sid)
@@ -287,6 +290,7 @@ class GameEngine(
                         gmcpEmitter.sendAuctionList(p.sessionId, payload)
                     }
                 }
+                lotterySystem.onDisconnect(sid)
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
                 friendsSystem.onPlayerLogout(player.name)
@@ -590,6 +594,22 @@ class GameEngine(
         } else {
             null
         }
+    private val guildHallSystem: GuildHallSystem? =
+        if (guildSystem != null && guildRepo != null && engineConfig.guildHalls.enabled && engineConfig.guildHalls.templates.isNotEmpty()) {
+            GuildHallSystem(
+                players = players,
+                guildRepo = guildRepo!!,
+                world = world,
+                outbound = outbound,
+                config = engineConfig.guildHalls,
+                rankConfig = engineConfig.guildRanks,
+                markPlayerDirty = { sid -> players.persistPlayer(sid) },
+                gmcpEmitter = gmcpEmitter,
+                guildSystem = guildSystem!!,
+            )
+        } else {
+            null
+        }
     private val housingSystem: HousingSystem? =
         if (houseRepo != null && engineConfig.housing.enabled && engineConfig.housing.templates.isNotEmpty()) {
             HousingSystem(
@@ -772,6 +792,8 @@ class GameEngine(
 
     private val reputationSystem = ReputationSystem(config = engineConfig.factions)
 
+    private val currencySystem = CurrencySystem(config = engineConfig.currencies)
+
     private val duelRng = java.util.Random()
 
     private val auctionSystem = AuctionSystem(
@@ -779,6 +801,13 @@ class GameEngine(
         clock = clock,
         persistPath = java.nio.file.Path.of("data", "auction_listings.json"),
     ).also { it.loadPersistedListings() }
+
+    private val lotterySystem = LotterySystem(
+        lotteryConfig = engineConfig.lottery,
+        gamblingConfig = engineConfig.gambling,
+        clock = clock,
+        persistPath = java.nio.file.Path.of("data", "lottery_state.json"),
+    ).also { it.loadPersistedState() }
 
     private val dialogueSystem =
         DialogueSystem(
@@ -822,6 +851,21 @@ class GameEngine(
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
         combatSystem.zoneStartRoomLookup = { zoneId -> world.zoneStartRoom(zoneId) }
+        combatSystem.onPvpKill = { killerSid ->
+            val killer = players.get(killerSid)
+            if (killer != null && currencySystem.honorPerPvpKill > 0) {
+                currencySystem.award(killer, "honor", currencySystem.honorPerPvpKill)
+                val def = currencySystem.getDefinition("honor")
+                val displayName = def?.displayName ?: "Honor"
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        killerSid,
+                        "[Currency] You receive ${currencySystem.honorPerPvpKill} $displayName.",
+                    ),
+                )
+                emitCurrencies(killerSid, killer)
+            }
+        }
         statusEffectSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
 
         questSystem.onQuestCompleted = { sid, questId ->
@@ -841,6 +885,20 @@ class GameEngine(
                     )
                 }
                 if (changes.isNotEmpty()) emitFactions(sid, player)
+
+                // Award secondary currencies from quest rewards
+                val questDef = questRegistry.get(questId)
+                if (questDef != null) {
+                    for ((currencyId, amount) in questDef.rewards.currencies) {
+                        currencySystem.award(player, currencyId, amount)
+                        val def = currencySystem.getDefinition(currencyId)
+                        val displayName = def?.displayName ?: currencyId
+                        outbound.send(
+                            OutboundEvent.SendInfo(sid, "[Currency] You receive $amount $displayName."),
+                        )
+                    }
+                    if (questDef.rewards.currencies.isNotEmpty()) emitCurrencies(sid, player)
+                }
             }
         }
         questSystem.onQuestListChanged = { sid -> sendQuestListGmcp(sid) }
@@ -881,6 +939,7 @@ class GameEngine(
             dialogueSystem,
             groupSystem,
             guildSystem,
+            guildHallSystem,
             housingSystem,
         ),
     )
@@ -993,6 +1052,7 @@ class GameEngine(
                 onCrossZoneMove = crossZoneMove,
                 recallConfig = engineConfig.navigation.recall,
                 housingSystem = housingSystem,
+                guildHallSystem = guildHallSystem,
                 onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },
             ),
             communicationHandler,
@@ -1010,6 +1070,7 @@ class GameEngine(
                 abilitySystem = abilitySystem,
                 statusEffects = statusEffectSystem,
                 groupSystem = groupSystem,
+                currencySystem = currencySystem,
             ),
             ItemHandler(
                 ctx = ctx,
@@ -1039,6 +1100,19 @@ class GameEngine(
                 onItemCrafted = { sid ->
                     achievementSystem.onItemCrafted(sid)
                     globalQuestSystem?.onEvent(sid, GlobalQuestObjectiveType.CRAFT)
+                    val crafter = players.get(sid)
+                    if (crafter != null && currencySystem.tokensPerCraft > 0) {
+                        currencySystem.award(crafter, "crafting_tokens", currencySystem.tokensPerCraft)
+                        val def = currencySystem.getDefinition("crafting_tokens")
+                        val displayName = def?.displayName ?: "Crafting Tokens"
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sid,
+                                "[Currency] You receive ${currencySystem.tokensPerCraft} $displayName.",
+                            ),
+                        )
+                        emitCurrencies(sid, crafter)
+                    }
                 },
                 onItemGathered = { sid, skill ->
                     achievementSystem.onItemGathered(sid, skill)
@@ -1076,6 +1150,7 @@ class GameEngine(
             GuildHandler(
                 ctx = ctx,
                 guildSystem = guildSystem,
+                guildHallSystem = guildHallSystem,
             ),
             FriendsHandler(
                 ctx = ctx,
@@ -1110,9 +1185,18 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 playerRepo = persistence.playerRepo,
             ),
+            LotteryHandler(
+                ctx = ctx,
+                lotterySystem = lotterySystem,
+                markVitalsDirty = ::markVitalsDirty,
+            ),
             ReputationHandler(
                 ctx = ctx,
                 reputationSystem = reputationSystem,
+            ),
+            CurrencyHandler(
+                ctx = ctx,
+                currencySystem = currencySystem,
             ),
             PetHandler(
                 ctx = ctx,
@@ -1128,6 +1212,8 @@ class GameEngine(
                 trainerRegistry = trainerRegistry,
                 skillPointsConfig = engineConfig.skillPoints,
                 multiclassConfig = engineConfig.multiclass,
+                respecConfig = engineConfig.respec,
+                clock = clock,
                 markVitalsDirty = ::markVitalsDirty,
                 prestigeSkillPointBonus = { rank -> prestigeSystem.accumulatedSkillPointBonus(rank) },
             ),
@@ -1198,6 +1284,11 @@ class GameEngine(
 
             // Load guild data into memory.
             guildSystem?.initialize()
+
+            // Materialise guild halls.
+            if (guildSystem != null && guildHallSystem != null) {
+                guildHallSystem.materializeAllHalls(guildSystem.allGuilds())
+            }
 
             // Schedule initial leaderboard population and recurring refresh.
             leaderboardSystem?.let { sys ->
@@ -1409,6 +1500,44 @@ class GameEngine(
                     // Tick global competitive quests
                     tickGlobalQuest(tickStart)
 
+                    // Tick lottery drawing
+                    val drawingResult = lotterySystem.tick(tickStart)
+                    if (drawingResult != null) {
+                        val winner = drawingResult.winnerName
+                        if (winner != null) {
+                            val msg = "[Lottery] $winner wins the lottery jackpot of ${drawingResult.jackpotAmount} gold!"
+                            for (p in players.allPlayers()) {
+                                outbound.send(OutboundEvent.SendInfo(p.sessionId, msg))
+                            }
+                            // Credit gold to winner if online
+                            val winnerState = players.getByName(winner)
+                            if (winnerState != null) {
+                                winnerState.gold += drawingResult.jackpotAmount
+                                markVitalsDirty(winnerState.sessionId)
+                            } else {
+                                // Winner is offline — credit gold via persistence
+                                val repo = persistence.playerRepo
+                                if (repo != null) {
+                                    try {
+                                        val record = repo.findByName(winner)
+                                        if (record != null) {
+                                            repo.save(
+                                                record.copy(gold = record.gold + drawingResult.jackpotAmount),
+                                            )
+                                        }
+                                    } catch (e: Exception) {
+                                        log.warn(e) { "Failed to credit lottery winnings to offline player $winner" }
+                                    }
+                                }
+                            }
+                        } else {
+                            val msg = "[Lottery] No tickets sold this round. Jackpot rolls over (${drawingResult.jackpotAmount} gold)."
+                            for (p in players.allPlayers()) {
+                                outbound.send(OutboundEvent.SendInfo(p.sessionId, msg))
+                            }
+                        }
+                    }
+
                     // Expire grace period sessions
                     gracePeriodManager?.expireSessions()?.forEach { expired ->
                         log.info { "Running deferred disconnect for ${expired.playerState.name}" }
@@ -1609,6 +1738,9 @@ class GameEngine(
 
         val me = players.get(newSessionId) ?: return
         outbound.send(OutboundEvent.SetAnsi(newSessionId, me.ansiEnabled))
+        if (me.screenReaderEnabled) {
+            outbound.send(OutboundEvent.SetScreenReader(newSessionId, true))
+        }
         loginFlowHandler.onAfterLogin(newSessionId)
 
         // Full state sync (same as login)
@@ -1698,6 +1830,9 @@ class GameEngine(
         val player = players.get(sessionId) ?: return
         abilitySystem.loadAbilities(sessionId, player.learnedAbilityIds)
         outbound.send(OutboundEvent.SetAnsi(sessionId, player.ansiEnabled))
+        if (player.screenReaderEnabled) {
+            outbound.send(OutboundEvent.SetScreenReader(sessionId, true))
+        }
         if (!world.rooms.containsKey(player.roomId)) {
             players.moveTo(sessionId, world.startRoom)
         }
@@ -2082,6 +2217,21 @@ class GameEngine(
                     name = definitions[factionId]?.name ?: factionId,
                     reputation = reputation,
                     tier = StandingTier.forReputation(reputation).displayName,
+                )
+            },
+        )
+    }
+
+    private suspend fun emitCurrencies(sessionId: SessionId, player: PlayerState) {
+        val definitions = currencySystem.definitions()
+        gmcpEmitter.sendCharCurrencies(
+            sessionId,
+            definitions.map { (currencyId, def) ->
+                GmcpEmitter.CurrencyBalancePayload(
+                    id = currencyId,
+                    name = def.displayName,
+                    abbreviation = def.abbreviation,
+                    balance = currencySystem.balance(player, currencyId),
                 )
             },
         )
