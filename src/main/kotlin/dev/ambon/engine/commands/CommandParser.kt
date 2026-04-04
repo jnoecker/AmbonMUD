@@ -536,6 +536,11 @@ sealed interface Command {
         val keyword: String,
     ) : Command
 
+    /** Answer a riddle puzzle: "answer <text>". */
+    data class Answer(
+        val text: String,
+    ) : Command
+
     /** `describe <text>` — set your custom character description. */
     data class Describe(
         val text: String,
@@ -1126,6 +1131,9 @@ object CommandParser {
                 }
             }
         }?.let { return it }
+
+        // answer <text> — answer a riddle puzzle
+        requiredArg(line, listOf("answer"), "answer <text>", { Command.Answer(it) })?.let { return it }
 
         // pull <lever>
         requiredArg(line, listOf("pull"), "pull <lever>", { Command.Pull(it) })?.let { return it }
