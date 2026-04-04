@@ -122,27 +122,28 @@ Sessions
 ### Command System
 
 `CommandParser.kt` transforms raw input into a sealed `Command` hierarchy. `CommandRouter.kt` dispatches each variant. Key command categories:
-- **Navigation:** Move, Look, LookDir, Exits
+- **Navigation:** Move, Look, LookAt, LookDir, Exits, Recall, Petition
 - **Communication:** Say, Tell, Whisper, Gossip, Shout, Ooc, Pose, Emote, Gtell, Describe, DescribeClear, DescribeCheck
 - **Combat:** Kill, Flee, Cast, Dispel
 - **Items:** Get, Drop, Use, Give, Wear, Remove, Inventory, Equipment
-- **Progression:** Score, Spells, Effects, Balance, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear, SpriteList, SpriteSet, SpriteDefault, Leaderboard, HallOfFame, Prestige, PrestigeInfo
+- **World Features:** OpenFeature, CloseFeature, UnlockFeature, LockFeature, SearchContainer, GetFrom, PutIn, Pull, ReadSign
+- **Progression:** Score, Spells, Effects, Balance, SetGender, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear, SpriteList, SpriteSet, SpriteDefault, Leaderboard, HallOfFame, Prestige, PrestigeInfo
 - **NPCs:** Talk, DialogueChoice, ShopList, Buy, Sell
-- **Groups:** GroupCmd (Invite, Accept, Leave, Kick, List)
-- **Guilds:** Guild (Create, Disband, Invite, Accept, Leave, Kick, Promote, Demote, Motd, Roster, Info, Hall, HallBuy, HallExpand, HallEnter, HallLeave), Gchat
+- **Groups:** GroupCmd (Invite, Accept, Decline, Leave, Kick, List)
+- **Guilds:** Guild (Create, Disband, Invite, Accept, Decline, Leave, Kick, Promote, Demote, Motd, Roster, Info, Hall, HallBuy, HallExpand, HallEnter, HallLeave), Gchat
 - **Friends:** Friend (List, Add, Remove)
 - **Mail:** Mail (List, Read, Delete, Send, Abort)
-- **Crafting:** Gather, Craft, Recipes, Specialize, Enchant, Enchantments
-- **Economy:** Auction (List, Sell, Buy, Cancel), Bank (Balance, Deposit, Withdraw), Trade (Initiate, Offer, Accept, Cancel), LotteryInfo, LotteryBuy, Gamble, Currencies
+- **Crafting:** Gather, Craft, Recipes, CraftSkills, Specialize, Enchant, Enchantments
+- **Economy:** Auction (List, Sell, Buy, Cancel), Bank (Balance, DepositGold, DepositItem, WithdrawGold, WithdrawItem), Trade (Request, Offer, OfferGold, Accept, Cancel, Status), LotteryInfo, LotteryBuy, Gamble, Currencies
 - **Social:** Duel (Challenge, Accept, Decline), Reputation
 - **Training:** Train (List, Learn, Unlock, Reset)
 - **Pets:** Pet (Status, Dismiss, Name)
 - **World:** Time, Answer
 - **Questing:** QuestAuto, QuestAutoInfo, QuestAutoAbandon, DailyQuests, WeeklyQuests, GlobalQuestInfo
 - **Dungeons:** DungeonEnter, DungeonLeave
-- **Housing:** House (Info, Expand, Furnish, Describe, Invite, Kick, Lock, Unlock)
+- **Housing:** House (Status, ListTemplates, Buy, Expand, SetTitle, SetDescription, Invite, Kick, Guests)
 - **Sharding:** Phase (instance switching)
-- **Staff:** Goto, Transfer, Spawn, Smite, Kick, Shutdown
+- **Staff:** Goto, Transfer, Spawn, Smite, Kick, SetLevel, Dispel, Reload, Broadcast, Possess, Return, Invis, Shutdown
 - **Utility:** Help, Clear, Colors, Who, AnsiOn, AnsiOff, ScreenReaderOn, ScreenReaderOff
 - **Meta:** Invalid (with usage hint), Unknown, Noop (empty input)
 
