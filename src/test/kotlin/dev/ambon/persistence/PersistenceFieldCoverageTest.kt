@@ -130,6 +130,7 @@ class PersistenceFieldCoverageTest {
                 prestigeXpSpent = 1_750_000L,
                 pvpKills = 12,
                 pvpDeaths = 3,
+                dailyQuestData = """{"streakDays":5}""",
             )
 
         @BeforeAll

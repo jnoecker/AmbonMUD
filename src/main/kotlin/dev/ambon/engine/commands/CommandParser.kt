@@ -308,6 +308,10 @@ sealed interface Command {
         val nameHint: String,
     ) : Command
 
+    data object DailyQuests : Command
+
+    data object WeeklyQuests : Command
+
     data object AchievementList : Command
 
     data class TitleSet(
@@ -1080,6 +1084,10 @@ object CommandParser {
 
         // accept: "accept <quest-name>" (for accepting quests offered by NPCs)
         requiredArg(line, listOf("accept"), "accept <quest>", { Command.QuestAccept(it) })?.let { return it }
+
+        // daily/weekly quest board
+        matchPrefix(line, listOf("daily", "dailies")) { Command.DailyQuests }?.let { return it }
+        matchPrefix(line, listOf("weekly")) { Command.WeeklyQuests }?.let { return it }
 
         // quest subcommands: "quest log", "quest info <name>", "quest abandon <name>"
         // also "quests" as alias for "quest log"

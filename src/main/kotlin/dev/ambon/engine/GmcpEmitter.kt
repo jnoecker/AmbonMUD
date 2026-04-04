@@ -962,6 +962,52 @@ class GmcpEmitter(
         emit(sessionId, "Quest.Available", payload, supportCheck = "Quest")
     }
 
+    // ---------- daily / weekly quests ----------
+
+    suspend fun sendDailyQuests(
+        sessionId: SessionId,
+        dailyQuestSystem: DailyQuestSystem,
+    ) {
+        val board = dailyQuestSystem.getDailyQuestBoard(sessionId)
+        val streak = dailyQuestSystem.getStreak(sessionId)
+        val payload = QuestDailyPayload(
+            quests = board.map { info ->
+                DailyQuestEntryPayload(
+                    index = info.index,
+                    type = info.definition.type,
+                    description = info.definition.description,
+                    current = info.progress,
+                    required = info.definition.targetCount,
+                    completed = info.completed,
+                    goldReward = info.definition.goldReward,
+                    xpReward = info.definition.xpReward,
+                )
+            },
+            streakDays = streak,
+        )
+        emit(sessionId, "Quest.Daily", payload, supportCheck = "Quest")
+    }
+
+    suspend fun sendWeeklyQuests(
+        sessionId: SessionId,
+        dailyQuestSystem: DailyQuestSystem,
+    ) {
+        val board = dailyQuestSystem.getWeeklyQuestBoard(sessionId)
+        val payload = board.map { info ->
+            DailyQuestEntryPayload(
+                index = info.index,
+                type = info.definition.type,
+                description = info.definition.description,
+                current = info.progress,
+                required = info.definition.targetCount,
+                completed = info.completed,
+                goldReward = info.definition.goldReward,
+                xpReward = info.definition.xpReward,
+            )
+        }
+        emit(sessionId, "Quest.Weekly", payload, supportCheck = "Quest")
+    }
+
     // ---------- cooldowns ----------
 
     suspend fun sendCharCooldown(
@@ -2092,6 +2138,24 @@ class GmcpEmitter(
     private data class QuestAvailableRewardsPayload(
         val xp: Long,
         val gold: Long,
+    )
+
+    // ---------- daily / weekly quest payloads ----------
+
+    private data class QuestDailyPayload(
+        val quests: List<DailyQuestEntryPayload>,
+        val streakDays: Int,
+    )
+
+    private data class DailyQuestEntryPayload(
+        val index: Int,
+        val type: String,
+        val description: String,
+        val current: Int,
+        val required: Int,
+        val completed: Boolean,
+        val goldReward: Long,
+        val xpReward: Long,
     )
 
     // ---------- cooldown payload ----------
