@@ -4,6 +4,7 @@ import dev.ambon.config.RecallConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.LockableState
+import dev.ambon.engine.GuildHallSystem
 import dev.ambon.engine.HouseEntryResult
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.ceilSeconds
@@ -25,6 +26,7 @@ class NavigationHandler(
     private val clock: Clock = Clock.systemUTC(),
     private val recallConfig: RecallConfig = RecallConfig(),
     private val housingSystem: HousingSystem? = null,
+    private val guildHallSystem: GuildHallSystem? = null,
     private val onPlayerMoved: (suspend (SessionId, RoomId) -> Unit)? = null,
     private val puzzleSystem: dev.ambon.engine.PuzzleSystem? = null,
 ) : CommandHandler {
@@ -125,6 +127,36 @@ class NavigationHandler(
                     )
                     onPlayerMoved?.invoke(sessionId, origin)
                     outbound.send(OutboundEvent.SendText(sessionId, "You step outside and find yourself back where you came from."))
+                    ctx.sendLook(sessionId)
+                } else {
+                    outbound.send(OutboundEvent.SendText(sessionId, "The exit shimmers but does not yield."))
+                }
+                return
+            }
+
+            // Guild hall exit: resolve dynamic destination
+            if (guildHallSystem != null && guildHallSystem.isGuildHallExit(to)) {
+                val origin = guildHallSystem.resolveHallExit(sessionId)
+                if (origin != null) {
+                    if (!world.rooms.containsKey(origin)) {
+                        if (!attemptCrossZoneMove(sessionId, origin, onCrossZoneMove, router::suppressAutoPrompt)) {
+                            outbound.send(OutboundEvent.SendText(sessionId, "The exit shimmers but does not yield."))
+                        }
+                        return
+                    }
+                    movePlayerWithNotify(
+                        sessionId,
+                        from,
+                        origin,
+                        "leaves the guild hall.",
+                        "arrives from a guild hall.",
+                        players,
+                        outbound,
+                        gmcpEmitter,
+                        dialogueSystem,
+                    )
+                    onPlayerMoved?.invoke(sessionId, origin)
+                    outbound.send(OutboundEvent.SendText(sessionId, "You leave the guild hall and find yourself back where you came from."))
                     ctx.sendLook(sessionId)
                 } else {
                     outbound.send(OutboundEvent.SendText(sessionId, "The exit shimmers but does not yield."))
@@ -342,6 +374,9 @@ class NavigationHandler(
             val p = otherPlayer
             val playerDesc = "You see ${p.name}, a level ${p.level} ${p.race} ${p.playerClass}."
             outbound.send(OutboundEvent.SendText(sessionId, playerDesc))
+            if (p.description.isNotEmpty()) {
+                outbound.send(OutboundEvent.SendText(sessionId, p.description))
+            }
             gmcpEmitter?.sendLookTarget(
                 sessionId,
                 "player",
@@ -350,6 +385,7 @@ class NavigationHandler(
                 level = p.level,
                 race = p.race,
                 playerClass = p.playerClass,
+                playerDescription = p.description.ifEmpty { null },
             )
             return
         }
