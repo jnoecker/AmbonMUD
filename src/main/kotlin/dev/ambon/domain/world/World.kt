@@ -5,6 +5,7 @@ import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.dungeon.DungeonTemplateDef
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.idZone
+import dev.ambon.domain.puzzle.PuzzleDef
 import dev.ambon.domain.quest.QuestDef
 
 class World(
@@ -21,6 +22,7 @@ class World(
     gatheringNodes: List<GatheringNodeDef> = emptyList(),
     recipes: List<RecipeDef> = emptyList(),
     dungeonTemplates: List<DungeonTemplateDef> = emptyList(),
+    puzzleDefinitions: List<PuzzleDef> = emptyList(),
 ) {
     private val _rooms = LinkedHashMap(rooms)
     val rooms: Map<RoomId, Room> get() = _rooms
@@ -66,6 +68,9 @@ class World(
 
     val dungeonTemplates: List<DungeonTemplateDef> = dungeonTemplates.toList()
 
+    private val _puzzleDefinitions = puzzleDefinitions.toMutableList()
+    val puzzleDefinitions: List<PuzzleDef> get() = _puzzleDefinitions
+
     /** Returns the set of zone names present in this world. */
     fun zones(): Set<String> = _rooms.keys.mapTo(mutableSetOf()) { it.zone }
 
@@ -110,6 +115,9 @@ class World(
 
         _recipes.removeAll { it.id.startsWith("$zone:") }
         _recipes.addAll(source.recipes.filter { it.id.startsWith("$zone:") })
+
+        _puzzleDefinitions.removeAll { it.id.startsWith("$zone:") }
+        _puzzleDefinitions.addAll(source.puzzleDefinitions.filter { it.id.startsWith("$zone:") })
 
         source.zoneLifespansMinutes[zone]?.let { _zoneLifespansMinutes[zone] = it }
             ?: _zoneLifespansMinutes.remove(zone)
@@ -162,6 +170,9 @@ class World(
 
         _recipes.clear()
         _recipes.addAll(source.recipes)
+
+        _puzzleDefinitions.clear()
+        _puzzleDefinitions.addAll(source.puzzleDefinitions)
 
         return oldRoomIds - source.rooms.keys
     }

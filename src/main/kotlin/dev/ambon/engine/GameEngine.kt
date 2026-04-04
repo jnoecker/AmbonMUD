@@ -41,6 +41,7 @@ import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.PrestigeHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
+import dev.ambon.engine.commands.handlers.PuzzleHandler
 import dev.ambon.engine.commands.handlers.ReputationHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.SpriteHandler
@@ -268,6 +269,7 @@ class GameEngine(
             showLoginScreen = { sid -> outbound.send(OutboundEvent.ShowLoginScreen(sid)) },
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
+                puzzleSystem.removeSession(sid)
                 petSystem.onOwnerDisconnect(sid)
                 tradeSystem.cancelForPlayer(sid)
                 val endedDuel = duelSystem.onPlayerDisconnect(sid)
@@ -759,6 +761,8 @@ class GameEngine(
 
     private val reputationSystem = ReputationSystem(config = engineConfig.factions)
 
+    private val puzzleSystem = PuzzleSystem(world = world, clock = clock)
+
     private val duelRng = java.util.Random()
 
     private val auctionSystem = AuctionSystem(
@@ -946,6 +950,7 @@ class GameEngine(
             genderRegistry = genderRegistry,
             leaderboardSystem = leaderboardSystem,
             trainerRegistry = trainerRegistry,
+            puzzleSystem = puzzleSystem,
         )
 
         communicationHandler = CommunicationHandler(
@@ -972,6 +977,8 @@ class GameEngine(
             },
         )
 
+        val puzzleHandlerInstance = PuzzleHandler(ctx = ctx, puzzleSystem = puzzleSystem)
+
         listOf(
             NavigationHandler(
                 ctx = ctx,
@@ -981,6 +988,7 @@ class GameEngine(
                 recallConfig = engineConfig.navigation.recall,
                 housingSystem = housingSystem,
                 onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },
+                puzzleSystem = puzzleSystem,
             ),
             communicationHandler,
             CombatHandler(
@@ -1066,7 +1074,8 @@ class GameEngine(
                 ctx = ctx,
                 housingSystem = housingSystem,
             ),
-            WorldFeaturesHandler(ctx = ctx),
+            puzzleHandlerInstance,
+            WorldFeaturesHandler(ctx = ctx, puzzleHandler = puzzleHandlerInstance),
             adminHandler,
             DungeonHandler(
                 ctx = ctx,

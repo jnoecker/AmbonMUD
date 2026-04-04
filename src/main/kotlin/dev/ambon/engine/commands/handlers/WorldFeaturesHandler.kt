@@ -15,6 +15,7 @@ import dev.ambon.engine.events.OutboundEvent
 
 class WorldFeaturesHandler(
     ctx: EngineContext,
+    private val puzzleHandler: PuzzleHandler? = null,
 ) : CommandHandler {
     private val world = ctx.world
     private val players = ctx.players
@@ -189,6 +190,8 @@ class WorldFeaturesHandler(
         outbound.send(OutboundEvent.SendInfo(sessionId, "You pull the ${feature.displayName}. It moves ${newState.name.lowercase()}."))
         broadcastToRoomExcept(me.roomId, sessionId, "${me.name} pulls the ${feature.displayName}.", players, outbound)
         emitRoomFeatures(room)
+        // Notify puzzle system of the lever interaction
+        puzzleHandler?.onFeatureInteraction(sessionId, feature.keyword, "pull")
     }
 
     private suspend fun handleReadSign(
