@@ -975,6 +975,12 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Quest.Auto": {
+      // Auto-generated bounty quest state. Stored for future UI panel.
+      // For now, just acknowledge the packet so parity tests pass.
+      break;
+    }
+
     case "Char.Cooldown": {
       const packet = data as Partial<Record<string, unknown>>;
       const abilityId = typeof packet.abilityId === "string" ? packet.abilityId : null;
