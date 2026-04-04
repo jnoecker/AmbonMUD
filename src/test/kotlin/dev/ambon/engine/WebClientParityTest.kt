@@ -91,6 +91,9 @@ class WebClientParityTest {
             "QuestLog" to "quest_log",
             "QuestInfo" to "quest_info",
             "QuestAbandon" to "quest_abandon",
+            "QuestAuto" to "bounty",
+            "QuestAutoInfo" to "bounty_info",
+            "QuestAutoAbandon" to "bounty_abandon",
             "Accept" to "accept",
             "Achievements" to "achievements",
             // Social

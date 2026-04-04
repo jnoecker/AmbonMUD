@@ -21,6 +21,7 @@ import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
+import dev.ambon.engine.commands.handlers.AutoQuestHandler
 import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
@@ -833,6 +834,18 @@ class GameEngine(
             clock = clock,
         )
 
+    private val autoQuestSystem: AutoQuestSystem? =
+        if (engineConfig.autoQuests.enabled) {
+            AutoQuestSystem(
+                config = engineConfig.autoQuests,
+                world = world,
+                players = players,
+                clock = clock,
+            )
+        } else {
+            null
+        }
+
     private val achievementCategoryRegistry = AchievementCategoryRegistry(engineConfig.achievementCategories)
 
     private val achievementSystem =
@@ -945,6 +958,7 @@ class GameEngine(
             guildSystem,
             guildHallSystem,
             housingSystem,
+            autoQuestSystem,
         ),
     )
 
@@ -992,6 +1006,7 @@ class GameEngine(
     private val communicationHandler: CommunicationHandler
     private val adminHandler: AdminHandler
     private val mailHandler: MailHandler
+    private val autoQuestHandler: AutoQuestHandler
 
     init {
         val crossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = if (handoffManager != null) ::handleCrossZoneMove else null
@@ -1246,6 +1261,33 @@ class GameEngine(
 
         mailHandler = MailHandler(ctx = ctx, clock = clock)
         mailHandler.register(router)
+
+        autoQuestHandler = AutoQuestHandler(
+            ctx = ctx,
+            autoQuestSystem = autoQuestSystem,
+            onQuestReward = { sid, xp, gold ->
+                val ps = players.get(sid)
+                if (ps != null) {
+                    if (gold > 0) {
+                        ps.gold += gold
+                        outbound.send(OutboundEvent.SendText(sid, "You receive $gold gold."))
+                        gmcpEmitter.sendCharGain(sid, "gold", gold, "bounty")
+                    }
+                    if (xp > 0) {
+                        val levelUp = players.grantXp(sid, xp)
+                        outbound.send(OutboundEvent.SendText(sid, "You gain $xp XP."))
+                        gmcpEmitter.sendCharGain(sid, "xp", xp, "bounty")
+                        if (levelUp != null) {
+                            outbound.send(
+                                OutboundEvent.SendInfo(sid, "Congratulations! You reached level ${levelUp.newLevel}!"),
+                            )
+                        }
+                    }
+                    markVitalsDirty(sid)
+                }
+            },
+        )
+        autoQuestHandler.register(router)
     }
 
     /**
@@ -1572,6 +1614,14 @@ class GameEngine(
                     schedulerSample.stop(metrics.schedulerRunDueTimer)
                     metrics.onSchedulerActionsExecuted(actionsRan)
                     metrics.onSchedulerActionsDropped(actionsDropped)
+
+                    // Expire timed auto-quests
+                    if (autoQuestSystem != null) {
+                        val expired = autoQuestSystem.tick(clock.millis())
+                        for (sid in expired) {
+                            autoQuestHandler.handleExpired(sid)
+                        }
+                    }
 
                     // Reset zones when their lifespan elapses.
                     zoneResetHandler.tick()
@@ -2108,6 +2158,7 @@ class GameEngine(
 
         questSystem.onMobKilled(sessionId, templateKey)
         achievementSystem.onMobKilled(sessionId, templateKey)
+        autoQuestHandler.onMobKill(sessionId, templateKey)
         globalQuestSystem?.onEvent(sessionId, GlobalQuestObjectiveType.KILL)
 
         // Faction reputation changes on mob kill
