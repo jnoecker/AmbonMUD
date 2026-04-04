@@ -172,6 +172,7 @@ object WorldLoader {
                         exits = emptyMap(),
                         station = station,
                         bank = rf.bank,
+                        tavern = rf.tavern,
                         image = (rf.image ?: imageDefaults?.room)?.let { "$imagesBase$it" },
                         video = rf.video?.let { "$videosBase$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },

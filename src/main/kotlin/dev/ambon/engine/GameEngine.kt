@@ -37,6 +37,7 @@ import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.HousingHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.LeaderboardHandler
+import dev.ambon.engine.commands.handlers.LotteryHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
@@ -288,6 +289,7 @@ class GameEngine(
                         gmcpEmitter.sendAuctionList(p.sessionId, payload)
                     }
                 }
+                lotterySystem.onDisconnect(sid)
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
                 friendsSystem.onPlayerLogout(player.name)
@@ -787,6 +789,13 @@ class GameEngine(
         persistPath = java.nio.file.Path.of("data", "auction_listings.json"),
     ).also { it.loadPersistedListings() }
 
+    private val lotterySystem = LotterySystem(
+        lotteryConfig = engineConfig.lottery,
+        gamblingConfig = engineConfig.gambling,
+        clock = clock,
+        persistPath = java.nio.file.Path.of("data", "lottery_state.json"),
+    ).also { it.loadPersistedState() }
+
     private val dialogueSystem =
         DialogueSystem(
             mobs = mobs,
@@ -1159,6 +1168,11 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 playerRepo = persistence.playerRepo,
             ),
+            LotteryHandler(
+                ctx = ctx,
+                lotterySystem = lotterySystem,
+                markVitalsDirty = ::markVitalsDirty,
+            ),
             ReputationHandler(
                 ctx = ctx,
                 reputationSystem = reputationSystem,
@@ -1459,6 +1473,44 @@ class GameEngine(
                             items.inventory(expired.sellerSid),
                             items.equipment(expired.sellerSid),
                         )
+                    }
+
+                    // Tick lottery drawing
+                    val drawingResult = lotterySystem.tick(tickStart)
+                    if (drawingResult != null) {
+                        val winner = drawingResult.winnerName
+                        if (winner != null) {
+                            val msg = "[Lottery] $winner wins the lottery jackpot of ${drawingResult.jackpotAmount} gold!"
+                            for (p in players.allPlayers()) {
+                                outbound.send(OutboundEvent.SendInfo(p.sessionId, msg))
+                            }
+                            // Credit gold to winner if online
+                            val winnerState = players.getByName(winner)
+                            if (winnerState != null) {
+                                winnerState.gold += drawingResult.jackpotAmount
+                                markVitalsDirty(winnerState.sessionId)
+                            } else {
+                                // Winner is offline — credit gold via persistence
+                                val repo = persistence.playerRepo
+                                if (repo != null) {
+                                    try {
+                                        val record = repo.findByName(winner)
+                                        if (record != null) {
+                                            repo.save(
+                                                record.copy(gold = record.gold + drawingResult.jackpotAmount),
+                                            )
+                                        }
+                                    } catch (e: Exception) {
+                                        log.warn(e) { "Failed to credit lottery winnings to offline player $winner" }
+                                    }
+                                }
+                            }
+                        } else {
+                            val msg = "[Lottery] No tickets sold this round. Jackpot rolls over (${drawingResult.jackpotAmount} gold)."
+                            for (p in players.allPlayers()) {
+                                outbound.send(OutboundEvent.SendInfo(p.sessionId, msg))
+                            }
+                        }
                     }
 
                     // Expire grace period sessions

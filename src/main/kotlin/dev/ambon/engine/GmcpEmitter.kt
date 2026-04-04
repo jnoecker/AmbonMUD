@@ -1071,6 +1071,31 @@ class GmcpEmitter(
         emit(sessionId, "Auction.List", listings)
     }
 
+    // ---------- lottery ----------
+
+    data class LotteryInfoPayload(
+        val jackpot: Long,
+        val totalTickets: Int,
+        val playerTickets: Int,
+        val nextDrawingMs: Long,
+    )
+
+    suspend fun sendLotteryInfo(
+        sessionId: SessionId,
+        info: LotteryInfo,
+    ) {
+        emit(
+            sessionId,
+            "Lottery.Info",
+            LotteryInfoPayload(
+                jackpot = info.jackpot,
+                totalTickets = info.totalTickets,
+                playerTickets = info.playerTickets,
+                nextDrawingMs = info.nextDrawingMs,
+            ),
+        )
+    }
+
     // ---------- pets ----------
 
     data class PetStatePayload(
