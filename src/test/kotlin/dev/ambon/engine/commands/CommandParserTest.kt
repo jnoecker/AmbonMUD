@@ -571,6 +571,15 @@ class CommandParserTest {
         assertEquals(Command.CraftSkills, CommandParser.parse("prof"))
     }
 
+    // -------- currencies command --------
+
+    @Test
+    fun `parses currencies command aliases`() {
+        assertEquals(Command.Currencies, CommandParser.parse("currencies"))
+        assertEquals(Command.Currencies, CommandParser.parse("currency"))
+        assertEquals(Command.Currencies, CommandParser.parse("wallet"))
+    }
+
     // -------- friend commands --------
 
     @Test

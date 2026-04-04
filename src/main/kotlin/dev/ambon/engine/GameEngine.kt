@@ -25,6 +25,7 @@ import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.CraftingHandler
+import dev.ambon.engine.commands.handlers.CurrencyHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.DuelHandler
 import dev.ambon.engine.commands.handlers.DungeonHandler
@@ -776,6 +777,8 @@ class GameEngine(
 
     private val reputationSystem = ReputationSystem(config = engineConfig.factions)
 
+    private val currencySystem = CurrencySystem(config = engineConfig.currencies)
+
     private val duelRng = java.util.Random()
 
     private val auctionSystem = AuctionSystem(
@@ -826,6 +829,21 @@ class GameEngine(
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
         combatSystem.zoneStartRoomLookup = { zoneId -> world.zoneStartRoom(zoneId) }
+        combatSystem.onPvpKill = { killerSid ->
+            val killer = players.get(killerSid)
+            if (killer != null && currencySystem.honorPerPvpKill > 0) {
+                currencySystem.award(killer, "honor", currencySystem.honorPerPvpKill)
+                val def = currencySystem.getDefinition("honor")
+                val displayName = def?.displayName ?: "Honor"
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        killerSid,
+                        "[Currency] You receive ${currencySystem.honorPerPvpKill} $displayName.",
+                    ),
+                )
+                emitCurrencies(killerSid, killer)
+            }
+        }
         statusEffectSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
 
         questSystem.onQuestCompleted = { sid, questId ->
@@ -845,6 +863,20 @@ class GameEngine(
                     )
                 }
                 if (changes.isNotEmpty()) emitFactions(sid, player)
+
+                // Award secondary currencies from quest rewards
+                val questDef = questRegistry.get(questId)
+                if (questDef != null) {
+                    for ((currencyId, amount) in questDef.rewards.currencies) {
+                        currencySystem.award(player, currencyId, amount)
+                        val def = currencySystem.getDefinition(currencyId)
+                        val displayName = def?.displayName ?: currencyId
+                        outbound.send(
+                            OutboundEvent.SendInfo(sid, "[Currency] You receive $amount $displayName."),
+                        )
+                    }
+                    if (questDef.rewards.currencies.isNotEmpty()) emitCurrencies(sid, player)
+                }
             }
         }
         questSystem.onQuestListChanged = { sid -> sendQuestListGmcp(sid) }
@@ -1016,6 +1048,7 @@ class GameEngine(
                 abilitySystem = abilitySystem,
                 statusEffects = statusEffectSystem,
                 groupSystem = groupSystem,
+                currencySystem = currencySystem,
             ),
             ItemHandler(
                 ctx = ctx,
@@ -1042,7 +1075,22 @@ class GameEngine(
                 craftingSkillRegistry = craftingSkillRegistry,
                 gatheringRegistry = gatheringRegistry,
                 markVitalsDirty = ::markVitalsDirty,
-                onItemCrafted = { sid -> achievementSystem.onItemCrafted(sid) },
+                onItemCrafted = { sid ->
+                    achievementSystem.onItemCrafted(sid)
+                    val crafter = players.get(sid)
+                    if (crafter != null && currencySystem.tokensPerCraft > 0) {
+                        currencySystem.award(crafter, "crafting_tokens", currencySystem.tokensPerCraft)
+                        val def = currencySystem.getDefinition("crafting_tokens")
+                        val displayName = def?.displayName ?: "Crafting Tokens"
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sid,
+                                "[Currency] You receive ${currencySystem.tokensPerCraft} $displayName.",
+                            ),
+                        )
+                        emitCurrencies(sid, crafter)
+                    }
+                },
                 onItemGathered = { sid, skill -> achievementSystem.onItemGathered(sid, skill) },
             ),
             EnchantHandler(
@@ -1114,6 +1162,10 @@ class GameEngine(
             ReputationHandler(
                 ctx = ctx,
                 reputationSystem = reputationSystem,
+            ),
+            CurrencyHandler(
+                ctx = ctx,
+                currencySystem = currencySystem,
             ),
             PetHandler(
                 ctx = ctx,
@@ -2035,6 +2087,21 @@ class GameEngine(
                     name = definitions[factionId]?.name ?: factionId,
                     reputation = reputation,
                     tier = StandingTier.forReputation(reputation).displayName,
+                )
+            },
+        )
+    }
+
+    private suspend fun emitCurrencies(sessionId: SessionId, player: PlayerState) {
+        val definitions = currencySystem.definitions()
+        gmcpEmitter.sendCharCurrencies(
+            sessionId,
+            definitions.map { (currencyId, def) ->
+                GmcpEmitter.CurrencyBalancePayload(
+                    id = currencyId,
+                    name = def.displayName,
+                    abbreviation = def.abbreviation,
+                    balance = currencySystem.balance(player, currencyId),
                 )
             },
         )
