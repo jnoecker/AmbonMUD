@@ -962,6 +962,24 @@ class GmcpEmitter(
         emit(sessionId, "Quest.Available", payload, supportCheck = "Quest")
     }
 
+    data class AutoQuestPayload(
+        val active: Boolean,
+        val targetMobName: String? = null,
+        val targetMobTemplateId: String? = null,
+        val killsRequired: Int? = null,
+        val killsCompleted: Int? = null,
+        val rewardGold: Long? = null,
+        val rewardXp: Long? = null,
+        val timeRemainingMs: Long? = null,
+    )
+
+    suspend fun sendAutoQuest(
+        sessionId: SessionId,
+        payload: AutoQuestPayload,
+    ) {
+        emit(sessionId, "Quest.Auto", payload, supportCheck = "Quest")
+    }
+
     // ---------- cooldowns ----------
 
     suspend fun sendCharCooldown(

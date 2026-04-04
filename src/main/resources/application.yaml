@@ -3374,6 +3374,17 @@ ambonmud:
           amount: 2
           description: "+2 All Stats"
 
+    autoQuests:
+      enabled: true
+      timeLimitMs: 600000
+      cooldownMs: 60000
+      rewardGoldBase: 50
+      rewardGoldPerLevel: 10
+      rewardXpBase: 100
+      rewardXpPerLevel: 25
+      killCountMin: 3
+      killCountMax: 8
+
     classes:
       definitions:
         WARRIOR:
