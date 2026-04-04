@@ -6025,7 +6025,7 @@ body {
 
   /* Text mode on mobile: smaller canvas strip */
   .panel-play.text-mode .canvas-strip {
-    height: 80px;
+    height: 100px;
   }
 
   .panel-play.text-mode .terminal-card-text-mode {
@@ -6170,7 +6170,7 @@ body {
   }
 
   .panel-play.text-mode .canvas-strip {
-    height: 120px;
+    height: 160px;
     flex-shrink: 0;
   }
 
@@ -9099,8 +9099,8 @@ body {
 .canvas-strip {
   position: relative;
   flex-shrink: 0;
-  height: 120px;
-  min-height: 80px;
+  height: 160px;
+  min-height: 100px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--line-panel);

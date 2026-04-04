@@ -450,14 +450,15 @@ export class WorldScene {
     this.titleText.style.fontSize = Math.round(26 * textScale);
     this.descText.style.fontSize = Math.round(18 * textScale);
 
-    // Minimap in bottom-right — smaller on mobile
+    // Minimap in top-right
     const mapDiam = w < 500 ? MINIMAP_MOBILE : MINIMAP_DESKTOP;
     this.minimap.setDiameter(mapDiam);
-    this.minimap.layout(w - mapDiam - MINIMAP_MARGIN, h - this.minimap.totalHeight - MINIMAP_MARGIN);
+    this.minimap.layout(w - mapDiam - MINIMAP_MARGIN, MINIMAP_MARGIN);
 
-    // Room title and description in top-left (full width now that minimap moved)
+    // Room title and description in top-left, leaving space for minimap
     const textLeft = 16;
-    const textMaxWidth = Math.max(200, w - textLeft - 40);
+    const textRight = mapDiam + MINIMAP_MARGIN * 2 + 8; // space for minimap
+    const textMaxWidth = Math.max(200, w - textLeft - textRight);
     this.titleText.x = textLeft;
     this.titleText.y = 14;
     this.descText.x = textLeft + 10;
