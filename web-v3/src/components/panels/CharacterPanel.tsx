@@ -75,8 +75,8 @@ export function CharacterPanel({
     [achievements.completed],
   );
 
-  const CATEGORY_LABELS: Record<string, string> = { tier: "Tier Sprites", achievement: "Achievement Sprites", staff: "Staff Sprites" };
-  const CATEGORY_ORDER = ["tier", "achievement", "staff"];
+  const CATEGORY_LABELS: Record<string, string> = { general: "Sprites", tier: "Tier Sprites", achievement: "Achievement Sprites", staff: "Staff Sprites" };
+  const CATEGORY_ORDER = ["general", "tier", "achievement", "staff"];
   const spritesByCategory = useMemo(() => {
     const grouped = new Map<string, SpriteEntry[]>();
     for (const sprite of spriteList.sprites) {
