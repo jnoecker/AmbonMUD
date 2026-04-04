@@ -138,6 +138,7 @@ rooms:
   roadside_inn:
     title: "The Milestone Inn"
     description: "A squat stone building that has been receiving road-weary travellers for a century. The common room is low and smoky but the fire is warm and Merchant Pell keeps a good supply of road provisions. A carved milestone beside the door reads: 'THORNHAVEN — 2 LEAGUES'. Type 'list' to browse Pell's wares."
+    tavern: true
     exits:
       w: roadside_camp
 

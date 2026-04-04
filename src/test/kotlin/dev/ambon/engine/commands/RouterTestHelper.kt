@@ -10,6 +10,7 @@ import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.GuildHallSystem
 import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.MobRegistry
@@ -92,6 +93,7 @@ internal fun buildTestRouter(
     dungeonRegistry: DungeonRegistry? = null,
     housingSystem: HousingSystem? = null,
     puzzleSystem: PuzzleSystem? = null,
+    guildHallSystem: GuildHallSystem? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -125,7 +127,7 @@ internal fun buildTestRouter(
         ShopHandler(ctx = ctx, shopRegistry = shopRegistry, economyConfig = economyConfig),
         DialogueQuestHandler(ctx = ctx),
         GroupHandler(ctx = ctx, groupSystem = groupSystem),
-        GuildHandler(ctx = ctx, guildSystem = guildSystem),
+        GuildHandler(ctx = ctx, guildSystem = guildSystem, guildHallSystem = guildHallSystem),
         puzzleHandler,
         WorldFeaturesHandler(ctx = ctx, puzzleHandler = puzzleHandler),
         MailHandler(ctx = ctx),
