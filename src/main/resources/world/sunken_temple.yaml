@@ -331,3 +331,20 @@ rooms:
     description: "The innermost room of the temple, where the high priest once officiated. The Elder Revenant drifts here in a slow orbit of the central dais, its luminous form never quite still. The chamber is cold, absolutely silent, and carries the weight of a thousand years of solitary occupation. The sanctum hall is back to the south."
     exits:
       s: sanctum_hall
+
+# ─── Puzzles ─────────────────────────────────────────────────────────────────
+
+puzzles:
+  guardian_riddle:
+    type: riddle
+    mobId: stone_guardian
+    roomId: temple_forecourt
+    question: "I guard the way yet have no sword. I stand for ages yet have no feet. I open for the worthy yet have no hands. What am I?"
+    answer: "a door"
+    acceptableAnswers: ["a door", "door", "the door", "gate", "a gate"]
+    reward:
+      type: give_xp
+      xp: 50
+    failMessage: "The guardian's eyes dim. 'You are not yet worthy. Think again.'"
+    successMessage: "The guardian's eyes flare bright. 'You speak truth. Pass, and carry this knowledge.'"
+    cooldownMs: 0

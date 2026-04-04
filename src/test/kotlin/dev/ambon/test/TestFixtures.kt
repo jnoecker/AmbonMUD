@@ -63,6 +63,7 @@ object TestWorlds {
     val testWorld: World by lazy { WorldLoader.loadFromResource("world/test_world.yaml") }
     val okSmall: World by lazy { WorldLoader.loadFromResource("world/ok_small.yaml") }
     val okFeatures: World by lazy { WorldLoader.loadFromResource("world/ok_features.yaml") }
+    val okPuzzles: World by lazy { WorldLoader.loadFromResource("world/ok_puzzles.yaml") }
 }
 
 object TestPasswordHasher : PasswordHasher {

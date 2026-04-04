@@ -1,0 +1,112 @@
+zone: ok_puzzles
+startRoom: entrance
+
+items:
+  ancient_gem:
+    displayName: "an ancient gem"
+    keyword: gem
+    description: "A glittering gem of immense value."
+    basePrice: 100
+
+mobs:
+  sphinx:
+    name: "the Sphinx"
+    room: entrance
+    tier: standard
+    level: 1
+    respawnSeconds: 60
+    xpReward: 0
+
+rooms:
+  entrance:
+    title: "Puzzle Chamber Entrance"
+    description: "A dimly lit chamber. A sphinx sits before the northern wall."
+    exits:
+      east: lever_room
+    features:
+      red_lever:
+        type: LEVER
+        displayName: "a red lever"
+        keyword: red
+        initialState: up
+        resetWithZone: true
+      blue_lever:
+        type: LEVER
+        displayName: "a blue lever"
+        keyword: blue
+        initialState: up
+        resetWithZone: true
+      green_lever:
+        type: LEVER
+        displayName: "a green lever"
+        keyword: green
+        initialState: up
+        resetWithZone: true
+
+  lever_room:
+    title: "Lever Chamber"
+    description: "A room with various mechanisms."
+    exits:
+      west: entrance
+
+  hidden_room:
+    title: "Hidden Treasure Room"
+    description: "A secret chamber filled with treasure."
+    exits:
+      south: entrance
+
+puzzles:
+  sphinx_riddle:
+    type: riddle
+    mobId: sphinx
+    roomId: entrance
+    question: "What has roots that nobody sees, is taller than trees, up it goes, and yet never grows?"
+    answer: "mountain"
+    acceptableAnswers: ["mountain", "a mountain", "the mountain"]
+    reward:
+      type: unlock_exit
+      exitDirection: north
+      targetRoom: hidden_room
+    failMessage: "The sphinx shakes its head. 'Think harder, mortal.'"
+    successMessage: "The sphinx nods and steps aside, revealing a passage to the north."
+    cooldownMs: 0
+
+  lever_sequence:
+    type: sequence
+    roomId: entrance
+    steps:
+      - { feature: red, action: pull }
+      - { feature: blue, action: pull }
+      - { feature: green, action: pull }
+    reward:
+      type: give_gold
+      gold: 50
+    resetOnFail: true
+    failMessage: "A grinding sound echoes as the mechanism resets."
+    successMessage: "With a final click, a shower of gold coins appears!"
+
+  xp_riddle:
+    type: riddle
+    roomId: lever_room
+    question: "I speak without a mouth and hear without ears. What am I?"
+    answer: "echo"
+    acceptableAnswers: ["echo", "an echo"]
+    reward:
+      type: give_xp
+      xp: 100
+    failMessage: "That is not the answer."
+    successMessage: "Correct! Ancient wisdom flows into you."
+    cooldownMs: 0
+
+  item_riddle:
+    type: riddle
+    roomId: lever_room
+    question: "The more you take, the more you leave behind. What am I?"
+    answer: "footsteps"
+    acceptableAnswers: ["footsteps", "footprints", "steps"]
+    reward:
+      type: give_item
+      itemId: ancient_gem
+    failMessage: "Not quite."
+    successMessage: "A gem materializes in your hands!"
+    cooldownMs: 0
