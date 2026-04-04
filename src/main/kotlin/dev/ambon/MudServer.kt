@@ -190,6 +190,7 @@ class MudServer(
         }
     private val spriteRegistry =
         SpriteRegistry().also { reg ->
+            SpriteLoader.loadFromResource("sprites.yaml", reg)
             SpriteLoader.loadFromResource("world/sprites.yaml", reg)
         }
     private val progression = PlayerProgression(config.progression, classRegistry, config.engine.stats.bindings)
