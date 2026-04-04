@@ -3805,6 +3805,23 @@ ambonmud:
           enemies: [shadowmere_cult]
       questRewards: {}
 
+    currencies:
+      honorPerPvpKill: 10
+      tokensPerCraft: 1
+      definitions:
+        quest_points:
+          displayName: "Quest Points"
+          abbreviation: "QP"
+          description: "Earned from completing quests"
+        honor:
+          displayName: "Honor"
+          abbreviation: "Hon"
+          description: "Earned from PvP kills"
+        crafting_tokens:
+          displayName: "Crafting Tokens"
+          abbreviation: "CT"
+          description: "Earned from crafting activities"
+
     commands:
       entries:
         help:
