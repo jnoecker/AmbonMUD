@@ -3279,6 +3279,11 @@ ambonmud:
       minLevel: 10
       goldCost: 500
 
+    respec:
+      enabled: true
+      goldCost: 1000
+      cooldownMs: 3600000
+
     prestige:
       enabled: true
       xpCostBase: 500000
@@ -3709,6 +3714,25 @@ ambonmud:
     guild:
       maxSize: 50
       inviteTimeoutMs: 60000
+    guildHalls:
+      enabled: true
+      purchaseCost: 50000
+      roomCost: 10000
+      maxRooms: 10
+      templates:
+        meeting_hall:
+          title: "Guild Meeting Hall"
+          description: "A grand chamber with a long oak table surrounded by sturdy chairs. Banners bearing the guild's colors hang from the walls."
+        vault:
+          title: "Guild Vault"
+          description: "A reinforced room with iron-bound chests lining the walls. The guild's shared treasures are stored here."
+          hasStorage: true
+        training_room:
+          title: "Training Room"
+          description: "Practice dummies and weapon racks fill this room. Guild members come here to hone their skills."
+        trophy_room:
+          title: "Trophy Room"
+          description: "Glass cases display trophies and mementos from the guild's greatest achievements."
     guildRanks:
       founderRank: leader
       defaultRank: member
@@ -3964,6 +3988,21 @@ ambonmud:
           category: guilds
         guild_info:
           usage: "guild info (or just 'guild')"
+          category: guilds
+        guild_hall:
+          usage: "guild hall"
+          category: guilds
+        guild_hall_buy:
+          usage: "guild hall buy"
+          category: guilds
+        guild_hall_expand:
+          usage: "guild hall expand <template>"
+          category: guilds
+        guild_hall_enter:
+          usage: "guild hall enter"
+          category: guilds
+        guild_hall_leave:
+          usage: "guild hall leave"
           category: guilds
         gchat:
           usage: "gchat/g <message>"
