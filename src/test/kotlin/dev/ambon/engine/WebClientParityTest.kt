@@ -107,6 +107,8 @@ class WebClientParityTest {
             "Help" to "help",
             "AnsiOn" to "ansi",
             "AnsiOff" to "ansi",
+            "ScreenReaderOn" to "screenreader",
+            "ScreenReaderOff" to "screenreader",
             "Colors" to "colors",
             "Clear" to "clear",
             "Quit" to "quit",
@@ -277,6 +279,9 @@ class WebClientParityTest {
             "Char.Sprites", // sprite picker panel not yet built
             "Quest.Daily", // daily quest board panel not yet built (#912)
             "Quest.Weekly", // weekly quest board panel not yet built (#912)
+            "Lottery.Info", // lottery panel not yet built
+            "Char.Currencies", // currency display panel not yet built
+            "Guild.Hall", // guild hall UI not yet built
         )
         val missing = emittedPackages.sorted().filter { it !in clientHandlers && it !in serverOnlyExclusions }
 

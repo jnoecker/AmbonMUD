@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.config.MulticlassConfig
+import dev.ambon.config.RespecConfig
 import dev.ambon.config.SkillPointsConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.TrainerDefinition
@@ -13,6 +14,7 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import java.time.Clock
 
 class TrainerHandler(
     private val ctx: EngineContext,
@@ -20,6 +22,8 @@ class TrainerHandler(
     private val trainerRegistry: TrainerRegistry,
     private val skillPointsConfig: SkillPointsConfig = SkillPointsConfig(),
     private val multiclassConfig: MulticlassConfig = MulticlassConfig(),
+    private val respecConfig: RespecConfig = RespecConfig(),
+    private val clock: Clock = Clock.systemUTC(),
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val prestigeSkillPointBonus: (Int) -> Int = { 0 },
 ) : CommandHandler {
@@ -31,6 +35,7 @@ class TrainerHandler(
         router.on<Command.Train.List> { sid, _ -> handleTrainList(sid) }
         router.on<Command.Train.Learn> { sid, cmd -> handleTrainLearn(sid, cmd.keyword) }
         router.on<Command.Train.Unlock> { sid, _ -> handleTrainUnlock(sid) }
+        router.on<Command.Train.Reset> { sid, _ -> handleTrainReset(sid) }
     }
 
     /** Returns the trainer at [me]'s current room, or null (sending an error) if there is none. */
@@ -274,6 +279,86 @@ class TrainerHandler(
                 ),
             )
             gmcpEmitter?.sendCharClasses(sessionId, me.unlockedClasses, me.playerClass)
+        }
+    }
+
+    private suspend fun handleTrainReset(sessionId: SessionId) {
+        players.withPlayer(sessionId) { me ->
+            val trainer = findTrainer(sessionId, me) ?: return
+
+            if (!respecConfig.enabled) {
+                outbound.send(OutboundEvent.SendError(sessionId, "Ability respec is not available."))
+                return
+            }
+
+            if (me.learnedAbilityIds.isEmpty()) {
+                outbound.send(OutboundEvent.SendError(sessionId, "You have no learned abilities to reset."))
+                return
+            }
+
+            // Check cooldown
+            if (respecConfig.cooldownMs > 0 && me.lastRespecAtMs > 0) {
+                val elapsed = clock.millis() - me.lastRespecAtMs
+                if (elapsed < respecConfig.cooldownMs) {
+                    val remainingSec = ((respecConfig.cooldownMs - elapsed) / 1000).coerceAtLeast(1)
+                    outbound.send(
+                        OutboundEvent.SendError(
+                            sessionId,
+                            "You must wait $remainingSec seconds before resetting abilities again.",
+                        ),
+                    )
+                    return
+                }
+            }
+
+            // Check gold
+            val cost = respecConfig.goldCost
+            if (!me.isStaff && me.gold < cost) {
+                outbound.send(
+                    OutboundEvent.SendError(sessionId, "You need $cost gold to reset your abilities."),
+                )
+                return
+            }
+
+            // Deduct gold
+            if (!me.isStaff) me.gold -= cost
+            markVitalsDirty(sessionId)
+
+            // Clear abilities
+            val resetCount = me.learnedAbilityIds.size
+            me.learnedAbilityIds.clear()
+            abilitySystem.clearLearnedAbilities(sessionId)
+            me.lastRespecAtMs = clock.millis()
+            players.persistPlayer(sessionId)
+
+            val available = abilitySystem.availableSkillPoints(
+                level = me.level,
+                learnedCount = 0,
+                interval = skillPointsConfig.interval,
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
+            )
+
+            outbound.send(
+                OutboundEvent.SendText(
+                    sessionId,
+                    "Your abilities have been reset! $resetCount abilities removed. " +
+                        "You now have $available skill points to spend.",
+                ),
+            )
+
+            // Emit GMCP updates
+            gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { id ->
+                abilitySystem.cooldownRemainingMs(sessionId, id)
+            }
+            gmcpEmitter?.sendCharVitals(sessionId, me)
+            gmcpEmitter?.sendTrainerList(
+                sessionId,
+                trainer,
+                abilitySystem.trainableAbilities(trainer.className, me.level, me.learnedAbilityIds),
+                available,
+                me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) },
+                multiclassConfig,
+            )
         }
     }
 }

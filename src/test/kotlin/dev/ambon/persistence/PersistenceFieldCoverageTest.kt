@@ -113,6 +113,7 @@ class PersistenceFieldCoverageTest {
                 discoveredRecipes = setOf("zone:copper_sword", "zone:iron_sword"),
                 craftingSpecialization = "smithing",
                 factionStandings = mapOf("crimson_guild" to 250, "shadowclan" to -100),
+                currencies = mapOf("quest_points" to 50L, "honor" to 120L),
                 inventoryItems = listOf(
                     ItemInstance(ItemId("test:potion"), Item(keyword = "potion", displayName = "a healing potion")),
                 ),
@@ -131,6 +132,8 @@ class PersistenceFieldCoverageTest {
                 pvpKills = 12,
                 pvpDeaths = 3,
                 dailyQuestData = """{"streakDays":5}""",
+                screenReaderEnabled = true,
+                description = "A tall warrior with a scar across the left cheek.",
             )
 
         @BeforeAll
