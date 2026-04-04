@@ -439,6 +439,11 @@ sealed interface Command {
         data object Unlock : Train
     }
 
+    // ---- Global quest commands ----
+
+    /** `gquest` / `gq` / `global` — show the current global competitive quest status. */
+    data object GlobalQuestInfo : Command
+
     // ---- Leaderboard commands ----
 
     /** Show a leaderboard. [category] is one of: level, achievements, crafting, dungeons, kills. */
@@ -1268,6 +1273,7 @@ object CommandParser {
             "craftskills", "professions", "prof" -> Command.CraftSkills
             "reputation", "rep", "factions", "standing", "standings" -> Command.Reputation
             "dungeon leave", "dungeon exit" -> Command.DungeonLeave
+            "gquest", "gq", "global" -> Command.GlobalQuestInfo
             else -> Command.Unknown(line)
         }
     }
