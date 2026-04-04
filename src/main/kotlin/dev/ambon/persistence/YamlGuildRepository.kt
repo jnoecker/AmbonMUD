@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.domain.guild.GuildHallRoom
 import dev.ambon.domain.guild.GuildRecord
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
@@ -96,6 +97,14 @@ class YamlGuildRepository(
 
 // -------- DTO --------
 
+internal data class GuildHallRoomDto(
+    val id: String = "",
+    val template: String = "",
+    val title: String = "",
+    val description: String = "",
+    val customDescription: String? = null,
+)
+
 internal data class GuildDto(
     val id: String,
     val name: String,
@@ -105,6 +114,7 @@ internal data class GuildDto(
     val motd: String? = null,
     val members: Map<Long, String> = emptyMap(),
     val createdAtEpochMs: Long,
+    val hallRooms: List<GuildHallRoomDto> = emptyList(),
 ) {
     fun toDomain(): GuildRecord =
         GuildRecord(
@@ -115,6 +125,15 @@ internal data class GuildDto(
             motd = motd,
             members = members.mapKeys { PlayerId(it.key) }.mapValues { it.value.lowercase() },
             createdAtEpochMs = createdAtEpochMs,
+            hallRooms = hallRooms.map {
+                GuildHallRoom(
+                    id = it.id,
+                    template = it.template,
+                    title = it.title,
+                    description = it.description,
+                    customDescription = it.customDescription,
+                )
+            },
         )
 
     companion object {
@@ -128,6 +147,15 @@ internal data class GuildDto(
                 motd = record.motd,
                 members = record.members.mapKeys { it.key.value }.mapValues { it.value },
                 createdAtEpochMs = record.createdAtEpochMs,
+                hallRooms = record.hallRooms.map {
+                    GuildHallRoomDto(
+                        id = it.id,
+                        template = it.template,
+                        title = it.title,
+                        description = it.description,
+                        customDescription = it.customDescription,
+                    )
+                },
             )
     }
 }

@@ -1,0 +1,2 @@
+ALTER TABLE guilds
+    ADD COLUMN hall_rooms TEXT NOT NULL DEFAULT '[]';

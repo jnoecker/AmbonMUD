@@ -1092,6 +1092,7 @@ rooms:
     title: "The Tarnished Flagon Inn"
     description: "A low-beamed common room with mismatched chairs and a crackling hearthfire. Dried herbs hang from the rafters and the smell of wood smoke and barley fills the air. Innkeeper Mira stands behind the bar with a ready smile. A faded sign reads: 'Set your recall here — this hearth is always burning.' The door leads back to the west district."
     bank: true
+    tavern: true
     exits:
       s: west_district
 

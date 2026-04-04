@@ -44,6 +44,15 @@ class GmcpWebContractTest {
             // Web client handler to be added when the daily quest UI panel is built.
             "Quest.Daily",
             "Quest.Weekly",
+            // Lottery.Info: web client lottery panel not yet implemented.
+            // Server emits jackpot/ticket data for the lottery system (#905).
+            "Lottery.Info",
+            // Char.Currencies: web client currency panel not yet implemented.
+            // Server emits this for the secondary currency system (#904);
+            // web handler to be added when the currency display panel is built.
+            "Char.Currencies",
+            // Guild hall info; web handler to be added when guild hall UI is built.
+            "Guild.Hall",
         )
 
         /**

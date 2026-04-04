@@ -20,6 +20,7 @@ private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
 private val craftingSkillsType = object : TypeReference<Map<String, CraftingSkillState>>() {}
 private val discoveredRecipesType = object : TypeReference<Set<String>>() {}
 private val factionStandingsType = object : TypeReference<Map<String, Int>>() {}
+private val currenciesType = object : TypeReference<Map<String, Long>>() {}
 private val friendsListType = object : TypeReference<Set<String>>() {}
 private val inventoryItemsType = object : TypeReference<List<ItemInstance>>() {}
 private val equippedItemsType = object : TypeReference<Map<String, ItemInstance>>() {}
@@ -62,6 +63,7 @@ object PlayersTable : Table("players") {
     val discoveredRecipes = text("discovered_recipes").default("[]")
     val craftingSpecialization = varchar("crafting_specialization", 64).nullable()
     val factionStandings = text("faction_standings").default("{}")
+    val currencies = text("currencies").default("{}")
     val friendsList = text("friends_list").default("[]")
     val bankGold = long("bank_gold").default(0L)
     val bankItems = text("bank_items").default("[]")
@@ -79,6 +81,8 @@ object PlayersTable : Table("players") {
     val pvpKills = integer("pvp_kills").default(0)
     val pvpDeaths = integer("pvp_deaths").default(0)
     val dailyQuestData = text("daily_quest_data").default("{}")
+    val screenReaderEnabled = bool("screen_reader_enabled").default(false)
+    val description = text("description").default("")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -115,6 +119,7 @@ object PlayersTable : Table("players") {
             discoveredRecipes = safeReadJson(row[discoveredRecipes], discoveredRecipesType, emptySet()),
             craftingSpecialization = row[craftingSpecialization],
             factionStandings = safeReadJson(row[factionStandings], factionStandingsType, emptyMap()),
+            currencies = safeReadJson(row[currencies], currenciesType, emptyMap()),
             friendsList = safeReadJson(row[friendsList], friendsListType, emptySet()),
             bankGold = row[bankGold],
             bankItems = safeReadJson(row[bankItems], inventoryItemsType, emptyList()),
@@ -132,6 +137,8 @@ object PlayersTable : Table("players") {
             pvpKills = row[pvpKills],
             pvpDeaths = row[pvpDeaths],
             dailyQuestData = row[dailyQuestData],
+            screenReaderEnabled = row[screenReaderEnabled],
+            description = row[description],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -167,6 +174,7 @@ object PlayersTable : Table("players") {
         statement[discoveredRecipes] = jsonMapper.writeValueAsString(record.discoveredRecipes)
         statement[craftingSpecialization] = record.craftingSpecialization
         statement[factionStandings] = jsonMapper.writeValueAsString(record.factionStandings)
+        statement[currencies] = jsonMapper.writeValueAsString(record.currencies)
         statement[friendsList] = jsonMapper.writeValueAsString(record.friendsList)
         statement[bankGold] = record.bankGold
         statement[bankItems] = jsonMapper.writeValueAsString(record.bankItems)
@@ -184,5 +192,7 @@ object PlayersTable : Table("players") {
         statement[pvpKills] = record.pvpKills
         statement[pvpDeaths] = record.pvpDeaths
         statement[dailyQuestData] = record.dailyQuestData
+        statement[screenReaderEnabled] = record.screenReaderEnabled
+        statement[description] = record.description
     }
 }

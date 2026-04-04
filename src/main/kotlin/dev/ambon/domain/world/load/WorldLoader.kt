@@ -172,6 +172,7 @@ object WorldLoader {
                         exits = emptyMap(),
                         station = station,
                         bank = rf.bank,
+                        tavern = rf.tavern,
                         image = (rf.image ?: imageDefaults?.room)?.let { "$imagesBase$it" },
                         video = rf.video?.let { "$videosBase$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
@@ -514,7 +515,11 @@ object WorldLoader {
                         description = questFile.description,
                         giverMobId = qualifyId(zone, giver),
                         objectives = objectives,
-                        rewards = QuestRewards(xp = questFile.rewards.xp, gold = questFile.rewards.gold),
+                        rewards = QuestRewards(
+                            xp = questFile.rewards.xp,
+                            gold = questFile.rewards.gold,
+                            currencies = questFile.rewards.currencies,
+                        ),
                         completionType = completionType,
                     ),
                 )

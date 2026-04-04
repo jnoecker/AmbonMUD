@@ -693,6 +693,15 @@ class AbilitySystem(
         return null
     }
 
+    /**
+     * Clears all learned abilities for a session, effectively resetting the player's
+     * skill point allocations. Cooldowns are also cleared since the abilities are gone.
+     */
+    fun clearLearnedAbilities(sessionId: SessionId) {
+        learnedAbilities[sessionId]?.clear()
+        cooldowns.remove(sessionId)
+    }
+
     fun cooldownRemainingMs(
         sessionId: SessionId,
         abilityId: AbilityId,

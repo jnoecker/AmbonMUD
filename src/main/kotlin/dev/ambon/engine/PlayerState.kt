@@ -61,10 +61,14 @@ data class PlayerState(
     var bankItems: MutableList<dev.ambon.domain.items.ItemInstance> = mutableListOf(),
     /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
     var recallCooldownUntilMs: Long = 0L,
+    /** Epoch-ms of last stat respec. Runtime-only; not persisted (cooldown resets on logout). */
+    var lastRespecAtMs: Long = 0L,
     var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
     var discoveredRecipes: MutableSet<String> = mutableSetOf(),
     var craftingSpecialization: String? = null,
     var factionStandings: MutableMap<String, Int> = mutableMapOf(),
+    /** Secondary currency balances (e.g. quest_points, honor, crafting_tokens). */
+    var currencies: MutableMap<String, Long> = mutableMapOf(),
     /** Epoch-ms timestamp after which gathering is available again. Runtime-only; not persisted. */
     var gatherCooldownUntilMs: Long = 0L,
     /** Epoch-ms of last command input. Runtime-only; used for idle calculation. */
@@ -97,6 +101,10 @@ data class PlayerState(
     var pvpDeaths: Int = 0,
     /** Daily/weekly quest tracking state. */
     var dailyQuestState: DailyQuestState = DailyQuestState(),
+    /** Whether screen-reader accessibility mode is enabled. */
+    var screenReaderEnabled: Boolean = false,
+    /** Player-written custom description visible when others look at them. */
+    var description: String = "",
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -215,6 +223,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         discoveredRecipes = discoveredRecipes.toMutableSet(),
         craftingSpecialization = craftingSpecialization,
         factionStandings = factionStandings.toMutableMap(),
+        currencies = currencies.toMutableMap(),
         friendsList = friendsList.toMutableSet(),
         bankGold = bankGold,
         bankItems = bankItems.toMutableList(),
@@ -231,6 +240,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         dailyQuestState = runCatching {
             jsonMapper.readValue(dailyQuestData, DailyQuestState::class.java)
         }.getOrDefault(DailyQuestState()),
+        screenReaderEnabled = screenReaderEnabled,
+        description = description,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -267,6 +278,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         discoveredRecipes = discoveredRecipes.toSet(),
         craftingSpecialization = craftingSpecialization,
         factionStandings = factionStandings.toMap(),
+        currencies = currencies.toMap(),
         friendsList = friendsList.toSet(),
         bankGold = bankGold,
         bankItems = bankItems.toList(),
@@ -280,6 +292,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
         dailyQuestData = jsonMapper.writeValueAsString(dailyQuestState),
+        screenReaderEnabled = screenReaderEnabled,
+        description = description,
     )
 }
 
