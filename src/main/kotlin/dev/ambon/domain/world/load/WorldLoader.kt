@@ -514,7 +514,11 @@ object WorldLoader {
                         description = questFile.description,
                         giverMobId = qualifyId(zone, giver),
                         objectives = objectives,
-                        rewards = QuestRewards(xp = questFile.rewards.xp, gold = questFile.rewards.gold),
+                        rewards = QuestRewards(
+                            xp = questFile.rewards.xp,
+                            gold = questFile.rewards.gold,
+                            currencies = questFile.rewards.currencies,
+                        ),
                         completionType = completionType,
                     ),
                 )

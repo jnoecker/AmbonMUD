@@ -1180,6 +1180,22 @@ class GmcpEmitter(
         emit(sessionId, "Char.Factions", standings)
     }
 
+    // ---------- currencies ----------
+
+    data class CurrencyBalancePayload(
+        val id: String,
+        val name: String,
+        val abbreviation: String,
+        val balance: Long,
+    )
+
+    suspend fun sendCharCurrencies(
+        sessionId: SessionId,
+        currencies: List<CurrencyBalancePayload>,
+    ) {
+        emit(sessionId, "Char.Currencies", currencies)
+    }
+
     // ---------- room features ----------
 
     suspend fun sendRoomFeatures(

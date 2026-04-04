@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.StatDefinition
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.CurrencySystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.abilities.AbilitySystem
@@ -19,6 +20,7 @@ class ProgressionHandler(
     private val abilitySystem: AbilitySystem? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
+    private val currencySystem: CurrencySystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
@@ -107,6 +109,14 @@ class ProgressionHandler(
                 outbound.send(
                     OutboundEvent.SendInfo(sessionId, "  Prestige: Rank ${me.prestigeLevel}"),
                 )
+            }
+            val currDefs = currencySystem?.definitions() ?: emptyMap()
+            if (currDefs.isNotEmpty()) {
+                val summary = currDefs.entries.joinToString(", ") { (id, def) ->
+                    val bal = currencySystem!!.balance(me, id)
+                    "${def.abbreviation}: $bal"
+                }
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  Currencies: $summary"))
             }
         }
     }
