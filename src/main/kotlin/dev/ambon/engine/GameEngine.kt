@@ -227,6 +227,7 @@ class GameEngine(
                 housingSystem?.onPlayerLogin(sid)
                 sendHousingGmcp(sid)
                 guildSystem?.onPlayerLogin(sid)
+                guildHallSystem?.onPlayerLogin(sid)
                 friendsSystem.onPlayerLogin(sid)
                 sendQuestListGmcp(sid)
                 markStatsDirty(sid)
@@ -589,6 +590,22 @@ class GameEngine(
         } else {
             null
         }
+    private val guildHallSystem: GuildHallSystem? =
+        if (guildSystem != null && guildRepo != null && engineConfig.guildHalls.enabled && engineConfig.guildHalls.templates.isNotEmpty()) {
+            GuildHallSystem(
+                players = players,
+                guildRepo = guildRepo!!,
+                world = world,
+                outbound = outbound,
+                config = engineConfig.guildHalls,
+                rankConfig = engineConfig.guildRanks,
+                markPlayerDirty = { sid -> players.persistPlayer(sid) },
+                gmcpEmitter = gmcpEmitter,
+                guildSystem = guildSystem!!,
+            )
+        } else {
+            null
+        }
     private val housingSystem: HousingSystem? =
         if (houseRepo != null && engineConfig.housing.enabled && engineConfig.housing.templates.isNotEmpty()) {
             HousingSystem(
@@ -868,6 +885,7 @@ class GameEngine(
             dialogueSystem,
             groupSystem,
             guildSystem,
+            guildHallSystem,
             housingSystem,
         ),
     )
@@ -980,6 +998,7 @@ class GameEngine(
                 onCrossZoneMove = crossZoneMove,
                 recallConfig = engineConfig.navigation.recall,
                 housingSystem = housingSystem,
+                guildHallSystem = guildHallSystem,
                 onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },
             ),
             communicationHandler,
@@ -1057,6 +1076,7 @@ class GameEngine(
             GuildHandler(
                 ctx = ctx,
                 guildSystem = guildSystem,
+                guildHallSystem = guildHallSystem,
             ),
             FriendsHandler(
                 ctx = ctx,
@@ -1174,6 +1194,11 @@ class GameEngine(
 
             // Load guild data into memory.
             guildSystem?.initialize()
+
+            // Materialise guild halls.
+            if (guildSystem != null && guildHallSystem != null) {
+                guildHallSystem.materializeAllHalls(guildSystem.allGuilds())
+            }
 
             // Schedule initial leaderboard population and recurring refresh.
             leaderboardSystem?.let { sys ->
