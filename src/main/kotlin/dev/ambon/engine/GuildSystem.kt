@@ -484,6 +484,17 @@ class GuildSystem(
             GuildMemberInfo(name = name, rank = rank, online = online, level = ps?.level)
         }
 
+    /** Returns the in-memory guild record by id, or null if not found. */
+    fun getGuild(guildId: String): GuildRecord? = guildsById[guildId]
+
+    /** Returns all in-memory guild records. */
+    fun allGuilds(): Collection<GuildRecord> = guildsById.values
+
+    /** Replaces the cached guild record (used by GuildHallSystem after mutating hallRooms). */
+    fun updateGuildCache(record: GuildRecord) {
+        guildsById[record.id] = record
+    }
+
     // -------- helpers --------
 
     private suspend fun withMembership(

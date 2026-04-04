@@ -50,6 +50,7 @@ message OutboundEventProto {
     ShowAnsiDemoProto show_ansi_demo = 10;
     SessionRedirectProto session_redirect = 11;
     GmcpDataProto gmcp_data = 12;
+    SetScreenReaderProto set_screen_reader = 13;
   }
 }
 
@@ -70,6 +71,10 @@ message SendPromptProto {}
 message ShowLoginScreenProto {}
 
 message SetAnsiProto {
+  bool enabled = 1;
+}
+
+message SetScreenReaderProto {
   bool enabled = 1;
 }
 

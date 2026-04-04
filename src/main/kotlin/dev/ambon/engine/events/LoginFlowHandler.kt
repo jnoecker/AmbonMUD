@@ -518,6 +518,9 @@ internal class LoginFlowHandler(
         playerLocationIndex?.register(me.name)
         abilitySystem.loadAbilities(sessionId, me.learnedAbilityIds)
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
+        if (me.screenReaderEnabled) {
+            outbound.send(OutboundEvent.SetScreenReader(sessionId, true))
+        }
         if (!ensureLoginRoomAvailable(sessionId, suppressEnterBroadcast)) return
         if (!suppressEnterBroadcast) {
             broadcastToRoom(players, outbound, me.roomId, "${me.name} enters.", sessionId)
