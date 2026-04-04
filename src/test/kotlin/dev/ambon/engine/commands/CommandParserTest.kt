@@ -840,6 +840,23 @@ class CommandParserTest {
         assertEquals(Command.PrestigeInfo, CommandParser.parse("prestige perks"))
     }
 
+    // ── Global quest commands ───────────────────────────────────────────
+
+    @Test
+    fun `gquest parses to GlobalQuestInfo`() {
+        assertEquals(Command.GlobalQuestInfo, CommandParser.parse("gquest"))
+    }
+
+    @Test
+    fun `gq parses to GlobalQuestInfo`() {
+        assertEquals(Command.GlobalQuestInfo, CommandParser.parse("gq"))
+    }
+
+    @Test
+    fun `global parses to GlobalQuestInfo`() {
+        assertEquals(Command.GlobalQuestInfo, CommandParser.parse("global"))
+    }
+
     // ---- Describe ----
 
     @Test

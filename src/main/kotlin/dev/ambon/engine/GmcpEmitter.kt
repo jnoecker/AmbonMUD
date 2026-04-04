@@ -2550,6 +2550,86 @@ class GmcpEmitter(
         val scoreLabel: String,
         val entries: List<LeaderboardEntryPayload>,
     )
+
+    // ---------- global quest ----------
+
+    /** Sends the `Quest.Global` GMCP package with current global quest state. */
+    suspend fun sendGlobalQuest(
+        sessionId: SessionId,
+        status: GlobalQuestStatus,
+        playerProgress: Int,
+    ) {
+        emit(
+            sessionId,
+            "Quest.Global",
+            GlobalQuestPayload(
+                active = true,
+                objective = status.objective.description,
+                objectiveType = status.objective.type.name.lowercase(),
+                targetCount = status.objective.targetCount,
+                playerProgress = playerProgress,
+                endsAtMs = status.endsAtMs,
+                completed = status.completed,
+                leaderboard = status.leaderboard.mapIndexed { index, entry ->
+                    GlobalQuestLeaderboardPayload(
+                        rank = index + 1,
+                        name = entry.playerName,
+                        progress = entry.progress,
+                    )
+                },
+            ),
+            supportCheck = "Quest",
+        )
+    }
+
+    /** Sends a `Quest.Global` GMCP with active=false when no quest is running. */
+    suspend fun sendGlobalQuestInactive(sessionId: SessionId) {
+        emit(
+            sessionId,
+            "Quest.Global",
+            GlobalQuestInactivePayload(active = false),
+            supportCheck = "Quest",
+        )
+    }
+
+    /** Broadcasts `Quest.Global` to all connected players. */
+    suspend fun broadcastGlobalQuest(
+        status: GlobalQuestStatus,
+        players: PlayerRegistry,
+        progressBySession: Map<SessionId, Int>,
+    ) {
+        for (p in players.allPlayers()) {
+            sendGlobalQuest(p.sessionId, status, progressBySession[p.sessionId] ?: 0)
+        }
+    }
+
+    /** Broadcasts `Quest.Global` inactive to all connected players. */
+    suspend fun broadcastGlobalQuestInactive(players: PlayerRegistry) {
+        for (p in players.allPlayers()) {
+            sendGlobalQuestInactive(p.sessionId)
+        }
+    }
+
+    private data class GlobalQuestPayload(
+        val active: Boolean,
+        val objective: String,
+        val objectiveType: String,
+        val targetCount: Int,
+        val playerProgress: Int,
+        val endsAtMs: Long,
+        val completed: Boolean,
+        val leaderboard: List<GlobalQuestLeaderboardPayload>,
+    )
+
+    private data class GlobalQuestInactivePayload(
+        val active: Boolean,
+    )
+
+    private data class GlobalQuestLeaderboardPayload(
+        val rank: Int,
+        val name: String,
+        val progress: Int,
+    )
 }
 
 // ---------- public data entry types for new GMCP methods ----------
