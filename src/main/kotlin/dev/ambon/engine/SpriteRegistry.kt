@@ -47,7 +47,7 @@ class SpriteRegistry {
         isUnlocked(it, level, unlockedAchievementIds, isStaff, playerRace, playerClass)
     }
 
-    /** Returns all variants the player can see (unlocked + matches race/class/gender). */
+    /** Returns all variants the player can see (unlocked + matches race/class/gender). Staff see everything. */
     fun availableVariants(
         level: Int,
         unlockedAchievementIds: Set<String>,
@@ -58,9 +58,9 @@ class SpriteRegistry {
     ): List<Pair<SpriteDefinition, SpriteVariant>> {
         val result = mutableListOf<Pair<SpriteDefinition, SpriteVariant>>()
         for (def in definitions.values) {
-            if (!isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass)) continue
+            if (!isStaff && !isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass)) continue
             for (v in def.variants) {
-                if (def.category == SpriteCategory.STAFF || v.matchesPlayer(playerRace, playerClass, playerGender)) {
+                if (isStaff || def.category == SpriteCategory.STAFF || v.matchesPlayer(playerRace, playerClass, playerGender)) {
                     result.add(def to v)
                 }
             }
@@ -82,6 +82,7 @@ class SpriteRegistry {
         playerGender: String,
     ): SpriteVariant? {
         val (def, variant) = variantIndex[imageId] ?: return null
+        if (isStaff) return variant
         if (!isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass)) return null
         if (def.category != SpriteCategory.STAFF && !variant.matchesPlayer(playerRace, playerClass, playerGender)) return null
         return variant
