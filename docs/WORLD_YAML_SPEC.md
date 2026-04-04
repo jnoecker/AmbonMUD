@@ -8,7 +8,7 @@ It is written for code generators that need to emit valid zone files.
 - One YAML document describes one zone file.
 - Multiple zone files can be merged into one world.
 - YAML files are deserialized into:
-  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`, `trainers`, `gatheringNodes`, `recipes`, `dungeon`)
+  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`, `trainers`, `gatheringNodes`, `recipes`, `puzzles`, `dungeon`)
   - `RoomFile`
   - `MobFile`
   - `MobDropFile`
@@ -26,6 +26,7 @@ zone: <string, required, non-blank after trim>
 lifespan: <integer minutes >= 0, optional>
 startRoom: <room-id string, required>
 graphical: <boolean, optional, default false>  # true if the zone has custom graphical assets
+pvpEnabled: <boolean, optional, default false>  # when true, players can attack each other in this zone
 image:                  # zone-wide image defaults
   room: <string, optional>
   mob: <string, optional>
@@ -40,16 +41,22 @@ shops: <map<string, Shop>, optional, default {}>
 trainers: <map<string, Trainer>, optional, default {}>
 gatheringNodes: <map<string, GatheringNode>, optional, default {}>
 recipes: <map<string, Recipe>, optional, default {}>
+puzzles: <map<string, Puzzle>, optional, default {}>
 ```
 
 `lifespan` notes:
 - Units are minutes.
 - `0` is allowed and, in the current engine, effectively disables runtime resets (zones reset only when `lifespan > 0`).
 
+`pvpEnabled` notes:
+- When `true`, players in this zone can attack each other with `kill <player>`.
+- PvP death respawns the defeated player at the zone's `startRoom` with full HP/mana, no loot loss.
+- PvP kills and deaths are tracked on `PlayerRecord` (`pvpKills`/`pvpDeaths`).
+
 ### Required vs optional
 
 - Required top-level fields: `zone`, `startRoom`, `rooms`
-- Optional top-level fields: `lifespan`, `mobs`, `items`, `shops`, `trainers`, `gatheringNodes`, `recipes`
+- Optional top-level fields: `lifespan`, `graphical`, `pvpEnabled`, `image`, `audio`, `mobs`, `items`, `shops`, `trainers`, `gatheringNodes`, `recipes`, `puzzles`
 
 ## Nested Schemas
 
@@ -63,11 +70,20 @@ title: <string, required>
 description: <string, required>
 exits: <map<string direction, string target-room-id>, optional, default {}>
 station: <string, optional - one of FORGE|ALCHEMY_TABLE|WORKBENCH (case-insensitive)>
+bank: <boolean, optional, default false>
+tavern: <boolean, optional, default false>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown as clickable cinematic>
 music: <string, optional - overrides zone audio.music>
 ambient: <string, optional - overrides zone audio.ambient>
 ```
+
+`bank` notes:
+- When `true`, enables bank commands (`deposit`, `withdraw`, `bank`) in this room.
+- See the Bank NPC System section in `docs/RECENT_YAML_CHANGES.md` for full details.
+
+`tavern` notes:
+- When `true`, enables gambling commands (`gamble`, `dice`) in this room.
 
 `station` notes:
 - Designates the room as a crafting station of the given type.
@@ -359,6 +375,66 @@ Commands:
 - `recipes [filter]` — list all recipes, optionally filtered by skill name or recipe name.
 - `craftskills` / `professions` / `prof` — view your gathering and crafting skill levels.
 
+### `puzzles` map
+
+Each key is a puzzle ID (local identifier).
+Each value:
+
+```yaml
+puzzles:
+  <puzzle-id>:
+    type: <string, required - one of riddle|sequence>
+    # For riddle type:
+    mobId: <mob-id string, optional - the NPC that poses the riddle>
+    roomId: <room-id string, required - room where the puzzle is>
+    question: <string, required for riddle>
+    answer: <string, required for riddle - the correct answer>
+    acceptableAnswers: <list<string>, optional - additional accepted answers>
+    reward:
+      type: <string, required - one of unlock_exit|give_item|give_gold|give_xp>
+      exitDirection: <direction, required for unlock_exit>
+      targetRoom: <room-id, required for unlock_exit>
+      amount: <integer, required for give_gold|give_xp>
+      itemId: <item-id, required for give_item>
+    failMessage: <string, optional>
+    successMessage: <string, optional>
+    cooldownMs: <long, optional, default 0 - 0 means one-time per session>
+    # For sequence type:
+    steps:
+      - { feature: <feature-id>, action: <string> }
+    resetOnFail: <boolean, optional, default true>
+```
+
+Puzzle notes:
+- Puzzles are session-scoped: solved state resets when the player disconnects.
+- The `answer` command is used to submit a riddle answer (`answer <text>`).
+- For `riddle` type: `question` and `answer` are required. The `mobId` optionally ties the riddle to an NPC in the room.
+- For `sequence` type: `steps` defines an ordered list of feature interactions the player must complete. `resetOnFail` (default `true`) resets progress if the player performs the wrong step.
+- Reward types:
+  - `unlock_exit` — reveals a hidden exit in `exitDirection` leading to `targetRoom`.
+  - `give_item` — grants the item specified by `itemId`.
+  - `give_gold` — awards `amount` gold.
+  - `give_xp` — awards `amount` XP.
+- `cooldownMs` of `0` (default) means the puzzle can only be solved once per session.
+
+Puzzle ID normalization:
+- `roomId` follows the same normalization rules as other room references (prefixed with `<zone>:` when unqualified).
+- `mobId` follows the same normalization rules as mob references.
+- Reward `targetRoom` and `itemId` follow standard normalization.
+
+### Quest reward `currencies` extension
+
+Quests can award secondary currencies via the `currencies` field on quest rewards:
+
+```yaml
+quests:
+  <quest-id>:
+    rewards:
+      currencies: <map<string, long>, optional> # e.g., { quest_points: 10, honor: 5 }
+```
+
+Currency keys must match defined currency IDs in `application.yaml` under `engine.currencies.definitions`. See `CurrencySystem` for runtime handling.
+
 ## ID Normalization Rules
 
 The loader normalizes IDs with this logic:
@@ -383,6 +459,10 @@ This applies to:
 - `recipes` keys
 - `recipes.*.materials.*.itemId`
 - `recipes.*.outputItemId`
+- `puzzles.*.roomId`
+- `puzzles.*.mobId` (if present)
+- `puzzles.*.reward.targetRoom` (if present)
+- `puzzles.*.reward.itemId` (if present)
 
 Examples with `zone: swamp`:
 
@@ -467,6 +547,11 @@ For each file your tool emits:
 25. Each recipe's `outputItemId` must resolve to an existing item.
 26. If a recipe specifies `station`, it must be one of `FORGE`, `ALCHEMY_TABLE`, or `WORKBENCH`.
 27. If a room specifies `station`, it must be one of `FORGE`, `ALCHEMY_TABLE`, or `WORKBENCH`.
+28. If `puzzles` is present, each puzzle must have a valid `type` (`riddle` or `sequence`).
+29. For `riddle` puzzles, `question` and `answer` must be non-blank; `roomId` must resolve to an existing room.
+30. For `sequence` puzzles, `steps` must be non-empty.
+31. Puzzle reward `targetRoom` (for `unlock_exit`) and `itemId` (for `give_item`) must resolve to existing rooms/items.
+32. If `pvpEnabled` is present, it must be a boolean.
 
 ## Minimal Valid Example
 

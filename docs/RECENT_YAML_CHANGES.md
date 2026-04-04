@@ -748,3 +748,343 @@ Broadcast to all players when events change:
   { "id": "spring_festival", "name": "Spring Festival", "description": "Flowers bloom across the realm." }
 ]
 ```
+
+---
+
+## Zone PvP (zone YAML)
+
+New top-level `pvpEnabled` field on zone files:
+
+```yaml
+zone: blood_arena
+pvpEnabled: true           # enables player-vs-player combat in this zone
+startRoom: arena_entrance
+rooms:
+  arena_entrance:
+    title: "The Blood Arena"
+    description: "A gladiatorial pit where combatants fight for glory."
+```
+
+### Behavior
+- When `pvpEnabled: true`, `kill <player>` targets other players instead of requiring a mob
+- PvP death respawns at the zone's `startRoom` with full HP/mana, no loot loss
+- PvP kills/deaths tracked on `PlayerRecord.pvpKills`/`pvpDeaths`
+
+### Persistence (Flyway V29)
+
+New columns on `players` table:
+- `pvp_kills INTEGER NOT NULL DEFAULT 0`
+- `pvp_deaths INTEGER NOT NULL DEFAULT 0`
+
+---
+
+## Tavern Rooms (zone YAML)
+
+New `tavern` field on room definitions:
+
+```yaml
+rooms:
+  tavern_hall:
+    title: "The Rusty Tankard"
+    description: "A lively tavern with games of chance in every corner."
+    tavern: true              # enables gambling commands (gamble, dice)
+    exits:
+      s: market_square
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `gamble <amount>` | Gamble gold on a coin flip |
+| `dice` | Roll dice for entertainment |
+
+---
+
+## Puzzle System (zone YAML)
+
+New top-level `puzzles` section in zone YAML files:
+
+```yaml
+puzzles:
+  sphinx_riddle:
+    type: riddle
+    mobId: sphinx_guardian
+    roomId: sphinx_chamber
+    question: "What has keys but no locks?"
+    answer: "piano"
+    acceptableAnswers: ["a piano", "keyboard"]
+    reward:
+      type: unlock_exit
+      exitDirection: north
+      targetRoom: hidden_treasury
+    failMessage: "The sphinx shakes its head disapprovingly."
+    successMessage: "The sphinx nods and a hidden passage reveals itself!"
+    cooldownMs: 0
+
+  lever_sequence:
+    type: sequence
+    roomId: puzzle_room
+    steps:
+      - { feature: red_lever, action: pull }
+      - { feature: blue_lever, action: pull }
+      - { feature: green_lever, action: pull }
+    resetOnFail: true
+    reward:
+      type: give_item
+      itemId: puzzle_key
+    successMessage: "A click echoes through the chamber as a key drops from the ceiling."
+```
+
+### Puzzle Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `type` | String | — | Required: `riddle` or `sequence` |
+| `roomId` | String | — | Required: room where the puzzle is |
+| `mobId` | String? | `null` | NPC that poses the riddle (riddle type) |
+| `question` | String | — | Required for riddle: the question text |
+| `answer` | String | — | Required for riddle: the correct answer |
+| `acceptableAnswers` | List\<String\> | `[]` | Additional accepted answers |
+| `reward` | Reward | — | Required: what the player receives on success |
+| `failMessage` | String? | `null` | Custom failure message |
+| `successMessage` | String? | `null` | Custom success message |
+| `cooldownMs` | Long | `0` | Cooldown; 0 = one-time per session |
+| `steps` | List\<Step\> | `[]` | Required for sequence: ordered interactions |
+| `resetOnFail` | Boolean | `true` | Sequence resets on wrong step |
+
+### Reward Types
+
+| Type | Required Fields | Description |
+|------|----------------|-------------|
+| `unlock_exit` | `exitDirection`, `targetRoom` | Reveals a hidden exit |
+| `give_item` | `itemId` | Grants an item |
+| `give_gold` | `amount` | Awards gold |
+| `give_xp` | `amount` | Awards XP |
+
+### Behavior
+- Puzzles are session-scoped (solved state resets on disconnect)
+- `answer <text>` command submits riddle answers
+- Sequence puzzles track ordered feature interactions
+
+---
+
+## Prestige System (application.yaml)
+
+New config section under `ambonmud.engine.prestige`:
+
+```yaml
+ambonmud:
+  engine:
+    prestige:
+      perks:
+        xp_boost:
+          displayName: "XP Boost"
+          description: "Gain 10% bonus XP per prestige level"
+          perLevel: 0.1
+        gold_boost:
+          displayName: "Gold Boost"
+          description: "Gain 5% bonus gold per prestige level"
+          perLevel: 0.05
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `prestige` | Reset level to 1, gain a prestige level |
+| `prestige info` | View prestige level and active perks |
+
+### Persistence (Flyway V28)
+
+New columns on `players` table:
+- `prestige_level INTEGER NOT NULL DEFAULT 0`
+- `prestige_xp_spent BIGINT NOT NULL DEFAULT 0`
+
+---
+
+## Secondary Currencies (application.yaml + zone YAML)
+
+New config section under `ambonmud.engine.currencies`:
+
+```yaml
+ambonmud:
+  engine:
+    currencies:
+      definitions:
+        quest_points:
+          displayName: "Quest Points"
+          description: "Earned by completing quests"
+        honor:
+          displayName: "Honor"
+          description: "Earned through PvP combat"
+```
+
+### Quest Reward Integration
+
+Quests can award secondary currencies via a `currencies` map on rewards:
+
+```yaml
+quests:
+  goblin_slayer:
+    rewards:
+      xp: 100
+      gold: 50
+      currencies:
+        quest_points: 10
+        honor: 5
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `currencies` | View all secondary currency balances |
+
+### Persistence (Flyway V32)
+
+New column on `players` table:
+- `currencies TEXT NOT NULL DEFAULT '{}'` — JSON map of currency ID to amount
+
+---
+
+## Guild Halls (application.yaml)
+
+New config section under `ambonmud.engine.guildHalls`:
+
+```yaml
+ambonmud:
+  engine:
+    guildHalls:
+      baseCost: 5000          # Gold cost to purchase a guild hall
+      expansionCost: 2500     # Gold cost per expansion
+      maxExpansions: 5        # Maximum hall expansions
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `guild hall` | View guild hall info |
+| `guild hall buy` | Purchase a guild hall |
+| `guild hall expand` | Expand the guild hall |
+| `guild hall enter` | Enter the guild hall |
+| `guild hall leave` | Leave the guild hall |
+
+### Persistence (Flyway V30)
+
+Guild hall data stored as JSON on the guilds table.
+
+---
+
+## Lottery System (application.yaml)
+
+New config section under `ambonmud.engine.lottery`:
+
+```yaml
+ambonmud:
+  engine:
+    lottery:
+      ticketCost: 100         # Gold per ticket
+      drawIntervalMs: 3600000 # Draw every hour
+      jackpotPercent: 0.8     # 80% of pool goes to winner
+    gambling:
+      minBet: 10
+      maxBet: 1000
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `lottery` / `lottery info` | View current jackpot and next draw time |
+| `lottery buy [count]` | Purchase lottery tickets |
+| `gamble <amount>` | Gamble gold (requires `tavern: true` room) |
+
+### Persistence
+
+Lottery state persisted to `data/lottery_state.json`.
+
+---
+
+## Auto Quest / Daily Quest / Global Quest Systems (application.yaml)
+
+Three new quest systems with config under `ambonmud.engine`:
+
+```yaml
+ambonmud:
+  engine:
+    autoQuests:
+      enabled: true
+      maxActive: 3            # Max auto-quests per player
+    dailyQuests:
+      enabled: true
+      resetHourUtc: 0         # UTC hour for daily reset
+      dailySlots: 3           # Number of daily quest slots
+      weeklySlots: 1          # Number of weekly quest slots
+    globalQuests:
+      enabled: true
+      checkIntervalMs: 60000  # How often to check global quest progress
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `quest auto` | Toggle auto-quest generation |
+| `quest auto info` | View auto-quest settings |
+| `quest auto abandon` | Abandon current auto-quest |
+| `daily` / `dailyquests` | View available daily quests |
+| `weekly` / `weeklyquests` | View available weekly quests |
+| `globalquest` / `globalquest info` | View active global quest progress |
+
+### Behavior
+- **Auto quests**: Session-only procedural quests generated based on player location and level
+- **Daily quests**: Time-rotated quests that reset daily/weekly; progress persisted via `PlayerRecord.dailyQuestData`
+- **Global quests**: Server-wide cooperative objectives; ephemeral (not persisted per player)
+
+### Persistence (Flyway V34)
+
+New column on `players` table:
+- `daily_quest_data TEXT NOT NULL DEFAULT '{}'` — JSON object for daily/weekly quest progress
+
+---
+
+## Screen Reader Mode
+
+New accessibility feature for screen reader users:
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `screenreader on` | Enable screen reader mode (strips ANSI, simplifies output) |
+| `screenreader off` | Disable screen reader mode |
+
+### Persistence
+
+New columns on `players` table:
+- `screen_reader_enabled BOOLEAN NOT NULL DEFAULT false`
+
+### Behavior
+- `ScreenReaderFilter.kt` in the transport package strips ANSI codes and reformats output for screen readers
+- `PlayerRecord.screenReaderEnabled` persists the preference
+
+---
+
+## Player Description
+
+New `describe` command for setting a custom player description visible to others:
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `describe <text>` | Set your character description |
+| `describe clear` | Clear your description |
+| `describe check` | View your current description |
+
+### Persistence
+
+New column on `players` table:
+- `description TEXT NOT NULL DEFAULT ''`

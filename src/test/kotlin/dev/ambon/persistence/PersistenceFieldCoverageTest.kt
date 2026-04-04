@@ -131,7 +131,7 @@ class PersistenceFieldCoverageTest {
                 prestigeXpSpent = 1_750_000L,
                 pvpKills = 12,
                 pvpDeaths = 3,
-                dailyQuestData = """{"streakDays":5}""",
+                dailyQuestData = """{"lastDailyResetDate":"","lastWeeklyResetDate":"","dailyCompletions":[],"weeklyCompletions":[],"dailyProgress":{},"weeklyProgress":{},"streakDays":5,"lastStreakDate":""}""",
                 screenReaderEnabled = true,
                 description = "A tall warrior with a scar across the left cheek.",
             )

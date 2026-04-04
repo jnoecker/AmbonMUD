@@ -80,7 +80,10 @@ GameEngine  (single-threaded coroutine dispatcher, 100ms tick)
     │  CraftingSystem, FriendsSystem, HousingSystem, PetSystem,
     │  ReputationSystem, AuctionSystem, TradeSystem, DuelSystem,
     │  WeatherSystem, WorldTimeSystem, WorldEventSystem,
-    │  LeaderboardSystem, TrainerRegistry, Scheduler,
+    │  LeaderboardSystem, PrestigeSystem, CurrencySystem,
+    │  LotterySystem, AutoQuestSystem, DailyQuestSystem,
+    │  GlobalQuestSystem, PuzzleSystem, GuildHallSystem,
+    │  TrainerRegistry, Scheduler,
     │  PlayerProgression, GmcpEmitter, Registries
     ▼
 OutboundRouter  (per-session queues, backpressure, prompt coalescing)
@@ -120,31 +123,32 @@ Sessions
 
 `CommandParser.kt` transforms raw input into a sealed `Command` hierarchy. `CommandRouter.kt` dispatches each variant. Key command categories:
 - **Navigation:** Move, Look, LookDir, Exits
-- **Communication:** Say, Tell, Whisper, Gossip, Shout, Ooc, Pose, Emote, Gtell
+- **Communication:** Say, Tell, Whisper, Gossip, Shout, Ooc, Pose, Emote, Gtell, Describe, DescribeClear, DescribeCheck
 - **Combat:** Kill, Flee, Cast, Dispel
 - **Items:** Get, Drop, Use, Give, Wear, Remove, Inventory, Equipment
-- **Progression:** Score, Spells, Effects, Balance, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear, SpriteList, SpriteSet, SpriteDefault, Leaderboard, HallOfFame
+- **Progression:** Score, Spells, Effects, Balance, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear, SpriteList, SpriteSet, SpriteDefault, Leaderboard, HallOfFame, Prestige, PrestigeInfo
 - **NPCs:** Talk, DialogueChoice, ShopList, Buy, Sell
 - **Groups:** GroupCmd (Invite, Accept, Leave, Kick, List)
-- **Guilds:** Guild (Create, Disband, Invite, Accept, Leave, Kick, Promote, Demote, Motd, Roster, Info), Gchat
+- **Guilds:** Guild (Create, Disband, Invite, Accept, Leave, Kick, Promote, Demote, Motd, Roster, Info, Hall, HallBuy, HallExpand, HallEnter, HallLeave), Gchat
 - **Friends:** Friend (List, Add, Remove)
 - **Mail:** Mail (List, Read, Delete, Send, Abort)
 - **Crafting:** Gather, Craft, Recipes, Specialize, Enchant, Enchantments
-- **Economy:** Auction (List, Sell, Buy, Cancel), Bank (Balance, Deposit, Withdraw), Trade (Initiate, Offer, Accept, Cancel)
+- **Economy:** Auction (List, Sell, Buy, Cancel), Bank (Balance, Deposit, Withdraw), Trade (Initiate, Offer, Accept, Cancel), LotteryInfo, LotteryBuy, Gamble, Currencies
 - **Social:** Duel (Challenge, Accept, Decline), Reputation
-- **Training:** Train (List, Learn, Unlock)
+- **Training:** Train (List, Learn, Unlock, Reset)
 - **Pets:** Pet (Status, Dismiss, Name)
-- **World:** Time
+- **World:** Time, Answer
+- **Questing:** QuestAuto, QuestAutoInfo, QuestAutoAbandon, DailyQuests, WeeklyQuests, GlobalQuestInfo
 - **Dungeons:** DungeonEnter, DungeonLeave
 - **Housing:** House (Info, Expand, Furnish, Describe, Invite, Kick, Lock, Unlock)
 - **Sharding:** Phase (instance switching)
 - **Staff:** Goto, Transfer, Spawn, Smite, Kick, Shutdown
-- **Utility:** Help, Clear, Colors, Who, AnsiOn, AnsiOff
+- **Utility:** Help, Clear, Colors, Who, AnsiOn, AnsiOff, ScreenReaderOn, ScreenReaderOff
 - **Meta:** Invalid (with usage hint), Unknown, Noop (empty input)
 
 ### Persistence Model
 
-`PlayerRecord` (in `persistence/PlayerRecord.kt`) is the persistence DTO. Key fields: `id` (PlayerId), `name`, `roomId`, `level`, `xpTotal`, `hp`/`maxHp`, `mana`/`maxMana`, `race`, `playerClass`, `gold`, `isStaff`, `activeQuests`, `completedQuestIds`, `unlockedAchievementIds`, `achievementProgress`, `activeTitle`, `passwordHash`, `ansiEnabled`, `guildId`, `recallRoom`, `friends`, `craftingSkills`, `discoveredRecipes`, `craftingSpecialization`, `mail`, `gender`, `stats` (JSON map), `bankGold`, `bankItems`, `factionStandings` (JSON map), `learnedAbilityIds`, `unlockedClasses`, `skillPoints`.
+`PlayerRecord` (in `persistence/PlayerRecord.kt`) is the persistence DTO. Key fields: `id` (PlayerId), `name`, `roomId`, `level`, `xpTotal`, `hp`/`maxHp`, `mana`/`maxMana`, `race`, `playerClass`, `gold`, `isStaff`, `activeQuests`, `completedQuestIds`, `unlockedAchievementIds`, `achievementProgress`, `activeTitle`, `passwordHash`, `ansiEnabled`, `guildId`, `recallRoom`, `friends`, `craftingSkills`, `discoveredRecipes`, `craftingSpecialization`, `mail`, `gender`, `stats` (JSON map), `bankGold`, `bankItems`, `factionStandings` (JSON map), `learnedAbilityIds`, `unlockedClasses`, `skillPoints`, `description`, `screenReaderEnabled`, `currencies` (JSON map), `prestigeLevel`, `prestigeXpSpent`, `pvpKills`, `pvpDeaths`, `dailyQuestData` (JSON).
 
 `PlayerState` (in `engine/PlayerState.kt`) is the runtime in-memory version, maintained by the engine and periodically flushed back to `PlayerRecord` via the repository chain.
 
@@ -164,8 +168,8 @@ Sessions
 |---------|---------|-----------|
 | `dev.ambon` | Entry point, wiring | `Main.kt` (bootstrap), `MudServer.kt` (21K, composition root), `CoroutineExtensions.kt` |
 | `dev.ambon.config` | Configuration | `AppConfig.kt` (84K, full schema + `validated()`), `AppConfigLoader.kt` |
-| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (87K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (29K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (77K), `GroupSystem.kt` (13K), `QuestSystem.kt` (12K), `AchievementSystem.kt` (13K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `HousingSystem.kt`, `PetSystem.kt`, `ReputationSystem.kt`, `AuctionSystem.kt`, `TradeSystem.kt`, `DuelSystem.kt`, `WeatherSystem.kt`, `WorldTimeSystem.kt`, `WorldEventSystem.kt`, `LeaderboardSystem.kt`, `TrainerRegistry.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `SpriteRegistry.kt`, `SpriteLoader.kt`, `EngineUtil.kt` |
-| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (47K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `EnchantHandler`, `FriendsHandler`, `MailHandler`, `SpriteHandler`, `TrainerHandler`, `PetHandler`, `AuctionHandler`, `BankHandler`, `TradeHandler`, `DuelHandler`, `ReputationHandler`, `LeaderboardHandler`, `DungeonHandler`, `HousingHandler`, `WorldInfoHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
+| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (87K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (29K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (77K), `GroupSystem.kt` (13K), `QuestSystem.kt` (12K), `AchievementSystem.kt` (13K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `HousingSystem.kt`, `PetSystem.kt`, `ReputationSystem.kt`, `AuctionSystem.kt`, `TradeSystem.kt`, `DuelSystem.kt`, `WeatherSystem.kt`, `WorldTimeSystem.kt`, `WorldEventSystem.kt`, `LeaderboardSystem.kt`, `PrestigeSystem.kt`, `CurrencySystem.kt`, `LotterySystem.kt`, `AutoQuestSystem.kt`, `DailyQuestSystem.kt`, `GlobalQuestSystem.kt`, `PuzzleSystem.kt`, `GuildHallSystem.kt`, `TrainerRegistry.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `SpriteRegistry.kt`, `SpriteLoader.kt`, `EngineUtil.kt` |
+| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (47K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `EnchantHandler`, `FriendsHandler`, `MailHandler`, `SpriteHandler`, `TrainerHandler`, `PetHandler`, `AuctionHandler`, `BankHandler`, `TradeHandler`, `DuelHandler`, `ReputationHandler`, `LeaderboardHandler`, `DungeonHandler`, `HousingHandler`, `WorldInfoHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers`, `PrestigeHandler`, `CurrencyHandler`, `LotteryHandler`, `AutoQuestHandler`, `DailyQuestHandler`, `GlobalQuestHandler`, `PuzzleHandler` |
 | `dev.ambon.engine.abilities` | Ability/spell system | `AbilitySystem.kt` (29K), `AbilityRegistry.kt`, `AbilityRegistryLoader.kt`, `AbilityDefinition.kt` |
 | `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (16K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
 | `dev.ambon.engine.behavior` | Mob behavior trees | `BehaviorTreeSystem.kt`, `BtNode.kt`, `BtResult.kt`, `BtContext.kt`, `BehaviorTemplates.kt`, `MobBehaviorMemory.kt`; nodes/conditions/actions subdirs |
@@ -182,7 +186,7 @@ Sessions
 | `dev.ambon.domain.world.data` | YAML DTOs | `WorldFile.kt`, `RoomFile.kt`, `MobFile.kt`, `ItemFile.kt`, `ShopFile.kt`, `MobDropFile.kt`, `BehaviorFile.kt`, `DialogueNodeFile.kt`, `QuestFile.kt`, `DungeonFile.kt` |
 | `dev.ambon.domain.world.load` | World loading | `WorldLoader.kt` (61K, YAML parsing + validation) |
 | `dev.ambon.persistence` | Player + guild persistence | `PlayerRepository.kt` (interface), `PlayerRecord.kt`, `PlayerCreationRequest.kt`; `WriteCoalescingPlayerRepository.kt`, `RedisCachingPlayerRepository.kt`, `YamlPlayerRepository.kt`, `PostgresPlayerRepository.kt`, `PlayersTable.kt`, `DatabaseManager.kt`, `PersistenceWorker.kt`, `StringCache.kt`; `GuildRepository.kt` (interface), `YamlGuildRepository.kt`, `PostgresGuildRepository.kt`, `GuildsTable.kt` |
-| `dev.ambon.transport` | Network I/O | `Transport.kt`, `BlockingSocketTransport.kt` (telnet), `KtorWebSocketTransport.kt` (14K, WebSocket), `NetworkSession.kt` (12K), `OutboundRouter.kt` (10K), `AnsiRenderer.kt`, `PlainRenderer.kt`, `TelnetLineDecoder.kt` (6K) |
+| `dev.ambon.transport` | Network I/O | `Transport.kt`, `BlockingSocketTransport.kt` (telnet), `KtorWebSocketTransport.kt` (14K, WebSocket), `NetworkSession.kt` (12K), `OutboundRouter.kt` (10K), `AnsiRenderer.kt`, `PlainRenderer.kt`, `TelnetLineDecoder.kt` (6K), `ScreenReaderFilter.kt` |
 | `dev.ambon.grpc` | gRPC engine/gateway | `EngineGrpcServer.kt`, `EngineServer.kt` (10K), `EngineServiceImpl.kt`, `GrpcOutboundDispatcher.kt`, `ProtoMapper.kt` (8K), `OutboundEventPlane.kt` |
 | `dev.ambon.gateway` | Gateway-mode root | `GatewayServer.kt` (23K), `SessionRouter.kt` |
 | `dev.ambon.sharding` | Zone sharding | `ZoneRegistry.kt`, `StaticZoneRegistry.kt`, `RedisZoneRegistry.kt`, `InterEngineBus.kt`, `LocalInterEngineBus.kt`, `RedisInterEngineBus.kt`, `InterEngineMessage.kt`, `HandoffManager.kt` (12K), `PlayerLocationIndex.kt`, `RedisPlayerLocationIndex.kt`, `InstanceSelector.kt`, `LoadBalancedInstanceSelector.kt`, `InstanceScaler.kt`, `ThresholdInstanceScaler.kt`, `ScaleDecisionPublisher.kt`, `ZoneInstance.kt` |
@@ -198,9 +202,9 @@ Sessions
 |------|-------|
 | Default config | `src/main/resources/application.yaml` |
 | Multi-instance profiles | `src/main/resources/application-{engine1,engine2,gw1,gw2}.yaml` |
-| World zones (23 YAML files) | `src/main/resources/world/` — 20 zones: crossroads_path, thornhaven_city, thornwood_forest, farmer_fields, cobblestone_road, highland_trails, old_mines, marsh_of_fog, goblin_warrens, dark_barrows, sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen, thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns, celestial_peak, dungeon_of_echoes; plus achievements, player_sprites, sprites |
+| World zones (24 YAML files) | `src/main/resources/world/` — 21 zones: crossroads_path, thornhaven_city, thornwood_forest, farmer_fields, cobblestone_road, highland_trails, old_mines, marsh_of_fog, goblin_warrens, dark_barrows, sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen, thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns, celestial_peak, dungeon_of_echoes, blood_arena; plus achievements, player_sprites, sprites |
 | Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
-| Flyway migrations | `src/main/resources/db/migration/` (V1–V26: players table through guilds, crafting, friends, mail, sprites, stats JSON, discovered recipes, faction standings, bank, leaderboards, skill points/multiclass) |
+| Flyway migrations | `src/main/resources/db/migration/` (V1–V34: players table through guilds, crafting, friends, mail, sprites, stats JSON, discovered recipes, faction standings, bank, leaderboards, skill points/multiclass, prestige, PvP stats, guild halls, currencies, daily quests) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
 | V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/` by `./gradlew buildWeb`) |
 | Demo placeholder sprites | `src/main/resources/world/images/demo/` (default PNGs) |
@@ -221,6 +225,14 @@ Sessions
 | Groups | `GroupSystemTest` (15K) | Party invite/leave/kick, XP sharing |
 | Guilds | `GuildSystemTest` | Guild create/disband/invite/promote/demote, MOTD, roster |
 | Crafting | `CraftingSystemTest` | Gather, craft, recipe validation, specialization, quality, discovery |
+| Prestige/Currency | `PrestigeSystemTest`, `CurrencySystemTest` | Prestige resets, currency tracking |
+| Lottery/Gambling | `LotterySystemTest` | Lottery draws, ticket purchases |
+| Quest extensions | `AutoQuestSystemTest`, `DailyQuestSystemTest`, `GlobalQuestSystemTest` | Auto quests, daily/weekly rotation, global objectives |
+| Puzzles | `PuzzleSystemTest` | Riddle/sequence puzzle solving, rewards |
+| Guild halls | `GuildHallSystemTest` | Guild hall purchase, expansion, enter/leave |
+| PvP | `PvpCombatTest` | Zone PvP combat, kill tracking, respawn |
+| Skill trees | `SkillTreeTest`, `TrainerRespecTest` | Ability prerequisites, DAG validation, respec |
+| Screen reader | `ScreenReaderFilterTest`, `ScreenReaderOutboundRouterTest`, `ScreenReaderCommandParserTest` | ANSI stripping, screen reader mode |
 | Dungeons | `DungeonGeneratorTest`, `DungeonManagerTest` | Layout generation, instance lifecycle, scaling, boss detection |
 | Friends/Mail | `FriendsSystemTest`, `MailHandlerTest` | Friend list management, mail send/read/delete |
 | Persistence | `YamlPlayerRepositoryTest`, `PostgresPlayerRepositoryTest`, `RedisCachingPlayerRepositoryTest`, `WriteCoalescingPlayerRepositoryTest`, `PersistenceWorkerTest` | Atomic writes, H2 Postgres mode, cache layers |
@@ -336,6 +348,30 @@ Edit bank logic in the bank handler, `BankHandler.kt` for commands. Rooms with `
 
 ### Day/night, weather, seasonal events
 Edit `WorldTimeSystem.kt` (clock/period), `WeatherSystem.kt` (transitions), `WorldEventSystem.kt` (date-triggered events). Config in `application.yaml` under `engine.worldTime`, `engine.weather`, `engine.worldEvents.definitions`. GMCP: `World.Time`, `World.Weather`, `World.Events`. `time` command handled in `WorldInfoHandler.kt`. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
+
+### Prestige system changes
+Edit `PrestigeSystem.kt` for logic, `PrestigeHandler.kt` for commands (Prestige, PrestigeInfo). Perks defined in `application.yaml` under `engine.prestige.perks`. `PlayerRecord.prestigeLevel`/`prestigeXpSpent` store progression. Flyway V28. Test in `PrestigeSystemTest`.
+
+### Skill tree changes
+Abilities now support `prerequisites`, `tree`, and `tier` fields for skill tree organization. DAG validation in `AbilityRegistryLoader` ensures no circular dependencies. `train list` groups abilities by tree. Test in `SkillTreeTest`.
+
+### Zone PvP changes
+Set `pvpEnabled: true` in zone YAML. `CombatSystem.kt` handles PvP combat via the existing `kill` command targeting players. Death respawns at zone `startRoom` with full HP/mana, no loot loss. `PlayerRecord.pvpKills`/`pvpDeaths` track stats. Flyway V29. Test in `PvpCombatTest`.
+
+### Secondary currency changes
+`CurrencySystem.kt` for logic, `CurrencyHandler.kt` for the `currencies` display command. Currency definitions in `application.yaml` under `engine.currencies.definitions`. Quest rewards support a `currencies` map for awarding secondary currencies. `PlayerRecord.currencies` persisted as JSON map. Flyway V32. Test in `CurrencySystemTest`.
+
+### Puzzle system changes
+Add `puzzles:` section to zone YAML. `PuzzleSystem.kt` for runtime state, `PuzzleHandler.kt` for the `answer` command. Supports `riddle` (question/answer) and `sequence` (ordered feature interactions) puzzle types. Session-scoped (no persistence). See `docs/WORLD_YAML_SPEC.md` for YAML schema. Test in `PuzzleSystemTest`.
+
+### Guild hall changes
+`GuildHallSystem.kt` for logic. Config in `application.yaml` under `engine.guildHalls`. Guild halls stored as JSON on guild record. Commands in `GuildHandler.kt` (Guild.Hall, Guild.HallBuy, Guild.HallExpand, Guild.HallEnter, Guild.HallLeave). Flyway V30 (on guilds table). Test in `GuildHallSystemTest`.
+
+### Lottery/gambling changes
+`LotterySystem.kt` for logic. Config in `application.yaml` under `engine.lottery` and `engine.gambling`. Lottery state persisted to `data/lottery_state.json`. Rooms with `tavern: true` in zone YAML enable gambling commands (`gamble`, `dice`). Commands: `LotteryInfo`, `LotteryBuy`, `Gamble`. Test in `LotterySystemTest`.
+
+### Auto quest / daily quest / global quest changes
+Three new quest systems. `AutoQuestSystem.kt` generates session-only procedural quests. `DailyQuestSystem.kt` manages time-rotated daily/weekly quests. `GlobalQuestSystem.kt` manages server-wide cooperative objectives. Config in `application.yaml` under `engine.autoQuests`, `engine.dailyQuests`, `engine.globalQuests`. Auto quests are session-only. Daily quest progress persisted via `PlayerRecord.dailyQuestData` JSON (Flyway V34). Global quests are ephemeral. Test in `AutoQuestSystemTest`, `DailyQuestSystemTest`, `GlobalQuestSystemTest`.
 
 ## Kotlin Style (ktlint)
 
