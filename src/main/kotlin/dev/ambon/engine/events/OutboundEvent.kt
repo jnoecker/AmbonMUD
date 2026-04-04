@@ -41,6 +41,11 @@ sealed interface OutboundEvent {
         val enabled: Boolean,
     ) : OutboundEvent
 
+    data class SetScreenReader(
+        override val sessionId: SessionId,
+        val enabled: Boolean,
+    ) : OutboundEvent
+
     data class Close(
         override val sessionId: SessionId,
         val reason: String,
