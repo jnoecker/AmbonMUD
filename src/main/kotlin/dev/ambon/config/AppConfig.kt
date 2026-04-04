@@ -702,6 +702,20 @@ data class FactionDefinition(
     val enemies: List<String> = emptyList(),
 )
 
+data class CurrencyDefinitionConfig(
+    val displayName: String = "",
+    val abbreviation: String = "",
+    val description: String = "",
+)
+
+data class CurrenciesConfig(
+    val definitions: Map<String, CurrencyDefinitionConfig> = emptyMap(),
+    /** Honor points awarded per PvP kill. */
+    val honorPerPvpKill: Long = 10L,
+    /** Crafting tokens awarded per successful craft. */
+    val tokensPerCraft: Long = 1L,
+)
+
 data class PetTemplateConfig(
     val name: String = "a pet",
     val description: String = "",
@@ -1149,8 +1163,10 @@ data class EngineConfig(
     val economy: EconomyConfig = EconomyConfig(),
     val group: GroupConfig = GroupConfig(),
     val guild: GuildConfig = GuildConfig(),
+    val guildHalls: GuildHallsConfig = GuildHallsConfig(),
     val crafting: CraftingConfig = CraftingConfig(),
     val factions: FactionConfig = FactionConfig(),
+    val currencies: CurrenciesConfig = CurrenciesConfig(),
     val pets: PetConfig = PetConfig(),
     val enchanting: EnchantingConfig = EnchantingConfig(),
     val bank: BankConfig = BankConfig(),
@@ -1186,6 +1202,7 @@ data class EngineConfig(
     val leaderboard: LeaderboardConfig = LeaderboardConfig(),
     val skillPoints: SkillPointsConfig = SkillPointsConfig(),
     val multiclass: MulticlassConfig = MulticlassConfig(),
+    val respec: RespecConfig = RespecConfig(),
     val prestige: PrestigeConfig = PrestigeConfig(),
     val lottery: LotteryConfig = LotteryConfig(),
     val gambling: GamblingConfig = GamblingConfig(),
@@ -1296,6 +1313,7 @@ data class CommandsConfig(
             "effects" to CommandMetadata("effects/buffs/debuffs", "View active status effects", "progression"),
             "score" to CommandMetadata("score/sc", "View your character sheet", "progression"),
             "balance" to CommandMetadata("gold/balance", "Check your gold", "shops"),
+            "currencies" to CommandMetadata("currencies/currency/wallet", "View secondary currencies", "progression"),
             "shop_list" to CommandMetadata("list/shop", "Browse a shop's wares", "shops"),
             "buy" to CommandMetadata("buy <item>", "Purchase from a shop", "shops", requiresTarget = true),
             "sell" to CommandMetadata("sell <item>", "Sell to a shop", "shops", requiresTarget = true),
@@ -1371,6 +1389,7 @@ data class CommandsConfig(
             "lottery" to CommandMetadata("lottery [info] | lottery buy [count]", "View or buy lottery tickets", "social"),
             "gamble" to CommandMetadata("gamble/dice <amount>", "Roll the dice at a tavern", "social"),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),
+            "screenreader" to CommandMetadata("screenreader [on/off]", "Toggle screen reader mode", "utility"),
             "colors" to CommandMetadata("colors", "Preview ANSI color palette", "utility"),
             "clear" to CommandMetadata("clear", "Clear the terminal", "utility"),
             "quit" to CommandMetadata("quit/exit", "Disconnect", "utility"),
@@ -1708,6 +1727,26 @@ data class GuildConfig(
     val inviteTimeoutMs: Long = 60_000L,
 )
 
+data class GuildHallsConfig(
+    /** Master toggle for the guild halls feature. */
+    val enabled: Boolean = true,
+    /** Gold cost for the initial guild hall purchase (creates meeting_hall). */
+    val purchaseCost: Long = 50_000L,
+    /** Gold cost per additional room expansion. */
+    val roomCost: Long = 10_000L,
+    /** Maximum number of rooms a guild hall can contain. */
+    val maxRooms: Int = 10,
+    /** Room template definitions keyed by template id. */
+    val templates: Map<String, GuildHallTemplateConfig> = emptyMap(),
+)
+
+data class GuildHallTemplateConfig(
+    val title: String = "",
+    val description: String = "",
+    /** When true, the vault storage feature is enabled for this room. */
+    val hasStorage: Boolean = false,
+)
+
 data class FriendsConfig(
     val maxFriends: Int = 50,
 )
@@ -1777,6 +1816,20 @@ data class SkillPointsConfig(
 ) {
     init {
         require(interval >= 1) { "skillPoints.interval must be >= 1, got $interval" }
+    }
+}
+
+data class RespecConfig(
+    /** Whether the respec system is enabled. */
+    val enabled: Boolean = true,
+    /** Gold cost to reset all learned abilities. Must be >= 0. */
+    val goldCost: Long = 1000L,
+    /** Cooldown between respecs in milliseconds. 0 disables cooldown. */
+    val cooldownMs: Long = 3_600_000L,
+) {
+    init {
+        require(goldCost >= 0) { "respec.goldCost must be >= 0, got $goldCost" }
+        require(cooldownMs >= 0) { "respec.cooldownMs must be >= 0, got $cooldownMs" }
     }
 }
 

@@ -19,4 +19,5 @@ data class QuestObjectiveFile(
 data class QuestRewardsFile(
     val xp: Long = 0L,
     val gold: Long = 0L,
+    val currencies: Map<String, Long> = emptyMap(),
 )
