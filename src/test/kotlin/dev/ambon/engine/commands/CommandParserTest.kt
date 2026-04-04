@@ -490,6 +490,46 @@ class CommandParserTest {
         assertEquals(Command.Guild.Decline, CommandParser.parse("guild reject"))
     }
 
+    // ---- Guild Hall ----
+
+    @Test
+    fun `parses guild hall`() {
+        assertEquals(Command.Guild.Hall, CommandParser.parse("guild hall"))
+    }
+
+    @Test
+    fun `parses guild hall buy`() {
+        assertEquals(Command.Guild.HallBuy, CommandParser.parse("guild hall buy"))
+        assertEquals(Command.Guild.HallBuy, CommandParser.parse("guild hall purchase"))
+    }
+
+    @Test
+    fun `parses guild hall expand with template`() {
+        assertEquals(Command.Guild.HallExpand("vault"), CommandParser.parse("guild hall expand vault"))
+        assertEquals(Command.Guild.HallExpand("training_room"), CommandParser.parse("guild hall expand training_room"))
+    }
+
+    @Test
+    fun `guild hall expand without template is Invalid`() {
+        assertTrue(CommandParser.parse("guild hall expand") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses guild hall enter`() {
+        assertEquals(Command.Guild.HallEnter, CommandParser.parse("guild hall enter"))
+    }
+
+    @Test
+    fun `parses guild hall leave`() {
+        assertEquals(Command.Guild.HallLeave, CommandParser.parse("guild hall leave"))
+        assertEquals(Command.Guild.HallLeave, CommandParser.parse("guild hall exit"))
+    }
+
+    @Test
+    fun `guild hall with unknown subcommand returns Hall`() {
+        assertEquals(Command.Guild.Hall, CommandParser.parse("guild hall unknown"))
+    }
+
     // ---- Crafting & Gathering ----
 
     @Test
