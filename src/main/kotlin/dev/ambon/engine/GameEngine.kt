@@ -1582,6 +1582,9 @@ class GameEngine(
 
         val me = players.get(newSessionId) ?: return
         outbound.send(OutboundEvent.SetAnsi(newSessionId, me.ansiEnabled))
+        if (me.screenReaderEnabled) {
+            outbound.send(OutboundEvent.SetScreenReader(newSessionId, true))
+        }
         loginFlowHandler.onAfterLogin(newSessionId)
 
         // Full state sync (same as login)
@@ -1671,6 +1674,9 @@ class GameEngine(
         val player = players.get(sessionId) ?: return
         abilitySystem.loadAbilities(sessionId, player.learnedAbilityIds)
         outbound.send(OutboundEvent.SetAnsi(sessionId, player.ansiEnabled))
+        if (player.screenReaderEnabled) {
+            outbound.send(OutboundEvent.SetScreenReader(sessionId, true))
+        }
         if (!world.rooms.containsKey(player.roomId)) {
             players.moveTo(sessionId, world.startRoom)
         }

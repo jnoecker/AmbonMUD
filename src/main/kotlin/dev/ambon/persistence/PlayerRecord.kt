@@ -82,6 +82,8 @@ data class PlayerRecord(
     val pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
     val pvpDeaths: Int = 0,
+    /** Whether screen-reader accessibility mode is enabled. */
+    val screenReaderEnabled: Boolean = false,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.
