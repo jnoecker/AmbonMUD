@@ -31,6 +31,7 @@ import dev.ambon.engine.commands.handlers.DungeonHandler
 import dev.ambon.engine.commands.handlers.EnchantHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.FriendsHandler
+import dev.ambon.engine.commands.handlers.GlobalQuestHandler
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.HousingHandler
@@ -696,6 +697,18 @@ class GameEngine(
         progression = progression,
     )
 
+    private val globalQuestSystem: GlobalQuestSystem? =
+        if (engineConfig.globalQuests.enabled) {
+            GlobalQuestSystem(
+                config = engineConfig.globalQuests,
+                clock = clock,
+                playerCount = { players.allPlayers().size },
+                resolvePlayerName = { sid -> players.get(sid)?.name },
+            )
+        } else {
+            null
+        }
+
     private var lastTimePeriod: TimePeriod = worldTimeSystem.period()
 
     private val abilitySystem: AbilitySystem =
@@ -1023,8 +1036,14 @@ class GameEngine(
                 craftingSkillRegistry = craftingSkillRegistry,
                 gatheringRegistry = gatheringRegistry,
                 markVitalsDirty = ::markVitalsDirty,
-                onItemCrafted = { sid -> achievementSystem.onItemCrafted(sid) },
-                onItemGathered = { sid, skill -> achievementSystem.onItemGathered(sid, skill) },
+                onItemCrafted = { sid ->
+                    achievementSystem.onItemCrafted(sid)
+                    globalQuestSystem?.onEvent(sid, GlobalQuestObjectiveType.CRAFT)
+                },
+                onItemGathered = { sid, skill ->
+                    achievementSystem.onItemGathered(sid, skill)
+                    globalQuestSystem?.onEvent(sid, GlobalQuestObjectiveType.GATHER)
+                },
             ),
             EnchantHandler(
                 ctx = ctx,
@@ -1113,6 +1132,11 @@ class GameEngine(
                 prestigeSkillPointBonus = { rank -> prestigeSystem.accumulatedSkillPointBonus(rank) },
             ),
             LeaderboardHandler(ctx = ctx),
+            GlobalQuestHandler(
+                ctx = ctx,
+                globalQuestSystem = globalQuestSystem,
+                clock = clock,
+            ),
             PrestigeHandler(
                 ctx = ctx,
                 prestigeSystem = prestigeSystem,
@@ -1381,6 +1405,9 @@ class GameEngine(
                             items.equipment(expired.sellerSid),
                         )
                     }
+
+                    // Tick global competitive quests
+                    tickGlobalQuest(tickStart)
 
                     // Expire grace period sessions
                     gracePeriodManager?.expireSessions()?.forEach { expired ->
@@ -1937,6 +1964,7 @@ class GameEngine(
 
         questSystem.onMobKilled(sessionId, templateKey)
         achievementSystem.onMobKilled(sessionId, templateKey)
+        globalQuestSystem?.onEvent(sessionId, GlobalQuestObjectiveType.KILL)
 
         // Faction reputation changes on mob kill
         val mobSpawn = world.mobSpawns.firstOrNull { it.id.value == templateKey }
@@ -1960,6 +1988,58 @@ class GameEngine(
                 if (changes.isNotEmpty()) emitFactions(sessionId, player)
             }
         }
+    }
+
+    private suspend fun tickGlobalQuest(nowMs: Long) {
+        val sys = globalQuestSystem ?: return
+        val result = sys.tick(nowMs)
+        when (result) {
+            is GlobalQuestTickResult.Nothing -> {}
+            is GlobalQuestTickResult.QuestStarted -> {
+                for (p in players.allPlayers()) {
+                    outbound.send(OutboundEvent.SendInfo(p.sessionId, "[GLOBAL QUEST] ${result.announcement}"))
+                }
+                val status = sys.getStatus()
+                if (status != null) {
+                    gmcpEmitter.broadcastGlobalQuest(status, players, emptyMap())
+                }
+            }
+            is GlobalQuestTickResult.ProgressUpdate -> {
+                for (p in players.allPlayers()) {
+                    outbound.send(OutboundEvent.SendInfo(p.sessionId, "[GLOBAL QUEST] ${result.announcement}"))
+                }
+                val status = sys.getStatus()
+                if (status != null) {
+                    val progressMap = sys.activeQuestForTesting()?.progress ?: emptyMap()
+                    gmcpEmitter.broadcastGlobalQuest(status, players, progressMap)
+                }
+            }
+            is GlobalQuestTickResult.QuestEnded -> {
+                for (p in players.allPlayers()) {
+                    outbound.send(OutboundEvent.SendInfo(p.sessionId, "[GLOBAL QUEST] ${result.announcement}"))
+                }
+                for (winner in result.winners) {
+                    val ps = players.get(winner.sessionId) ?: continue
+                    ps.gold += winner.goldReward
+                    val levelResult = progression.grantXp(ps, winner.xpReward)
+                    markVitalsDirty(winner.sessionId)
+                    val rewardMsg = "You earned ${winner.goldReward} gold and ${winner.xpReward} XP " +
+                        "for placing ${ordinalPlace(winner.place)} in the global quest!"
+                    outbound.send(OutboundEvent.SendInfo(winner.sessionId, rewardMsg))
+                    if (levelResult.levelsGained > 0) {
+                        onCombatLevelUp(winner.sessionId, levelResult.newLevel)
+                    }
+                }
+                gmcpEmitter.broadcastGlobalQuestInactive(players)
+            }
+        }
+    }
+
+    private fun ordinalPlace(n: Int): String = when (n) {
+        1 -> "1st"
+        2 -> "2nd"
+        3 -> "3rd"
+        else -> "${n}th"
     }
 
     private suspend fun emitPetState(sessionId: SessionId, pet: dev.ambon.domain.mob.MobState?) {
