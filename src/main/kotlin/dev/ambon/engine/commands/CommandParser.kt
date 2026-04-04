@@ -326,6 +326,10 @@ sealed interface Command {
         val nameHint: String,
     ) : Command
 
+    data object DailyQuests : Command
+
+    data object WeeklyQuests : Command
+
     data object QuestAuto : Command
 
     data object QuestAutoInfo : Command
@@ -1203,6 +1207,10 @@ object CommandParser {
 
         // accept: "accept <quest-name>" (for accepting quests offered by NPCs)
         requiredArg(line, listOf("accept"), "accept <quest>", { Command.QuestAccept(it) })?.let { return it }
+
+        // daily/weekly quest board
+        matchPrefix(line, listOf("daily", "dailies")) { Command.DailyQuests }?.let { return it }
+        matchPrefix(line, listOf("weekly")) { Command.WeeklyQuests }?.let { return it }
 
         // bounty subcommands: "bounty", "bounty info", "bounty abandon"
         matchPrefix(line, listOf("bounty")) { rest ->

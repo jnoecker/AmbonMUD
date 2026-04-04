@@ -399,6 +399,7 @@ class CombatSystem(
             it.pvpKills += 1
             dirtyNotifier.playerVitalsDirty(killerSid)
         }
+        onPvpKill(killerSid)
         loser.pvpDeaths += 1
         onPvpKill(killerSid)
 

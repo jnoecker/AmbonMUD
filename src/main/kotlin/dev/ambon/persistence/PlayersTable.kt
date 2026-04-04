@@ -80,6 +80,7 @@ object PlayersTable : Table("players") {
     val prestigeXpSpent = long("prestige_xp_spent").default(0L)
     val pvpKills = integer("pvp_kills").default(0)
     val pvpDeaths = integer("pvp_deaths").default(0)
+    val dailyQuestData = text("daily_quest_data").default("{}")
     val screenReaderEnabled = bool("screen_reader_enabled").default(false)
     val description = text("description").default("")
 
@@ -135,6 +136,7 @@ object PlayersTable : Table("players") {
             prestigeXpSpent = row[prestigeXpSpent],
             pvpKills = row[pvpKills],
             pvpDeaths = row[pvpDeaths],
+            dailyQuestData = row[dailyQuestData],
             screenReaderEnabled = row[screenReaderEnabled],
             description = row[description],
         ).migrateDefaults()
@@ -189,6 +191,7 @@ object PlayersTable : Table("players") {
         statement[prestigeXpSpent] = record.prestigeXpSpent
         statement[pvpKills] = record.pvpKills
         statement[pvpDeaths] = record.pvpDeaths
+        statement[dailyQuestData] = record.dailyQuestData
         statement[screenReaderEnabled] = record.screenReaderEnabled
         statement[description] = record.description
     }

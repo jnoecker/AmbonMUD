@@ -96,6 +96,8 @@ class WebClientParityTest {
             "QuestAutoAbandon" to "bounty_abandon",
             "Accept" to "accept",
             "Achievements" to "achievements",
+            "DailyQuests" to "daily",
+            "WeeklyQuests" to "weekly",
             // Social
             "Talk" to "talk",
             "DialogueChoice" to "talk",
@@ -278,6 +280,8 @@ class WebClientParityTest {
         // Server-only packages intentionally not yet handled by the web client.
         val serverOnlyExclusions = setOf(
             "Char.Sprites", // sprite picker panel not yet built
+            "Quest.Daily", // daily quest board panel not yet built (#912)
+            "Quest.Weekly", // weekly quest board panel not yet built (#912)
             "Lottery.Info", // lottery panel not yet built
             "Char.Currencies", // currency display panel not yet built
             "Guild.Hall", // guild hall UI not yet built

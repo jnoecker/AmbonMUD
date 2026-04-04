@@ -40,6 +40,10 @@ class GmcpWebContractTest {
             // Server emits this for the sprite selection system (#706);
             // web handler to be added when the sprite picker panel is built.
             "Char.Sprites",
+            // Quest.Daily / Quest.Weekly: daily/weekly quest board GMCP packages (#912).
+            // Web client handler to be added when the daily quest UI panel is built.
+            "Quest.Daily",
+            "Quest.Weekly",
             // Lottery.Info: web client lottery panel not yet implemented.
             // Server emits jackpot/ticket data for the lottery system (#905).
             "Lottery.Info",

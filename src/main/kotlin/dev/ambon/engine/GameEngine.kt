@@ -27,6 +27,7 @@ import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.CraftingHandler
 import dev.ambon.engine.commands.handlers.CurrencyHandler
+import dev.ambon.engine.commands.handlers.DailyQuestHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.DuelHandler
 import dev.ambon.engine.commands.handlers.DungeonHandler
@@ -834,6 +835,18 @@ class GameEngine(
             clock = clock,
         )
 
+    private val dailyQuestSystem: DailyQuestSystem? =
+        if (engineConfig.dailyQuests.enabled) {
+            DailyQuestSystem(
+                config = engineConfig.dailyQuests,
+                players = players,
+                clock = clock,
+                progression = progression,
+            )
+        } else {
+            null
+        }
+
     private val autoQuestSystem: AutoQuestSystem? =
         if (engineConfig.autoQuests.enabled) {
             AutoQuestSystem(
@@ -867,6 +880,7 @@ class GameEngine(
         combatSystem.onXpGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "xp", amount, source) }
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
+        combatSystem.onPvpKill = { sid -> notifyDailyQuest(sid, "pvpKill") }
         combatSystem.zoneStartRoomLookup = { zoneId -> world.zoneStartRoom(zoneId) }
         combatSystem.onPvpKill = { killerSid ->
             val killer = players.get(killerSid)
@@ -1122,6 +1136,7 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 onItemCrafted = { sid ->
                     achievementSystem.onItemCrafted(sid)
+                    notifyDailyQuest(sid, "craft")
                     globalQuestSystem?.onEvent(sid, GlobalQuestObjectiveType.CRAFT)
                     val crafter = players.get(sid)
                     if (crafter != null && currencySystem.tokensPerCraft > 0) {
@@ -1139,6 +1154,7 @@ class GameEngine(
                 },
                 onItemGathered = { sid, skill ->
                     achievementSystem.onItemGathered(sid, skill)
+                    notifyDailyQuest(sid, "gather")
                     globalQuestSystem?.onEvent(sid, GlobalQuestObjectiveType.GATHER)
                 },
             ),
@@ -1242,6 +1258,10 @@ class GameEngine(
                 prestigeSkillPointBonus = { rank -> prestigeSystem.accumulatedSkillPointBonus(rank) },
             ),
             LeaderboardHandler(ctx = ctx),
+            DailyQuestHandler(
+                ctx = ctx,
+                dailyQuestSystem = dailyQuestSystem,
+            ),
             GlobalQuestHandler(
                 ctx = ctx,
                 globalQuestSystem = globalQuestSystem,
@@ -2147,6 +2167,28 @@ class GameEngine(
         gmcpEmitter.broadcastRoomItems(roomId, items.itemsInRoom(roomId), players)
     }
 
+    /**
+     * Notifies the daily/weekly quest system of a player action and sends
+     * completion feedback if any quests were finished.
+     */
+    private suspend fun notifyDailyQuest(sessionId: SessionId, type: String) {
+        val dqs = dailyQuestSystem ?: return
+        val completed = dqs.onEvent(sessionId, type)
+        if (completed.isEmpty()) return
+        dqs.awardRewards(sessionId, completed)
+        for (c in completed) {
+            val label = if (c.isDaily) "Daily" else "Weekly"
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "[$label Quest Complete] ${c.description} — ${c.goldReward}g, ${c.xpReward}xp",
+                ),
+            )
+        }
+        gmcpEmitter.sendDailyQuests(sessionId, dqs)
+        gmcpEmitter.sendWeeklyQuests(sessionId, dqs)
+    }
+
     private suspend fun onCombatMobKilledByPlayer(
         sessionId: SessionId,
         templateKey: String,
@@ -2158,6 +2200,7 @@ class GameEngine(
 
         questSystem.onMobKilled(sessionId, templateKey)
         achievementSystem.onMobKilled(sessionId, templateKey)
+        notifyDailyQuest(sessionId, "kill")
         autoQuestHandler.onMobKill(sessionId, templateKey)
         globalQuestSystem?.onEvent(sessionId, GlobalQuestObjectiveType.KILL)
 
@@ -2314,6 +2357,7 @@ class GameEngine(
         for (sid in inst.members) {
             players.get(sid)?.let { it.dungeonsCompleted += 1 }
             achievementSystem.onDungeonCompleted(sid, inst.template.name)
+            notifyDailyQuest(sid, "dungeon")
             if (inst.members.size >= engineConfig.group.maxSize) {
                 achievementSystem.onDungeonCompletedWithFullParty(sid, inst.template.name)
             }

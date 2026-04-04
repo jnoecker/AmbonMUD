@@ -133,10 +133,32 @@ data class AppConfig(
         validateEngineWeather()
         validateEngineEnchanting()
         validateEngineFactions()
+        validateEngineDailyQuests()
         validateEngineAutoQuests()
         validateEngineGlobalQuests()
         validateEngineLottery()
         validateEngineGambling()
+    }
+
+    private fun validateEngineDailyQuests() {
+        val dq = engine.dailyQuests
+        require(dq.resetHourUtc in 0..23) { "ambonMUD.engine.dailyQuests.resetHourUtc must be 0–23" }
+        require(dq.dailySlots in 0..20) { "ambonMUD.engine.dailyQuests.dailySlots must be 0–20" }
+        require(dq.weeklySlots in 0..10) { "ambonMUD.engine.dailyQuests.weeklySlots must be 0–10" }
+        require(dq.streakBonusPercent >= 0) { "ambonMUD.engine.dailyQuests.streakBonusPercent must be >= 0" }
+        require(dq.streakMaxDays >= 0) { "ambonMUD.engine.dailyQuests.streakMaxDays must be >= 0" }
+        if (dq.enabled) {
+            if (dq.dailySlots > 0) {
+                require(dq.dailyPool.size >= dq.dailySlots) {
+                    "ambonMUD.engine.dailyQuests.dailyPool must have at least ${dq.dailySlots} entries (dailySlots)"
+                }
+            }
+            if (dq.weeklySlots > 0) {
+                require(dq.weeklyPool.size >= dq.weeklySlots) {
+                    "ambonMUD.engine.dailyQuests.weeklyPool must have at least ${dq.weeklySlots} entries (weeklySlots)"
+                }
+            }
+        }
     }
 
     private fun validateEngineMob() {
@@ -808,6 +830,38 @@ data class PrestigePerkConfig(
     val description: String = "",
 )
 
+data class DailyQuestsConfig(
+    /** Whether the daily/weekly quest system is enabled. */
+    val enabled: Boolean = false,
+    /** UTC hour at which daily quests reset (0–23). */
+    val resetHourUtc: Int = 0,
+    /** Number of daily quest slots available each day. */
+    val dailySlots: Int = 3,
+    /** Number of weekly quest slots available each week. */
+    val weeklySlots: Int = 1,
+    /** Percentage bonus per consecutive daily completion day (capped at streakMaxDays * this). */
+    val streakBonusPercent: Int = 10,
+    /** Maximum streak days that contribute to the bonus. */
+    val streakMaxDays: Int = 7,
+    /** Pool of possible daily quests. */
+    val dailyPool: List<DailyQuestDefinition> = emptyList(),
+    /** Pool of possible weekly quests. */
+    val weeklyPool: List<DailyQuestDefinition> = emptyList(),
+)
+
+data class DailyQuestDefinition(
+    /** Quest objective type: kill, gather, dungeon, craft, pvpKill. */
+    val type: String = "kill",
+    /** Number of actions required to complete. */
+    val targetCount: Int = 10,
+    /** Player-facing description. */
+    val description: String = "",
+    /** Gold rewarded on completion. */
+    val goldReward: Long = 0L,
+    /** XP rewarded on completion. */
+    val xpReward: Long = 0L,
+)
+
 data class AutoQuestsConfig(
     /** Whether auto-generated bounty quests are enabled. */
     val enabled: Boolean = true,
@@ -1266,6 +1320,7 @@ data class EngineConfig(
     val multiclass: MulticlassConfig = MulticlassConfig(),
     val respec: RespecConfig = RespecConfig(),
     val prestige: PrestigeConfig = PrestigeConfig(),
+    val dailyQuests: DailyQuestsConfig = DailyQuestsConfig(),
     val autoQuests: AutoQuestsConfig = AutoQuestsConfig(),
     val globalQuests: GlobalQuestsConfig = GlobalQuestsConfig(),
     val lottery: LotteryConfig = LotteryConfig(),
@@ -1389,6 +1444,8 @@ data class CommandsConfig(
             "bounty_info" to CommandMetadata("bounty info / quest auto info", "View active bounty progress", "quests"),
             "bounty_abandon" to CommandMetadata("bounty abandon / quest auto abandon", "Abandon active bounty", "quests"),
             "achievements" to CommandMetadata("achievements/ach", "View achievements", "quests"),
+            "daily" to CommandMetadata("daily/dailies", "View daily quest board", "quests"),
+            "weekly" to CommandMetadata("weekly", "View weekly quest board", "quests"),
             "gquest" to CommandMetadata("gquest/gq/global", "View active global quest status", "quests"),
             "group_invite" to CommandMetadata("group invite <player>", "Invite to your group", "groups", requiresTarget = true),
             "group_accept" to CommandMetadata("group accept", "Accept a group invite", "groups"),
