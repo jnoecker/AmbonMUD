@@ -1,26 +1,21 @@
 zone: crossroads_path
 startRoom: world_gate
 lifespan: 0
-
 image:
-  room: demo/DefaultRoom.png
-  mob: demo/DefaultMob.png
-  item: demo/DefaultObject.png
-
-# ─── Items ────────────────────────────────────────────────────────────────────
-
+  room: d1250c88ab2166511da125297029999ab3efe248b9c53e4b6800702049a60ec1.jpg
+  mob: 0c2aae907549c9b87f76b3ea46d34efa2f1de9b67f3638cd1ff29012d92a3f32.png
+  item: eb285cb64bf068451bce5c9441dc56604da455580283f1f92067512428b91fff.png
 items:
   waypost_letter:
-    displayName: "a travel letter"
+    displayName: a travel letter
     keyword: letter
-    description: "A folded letter bearing the Thornhaven city seal. The Waypost Guard asked you to carry it to the inn. It smells faintly of wax."
+    description: A folded letter bearing the Thornhaven city seal. The Waypost Guard asked you to carry it to the inn. It
+      smells faintly of wax.
     basePrice: 0
-
-# ─── Mobs ─────────────────────────────────────────────────────────────────────
-
+    image: 405c33db2e74fb2fcc24306d5d5fe62db92642e4572501948a64ec355b893d67.png
 mobs:
   waypost_guard:
-    name: "Waypost Guard Edmon"
+    name: Waypost Guard Edmon
     room: world_road_south
     quests:
       - travelers_welcome
@@ -34,156 +29,184 @@ mobs:
     goldMax: 0
     dialogue:
       root:
-        text: "Halt, traveller! Welcome to Eryndal. If you're heading into Thornhaven, the road south will take you straight to the north gate. I'd recommend speaking to the innkeeper first — the Tarnished Flagon is hard to miss. What would you like to know?"
+        text: Halt, traveller! Welcome to Eryndal. If you're heading into Thornhaven, the road south will take you straight to
+          the north gate. I'd recommend speaking to the innkeeper first — the Tarnished Flagon is hard to miss. What
+          would you like to know?
         choices:
-          - text: "What quest brings you here?"
+          - text: What quest brings you here?
             next: quest_intro
-          - text: "Tell me about Thornhaven."
+          - text: Tell me about Thornhaven.
             next: about_thornhaven
-          - text: "Goodbye."
+          - text: Goodbye.
             next: farewell
       quest_intro:
-        text: "Actually — I wonder if you'd do me a favour. I have a letter for Innkeeper Mira. She's the proprietor of the Tarnished Flagon in Thornhaven. Could you deliver it? Consider it your first errand in Eryndal."
+        text: Actually — I wonder if you'd do me a favour. I have a letter for Innkeeper Mira. She's the proprietor of the
+          Tarnished Flagon in Thornhaven. Could you deliver it? Consider it your first errand in Eryndal.
         choices:
-          - text: "I'll deliver it."
+          - text: I'll deliver it.
             next: accept_quest
             action: quest_give
-          - text: "Maybe later."
+          - text: Maybe later.
             next: farewell
       accept_quest:
-        text: "Much appreciated. The letter's right here. Head south to Thornhaven, find the Tarnished Flagon, and hand it to Mira. She'll be glad to see you."
+        text: Much appreciated. The letter's right here. Head south to Thornhaven, find the Tarnished Flagon, and hand it to
+          Mira. She'll be glad to see you.
         choices:
-          - text: "I'll be on my way."
+          - text: I'll be on my way.
             next: farewell
       about_thornhaven:
-        text: "Thornhaven's a frontier city — sitting right on the edge of the settled lands and the wild places beyond. Everything you need is there: trainers, a bank, shops, even a dungeon finder if that's your sort of thing. City center is south through the gate."
+        text: "Thornhaven's a frontier city — sitting right on the edge of the settled lands and the wild places beyond.
+          Everything you need is there: trainers, a bank, shops, even a dungeon finder if that's your sort of thing.
+          City center is south through the gate."
         choices:
-          - text: "Goodbye."
+          - text: Goodbye.
             next: farewell
       farewell:
-        text: "Safe roads, adventurer."
-
+        text: Safe roads, adventurer.
+    image: f228115ee7b23f380964f161319d258c9c3e117ae1d30510feeb1327dd55b488.png
   road_sparrow:
-    name: "a road sparrow"
+    name: a road sparrow
     room: rolling_hills
     tier: weak
     level: 1
     respawnSeconds: 120
     xpReward: 5
-
+    image: d217e4d2674e6037aae927b70ff9e634afa24468f944df243f6d8c19bba3bedb.png
   wild_rabbit:
-    name: "a wild rabbit"
+    name: a wild rabbit
     room: meadow_crossing
     tier: weak
     level: 1
     respawnSeconds: 90
     xpReward: 5
-
+    image: 3942952a51c8b99a46071e0d42bc940815950c69f50666ddfb0a630474463e0b.png
   road_rat:
-    name: "a scrappy road rat"
+    name: a scrappy road rat
     room: old_waystation
     tier: weak
     level: 1
     respawnSeconds: 60
     behavior:
       template: wander_aggro
-
-# ─── Quests ───────────────────────────────────────────────────────────────────
-
+    image: 8c178d8299df1ae03759aa6051d582eb2842ebdc4fca53d793fda13e6df79360.png
 quests:
   travelers_welcome:
-    name: "A Traveler's Welcome"
-    description: "Waypost Guard Edmon has asked you to prove yourself in Eryndal. Head to Thornwood Forest east of Thornhaven and kill three stray wolves. It is a simple task, but it marks you as someone who takes initiative."
+    name: A Traveler's Welcome
+    description: Waypost Guard Edmon has asked you to prove yourself in Eryndal. Head to Thornwood Forest east of Thornhaven
+      and kill three stray wolves. It is a simple task, but it marks you as someone who takes initiative.
     giver: waypost_guard
     objectives:
       - type: kill
         targetKey: thornwood_forest:stray_wolf
         count: 3
-        description: "Kill 3 stray wolves in Thornwood Forest"
+        description: Kill 3 stray wolves in Thornwood Forest
     rewards:
       xp: 650
       gold: 20
-
-# ─── Rooms ────────────────────────────────────────────────────────────────────
-
 rooms:
   world_gate:
-    title: "World Gate — Crossroads Path"
-    description: "A tall stone arch marks the northern end of the Crossroads Path. Carved runes read: 'Beyond this gate the road to Thornhaven begins.' The sky is wide and open here, and the air carries the smell of fresh earth and distant woodsmoke. The path winds south toward the city. Beyond the gate to the north, the green countryside gives way to dry, sun-blasted scrubland."
+    title: World Gate — Crossroads Path
+    description: "A tall stone arch marks the northern end of the Crossroads Path. Carved runes read: 'Beyond this gate the
+      road to Thornhaven begins.' The sky is wide and open here, and the air carries the smell of fresh earth and
+      distant woodsmoke. The path winds south toward the city. Beyond the gate to the north, the green countryside gives
+      way to dry, sun-blasted scrubland."
     exits:
       s: world_road_north
       n: barrens_wastes:wastes_edge
-
+    image: aa882a5432b03157aa95ef3f39a009823d7f45dd1e274703709a21d938349712.jpg
   world_road_north:
-    title: "Crossroads Path — Northern Stretch"
-    description: "A well-worn road cuts through low grassy hills. The stone arch of the World Gate is still visible behind you to the north. Far ahead to the south the tops of Thornhaven's walls catch the midday light. A wooden signpost leans slightly, pointing south: 'THORNHAVEN — 1 LEAGUE'. A dirt track branches off to the west."
+    title: Crossroads Path — Northern Stretch
+    description: "A well-worn road cuts through low grassy hills. The stone arch of the World Gate is still visible behind
+      you to the north. Far ahead to the south the tops of Thornhaven's walls catch the midday light. A wooden signpost
+      leans slightly, pointing south: 'THORNHAVEN — 1 LEAGUE'. A dirt track branches off to the west."
     exits:
       n: world_gate
       s: rolling_hills
       w: signpost_junction
-
+    image: d904fe912caa8de090334b7e70917c2ac1c8de590412ce0a6137aabdc5366eef.jpg
   rolling_hills:
-    title: "Rolling Hills"
-    description: "The road crests a gentle rise that commands a sweeping view of the surrounding countryside. To the south, Thornhaven's rooftops and towers are clearly visible. To the east and west, farmland stretches to the horizon. A road sparrow flits between the stones at the roadside."
+    title: Rolling Hills
+    description: The road crests a gentle rise that commands a sweeping view of the surrounding countryside. To the south,
+      Thornhaven's rooftops and towers are clearly visible. To the east and west, farmland stretches to the horizon. A
+      road sparrow flits between the stones at the roadside.
     exits:
       n: world_road_north
       s: meadow_crossing
       e: eastern_overlook
-
+    image: 45bd4e6d4fa10e936f6ef14d2ae4da13f2f2caba7bdfc8d1cc347a2b6e412c5f.jpg
   eastern_overlook:
-    title: "Eastern Overlook"
-    description: "A flat-topped rise a short walk from the main road. From here you can see the full sweep of the farmlands to the east — neat furrows, hayricks, and the glint of what might be the sea far to the southeast. The main road is back to the west."
+    title: Eastern Overlook
+    description: A flat-topped rise a short walk from the main road. From here you can see the full sweep of the farmlands
+      to the east — neat furrows, hayricks, and the glint of what might be the sea far to the southeast. The main road
+      is back to the west.
     exits:
       w: rolling_hills
-
+    image: 1ccf870b420bdd34bf50ae6f9585a120c7b65def762232397346691e0f8fe253.jpg
   meadow_crossing:
-    title: "Meadow Crossing"
-    description: "The road dips into a broad meadow bright with wildflowers. A creek too narrow to need a bridge trickles across the path. Wild rabbits watch you pass with idle curiosity. The pleasant weather and open sky make this an ideal rest spot. A flat stone platform is visible to the east."
+    title: Meadow Crossing
+    description: The road dips into a broad meadow bright with wildflowers. A creek too narrow to need a bridge trickles
+      across the path. Wild rabbits watch you pass with idle curiosity. The pleasant weather and open sky make this an
+      ideal rest spot. A flat stone platform is visible to the east.
     exits:
       n: rolling_hills
       s: old_waystation
       w: meadow_side_path
       e: dawn_rest_point
-
+    image: cbdce68dcec4596454348e97354af6b0eb48931ced32e77a6292e5dcd9b9695a.jpg
   meadow_side_path:
-    title: "Meadow Side Path"
-    description: "A narrow footpath that leaves the main road and wanders through the meadow. Tall grass closes in on either side and the sounds of the road fade. At the end of the path a low stone bench sits beside a gnarled oak — someone's private rest spot, long abandoned."
+    title: Meadow Side Path
+    description: A narrow footpath that leaves the main road and wanders through the meadow. Tall grass closes in on either
+      side and the sounds of the road fade. At the end of the path a low stone bench sits beside a gnarled oak —
+      someone's private rest spot, long abandoned.
     exits:
       e: meadow_crossing
-
+    image: 5d749f335ddf914c7c0d0815e74875d9e6f2633d7a5c440056159e4d182bf4cc.jpg
   old_waystation:
-    title: "Old Waystation"
-    description: "A moss-covered stone shelter that once served travelers on the north road. The roof has partially caved in, but the walls still stand. Inside, a scrappy road rat noses through the debris. An old milepost beside the door reads: 'THORNHAVEN NORTH GATE — HALF LEAGUE'. The city is close."
+    title: Old Waystation
+    description: "A moss-covered stone shelter that once served travelers on the north road. The roof has partially caved
+      in, but the walls still stand. Inside, a scrappy road rat noses through the debris. An old milepost beside the
+      door reads: 'THORNHAVEN NORTH GATE — HALF LEAGUE'. The city is close."
     exits:
       n: meadow_crossing
       s: city_approach
-
+    image: 33c2948cb3642ff13ddd02f795651a3a0c1f555c141bae8c1040e997286818a9.jpg
   city_approach:
-    title: "City Approach — North Road"
-    description: "The road straightens and widens as Thornhaven draws near. The city walls rise ahead of you, and the north gate is plainly visible, its ironwood doors standing open. Traffic flows in and out: merchants with handcarts, a knight on horseback, a group of chattering apprentices. The smell of baked goods drifts over the wall."
+    title: City Approach — North Road
+    description: "The road straightens and widens as Thornhaven draws near. The city walls rise ahead of you, and the north
+      gate is plainly visible, its ironwood doors standing open. Traffic flows in and out: merchants with handcarts, a
+      knight on horseback, a group of chattering apprentices. The smell of baked goods drifts over the wall."
     exits:
       n: old_waystation
       s: world_road_south
-
+    image: 779c5b0c08a98ff9e8779020853a009ceadb6bd8357fd32a7c8f386510abe30c.jpg
   world_road_south:
-    title: "Crossroads Path — South End"
-    description: "The final stretch of the Crossroads Path, where the road meets Thornhaven's north gate. Waypost Guard Edmon stands here in his battered tabard, eyeing every arrival. The gate arch frames the busy streets of Thornhaven ahead to the south."
+    title: Crossroads Path — South End
+    description: The final stretch of the Crossroads Path, where the road meets Thornhaven's north gate. Waypost Guard Edmon
+      stands here in his battered tabard, eyeing every arrival. The gate arch frames the busy streets of Thornhaven
+      ahead to the south.
     exits:
       n: city_approach
       s: thornhaven_city:north_gate
-
+    image: a9daef3d88d7352665ddae503609842ced631542cbebde399190bc38def9da08.jpg
   signpost_junction:
-    title: "Signpost Junction"
-    description: "A junction where a dirt track branches west off the main road. A battered wooden signpost stands at the fork, its carved arms pointing: south to Thornhaven, west along a track labeled 'SCENIC ROUTE — NOT MAINTAINED', and north to the Blood Arena. The main road is back to the east."
+    title: Signpost Junction
+    description: "A junction where a dirt track branches west off the main road. A battered wooden signpost stands at the
+      fork, its carved arms pointing: south to Thornhaven, west along a track labeled 'SCENIC ROUTE — NOT MAINTAINED',
+      and north to the Blood Arena. The main road is back to the east."
     exits:
       e: world_road_north
       s: world_road_south
       w: meadow_side_path
       n: blood_arena:arena_gates
-
+    image: daf6f2750422fd8892ca475896d6cab9f9b758fc6537b6d2cd543dfe23396002.jpg
   dawn_rest_point:
-    title: "Dawn Rest Point"
-    description: "A flat stone platform beside the road where travelers stop to watch the sunrise. At dawn, the sky to the east turns rose gold and amber, and the distant sea glints far to the southeast like hammered copper. At night the stars are extraordinary here, undimmed by city lights. The meadow crossing is back to the west, and the rolling hills lie to the north."
+    title: Dawn Rest Point
+    description: A flat stone platform beside the road where travelers stop to watch the sunrise. At dawn, the sky to the
+      east turns rose gold and amber, and the distant sea glints far to the southeast like hammered copper. At night the
+      stars are extraordinary here, undimmed by city lights. The meadow crossing is back to the west, and the rolling
+      hills lie to the north.
     exits:
       n: rolling_hills
       w: meadow_crossing
+    image: ac93bb1d6bccc1040261c09eca80170128511f880ad464f0204151f8e9a7ac8e.jpg
+graphical: true

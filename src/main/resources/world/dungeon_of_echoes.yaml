@@ -1,78 +1,71 @@
 zone: dungeon_of_echoes
 startRoom: portal_chamber
 lifespan: 0
-
 image:
-  room: demo/DefaultRoom.png
-  mob: demo/DefaultMob.png
-  item: demo/DefaultObject.png
-
-# ─── Items ────────────────────────────────────────────────────────────────────
-
+  room: 9d1c7483a3f055315b6fac10a17acbbbb22bbf48da8ec11c3bd025ef824e63d2.jpg
+  mob: 30e5b67e467edcd542ae0ddd7485fbfcd0989089d4ef33f5430f01604039357c.png
+  item: 7c0f37e7ad60b846e21e146bcf77c18a09dfbcb0274c235df0460b60dead807b.png
 items:
   echo_shard:
-    displayName: "an echo shard"
+    displayName: an echo shard
     keyword: shard
-    description: "A jagged crystal that hums faintly, as if it remembers the sounds of battle. Has modest crafting value."
+    description: A jagged crystal that hums faintly, as if it remembers the sounds of battle. Has modest crafting value.
     basePrice: 25
-
+    image: 31b81875e59cb00e3693780e32d3c1e38ccd1588f4ae9733630f561d6a9fae85.png
   echo_relic:
-    displayName: "an echo relic"
+    displayName: an echo relic
     keyword: relic
-    description: "A pulsing fragment of ancient magic recovered from deep in the dungeon. Sought by alchemists."
+    description: A pulsing fragment of ancient magic recovered from deep in the dungeon. Sought by alchemists.
     basePrice: 80
-
+    image: ec8fcf6173d2ce6a0d0d42daec27059980e1bf4c667a40afda11fd430952f49f.png
   echo_dust:
-    displayName: "a pinch of echo dust"
+    displayName: a pinch of echo dust
     keyword: dust
-    description: "Fine iridescent powder that drifts upward rather than settling. A byproduct of dungeon decay."
+    description: Fine iridescent powder that drifts upward rather than settling. A byproduct of dungeon decay.
     basePrice: 15
-
+    image: d7ffe78f3f3ef5da3475787ec1afb5fe64155f45ead1df7bba1c89196010f761.png
   dungeon_key:
-    displayName: "a dungeon key"
+    displayName: a dungeon key
     keyword: key
-    description: "A worn iron key found in the dungeon. No lock nearby needs it — it must be worth something."
+    description: A worn iron key found in the dungeon. No lock nearby needs it — it must be worth something.
     basePrice: 30
-
+    image: d2eb15f644648ef923a04dcda68eba838f4c1301e748e59ad10ed68d14554b7b.png
   minor_healing_potion:
-    displayName: "a minor healing potion"
+    displayName: a minor healing potion
     keyword: potion
     consumable: true
     onUse:
       healHp: 15
     basePrice: 50
-    description: "A small vial of cherry-red liquid. Restores a modest amount of health."
-
+    description: A small vial of cherry-red liquid. Restores a modest amount of health.
+    image: f82828ffc64a350211e5c57d819cb456f9658b655fcd2ef83fa0625245ab5cb4.png
   echo_helm:
-    displayName: "an echo-forged helm"
+    displayName: an echo-forged helm
     keyword: helm
     slot: head
     armor: 3
     basePrice: 180
-    description: "A helm forged in the dungeon's depths, resonating faintly with stored energy."
-
+    description: A helm forged in the dungeon's depths, resonating faintly with stored energy.
+    image: 29ba63bc52039b1a9978f46d5a644174893a8dd2226567791f2cbc0564d08569.png
   echo_blade:
-    displayName: "an echo blade"
+    displayName: an echo blade
     keyword: blade
     slot: weapon
     damage: 8
     basePrice: 250
-    description: "A sword that seems to remember every blow it has struck. Keenly balanced."
-
+    description: A sword that seems to remember every blow it has struck. Keenly balanced.
+    image: 6d625e6f179169b0d7c9818c04c42694f62c5fd72699c6f49421ec7247469523.png
   echo_staff:
-    displayName: "an echo staff"
+    displayName: an echo staff
     keyword: staff
     slot: weapon
     damage: 6
     basePrice: 220
-    description: "A staff of twisted crystal that channels arcane energy with unusual efficiency."
-
-# ─── Mobs ─────────────────────────────────────────────────────────────────────
-
+    description: A staff of twisted crystal that channels arcane energy with unusual efficiency.
+    image: fe4f9cd3a6136c06dea1f1a5f8d0d48a8603f2bb879d1c86d28315c67943f06c.png
 mobs:
-  # ── Common mobs ─────────────────────────────────────────────────────────────
   echo_wraith:
-    name: "an echo wraith"
+    name: an echo wraith
     room: mob_templates
     tier: standard
     level: 5
@@ -81,9 +74,9 @@ mobs:
         chance: 0.4
       - itemId: echo_shard
         chance: 0.2
-
+    image: c2a4aacdf8451552df3831cd5e4eba40107f844ddc580920b64a4fa5c5be8851.png
   echo_construct:
-    name: "an echo construct"
+    name: an echo construct
     room: mob_templates
     tier: standard
     level: 5
@@ -92,18 +85,18 @@ mobs:
         chance: 0.3
       - itemId: dungeon_key
         chance: 0.15
-
+    image: e9dbaf8300ca84adc4b4abea1447a88ac113f130aa46f45f58e5ef72cd8cf2a5.png
   echo_lurker:
-    name: "an echo lurker"
+    name: an echo lurker
     room: mob_templates
     tier: standard
     level: 5
     drops:
       - itemId: echo_dust
         chance: 0.5
-
+    image: 91389b90e285e774307f6c44457376844b6017e95079260bb2c2bf719b4d5568.png
   echo_guardian:
-    name: "an echo guardian"
+    name: an echo guardian
     room: mob_templates
     tier: standard
     level: 6
@@ -112,10 +105,9 @@ mobs:
         chance: 0.4
       - itemId: minor_healing_potion
         chance: 0.2
-
-  # ── Elite mobs ───────────────────────────────────────────────────────────────
+    image: a61e7c6a664d11c8e9c2c5310e9cab2b588a87a3aeba13a37047bceaf1b70d78.png
   echo_revenant:
-    name: "an echo revenant"
+    name: an echo revenant
     room: mob_templates
     tier: elite
     level: 6
@@ -126,9 +118,9 @@ mobs:
         chance: 0.5
       - itemId: minor_healing_potion
         chance: 0.25
-
+    image: d11451c45b7b311e9be440971f79eefd48033da6798563c78573d5bd878e2f75.png
   echo_sentinel:
-    name: "an echo sentinel"
+    name: an echo sentinel
     room: mob_templates
     tier: elite
     level: 7
@@ -139,124 +131,135 @@ mobs:
         chance: 0.3
       - itemId: dungeon_key
         chance: 0.4
-
-  # ── Boss mobs ────────────────────────────────────────────────────────────────
+    image: fd689f56a51681f0dc113db5bae124c92c6159eab49b967f5fa229321b9fc6fe.png
   echo_colossus:
-    name: "the Echo Colossus"
+    name: the Echo Colossus
     room: mob_templates
     tier: boss
     level: 7
     drops:
       - itemId: echo_relic
-        chance: 1.0
+        chance: 1
       - itemId: echo_helm
         chance: 0.4
       - itemId: echo_blade
         chance: 0.25
       - itemId: echo_staff
         chance: 0.25
-
+    image: ac27bd834b06c8dc1f8a23d1dcc91ed0b801b6ba42ac0a07a3c89ed0d46a9d82.png
   echo_sovereign:
-    name: "the Echo Sovereign"
+    name: the Echo Sovereign
     room: mob_templates
     tier: boss
     level: 9
     drops:
       - itemId: echo_relic
-        chance: 1.0
+        chance: 1
       - itemId: echo_blade
         chance: 0.5
       - itemId: echo_staff
         chance: 0.5
       - itemId: echo_helm
         chance: 0.6
-
+    image: 40200cbb26b637bfa26b215824ec7a4c1a5c5710fbea1ffa523f5279787428b3.png
   echo_aberration:
-    name: "the Echo Aberration"
+    name: the Echo Aberration
     room: mob_templates
     tier: boss
     level: 8
     drops:
       - itemId: echo_relic
-        chance: 1.0
+        chance: 1
       - itemId: echo_shard
-        chance: 1.0
+        chance: 1
       - itemId: minor_healing_potion
         chance: 0.5
-
+    image: bdef634fa7309bdf73466a8e161c9d59f012ab1690be3fd013afea4999dc9af8.png
   echo_overlord:
-    name: "the Echo Overlord"
+    name: the Echo Overlord
     room: mob_templates
     tier: boss
     level: 10
     drops:
       - itemId: echo_relic
-        chance: 1.0
+        chance: 1
       - itemId: echo_blade
         chance: 0.6
       - itemId: echo_staff
         chance: 0.6
       - itemId: echo_helm
         chance: 0.75
-
-# ─── Rooms ────────────────────────────────────────────────────────────────────
-
+    image: b4dc5e54c1dfe5e3cb402032166a53674c0fb2745b87f0b29676da5edcbb52d1.png
 rooms:
   portal_chamber:
-    title: "Portal Chamber — Dungeon of Echoes"
-    description: "A circular stone chamber etched with spiraling runes that pulse faintly with residual magic. A shimmering portal arch stands in the center, its surface rippling like disturbed water. The exit back to Old Grimly's study is carved into the northern wall. Type 'dungeon enter dungeon_of_echoes' to descend once more."
+    title: Portal Chamber — Dungeon of Echoes
+    description: A circular stone chamber etched with spiraling runes that pulse faintly with residual magic. A shimmering
+      portal arch stands in the center, its surface rippling like disturbed water. The exit back to Old Grimly's study
+      is carved into the northern wall. Type 'dungeon enter dungeon_of_echoes' to descend once more.
     exits:
       n: thornhaven_city:grimlys_study
-
+    image: 718a7470fc8b5b51386c29db016a6f1d00f1014e80dee589b924a23c37748fa4.jpg
   mob_templates:
-    title: "Mob Template Room"
-    description: "An internal room used to stage dungeon mob templates. Players cannot reach this room."
-
-# ─── Dungeon Template ─────────────────────────────────────────────────────────
-
+    title: Mob Template Room
+    description: An internal room used to stage dungeon mob templates. Players cannot reach this room.
+    image: 63a7c67c379f5cb1f88c464b8277ce5f65f9cedf0b825c8c561af0d4966a36b4.jpg
 dungeon:
-  name: "dungeon_of_echoes"
-  description: "A labyrinth that reshapes itself for every party that enters. Ancient magic echoes through the halls, animating constructs and spirits from a long-forgotten age."
+  name: dungeon_of_echoes
+  description: A labyrinth that reshapes itself for every party that enters. Ancient magic echoes through the halls,
+    animating constructs and spirits from a long-forgotten age.
   minLevel: 3
   roomCountMin: 10
   roomCountMax: 16
   portalRoom: portal_chamber
-
   roomTemplates:
     entrance:
-      - title: "Echoing Threshold"
-        description: "The entrance to the dungeon hums with faint resonance. Runes on the walls pulse in irregular rhythm, as if breathing. The air tastes of old stone and spent magic."
-      - title: "The Shivering Gate"
-        description: "A massive stone arch marks the dungeon entrance, its keystone carved with a screaming face. Drafts of cold air exhale from the passage ahead."
+      - title: Echoing Threshold
+        description: The entrance to the dungeon hums with faint resonance. Runes on the walls pulse in irregular rhythm, as if
+          breathing. The air tastes of old stone and spent magic.
+      - title: The Shivering Gate
+        description: A massive stone arch marks the dungeon entrance, its keystone carved with a screaming face. Drafts of cold
+          air exhale from the passage ahead.
     corridor:
-      - title: "The Resonant Corridor"
-        description: "A narrow passage where every footstep returns to you twice, slightly wrong. The walls are etched with symbols that seem to shift when you aren't looking directly at them."
-      - title: "The Long Hall"
-        description: "A straightway of dressed stone that stretches further than it should. Sconces hold ever-burning torches that cast no shadows. Something moves at the far end."
-      - title: "Collapsed Passage"
-        description: "The corridor has partially collapsed, forcing a crawl through rubble. On the other side the ceiling opens back up, but chunks of stone litter the floor and something has been digging."
-      - title: "The Flooded Corridor"
-        description: "Ankle-deep water covers the floor here, and the smell of wet stone and iron fills the air. The water ripples slightly, though there is no breeze."
+      - title: The Resonant Corridor
+        description: A narrow passage where every footstep returns to you twice, slightly wrong. The walls are etched with
+          symbols that seem to shift when you aren't looking directly at them.
+      - title: The Long Hall
+        description: A straightway of dressed stone that stretches further than it should. Sconces hold ever-burning torches
+          that cast no shadows. Something moves at the far end.
+      - title: Collapsed Passage
+        description: The corridor has partially collapsed, forcing a crawl through rubble. On the other side the ceiling opens
+          back up, but chunks of stone litter the floor and something has been digging.
+      - title: The Flooded Corridor
+        description: Ankle-deep water covers the floor here, and the smell of wet stone and iron fills the air. The water
+          ripples slightly, though there is no breeze.
     chamber:
-      - title: "The Memory Chamber"
-        description: "A wide room where images of past battles play out in translucent echo-light. Figures that look like adventurers fight creatures that may once have been real. The scene loops every few minutes. Mobs prowl among the images, ignoring them."
-      - title: "The Shattered Hall"
-        description: "A grand chamber whose ceiling has given way, leaving a rubble field and an open sky of luminous void above. Strange constructs patrol the debris."
-      - title: "The Whispering Vault"
-        description: "Every surface here is covered in tiny carved text — words that seem to rearrange themselves when read. The whispers are faint but constant. Something guards the far door."
-      - title: "The Echo Pool"
-        description: "A perfectly still pool of dark water fills the center of this chamber. The reflections in it are subtly wrong — they show a different dungeon, or perhaps this one at a different time."
+      - title: The Memory Chamber
+        description: A wide room where images of past battles play out in translucent echo-light. Figures that look like
+          adventurers fight creatures that may once have been real. The scene loops every few minutes. Mobs prowl among
+          the images, ignoring them.
+      - title: The Shattered Hall
+        description: A grand chamber whose ceiling has given way, leaving a rubble field and an open sky of luminous void above.
+          Strange constructs patrol the debris.
+      - title: The Whispering Vault
+        description: Every surface here is covered in tiny carved text — words that seem to rearrange themselves when read. The
+          whispers are faint but constant. Something guards the far door.
+      - title: The Echo Pool
+        description: A perfectly still pool of dark water fills the center of this chamber. The reflections in it are subtly
+          wrong — they show a different dungeon, or perhaps this one at a different time.
     treasure:
-      - title: "Cache of Echoes"
-        description: "A side chamber sealed by a recently broken lock. Inside, chests and crates bear the marks of a party that came before — whoever they were, they didn't make it back out."
-      - title: "The Resonance Vault"
-        description: "A small room whose walls amplify sound into near-physical force. At its center, a plinth holds a cache of crystallized echo fragments — valuable to those who know what to do with them."
+      - title: Cache of Echoes
+        description: A side chamber sealed by a recently broken lock. Inside, chests and crates bear the marks of a party that
+          came before — whoever they were, they didn't make it back out.
+      - title: The Resonance Vault
+        description: A small room whose walls amplify sound into near-physical force. At its center, a plinth holds a cache of
+          crystallized echo fragments — valuable to those who know what to do with them.
     boss:
-      - title: "The Heart of Echoes"
-        description: "The deepest chamber in the dungeon. The walls pulse with rhythmic light, and the floor is worn smooth by the continuous circling of the dungeon's apex predator. This is where the Echo ends."
-      - title: "The Resonance Throne"
-        description: "A vaulted chamber dominated by a throne of fused crystal and stone. Whatever rules here has done so for a very long time. The air vibrates at a frequency that makes your bones ache."
-
+      - title: The Heart of Echoes
+        description: The deepest chamber in the dungeon. The walls pulse with rhythmic light, and the floor is worn smooth by
+          the continuous circling of the dungeon's apex predator. This is where the Echo ends.
+      - title: The Resonance Throne
+        description: A vaulted chamber dominated by a throne of fused crystal and stone. Whatever rules here has done so for a
+          very long time. The air vibrates at a frequency that makes your bones ache.
   mobPools:
     common:
       - echo_wraith
@@ -271,7 +274,6 @@ dungeon:
       - echo_sovereign
       - echo_aberration
       - echo_overlord
-
   lootTables:
     normal:
       mobDrops:
@@ -292,3 +294,4 @@ dungeon:
         - echo_blade
         - echo_staff
         - echo_helm
+graphical: true

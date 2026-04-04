@@ -1,56 +1,50 @@
 zone: thornwood_forest
 startRoom: forest_road
 lifespan: 0
-
 image:
-  room: demo/DefaultRoom.png
-  mob: demo/DefaultMob.png
-  item: demo/DefaultObject.png
-
-# ─── Items ────────────────────────────────────────────────────────────────────
-
+  room: a2b8fb0479298855c652a0539c39f4bba972a167b2004e6bca5d14ffb2c0cba0.jpg
+  mob: 3d97089ef33e170678426a2efd20a638516a727df0ad292f998311554f8a98fa.png
+  item: 86319f4457cc5f7d7a2e922a080008cb1a562d2b75803916f45da7e070684066.png
 items:
   wildflower:
-    displayName: "a wildflower"
+    displayName: a wildflower
     keyword: flower
-    description: "A small bloom with bright petals, still fresh from the meadow. Herbalists prize these."
+    description: A small bloom with bright petals, still fresh from the meadow. Herbalists prize these.
     basePrice: 5
-
+    image: 8edd680ac78e18cf4df0aecf4e46fd70c4c107b6fcde7ab4b0a0ef30e9a40cc6.png
   forest_mushroom:
-    displayName: "a forest mushroom"
+    displayName: a forest mushroom
     keyword: mushroom
-    description: "A thick-capped mushroom found in the shaded dell. Useful in potions and cooking."
+    description: A thick-capped mushroom found in the shaded dell. Useful in potions and cooking.
     basePrice: 8
-
+    image: 421eb908ced638dcf61df5b3c7c9fa6201b88254e86ed616b222916f86192746.png
   birch_bark:
-    displayName: "a strip of birch bark"
+    displayName: a strip of birch bark
     keyword: bark
-    description: "Peeled from a riverside birch. Surprisingly useful in alchemical preparations."
+    description: Peeled from a riverside birch. Surprisingly useful in alchemical preparations.
     basePrice: 6
-
+    image: 1503c91dfe1753e09a5150868a95cf0e5c0af061ca65c0b85dbd0658841b1b75.png
   wolf_pelt:
-    displayName: "a wolf pelt"
+    displayName: a wolf pelt
     keyword: pelt
-    description: "A thick grey-brown pelt stripped from a Thornwood wolf. Fetches a fair price at market."
+    description: A thick grey-brown pelt stripped from a Thornwood wolf. Fetches a fair price at market.
     basePrice: 8
-
+    image: a799797c110b9fc19b31e590f741f6676412db9ca4fbbd166b9c6ec690932ceb.png
   spider_silk:
-    displayName: "a strand of spider silk"
+    displayName: a strand of spider silk
     keyword: silk
-    description: "Thick, unusually strong silk from a cave spider. Weavers and alchemists both want it."
+    description: Thick, unusually strong silk from a cave spider. Weavers and alchemists both want it.
     basePrice: 10
-
+    image: 360b95d9d3c8c4831de4db137c96f26539d9b2446a407c99d30f8c824b3b84ae.png
   bear_hide:
-    displayName: "a bear hide"
+    displayName: a bear hide
     keyword: hide
-    description: "A heavy hide from a Thornwood bear. Good leather stock if properly cured."
+    description: A heavy hide from a Thornwood bear. Good leather stock if properly cured.
     basePrice: 20
-
-# ─── Gathering Nodes ──────────────────────────────────────────────────────────
-
+    image: 71d49c1438d0d75bc8800118ddabbfcdf8bd33fd8270cc4c259be5f341ad5f45.png
 gatheringNodes:
   wildflower_patch:
-    displayName: "a wildflower patch"
+    displayName: a wildflower patch
     keyword: flowers
     skill: herbalism
     skillRequired: 1
@@ -61,9 +55,8 @@ gatheringNodes:
       - itemId: wildflower
         minQuantity: 1
         maxQuantity: 2
-
   mushroom_cluster:
-    displayName: "a mushroom cluster"
+    displayName: a mushroom cluster
     keyword: mushrooms
     skill: herbalism
     skillRequired: 1
@@ -74,9 +67,8 @@ gatheringNodes:
       - itemId: forest_mushroom
         minQuantity: 1
         maxQuantity: 2
-
   birch_stand:
-    displayName: "a stand of birch trees"
+    displayName: a stand of birch trees
     keyword: birch
     skill: herbalism
     skillRequired: 2
@@ -87,12 +79,9 @@ gatheringNodes:
       - itemId: birch_bark
         minQuantity: 1
         maxQuantity: 1
-
-# ─── Mobs ─────────────────────────────────────────────────────────────────────
-
 mobs:
   stray_wolf:
-    name: "a stray wolf"
+    name: a stray wolf
     room: wolf_den
     tier: standard
     level: 2
@@ -103,25 +92,25 @@ mobs:
     drops:
       - itemId: wolf_pelt
         chance: 0.5
-
+    image: 73a0d83a2a3771ea3df33c03a1b8e1f551d75b88c44e6a85bc006bcaaf6224b9.png
   territorial_hare:
-    name: "a territorial hare"
+    name: a territorial hare
     room: berry_thicket
     tier: weak
     level: 1
     respawnSeconds: 60
     xpReward: 5
-
+    image: 5fd292de1c3ec40a801a0871e9b236a21013bf4fc1c929f2bf800c0b746f3d5e.png
   scrappy_fox:
-    name: "a scrappy fox"
+    name: a scrappy fox
     room: forest_clearing
     tier: weak
     level: 2
     respawnSeconds: 120
     xpReward: 8
-
+    image: 057292526ed15c299df35dd410b670d1ef2784b79385cdaee594dbb416b96ae3.png
   forest_bandit:
-    name: "a forest bandit"
+    name: a forest bandit
     room: bandit_camp
     tier: standard
     level: 3
@@ -131,9 +120,9 @@ mobs:
     goldMax: 15
     behavior:
       template: wander_aggro
-
+    image: a08abd305f9e2b944da92d10c4e9add65a94b6133eeb8fd57144834a03f198c2.png
   cave_spider:
-    name: "a cave spider"
+    name: a cave spider
     room: spider_cavern
     tier: standard
     level: 3
@@ -142,9 +131,9 @@ mobs:
     drops:
       - itemId: spider_silk
         chance: 0.5
-
+    image: 6749423e9c43ca4ac6004af88f60695884830db113b8c8bacc0b6d2736177a09.png
   mother_bear:
-    name: "a mother bear"
+    name: a mother bear
     room: mothers_hollow
     tier: elite
     level: 4
@@ -155,9 +144,9 @@ mobs:
     drops:
       - itemId: bear_hide
         chance: 0.8
-
+    image: 6a98b5ca4def08a899d49703d52dec6de0e77b7acd3a9b5f0b7a78b23566b138.png
   forester_lenna_forest:
-    name: "Forester Lenna"
+    name: Forester Lenna
     room: forest_outpost
     tier: weak
     level: 1
@@ -171,163 +160,198 @@ mobs:
       - bandit_problem
     dialogue:
       root:
-        text: "You found my outpost — good eyes. I'm Lenna. The Thornwood has a bandit problem that needs solving, and I have a quest to match. Interested?"
+        text: You found my outpost — good eyes. I'm Lenna. The Thornwood has a bandit problem that needs solving, and I have a
+          quest to match. Interested?
         choices:
-          - text: "Tell me about the bandits."
+          - text: Tell me about the bandits.
             next: bandit_info
-          - text: "Goodbye."
+          - text: Goodbye.
             next: farewell
       bandit_info:
-        text: "A camp of brigands has moved into the deep woods south of here. They prey on travelers on the road. Take out three of them and the others may think twice. The camp is south through the berry thicket and deeper forest."
+        text: A camp of brigands has moved into the deep woods south of here. They prey on travelers on the road. Take out three
+          of them and the others may think twice. The camp is south through the berry thicket and deeper forest.
         choices:
-          - text: "I'll deal with them."
+          - text: I'll deal with them.
             next: farewell
-          - text: "Goodbye."
+          - text: Goodbye.
             next: farewell
       farewell:
-        text: "Track true. I'll be here when you return."
-
-# ─── Quests ───────────────────────────────────────────────────────────────────
-
+        text: Track true. I'll be here when you return.
+    image: bff00cf0f02e533646c32eb10f1816df147bd971ec0f0ed2ceee919810f9f43e.png
 quests:
   bandit_problem:
-    name: "The Bandit Problem"
-    description: "Forester Lenna has asked you to deal with the bandits camped deep in Thornwood Forest. Kill three forest bandits to discourage further encroachment."
+    name: The Bandit Problem
+    description: Forester Lenna has asked you to deal with the bandits camped deep in Thornwood Forest. Kill three forest
+      bandits to discourage further encroachment.
     giver: forester_lenna_forest
     objectives:
       - type: kill
         targetKey: forest_bandit
         count: 3
-        description: "Kill 3 forest bandits in Thornwood Forest"
+        description: Kill 3 forest bandits in Thornwood Forest
     rewards:
       xp: 500
       gold: 30
-
-# ─── Rooms ────────────────────────────────────────────────────────────────────
-
 rooms:
   forest_road:
-    title: "Thornwood Forest — Forest Road"
-    description: "A hard-packed dirt track that branches east from Thornhaven's north gate, curving between old oaks. The city is visible through the tree trunks behind you to the west. The road ahead widens slightly as it enters the forest proper. An outpost lean-to stands a short walk to the north."
+    title: Thornwood Forest — Forest Road
+    description: A hard-packed dirt track that branches east from Thornhaven's north gate, curving between old oaks. The
+      city is visible through the tree trunks behind you to the west. The road ahead widens slightly as it enters the
+      forest proper. An outpost lean-to stands a short walk to the north.
     exits:
       w: thornhaven_city:north_gate
       e: forest_clearing
       n: forest_outpost
-
+    image: 57993580afe372b4d05e583d7c8dc8947e25786e3feefad43609761de4ffe6ed.jpg
   forest_outpost:
-    title: "Lenna's Outpost"
-    description: "A compact camp sheltered by a leaning birch: a bedroll, a fire ring, and a rack of tools. A hand-drawn map of the Thornwood is pinned to the tree. Forester Lenna uses this as a base when ranging near the city. The forest road lies to the south."
+    title: Lenna's Outpost
+    description: "A compact camp sheltered by a leaning birch: a bedroll, a fire ring, and a rack of tools. A hand-drawn map
+      of the Thornwood is pinned to the tree. Forester Lenna uses this as a base when ranging near the city. The forest
+      road lies to the south."
     exits:
       s: forest_road
-
+    image: c6dab50e3c36e746622d48efa85994dbb94ce92da92694b91d92860786d2033f.jpg
   forest_clearing:
-    title: "Thornwood Clearing"
-    description: "A broad clearing where the canopy opens to the sky. Tall grass and wildflowers ring the open ground. Foxes den in the thicket roots here and dart away at the sound of footsteps. The forest road is back to the west; the ancient oak grove is to the east; the wolf territory begins north; and berry thickets stretch south."
+    title: Thornwood Clearing
+    description: A broad clearing where the canopy opens to the sky. Tall grass and wildflowers ring the open ground. Foxes
+      den in the thicket roots here and dart away at the sound of footsteps. The forest road is back to the west; the
+      ancient oak grove is to the east; the wolf territory begins north; and berry thickets stretch south.
     exits:
       w: forest_road
       n: wolf_trail
       s: berry_thicket
       e: ancient_oak
-
+    image: 69661ca70a10e6e219b4aea1e9b82d00698cdb2fb39c7be36e5e9f1d902fd5d3.jpg
   wolf_trail:
-    title: "Wolf Trail"
-    description: "A narrow path worn into the earth by paws rather than boots. Tufts of grey fur cling to low branches on either side. The smell of animal is strong here. The clearing is back to the south and the wolf den lies ahead to the north."
+    title: Wolf Trail
+    description: A narrow path worn into the earth by paws rather than boots. Tufts of grey fur cling to low branches on
+      either side. The smell of animal is strong here. The clearing is back to the south and the wolf den lies ahead to
+      the north.
     exits:
       s: forest_clearing
       n: wolf_den
-
+    image: 466f1df17c56e1ea8a9e7f4efa34db27072ae6cbb2a6273641f27e6e0e87ee5c.jpg
   wolf_den:
-    title: "Wolf Den"
-    description: "A hollow of twisted roots at the base of a great elm, matted with fur and old bones. Stray wolves circle the perimeter with low growls, eyes catching the light. This is the heart of their range. The trail leads back south."
+    title: Wolf Den
+    description: A hollow of twisted roots at the base of a great elm, matted with fur and old bones. Stray wolves circle
+      the perimeter with low growls, eyes catching the light. This is the heart of their range. The trail leads back
+      south.
     exits:
       s: wolf_trail
       w: mothers_hollow
-
+    image: 27f74d0303abe35c35691b84ae694dae9bdb8de33fc2a6d92d96c4a93c2be6e7.jpg
   mothers_hollow:
-    title: "Mother's Hollow"
-    description: "A shallow depression ringed by roots and fallen logs. The air smells of wet earth and danger. A mother bear has claimed this hollow as her own and does not welcome visitors — she is fast, powerful, and protecting something. The wolf den is to the east."
+    title: Mother's Hollow
+    description: A shallow depression ringed by roots and fallen logs. The air smells of wet earth and danger. A mother bear
+      has claimed this hollow as her own and does not welcome visitors — she is fast, powerful, and protecting
+      something. The wolf den is to the east.
     exits:
       e: wolf_den
-
+    image: d57d8e8f5d95ecd83d8d8c77153822d1a4e5bba9f0a4754b233cdb550ffd6668.jpg
   ancient_oak:
-    title: "The Ancient Oak"
-    description: "A single enormous oak, wider than three men, stands at the heart of an old grove. Carvings cover its bark — names, dates, and one worn symbol no one seems to recognize. The mood is peaceful but watchful. A hidden glade lies to the north, and the forest's eastern edge is beyond to the east."
+    title: The Ancient Oak
+    description: A single enormous oak, wider than three men, stands at the heart of an old grove. Carvings cover its bark —
+      names, dates, and one worn symbol no one seems to recognize. The mood is peaceful but watchful. A hidden glade
+      lies to the north, and the forest's eastern edge is beyond to the east.
     exits:
       w: forest_clearing
       n: hidden_grove
       e: thornwood_eastern_edge
-
+    image: 8b510159e72572d94f4b8296845e27c345a47466450455b4ecb0c95d6352c436.jpg
   hidden_grove:
-    title: "Hidden Grove"
-    description: "A small sunlit clearing entirely enclosed by old-growth trees. The grass is impossibly green, wildflowers bloom in patches, and a bee or two drifts past. It feels like a place that doesn't know there's a world outside it. The ancient oak is back to the south."
+    title: Hidden Grove
+    description: A small sunlit clearing entirely enclosed by old-growth trees. The grass is impossibly green, wildflowers
+      bloom in patches, and a bee or two drifts past. It feels like a place that doesn't know there's a world outside
+      it. The ancient oak is back to the south.
     exits:
       s: ancient_oak
-
+    image: 6baf18383f6fdae4100620af82994ad31dff898a24ee172dd036881ca6e6fed2.jpg
   thornwood_eastern_edge:
-    title: "Thornwood Eastern Edge"
-    description: "The trees thin here, and through the gaps you can see open farmland rolling away to the east and south — the Farmer Fields. The ancient oak stands at your back to the west. A wooden boundary post driven into the soil marks the edge of the forest."
+    title: Thornwood Eastern Edge
+    description: The trees thin here, and through the gaps you can see open farmland rolling away to the east and south —
+      the Farmer Fields. The ancient oak stands at your back to the west. A wooden boundary post driven into the soil
+      marks the edge of the forest.
     exits:
       w: ancient_oak
-
+    image: a56ed08c3a4dc1f544033fd92aaedc43f4101b8da111a0df6e3cc3d74ffa5a7b.jpg
   berry_thicket:
-    title: "Berry Thicket"
-    description: "Dense bramble bushes heavy with berries line both sides of the path. Wild hares live in the thicket roots and watch you pass with defiant curiosity. Wildflowers grow wherever there is a gap in the brambles. The clearing is back north; mushroom dell lies to the east; the deep woods are south."
+    title: Berry Thicket
+    description: Dense bramble bushes heavy with berries line both sides of the path. Wild hares live in the thicket roots
+      and watch you pass with defiant curiosity. Wildflowers grow wherever there is a gap in the brambles. The clearing
+      is back north; mushroom dell lies to the east; the deep woods are south.
     exits:
       n: forest_clearing
       e: mushroom_dell
       s: deep_woods
-
+    image: 977572f009486e17d9e0a459c7e4fe34720810b11bda58df634125259e83208a.jpg
   mushroom_dell:
-    title: "Mushroom Dell"
-    description: "A mossy hollow where the trees press close and the light is green-tinged and diffuse. Mushrooms of every size grow in clusters across the floor and up the sides of fallen logs. It is remarkably quiet here. The thicket is back to the west."
+    title: Mushroom Dell
+    description: A mossy hollow where the trees press close and the light is green-tinged and diffuse. Mushrooms of every
+      size grow in clusters across the floor and up the sides of fallen logs. It is remarkably quiet here. The thicket
+      is back to the west.
     exits:
       w: berry_thicket
-
+    image: e81448ceef3077c7c57933589a10c40f9feb41e5695631aa8efe2585a1d177d0.jpg
   deep_woods:
-    title: "Deep Woods"
-    description: "The forest grows old and dark here. The undergrowth is thick, the canopy heavy, and the sounds of the road are long gone. A forest stream trickles somewhere to the west. A moonlit glade lies to the east. The bandit trail continues south, and the berry thicket is back north."
+    title: Deep Woods
+    description: The forest grows old and dark here. The undergrowth is thick, the canopy heavy, and the sounds of the road
+      are long gone. A forest stream trickles somewhere to the west. A moonlit glade lies to the east. The bandit trail
+      continues south, and the berry thicket is back north.
     exits:
       n: berry_thicket
       e: moonlit_glade
       s: bandit_trail
       w: forest_stream
-
+    image: 8f3d53657b28a854b43fcbe05574393c7e9d2fbea89a1692e231a8d128b5b08f.jpg
   forest_stream:
-    title: "Forest Stream"
-    description: "A clear, cold stream tumbles over smooth stones between rows of silver birch. The sound of the water masks everything else and the air smells of clean earth and bark. The deep woods are back to the east."
+    title: Forest Stream
+    description: A clear, cold stream tumbles over smooth stones between rows of silver birch. The sound of the water masks
+      everything else and the air smells of clean earth and bark. The deep woods are back to the east.
     exits:
       e: deep_woods
-
+    image: f52fae8738115defbc1b97b3d5d8fe4cdbdbc62e65359063e418a777bf5ab819.jpg
   moonlit_glade:
-    title: "Moonlit Glade"
-    description: "A perfect circular clearing that the locals say glows faintly on full-moon nights. The grass here is shorter and finer than elsewhere in the forest, and deer tracks cross it in every direction. At night the air is exceptionally still. A dark track leads east into a part of the forest that feels wrong. The deep woods are back to the west."
+    title: Moonlit Glade
+    description: A perfect circular clearing that the locals say glows faintly on full-moon nights. The grass here is
+      shorter and finer than elsewhere in the forest, and deer tracks cross it in every direction. At night the air is
+      exceptionally still. A dark track leads east into a part of the forest that feels wrong. The deep woods are back
+      to the west.
     exits:
       w: deep_woods
       e: haunted_manor:manor_road
-
+    image: 3a1add2d20529511c879d8626eaf46d931f2e50bcbadcc2048a75b8ed162851a.jpg
   bandit_trail:
-    title: "Bandit Trail"
-    description: "A path that wasn't here last season. Boot prints and horse dung tell you a group has been using this regularly. The deep woods are back to the north; the bandit camp is ahead to the south."
+    title: Bandit Trail
+    description: A path that wasn't here last season. Boot prints and horse dung tell you a group has been using this
+      regularly. The deep woods are back to the north; the bandit camp is ahead to the south.
     exits:
       n: deep_woods
       s: bandit_camp
-
+    image: 3cfc58075b55854a5ae4648b26a8665c65f5d0e46a3710c5b42f41fa58676402.jpg
   bandit_camp:
-    title: "Bandit Camp"
-    description: "A ragged camp of makeshift shelters, cold fire pits, and stolen goods dumped in piles. Forest bandits patrol the perimeter with a bluster that suggests they know this ground. A cave entrance gapes in the rock face to the east — home to something worse than bandits. The trail leads back north."
+    title: Bandit Camp
+    description: A ragged camp of makeshift shelters, cold fire pits, and stolen goods dumped in piles. Forest bandits
+      patrol the perimeter with a bluster that suggests they know this ground. A cave entrance gapes in the rock face to
+      the east — home to something worse than bandits. The trail leads back north.
     exits:
       n: bandit_trail
       e: cave_entrance
-
+    image: 29c32b530669fa047feb4a9637f0a952fd35b834a6947b02415fa2ddbfefd97c.jpg
   cave_entrance:
-    title: "Cave Entrance"
-    description: "A low natural arch in a limestone outcropping. Something has been in and out of it regularly — a heavy smell of musk and old web lingers around the opening. The bandit camp is back to the west. The cave descends steeply below."
+    title: Cave Entrance
+    description: A low natural arch in a limestone outcropping. Something has been in and out of it regularly — a heavy
+      smell of musk and old web lingers around the opening. The bandit camp is back to the west. The cave descends
+      steeply below.
     exits:
       w: bandit_camp
       d: spider_cavern
-
+    image: 01f72986292088b60e98f07f788438519fe4fd956052b63e16caffe7ee3160c1.jpg
   spider_cavern:
-    title: "Spider Cavern"
-    description: "A damp, web-choked cave lit only by the faint phosphorescence of the silk itself. Cave spiders move through the darkness with fluid, unhurried confidence. The walls are entirely covered in intricate web structures. The cave entrance is back up above."
+    title: Spider Cavern
+    description: A damp, web-choked cave lit only by the faint phosphorescence of the silk itself. Cave spiders move through
+      the darkness with fluid, unhurried confidence. The walls are entirely covered in intricate web structures. The
+      cave entrance is back up above.
     exits:
       u: cave_entrance
+    image: e7314d4cf931b88acb6d7e44688c7e8a1b4de3cdb0d57bcb4092769addbba200.jpg
+graphical: true
