@@ -1104,6 +1104,7 @@ data class EngineConfig(
     val economy: EconomyConfig = EconomyConfig(),
     val group: GroupConfig = GroupConfig(),
     val guild: GuildConfig = GuildConfig(),
+    val guildHalls: GuildHallsConfig = GuildHallsConfig(),
     val crafting: CraftingConfig = CraftingConfig(),
     val factions: FactionConfig = FactionConfig(),
     val pets: PetConfig = PetConfig(),
@@ -1659,6 +1660,26 @@ data class GroupConfig(
 data class GuildConfig(
     val maxSize: Int = 50,
     val inviteTimeoutMs: Long = 60_000L,
+)
+
+data class GuildHallsConfig(
+    /** Master toggle for the guild halls feature. */
+    val enabled: Boolean = true,
+    /** Gold cost for the initial guild hall purchase (creates meeting_hall). */
+    val purchaseCost: Long = 50_000L,
+    /** Gold cost per additional room expansion. */
+    val roomCost: Long = 10_000L,
+    /** Maximum number of rooms a guild hall can contain. */
+    val maxRooms: Int = 10,
+    /** Room template definitions keyed by template id. */
+    val templates: Map<String, GuildHallTemplateConfig> = emptyMap(),
+)
+
+data class GuildHallTemplateConfig(
+    val title: String = "",
+    val description: String = "",
+    /** When true, the vault storage feature is enabled for this room. */
+    val hasStorage: Boolean = false,
 )
 
 data class FriendsConfig(
