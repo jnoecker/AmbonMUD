@@ -60,6 +60,8 @@ data class PlayerState(
     var bankItems: MutableList<dev.ambon.domain.items.ItemInstance> = mutableListOf(),
     /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
     var recallCooldownUntilMs: Long = 0L,
+    /** Epoch-ms of last stat respec. Runtime-only; not persisted (cooldown resets on logout). */
+    var lastRespecAtMs: Long = 0L,
     var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
     var discoveredRecipes: MutableSet<String> = mutableSetOf(),
     var craftingSpecialization: String? = null,
@@ -96,6 +98,10 @@ data class PlayerState(
     var pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
     var pvpDeaths: Int = 0,
+    /** Whether screen-reader accessibility mode is enabled. */
+    var screenReaderEnabled: Boolean = false,
+    /** Player-written custom description visible when others look at them. */
+    var description: String = "",
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -205,6 +211,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
+        screenReaderEnabled = screenReaderEnabled,
+        description = description,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -254,6 +262,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
+        screenReaderEnabled = screenReaderEnabled,
+        description = description,
     )
 }
 

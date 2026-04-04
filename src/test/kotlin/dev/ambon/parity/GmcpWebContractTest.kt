@@ -44,6 +44,8 @@ class GmcpWebContractTest {
             // Server emits this for the secondary currency system (#904);
             // web handler to be added when the currency display panel is built.
             "Char.Currencies",
+            // Guild hall info; web handler to be added when guild hall UI is built.
+            "Guild.Hall",
         )
 
         /**
