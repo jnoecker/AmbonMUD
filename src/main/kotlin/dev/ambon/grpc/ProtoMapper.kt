@@ -18,6 +18,7 @@ import dev.ambon.grpc.proto.SendPromptProto
 import dev.ambon.grpc.proto.SendTextProto
 import dev.ambon.grpc.proto.SessionRedirectProto
 import dev.ambon.grpc.proto.SetAnsiProto
+import dev.ambon.grpc.proto.SetScreenReaderProto
 import dev.ambon.grpc.proto.ShowAnsiDemoProto
 import dev.ambon.grpc.proto.ShowLoginScreenProto
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -75,6 +76,7 @@ fun OutboundEvent.toProto(): OutboundEventProto =
         is OutboundEvent.ShowLoginScreen ->
             outboundProto(sessionId) { setShowLoginScreen(ShowLoginScreenProto.getDefaultInstance()) }
         is OutboundEvent.SetAnsi -> outboundProto(sessionId) { setSetAnsi(toSetAnsiProto()) }
+        is OutboundEvent.SetScreenReader -> outboundProto(sessionId) { setSetScreenReader(toSetScreenReaderProto()) }
         is OutboundEvent.Close -> outboundProto(sessionId) { setClose(toCloseProto()) }
         is OutboundEvent.ClearScreen -> outboundProto(sessionId) { setClearScreen(ClearScreenProto.getDefaultInstance()) }
         is OutboundEvent.ShowAnsiDemo -> outboundProto(sessionId) { setShowAnsiDemo(ShowAnsiDemoProto.getDefaultInstance()) }
@@ -98,6 +100,8 @@ fun OutboundEventProto.toDomain(): OutboundEvent? {
             OutboundEvent.ShowLoginScreen(sessionId = sid)
         OutboundEventProto.EventCase.SET_ANSI ->
             OutboundEvent.SetAnsi(sessionId = sid, enabled = setAnsi.enabled)
+        OutboundEventProto.EventCase.SET_SCREEN_READER ->
+            OutboundEvent.SetScreenReader(sessionId = sid, enabled = setScreenReader.enabled)
         OutboundEventProto.EventCase.CLOSE ->
             OutboundEvent.Close(sessionId = sid, reason = close.reason)
         OutboundEventProto.EventCase.CLEAR_SCREEN ->
@@ -189,6 +193,12 @@ private fun OutboundEvent.SendError.toSendErrorProto(): SendErrorProto =
 
 private fun OutboundEvent.SetAnsi.toSetAnsiProto(): SetAnsiProto =
     SetAnsiProto
+        .newBuilder()
+        .setEnabled(enabled)
+        .build()
+
+private fun OutboundEvent.SetScreenReader.toSetScreenReaderProto(): SetScreenReaderProto =
+    SetScreenReaderProto
         .newBuilder()
         .setEnabled(enabled)
         .build()

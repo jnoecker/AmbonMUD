@@ -17,6 +17,10 @@ sealed interface Command {
 
     data object Colors : Command
 
+    data object ScreenReaderOn : Command
+
+    data object ScreenReaderOff : Command
+
     data class Move(
         val dir: Direction,
     ) : Command
@@ -1279,6 +1283,9 @@ object CommandParser {
             "quit", "exit" -> Command.Quit
             "ansi on" -> Command.AnsiOn
             "ansi off" -> Command.AnsiOff
+            "screenreader on" -> Command.ScreenReaderOn
+            "screenreader off" -> Command.ScreenReaderOff
+            "screenreader" -> Command.ScreenReaderOn // toggle handled by router
             "clear" -> Command.Clear
             "colors" -> Command.Colors
             "who" -> Command.Who
