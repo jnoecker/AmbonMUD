@@ -11,6 +11,7 @@ import dev.ambon.engine.LeaderboardSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.PuzzleSystem
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.ShopRegistry
@@ -49,4 +50,5 @@ data class EngineContext(
     val genderRegistry: GenderRegistry? = null,
     val leaderboardSystem: LeaderboardSystem? = null,
     val trainerRegistry: TrainerRegistry? = null,
+    val puzzleSystem: PuzzleSystem? = null,
 )

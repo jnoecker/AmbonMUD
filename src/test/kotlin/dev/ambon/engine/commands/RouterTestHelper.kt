@@ -18,6 +18,7 @@ import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PrestigeSystem
+import dev.ambon.engine.PuzzleSystem
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.WorldStateRegistry
@@ -39,6 +40,7 @@ import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.PrestigeHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
+import dev.ambon.engine.commands.handlers.PuzzleHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.TradeHandler
 import dev.ambon.engine.commands.handlers.UiHandler
@@ -89,6 +91,7 @@ internal fun buildTestRouter(
     dungeonManager: DungeonManager? = null,
     dungeonRegistry: DungeonRegistry? = null,
     housingSystem: HousingSystem? = null,
+    puzzleSystem: PuzzleSystem? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -104,6 +107,7 @@ internal fun buildTestRouter(
         shopRegistry = shopRegistry,
         economyConfig = economyConfig,
     )
+    val puzzleHandler = puzzleSystem?.let { PuzzleHandler(ctx = ctx, puzzleSystem = it) }
     listOfNotNull(
         UiHandler(ctx = ctx, onPhase = onPhase),
         CommunicationHandler(
@@ -114,7 +118,7 @@ internal fun buildTestRouter(
             engineId = engineId,
             onRemoteWho = onRemoteWho,
         ),
-        NavigationHandler(ctx = ctx, onCrossZoneMove = onCrossZoneMove, clock = clock),
+        NavigationHandler(ctx = ctx, onCrossZoneMove = onCrossZoneMove, clock = clock, puzzleSystem = puzzleSystem),
         CombatHandler(ctx = ctx),
         ProgressionHandler(ctx = ctx, progression = progression, groupSystem = groupSystem),
         ItemHandler(ctx = ctx),
@@ -122,7 +126,8 @@ internal fun buildTestRouter(
         DialogueQuestHandler(ctx = ctx),
         GroupHandler(ctx = ctx, groupSystem = groupSystem),
         GuildHandler(ctx = ctx, guildSystem = guildSystem),
-        WorldFeaturesHandler(ctx = ctx),
+        puzzleHandler,
+        WorldFeaturesHandler(ctx = ctx, puzzleHandler = puzzleHandler),
         MailHandler(ctx = ctx),
         petSystem?.let { PetHandler(ctx = ctx, petSystem = it) },
         enchantSystem?.let { EnchantHandler(ctx = ctx, enchantSystem = it) },
