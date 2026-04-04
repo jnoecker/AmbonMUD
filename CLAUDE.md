@@ -140,7 +140,7 @@ Sessions
 - **World:** Time, Answer
 - **Questing:** QuestAuto, QuestAutoInfo, QuestAutoAbandon, DailyQuests, WeeklyQuests, GlobalQuestInfo
 - **Dungeons:** DungeonEnter, DungeonLeave
-- **Housing:** House (Info, Expand, Furnish, Describe, Invite, Kick, Lock, Unlock)
+- **Housing:** House (Status, ListTemplates, Buy, Expand, SetTitle, SetDescription, Invite, Kick, Guests)
 - **Sharding:** Phase (instance switching)
 - **Staff:** Goto, Transfer, Spawn, Smite, Kick, Shutdown
 - **Utility:** Help, Clear, Colors, Who, AnsiOn, AnsiOff, ScreenReaderOn, ScreenReaderOff
