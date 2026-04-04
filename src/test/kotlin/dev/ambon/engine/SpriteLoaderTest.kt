@@ -16,63 +16,6 @@ class SpriteLoaderTest {
         registry = SpriteRegistry()
     }
 
-    // ── Tier generation ──────────────────────────────────────────────────
-
-    @Test
-    fun `generateTierSprites creates definitions for each tier`() {
-        SpriteLoader.generateTierSprites(
-            registry = registry,
-            tierNames = mapOf(1 to "Novice", 10 to "Apprentice"),
-            raceIds = listOf("HUMAN", "ELF"),
-            classIds = listOf("WARRIOR", "MAGE"),
-        )
-
-        val all = registry.all().toList()
-        assertEquals(2, all.size)
-
-        val novice = registry.get("tier_novice")
-        assertNotNull(novice)
-        assertEquals("Novice", novice!!.displayName)
-        assertEquals(SpriteCategory.TIER, novice.category)
-        assertEquals(SpriteUnlockCondition.Level(1), novice.unlockCondition)
-        assertEquals(1, novice.sortOrder)
-        // 2 races x 2 classes = 4 variants
-        assertEquals(4, novice.variants.size)
-    }
-
-    @Test
-    fun `tier sprite variants follow naming convention`() {
-        SpriteLoader.generateTierSprites(
-            registry = registry,
-            tierNames = mapOf(1 to "Novice"),
-            raceIds = listOf("ELF"),
-            classIds = listOf("MAGE"),
-        )
-
-        val novice = registry.get("tier_novice")!!
-        assertEquals(1, novice.variants.size)
-        val v = novice.variants[0]
-        assertEquals("elf_mage_t1", v.imageId)
-        assertEquals("Novice (Elf Mage)", v.displayName)
-        assertEquals("ELF", v.race)
-        assertEquals("MAGE", v.playerClass)
-        assertEquals("player_sprites/elf_mage_t1.png", v.imagePath)
-    }
-
-    @Test
-    fun `tier sprites are indexed in variant lookup`() {
-        SpriteLoader.generateTierSprites(
-            registry = registry,
-            tierNames = mapOf(10 to "Apprentice"),
-            raceIds = listOf("HUMAN"),
-            classIds = listOf("WARRIOR"),
-        )
-
-        val result = registry.findVariant("human_warrior_t10")
-        assertNotNull(result)
-        assertEquals("tier_apprentice", result!!.first.id)
-    }
-
     // ── Staff generation ─────────────────────────────────────────────────
 
     @Test
@@ -149,19 +92,12 @@ class SpriteLoaderTest {
     // ── Combined loading ─────────────────────────────────────────────────
 
     @Test
-    fun `tier and achievement sprites coexist in registry`() {
-        SpriteLoader.generateTierSprites(
-            registry = registry,
-            tierNames = mapOf(1 to "Novice"),
-            raceIds = listOf("ELF"),
-            classIds = listOf("MAGE"),
-        )
+    fun `staff and achievement sprites coexist in registry`() {
         SpriteLoader.generateStaffSprites(registry, listOf("ELF"))
         SpriteLoader.loadFromResource("world/sprites.yaml", registry)
 
-        // Should have tier + staff + legacy achievements + new requirements sprites
-        assertTrue(registry.all().size >= 4)
-        assertNotNull(registry.get("tier_novice"))
+        // Should have staff + legacy achievements + new requirements sprites
+        assertTrue(registry.all().size >= 3)
         assertNotNull(registry.get("staff"))
         assertNotNull(registry.get("beetle_slayer"))
         assertNotNull(registry.get("spider_hunter"))

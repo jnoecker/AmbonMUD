@@ -2245,22 +2245,8 @@ data class ShardingConfig(
 data class ImagesConfig(
     val baseUrl: String = "/images/",
     val globalAssets: Map<String, String> = DEFAULT_GLOBAL_ASSETS,
-    /** Level thresholds for player sprite tiers, checked highest-first. */
-    val spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
-    /** Human-readable names for each sprite tier, keyed by level threshold. */
-    val spriteTierNames: Map<Int, String> = DEFAULT_SPRITE_TIER_NAMES,
-    /** When true, auto-generates race x class x tier sprite definitions (96 images). Set false to sunset. */
-    val legacyTierSprites: Boolean = true,
 ) {
     companion object {
-        val DEFAULT_SPRITE_TIER_NAMES: Map<Int, String> = linkedMapOf(
-            1 to "Novice",
-            10 to "Apprentice",
-            20 to "Journeyman",
-            30 to "Expert",
-            40 to "Master",
-            50 to "Legend",
-        )
         val DEFAULT_GLOBAL_ASSETS: Map<String, String> = linkedMapOf(
             "compass_rose" to "global_assets/compass_rose.png",
             "direction_marker" to "global_assets/direction_marker.png",
