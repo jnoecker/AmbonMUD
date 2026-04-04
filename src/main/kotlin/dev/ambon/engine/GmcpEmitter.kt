@@ -1482,6 +1482,7 @@ class GmcpEmitter(
         level: Int? = null,
         race: String? = null,
         playerClass: String? = null,
+        playerDescription: String? = null,
     ) {
         emit(
             sessionId,
@@ -1494,6 +1495,7 @@ class GmcpEmitter(
                 level = level,
                 race = race,
                 playerClass = playerClass,
+                playerDescription = playerDescription,
             ),
             supportCheck = "Room.Info",
         )
@@ -2297,6 +2299,7 @@ class GmcpEmitter(
         val level: Int? = null,
         val race: String? = null,
         @get:JsonProperty("class") val playerClass: String? = null,
+        val playerDescription: String? = null,
     )
 
     // ---------- shop payloads ----------
