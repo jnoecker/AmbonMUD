@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN screen_reader_enabled BOOLEAN NOT NULL DEFAULT FALSE;

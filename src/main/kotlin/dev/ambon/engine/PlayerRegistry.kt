@@ -553,6 +553,16 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
+    suspend fun setScreenReaderEnabled(
+        sessionId: SessionId,
+        enabled: Boolean,
+    ) {
+        val ps = players[sessionId] ?: return
+        if (ps.screenReaderEnabled == enabled) return
+        ps.screenReaderEnabled = enabled
+        persistIfClaimed(ps)
+    }
+
     fun findSessionByName(name: String): SessionId? = sessionByLowerName[normalizeName(name).lowercase()]
 
     fun isNameOnline(

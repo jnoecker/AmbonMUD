@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.StatDefinition
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.CurrencySystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.abilities.AbilitySystem
@@ -10,6 +11,7 @@ import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
+import dev.ambon.engine.commands.onStaff
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectSystem
 
@@ -19,6 +21,7 @@ class ProgressionHandler(
     private val abilitySystem: AbilitySystem? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
+    private val currencySystem: CurrencySystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
@@ -36,6 +39,9 @@ class ProgressionHandler(
         router.on<Command.Effects> { sid, _ -> handleEffects(sid) }
         router.on<Command.Balance> { sid, _ -> handleBalance(sid) }
         router.on<Command.SetGender> { sid, cmd -> handleSetGender(sid, cmd) }
+        router.on<Command.Describe> { sid, cmd -> handleDescribe(sid, cmd) }
+        router.on<Command.DescribeClear> { sid, _ -> handleDescribeClear(sid) }
+        router.onStaff<Command.DescribeCheck> { sid, cmd -> handleDescribeCheck(sid, cmd) }
     }
 
     private suspend fun handleScore(sessionId: SessionId) {
@@ -107,6 +113,14 @@ class ProgressionHandler(
                 outbound.send(
                     OutboundEvent.SendInfo(sessionId, "  Prestige: Rank ${me.prestigeLevel}"),
                 )
+            }
+            val currDefs = currencySystem?.definitions() ?: emptyMap()
+            if (currDefs.isNotEmpty()) {
+                val summary = currDefs.entries.joinToString(", ") { (id, def) ->
+                    val bal = currencySystem!!.balance(me, id)
+                    "${def.abbreviation}: $bal"
+                }
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  Currencies: $summary"))
             }
         }
     }
@@ -185,5 +199,43 @@ class ProgressionHandler(
             outbound.send(OutboundEvent.SendInfo(sessionId, "Gender set to ${gender.displayName}."))
             gmcpEmitter?.sendCharName(sessionId, me)
         }
+    }
+
+    private suspend fun handleDescribe(sessionId: SessionId, cmd: Command.Describe) {
+        if (cmd.text.length > MAX_DESCRIPTION_LENGTH) {
+            outbound.send(
+                OutboundEvent.SendError(
+                    sessionId,
+                    "Description too long (max $MAX_DESCRIPTION_LENGTH characters).",
+                ),
+            )
+            return
+        }
+        players.withPlayer(sessionId) { me ->
+            me.description = cmd.text
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Description set."))
+        }
+    }
+
+    private suspend fun handleDescribeClear(sessionId: SessionId) {
+        players.withPlayer(sessionId) { me ->
+            me.description = ""
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Description cleared."))
+        }
+    }
+
+    private suspend fun handleDescribeCheck(sessionId: SessionId, cmd: Command.DescribeCheck) {
+        val target = players.getByName(cmd.targetName)
+        if (target == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Player '${cmd.targetName}' is not online."))
+            return
+        }
+        val desc = target.description.ifEmpty { "(no description set)" }
+        outbound.send(OutboundEvent.SendInfo(sessionId, "${target.name}'s description: $desc"))
+    }
+
+    companion object {
+        /** Maximum length for a player-written character description. */
+        const val MAX_DESCRIPTION_LENGTH = 500
     }
 }

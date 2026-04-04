@@ -22,4 +22,5 @@ data class QuestObjectiveDef(
 data class QuestRewards(
     override val xp: Long = 0L,
     override val gold: Long = 0L,
+    val currencies: Map<String, Long> = emptyMap(),
 ) : Rewards

@@ -12,6 +12,7 @@ object GuildsTable : Table("guilds") {
     val motd = text("motd").nullable()
     val members = text("members").default("{}")
     val createdAtEpochMs = long("created_at_epoch_ms")
+    val hallRooms = text("hall_rooms").default("[]")
 
     override val primaryKey = PrimaryKey(id)
 }
