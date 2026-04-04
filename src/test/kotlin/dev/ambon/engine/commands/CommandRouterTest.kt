@@ -515,4 +515,140 @@ class CommandRouterTest {
             assertTrue(stationLine != null, "Expected Crafting station line. got=$outs")
             assertEquals("Crafting station: Alchemy Table", stationLine!!.text)
         }
+
+    // ---- Describe ----
+
+    @Test
+    fun `describe sets description on player`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Hero")
+            h.drain()
+
+            h.router.handle(sid, Command.Describe("A scarred warrior."))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text == "Description set." },
+                "Expected confirmation. got=$outs",
+            )
+            assertEquals("A scarred warrior.", h.players.get(sid)!!.description)
+        }
+
+    @Test
+    fun `describe clear resets description`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Hero")
+            h.players.get(sid)!!.description = "Old text"
+            h.drain()
+
+            h.router.handle(sid, Command.DescribeClear)
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text == "Description cleared." },
+                "Expected confirmation. got=$outs",
+            )
+            assertEquals("", h.players.get(sid)!!.description)
+        }
+
+    @Test
+    fun `describe rejects text over 500 characters`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Hero")
+            h.drain()
+
+            val longText = "x".repeat(501)
+            h.router.handle(sid, Command.Describe(longText))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("too long") },
+                "Expected error for long description. got=$outs",
+            )
+            assertEquals("", h.players.get(sid)!!.description)
+        }
+
+    @Test
+    fun `look at player shows description when set`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(bob)!!.description = "A mysterious figure in a dark cloak."
+            h.drain()
+
+            h.router.handle(alice, Command.LookAt("Bob"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text.contains("A mysterious figure") },
+                "Expected custom description. got=$outs",
+            )
+        }
+
+    @Test
+    fun `look at player without description shows only level line`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.drain()
+
+            h.router.handle(alice, Command.LookAt("Bob"))
+            val outs = h.drain()
+
+            val textLines = outs.filterIsInstance<OutboundEvent.SendText>()
+            assertEquals(1, textLines.size, "Expected only the level line. got=$textLines")
+            assertTrue(textLines[0].text.startsWith("You see Bob"), "got=${textLines[0].text}")
+        }
+
+    @Test
+    fun `describe check requires staff`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(bob)!!.description = "Some desc"
+            h.drain()
+
+            h.router.handle(alice, Command.DescribeCheck("Bob"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text == "You are not staff." },
+                "Expected staff-only error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `describe check by staff shows target description`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            val bob = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(bob)!!.description = "Tall and imposing."
+            h.drain()
+
+            h.router.handle(staffSid, Command.DescribeCheck("Bob"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text.contains("Tall and imposing.") },
+                "Expected target's description. got=$outs",
+            )
+        }
 }

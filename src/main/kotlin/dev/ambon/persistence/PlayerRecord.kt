@@ -82,6 +82,8 @@ data class PlayerRecord(
     val pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
     val pvpDeaths: Int = 0,
+    /** Player-written custom description visible when others look at them. */
+    val description: String = "",
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

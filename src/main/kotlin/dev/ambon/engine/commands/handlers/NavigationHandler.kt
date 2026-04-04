@@ -329,6 +329,9 @@ class NavigationHandler(
             val p = otherPlayer
             val playerDesc = "You see ${p.name}, a level ${p.level} ${p.race} ${p.playerClass}."
             outbound.send(OutboundEvent.SendText(sessionId, playerDesc))
+            if (p.description.isNotEmpty()) {
+                outbound.send(OutboundEvent.SendText(sessionId, p.description))
+            }
             gmcpEmitter?.sendLookTarget(
                 sessionId,
                 "player",
@@ -337,6 +340,7 @@ class NavigationHandler(
                 level = p.level,
                 race = p.race,
                 playerClass = p.playerClass,
+                playerDescription = p.description.ifEmpty { null },
             )
             return
         }
