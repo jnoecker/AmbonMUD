@@ -94,6 +94,8 @@ data class PlayerState(
     var pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
     var pvpDeaths: Int = 0,
+    /** Whether screen-reader accessibility mode is enabled. */
+    var screenReaderEnabled: Boolean = false,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -202,6 +204,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
+        screenReaderEnabled = screenReaderEnabled,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -250,6 +253,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
+        screenReaderEnabled = screenReaderEnabled,
     )
 }
 

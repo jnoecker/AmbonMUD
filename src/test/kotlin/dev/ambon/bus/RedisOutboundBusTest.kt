@@ -144,6 +144,16 @@ class RedisOutboundBusTest {
     }
 
     @Test
+    fun `SetScreenReader round-trips through Redis`() {
+        roundTrip(
+            expected = OutboundEvent.SetScreenReader(SessionId(25), enabled = true),
+            sessionId = 25,
+            type = "SetScreenReader",
+            enabled = true,
+        )
+    }
+
+    @Test
     fun `Close round-trips through Redis`() {
         roundTrip(
             expected = OutboundEvent.Close(SessionId(16), reason = "kicked"),
@@ -208,6 +218,7 @@ class RedisOutboundBusTest {
                     OutboundEvent.SendPrompt(sid),
                     OutboundEvent.ShowLoginScreen(sid),
                     OutboundEvent.SetAnsi(sid, true),
+                    OutboundEvent.SetScreenReader(sid, true),
                     OutboundEvent.Close(sid, "r"),
                     OutboundEvent.ClearScreen(sid),
                     OutboundEvent.ShowAnsiDemo(sid),

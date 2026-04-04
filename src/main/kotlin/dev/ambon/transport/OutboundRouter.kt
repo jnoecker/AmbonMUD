@@ -39,6 +39,7 @@ class OutboundRouter(
         val queueDepth: AtomicInteger = AtomicInteger(0),
         @Volatile var lastEnqueuedWasPrompt: Boolean = false,
         @Volatile var renderer: TextRenderer = PlainRenderer(),
+        @Volatile var screenReaderEnabled: Boolean = false,
     ) {
         val isAnsi: Boolean get() = renderer is AnsiRenderer
     }
@@ -132,6 +133,11 @@ class OutboundRouter(
                         setAnsi(sink, ev.enabled)
                     }
 
+                    is OutboundEvent.SetScreenReader -> {
+                        val sink = sinks[ev.sessionId] ?: continue
+                        sink.screenReaderEnabled = ev.enabled
+                    }
+
                     is OutboundEvent.ClearScreen -> {
                         val sink = sinks[ev.sessionId] ?: continue
                         clearScreen(ev.sessionId, sink)
@@ -168,7 +174,8 @@ class OutboundRouter(
         text: String,
         kind: TextKind,
     ) {
-        val framed = sink.renderer.renderLine(text, kind)
+        val filtered = if (sink.screenReaderEnabled) ScreenReaderFilter.filter(text) else text
+        val framed = sink.renderer.renderLine(filtered, kind)
         if (enqueueFramed(sessionId, sink, framed)) {
             sink.lastEnqueuedWasPrompt = false
         }
