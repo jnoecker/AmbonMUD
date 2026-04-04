@@ -134,6 +134,7 @@ data class AppConfig(
         validateEngineEnchanting()
         validateEngineFactions()
         validateEngineDailyQuests()
+        validateEngineAutoQuests()
         validateEngineGlobalQuests()
         validateEngineLottery()
         validateEngineGambling()
@@ -377,6 +378,19 @@ data class AppConfig(
                 }
             }
         }
+    }
+
+    private fun validateEngineAutoQuests() {
+        val aq = engine.autoQuests
+        if (!aq.enabled) return
+        require(aq.timeLimitMs > 0) { "ambonMUD.engine.autoQuests.timeLimitMs must be > 0" }
+        require(aq.cooldownMs >= 0) { "ambonMUD.engine.autoQuests.cooldownMs must be >= 0" }
+        require(aq.rewardGoldBase >= 0) { "ambonMUD.engine.autoQuests.rewardGoldBase must be >= 0" }
+        require(aq.rewardGoldPerLevel >= 0) { "ambonMUD.engine.autoQuests.rewardGoldPerLevel must be >= 0" }
+        require(aq.rewardXpBase >= 0) { "ambonMUD.engine.autoQuests.rewardXpBase must be >= 0" }
+        require(aq.rewardXpPerLevel >= 0) { "ambonMUD.engine.autoQuests.rewardXpPerLevel must be >= 0" }
+        require(aq.killCountMin >= 1) { "ambonMUD.engine.autoQuests.killCountMin must be >= 1" }
+        require(aq.killCountMax >= aq.killCountMin) { "ambonMUD.engine.autoQuests.killCountMax must be >= killCountMin" }
     }
 
     private fun validateEngineGlobalQuests() {
@@ -848,6 +862,27 @@ data class DailyQuestDefinition(
     val xpReward: Long = 0L,
 )
 
+data class AutoQuestsConfig(
+    /** Whether auto-generated bounty quests are enabled. */
+    val enabled: Boolean = true,
+    /** Time limit to complete an auto-quest (ms). */
+    val timeLimitMs: Long = 600_000L,
+    /** Cooldown between requesting auto-quests (ms). */
+    val cooldownMs: Long = 60_000L,
+    /** Base gold reward. */
+    val rewardGoldBase: Long = 50L,
+    /** Additional gold per player level. */
+    val rewardGoldPerLevel: Long = 10L,
+    /** Base XP reward. */
+    val rewardXpBase: Long = 100L,
+    /** Additional XP per player level. */
+    val rewardXpPerLevel: Long = 25L,
+    /** Minimum kill count for generated quests. */
+    val killCountMin: Int = 3,
+    /** Maximum kill count for generated quests. */
+    val killCountMax: Int = 8,
+)
+
 data class WorldTimeConfig(
     /** Real-time milliseconds for one full game day (24 game hours). Default: 1 hour. */
     val cycleLengthMs: Long = 3_600_000L,
@@ -1286,6 +1321,7 @@ data class EngineConfig(
     val respec: RespecConfig = RespecConfig(),
     val prestige: PrestigeConfig = PrestigeConfig(),
     val dailyQuests: DailyQuestsConfig = DailyQuestsConfig(),
+    val autoQuests: AutoQuestsConfig = AutoQuestsConfig(),
     val globalQuests: GlobalQuestsConfig = GlobalQuestsConfig(),
     val lottery: LotteryConfig = LotteryConfig(),
     val gambling: GamblingConfig = GamblingConfig(),
@@ -1404,6 +1440,9 @@ data class CommandsConfig(
             "quest_info" to CommandMetadata("quest info <name>", "Quest details", "quests", requiresTarget = true),
             "quest_abandon" to CommandMetadata("quest abandon <name>", "Abandon a quest", "quests", requiresTarget = true),
             "accept" to CommandMetadata("accept <quest>", "Accept a quest from an NPC", "quests", requiresTarget = true),
+            "bounty" to CommandMetadata("bounty / quest auto", "Request an auto-generated bounty quest", "quests"),
+            "bounty_info" to CommandMetadata("bounty info / quest auto info", "View active bounty progress", "quests"),
+            "bounty_abandon" to CommandMetadata("bounty abandon / quest auto abandon", "Abandon active bounty", "quests"),
             "achievements" to CommandMetadata("achievements/ach", "View achievements", "quests"),
             "daily" to CommandMetadata("daily/dailies", "View daily quest board", "quests"),
             "weekly" to CommandMetadata("weekly", "View weekly quest board", "quests"),

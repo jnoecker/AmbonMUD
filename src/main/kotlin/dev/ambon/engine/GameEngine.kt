@@ -21,6 +21,7 @@ import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
+import dev.ambon.engine.commands.handlers.AutoQuestHandler
 import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
@@ -45,6 +46,7 @@ import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.PrestigeHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
+import dev.ambon.engine.commands.handlers.PuzzleHandler
 import dev.ambon.engine.commands.handlers.ReputationHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.SpriteHandler
@@ -273,6 +275,7 @@ class GameEngine(
             showLoginScreen = { sid -> outbound.send(OutboundEvent.ShowLoginScreen(sid)) },
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
+                puzzleSystem.removeSession(sid)
                 petSystem.onOwnerDisconnect(sid)
                 tradeSystem.cancelForPlayer(sid)
                 val endedDuel = duelSystem.onPlayerDisconnect(sid)
@@ -793,6 +796,8 @@ class GameEngine(
 
     private val reputationSystem = ReputationSystem(config = engineConfig.factions)
 
+    private val puzzleSystem = PuzzleSystem(world = world, clock = clock)
+
     private val currencySystem = CurrencySystem(config = engineConfig.currencies)
 
     private val duelRng = java.util.Random()
@@ -837,6 +842,18 @@ class GameEngine(
                 players = players,
                 clock = clock,
                 progression = progression,
+            )
+        } else {
+            null
+        }
+
+    private val autoQuestSystem: AutoQuestSystem? =
+        if (engineConfig.autoQuests.enabled) {
+            AutoQuestSystem(
+                config = engineConfig.autoQuests,
+                world = world,
+                players = players,
+                clock = clock,
             )
         } else {
             null
@@ -955,6 +972,7 @@ class GameEngine(
             guildSystem,
             guildHallSystem,
             housingSystem,
+            autoQuestSystem,
         ),
     )
 
@@ -1002,6 +1020,7 @@ class GameEngine(
     private val communicationHandler: CommunicationHandler
     private val adminHandler: AdminHandler
     private val mailHandler: MailHandler
+    private val autoQuestHandler: AutoQuestHandler
 
     init {
         val crossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = if (handoffManager != null) ::handleCrossZoneMove else null
@@ -1032,6 +1051,7 @@ class GameEngine(
             genderRegistry = genderRegistry,
             leaderboardSystem = leaderboardSystem,
             trainerRegistry = trainerRegistry,
+            puzzleSystem = puzzleSystem,
         )
 
         communicationHandler = CommunicationHandler(
@@ -1058,6 +1078,8 @@ class GameEngine(
             },
         )
 
+        val puzzleHandlerInstance = PuzzleHandler(ctx = ctx, puzzleSystem = puzzleSystem)
+
         listOf(
             NavigationHandler(
                 ctx = ctx,
@@ -1068,6 +1090,7 @@ class GameEngine(
                 housingSystem = housingSystem,
                 guildHallSystem = guildHallSystem,
                 onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },
+                puzzleSystem = puzzleSystem,
             ),
             communicationHandler,
             CombatHandler(
@@ -1176,7 +1199,8 @@ class GameEngine(
                 ctx = ctx,
                 housingSystem = housingSystem,
             ),
-            WorldFeaturesHandler(ctx = ctx),
+            puzzleHandlerInstance,
+            WorldFeaturesHandler(ctx = ctx, puzzleHandler = puzzleHandlerInstance),
             adminHandler,
             DungeonHandler(
                 ctx = ctx,
@@ -1257,6 +1281,33 @@ class GameEngine(
 
         mailHandler = MailHandler(ctx = ctx, clock = clock)
         mailHandler.register(router)
+
+        autoQuestHandler = AutoQuestHandler(
+            ctx = ctx,
+            autoQuestSystem = autoQuestSystem,
+            onQuestReward = { sid, xp, gold ->
+                val ps = players.get(sid)
+                if (ps != null) {
+                    if (gold > 0) {
+                        ps.gold += gold
+                        outbound.send(OutboundEvent.SendText(sid, "You receive $gold gold."))
+                        gmcpEmitter.sendCharGain(sid, "gold", gold, "bounty")
+                    }
+                    if (xp > 0) {
+                        val levelUp = players.grantXp(sid, xp)
+                        outbound.send(OutboundEvent.SendText(sid, "You gain $xp XP."))
+                        gmcpEmitter.sendCharGain(sid, "xp", xp, "bounty")
+                        if (levelUp != null) {
+                            outbound.send(
+                                OutboundEvent.SendInfo(sid, "Congratulations! You reached level ${levelUp.newLevel}!"),
+                            )
+                        }
+                    }
+                    markVitalsDirty(sid)
+                }
+            },
+        )
+        autoQuestHandler.register(router)
     }
 
     /**
@@ -1583,6 +1634,14 @@ class GameEngine(
                     schedulerSample.stop(metrics.schedulerRunDueTimer)
                     metrics.onSchedulerActionsExecuted(actionsRan)
                     metrics.onSchedulerActionsDropped(actionsDropped)
+
+                    // Expire timed auto-quests
+                    if (autoQuestSystem != null) {
+                        val expired = autoQuestSystem.tick(clock.millis())
+                        for (sid in expired) {
+                            autoQuestHandler.handleExpired(sid)
+                        }
+                    }
 
                     // Reset zones when their lifespan elapses.
                     zoneResetHandler.tick()
@@ -2142,6 +2201,7 @@ class GameEngine(
         questSystem.onMobKilled(sessionId, templateKey)
         achievementSystem.onMobKilled(sessionId, templateKey)
         notifyDailyQuest(sessionId, "kill")
+        autoQuestHandler.onMobKill(sessionId, templateKey)
         globalQuestSystem?.onEvent(sessionId, GlobalQuestObjectiveType.KILL)
 
         // Faction reputation changes on mob kill

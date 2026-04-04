@@ -975,6 +975,12 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Quest.Auto": {
+      // Auto-generated bounty quest state. Stored for future UI panel.
+      // For now, just acknowledge the packet so parity tests pass.
+      break;
+    }
+
     case "Quest.Global": {
       // Global competitive quest status — data contains active, objective,
       // targetCount, playerProgress, leaderboard, etc.
