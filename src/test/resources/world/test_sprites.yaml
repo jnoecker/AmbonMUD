@@ -1,0 +1,84 @@
+sprites:
+  beetle_slayer:
+    displayName: "Beetle Slayer"
+    category: achievement
+    sortOrder: 100
+    unlock:
+      type: achievement
+      achievementId: combat/beetle_exterminator
+    variants:
+      - imageId: beetle_slayer
+        displayName: "Beetle Slayer"
+        imagePath: player_sprites/beetle_slayer.png
+      - imageId: elf_beetle_slayer
+        displayName: "Beetle Slayer (Elf)"
+        race: ELF
+        imagePath: player_sprites/elf_beetle_slayer.png
+      - imageId: dwarf_beetle_slayer
+        displayName: "Beetle Slayer (Dwarf)"
+        race: DWARF
+        imagePath: player_sprites/dwarf_beetle_slayer.png
+
+  spider_hunter:
+    displayName: "Spider Hunter"
+    category: achievement
+    sortOrder: 101
+    unlock:
+      type: achievement
+      achievementId: combat/spider_hunter
+    variants:
+      - imageId: spider_hunter
+        displayName: "Spider Hunter"
+        imagePath: player_sprites/spider_hunter.png
+      - imageId: rogue_spider_hunter
+        displayName: "Spider Hunter (Rogue)"
+        playerClass: ROGUE
+        imagePath: player_sprites/rogue_spider_hunter.png
+
+  elven_heritage:
+    displayName: "Elven Heritage"
+    description: "The grace of the elder folk."
+    category: general
+    sortOrder: 50
+    requirements:
+      - type: race
+        race: ELF
+    image: player_sprites/elven_heritage.png
+
+  sword_saint:
+    displayName: "Sword Saint"
+    description: "A warrior who has mastered the blade."
+    category: general
+    sortOrder: 120
+    requirements:
+      - type: class
+        playerClass: WARRIOR
+      - type: minLevel
+        level: 20
+    image: player_sprites/sword_saint.png
+
+  elven_arcanist:
+    displayName: "Elven Arcanist"
+    description: "An elf who has mastered ancient magic."
+    category: general
+    sortOrder: 200
+    requirements:
+      - type: race
+        race: ELF
+      - type: class
+        playerClass: MAGE
+      - type: minLevel
+        level: 30
+    image: player_sprites/elven_arcanist.png
+
+  dragon_slayer:
+    displayName: "Dragon Slayer"
+    description: "Defeated the ancient golem in single combat."
+    category: general
+    sortOrder: 300
+    requirements:
+      - type: achievement
+        achievementId: combat/secret_slayer
+      - type: minLevel
+        level: 20
+    image: player_sprites/dragon_slayer.png

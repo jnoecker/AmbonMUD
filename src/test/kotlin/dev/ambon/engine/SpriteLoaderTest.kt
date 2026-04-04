@@ -52,7 +52,7 @@ class SpriteLoaderTest {
 
     @Test
     fun `loadFromResource loads sprites from YAML`() {
-        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+        SpriteLoader.loadFromResource("world/test_sprites.yaml", registry)
 
         val beetle = registry.get("beetle_slayer")
         assertNotNull(beetle)
@@ -69,7 +69,7 @@ class SpriteLoaderTest {
 
     @Test
     fun `loaded variants have correct qualifiers`() {
-        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+        SpriteLoader.loadFromResource("world/test_sprites.yaml", registry)
 
         val beetle = registry.get("beetle_slayer")!!
         val generic = beetle.variants.find { it.imageId == "beetle_slayer" }
@@ -94,7 +94,7 @@ class SpriteLoaderTest {
     @Test
     fun `staff and achievement sprites coexist in registry`() {
         SpriteLoader.generateStaffSprites(registry, listOf("ELF"))
-        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+        SpriteLoader.loadFromResource("world/test_sprites.yaml", registry)
 
         // Should have staff + legacy achievements + new requirements sprites
         assertTrue(registry.all().size >= 3)
@@ -107,7 +107,7 @@ class SpriteLoaderTest {
 
     @Test
     fun `loadFromResource loads requirements-based sprites`() {
-        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+        SpriteLoader.loadFromResource("world/test_sprites.yaml", registry)
 
         val arcanist = registry.get("elven_arcanist")
         assertNotNull(arcanist)
@@ -120,7 +120,7 @@ class SpriteLoaderTest {
 
     @Test
     fun `single-image shorthand creates one variant with sprite id`() {
-        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+        SpriteLoader.loadFromResource("world/test_sprites.yaml", registry)
 
         val heritage = registry.get("elven_heritage")
         assertNotNull(heritage)
@@ -131,7 +131,7 @@ class SpriteLoaderTest {
 
     @Test
     fun `requirements sprite has correct requirement types`() {
-        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+        SpriteLoader.loadFromResource("world/test_sprites.yaml", registry)
 
         val arcanist = registry.get("elven_arcanist")!!
         assertTrue(arcanist.requirements.any { it is dev.ambon.domain.sprite.SpriteRequirement.Race })
@@ -141,7 +141,7 @@ class SpriteLoaderTest {
 
     @Test
     fun `legacy and requirements sprites coexist from same YAML`() {
-        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+        SpriteLoader.loadFromResource("world/test_sprites.yaml", registry)
 
         // Legacy achievement sprites
         assertNotNull(registry.get("beetle_slayer"))
