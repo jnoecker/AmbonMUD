@@ -3279,6 +3279,11 @@ ambonmud:
       minLevel: 10
       goldCost: 500
 
+    respec:
+      enabled: true
+      goldCost: 1000
+      cooldownMs: 3600000
+
     prestige:
       enabled: true
       xpCostBase: 500000
