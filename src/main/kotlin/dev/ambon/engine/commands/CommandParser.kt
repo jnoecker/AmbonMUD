@@ -383,6 +383,18 @@ sealed interface Command {
         data object Roster : Guild
 
         data object Info : Guild
+
+        data object Hall : Guild
+
+        data object HallBuy : Guild
+
+        data class HallExpand(
+            val template: String,
+        ) : Guild
+
+        data object HallEnter : Guild
+
+        data object HallLeave : Guild
     }
 
     // ---- Crafting & Gathering commands ----
@@ -873,6 +885,25 @@ object CommandParser {
                 }
                 "roster" -> Command.Guild.Roster
                 "info" -> Command.Guild.Info
+                "hall" -> {
+                    val hallRest = parts.getOrNull(1)?.trim() ?: ""
+                    val hallParts = hallRest.split(Regex("\\s+"), limit = 2)
+                    when (hallParts[0].lowercase()) {
+                        "" -> Command.Guild.Hall
+                        "buy", "purchase" -> Command.Guild.HallBuy
+                        "expand" -> {
+                            val template = hallParts.getOrNull(1)?.trim() ?: ""
+                            if (template.isEmpty()) {
+                                Command.Invalid(line, "guild hall expand <template>")
+                            } else {
+                                Command.Guild.HallExpand(template)
+                            }
+                        }
+                        "enter" -> Command.Guild.HallEnter
+                        "leave", "exit" -> Command.Guild.HallLeave
+                        else -> Command.Guild.Hall
+                    }
+                }
                 else -> Command.Guild.Info
             }
         }?.let { return it }
