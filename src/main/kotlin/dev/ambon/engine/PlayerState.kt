@@ -60,6 +60,8 @@ data class PlayerState(
     var bankItems: MutableList<dev.ambon.domain.items.ItemInstance> = mutableListOf(),
     /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
     var recallCooldownUntilMs: Long = 0L,
+    /** Epoch-ms of last stat respec. Runtime-only; not persisted (cooldown resets on logout). */
+    var lastRespecAtMs: Long = 0L,
     var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
     var discoveredRecipes: MutableSet<String> = mutableSetOf(),
     var craftingSpecialization: String? = null,
