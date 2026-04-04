@@ -498,6 +498,19 @@ sealed interface Command {
         val keyword: String,
     ) : Command
 
+    /** `describe <text>` — set your custom character description. */
+    data class Describe(
+        val text: String,
+    ) : Command
+
+    /** `describe clear` — remove your custom character description. */
+    data object DescribeClear : Command
+
+    /** `describe check <player>` — staff command to view another player's description. */
+    data class DescribeCheck(
+        val targetName: String,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -1155,6 +1168,21 @@ object CommandParser {
                 rest.isBlank() -> Command.Invalid(line, "title <titleName>  or  title clear")
                 rest.trim().equals("clear", ignoreCase = true) -> Command.TitleClear
                 else -> Command.TitleSet(rest.trim())
+            }
+        }?.let { return it }
+
+        // describe clear / describe check <player> / describe <text>
+        matchPrefix(line, listOf("describe")) { rest ->
+            val trimmed = rest.trim()
+            when {
+                trimmed.isEmpty() -> Command.Invalid(line, "describe <text>  or  describe clear")
+                trimmed.equals("clear", ignoreCase = true) -> Command.DescribeClear
+                trimmed.equals("check", ignoreCase = true) -> Command.Invalid(line, "describe check <player>")
+                trimmed.startsWith("check ", ignoreCase = true) -> {
+                    val name = trimmed.removePrefix("check").trim()
+                    if (name.isEmpty()) Command.Invalid(line, "describe check <player>") else Command.DescribeCheck(name)
+                }
+                else -> Command.Describe(trimmed)
             }
         }?.let { return it }
 
