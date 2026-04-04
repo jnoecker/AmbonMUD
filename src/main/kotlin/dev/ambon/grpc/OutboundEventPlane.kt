@@ -13,6 +13,7 @@ fun OutboundEvent.isControlPlane(): Boolean =
         is OutboundEvent.Close,
         is OutboundEvent.ShowLoginScreen,
         is OutboundEvent.SetAnsi,
+        is OutboundEvent.SetScreenReader,
         is OutboundEvent.ClearScreen,
         is OutboundEvent.SessionRedirect,
         -> true

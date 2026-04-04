@@ -228,6 +228,7 @@ class GameEngine(
                 housingSystem?.onPlayerLogin(sid)
                 sendHousingGmcp(sid)
                 guildSystem?.onPlayerLogin(sid)
+                guildHallSystem?.onPlayerLogin(sid)
                 friendsSystem.onPlayerLogin(sid)
                 sendQuestListGmcp(sid)
                 markStatsDirty(sid)
@@ -590,6 +591,22 @@ class GameEngine(
         } else {
             null
         }
+    private val guildHallSystem: GuildHallSystem? =
+        if (guildSystem != null && guildRepo != null && engineConfig.guildHalls.enabled && engineConfig.guildHalls.templates.isNotEmpty()) {
+            GuildHallSystem(
+                players = players,
+                guildRepo = guildRepo!!,
+                world = world,
+                outbound = outbound,
+                config = engineConfig.guildHalls,
+                rankConfig = engineConfig.guildRanks,
+                markPlayerDirty = { sid -> players.persistPlayer(sid) },
+                gmcpEmitter = gmcpEmitter,
+                guildSystem = guildSystem!!,
+            )
+        } else {
+            null
+        }
     private val housingSystem: HousingSystem? =
         if (houseRepo != null && engineConfig.housing.enabled && engineConfig.housing.templates.isNotEmpty()) {
             HousingSystem(
@@ -900,6 +917,7 @@ class GameEngine(
             dialogueSystem,
             groupSystem,
             guildSystem,
+            guildHallSystem,
             housingSystem,
         ),
     )
@@ -1012,6 +1030,7 @@ class GameEngine(
                 onCrossZoneMove = crossZoneMove,
                 recallConfig = engineConfig.navigation.recall,
                 housingSystem = housingSystem,
+                guildHallSystem = guildHallSystem,
                 onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },
             ),
             communicationHandler,
@@ -1105,6 +1124,7 @@ class GameEngine(
             GuildHandler(
                 ctx = ctx,
                 guildSystem = guildSystem,
+                guildHallSystem = guildHallSystem,
             ),
             FriendsHandler(
                 ctx = ctx,
@@ -1161,6 +1181,8 @@ class GameEngine(
                 trainerRegistry = trainerRegistry,
                 skillPointsConfig = engineConfig.skillPoints,
                 multiclassConfig = engineConfig.multiclass,
+                respecConfig = engineConfig.respec,
+                clock = clock,
                 markVitalsDirty = ::markVitalsDirty,
                 prestigeSkillPointBonus = { rank -> prestigeSystem.accumulatedSkillPointBonus(rank) },
             ),
@@ -1226,6 +1248,11 @@ class GameEngine(
 
             // Load guild data into memory.
             guildSystem?.initialize()
+
+            // Materialise guild halls.
+            if (guildSystem != null && guildHallSystem != null) {
+                guildHallSystem.materializeAllHalls(guildSystem.allGuilds())
+            }
 
             // Schedule initial leaderboard population and recurring refresh.
             leaderboardSystem?.let { sys ->
@@ -1634,6 +1661,9 @@ class GameEngine(
 
         val me = players.get(newSessionId) ?: return
         outbound.send(OutboundEvent.SetAnsi(newSessionId, me.ansiEnabled))
+        if (me.screenReaderEnabled) {
+            outbound.send(OutboundEvent.SetScreenReader(newSessionId, true))
+        }
         loginFlowHandler.onAfterLogin(newSessionId)
 
         // Full state sync (same as login)
@@ -1723,6 +1753,9 @@ class GameEngine(
         val player = players.get(sessionId) ?: return
         abilitySystem.loadAbilities(sessionId, player.learnedAbilityIds)
         outbound.send(OutboundEvent.SetAnsi(sessionId, player.ansiEnabled))
+        if (player.screenReaderEnabled) {
+            outbound.send(OutboundEvent.SetScreenReader(sessionId, true))
+        }
         if (!world.rooms.containsKey(player.roomId)) {
             players.moveTo(sessionId, world.startRoom)
         }
