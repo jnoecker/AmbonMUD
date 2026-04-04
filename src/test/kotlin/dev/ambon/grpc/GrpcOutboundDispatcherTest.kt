@@ -140,6 +140,7 @@ class GrpcOutboundDispatcherTest {
             OutboundEvent.SendPrompt(sid),
             OutboundEvent.ShowLoginScreen(sid),
             OutboundEvent.SetAnsi(sid, true),
+            OutboundEvent.SetScreenReader(sid, true),
             OutboundEvent.Close(sid, ""),
             OutboundEvent.ClearScreen(sid),
             OutboundEvent.ShowAnsiDemo(sid),
