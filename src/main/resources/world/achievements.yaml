@@ -1,222 +1,198 @@
 achievements:
-  # ─── Combat ───────────────────────────────────────────────────────────────
-
   first_blood:
-    displayName: "First Blood"
-    description: "Kill your first enemy in Eryndal."
+    displayName: First Blood
+    description: Kill your first enemy in Eryndal.
     category: combat
     hidden: false
     criteria:
       - type: kill
         targetId: ""
         count: 1
-        description: "Kill any mob"
+        description: Kill any mob
     rewards:
       xp: 50
-
   wolf_hunter:
-    displayName: "Wolf Hunter"
-    description: "Prove yourself against the wolves of Thornwood."
+    displayName: Wolf Hunter
+    description: Prove yourself against the wolves of Thornwood.
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: "thornwood_forest:stray_wolf"
+        targetId: thornwood_forest:stray_wolf
         count: 10
-        description: "Kill 10 stray wolves in Thornwood Forest"
+        description: Kill 10 stray wolves in Thornwood Forest
     rewards:
       xp: 300
       gold: 50
-
   chieftain_slayer:
-    displayName: "Chieftain Slayer"
-    description: "Strike down Chieftain Grak in the heart of his warrens."
+    displayName: Chieftain Slayer
+    description: Strike down Chieftain Grak in the heart of his warrens.
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: "goblin_warrens:chieftain_grak"
+        targetId: goblin_warrens:chieftain_grak
         count: 1
-        description: "Kill Chieftain Grak"
+        description: Kill Chieftain Grak
     rewards:
       xp: 600
       gold: 100
-      title: "Goblin Bane"
-
+      title: Goblin Bane
   corsair_hunter:
-    displayName: "Corsair Hunter"
-    description: "Defeat the pirate captain terrorising the Sea Cliffs."
+    displayName: Corsair Hunter
+    description: Defeat the pirate captain terrorising the Sea Cliffs.
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: "sea_cliffs:corsair_captain"
+        targetId: sea_cliffs:corsair_captain
         count: 1
-        description: "Kill the Corsair Captain"
+        description: Kill the Corsair Captain
     rewards:
       xp: 500
       gold: 150
-
   barrow_breaker:
-    displayName: "Barrow Breaker"
-    description: "Destroy Necromancer Vaelthos and end his dark research."
+    displayName: Barrow Breaker
+    description: Destroy Necromancer Vaelthos and end his dark research.
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: "dark_barrows:necromancer_vaelthos"
+        targetId: dark_barrows:necromancer_vaelthos
         count: 1
-        description: "Kill Necromancer Vaelthos"
+        description: Kill Necromancer Vaelthos
     rewards:
       xp: 1000
       gold: 200
-      title: "Barrow Breaker"
-
+      title: Barrow Breaker
   dragon_slayer:
-    displayName: "Dragonslayer"
-    description: "Slay Elder Dragon Auranthos atop the Celestial Peak."
+    displayName: Dragonslayer
+    description: Slay Elder Dragon Auranthos atop the Celestial Peak.
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: "celestial_peak:elder_dragon_auranthos"
+        targetId: celestial_peak:elder_dragon_auranthos
         count: 1
-        description: "Kill Elder Dragon Auranthos"
+        description: Kill Elder Dragon Auranthos
     rewards:
       xp: 3000
       gold: 500
-      title: "Dragonslayer"
-
-  # ─── Exploration / Dungeons ───────────────────────────────────────────────
-
+      title: Dragonslayer
   echo_diver:
-    displayName: "Echo Diver"
-    description: "Complete a run through the Dungeon of Echoes."
+    displayName: Echo Diver
+    description: Complete a run through the Dungeon of Echoes.
     category: combat
     hidden: false
     criteria:
       - type: dungeon_complete
-        targetId: "dungeon_of_echoes"
+        targetId: dungeon_of_echoes
         count: 1
-        description: "Complete a Dungeon of Echoes run"
+        description: Complete a Dungeon of Echoes run
     rewards:
       xp: 500
-      title: "Echo Diver"
-
-  # ─── Crafting / Gathering ─────────────────────────────────────────────────
-
+      title: Echo Diver
   master_crafter:
-    displayName: "Master Crafter"
-    description: "Craft 20 items at the forges and benches of Eryndal."
+    displayName: Master Crafter
+    description: Craft 20 items at the forges and benches of Eryndal.
     category: class
     hidden: false
     criteria:
       - type: craft
         targetId: ""
         count: 20
-        description: "Craft 20 items"
+        description: Craft 20 items
     rewards:
       xp: 400
-      title: "Artisan"
-
+      title: Artisan
   herb_collector:
-    displayName: "Hedge Witch's Friend"
-    description: "Gather 10 herbs from the wilds of Eryndal."
+    displayName: Hedge Witch's Friend
+    description: Gather 10 herbs from the wilds of Eryndal.
     category: class
     hidden: false
     criteria:
       - type: gather
-        targetId: "herbalism"
+        targetId: herbalism
         count: 10
-        description: "Gather 10 herbs"
+        description: Gather 10 herbs
     rewards:
       xp: 200
       gold: 30
-
   ore_miner:
-    displayName: "Deep Delver"
-    description: "Mine 10 ore from the depths of Eryndal."
+    displayName: Deep Delver
+    description: Mine 10 ore from the depths of Eryndal.
     category: class
     hidden: false
     criteria:
       - type: gather
-        targetId: "mining"
+        targetId: mining
         count: 10
-        description: "Mine 10 ore"
+        description: Mine 10 ore
     rewards:
       xp: 200
       gold: 30
-
-  # ─── Group / Social ───────────────────────────────────────────────────────
-
   full_party:
-    displayName: "Strength in Numbers"
-    description: "Complete a dungeon with a full adventuring party."
+    displayName: Strength in Numbers
+    description: Complete a dungeon with a full adventuring party.
     category: social
     hidden: false
     criteria:
       - type: dungeon_complete_full_party
         targetId: ""
         count: 1
-        description: "Complete a dungeon with a full group"
+        description: Complete a dungeon with a full group
     rewards:
       xp: 600
-      title: "Party Leader"
-
+      title: Party Leader
   bounty_hunter:
-    displayName: "Bounty Hunter"
-    description: "Complete the wasteland bounty from the Barrens notice board."
+    displayName: Bounty Hunter
+    description: Complete the wasteland bounty from the Barrens notice board.
     category: social
     hidden: false
     criteria:
       - type: quest_complete
-        targetId: "wasteland_bounty"
+        targetId: wasteland_bounty
         count: 1
-        description: "Complete the wasteland bounty"
+        description: Complete the wasteland bounty
     rewards:
       xp: 800
       gold: 200
-      title: "Bounty Hunter"
-
+      title: Bounty Hunter
   loyal_companion:
-    displayName: "Loyal Companion"
-    description: "Earn the trust of the ghost of Haunted Manor."
+    displayName: Loyal Companion
+    description: Earn the trust of the ghost of Haunted Manor.
     category: social
     hidden: true
     criteria:
       - type: quest_complete
-        targetId: "the_restless_dead"
+        targetId: the_restless_dead
         count: 1
-        description: "Complete The Restless Dead quest"
+        description: Complete The Restless Dead quest
     rewards:
       xp: 700
-      title: "Ghost Friend"
-
+      title: Ghost Friend
   guild_founder:
-    displayName: "Guild Founder"
-    description: "Establish a guild at the Thornhaven Guild Registry."
+    displayName: Guild Founder
+    description: Establish a guild at the Thornhaven Guild Registry.
     category: social
     hidden: false
     criteria:
       - type: guild_create
         targetId: ""
         count: 1
-        description: "Create a guild"
+        description: Create a guild
     rewards:
       xp: 300
-      title: "Founder"
-
-  # ─── Milestone ────────────────────────────────────────────────────────────
-
+      title: Founder
   max_level:
-    displayName: "Level Ten"
-    description: "Reach level 10 and stand among Eryndal's elite."
+    displayName: Level Ten
+    description: Reach level 10 and stand among Eryndal's elite.
     category: class
     hidden: false
     criteria:
       - type: reach_level
         count: 10
-        description: "Reach level 10"
+        description: Reach level 10
     rewards:
       xp: 1000
-      title: "Veteran"
+      title: Veteran

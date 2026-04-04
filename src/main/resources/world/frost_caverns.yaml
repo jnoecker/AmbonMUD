@@ -1,60 +1,58 @@
 zone: frost_caverns
 startRoom: frozen_pass
 lifespan: 0
-
 image:
-  room: demo/DefaultRoom.png
-  mob: demo/DefaultMob.png
-  item: demo/DefaultObject.png
-
-# ─── Items ────────────────────────────────────────────────────────────────────
-
+  room: cb4bad3186289757af5b6741fe755c5fb70bfa1e39ce9cfc8d33f6fe0c4fda5b.jpg
+  mob: 65c0284b172d6054b4982fb7ee1b87983cef5f9996ee40522ce0d35f377f6ab0.png
+  item: ab9a968fbf0e26150d52062f98cc5c9883551ac7f9d9e2cc5587efab598110fa.png
 items:
   frost_crystal:
-    displayName: "a frost crystal"
+    displayName: a frost crystal
     keyword: crystal
-    description: "A perfectly clear crystal of pure ice that doesn't melt at room temperature. The cold it radiates is magical in origin."
+    description: A perfectly clear crystal of pure ice that doesn't melt at room temperature. The cold it radiates is
+      magical in origin.
     basePrice: 20
-
+    image: 9856343d3efdce9085a88ae79ebef3c2a19fff04d1b3fc91ec0d1f029f5073b5.png
   spider_silk_shard:
-    displayName: "a shard of ice-spider silk"
+    displayName: a shard of ice-spider silk
     keyword: silk
-    description: "A rigid strand of silk frozen solid by the ice spider that spun it. Crafters use it in enchanted thread."
+    description: A rigid strand of silk frozen solid by the ice spider that spun it. Crafters use it in enchanted thread.
     basePrice: 15
-
+    image: 8215e4c9642047ee06ed74d1f5c925f68e2859e0dd0c6510581342c5d196547a.png
   ancient_frost_ward:
-    displayName: "an ancient frost ward"
+    displayName: an ancient frost ward
     keyword: ward
-    description: "A stone tablet inscribed with ward-glyphs that radiate intense cold. Part of the old protective network mentioned in the Scholars' Guild texts. Hermit Jorek has been searching for this."
+    description: A stone tablet inscribed with ward-glyphs that radiate intense cold. Part of the old protective network
+      mentioned in the Scholars' Guild texts. Hermit Jorek has been searching for this.
     basePrice: 0
-
+    image: 441f294560e934729089b08e25c21f362eec9c93ed9b70d1864d440948380056.png
   frost_fang:
-    displayName: "the Frost Wyrm's fang"
+    displayName: the Frost Wyrm's fang
     keyword: fang
     slot: weapon
     damage: 13
     basePrice: 450
-    description: "A dagger-length fang of crystallised ice, sharp as steel and colder than anything natural. Torn from the Frost Wyrm's jaw."
-
+    description: A dagger-length fang of crystallised ice, sharp as steel and colder than anything natural. Torn from the
+      Frost Wyrm's jaw.
+    image: f54e72a9aad4c5b3f70137091ec38457c2e447732e90a083cf0e5a2390f2bca4.png
   glacial_plate:
-    displayName: "glacial plate armour"
+    displayName: glacial plate armour
     keyword: plate
     slot: body
     armor: 8
     basePrice: 470
-    description: "Armour forged from compressed glacial ice and bound with silver wire. It never melts and provides extraordinary protection."
-
+    description: Armour forged from compressed glacial ice and bound with silver wire. It never melts and provides
+      extraordinary protection.
+    image: 5214aaba5bb33440ccd29213fbb274b80523bc14378775f336c53aeb8cdb8377.png
   glacial_ore:
-    displayName: "a chunk of glacial ore"
+    displayName: a chunk of glacial ore
     keyword: ore
-    description: "Dense, blue-veined ore found only in glacial formations. Smiths prize it for frost-resistant alloys."
+    description: Dense, blue-veined ore found only in glacial formations. Smiths prize it for frost-resistant alloys.
     basePrice: 28
-
-# ─── Mobs ─────────────────────────────────────────────────────────────────────
-
+    image: d9c11a1fe5327d31aac58bfce2abbd33321ce01fd561b25b36f15567b0513b2e.png
 mobs:
   frost_bat:
-    name: "a frost bat"
+    name: a frost bat
     room: ice_shelf
     tier: weak
     level: 6
@@ -62,9 +60,9 @@ mobs:
     xpReward: 25
     behavior:
       template: wander_aggro
-
+    image: a78ae635d4310e28d6170bd4f19e2550364aa094484e30da3cdbed01f2e1fed7.png
   ice_spider:
-    name: "an ice spider"
+    name: an ice spider
     room: frost_spider_nest
     tier: standard
     level: 7
@@ -75,9 +73,9 @@ mobs:
     drops:
       - itemId: spider_silk_shard
         chance: 0.5
-
+    image: cc59430b385810ddc4aa7acd8824bd5855d218c104ae75d57b7bb006c41a1468.png
   frost_elemental:
-    name: "a frost elemental"
+    name: a frost elemental
     room: glacial_chamber
     tier: standard
     level: 8
@@ -88,9 +86,9 @@ mobs:
     drops:
       - itemId: frost_crystal
         chance: 0.5
-
+    image: 79a7f71213c7ed961c3b1c171ed5ecd7e2aba5c59422732deae55558c7624cf4.png
   glacial_sentinel:
-    name: "a glacial sentinel"
+    name: a glacial sentinel
     room: ancient_ice_shrine
     tier: elite
     level: 8
@@ -101,9 +99,9 @@ mobs:
     drops:
       - itemId: frost_crystal
         chance: 0.8
-
+    image: 21fd6195a8531b0fc0ef53fc89479669f7019e33375f3cf7cfae5aca0f2ebd98.png
   frost_wyrm:
-    name: "the Frost Wyrm"
+    name: the Frost Wyrm
     room: frost_wyrms_den
     tier: boss
     level: 9
@@ -120,15 +118,17 @@ mobs:
         chance: 0.35
     dialogue:
       root:
-        text: "The cavern shakes. Ice cracks and falls in sheets from the ceiling as an enormous wyrm of crystallised ice unfolds from the far wall — it was there the entire time, motionless, indistinguishable from the glacier. Its eyes open: deep blue, ancient, and utterly cold."
+        text: "The cavern shakes. Ice cracks and falls in sheets from the ceiling as an enormous wyrm of crystallised ice
+          unfolds from the far wall — it was there the entire time, motionless, indistinguishable from the glacier. Its
+          eyes open: deep blue, ancient, and utterly cold."
         choices:
-          - text: "Fight."
+          - text: Fight.
             next: farewell
       farewell:
-        text: "The temperature plummets. Frost forms on your weapon."
-
+        text: The temperature plummets. Frost forms on your weapon.
+    image: 1899095509e65a3fa3221e9a5c3edd8e161d4c4495517dc338acfc2bb919a4c9.png
   hermit_jorek:
-    name: "Hermit Jorek"
+    name: Hermit Jorek
     room: frozen_pass
     tier: weak
     level: 1
@@ -142,34 +142,39 @@ mobs:
       - the_frozen_ward
     dialogue:
       root:
-        text: "Ha! A visitor! Don't see many up here. I'm Jorek — used to be Scholars' Guild before I got fed up with committees. Came up here to study the old wards. There's one in the frozen vault deep inside these caverns — a frost ward, part of the original protective network. I need it retrieved. The sentinel guards the path and the wyrm guards the depths. Interested?"
+        text: Ha! A visitor! Don't see many up here. I'm Jorek — used to be Scholars' Guild before I got fed up with committees.
+          Came up here to study the old wards. There's one in the frozen vault deep inside these caverns — a frost ward,
+          part of the original protective network. I need it retrieved. The sentinel guards the path and the wyrm guards
+          the depths. Interested?
         choices:
-          - text: "I'll find the ward."
+          - text: I'll find the ward.
             next: quest_accept
-          - text: "Tell me about the wards."
+          - text: Tell me about the wards.
             next: ward_info
-          - text: "Goodbye."
+          - text: Goodbye.
             next: farewell
       ward_info:
-        text: "The old order placed wards across the land — seals, tablets, protective enchantments. They were holding something in check at the Celestial Peak. The wards are failing. This frost ward is one of the last intact ones. If we can study it, we might understand what they were protecting against."
+        text: The old order placed wards across the land — seals, tablets, protective enchantments. They were holding something
+          in check at the Celestial Peak. The wards are failing. This frost ward is one of the last intact ones. If we
+          can study it, we might understand what they were protecting against.
         choices:
-          - text: "I'll get the ward."
+          - text: I'll get the ward.
             next: quest_accept
-          - text: "Goodbye."
+          - text: Goodbye.
             next: farewell
       quest_accept:
-        text: "Excellent. The vault is in the deepest part of the caverns, past the glacial chamber and the wyrm's den. The ancient frost ward is on a pedestal in the frozen vault. Be careful — everything in there has been preserved by the cold, including the things that guard it."
+        text: Excellent. The vault is in the deepest part of the caverns, past the glacial chamber and the wyrm's den. The
+          ancient frost ward is on a pedestal in the frozen vault. Be careful — everything in there has been preserved
+          by the cold, including the things that guard it.
         choices:
-          - text: "I'll return with it."
+          - text: I'll return with it.
             next: farewell
       farewell:
-        text: "Bundle up. It gets worse the deeper you go."
-
-# ─── Gathering Nodes ──────────────────────────────────────────────────────────
-
+        text: Bundle up. It gets worse the deeper you go.
+    image: 2ac8b99c0d09943f6312aebfaeeb261dd78bb274c35d89d379b26fef65864848.png
 gatheringNodes:
   glacial_crystal_vein:
-    displayName: "a glacial crystal vein"
+    displayName: a glacial crystal vein
     keyword: crystal
     skill: mining
     skillRequired: 3
@@ -180,110 +185,138 @@ gatheringNodes:
       - itemId: glacial_ore
         minQuantity: 1
         maxQuantity: 2
-
-# ─── Quests ───────────────────────────────────────────────────────────────────
-
 quests:
   the_frozen_ward:
-    name: "The Frozen Ward"
-    description: "Hermit Jorek, a former Scholars' Guild member, needs the ancient frost ward retrieved from the frozen vault deep in the Frost Caverns. This ward is part of the old protective network that once safeguarded the Celestial Peak."
+    name: The Frozen Ward
+    description: Hermit Jorek, a former Scholars' Guild member, needs the ancient frost ward retrieved from the frozen vault
+      deep in the Frost Caverns. This ward is part of the old protective network that once safeguarded the Celestial
+      Peak.
     giver: hermit_jorek
     objectives:
       - type: collect
         targetKey: ancient_frost_ward
         count: 1
-        description: "Retrieve the ancient frost ward from the frozen vault"
+        description: Retrieve the ancient frost ward from the frozen vault
     rewards:
       xp: 1200
       gold: 60
-
-# ─── Rooms ────────────────────────────────────────────────────────────────────
-
 rooms:
   frozen_pass:
-    title: "Frost Caverns — Frozen Pass"
-    description: "Beyond the highland summit the trail descends into a narrow pass where the temperature drops sharply. Ice coats the rock walls and the ground is treacherous. The entrance to a vast cavern system opens in the cliff face ahead to the north — a dark mouth rimmed with icicles. Hermit Jorek has pitched a weather-beaten tent near the entrance. The highland summit is back to the south."
+    title: Frost Caverns — Frozen Pass
+    description: Beyond the highland summit the trail descends into a narrow pass where the temperature drops sharply. Ice
+      coats the rock walls and the ground is treacherous. The entrance to a vast cavern system opens in the cliff face
+      ahead to the north — a dark mouth rimmed with icicles. Hermit Jorek has pitched a weather-beaten tent near the
+      entrance. The highland summit is back to the south.
     exits:
       s: highland_trails:summit_approach
       n: ice_shelf
-
+    image: 035f2c4811b70d3928b6e281400a75c5e9730d37a8db8a916919c8e8b5c0f5a0.jpg
   ice_shelf:
-    title: "Ice Shelf"
-    description: "A broad ledge of ice-covered rock inside the cavern entrance. Frost bats hang from the ceiling in clusters, dropping to attack anything that disturbs them. The daylight from the entrance behind you fades quickly. The frozen pass is back to the south; the crystal grotto glitters ahead to the east; a frozen stream lies to the north."
+    title: Ice Shelf
+    description: A broad ledge of ice-covered rock inside the cavern entrance. Frost bats hang from the ceiling in clusters,
+      dropping to attack anything that disturbs them. The daylight from the entrance behind you fades quickly. The
+      frozen pass is back to the south; the crystal grotto glitters ahead to the east; a frozen stream lies to the
+      north.
     exits:
       s: frozen_pass
       e: crystal_grotto
       n: frozen_stream
-
+    image: 4d6107218febd45ce2cc8af61af7e3e512d0b07951e59b1b7e8c90cd73464816.jpg
   crystal_grotto:
-    title: "Crystal Grotto"
-    description: "A natural chamber where mineral-rich water has frozen into spectacular crystal formations. The ice here is not white but deep blue, shot through with veins of silver and pale gold. Glacial ore is visible in the exposed crystal faces. The beauty is extraordinary — and entirely indifferent to your survival. The ice shelf is back to the west."
+    title: Crystal Grotto
+    description: A natural chamber where mineral-rich water has frozen into spectacular crystal formations. The ice here is
+      not white but deep blue, shot through with veins of silver and pale gold. Glacial ore is visible in the exposed
+      crystal faces. The beauty is extraordinary — and entirely indifferent to your survival. The ice shelf is back to
+      the west.
     exits:
       w: ice_shelf
-
+    image: 9550d9a5e099283da9a0cc7e65d04b711fbaeceb5550811f94c6f313129186ad.jpg
   frozen_stream:
-    title: "Frozen Stream"
-    description: "An underground river, frozen solid, its surface rippled as though the water stopped mid-flow. The ice is thick enough to walk on. Strange shapes are visible deep in the ice — preserved creatures, objects, and what might be architecture from a much older time. An ice bridge crosses a chasm to the east. The ice shelf is back to the south."
+    title: Frozen Stream
+    description: An underground river, frozen solid, its surface rippled as though the water stopped mid-flow. The ice is
+      thick enough to walk on. Strange shapes are visible deep in the ice — preserved creatures, objects, and what might
+      be architecture from a much older time. An ice bridge crosses a chasm to the east. The ice shelf is back to the
+      south.
     exits:
       s: ice_shelf
       e: ice_bridge
-
+    image: 9440a436981e4f5623dc57e6afe6dc80d4f355b7e09daa6df6663ce60cfcceae.jpg
   ice_bridge:
-    title: "Ice Bridge"
-    description: "A natural bridge of compacted ice spanning a deep crevasse. The drop below is invisible — the darkness swallows light. The bridge is stable but the footing is treacherous. On the far side, the cavern system opens into wider spaces. The frozen stream is back to the west; the glacial chamber is ahead to the north."
+    title: Ice Bridge
+    description: A natural bridge of compacted ice spanning a deep crevasse. The drop below is invisible — the darkness
+      swallows light. The bridge is stable but the footing is treacherous. On the far side, the cavern system opens into
+      wider spaces. The frozen stream is back to the west; the glacial chamber is ahead to the north.
     exits:
       w: frozen_stream
       n: glacial_chamber
-
+    image: 837b81df762326919e98f023f37aec25cb442da7b2fb9ce115d420a0719f4cd7.jpg
   glacial_chamber:
-    title: "Glacial Chamber"
-    description: "A vast cavern of blue-white ice, its ceiling lost in frozen mist. Frost elementals coalesce from the ambient cold, their forms shifting and unstable. The chamber branches: a spider nest lies to the east, an ancient shrine to the west, and a frozen gallery descends to the north. The ice bridge is back south."
+    title: Glacial Chamber
+    description: "A vast cavern of blue-white ice, its ceiling lost in frozen mist. Frost elementals coalesce from the
+      ambient cold, their forms shifting and unstable. The chamber branches: a spider nest lies to the east, an ancient
+      shrine to the west, and a frozen gallery descends to the north. The ice bridge is back south."
     exits:
       s: ice_bridge
       e: frost_spider_nest
       w: ancient_ice_shrine
       n: frozen_gallery
-
+    image: f708050922e1acbc36cb5c3aae8e8b47752be93a38f382be8d8b6403b2fed900.jpg
   frost_spider_nest:
-    title: "Frost Spider Nest"
-    description: "A side cavern choked with frozen webs of incredible density and complexity. Ice spiders move through their crystalline web network with fluid confidence, their bodies translucent and hard to see against the ice. Prey items — frozen solid — hang at intervals throughout the web. The glacial chamber is back to the west."
+    title: Frost Spider Nest
+    description: A side cavern choked with frozen webs of incredible density and complexity. Ice spiders move through their
+      crystalline web network with fluid confidence, their bodies translucent and hard to see against the ice. Prey
+      items — frozen solid — hang at intervals throughout the web. The glacial chamber is back to the west.
     exits:
       w: glacial_chamber
-
+    image: aa3f445e29c67ea230607d1579163d801044154d6e634a853f164d1044c9b371.jpg
   ancient_ice_shrine:
-    title: "Ancient Ice Shrine"
-    description: "A carved chamber predating the natural cavern system — someone built this space deliberately, long ago. The walls bear carved geometric patterns similar to those found on the ancient seals elsewhere in Eryndal. A glacial sentinel stands motionless before an altar of blue ice, guarding whatever purpose this place once served. The glacial chamber is back east."
+    title: Ancient Ice Shrine
+    description: A carved chamber predating the natural cavern system — someone built this space deliberately, long ago. The
+      walls bear carved geometric patterns similar to those found on the ancient seals elsewhere in Eryndal. A glacial
+      sentinel stands motionless before an altar of blue ice, guarding whatever purpose this place once served. The
+      glacial chamber is back east.
     exits:
       e: glacial_chamber
-
+    image: e3d76bfc63d20f5b4592b7937ddd3ada2b99a63e4b7486db2ee77e5bf468a2d5.jpg
   frozen_gallery:
-    title: "Frozen Gallery"
-    description: "A long, descending passage where the ice forms natural columns and curtains of extraordinary beauty. The temperature drops with every step north. The walls narrow and the ceiling lowers. Something large has scraped along the walls ahead — deep gouges in the ice, wide apart. The glacial chamber is back south; the wyrm's approach lies to the north."
+    title: Frozen Gallery
+    description: A long, descending passage where the ice forms natural columns and curtains of extraordinary beauty. The
+      temperature drops with every step north. The walls narrow and the ceiling lowers. Something large has scraped
+      along the walls ahead — deep gouges in the ice, wide apart. The glacial chamber is back south; the wyrm's approach
+      lies to the north.
     exits:
       s: glacial_chamber
       n: wyrm_approach
-
+    image: e834f3c1012d768367a4e4546d1fb313ce9cf30ce717ab57628a8ef259882500.jpg
   wyrm_approach:
-    title: "Wyrm's Approach"
-    description: "The passage widens into a natural antechamber before the deepest cavern. The walls are scored with massive claw marks and patches of ice have been melted and refrozen repeatedly — the frost wyrm's territory is unmistakable. The air itself feels hostile, the cold so intense it burns. The den opens ahead to the north; the gallery is back south."
+    title: Wyrm's Approach
+    description: The passage widens into a natural antechamber before the deepest cavern. The walls are scored with massive
+      claw marks and patches of ice have been melted and refrozen repeatedly — the frost wyrm's territory is
+      unmistakable. The air itself feels hostile, the cold so intense it burns. The den opens ahead to the north; the
+      gallery is back south.
     exits:
       s: frozen_gallery
       n: frost_wyrms_den
-
+    image: 5bc592af68369d072ec7468faa57fc54e66c0442cc4598158d1b4135071cb67a.jpg
   frost_wyrms_den:
-    title: "Frost Wyrm's Den"
-    description: "The deepest chamber in the cavern system: an enormous natural cathedral of ice where the Frost Wyrm makes its lair. The creature is part of the glacier itself — when motionless, it is indistinguishable from the surrounding ice. Bones of previous challengers are frozen into the floor. A passage in the far wall leads to the frozen vault beyond."
+    title: Frost Wyrm's Den
+    description: "The deepest chamber in the cavern system: an enormous natural cathedral of ice where the Frost Wyrm makes
+      its lair. The creature is part of the glacier itself — when motionless, it is indistinguishable from the
+      surrounding ice. Bones of previous challengers are frozen into the floor. A passage in the far wall leads to the
+      frozen vault beyond."
     exits:
       s: wyrm_approach
       e: frozen_vault
-
+    image: cc22ad13e7882daff81a39ae076df808905d5645b8ed7c80b950583e65fb2acf.jpg
   frozen_vault:
-    title: "Frozen Vault"
-    description: "A sealed chamber at the absolute deepest point of the cavern system. The construction is deliberate — carved stone beneath the ice, ward-glyphs cut into every surface, and a stone pedestal at the center bearing an ancient frost ward tablet. This room was built to preserve something important. It has succeeded."
+    title: Frozen Vault
+    description: A sealed chamber at the absolute deepest point of the cavern system. The construction is deliberate —
+      carved stone beneath the ice, ward-glyphs cut into every surface, and a stone pedestal at the center bearing an
+      ancient frost ward tablet. This room was built to preserve something important. It has succeeded.
     features:
       ward_pedestal:
         type: CONTAINER
-        displayName: "a stone pedestal"
+        displayName: a stone pedestal
         keyword: pedestal
         initialState: open
         resetWithZone: false
@@ -291,10 +324,15 @@ rooms:
           - ancient_frost_ward
     exits:
       w: frost_wyrms_den
-
+    image: 51bba94cb45d36ef1a72e1ccefec2381249c43e2c8481fd3fd7abc51abfb572b.jpg
   ice_passage:
-    title: "Ice Passage"
-    description: "Beyond the frozen vault, the passage continues deeper into the mountain. The ward-glyphs carved into the walls glow with increasing intensity — blue shifting to white — and the air grows warmer despite the ice. Something powerful lies ahead. The ancient ice that once sealed this passage has cracked and fallen away, leaving the way north open for the first time in centuries. The vault is back to the south."
+    title: Ice Passage
+    description: Beyond the frozen vault, the passage continues deeper into the mountain. The ward-glyphs carved into the
+      walls glow with increasing intensity — blue shifting to white — and the air grows warmer despite the ice.
+      Something powerful lies ahead. The ancient ice that once sealed this passage has cracked and fallen away, leaving
+      the way north open for the first time in centuries. The vault is back to the south.
     exits:
       s: frozen_vault
       n: celestial_peak:mountain_passage
+    image: 998581047966908aae7adb273c4170a547b0927395c4e23d8aa093e2cc512406.jpg
+graphical: true

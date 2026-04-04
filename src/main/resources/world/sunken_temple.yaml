@@ -1,60 +1,58 @@
 zone: sunken_temple
 startRoom: tidal_approach
 lifespan: 0
-
 image:
-  room: demo/DefaultRoom.png
-  mob: demo/DefaultMob.png
-  item: demo/DefaultObject.png
-
-# ─── Items ────────────────────────────────────────────────────────────────────
-
+  room: 31f4b779cb1f745f47a1ed2a19dd744b58217dd3ba525311eaa04d46b92ba226.jpg
+  mob: 370edac2bb1a187af2cf64cf445502cfe514bef9c64e726a50e0dc5722c8d057.png
+  item: d6120ec04fc9feb5dcb158c5af7790e7017ef14c133947f91985ca609fe7f980.png
 items:
   sanctum_key:
-    displayName: "a sanctum key"
+    displayName: a sanctum key
     keyword: key
-    description: "A barnacle-encrusted iron key on a corroded ring. The stone guardian was carrying it. It must open something deep in the temple."
+    description: A barnacle-encrusted iron key on a corroded ring. The stone guardian was carrying it. It must open
+      something deep in the temple.
     basePrice: 0
-
+    image: 5cf94e9e88d92f13030d6a97019090b6fa24fac6ac36e1a9b715e7075af513a3.png
   temple_medallion:
-    displayName: "the temple medallion"
+    displayName: the temple medallion
     keyword: medallion
-    description: "A disc of dark metal engraved with a star-pattern and inlaid with sea-glass. Whoever placed it in the offering chamber considered it sacred. Scholar Timon will recognise it."
+    description: A disc of dark metal engraved with a star-pattern and inlaid with sea-glass. Whoever placed it in the
+      offering chamber considered it sacred. Scholar Timon will recognise it.
     basePrice: 0
-
+    image: 78b876abcbfbd491a3542d9e88c06936989d3f02ea507dadf05e1c3ca3a29f1d.png
   ancient_codex:
-    displayName: "an ancient codex"
+    displayName: an ancient codex
     keyword: codex
-    description: "A waterlogged book of pressed sea-cloth whose text has survived the flooding. Written in a script no one in Thornhaven reads — worth considerable gold to the Scholars' Guild."
+    description: A waterlogged book of pressed sea-cloth whose text has survived the flooding. Written in a script no one in
+      Thornhaven reads — worth considerable gold to the Scholars' Guild.
     basePrice: 75
-
+    image: b0adf4c621d1c62269feadbb7c8934e67f4e8f33b80bffc79d062960a2849565.png
   drowned_trinket:
-    displayName: "a drowned trinket"
+    displayName: a drowned trinket
     keyword: trinket
-    description: "A small ornamental piece recovered from a drowned acolyte — corroded but identifiable as devotional jewellery."
+    description: A small ornamental piece recovered from a drowned acolyte — corroded but identifiable as devotional jewellery.
     basePrice: 15
-
+    image: e857ffd6e3d568e562e162d4e2c30066a959378ae3ae1b60df9892d35b00c680.png
   revenant_scepter:
-    displayName: "the Elder Revenant's scepter"
+    displayName: the Elder Revenant's scepter
     keyword: scepter
     slot: weapon
     damage: 11
     basePrice: 380
-    description: "A scepter of ancient iron wrapped in sea-glass and silver wire, thrumming faintly with residual divine power."
-
+    description: A scepter of ancient iron wrapped in sea-glass and silver wire, thrumming faintly with residual divine power.
+    image: 7304596200616f33e094fc1969e2190a92d4e91a6effbe8d705c610500c0e295.png
   revenant_shroud:
-    displayName: "the Elder Revenant's shroud"
+    displayName: the Elder Revenant's shroud
     keyword: shroud
     slot: body
     armor: 5
     basePrice: 290
-    description: "A garment that is somehow dry despite its long immersion — the cloth is ancient but undamaged, and the enchantments woven through it still hold."
-
-# ─── Mobs ─────────────────────────────────────────────────────────────────────
-
+    description: A garment that is somehow dry despite its long immersion — the cloth is ancient but undamaged, and the
+      enchantments woven through it still hold.
+    image: 3b3c3a369efcfdce6a59fcd1146a4feb650fbe5fbd4fe4544de83cde472ed926.png
 mobs:
   temple_skeleton:
-    name: "a temple skeleton"
+    name: a temple skeleton
     room: entrance_hall
     tier: standard
     level: 5
@@ -62,9 +60,9 @@ mobs:
     xpReward: 38
     behavior:
       template: wander_aggro
-
+    image: efa6029b39aa4ae943cd646f811775dc27c481b0440fba9128f66ea4acb5dd8f.png
   dark_cultist:
-    name: "a dark cultist"
+    name: a dark cultist
     room: west_side_chapel
     tier: standard
     level: 5
@@ -72,9 +70,9 @@ mobs:
     xpReward: 42
     behavior:
       template: aggro_guard
-
+    image: 00b06c93480e019781917a37ed8f2061f2a9eb9d921113da2ac3da54a209140f.png
   drowned_acolyte:
-    name: "a drowned acolyte"
+    name: a drowned acolyte
     room: drowned_chamber
     tier: standard
     level: 5
@@ -85,9 +83,9 @@ mobs:
     drops:
       - itemId: drowned_trinket
         chance: 0.5
-
+    image: d13195db1f25f4aa3a1eb6049a21fa93d88cf3a18a22aba6415a195ff1c6e2ab.png
   stone_guardian:
-    name: "a stone guardian"
+    name: a stone guardian
     room: submerged_vault
     tier: elite
     level: 6
@@ -97,10 +95,10 @@ mobs:
       template: aggro_guard
     drops:
       - itemId: sanctum_key
-        chance: 1.0
-
+        chance: 1
+    image: 8708d5730e6aa286fda014ab7420185460832fd125796eb7dcbb9c81b563cf1a.png
   elder_revenant:
-    name: "the Elder Revenant"
+    name: the Elder Revenant
     room: revenant_chamber
     tier: boss
     level: 7
@@ -115,31 +113,35 @@ mobs:
         chance: 0.4
     dialogue:
       root:
-        text: "...Still. After all this time. You come bearing the noise of the living — boots on stone, breath in the air. I remember what that was like. I am what remained when the cult drowned this place and everyone in it. What business do the living have in my temple?"
+        text: ...Still. After all this time. You come bearing the noise of the living — boots on stone, breath in the air. I
+          remember what that was like. I am what remained when the cult drowned this place and everyone in it. What
+          business do the living have in my temple?
         choices:
-          - text: "We're looking for a stolen relic."
+          - text: We're looking for a stolen relic.
             next: relic_info
-          - text: "We've come to put you to rest."
+          - text: We've come to put you to rest.
             next: defiance
-          - text: "We'll leave."
+          - text: We'll leave.
             next: farewell
       relic_info:
-        text: "The medallion. Yes. The cultists left it in the offering chamber when they sealed the sanctum. I have watched it for centuries. It is not theirs. It was never theirs. Take it if you can reach it. Defeating me would be the first step."
+        text: The medallion. Yes. The cultists left it in the offering chamber when they sealed the sanctum. I have watched it
+          for centuries. It is not theirs. It was never theirs. Take it if you can reach it. Defeating me would be the
+          first step.
         choices:
-          - text: "Then we fight."
+          - text: Then we fight.
             next: farewell
-          - text: "We'll go."
+          - text: We'll go.
             next: farewell
       defiance:
-        text: "Rest. An interesting word. I wonder what that would feel like. Come, then. Let us find out."
+        text: Rest. An interesting word. I wonder what that would feel like. Come, then. Let us find out.
         choices:
-          - text: "Now."
+          - text: Now.
             next: farewell
       farewell:
-        text: "..."
-
+        text: ...
+    image: 935c9713584510fe146be714990f64577cbe9b556c095c93e7484bf88da0f427.png
   scholar_timon:
-    name: "Scholar Timon"
+    name: Scholar Timon
     room: temple_outer_steps
     tier: weak
     level: 1
@@ -153,100 +155,120 @@ mobs:
       - stolen_relic
     dialogue:
       root:
-        text: "Careful on the steps — the tide has made them treacherous. I'm Timon, Thornhaven Scholars' Guild. I've been documenting this site for a season. The inner sanctum holds a medallion of significant historical value. I can't reach it — the guardian deeper in is beyond my abilities. Could you retrieve it?"
+        text: Careful on the steps — the tide has made them treacherous. I'm Timon, Thornhaven Scholars' Guild. I've been
+          documenting this site for a season. The inner sanctum holds a medallion of significant historical value. I
+          can't reach it — the guardian deeper in is beyond my abilities. Could you retrieve it?
         choices:
-          - text: "I'll find the medallion."
+          - text: I'll find the medallion.
             next: quest_accept
-          - text: "What can you tell me about this place?"
+          - text: What can you tell me about this place?
             next: temple_lore
-          - text: "Goodbye."
+          - text: Goodbye.
             next: farewell
       quest_accept:
-        text: "Excellent. The medallion is in the offering chamber — you'll need to get past the stone guardian to reach it. The guardian carries the sanctum key. The offering chamber is north of the inner sanctum hall. Thank you."
+        text: Excellent. The medallion is in the offering chamber — you'll need to get past the stone guardian to reach it. The
+          guardian carries the sanctum key. The offering chamber is north of the inner sanctum hall. Thank you.
         choices:
-          - text: "I'll return when I have it."
+          - text: I'll return when I have it.
             next: farewell
       temple_lore:
-        text: "This was a coastal temple, pre-Thornhaven — a thousand years old at minimum. A cult took it over, flooded the lower levels deliberately, and then apparently drowned themselves inside it. The Elder Revenant is what's left of the high priest. The whole affair is academically fascinating and personally terrifying."
+        text: This was a coastal temple, pre-Thornhaven — a thousand years old at minimum. A cult took it over, flooded the
+          lower levels deliberately, and then apparently drowned themselves inside it. The Elder Revenant is what's left
+          of the high priest. The whole affair is academically fascinating and personally terrifying.
         choices:
-          - text: "I'll find the medallion."
+          - text: I'll find the medallion.
             next: quest_accept
-          - text: "Goodbye."
+          - text: Goodbye.
             next: farewell
       farewell:
-        text: "Be careful in there. And watch your footing on the wet stone."
-
-# ─── Quests ───────────────────────────────────────────────────────────────────
-
+        text: Be careful in there. And watch your footing on the wet stone.
+    image: f1e4b26ef5229e1717f15f537b7966758673038c1e05a2b7a559896008dca272.png
 quests:
   stolen_relic:
-    name: "The Stolen Relic"
-    description: "Scholar Timon needs you to recover the temple medallion from the offering chamber deep in the Sunken Temple. Defeat the stone guardian for the sanctum key, then find the medallion."
+    name: The Stolen Relic
+    description: Scholar Timon needs you to recover the temple medallion from the offering chamber deep in the Sunken
+      Temple. Defeat the stone guardian for the sanctum key, then find the medallion.
     giver: scholar_timon
     objectives:
       - type: collect
         targetKey: temple_medallion
         count: 1
-        description: "Recover the temple medallion from the offering chamber"
+        description: Recover the temple medallion from the offering chamber
     rewards:
       xp: 900
       gold: 40
-
-# ─── Rooms ────────────────────────────────────────────────────────────────────
-
 rooms:
   tidal_approach:
-    title: "Sunken Temple — Tidal Approach"
-    description: "The low-tide causeway from the Sea Cliffs ends here at the base of an ancient structure rising from the water. Barnacled stone walls, a colonnade of half-submerged pillars, and a wide staircase ascending from the tidal zone. At high tide this would all be under water. Scholar Timon's camp is just above on the outer steps. The causeway leads back north."
+    title: Sunken Temple — Tidal Approach
+    description: The low-tide causeway from the Sea Cliffs ends here at the base of an ancient structure rising from the
+      water. Barnacled stone walls, a colonnade of half-submerged pillars, and a wide staircase ascending from the tidal
+      zone. At high tide this would all be under water. Scholar Timon's camp is just above on the outer steps. The
+      causeway leads back north.
     exits:
       n: sea_cliffs:low_tide_path
       e: temple_outer_steps
-
+    image: cceac23cf2572e19c76ba1919a06a84bd319ad427f0682b62799a11a227e1520.jpg
   temple_outer_steps:
-    title: "Temple Outer Steps"
-    description: "A broad staircase of sea-worn stone climbing from the tidal zone to the temple entrance. The steps are uneven from centuries of wave action but still passable. Scholar Timon has set up a small research camp on a dry landing halfway up. The tidal approach is back west; the entrance hall lies ahead to the north."
+    title: Temple Outer Steps
+    description: A broad staircase of sea-worn stone climbing from the tidal zone to the temple entrance. The steps are
+      uneven from centuries of wave action but still passable. Scholar Timon has set up a small research camp on a dry
+      landing halfway up. The tidal approach is back west; the entrance hall lies ahead to the north.
     exits:
       w: tidal_approach
       n: entrance_hall
-
+    image: d9e9c51deaef8ee6950713bd6a1c6e94e843f4a7ac365b3c2acdb6d4551c0a88.jpg
   entrance_hall:
-    title: "Temple Entrance Hall"
-    description: "The first interior space: a vaulted hall where the ceiling is intact but the floor is ankle-deep in seawater. Carved fish and wave-patterns cover the walls in the pre-Thornhaven style. Temple skeletons patrol the waterlogged floor. A flooded corridor continues east; ceremonial side chambers are to the west; the forecourt is to the north."
+    title: Temple Entrance Hall
+    description: "The first interior space: a vaulted hall where the ceiling is intact but the floor is ankle-deep in
+      seawater. Carved fish and wave-patterns cover the walls in the pre-Thornhaven style. Temple skeletons patrol the
+      waterlogged floor. A flooded corridor continues east; ceremonial side chambers are to the west; the forecourt is
+      to the north."
     exits:
       s: temple_outer_steps
       n: temple_forecourt
       e: flooded_corridor
       w: ceremonial_chamber
-
+    image: 1087776f9bd5bff934874ae6f97c9109c38eab4b8c8d1180251515907c5cd387.jpg
   ceremonial_chamber:
-    title: "Ceremonial Chamber"
-    description: "A side chamber that served as a preparation room for temple rites. Stone basins line the walls, their interiors stained with old pigment. A carved altar table has survived the flooding intact, its surface still bearing the impression of objects removed long ago. The entrance hall is back east."
+    title: Ceremonial Chamber
+    description: A side chamber that served as a preparation room for temple rites. Stone basins line the walls, their
+      interiors stained with old pigment. A carved altar table has survived the flooding intact, its surface still
+      bearing the impression of objects removed long ago. The entrance hall is back east.
     exits:
       e: entrance_hall
-
+    image: 2baaca6575b6b03f1ebe9b59c8bfb2d59d8c83f2a14fdc07cbab8892d7f1558d.jpg
   flooded_corridor:
-    title: "Flooded Corridor"
-    description: "A long passage running deeper into the temple's eastern wing, knee-deep in dark water. The flooding gets deeper the further in you go. Something moves in the murk ahead. Drowned acolytes haunt this passage, drifting with the currents. The entrance hall is back west."
+    title: Flooded Corridor
+    description: A long passage running deeper into the temple's eastern wing, knee-deep in dark water. The flooding gets
+      deeper the further in you go. Something moves in the murk ahead. Drowned acolytes haunt this passage, drifting
+      with the currents. The entrance hall is back west.
     exits:
       w: entrance_hall
       n: drowned_chamber
-
+    image: 776345ec38e0c392cf5920031b9514c784dfbf06a897972eb92e12c5b6e9b66c.jpg
   drowned_chamber:
-    title: "Drowned Chamber"
-    description: "A partially flooded chamber where the water reaches the waist. The cult's act of drowning this level is most visible here — possessions float, preserved by cold and darkness: robes, devotional objects, writing tablets. Drowned acolytes drift between them. A passage continues east to the submerged vault."
+    title: Drowned Chamber
+    description: "A partially flooded chamber where the water reaches the waist. The cult's act of drowning this level is
+      most visible here — possessions float, preserved by cold and darkness: robes, devotional objects, writing tablets.
+      Drowned acolytes drift between them. A passage continues east to the submerged vault."
     exits:
       s: flooded_corridor
       e: submerged_vault
-
+    image: 19c8d3503a488553598ee45d89b6b328b1db9ef6454b19c975ab2e4dfcbf36eb.jpg
   submerged_vault:
-    title: "Submerged Vault"
-    description: "A reinforced chamber at the end of the flooded wing, the stone walls thicker here than anywhere else. A stone guardian stands in the center of the room — statue-still until it detects movement, then devastatingly fast. A iron ring on the floor holds something large. The drowned chamber is back to the west."
+    title: Submerged Vault
+    description: A reinforced chamber at the end of the flooded wing, the stone walls thicker here than anywhere else. A
+      stone guardian stands in the center of the room — statue-still until it detects movement, then devastatingly fast.
+      A iron ring on the floor holds something large. The drowned chamber is back to the west.
     exits:
       w: drowned_chamber
-
+    image: e141372987377efab5beffb69f26eda0bb9aefecb007e2d50a716de2c6d1ad3e.jpg
   temple_forecourt:
-    title: "Temple Forecourt"
-    description: "The main interior courtyard, open to a partially collapsed roof that lets in grey sea-light. The floor here is dry — high enough to escape the flooding. Side chapels branch east and west. A heavy bronze door stands at the north wall, its surface carved with a star-pattern and sealed with a corroded lock. The entrance hall is to the south."
+    title: Temple Forecourt
+    description: The main interior courtyard, open to a partially collapsed roof that lets in grey sea-light. The floor here
+      is dry — high enough to escape the flooding. Side chapels branch east and west. A heavy bronze door stands at the
+      north wall, its surface carved with a star-pattern and sealed with a corroded lock. The entrance hall is to the
+      south.
     exits:
       s: entrance_hall
       e: east_side_chapel
@@ -258,14 +280,15 @@ rooms:
           keyItemId: sanctum_key
           keyConsumed: false
           resetWithZone: false
-
+    image: 97e4a9d0c4c66c361822be64683e642d1dbd63f3428d27884df99e868eb63a67.jpg
   east_side_chapel:
-    title: "East Side Chapel"
-    description: "A small devotional space still in reasonable condition — the carved figures on the walls are intact, and a stone chest has kept its contents dry for centuries. The forecourt is back to the west."
+    title: East Side Chapel
+    description: A small devotional space still in reasonable condition — the carved figures on the walls are intact, and a
+      stone chest has kept its contents dry for centuries. The forecourt is back to the west.
     features:
       stone_chest:
         type: CONTAINER
-        displayName: "a stone chest"
+        displayName: a stone chest
         keyword: chest
         initialState: closed
         resetWithZone: false
@@ -273,36 +296,44 @@ rooms:
           - ancient_codex
     exits:
       w: temple_forecourt
-
+    image: 29c2eb11fedf767b44cc9c1d3ccc79cc5f1c42a311a5f98b5feb6af51cb15bed.jpg
   west_side_chapel:
-    title: "West Side Chapel"
-    description: "A larger chapel on the west side, its walls covered in more recent carvings in a different and darker style — the cult's additions. A dark cultist kneels before an obsidian slab that has replaced the original altar. The forecourt is east."
+    title: West Side Chapel
+    description: A larger chapel on the west side, its walls covered in more recent carvings in a different and darker style
+      — the cult's additions. A dark cultist kneels before an obsidian slab that has replaced the original altar. The
+      forecourt is east.
     exits:
       e: temple_forecourt
-
+    image: 81d96b2dc367dd0312716b1a0b569006dad2597cdaffc2b8eadf0ee340ecf912.jpg
   inner_sanctum:
-    title: "Inner Sanctum"
-    description: "The heart of the temple proper, accessed through the bronze door. The air here is different — drier, stiller, preserved by the sealing. Carved stars cover every surface and the floor is inlaid with a compass-pattern in sea-glass. Passages lead north to the sanctum hall."
+    title: Inner Sanctum
+    description: The heart of the temple proper, accessed through the bronze door. The air here is different — drier,
+      stiller, preserved by the sealing. Carved stars cover every surface and the floor is inlaid with a compass-pattern
+      in sea-glass. Passages lead north to the sanctum hall.
     exits:
       s: temple_forecourt
       n: sanctum_hall
-
+    image: f6f704bfec5639bd5828ec0f19bf5da91e2824a5178102033649a12dac97cc64.jpg
   sanctum_hall:
-    title: "Sanctum Hall"
-    description: "A long hall connecting the inner sanctum to the deeper ceremonial spaces. Alcoves hold the stone likenesses of figures in prayer. The hall branches east to a side shrine, west to an offering pit, and north to the revenant's chamber where something cold and luminous can be seen moving."
+    title: Sanctum Hall
+    description: A long hall connecting the inner sanctum to the deeper ceremonial spaces. Alcoves hold the stone likenesses
+      of figures in prayer. The hall branches east to a side shrine, west to an offering pit, and north to the
+      revenant's chamber where something cold and luminous can be seen moving.
     exits:
       s: inner_sanctum
       e: side_shrine
       w: offering_pit
       n: revenant_chamber
-
+    image: c6985d0a8f5356403ca908a91b493c9c41af2470d35e8101c63b2b17afb0d9f9.jpg
   side_shrine:
-    title: "Side Shrine"
-    description: "A narrow alcove off the sanctum hall containing a carved figure of a sea deity — double-headed, half-submerged, arms open. Offerings have been placed at its feet repeatedly over centuries: coins, shells, and objects of no obvious function. A small locked cabinet at the back holds something that glints."
+    title: Side Shrine
+    description: "A narrow alcove off the sanctum hall containing a carved figure of a sea deity — double-headed,
+      half-submerged, arms open. Offerings have been placed at its feet repeatedly over centuries: coins, shells, and
+      objects of no obvious function. A small locked cabinet at the back holds something that glints."
     features:
       offering_cabinet:
         type: CONTAINER
-        displayName: "a stone cabinet"
+        displayName: a stone cabinet
         keyword: cabinet
         initialState: closed
         resetWithZone: false
@@ -310,14 +341,16 @@ rooms:
           - drowned_trinket
     exits:
       w: sanctum_hall
-
+    image: 58ff2dbafd8285ba19335856afe1b21f2e8b98e23274ca52f09e6b692f49af46.jpg
   offering_pit:
-    title: "Offering Pit"
-    description: "A ritual pit in the west wing of the sanctum, used for offerings that were meant to sink — coins, sealed vessels, valuable objects given to the sea. The pit is still dry, and at the bottom, placed carefully on a stone shelf, sits the temple medallion on a circle of faded velvet."
+    title: Offering Pit
+    description: A ritual pit in the west wing of the sanctum, used for offerings that were meant to sink — coins, sealed
+      vessels, valuable objects given to the sea. The pit is still dry, and at the bottom, placed carefully on a stone
+      shelf, sits the temple medallion on a circle of faded velvet.
     features:
       offering_shelf:
         type: CONTAINER
-        displayName: "an offering shelf"
+        displayName: an offering shelf
         keyword: shelf
         initialState: open
         resetWithZone: false
@@ -325,26 +358,33 @@ rooms:
           - temple_medallion
     exits:
       e: sanctum_hall
-
+    image: 92f0f9ca67f5049d2409554c3d2d013adeb0cc034149ee6e3640ceaa1062f95e.jpg
   revenant_chamber:
-    title: "Revenant's Chamber"
-    description: "The innermost room of the temple, where the high priest once officiated. The Elder Revenant drifts here in a slow orbit of the central dais, its luminous form never quite still. The chamber is cold, absolutely silent, and carries the weight of a thousand years of solitary occupation. The sanctum hall is back to the south."
+    title: Revenant's Chamber
+    description: The innermost room of the temple, where the high priest once officiated. The Elder Revenant drifts here in
+      a slow orbit of the central dais, its luminous form never quite still. The chamber is cold, absolutely silent, and
+      carries the weight of a thousand years of solitary occupation. The sanctum hall is back to the south.
     exits:
       s: sanctum_hall
-
-# ─── Puzzles ─────────────────────────────────────────────────────────────────
-
+    image: 4d178df76146d2df918f66e1d0c13b78304d6b79891a950164e8ccbfdbb3c63d.jpg
 puzzles:
   guardian_riddle:
     type: riddle
     mobId: stone_guardian
     roomId: temple_forecourt
-    question: "I guard the way yet have no sword. I stand for ages yet have no feet. I open for the worthy yet have no hands. What am I?"
-    answer: "a door"
-    acceptableAnswers: ["a door", "door", "the door", "gate", "a gate"]
+    question: I guard the way yet have no sword. I stand for ages yet have no feet. I open for the worthy yet have no hands.
+      What am I?
+    answer: a door
+    acceptableAnswers:
+      - a door
+      - door
+      - the door
+      - gate
+      - a gate
     reward:
       type: give_xp
       xp: 50
-    failMessage: "The guardian's eyes dim. 'You are not yet worthy. Think again.'"
-    successMessage: "The guardian's eyes flare bright. 'You speak truth. Pass, and carry this knowledge.'"
+    failMessage: The guardian's eyes dim. 'You are not yet worthy. Think again.'
+    successMessage: The guardian's eyes flare bright. 'You speak truth. Pass, and carry this knowledge.'
     cooldownMs: 0
+graphical: true
