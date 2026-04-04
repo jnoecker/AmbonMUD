@@ -150,6 +150,18 @@ sealed interface Command {
 
     data object Enchantments : Command
 
+    // ---- Lottery / gambling commands ----
+
+    data object LotteryInfo : Command
+
+    data class LotteryBuy(
+        val count: Int,
+    ) : Command
+
+    data class Gamble(
+        val amount: Long,
+    ) : Command
+
     // ---- Bank commands ----
 
     sealed interface Bank : Command {
@@ -840,6 +852,45 @@ object CommandParser {
 
         matchPrefix(line, listOf("bank")) { _ ->
             Command.Bank.Balance
+        }?.let { return it }
+
+        // lottery: "lottery buy [count]" or "lottery [info]"
+        matchPrefix(line, listOf("lottery buy")) { rest ->
+            val countStr = rest.trim()
+            if (countStr.isEmpty()) {
+                Command.LotteryBuy(1)
+            } else {
+                val count = countStr.toIntOrNull()
+                if (count == null || count < 1) {
+                    Command.Invalid(line, "lottery buy [count]")
+                } else {
+                    Command.LotteryBuy(count)
+                }
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("lottery")) { rest ->
+            val sub = rest.trim().lowercase()
+            if (sub.isEmpty() || sub == "info" || sub == "status") {
+                Command.LotteryInfo
+            } else {
+                Command.Invalid(line, "lottery [info] | lottery buy [count]")
+            }
+        }?.let { return it }
+
+        // gamble / dice: "gamble <amount>" or "dice <amount>"
+        matchPrefix(line, listOf("gamble", "dice")) { rest ->
+            val trimmed = rest.trim()
+            if (trimmed.isEmpty()) {
+                Command.Invalid(line, "gamble <amount>")
+            } else {
+                val amount = trimmed.toLongOrNull()
+                if (amount == null || amount < 1) {
+                    Command.Invalid(line, "gamble <amount> (positive number)")
+                } else {
+                    Command.Gamble(amount)
+                }
+            }
         }?.let { return it }
 
         matchPrefix(line, listOf("time")) { _ ->
