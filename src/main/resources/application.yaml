@@ -3393,6 +3393,24 @@ ambonmud:
           amount: 2
           description: "+2 All Stats"
 
+    globalQuests:
+      enabled: true
+      intervalMs: 7200000
+      durationMs: 1800000
+      announceIntervalMs: 300000
+      minPlayersOnline: 2
+      rewardGoldFirst: 2000
+      rewardGoldSecond: 1000
+      rewardGoldThird: 500
+      rewardXpFirst: 5000
+      rewardXpSecond: 2500
+      rewardXpThird: 1000
+      objectives:
+        - { type: kill, targetCount: 25, description: "Slay 25 creatures" }
+        - { type: kill, targetCount: 50, description: "Slay 50 creatures" }
+        - { type: gather, targetCount: 15, description: "Gather 15 resources" }
+        - { type: craft, targetCount: 10, description: "Craft 10 items" }
+
     classes:
       definitions:
         WARRIOR:
