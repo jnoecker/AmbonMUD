@@ -158,53 +158,6 @@ object SpriteLoader {
         }
 
     /**
-     * Auto-generates tier sprite definitions from the configured level tiers,
-     * race IDs, and class IDs. Image paths follow the existing naming convention:
-     * `player_sprites/{race}_{class}_{tierSuffix}.png`.
-     */
-    fun generateTierSprites(
-        registry: SpriteRegistry,
-        tierNames: Map<Int, String>,
-        raceIds: List<String>,
-        classIds: List<String>,
-    ) {
-        // Sort tiers ascending so sortOrder increases with level
-        for ((level, name) in tierNames.toSortedMap()) {
-            val tierSuffix = "t$level"
-            val variants = mutableListOf<SpriteVariant>()
-
-            for (race in raceIds) {
-                for (cls in classIds) {
-                    val rLow = race.lowercase()
-                    val cLow = cls.lowercase()
-                    variants.add(
-                        SpriteVariant(
-                            imageId = "${rLow}_${cLow}_$tierSuffix",
-                            displayName = "$name (${race.lowercase().replaceFirstChar {
-                                it.uppercase()
-                            }} ${cls.lowercase().replaceFirstChar { it.uppercase() }})",
-                            race = race.uppercase(),
-                            playerClass = cls.uppercase(),
-                            imagePath = "player_sprites/${rLow}_${cLow}_$tierSuffix.png",
-                        ),
-                    )
-                }
-            }
-
-            registry.register(
-                SpriteDefinition(
-                    id = "tier_${name.lowercase().replace(' ', '_')}",
-                    displayName = name,
-                    category = SpriteCategory.TIER,
-                    unlockCondition = SpriteUnlockCondition.Level(level),
-                    sortOrder = level,
-                    variants = variants,
-                ),
-            )
-        }
-    }
-
-    /**
      * Auto-generates staff sprite definitions. Image paths follow the existing
      * convention: `player_sprites/{race}_base_tstaff.png`.
      */
