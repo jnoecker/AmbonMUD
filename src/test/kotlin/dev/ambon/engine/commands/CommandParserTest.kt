@@ -748,4 +748,32 @@ class CommandParserTest {
     fun `prestige with unknown subcommand defaults to PrestigeInfo`() {
         assertEquals(Command.PrestigeInfo, CommandParser.parse("prestige perks"))
     }
+
+    // ---- Describe ----
+
+    @Test
+    fun `describe with text parses to Describe`() {
+        assertEquals(Command.Describe("A tall elf."), CommandParser.parse("describe A tall elf."))
+    }
+
+    @Test
+    fun `describe clear parses to DescribeClear`() {
+        assertEquals(Command.DescribeClear, CommandParser.parse("describe clear"))
+        assertEquals(Command.DescribeClear, CommandParser.parse("describe CLEAR"))
+    }
+
+    @Test
+    fun `describe check with player name parses to DescribeCheck`() {
+        assertEquals(Command.DescribeCheck("Alice"), CommandParser.parse("describe check Alice"))
+    }
+
+    @Test
+    fun `describe without text is Invalid`() {
+        assertTrue(CommandParser.parse("describe") is Command.Invalid)
+    }
+
+    @Test
+    fun `describe check without player name is Invalid`() {
+        assertTrue(CommandParser.parse("describe check") is Command.Invalid)
+    }
 }
