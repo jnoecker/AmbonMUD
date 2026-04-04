@@ -14,7 +14,7 @@ items:
   worn_sword:
     displayName: "a worn iron sword"
     keyword: sword
-    slot: hand
+    slot: weapon
     damage: 3
     basePrice: 20
     description: "A short-bladed sword with a well-worn grip. Still serviceable."
@@ -22,7 +22,7 @@ items:
   battered_staff:
     displayName: "a battered oak staff"
     keyword: staff
-    slot: hand
+    slot: weapon
     damage: 2
     basePrice: 15
     description: "A gnarled oak staff, nicked and scratched from long use."
@@ -30,7 +30,7 @@ items:
   hunting_bow:
     displayName: "a hunting bow"
     keyword: bow
-    slot: hand
+    slot: weapon
     damage: 3
     basePrice: 20
     description: "A simple recurve bow strung with gut. Good for the road."
@@ -38,7 +38,7 @@ items:
   rusty_dagger:
     displayName: "a rusty dagger"
     keyword: dagger
-    slot: hand
+    slot: weapon
     damage: 2
     basePrice: 10
     description: "A short blade mottled with rust. Still sharp at the tip."
@@ -81,7 +81,7 @@ items:
   iron_sword:
     displayName: "an iron sword"
     keyword: sword
-    slot: hand
+    slot: weapon
     damage: 5
     basePrice: 80
     description: "A standard issue iron sword, sturdy and well-balanced."
@@ -89,7 +89,7 @@ items:
   oak_staff:
     displayName: "an oak staff"
     keyword: staff
-    slot: hand
+    slot: weapon
     damage: 3
     basePrice: 60
     description: "A polished staff of dense oak, engraved with simple runes."
@@ -97,7 +97,7 @@ items:
   short_bow:
     displayName: "a short bow"
     keyword: bow
-    slot: hand
+    slot: weapon
     damage: 5
     basePrice: 80
     description: "A compact bow light enough to carry all day."
@@ -105,7 +105,7 @@ items:
   silver_dagger:
     displayName: "a silver-tipped dagger"
     keyword: dagger
-    slot: hand
+    slot: weapon
     damage: 4
     basePrice: 70
     description: "A sleek dagger with a silver point — effective against the undead."
@@ -129,7 +129,7 @@ items:
   leather_bracers:
     displayName: "leather bracers"
     keyword: bracers
-    slot: hand
+    slot: weapon
     armor: 1
     basePrice: 35
     description: "Strapped leather vambraces that protect the forearms."

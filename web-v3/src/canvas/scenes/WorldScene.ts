@@ -482,6 +482,36 @@ export class WorldScene {
     this.roomExpandBtn.x = textLeft + this.titleText.width + 12;
     this.roomExpandBtn.y = this.titleText.y;
 
+    // In strip mode (text layout), hide entity sprites — they're just placeholders
+    // and clutter the compact room header.
+    const stripMode = h < 200;
+    this.roleGraphics.visible = !stripMode;
+    this.statusEffects.container.visible = !stripMode;
+    if (this.playerSprite) this.playerSprite.visible = !stripMode;
+    this.playerLabel.visible = !stripMode;
+    this.playerLabelBg.visible = !stripMode;
+    for (const { sprite, label, labelBg, hitArea } of this.mobSprites.values()) {
+      sprite.visible = !stripMode;
+      label.visible = !stripMode;
+      labelBg.visible = !stripMode;
+      hitArea.visible = !stripMode;
+    }
+    for (const { sprite, label, labelBg, hitArea } of this.playerSprites.values()) {
+      sprite.visible = !stripMode;
+      label.visible = !stripMode;
+      labelBg.visible = !stripMode;
+      hitArea.visible = !stripMode;
+    }
+    for (const { sprite, label, labelBg, hitArea } of this.itemSprites) {
+      sprite.visible = !stripMode;
+      label.visible = !stripMode;
+      labelBg.visible = !stripMode;
+      hitArea.visible = !stripMode;
+    }
+    this.shopBadge.visible = !stripMode;
+    this.stationBadge.visible = !stripMode;
+    this.recallBtn.visible = this.recallBtn.visible && !stripMode;
+
     // Dynamic entity sizing
     const scale = Math.min(w / REF_WIDTH, h / REF_HEIGHT);
     const playerSize = clamp(BASE_SPRITE_SIZE * scale, MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);

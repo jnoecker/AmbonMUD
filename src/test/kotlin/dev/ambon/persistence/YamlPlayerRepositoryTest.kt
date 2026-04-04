@@ -401,12 +401,12 @@ class YamlPlayerRepositoryTest {
             val potion = ItemInstance(ItemId("test:potion"), Item(keyword = "potion", displayName = "a healing potion"))
             val sword = ItemInstance(
                 ItemId("test:sword"),
-                Item(keyword = "sword", displayName = "a short sword", slot = ItemSlot.HAND),
+                Item(keyword = "sword", displayName = "a short sword", slot = ItemSlot.WEAPON),
             )
 
             val updated = r.copy(
                 inventoryItems = listOf(potion),
-                equippedItems = mapOf("hand" to sword),
+                equippedItems = mapOf("weapon" to sword),
             )
             repo.save(updated)
 
@@ -415,8 +415,8 @@ class YamlPlayerRepositoryTest {
             assertEquals("potion", loaded.inventoryItems[0].item.keyword)
             assertEquals(ItemId("test:potion"), loaded.inventoryItems[0].id)
             assertEquals(1, loaded.equippedItems.size)
-            assertEquals("sword", loaded.equippedItems["hand"]?.item?.keyword)
-            assertEquals(ItemId("test:sword"), loaded.equippedItems["hand"]?.id)
+            assertEquals("sword", loaded.equippedItems["weapon"]?.item?.keyword)
+            assertEquals(ItemId("test:sword"), loaded.equippedItems["weapon"]?.id)
         }
 
     // -------- auth token index tests --------

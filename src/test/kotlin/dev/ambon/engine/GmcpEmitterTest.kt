@@ -87,7 +87,7 @@ class GmcpEmitterTest {
     private fun item(
         id: String = "forest:sword",
         name: String = "Iron Sword",
-        slot: ItemSlot? = ItemSlot.HAND,
+        slot: ItemSlot? = ItemSlot.WEAPON,
         damage: Int = 3,
         armor: Int = 0,
     ) = ItemInstance(
@@ -219,7 +219,7 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"inventory\":[]"))
             assertTrue(data.jsonData.contains("\"head\":null"))
             assertTrue(data.jsonData.contains("\"body\":null"))
-            assertTrue(data.jsonData.contains("\"hand\":null"))
+            assertTrue(data.jsonData.contains("\"weapon\":null"))
         }
 
     @Test
@@ -240,7 +240,7 @@ class GmcpEmitterTest {
             val data = drainGmcp()[0]
             assertEquals("Char.Items.Add", data.gmcpPackage)
             assertTrue(data.jsonData.contains("\"name\":\"Iron Sword\""))
-            assertTrue(data.jsonData.contains("\"slot\":\"hand\""))
+            assertTrue(data.jsonData.contains("\"slot\":\"weapon\""))
             assertTrue(data.jsonData.contains("\"damage\":3"))
         }
 
@@ -819,7 +819,7 @@ class GmcpEmitterTest {
                 item = Item(
                     keyword = "sword",
                     displayName = "Iron Sword",
-                    slot = ItemSlot.HAND,
+                    slot = ItemSlot.WEAPON,
                     damage = 3,
                     armor = 0,
                     image = "/images/items/sword.png",
@@ -839,7 +839,7 @@ class GmcpEmitterTest {
                 item = Item(
                     keyword = "axe",
                     displayName = "Battle Axe",
-                    slot = ItemSlot.HAND,
+                    slot = ItemSlot.WEAPON,
                     damage = 5,
                     armor = 0,
                     image = "/images/items/axe.png",
@@ -1176,7 +1176,7 @@ class GmcpEmitterTest {
                     keyword = "sword",
                     displayName = "Iron Sword",
                     description = "A sturdy blade.",
-                    slot = ItemSlot.HAND,
+                    slot = ItemSlot.WEAPON,
                     damage = 5,
                     armor = 0,
                     basePrice = 100,
@@ -1200,7 +1200,7 @@ class GmcpEmitterTest {
             // sword: 100 * 1.5 = 150
             assertTrue(data.jsonData.contains("\"buyPrice\":150"))
             assertTrue(data.jsonData.contains("\"keyword\":\"sword\""))
-            assertTrue(data.jsonData.contains("\"slot\":\"hand\""))
+            assertTrue(data.jsonData.contains("\"slot\":\"weapon\""))
             assertTrue(data.jsonData.contains("\"damage\":5"))
             // potion: 20 * 1.5 = 30
             assertTrue(data.jsonData.contains("\"buyPrice\":30"))

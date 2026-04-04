@@ -37,7 +37,7 @@ items:
   corsairs_cutlass:
     displayName: "the corsair's cutlass"
     keyword: cutlass
-    slot: hand
+    slot: weapon
     damage: 9
     basePrice: 310
     description: "A beautifully balanced cutlass with a gold-inlaid guard. The corsair captain kept this one sharp."

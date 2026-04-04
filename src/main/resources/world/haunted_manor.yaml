@@ -31,7 +31,7 @@ items:
   ghost_blade:
     displayName: "the Phantom Blade"
     keyword: blade
-    slot: hand
+    slot: weapon
     damage: 11
     basePrice: 390
     description: "A longsword that shimmers between solid steel and translucent mist. Strikes with the cold of the grave."

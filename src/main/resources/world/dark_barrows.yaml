@@ -37,7 +37,7 @@ items:
   vaelthos_staff:
     displayName: "Vaelthos's staff"
     keyword: staff
-    slot: hand
+    slot: weapon
     damage: 10
     basePrice: 320
     description: "A bone-and-iron staff wrapped in preserved skin, humming with necromantic energy. Powerful and unsettling."

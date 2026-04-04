@@ -120,7 +120,7 @@ class HandoffManagerTest {
         val sword =
             ItemInstance(
                 id = ItemId("forest:sword"),
-                item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.HAND, damage = 5),
+                item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.WEAPON, damage = 5),
             )
         val shield =
             ItemInstance(
@@ -138,7 +138,7 @@ class HandoffManagerTest {
                 player = player,
                 targetRoomId = targetRoom,
                 inventory = listOf(coin),
-                equipment = mapOf(ItemSlot.HAND to sword, ItemSlot.BODY to shield),
+                equipment = mapOf(ItemSlot.WEAPON to sword, ItemSlot.BODY to shield),
             )
 
         assertEquals(42L, serialized.playerId)
@@ -157,8 +157,8 @@ class HandoffManagerTest {
         assertEquals("coin", serialized.inventoryItems[0].item.keyword)
 
         assertEquals(2, serialized.equippedItems.size)
-        assertEquals(ItemId("forest:sword"), serialized.equippedItems["hand"]?.id)
-        assertEquals(5, serialized.equippedItems["hand"]?.item?.damage)
+        assertEquals(ItemId("forest:sword"), serialized.equippedItems["weapon"]?.id)
+        assertEquals(5, serialized.equippedItems["weapon"]?.item?.damage)
         assertEquals(ItemId("forest:shield"), serialized.equippedItems["body"]?.id)
         assertEquals(2, serialized.equippedItems["body"]?.item?.armor)
     }
@@ -188,7 +188,7 @@ class HandoffManagerTest {
                         keyword = "staff",
                         displayName = "a glowing staff",
                         description = "It hums with power.",
-                        slot = ItemSlot.HAND,
+                        slot = ItemSlot.WEAPON,
                         damage = 7,
                         armor = 1,
                         stats = StatMap.of("CON" to 2),
@@ -204,11 +204,11 @@ class HandoffManagerTest {
                 player = player,
                 targetRoomId = targetRoom,
                 inventory = listOf(original),
-                equipment = mapOf(ItemSlot.HAND to original),
+                equipment = mapOf(ItemSlot.WEAPON to original),
             )
 
         assertEquals(original, serialized.inventoryItems[0])
-        assertEquals(original, serialized.equippedItems["hand"])
+        assertEquals(original, serialized.equippedItems["weapon"])
     }
 
     @Test
@@ -368,10 +368,15 @@ class HandoffManagerTest {
                                 ),
                             equippedItems =
                                 mapOf(
-                                    "HAND" to
+                                    "weapon" to
                                         ItemInstance(
                                             id = ItemId("forest:sword"),
-                                            item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.HAND, damage = 5),
+                                            item = Item(
+                                                keyword = "sword",
+                                                displayName = "a sharp sword",
+                                                slot = ItemSlot.WEAPON,
+                                                damage = 5,
+                                            ),
                                         ),
                                 ),
                         ),
@@ -397,7 +402,7 @@ class HandoffManagerTest {
             assertEquals("forest:coin", inv[0].id.value)
 
             val eq = items.equipment(SessionId(42L))
-            assertEquals("forest:sword", eq[ItemSlot.HAND]!!.id.value)
+            assertEquals("forest:sword", eq[ItemSlot.WEAPON]!!.id.value)
 
             val ack = bus.incoming().tryReceive().getOrNull() as? InterEngineMessage.HandoffAck
             assertNotNull(ack)

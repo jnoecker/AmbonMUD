@@ -31,7 +31,7 @@ items:
   frost_fang:
     displayName: "the Frost Wyrm's fang"
     keyword: fang
-    slot: hand
+    slot: weapon
     damage: 13
     basePrice: 450
     description: "A dagger-length fang of crystallised ice, sharp as steel and colder than anything natural. Torn from the Frost Wyrm's jaw."

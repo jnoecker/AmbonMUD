@@ -54,7 +54,7 @@ items:
   echo_blade:
     displayName: "an echo blade"
     keyword: blade
-    slot: hand
+    slot: weapon
     damage: 8
     basePrice: 250
     description: "A sword that seems to remember every blow it has struck. Keenly balanced."
@@ -62,7 +62,7 @@ items:
   echo_staff:
     displayName: "an echo staff"
     keyword: staff
-    slot: hand
+    slot: weapon
     damage: 6
     basePrice: 220
     description: "A staff of twisted crystal that channels arcane energy with unusual efficiency."

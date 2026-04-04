@@ -101,7 +101,7 @@ class CombatSystemTest {
                 sid,
                 ItemInstance(
                     ItemId("demo:dagger"),
-                    Item(keyword = "dagger", displayName = "a dagger", slot = ItemSlot.HAND, damage = 2),
+                    Item(keyword = "dagger", displayName = "a dagger", slot = ItemSlot.WEAPON, damage = 2),
                 ),
             )
 

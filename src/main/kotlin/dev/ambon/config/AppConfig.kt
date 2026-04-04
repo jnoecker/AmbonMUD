@@ -1050,8 +1050,12 @@ data class EquipmentConfig(
     companion object {
         fun defaultEquipmentSlots(): Map<String, EquipmentSlotConfig> = linkedMapOf(
             "head" to EquipmentSlotConfig(displayName = "Head", order = 0, x = 50.0, y = 8.0),
-            "body" to EquipmentSlotConfig(displayName = "Body", order = 1, x = 50.0, y = 40.0),
-            "hand" to EquipmentSlotConfig(displayName = "Hand", order = 2, x = 20.0, y = 52.0),
+            "neck" to EquipmentSlotConfig(displayName = "Neck", order = 1, x = 50.0, y = 20.0),
+            "body" to EquipmentSlotConfig(displayName = "Body", order = 2, x = 50.0, y = 40.0),
+            "hands" to EquipmentSlotConfig(displayName = "Hands", order = 3, x = 20.0, y = 52.0),
+            "weapon" to EquipmentSlotConfig(displayName = "Weapon", order = 4, x = 80.0, y = 52.0),
+            "offhand" to EquipmentSlotConfig(displayName = "Offhand", order = 5, x = 20.0, y = 70.0),
+            "feet" to EquipmentSlotConfig(displayName = "Feet", order = 6, x = 50.0, y = 90.0),
         )
     }
 }

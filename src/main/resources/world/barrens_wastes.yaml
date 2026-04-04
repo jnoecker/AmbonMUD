@@ -31,7 +31,7 @@ items:
   wyrm_fang_blade:
     displayName: "a wyrm-fang blade"
     keyword: blade
-    slot: hand
+    slot: weapon
     damage: 13
     basePrice: 460
     description: "A heavy, curved sword forged from the fang of a sand wyrm. The edge never dulls and the blade radiates dry heat."

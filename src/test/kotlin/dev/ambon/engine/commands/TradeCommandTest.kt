@@ -47,12 +47,12 @@ class TradeCommandTest {
 
     private fun sword(suffix: String = "1") = ItemInstance(
         id = ItemId("sword_$suffix"),
-        item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.HAND, damage = 4),
+        item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.WEAPON, damage = 4),
     )
 
     private fun shield() = ItemInstance(
         id = ItemId("shield_1"),
-        item = Item(keyword = "shield", displayName = "a wooden shield", slot = ItemSlot.HAND, armor = 2),
+        item = Item(keyword = "shield", displayName = "a wooden shield", slot = ItemSlot.WEAPON, armor = 2),
     )
 
     private fun harness(): Triple<CommandRouterHarness, ItemRegistry, TradeSystem> {

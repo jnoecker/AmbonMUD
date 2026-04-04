@@ -37,7 +37,7 @@ items:
   heralds_blade:
     displayName: "the Shadow Herald's blade"
     keyword: blade
-    slot: hand
+    slot: weapon
     damage: 12
     basePrice: 420
     description: "A long, curved sword of blackened iron that trails wisps of shadow when swung. The Shadow Herald wielded this for centuries."

@@ -68,7 +68,7 @@ class EnchantCommandTest {
                 skillRequired = 1,
                 materials = listOf(MaterialConfigEntry(itemId = "essence", quantity = 1)),
                 damageBonus = 2,
-                targetSlots = listOf("hand"),
+                targetSlots = listOf("weapon"),
                 xpReward = 30,
             ),
         ),
@@ -109,7 +109,7 @@ class EnchantCommandTest {
                 sid,
                 ItemInstance(
                     id = ItemId("sword_1"),
-                    item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.HAND, damage = 4),
+                    item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.WEAPON, damage = 4),
                 ),
             )
             items.addToInventory(

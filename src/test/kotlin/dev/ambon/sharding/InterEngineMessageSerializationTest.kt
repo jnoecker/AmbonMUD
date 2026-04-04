@@ -72,7 +72,7 @@ class InterEngineMessageSerializationTest {
                     listOf(
                         ItemInstance(
                             id = ItemId("zone:sword"),
-                            item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.HAND, damage = 5),
+                            item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.WEAPON, damage = 5),
                         ),
                         ItemInstance(
                             id = ItemId("zone:shield"),
@@ -84,7 +84,7 @@ class InterEngineMessageSerializationTest {
                         "HAND" to
                             ItemInstance(
                                 id = ItemId("zone:sword"),
-                                item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.HAND, damage = 5),
+                                item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.WEAPON, damage = 5),
                             ),
                     ),
             )
@@ -111,7 +111,7 @@ class InterEngineMessageSerializationTest {
                         keyword = "staff",
                         displayName = "a glowing staff",
                         description = "It hums with power.",
-                        slot = ItemSlot.HAND,
+                        slot = ItemSlot.WEAPON,
                         damage = 7,
                         armor = 1,
                         stats = StatMap.of("CON" to 2),

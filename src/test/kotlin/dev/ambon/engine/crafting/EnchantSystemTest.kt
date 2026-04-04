@@ -26,7 +26,7 @@ class EnchantSystemTest {
         skillRequired = 1,
         materials = listOf(MaterialConfigEntry(itemId = "essence", quantity = 1)),
         damageBonus = 2,
-        targetSlots = listOf("hand"),
+        targetSlots = listOf("weapon"),
         xpReward = 30,
     )
 
@@ -49,7 +49,7 @@ class EnchantSystemTest {
             MaterialConfigEntry(itemId = "gem", quantity = 1),
         ),
         statBonuses = mapOf("STR" to 2),
-        targetSlots = listOf("hand"),
+        targetSlots = listOf("weapon"),
         xpReward = 50,
     )
 
@@ -71,7 +71,7 @@ class EnchantSystemTest {
         item = Item(
             keyword = "sword",
             displayName = "a copper sword",
-            slot = ItemSlot.HAND,
+            slot = ItemSlot.WEAPON,
             damage = 4,
         ),
     )

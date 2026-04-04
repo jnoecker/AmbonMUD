@@ -33,7 +33,7 @@ items:
   chieftain_axe:
     displayName: "Chieftain Grak's axe"
     keyword: axe
-    slot: hand
+    slot: weapon
     damage: 9
     basePrice: 350
     description: "A broad-bladed battle axe notched from heavy use. Balance is poor but the weight behind the blow is not."

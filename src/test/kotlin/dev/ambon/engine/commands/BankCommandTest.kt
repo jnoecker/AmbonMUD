@@ -113,7 +113,7 @@ class BankCommandTest {
 
     private fun sword() = ItemInstance(
         id = ItemId("sword_1"),
-        item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.HAND, damage = 4),
+        item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.WEAPON, damage = 4),
     )
 
     @Nested

@@ -13,7 +13,7 @@ items:
       CON: 2
   sword:
     displayName: "a short sword"
-    slot: hand
+    slot: weapon
     damage: 3
     stats:
       CON: 1

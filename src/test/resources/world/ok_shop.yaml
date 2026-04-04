@@ -4,7 +4,7 @@ items:
   sword:
     displayName: "a steel sword"
     keyword: "sword"
-    slot: hand
+    slot: weapon
     damage: 3
     basePrice: 50
   potion:

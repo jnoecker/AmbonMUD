@@ -37,7 +37,7 @@ items:
   thieves_shiv:
     displayName: "a thieves' shiv"
     keyword: shiv
-    slot: hand
+    slot: weapon
     damage: 8
     basePrice: 280
     description: "A short, perfectly balanced stabbing blade favoured by sewer-dwelling rogues. Quick and quiet."
@@ -68,7 +68,7 @@ items:
   smuggled_blade:
     displayName: "a smuggled blade"
     keyword: blade
-    slot: hand
+    slot: weapon
     damage: 6
     basePrice: 180
     description: "A serviceable sword of foreign manufacture, smuggled past the city tariffs. No maker's mark."

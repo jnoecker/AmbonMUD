@@ -25,7 +25,7 @@ items:
   dragonfire_blade:
     displayName: "the Dragonfire Blade"
     keyword: blade
-    slot: hand
+    slot: weapon
     damage: 15
     basePrice: 600
     description: "A longsword forged in dragonfire, its blade rippling with heat-shimmer even at rest. The weapon of a world's endgame."

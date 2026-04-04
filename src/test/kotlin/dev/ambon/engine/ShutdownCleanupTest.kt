@@ -121,11 +121,11 @@ class ShutdownCleanupTest {
 
         val sword = ItemInstance(
             id = ItemId("sword_1"),
-            item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.HAND, damage = 4),
+            item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.WEAPON, damage = 4),
         )
         val shield = ItemInstance(
             id = ItemId("shield_1"),
-            item = Item(keyword = "shield", displayName = "a wooden shield", slot = ItemSlot.HAND, armor = 2),
+            item = Item(keyword = "shield", displayName = "a wooden shield", slot = ItemSlot.WEAPON, armor = 2),
         )
 
         items.addToInventory(alice, sword)
@@ -162,11 +162,11 @@ class ShutdownCleanupTest {
 
         val sword = ItemInstance(
             id = ItemId("sword_1"),
-            item = Item(keyword = "sword", displayName = "sword", slot = ItemSlot.HAND, damage = 4),
+            item = Item(keyword = "sword", displayName = "sword", slot = ItemSlot.WEAPON, damage = 4),
         )
         val shield = ItemInstance(
             id = ItemId("shield_1"),
-            item = Item(keyword = "shield", displayName = "shield", slot = ItemSlot.HAND, armor = 2),
+            item = Item(keyword = "shield", displayName = "shield", slot = ItemSlot.WEAPON, armor = 2),
         )
 
         items.addToInventory(alice, sword)

@@ -37,7 +37,7 @@ items:
   iron_order_sword:
     displayName: "an Iron Order sword"
     keyword: sword
-    slot: hand
+    slot: weapon
     damage: 10
     basePrice: 340
     description: "A regulation Iron Order longsword, well-maintained and stamped with the order's mark near the hilt."

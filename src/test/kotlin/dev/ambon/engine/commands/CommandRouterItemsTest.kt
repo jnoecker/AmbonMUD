@@ -213,7 +213,7 @@ class CommandRouterItemsTest {
                     ),
                     ItemInstance(
                         ItemId("test:ring_spiked"),
-                        Item(keyword = "ring", displayName = "a spiked ring", slot = ItemSlot.HAND, damage = 1),
+                        Item(keyword = "ring", displayName = "a spiked ring", slot = ItemSlot.WEAPON, damage = 1),
                     ),
                 ),
             )
@@ -223,7 +223,7 @@ class CommandRouterItemsTest {
             h.router.handle(sid, Command.Wear("ring"))
 
             val equipped = h.items.equipment(sid)
-            assertEquals("ring", equipped.getValue(ItemSlot.HAND).item.keyword)
+            assertEquals("ring", equipped.getValue(ItemSlot.WEAPON).item.keyword)
             assertEquals(1, h.items.inventory(sid).size)
             assertEquals("ring", h.items.inventory(sid)[0].item.keyword)
 

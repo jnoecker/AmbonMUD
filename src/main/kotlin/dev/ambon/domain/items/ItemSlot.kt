@@ -15,8 +15,12 @@ value class ItemSlot(
 
     companion object {
         val HEAD = ItemSlot("head")
+        val NECK = ItemSlot("neck")
         val BODY = ItemSlot("body")
-        val HAND = ItemSlot("hand")
+        val HANDS = ItemSlot("hands")
+        val WEAPON = ItemSlot("weapon")
+        val OFFHAND = ItemSlot("offhand")
+        val FEET = ItemSlot("feet")
 
         fun parse(raw: String): ItemSlot? {
             val value = raw.trim().lowercase()

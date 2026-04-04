@@ -10,7 +10,7 @@ items:
   copper_sword:
     displayName: "a copper sword"
     keyword: "copper sword"
-    slot: hand
+    slot: weapon
     damage: 4
   healing_potion:
     displayName: "a healing potion"

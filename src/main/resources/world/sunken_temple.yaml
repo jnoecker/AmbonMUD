@@ -37,7 +37,7 @@ items:
   revenant_scepter:
     displayName: "the Elder Revenant's scepter"
     keyword: scepter
-    slot: hand
+    slot: weapon
     damage: 11
     basePrice: 380
     description: "A scepter of ancient iron wrapped in sea-glass and silver wire, thrumming faintly with residual divine power."
