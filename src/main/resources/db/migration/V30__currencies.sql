@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN currencies TEXT NOT NULL DEFAULT '{}';
