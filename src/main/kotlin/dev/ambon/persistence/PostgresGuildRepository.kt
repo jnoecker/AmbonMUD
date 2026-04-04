@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.core.type.TypeReference
+import dev.ambon.domain.guild.GuildHallRoom
 import dev.ambon.domain.guild.GuildRecord
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.sql.Database
@@ -12,6 +13,15 @@ import org.jetbrains.exposed.sql.upsert
 
 private val log = KotlinLogging.logger {}
 private val membersType = object : TypeReference<Map<Long, String>>() {}
+private val hallRoomsType = object : TypeReference<List<GuildHallRoomJson>>() {}
+
+private data class GuildHallRoomJson(
+    val id: String = "",
+    val template: String = "",
+    val title: String = "",
+    val description: String = "",
+    val customDescription: String? = null,
+)
 
 class PostgresGuildRepository(
     private val database: Database,
@@ -71,6 +81,17 @@ class PostgresGuildRepository(
                 record.members.mapKeys { e -> e.key.value }.mapValues { e -> e.value },
             )
             it[createdAtEpochMs] = record.createdAtEpochMs
+            it[hallRooms] = mapper.writeValueAsString(
+                record.hallRooms.map { room ->
+                    GuildHallRoomJson(
+                        id = room.id,
+                        template = room.template,
+                        title = room.title,
+                        description = room.description,
+                        customDescription = room.customDescription,
+                    )
+                },
+            )
         }
     }
 
@@ -81,6 +102,12 @@ class PostgresGuildRepository(
             }.onFailure { ex ->
                 log.warn(ex) { "Failed to deserialize members for guild ${this[GuildsTable.id]}; defaulting to empty" }
             }.getOrDefault(emptyMap())
+        val rawHallRooms: List<GuildHallRoomJson> =
+            runCatching {
+                mapper.readValue(this[GuildsTable.hallRooms], hallRoomsType)
+            }.onFailure { ex ->
+                log.warn(ex) { "Failed to deserialize hallRooms for guild ${this[GuildsTable.id]}; defaulting to empty" }
+            }.getOrDefault(emptyList())
         return GuildRecord(
             id = this[GuildsTable.id],
             name = this[GuildsTable.name],
@@ -89,6 +116,15 @@ class PostgresGuildRepository(
             motd = this[GuildsTable.motd],
             members = rawMembers.mapKeys { PlayerId(it.key) }.mapValues { it.value.lowercase() },
             createdAtEpochMs = this[GuildsTable.createdAtEpochMs],
+            hallRooms = rawHallRooms.map {
+                GuildHallRoom(
+                    id = it.id,
+                    template = it.template,
+                    title = it.title,
+                    description = it.description,
+                    customDescription = it.customDescription,
+                )
+            },
         )
     }
 }

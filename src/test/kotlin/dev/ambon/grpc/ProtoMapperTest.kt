@@ -100,6 +100,18 @@ class ProtoMapperTest {
     }
 
     @Test
+    fun `SetScreenReader enabled round-trips`() {
+        val event = OutboundEvent.SetScreenReader(sessionId = sid, enabled = true)
+        assertEquals(event, event.toProto().toDomain())
+    }
+
+    @Test
+    fun `SetScreenReader disabled round-trips`() {
+        val event = OutboundEvent.SetScreenReader(sessionId = sid, enabled = false)
+        assertEquals(event, event.toProto().toDomain())
+    }
+
+    @Test
     fun `Close round-trips`() {
         val event = OutboundEvent.Close(sessionId = sid, reason = "kicked")
         assertEquals(event, event.toProto().toDomain())
@@ -185,6 +197,7 @@ class ProtoMapperTest {
                 OutboundEvent.SendPrompt(sid),
                 OutboundEvent.ShowLoginScreen(sid),
                 OutboundEvent.SetAnsi(sid, true),
+                OutboundEvent.SetScreenReader(sid, true),
                 OutboundEvent.Close(sid, "r"),
                 OutboundEvent.ClearScreen(sid),
                 OutboundEvent.ShowAnsiDemo(sid),

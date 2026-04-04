@@ -17,6 +17,10 @@ sealed interface Command {
 
     data object Colors : Command
 
+    data object ScreenReaderOn : Command
+
+    data object ScreenReaderOff : Command
+
     data class Move(
         val dir: Direction,
     ) : Command
@@ -125,6 +129,8 @@ sealed interface Command {
 
     data object Reputation : Command
 
+    data object Currencies : Command
+
     // ---- Pet commands ----
 
     data object PetStatus : Command
@@ -143,6 +149,18 @@ sealed interface Command {
     ) : Command
 
     data object Enchantments : Command
+
+    // ---- Lottery / gambling commands ----
+
+    data object LotteryInfo : Command
+
+    data class LotteryBuy(
+        val count: Int,
+    ) : Command
+
+    data class Gamble(
+        val amount: Long,
+    ) : Command
 
     // ---- Bank commands ----
 
@@ -383,6 +401,18 @@ sealed interface Command {
         data object Roster : Guild
 
         data object Info : Guild
+
+        data object Hall : Guild
+
+        data object HallBuy : Guild
+
+        data class HallExpand(
+            val template: String,
+        ) : Guild
+
+        data object HallEnter : Guild
+
+        data object HallLeave : Guild
     }
 
     // ---- Crafting & Gathering commands ----
@@ -437,7 +467,15 @@ sealed interface Command {
 
         /** `train unlock` — pay gold to unlock the class taught by this trainer. */
         data object Unlock : Train
+
+        /** `train reset` — pay gold to reset all learned abilities and refund skill points. */
+        data object Reset : Train
     }
+
+    // ---- Global quest commands ----
+
+    /** `gquest` / `gq` / `global` — show the current global competitive quest status. */
+    data object GlobalQuestInfo : Command
 
     // ---- Leaderboard commands ----
 
@@ -501,6 +539,19 @@ sealed interface Command {
     /** Answer a riddle puzzle: "answer <text>". */
     data class Answer(
         val text: String,
+    ) : Command
+
+    /** `describe <text>` — set your custom character description. */
+    data class Describe(
+        val text: String,
+    ) : Command
+
+    /** `describe clear` — remove your custom character description. */
+    data object DescribeClear : Command
+
+    /** `describe check <player>` — staff command to view another player's description. */
+    data class DescribeCheck(
+        val targetName: String,
     ) : Command
 
     data class Unknown(
@@ -813,6 +864,45 @@ object CommandParser {
             Command.Bank.Balance
         }?.let { return it }
 
+        // lottery: "lottery buy [count]" or "lottery [info]"
+        matchPrefix(line, listOf("lottery buy")) { rest ->
+            val countStr = rest.trim()
+            if (countStr.isEmpty()) {
+                Command.LotteryBuy(1)
+            } else {
+                val count = countStr.toIntOrNull()
+                if (count == null || count < 1) {
+                    Command.Invalid(line, "lottery buy [count]")
+                } else {
+                    Command.LotteryBuy(count)
+                }
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("lottery")) { rest ->
+            val sub = rest.trim().lowercase()
+            if (sub.isEmpty() || sub == "info" || sub == "status") {
+                Command.LotteryInfo
+            } else {
+                Command.Invalid(line, "lottery [info] | lottery buy [count]")
+            }
+        }?.let { return it }
+
+        // gamble / dice: "gamble <amount>" or "dice <amount>"
+        matchPrefix(line, listOf("gamble", "dice")) { rest ->
+            val trimmed = rest.trim()
+            if (trimmed.isEmpty()) {
+                Command.Invalid(line, "gamble <amount>")
+            } else {
+                val amount = trimmed.toLongOrNull()
+                if (amount == null || amount < 1) {
+                    Command.Invalid(line, "gamble <amount> (positive number)")
+                } else {
+                    Command.Gamble(amount)
+                }
+            }
+        }?.let { return it }
+
         matchPrefix(line, listOf("time")) { _ ->
             Command.Time
         }?.let { return it }
@@ -878,6 +968,25 @@ object CommandParser {
                 }
                 "roster" -> Command.Guild.Roster
                 "info" -> Command.Guild.Info
+                "hall" -> {
+                    val hallRest = parts.getOrNull(1)?.trim() ?: ""
+                    val hallParts = hallRest.split(Regex("\\s+"), limit = 2)
+                    when (hallParts[0].lowercase()) {
+                        "" -> Command.Guild.Hall
+                        "buy", "purchase" -> Command.Guild.HallBuy
+                        "expand" -> {
+                            val template = hallParts.getOrNull(1)?.trim() ?: ""
+                            if (template.isEmpty()) {
+                                Command.Invalid(line, "guild hall expand <template>")
+                            } else {
+                                Command.Guild.HallExpand(template)
+                            }
+                        }
+                        "enter" -> Command.Guild.HallEnter
+                        "leave", "exit" -> Command.Guild.HallLeave
+                        else -> Command.Guild.Hall
+                    }
+                }
                 else -> Command.Guild.Info
             }
         }?.let { return it }
@@ -1166,6 +1275,21 @@ object CommandParser {
             }
         }?.let { return it }
 
+        // describe clear / describe check <player> / describe <text>
+        matchPrefix(line, listOf("describe")) { rest ->
+            val trimmed = rest.trim()
+            when {
+                trimmed.isEmpty() -> Command.Invalid(line, "describe <text>  or  describe clear")
+                trimmed.equals("clear", ignoreCase = true) -> Command.DescribeClear
+                trimmed.equals("check", ignoreCase = true) -> Command.Invalid(line, "describe check <player>")
+                trimmed.startsWith("check ", ignoreCase = true) -> {
+                    val name = trimmed.removePrefix("check").trim()
+                    if (name.isEmpty()) Command.Invalid(line, "describe check <player>") else Command.DescribeCheck(name)
+                }
+                else -> Command.Describe(trimmed)
+            }
+        }?.let { return it }
+
         // gender <option>
         requiredArg(line, listOf("gender"), "gender <option>", { Command.SetGender(it) })?.let { return it }
 
@@ -1198,6 +1322,7 @@ object CommandParser {
                     if (kw.isEmpty()) Command.Invalid(line, "train learn <ability>") else Command.Train.Learn(kw)
                 }
                 "unlock" -> Command.Train.Unlock
+                "reset", "respec" -> Command.Train.Reset
                 else -> Command.Train.Learn(rest.trim())
             }
         }?.let { return it }
@@ -1255,6 +1380,9 @@ object CommandParser {
             "quit", "exit" -> Command.Quit
             "ansi on" -> Command.AnsiOn
             "ansi off" -> Command.AnsiOff
+            "screenreader on" -> Command.ScreenReaderOn
+            "screenreader off" -> Command.ScreenReaderOff
+            "screenreader" -> Command.ScreenReaderOn // toggle handled by router
             "clear" -> Command.Clear
             "colors" -> Command.Colors
             "who" -> Command.Who
@@ -1275,7 +1403,9 @@ object CommandParser {
             "list", "shop" -> Command.ShopList
             "craftskills", "professions", "prof" -> Command.CraftSkills
             "reputation", "rep", "factions", "standing", "standings" -> Command.Reputation
+            "currencies", "currency", "wallet" -> Command.Currencies
             "dungeon leave", "dungeon exit" -> Command.DungeonLeave
+            "gquest", "gq", "global" -> Command.GlobalQuestInfo
             else -> Command.Unknown(line)
         }
     }
