@@ -1,6 +1,31 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
+
+export interface WorldTime {
+  period: string;
+  hour: number;
+  minute: number;
+}
+
+export interface WorldWeather {
+  zone: string;
+  weather: string;
+  description: string;
+}
+
+export interface WorldEvent {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface CurrencyBalance {
+  id: string;
+  name: string;
+  abbreviation: string;
+  balance: number;
+}
 
 export interface AuctionListing {
   id: number;
@@ -621,6 +646,13 @@ export interface HousingInfo {
   rooms: HousingRoomInfo[];
 }
 
+export interface FactionStanding {
+  id: string;
+  name: string;
+  reputation: number;
+  tier: string;
+}
+
 export interface TrainerAbility {
   id: string;
   name: string;
@@ -645,3 +677,26 @@ export interface TrainerData {
   abilities: TrainerAbility[];
 }
 
+export interface PetState {
+  active: boolean;
+  name?: string;
+  hp?: number;
+  maxHp?: number;
+  minDamage?: number;
+  maxDamage?: number;
+  armor?: number;
+  image?: string;
+}
+
+export interface BankItem {
+  id: string;
+  name: string;
+  keyword: string;
+  image?: string | null;
+}
+
+export interface BankState {
+  gold: number;
+  items: BankItem[];
+  maxItems: number;
+}

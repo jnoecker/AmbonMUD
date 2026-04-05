@@ -3,6 +3,7 @@ import type {
   AchievementData,
   AuctionListing,
   CharStats,
+  FactionStanding,
   StatEntry,
   ChatChannel,
   ChatMessage,
@@ -57,16 +58,22 @@ import type {
   SpriteList,
   StatusEffect,
   StatusVarLabels,
+  CurrencyBalance,
   TradeState,
   TrainerAbility,
   TrainerData,
   UiFeedback,
   Vitals,
   WhoPlayer,
+  WorldEvent,
+  WorldTime,
+  WorldWeather,
   ZoneInstances,
   ZoneInstanceItem,
   LeaderboardData,
   LeaderboardEntry,
+  PetState,
+  BankState,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
@@ -138,8 +145,15 @@ interface GmcpContext {
   setTradeState: Dispatch<SetStateAction<TradeState | null>>;
   setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
+  setCurrencies: Dispatch<SetStateAction<CurrencyBalance[]>>;
   setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
   setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
+  setWorldTime: Dispatch<SetStateAction<WorldTime | null>>;
+  setWorldWeather: Dispatch<SetStateAction<WorldWeather | null>>;
+  setWorldEvents: Dispatch<SetStateAction<WorldEvent[]>>;
+  setPetState: Dispatch<SetStateAction<PetState | null>>;
+  setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
+  setBankState: Dispatch<SetStateAction<BankState | null>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1370,32 +1384,104 @@ export function applyGmcpPackage(
     }
 
     case "Char.Pet": {
-      // Pet state received via GMCP — available for future pet panel.
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setPetState({
+        active: !!packet.active,
+        name: typeof packet.name === "string" ? packet.name : undefined,
+        hp: typeof packet.hp === "number" ? packet.hp : undefined,
+        maxHp: typeof packet.maxHp === "number" ? packet.maxHp : undefined,
+        minDamage: typeof packet.minDamage === "number" ? packet.minDamage : undefined,
+        maxDamage: typeof packet.maxDamage === "number" ? packet.maxDamage : undefined,
+        armor: typeof packet.armor === "number" ? packet.armor : undefined,
+        image: typeof packet.image === "string" ? packet.image : undefined,
+      });
       break;
     }
 
     case "Char.Bank": {
-      // Bank state received via GMCP — available for future bank panel.
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setBankState({
+        gold: safeNumber(packet.gold, 0),
+        items: Array.isArray(packet.items)
+          ? (packet.items as Array<Record<string, unknown>>)
+            .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
+            .map((i) => ({
+              id: typeof i.id === "string" ? i.id : "",
+              name: typeof i.name === "string" ? i.name : "",
+              keyword: typeof i.keyword === "string" ? i.keyword : "",
+              image: typeof i.image === "string" ? i.image : null,
+            }))
+          : [],
+        maxItems: safeNumber(packet.maxItems, 0),
+      });
       break;
     }
 
     case "Char.Factions": {
-      // Faction standings received via GMCP — stored for future panel.
+      const factionPacket = data;
+      ctx.setFactions(
+        Array.isArray(factionPacket)
+          ? factionPacket
+            .filter((f): f is Record<string, unknown> => typeof f === "object" && f !== null)
+            .map((f) => ({
+              id: typeof f.id === "string" ? f.id : "",
+              name: typeof f.name === "string" ? f.name : "",
+              reputation: safeNumber(f.reputation, 0),
+              tier: typeof f.tier === "string" ? f.tier : "Neutral",
+            }))
+          : [],
+      );
+      break;
+    }
+
+    case "Char.Currencies": {
+      ctx.setCurrencies(
+        Array.isArray(data)
+          ? data
+            .filter((c): c is Record<string, unknown> => typeof c === "object" && c !== null)
+            .map((c) => ({
+              id: typeof c.id === "string" ? c.id : "",
+              name: typeof c.name === "string" ? c.name : "",
+              abbreviation: typeof c.abbreviation === "string" ? c.abbreviation : "",
+              balance: safeNumber(c.balance),
+            }))
+          : [],
+      );
       break;
     }
 
     case "World.Time": {
-      // World time received via GMCP — available for day/night UI.
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setWorldTime({
+        period: typeof packet.period === "string" ? packet.period : "DAY",
+        hour: safeNumber(packet.hour),
+        minute: safeNumber(packet.minute),
+      });
       break;
     }
 
     case "World.Weather": {
-      // Zone weather received via GMCP — available for weather effects.
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setWorldWeather({
+        zone: typeof packet.zone === "string" ? packet.zone : "",
+        weather: typeof packet.weather === "string" ? packet.weather : "CLEAR",
+        description: typeof packet.description === "string" ? packet.description : "",
+      });
       break;
     }
 
     case "World.Events": {
-      // Active world events received via GMCP — available for event panel.
+      ctx.setWorldEvents(
+        Array.isArray(data)
+          ? data
+              .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+              .map((e) => ({
+                id: typeof e.id === "string" ? e.id : "",
+                name: typeof e.name === "string" ? e.name : "",
+                description: typeof e.description === "string" ? e.description : "",
+              }))
+          : [],
+      );
       break;
     }
 

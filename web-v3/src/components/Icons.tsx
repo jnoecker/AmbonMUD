@@ -421,6 +421,16 @@ export function ScoreTabIcon({ className }: { className?: string }) {
   );
 }
 
+export function FactionsTabIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 3v18" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M12 3l7.2 4.2v5.4L12 17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
+      <path d="M12 3L4.8 7.2v5.4L12 17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function HelpIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
@@ -566,6 +576,17 @@ export function HousingIcon({ className }: { className?: string }) {
       <path d="M3 10.5L12 4l9 6.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M5 9.5V19a1 1 0 001 1h12a1 1 0 001-1V9.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M9.5 20v-5a1 1 0 011-1h3a1 1 0 011 1v5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function BankIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M3 21h18" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M12 3L3 10h18L12 3z" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
+      <path d="M5 10v11M9 10v11M15 10v11M19 10v11" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }

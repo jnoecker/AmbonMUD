@@ -3336,6 +3336,140 @@ body {
   color: var(--text-primary);
 }
 
+/* ---------- Currencies section in Score tab ---------- */
+
+.score-currencies {
+  margin-top: var(--space-2);
+}
+
+.score-currencies-label {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.score-currencies-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 8px;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.score-currencies-grid > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  border-bottom: 1px solid rgb(106 96 136 / 8%);
+}
+
+.score-currencies-grid dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.score-currencies-grid dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ---------- Factions tab ---------- */
+
+.character-factions {
+  overflow-y: auto;
+}
+
+.factions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faction-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  background: rgb(50 60 88 / 40%);
+}
+
+.faction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.faction-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.faction-tier {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.faction-tier-positive {
+  color: var(--color-hp-light);
+}
+
+.faction-tier-neutral {
+  color: var(--color-xp-light);
+}
+
+.faction-tier-negative {
+  color: var(--color-error);
+}
+
+.faction-rep-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.faction-rep-track {
+  flex: 1;
+  height: 6px;
+}
+
+.faction-rep-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 300ms var(--ease-out-soft);
+}
+
+.faction-rep-fill-positive {
+  background: linear-gradient(90deg, var(--color-hp-light), var(--color-hp-dark));
+}
+
+.faction-rep-fill-neutral {
+  background: linear-gradient(90deg, var(--color-xp-light), var(--color-xp-dark));
+}
+
+.faction-rep-fill-negative {
+  background: linear-gradient(90deg, var(--color-error), var(--color-damage));
+}
+
+.faction-rep-value {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 36px;
+  text-align: right;
+}
+
 .quest-notifications {
   display: flex;
   flex-direction: column;
@@ -8875,6 +9009,61 @@ body {
   background: rgb(168 151 210 / 6%);
 }
 
+/* ---------- World atmosphere (character panel) ---------- */
+.world-atmosphere-subpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.world-atmosphere-heading {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 2px;
+}
+
+.world-atmosphere-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.world-atmosphere-icon {
+  flex-shrink: 0;
+  width: 1.1em;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.world-atmosphere-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.world-atmosphere-value {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.world-atmosphere-event {
+  color: var(--color-primary-lavender);
+}
+
+.world-atmosphere-event-icon {
+  color: var(--color-primary-lavender);
+}
+
 /* ---------- Character panel logout ---------- */
 .character-logout-row {
   display: flex;
@@ -8891,6 +9080,70 @@ body {
 
 .character-logout-btn:hover {
   opacity: 1;
+}
+
+/* ---------- Character panel pet section ---------- */
+.character-pet-subpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.pet-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.pet-thumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgb(140 154 193 / 18%);
+  flex-shrink: 0;
+}
+
+.pet-header-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pet-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pet-stat-grid {
+  font-size: 0.78rem;
+  gap: 4px 12px;
+}
+
+.pet-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pet-dismiss-btn {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.pet-dismiss-btn:hover {
+  opacity: 1;
+  color: var(--color-hp-red);
 }
 
 /* Filter toggle button */
