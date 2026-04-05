@@ -3378,6 +3378,61 @@ body {
   font-weight: 500;
 }
 
+/* ---------- Prestige section in Score tab ---------- */
+
+.score-prestige {
+  margin-top: var(--space-2);
+  padding: 8px;
+  border-radius: 6px;
+  background: rgb(62 74 108 / 40%);
+  border: 1px solid rgb(151 166 204 / 20%);
+}
+
+.score-prestige-label {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary-soft-gold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.score-prestige-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.score-prestige-grid > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.score-prestige-grid dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.score-prestige-grid dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.score-prestige-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.score-prestige-btn {
+  flex: 1;
+  font-size: 0.72rem;
+  padding: 4px 8px;
+}
+
 /* ---------- Factions tab ---------- */
 
 .character-factions {

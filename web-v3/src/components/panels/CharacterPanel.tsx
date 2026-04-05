@@ -686,6 +686,52 @@ export function CharacterPanel({
                         </dl>
                       </div>
                     )}
+                    {((vitals.prestigeLevel ?? 0) > 0 || vitals.prestigeNextCost != null) && (
+                      <div className="score-prestige">
+                        <p className="score-prestige-label">Prestige</p>
+                        <dl className="score-prestige-grid">
+                          <div>
+                            <dt>Rank</dt>
+                            <dd>{vitals.prestigeLevel ?? 0}</dd>
+                          </div>
+                          {vitals.prestigeXpAvailable != null && (
+                            <div>
+                              <dt>Available XP</dt>
+                              <dd>{vitals.prestigeXpAvailable.toLocaleString()}</dd>
+                            </div>
+                          )}
+                          {vitals.prestigeNextCost != null && (
+                            <div>
+                              <dt>Next Rank Cost</dt>
+                              <dd>{vitals.prestigeNextCost.toLocaleString()}</dd>
+                            </div>
+                          )}
+                        </dl>
+                        <div className="score-prestige-actions">
+                          <button
+                            type="button"
+                            className="soft-button score-prestige-btn"
+                            disabled={vitals.prestigeXpAvailable == null || vitals.prestigeNextCost == null || vitals.prestigeXpAvailable < vitals.prestigeNextCost}
+                            onClick={() => onCommand("prestige")}
+                            title={
+                              vitals.prestigeXpAvailable != null && vitals.prestigeNextCost != null && vitals.prestigeXpAvailable >= vitals.prestigeNextCost
+                                ? "Advance to next prestige rank"
+                                : "Not enough XP to prestige"
+                            }
+                          >
+                            Prestige Up
+                          </button>
+                          <button
+                            type="button"
+                            className="soft-button score-prestige-btn"
+                            onClick={() => onCommand("prestige info")}
+                            title="View prestige perks and details"
+                          >
+                            View Perks
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </section>
