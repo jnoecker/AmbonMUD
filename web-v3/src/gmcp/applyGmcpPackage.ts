@@ -3,6 +3,7 @@ import type {
   AchievementData,
   AuctionListing,
   CharStats,
+  FactionStanding,
   StatEntry,
   ChatChannel,
   ChatMessage,
@@ -138,6 +139,7 @@ interface GmcpContext {
   setTradeState: Dispatch<SetStateAction<TradeState | null>>;
   setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
+  setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
   setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
   setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
 }
@@ -1380,7 +1382,19 @@ export function applyGmcpPackage(
     }
 
     case "Char.Factions": {
-      // Faction standings received via GMCP — stored for future panel.
+      const factionPacket = data;
+      ctx.setFactions(
+        Array.isArray(factionPacket)
+          ? factionPacket
+            .filter((f): f is Record<string, unknown> => typeof f === "object" && f !== null)
+            .map((f) => ({
+              id: typeof f.id === "string" ? f.id : "",
+              name: typeof f.name === "string" ? f.name : "",
+              reputation: safeNumber(f.reputation, 0),
+              tier: typeof f.tier === "string" ? f.tier : "Neutral",
+            }))
+          : [],
+      );
       break;
     }
 

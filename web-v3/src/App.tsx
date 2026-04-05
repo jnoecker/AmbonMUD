@@ -57,6 +57,7 @@ import type {
   DialogueState,
   EmotePreset,
   EquipmentSlotDef,
+  FactionStanding,
   FriendEntry,
   FriendNotification,
   GainEvent,
@@ -245,6 +246,7 @@ function App() {
   const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]); // GMCP Auction.List data for future panel
   void auctionListings; // suppress unused-var lint until auction panel is built
   const [leaderboard, setLeaderboard] = useState<Record<string, LeaderboardData>>({});
+  const [factions, setFactions] = useState<FactionStanding[]>([]);
   const [trainer, setTrainer] = useState<TrainerData | null>(null);
   const [unlockedClasses, setUnlockedClasses] = useState<string[]>([]);
   void unlockedClasses; // stored for future character sheet multi-class display
@@ -494,6 +496,7 @@ function App() {
           setTradeState,
           setAuctionListings,
           setLeaderboard,
+          setFactions,
           setTrainer: (value) => {
             setTrainer(value);
             // Auto-open trainer popout when trainer data arrives
@@ -1148,6 +1151,7 @@ function App() {
             groupInfo={groupInfo}
             activeTitle={whoPlayers.find((p) => p.name === character.name)?.title ?? null}
             spriteList={spriteList}
+            factions={factions}
             onDismissQuestNotification={(id) => {
               setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
             }}

@@ -1,8 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
-import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
+import type { AchievementData, CharacterInfo, CharStats, FactionStanding, GroupInfo, GuildInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
+import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
-type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score";
+type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions";
+
+function factionTierClass(tier: string): "positive" | "neutral" | "negative" {
+  switch (tier) {
+    case "Friendly":
+    case "Honored":
+    case "Revered":
+      return "positive";
+    case "Unfriendly":
+    case "Hostile":
+    case "Hated":
+      return "negative";
+    default:
+      return "neutral";
+  }
+}
 
 interface CharacterPanelProps {
   connected: boolean;
@@ -27,6 +42,7 @@ interface CharacterPanelProps {
   groupInfo: GroupInfo;
   activeTitle: string | null;
   spriteList: SpriteList;
+  factions: FactionStanding[];
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -58,6 +74,7 @@ export function CharacterPanel({
   groupInfo,
   activeTitle,
   spriteList,
+  factions,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -322,6 +339,19 @@ export function CharacterPanel({
             >
               <ScoreTabIcon className="detail-tab-icon" />
             </button>
+            {factions.length > 0 && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeDetailTab === "factions"}
+                aria-label="Factions"
+                title="Factions"
+                className={`character-detail-tab ${activeDetailTab === "factions" ? "character-detail-tab-active" : ""}`}
+                onClick={() => setActiveDetailTab("factions")}
+              >
+                <FactionsTabIcon className="detail-tab-icon" />
+              </button>
+            )}
           </div>
 
           <div className="character-detail-body">
@@ -634,6 +664,39 @@ export function CharacterPanel({
                       )}
                     </div>
                   </div>
+                )}
+              </section>
+            )}
+
+            {activeDetailTab === "factions" && (
+              <section
+                key="factions"
+                className="character-detail-panel character-detail-panel-flip character-factions"
+                role="tabpanel"
+                aria-label="Factions"
+              >
+                {factions.length === 0 ? (
+                  <p className="empty-note">No faction standings yet.</p>
+                ) : (
+                  <ul className="factions-list">
+                    {factions.map((f) => (
+                      <li key={f.id} className="faction-item">
+                        <div className="faction-header">
+                          <span className="faction-name">{f.name}</span>
+                          <span className={`faction-tier faction-tier-${factionTierClass(f.tier)}`}>{f.tier}</span>
+                        </div>
+                        <div className="faction-rep-row">
+                          <div className="meter-track faction-rep-track">
+                            <span
+                              className={`meter-fill faction-rep-fill faction-rep-fill-${factionTierClass(f.tier)}`}
+                              style={{ width: `${Math.min(100, Math.max(0, ((f.reputation + 1000) / 2000) * 100))}%` }}
+                            />
+                          </div>
+                          <span className="faction-rep-value">{f.reputation}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </section>
             )}

@@ -3336,6 +3336,98 @@ body {
   color: var(--text-primary);
 }
 
+/* ---------- Factions tab ---------- */
+
+.character-factions {
+  overflow-y: auto;
+}
+
+.factions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faction-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  background: rgb(50 60 88 / 40%);
+}
+
+.faction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.faction-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.faction-tier {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.faction-tier-positive {
+  color: var(--color-hp-light);
+}
+
+.faction-tier-neutral {
+  color: var(--color-xp-light);
+}
+
+.faction-tier-negative {
+  color: var(--color-error);
+}
+
+.faction-rep-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.faction-rep-track {
+  flex: 1;
+  height: 6px;
+}
+
+.faction-rep-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 300ms var(--ease-out-soft);
+}
+
+.faction-rep-fill-positive {
+  background: linear-gradient(90deg, var(--color-hp-light), var(--color-hp-dark));
+}
+
+.faction-rep-fill-neutral {
+  background: linear-gradient(90deg, var(--color-xp-light), var(--color-xp-dark));
+}
+
+.faction-rep-fill-negative {
+  background: linear-gradient(90deg, var(--color-error), var(--color-damage));
+}
+
+.faction-rep-value {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 36px;
+  text-align: right;
+}
+
 .quest-notifications {
   display: flex;
   flex-direction: column;

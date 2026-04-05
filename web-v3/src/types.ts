@@ -633,6 +633,13 @@ export interface TrainerAbility {
   image: string | null;
 }
 
+export interface FactionStanding {
+  id: string;
+  name: string;
+  reputation: number;
+  tier: string;
+}
+
 export interface TrainerData {
   trainerId: string;
   name: string;
