@@ -111,6 +111,7 @@ import type {
   DailyQuestEntry,
   AutoQuest,
   GlobalQuest,
+  LotteryInfo,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
@@ -271,6 +272,7 @@ function App() {
   const [worldEvents, setWorldEvents] = useState<WorldEvent[]>([]);
   const [petState, setPetState] = useState<PetState | null>(null);
   const [bankState, setBankState] = useState<BankState | null>(null);
+  const [lotteryInfo, setLotteryInfo] = useState<LotteryInfo | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -430,6 +432,7 @@ function App() {
     setAuctionListings([]);
     setPetState(null);
     setBankState(null);
+    setLotteryInfo(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
@@ -542,6 +545,7 @@ function App() {
           setPetState,
           setFactions,
           setBankState,
+          setLotteryInfo,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -1198,6 +1202,7 @@ function App() {
             worldTime={worldTime}
             worldWeather={worldWeather}
             worldEvents={worldEvents}
+            lotteryInfo={lotteryInfo}
             onDismissQuestNotification={(id) => {
               setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
             }}

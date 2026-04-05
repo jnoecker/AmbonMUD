@@ -3433,6 +3433,94 @@ body {
   padding: 4px 8px;
 }
 
+/* ---------- Lottery section in Score tab ---------- */
+
+.score-lottery {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: rgb(106 96 136 / 8%);
+  border: 1px solid rgb(106 96 136 / 12%);
+}
+
+.score-lottery-label {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.score-lottery-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.82rem;
+}
+
+.score-lottery-grid > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  border-bottom: 1px solid rgb(106 96 136 / 8%);
+}
+
+.score-lottery-grid dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.score-lottery-grid dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.score-lottery-jackpot {
+  color: var(--gold, #e8c547);
+  font-weight: 600;
+}
+
+.score-lottery-actions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.score-lottery-btn {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--border-subtle, rgb(106 96 136 / 20%));
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated, rgb(106 96 136 / 12%));
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.score-lottery-btn:hover {
+  background: rgb(106 96 136 / 20%);
+  border-color: rgb(106 96 136 / 30%);
+}
+
+.score-lottery-btn:active {
+  background: rgb(106 96 136 / 28%);
+}
+
+.score-lottery-btn-secondary {
+  background: transparent;
+}
+
+.score-lottery-btn-secondary:hover {
+  background: rgb(106 96 136 / 10%);
+}
+
 /* ---------- Factions tab ---------- */
 
 .character-factions {
