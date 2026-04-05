@@ -1,7 +1,7 @@
 # Requirements: AmbonMUD Mobile-First Redesign
 
 **Defined:** 2026-04-05
-**Core Value:** Mobile players must have a first-class gameplay experience — every game system accessible through tap interactions, no terminal required for anything except social communication.
+**Core Value:** Mobile players must have a first-class gameplay experience -- every game system accessible through tap interactions, no terminal required for anything except social communication.
 
 ## v1 Requirements
 
@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Layout & Responsive Design
 
-- [ ] **LAYOUT-01**: Portrait-first responsive layout (375px → 1440px+) as single component tree
+- [ ] **LAYOUT-01**: Portrait-first responsive layout (375px -> 1440px+) as single component tree
 - [ ] **LAYOUT-02**: Safe area inset handling for notches, Dynamic Island, punch-hole cameras
 - [ ] **LAYOUT-03**: Canvas viewport fills upper portion of mobile screen, adapts to all breakpoints
 - [ ] **LAYOUT-04**: All interactive elements meet 48x48dp minimum touch target size
@@ -71,7 +71,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **CHAT-01**: Messenger-style chat bubble interface (own=right, others=left, sender colors)
 - [ ] **CHAT-02**: Channel tabs (say/tell/gossip/guild/ooc) with unread indicators
-- [ ] **CHAT-03**: Expandable text input (single → multi-line)
+- [ ] **CHAT-03**: Expandable text input (single -> multi-line)
 - [ ] **CHAT-04**: Chat minimized mode (last 1-2 messages as overlay, tap to expand)
 - [ ] **CHAT-05**: Virtual keyboard avoidance (layout adjusts when soft keyboard opens)
 
@@ -99,7 +99,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### First-Time Experience
 
-- [ ] **FTUE-01**: Guided walkthrough for new mobile players (move, fight, open panels — 5-7 steps)
+- [ ] **FTUE-01**: Guided walkthrough for new mobile players (move, fight, open panels -- 5-7 steps)
 
 ## v2 Requirements
 
@@ -141,70 +141,70 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LAYOUT-01 | TBD | Pending |
-| LAYOUT-02 | TBD | Pending |
-| LAYOUT-03 | TBD | Pending |
-| LAYOUT-04 | TBD | Pending |
-| LAYOUT-05 | TBD | Pending |
-| LAYOUT-06 | TBD | Pending |
-| STATE-01 | TBD | Pending |
-| STATE-02 | TBD | Pending |
-| PANEL-01 | TBD | Pending |
-| PANEL-02 | TBD | Pending |
-| PANEL-03 | TBD | Pending |
-| PANEL-04 | TBD | Pending |
-| PANEL-05 | TBD | Pending |
-| PANEL-06 | TBD | Pending |
-| PANEL-07 | TBD | Pending |
-| PANEL-08 | TBD | Pending |
-| PANEL-09 | TBD | Pending |
-| PANEL-10 | TBD | Pending |
-| PANEL-11 | TBD | Pending |
-| PANEL-12 | TBD | Pending |
-| PANEL-13 | TBD | Pending |
-| PANEL-14 | TBD | Pending |
-| PANEL-15 | TBD | Pending |
-| PANEL-16 | TBD | Pending |
-| HUD-01 | TBD | Pending |
-| HUD-02 | TBD | Pending |
-| HUD-03 | TBD | Pending |
-| HUD-04 | TBD | Pending |
-| NAV-01 | TBD | Pending |
-| NAV-02 | TBD | Pending |
-| COMBAT-01 | TBD | Pending |
-| COMBAT-02 | TBD | Pending |
-| COMBAT-03 | TBD | Pending |
-| COMBAT-04 | TBD | Pending |
-| TOAST-01 | TBD | Pending |
-| TOAST-02 | TBD | Pending |
-| TOAST-03 | TBD | Pending |
-| TOAST-04 | TBD | Pending |
-| TOAST-05 | TBD | Pending |
-| CHAT-01 | TBD | Pending |
-| CHAT-02 | TBD | Pending |
-| CHAT-03 | TBD | Pending |
-| CHAT-04 | TBD | Pending |
-| CHAT-05 | TBD | Pending |
-| NPC-01 | TBD | Pending |
-| NPC-02 | TBD | Pending |
-| NPC-03 | TBD | Pending |
-| NPC-04 | TBD | Pending |
-| CANVAS-01 | TBD | Pending |
-| CANVAS-02 | TBD | Pending |
-| CANVAS-03 | TBD | Pending |
-| CANVAS-04 | TBD | Pending |
-| PWA-01 | TBD | Pending |
-| PWA-02 | TBD | Pending |
-| PWA-03 | TBD | Pending |
-| PWA-04 | TBD | Pending |
-| PWA-05 | TBD | Pending |
-| FTUE-01 | TBD | Pending |
+| STATE-01 | Phase 1 | Pending |
+| STATE-02 | Phase 1 | Pending |
+| LAYOUT-01 | Phase 2 | Pending |
+| LAYOUT-02 | Phase 2 | Pending |
+| LAYOUT-03 | Phase 2 | Pending |
+| LAYOUT-04 | Phase 9 | Pending |
+| LAYOUT-05 | Phase 9 | Pending |
+| LAYOUT-06 | Phase 9 | Pending |
+| PANEL-01 | Phase 3 | Pending |
+| PANEL-02 | Phase 3 | Pending |
+| PANEL-03 | Phase 3 | Pending |
+| PANEL-04 | Phase 8 | Pending |
+| PANEL-05 | Phase 8 | Pending |
+| PANEL-06 | Phase 8 | Pending |
+| PANEL-07 | Phase 8 | Pending |
+| PANEL-08 | Phase 8 | Pending |
+| PANEL-09 | Phase 8 | Pending |
+| PANEL-10 | Phase 8 | Pending |
+| PANEL-11 | Phase 8 | Pending |
+| PANEL-12 | Phase 8 | Pending |
+| PANEL-13 | Phase 8 | Pending |
+| PANEL-14 | Phase 8 | Pending |
+| PANEL-15 | Phase 8 | Pending |
+| PANEL-16 | Phase 8 | Pending |
+| HUD-01 | Phase 3 | Pending |
+| HUD-02 | Phase 4 | Pending |
+| HUD-03 | Phase 3 | Pending |
+| HUD-04 | Phase 4 | Pending |
+| NAV-01 | Phase 4 | Pending |
+| NAV-02 | Phase 4 | Pending |
+| COMBAT-01 | Phase 4 | Pending |
+| COMBAT-02 | Phase 4 | Pending |
+| COMBAT-03 | Phase 4 | Pending |
+| COMBAT-04 | Phase 4 | Pending |
+| TOAST-01 | Phase 5 | Pending |
+| TOAST-02 | Phase 5 | Pending |
+| TOAST-03 | Phase 5 | Pending |
+| TOAST-04 | Phase 5 | Pending |
+| TOAST-05 | Phase 5 | Pending |
+| CHAT-01 | Phase 6 | Pending |
+| CHAT-02 | Phase 6 | Pending |
+| CHAT-03 | Phase 6 | Pending |
+| CHAT-04 | Phase 6 | Pending |
+| CHAT-05 | Phase 6 | Pending |
+| NPC-01 | Phase 7 | Pending |
+| NPC-02 | Phase 7 | Pending |
+| NPC-03 | Phase 7 | Pending |
+| NPC-04 | Phase 7 | Pending |
+| CANVAS-01 | Phase 4 | Pending |
+| CANVAS-02 | Phase 2 | Pending |
+| CANVAS-03 | Phase 2 | Pending |
+| CANVAS-04 | Phase 5 | Pending |
+| PWA-01 | Phase 3 | Pending |
+| PWA-02 | Phase 3 | Pending |
+| PWA-03 | Phase 9 | Pending |
+| PWA-04 | Phase 9 | Pending |
+| PWA-05 | Phase 3 | Pending |
+| FTUE-01 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 52 total
-- Mapped to phases: 0
-- Unmapped: 52 ⚠️
+- v1 requirements: 58 total
+- Mapped to phases: 58
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after initial definition*
+*Last updated: 2026-04-05 after roadmap creation*

@@ -492,3 +492,352 @@ AmbonMUD's visual identity is **Surreal Gentle Magic** — cozy fantasy with gla
 - **Gradle daemon idle timeout:** Set to 10 minutes (`gradle.properties`) to reclaim stale daemons faster than the 3-hour default.
 - **Staff access:** Granted by editing `isStaff: true` in the player YAML file (or `is_staff` column in Postgres) — there is no in-game promotion command.
 - **Metrics package:** Uses `io.micrometer.prometheusmetrics` (not the deprecated `io.micrometer.prometheus`).
+
+<!-- GSD:project-start source:PROJECT.md -->
+## Project
+
+**AmbonMUD Mobile-First Redesign**
+
+A comprehensive UX overhaul of AmbonMUD's web client (React + PixiJS) to transform it from a terminal-with-panels layout into a tap-first visual RPG that works beautifully on both mobile and desktop. The existing GMCP infrastructure already delivers structured data for every game system — this project redesigns how players interact with that data, eliminating the terminal for gameplay and replacing it with tap-based interactions, toast notifications, bottom-sheet panels, and a messenger-style chat UI.
+
+**Core Value:** Mobile players must have a first-class gameplay experience — every game system accessible through tap interactions, no terminal required for anything except social communication.
+
+### Constraints
+
+- **Tech stack:** React + PixiJS + TypeScript + Bun — no framework migration
+- **Server boundary:** Client-only changes; no GMCP protocol modifications or server code changes
+- **Design system:** Must maintain "Surreal Gentle Magic" aesthetic and existing CSS variable system
+- **Accessibility:** WCAG AA contrast, `prefers-reduced-motion` support, screen reader compatibility
+- **Performance:** Canvas + React must run smoothly on mid-range mobile devices (target: 30fps minimum on 2-year-old phones)
+- **PWA:** Must be installable and provide app-like experience on iOS Safari and Android Chrome
+<!-- GSD:project-end -->
+
+<!-- GSD:stack-start source:codebase/STACK.md -->
+## Technology Stack
+
+## Languages
+- Kotlin 2.3.10 - Backend game engine, all server-side logic and systems
+- TypeScript 5.9.3 - Web client development
+- JavaScript - Web client runtime (React 19.2, PixiJS 8.16)
+- SQL - Database schema migrations (Flyway), PostgreSQL queries via Exposed ORM
+- YAML - World content definition, configuration loading, player persistence (optional)
+- Protocol Buffers (proto3) - gRPC service definitions for engine-gateway communication
+## Runtime
+- Java/JVM 21 (Temurin distribution in CI)
+- Kotlin targets JVM (jvmToolchain 21 in `build.gradle.kts`)
+- Gradle 8.x (wrapper) - Backend dependency and build management
+- Bun 1.x+ - Frontend package manager and task runner
+## Frameworks
+- Ktor 3.4.2 - WebSocket server, HTTP routing, async coroutine-based networking
+- kotlinx-coroutines 1.10.2 - Async I/O, tick-based event loop, multi-instance coordination
+- Custom tick-based event loop in `GameEngine.kt` - 100ms ticks by default
+- Event bus pattern with pluggable impls (Local, Redis, gRPC for multi-process modes)
+- React 19.2.0 - UI component framework
+- Vite 7.3.1 - Build tool and dev server
+- xterm.js 6.0 - Terminal emulator for text-based client overlay
+- PixiJS 8.16.0 - Canvas/WebGL 2D rendering for world viewport and effects
+- JUnit Jupiter (JUnit 5) 6.0.3 - Test runner
+- kotlinx-coroutines-test - Async test utilities (runTest, advanceTimeBy)
+- Ktor test-host - In-process HTTP/WebSocket testing
+- H2 Database 2.4.240 (PostgreSQL mode) - Fast in-memory testing, avoids Docker
+- protobuf-gradle-plugin 0.9.6 - Code generation from proto definitions
+- google-protobuf (protoc) 4.34.1 - Protocol Buffers compiler
+- gradle-shadow 9.4.1 - Fat JAR packaging for deployment
+- org.jlleitschuh.gradle.ktlint 14.2.0 - Kotlin linting (official style, custom .editorconfig)
+- Flyway 12.2.0 - Database schema versioning and migrations
+- Jacoco - Code coverage reporting
+## Key Dependencies
+- Jackson 2.21.1 (jackson-module-kotlin, jackson-dataformat-yaml) - YAML parsing for configs and world loading, JSON serialization for persistence
+- Hoplite 2.9.0 - YAML-driven configuration management with validation
+- Lettuce 7.5.0.RELEASE - Redis client for caching and pub/sub (optional, graceful fallback)
+- BCrypt (jbcrypt 0.4) - Password hashing and verification with CPU isolation
+- Exposed 0.58.0 - Kotlin SQL DSL and ORM (JDBC-based)
+- HikariCP 7.0.2 - JDBC connection pooling
+- PostgreSQL driver 42.7.10 - Production database support
+- Flyway 12.2.0 - Schema migrations (V1–V34 covering all features)
+- gRPC 1.80.0 - Bidirectional streaming RPC for engine-gateway communication
+- Micrometer Core 1.16.4 - Metrics facade
+- Micrometer Prometheus Registry 1.16.4 - Prometheus scrape endpoint (`/metrics` on port 9099)
+- Logback 1.5.32 - SLF4J implementation, console + ring buffer appenders
+- kotlin-logging 8.0.01 - Kotlin facade over SLF4J
+## Configuration
+- YAML-driven via Hoplite (`src/main/resources/application.yaml`)
+- Profile overlays: `application-{profile}.yaml` (engine1, engine2, gw1, gw2 for multi-instance)
+- System property override: `-Pconfig.ambonMUD.X.Y=value` (Gradle property → system property mapper)
+- Environment variable support for database credentials and Redis URI
+- `build.gradle.kts` - Single Gradle configuration file
+- Kotlin DSL with manual dependency version variables
+- Web client build target: `./gradlew buildWeb` → outputs to `src/main/resources/web-v3/` (git-ignored)
+- Multi-instance test profiles (engines on gRPC :9091/:9092, gateways on telnet :4000/:4001)
+## Platform Requirements
+- JDK 21 (any distribution, tested with Temurin)
+- Gradle wrapper (self-downloading, requires ~2GB heap)
+- Kotlin 2.3.10 (managed by Gradle)
+- Bun 1.x+ (for web client build; graceful skip if missing)
+- Optional: Docker + Docker Compose for Redis/Postgres/Prometheus/Grafana stack
+- Java 21 runtime (cloud-native: container via Dockerfile multi-stage build)
+- PostgreSQL 16+ (or any Postgres-compatible database)
+- Redis 7+ (optional, for caching and multi-instance pub/sub)
+- Prometheus 2.51+ (optional, for metrics scraping)
+- Grafana 10.4+ (optional, for visualization)
+- Docker image: Multi-stage (frontend build → backend JAR + static assets)
+- CI/CD: GitHub Actions with ARM64 native runner for ECR push (OIDC credential federation)
+- Container orchestration: Not required (single-process STANDALONE mode supported)
+- Horizontal scaling: gRPC-based ENGINE/GATEWAY sharding with Redis coordination
+<!-- GSD:stack-end -->
+
+<!-- GSD:conventions-start source:CONVENTIONS.md -->
+## Conventions
+
+## Naming Patterns
+- PascalCase for classes: `PlayerRegistry.kt`, `CombatSystem.kt`, `CommandParser.kt`
+- camelCase for function/variable files: `commandRouter.kt` (unlikely; most files are class-based)
+- Sealed interfaces and data classes grouped in same file: `Command.kt` contains sealed `Command` hierarchy with 30+ variants
+- Test files: `{ClassName}Test.kt` for unit tests, `{ClassName}IntegrationTest.kt` for integration tests
+- Fixtures/helpers: `{SystemName}TestFixture.kt`, `{Domain}Harness.kt`
+- camelCase for all functions: `startCombat()`, `handleKill()`, `drainAll()`
+- Private functions prefixed with `private suspend`: `private suspend fun handleMove()`
+- Suspend functions explicitly marked: `suspend fun startCombat()`
+- Extension functions declared at package level or as member extensions
+- Handler methods follow pattern: `handle{Command}` (e.g., `handleKill`, `handleFlee`, `handleCast`)
+- camelCase for all variables: `sessionId`, `playerTarget`, `mobRegistry`
+- Constants (module-level): UPPER_SNAKE_CASE: `AUTH_TOKEN_EXPIRY_DAYS`, `THREAT_CLEANUP_INTERVAL_MS`
+- Private mutable collections: `playerTarget`, `activeMobs`, `pvpTarget` (not prefixed with underscore)
+- Boolean properties: descriptive names starting with `is` or `has`: `isStaff`, `isInCombat()`, `hasPrompt()`
+- Sealed interface variants: PascalCase: `LoginResult.Ok`, `LoginResult.InvalidName`
+- Data class fields: camelCase matching property semantics: `nextTickAtMs`, `onMobRemoved`
+- Type aliases avoided; prefer explicit types: `SessionId`, `RoomId`, `MobId` (value classes in `domain.ids`)
+- Sealed interfaces for result types: `LoginResult`, `CreateResult`, `PhaseResult`
+- Configuration data classes: `{System}Config` (e.g., `CombatSystemConfig`)
+- Callback data classes: `{System}Callbacks` (e.g., `CombatSystemCallbacks`)
+- Test helpers: `Test{Domain}` or `{System}TestFixture`
+## Code Style
+- Tool: **ktlint 1.5.0** with `kotlin.code.style=official`
+- Editorconfig file: `.editorconfig` (4 rules disabled for flexibility)
+- `multiline-expression-wrapping` — no forced newline after `=` for multiline RHS; allow author judgment
+- `string-template-indent` — corollary of above; disabled together per ktlint #2288
+- `chain-method-continuation` — short 2-3 element chains can stay on fewer lines
+- `function-signature` — parameters don't have to be one-per-line for single-param functions
+- Trailing commas (REQUIRED): Every multiline parameter list, argument list, and collection literal must end with a trailing comma
+- No wildcard imports: Always `import foo.Bar` not `import foo.*`
+- Single space after control keywords: `if (condition)`, `for (item in list)`, `when (x)`
+- Single space around operators and colons; no space before commas
+- No blank lines at start/end of class or function bodies
+- No blank line before first declaration in a class
+- No hard max enforced; keep reasonable but don't force-wrap short expressions
+- Long function signatures may extend beyond 100 chars; use judgment
+- Closing `"""` on its own line, trimmed:
+## Linting & Formatting
+- Tool: ktlint 1.5.0
+- Config: `.editorconfig` in repo root
+- Run before every PR: `./gradlew ktlintCheck`
+- Auto-format: `./gradlew ktlintFormat`
+- Hook enforces `ktlintCheck` automatically (cannot commit if it fails)
+- Do not use `--no-verify` to skip hooks
+- `.github/workflows/ci.yml` runs `./gradlew ktlintCheck` on all PRs
+- Must pass before merge
+## Import Organization
+- No aliases are used in this codebase
+- All imports are fully qualified explicit imports
+- Test helper imports at top: `import dev.ambon.test.{Helper}`
+- Event bus imports: `import dev.ambon.bus.{Local|Redis|Grpc}*Bus`
+- System imports: `import dev.ambon.engine.{System}`
+- Command imports: `import dev.ambon.engine.commands.{CommandParser|CommandRouter}`
+## Error Handling
+- `require()` for contract violations (fail-fast for preconditions)
+- `check()` for state invariants
+- `error()` for unrecoverable failures (rarely used)
+- `OutboundEvent.SendError` — errors the player caused (wrong syntax, not enough mana, etc.)
+- `OutboundEvent.SendInfo` — informational messages (status, prompts, system messages)
+- `OutboundEvent.SendText` — regular narrative/room text
+## Logging
+- `log.debug { "message" }` — lazy evaluation (message only computed if debug enabled)
+- `log.info { "message" }` — informational
+- `log.warn { "message" }` — warnings
+- `log.error { "message" }` — errors (not recoverable, but not crash)
+## Comments
+- Explain the "why" not the "what" (code should be readable enough to explain the what)
+- Clarify non-obvious algorithm choices: `// Threat table persists across tick cycles to prevent target-switching`
+- Mark temporary workarounds: `// TODO: replace with native X when available` (none currently in codebase)
+- Document public API contracts (JSDoc-style below)
+- Used on public functions in API-facing modules (systems, registries, repositories)
+- Sparse in handler code (handler purpose is obvious from context)
+- Not required on private functions unless algorithm is non-obvious
+## Function Design
+- Handlers: 10-50 lines (dispatch logic, error checks, outbound sends)
+- System methods: 20-100 lines (complex game logic, state management)
+- Utility functions: 5-20 lines
+- Not enforced by linter; judgment call based on readability
+- Max 5 parameters before considering a config data class
+- Required parameters first, optional/default parameters last
+- Use named arguments for clarity: `startCombat(sessionId = sid, keyword = "rat")`
+- Prefer explicit types over inference when signature is public
+- Return sealed interfaces for operation results (not exceptions)
+- Return `String?` (null on success, error message on failure) for optional errors
+- Use callbacks for events that handlers and systems emit: `var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit`
+## Module Design
+- Each system (`CombatSystem`, `AbilitySystem`, etc.) is a class with public methods
+- No barrel exports (no `index.kt` files)
+- Handlers register themselves via `override fun register(router: CommandRouter)`
+- `sealed interface` for command types: `Command` hierarchy
+- `sealed interface` for results: `LoginResult`, `CreateResult`, `PhaseResult`
+- `sealed interface` for events: `InboundEvent`, `OutboundEvent`
+- Not used for config or domain models (open data classes)
+- Rarely used; prefer top-level functions or object singletons
+- `TestPasswordHasher : PasswordHasher` in test fixtures is an `object` not a companion
+## Data Classes
+- Used for domain models, config, and test data
+- Copy semantics preferred: `record.copy(field = newValue)`
+- Destructuring used in tests: `val (sessionId, event) = pair`
+- Equals/hashCode auto-generated (standard data class behavior)
+## Kotlin-Specific Patterns
+- All I/O is `suspend` (no blocking in engine thread)
+- Game engine runs on single-thread dispatcher `engineDispatcher`
+- Tests use `runTest` with `ExperimentalCoroutinesApi`
+- Mutable state is safe on single thread (no locks needed)
+- `let` for null-coalescing: `player?.let { handlePlayer(it) }`
+- `apply` for builder patterns (rare in this codebase)
+- `also` for side effects in chains (rare)
+<!-- GSD:conventions-end -->
+
+<!-- GSD:architecture-start source:ARCHITECTURE.md -->
+## Architecture
+
+## Pattern Overview
+- Single-threaded game engine on dedicated coroutine dispatcher
+- Transport-agnostic event bus (InboundBus/OutboundBus)
+- Sealed command hierarchy with registry-based routing
+- Three deployment modes (STANDALONE, ENGINE, GATEWAY) with identical game logic
+- Pluggable persistence chain: WriteCoalescingPlayerRepository → RedisCachingPlayerRepository → YamlPlayerRepository|PostgresPlayerRepository
+## Layers
+- Purpose: Accept raw client input (telnet/WebSocket) and serialize engine outbound events to network frames
+- Location: `src/main/kotlin/dev/ambon/transport/`
+- Contains: BlockingSocketTransport, KtorWebSocketTransport, NetworkSession, OutboundRouter
+- Depends on: InboundBus (to send Connected/Disconnected/LineReceived/GmcpReceived events), OutboundBus (to receive text/prompts/GMCP/control events)
+- Used by: Session handlers that accept inbound frames and emit OutboundFrames
+- Purpose: Decouple transports from engine; enable multi-process deployments via Redis or gRPC
+- Location: `src/main/kotlin/dev/ambon/bus/`
+- Contains: InboundBus interface (Local, Redis, gRPC impls), OutboundBus interface (Local, Redis, gRPC impls)
+- Depends on: InboundEvent, OutboundEvent sealed types; Clock (for event timestamps); Jackson/Protobuf for serialization
+- Used by: GameEngine (receives/sends events), Transports (sends inbound, receives outbound), Persistence (flushes on shutdown)
+- Purpose: Single-threaded tick-based game loop processing player commands, mob AI, combat, ability effects, world events
+- Location: `src/main/kotlin/dev/ambon/engine/`
+- Contains: GameEngine (87K lines, tick loop), PlayerRegistry, PlayerState, CombatSystem, AbilitySystem, StatusEffectSystem, MobSystem, BehaviorTreeSystem, CommandRouter, 30+ specialized systems
+- Depends on: InboundBus (to poll/receive events), OutboundBus (to send events), World (spatial/content model), Registries (items, mobs, abilities, quests, achievements, stats)
+- Used by: Entry point (MudServer/EngineServer/GatewayServer instantiate), PersistenceWorker (calls save/evict)
+- Purpose: Parse raw input text into a sealed Command hierarchy, route to handlers
+- Location: `src/main/kotlin/dev/ambon/engine/commands/`
+- Contains: CommandParser (47K, text→Command parsing), CommandRouter (dispatch registry), handlers/ subpackage with ~35 handler files (NavigationHandler, CombatHandler, CraftingHandler, etc.)
+- Depends on: PlayerRegistry, World, Registries, OutboundBus
+- Used by: InputEventHandler in GameEngine event dispatch
+- Purpose: Immutable domain types: Player progression, items, mobs, quests, achievements, world structure
+- Location: `src/main/kotlin/dev/ambon/domain/`
+- Contains: PlayerClass, Race, Stats, Room, Direction, World; sub-packages: ids/, items/, mob/, quest/, achievement/, world/, world/data/, world/load/
+- Depends on: Jackson (for YAML deserialize), validations
+- Used by: Every layer
+- Purpose: Translate between runtime state (PlayerState/PlayerRecord) and durable storage (YAML files or PostgreSQL)
+- Location: `src/main/kotlin/dev/ambon/persistence/`
+- Contains: PlayerRepository interface, PlayerRecord DTO, WriteCoalescingPlayerRepository (batches writes), RedisCachingPlayerRepository (optional layer), YamlPlayerRepository, PostgresPlayerRepository; GuildRepository/HouseRepository variants
+- Depends on: Database (Exposed ORM), Jackson (YAML), Lettuce (Redis optional)
+- Used by: MudServer wiring, PersistenceWorker (async flush)
+- Single JVM process: all transports + engine + persistence in-process
+- Wiring: `src/main/kotlin/dev/ambon/MudServer.kt` (21K, composition root)
+- InboundBus/OutboundBus: LocalInboundBus/LocalOutboundBus (in-process Channel-based)
+- No transports; exposes GameEngine via gRPC service (proto: `src/main/proto/ambonmud/v1/engine_service.proto`)
+- Wiring: `src/main/kotlin/dev/ambon/grpc/EngineServer.kt`
+- InboundBus/OutboundBus: GrpcInboundBus/GrpcOutboundBus (receive/send from gRPC streams)
+- Transports + gRPC client connections to remote engines; no local game logic
+- Wiring: `src/main/kotlin/dev/ambon/gateway/GatewayServer.kt` (23K)
+- InboundBus/OutboundBus: GrpcInboundBus/GrpcOutboundBus (forward to engines)
+- SessionRouter: remaps sessions on cross-zone handoffs (engine redirects)
+## Data Flow
+- **Runtime state:** PlayerState (in-memory), MobState, DungeonInstance (ephemeral)
+- **Persisted state:** PlayerRecord (via PlayerRepository), GuildRecord (via GuildRepository)
+- **World state:** WorldStateRegistry (world feature toggles: doors, containers, levers)
+- **Periodic flush:** PersistenceWorker calls `playerRepo.save(playerRecord)` every N seconds (coalesced)
+## Key Abstractions
+- Purpose: Represent all types of input from clients
+- Examples: `Connected(sessionId)`, `LineReceived(sessionId, line)`, `GmcpReceived(sessionId, gmcpPackage, jsonData)`
+- Pattern: Direct sum type; engine exhaustively matches on all variants
+- Purpose: Represent all types of output to clients
+- Examples: `SendText(sessionId, text)`, `SendPrompt(sessionId)`, `GmcpData(sessionId, gmcpPackage, jsonData)`, `Close(sessionId, reason)`
+- Pattern: Direct sum type; OutboundRouter exhaustively matches on all variants
+- Purpose: Represent all player commands after parsing
+- Examples: `Move(dir)`, `Say(message)`, `Kill(targetName)`, `Learn(abilityName)`
+- Pattern: Direct sum type; CommandRouter routes via registry lookup by `cmd::class`
+- Purpose: In-memory map of active SessionId → PlayerState
+- Pattern: get(sessionId), getByName(name), add/remove on login/logout
+- Lifecycle: Empty on startup, populated as players login, emptied as players logout
+- Purpose: Complete runtime player data (HP, mana, inventory, quests, etc.)
+- Pattern: Mutable data class; modified by systems during tick; flushed to PlayerRecord periodically
+- Lifecycle: Created on login (load from repository), modified in-tick, saved on logout
+- Purpose: Persistence DTO with all fields that survive logout
+- Pattern: Immutable data class; created/updated by repository layer
+- Contains: All PlayerState fields except runtime-only (lastActivityEpochMs, possessed MobId, etc.)
+- Purpose: Immutable spatial model (rooms, NPCs, items, spawns, quests, shops)
+- Pattern: Loaded once at startup from YAML, reference is shared read-only
+- Contains: Map<RoomId, Room>, mob/item spawns, quest/shop/trainer definitions
+- Purpose: Single location with exits, NPCs, features (doors, containers, levers)
+- Pattern: Immutable; accessed via World.rooms[roomId]
+- Contains: description, exits, mobIds, itemIds, features
+## Entry Points
+- Location: `src/main/kotlin/dev/ambon/MudServer.kt`
+- Triggers: `./gradlew run` or `Main.kt` with `config.mode == STANDALONE`
+- Responsibilities: Compose all layers (transports, engine, persistence), start/stop all jobs, bind to telnet/web ports
+- Location: `src/main/kotlin/dev/ambon/grpc/EngineServer.kt`
+- Triggers: `./gradlew runEngine1` or `Main.kt` with `config.mode == ENGINE`
+- Responsibilities: Start gRPC server (port 9091+), forward inbound/outbound to local GameEngine, handle session redirects
+- Location: `src/main/kotlin/dev/ambon/gateway/GatewayServer.kt`
+- Triggers: `./gradlew runGateway1` or `Main.kt` with `config.mode == GATEWAY`
+- Responsibilities: Start telnet/web transports, connect to engine(s) via gRPC, proxy InboundEvents and OutboundEvents
+- Location: `src/main/kotlin/dev/ambon/Main.kt`
+- Loads AppConfig, sets log levels, dispatches to one of the three server classes
+- Installs shutdown hook for graceful termination
+## Error Handling
+- Login errors: Send SendError OutboundEvent, keep session open for retry (max 3 wrong passwords)
+- Command errors: Send SendError (invalid command) or SendInfo (outcome), always send SendPrompt
+- Missing player/NPC: Silently skip (e.g., kill non-existent target, look at missing room feature)
+- Persistence errors: Log warning, continue (do not drop session)
+- Transport backpressure: Session queue fills; OutboundRouter applies backpressure; slow clients get disconnected after timeout
+- Channel closed: Transports and engine handle gracefully (no panic)
+## Cross-Cutting Concerns
+- Framework: Logback (ch.qos.logback)
+- Levels configurable per-package in `application.yaml`
+- Used for startup info, errors, debug traces, metrics (no game messages)
+- Player names: 2–16 chars, alphanumeric/underscore, no leading digit
+- Passwords: non-blank, max 72 chars (BCrypt limit)
+- Configured in LoginFlowHandler, validated before PlayerRecord creation
+- BCrypt hash on password (4 rounds)
+- Auth tokens: SHA-256 hash stored in player record, issued on login, used for fast re-login
+- Resume tokens: Session-only, used to reconnect if gateway fails
+- Enabled via telnet negotiation in NetworkSession
+- Engine emits structured JSON packages (Char.Name, Char.Stats, Char.Skills, Combat.State, etc.)
+- Client parses JSON and updates UI (handled by `web-v3/src/gmcp/applyGmcpPackage.ts`)
+- Sent via `GmcpData` OutboundEvent; routed through OutboundRouter unchanged
+<!-- GSD:architecture-end -->
+
+<!-- GSD:skills-start source:skills/ -->
+## Project Skills
+
+No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, or `.github/skills/` with a `SKILL.md` index file.
+<!-- GSD:skills-end -->
+
+<!-- GSD:workflow-start source:GSD defaults -->
+## GSD Workflow Enforcement
+
+Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+
+Use these entry points:
+- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
+- `/gsd-debug` for investigation and bug fixing
+- `/gsd-execute-phase` for planned phase work
+
+Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+<!-- GSD:workflow-end -->
+
+<!-- GSD:profile-start -->
+## Developer Profile
+
+> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
+> This section is managed by `generate-claude-profile` -- do not edit manually.
+<!-- GSD:profile-end -->
