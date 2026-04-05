@@ -106,6 +106,10 @@ import type {
   LeaderboardData,
   PetState,
   BankState,
+  DailyQuestBoard,
+  DailyQuestEntry,
+  AutoQuest,
+  GlobalQuest,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
@@ -222,6 +226,10 @@ function App() {
   const [charStats, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
   const [questsAvailable, setQuestsAvailable] = useState<QuestAvailable[]>([]);
+  const [dailyQuests, setDailyQuests] = useState<DailyQuestBoard | null>(null);
+  const [weeklyQuests, setWeeklyQuests] = useState<DailyQuestEntry[]>([]);
+  const [autoQuest, setAutoQuest] = useState<AutoQuest | null>(null);
+  const [globalQuest, setGlobalQuest] = useState<GlobalQuest | null>(null);
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
   const [roomFeatures, setRoomFeatures] = useState<RoomFeature[]>([]);
   const [containerContents, setContainerContents] = useState<ContainerContents | null>(null);
@@ -400,6 +408,10 @@ function App() {
     setCharStats(null);
     setQuests([]);
     setQuestsAvailable([]);
+    setDailyQuests(null);
+    setWeeklyQuests([]);
+    setAutoQuest(null);
+    setGlobalQuest(null);
     setMobInfo([]);
     setRoomFeatures([]);
     setContainerContents(null);
@@ -476,6 +488,10 @@ function App() {
           setCharStats,
           setQuests,
           setQuestsAvailable,
+          setDailyQuests,
+          setWeeklyQuests,
+          setAutoQuest,
+          setGlobalQuest,
           pushGainEvent,
           pushQuestNotification,
           setMobInfo,
@@ -1362,6 +1378,10 @@ function App() {
             quests={quests}
             questsAvailable={questsAvailable}
             questNotifications={questNotifications}
+            dailyQuests={dailyQuests}
+            weeklyQuests={weeklyQuests}
+            autoQuest={autoQuest}
+            globalQuest={globalQuest}
             onDismissQuestNotification={(id) => {
               setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
             }}
@@ -1373,6 +1393,7 @@ function App() {
               sendCommand(`accept ${questName}`, true);
               focusComposer();
             }}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
 

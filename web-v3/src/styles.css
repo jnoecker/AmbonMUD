@@ -4699,6 +4699,294 @@ body {
   pointer-events: none;
 }
 
+/* ── Load / Request button (daily, weekly, bounty, global empty states) ── */
+.quest-load-button {
+  display: inline-block;
+  margin-top: var(--space-2);
+  padding: 8px 20px;
+  border: 1px solid rgb(168 151 210 / 44%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(140deg, rgb(90 80 130 / 45%), rgb(80 100 140 / 35%));
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 180ms var(--ease-out-soft),
+    border-color 180ms var(--ease-out-soft),
+    box-shadow 180ms var(--ease-out-soft),
+    transform 160ms var(--ease-out-soft);
+}
+
+.quest-load-button:hover {
+  background: linear-gradient(140deg, rgb(110 95 155 / 55%), rgb(95 115 160 / 45%));
+  border-color: rgb(168 151 210 / 64%);
+  box-shadow: 0 0 14px rgb(168 151 210 / 28%);
+  transform: translateY(-1px);
+}
+
+.quest-load-button:active {
+  transform: scale(0.97);
+}
+
+/* ── Daily / Weekly timed quest board ── */
+.quest-timed-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quest-streak-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(140deg, rgb(180 160 80 / 18%), rgb(200 180 100 / 12%));
+  border: 1px solid rgb(200 180 100 / 25%);
+}
+
+.quest-streak-icon {
+  font-size: 0.82rem;
+  color: var(--color-primary-soft-gold);
+}
+
+.quest-streak-text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-primary-soft-gold);
+}
+
+.quest-timed-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0 var(--space-1);
+}
+
+.quest-timed-row {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgb(107 107 123 / 8%);
+  border: 1px solid rgb(107 107 123 / 12%);
+  transition: background 150ms var(--ease-out-soft);
+}
+
+.quest-timed-row:hover {
+  background: rgb(107 107 123 / 14%);
+}
+
+.quest-timed-row-done {
+  opacity: 0.65;
+}
+
+.quest-timed-row-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.quest-timed-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-white);
+  background: linear-gradient(140deg, rgb(168 151 210 / 80%), rgb(140 174 201 / 70%));
+}
+
+.quest-timed-description {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
+.quest-timed-track {
+  height: 4px;
+  margin: 4px 0;
+}
+
+.quest-timed-done-check {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-primary-moss-green);
+  margin: 4px 0;
+}
+
+.quest-timed-rewards {
+  display: flex;
+  gap: var(--space-2);
+  font-size: 0.72rem;
+  margin-top: 2px;
+}
+
+/* ── Bounty card ── */
+.quest-bounty-card {
+  padding: var(--space-3) var(--space-3);
+  margin: 0 var(--space-1);
+  border-radius: var(--radius-md);
+  background: rgb(107 107 123 / 8%);
+  border: 1px solid rgb(107 107 123 / 14%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.quest-bounty-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quest-bounty-icon {
+  font-size: 1rem;
+  color: var(--color-primary-lavender);
+}
+
+.quest-bounty-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.quest-bounty-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quest-bounty-details {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.76rem;
+}
+
+.quest-bounty-timer {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Global quest card ── */
+.quest-global-card {
+  padding: var(--space-3) var(--space-3);
+  margin: 0 var(--space-1);
+  border-radius: var(--radius-md);
+  background: rgb(107 107 123 / 8%);
+  border: 1px solid rgb(107 107 123 / 14%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.quest-global-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quest-global-icon {
+  font-size: 1rem;
+  color: var(--color-primary-pale-blue);
+}
+
+.quest-global-title {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.quest-global-complete-badge {
+  padding: 2px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-white);
+  background: linear-gradient(140deg, rgb(141 169 123 / 90%), rgb(110 148 90 / 85%));
+}
+
+.quest-global-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quest-global-timer {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.quest-global-leaderboard {
+  margin-top: var(--space-1);
+}
+
+.quest-global-leaderboard-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.quest-global-leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quest-global-leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 0.74rem;
+}
+
+.quest-global-leaderboard-row:nth-child(odd) {
+  background: rgb(107 107 123 / 6%);
+}
+
+.quest-global-lb-rank {
+  font-weight: 800;
+  color: var(--color-primary-soft-gold);
+  min-width: 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+.quest-global-lb-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.quest-global-lb-progress {
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .quest-empty-icon {
     animation: none;

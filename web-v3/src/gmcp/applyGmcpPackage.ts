@@ -74,6 +74,11 @@ import type {
   LeaderboardEntry,
   PetState,
   BankState,
+  DailyQuestBoard,
+  DailyQuestEntry,
+  AutoQuest,
+  GlobalQuest,
+  GlobalQuestLeaderboardEntry,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
@@ -109,6 +114,10 @@ interface GmcpContext {
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
   setQuestsAvailable: Dispatch<SetStateAction<QuestAvailable[]>>;
+  setDailyQuests: Dispatch<SetStateAction<DailyQuestBoard | null>>;
+  setWeeklyQuests: Dispatch<SetStateAction<DailyQuestEntry[]>>;
+  setAutoQuest: Dispatch<SetStateAction<AutoQuest | null>>;
+  setGlobalQuest: Dispatch<SetStateAction<GlobalQuest | null>>;
   pushGainEvent: (event: GainEvent) => void;
   pushQuestNotification: (notification: QuestNotification) => void;
   setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
@@ -989,16 +998,84 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Quest.Daily": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const rawQuests = Array.isArray(packet.quests) ? packet.quests : [];
+      const quests: DailyQuestEntry[] = rawQuests
+        .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+        .map((e) => ({
+          index: safeNumber(e.index),
+          type: typeof e.type === "string" ? e.type : "",
+          description: typeof e.description === "string" ? e.description : "",
+          current: safeNumber(e.current),
+          required: safeNumber(e.required),
+          completed: e.completed === true,
+          goldReward: safeNumber(e.goldReward),
+          xpReward: safeNumber(e.xpReward),
+        }));
+      ctx.setDailyQuests({
+        quests,
+        streakDays: safeNumber(packet.streakDays),
+      });
+      break;
+    }
+
+    case "Quest.Weekly": {
+      const rawQuests = Array.isArray(data) ? data : [];
+      const quests: DailyQuestEntry[] = rawQuests
+        .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+        .map((e) => ({
+          index: safeNumber(e.index),
+          type: typeof e.type === "string" ? e.type : "",
+          description: typeof e.description === "string" ? e.description : "",
+          current: safeNumber(e.current),
+          required: safeNumber(e.required),
+          completed: e.completed === true,
+          goldReward: safeNumber(e.goldReward),
+          xpReward: safeNumber(e.xpReward),
+        }));
+      ctx.setWeeklyQuests(quests);
+      break;
+    }
+
     case "Quest.Auto": {
-      // Auto-generated bounty quest state. Stored for future UI panel.
-      // For now, just acknowledge the packet so parity tests pass.
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setAutoQuest({
+        active: packet.active === true,
+        targetMobName: typeof packet.targetMobName === "string" ? packet.targetMobName : undefined,
+        killsRequired: typeof packet.killsRequired === "number" ? packet.killsRequired : undefined,
+        killsCompleted: typeof packet.killsCompleted === "number" ? packet.killsCompleted : undefined,
+        rewardGold: typeof packet.rewardGold === "number" ? packet.rewardGold : undefined,
+        rewardXp: typeof packet.rewardXp === "number" ? packet.rewardXp : undefined,
+        timeRemainingMs: typeof packet.timeRemainingMs === "number" ? packet.timeRemainingMs : undefined,
+      });
       break;
     }
 
     case "Quest.Global": {
-      // Global competitive quest status — data contains active, objective,
-      // targetCount, playerProgress, leaderboard, etc.
-      // Full UI panel for global quests to be implemented in a future PR.
+      const packet = data as Partial<Record<string, unknown>>;
+      if (packet.active === true) {
+        const rawLeaderboard = Array.isArray(packet.leaderboard) ? packet.leaderboard : [];
+        const leaderboard: GlobalQuestLeaderboardEntry[] = rawLeaderboard
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            rank: safeNumber(e.rank),
+            name: typeof e.name === "string" ? e.name : "",
+            progress: safeNumber(e.progress),
+          }));
+        ctx.setGlobalQuest({
+          active: true,
+          objective: typeof packet.objective === "string" ? packet.objective : undefined,
+          objectiveType: typeof packet.objectiveType === "string" ? packet.objectiveType : undefined,
+          targetCount: typeof packet.targetCount === "number" ? packet.targetCount : undefined,
+          playerProgress: typeof packet.playerProgress === "number" ? packet.playerProgress : undefined,
+          endsAtMs: typeof packet.endsAtMs === "number" ? packet.endsAtMs : undefined,
+          completed: packet.completed === true,
+          leaderboard,
+        });
+      } else {
+        ctx.setGlobalQuest({ active: false });
+      }
       break;
     }
 
