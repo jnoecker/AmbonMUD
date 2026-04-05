@@ -95,6 +95,8 @@ export function CharacterPanel({
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
   const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
   const [showSpriteSelector, setShowSpriteSelector] = useState(false);
+  const [showDescriptionEditor, setShowDescriptionEditor] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState("");
 
   const totalAchievements = achievements.completed.length + achievements.inProgress.length;
   const unlockedTitles = useMemo(
@@ -261,6 +263,51 @@ export function CharacterPanel({
                     <option value="enby">Enby</option>
                   </select>
                 </label>
+              </div>
+              <div className="description-editor-section">
+                <button
+                  type="button"
+                  className="description-editor-toggle"
+                  onClick={() => setShowDescriptionEditor((prev) => !prev)}
+                  aria-expanded={showDescriptionEditor}
+                >
+                  <span className="description-editor-toggle-label">Edit Description</span>
+                  <span className={`description-editor-toggle-chevron ${showDescriptionEditor ? "description-editor-toggle-chevron-open" : ""}`} aria-hidden="true">&rsaquo;</span>
+                </button>
+                {showDescriptionEditor && (
+                  <div className="description-editor-body">
+                    <textarea
+                      className="description-editor-textarea"
+                      maxLength={500}
+                      rows={4}
+                      placeholder="Describe your character's appearance..."
+                      value={descriptionDraft}
+                      onChange={(e) => setDescriptionDraft(e.target.value)}
+                    />
+                    <div className="description-editor-footer">
+                      <span className={`description-editor-counter ${descriptionDraft.length >= 450 ? "description-editor-counter-warn" : ""} ${descriptionDraft.length >= 500 ? "description-editor-counter-limit" : ""}`}>
+                        {descriptionDraft.length} / 500
+                      </span>
+                      <div className="description-editor-actions">
+                        <button
+                          type="button"
+                          className="description-editor-btn description-editor-clear-btn"
+                          onClick={() => { onCommand("describe clear"); setDescriptionDraft(""); }}
+                        >
+                          Clear
+                        </button>
+                        <button
+                          type="button"
+                          className="description-editor-btn description-editor-save-btn"
+                          disabled={descriptionDraft.trim().length === 0}
+                          onClick={() => { onCommand(`describe ${descriptionDraft.trim()}`); setShowDescriptionEditor(false); }}
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <dl className="stat-grid identity-stat-grid">
                 <div><dt>Level</dt><dd>{vitals.level ?? character.level ?? "-"}</dd></div>
