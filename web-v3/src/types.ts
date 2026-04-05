@@ -186,6 +186,8 @@ export interface RoomState {
   housingOwner?: string | null;
   /** Whether the current zone has custom graphical assets. */
   graphical?: boolean;
+  bank?: boolean;
+  tavern?: boolean;
 }
 
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */

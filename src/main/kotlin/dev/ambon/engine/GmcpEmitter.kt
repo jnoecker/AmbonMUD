@@ -165,6 +165,8 @@ class GmcpEmitter(
                 graphical = room.graphical,
                 pvpEnabled = pvpEnabled,
                 trainer = trainerName,
+                bank = room.bank,
+                tavern = room.tavern,
             ),
         )
     }
@@ -1884,6 +1886,8 @@ class GmcpEmitter(
         val graphical: Boolean = false,
         val pvpEnabled: Boolean = false,
         val trainer: String? = null,
+        val bank: Boolean = false,
+        val tavern: Boolean = false,
     )
 
     private data class ItemPayload(

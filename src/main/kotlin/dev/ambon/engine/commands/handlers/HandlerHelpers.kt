@@ -94,6 +94,22 @@ internal suspend fun requireSameRoom(
 internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry, questSystem, trainerRegistry)
     emitShopGmcp(sessionId)
+    emitBankGmcp(sessionId)
+}
+
+/** Emits `Char.Bank` if the player is in a bank room, so the bank panel has data on room entry. */
+internal suspend fun EngineContext.emitBankGmcp(sessionId: SessionId) {
+    val emitter = gmcpEmitter ?: return
+    val me = players.get(sessionId) ?: return
+    val room = world.rooms[me.roomId] ?: return
+    if (room.bank) {
+        emitter.sendBankState(
+            sessionId,
+            gold = me.bankGold,
+            items = me.bankItems,
+            maxItems = bankConfig.maxItems,
+        )
+    }
 }
 
 /** Emits `Shop.List` if the player is in a shop room, otherwise emits `Shop.Close`. */

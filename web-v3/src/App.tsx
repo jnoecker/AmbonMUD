@@ -559,7 +559,12 @@ function App() {
           setWorldEvents,
           setPetState,
           setFactions,
-          setBankState,
+          setBankState: (value) => {
+            setBankState(value);
+            if (value) {
+              setActivePopout("bank");
+            }
+          },
           setLotteryInfo,
           setGuildHall,
           setDuelState,

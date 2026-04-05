@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.BankConfig
 import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
@@ -51,4 +52,5 @@ data class EngineContext(
     val leaderboardSystem: LeaderboardSystem? = null,
     val trainerRegistry: TrainerRegistry? = null,
     val puzzleSystem: PuzzleSystem? = null,
+    val bankConfig: BankConfig = BankConfig(),
 )

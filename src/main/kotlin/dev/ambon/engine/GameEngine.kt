@@ -1053,6 +1053,7 @@ class GameEngine(
             leaderboardSystem = leaderboardSystem,
             trainerRegistry = trainerRegistry,
             puzzleSystem = puzzleSystem,
+            bankConfig = engineConfig.bank,
         )
 
         communicationHandler = CommunicationHandler(
