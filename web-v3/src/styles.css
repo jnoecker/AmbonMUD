@@ -3336,6 +3336,48 @@ body {
   color: var(--text-primary);
 }
 
+/* ---------- Currencies section in Score tab ---------- */
+
+.score-currencies {
+  margin-top: var(--space-2);
+}
+
+.score-currencies-label {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.score-currencies-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 8px;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.score-currencies-grid > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  border-bottom: 1px solid rgb(106 96 136 / 8%);
+}
+
+.score-currencies-grid dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.score-currencies-grid dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 .quest-notifications {
   display: flex;
   flex-direction: column;

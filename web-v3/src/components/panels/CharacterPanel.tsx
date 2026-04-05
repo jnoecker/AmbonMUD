@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
+import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, GroupInfo, GuildInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score";
@@ -27,6 +27,7 @@ interface CharacterPanelProps {
   groupInfo: GroupInfo;
   activeTitle: string | null;
   spriteList: SpriteList;
+  currencies: CurrencyBalance[];
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -58,6 +59,7 @@ export function CharacterPanel({
   groupInfo,
   activeTitle,
   spriteList,
+  currencies,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -633,6 +635,19 @@ export function CharacterPanel({
                         </div>
                       )}
                     </div>
+                    {currencies.length > 0 && (
+                      <div className="score-currencies">
+                        <p className="score-currencies-label">Currencies</p>
+                        <dl className="score-currencies-grid">
+                          {currencies.map((c) => (
+                            <div key={c.id}>
+                              <dt title={c.abbreviation}>{c.name}</dt>
+                              <dd>{c.balance.toLocaleString()}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    )}
                   </div>
                 )}
               </section>

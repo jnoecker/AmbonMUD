@@ -57,6 +57,7 @@ import type {
   SpriteList,
   StatusEffect,
   StatusVarLabels,
+  CurrencyBalance,
   TradeState,
   TrainerAbility,
   TrainerData,
@@ -138,6 +139,7 @@ interface GmcpContext {
   setTradeState: Dispatch<SetStateAction<TradeState | null>>;
   setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
+  setCurrencies: Dispatch<SetStateAction<CurrencyBalance[]>>;
   setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
   setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
 }
@@ -1381,6 +1383,22 @@ export function applyGmcpPackage(
 
     case "Char.Factions": {
       // Faction standings received via GMCP — stored for future panel.
+      break;
+    }
+
+    case "Char.Currencies": {
+      ctx.setCurrencies(
+        Array.isArray(data)
+          ? data
+            .filter((c): c is Record<string, unknown> => typeof c === "object" && c !== null)
+            .map((c) => ({
+              id: typeof c.id === "string" ? c.id : "",
+              name: typeof c.name === "string" ? c.name : "",
+              abbreviation: typeof c.abbreviation === "string" ? c.abbreviation : "",
+              balance: safeNumber(c.balance),
+            }))
+          : [],
+      );
       break;
     }
 

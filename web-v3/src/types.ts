@@ -2,6 +2,13 @@ export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | 
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
+export interface CurrencyBalance {
+  id: string;
+  name: string;
+  abbreviation: string;
+  balance: number;
+}
+
 export interface AuctionListing {
   id: number;
   itemName: string;
