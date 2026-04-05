@@ -4288,7 +4288,7 @@ ambonmud:
           maxDamage: 6
           armor: 0
           description: A keen-eyed hawk that fights alongside the ranger with swift talons.
-          image: demo/DefaultMob.png
+          image: 270f23c50d499e30e7b7ab6f2cb6c711ba99fa58776249766625f51d6fa26f18.png
         spectral_wisp:
           name: a spectral wisp
           hp: 15
@@ -4297,7 +4297,7 @@ ambonmud:
           armor: 0
           description: A glowing mote of ghost-light that orbits you protectively. It was
             once something more.
-          image: demo/DefaultMob.png
+          image: 97136689108bd346f8b303eefc96b98e89f5f6bb7a453624353661ccd3e8a64a.png
     skillPoints:
       interval: 2
     multiclass:
@@ -4714,10 +4714,6 @@ ambonmud:
       - 5
       - 1
     globalAssets:
-      compass_rose: e201e29796fd12881e521ea892c6d97e56d362d6bd443cdd5b494029314814d4.png
-      direction_marker: 829a44129781d086ef03b8c317ec1db699add28e68cc83363b47ee760d73d58a.png
-      stairs_up: fdf08dd03ad1beef0e0a083430254f390ae90320210f4b340045e0f9e0ec63b0.png
-      stairs_down: e0871cab0b4cf27d28542d443790a3868d728d3bba94cc753bea5daca40fe921.png
       video_available_indicator: 9679b3d4f5e7f4acf9f10a0b1f2bd9760a363eed58bd73e200b9a3ae74f34ee4.png
       shop_kiosk: 6f2404b50d546821d3acc69316668647c708032b832e3d273f5e7c2fc1cbe445.png
       dialog_indicator: cb42c6d4daaddd09aa1c91adcc98d4cf6b7d9cd5a5b0f6d7a9e90a4285c669ed.png

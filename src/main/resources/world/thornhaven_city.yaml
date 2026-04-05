@@ -212,7 +212,8 @@ mobs:
     goldMax: 0
     dialogue:
       root:
-        text: Step right up! Auringold's premier auction house. List your wares, browse the offerings — everything's on the table!
+        text: Step right up! Auringold's premier auction house. List your wares, browse the offerings — everything's on the
+          table!
         choices:
           - text: How do I use the auction house?
             next: explain_auction
@@ -658,8 +659,8 @@ mobs:
           - text: Back to the main topics.
             next: root
       about_combat:
-        text: "Combat in Auringold is real-time and tick-based. The world heartbeat pulses every hundred milliseconds — ten times
-          per second. When you engage a foe, damage is calculated each round using your attributes, equipment, and
+        text: "Combat in Auringold is real-time and tick-based. The world heartbeat pulses every hundred milliseconds — ten
+          times per second. When you engage a foe, damage is calculated each round using your attributes, equipment, and
           abilities. There's a dodge mechanic based on your stats, armor reduces incoming damage, and a threat system
           determines who the mob attacks in a group. Status effects layer on top: damage over time, healing over time,
           stuns, roots, shields, stat buffs and debuffs. Each effect ticks independently."
@@ -707,10 +708,11 @@ mobs:
           - text: Back to the main topics.
             next: root
       about_classes:
-        text: "There are five classes in Auringold: Warrior, Mage, Cleric, Rogue, and Ranger. Each has its own ability tree — over
-          a hundred abilities total across all classes. Warriors wield steel and fury. Mages command arcane destruction.
-          Clerics channel divine healing and protection. Rogues strike from shadows with precision. Rangers blend nature
-          magic with ranged combat. You choose your class at character creation, but the path doesn't end there."
+        text: "There are five classes in Auringold: Warrior, Mage, Cleric, Rogue, and Ranger. Each has its own ability tree —
+          over a hundred abilities total across all classes. Warriors wield steel and fury. Mages command arcane
+          destruction. Clerics channel divine healing and protection. Rogues strike from shadows with precision. Rangers
+          blend nature magic with ranged combat. You choose your class at character creation, but the path doesn't end
+          there."
         choices:
           - text: How do I learn abilities?
             next: about_training
@@ -785,8 +787,8 @@ mobs:
           - text: Back to the main topics.
             next: root
       about_economy:
-        text: "Gold flows through Auringold in many ways. Mobs drop it. Quests reward it. You spend it in shops, at trainers, and
-          on guild creation. The bank stores it safely — Banker Theron holds your deposits. The auction house lets
+        text: "Gold flows through Auringold in many ways. Mobs drop it. Quests reward it. You spend it in shops, at trainers,
+          and on guild creation. The bank stores it safely — Banker Theron holds your deposits. The auction house lets
           players trade items for gold on the open market. Direct player-to-player trading is supported too, with a
           confirmation flow so nobody gets cheated. And there's crafting: gather materials, combine them at stations,
           and sell the results. Enchanting adds magical properties to items for additional value. The whole economy is
@@ -1453,3 +1455,5 @@ rooms:
       d: thornhaven_sewers:sewer_entrance
     image: c01240e20f3550b21dd00979e453dbc54890512f5fb55502c2e0e935242e6450.jpg
 graphical: true
+audio:
+  music: b0ca0dc1f5419b30cae03cd11072652e8bc7ac0b504031a3565f8d0229180576.mp3

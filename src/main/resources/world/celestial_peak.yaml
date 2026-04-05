@@ -282,9 +282,9 @@ rooms:
   elder_shrine:
     title: Elder Shrine
     description: "A devotional space carved by the old order at the mountain's heart. The shrine is simple — a stone altar
-      bearing the geometric star-pattern found on every seal and ward in Auringold. The inscription reads: 'We who watch.
-      We who ward. We who will not be forgotten.' The words glow faintly. The approach is south; the celestial bridge
-      lies north."
+      bearing the geometric star-pattern found on every seal and ward in Auringold. The inscription reads: 'We who
+      watch. We who ward. We who will not be forgotten.' The words glow faintly. The approach is south; the celestial
+      bridge lies north."
     exits:
       s: celestial_approach
       n: celestial_bridge
@@ -359,11 +359,13 @@ rooms:
   celestial_apex:
     title: Celestial Apex
     description: "Beyond the throne, a small chamber opens at the absolute summit of the peak. The dome is open here — true
-      sky above, wind and stars and the vast sweep of Auringold below. A final inscription is carved into the floor: 'The
-      ward is broken. The reckoning begins. What sleeps beneath will wake. May those who come after us be stronger than
-      we were.' The view from the apex encompasses the entire world of Auringold — every zone, every road, every forest
-      and sea visible from this single, extraordinary vantage point. The throne room is back to the south."
+      sky above, wind and stars and the vast sweep of Auringold below. A final inscription is carved into the floor:
+      'The ward is broken. The reckoning begins. What sleeps beneath will wake. May those who come after us be stronger
+      than we were.' The view from the apex encompasses the entire world of Auringold — every zone, every road, every
+      forest and sea visible from this single, extraordinary vantage point. The throne room is back to the south."
     exits:
       s: celestial_throne
     image: 6d5b23b4a90846247f88a170669aa5f4b0ec032ac3a76d2153ca0b6b2ceb4e62.jpg
 graphical: true
+audio:
+  music: d02c4cbac8ee4d55e1edfb5f9b769b6944cb4ee8f37f50e66d9847bc9d176d5e.mp3
