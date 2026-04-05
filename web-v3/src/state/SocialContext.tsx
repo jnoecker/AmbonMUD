@@ -52,6 +52,8 @@ export type SocialAction =
   | { type: "SET_GUILD_MEMBERS"; payload: GuildMemberEntry[] }
   | { type: "SET_GUILD_HALL"; payload: GuildHallInfo | null }
   | { type: "SET_FRIENDS"; payload: FriendEntry[] }
+  | { type: "UPDATE_FRIEND_ONLINE"; payload: { name: string; level: number | null } }
+  | { type: "UPDATE_FRIEND_OFFLINE"; payload: string }
   | { type: "SET_WHO_PLAYERS"; payload: WhoPlayer[] }
   | { type: "SET_LOTTERY_INFO"; payload: LotteryInfo | null }
   | { type: "RESET" };
@@ -98,6 +100,16 @@ function socialReducer(state: SocialState, action: SocialAction): SocialState {
       return { ...state, guildHall: action.payload };
     case "SET_FRIENDS":
       return { ...state, friends: action.payload };
+    case "UPDATE_FRIEND_ONLINE": {
+      const { name, level } = action.payload;
+      const existing = state.friends.find((f) => f.name === name);
+      if (existing) {
+        return { ...state, friends: state.friends.map((f) => f.name === name ? { ...f, online: true, level } : f) };
+      }
+      return { ...state, friends: [...state.friends, { name, online: true, level, zone: null }] };
+    }
+    case "UPDATE_FRIEND_OFFLINE":
+      return { ...state, friends: state.friends.map((f) => f.name === action.payload ? { ...f, online: false, zone: null } : f) };
     case "SET_WHO_PLAYERS":
       return { ...state, whoPlayers: action.payload };
     case "SET_LOTTERY_INFO":

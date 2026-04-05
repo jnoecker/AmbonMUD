@@ -73,7 +73,9 @@ function worldReducer(state: WorldState, action: WorldAction): WorldState {
     case "SET_PLAYERS":
       return { ...state, players: action.payload };
     case "ADD_PLAYER":
-      return { ...state, players: [...state.players, action.payload] };
+      return state.players.some((p) => p.name === action.payload.name)
+        ? state
+        : { ...state, players: [...state.players, action.payload] };
     case "REMOVE_PLAYER":
       return { ...state, players: state.players.filter((p) => p.name !== action.payload) };
     case "SET_MOBS":
@@ -81,7 +83,7 @@ function worldReducer(state: WorldState, action: WorldAction): WorldState {
     case "ADD_MOB":
       return { ...state, mobs: [...state.mobs, action.payload] };
     case "UPDATE_MOB":
-      return { ...state, mobs: state.mobs.map((m) => (m.id === action.payload.id ? action.payload : m)) };
+      return { ...state, mobs: state.mobs.map((m) => (m.id === action.payload.id ? { ...m, ...action.payload } : m)) };
     case "REMOVE_MOB":
       return { ...state, mobs: state.mobs.filter((m) => m.id !== action.payload) };
     case "SET_ROOM_ITEMS":

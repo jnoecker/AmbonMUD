@@ -45,6 +45,7 @@ export interface UIState {
 
 export type UIAction =
   | { type: "SET_ACTIVE_POPOUT"; payload: PopoutPanel }
+  | { type: "CLOSE_POPOUT_IF"; payload: PopoutPanel }
   | { type: "SET_SHOW_ADMIN_PANEL"; payload: boolean }
   | { type: "SET_SHOW_COMMAND_PALETTE"; payload: boolean }
   | { type: "SET_TERMINAL_VISIBLE"; payload: boolean }
@@ -69,6 +70,7 @@ export type UIAction =
   | { type: "SET_TRAINER"; payload: TrainerData | null }
   | { type: "SET_HOUSING"; payload: HousingInfo | null }
   | { type: "SET_LEADERBOARD"; payload: Record<string, LeaderboardData> }
+  | { type: "MERGE_LEADERBOARD"; payload: { category: string; data: LeaderboardData } }
   | { type: "SET_FACTIONS"; payload: FactionStanding[] }
   | { type: "RESET" };
 
@@ -111,6 +113,8 @@ function uiReducer(state: UIState, action: UIAction): UIState {
   switch (action.type) {
     case "SET_ACTIVE_POPOUT":
       return { ...state, activePopout: action.payload };
+    case "CLOSE_POPOUT_IF":
+      return state.activePopout === action.payload ? { ...state, activePopout: null } : state;
     case "SET_SHOW_ADMIN_PANEL":
       return { ...state, showAdminPanel: action.payload };
     case "SET_SHOW_COMMAND_PALETTE":
@@ -159,6 +163,8 @@ function uiReducer(state: UIState, action: UIAction): UIState {
       return { ...state, housing: action.payload };
     case "SET_LEADERBOARD":
       return { ...state, leaderboard: action.payload };
+    case "MERGE_LEADERBOARD":
+      return { ...state, leaderboard: { ...state.leaderboard, [action.payload.category]: action.payload.data } };
     case "SET_FACTIONS":
       return { ...state, factions: action.payload };
     case "RESET":

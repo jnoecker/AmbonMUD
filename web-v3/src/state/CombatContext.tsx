@@ -24,8 +24,11 @@ export interface CombatState {
 
 export type CombatAction =
   | { type: "SET_COMBAT_TARGET"; payload: CombatTarget | null }
+  | { type: "UPDATE_COMBAT_TARGET_HP"; payload: { targetId: string; hp: number; maxHp: number } }
+  | { type: "CLEAR_COMBAT_TARGET_IF"; payload: string }
   | { type: "SET_EFFECTS"; payload: StatusEffect[] }
   | { type: "SET_SKILLS"; payload: SkillSummary[] }
+  | { type: "UPDATE_SKILL_COOLDOWN"; payload: { abilityId: string; cooldownMs: number; receivedAt: number } }
   | { type: "SET_COMBAT_LOG_MESSAGES"; payload: CombatLogMessage[] }
   | { type: "PUSH_COMBAT_LOG_MESSAGE"; payload: CombatLogMessage }
   | { type: "SET_DUEL_STATE"; payload: DuelState | null }
@@ -47,10 +50,22 @@ function combatReducer(state: CombatState, action: CombatAction): CombatState {
   switch (action.type) {
     case "SET_COMBAT_TARGET":
       return { ...state, combatTarget: action.payload };
+    case "UPDATE_COMBAT_TARGET_HP":
+      return state.combatTarget && state.combatTarget.targetId === action.payload.targetId
+        ? { ...state, combatTarget: { ...state.combatTarget, targetHp: action.payload.hp, targetMaxHp: action.payload.maxHp } }
+        : state;
+    case "CLEAR_COMBAT_TARGET_IF":
+      return state.combatTarget && state.combatTarget.targetId === action.payload
+        ? { ...state, combatTarget: null }
+        : state;
     case "SET_EFFECTS":
       return { ...state, effects: action.payload };
     case "SET_SKILLS":
       return { ...state, skills: action.payload };
+    case "UPDATE_SKILL_COOLDOWN": {
+      const { abilityId, cooldownMs, receivedAt } = action.payload;
+      return { ...state, skills: state.skills.map((s) => s.id === abilityId ? { ...s, cooldownRemainingMs: cooldownMs, receivedAt } : s) };
+    }
     case "SET_COMBAT_LOG_MESSAGES":
       return { ...state, combatLogMessages: action.payload };
     case "PUSH_COMBAT_LOG_MESSAGE": {

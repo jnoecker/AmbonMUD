@@ -29,6 +29,8 @@ export interface InventoryState {
 
 export type InventoryAction =
   | { type: "SET_INVENTORY"; payload: ItemSummary[] }
+  | { type: "ADD_INVENTORY_ITEM"; payload: ItemSummary }
+  | { type: "REMOVE_INVENTORY_ITEM"; payload: string }
   | { type: "SET_EQUIPMENT"; payload: Record<string, ItemSummary> }
   | { type: "SET_EQUIPMENT_SLOT_DEFS"; payload: EquipmentSlotDef[] }
   | { type: "SET_SHOP"; payload: ShopState | null }
@@ -59,6 +61,10 @@ function inventoryReducer(state: InventoryState, action: InventoryAction): Inven
   switch (action.type) {
     case "SET_INVENTORY":
       return { ...state, inventory: action.payload };
+    case "ADD_INVENTORY_ITEM":
+      return { ...state, inventory: [...state.inventory, action.payload] };
+    case "REMOVE_INVENTORY_ITEM":
+      return { ...state, inventory: state.inventory.filter((item) => item.id !== action.payload) };
     case "SET_EQUIPMENT":
       return { ...state, equipment: action.payload };
     case "SET_EQUIPMENT_SLOT_DEFS":
