@@ -2,6 +2,24 @@ export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | 
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
+export interface WorldTime {
+  period: string;
+  hour: number;
+  minute: number;
+}
+
+export interface WorldWeather {
+  zone: string;
+  weather: string;
+  description: string;
+}
+
+export interface WorldEvent {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export interface AuctionListing {
   id: number;
   itemName: string;

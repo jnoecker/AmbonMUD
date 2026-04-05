@@ -96,6 +96,9 @@ import type {
   UiFeedback,
   Vitals,
   WhoPlayer,
+  WorldEvent,
+  WorldTime,
+  WorldWeather,
   ZoneInstances,
   LeaderboardData,
 } from "./types";
@@ -248,6 +251,9 @@ function App() {
   const [trainer, setTrainer] = useState<TrainerData | null>(null);
   const [unlockedClasses, setUnlockedClasses] = useState<string[]>([]);
   void unlockedClasses; // stored for future character sheet multi-class display
+  const [worldTime, setWorldTime] = useState<WorldTime | null>(null);
+  const [worldWeather, setWorldWeather] = useState<WorldWeather | null>(null);
+  const [worldEvents, setWorldEvents] = useState<WorldEvent[]>([]);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -502,6 +508,9 @@ function App() {
             }
           },
           setUnlockedClasses,
+          setWorldTime,
+          setWorldWeather,
+          setWorldEvents,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -1148,6 +1157,9 @@ function App() {
             groupInfo={groupInfo}
             activeTitle={whoPlayers.find((p) => p.name === character.name)?.title ?? null}
             spriteList={spriteList}
+            worldTime={worldTime}
+            worldWeather={worldWeather}
+            worldEvents={worldEvents}
             onDismissQuestNotification={(id) => {
               setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
             }}

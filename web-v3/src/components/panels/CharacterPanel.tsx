@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
+import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score";
@@ -27,6 +27,9 @@ interface CharacterPanelProps {
   groupInfo: GroupInfo;
   activeTitle: string | null;
   spriteList: SpriteList;
+  worldTime: WorldTime | null;
+  worldWeather: WorldWeather | null;
+  worldEvents: WorldEvent[];
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -58,6 +61,9 @@ export function CharacterPanel({
   groupInfo,
   activeTitle,
   spriteList,
+  worldTime,
+  worldWeather,
+  worldEvents,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -640,6 +646,31 @@ export function CharacterPanel({
           </div>
         </article>
 
+        {hasCharacterProfile && (worldTime || worldWeather || worldEvents.length > 0) && (
+          <article className="subpanel world-atmosphere-subpanel">
+            <p className="world-atmosphere-heading">World</p>
+            {worldTime && (
+              <div className="world-atmosphere-row">
+                <span className="world-atmosphere-icon" aria-hidden="true">{periodIcon(worldTime.period)}</span>
+                <span className="world-atmosphere-label">{periodLabel(worldTime.period)}</span>
+                <span className="world-atmosphere-value">{String(worldTime.hour).padStart(2, "0")}:{String(worldTime.minute).padStart(2, "0")}</span>
+              </div>
+            )}
+            {worldWeather && worldWeather.weather !== "CLEAR" && (
+              <div className="world-atmosphere-row" title={worldWeather.description}>
+                <span className="world-atmosphere-icon" aria-hidden="true">{weatherIcon(worldWeather.weather)}</span>
+                <span className="world-atmosphere-label">{weatherLabel(worldWeather.weather)}</span>
+              </div>
+            )}
+            {worldEvents.length > 0 && worldEvents.map((evt) => (
+              <div key={evt.id} className="world-atmosphere-row world-atmosphere-event" title={evt.description}>
+                <span className="world-atmosphere-icon world-atmosphere-event-icon" aria-hidden="true">&#x2726;</span>
+                <span className="world-atmosphere-label">{evt.name}</span>
+              </div>
+            ))}
+          </article>
+        )}
+
         {hasCharacterProfile && (
           <div className="character-logout-row">
             <button type="button" className="soft-button character-logout-btn" onClick={onLogout}>
@@ -650,4 +681,47 @@ export function CharacterPanel({
       </div>
     </section>
   );
+}
+
+function periodIcon(period: string): string {
+  switch (period) {
+    case "DAWN": return "\u263C";
+    case "DAY": return "\u2600";
+    case "DUSK": return "\u263D";
+    case "NIGHT": return "\u263E";
+    default: return "\u2600";
+  }
+}
+
+function periodLabel(period: string): string {
+  switch (period) {
+    case "DAWN": return "Dawn";
+    case "DAY": return "Day";
+    case "DUSK": return "Dusk";
+    case "NIGHT": return "Night";
+    default: return period;
+  }
+}
+
+function weatherIcon(weather: string): string {
+  switch (weather) {
+    case "RAIN": return "\u2602";
+    case "STORM": return "\u26A1";
+    case "FOG": return "\u2601";
+    case "SNOW": return "\u2744";
+    case "WIND": return "\u2634";
+    default: return "";
+  }
+}
+
+function weatherLabel(weather: string): string {
+  switch (weather) {
+    case "CLEAR": return "Clear";
+    case "RAIN": return "Rain";
+    case "STORM": return "Storm";
+    case "FOG": return "Fog";
+    case "SNOW": return "Snow";
+    case "WIND": return "Wind";
+    default: return weather;
+  }
 }

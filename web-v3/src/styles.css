@@ -8875,6 +8875,61 @@ body {
   background: rgb(168 151 210 / 6%);
 }
 
+/* ---------- World atmosphere (character panel) ---------- */
+.world-atmosphere-subpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.world-atmosphere-heading {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 2px;
+}
+
+.world-atmosphere-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.world-atmosphere-icon {
+  flex-shrink: 0;
+  width: 1.1em;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.world-atmosphere-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.world-atmosphere-value {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.world-atmosphere-event {
+  color: var(--color-primary-lavender);
+}
+
+.world-atmosphere-event-icon {
+  color: var(--color-primary-lavender);
+}
+
 /* ---------- Character panel logout ---------- */
 .character-logout-row {
   display: flex;

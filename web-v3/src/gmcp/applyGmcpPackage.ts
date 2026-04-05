@@ -63,6 +63,9 @@ import type {
   UiFeedback,
   Vitals,
   WhoPlayer,
+  WorldEvent,
+  WorldTime,
+  WorldWeather,
   ZoneInstances,
   ZoneInstanceItem,
   LeaderboardData,
@@ -140,6 +143,9 @@ interface GmcpContext {
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
   setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
   setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
+  setWorldTime: Dispatch<SetStateAction<WorldTime | null>>;
+  setWorldWeather: Dispatch<SetStateAction<WorldWeather | null>>;
+  setWorldEvents: Dispatch<SetStateAction<WorldEvent[]>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1385,17 +1391,37 @@ export function applyGmcpPackage(
     }
 
     case "World.Time": {
-      // World time received via GMCP — available for day/night UI.
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setWorldTime({
+        period: typeof packet.period === "string" ? packet.period : "DAY",
+        hour: safeNumber(packet.hour),
+        minute: safeNumber(packet.minute),
+      });
       break;
     }
 
     case "World.Weather": {
-      // Zone weather received via GMCP — available for weather effects.
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setWorldWeather({
+        zone: typeof packet.zone === "string" ? packet.zone : "",
+        weather: typeof packet.weather === "string" ? packet.weather : "CLEAR",
+        description: typeof packet.description === "string" ? packet.description : "",
+      });
       break;
     }
 
     case "World.Events": {
-      // Active world events received via GMCP — available for event panel.
+      ctx.setWorldEvents(
+        Array.isArray(data)
+          ? data
+              .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+              .map((e) => ({
+                id: typeof e.id === "string" ? e.id : "",
+                name: typeof e.name === "string" ? e.name : "",
+                description: typeof e.description === "string" ? e.description : "",
+              }))
+          : [],
+      );
       break;
     }
 
