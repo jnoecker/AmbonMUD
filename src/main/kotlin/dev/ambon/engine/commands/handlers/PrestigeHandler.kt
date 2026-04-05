@@ -127,6 +127,19 @@ class PrestigeHandler(
                     ),
                 )
             }
+
+            // Emit structured GMCP
+            val available = if (me.level >= maxLevel) prestigeSystem.availableXp(me) else 0L
+            val nextCost = if (currentRank < maxRank) prestigeSystem.xpCostForNextRank(currentRank) else null
+            gmcpEmitter?.sendPrestigeInfo(
+                sessionId,
+                enabled = true,
+                currentRank = currentRank,
+                maxRank = maxRank,
+                availableXp = available,
+                nextRankCost = nextCost,
+                perks = gmcpEmitter.buildPrestigePerkPayloads(currentRank, maxRank) { prestigeSystem.perkForRank(it) },
+            )
         }
     }
 }

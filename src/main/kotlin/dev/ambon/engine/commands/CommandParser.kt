@@ -1439,6 +1439,7 @@ object CommandParser {
             "reputation", "rep", "factions", "standing", "standings" -> Command.Reputation
             "currencies", "currency", "wallet" -> Command.Currencies
             "dungeon leave", "dungeon exit" -> Command.DungeonLeave
+            "dungeon" -> Command.Invalid(line, "dungeon enter <name> [difficulty] | dungeon leave")
             "gquest", "gq", "global", "globalquest" -> Command.GlobalQuestInfo
             else -> Command.Unknown(line)
         }

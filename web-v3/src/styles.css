@@ -1877,6 +1877,65 @@ body {
   margin-left: 4px;
 }
 
+/* ---------- Guild Hall section ---------- */
+
+.guild-hall-section {
+  padding: 6px 8px;
+  border-top: 1px solid rgb(106 96 136 / 18%);
+}
+
+.guild-hall-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: 4px;
+}
+
+.guild-hall-label {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+}
+
+.guild-hall-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+}
+
+.guild-hall-room-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guild-hall-room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: rgb(106 96 136 / 8%);
+  font-size: var(--fs-xs);
+}
+
+.guild-hall-room-title {
+  color: var(--text-primary);
+}
+
+.guild-hall-room-template {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.guild-hall-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 6px;
+}
+
 .guild-footer-actions {
   display: flex;
   gap: var(--space-2);
@@ -3519,6 +3578,112 @@ body {
 
 .score-lottery-btn-secondary:hover {
   background: rgb(106 96 136 / 10%);
+}
+
+/* ---------- Duel / Dungeon / Prestige Perks in Score tab ---------- */
+
+.score-section-label {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.score-section-value {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+.score-duel,
+.score-dungeon,
+.score-prestige-perks {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: rgb(106 96 136 / 8%);
+}
+
+.score-duel-challenge {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.score-duel-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.score-dungeon-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  margin: 4px 0;
+}
+
+.score-dungeon-grid dt {
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+}
+
+.score-dungeon-grid dd {
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+}
+
+.score-dungeon-complete {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-success);
+  margin: 4px 0;
+}
+
+.score-dungeon-actions {
+  margin-top: 6px;
+}
+
+.prestige-perk-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.prestige-perk-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+}
+
+.prestige-perk-earned {
+  background: rgb(106 96 136 / 12%);
+  color: var(--text-primary);
+}
+
+.prestige-perk-locked {
+  background: transparent;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.prestige-perk-rank {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 600;
+  font-size: var(--fs-xs);
+}
+
+.prestige-perk-earned .prestige-perk-rank {
+  color: var(--color-success);
+}
+
+.prestige-perk-desc {
+  flex: 1;
 }
 
 /* ---------- Factions tab ---------- */

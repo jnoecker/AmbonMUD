@@ -754,3 +754,54 @@ export interface LotteryInfo {
   playerTickets: number;
   nextDrawingMs: number;
 }
+
+export interface GuildHallRoom {
+  id: string;
+  template: string;
+  title: string;
+}
+
+export interface GuildHallInfo {
+  guildName: string;
+  rooms: GuildHallRoom[];
+  membersInHall: number;
+  maxRooms: number;
+}
+
+export interface DuelChallenge {
+  challengerName: string;
+  targetName: string;
+  direction: "incoming" | "outgoing";
+}
+
+export interface DuelState {
+  active: boolean;
+  opponentName?: string;
+  startedAtMs?: number;
+}
+
+export interface DungeonInfo {
+  active: boolean;
+  instanceId?: string;
+  name?: string;
+  difficulty?: string;
+  totalRooms?: number;
+  completed?: boolean;
+  memberCount?: number;
+}
+
+export interface PrestigePerk {
+  rank: number;
+  type: string;
+  description: string;
+  earned: boolean;
+}
+
+export interface PrestigeInfo {
+  enabled: boolean;
+  currentRank: number;
+  maxRank: number;
+  availableXp: number;
+  nextRankCost: number | null;
+  perks: PrestigePerk[];
+}

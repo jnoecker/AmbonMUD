@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, FactionStanding, GroupInfo, GuildInfo, LotteryInfo, PetState, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
+import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, DuelChallenge, DuelState, DungeonInfo, FactionStanding, GroupInfo, GuildInfo, LotteryInfo, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions";
@@ -60,6 +60,10 @@ interface CharacterPanelProps {
   worldWeather: WorldWeather | null;
   worldEvents: WorldEvent[];
   lotteryInfo: LotteryInfo | null;
+  duelState: DuelState | null;
+  duelChallenge: DuelChallenge | null;
+  dungeonInfo: DungeonInfo | null;
+  prestigeInfo: PrestigeInfo | null;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -98,6 +102,10 @@ export function CharacterPanel({
   worldWeather,
   worldEvents,
   lotteryInfo,
+  duelState,
+  duelChallenge,
+  dungeonInfo,
+  prestigeInfo,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -825,6 +833,64 @@ export function CharacterPanel({
                             Check Info
                           </button>
                         </div>
+                      </div>
+                    )}
+                    {duelState?.active && (
+                      <div className="score-duel">
+                        <p className="score-section-label">Duel</p>
+                        <p className="score-section-value">Fighting <strong>{duelState.opponentName ?? "unknown"}</strong></p>
+                      </div>
+                    )}
+                    {duelChallenge && !duelState?.active && (
+                      <div className="score-duel">
+                        <p className="score-section-label">Duel Challenge</p>
+                        {duelChallenge.direction === "incoming" ? (
+                          <div className="score-duel-challenge">
+                            <p className="score-section-value"><strong>{duelChallenge.challengerName}</strong> challenges you!</p>
+                            <div className="score-duel-actions">
+                              <button type="button" className="soft-button" onClick={() => onCommand("duel accept")}>Accept</button>
+                              <button type="button" className="soft-button" onClick={() => onCommand("duel decline")}>Decline</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="score-section-value">Challenging <strong>{duelChallenge.targetName}</strong>&hellip;</p>
+                        )}
+                      </div>
+                    )}
+                    {dungeonInfo?.active && (
+                      <div className="score-dungeon">
+                        <p className="score-section-label">Dungeon</p>
+                        <dl className="score-dungeon-grid">
+                          {dungeonInfo.name && (
+                            <div><dt>Name</dt><dd>{dungeonInfo.name}</dd></div>
+                          )}
+                          {dungeonInfo.difficulty && (
+                            <div><dt>Difficulty</dt><dd>{dungeonInfo.difficulty}</dd></div>
+                          )}
+                          {dungeonInfo.totalRooms != null && (
+                            <div><dt>Rooms</dt><dd>{dungeonInfo.totalRooms}</dd></div>
+                          )}
+                          {dungeonInfo.memberCount != null && (
+                            <div><dt>Party</dt><dd>{dungeonInfo.memberCount}</dd></div>
+                          )}
+                        </dl>
+                        {dungeonInfo.completed && <p className="score-dungeon-complete">Boss defeated!</p>}
+                        <div className="score-dungeon-actions">
+                          <button type="button" className="soft-button" onClick={() => onCommand("dungeon leave")}>Leave Dungeon</button>
+                        </div>
+                      </div>
+                    )}
+                    {prestigeInfo && prestigeInfo.perks.length > 0 && (
+                      <div className="score-prestige-perks">
+                        <p className="score-section-label">Prestige Perks</p>
+                        <ul className="prestige-perk-list">
+                          {prestigeInfo.perks.map((perk) => (
+                            <li key={perk.rank} className={`prestige-perk-item ${perk.earned ? "prestige-perk-earned" : "prestige-perk-locked"}`}>
+                              <span className="prestige-perk-rank">{perk.earned ? "\u2713" : perk.rank}</span>
+                              <span className="prestige-perk-desc">{perk.description}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
                   </div>
