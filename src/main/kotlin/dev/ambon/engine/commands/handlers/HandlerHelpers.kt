@@ -16,6 +16,7 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.QuestSystem
+import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -91,7 +92,7 @@ internal suspend fun requireSameRoom(
 
 /** Convenience extension that delegates to the full [sendLook], pulling all dependencies from this context. */
 internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
-    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry, questSystem)
+    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry, questSystem, trainerRegistry)
     emitShopGmcp(sessionId)
 }
 
@@ -127,6 +128,7 @@ internal suspend fun sendLook(
     gmcpEmitter: GmcpEmitter?,
     gatheringRegistry: GatheringRegistry? = null,
     questSystem: QuestSystem? = null,
+    trainerRegistry: TrainerRegistry? = null,
 ) {
     val me = players.get(sessionId) ?: return
     val roomId = me.roomId
@@ -238,7 +240,15 @@ internal suspend fun sendLook(
     val isHousing = room.id.zone.startsWith("house_")
     val housingOwner = if (isHousing) room.id.zone.removePrefix("house_") else null
     val isPvpZone = world.isZonePvpEnabled(room.id.zone)
-    gmcpEmitter?.sendRoomInfo(sessionId, room, isHousing = isHousing, housingOwner = housingOwner, pvpEnabled = isPvpZone)
+    val trainerHere = trainerRegistry?.trainerInRoom(room.id)
+    gmcpEmitter?.sendRoomInfo(
+        sessionId,
+        room,
+        isHousing = isHousing,
+        housingOwner = housingOwner,
+        pvpEnabled = isPvpZone,
+        trainerName = trainerHere?.name,
+    )
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
     val mobIds = rawRoomMobs.map { it.id.value }

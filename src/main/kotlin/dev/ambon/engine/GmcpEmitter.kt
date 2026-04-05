@@ -142,6 +142,7 @@ class GmcpEmitter(
         isHousing: Boolean = false,
         housingOwner: String? = null,
         pvpEnabled: Boolean = false,
+        trainerName: String? = null,
     ) {
         emit(
             sessionId,
@@ -163,6 +164,7 @@ class GmcpEmitter(
                 housingOwner = housingOwner,
                 graphical = room.graphical,
                 pvpEnabled = pvpEnabled,
+                trainer = trainerName,
             ),
         )
     }
@@ -1881,6 +1883,7 @@ class GmcpEmitter(
         val housingOwner: String? = null,
         val graphical: Boolean = false,
         val pvpEnabled: Boolean = false,
+        val trainer: String? = null,
     )
 
     private data class ItemPayload(

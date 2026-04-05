@@ -144,6 +144,12 @@ export class WorldScene {
   private stationHitArea = new Graphics();
   private stationVisible = false;
 
+  private trainerBadge: Container;
+  private trainerLabel: Text;
+  private trainerLabelBg = new Graphics();
+  private trainerHitArea = new Graphics();
+  private trainerVisible = false;
+
   private lastMobsKey = "";
   private lastItemsKey = "";
   private lastNodesKey = "";
@@ -264,6 +270,29 @@ export class WorldScene {
     this.stationBadge.addChild(this.stationLabelBg);
     this.stationBadge.addChild(this.stationLabel);
 
+    // Trainer badge — floating icon when a trainer is present
+    this.trainerBadge = new Container();
+    this.trainerBadge.visible = false;
+    this.trainerBadge.eventMode = "static";
+    this.trainerBadge.cursor = "pointer";
+    this.trainerBadge.on("pointerdown", () => {
+      canvasCallbacks.sendCommand?.("train list");
+    });
+    this.trainerHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.trainerHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.trainerHitArea.eventMode = "auto";
+    this.trainerBadge.addChild(this.trainerHitArea);
+    this.trainerLabel = new Text({
+      text: "Trainer",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#b9aed8", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.trainerLabel.anchor.set(0.5, 0);
+    this.trainerLabel.y = hs / 2 + 2;
+    this.trainerLabel.eventMode = "none";
+    this.trainerLabelBg.eventMode = "none";
+    this.trainerBadge.addChild(this.trainerLabelBg);
+    this.trainerBadge.addChild(this.trainerLabel);
+
     // Recall button
     this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
       canvasCallbacks.sendCommand?.("recall");
@@ -282,6 +311,7 @@ export class WorldScene {
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
     this.container.addChild(this.stationBadge);
+    this.container.addChild(this.trainerBadge);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
@@ -423,6 +453,16 @@ export class WorldScene {
       }
     }
 
+    // Trainer badge visibility
+    const hasTrainer = !!state.room.trainer;
+    if (hasTrainer !== this.trainerVisible) {
+      this.trainerVisible = hasTrainer;
+      this.trainerBadge.visible = hasTrainer;
+      if (hasTrainer) {
+        this.trainerLabel.text = state.room.trainer!;
+      }
+    }
+
     // Recall button visibility — show when logged in and not in combat
     const loggedIn = state.character.name !== "-";
     const showRecall = loggedIn && !state.vitals.inCombat;
@@ -510,6 +550,7 @@ export class WorldScene {
     }
     this.shopBadge.visible = this.shopVisible && !stripMode;
     this.stationBadge.visible = this.stationVisible && !stripMode;
+    this.trainerBadge.visible = this.trainerVisible && !stripMode;
     this.recallBtn.visible = this.recallBtn.visible && !stripMode;
 
     // Dynamic entity sizing
@@ -677,6 +718,14 @@ export class WorldScene {
       this.stationBadge.x = w - 70;
       this.stationBadge.y = this.shopBadge.visible ? h * 0.48 : h * 0.35;
       drawLabelPill(this.stationLabelBg, this.stationLabel);
+    }
+
+    // Trainer badge position — right side, below shop/station badges
+    if (this.trainerBadge.visible) {
+      this.trainerBadge.x = w - 70;
+      const badgesAbove = (this.shopBadge.visible ? 1 : 0) + (this.stationBadge.visible ? 1 : 0);
+      this.trainerBadge.y = h * 0.35 + badgesAbove * h * 0.13;
+      drawLabelPill(this.trainerLabelBg, this.trainerLabel);
     }
 
     // Recall button — bottom-left

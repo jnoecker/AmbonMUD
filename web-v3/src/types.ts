@@ -179,6 +179,7 @@ export interface RoomState {
   music?: string | null;
   ambient?: string | null;
   station?: string | null;
+  trainer?: string | null;
   mapX: number;
   mapY: number;
   housing?: boolean;

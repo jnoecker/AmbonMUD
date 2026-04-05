@@ -190,7 +190,12 @@ class HotReloadManager(
         // Refresh GMCP for all connected players so room data is current.
         for (player in players.allPlayers()) {
             val room = world.rooms[player.roomId] ?: continue
-            gmcpEmitter.sendRoomInfo(player.sessionId, room, pvpEnabled = world.isZonePvpEnabled(room.id.zone))
+            gmcpEmitter.sendRoomInfo(
+                player.sessionId,
+                room,
+                pvpEnabled = world.isZonePvpEnabled(room.id.zone),
+                trainerName = trainerRegistry.trainerInRoom(room.id)?.name,
+            )
             gmcpEmitter.sendRoomMobs(player.sessionId, mobs.mobsInRoom(player.roomId))
             gmcpEmitter.sendRoomItems(player.sessionId, items.itemsInRoom(player.roomId))
             // Refresh staff world browser with updated zones/rooms

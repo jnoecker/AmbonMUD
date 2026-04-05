@@ -27,6 +27,7 @@ class GmcpEventHandler(
     private val achievementRegistry: AchievementRegistry,
     private val groupSystem: GroupSystem,
     private val guildSystem: GuildSystem? = null,
+    private val trainerRegistry: dev.ambon.engine.TrainerRegistry? = null,
     private val gmcpEmitter: GmcpEmitter,
     private val onResumeRequested: (suspend (SessionId, String) -> Unit)? = null,
     private val onAuthenticateRequested: (suspend (SessionId, String) -> Unit)? = null,
@@ -63,7 +64,12 @@ class GmcpEventHandler(
                     players,
                     guildSystem,
                 )
-                gmcpEmitter.sendRoomInfo(sid, room, pvpEnabled = world.isZonePvpEnabled(room.id.zone))
+                gmcpEmitter.sendRoomInfo(
+                    sid,
+                    room,
+                    pvpEnabled = world.isZonePvpEnabled(room.id.zone),
+                    trainerName = trainerRegistry?.trainerInRoom(room.id)?.name,
+                )
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendRoomItems(sid, items.itemsInRoom(player.roomId))

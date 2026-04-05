@@ -291,6 +291,7 @@ export function applyGmcpPackage(
       const music = typeof packet.music === "string" ? packet.music : null;
       const ambient = typeof packet.ambient === "string" ? packet.ambient : null;
       const station = typeof packet.station === "string" ? packet.station : null;
+      const trainer = typeof packet.trainer === "string" ? packet.trainer : null;
       const housing = packet.housing === true;
       const housingOwner = typeof packet.housingOwner === "string" ? packet.housingOwner : null;
       const graphical = packet.graphical === true;
@@ -302,7 +303,7 @@ export function applyGmcpPackage(
           ctx.setDialogue(null);
           ctx.setQuestsAvailable([]);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, mapX, mapY, housing, housingOwner, graphical };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical };
       });
 
       if (id) {

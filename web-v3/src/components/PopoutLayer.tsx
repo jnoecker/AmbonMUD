@@ -2,7 +2,7 @@ import type { ReactNode, RefObject } from "react";
 import type { CommandEntry, ContainerContents, CraftingNode, PopoutPanel, RoomFeature, RoomState } from "../types";
 import { HelpContent } from "./HelpContent";
 
-const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests", "inventory", "equipment", "mail", "crafting", "housing"]);
+const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests", "inventory", "equipment", "mail", "crafting", "housing", "trainer", "leaderboard", "bank", "auction"]);
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;

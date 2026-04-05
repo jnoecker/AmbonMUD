@@ -382,6 +382,7 @@ class GameEngine(
             achievementRegistry = achievementRegistry,
             groupSystem = groupSystem,
             guildSystem = guildSystem,
+            trainerRegistry = trainerRegistry,
             gmcpEmitter = gmcpEmitter,
             onResumeRequested = if (gracePeriodManager != null) ::handleSessionResume else null,
             onAuthenticateRequested = ::handleSessionAuthenticate,
