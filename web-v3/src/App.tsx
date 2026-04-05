@@ -21,6 +21,7 @@ import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
 import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { BankPanel } from "./components/panels/BankPanel";
+import { AuctionPanel } from "./components/panels/AuctionPanel";
 import { CommandPalette } from "./components/CommandPalette";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
@@ -258,8 +259,7 @@ function App() {
   const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
   const [housing, setHousing] = useState<HousingInfo | null>(null);
   const [tradeState, setTradeState] = useState<TradeState | null>(null);
-  const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]); // GMCP Auction.List data for future panel
-  void auctionListings; // suppress unused-var lint until auction panel is built
+  const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]);
   const [leaderboard, setLeaderboard] = useState<Record<string, LeaderboardData>>({});
   const [factions, setFactions] = useState<FactionStanding[]>([]);
   const [currencies, setCurrencies] = useState<CurrencyBalance[]>([]);
@@ -886,6 +886,8 @@ function App() {
         ? "Housing"
       : activePopout === "bank"
         ? "Bank"
+      : activePopout === "auction"
+        ? "Auction House"
         : "";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -1417,6 +1419,13 @@ function App() {
         {activePopout === "bank" && (
           <BankPanel
             bankState={bankState}
+            onCommand={(cmd: string) => { sendCommand(cmd, true); focusComposer(); }}
+          />
+        )}
+
+        {activePopout === "auction" && (
+          <AuctionPanel
+            listings={auctionListings}
             onCommand={(cmd: string) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
