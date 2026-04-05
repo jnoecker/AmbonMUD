@@ -590,3 +590,13 @@ export function BankIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function AuctionIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M14.7 3.3a1 1 0 011.4 0l4.6 4.6a1 1 0 010 1.4l-7.8 7.8-6-6 7.8-7.8z" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
+      <path d="M6.9 11.1L3 15l3 3 3.9-3.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 21h8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}

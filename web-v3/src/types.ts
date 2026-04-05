@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "auction" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
