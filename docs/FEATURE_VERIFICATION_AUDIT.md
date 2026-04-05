@@ -13,12 +13,12 @@ Documentation gaps have been resolved.
 |--------|-----------------|------|---------|---------|
 | Combat & Abilities | 6 | 6 | 0 | 0 |
 | Progression & Economy | 6 | 6 | 0 | 0 |
-| Social & Communication | 7 | 6 | 1 | 0 |
+| Social & Communication | 7 | 7 | 0 | 0 |
 | Quests & Content | 8 | 8 | 0 | 0 |
 | Crafting & Trading | 7 | 7 | 0 | 0 |
 | Player Features | 7 | 7 | 0 | 0 |
 | Infrastructure | 10 | 10 | 0 | 0 |
-| **Totals** | **51** | **50** | **1** | **0** |
+| **Totals** | **51** | **51** | **0** | **0** |
 
 ### Remediation Summary (PRs #934–#945)
 
@@ -68,20 +68,19 @@ Documentation gaps have been resolved.
 
 ---
 
-### Social & Communication — 6 PASS, 1 PARTIAL
+### Social & Communication — All PASS
 
 | Feature | Backend | GMCP | Frontend | Tests | Verdict |
 |---------|---------|------|----------|-------|---------|
 | GroupSystem (invite/accept/leave/kick, XP sharing) | Complete | Group.Info, Group.Invite | Full (ChatPanel) | GroupSystemTest (21 tests) | **PASS** |
-| GuildSystem (create through gchat, YAML+PG persist) | Complete | Guild.Info/Members/Chat/Invite | Full (ChatPanel) | GuildSystemTest (17 tests) | **PASS** |
+| GuildSystem (create through gchat, YAML+PG persist) | Complete | Guild.Info/Members/Chat/Invite | Full (ChatPanel guild tab) | GuildSystemTest (17 tests) | **PASS** |
 | GuildHallSystem (buy/expand/enter/leave) | Complete | Guild.Hall | Full | GuildHallSystemTest | **PASS** |
 | FriendsSystem (add/remove, online notifications) | Complete | Friends.List/Online/Offline | Full (ChatPanel) | FriendsSystemTest (16 tests) | **PASS** |
 | Mail (send/read/delete/compose, online+offline delivery) | Complete | Mail.List/Message/Notification | Full (MailPanel) | MailHandlerTest (14 tests) | **PASS** |
 | Communication (say/tell/whisper/gossip/shout/ooc/pose) | Complete | Comm.Channel | Full (ChatPanel) | CommandRouterBroadcastTest | **PASS** |
-| Describe (set/clear/check player description) | Complete | N/A (text-only) | No UI editor | Implicit | **PARTIAL** |
+| Describe (set/clear/check player description) | Complete | N/A (text-only) | Full (CharacterPanel editor) | Implicit | **PASS** |
 
-**Remaining gap:**
-- **Describe:** Commands work but there is no UI panel for viewing/editing player descriptions.
+**Note:** Guild management is fully implemented in ChatPanel's guild tab: create, invite, accept/decline, MOTD editing, full roster with promote/demote/kick buttons, leave/disband with confirmations, and embedded guild chat.
 
 ---
 
@@ -154,11 +153,8 @@ Crafting, Housing, Navigation/Minimap, NPCs, Trading, Leaderboards, Trainer, Gro
 Admin/Staff tools, Sprites, Bank, Pets, Factions/Reputation, World Time, World Weather,
 World Events, Currencies, Auction, Prestige, Lottery, Description Editor
 
-**Partial UI Support (1 system):**
-Guild management (metadata in CharacterPanel, no dedicated management panel)
-
-**No UI Support (0 systems):**
-All GMCP stubs have been replaced with real handlers and UI.
+**No UI Gaps (0 systems):**
+All GMCP packages have real handlers and UI. Every documented feature is fully covered.
 
 ---
 
@@ -171,8 +167,7 @@ CLAUDE.md command category table has been updated to include all implemented com
 
 ---
 
-## Remaining Minor Gaps
+## Remaining Minor Notes
 
-1. **Describe:** The description editor sends commands but there is no GMCP feedback to populate the textarea with the current description. Players must re-type their description each time they open the editor.
-2. **Guild management panel:** Guild info is displayed in CharacterPanel but there's no dedicated panel for member management (promote/demote/kick). These work via text commands.
-3. **Housing lock/unlock** — documented in original CLAUDE.md but never implemented as commands. Documentation has been corrected.
+1. **Describe editor:** Sends commands but there is no GMCP feedback to pre-populate the textarea with the current description. Players must re-type their description each time they open the editor.
+2. **Housing lock/unlock** — documented in original CLAUDE.md but never implemented as commands. Documentation has been corrected.
