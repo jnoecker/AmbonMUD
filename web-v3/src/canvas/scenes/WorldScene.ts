@@ -508,8 +508,8 @@ export class WorldScene {
       labelBg.visible = !stripMode;
       hitArea.visible = !stripMode;
     }
-    this.shopBadge.visible = !stripMode;
-    this.stationBadge.visible = !stripMode;
+    this.shopBadge.visible = this.shopVisible && !stripMode;
+    this.stationBadge.visible = this.stationVisible && !stripMode;
     this.recallBtn.visible = this.recallBtn.visible && !stripMode;
 
     // Dynamic entity sizing

@@ -1,7 +1,7 @@
 sprites:
   HUMAN_base_t1:
     displayName: Human (Novice)
-    category: general
+    category: tier
     sortOrder: 0
     requirements:
       - type: race
@@ -11,7 +11,7 @@ sprites:
     image: player_sprites/HUMAN_base_t1.png
   ELF_base_t1:
     displayName: Elf (Novice)
-    category: general
+    category: tier
     sortOrder: 10
     requirements:
       - type: race
@@ -21,7 +21,7 @@ sprites:
     image: player_sprites/ELF_base_t1.png
   DWARF_base_t1:
     displayName: Dwarf (Novice)
-    category: general
+    category: tier
     sortOrder: 20
     requirements:
       - type: race
@@ -31,7 +31,7 @@ sprites:
     image: player_sprites/DWARF_base_t1.png
   HALFLING_base_t1:
     displayName: Halfling (Novice)
-    category: general
+    category: tier
     sortOrder: 30
     requirements:
       - type: race
@@ -41,7 +41,7 @@ sprites:
     image: player_sprites/HALFLING_base_t1.png
   HALF_ORC_base_t1:
     displayName: Half-Orc (Novice)
-    category: general
+    category: tier
     sortOrder: 40
     requirements:
       - type: race
@@ -51,7 +51,7 @@ sprites:
     image: player_sprites/HALF_ORC_base_t1.png
   GNOME_base_t1:
     displayName: Gnome (Novice)
-    category: general
+    category: tier
     sortOrder: 50
     requirements:
       - type: race
@@ -61,7 +61,7 @@ sprites:
     image: player_sprites/GNOME_base_t1.png
   HUMAN_WARRIOR_t5:
     displayName: Human Warrior (Adept)
-    category: general
+    category: tier
     sortOrder: 60
     requirements:
       - type: race
@@ -73,7 +73,7 @@ sprites:
     image: player_sprites/HUMAN_WARRIOR_t5.png
   HUMAN_MAGE_t5:
     displayName: Human Mage (Adept)
-    category: general
+    category: tier
     sortOrder: 70
     requirements:
       - type: race
@@ -85,7 +85,7 @@ sprites:
     image: player_sprites/HUMAN_MAGE_t5.png
   HUMAN_CLERIC_t5:
     displayName: Human Cleric (Adept)
-    category: general
+    category: tier
     sortOrder: 80
     requirements:
       - type: race
@@ -97,7 +97,7 @@ sprites:
     image: player_sprites/HUMAN_CLERIC_t5.png
   HUMAN_ROGUE_t5:
     displayName: Human Rogue (Adept)
-    category: general
+    category: tier
     sortOrder: 90
     requirements:
       - type: race
@@ -109,7 +109,7 @@ sprites:
     image: player_sprites/HUMAN_ROGUE_t5.png
   HUMAN_RANGER_t5:
     displayName: Human Ranger (Adept)
-    category: general
+    category: tier
     sortOrder: 100
     requirements:
       - type: race
@@ -121,7 +121,7 @@ sprites:
     image: player_sprites/HUMAN_RANGER_t5.png
   ELF_WARRIOR_t5:
     displayName: Elf Warrior (Adept)
-    category: general
+    category: tier
     sortOrder: 110
     requirements:
       - type: race
@@ -133,7 +133,7 @@ sprites:
     image: player_sprites/ELF_WARRIOR_t5.png
   ELF_MAGE_t5:
     displayName: Elf Mage (Adept)
-    category: general
+    category: tier
     sortOrder: 120
     requirements:
       - type: race
@@ -145,7 +145,7 @@ sprites:
     image: player_sprites/ELF_MAGE_t5.png
   ELF_CLERIC_t5:
     displayName: Elf Cleric (Adept)
-    category: general
+    category: tier
     sortOrder: 130
     requirements:
       - type: race
@@ -157,7 +157,7 @@ sprites:
     image: player_sprites/ELF_CLERIC_t5.png
   ELF_ROGUE_t5:
     displayName: Elf Rogue (Adept)
-    category: general
+    category: tier
     sortOrder: 140
     requirements:
       - type: race
@@ -169,7 +169,7 @@ sprites:
     image: player_sprites/ELF_ROGUE_t5.png
   ELF_RANGER_t5:
     displayName: Elf Ranger (Adept)
-    category: general
+    category: tier
     sortOrder: 150
     requirements:
       - type: race
@@ -181,7 +181,7 @@ sprites:
     image: player_sprites/ELF_RANGER_t5.png
   DWARF_WARRIOR_t5:
     displayName: Dwarf Warrior (Adept)
-    category: general
+    category: tier
     sortOrder: 160
     requirements:
       - type: race
@@ -193,7 +193,7 @@ sprites:
     image: player_sprites/DWARF_WARRIOR_t5.png
   DWARF_MAGE_t5:
     displayName: Dwarf Mage (Adept)
-    category: general
+    category: tier
     sortOrder: 170
     requirements:
       - type: race
@@ -205,7 +205,7 @@ sprites:
     image: player_sprites/DWARF_MAGE_t5.png
   DWARF_CLERIC_t5:
     displayName: Dwarf Cleric (Adept)
-    category: general
+    category: tier
     sortOrder: 180
     requirements:
       - type: race
@@ -217,7 +217,7 @@ sprites:
     image: player_sprites/DWARF_CLERIC_t5.png
   DWARF_ROGUE_t5:
     displayName: Dwarf Rogue (Adept)
-    category: general
+    category: tier
     sortOrder: 190
     requirements:
       - type: race
@@ -229,7 +229,7 @@ sprites:
     image: player_sprites/DWARF_ROGUE_t5.png
   DWARF_RANGER_t5:
     displayName: Dwarf Ranger (Adept)
-    category: general
+    category: tier
     sortOrder: 200
     requirements:
       - type: race
@@ -241,7 +241,7 @@ sprites:
     image: player_sprites/DWARF_RANGER_t5.png
   HALFLING_WARRIOR_t5:
     displayName: Halfling Warrior (Adept)
-    category: general
+    category: tier
     sortOrder: 210
     requirements:
       - type: race
@@ -253,7 +253,7 @@ sprites:
     image: player_sprites/HALFLING_WARRIOR_t5.png
   HALFLING_MAGE_t5:
     displayName: Halfling Mage (Adept)
-    category: general
+    category: tier
     sortOrder: 220
     requirements:
       - type: race
@@ -265,7 +265,7 @@ sprites:
     image: player_sprites/HALFLING_MAGE_t5.png
   HALFLING_CLERIC_t5:
     displayName: Halfling Cleric (Adept)
-    category: general
+    category: tier
     sortOrder: 230
     requirements:
       - type: race
@@ -277,7 +277,7 @@ sprites:
     image: player_sprites/HALFLING_CLERIC_t5.png
   HALFLING_ROGUE_t5:
     displayName: Halfling Rogue (Adept)
-    category: general
+    category: tier
     sortOrder: 240
     requirements:
       - type: race
@@ -289,7 +289,7 @@ sprites:
     image: player_sprites/HALFLING_ROGUE_t5.png
   HALFLING_RANGER_t5:
     displayName: Halfling Ranger (Adept)
-    category: general
+    category: tier
     sortOrder: 250
     requirements:
       - type: race
@@ -301,7 +301,7 @@ sprites:
     image: player_sprites/HALFLING_RANGER_t5.png
   HALF_ORC_WARRIOR_t5:
     displayName: Half-Orc Warrior (Adept)
-    category: general
+    category: tier
     sortOrder: 260
     requirements:
       - type: race
@@ -313,7 +313,7 @@ sprites:
     image: player_sprites/HALF_ORC_WARRIOR_t5.png
   HALF_ORC_MAGE_t5:
     displayName: Half-Orc Mage (Adept)
-    category: general
+    category: tier
     sortOrder: 270
     requirements:
       - type: race
@@ -325,7 +325,7 @@ sprites:
     image: player_sprites/HALF_ORC_MAGE_t5.png
   HALF_ORC_CLERIC_t5:
     displayName: Half-Orc Cleric (Adept)
-    category: general
+    category: tier
     sortOrder: 280
     requirements:
       - type: race
@@ -337,7 +337,7 @@ sprites:
     image: player_sprites/HALF_ORC_CLERIC_t5.png
   HALF_ORC_ROGUE_t5:
     displayName: Half-Orc Rogue (Adept)
-    category: general
+    category: tier
     sortOrder: 290
     requirements:
       - type: race
@@ -349,7 +349,7 @@ sprites:
     image: player_sprites/HALF_ORC_ROGUE_t5.png
   HALF_ORC_RANGER_t5:
     displayName: Half-Orc Ranger (Adept)
-    category: general
+    category: tier
     sortOrder: 300
     requirements:
       - type: race
@@ -361,7 +361,7 @@ sprites:
     image: player_sprites/HALF_ORC_RANGER_t5.png
   GNOME_WARRIOR_t5:
     displayName: Gnome Warrior (Adept)
-    category: general
+    category: tier
     sortOrder: 310
     requirements:
       - type: race
@@ -373,7 +373,7 @@ sprites:
     image: player_sprites/GNOME_WARRIOR_t5.png
   GNOME_MAGE_t5:
     displayName: Gnome Mage (Adept)
-    category: general
+    category: tier
     sortOrder: 320
     requirements:
       - type: race
@@ -385,7 +385,7 @@ sprites:
     image: player_sprites/GNOME_MAGE_t5.png
   GNOME_CLERIC_t5:
     displayName: Gnome Cleric (Adept)
-    category: general
+    category: tier
     sortOrder: 330
     requirements:
       - type: race
@@ -397,7 +397,7 @@ sprites:
     image: player_sprites/GNOME_CLERIC_t5.png
   GNOME_ROGUE_t5:
     displayName: Gnome Rogue (Adept)
-    category: general
+    category: tier
     sortOrder: 340
     requirements:
       - type: race
@@ -409,7 +409,7 @@ sprites:
     image: player_sprites/GNOME_ROGUE_t5.png
   GNOME_RANGER_t5:
     displayName: Gnome Ranger (Adept)
-    category: general
+    category: tier
     sortOrder: 350
     requirements:
       - type: race
@@ -421,7 +421,7 @@ sprites:
     image: player_sprites/GNOME_RANGER_t5.png
   HUMAN_WARRIOR_t10:
     displayName: Human Warrior (Awakened)
-    category: general
+    category: tier
     sortOrder: 360
     requirements:
       - type: race
@@ -433,7 +433,7 @@ sprites:
     image: player_sprites/HUMAN_WARRIOR_t10.png
   HUMAN_MAGE_t10:
     displayName: Human Mage (Awakened)
-    category: general
+    category: tier
     sortOrder: 370
     requirements:
       - type: race
@@ -445,7 +445,7 @@ sprites:
     image: player_sprites/HUMAN_MAGE_t10.png
   HUMAN_CLERIC_t10:
     displayName: Human Cleric (Awakened)
-    category: general
+    category: tier
     sortOrder: 380
     requirements:
       - type: race
@@ -457,7 +457,7 @@ sprites:
     image: player_sprites/HUMAN_CLERIC_t10.png
   HUMAN_ROGUE_t10:
     displayName: Human Rogue (Awakened)
-    category: general
+    category: tier
     sortOrder: 390
     requirements:
       - type: race
@@ -469,7 +469,7 @@ sprites:
     image: player_sprites/HUMAN_ROGUE_t10.png
   HUMAN_RANGER_t10:
     displayName: Human Ranger (Awakened)
-    category: general
+    category: tier
     sortOrder: 400
     requirements:
       - type: race
@@ -481,7 +481,7 @@ sprites:
     image: player_sprites/HUMAN_RANGER_t10.png
   ELF_WARRIOR_t10:
     displayName: Elf Warrior (Awakened)
-    category: general
+    category: tier
     sortOrder: 410
     requirements:
       - type: race
@@ -493,7 +493,7 @@ sprites:
     image: player_sprites/ELF_WARRIOR_t10.png
   ELF_MAGE_t10:
     displayName: Elf Mage (Awakened)
-    category: general
+    category: tier
     sortOrder: 420
     requirements:
       - type: race
@@ -505,7 +505,7 @@ sprites:
     image: player_sprites/ELF_MAGE_t10.png
   ELF_CLERIC_t10:
     displayName: Elf Cleric (Awakened)
-    category: general
+    category: tier
     sortOrder: 430
     requirements:
       - type: race
@@ -517,7 +517,7 @@ sprites:
     image: player_sprites/ELF_CLERIC_t10.png
   ELF_ROGUE_t10:
     displayName: Elf Rogue (Awakened)
-    category: general
+    category: tier
     sortOrder: 440
     requirements:
       - type: race
@@ -529,7 +529,7 @@ sprites:
     image: player_sprites/ELF_ROGUE_t10.png
   ELF_RANGER_t10:
     displayName: Elf Ranger (Awakened)
-    category: general
+    category: tier
     sortOrder: 450
     requirements:
       - type: race
@@ -541,7 +541,7 @@ sprites:
     image: player_sprites/ELF_RANGER_t10.png
   DWARF_WARRIOR_t10:
     displayName: Dwarf Warrior (Awakened)
-    category: general
+    category: tier
     sortOrder: 460
     requirements:
       - type: race
@@ -553,7 +553,7 @@ sprites:
     image: player_sprites/DWARF_WARRIOR_t10.png
   DWARF_MAGE_t10:
     displayName: Dwarf Mage (Awakened)
-    category: general
+    category: tier
     sortOrder: 470
     requirements:
       - type: race
@@ -565,7 +565,7 @@ sprites:
     image: player_sprites/DWARF_MAGE_t10.png
   DWARF_CLERIC_t10:
     displayName: Dwarf Cleric (Awakened)
-    category: general
+    category: tier
     sortOrder: 480
     requirements:
       - type: race
@@ -577,7 +577,7 @@ sprites:
     image: player_sprites/DWARF_CLERIC_t10.png
   DWARF_ROGUE_t10:
     displayName: Dwarf Rogue (Awakened)
-    category: general
+    category: tier
     sortOrder: 490
     requirements:
       - type: race
@@ -589,7 +589,7 @@ sprites:
     image: player_sprites/DWARF_ROGUE_t10.png
   DWARF_RANGER_t10:
     displayName: Dwarf Ranger (Awakened)
-    category: general
+    category: tier
     sortOrder: 500
     requirements:
       - type: race
@@ -601,7 +601,7 @@ sprites:
     image: player_sprites/DWARF_RANGER_t10.png
   HALFLING_WARRIOR_t10:
     displayName: Halfling Warrior (Awakened)
-    category: general
+    category: tier
     sortOrder: 510
     requirements:
       - type: race
@@ -613,7 +613,7 @@ sprites:
     image: player_sprites/HALFLING_WARRIOR_t10.png
   HALFLING_MAGE_t10:
     displayName: Halfling Mage (Awakened)
-    category: general
+    category: tier
     sortOrder: 520
     requirements:
       - type: race
@@ -625,7 +625,7 @@ sprites:
     image: player_sprites/HALFLING_MAGE_t10.png
   HALFLING_CLERIC_t10:
     displayName: Halfling Cleric (Awakened)
-    category: general
+    category: tier
     sortOrder: 530
     requirements:
       - type: race
@@ -637,7 +637,7 @@ sprites:
     image: player_sprites/HALFLING_CLERIC_t10.png
   HALFLING_ROGUE_t10:
     displayName: Halfling Rogue (Awakened)
-    category: general
+    category: tier
     sortOrder: 540
     requirements:
       - type: race
@@ -649,7 +649,7 @@ sprites:
     image: player_sprites/HALFLING_ROGUE_t10.png
   HALFLING_RANGER_t10:
     displayName: Halfling Ranger (Awakened)
-    category: general
+    category: tier
     sortOrder: 550
     requirements:
       - type: race
@@ -661,7 +661,7 @@ sprites:
     image: player_sprites/HALFLING_RANGER_t10.png
   HALF_ORC_WARRIOR_t10:
     displayName: Half-Orc Warrior (Awakened)
-    category: general
+    category: tier
     sortOrder: 560
     requirements:
       - type: race
@@ -673,7 +673,7 @@ sprites:
     image: player_sprites/HALF_ORC_WARRIOR_t10.png
   HALF_ORC_MAGE_t10:
     displayName: Half-Orc Mage (Awakened)
-    category: general
+    category: tier
     sortOrder: 570
     requirements:
       - type: race
@@ -685,7 +685,7 @@ sprites:
     image: player_sprites/HALF_ORC_MAGE_t10.png
   HALF_ORC_CLERIC_t10:
     displayName: Half-Orc Cleric (Awakened)
-    category: general
+    category: tier
     sortOrder: 580
     requirements:
       - type: race
@@ -697,7 +697,7 @@ sprites:
     image: player_sprites/HALF_ORC_CLERIC_t10.png
   HALF_ORC_ROGUE_t10:
     displayName: Half-Orc Rogue (Awakened)
-    category: general
+    category: tier
     sortOrder: 590
     requirements:
       - type: race
@@ -709,7 +709,7 @@ sprites:
     image: player_sprites/HALF_ORC_ROGUE_t10.png
   HALF_ORC_RANGER_t10:
     displayName: Half-Orc Ranger (Awakened)
-    category: general
+    category: tier
     sortOrder: 600
     requirements:
       - type: race
@@ -721,7 +721,7 @@ sprites:
     image: player_sprites/HALF_ORC_RANGER_t10.png
   GNOME_WARRIOR_t10:
     displayName: Gnome Warrior (Awakened)
-    category: general
+    category: tier
     sortOrder: 610
     requirements:
       - type: race
@@ -733,7 +733,7 @@ sprites:
     image: player_sprites/GNOME_WARRIOR_t10.png
   GNOME_MAGE_t10:
     displayName: Gnome Mage (Awakened)
-    category: general
+    category: tier
     sortOrder: 620
     requirements:
       - type: race
@@ -745,7 +745,7 @@ sprites:
     image: player_sprites/GNOME_MAGE_t10.png
   GNOME_CLERIC_t10:
     displayName: Gnome Cleric (Awakened)
-    category: general
+    category: tier
     sortOrder: 630
     requirements:
       - type: race
@@ -757,7 +757,7 @@ sprites:
     image: player_sprites/GNOME_CLERIC_t10.png
   GNOME_ROGUE_t10:
     displayName: Gnome Rogue (Awakened)
-    category: general
+    category: tier
     sortOrder: 640
     requirements:
       - type: race
@@ -769,7 +769,7 @@ sprites:
     image: player_sprites/GNOME_ROGUE_t10.png
   GNOME_RANGER_t10:
     displayName: Gnome Ranger (Awakened)
-    category: general
+    category: tier
     sortOrder: 650
     requirements:
       - type: race

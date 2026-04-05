@@ -714,7 +714,7 @@ class CombatSystem(
                     onCombatEvent(
                         targetSid,
                         CombatEvent.MeleeHit(
-                            targetName = target.name,
+                            targetName = mob.name,
                             targetId = null,
                             damage = mobDamage,
                             sourceIsPlayer = false,
