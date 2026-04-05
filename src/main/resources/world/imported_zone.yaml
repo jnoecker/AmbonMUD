@@ -1,0 +1,2793 @@
+zone: imported_zone
+startRoom: temple_of_mota
+rooms:
+  temple_of_mota:
+    title: The Temple Of Mota
+    description: |-
+      You are in the southern end of the temple hall in the Temple of Mota.
+      The temple has been constructed from giant marble blocks, eternal in
+      appearance, and most of the walls are covered by ancient wall paintings
+      picturing gods, giants and peasants.
+         Large steps lead down through the grand temple gate, descending the huge
+      mound upon which the temple is built and ends on the temple square below.
+         Equally large steps lead UP through a small door into the ENTRANCE to MUD 
+      SCHOOL.  (type 'up' to go to MUD SCHOOL.)  A small plaque is on this wall.
+    exits:
+      n: by_the_temple_altar
+      s: temple_square
+  clerics_inner_sanctum:
+    title: Cleric's Inner Sanctum
+    description: |-
+      This is the inner sanctum.  A picture of the mighty Mota is hanging on
+      the wall, just above the altar which is set against the western wall.  A well
+      in the middle of the floor leads down into darkness.  Vile smells waft from
+      the depths.
+    exits:
+      e: clerics_bar
+  clerics_bar:
+    title: Cleric's Bar
+    description: |-
+      The bar is one of the finest in the land, lucky it is members only.  Fine
+      furniture is set all around the room.  A small sign is hanging on the wall.
+    exits:
+      s: entrance_to_clerics_guild
+      w: clerics_inner_sanctum
+  entrance_to_clerics_guild:
+    title: Entrance to Cleric's Guild
+    description: |-
+      The entrance hall is a small modest room, reflecting the true nature of
+      the Clerics.  The exit leads east to the temple square.  A small entrance to
+      the bar is in the northern wall.
+    exits:
+      n: clerics_bar
+      e: temple_square
+  temple_square:
+    title: The Temple Square
+    description: |-
+      You are standing on the temple square.  Huge marble steps lead up to the
+      temple gate.  The entrance to the Clerics Guild is to the west, and the old
+      Grunting Boar Inn, is to the east.  Just south of here you see the market
+      square, the center of Midgaard.
+    exits:
+      n: temple_of_mota
+      e: entrance_to_the_grunting_boar_inn
+      s: market_square
+      w: entrance_to_clerics_guild
+      u: the_air
+  entrance_to_the_grunting_boar_inn:
+    title: Entrance to the Grunting Boar Inn
+    description: |-
+      You are standing in the entrance hall of the Grunting Boar Inn.  The hall
+      has been wisely decorated with simple but functional furniture.  A small
+      staircase leads up to the defunct reception room and the bar is to the east.
+    exits:
+      e: grunting_boar
+      w: temple_square
+      u: defunct_reception
+  grunting_boar:
+    title: The Grunting Boar
+    description: |-
+      You are standing in the bar.  The bar is set against the northern wall, old
+      archaic writing, carvings and symbols cover its top.  A fireplace is built into
+      the western wall, and through the southeastern windows you can see the temple
+      square.  This place makes you feel like home.
+      A small sign with big letters is fastened to the bar.
+    exits:
+      w: entrance_to_the_grunting_boar_inn
+  defunct_reception:
+    title: The Defunct Reception
+    description: |-
+      You are standing in a dusty, defunct reception.  The staircase leads
+      down to the entrance hall.
+    exits:
+      d: entrance_to_the_grunting_boar_inn
+  bakery:
+    title: The Bakery
+    description: |-
+      You are standing inside the small bakery.  A sweet scent of Danish and fine bread fills the room.  The bread and Danish are arranged in fine order on the shelves, and seem to be of the finest quality.
+      A small sign is on the counter.
+    exits:
+      s: main_street_2
+  general_store:
+    title: The General Store
+    description: |-
+      You are inside the general store.  All sorts of items are stacked on shelves behind the counter, safely out of your reach.
+      A small note hangs on the wall.
+    exits:
+      s: main_street_3
+  weapon_shop:
+    title: The Weapon Shop
+    description: You are inside the weapon shop.  There is a small note on the counter.
+    exits:
+      s: main_street_4
+  main_street_1:
+    title: Main Street
+    description: You are at the end of the main street of Midgaard.  South of here is the entrance to the Guild of Magic Users.  The street continues east towards the market square.  The magic shop is to the north and to the west is the city gate.
+    exits:
+      n: magic_shop
+      e: main_street_2
+      s: entrance_to_mages_guild
+      w: inside_the_west_gate_of_midgaard
+  main_street_2:
+    title: Main Street
+    description: You are on the main street passing through the City of Midgaard.  South of here is the entrance to the Armoury, and the bakery is to the north.  East of here is the market square.
+    exits:
+      n: bakery
+      e: market_square
+      s: armoury
+      w: main_street_1
+  market_square:
+    title: Market Square
+    description: |-
+      You are standing on the market square, the famous Square of Midgaard.
+      A large, peculiar looking statue is standing in the middle of the square.
+      Roads lead in every direction, north to the temple square, south to the common square, east and westbound is the main street.
+    exits:
+      n: temple_square
+      e: main_street_3
+      s: common_square
+      w: main_street_2
+  main_street_3:
+    title: The Main Street
+    description: You are on Main Street crossing through town.  To the north is the general store, and the main street continues east.  To the west you see and hear the market place and to the south is the Jeweller's Shop.
+    exits:
+      n: general_store
+      e: main_street_4
+      s: jewellers_shop
+      w: market_square
+  main_street_4:
+    title: The Main Street
+    description: The main street, to the north is the weapon shop and to the south is the Guild of Swordsmen.  To the east you leave town and to the west the street leads to the market square.
+    exits:
+      n: weapon_shop
+      e: inside_the_east_gate_of_midgaard
+      s: entrance_hall_to_the_guild_of_swordsmen
+      w: main_street_3
+  entrance_to_mages_guild:
+    title: Entrance to Mage's Guild
+    description: The entrance hall is a small, poor lighted room.
+    exits:
+      n: main_street_1
+      s: mages_bar
+  mages_bar:
+    title: Mage's Bar
+    description: The bar is one of the wierdest in the land.  Mystical images float around the air.  Illusions of fine furniture appear all around the room.
+    exits:
+      n: entrance_to_mages_guild
+      e: mages_laboratory
+  mages_laboratory:
+    title: Mage's Laboratory
+    description: This is the Magical Experiments Laboratory.  Dark smoke-stained stones arch over numerous huge oaken tables, most of these cluttered with strange-looking pipes and flasks.  The floor is covered with half-erased pentagrams and even weirder symbols, and a blackboard in a dark corner has only been partially cleaned, some painful-looking letters faintly visible.  A well in the middle of the floor leads down into darkness.  Vile smells waft from the depths.
+    exits:
+      w: mages_bar
+  armoury:
+    title: The Armoury
+    description: The armoury with all kinds of armours on the walls and in the window.  You see helmets, shields and chain mails.  To the north is the main street. On the wall is a small note.
+    exits:
+      n: main_street_2
+  entrance_hall_to_the_guild_of_swordsmen:
+    title: Entrance Hall to the Guild of Swordsmen
+    description: The entrance hall to the Guild of Swordsmen.  A place where one has to be careful not to say something wrong (or right).  To the east is the bar and to the north is the main street.
+    exits:
+      n: main_street_4
+      e: bar_of_swordsmen
+  bar_of_swordsmen:
+    title: The Bar of Swordsmen
+    description: The bar of swordsmen, once upon a time beautifully furnished.  But now the furniture is all around you in small pieces.  To the south is the yard, and to the west is the entrance hall.
+    exits:
+      s: tournament_and_practice_yard
+      w: entrance_hall_to_the_guild_of_swordsmen
+  tournament_and_practice_yard:
+    title: The Tournament and Practice Yard
+    description: The practice yard of the fighters.  To the north is the bar.  A well leads down into darkness.
+    exits:
+      n: bar_of_swordsmen
+  eastern_end_of_poor_alley:
+    title: Eastern End of Poor Alley
+    description: You are at the poor alley. South of here is the Grubby Inn and to the east you see common square. Melancholy's map shop is north. The alley continues further west.
+    exits:
+      n: melancholys_maps
+      e: common_square
+      s: grubby_inn
+      w: poor_alley
+  common_square:
+    title: The Common Square
+    description: |-
+      The common square, people pass you, talking to each other.  To the west is
+      the poor alley and to the east is the dark alley.  To the north, this square
+      is connected to the market square.  From the south you notice a nasty smell.
+    exits:
+      n: market_square
+      e: dark_alley
+      s: dump
+      w: eastern_end_of_poor_alley
+  dark_alley:
+    title: The Dark Alley
+    description: |-
+      The dark alley, to the west is the common square and to the south is the
+      Guild of Thieves.  Grebe's Tavern, the famous sailor's dive, is north.
+      The alley continues east.
+    exits:
+      n: grebes_tavern
+      e: alley_at_levee
+      s: entrance_hall_to_the_guild_of_thieves
+      w: common_square
+  entrance_hall_to_the_guild_of_thieves:
+    title: Entrance Hall to the Guild of Thieves
+    description: |-
+      The entrance hall to the thieves' and assassins' guild.  A place where you
+      can lose both your life and your money, if you are not careful.  To the north
+      is the dark alley and to the east is the thieves' bar.
+    exits:
+      n: dark_alley
+      e: thieves_bar
+  thieves_bar:
+    title: The Thieves Bar
+    description: |-
+      The bar of the thieves.  Once upon a time this place was beautifully
+      furnished, but now it seems almost empty.  To the south is the yard, and to
+      the west is the entrance hall.
+         (Maybe the furniture has been stolen?!)
+    exits:
+      s: secret_yard
+      w: entrance_hall_to_the_guild_of_thieves
+  secret_yard:
+    title: The Secret Yard
+    description: |-
+      The secret practice yard of thieves and assassins.  To the north is the
+      bar.  A well leads down into darkness.
+    exits:
+      n: thieves_bar
+  dump:
+    title: The Dump
+    description: |-
+      The dump, where the people from the city drop their garbage.  Through the
+      garbage you can see a large junction of pipes, looks like the entrance to the
+      sewer system.  South of here you see the river and to the north is the common
+      square.  A rickety old bridge leads south to the promenade.
+    exits:
+      n: common_square
+      s: south_bridge
+  pet_shop:
+    title: The Pet Shop
+    description: |-
+      The Pet Shop is a small crowded store, full of cages and animals of
+      various sorts and sizes.  There is a sign on the wall.
+    exits:
+      s: alley_at_levee
+  pet_shop_store:
+    title: Pet Shop Store
+    description: |-
+      This is the small dark room in which the Pet Shop Boy keeps his pets.
+      It is vital that this room be immediately after the pet shop.
+  magic_shop:
+    title: The Magic Shop
+    description: You are in a small room that smells of rare chemicals and spices. Dividing the room in two is a large desk, and on the wall behind it are numerous shelves crammed with jars, bottles, books and scrolls of all sorts and sizes.
+    exits:
+      s: main_street_1
+  jewellers_shop:
+    title: The Jeweller's Shop
+    description: You are in a small, beautifully furnished room. The warm light emanating from the small oil lamps on the walls is reflected in the hard, polished surface of the big mahogany desk that stands in the centre of the room. A small sign with golden letters stands on the desk.
+    exits:
+      n: main_street_3
+  leather_shop:
+    title: The Leather Shop
+    description: An acrid smell fills this large room. Along the walls are numerous shelves containing all sorts of animal hide and in the crackling fireplace hangs a big iron pot with boiling water. In the middle of the room is a large oak table. A wooden sign is hanging above the fireplace.
+    exits:
+      s: poor_alley
+  inside_the_west_gate_of_midgaard:
+    title: Inside the West Gate of Midgaard
+    description: You are by two small towers that have been built into the city wall and connected with a footbridge across the heavy wooden gate. Main Street leads east and Wall Road leads both north and south from here.
+    exits:
+      n: wall_road_7
+      e: main_street_1
+      s: wall_road_1
+      w:
+        to: outside_the_west_gate_of_midgaard
+        door:
+          initialState: closed
+  inside_the_east_gate_of_midgaard:
+    title: Inside the East Gate of Midgaard
+    description: You are by two small towers that have been built into the city wall and connected with a footbridge across the heavy wooden gate. Main Street leads west from here. Wall road crosses the street, heading north and south along the city wall.
+    exits:
+      n: wall_road_14
+      e:
+        to: outside_the_east_gate_of_midgaard
+        door:
+          initialState: closed
+      s: wall_road_4
+      w: main_street_4
+  wall_road_1:
+    title: Wall Road
+    description: You are walking next to the western city wall. The road continues further south and the city gate is just north of here.
+    exits:
+      n: inside_the_west_gate_of_midgaard
+      s: wall_road_2
+  wall_road_2:
+    title: Wall Road
+    description: You are walking next to the western city wall. Wall Road continues further north and south. A small, poor alley leads east. Some letters have been written on the wall here.
+    exits:
+      n: wall_road_1
+      e: poor_alley
+      s: wall_road_3
+  poor_alley:
+    title: Poor Alley
+    description: You are in narrow and dirty alley leading east and west. The leather shop is to the north.
+    exits:
+      n: leather_shop
+      e: eastern_end_of_poor_alley
+      s: temple_of_stupid
+      w: wall_road_2
+  alley_at_levee:
+    title: Alley at Levee
+    description: You are standing in the alley which continues east and west.  South of here you see the levee.  North is the Pet Shop.
+    exits:
+      n: pet_shop
+      e: eastern_end_of_alley
+      s: levee
+      w: dark_alley
+  eastern_end_of_alley:
+    title: Eastern end of Alley
+    description: You are standing at the eastern end of the alley,  near the city walls.  Wall road loops around the city to your east, and you can see an old three-story warehouse to the south.  The Fountain of Youth Apothecary is north.
+    exits:
+      n: fountain_of_youth_apothecary
+      e: wall_road_5
+      s: abandoned_warehouse
+      w: alley_at_levee
+  wall_road_3:
+    title: Wall Road
+    description: You are standing on the road next to the western city wall which continues north.  South of here is a bridge across the river.  To the east, you see an odd looking building painted bright orange with purple trim... it must be the Mob Factory!
+    exits:
+      n: wall_road_2
+      s: on_the_bridge_1
+  grubby_inn:
+    title: Grubby Inn
+    description: You are inside the old Grubby Inn.  This place has not been cleaned for several decades, vile smells make you dizzy.
+    exits:
+      n: eastern_end_of_poor_alley
+  levee:
+    title: Levee
+    description: You are at the levee.  South of here you see the river gently flowing west. The river bank is very low making it possible to enter the river.  Directly across the river you can see a small boat landing built off of Kate's Diner.
+    exits:
+      n: alley_at_levee
+      s: on_the_river_3
+  abandoned_warehouse:
+    title: Abandoned Warehouse
+    description: You are inside the only room in the old warehouse.  The place is very dusty and appears to have been unused for many years.  The skylight spills violet-tinged light.
+    exits:
+      n: eastern_end_of_alley
+  on_the_bridge_1:
+    title: On the Bridge
+    description: You are standing on the stone bridge crosses the river.  The bridge is built out from the western city wall and the river flows west through an opening in the wall ten feet below the bridge.
+    exits:
+      n: wall_road_3
+      s: northwest_end_of_concourse
+  outside_the_west_gate_of_midgaard:
+    title: Outside the West Gate of Midgaard
+    description: You are by two small towers that have been built into the city wall and connected with a footbridge across the heavy wooden gate.  To the west you can see the edge of a big forest. A small dusty trail leads north along the wall.
+    exits:
+      e:
+        to: inside_the_west_gate_of_midgaard
+        door:
+          initialState: closed
+  outside_the_east_gate_of_midgaard:
+    title: Outside the East Gate of Midgaard
+    description: You are by two small towers that have been built into the city wall and connected with a footbridge across the heavy wooden gate.  To the east the plains stretch out in the distance. To the north a small dusty trail follow the city wall.
+    exits:
+      w:
+        to: inside_the_east_gate_of_midgaard
+        door:
+          initialState: closed
+  by_the_temple_altar:
+    title: By the Temple Altar
+    description: You are by the temple altar in the northern end of the Temple of Mota. A huge altar made from white polished marble is standing in front of you and behind it is a ten foot tall sitting statue of Odin, the King of the Gods. The back of the altar opens into a a beautiful atrium, above which can be seen a rainbow.
+    exits:
+      s: temple_of_mota
+  fountain_of_youth_apothecary:
+    title: The Fountain of Youth Apothecary
+    description: An old man putters around behind the counter, making strange love potions and curative philtres.  He turns as you enter, and looks on with avarice. Judging from the furnishings, he's been made very wealthy by his trade.
+    exits:
+      s: eastern_end_of_alley
+  the_air:
+    title: In the air...
+    description: WOW you can fly!  You are floating in the air above Temple Square of Midgaard.
+    exits:
+      d: temple_square
+  northwest_end_of_concourse:
+    title: Northwest end of Concourse
+    description: You are at the concourse, the city wall is just west.  A small promenade goes east, and the bridge is just north of here.  The concourse continues south along the city wall.
+    exits:
+      n: on_the_bridge_1
+      e: promenade_1
+      s: on_the_concourse_5
+  promenade_1:
+    title: Promenade
+    description: The river gently flows west just north of here.  The promenade continues further east and to the west you see the city wall.  Park Road leads south from here.
+    exits:
+      e: promenade_2
+      s: park_road_5
+      w: northwest_end_of_concourse
+  promenade_2:
+    title: Promenade
+    description: The river gently flows west just north of here.  The promenade continues both east and west.  A rickety bridge crosses the river to the north, towards the city dump (fortunately, the wind is blowing towards the dump today). South of here you see the entrance to the park, and a small building seems to be just west of the entrance.  Austral Square, home of Kate's Diner, lies to your east.
+    exits:
+      n: south_bridge
+      e: austral_square
+      s: park_entrance
+      w: promenade_1
+  austral_square:
+    title: Austral Square
+    description: The Promenade opens here onto Austral Square, on the south bank of the Midgaard River.  All around you is the bustle of Southern Midgaard-- shopkeepers on break, a town gossip or two prattling away.  You hear the river lapping at the pilings of the dock by Kate's Diner, which is to your north.  Emerald Avenue begins to the south, the Promenade continues west, and the concourse ends to your east.
+    exits:
+      n: kates_diner
+      e: northeast_end_of_concourse
+      s: emerald_avenue_5
+      w: promenade_2
+  northeast_end_of_concourse:
+    title: Northeast end of Concourse
+    description: |-
+      You are at the Concourse.  The city wall is just east and Austral Square,
+      home of Kate's Diner, is west.  Looking across the river you see an old  
+      warehouse.  A strong stone bridge crosses the river to the north, where the
+      concourse becomes wall road.  The Concourse continues south along the wall.
+    exits:
+      n: on_the_bridge_2
+      s: on_the_concourse_at_penny_lane
+      w: austral_square
+  park_entrance:
+    title: Park Entrance
+    description: |-
+      You are standing just inside the small park of Midgaard.  To the north is
+      the promenade and a small path leads south into the park.  To your east is
+      the famous Park Cafe.
+    exits:
+      n: promenade_2
+      e: park_cafe
+      s: small_path_in_the_park_1
+  park_cafe:
+    title: Park Cafe
+    description: |-
+      You are inside Park Cafe, a very well lighted, cosy place. The cafe
+      is built from large logs. Through the windows in the northern wall you
+      see the river, and through the southern window you see many vigorous
+      colorful plants.
+    exits:
+      w: park_entrance
+  small_path_through_the_park:
+    title: Small path through the park
+    description: |-
+      You are walking along a small path through the park.  The path continues
+      south and east.
+    exits:
+      e: small_path_in_the_park_1
+      s: path_in_the_park_1
+  small_path_in_the_park_1:
+    title: Small path in the park
+    description: |-
+      You are standing on a small path inside the park.  The park entrance is
+      just north of here, and Park Cafe is just east of the entrance.  The path
+      leads further east and west.
+    exits:
+      n: park_entrance
+      e: small_path_in_the_park_2
+      w: small_path_through_the_park
+  small_path_in_the_park_2:
+    title: Small path in the park
+    description: |-
+      You are on a small path running through the park.  It continues west and
+      south and just north of here you see the southern wall of Park Cafe.
+    exits:
+      s: path_in_the_park_2
+      w: small_path_in_the_park_1
+  cityguard_head_quarters:
+    title: Cityguard Head Quarters
+    description: |-
+      You are inside a tidy office.  A big desk made from dark wood is standing
+      in the centre of the room.
+    exits:
+      e:
+        to: park_road_1
+        door:
+          initialState: closed
+      w:
+        to: captains_office
+        door:
+          initialState: locked
+  park_road_1:
+    title: Park Road
+    description: |-
+      The road continues north and south.  A building is just west of here, you
+      notice a sign on the door.  The park entrance is to the east.
+    exits:
+      n: park_road_5
+      e: western_park_entrance
+      s: park_road_2
+      w:
+        to: cityguard_head_quarters
+        door:
+          initialState: closed
+  western_park_entrance:
+    title: Western Park Entrance
+    description: You are standing at the western end of the park.  A small path leads east into the park and going west through the entrance you will reach Park Road.
+    exits:
+      e: path_in_the_park_1
+      w: park_road_1
+  path_in_the_park_1:
+    title: A path in the park
+    description: You are in the park.  The paths lead north and west.  Westwards is the park entrance and to the east you see a small pond.
+    exits:
+      n: small_path_through_the_park
+      e: pond
+      w: western_park_entrance
+  pond:
+    title: The Pond
+    description: You are swimming around in the pond, feeling rather stupid.  You can get back on the path from the eastern and western end of the pond.
+    exits:
+      e: path_in_the_park_2
+      w: path_in_the_park_1
+  path_in_the_park_2:
+    title: A path in the park
+    description: You are in the park.  The paths lead north and east.  Eastwards is the park entrance and to the west you see a small pond.
+    exits:
+      n: small_path_in_the_park_2
+      e: eastern_park_entrance
+      w: pond
+  eastern_park_entrance:
+    title: Eastern Park Entrance
+    description: You are standing at the eastern end of the park.  A small path leads west into the park.  Going east through the entrance you will reach Emerald Avenue.
+    exits:
+      e: emerald_avenue_1
+      w: path_in_the_park_2
+  emerald_avenue_1:
+    title: Emerald Avenue
+    description: You are at Emerald Avenue which continues north and south.  To the west is the park entrance and to the east is the not very big Town Hall of Midgaard.
+    exits:
+      n: emerald_avenue_5
+      e: waiting_room
+      s: emerald_avenue_2
+      w: eastern_park_entrance
+  park_road_2:
+    title: Park Road
+    description: You are on Park Road which leads north and south.
+    exits:
+      n: park_road_1
+      s: park_road_6
+  emerald_avenue_2:
+    title: Emerald Avenue
+    description: You are standing at a bend on Emerald Avenue.  The road leads north and west. To the east, you see some run-down slums...it looks like the bad part of town.
+    exits:
+      n: emerald_avenue_1
+      w: emerald_avenue_6
+  road_crossing:
+    title: Road Crossing
+    description: You are in the middle of the road cross.  Roads lead in all directions. A huge black iron chain as thick as a tree trunk is fastened into the ground at the centre of the road cross.  Its other end leads directly upwards towards the sky. A road sign is here.
+    exits:
+      n: emerald_avenue_6
+      e: park_road_7
+      s: emerald_avenue_7
+      w: park_road_6
+  emerald_avenue_3:
+    title: Emerald Avenue
+    description: You are standing at a bend on Emerald Avenue.  The road leads south and east.
+    exits:
+      e: emerald_avenue_7
+      s: emerald_avenue_4
+  park_road_3:
+    title: Park Road
+    description: You are on Park Road which leads south and north.  Elm Street is east of here.
+    exits:
+      n: park_road_7
+      e: elm_street_1
+      s: park_road_4
+  elm_street_1:
+    title: Elm Street
+    description: You are on Elm street.  Park Road is to the west and Elm Street continues in eastward direction.
+    exits:
+      e: elm_street_2
+      w: park_road_3
+  elm_street_2:
+    title: Elm Street
+    description: You near the end of Elm Street.  An old elm tree grows here.  A heavy iron grating is south, surrounding the city's graveyard.  You can see a sign hanging on the grate.  The concourse joins Elm Street to the east, and the street ends to the north near a run-down neighborhood.
+    exits:
+      n: end_of_elm_street
+      e: on_the_concourse_at_elm_street
+      w: elm_street_1
+  emerald_avenue_4:
+    title: Emerald Avenue
+    description: You are on Emerald Avenue which continues north. The Concourse is south of here.
+    exits:
+      n: emerald_avenue_3
+      s: on_the_concourse_2
+  park_road_4:
+    title: Park Road
+    description: You are on Park Road which continues north.  The Concourse is south of here.
+    exits:
+      n: park_road_3
+      s: on_the_concourse_3
+  on_the_concourse_1:
+    title: On the Concourse
+    description: You are at the southwest corner of the city wall.  The Concourse leads both north and east.
+    exits:
+      n: on_the_concourse_near_the_park
+      e: on_the_concourse_2
+  on_the_concourse_2:
+    title: On the Concourse
+    description: You are walking around the scenic concourse as it continues its path around the city of Midgaard.  The south gate of the city lies to your east, and the southwestern corner of the city wall is west.  Emerald Avenue stretches out to the north.
+    exits:
+      n: emerald_avenue_4
+      e: inside_the_south_gate_of_midgaard
+      w: on_the_concourse_1
+  on_the_concourse_3:
+    title: On the Concourse
+    description: The concourse continues its path around the city.  The southern gates of the city are west of here, and park road lies north.  The northeastern corner of the city wall is east.
+    exits:
+      n: park_road_4
+      e: on_the_concourse_4
+      w: inside_the_south_gate_of_midgaard
+  on_the_concourse_4:
+    title: On the Concourse
+    description: You are at the southeast corner of the city wall.  The Concourse leads both north and west.
+    exits:
+      n: on_the_concourse_at_elm_street
+      w: on_the_concourse_3
+  park_road_5:
+    title: Park Road
+    description: You are at Park Road which continues north and south.
+    exits:
+      n: promenade_1
+      s: park_road_1
+  emerald_avenue_5:
+    title: Emerald Avenue
+    description: You are standing on the north end of Emerald Avenue.  To the north is Austral Square and Kate's Diner, to the east is the small street Penny Lane.
+    exits:
+      n: austral_square
+      e: penny_lane_1
+      s: emerald_avenue_1
+  emerald_avenue_6:
+    title: Emerald Avenue
+    description: You are standing at a bend on Emerald Avenue.  To the east the road goes on and to the south is the Road Crossing.
+    exits:
+      e: emerald_avenue_2
+      s: road_crossing
+  emerald_avenue_7:
+    title: Emerald Avenue
+    description: You are standing at a bend on Emerald Avenue.  To the west the road goes on and to the north is the Road Crossing.
+    exits:
+      n: road_crossing
+      w: emerald_avenue_3
+  park_road_6:
+    title: Park Road
+    description: You are at a bend on Park Road.  To the north the road goes on and to the east is the Road Crossing.  To the south, the ancient cliffs rise from deep under the ground, forming a wall.
+    exits:
+      n: park_road_2
+      e: road_crossing
+  park_road_7:
+    title: Park Road
+    description: You are at a bend on Park Road.  To the south the road goes on and to the west is the Road Crossing.
+    exits:
+      s: park_road_3
+      w: road_crossing
+  waiting_room:
+    title: The Waiting Room
+    description: You are standing in the waiting room at the town hall.  Wooden chairs stand along the walls and a long desk is placed in the middle of the room.
+    exits:
+      e: mayors_office
+      w: emerald_avenue_1
+  mayors_office:
+    title: The Mayor's Office
+    description: You are in the not very big office of the Mayor of Midgaard.  A large and polished but completely empty desk is standing in front of an armchair that looks so comfortable that it most of all resembles a bed with the head end raised slightly.
+    exits:
+      w: waiting_room
+  penny_lane_1:
+    title: Penny Lane
+    description: You are on Penny Lane.  Emerald Avenue is to the west and Penny Lane continues in eastward direction.
+    exits:
+      e: penny_lane_2
+      w: emerald_avenue_5
+  penny_lane_2:
+    title: Penny Lane
+    description: You are on Penny Lane.  The narrow road continues north and west, and the concourse intersects this street to the east.
+    exits:
+      n: end_of_penny_lane
+      e: on_the_concourse_at_penny_lane
+      w: penny_lane_1
+  end_of_penny_lane:
+    title: The end of Penny Lane
+    description: You are at the end of Penny Lane.  The only exit appears to be south.
+    exits:
+      s: penny_lane_2
+  captains_office:
+    title: Captain's Office
+    description: You are in the Office of the Captain of the Guard.  The Midgaard Coat of Arms is hanging on the north wall and a heavy steel door is to the south.
+    exits:
+      e:
+        to: cityguard_head_quarters
+        door:
+          initialState: locked
+      s:
+        to: jail
+        door:
+          initialState: locked
+  jail:
+    title: The Jail
+    description: You are in a dark and humid jail.  The dark stone walls are hard and cold to the touch.  A heavy steel door is to the north.
+    exits:
+      n:
+        to: captains_office
+        door:
+          initialState: locked
+  end_of_elm_street:
+    title: The end of Elm Street
+    description: Elm street ends here, next to a dangerous-looking run down neighborhood. You can enter the slums to the east, or head towards the graveyard to the south.  It occurs to you that this isn't the happiest section of town.
+    exits:
+      s: elm_street_2
+  kates_diner:
+    title: Kate's Diner
+    description: The smells of baking bread and simmering stew lead you dancing through the doorway of the diner.  No greasy spoons to be seen here-- the booth walls are covered in casual paisleys; the chairs are carved wood, rescued from garage sales.  Most tables have chess or backgammon boards carved and painted on their fingertip-smooth tops.  The refrain of some musical or other from the 1930's blends with the dusty golden light and the wonderful smells to put you completely at ease.  A huge picture window looks out over the Midgaard River, and a doorway leads north onto the dock and the South Bank river landing, while the main entrance to the south returns you to Austral Square. On most days you will find Kate here, testing a batch of stew or brewing a special pot of cinnamon coffee, eerily just in time for your arrival Pull up a chair, perhaps play a game, and take time out to talk.
+    exits:
+      n: on_the_river_3
+      s: austral_square
+  melancholys_maps:
+    title: Melancholy's Maps
+    description: As you walk in, a sudden gust of wind enters the shop and sends several scraps of paper fly around the room.  You blink as the dust you've stirred up stings your eyes, and take a look around the shop.  This shop is cluttered with old pieces of parchment, stacks of books, and odd scraps.  A desk with slightly less clutter than the rest of the shop is in front of you.  A scroll case full of scrolls is behind the desk.  A bookcase is to the right of you, and to the left is a window overlooking the Common Square.  A small door, half hidden by a stack of books, leads to a room in the back of the shop.
+    exits:
+      n:
+        to: melancholys_room
+        door:
+          initialState: locked
+      s: eastern_end_of_poor_alley
+  melancholys_room:
+    title: Melancholy's Room
+    description: A faint smell of incense teases your nose as you enter this room.  You step onto a soft bearskin rug and look around.  A simple bed lies against the far wall.  At the foot of it is a sturdy, ironbound chest, most likely full of Melancholy's trappings from her adventuring days.  On a small table under a window to the east is a vase with a single white rose.  Other than that, the room is quite bare.
+    exits:
+      s:
+        to: melancholys_maps
+        door:
+          initialState: locked
+  temple_of_stupid:
+    title: Temple Of Stupid
+    description: As you enter the abandoned warehouse your eyes blink violently to adjust to the almost total darkness.  You wonder where the windows are as you step into a mud puddle in the middle of the floor.  As your eyes adjust, you realize that there are mud puddles all around the room, and this is some weird version of windows.  In a flash of revelation, you realize that you've entered the Temple of Stupid.
+    exits:
+      n: poor_alley
+  under_the_bridge:
+    title: Under the Bridge
+    description: The arch under the bridge is covered by seaweed for one foot above the surface of the river.  The water gently flows through an opening in the lower part of the city wall.
+    exits:
+      e: on_the_river_1
+  on_the_river_1:
+    title: On the River
+    description: North of here you see the miserable buildings of the poor alley.  The river flows west towards the bridge.  The riverbanks are too steep to climb.
+    exits:
+      e: on_the_river_2
+      w: under_the_bridge
+  on_the_river_2:
+    title: On the River
+    description: North of here you see the dump.  The river flows from east to west.  The riverbanks are too steep to climb.  A bridge passes overhead, connecting the dump to the promenade.
+    exits:
+      e: on_the_river_3
+      w: on_the_river_1
+  on_the_river_3:
+    title: On the River
+    description: The levee is directly north of here, and a small boat landing for Kate's Diner is to the south.  The river flows in an east west direction.
+    exits:
+      n: levee
+      e: on_the_river_4
+      s: kates_diner
+      w: on_the_river_2
+  on_the_river_4:
+    title: On the River
+    description: You see the warehouse on the northern riverbank.  East of here the river passes under the eastern bridge and through the city wall. The banks of the levee are west, in the direction of the current.
+    exits:
+      e: on_the_river_5
+      w: on_the_river_3
+  on_the_river_5:
+    title: On the River
+    description: The river enters from a hole in the eastern city wall.  The hole has been blocked by several vertically positioned iron bars set into the wall. Overhead you can see the stone buttresses of the eastern bridge.
+    exits:
+      w: on_the_river_4
+  wall_road_4:
+    title: Wall Road
+    description: Wall road extends north and south along the eastern walls of the city. The east gate is north of you, south is an intersection with a dark alley. You check to make sure you still have your wallet.
+    exits:
+      n: inside_the_east_gate_of_midgaard
+      s: wall_road_5
+  wall_road_5:
+    title: Wall Road
+    description: You are walking along the eastern wall of the city, on a road extending between the east gate and a bridge to the south.  A dark, dirty alley lies west of here.  You step carefully around a pool of liquid...who knows what it could be in a place this foul...
+    exits:
+      n: wall_road_4
+      s: wall_road_6
+      w: eastern_end_of_alley
+  wall_road_6:
+    title: Wall Road
+    description: The walls of Midgaard tower above you to the east, keeping the city safe from its enemies...you hope.  An intersection with a dark alley lies north, and a bridge over the Midgaard river is south.  Beyond the bridge wall road turns in the concourse.
+    exits:
+      n: wall_road_5
+      s: on_the_bridge_2
+  on_the_bridge_2:
+    title: On the Bridge
+    description: You are crossing a strong stone bridge, which spans the Midgaard river. Below you, the river flows into an opening in the city wall, sealed with strong metal bars.  North of you is wall road, south of here the concourse loops around the inside of the city walls.
+    exits:
+      n: wall_road_6
+      s: northeast_end_of_concourse
+  south_bridge:
+    title: The South Bridge
+    description: You are standing on a small, rickety bridge leading from the Midgaard City Dump to the much more attractive promenade of the southern parts of Midgaard.  You can smell the stench of the dump to the north, the fresher air of the promenade seems preferable.  Below you are the swift-moving currents of the Midgaard river.
+    exits:
+      n:
+        to: dump
+        door:
+          initialState: closed
+      s: promenade_2
+  inside_the_south_gate_of_midgaard:
+    title: Inside the South Gate of Midgaard
+    description: Two strong stone towers surround a heavy wooden gate set into the city wall, to guard against the goblins that lurk in the southern forests.  You can exit the city to the south, if you dare, or walk down the concourse to the east or west.
+    exits:
+      e: on_the_concourse_3
+      s:
+        to: outside_the_south_gate_of_midgaard
+        door:
+          initialState: closed
+      w: on_the_concourse_2
+  outside_the_south_gate_of_midgaard:
+    title: Outside the South Gate of Midgaard
+    description: You are standing outside the strong wooden gate on the southern walls of Midgaard.  Guards eye you suspiciously from the two towers on either side of the gate, as they stand watch to protect the city from the goblins of this forest.  The trees and goblins of the Miden'nir are south, the gate back to Migaard lies north.
+    exits:
+      n:
+        to: inside_the_south_gate_of_midgaard
+        door:
+          initialState: closed
+  wall_road_7:
+    title: Wall Road
+    description: You are walking along wall road, just north of the west gate of Midgaard.  The road continues along the western wall to the north, towards an intersection with a busy Clan street.
+    exits:
+      n: wall_road_8
+      s: inside_the_west_gate_of_midgaard
+  wall_road_8:
+    title: Wall Road
+    description: Wall road intersects with a crowded Clan Road here, filled with shops and artisans.  The street stretches off to the east, towards the far wall of the city.  Wall road continues to the north and south.
+    exits:
+      n: wall_road_9
+      e: clan_road_1
+      s: wall_road_7
+  wall_road_9:
+    title: Wall Road
+    description: You are walking along wall road, which extends along the inside of the western wall of Midgaard.  To the south, you can see an intersection with a crowded Clan street.  The northwestern corner of the city wall lies ahead to the north.
+    exits:
+      n: northwest_corner
+      s: wall_road_8
+  northwest_corner:
+    title: The Northwest Corner
+    description: You are standing beneath the northwestern corner of the city wall, on a turn in wall road.  You can head south, towards the west gate, or east, to the north gate.
+    exits:
+      e: wall_road_10
+      s: wall_road_9
+  wall_road_10:
+    title: Wall Road
+    description: The city walls tower over you as walk down wall road, between the northwestern corner of the wall to the west, and the northern gate of Midgaard to the east.
+    exits:
+      e: inside_the_north_gate_of_midgaard
+      w: northwest_corner
+  inside_the_north_gate_of_midgaard:
+    title: Inside the North Gate of Midgaard
+    description: Two small towers surround a strong wooden gate, connected by a small stone bridge set with murder holes.  This gate is not as heavily guarded as the others, as the plains outside are safe to travel.  You can leave midgaard to the north, or continues along wall road to the west and east.  A teeming clan street is visible to the south, and beyond that the graceful spires of the Temple of Mota, but there is no way to reach them from here.
+    exits:
+      n:
+        to: outside_the_north_gate_of_midgaard
+        door:
+          initialState: closed
+      e: wall_road_11
+      w: wall_road_10
+  wall_road_11:
+    title: Wall Road
+    description: You are walking along wall road, between the northern gate of the city and the northeastern corner of the city walls.  You can see bloodstains on the road... better be on guard for thieves.
+    exits:
+      e: northeast_corner
+      w: inside_the_north_gate_of_midgaard
+  northeast_corner:
+    title: The Northeast Corner
+    description: Wall road turns the corner here, as you pass by the northeastern edge of the city wall.  The north gate lies to your west, and the road south leads to the eastern gate of Midgaard.
+    exits:
+      s: wall_road_12
+      w: wall_road_11
+  wall_road_12:
+    title: Wall Road
+    description: Just south of you is an intersection with a crowded clan street.  The eastern wall of Midgaard is beside you, and to the north you can see the northeast corner of the city wall.
+    exits:
+      n: northeast_corner
+      s: wall_road_13
+  wall_road_13:
+    title: Wall Road
+    description: Here, wall road meets up with a busy clan street heading off towards the west, and the far wall of the city.  You can smell spices, perfume, freshly cured hide, and other strange scents, all mingle together in one heady aroma. Wall road continues to the north and south.
+    exits:
+      n: wall_road_12
+      s: wall_road_14
+      w: clan_road_6
+  wall_road_14:
+    title: Wall Road
+    description: You are near the center of wall road, just north of the east gate of the city. To the north, you can see an intersection with a crowded clan street. The guards at the gate eye you suspiciously from afar.
+    exits:
+      n: wall_road_13
+      s: inside_the_east_gate_of_midgaard
+  outside_the_north_gate_of_midgaard:
+    title: Outside the North Gate of Midgaard
+    description: You stand outside the north gate of the walled city of Midgaard.  A dusty trail is visibile to the north, it stretches around the walls of the city.  Further north are the wide expanses of the northern plains, leading to the village of Ofcol.  You can return to Midgaard to the south.
+    exits:
+      s:
+        to: inside_the_north_gate_of_midgaard
+        door:
+          initialState: closed
+  on_the_concourse_5:
+    title: On the Concourse
+    description: The strong stone walls of Midgaard rise up to the west, keeping evil at bay. The concourse heads towards a bridge to the north, and continues south alongside a beautiful park.
+    exits:
+      n: northwest_end_of_concourse
+      s: on_the_concourse_near_the_park
+  on_the_concourse_near_the_park:
+    title: On the Concourse near the park
+    description: You are walking down the Concoruse, along the western wall of Midgaard.  To the north, the road passes by a beautiful park, to the south, you can see the southwest corner of the city wall.
+    exits:
+      n: on_the_concourse_5
+      s: on_the_concourse_1
+  on_the_concourse_at_penny_lane:
+    title: On the Concourse at Penny Lane
+    description: You are on a road leading around the inner walls of Midgaard.  To the north, the concourse heads towards a bridge into northern Midgaard.  To the south, you can see an intersection with Elm Street.  The quaint paved streets of Penny Lane lie west.
+    exits:
+      n: northeast_end_of_concourse
+      s: on_the_concourse_at_elm_street
+      w: penny_lane_2
+  on_the_concourse_at_elm_street:
+    title: On the Concourse at Elm Street
+    description: The air grows chill as you pass near the Elm Street graveyard.  The walls of Midgaard are to the east, and the concourse continues to the north and south. To your west, you see Elm Street at the graveyard entrance.
+    exits:
+      n: on_the_concourse_at_penny_lane
+      s: on_the_concourse_4
+      w: elm_street_2
+  clan_road_1:
+    title: Clan Road
+    description: You are standing on the western end of Clan Road.  The traffic here is light.  This is a quieter section of Midgaard.  You can hear the sound of haggling coming from the east.
+    exits:
+      e: clan_road_2
+      w: wall_road_8
+  clan_road_2:
+    title: Clan Road
+    description: You are walking along Clan Road.  To the south of you is the money changer. Clan Road continues on to the east and the west.
+    exits:
+      e: clan_road_3
+      s: money_changers_room
+      w: clan_road_1
+  clan_road_3:
+    title: Clan Road
+    description: The shops on this stretch of Clan road are long-closed and boarded up. Not much traffic passes through this part, as there is nothing to buy.
+    exits:
+      e: clan_road_4
+      w: clan_road_2
+  clan_road_4:
+    title: Clan Road
+    description: Noise and light abound on this part of Clan Road.  Clan road continues off to the east and west.
+    exits:
+      e: clan_road_5
+      w: clan_road_3
+  clan_road_5:
+    title: Clan Road
+    description: Clan Road seems to widen here slightly, allowing more traffic to travel through the area.  To the south is another entrance to the busy pub.  This door is also open wide and spilling forth the sounds of happy patrons.  Clan Road continues to the east and west.
+    exits:
+      e: clan_road_6
+      s: room_in_the_pub
+      w: clan_road_4
+  clan_road_6:
+    title: Clan Road
+    description: You are at the eastern end of Clan Road.  To the east of you, the tall wall around the city looms up before you and casts its shadow on you.  Clan Road continues to the west.
+    exits:
+      e: wall_road_13
+      w: clan_road_5
+  money_changers_room:
+    title: A Money Changer's Room
+    description: A few strategically placed lanterns keep this place well-lit in the absence of any windows.  The room is surprisingly well appointed with tapestries hanging on the walls.  You'd wager your life the moneylender's guards are behind them, as there are none here.  The moneylender himself works from behind a large desk, no doubt holding a fortune in gold and silver. A smallish sign hangs on the wall, lettered in common.
+    exits:
+      n: clan_road_2
+  grebes_tavern:
+    title: Grebe's Tavern
+    description: Dive.  That's all you can say about this place; its a dive.  You step carefully over the dead and/or drunk sailors on the floor toward the center of the room.  There's no decorations on the wall; they've all been ripped down in anger or for use as weapons at one time or another.  Looking around, you search vainly for a clean table to sit at, and then give up.
+    exits:
+      s: dark_alley
+  andys_pub:
+    title: Andy's Pub
+    description: The busy pub is filled with patrons.  People are laughing and singing. A minstrel plays his lute in another part of the pub, and a few people are even dancing.  Andy, the pubs owner, wanders around and checks to see that the needs of his customers are met.  The bar is to your south.  East of you is another section of the pub.  You know that there are rooms to be had somewhere around here...
+    exits:
+      e: room_in_the_pub
+      s: bar_1
+  room_in_the_pub:
+    title: A Room in the Pub
+    description: This part of the pub is filled with dancing and singing.  A wandering minstrel is on a chair in a corner with his lute.  A busty red headed woman is standing near him and singing a tale of comedic heroism. Drunk men sit laughing at their tables and busy bar maids weave through the crowd with full mugs and horns of ale and mead.  Another part of the pub is located to your west. The bar is to the south.  A set of steps occupy in a corner of the room.  They lead up to the inn section of this prosperous establishment.
+    exits:
+      n: clan_road_5
+      s: bar_2
+      w: andys_pub
+      u: inn
+  bar_1:
+    title: The Bar
+    description: A long mahogany bar is set in the back of the pub.  Mugs line a shelf behind the bar.  Bottles of strong, nasty looking liquids decorate one of the lower shelves.  A large cask rests on a table behind the bar.  A strong but friendly-looking bartender stands next to the cask polishing glasses.  A couple of the bar maids stand in a corner and throw the most inviting glances your way. A sign is on the wall.
+    exits:
+      n: andys_pub
+  bar_2:
+    title: The Bar
+    description: A long mahogany bar is set in the back of the pub.  Mugs line a shelf behind the bar.  Bottles of strong, nasty looking liquids decorate one of the lower shelves.  A large cask rests on a table behind the bar.  A strong but friendly looking bartender stands next to the cask polishing glasses.  A couple of the bar maids stand in a corner and throw the most inviting glances your way.
+    exits:
+      n: room_in_the_pub
+  inn:
+    title: The Inn
+    description: You are standing upstairs from Andy's Pub at Andy's Inn.  A few chairs and a couple of end tables give the room a `homey' atmosphere.  A large stone fireplace burns brightly against one wall and warms the room.  A large oak desk is nestled in one corner of the room.  A small man with wire-framed glasses sits behind the desk working dilligently on his books. He looks up as you enter the room.  He looks at you quizzically.  He is probably waiting for you to ask him for a room.
+    exits:
+      d: room_in_the_pub
+items:
+  barrel_of_beer:
+    displayName: a barrel of beer
+    description: A beer barrel has been left here.
+    keyword: barrel
+    consumable: true
+    basePrice: 160
+  bottle_of_beer:
+    displayName: a bottle of beer
+    description: A beer bottle has been left here.
+    keyword: bottle
+    consumable: true
+    basePrice: 10
+  bottle_of_ale:
+    displayName: a bottle of ale
+    description: A dark bottle of ale has been left here.
+    keyword: bottle
+    consumable: true
+    basePrice: 20
+  bottle_of_firebreather:
+    displayName: a bottle of firebreather
+    description: A bottle of firebreather has been left here.
+    keyword: bottle
+    consumable: true
+    basePrice: 10
+  bottle_of_local_specialty:
+    displayName: a bottle of local specialty
+    description: A dark bottle has been left here.
+    keyword: bottle
+    consumable: true
+    basePrice: 10
+  hassan_s_scimitar:
+    displayName: Hassan's scimitar
+    description: Hassan's scimitar lies upon the ground, waiting for its owner.
+    keyword: scimitar
+    slot: weapon
+    damage: 28
+    basePrice: 450
+  clan_stone:
+    displayName: A Clan Stone
+    description: Somebody left their Clan Stone here.
+    keyword: stone
+    consumable: true
+    basePrice: 20
+  big_pot_pie:
+    displayName: a big pot pie
+    description: A big pot pie has been left here.
+    keyword: potpie
+    consumable: true
+    basePrice: 20
+  donation_pit_1:
+    displayName: the donation pit
+    description: A pit for sacrifices is in front of the altar.
+    keyword: pit
+    basePrice: 0
+    room: by_the_temple_altar
+  bread:
+    displayName: a bread
+    description: A loaf of bread is here. It doesn't look too stale.
+    keyword: bread
+    consumable: true
+    basePrice: 10
+  cinnamon_roll:
+    displayName: a cinnamon roll
+    description: A piping hot cinnamon roll is here. It looks delicious!
+    keyword: cinnamon
+    consumable: true
+    basePrice: 10
+  batch_of_sara_s_cookies:
+    displayName: a batch of Sara's cookies
+    description: A plate of chocolate chip cookies is here.
+    keyword: cookies
+    consumable: true
+    basePrice: 10
+  blueberry_danish:
+    displayName: a blueberry danish
+    description: A scrumptious blueberry danish is here.
+    keyword: danish
+    consumable: true
+    basePrice: 10
+  dagger:
+    displayName: a dagger
+    description: A dagger with a long thin blade is here.
+    keyword: dagger
+    slot: weapon
+    damage: 2
+    basePrice: 10
+  small_sword:
+    displayName: a small sword
+    description: A small sword lies here.
+    keyword: sword
+    slot: weapon
+    damage: 3
+    basePrice: 30
+  long_sword_1:
+    displayName: a long sword
+    description: A long sword has been left here.
+    keyword: sword
+    slot: weapon
+    damage: 7
+    basePrice: 50
+  club:
+    displayName: a club
+    description: A stout wooden club is here.
+    keyword: club
+    slot: weapon
+    damage: 4
+    basePrice: 30
+  mace:
+    displayName: a mace
+    description: A heavy iron mace is here.
+    keyword: mace
+    slot: weapon
+    damage: 5
+    stats:
+      damage: 1
+    basePrice: 100
+  hand_axe:
+    displayName: a hand axe
+    description: A small hand axe lies forgotten on the floor.
+    keyword: axe
+    slot: weapon
+    damage: 4
+    basePrice: 50
+  battle_axe:
+    displayName: a battle axe
+    description: A large steel axe rests on the ground.
+    keyword: axe
+    slot: weapon
+    damage: 7
+    basePrice: 90
+  spear:
+    displayName: a spear
+    description: A long spear leans against the wall.
+    keyword: spear
+    slot: weapon
+    damage: 5
+    basePrice: 50
+  wooden_staff:
+    displayName: a wooden staff
+    description: A stout wooden staff lies on the floor.
+    keyword: staff
+    slot: weapon
+    damage: 5
+    basePrice: 40
+  flail:
+    displayName: a flail
+    description: A small iron flail is here.
+    keyword: flail
+    slot: weapon
+    damage: 4
+    stats:
+      armor: 1
+    basePrice: 50
+  torch:
+    displayName: a torch
+    description: A large torch.
+    keyword: torch
+    basePrice: 30
+  hooded_brass_lantern:
+    displayName: a hooded brass lantern
+    description: A hooded brass lantern has been left here.
+    keyword: lantern
+    basePrice: 40
+  bag:
+    displayName: a bag
+    description: A small bag.
+    keyword: bag
+    basePrice: 10
+  box:
+    displayName: a box
+    description: A small box.
+    keyword: box
+    basePrice: 10
+  scroll_of_cancellation:
+    displayName: a scroll of cancellation
+    description: A rolled vellum scroll is here.
+    keyword: scroll
+    basePrice: 10
+  scroll_of_identify_1:
+    displayName: a scroll of identify
+    description: A scroll has carelessly been left here.
+    keyword: scroll
+    basePrice: 10
+  yellow_potion_of_see_invisible_1:
+    displayName: a yellow potion of see invisible
+    description: A small yellow potion has carelessly been left here.
+    keyword: potion
+    consumable: true
+    basePrice: 10
+  scroll_of_recall_1:
+    displayName: a scroll of recall
+    description: A scroll has carelessly been left here.
+    keyword: scroll
+    basePrice: 20
+  ring_of_protection:
+    displayName: a ring of protection
+    description: an enchanted ring of protection sits on the floor.
+    keyword: ring
+    basePrice: 10
+  wand_of_magic_missiles:
+    displayName: a wand of magic missiles
+    description: a wooden stick lies on the ground.
+    keyword: wand
+    basePrice: 10
+  scale_mail_jacket:
+    displayName: a scale mail jacket
+    description: A scale mail jacket is lying on the ground.
+    keyword: jacket
+    slot: body
+    armor: 3
+    basePrice: 160
+  bronze_breast_plate:
+    displayName: a bronze breast plate
+    description: A bronze breast plate is lying on the ground.
+    keyword: bronze
+    slot: body
+    armor: 6
+    basePrice: 200
+  special_bronze_breast_plate:
+    displayName: a special bronze breast plate
+    description: A special bronze breast plate is lying on the ground.
+    keyword: bronze
+    slot: body
+    armor: 6
+    basePrice: 200
+  raft:
+    displayName: a raft
+    description: A raft has been left here.
+    keyword: raft
+    basePrice: 750
+  canoe:
+    displayName: a canoe
+    description: A canoe has been left here.
+    keyword: canoe
+    basePrice: 320
+  leather_bracer:
+    displayName: a leather bracer
+    description: A strong leather bracer is here.
+    keyword: bracer
+    basePrice: 10
+  leather_belt:
+    displayName: a leather belt
+    description: A soft leather belt is here.
+    keyword: belt
+    basePrice: 10
+  leather_girdle:
+    displayName: a leather girdle
+    description: A wide leather girdle is here.
+    keyword: girdle
+    basePrice: 20
+  leather_jerkin:
+    displayName: a leather jerkin
+    description: A leather jerkin is lying on the ground.
+    keyword: jerkin
+    slot: body
+    armor: 1
+    basePrice: 50
+  leather_cap:
+    displayName: a leather cap
+    description: A leather cap is lying on the ground.
+    keyword: cap
+    slot: head
+    armor: 1
+    basePrice: 10
+  pair_of_leather_pants:
+    displayName: a pair of leather pants
+    description: A pair of leather pants is lying on the ground.
+    keyword: pants
+    basePrice: 50
+  pair_of_leather_boots:
+    displayName: a pair of leather boots
+    description: A pair of leather boots lies here.
+    keyword: boots
+    slot: feet
+    armor: 1
+    basePrice: 30
+  pair_of_leather_gloves:
+    displayName: a pair of leather gloves
+    description: A pair of leather gloves is lying on the ground.
+    keyword: gloves
+    slot: hands
+    armor: 1
+    basePrice: 10
+  pair_of_leather_sleeves:
+    displayName: a pair of leather sleeves
+    description: A pair of leather sleeves is lying on the ground.
+    keyword: sleeves
+    basePrice: 30
+  hard_leather_jerkin:
+    displayName: a hard leather jerkin
+    description: A hard leather jerkin is lying on the ground.
+    keyword: jerkin
+    slot: body
+    armor: 1
+    basePrice: 80
+  hard_leather_cap:
+    displayName: a hard leather cap
+    description: A hard leather cap is lying on the ground.
+    keyword: cap
+    slot: head
+    armor: 1
+    basePrice: 20
+  pair_of_hard_leather_pants:
+    displayName: a pair of hard leather pants
+    description: A pair of hard leather pants is lying on the ground.
+    keyword: pants
+    basePrice: 70
+  pair_of_hard_leather_boots:
+    displayName: a pair of hard leather boots
+    description: A pair of hard leather boots lies here.
+    keyword: boots
+    slot: feet
+    armor: 1
+    basePrice: 40
+  pair_of_hard_leather_gloves:
+    displayName: a pair of hard leather gloves
+    description: A pair of hard leather gloves is lying on the ground.
+    keyword: gloves
+    slot: hands
+    armor: 1
+    basePrice: 10
+  pair_of_hard_leather_sleeves:
+    displayName: a pair of hard leather sleeves
+    description: A pair of hard leather sleeves is lying on the ground.
+    keyword: sleeves
+    basePrice: 40
+  scale_mail_jerkin:
+    displayName: a scale mail jerkin
+    description: A scale mail jerkin is lying on the ground.
+    keyword: jerkin
+    slot: body
+    armor: 3
+    basePrice: 140
+  scale_mail_coif:
+    displayName: a scale mail coif
+    description: A scale mail coif is lying on the ground.
+    keyword: coif
+    slot: head
+    armor: 3
+    basePrice: 40
+  long_scale_mail_skirt:
+    displayName: a long scale mail skirt
+    description: A long scale mail skirt is lying on the ground.
+    keyword: skirt
+    basePrice: 80
+  pair_of_reinforced_boots:
+    displayName: a pair of reinforced boots
+    description: A pair of reinforced boots lies here.
+    keyword: boots
+    slot: feet
+    armor: 3
+    basePrice: 40
+  pair_of_reinforced_gloves:
+    displayName: a pair of reinforced gloves
+    description: A pair of reinforced gloves is lying on the ground.
+    keyword: gloves
+    slot: hands
+    armor: 3
+    basePrice: 20
+  pair_of_scale_mail_sleeves:
+    displayName: a pair of scale mail sleeves
+    description: A pair of scale mail sleeves is lying on the ground.
+    keyword: sleeves
+    basePrice: 60
+  potion_of_healing_1:
+    displayName: a potion of healing
+    description: A potion of healing is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 20
+    basePrice: 10
+  potion_of_sanctuary_1:
+    displayName: a potion of sanctuary
+    description: A potion of sanctuary is here.
+    keyword: potion
+    consumable: true
+    basePrice: 10
+  potion_of_divine_protection_1:
+    displayName: a potion of divine protection
+    description: A potion of divine protection is here.
+    keyword: potion
+    consumable: true
+    basePrice: 10
+  potion_of_cure_light_wounds_1:
+    displayName: a potion of cure light wounds
+    description: A potion of cure light wounds is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 5
+    basePrice: 10
+  potion_of_cure_serious_wounds_1:
+    displayName: a potion of cure serious wounds
+    description: A potion of cure serious wounds is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 10
+    basePrice: 10
+  potion_of_cure_critical_wounds_1:
+    displayName: a potion of cure critical wounds
+    description: A potion of cure critical wounds is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 15
+    basePrice: 10
+  bottle_of_antidote_1:
+    displayName: a bottle of antidote
+    description: A bottle of antidote is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 14
+    basePrice: 10
+  potion_of_cure_blindness_1:
+    displayName: a potion of cure blindness
+    description: A potion of cure blindness is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 13
+    basePrice: 10
+  vial_of_holy_water_1:
+    displayName: a vial of holy water
+    description: A vial of holy water is here.
+    keyword: vial
+    consumable: true
+    onUse:
+      healHp: 20
+    basePrice: 10
+  potion_of_armor_1:
+    displayName: a potion of armor
+    description: A potion of armor is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 10
+    basePrice: 10
+  potion_of_negation_1:
+    displayName: a potion of negation
+    description: A potion of negation is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 35
+    basePrice: 10
+  potion_of_flying_1:
+    displayName: a potion of flying
+    description: A potion of flying is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 9
+    basePrice: 10
+  potion_of_true_sight_1:
+    displayName: a potion of true sight
+    description: A potion of true sight is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 10
+    basePrice: 10
+  small_metal_shield:
+    displayName: a small metal shield
+    description: A small metal shield is lying on the ground.
+    keyword: shield
+    slot: offhand
+    armor: 4
+    basePrice: 30
+  cup_of_tea:
+    displayName: a cup of tea
+    description: A cup has been set here.
+    keyword: tea
+    consumable: true
+    basePrice: 10
+  cup_of_coffee:
+    displayName: a cup of coffee
+    description: A cup has been set here.
+    keyword: coffee
+    consumable: true
+    basePrice: 10
+  cup_of_water:
+    displayName: a cup of water
+    description: A cup has been set here.
+    keyword: water
+    consumable: true
+    basePrice: 10
+  bronze_bracer:
+    displayName: a bronze bracer
+    description: A bronze bracer is lying on the ground.
+    keyword: bracer
+    basePrice: 30
+  iron_bracer:
+    displayName: an iron bracer
+    description: An iron bracer is lying on the ground.
+    keyword: bracer
+    basePrice: 40
+  chain_mail_shirt:
+    displayName: a chain mail shirt
+    description: A chain mail shirt is lying on the ground.
+    keyword: shirt
+    slot: body
+    armor: 5
+    basePrice: 180
+  chain_mail_coif:
+    displayName: a chain mail coif
+    description: A chain mail coif is lying on the ground.
+    keyword: coif
+    slot: head
+    armor: 5
+    basePrice: 50
+  long_chain_mail_skirt:
+    displayName: a long chain mail skirt
+    description: A long chain mail skirt is lying on the ground.
+    keyword: skirt
+    basePrice: 100
+  pair_of_iron_bound_boots:
+    displayName: a pair of iron-bound boots
+    description: A pair of iron-bound boots lies here.
+    keyword: boots
+    slot: feet
+    armor: 5
+    basePrice: 60
+  pair_of_chain_mail_gauntlets:
+    displayName: a pair of chain mail gauntlets
+    description: A pair of chain mail gauntlets is lying on the ground.
+    keyword: gauntlets
+    slot: hands
+    armor: 5
+    basePrice: 40
+  pair_of_chain_mail_sleeves:
+    displayName: a pair of chain mail sleeves
+    description: A pair of chain mail sleeves is lying on the ground.
+    keyword: sleeves
+    basePrice: 80
+  large_metal_shield:
+    displayName: a large metal shield
+    description: A large metal shield is lying on the ground.
+    keyword: shield
+    slot: offhand
+    armor: 5
+    basePrice: 100
+  small_wooden_shield:
+    displayName: a small wooden shield
+    description: A small wooden shield is lying on the ground.
+    keyword: shield
+    slot: offhand
+    armor: 4
+    basePrice: 20
+  key_1:
+    displayName: a key
+    description: An iron key has been left here.
+    keyword: key
+    basePrice: 10
+  key_2:
+    displayName: a key
+    description: A rusty key has been left here.
+    keyword: key
+    basePrice: 10
+  key_3:
+    displayName: a key
+    description: A wooden key has been left here.
+    keyword: key
+    basePrice: 10
+  key_4:
+    displayName: a key
+    description: A brass key has been left here.
+    keyword: key
+    basePrice: 10
+  long_sword_2:
+    displayName: a long sword
+    description: A long sword has been left here.
+    keyword: sword
+    slot: weapon
+    damage: 14
+    stats:
+      accuracy: 20
+      damage: 20
+    basePrice: 50
+  pair_of_hand_cuffs:
+    displayName: a pair of hand cuffs
+    description: A pair of hand cuffs has been left here.
+    keyword: hand
+    basePrice: 40
+  desk:
+    displayName: the desk
+    description: A desk is set against the western wall.
+    keyword: desk
+    basePrice: 0
+    room: captains_office
+  safe:
+    displayName: the safe
+    description: A safe is placed in a dark corner of the room.
+    keyword: safe
+    basePrice: 0
+    room: captains_office
+  silver_coins:
+    displayName: the silver coins
+    description: A lot of silver is here.
+    keyword: silver
+    basePrice: 0
+  city_key:
+    displayName: the City Key
+    description: The very big City Key is lying here.
+    keyword: city
+    basePrice: 250
+  bench:
+    displayName: the Bench
+    description: A white-painted wooden bench is standing here.
+    keyword: bench
+    basePrice: 0
+    room: austral_square
+  fountain:
+    displayName: a fountain
+    description: A small white fountain gushes forth here.
+    keyword: fountain
+    basePrice: 0
+    room: end_of_penny_lane
+  small_pile_of_coins:
+    displayName: a small pile of coins
+    description: A small pile of coins lies here.
+    keyword: coins
+    basePrice: 0
+    room: end_of_penny_lane
+  steel_key:
+    displayName: a steel key
+    description: A large steel key has been left here.
+    keyword: key
+    basePrice: 10
+  buffalo_water_skin_1:
+    displayName: a buffalo water skin
+    description: A bloated dead buffalo is on the floor.
+    keyword: skin
+    basePrice: 40
+  receptionist_s_letter_of_resignation:
+    displayName: the receptionist's letter of resignation
+    description: The receptionist's letter of resignation is taped to the wall.
+    keyword: letter
+    basePrice: 0
+    room: defunct_reception
+  bank_s_notice_of_liquidation:
+    displayName: the bank's notice of liquidation
+    description: The bank's notice of liquidation is taped to the wall.
+    keyword: notice
+    basePrice: 0
+    room: defunct_reception
+  cup_of_cinnamon_coffee:
+    displayName: a cup of cinnamon coffee
+    description: A piping hot cup of cinnamon coffee is here.
+    keyword: coffee
+    basePrice: 10
+  bowl_of_chicken_noodle_soup:
+    displayName: a bowl of chicken noodle soup
+    description: A nice hot bowl of chicken noodle soup is here.
+    keyword: soup
+    consumable: true
+    basePrice: 20
+  bowl_of_beef_stew:
+    displayName: a bowl of beef stew
+    description: A bowl of nice thick beef stew, with lots of vegetables, steams here.
+    keyword: bowl
+    consumable: true
+    basePrice: 30
+  biscuit:
+    displayName: a biscuit
+    description: A yummy biscuit, covered with butter, is here.
+    keyword: biscuit
+    consumable: true
+    basePrice: 10
+  bottle_of_george_killian_s_irish_red:
+    displayName: a bottle of George Killian's Irish Red
+    description: A dark-tinted bottle of beer is here.
+    keyword: beer
+    basePrice: 20
+  white_key:
+    displayName: a white key
+    description: A white key has been left here.
+    keyword: key
+    basePrice: 10
+  map_of_the_city_of_midgaard:
+    displayName: a map of the city of Midgaard
+    description: A rolled up map is here.
+    keyword: map
+    basePrice: 10
+  map_of_thera:
+    displayName: a map of Thera
+    description: A rolled up map is here.
+    keyword: map
+    basePrice: 10
+  map_of_southern_midgaard:
+    displayName: a map of southern Midgaard
+    description: A rolled up map is here.
+    keyword: map
+    basePrice: 10
+  map_of_the_dwarven_kingdom:
+    displayName: a map of the Dwarven Kingdom
+    description: A rolled up map is here.
+    keyword: map
+    basePrice: 10
+  map_of_the_first_level_of_moria:
+    displayName: a map of the first level of Moria
+    description: A rolled up map is here.
+    keyword: map
+    basePrice: 10
+  map_of_new_thalos:
+    displayName: a map of New Thalos
+    description: A rolled up map is here.
+    keyword: map
+    basePrice: 10
+  map_of_olympus:
+    displayName: a map of Olympus
+    description: A rolled up map is here.
+    keyword: map
+    basePrice: 10
+  donation_pit_2:
+    displayName: the donation pit
+    description: A pit for sacrifices is in front of the altar.
+    keyword: pit
+    basePrice: 0
+  buffalo_water_skin_2:
+    displayName: a buffalo water skin
+    description: A bloated dead buffalo is on the floor.
+    keyword: skin
+    basePrice: 40
+  scroll_of_identify_2:
+    displayName: a scroll of identify
+    description: A scroll has carelessly been left here.
+    keyword: scroll
+    basePrice: 10
+  yellow_potion_of_see_invisible_2:
+    displayName: a yellow potion of see invisible
+    description: A small yellow potion has carelessly been left here.
+    keyword: potion
+    consumable: true
+    basePrice: 10
+  scroll_of_recall_2:
+    displayName: a scroll of recall
+    description: A scroll has carelessly been left here.
+    keyword: scroll
+    consumable: true
+    basePrice: 20
+  potion_of_healing_2:
+    displayName: a potion of healing
+    description: A potion of healing is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 100
+    basePrice: 10
+  potion_of_sanctuary_2:
+    displayName: a potion of sanctuary
+    description: A potion of sanctuary is here.
+    keyword: potion
+    consumable: true
+    basePrice: 10
+  potion_of_divine_protection_2:
+    displayName: a potion of divine protection
+    description: A potion of divine protection is here.
+    keyword: potion
+    consumable: true
+    basePrice: 10
+  potion_of_cure_light_wounds_2:
+    displayName: a potion of cure light wounds
+    description: A potion of cure light wounds is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 15
+    basePrice: 10
+  potion_of_cure_serious_wounds_2:
+    displayName: a potion of cure serious wounds
+    description: A potion of cure serious wounds is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 25
+    basePrice: 10
+  potion_of_cure_critical_wounds_2:
+    displayName: a potion of cure critical wounds
+    description: A potion of cure critical wounds is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 35
+    basePrice: 10
+  bottle_of_antidote_2:
+    displayName: a bottle of antidote
+    description: A bottle of antidote is here.
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 15
+    basePrice: 10
+  potion_of_cure_blindness_2:
+    displayName: a potion of cure blindness
+    description: A potion of cure blindness is here.
+    keyword: potion
+    consumable: true
+    basePrice: 10
+  vial_of_holy_water_2:
+    displayName: a vial of holy water
+    description: A vial of holy water is here.
+    keyword: vial
+    consumable: true
+    basePrice: 10
+  potion_of_armor_2:
+    displayName: a potion of armor
+    description: A potion of armor is here.
+    keyword: potion
+    consumable: true
+    basePrice: 10
+  potion_of_negation_2:
+    displayName: a potion of negation
+    description: A potion of negation is here.
+    keyword: potion
+    consumable: true
+    basePrice: 830
+  potion_of_flying_2:
+    displayName: a potion of flying
+    description: A potion of flying is here.
+    keyword: potion
+    consumable: true
+    basePrice: 250
+  potion_of_true_sight_2:
+    displayName: a potion of true sight
+    description: A potion of true sight is here.
+    keyword: potion
+    consumable: true
+    basePrice: 290
+  glowing_long_sword:
+    displayName: a glowing long sword
+    description: A glowing long sword is here.
+    keyword: long
+    slot: weapon
+    damage: 24
+    stats:
+      damage: 2
+      accuracy: 2
+    basePrice: 3100
+  standard_issue_sword:
+    displayName: a standard issue sword
+    description: You see a standard issue sword here.
+    keyword: sword
+    slot: weapon
+    damage: 15
+    stats:
+      damage: 1
+      accuracy: 1
+    basePrice: 1280
+  standard_issue_dagger:
+    displayName: a standard issue dagger
+    description: You see a standard issue dagger here.
+    keyword: dagger
+    slot: weapon
+    damage: 10
+    stats:
+      damage: 1
+      accuracy: 1
+    basePrice: 590
+  standard_issue_mace:
+    displayName: a standard issue mace
+    description: You see a standard issue mace here.
+    keyword: mace
+    slot: weapon
+    damage: 8
+    stats:
+      damage: 2
+      accuracy: 1
+    basePrice: 620
+  standard_issue_vest:
+    displayName: a standard issue vest
+    description: You see a standard issue vest here.
+    keyword: vest
+    slot: body
+    armor: 4
+    basePrice: 900
+  standard_issue_shield:
+    displayName: a standard issue shield
+    description: You see a standard issue shield here.
+    keyword: shield
+    slot: offhand
+    armor: 4
+    basePrice: 810
+  standard_issue_cloak:
+    displayName: a standard issue cloak
+    description: You see a standard issue cloak here.
+    keyword: cloak
+    basePrice: 510
+  standard_issue_helmet:
+    displayName: a standard issue helmet
+    description: You see a standard issue helmet here.
+    keyword: helmet
+    slot: head
+    armor: 4
+    basePrice: 450
+  pair_of_standard_issue_leggings:
+    displayName: a pair of standard issue leggings
+    description: You see a pair of standard issue leggings here.
+    keyword: leggings
+    basePrice: 450
+  pair_of_standard_issue_boots:
+    displayName: a pair of standard issue boots
+    description: You see a pair of standard issue boots here.
+    keyword: boots
+    slot: feet
+    armor: 4
+    basePrice: 30
+  pair_of_standard_issue_gloves:
+    displayName: a pair of standard issue gloves
+    description: You see a pair of standard issue gloves here.
+    keyword: gloves
+    slot: hands
+    armor: 4
+    basePrice: 30
+  pair_of_standard_issue_sleeves:
+    displayName: a pair of standard issue sleeves
+    description: You see a pair of standard issue sleeves here.
+    keyword: sleeves
+    basePrice: 20
+  standard_issue_cape:
+    displayName: a standard issue cape
+    description: You see a standard issue cape here.
+    keyword: cape
+    basePrice: 20
+  standard_issue_belt:
+    displayName: a standard issue belt
+    description: You see a standard issue belt here.
+    keyword: belt
+    basePrice: 20
+  standard_issue_bracer:
+    displayName: a standard issue bracer
+    description: You see a standard issue bracer here.
+    keyword: bracer
+    basePrice: 10
+  city_guard_signet_ring:
+    displayName: a city guard signet ring
+    description: You see a ring with a strange symbol on the floor.
+    keyword: ring
+    basePrice: 10
+  war_banner:
+    displayName: a war banner
+    description: A war banner is on the floor here.
+    keyword: banner
+    basePrice: 10
+  diamond_wedding_ring:
+    displayName: a diamond wedding ring
+    description: Vanya's diamond wedding ring has been left here.
+    keyword: ring
+    basePrice: 10
+  gold_wedding_band:
+    displayName: a gold wedding band
+    description: House's gold wedding band has been left here.
+    keyword: band
+    basePrice: 10
+  small_pearl:
+    displayName: a small pearl
+    description: A small but well-formed pearl lies here.
+    keyword: pearl
+    basePrice: 1
+  garnet:
+    displayName: a garnet
+    description: A garnet catches your eye.
+    keyword: garnet
+    basePrice: 1
+  emerald:
+    displayName: an emerald
+    description: A deep green emerald winks at you.
+    keyword: emerald
+    basePrice: 1
+  ruby:
+    displayName: a ruby
+    description: A beautiful, if small, ruby is here.
+    keyword: ruby
+    basePrice: 1
+  diamond:
+    displayName: a diamond
+    description: A diamond catches and reflects the lighting.
+    keyword: diamond
+    basePrice: 1
+  opal:
+    displayName: an opal
+    description: A lustrous opal reminds you of far-off places.
+    keyword: opal
+    basePrice: 1
+mobs:
+  wizard:
+    name: the wizard
+    room: magic_shop
+    description: The wizard looks old and senile, and yet he looks like a very powerful wizard. He is equipped with fine clothing, and is wearing many fine rings and bracelets.
+    level: 23
+    hp: 1000
+    minDamage: 33
+    maxDamage: 40
+    armor: 125
+    xpReward: 15000
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  baker:
+    name: the baker
+    room: bakery
+    description: A fat, nice looking baker. But you can see that he has many scars on his body.
+    level: 23
+    hp: 1000
+    minDamage: 21
+    maxDamage: 28
+    armor: 125
+    xpReward: 500
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  grocer:
+    name: the grocer
+    room: general_store
+    description: A tall grocer, who moves two 200 pounds bag of flour around on his shoulders.
+    level: 23
+    hp: 1000
+    minDamage: 21
+    maxDamage: 28
+    armor: 125
+    xpReward: 1300
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  weaponsmith:
+    name: the weaponsmith
+    room: weapon_shop
+    description: A young weaponsmith, who still has lots to learn.
+    level: 23
+    hp: 1000
+    minDamage: 33
+    maxDamage: 40
+    armor: 125
+    xpReward: 25000
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  armourer:
+    name: the armourer
+    room: armoury
+    description: An old but very strong armourer, he has made more armours in his lifetime than you have ever seen.
+    level: 23
+    hp: 1000
+    minDamage: 33
+    maxDamage: 40
+    armor: 125
+    xpReward: 25000
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  thief_1:
+    name: the thief
+    room: on_the_concourse_2
+    description: Well COUNT your money!
+    level: 8
+    hp: 116
+    minDamage: 2
+    maxDamage: 6
+    armor: 40
+    xpReward: 100
+    goldMin: 0
+    goldMax: 0
+    tier: weak
+  captain_1:
+    name: the captain
+    room: levee
+    description: This captain has killed more sharks than you have eaten peas.
+    level: 23
+    hp: 1000
+    minDamage: 33
+    maxDamage: 40
+    armor: 125
+    xpReward: 1300
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  sailor:
+    name: the sailor
+    room: abandoned_warehouse
+    description: He looks like a strong, fit sailor.
+    level: 23
+    hp: 1000
+    minDamage: 24
+    maxDamage: 27
+    armor: 125
+    xpReward: 58
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  pet_shop_boy:
+    name: the pet shop boy
+    room: pet_shop
+    description: He is young and close-cropped and looks quite happy.
+    level: 23
+    hp: 1000
+    minDamage: 21
+    maxDamage: 28
+    armor: 125
+    xpReward: 4000
+    goldMin: 99
+    goldMax: 99
+    tier: elite
+  jeweller:
+    name: the jeweller
+    room: jewellers_shop
+    description: He is fat and has a content although watchful look on his face.
+    level: 23
+    hp: 1000
+    minDamage: 23
+    maxDamage: 30
+    armor: 125
+    xpReward: 58000
+    goldMin: 99
+    goldMax: 99
+    tier: elite
+  leather_worker:
+    name: the leather worker
+    room: leather_shop
+    description: She looks as an honest, hard-working artisan who only just earns enough to keep herself going.
+    level: 23
+    hp: 1000
+    minDamage: 21
+    maxDamage: 28
+    armor: 125
+    xpReward: 4500
+    goldMin: 99
+    goldMax: 99
+    tier: elite
+  hassan:
+    name: Hassan
+    room: temple_of_mota
+    description: Big. Very big. Stupid. Very stupid. Hassan, the guardian of the Temple of Mota, towers over you. He's over 12 feet tall, every inch of it muscle. It would be a Bad Thing to commit a crime in his presence.
+    level: 45
+    hp: 4499
+    minDamage: 45
+    maxDamage: 60
+    armor: 175
+    xpReward: 0
+    goldMin: 499
+    goldMax: 499
+    tier: boss
+  healer:
+    name: the healer
+    room: by_the_temple_altar
+    description: Although retired from adventuring, the healer still lends a hand. Type 'heal' to see a listing of spells.
+    level: 40
+    hp: 1999
+    minDamage: 32
+    maxDamage: 38
+    armor: 125
+    xpReward: 5000
+    goldMin: 999
+    goldMax: 999
+    tier: boss
+  guildmaster_1:
+    name: the guildmaster
+    room: mages_laboratory
+    description: Even though your guildmaster looks old and tired, you can clearly see the vast amount of knowledge she possesses. She is wearing fine magic clothing, and you notice that she is surrounded by a blue shimmering aura.
+    level: 36
+    hp: 2499
+    minDamage: 27
+    maxDamage: 48
+    armor: 125
+    xpReward: 0
+    goldMin: 999
+    goldMax: 999
+    tier: boss
+  guildmaster_2:
+    name: the guildmaster
+    room: clerics_inner_sanctum
+    description: You are in no doubt that this guildmaster is truly close to your god; he has a peaceful, loving look. You notice that he is surrounded by a white aura.
+    level: 36
+    hp: 2499
+    minDamage: 27
+    maxDamage: 48
+    armor: 125
+    xpReward: 0
+    goldMin: 999
+    goldMax: 999
+    tier: boss
+  guildmaster_3:
+    name: the guildmaster
+    room: secret_yard
+    description: "You realize that whenever your guildmaster moves, you fail to notice it: the way of the true thief. She is dressed in poor clothing, having the appearance of a beggar."
+    level: 36
+    hp: 2499
+    minDamage: 27
+    maxDamage: 48
+    armor: 125
+    xpReward: 0
+    goldMin: 199
+    goldMax: 199
+    tier: boss
+  guildmaster_4:
+    name: the guildmaster
+    room: tournament_and_practice_yard
+    description: This is your master. A short, strong dwarf with bulging muscles.  Several scars across his body prove that he was using arms before you were born.  He has a calm look on his face.
+    level: 36
+    hp: 2000
+    minDamage: 25
+    maxDamage: 48
+    armor: 55
+    xpReward: 199
+    goldMin: 1999
+    goldMax: 1999
+    tier: boss
+  sorcerer:
+    name: the sorcerer
+    room: entrance_to_mages_guild
+    description: He is an experienced mage who has specialized in the field of Combat Magic. He is here to guard the Mage's Guild and his superior knowledge of offensive as well as defensive spells make him a deadly opponent.
+    level: 30
+    hp: 1000
+    minDamage: 20
+    maxDamage: 50
+    armor: 75
+    xpReward: 499
+    goldMin: 999
+    goldMax: 999
+    tier: elite
+  knight_templar:
+    name: the knight templar
+    room: entrance_to_clerics_guild
+    description: He is a specially trained warrior belonging to the military order of the Faith. His duty is to protect the faithful from persecution and infidel attacks and his religious devotion combined with his superior skill makes him a deadly opponent.
+    level: 30
+    hp: 1000
+    minDamage: 15
+    maxDamage: 50
+    armor: 75
+    xpReward: 499
+    goldMin: 999
+    goldMax: 999
+    tier: elite
+  assassin:
+    name: the assassin
+    room: entrance_hall_to_the_guild_of_thieves
+    description: He is a thief who has specialized in killing others as effectively as possible, using all sorts of weapons.  His superior knowledge of how and where to use them combined with his extraordinary stealth makes him a deadly opponent.
+    level: 30
+    hp: 1000
+    minDamage: 16
+    maxDamage: 52
+    armor: 90
+    xpReward: 99
+    goldMin: 999
+    goldMax: 999
+    tier: elite
+  knight:
+    name: the knight
+    room: entrance_hall_to_the_guild_of_swordsmen
+    description: He is an expert warrior who has attained knighthood through countless chivalrous deeds.  His duty is to protect the Guild of Swordsmen and his extreme skill combined with his experience in warfare makes him a deadly opponent.
+    level: 30
+    hp: 1000
+    minDamage: 21
+    maxDamage: 54
+    armor: 60
+    xpReward: 199
+    goldMin: 999
+    goldMax: 999
+    tier: elite
+  bartender:
+    name: the bartender
+    room: grunting_boar
+    description: A tired looking Bartender who hates trouble in his bar.
+    level: 23
+    hp: 500
+    minDamage: 19
+    maxDamage: 26
+    armor: 80
+    xpReward: 99
+    goldMin: 499
+    goldMax: 499
+    tier: elite
+  waiter_2:
+    name: the waiter
+    room: mages_bar
+    description: A man who in his young days was a famous sorcerer but now leads a quiet, peaceful life as a waiter.
+    level: 23
+    hp: 500
+    minDamage: 19
+    maxDamage: 26
+    armor: 80
+    xpReward: 99
+    goldMin: 499
+    goldMax: 499
+    tier: elite
+  waiter_3:
+    name: the waiter
+    room: clerics_bar
+    level: 23
+    hp: 500
+    minDamage: 19
+    maxDamage: 26
+    armor: 80
+    xpReward: 1
+    goldMin: 99
+    goldMax: 99
+    tier: elite
+  waiter_4:
+    name: the waiter
+    room: thieves_bar
+    level: 23
+    hp: 500
+    minDamage: 19
+    maxDamage: 26
+    armor: 80
+    xpReward: 1
+    goldMin: 99
+    goldMax: 99
+    tier: elite
+  waiter_5:
+    name: the waiter
+    room: bar_of_swordsmen
+    level: 23
+    hp: 500
+    minDamage: 19
+    maxDamage: 26
+    armor: 80
+    xpReward: 1
+    goldMin: 99
+    goldMax: 99
+    tier: elite
+  filthy:
+    name: Filthy
+    room: grubby_inn
+    description: Filthy looks real, ehm, dirty. He likes to keep his costumers happy, but do not mess with him or else he'll get upset.
+    level: 23
+    hp: 500
+    minDamage: 19
+    maxDamage: 26
+    armor: 90
+    xpReward: 1
+    goldMin: 99
+    goldMax: 99
+    tier: elite
+  cityguard_1:
+    name: the cityguard
+    room: emerald_avenue_4
+    description: A big, strong, helpful, trustworthy guard.
+    level: 15
+    hp: 280
+    minDamage: 6
+    maxDamage: 12
+    armor: 50
+    xpReward: 15
+    goldMin: 149
+    goldMax: 149
+    tier: standard
+  janitor:
+    name: the janitor
+    room: entrance_to_the_grunting_boar_inn
+    level: 1
+    hp: 17
+    minDamage: 1
+    maxDamage: 5
+    xpReward: 2
+    goldMin: 99
+    goldMax: 99
+    tier: weak
+  beastly_fido:
+    name: the beastly fido
+    room: main_street_1
+    description: Fido is a small dog that has a foul smell and pieces of rotted meat hanging around its teeth.
+    level: 1
+    hp: 7
+    minDamage: 1
+    maxDamage: 4
+    xpReward: 1
+    goldMin: 99
+    goldMax: 99
+    tier: weak
+  vagabond:
+    name: the vagabond
+    room: dark_alley
+    description: He looks pretty mean.
+    level: 5
+    hp: 67
+    minDamage: 2
+    maxDamage: 7
+    armor: 15
+    xpReward: 2
+    goldMin: 99
+    goldMax: 99
+    tier: weak
+  drunk:
+    name: the drunk
+    room: grunting_boar
+    description: A drunk who seems to be too happy, and to carry too much money.
+    level: 2
+    hp: 35
+    minDamage: 100
+    maxDamage: 105
+    armor: 55
+    xpReward: 65
+    goldMin: 1
+    goldMax: 6
+    tier: weak
+  beggar:
+    name: the beggar
+    room: grubby_inn
+    description: The beggar looks like she is fed up with life.
+    level: 1
+    hp: 17
+    minDamage: 100
+    maxDamage: 104
+    armor: 50
+    xpReward: 0
+    goldMin: 1
+    goldMax: 5
+    tier: weak
+  alley_cat:
+    name: an alley cat
+    room: dark_alley
+    description: The alley cat is half starved and more than a little feral.
+    level: 1
+    hp: 7
+    minDamage: 100
+    maxDamage: 103
+    armor: 45
+    xpReward: 0
+    goldMin: 1
+    goldMax: 4
+    tier: weak
+  cityguard_2:
+    name: the cityguard
+    room: inside_the_east_gate_of_midgaard
+    description: A big, strong, helpful, trustworthy guard.
+    level: 15
+    hp: 280
+    minDamage: 151
+    maxDamage: 156
+    armor: 50
+    xpReward: 150
+    goldMin: 2
+    goldMax: 8
+    tier: standard
+  cityguard_3:
+    name: the cityguard
+    room: inside_the_west_gate_of_midgaard
+    description: A big, strong, helpful, trustworthy guard.
+    level: 15
+    hp: 280
+    minDamage: 151
+    maxDamage: 156
+    armor: 50
+    xpReward: 150
+    goldMin: 2
+    goldMax: 8
+    tier: standard
+  cityguard_4:
+    name: the cityguard
+    room: mayors_office
+    description: A big, strong, helpful, trustworthy guard.
+    level: 20
+    hp: 410
+    minDamage: 201
+    maxDamage: 207
+    armor: 70
+    xpReward: 500
+    goldMin: 2
+    goldMax: 8
+    tier: standard
+  ancient_potion_brewer:
+    name: the ancient potion-brewer
+    room: fountain_of_youth_apothecary
+    description: He looks very dangerous.  I wouldn't try to rob him.
+    level: 32
+    hp: 1000
+    minDamage: 1010
+    maxDamage: 1110
+    armor: 125
+    xpReward: 5000
+    goldMin: 10
+    goldMax: 100
+    tier: boss
+  cityguard_5:
+    name: the cityguard
+    room: inside_the_south_gate_of_midgaard
+    description: A big, strong, helpful, trustworthy guard.
+    level: 15
+    hp: 280
+    minDamage: 151
+    maxDamage: 156
+    armor: 50
+    xpReward: 150
+    goldMin: 2
+    goldMax: 8
+    tier: standard
+  cityguard_6:
+    name: the cityguard
+    room: inside_the_north_gate_of_midgaard
+    description: A big, strong, helpful, trustworthy guard.
+    level: 15
+    hp: 280
+    minDamage: 150
+    maxDamage: 150
+    armor: 25
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: standard
+  kitten:
+    name: the kitten
+    room: pet_shop_store
+    description: The kitten looks like a cute, little, fierce fighter.
+    level: 1
+    hp: 18
+    minDamage: 100
+    maxDamage: 100
+    armor: 40
+    xpReward: 8
+    goldMin: 8
+    goldMax: 8
+    tier: weak
+  puppy:
+    name: the puppy
+    room: pet_shop_store
+    description: The puppy looks like a cute, little, fierce fighter.
+    level: 3
+    hp: 39
+    minDamage: 100
+    maxDamage: 100
+    armor: 40
+    xpReward: 7
+    goldMin: 7
+    goldMax: 7
+    tier: weak
+  beagle:
+    name: the beagle
+    room: pet_shop_store
+    description: The beagle looks like a fierce fighter.
+    level: 5
+    hp: 69
+    minDamage: 100
+    maxDamage: 100
+    armor: 45
+    xpReward: 5
+    goldMin: 5
+    goldMax: 5
+    tier: weak
+  rottweiler:
+    name: the rottweiler
+    room: pet_shop_store
+    description: The rottweiler looks like a strong, fierce fighter.
+    level: 7
+    hp: 93
+    minDamage: 150
+    maxDamage: 150
+    armor: 45
+    xpReward: 4
+    goldMin: 4
+    goldMax: 4
+    tier: weak
+  wolf:
+    name: the wolf
+    room: pet_shop_store
+    description: The wolf looks like a strong, fearless fighter.
+    level: 9
+    hp: 113
+    minDamage: 100
+    maxDamage: 100
+    armor: 45
+    xpReward: 4
+    goldMin: 4
+    goldMax: 4
+    tier: weak
+  maid:
+    name: the maid
+    room: park_cafe
+    description: She is very beautiful with golden hair, and deep blue eyes. A good reason for coming here more often.
+    level: 23
+    hp: 499
+    minDamage: 13
+    maxDamage: 20
+    armor: 125
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  sexton:
+    name: the sexton
+    room: park_cafe
+    description: The sexton looks like he is relaxing after another grave-digging job.
+    level: 3
+    hp: 42
+    minDamage: 1
+    maxDamage: 7
+    armor: 15
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: weak
+  swan:
+    name: the swan
+    room: pond
+    description: The white swan is very elegant.
+    level: 1
+    hp: 17
+    minDamage: 1
+    maxDamage: 5
+    armor: 10
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: weak
+  duckling:
+    name: the duckling
+    room: pond
+    description: The duckling is adorable, it looks most of all like a tiny furball.
+    level: 1
+    hp: 2
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: weak
+  sparrow:
+    name: the sparrow
+    room: small_path_in_the_park_2
+    description: The sparrow looks like it is enjoying life.
+    level: 1
+    hp: 6
+    minDamage: 1
+    maxDamage: 3
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: weak
+  duck:
+    name: the duck
+    room: path_in_the_park_2
+    description: The duck is quite fat. It looks like it is enjoying life.
+    level: 1
+    hp: 12
+    minDamage: 1
+    maxDamage: 4
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: weak
+  captain_2:
+    name: the captain
+    room: captains_office
+    description: A big, strong, angry captain.
+    level: 17
+    hp: 310
+    minDamage: 8
+    maxDamage: 14
+    armor: 60
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: standard
+  cityguard_7:
+    name: the cityguard
+    room: captains_office
+    description: A big, strong, angry guard.
+    level: 15
+    hp: 127
+    minDamage: 150
+    maxDamage: 150
+    armor: 35
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: standard
+  secretary:
+    name: the secretary
+    room: waiting_room
+    description: She looks very busy. The Secretary says 'Sorry, but the Mayor is extremely busy today'. The Secretary says 'Please sit down and have a seat in the meantime'.
+    level: 12
+    hp: 174
+    minDamage: 100
+    maxDamage: 100
+    armor: 40
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: standard
+  mayor:
+    name: the mayor
+    room: mayors_office
+    description: He is a stocky, middle-aged man with thin, grey hair.
+    level: 23
+    hp: 533
+    minDamage: 200
+    maxDamage: 200
+    armor: 125
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  town_crier:
+    name: the town crier
+    room: road_crossing
+    description: He is very good at his job - completely dissolved in tears.
+    level: 1
+    hp: 17
+    minDamage: 100
+    maxDamage: 100
+    xpReward: 14
+    goldMin: 0
+    goldMax: 0
+    tier: weak
+  esme:
+    name: Esme
+    room: kates_diner
+    description: Esme brushes a lock of dark hair away from her wire-rimmed glasess and smiles warmly at you.
+    level: 25
+    hp: 1000
+    minDamage: 210
+    maxDamage: 210
+    armor: 125
+    xpReward: 1000
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  melancholy:
+    name: Melancholy
+    room: melancholys_maps
+    description: Ragged brown hair frames a ghostly, pale face. Puffy eyelids surround two sky blue, haunting eyes. An old, brown robe is wrapped around her frail frame. She looks up from her pile of papers and maps and looks inquiringly at you, smiling faintly.
+    level: 25
+    hp: 1000
+    minDamage: 225
+    maxDamage: 250
+    armor: 125
+    xpReward: 1000
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  lister:
+    name: Lister
+    room: melancholys_maps
+    description: This is Melancholy's pet tree snake, Lister. Something seems odd about his jaw, almost as if he were smiling at you. He's quite friendly, but don't get him drunk.
+    level: 15
+    hp: 255
+    minDamage: 103
+    maxDamage: 123
+    armor: 80
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    tier: standard
+  otho_the_changer:
+    name: Otho the Changer
+    room: money_changers_room
+    description: Otho is grotesquely fat man dressed in rich clothes. Apparently the money changing business pays quite well in this busy city, or possibly the rumors of his fencing services are true...
+    level: 25
+    hp: 1000
+    minDamage: 225
+    maxDamage: 250
+    armor: 125
+    xpReward: 1000
+    goldMin: 0
+    goldMax: 0
+    tier: elite
+  thief_2:
+    name: the thief
+    room: grubby_inn
+    description: Well COUNT your money!
+    level: 30
+    hp: 427
+    minDamage: 100
+    maxDamage: 100
+    armor: 20
+    xpReward: 25
+    goldMin: 25
+    goldMax: 25
+    tier: elite

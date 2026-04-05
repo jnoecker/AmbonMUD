@@ -423,6 +423,20 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `loads imported midgaard zone with all rooms mobs and items`() {
+        val world =
+            WorldLoader.loadFromResources(
+                listOf("world/imported_zone.yaml"),
+                zoneFilter = setOf("imported_zone"),
+            )
+
+        assertEquals(RoomId("imported_zone:temple_of_mota"), world.startRoom)
+        assertTrue(world.rooms.size >= 140, "Expected at least 140 rooms, got ${world.rooms.size}")
+        assertTrue(world.mobSpawns.isNotEmpty(), "Expected at least one mob spawn")
+        assertTrue(world.itemSpawns.isNotEmpty(), "Expected at least one item spawn")
+    }
+
+    @Test
     fun `cross-zone exit resolves when loading multiple zones`() {
         // Uses the stable test fixture multi-zone files — not production world content.
         val world =
