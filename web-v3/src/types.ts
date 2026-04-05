@@ -700,3 +700,46 @@ export interface BankState {
   items: BankItem[];
   maxItems: number;
 }
+
+export interface DailyQuestEntry {
+  index: number;
+  type: string;
+  description: string;
+  current: number;
+  required: number;
+  completed: boolean;
+  goldReward: number;
+  xpReward: number;
+}
+
+export interface DailyQuestBoard {
+  quests: DailyQuestEntry[];
+  streakDays: number;
+}
+
+export interface AutoQuest {
+  active: boolean;
+  targetMobName?: string;
+  killsRequired?: number;
+  killsCompleted?: number;
+  rewardGold?: number;
+  rewardXp?: number;
+  timeRemainingMs?: number;
+}
+
+export interface GlobalQuestLeaderboardEntry {
+  rank: number;
+  name: string;
+  progress: number;
+}
+
+export interface GlobalQuest {
+  active: boolean;
+  objective?: string;
+  objectiveType?: string;
+  targetCount?: number;
+  playerProgress?: number;
+  endsAtMs?: number;
+  completed?: boolean;
+  leaderboard?: GlobalQuestLeaderboardEntry[];
+}
