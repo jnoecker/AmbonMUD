@@ -20,6 +20,7 @@ import { MailPanel } from "./components/panels/MailPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
 import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
+import { BankPanel } from "./components/panels/BankPanel";
 import { CommandPalette } from "./components/CommandPalette";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
@@ -98,6 +99,7 @@ import type {
   WhoPlayer,
   ZoneInstances,
   LeaderboardData,
+  BankState,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
@@ -248,6 +250,7 @@ function App() {
   const [trainer, setTrainer] = useState<TrainerData | null>(null);
   const [unlockedClasses, setUnlockedClasses] = useState<string[]>([]);
   void unlockedClasses; // stored for future character sheet multi-class display
+  const [bankState, setBankState] = useState<BankState | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -401,6 +404,7 @@ function App() {
     setHousing(null);
     setTradeState(null);
     setAuctionListings([]);
+    setBankState(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
@@ -502,6 +506,7 @@ function App() {
             }
           },
           setUnlockedClasses,
+          setBankState,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -844,6 +849,8 @@ function App() {
         ? "Quests"
       : activePopout === "housing"
         ? "Housing"
+      : activePopout === "bank"
+        ? "Bank"
         : "";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -1357,6 +1364,13 @@ function App() {
         {activePopout === "leaderboard" && (
           <LeaderboardPanel
             leaderboard={leaderboard}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+          />
+        )}
+
+        {activePopout === "bank" && (
+          <BankPanel
+            bankState={bankState}
             onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}

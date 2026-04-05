@@ -67,6 +67,7 @@ import type {
   ZoneInstanceItem,
   LeaderboardData,
   LeaderboardEntry,
+  BankState,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
@@ -140,6 +141,7 @@ interface GmcpContext {
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
   setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
   setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
+  setBankState: Dispatch<SetStateAction<BankState | null>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1375,7 +1377,21 @@ export function applyGmcpPackage(
     }
 
     case "Char.Bank": {
-      // Bank state received via GMCP — available for future bank panel.
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setBankState({
+        gold: safeNumber(packet.gold, 0),
+        items: Array.isArray(packet.items)
+          ? (packet.items as Array<Record<string, unknown>>)
+            .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
+            .map((i) => ({
+              id: typeof i.id === "string" ? i.id : "",
+              name: typeof i.name === "string" ? i.name : "",
+              keyword: typeof i.keyword === "string" ? i.keyword : "",
+              image: typeof i.image === "string" ? i.image : null,
+            }))
+          : [],
+        maxItems: safeNumber(packet.maxItems, 0),
+      });
       break;
     }
 

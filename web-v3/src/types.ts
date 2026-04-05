@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -645,3 +645,15 @@ export interface TrainerData {
   abilities: TrainerAbility[];
 }
 
+export interface BankItem {
+  id: string;
+  name: string;
+  keyword: string;
+  image?: string | null;
+}
+
+export interface BankState {
+  gold: number;
+  items: BankItem[];
+  maxItems: number;
+}

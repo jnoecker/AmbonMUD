@@ -569,3 +569,14 @@ export function HousingIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function BankIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M3 21h18" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M12 3L3 10h18L12 3z" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
+      <path d="M5 10v11M9 10v11M15 10v11M19 10v11" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
