@@ -79,6 +79,7 @@ import type {
   AutoQuest,
   GlobalQuest,
   GlobalQuestLeaderboardEntry,
+  LotteryInfo,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
@@ -163,6 +164,7 @@ interface GmcpContext {
   setPetState: Dispatch<SetStateAction<PetState | null>>;
   setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
   setBankState: Dispatch<SetStateAction<BankState | null>>;
+  setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1781,6 +1783,17 @@ export function applyGmcpPackage(
         ? packet.unlockedClasses.filter((c): c is string => typeof c === "string")
         : [];
       ctx.setUnlockedClasses(unlockedClasses);
+      break;
+    }
+
+    case "Lottery.Info": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setLotteryInfo({
+        jackpot: safeNumber(packet.jackpot, 0),
+        totalTickets: safeNumber(packet.totalTickets, 0),
+        playerTickets: safeNumber(packet.playerTickets, 0),
+        nextDrawingMs: safeNumber(packet.nextDrawingMs, 0),
+      });
       break;
     }
 

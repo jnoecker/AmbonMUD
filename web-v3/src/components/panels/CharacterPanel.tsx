@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, FactionStanding, GroupInfo, GuildInfo, PetState, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
+import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, FactionStanding, GroupInfo, GuildInfo, LotteryInfo, PetState, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions";
@@ -17,6 +17,17 @@ function factionTierClass(tier: string): "positive" | "neutral" | "negative" {
     default:
       return "neutral";
   }
+}
+
+function formatDrawingCountdown(ms: number): string {
+  if (ms <= 0) return "Drawing soon!";
+  const totalSec = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSec / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
 }
 
 interface CharacterPanelProps {
@@ -48,6 +59,7 @@ interface CharacterPanelProps {
   worldTime: WorldTime | null;
   worldWeather: WorldWeather | null;
   worldEvents: WorldEvent[];
+  lotteryInfo: LotteryInfo | null;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -85,6 +97,7 @@ export function CharacterPanel({
   worldTime,
   worldWeather,
   worldEvents,
+  lotteryInfo,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -775,6 +788,41 @@ export function CharacterPanel({
                             title="View prestige perks and details"
                           >
                             View Perks
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {lotteryInfo && (
+                      <div className="score-lottery">
+                        <p className="score-lottery-label">Lottery</p>
+                        <dl className="score-lottery-grid">
+                          <div>
+                            <dt>Jackpot</dt>
+                            <dd className="score-lottery-jackpot">{lotteryInfo.jackpot.toLocaleString()} gold</dd>
+                          </div>
+                          <div>
+                            <dt>Your Tickets</dt>
+                            <dd>{lotteryInfo.playerTickets} / {lotteryInfo.totalTickets}</dd>
+                          </div>
+                          <div>
+                            <dt>Next Drawing</dt>
+                            <dd>{formatDrawingCountdown(lotteryInfo.nextDrawingMs)}</dd>
+                          </div>
+                        </dl>
+                        <div className="score-lottery-actions">
+                          <button
+                            type="button"
+                            className="score-lottery-btn"
+                            onClick={() => onCommand("lottery buy 1")}
+                          >
+                            Buy Ticket
+                          </button>
+                          <button
+                            type="button"
+                            className="score-lottery-btn score-lottery-btn-secondary"
+                            onClick={() => onCommand("lottery")}
+                          >
+                            Check Info
                           </button>
                         </div>
                       </div>

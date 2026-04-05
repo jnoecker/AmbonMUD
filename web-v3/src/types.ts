@@ -746,3 +746,10 @@ export interface GlobalQuest {
   completed?: boolean;
   leaderboard?: GlobalQuestLeaderboardEntry[];
 }
+
+export interface LotteryInfo {
+  jackpot: number;
+  totalTickets: number;
+  playerTickets: number;
+  nextDrawingMs: number;
+}
