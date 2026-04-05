@@ -11396,3 +11396,327 @@ body {
   color: var(--text-primary);
   border-color: var(--primary-dim);
 }
+
+/* ── Bank Panel ── */
+
+.bank-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.bank-panel .panel-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bank-panel .panel-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Empty state */
+
+.bank-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.bank-empty-icon {
+  font-size: 2.4rem;
+  opacity: 0.5;
+}
+
+.bank-hint {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.bank-hint code {
+  font-size: 0.78rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 8%);
+  color: var(--text-secondary);
+}
+
+/* Gold balance section */
+
+.bank-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.bank-gold-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgb(190 168 115 / 12%), rgb(190 168 115 / 6%));
+  border: 1px solid rgb(190 168 115 / 22%);
+}
+
+.bank-gold-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.bank-gold-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-primary-soft-gold);
+}
+
+/* Gold deposit/withdraw actions */
+
+.bank-gold-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bank-gold-input {
+  flex: 1;
+  min-width: 80px;
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: rgb(255 255 255 / 4%);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.bank-gold-input:focus {
+  outline: none;
+  border-color: var(--color-primary-soft-gold);
+  box-shadow: 0 0 0 2px rgb(190 168 115 / 18%);
+}
+
+.bank-gold-input::placeholder {
+  color: var(--text-disabled);
+}
+
+/* Hide number spinner */
+.bank-gold-input::-webkit-inner-spin-button,
+.bank-gold-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.bank-gold-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.bank-action-btn {
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgb(190 168 115 / 30%);
+  background: linear-gradient(135deg, rgb(190 168 115 / 50%), rgb(170 148 95 / 44%));
+  color: #fff;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.bank-action-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgb(200 178 125 / 64%), rgb(180 158 105 / 58%));
+}
+
+.bank-action-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.bank-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Item vault capacity */
+
+.bank-capacity-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bank-capacity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bank-capacity-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.bank-capacity-count {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.bank-capacity-bar-track {
+  height: 8px;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 6%);
+  overflow: hidden;
+}
+
+.bank-capacity-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, rgb(142 169 123 / 80%), rgb(113 150 92 / 90%));
+  transition: width 0.3s var(--ease-in-out-smooth);
+  box-shadow: 0 0 6px rgb(142 169 123 / 40%);
+}
+
+.bank-capacity-bar-fill.bank-capacity-full {
+  background: linear-gradient(90deg, rgb(212 136 138 / 80%), rgb(192 106 108 / 90%));
+  box-shadow: 0 0 8px rgb(212 136 138 / 50%);
+}
+
+/* Item deposit input row */
+
+.bank-item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bank-item-input {
+  flex: 1;
+  min-width: 80px;
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: rgb(255 255 255 / 4%);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.bank-item-input:focus {
+  outline: none;
+  border-color: var(--color-primary-soft-gold);
+  box-shadow: 0 0 0 2px rgb(190 168 115 / 18%);
+}
+
+.bank-item-input::placeholder {
+  color: var(--text-disabled);
+}
+
+/* Empty vault message */
+
+.bank-items-empty {
+  text-align: center;
+  padding: var(--space-4);
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Item list */
+
+.bank-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 40vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(90 82 120 / 70%) transparent;
+}
+
+.bank-item-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bank-item-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(90 82 120 / 70%), rgb(70 90 110 / 65%));
+}
+
+.bank-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 3%);
+  border: 1px solid var(--border-subtle);
+  transition: background 120ms, border-color 120ms;
+}
+
+.bank-item-row:hover {
+  background: rgb(255 255 255 / 6%);
+  border-color: var(--line-soft);
+}
+
+.bank-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bank-item-image {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--line-faint);
+}
+
+.bank-item-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bank-withdraw-btn {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgb(142 169 123 / 30%);
+  background: linear-gradient(135deg, rgb(142 169 123 / 60%), rgb(113 150 92 / 54%));
+  color: #fff;
+  transition: background 0.15s;
+}
+
+.bank-withdraw-btn:hover {
+  background: linear-gradient(135deg, rgb(152 179 133 / 72%), rgb(123 160 102 / 68%));
+}

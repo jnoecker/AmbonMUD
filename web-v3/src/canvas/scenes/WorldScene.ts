@@ -139,16 +139,32 @@ export class WorldScene {
   private lastPlayerSpritePath: string | null = null;
   private nodeSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private stationBadge: Container;
+  private stationSprite: Sprite | null = null;
   private stationLabel: Text;
   private stationLabelBg = new Graphics();
   private stationHitArea = new Graphics();
   private stationVisible = false;
 
   private trainerBadge: Container;
+  private trainerSprite: Sprite | null = null;
   private trainerLabel: Text;
   private trainerLabelBg = new Graphics();
   private trainerHitArea = new Graphics();
   private trainerVisible = false;
+
+  private bankBadge: Container | null = null;
+  private bankSprite: Sprite | null = null;
+  private bankLabel: Text | null = null;
+  private bankLabelBg = new Graphics();
+  private bankHitArea = new Graphics();
+  private bankVisible = false;
+
+  private tavernBadge: Container | null = null;
+  private tavernSprite: Sprite | null = null;
+  private tavernLabel: Text | null = null;
+  private tavernLabelBg = new Graphics();
+  private tavernHitArea = new Graphics();
+  private tavernVisible = false;
 
   private lastMobsKey = "";
   private lastItemsKey = "";
@@ -247,13 +263,19 @@ export class WorldScene {
     // lazily in update() once Server.Assets GMCP arrives, to avoid 404s
     // from fallback URLs when assets live on a CDN.
 
-    // Station badge — floating anvil icon when a crafting station is present
+    // Station badge — floating icon when a crafting station is present
     this.stationBadge = new Container();
     this.stationBadge.visible = false;
     this.stationBadge.eventMode = "static";
     this.stationBadge.cursor = "pointer";
     this.stationBadge.on("pointerdown", () => {
       canvasCallbacks.sendCommand?.("recipes");
+    });
+    this.stationBadge.on("pointerover", () => {
+      if (this.stationSprite) this.stationSprite.alpha = 1;
+    });
+    this.stationBadge.on("pointerout", () => {
+      if (this.stationSprite) this.stationSprite.alpha = 0.85;
     });
     this.stationHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
     this.stationHitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -276,7 +298,13 @@ export class WorldScene {
     this.trainerBadge.eventMode = "static";
     this.trainerBadge.cursor = "pointer";
     this.trainerBadge.on("pointerdown", () => {
-      canvasCallbacks.sendCommand?.("train list");
+      canvasCallbacks.openTrainer?.();
+    });
+    this.trainerBadge.on("pointerover", () => {
+      if (this.trainerSprite) this.trainerSprite.alpha = 1;
+    });
+    this.trainerBadge.on("pointerout", () => {
+      if (this.trainerSprite) this.trainerSprite.alpha = 0.85;
     });
     this.trainerHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
     this.trainerHitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -292,6 +320,64 @@ export class WorldScene {
     this.trainerLabelBg.eventMode = "none";
     this.trainerBadge.addChild(this.trainerLabelBg);
     this.trainerBadge.addChild(this.trainerLabel);
+
+    // Bank badge — floating icon when a bank is present
+    this.bankBadge = new Container();
+    this.bankBadge.visible = false;
+    this.bankBadge.eventMode = "static";
+    this.bankBadge.cursor = "pointer";
+    this.bankBadge.on("pointerdown", () => {
+      canvasCallbacks.openBank?.();
+    });
+    this.bankBadge.on("pointerover", () => {
+      if (this.bankSprite) this.bankSprite.alpha = 1;
+    });
+    this.bankBadge.on("pointerout", () => {
+      if (this.bankSprite) this.bankSprite.alpha = 0.85;
+    });
+    this.bankHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.bankHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.bankHitArea.eventMode = "auto";
+    this.bankBadge.addChild(this.bankHitArea);
+    this.bankLabel = new Text({
+      text: "Bank",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#c9a84c", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.bankLabel.anchor.set(0.5, 0);
+    this.bankLabel.y = hs / 2 + 2;
+    this.bankLabel.eventMode = "none";
+    this.bankLabelBg.eventMode = "none";
+    this.bankBadge.addChild(this.bankLabelBg);
+    this.bankBadge.addChild(this.bankLabel);
+
+    // Tavern badge — floating icon when a tavern is present
+    this.tavernBadge = new Container();
+    this.tavernBadge.visible = false;
+    this.tavernBadge.eventMode = "static";
+    this.tavernBadge.cursor = "pointer";
+    this.tavernBadge.on("pointerdown", () => {
+      canvasCallbacks.sendCommand?.("gamble");
+    });
+    this.tavernBadge.on("pointerover", () => {
+      if (this.tavernSprite) this.tavernSprite.alpha = 1;
+    });
+    this.tavernBadge.on("pointerout", () => {
+      if (this.tavernSprite) this.tavernSprite.alpha = 0.85;
+    });
+    this.tavernHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.tavernHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.tavernHitArea.eventMode = "auto";
+    this.tavernBadge.addChild(this.tavernHitArea);
+    this.tavernLabel = new Text({
+      text: "Tavern",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#d4888a", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.tavernLabel.anchor.set(0.5, 0);
+    this.tavernLabel.y = hs / 2 + 2;
+    this.tavernLabel.eventMode = "none";
+    this.tavernLabelBg.eventMode = "none";
+    this.tavernBadge.addChild(this.tavernLabelBg);
+    this.tavernBadge.addChild(this.tavernLabel);
 
     // Recall button
     this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
@@ -312,6 +398,8 @@ export class WorldScene {
     this.container.addChild(this.shopBadge);
     this.container.addChild(this.stationBadge);
     this.container.addChild(this.trainerBadge);
+    this.container.addChild(this.bankBadge!);
+    this.container.addChild(this.tavernBadge!);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
@@ -343,6 +431,10 @@ export class WorldScene {
     if (!this.assetsLoaded && Object.keys(state.serverAssets).length > 0) {
       this.assetsLoaded = true;
       this.loadShopIcon();
+      this.loadStationIcon();
+      this.loadTrainerIcon();
+      this.loadBankIcon();
+      this.loadTavernIcon();
       this.loadDialogueTexture();
       this.loadAggroTexture();
       this.loadQuestTextures();
@@ -463,6 +555,20 @@ export class WorldScene {
       }
     }
 
+    // Bank badge visibility
+    const hasBank = !!state.room.bank;
+    if (hasBank !== this.bankVisible) {
+      this.bankVisible = hasBank;
+      if (this.bankBadge) this.bankBadge.visible = hasBank;
+    }
+
+    // Tavern badge visibility
+    const hasTavern = !!state.room.tavern;
+    if (hasTavern !== this.tavernVisible) {
+      this.tavernVisible = hasTavern;
+      if (this.tavernBadge) this.tavernBadge.visible = hasTavern;
+    }
+
     // Recall button visibility — show when logged in and not in combat
     const loggedIn = state.character.name !== "-";
     const showRecall = loggedIn && !state.vitals.inCombat;
@@ -551,6 +657,8 @@ export class WorldScene {
     this.shopBadge.visible = this.shopVisible && !stripMode;
     this.stationBadge.visible = this.stationVisible && !stripMode;
     this.trainerBadge.visible = this.trainerVisible && !stripMode;
+    if (this.bankBadge) this.bankBadge.visible = this.bankVisible && !stripMode;
+    if (this.tavernBadge) this.tavernBadge.visible = this.tavernVisible && !stripMode;
     this.recallBtn.visible = this.recallBtn.visible && !stripMode;
 
     // Dynamic entity sizing
@@ -706,26 +814,45 @@ export class WorldScene {
       }
     }
 
-    // Shop badge position — right side, below description area
+    // Room-feature badges — right side, stacked vertically below description area
+    const badgeX = w - 70;
+    const badgeStartY = h * 0.35;
+    const badgeSpacing = h * 0.13;
+    let badgeSlot = 0;
+
     if (this.shopBadge.visible) {
-      this.shopBadge.x = w - 70;
-      this.shopBadge.y = h * 0.35;
+      this.shopBadge.x = badgeX;
+      this.shopBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.shopLabelBg, this.shopLabel);
+      badgeSlot++;
     }
 
-    // Station badge position — right side, below shop badge
     if (this.stationBadge.visible) {
-      this.stationBadge.x = w - 70;
-      this.stationBadge.y = this.shopBadge.visible ? h * 0.48 : h * 0.35;
+      this.stationBadge.x = badgeX;
+      this.stationBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.stationLabelBg, this.stationLabel);
+      badgeSlot++;
     }
 
-    // Trainer badge position — right side, below shop/station badges
     if (this.trainerBadge.visible) {
-      this.trainerBadge.x = w - 70;
-      const badgesAbove = (this.shopBadge.visible ? 1 : 0) + (this.stationBadge.visible ? 1 : 0);
-      this.trainerBadge.y = h * 0.35 + badgesAbove * h * 0.13;
+      this.trainerBadge.x = badgeX;
+      this.trainerBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.trainerLabelBg, this.trainerLabel);
+      badgeSlot++;
+    }
+
+    if (this.bankBadge?.visible) {
+      this.bankBadge.x = badgeX;
+      this.bankBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.bankLabelBg, this.bankLabel!);
+      badgeSlot++;
+    }
+
+    if (this.tavernBadge?.visible) {
+      this.tavernBadge.x = badgeX;
+      this.tavernBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.tavernLabelBg, this.tavernLabel!);
+      badgeSlot++;
     }
 
     // Recall button — bottom-left
@@ -1214,6 +1341,70 @@ export class WorldScene {
       this.shopBadge.addChild(sprite);
     } catch {
       // Fallback: no icon shown
+    }
+  }
+
+  private async loadStationIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("crafting_station", "crafting_station.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.stationSprite = sprite;
+      this.stationBadge.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadTrainerIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("trainer_icon", "trainer_icon.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.trainerSprite = sprite;
+      this.trainerBadge.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadBankIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("bank_vault", "bank_vault.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.bankSprite = sprite;
+      this.bankBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadTavernIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("tavern_icon", "tavern_icon.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.tavernSprite = sprite;
+      this.tavernBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
     }
   }
 
