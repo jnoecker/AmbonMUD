@@ -691,25 +691,16 @@ export function AppShell() {
           terminalVisible={terminalVisible}
           terminalOpaque={terminalOpaque}
           textMode={textMode}
-          combatLogMessages={combatLogMessages}
         />
 
         <ActionBar
-          connected={connected}
-          hasCharacterProfile={hasCharacterProfile}
-          vitals={vitals}
           quickbarSlots={quickbar.slots}
-          shop={shop}
-          questCount={quests.length}
-          mailUnreadCount={(mailInbox ?? []).filter((m) => !m.read).length}
-          activePopout={activePopout}
           onOpenPopout={(p) => uiDispatch({ type: "SET_ACTIVE_POPOUT", payload: p })}
           onCastSkill={handleCastSkill}
           onQuickbarSwap={quickbar.swap}
           onQuickbarAssign={quickbar.assign}
           onQuickbarClear={quickbar.clear}
           composerInputRef={composerInputRef}
-          composerValue={composerValue}
           commandPlaceholder={commandPlaceholder}
           onComposerChange={(value) => {
             uiDispatch({ type: "SET_COMPOSER_VALUE", payload: value });
@@ -720,10 +711,7 @@ export function AppShell() {
           onComposerFocus={() => uiDispatch({ type: "SET_TERMINAL_VISIBLE", payload: true })}
           onComposerBlur={() => { uiDispatch({ type: "SET_TERMINAL_VISIBLE", payload: false }); uiDispatch({ type: "SET_TERMINAL_OPAQUE", payload: false }); }}
           onSubmitComposer={submitComposer}
-          zoneInstances={zoneInstances}
           onPhaseSwitch={(engineId) => { sendCommand(`phase ${engineId}`, true); focusComposer(); }}
-          mobs={mobs}
-          combatTarget={combatTarget}
           onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
         />
       </div>
@@ -745,39 +733,6 @@ export function AppShell() {
       >
         {activePopout === "character" && (
           <CharacterPanel
-            connected={connected}
-            hasCharacterProfile={hasCharacterProfile}
-            canOpenEquipment={canOpenEquipment}
-            character={character}
-            displayRace={displayRace}
-            displayClassName={displayClassName}
-            vitals={vitals}
-            statusVarLabels={coreState.statusVarLabels}
-            xpValue={xpValue}
-            xpMax={xpMax}
-            xpText={xpText}
-            effects={effects}
-            visibleEffects={visibleEffects}
-            hiddenEffectsCount={hiddenEffectsCount}
-            achievements={achievements}
-            quests={quests}
-            questNotifications={questNotifications}
-            charStats={charStats}
-            guildInfo={guildInfo}
-            groupInfo={groupInfo}
-            activeTitle={whoPlayers.find((p) => p.name === character.name)?.title ?? null}
-            spriteList={spriteList}
-            currencies={currencies}
-            factions={factions}
-            petState={petState}
-            worldTime={worldTime}
-            worldWeather={worldWeather}
-            worldEvents={worldEvents}
-            lotteryInfo={lotteryInfo}
-            duelState={duelState}
-            duelChallenge={duelChallenge}
-            dungeonInfo={dungeonInfo}
-            prestigeInfo={prestigeInfo}
             onDismissQuestNotification={(id) => questDispatch({ type: "DISMISS_QUEST_NOTIFICATION", payload: id })}
             onAbandonQuest={(questName) => { sendCommand(`quest abandon ${questName}`, true); focusComposer(); }}
             onOpenInventory={() => uiDispatch({ type: "SET_ACTIVE_POPOUT", payload: "inventory" })}
@@ -797,13 +752,6 @@ export function AppShell() {
 
         {activePopout === "inventory" && (
           <InventoryPanel
-            connected={connected}
-            hasCharacterProfile={hasCharacterProfile}
-            inventory={inventory}
-            players={players}
-            canManageItems={connected && hasCharacterProfile}
-            roomFeatures={roomFeatures}
-            containerContents={containerContents}
             onWearItem={(itemName) => { sendCommand(`wear ${itemName}`, true); focusComposer(); }}
             onDropItem={(itemName) => { sendCommand(`drop ${itemName}`, true); focusComposer(); }}
             onGiveItem={(itemKeyword, playerName) => { sendCommand(`give ${itemKeyword} ${playerName}`, true); focusComposer(); }}
@@ -813,33 +761,12 @@ export function AppShell() {
 
         {activePopout === "equipment" && (
           <EquipmentPanel
-            connected={connected}
-            hasCharacterProfile={hasCharacterProfile}
-            character={character}
-            equipment={equipment}
-            slotDefs={equipmentSlotDefs}
-            canManageItems={connected && hasCharacterProfile}
             onRemoveItem={(slot) => { sendCommand(`remove ${slot}`, true); focusComposer(); }}
           />
         )}
 
         {activePopout === "chat" && (
           <ChatPanel
-            connected={connected}
-            canChat={connected && hasCharacterProfile}
-            playerName={character.name}
-            activeChannel={activeChatChannel}
-            chatByChannel={chatByChannel}
-            emotePresets={emotePresets}
-            whoPlayers={whoPlayers}
-            groupInfo={groupInfo}
-            pendingGroupInvite={pendingGroupInvite}
-            guildInfo={guildInfo}
-            pendingGuildInvite={pendingGuildInvite}
-            guildMembers={guildMembers}
-            guildHall={guildHall}
-            friends={friends}
-            friendNotifications={friendNotifications}
             onChannelChange={(ch) => socialDispatch({ type: "SET_ACTIVE_CHAT_CHANNEL", payload: ch })}
             onRequestWho={() => { sendCommand("who", true); focusComposer(); }}
             onSendMessage={sendChatMessage}
@@ -849,9 +776,6 @@ export function AppShell() {
 
         {activePopout === "shop" && shop && (
           <ShopPopout
-            shop={shop}
-            inventory={inventory}
-            gold={vitals.gold}
             onBuyItem={(keyword) => { sendCommand(`buy ${keyword}`, true); focusComposer(); }}
             onSellItem={(keyword) => { sendCommand(`sell ${keyword}`, true); focusComposer(); }}
           />
@@ -890,10 +814,6 @@ export function AppShell() {
 
         {activePopout === "mail" && (
           <MailPanel
-            connected={connected}
-            hasCharacterProfile={hasCharacterProfile}
-            inbox={mailInbox}
-            openMessage={mailMessage}
             onReadMessage={(index) => sendCommand(`mail read ${index}`, true)}
             onDeleteMessage={(index) => sendCommand(`mail delete ${index}`, true)}
             onCompose={(recipient, body) => {
@@ -907,11 +827,6 @@ export function AppShell() {
 
         {activePopout === "crafting" && (
           <CraftingPanel
-            connected={connected}
-            hasCharacterProfile={hasCharacterProfile}
-            skills={craftingSkills}
-            recipes={craftingRecipes}
-            nodes={craftingNodes}
             onGather={(keyword) => sendCommand(`gather ${keyword}`, true)}
             onCraft={(recipeKeyword) => sendCommand(`craft ${recipeKeyword}`, true)}
             onRequestRecipes={() => sendCommand("recipes", true)}
@@ -921,15 +836,6 @@ export function AppShell() {
 
         {activePopout === "quests" && (
           <QuestPanel
-            connected={connected}
-            hasCharacterProfile={hasCharacterProfile}
-            quests={quests}
-            questsAvailable={questsAvailable}
-            questNotifications={questNotifications}
-            dailyQuests={dailyQuests}
-            weeklyQuests={weeklyQuests}
-            autoQuest={autoQuest}
-            globalQuest={globalQuest}
             onDismissQuestNotification={(id) => questDispatch({ type: "DISMISS_QUEST_NOTIFICATION", payload: id })}
             onAbandonQuest={(questName) => { sendCommand(`quest abandon ${questName}`, true); focusComposer(); }}
             onAcceptQuest={(questName) => { sendCommand(`accept ${questName}`, true); focusComposer(); }}
@@ -939,31 +845,24 @@ export function AppShell() {
 
         {activePopout === "housing" && (
           <HousingPanel
-            connected={connected}
-            hasCharacterProfile={hasCharacterProfile}
-            housing={housing}
-            room={room}
             onSendCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
 
         {activePopout === "leaderboard" && (
           <LeaderboardPanel
-            leaderboard={leaderboard}
             onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
 
         {activePopout === "bank" && (
           <BankPanel
-            bankState={bankState}
             onCommand={(cmd: string) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
 
         {activePopout === "auction" && (
           <AuctionPanel
-            listings={auctionListings}
             onCommand={(cmd: string) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
@@ -1068,9 +967,6 @@ export function AppShell() {
         <AdminPanel
           onCommand={(command) => { sendCommand(command, true); focusComposer(); }}
           onClose={() => uiDispatch({ type: "SET_SHOW_ADMIN_PANEL", payload: false })}
-          worldInfo={staffWorldInfo}
-          mobTemplates={staffMobTemplates}
-          whoPlayers={whoPlayers}
         />
       )}
 

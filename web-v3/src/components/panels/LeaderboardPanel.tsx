@@ -1,4 +1,4 @@
-import type { LeaderboardData } from "../../types";
+import { useUIState } from "../../state/UIContext";
 
 const CATEGORIES = [
   { key: "level", label: "Top Level" },
@@ -9,11 +9,11 @@ const CATEGORIES = [
 ];
 
 interface Props {
-  leaderboard: Record<string, LeaderboardData>;
   onCommand: (cmd: string) => void;
 }
 
-export function LeaderboardPanel({ leaderboard, onCommand }: Props) {
+export function LeaderboardPanel({ onCommand }: Props) {
+  const { leaderboard } = useUIState();
   const activeCats = CATEGORIES.filter((c) => {
     const data = leaderboard[c.key];
     return data && data.entries.length > 0;

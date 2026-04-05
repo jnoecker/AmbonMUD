@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { AuctionListing } from "../../types";
+import { useInventoryState } from "../../state/InventoryContext";
 
 interface Props {
-  listings: AuctionListing[];
   onCommand: (cmd: string) => void;
 }
 
-export function AuctionPanel({ listings, onCommand }: Props) {
+export function AuctionPanel({ onCommand }: Props) {
+  const { auctionListings: listings } = useInventoryState();
   const [filter, setFilter] = useState("");
 
   const filtered = filter

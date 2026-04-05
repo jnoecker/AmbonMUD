@@ -1,13 +1,11 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import type { StaffMobZone, StaffWorldZone, WhoPlayer } from "../../types";
+import { useUIState } from "../../state/UIContext";
+import { useSocialState } from "../../state/SocialContext";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
   onClose: () => void;
-  worldInfo: StaffWorldZone[];
-  mobTemplates: StaffMobZone[];
-  whoPlayers: WhoPlayer[];
 }
 
 type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "setlevel" | "dispel" | "reload" | "broadcast" | "shutdown";
@@ -220,7 +218,9 @@ function MobTemplateBrowser({
   );
 }
 
-export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPlayers }: AdminPanelProps) {
+export function AdminPanel({ onCommand, onClose }: AdminPanelProps) {
+  const { staffWorldInfo: worldInfo, staffMobTemplates: mobTemplates } = useUIState();
+  const { whoPlayers } = useSocialState();
   const [activeAction, setActiveAction] = useState<AdminAction | null>(null);
   const [inputA, setInputA] = useState("");
   const [inputB, setInputB] = useState("");

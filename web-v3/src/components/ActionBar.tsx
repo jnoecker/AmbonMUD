@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import type { DragEvent, FormEvent, KeyboardEvent, RefObject } from "react";
-import type { CombatTarget, PopoutPanel, RoomMob, ShopState, SkillSummary, Vitals, ZoneInstances } from "../types";
+import type { PopoutPanel, SkillSummary } from "../types";
 import { percent } from "../utils";
+import { useCoreState } from "../state/CoreContext";
+import { useCombatState } from "../state/CombatContext";
+import { useInventoryState } from "../state/InventoryContext";
+import { useWorldState } from "../state/WorldContext";
+import { useQuestState } from "../state/QuestContext";
+import { useUIState } from "../state/UIContext";
 import {
   CharacterAvatarIcon,
   EquipmentIcon,
@@ -38,31 +44,20 @@ function skillCategory(skill: SkillSummary): string {
 }
 
 interface ActionBarProps {
-  connected: boolean;
-  hasCharacterProfile: boolean;
-  vitals: Vitals;
   quickbarSlots: (SkillSummary | null)[];
-  shop: ShopState | null;
-  questCount: number;
-  mailUnreadCount: number;
-  activePopout: PopoutPanel;
   onOpenPopout: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onQuickbarSwap: (fromIndex: number, toIndex: number) => void;
   onQuickbarAssign: (slotIndex: number, skillId: string) => void;
   onQuickbarClear: (slotIndex: number) => void;
   composerInputRef: RefObject<HTMLInputElement | null>;
-  composerValue: string;
   commandPlaceholder: string;
   onComposerChange: (value: string) => void;
   onComposerKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onComposerFocus: () => void;
   onComposerBlur: () => void;
   onSubmitComposer: (event: FormEvent<HTMLFormElement>) => void;
-  zoneInstances: ZoneInstances;
   onPhaseSwitch: (engineId: string) => void;
-  mobs: RoomMob[];
-  combatTarget: CombatTarget | null;
   onCommand: (command: string) => void;
 }
 
@@ -165,33 +160,32 @@ function EmptySlot({
 }
 
 export function ActionBar({
-  connected,
-  hasCharacterProfile,
-  vitals,
   quickbarSlots,
-  shop,
-  questCount,
-  mailUnreadCount,
-  activePopout,
   onOpenPopout,
   onCastSkill,
   onQuickbarSwap,
   onQuickbarAssign,
   onQuickbarClear,
   composerInputRef,
-  composerValue,
   commandPlaceholder,
   onComposerChange,
   onComposerKeyDown,
   onComposerFocus,
   onComposerBlur,
   onSubmitComposer,
-  zoneInstances,
   onPhaseSwitch,
-  mobs,
-  combatTarget,
   onCommand,
 }: ActionBarProps) {
+  const { vitals, character } = useCoreState();
+  const { combatTarget } = useCombatState();
+  const { shop } = useInventoryState();
+  const { mobs, zoneInstances } = useWorldState();
+  const { quests } = useQuestState();
+  const { activePopout, composerValue, mailInbox } = useUIState();
+  const connected = character.name !== "-" || vitals.hp > 0;
+  const hasCharacterProfile = character.name !== "-";
+  const questCount = quests.length;
+  const mailUnreadCount = (mailInbox ?? []).filter((m) => !m.read).length;
   const loggedIn = connected && hasCharacterProfile;
   const hasInstances = zoneInstances.instances.length > 1;
   const hasMobs = mobs.length > 0;

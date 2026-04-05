@@ -1,7 +1,6 @@
 import type { RefObject } from "react";
 import { PixiCanvas } from "../../canvas/PixiCanvas";
 import { CombatLog } from "../CombatLog";
-import type { CombatLogMessage } from "../../types";
 
 interface PlayPanelProps {
   preLogin: boolean;
@@ -9,10 +8,9 @@ interface PlayPanelProps {
   terminalVisible: boolean;
   terminalOpaque: boolean;
   textMode: boolean;
-  combatLogMessages: CombatLogMessage[];
 }
 
-export function PlayPanel({ preLogin, terminalOverlayRef, terminalVisible, terminalOpaque, textMode, combatLogMessages }: PlayPanelProps) {
+export function PlayPanel({ preLogin, terminalOverlayRef, terminalVisible, terminalOpaque, textMode }: PlayPanelProps) {
   const overlayClass = textMode
     ? "terminal-primary"
     : terminalVisible
@@ -33,7 +31,7 @@ export function PlayPanel({ preLogin, terminalOverlayRef, terminalVisible, termi
         <>
           <div className="canvas-strip">
             <PixiCanvas />
-            <CombatLog messages={combatLogMessages} />
+            <CombatLog />
           </div>
           <div className="terminal-card terminal-card-text-mode">
             <div ref={terminalOverlayRef} className={overlayClass} aria-hidden={false} />
@@ -42,7 +40,7 @@ export function PlayPanel({ preLogin, terminalOverlayRef, terminalVisible, termi
       ) : (
         <div className="terminal-card">
           <PixiCanvas />
-          <CombatLog messages={combatLogMessages} />
+          <CombatLog />
           <div ref={terminalOverlayRef} className={overlayClass} aria-hidden={!terminalVisible} />
         </div>
       )}

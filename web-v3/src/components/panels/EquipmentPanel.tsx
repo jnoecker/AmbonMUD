@@ -1,26 +1,20 @@
 import { useState } from "react";
-import type { CharacterInfo, EquipmentSlotDef, ItemSummary } from "../../types";
 import { RemoveItemIcon } from "../Icons";
+import { useCoreState } from "../../state/CoreContext";
+import { useInventoryState } from "../../state/InventoryContext";
 
 interface EquipmentPanelProps {
-  connected: boolean;
-  hasCharacterProfile: boolean;
-  character: CharacterInfo;
-  equipment: Record<string, ItemSummary>;
-  slotDefs: EquipmentSlotDef[];
-  canManageItems: boolean;
   onRemoveItem: (slot: string) => void;
 }
 
 export function EquipmentPanel({
-  connected,
-  hasCharacterProfile,
-  character,
-  equipment,
-  slotDefs,
-  canManageItems,
   onRemoveItem,
 }: EquipmentPanelProps) {
+  const { character } = useCoreState();
+  const { equipment, equipmentSlotDefs: slotDefs } = useInventoryState();
+  const connected = character.name !== "-";
+  const hasCharacterProfile = connected;
+  const canManageItems = connected && hasCharacterProfile;
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   if (!connected || !hasCharacterProfile) {

@@ -1,15 +1,12 @@
 import { useMemo, useState } from "react";
-import type { ContainerContents, ItemSummary, RoomFeature, RoomPlayer } from "../../types";
+import type { ItemSummary } from "../../types";
 import { DropItemIcon, GiveItemIcon, WearItemIcon } from "../Icons";
+import { useCoreState } from "../../state/CoreContext";
+import { useInventoryState } from "../../state/InventoryContext";
+import { useWorldState } from "../../state/WorldContext";
+import { useUIState } from "../../state/UIContext";
 
 interface InventoryPanelProps {
-  connected: boolean;
-  hasCharacterProfile: boolean;
-  inventory: ItemSummary[];
-  players: RoomPlayer[];
-  canManageItems: boolean;
-  roomFeatures: RoomFeature[];
-  containerContents: ContainerContents | null;
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onGiveItem: (itemKeyword: string, playerName: string) => void;
@@ -30,18 +27,18 @@ function categorize(items: ItemSummary[]): { wearable: ItemSummary[]; other: Ite
 }
 
 export function InventoryPanel({
-  connected,
-  hasCharacterProfile,
-  inventory,
-  players,
-  canManageItems,
-  roomFeatures,
-  containerContents,
   onWearItem,
   onDropItem,
   onGiveItem,
   onCommand,
 }: InventoryPanelProps) {
+  const { character } = useCoreState();
+  const { inventory } = useInventoryState();
+  const { players, roomFeatures } = useWorldState();
+  const { containerContents } = useUIState();
+  const connected = character.name !== "-";
+  const hasCharacterProfile = connected;
+  const canManageItems = connected && hasCharacterProfile;
   const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
   const containers = useMemo(
     () => roomFeatures.filter((f) => f.type === "container"),

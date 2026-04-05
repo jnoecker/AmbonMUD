@@ -1,11 +1,8 @@
 import { useState } from "react";
-import type { MailEntry, MailMessage } from "../../types";
+import { useCoreState } from "../../state/CoreContext";
+import { useUIState } from "../../state/UIContext";
 
 interface MailPanelProps {
-  connected: boolean;
-  hasCharacterProfile: boolean;
-  inbox: MailEntry[] | null;
-  openMessage: MailMessage | null;
   onReadMessage: (index: number) => void;
   onDeleteMessage: (index: number) => void;
   onCompose: (recipient: string, body: string) => void;
@@ -19,15 +16,15 @@ function formatDate(epochMs: number): string {
 }
 
 export function MailPanel({
-  connected,
-  hasCharacterProfile,
-  inbox,
-  openMessage,
   onReadMessage,
   onDeleteMessage,
   onCompose,
   onClearMessage,
 }: MailPanelProps) {
+  const { character } = useCoreState();
+  const { mailInbox: inbox, mailMessage: openMessage } = useUIState();
+  const connected = character.name !== "-";
+  const hasCharacterProfile = connected;
   const [composeTarget, setComposeTarget] = useState("");
   const [composeBody, setComposeBody] = useState("");
   const [showCompose, setShowCompose] = useState(false);
