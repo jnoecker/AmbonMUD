@@ -1417,7 +1417,7 @@ function App() {
         {activePopout === "bank" && (
           <BankPanel
             bankState={bankState}
-            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+            onCommand={(cmd: string) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
       </PopoutLayer>
