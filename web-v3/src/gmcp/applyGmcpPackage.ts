@@ -216,6 +216,9 @@ export function applyGmcpPackage(
         xpToNextLevel: packet.xpToNextLevel === null ? null : safeNumber(packet.xpToNextLevel),
         gold: safeNumber(packet.gold),
         inCombat: packet.inCombat === true,
+        prestigeLevel: safeNumber(packet.prestigeLevel, 0),
+        prestigeXpAvailable: packet.prestigeXpAvailable != null ? safeNumber(packet.prestigeXpAvailable) : null,
+        prestigeNextCost: packet.prestigeNextCost != null ? safeNumber(packet.prestigeNextCost) : null,
       });
       break;
     }

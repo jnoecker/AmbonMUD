@@ -154,6 +154,9 @@ export interface Vitals {
   xpToNextLevel: number | null;
   gold: number;
   inCombat: boolean;
+  prestigeLevel?: number;
+  prestigeXpAvailable?: number | null;
+  prestigeNextCost?: number | null;
 }
 
 export interface CharacterInfo {
