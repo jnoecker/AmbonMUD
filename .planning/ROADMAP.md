@@ -33,7 +33,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Any component in the tree can read game state (HP, inventory, room, etc.) via useContext without prop drilling
   3. Canvas still reads state via mutable refs at 60fps without triggering React re-renders
   4. All existing functionality works identically after the refactor (no regressions)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md -- Create 7 domain context files, GameStateProvider composition root, and GameStateBridgeSync
+- [ ] 01-02-PLAN.md -- Big-bang migration: refactor applyGmcpPackage, create AppShell, slim App.tsx, migrate all panels to useContext
+
 **UI hint**: yes
 
 ### Phase 2: Layout Shell & Canvas Safety
@@ -151,7 +156,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. State Extraction | 0/0 | Not started | - |
+| 1. State Extraction | 0/2 | Planning complete | - |
 | 2. Layout Shell & Canvas Safety | 0/0 | Not started | - |
 | 3. Bottom Sheet, HUD & PWA Foundation | 0/0 | Not started | - |
 | 4. Navigation & Combat | 0/0 | Not started | - |
