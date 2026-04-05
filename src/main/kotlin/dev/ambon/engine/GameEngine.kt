@@ -2052,6 +2052,8 @@ class GameEngine(
             outbound.send(
                 OutboundEvent.SendInfo(other, "Your duel opponent has died. Duel ended."),
             )
+            gmcpEmitter?.sendDuelState(sessionId, active = false)
+            gmcpEmitter?.sendDuelState(other, active = false)
         }
 
         // Dismiss active pets
@@ -2494,5 +2496,7 @@ class GameEngine(
                 loser,
             )
         }
+        gmcpEmitter?.sendDuelState(winner, active = false)
+        gmcpEmitter?.sendDuelState(loser, active = false)
     }
 }

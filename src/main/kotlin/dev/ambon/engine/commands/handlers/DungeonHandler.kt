@@ -20,6 +20,7 @@ class DungeonHandler(
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.DungeonEnter> { sid, cmd -> handleDungeonEnter(sid, cmd) }
@@ -38,6 +39,16 @@ class DungeonHandler(
                 players.moveTo(sessionId, entrance)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You re-enter ${existingInstance.template.name}."))
                 ctx.sendLook(sessionId)
+                gmcpEmitter?.sendDungeonInfo(
+                    sessionId,
+                    active = true,
+                    instanceId = existingInstance.id,
+                    name = existingInstance.template.name,
+                    difficulty = existingInstance.difficulty.displayName,
+                    totalRooms = existingInstance.layout.rooms.size,
+                    completed = existingInstance.completed,
+                    memberCount = existingInstance.members.size,
+                )
                 return
             }
 
@@ -112,6 +123,16 @@ class DungeonHandler(
                     ),
                 )
                 ctx.sendLook(sid)
+                gmcpEmitter?.sendDungeonInfo(
+                    sid,
+                    active = true,
+                    instanceId = instance.id,
+                    name = template.name,
+                    difficulty = difficulty.displayName,
+                    totalRooms = instance.layout.rooms.size,
+                    completed = false,
+                    memberCount = memberSids.size,
+                )
             }
         }
     }
@@ -128,6 +149,7 @@ class DungeonHandler(
             outbound.send(OutboundEvent.SendInfo(sessionId, "You leave the dungeon."))
             players.moveTo(sessionId, returnRoom)
             ctx.sendLook(sessionId)
+            gmcpEmitter?.sendDungeonInfo(sessionId, active = false)
         }
     }
 

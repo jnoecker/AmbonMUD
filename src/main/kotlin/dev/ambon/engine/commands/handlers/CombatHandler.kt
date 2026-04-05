@@ -99,6 +99,8 @@ class CombatHandler(
                 val myName = players.get(sessionId)?.name ?: "Someone"
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You flee from the duel!"))
                 outbound.send(OutboundEvent.SendInfo(other, "$myName flees from the duel!"))
+                gmcpEmitter?.sendDuelState(sessionId, active = false)
+                gmcpEmitter?.sendDuelState(other, active = false)
             }
             return
         }

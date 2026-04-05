@@ -17,6 +17,7 @@ class DuelHandler(
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.Duel> { sid, cmd -> handleDuel(sid, cmd) }
@@ -59,6 +60,8 @@ class DuelHandler(
                         "${me.name} challenges you to a duel! Type 'duel accept' or 'duel decline'.",
                     ),
                 )
+                gmcpEmitter?.sendDuelChallenge(sessionId, me.name, target.name, "outgoing")
+                gmcpEmitter?.sendDuelChallenge(targetSid, me.name, target.name, "incoming")
                 for (p in players.playersInRoom(me.roomId)) {
                     if (p.sessionId != sessionId && p.sessionId != targetSid) {
                         outbound.send(OutboundEvent.SendText(p.sessionId, "${me.name} challenges ${target.name} to a duel!"))
@@ -109,6 +112,8 @@ class DuelHandler(
         outbound.send(
             OutboundEvent.SendInfo(duel.player2, "** You accept the duel with ${challenger.name}! Fight! **"),
         )
+        gmcpEmitter?.sendDuelState(duel.player1, active = true, opponentName = me.name, startedAtMs = duel.startedAtMs)
+        gmcpEmitter?.sendDuelState(duel.player2, active = true, opponentName = challenger.name, startedAtMs = duel.startedAtMs)
 
         for (p in players.playersInRoom(me.roomId)) {
             if (p.sessionId != duel.player1 && p.sessionId != duel.player2) {
@@ -131,6 +136,8 @@ class DuelHandler(
         outbound.send(
             OutboundEvent.SendInfo(challenge.challengerSid, "$myName declined your duel challenge."),
         )
+        gmcpEmitter?.sendDuelState(sessionId, active = false)
+        gmcpEmitter?.sendDuelState(challenge.challengerSid, active = false)
     }
 
     private suspend fun sendUnavailable(sessionId: SessionId) {

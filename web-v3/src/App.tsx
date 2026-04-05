@@ -112,6 +112,11 @@ import type {
   AutoQuest,
   GlobalQuest,
   LotteryInfo,
+  GuildHallInfo,
+  DuelState,
+  DuelChallenge,
+  DungeonInfo,
+  PrestigeInfo,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
@@ -218,6 +223,7 @@ function App() {
   const [guildInfo, setGuildInfo] = useState<GuildInfo>({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
   const [pendingGuildInvite, setPendingGuildInvite] = useState<PendingGuildInvite | null>(null);
   const [guildMembers, setGuildMembers] = useState<GuildMemberEntry[]>([]);
+  const [guildHall, setGuildHall] = useState<GuildHallInfo | null>(null);
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [friendNotifications, setFriendNotifications] = useState<FriendNotification[]>([]);
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
@@ -273,6 +279,10 @@ function App() {
   const [petState, setPetState] = useState<PetState | null>(null);
   const [bankState, setBankState] = useState<BankState | null>(null);
   const [lotteryInfo, setLotteryInfo] = useState<LotteryInfo | null>(null);
+  const [duelState, setDuelState] = useState<DuelState | null>(null);
+  const [duelChallenge, setDuelChallenge] = useState<DuelChallenge | null>(null);
+  const [dungeonInfo, setDungeonInfo] = useState<DungeonInfo | null>(null);
+  const [prestigeInfo, setPrestigeInfo] = useState<PrestigeInfo | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -400,6 +410,7 @@ function App() {
     setGuildInfo({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
     setPendingGuildInvite(null);
     setGuildMembers([]);
+    setGuildHall(null);
     setFriends([]);
     setFriendNotifications([]);
     setChatByChannel(createEmptyChatByChannel());
@@ -433,6 +444,10 @@ function App() {
     setPetState(null);
     setBankState(null);
     setLotteryInfo(null);
+    setDuelState(null);
+    setDuelChallenge(null);
+    setDungeonInfo(null);
+    setPrestigeInfo(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
@@ -546,6 +561,11 @@ function App() {
           setFactions,
           setBankState,
           setLotteryInfo,
+          setGuildHall,
+          setDuelState,
+          setDuelChallenge,
+          setDungeonInfo,
+          setPrestigeInfo,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -1203,6 +1223,10 @@ function App() {
             worldWeather={worldWeather}
             worldEvents={worldEvents}
             lotteryInfo={lotteryInfo}
+            duelState={duelState}
+            duelChallenge={duelChallenge}
+            dungeonInfo={dungeonInfo}
+            prestigeInfo={prestigeInfo}
             onDismissQuestNotification={(id) => {
               setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
             }}
@@ -1282,6 +1306,7 @@ function App() {
             guildInfo={guildInfo}
             pendingGuildInvite={pendingGuildInvite}
             guildMembers={guildMembers}
+            guildHall={guildHall}
             friends={friends}
             friendNotifications={friendNotifications}
             onChannelChange={setActiveChatChannel}

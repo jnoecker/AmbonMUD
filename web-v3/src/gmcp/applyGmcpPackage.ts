@@ -80,6 +80,13 @@ import type {
   GlobalQuest,
   GlobalQuestLeaderboardEntry,
   LotteryInfo,
+  GuildHallInfo,
+  GuildHallRoom,
+  DuelState,
+  DuelChallenge,
+  DungeonInfo,
+  PrestigeInfo,
+  PrestigePerk,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
@@ -165,6 +172,11 @@ interface GmcpContext {
   setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
   setBankState: Dispatch<SetStateAction<BankState | null>>;
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
+  setGuildHall: Dispatch<SetStateAction<GuildHallInfo | null>>;
+  setDuelState: Dispatch<SetStateAction<DuelState | null>>;
+  setDuelChallenge: Dispatch<SetStateAction<DuelChallenge | null>>;
+  setDungeonInfo: Dispatch<SetStateAction<DungeonInfo | null>>;
+  setPrestigeInfo: Dispatch<SetStateAction<PrestigeInfo | null>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1794,6 +1806,88 @@ export function applyGmcpPackage(
         totalTickets: safeNumber(packet.totalTickets, 0),
         playerTickets: safeNumber(packet.playerTickets, 0),
         nextDrawingMs: safeNumber(packet.nextDrawingMs, 0),
+      });
+      break;
+    }
+
+    case "Guild.Hall": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const rooms: GuildHallRoom[] = Array.isArray(packet.rooms)
+        ? (packet.rooms as unknown[]).map((r) => {
+            const entry = r as Partial<Record<string, unknown>>;
+            return {
+              id: typeof entry.id === "string" ? entry.id : "",
+              template: typeof entry.template === "string" ? entry.template : "",
+              title: typeof entry.title === "string" ? entry.title : "",
+            };
+          })
+        : [];
+      ctx.setGuildHall({
+        guildName: typeof packet.guildName === "string" ? packet.guildName : "",
+        rooms,
+        membersInHall: safeNumber(packet.membersInHall, 0),
+        maxRooms: safeNumber(packet.maxRooms, 0),
+      });
+      break;
+    }
+
+    case "Duel.State": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const active = packet.active === true;
+      ctx.setDuelState({
+        active,
+        opponentName: typeof packet.opponentName === "string" ? packet.opponentName : undefined,
+        startedAtMs: typeof packet.startedAtMs === "number" ? packet.startedAtMs : undefined,
+      });
+      if (!active) ctx.setDuelChallenge(null);
+      break;
+    }
+
+    case "Duel.Challenge": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setDuelChallenge({
+        challengerName: typeof packet.challengerName === "string" ? packet.challengerName : "",
+        targetName: typeof packet.targetName === "string" ? packet.targetName : "",
+        direction: packet.direction === "incoming" ? "incoming" : "outgoing",
+      });
+      break;
+    }
+
+    case "Dungeon.Info": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const active = packet.active === true;
+      ctx.setDungeonInfo(active ? {
+        active: true,
+        instanceId: typeof packet.instanceId === "string" ? packet.instanceId : undefined,
+        name: typeof packet.name === "string" ? packet.name : undefined,
+        difficulty: typeof packet.difficulty === "string" ? packet.difficulty : undefined,
+        totalRooms: typeof packet.totalRooms === "number" ? packet.totalRooms : undefined,
+        completed: packet.completed === true,
+        memberCount: typeof packet.memberCount === "number" ? packet.memberCount : undefined,
+      } : null);
+      break;
+    }
+
+    case "Prestige.Info": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const perks: PrestigePerk[] = Array.isArray(packet.perks)
+        ? (packet.perks as unknown[]).map((p) => {
+            const entry = p as Partial<Record<string, unknown>>;
+            return {
+              rank: safeNumber(entry.rank, 0),
+              type: typeof entry.type === "string" ? entry.type : "",
+              description: typeof entry.description === "string" ? entry.description : "",
+              earned: entry.earned === true,
+            };
+          })
+        : [];
+      ctx.setPrestigeInfo({
+        enabled: packet.enabled === true,
+        currentRank: safeNumber(packet.currentRank, 0),
+        maxRank: safeNumber(packet.maxRank, 0),
+        availableXp: safeNumber(packet.availableXp, 0),
+        nextRankCost: packet.nextRankCost != null ? safeNumber(packet.nextRankCost) : null,
+        perks,
       });
       break;
     }

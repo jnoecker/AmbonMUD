@@ -2715,6 +2715,152 @@ class GmcpEmitter(
         val name: String,
         val progress: Int,
     )
+
+    // ---------- duel ----------
+
+    private data class DuelStatePayload(
+        val active: Boolean,
+        val opponentName: String? = null,
+        val startedAtMs: Long? = null,
+    )
+
+    private data class DuelChallengePayload(
+        val challengerName: String,
+        val targetName: String,
+        val direction: String,
+    )
+
+    suspend fun sendDuelState(
+        sessionId: SessionId,
+        active: Boolean,
+        opponentName: String? = null,
+        startedAtMs: Long? = null,
+    ) {
+        emit(
+            sessionId,
+            "Duel.State",
+            DuelStatePayload(
+                active = active,
+                opponentName = opponentName,
+                startedAtMs = startedAtMs,
+            ),
+            supportCheck = "Duel",
+        )
+    }
+
+    suspend fun sendDuelChallenge(
+        sessionId: SessionId,
+        challengerName: String,
+        targetName: String,
+        direction: String,
+    ) {
+        emit(
+            sessionId,
+            "Duel.Challenge",
+            DuelChallengePayload(
+                challengerName = challengerName,
+                targetName = targetName,
+                direction = direction,
+            ),
+            supportCheck = "Duel",
+        )
+    }
+
+    // ---------- dungeon ----------
+
+    private data class DungeonInfoPayload(
+        val active: Boolean,
+        val instanceId: String? = null,
+        val name: String? = null,
+        val difficulty: String? = null,
+        val totalRooms: Int? = null,
+        val completed: Boolean? = null,
+        val memberCount: Int? = null,
+    )
+
+    suspend fun sendDungeonInfo(
+        sessionId: SessionId,
+        active: Boolean,
+        instanceId: String? = null,
+        name: String? = null,
+        difficulty: String? = null,
+        totalRooms: Int? = null,
+        completed: Boolean? = null,
+        memberCount: Int? = null,
+    ) {
+        emit(
+            sessionId,
+            "Dungeon.Info",
+            DungeonInfoPayload(
+                active = active,
+                instanceId = instanceId,
+                name = name,
+                difficulty = difficulty,
+                totalRooms = totalRooms,
+                completed = completed,
+                memberCount = memberCount,
+            ),
+            supportCheck = "Dungeon",
+        )
+    }
+
+    // ---------- prestige ----------
+
+    private data class PrestigeInfoPayload(
+        val enabled: Boolean,
+        val currentRank: Int,
+        val maxRank: Int,
+        val availableXp: Long,
+        val nextRankCost: Long?,
+        val perks: List<PrestigePerkPayload>,
+    )
+
+    data class PrestigePerkPayload(
+        val rank: Int,
+        val type: String,
+        val description: String,
+        val earned: Boolean,
+    )
+
+    suspend fun sendPrestigeInfo(
+        sessionId: SessionId,
+        enabled: Boolean,
+        currentRank: Int,
+        maxRank: Int,
+        availableXp: Long,
+        nextRankCost: Long?,
+        perks: List<PrestigePerkPayload>,
+    ) {
+        emit(
+            sessionId,
+            "Prestige.Info",
+            PrestigeInfoPayload(
+                enabled = enabled,
+                currentRank = currentRank,
+                maxRank = maxRank,
+                availableXp = availableXp,
+                nextRankCost = nextRankCost,
+                perks = perks,
+            ),
+            supportCheck = "Prestige",
+        )
+    }
+
+    /** Helper to build perk payloads from the prestige system. */
+    fun buildPrestigePerkPayloads(
+        currentRank: Int,
+        maxRank: Int,
+        perkForRank: (Int) -> dev.ambon.config.PrestigePerkConfig?,
+    ): List<PrestigePerkPayload> =
+        (1..maxRank).map { rank ->
+            val perk = perkForRank(rank)
+            PrestigePerkPayload(
+                rank = rank,
+                type = perk?.type?.uppercase() ?: "",
+                description = perk?.description ?: "—",
+                earned = rank <= currentRank,
+            )
+        }
 }
 
 // ---------- public data entry types for new GMCP methods ----------

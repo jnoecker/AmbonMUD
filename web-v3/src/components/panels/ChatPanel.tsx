@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CHAT_CHANNELS } from "../../constants";
 import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, EmotePreset, FriendEntry, FriendNotification, GroupInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab, WhoPlayer } from "../../types";
+import type { ChatChannel, ChatMessage, EmotePreset, FriendEntry, FriendNotification, GroupInfo, GuildHallInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab, WhoPlayer } from "../../types";
 
 type WhoSortField = "name" | "level" | "race" | "class" | "idle";
 type SortDir = "asc" | "desc";
@@ -20,6 +20,7 @@ interface ChatPanelProps {
   guildInfo: GuildInfo;
   pendingGuildInvite: PendingGuildInvite | null;
   guildMembers: GuildMemberEntry[];
+  guildHall: GuildHallInfo | null;
   friends: FriendEntry[];
   friendNotifications: FriendNotification[];
   onChannelChange: (channel: ChatChannel) => void;
@@ -73,6 +74,7 @@ export function ChatPanel({
   guildInfo,
   pendingGuildInvite,
   guildMembers,
+  guildHall,
   friends,
   friendNotifications,
   onChannelChange,
@@ -593,6 +595,41 @@ export function ChatPanel({
                     </ul>
                   )}
                 </div>
+                {guildHall && (
+                  <div className="guild-hall-section">
+                    <div className="guild-hall-header">
+                      <span className="guild-hall-label">Guild Hall</span>
+                      <span className="guild-hall-meta">{guildHall.rooms.length} / {guildHall.maxRooms} rooms &middot; {guildHall.membersInHall} inside</span>
+                    </div>
+                    {guildHall.rooms.length > 0 && (
+                      <ul className="guild-hall-room-list">
+                        {guildHall.rooms.map((room) => (
+                          <li key={room.id} className="guild-hall-room-item">
+                            <span className="guild-hall-room-title">{room.title}</span>
+                            <span className="guild-hall-room-template">{room.template}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className="guild-hall-actions">
+                      <button type="button" className="social-action-btn" onClick={() => onCommand("guild hallenter")}>Enter Hall</button>
+                      {(guildInfo.rank === "LEADER" || guildInfo.rank === "OFFICER") && (
+                        <button type="button" className="social-action-btn" onClick={() => onCommand("guild hallexpand")}>Expand</button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {!guildHall && (guildInfo.rank === "LEADER" || guildInfo.rank === "OFFICER") && (
+                  <div className="guild-hall-section">
+                    <div className="guild-hall-header">
+                      <span className="guild-hall-label">Guild Hall</span>
+                    </div>
+                    <p className="empty-note">No guild hall yet.</p>
+                    <div className="guild-hall-actions">
+                      <button type="button" className="social-action-btn" onClick={() => onCommand("guild hallbuy")}>Purchase Hall</button>
+                    </div>
+                  </div>
+                )}
                 <div className="guild-footer-actions">
                   {guildConfirmAction === "leave" ? (
                     <span className="social-confirm-inline">
