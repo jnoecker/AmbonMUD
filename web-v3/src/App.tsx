@@ -546,25 +546,14 @@ function App() {
           setAuctionListings,
           setLeaderboard,
           setCurrencies,
-          setTrainer: (value) => {
-            setTrainer(value);
-            // Auto-open trainer popout when trainer data arrives
-            if (value) {
-              setActivePopout("trainer");
-            }
-          },
+          setTrainer,
           setUnlockedClasses,
           setWorldTime,
           setWorldWeather,
           setWorldEvents,
           setPetState,
           setFactions,
-          setBankState: (value) => {
-            setBankState(value);
-            if (value) {
-              setActivePopout("bank");
-            }
-          },
+          setBankState,
           setLotteryInfo,
           setGuildHall,
           setDuelState,
@@ -818,10 +807,12 @@ function App() {
     return () => { canvasCallbacks.prefillCommand = null; };
   }, [focusComposer]);
 
-  // Wire canvas shop badge to open shop popout
+  // Wire canvas shop/bank/trainer badges to open their popouts
   useEffect(() => {
     canvasCallbacks.openShop = () => setActivePopout("shop");
-    return () => { canvasCallbacks.openShop = null; };
+    canvasCallbacks.openBank = () => setActivePopout("bank");
+    canvasCallbacks.openTrainer = () => setActivePopout("trainer");
+    return () => { canvasCallbacks.openShop = null; canvasCallbacks.openBank = null; canvasCallbacks.openTrainer = null; };
   }, []);
 
   // Wire canvas minimap expand, room expand, and quest panel buttons

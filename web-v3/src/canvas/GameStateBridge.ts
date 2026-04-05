@@ -46,6 +46,8 @@ export const canvasCallbacks: {
   sendCommand: ((command: string) => void) | null;
   prefillCommand: ((text: string) => void) | null;
   openShop: (() => void) | null;
+  openBank: (() => void) | null;
+  openTrainer: (() => void) | null;
   openMap: (() => void) | null;
   openRoom: (() => void) | null;
   openQuests: (() => void) | null;
@@ -57,6 +59,8 @@ export const canvasCallbacks: {
   sendCommand: null,
   prefillCommand: null,
   openShop: null,
+  openBank: null,
+  openTrainer: null,
   openMap: null,
   openRoom: null,
   openQuests: null,
