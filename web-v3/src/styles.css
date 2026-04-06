@@ -125,9 +125,7 @@ body {
 .app-shell {
   position: relative;
   isolation: isolate;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: var(--space-4) var(--space-4) calc(var(--space-4) + 72px);
+  display: contents;
 }
 
 .app-shell::before {
@@ -6895,7 +6893,23 @@ body {
   }
 }
 
-@media (max-width: 959px) {
+/* Hide terminal overlay and combat log on mobile per D-10 */
+@media (max-width: 767px) {
+  .terminal-overlay,
+  .combat-log {
+    display: none !important;
+  }
+}
+
+/* Also hide on tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .terminal-overlay,
+  .combat-log {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
   .map-icon-trigger {
     width: 44px;
     height: 44px;
@@ -6942,15 +6956,9 @@ body {
     max-height: 46vh;
   }
 
-  /* Use 100dvh so iOS Safari address bar doesn't clip content.
-     Override the base padding-bottom relic (was calc(16px + 72px) = 88px
-     left over from a removed mobile tab bar). */
+  /* LayoutShell handles viewport sizing; app-shell stays transparent */
   .app-shell {
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 8px 8px 0;
+    display: contents;
   }
 
   .panel-play {
@@ -7021,8 +7029,8 @@ body {
   }
 }
 
-/* ── Tiny phones (≤ 480px) ─────────────────────────────────────── */
-@media (max-width: 480px) {
+/* ── Mobile only (≤ 767px) ─────────────────────────────────────── */
+@media (max-width: 767px) {
   /* Hide title — saves ~35px and avoids crowding the connection cluster */
   .top-banner-title {
     display: none;
@@ -7054,14 +7062,10 @@ body {
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1024px) {
+  /* LayoutShell handles viewport sizing; app-shell stays transparent */
   .app-shell {
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    overflow: hidden;
-    padding-bottom: var(--space-3);
+    display: contents;
   }
 
   .top-banner {
@@ -7160,7 +7164,7 @@ body {
   }
 }
 
-@media (min-width: 960px) and (max-width: 1120px) {
+@media (min-width: 1024px) and (max-width: 1200px) {
   .app-shell {
     padding-left: var(--space-3);
     padding-right: var(--space-3);
@@ -9244,7 +9248,7 @@ body {
   margin: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .help-command-entry {
     flex-direction: column;
     gap: 2px;

@@ -3,6 +3,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { ActionBar } from "./components/ActionBar";
+import { LayoutShell } from "./components/LayoutShell";
 import { AudioControls } from "./components/AudioControls";
 import { PopoutLayer } from "./components/PopoutLayer";
 import { ShopPopout } from "./components/ShopPopout";
@@ -1073,10 +1074,12 @@ function App() {
   }, [toast]);
 
   return (
+    <LayoutShell>
     <main className="app-shell">
       <div className="ambient-orb ambient-orb-a" aria-hidden="true" />
       <div className="ambient-orb ambient-orb-b" aria-hidden="true" />
 
+      <div className="layout-shell__hud">
       <header className="top-banner">
         <div>
           <h1 className="top-banner-title">AmbonMUD</h1>
@@ -1132,8 +1135,9 @@ function App() {
           </button>
         </div>
       </header>
+      </div>
 
-      <div className="dashboard">
+      <div className="layout-shell__canvas">
         <PlayPanel
           preLogin={preLogin}
           terminalOverlayRef={terminalOverlayRef}
@@ -1142,7 +1146,9 @@ function App() {
           textMode={textMode}
           combatLogMessages={combatLogMessages}
         />
+      </div>
 
+      <div className="layout-shell__interaction">
         <ActionBar
           connected={connected}
           hasCharacterProfile={hasCharacterProfile}
@@ -1658,6 +1664,7 @@ function App() {
         </div>
       )}
     </main>
+    </LayoutShell>
   );
 }
 
