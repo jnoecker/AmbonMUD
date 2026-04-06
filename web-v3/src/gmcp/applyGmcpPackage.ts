@@ -1,65 +1,183 @@
-import type { Dispatch } from "react";
-import type { CoreAction } from "../state/CoreContext";
-import type { CombatAction } from "../state/CombatContext";
-import type { InventoryAction } from "../state/InventoryContext";
-import type { SocialAction } from "../state/SocialContext";
-import type { WorldAction } from "../state/WorldContext";
-import type { QuestAction } from "../state/QuestContext";
-import type { UIAction } from "../state/UIContext";
+import type { Dispatch, SetStateAction } from "react";
 import type {
+  AchievementData,
+  AuctionListing,
+  CharStats,
+  FactionStanding,
+  StatEntry,
   ChatChannel,
+  ChatMessage,
+  CharacterInfo,
   CombatEventData,
+  CombatTarget,
+  CommandEntry,
+  EmotePreset,
   CompletedAchievement,
+  ContainerContents,
+  CraftingNode,
+  CraftingRecipe,
   CraftingResult,
-  DailyQuestEntry,
+  CraftingSkill,
   DialogueChoice,
+  DialogueState,
+  EquipmentSlotDef,
+  FriendEntry,
+  FriendNotification,
   GainEvent,
-  GlobalQuestLeaderboardEntry,
+  GroupInfo,
   GroupMember,
-  GuildHallRoom,
+  GuildInfo,
+  GuildMemberEntry,
+  HousingInfo,
   HousingRoomInfo,
+  PendingGroupInvite,
+  PendingGuildInvite,
   InProgressAchievement,
   ItemSummary,
-  LeaderboardEntry,
+  LookTargetInfo,
   LoginErrorState,
   LoginPromptState,
-  LookTargetInfo,
+  MailEntry,
+  MailMessage,
   MailNotification,
-  PrestigePerk,
+  MobInfo,
+  RoomFeature,
+  QuestAvailable,
+  QuestEntry,
+  QuestNotification,
   RoomMob,
+  RoomItem,
+  RoomPlayer,
+  RoomState,
   ShopItem,
+  StaffMobZone,
+  StaffWorldZone,
+  ShopState,
+  SkillSummary,
   SpriteEntry,
-  StatEntry,
+  SpriteList,
   StatusEffect,
+  StatusVarLabels,
+  CurrencyBalance,
+  TradeState,
   TrainerAbility,
   TrainerData,
   UiFeedback,
+  Vitals,
+  WhoPlayer,
+  WorldEvent,
+  WorldTime,
+  WorldWeather,
+  ZoneInstances,
   ZoneInstanceItem,
+  LeaderboardData,
+  LeaderboardEntry,
+  PetState,
+  BankState,
+  DailyQuestBoard,
+  DailyQuestEntry,
+  AutoQuest,
+  GlobalQuest,
+  GlobalQuestLeaderboardEntry,
+  LotteryInfo,
+  GuildHallInfo,
+  GuildHallRoom,
+  DuelState,
+  DuelChallenge,
+  DungeonInfo,
+  PrestigeInfo,
+  PrestigePerk,
 } from "../types";
+import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
 
-export interface GmcpDispatchMap {
-  core: Dispatch<CoreAction>;
-  combat: Dispatch<CombatAction>;
-  inventory: Dispatch<InventoryAction>;
-  social: Dispatch<SocialAction>;
-  world: Dispatch<WorldAction>;
-  quest: Dispatch<QuestAction>;
-  ui: Dispatch<UIAction>;
-  // Non-dispatch utilities that remain imperative:
+interface GmcpContext {
+  setVitals: Dispatch<SetStateAction<Vitals>>;
+  setStatusVarLabels: Dispatch<SetStateAction<StatusVarLabels>>;
+  setCharacter: Dispatch<SetStateAction<CharacterInfo>>;
+  setRoom: Dispatch<SetStateAction<RoomState>>;
+  setRoomItems: Dispatch<SetStateAction<RoomItem[]>>;
+  setInventory: Dispatch<SetStateAction<ItemSummary[]>>;
+  setEquipment: Dispatch<SetStateAction<Record<string, ItemSummary>>>;
+  setEquipmentSlotDefs: Dispatch<SetStateAction<EquipmentSlotDef[]>>;
+  setPlayers: Dispatch<SetStateAction<RoomPlayer[]>>;
+  setMobs: Dispatch<SetStateAction<RoomMob[]>>;
+  setEffects: Dispatch<SetStateAction<StatusEffect[]>>;
+  setSkills: Dispatch<SetStateAction<SkillSummary[]>>;
+  setAchievements: Dispatch<SetStateAction<AchievementData>>;
+  setGroupInfo: Dispatch<SetStateAction<GroupInfo>>;
+  setPendingGroupInvite: Dispatch<SetStateAction<PendingGroupInvite | null>>;
+  setGuildInfo: Dispatch<SetStateAction<GuildInfo>>;
+  setPendingGuildInvite: Dispatch<SetStateAction<PendingGuildInvite | null>>;
+  setGuildMembers: Dispatch<SetStateAction<GuildMemberEntry[]>>;
+  setFriends: Dispatch<SetStateAction<FriendEntry[]>>;
+  pushFriendNotification: (notification: FriendNotification) => void;
+  setDialogue: Dispatch<SetStateAction<DialogueState | null>>;
+  setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
+  setShop: Dispatch<SetStateAction<ShopState | null>>;
+  setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean) => void;
   loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
-  sendGmcp: (pkg: string, payload: unknown) => boolean;
   pushCombatEvent: (event: CombatEventData) => void;
+  setCharStats: Dispatch<SetStateAction<CharStats | null>>;
+  setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
+  setQuestsAvailable: Dispatch<SetStateAction<QuestAvailable[]>>;
+  setDailyQuests: Dispatch<SetStateAction<DailyQuestBoard | null>>;
+  setWeeklyQuests: Dispatch<SetStateAction<DailyQuestEntry[]>>;
+  setAutoQuest: Dispatch<SetStateAction<AutoQuest | null>>;
+  setGlobalQuest: Dispatch<SetStateAction<GlobalQuest | null>>;
   pushGainEvent: (event: GainEvent) => void;
-  pushCraftingResult: (result?: CraftingResult) => void;
-  pushMailNotification: (notification?: MailNotification) => void;
+  pushQuestNotification: (notification: QuestNotification) => void;
+  setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
+  setRoomFeatures: Dispatch<SetStateAction<RoomFeature[]>>;
+  setContainerContents: Dispatch<SetStateAction<ContainerContents | null>>;
+  setLoginPrompt: Dispatch<SetStateAction<LoginPromptState | null>>;
+  setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
+  setReconnecting: Dispatch<SetStateAction<boolean>>;
+  setSavedCharacters: Dispatch<SetStateAction<string[]>>;
   resumeTokenRef: { current: string | null };
   pendingAuthCharRef: { current: string | null };
   failedAuthCharRef: { current: string | null };
+  sendGmcp: (pkg: string, payload: unknown) => boolean;
+  setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
+  setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
+  setEmotePresets: Dispatch<SetStateAction<EmotePreset[]>>;
+  pushUiFeedback: (feedback: UiFeedback) => void;
+  setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
+  setStaffMobTemplates: Dispatch<SetStateAction<StaffMobZone[]>>;
+  setLookTarget: Dispatch<SetStateAction<LookTargetInfo | null>>;
+  pushBroadcast: (sender: string, message: string) => void;
+  setPossessing: Dispatch<SetStateAction<string | null>>;
+  setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
+  setCraftingRecipes: Dispatch<SetStateAction<CraftingRecipe[]>>;
+  setCraftingNodes: Dispatch<SetStateAction<CraftingNode[]>>;
+  pushCraftingResult: (result?: CraftingResult) => void;
+  setMailInbox: Dispatch<SetStateAction<MailEntry[] | null>>;
+  setMailMessage: Dispatch<SetStateAction<MailMessage | null>>;
+  pushMailNotification: (notification?: MailNotification) => void;
+  setWhoPlayers: Dispatch<SetStateAction<WhoPlayer[]>>;
+  setZoneInstances: Dispatch<SetStateAction<ZoneInstances>>;
+  setSpriteList: Dispatch<SetStateAction<SpriteList>>;
+  setHousing: Dispatch<SetStateAction<HousingInfo | null>>;
+  setTradeState: Dispatch<SetStateAction<TradeState | null>>;
+  setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
+  setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
+  setCurrencies: Dispatch<SetStateAction<CurrencyBalance[]>>;
+  setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
+  setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
+  setWorldTime: Dispatch<SetStateAction<WorldTime | null>>;
+  setWorldWeather: Dispatch<SetStateAction<WorldWeather | null>>;
+  setWorldEvents: Dispatch<SetStateAction<WorldEvent[]>>;
+  setPetState: Dispatch<SetStateAction<PetState | null>>;
+  setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
+  setBankState: Dispatch<SetStateAction<BankState | null>>;
+  setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
+  setGuildHall: Dispatch<SetStateAction<GuildHallInfo | null>>;
+  setDuelState: Dispatch<SetStateAction<DuelState | null>>;
+  setDuelChallenge: Dispatch<SetStateAction<DuelChallenge | null>>;
+  setDungeonInfo: Dispatch<SetStateAction<DungeonInfo | null>>;
+  setPrestigeInfo: Dispatch<SetStateAction<PrestigeInfo | null>>;
 }
-
-let combatLogIdCounter = 0;
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
 
@@ -80,60 +198,41 @@ function parseMobEffects(raw: unknown): StatusEffect[] | undefined {
   return effects.length > 0 ? effects : undefined;
 }
 
-function parseMob(packet: Record<string, unknown>): RoomMob {
-  return {
-    id: typeof packet.id === "string" ? packet.id : `${Date.now()}-${Math.random()}`,
-    name: typeof packet.name === "string" ? packet.name : "Unknown mob",
-    description: typeof packet.description === "string" ? packet.description : undefined,
-    hp: safeNumber(packet.hp),
-    maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
-    image: typeof packet.image === "string" ? packet.image : null,
-    video: typeof packet.video === "string" ? packet.video : null,
-    effects: parseMobEffects(packet.effects),
-  };
-}
-
 export function applyGmcpPackage(
   pkg: string,
   data: unknown,
-  ctx: GmcpDispatchMap,
+  ctx: GmcpContext,
 ) {
   switch (pkg) {
     case "Char.StatusVars": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.core({
-        type: "SET_STATUS_VAR_LABELS",
-        payload: {
-          hp: typeof packet.hp === "string" ? packet.hp : "HP",
-          maxHp: typeof packet.maxHp === "string" ? packet.maxHp : "Max HP",
-          mana: typeof packet.mana === "string" ? packet.mana : "Mana",
-          maxMana: typeof packet.maxMana === "string" ? packet.maxMana : "Max Mana",
-          level: typeof packet.level === "string" ? packet.level : "Level",
-          xp: typeof packet.xp === "string" ? packet.xp : "XP",
-        },
-      });
+      ctx.setStatusVarLabels((prev) => ({
+        hp: typeof packet.hp === "string" ? packet.hp : prev.hp,
+        maxHp: typeof packet.maxHp === "string" ? packet.maxHp : prev.maxHp,
+        mana: typeof packet.mana === "string" ? packet.mana : prev.mana,
+        maxMana: typeof packet.maxMana === "string" ? packet.maxMana : prev.maxMana,
+        level: typeof packet.level === "string" ? packet.level : prev.level,
+        xp: typeof packet.xp === "string" ? packet.xp : prev.xp,
+      }));
       break;
     }
 
     case "Char.Vitals": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.core({
-        type: "SET_VITALS",
-        payload: {
-          hp: safeNumber(packet.hp),
-          maxHp: safeNumber(packet.maxHp, 1),
-          mana: safeNumber(packet.mana),
-          maxMana: safeNumber(packet.maxMana, 1),
-          level: typeof packet.level === "number" ? packet.level : null,
-          xp: safeNumber(packet.xp),
-          xpIntoLevel: safeNumber(packet.xpIntoLevel),
-          xpToNextLevel: packet.xpToNextLevel === null ? null : safeNumber(packet.xpToNextLevel),
-          gold: safeNumber(packet.gold),
-          inCombat: packet.inCombat === true,
-          prestigeLevel: safeNumber(packet.prestigeLevel, 0),
-          prestigeXpAvailable: packet.prestigeXpAvailable != null ? safeNumber(packet.prestigeXpAvailable) : null,
-          prestigeNextCost: packet.prestigeNextCost != null ? safeNumber(packet.prestigeNextCost) : null,
-        },
+      ctx.setVitals({
+        hp: safeNumber(packet.hp),
+        maxHp: safeNumber(packet.maxHp, 1),
+        mana: safeNumber(packet.mana),
+        maxMana: safeNumber(packet.maxMana, 1),
+        level: typeof packet.level === "number" ? packet.level : null,
+        xp: safeNumber(packet.xp),
+        xpIntoLevel: safeNumber(packet.xpIntoLevel),
+        xpToNextLevel: packet.xpToNextLevel === null ? null : safeNumber(packet.xpToNextLevel),
+        gold: safeNumber(packet.gold),
+        inCombat: packet.inCombat === true,
+        prestigeLevel: safeNumber(packet.prestigeLevel, 0),
+        prestigeXpAvailable: packet.prestigeXpAvailable != null ? safeNumber(packet.prestigeXpAvailable) : null,
+        prestigeNextCost: packet.prestigeNextCost != null ? safeNumber(packet.prestigeNextCost) : null,
       });
       break;
     }
@@ -142,17 +241,14 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const targetId = typeof packet.targetId === "string" ? packet.targetId : null;
       if (targetId === null) {
-        ctx.combat({ type: "SET_COMBAT_TARGET", payload: null });
+        ctx.setCombatTarget(null);
       } else {
-        ctx.combat({
-          type: "SET_COMBAT_TARGET",
-          payload: {
-            targetId,
-            targetName: typeof packet.targetName === "string" ? packet.targetName : null,
-            targetHp: typeof packet.targetHp === "number" ? packet.targetHp : null,
-            targetMaxHp: typeof packet.targetMaxHp === "number" ? packet.targetMaxHp : null,
-            targetImage: typeof packet.targetImage === "string" ? packet.targetImage : null,
-          },
+        ctx.setCombatTarget({
+          targetId,
+          targetName: typeof packet.targetName === "string" ? packet.targetName : null,
+          targetHp: typeof packet.targetHp === "number" ? packet.targetHp : null,
+          targetMaxHp: typeof packet.targetMaxHp === "number" ? packet.targetMaxHp : null,
+          targetImage: typeof packet.targetImage === "string" ? packet.targetImage : null,
         });
       }
       break;
@@ -160,21 +256,18 @@ export function applyGmcpPackage(
 
     case "Char.Name": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.core({
-        type: "SET_CHARACTER",
-        payload: {
-          name: typeof packet.name === "string" && packet.name.length > 0 ? packet.name : "-",
-          gender: typeof packet.gender === "string" ? packet.gender : "",
-          race: typeof packet.race === "string" ? packet.race : "",
-          className: typeof packet.class === "string" ? packet.class : "",
-          level: typeof packet.level === "number" ? packet.level : null,
-          sprite: typeof packet.sprite === "string" ? packet.sprite : null,
-          isStaff: packet.isStaff === true,
-        },
+      ctx.setCharacter({
+        name: typeof packet.name === "string" && packet.name.length > 0 ? packet.name : "-",
+        gender: typeof packet.gender === "string" ? packet.gender : "",
+        race: typeof packet.race === "string" ? packet.race : "",
+        className: typeof packet.class === "string" ? packet.class : "",
+        level: typeof packet.level === "number" ? packet.level : null,
+        sprite: typeof packet.sprite === "string" ? packet.sprite : null,
+        isStaff: packet.isStaff === true,
       });
       // Login complete — dismiss modal
-      ctx.core({ type: "SET_LOGIN_PROMPT", payload: null });
-      ctx.core({ type: "SET_LOGIN_ERROR", payload: null });
+      ctx.setLoginPrompt(null);
+      ctx.setLoginError(null);
       break;
     }
 
@@ -191,7 +284,7 @@ export function applyGmcpPackage(
           imagePath: typeof s.imagePath === "string" ? s.imagePath : "",
         }))
         .filter((s) => s.imageId.length > 0);
-      ctx.core({ type: "SET_SPRITE_LIST", payload: { active, sprites } });
+      ctx.setSpriteList({ active, sprites });
       break;
     }
 
@@ -199,8 +292,10 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const exits = packet.exits && typeof packet.exits === "object" ? (packet.exits as Record<string, string>) : {};
       const id = typeof packet.id === "string" ? packet.id : null;
+
       const mapX = typeof packet.mapX === "number" ? packet.mapX : 0;
       const mapY = typeof packet.mapY === "number" ? packet.mapY : 0;
+
       const title = typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "-";
       const description = typeof packet.description === "string" ? packet.description : "";
       const image = typeof packet.image === "string" ? packet.image : null;
@@ -215,13 +310,14 @@ export function applyGmcpPackage(
       const bank = packet.bank === true;
       const tavern = packet.tavern === true;
 
-      // Cross-context: clear dialogue and available quests on room change
-      ctx.world({ type: "SET_DIALOGUE", payload: null });
-      ctx.quest({ type: "SET_QUESTS_AVAILABLE", payload: [] });
-
-      ctx.world({
-        type: "SET_ROOM",
-        payload: { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, bank, tavern },
+      // Detect actual room change (not just a look/refresh of the same room)
+      ctx.setRoom((prev) => {
+        if (prev.id !== id && prev.id !== null) {
+          // Moved to a different room — clear dialogue/quest offers
+          ctx.setDialogue(null);
+          ctx.setQuestsAvailable([]);
+        }
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, bank, tavern };
       });
 
       if (id) {
@@ -263,15 +359,14 @@ export function applyGmcpPackage(
             isCurrent: i.isCurrent === true,
           }))
         : [];
-      ctx.world({ type: "SET_ZONE_INSTANCES", payload: { zone, currentEngineId, instances } });
+      ctx.setZoneInstances({ zone, currentEngineId, instances });
       break;
     }
 
     case "Char.Equipment.Slots": {
       if (!Array.isArray(data)) break;
-      ctx.inventory({
-        type: "SET_EQUIPMENT_SLOT_DEFS",
-        payload: data
+      ctx.setEquipmentSlotDefs(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             id: typeof e.id === "string" ? e.id : "",
@@ -281,7 +376,7 @@ export function applyGmcpPackage(
             y: typeof e.y === "number" ? e.y : 50,
           }))
           .sort((a, b) => a.order - b.order),
-      });
+      );
       break;
     }
 
@@ -321,16 +416,16 @@ export function applyGmcpPackage(
         }
       }
 
-      ctx.inventory({ type: "SET_INVENTORY", payload: inventoryList });
-      ctx.inventory({ type: "SET_EQUIPMENT", payload: equipmentMap });
+      ctx.setInventory(inventoryList);
+      ctx.setEquipment(equipmentMap);
       break;
     }
 
     case "Char.Items.Add": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.inventory({
-        type: "ADD_INVENTORY_ITEM",
-        payload: {
+      ctx.setInventory((prev) => [
+        ...prev,
+        {
           id: typeof packet.id === "string" ? packet.id : `${Date.now()}-${Math.random()}`,
           name: typeof packet.name === "string" ? packet.name : "Unknown item",
           keyword: typeof packet.keyword === "string" ? packet.keyword : (typeof packet.name === "string" ? packet.name : "item"),
@@ -341,25 +436,24 @@ export function applyGmcpPackage(
           stats: packet.stats && typeof packet.stats === "object" ? packet.stats as Record<string, number> : undefined,
           enchantments: Array.isArray(packet.enchantments) ? (packet.enchantments as unknown[]).filter((e): e is string => typeof e === "string") : undefined,
         },
-      });
+      ]);
       break;
     }
 
     case "Char.Items.Remove": {
       const packet = data as Partial<Record<string, unknown>>;
       if (typeof packet.id !== "string") break;
-      ctx.inventory({ type: "REMOVE_INVENTORY_ITEM", payload: packet.id });
+      ctx.setInventory((prev) => prev.filter((item) => item.id !== packet.id));
       break;
     }
 
     case "Room.Items": {
       if (!Array.isArray(data)) {
-        ctx.world({ type: "SET_ROOM_ITEMS", payload: [] });
+        ctx.setRoomItems([]);
         break;
       }
-      ctx.world({
-        type: "SET_ROOM_ITEMS",
-        payload: data
+      ctx.setRoomItems(
+        data
           .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
           .map((entry, index) => ({
             id: typeof entry.id === "string" ? entry.id : `room-item-${index}-${Date.now()}`,
@@ -368,43 +462,39 @@ export function applyGmcpPackage(
             image: typeof entry.image === "string" ? entry.image : null,
             video: typeof entry.video === "string" ? entry.video : null,
           })),
-      });
+      );
       break;
     }
 
     case "Room.LookTarget": {
       const packet = data as Partial<Record<string, unknown>>;
       const targetType = typeof packet.type === "string" ? packet.type : "item";
-      ctx.ui({
-        type: "SET_LOOK_TARGET",
-        payload: {
-          type: targetType as LookTargetInfo["type"],
-          name: typeof packet.name === "string" ? packet.name : "Unknown",
-          description: typeof packet.description === "string" ? packet.description : "",
-          image: typeof packet.image === "string" ? packet.image : null,
-          level: typeof packet.level === "number" ? packet.level : null,
-          race: typeof packet.race === "string" ? packet.race : null,
-          playerClass: typeof packet.class === "string" ? (packet.class as string) : null,
-          receivedAt: Date.now(),
-        },
+      ctx.setLookTarget({
+        type: targetType as LookTargetInfo["type"],
+        name: typeof packet.name === "string" ? packet.name : "Unknown",
+        description: typeof packet.description === "string" ? packet.description : "",
+        image: typeof packet.image === "string" ? packet.image : null,
+        level: typeof packet.level === "number" ? packet.level : null,
+        race: typeof packet.race === "string" ? packet.race : null,
+        playerClass: typeof packet.class === "string" ? (packet.class as string) : null,
+        receivedAt: Date.now(),
       });
       break;
     }
 
     case "Room.Players": {
       if (!Array.isArray(data)) {
-        ctx.world({ type: "SET_PLAYERS", payload: [] });
+        ctx.setPlayers([]);
         break;
       }
-      ctx.world({
-        type: "SET_PLAYERS",
-        payload: data
+      ctx.setPlayers(
+        data
           .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
           .map((entry) => ({
             name: typeof entry.name === "string" ? entry.name : "Unknown",
             level: safeNumber(entry.level),
           })),
-      });
+      );
       break;
     }
 
@@ -412,28 +502,39 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const name = packet.name;
       if (typeof name !== "string") break;
-      ctx.world({ type: "ADD_PLAYER", payload: { name, level: safeNumber(packet.level) } });
+      ctx.setPlayers((prev) => {
+        if (prev.some((player) => player.name === name)) return prev;
+        return [...prev, { name, level: safeNumber(packet.level) }];
+      });
       break;
     }
 
     case "Room.RemovePlayer": {
       const packet = data as Partial<Record<string, unknown>>;
       if (typeof packet.name !== "string") break;
-      ctx.world({ type: "REMOVE_PLAYER", payload: packet.name });
+      ctx.setPlayers((prev) => prev.filter((player) => player.name !== packet.name));
       break;
     }
 
     case "Room.Mobs": {
       if (!Array.isArray(data)) {
-        ctx.world({ type: "SET_MOBS", payload: [] });
+        ctx.setMobs([]);
         break;
       }
-      ctx.world({
-        type: "SET_MOBS",
-        payload: data
+      ctx.setMobs(
+        data
           .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
-          .map((entry) => parseMob(entry)),
-      });
+          .map((entry) => ({
+            id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
+            name: typeof entry.name === "string" ? entry.name : "Unknown mob",
+            description: typeof entry.description === "string" ? entry.description : undefined,
+            hp: safeNumber(entry.hp),
+            maxHp: Math.max(1, safeNumber(entry.maxHp, 1)),
+            image: typeof entry.image === "string" ? entry.image : null,
+            video: typeof entry.video === "string" ? entry.video : null,
+            effects: parseMobEffects(entry.effects),
+          })),
+      );
       break;
     }
 
@@ -441,7 +542,19 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const id = packet.id;
       if (typeof id !== "string") break;
-      ctx.world({ type: "ADD_MOB", payload: parseMob(packet as Record<string, unknown>) });
+      ctx.setMobs((prev) => [
+        ...prev,
+        {
+          id,
+          name: typeof packet.name === "string" ? packet.name : "Unknown mob",
+          description: typeof packet.description === "string" ? packet.description : undefined,
+          hp: safeNumber(packet.hp),
+          maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
+          image: typeof packet.image === "string" ? packet.image : null,
+          video: typeof packet.video === "string" ? packet.video : null,
+          effects: parseMobEffects(packet.effects),
+        },
+      ]);
       break;
     }
 
@@ -450,51 +563,46 @@ export function applyGmcpPackage(
       if (typeof packet.id !== "string") break;
       const updatedHp = safeNumber(packet.hp);
       const updatedMaxHp = Math.max(1, safeNumber(packet.maxHp, 1));
-      const effects = parseMobEffects(packet.effects);
-      // We dispatch UPDATE_MOB with the partial data; the reducer merges via id match
-      // Since WorldContext UPDATE_MOB replaces the full mob, we need to construct the full mob
-      // But we don't have prev state here. We need a PATCH_MOB action instead.
-      // For now, dispatch the update data and let the mob merge happen.
-      // Actually WorldContext.UPDATE_MOB does a full replace by id. We'll need to
-      // construct a complete mob object. But we're missing the old fields.
-      // Let's add a PATCH_MOB action to WorldContext that only updates provided fields.
-      // Simpler approach: use the existing world dispatch with a custom action.
-      // We'll handle this by dispatching a dedicated update that the reducer can handle.
-      ctx.world({
-        type: "UPDATE_MOB",
-        payload: {
-          id: packet.id,
-          name: typeof packet.name === "string" ? packet.name : "Unknown mob",
-          description: typeof packet.description === "string" ? packet.description : undefined,
-          hp: safeNumber(packet.hp, 0),
-          maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
-          image: typeof packet.image === "string" ? packet.image : null,
-          video: typeof packet.video === "string" ? packet.video : null,
-          effects,
-        },
-      });
-      // Cross-context: keep combat target HP in sync
-      ctx.combat({ type: "UPDATE_COMBAT_TARGET_HP", payload: { targetId: packet.id, hp: updatedHp, maxHp: updatedMaxHp } });
+      ctx.setMobs((prev) =>
+        prev.map((mob) => {
+          if (mob.id !== packet.id) return mob;
+          const effects = parseMobEffects(packet.effects);
+          return {
+            ...mob,
+            hp: safeNumber(packet.hp, mob.hp),
+            maxHp: Math.max(1, safeNumber(packet.maxHp, mob.maxHp)),
+            description: typeof packet.description === "string" ? packet.description : mob.description,
+            image: typeof packet.image === "string" ? packet.image : mob.image,
+            video: typeof packet.video === "string" ? packet.video : mob.video,
+            effects: effects !== undefined ? effects : mob.effects,
+          };
+        }),
+      );
+      // Keep combat target HP in sync
+      ctx.setCombatTarget((prev) =>
+        prev && prev.targetId === packet.id
+          ? { ...prev, targetHp: updatedHp, targetMaxHp: updatedMaxHp }
+          : prev,
+      );
       break;
     }
 
     case "Room.RemoveMob": {
       const packet = data as Partial<Record<string, unknown>>;
       if (typeof packet.id !== "string") break;
-      ctx.world({ type: "REMOVE_MOB", payload: packet.id });
-      // Cross-context: clear combat target if the removed mob was our target
-      ctx.combat({ type: "CLEAR_COMBAT_TARGET_IF", payload: packet.id });
+      ctx.setMobs((prev) => prev.filter((mob) => mob.id !== packet.id));
+      // Clear combat target if the removed mob was our target
+      ctx.setCombatTarget((prev) => (prev && prev.targetId === packet.id ? null : prev));
       break;
     }
 
     case "Char.StatusEffects": {
       if (!Array.isArray(data)) {
-        ctx.combat({ type: "SET_EFFECTS", payload: [] });
+        ctx.setEffects([]);
         break;
       }
-      ctx.combat({
-        type: "SET_EFFECTS",
-        payload: data
+      ctx.setEffects(
+        data
           .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
           .map((entry) => ({
             name: typeof entry.name === "string" ? entry.name : "Effect",
@@ -502,19 +610,18 @@ export function applyGmcpPackage(
             stacks: Math.max(1, safeNumber(entry.stacks, 1)),
             remainingMs: Math.max(0, safeNumber(entry.remainingMs, 0)),
           })),
-      });
+      );
       break;
     }
 
     case "Char.Skills": {
       const now = Date.now();
       if (!Array.isArray(data)) {
-        ctx.combat({ type: "SET_SKILLS", payload: [] });
+        ctx.setSkills([]);
         break;
       }
-      ctx.combat({
-        type: "SET_SKILLS",
-        payload: data
+      ctx.setSkills(
+        data
           .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
           .map((entry, index) => ({
             id: typeof entry.id === "string" ? entry.id : `skill-${index}`,
@@ -530,7 +637,7 @@ export function applyGmcpPackage(
             image: typeof entry.image === "string" ? entry.image : null,
             receivedAt: now,
           })),
-      });
+      );
       break;
     }
 
@@ -555,7 +662,7 @@ export function applyGmcpPackage(
               required: safeNumber(e.required, 1),
             }))
         : [];
-      ctx.quest({ type: "SET_ACHIEVEMENTS", payload: { completed, inProgress } });
+      ctx.setAchievements({ completed, inProgress });
       break;
     }
 
@@ -575,35 +682,32 @@ export function applyGmcpPackage(
               playerClass: typeof e.class === "string" ? e.class : "",
             }))
         : [];
-      ctx.social({ type: "SET_GROUP_INFO", payload: { leader, members } });
+      ctx.setGroupInfo({ leader, members });
       // Clear pending invite when group info arrives (player joined a group)
-      if (leader) ctx.social({ type: "SET_PENDING_GROUP_INVITE", payload: null });
+      if (leader) ctx.setPendingGroupInvite(null);
       break;
     }
 
     case "Group.Invite": {
       const packet = data as Partial<Record<string, unknown>>;
       const inviterName = typeof packet.inviterName === "string" ? packet.inviterName : "Unknown";
-      ctx.social({ type: "SET_PENDING_GROUP_INVITE", payload: { inviterName, receivedAt: Date.now() } });
+      ctx.setPendingGroupInvite({ inviterName, receivedAt: Date.now() });
       break;
     }
 
     case "Guild.Info": {
       const packet = data as Partial<Record<string, unknown>>;
       const guildName = typeof packet.name === "string" ? packet.name : null;
-      ctx.social({
-        type: "SET_GUILD_INFO",
-        payload: {
-          name: guildName,
-          tag: typeof packet.tag === "string" ? packet.tag : null,
-          rank: typeof packet.rank === "string" ? packet.rank : null,
-          motd: typeof packet.motd === "string" ? packet.motd : null,
-          memberCount: safeNumber(packet.memberCount),
-          maxSize: safeNumber(packet.maxSize, 50),
-        },
+      ctx.setGuildInfo({
+        name: guildName,
+        tag: typeof packet.tag === "string" ? packet.tag : null,
+        rank: typeof packet.rank === "string" ? packet.rank : null,
+        motd: typeof packet.motd === "string" ? packet.motd : null,
+        memberCount: safeNumber(packet.memberCount),
+        maxSize: safeNumber(packet.maxSize, 50),
       });
       // Clear pending invite when guild info arrives (player joined a guild)
-      if (guildName) ctx.social({ type: "SET_PENDING_GUILD_INVITE", payload: null });
+      if (guildName) ctx.setPendingGuildInvite(null);
       break;
     }
 
@@ -612,18 +716,17 @@ export function applyGmcpPackage(
       const inviterName = typeof packet.inviterName === "string" ? packet.inviterName : "Unknown";
       const guildName = typeof packet.guildName === "string" ? packet.guildName : "Unknown";
       const guildTag = typeof packet.guildTag === "string" ? packet.guildTag : "";
-      ctx.social({ type: "SET_PENDING_GUILD_INVITE", payload: { inviterName, guildName, guildTag, receivedAt: Date.now() } });
+      ctx.setPendingGuildInvite({ inviterName, guildName, guildTag, receivedAt: Date.now() });
       break;
     }
 
     case "Guild.Members": {
       if (!Array.isArray(data)) {
-        ctx.social({ type: "SET_GUILD_MEMBERS", payload: [] });
+        ctx.setGuildMembers([]);
         break;
       }
-      ctx.social({
-        type: "SET_GUILD_MEMBERS",
-        payload: data
+      ctx.setGuildMembers(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             name: typeof e.name === "string" ? e.name : "Unknown",
@@ -631,7 +734,7 @@ export function applyGmcpPackage(
             online: e.online === true,
             level: typeof e.level === "number" ? e.level : null,
           })),
-      });
+      );
       break;
     }
 
@@ -641,27 +744,31 @@ export function applyGmcpPackage(
       const message = typeof packet.message === "string" ? packet.message.trim() : "";
       if (message.length === 0) break;
 
-      ctx.social({
-        type: "PUSH_CHAT_MESSAGE",
-        payload: {
-          id: `${Date.now()}-${Math.random()}`,
-          channel: "gchat" as ChatChannel,
-          sender,
-          message,
-          receivedAt: Date.now(),
-        },
+      const entry: ChatMessage = {
+        id: `${Date.now()}-${Math.random()}`,
+        channel: "gchat",
+        sender,
+        message,
+        receivedAt: Date.now(),
+      };
+
+      ctx.setChatByChannel((prev) => {
+        const next = [...prev.gchat, entry];
+        if (next.length > MAX_CHAT_MESSAGES_PER_CHANNEL) {
+          next.splice(0, next.length - MAX_CHAT_MESSAGES_PER_CHANNEL);
+        }
+        return { ...prev, gchat: next };
       });
       break;
     }
 
     case "Friends.List": {
       if (!Array.isArray(data)) {
-        ctx.social({ type: "SET_FRIENDS", payload: [] });
+        ctx.setFriends([]);
         break;
       }
-      ctx.social({
-        type: "SET_FRIENDS",
-        payload: data
+      ctx.setFriends(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             name: typeof e.name === "string" ? e.name : "Unknown",
@@ -669,7 +776,7 @@ export function applyGmcpPackage(
             level: typeof e.level === "number" ? e.level : null,
             zone: typeof e.zone === "string" ? e.zone : null,
           })),
-      });
+      );
       break;
     }
 
@@ -678,10 +785,18 @@ export function applyGmcpPackage(
       const name = typeof packet.name === "string" ? packet.name : null;
       if (!name) break;
       const level = typeof packet.level === "number" ? packet.level : null;
-      ctx.social({ type: "UPDATE_FRIEND_ONLINE", payload: { name, level } });
-      ctx.ui({
-        type: "PUSH_FRIEND_NOTIFICATION",
-        payload: { id: `${Date.now()}-${Math.random()}`, name, event: "online", receivedAt: Date.now() },
+      ctx.setFriends((prev) => {
+        const existing = prev.find((f) => f.name === name);
+        if (existing) {
+          return prev.map((f) => f.name === name ? { ...f, online: true, level } : f);
+        }
+        return [...prev, { name, online: true, level, zone: null }];
+      });
+      ctx.pushFriendNotification({
+        id: `${Date.now()}-${Math.random()}`,
+        name,
+        event: "online",
+        receivedAt: Date.now(),
       });
       break;
     }
@@ -690,10 +805,14 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const name = typeof packet.name === "string" ? packet.name : null;
       if (!name) break;
-      ctx.social({ type: "UPDATE_FRIEND_OFFLINE", payload: name });
-      ctx.ui({
-        type: "PUSH_FRIEND_NOTIFICATION",
-        payload: { id: `${Date.now()}-${Math.random()}`, name, event: "offline", receivedAt: Date.now() },
+      ctx.setFriends((prev) =>
+        prev.map((f) => f.name === name ? { ...f, online: false, zone: null } : f),
+      );
+      ctx.pushFriendNotification({
+        id: `${Date.now()}-${Math.random()}`,
+        name,
+        event: "offline",
+        receivedAt: Date.now(),
       });
       break;
     }
@@ -709,16 +828,21 @@ export function applyGmcpPackage(
       const message = typeof packet.message === "string" ? packet.message.trim() : "";
       if (message.length === 0) break;
 
-      ctx.social({
-        type: "PUSH_CHAT_MESSAGE",
-        payload: {
-          id: `${Date.now()}-${Math.random()}`,
-          channel: mappedChannel,
-          sender,
-          message,
-          receivedAt: Date.now(),
-          ...(isWhisper && { isWhisper: true }),
-        },
+      const entry: ChatMessage = {
+        id: `${Date.now()}-${Math.random()}`,
+        channel: mappedChannel,
+        sender,
+        message,
+        receivedAt: Date.now(),
+        ...(isWhisper && { isWhisper: true }),
+      };
+
+      ctx.setChatByChannel((prev) => {
+        const next = [...prev[mappedChannel], entry];
+        if (next.length > MAX_CHAT_MESSAGES_PER_CHANNEL) {
+          next.splice(0, next.length - MAX_CHAT_MESSAGES_PER_CHANNEL);
+        }
+        return { ...prev, [mappedChannel]: next };
       });
       break;
     }
@@ -735,12 +859,12 @@ export function applyGmcpPackage(
               text: typeof e.text === "string" ? e.text : "",
             }))
         : [];
-      ctx.world({ type: "SET_DIALOGUE", payload: { mobName, text, choices } });
+      ctx.setDialogue({ mobName, text, choices });
       break;
     }
 
     case "Dialogue.End": {
-      ctx.world({ type: "SET_DIALOGUE", payload: null });
+      ctx.setDialogue(null);
       break;
     }
 
@@ -779,22 +903,19 @@ export function applyGmcpPackage(
           base: safeNumber(s.base),
           effective: safeNumber(s.effective),
         }));
-      ctx.core({
-        type: "SET_CHAR_STATS",
-        payload: {
-          stats,
-          baseDamageMin: safeNumber(packet.baseDamageMin),
-          baseDamageMax: safeNumber(packet.baseDamageMax),
-          armor: safeNumber(packet.armor),
-          dodgePercent: safeNumber(packet.dodgePercent),
-        },
+      ctx.setCharStats({
+        stats,
+        baseDamageMin: safeNumber(packet.baseDamageMin),
+        baseDamageMax: safeNumber(packet.baseDamageMax),
+        armor: safeNumber(packet.armor),
+        dodgePercent: safeNumber(packet.dodgePercent),
       });
       break;
     }
 
     case "Quest.List": {
       if (!Array.isArray(data)) {
-        ctx.quest({ type: "SET_QUESTS", payload: [] });
+        ctx.setQuests([]);
         break;
       }
       const parsedQuests = data
@@ -816,8 +937,13 @@ export function applyGmcpPackage(
                 }))
             : [],
         }));
-      // SET_QUESTS_AND_FILTER_AVAILABLE sets quests and removes newly-active ones from available
-      ctx.quest({ type: "SET_QUESTS_AND_FILTER_AVAILABLE", payload: parsedQuests });
+      ctx.setQuests(parsedQuests);
+      // Remove newly-active quests from available offers so accept buttons disappear
+      const activeIds = new Set(parsedQuests.map((q) => q.id));
+      ctx.setQuestsAvailable((prev) => {
+        const filtered = prev.filter((q) => !activeIds.has(q.id));
+        return filtered.length === prev.length ? prev : filtered;
+      });
       break;
     }
 
@@ -826,15 +952,17 @@ export function applyGmcpPackage(
       const questId = typeof packet.questId === "string" ? packet.questId : null;
       const objIndex = typeof packet.objectiveIndex === "number" ? packet.objectiveIndex : -1;
       if (!questId || objIndex < 0) break;
-      ctx.quest({
-        type: "UPDATE_QUEST_OBJECTIVE",
-        payload: {
-          questId,
-          objectiveIndex: objIndex,
-          current: safeNumber(packet.current),
-          required: safeNumber(packet.required),
-        },
-      });
+      ctx.setQuests((prev) =>
+        prev.map((q) => {
+          if (q.id !== questId) return q;
+          const objectives = q.objectives.map((o, i) =>
+            i === objIndex
+              ? { ...o, current: safeNumber(packet.current, o.current), required: safeNumber(packet.required, o.required) }
+              : o,
+          );
+          return { ...q, objectives };
+        }),
+      );
       break;
     }
 
@@ -843,28 +971,24 @@ export function applyGmcpPackage(
       const questId = typeof packet.questId === "string" ? packet.questId : null;
       if (!questId) break;
       const questName = typeof packet.questName === "string" ? packet.questName : "Quest";
-      ctx.quest({ type: "REMOVE_QUEST", payload: questId });
-      ctx.quest({
-        type: "PUSH_QUEST_NOTIFICATION",
-        payload: {
-          id: `${Date.now()}-${Math.random()}`,
-          questId,
-          questName,
-          event: "complete",
-          receivedAt: Date.now(),
-        },
+      ctx.setQuests((prev) => prev.filter((q) => q.id !== questId));
+      ctx.pushQuestNotification({
+        id: `${Date.now()}-${Math.random()}`,
+        questId,
+        questName,
+        event: "complete",
+        receivedAt: Date.now(),
       });
       break;
     }
 
     case "Quest.Available": {
       if (!Array.isArray(data)) {
-        ctx.quest({ type: "SET_QUESTS_AVAILABLE", payload: [] });
+        ctx.setQuestsAvailable([]);
         break;
       }
-      ctx.quest({
-        type: "SET_QUESTS_AVAILABLE",
-        payload: data
+      ctx.setQuestsAvailable(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => {
             const objectives = Array.isArray(e.objectives)
@@ -890,7 +1014,7 @@ export function applyGmcpPackage(
               },
             };
           }),
-      });
+      );
       break;
     }
 
@@ -909,7 +1033,10 @@ export function applyGmcpPackage(
           goldReward: safeNumber(e.goldReward),
           xpReward: safeNumber(e.xpReward),
         }));
-      ctx.quest({ type: "SET_DAILY_QUESTS", payload: { quests, streakDays: safeNumber(packet.streakDays) } });
+      ctx.setDailyQuests({
+        quests,
+        streakDays: safeNumber(packet.streakDays),
+      });
       break;
     }
 
@@ -927,23 +1054,20 @@ export function applyGmcpPackage(
           goldReward: safeNumber(e.goldReward),
           xpReward: safeNumber(e.xpReward),
         }));
-      ctx.quest({ type: "SET_WEEKLY_QUESTS", payload: quests });
+      ctx.setWeeklyQuests(quests);
       break;
     }
 
     case "Quest.Auto": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.quest({
-        type: "SET_AUTO_QUEST",
-        payload: {
-          active: packet.active === true,
-          targetMobName: typeof packet.targetMobName === "string" ? packet.targetMobName : undefined,
-          killsRequired: typeof packet.killsRequired === "number" ? packet.killsRequired : undefined,
-          killsCompleted: typeof packet.killsCompleted === "number" ? packet.killsCompleted : undefined,
-          rewardGold: typeof packet.rewardGold === "number" ? packet.rewardGold : undefined,
-          rewardXp: typeof packet.rewardXp === "number" ? packet.rewardXp : undefined,
-          timeRemainingMs: typeof packet.timeRemainingMs === "number" ? packet.timeRemainingMs : undefined,
-        },
+      ctx.setAutoQuest({
+        active: packet.active === true,
+        targetMobName: typeof packet.targetMobName === "string" ? packet.targetMobName : undefined,
+        killsRequired: typeof packet.killsRequired === "number" ? packet.killsRequired : undefined,
+        killsCompleted: typeof packet.killsCompleted === "number" ? packet.killsCompleted : undefined,
+        rewardGold: typeof packet.rewardGold === "number" ? packet.rewardGold : undefined,
+        rewardXp: typeof packet.rewardXp === "number" ? packet.rewardXp : undefined,
+        timeRemainingMs: typeof packet.timeRemainingMs === "number" ? packet.timeRemainingMs : undefined,
       });
       break;
     }
@@ -959,21 +1083,18 @@ export function applyGmcpPackage(
             name: typeof e.name === "string" ? e.name : "",
             progress: safeNumber(e.progress),
           }));
-        ctx.quest({
-          type: "SET_GLOBAL_QUEST",
-          payload: {
-            active: true,
-            objective: typeof packet.objective === "string" ? packet.objective : undefined,
-            objectiveType: typeof packet.objectiveType === "string" ? packet.objectiveType : undefined,
-            targetCount: typeof packet.targetCount === "number" ? packet.targetCount : undefined,
-            playerProgress: typeof packet.playerProgress === "number" ? packet.playerProgress : undefined,
-            endsAtMs: typeof packet.endsAtMs === "number" ? packet.endsAtMs : undefined,
-            completed: packet.completed === true,
-            leaderboard,
-          },
+        ctx.setGlobalQuest({
+          active: true,
+          objective: typeof packet.objective === "string" ? packet.objective : undefined,
+          objectiveType: typeof packet.objectiveType === "string" ? packet.objectiveType : undefined,
+          targetCount: typeof packet.targetCount === "number" ? packet.targetCount : undefined,
+          playerProgress: typeof packet.playerProgress === "number" ? packet.playerProgress : undefined,
+          endsAtMs: typeof packet.endsAtMs === "number" ? packet.endsAtMs : undefined,
+          completed: packet.completed === true,
+          leaderboard,
         });
       } else {
-        ctx.quest({ type: "SET_GLOBAL_QUEST", payload: { active: false } });
+        ctx.setGlobalQuest({ active: false });
       }
       break;
     }
@@ -983,31 +1104,40 @@ export function applyGmcpPackage(
       const abilityId = typeof packet.abilityId === "string" ? packet.abilityId : null;
       const cooldownMs = safeNumber(packet.cooldownMs);
       if (!abilityId || cooldownMs <= 0) break;
-      ctx.combat({ type: "UPDATE_SKILL_COOLDOWN", payload: { abilityId, cooldownMs, receivedAt: Date.now() } });
+      const now = Date.now();
+      ctx.setSkills((prev) =>
+        prev.map((s) =>
+          s.id === abilityId
+            ? { ...s, cooldownRemainingMs: cooldownMs, receivedAt: now }
+            : s,
+        ),
+      );
       break;
     }
 
     case "Char.Gain": {
       const packet = data as Partial<Record<string, unknown>>;
+      const nl = typeof packet.newLevel === "number" ? packet.newLevel : null;
+      const hpG = typeof packet.hpGained === "number" ? packet.hpGained : null;
+      const manaG = typeof packet.manaGained === "number" ? packet.manaGained : null;
       ctx.pushGainEvent({
         type: typeof packet.type === "string" ? packet.type : "unknown",
         amount: safeNumber(packet.amount),
         source: typeof packet.source === "string" ? packet.source : null,
-        newLevel: typeof packet.newLevel === "number" ? packet.newLevel : null,
-        hpGained: typeof packet.hpGained === "number" ? packet.hpGained : null,
-        manaGained: typeof packet.manaGained === "number" ? packet.manaGained : null,
+        newLevel: nl,
+        hpGained: hpG,
+        manaGained: manaG,
       });
       break;
     }
 
     case "Room.MobInfo": {
       if (!Array.isArray(data)) {
-        ctx.world({ type: "SET_MOB_INFO", payload: [] });
+        ctx.setMobInfo([]);
         break;
       }
-      ctx.world({
-        type: "SET_MOB_INFO",
-        payload: data
+      ctx.setMobInfo(
+        data
           .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
           .map((entry) => ({
             id: typeof entry.id === "string" ? entry.id : "",
@@ -1020,19 +1150,18 @@ export function applyGmcpPackage(
             dialogue: entry.dialogue === true,
             aggressive: entry.aggressive === true,
           })),
-      });
+      );
       break;
     }
 
     case "Room.Features": {
-      ctx.ui({ type: "SET_CONTAINER_CONTENTS", payload: null });
+      ctx.setContainerContents(null);
       if (!Array.isArray(data)) {
-        ctx.world({ type: "SET_ROOM_FEATURES", payload: [] });
+        ctx.setRoomFeatures([]);
         break;
       }
-      ctx.world({
-        type: "SET_ROOM_FEATURES",
-        payload: data
+      ctx.setRoomFeatures(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             id: typeof e.id === "string" ? e.id : "",
@@ -1046,24 +1175,21 @@ export function applyGmcpPackage(
             keyRequired: typeof e.keyRequired === "boolean" ? e.keyRequired : null,
             text: typeof e.text === "string" ? e.text : null,
           })),
-      });
+      );
       break;
     }
 
     case "Room.ContainerContents": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.ui({
-        type: "SET_CONTAINER_CONTENTS",
-        payload: {
-          featureId: typeof packet.featureId === "string" ? packet.featureId : "",
-          name: typeof packet.name === "string" ? packet.name : "",
-          keyword: typeof packet.keyword === "string" ? packet.keyword : "",
-          items: Array.isArray(packet.items)
-            ? packet.items
-                .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
-                .map((i) => ({ name: typeof i.name === "string" ? i.name : "", keyword: typeof i.keyword === "string" ? i.keyword : "" }))
-            : [],
-        },
+      ctx.setContainerContents({
+        featureId: typeof packet.featureId === "string" ? packet.featureId : "",
+        name: typeof packet.name === "string" ? packet.name : "",
+        keyword: typeof packet.keyword === "string" ? packet.keyword : "",
+        items: Array.isArray(packet.items)
+          ? packet.items
+              .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
+              .map((i) => ({ name: typeof i.name === "string" ? i.name : "", keyword: typeof i.keyword === "string" ? i.keyword : "" }))
+          : [],
       });
       break;
     }
@@ -1090,26 +1216,24 @@ export function applyGmcpPackage(
               video: typeof e.video === "string" ? e.video : null,
             }))
         : [];
-      ctx.inventory({ type: "SET_SHOP", payload: { name, sellMultiplier, items } });
+      ctx.setShop({ name, sellMultiplier, items });
       break;
     }
 
     case "Shop.Close": {
-      ctx.inventory({ type: "SET_SHOP", payload: null });
-      // Cross-context: close shop popout if it's currently open
-      ctx.ui({ type: "CLOSE_POPOUT_IF", payload: "shop" });
+      ctx.setShop(null);
       break;
     }
 
     case "Server.Assets": {
       const packet = data as Record<string, string>;
-      ctx.core({ type: "SET_SERVER_ASSETS", payload: packet });
+      ctx.setServerAssets(packet);
       break;
     }
 
     case "Server.Commands": {
       const packet = data as { commands?: unknown[] };
-      const commands = (packet.commands ?? [])
+      const commands: CommandEntry[] = (packet.commands ?? [])
         .filter((c): c is Record<string, unknown> => typeof c === "object" && c !== null)
         .map((c) => ({
           name: String(c.name ?? ""),
@@ -1119,7 +1243,7 @@ export function applyGmcpPackage(
           staff: c.staff === true,
           requiresTarget: c.requiresTarget === true,
         }));
-      ctx.core({ type: "SET_SERVER_COMMANDS", payload: commands });
+      ctx.setServerCommands(commands);
       break;
     }
 
@@ -1127,56 +1251,55 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const sender = typeof packet.sender === "string" ? packet.sender : "System";
       const message = typeof packet.message === "string" ? packet.message : "";
-      if (message.length > 0) ctx.ui({ type: "PUSH_BROADCAST", payload: { sender, message } });
+      if (message.length > 0) ctx.pushBroadcast(sender, message);
       break;
     }
 
     case "Server.EmotePresets": {
       if (!Array.isArray(data)) break;
-      ctx.core({
-        type: "SET_EMOTE_PRESETS",
-        payload: data
-          .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
-          .map((p) => ({
-            label: String(p.label ?? ""),
-            emoji: String(p.emoji ?? ""),
-            action: String(p.action ?? ""),
-          })),
-      });
+      const presets: EmotePreset[] = data
+        .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
+        .map((p) => ({
+          label: String(p.label ?? ""),
+          emoji: String(p.emoji ?? ""),
+          action: String(p.action ?? ""),
+        }));
+      ctx.setEmotePresets(presets);
       break;
     }
 
     case "Server.Who": {
       const packet = data as { players?: unknown[] };
-      ctx.social({
-        type: "SET_WHO_PLAYERS",
-        payload: (packet.players ?? [])
-          .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
-          .map((p) => ({
-            name: String(p.name ?? ""),
-            level: safeNumber(p.level),
-            race: String(p.race ?? ""),
-            playerClass: String(p.class ?? ""),
-            title: typeof p.title === "string" ? p.title : null,
-            guild: typeof p.guild === "string" ? p.guild : null,
-            groupSize: safeNumber(p.groupSize),
-            idle: safeNumber(p.idle),
-          })),
-      });
+      const players: WhoPlayer[] = (packet.players ?? [])
+        .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
+        .map((p) => ({
+          name: String(p.name ?? ""),
+          level: safeNumber(p.level),
+          race: String(p.race ?? ""),
+          playerClass: String(p.class ?? ""),
+          title: typeof p.title === "string" ? p.title : null,
+          guild: typeof p.guild === "string" ? p.guild : null,
+          groupSize: safeNumber(p.groupSize),
+          idle: safeNumber(p.idle),
+        }));
+      ctx.setWhoPlayers(players);
       break;
     }
 
     case "Login.Prompt": {
       const packet = data as LoginPromptState;
       // Only attempt auto-authentication on the initial "name" prompt.
+      // Subsequent prompts (confirmCreate, password, raceSelection, etc.) must
+      // always be shown to the user — otherwise the client intercepts every
+      // Login.Prompt mid-flow and loops back to the name screen.
       if (packet.state !== "name") {
-        ctx.core({ type: "SET_LOGIN_PROMPT", payload: packet });
-        ctx.core({ type: "SET_LOGIN_ERROR", payload: null });
+        ctx.setLoginPrompt(packet);
+        ctx.setLoginError(null);
         break;
       }
       // Priority: resume token (short-lived reconnect) > auth token (long-lived remember-me)
       if (ctx.resumeTokenRef.current) {
-        ctx.core({ type: "SET_RECONNECTING", payload: true });
+        ctx.setReconnecting(true);
         ctx.sendGmcp("Session.Resume", { token: ctx.resumeTokenRef.current });
       } else {
         // Check for saved auth tokens in localStorage
@@ -1188,12 +1311,12 @@ export function applyGmcpPackage(
 
         if (names.length >= 1) {
           // Show character picker with saved characters + "create new" option
-          ctx.core({ type: "SET_SAVED_CHARACTERS", payload: names });
-          ctx.core({ type: "SET_LOGIN_PROMPT", payload: packet });
-          ctx.core({ type: "SET_LOGIN_ERROR", payload: null });
+          ctx.setSavedCharacters(names);
+          ctx.setLoginPrompt(packet);
+          ctx.setLoginError(null);
         } else {
-          ctx.core({ type: "SET_LOGIN_PROMPT", payload: packet });
-          ctx.core({ type: "SET_LOGIN_ERROR", payload: null });
+          ctx.setLoginPrompt(packet);
+          ctx.setLoginError(null);
         }
       }
       break;
@@ -1210,13 +1333,15 @@ export function applyGmcpPackage(
     case "Session.ResumeResult": {
       const packet = data as { success?: boolean };
       if (packet.success) {
-        ctx.core({ type: "SET_RECONNECTING", payload: false });
-        ctx.resumeTokenRef.current = null;
+        // Resume succeeded — the server will send full state sync (Char.Name clears login modal)
+        ctx.setReconnecting(false);
+        ctx.resumeTokenRef.current = null; // will be replaced by the new token from onAfterLogin
       } else {
-        ctx.core({ type: "SET_RECONNECTING", payload: false });
+        // Resume failed — fall back to normal login
+        ctx.setReconnecting(false);
         ctx.resumeTokenRef.current = null;
-        ctx.core({ type: "SET_LOGIN_PROMPT", payload: data as LoginPromptState });
-        ctx.core({ type: "SET_LOGIN_ERROR", payload: null });
+        ctx.setLoginPrompt(data as LoginPromptState);
+        ctx.setLoginError(null);
       }
       break;
     }
@@ -1224,6 +1349,7 @@ export function applyGmcpPackage(
     case "Session.AuthToken": {
       const packet = data as { token?: string; characterName?: string; expiresInDays?: number };
       if (typeof packet.token === "string" && packet.token.length > 0 && typeof packet.characterName === "string") {
+        // Store in localStorage keyed by character name
         try {
           const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
           saved[packet.characterName] = packet.token;
@@ -1236,11 +1362,17 @@ export function applyGmcpPackage(
     case "Session.AuthResult": {
       const packet = data as { success?: boolean; message?: string };
       if (packet.success) {
-        ctx.core({ type: "SET_RECONNECTING", payload: false });
+        // Auth succeeded — server will send full state sync
+        ctx.setReconnecting(false);
         ctx.pendingAuthCharRef.current = null;
       } else {
-        ctx.core({ type: "SET_RECONNECTING", payload: false });
-        ctx.core({ type: "SET_LOGIN_ERROR", payload: null });
+        // Auth failed — remove the stale token and fall back to login prompt.
+        // Server re-sends Login.Prompt which will drive the full state reset,
+        // but clear error eagerly in case the server response is delayed.
+        // Stash the character name so the Login.Prompt handler can auto-send it,
+        // skipping straight to the password prompt instead of showing "Enter name".
+        ctx.setReconnecting(false);
+        ctx.setLoginError(null);
         const failedChar = ctx.pendingAuthCharRef.current;
         ctx.pendingAuthCharRef.current = null;
         ctx.failedAuthCharRef.current = failedChar;
@@ -1257,33 +1389,27 @@ export function applyGmcpPackage(
 
     case "Login.Error": {
       const packet = data as LoginErrorState;
-      ctx.core({ type: "SET_LOGIN_ERROR", payload: packet });
+      ctx.setLoginError(packet);
       break;
     }
 
     case "UI.Feedback": {
       const raw = data as Record<string, unknown>;
-      const feedback: UiFeedback = {
+      const packet: UiFeedback = {
         type: (raw.type as UiFeedback["type"]) ?? "info",
         message: typeof raw.message === "string" ? raw.message : "",
         code: typeof raw.code === "string" ? raw.code : undefined,
         scope: typeof raw.scope === "string" ? raw.scope : undefined,
         command: typeof raw.command === "string" ? raw.command : undefined,
       };
-      // Push as combat log message (same as old pushUiFeedback)
-      const style = feedback.type === "error" ? "error" : feedback.type === "success" ? "heal" : "info";
-      ctx.combat({
-        type: "PUSH_COMBAT_LOG_MESSAGE",
-        payload: { id: ++combatLogIdCounter, text: feedback.message, style, receivedAt: Date.now() },
-      });
+      ctx.pushUiFeedback(packet);
       break;
     }
 
     case "Crafting.Skills": {
       if (!Array.isArray(data)) break;
-      ctx.inventory({
-        type: "SET_CRAFTING_SKILLS",
-        payload: data
+      ctx.setCraftingSkills(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             id: typeof e.id === "string" ? e.id : "",
@@ -1294,15 +1420,14 @@ export function applyGmcpPackage(
             maxLevel: safeNumber(e.maxLevel, 100),
             type: e.type === "gathering" ? "gathering" as const : "crafting" as const,
           })),
-      });
+      );
       break;
     }
 
     case "Crafting.Recipes": {
       if (!Array.isArray(data)) break;
-      ctx.inventory({
-        type: "SET_CRAFTING_RECIPES",
-        payload: data
+      ctx.setCraftingRecipes(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             id: typeof e.id === "string" ? e.id : "",
@@ -1318,18 +1443,17 @@ export function applyGmcpPackage(
             outputName: typeof e.outputName === "string" ? e.outputName : "",
             outputQuantity: safeNumber(e.outputQuantity, 1),
           })),
-      });
+      );
       break;
     }
 
     case "Crafting.Nodes": {
       if (!Array.isArray(data)) {
-        ctx.inventory({ type: "SET_CRAFTING_NODES", payload: [] });
+        ctx.setCraftingNodes([]);
         break;
       }
-      ctx.inventory({
-        type: "SET_CRAFTING_NODES",
-        payload: data
+      ctx.setCraftingNodes(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             id: typeof e.id === "string" ? e.id : "",
@@ -1338,7 +1462,7 @@ export function applyGmcpPackage(
             skillRequired: safeNumber(e.skillRequired, 1),
             image: typeof e.image === "string" ? e.image : null,
           })),
-      });
+      );
       break;
     }
 
@@ -1358,49 +1482,42 @@ export function applyGmcpPackage(
 
     case "Char.Pet": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.combat({
-        type: "SET_PET_STATE",
-        payload: {
-          active: !!packet.active,
-          name: typeof packet.name === "string" ? packet.name : undefined,
-          hp: typeof packet.hp === "number" ? packet.hp : undefined,
-          maxHp: typeof packet.maxHp === "number" ? packet.maxHp : undefined,
-          minDamage: typeof packet.minDamage === "number" ? packet.minDamage : undefined,
-          maxDamage: typeof packet.maxDamage === "number" ? packet.maxDamage : undefined,
-          armor: typeof packet.armor === "number" ? packet.armor : undefined,
-          image: typeof packet.image === "string" ? packet.image : undefined,
-        },
+      ctx.setPetState({
+        active: !!packet.active,
+        name: typeof packet.name === "string" ? packet.name : undefined,
+        hp: typeof packet.hp === "number" ? packet.hp : undefined,
+        maxHp: typeof packet.maxHp === "number" ? packet.maxHp : undefined,
+        minDamage: typeof packet.minDamage === "number" ? packet.minDamage : undefined,
+        maxDamage: typeof packet.maxDamage === "number" ? packet.maxDamage : undefined,
+        armor: typeof packet.armor === "number" ? packet.armor : undefined,
+        image: typeof packet.image === "string" ? packet.image : undefined,
       });
       break;
     }
 
     case "Char.Bank": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.inventory({
-        type: "SET_BANK_STATE",
-        payload: {
-          gold: safeNumber(packet.gold, 0),
-          items: Array.isArray(packet.items)
-            ? (packet.items as Array<Record<string, unknown>>)
-              .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
-              .map((i) => ({
-                id: typeof i.id === "string" ? i.id : "",
-                name: typeof i.name === "string" ? i.name : "",
-                keyword: typeof i.keyword === "string" ? i.keyword : "",
-                image: typeof i.image === "string" ? i.image : null,
-              }))
-            : [],
-          maxItems: safeNumber(packet.maxItems, 0),
-        },
+      ctx.setBankState({
+        gold: safeNumber(packet.gold, 0),
+        items: Array.isArray(packet.items)
+          ? (packet.items as Array<Record<string, unknown>>)
+            .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
+            .map((i) => ({
+              id: typeof i.id === "string" ? i.id : "",
+              name: typeof i.name === "string" ? i.name : "",
+              keyword: typeof i.keyword === "string" ? i.keyword : "",
+              image: typeof i.image === "string" ? i.image : null,
+            }))
+          : [],
+        maxItems: safeNumber(packet.maxItems, 0),
       });
       break;
     }
 
     case "Char.Factions": {
       const factionPacket = data;
-      ctx.ui({
-        type: "SET_FACTIONS",
-        payload: Array.isArray(factionPacket)
+      ctx.setFactions(
+        Array.isArray(factionPacket)
           ? factionPacket
             .filter((f): f is Record<string, unknown> => typeof f === "object" && f !== null)
             .map((f) => ({
@@ -1410,14 +1527,13 @@ export function applyGmcpPackage(
               tier: typeof f.tier === "string" ? f.tier : "Neutral",
             }))
           : [],
-      });
+      );
       break;
     }
 
     case "Char.Currencies": {
-      ctx.inventory({
-        type: "SET_CURRENCIES",
-        payload: Array.isArray(data)
+      ctx.setCurrencies(
+        Array.isArray(data)
           ? data
             .filter((c): c is Record<string, unknown> => typeof c === "object" && c !== null)
             .map((c) => ({
@@ -1427,40 +1543,33 @@ export function applyGmcpPackage(
               balance: safeNumber(c.balance),
             }))
           : [],
-      });
+      );
       break;
     }
 
     case "World.Time": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.world({
-        type: "SET_WORLD_TIME",
-        payload: {
-          period: typeof packet.period === "string" ? packet.period : "DAY",
-          hour: safeNumber(packet.hour),
-          minute: safeNumber(packet.minute),
-        },
+      ctx.setWorldTime({
+        period: typeof packet.period === "string" ? packet.period : "DAY",
+        hour: safeNumber(packet.hour),
+        minute: safeNumber(packet.minute),
       });
       break;
     }
 
     case "World.Weather": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.world({
-        type: "SET_WORLD_WEATHER",
-        payload: {
-          zone: typeof packet.zone === "string" ? packet.zone : "",
-          weather: typeof packet.weather === "string" ? packet.weather : "CLEAR",
-          description: typeof packet.description === "string" ? packet.description : "",
-        },
+      ctx.setWorldWeather({
+        zone: typeof packet.zone === "string" ? packet.zone : "",
+        weather: typeof packet.weather === "string" ? packet.weather : "CLEAR",
+        description: typeof packet.description === "string" ? packet.description : "",
       });
       break;
     }
 
     case "World.Events": {
-      ctx.world({
-        type: "SET_WORLD_EVENTS",
-        payload: Array.isArray(data)
+      ctx.setWorldEvents(
+        Array.isArray(data)
           ? data
               .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
               .map((e) => ({
@@ -1469,18 +1578,17 @@ export function applyGmcpPackage(
                 description: typeof e.description === "string" ? e.description : "",
               }))
           : [],
-      });
+      );
       break;
     }
 
     case "Auction.List": {
       if (!Array.isArray(data)) {
-        ctx.inventory({ type: "SET_AUCTION_LISTINGS", payload: [] });
+        ctx.setAuctionListings([]);
         break;
       }
-      ctx.inventory({
-        type: "SET_AUCTION_LISTINGS",
-        payload: data
+      ctx.setAuctionListings(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             id: safeNumber(e.id, 0),
@@ -1489,7 +1597,7 @@ export function applyGmcpPackage(
             price: safeNumber(e.price, 0),
             seller: typeof e.seller === "string" ? e.seller : "",
           })),
-      });
+      );
       break;
     }
 
@@ -1507,7 +1615,8 @@ export function applyGmcpPackage(
               score: safeNumber(e.score, 0),
             }))
         : [];
-      ctx.ui({ type: "MERGE_LEADERBOARD", payload: { category, data: { category, label, scoreLabel, entries } } });
+      const leaderboardData: LeaderboardData = { category, label, scoreLabel, entries };
+      ctx.setLeaderboard((prev) => ({ ...prev, [category]: leaderboardData }));
       break;
     }
 
@@ -1523,33 +1632,29 @@ export function applyGmcpPackage(
               name: typeof e.name === "string" ? e.name : "",
             }));
         };
-        ctx.inventory({
-          type: "SET_TRADE_STATE",
-          payload: {
-            active: true,
-            partner: typeof packet.partner === "string" ? packet.partner : null,
-            myItems: parseItems(packet.myItems),
-            theirItems: parseItems(packet.theirItems),
-            myGold: safeNumber(packet.myGold, 0),
-            theirGold: safeNumber(packet.theirGold, 0),
-            myAccepted: packet.myAccepted === true,
-            theirAccepted: packet.theirAccepted === true,
-          },
+        ctx.setTradeState({
+          active: true,
+          partner: typeof packet.partner === "string" ? packet.partner : null,
+          myItems: parseItems(packet.myItems),
+          theirItems: parseItems(packet.theirItems),
+          myGold: safeNumber(packet.myGold, 0),
+          theirGold: safeNumber(packet.theirGold, 0),
+          myAccepted: packet.myAccepted === true,
+          theirAccepted: packet.theirAccepted === true,
         });
       } else {
-        ctx.inventory({ type: "SET_TRADE_STATE", payload: null });
+        ctx.setTradeState(null);
       }
       break;
     }
 
     case "Mail.List": {
       if (!Array.isArray(data)) {
-        ctx.ui({ type: "SET_MAIL_INBOX", payload: [] });
+        ctx.setMailInbox([]);
         break;
       }
-      ctx.ui({
-        type: "SET_MAIL_INBOX",
-        payload: data
+      ctx.setMailInbox(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             index: safeNumber(e.index, 0),
@@ -1559,22 +1664,19 @@ export function applyGmcpPackage(
             read: e.read === true,
             preview: typeof e.preview === "string" ? e.preview : "",
           })),
-      });
+      );
       break;
     }
 
     case "Mail.Message": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.ui({
-        type: "SET_MAIL_MESSAGE",
-        payload: {
-          index: safeNumber(packet.index, 0),
-          id: typeof packet.id === "string" ? packet.id : "",
-          from: typeof packet.from === "string" ? packet.from : "",
-          body: typeof packet.body === "string" ? packet.body : "",
-          date: safeNumber(packet.date, 0),
-          read: packet.read === true,
-        },
+      ctx.setMailMessage({
+        index: safeNumber(packet.index, 0),
+        id: typeof packet.id === "string" ? packet.id : "",
+        from: typeof packet.from === "string" ? packet.from : "",
+        body: typeof packet.body === "string" ? packet.body : "",
+        date: safeNumber(packet.date, 0),
+        read: packet.read === true,
       });
       break;
     }
@@ -1601,7 +1703,7 @@ export function applyGmcpPackage(
               description: typeof r.description === "string" ? r.description : "",
             }))
         : [];
-      ctx.ui({ type: "SET_HOUSING", payload: { hasHouse, ownerName, rooms } });
+      ctx.setHousing({ hasHouse, ownerName, rooms });
       break;
     }
 
@@ -1612,9 +1714,8 @@ export function applyGmcpPackage(
 
     case "Staff.WorldInfo": {
       if (!Array.isArray(data)) break;
-      ctx.ui({
-        type: "SET_STAFF_WORLD_INFO",
-        payload: data
+      ctx.setStaffWorldInfo(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             zone: typeof e.zone === "string" ? e.zone : "",
@@ -1627,7 +1728,7 @@ export function applyGmcpPackage(
                   }))
               : [],
           })),
-      });
+      );
       break;
     }
 
@@ -1635,15 +1736,14 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const active = packet.active === true;
       const mobName = typeof packet.mobName === "string" ? packet.mobName : null;
-      ctx.ui({ type: "SET_POSSESSING", payload: active ? mobName : null });
+      ctx.setPossessing(active ? mobName : null);
       break;
     }
 
     case "Staff.MobTemplates": {
       if (!Array.isArray(data)) break;
-      ctx.ui({
-        type: "SET_STAFF_MOB_TEMPLATES",
-        payload: data
+      ctx.setStaffMobTemplates(
+        data
           .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
           .map((e) => ({
             zone: typeof e.zone === "string" ? e.zone : "",
@@ -1656,7 +1756,7 @@ export function applyGmcpPackage(
                   }))
               : [],
           })),
-      });
+      );
       break;
     }
 
@@ -1688,7 +1788,7 @@ export function applyGmcpPackage(
         multiclassGoldCost: safeNumber(packet.multiclassGoldCost, 500),
         abilities,
       };
-      ctx.ui({ type: "SET_TRAINER", payload: trainer });
+      ctx.setTrainer(trainer);
       break;
     }
 
@@ -1697,20 +1797,17 @@ export function applyGmcpPackage(
       const unlockedClasses: string[] = Array.isArray(packet.unlockedClasses)
         ? packet.unlockedClasses.filter((c): c is string => typeof c === "string")
         : [];
-      ctx.core({ type: "SET_UNLOCKED_CLASSES", payload: unlockedClasses });
+      ctx.setUnlockedClasses(unlockedClasses);
       break;
     }
 
     case "Lottery.Info": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.social({
-        type: "SET_LOTTERY_INFO",
-        payload: {
-          jackpot: safeNumber(packet.jackpot, 0),
-          totalTickets: safeNumber(packet.totalTickets, 0),
-          playerTickets: safeNumber(packet.playerTickets, 0),
-          nextDrawingMs: safeNumber(packet.nextDrawingMs, 0),
-        },
+      ctx.setLotteryInfo({
+        jackpot: safeNumber(packet.jackpot, 0),
+        totalTickets: safeNumber(packet.totalTickets, 0),
+        playerTickets: safeNumber(packet.playerTickets, 0),
+        nextDrawingMs: safeNumber(packet.nextDrawingMs, 0),
       });
       break;
     }
@@ -1727,14 +1824,11 @@ export function applyGmcpPackage(
             };
           })
         : [];
-      ctx.social({
-        type: "SET_GUILD_HALL",
-        payload: {
-          guildName: typeof packet.guildName === "string" ? packet.guildName : "",
-          rooms,
-          membersInHall: safeNumber(packet.membersInHall, 0),
-          maxRooms: safeNumber(packet.maxRooms, 0),
-        },
+      ctx.setGuildHall({
+        guildName: typeof packet.guildName === "string" ? packet.guildName : "",
+        rooms,
+        membersInHall: safeNumber(packet.membersInHall, 0),
+        maxRooms: safeNumber(packet.maxRooms, 0),
       });
       break;
     }
@@ -1742,27 +1836,21 @@ export function applyGmcpPackage(
     case "Duel.State": {
       const packet = data as Partial<Record<string, unknown>>;
       const active = packet.active === true;
-      ctx.combat({
-        type: "SET_DUEL_STATE",
-        payload: {
-          active,
-          opponentName: typeof packet.opponentName === "string" ? packet.opponentName : undefined,
-          startedAtMs: typeof packet.startedAtMs === "number" ? packet.startedAtMs : undefined,
-        },
+      ctx.setDuelState({
+        active,
+        opponentName: typeof packet.opponentName === "string" ? packet.opponentName : undefined,
+        startedAtMs: typeof packet.startedAtMs === "number" ? packet.startedAtMs : undefined,
       });
-      if (!active) ctx.combat({ type: "SET_DUEL_CHALLENGE", payload: null });
+      if (!active) ctx.setDuelChallenge(null);
       break;
     }
 
     case "Duel.Challenge": {
       const packet = data as Partial<Record<string, unknown>>;
-      ctx.combat({
-        type: "SET_DUEL_CHALLENGE",
-        payload: {
-          challengerName: typeof packet.challengerName === "string" ? packet.challengerName : "",
-          targetName: typeof packet.targetName === "string" ? packet.targetName : "",
-          direction: packet.direction === "incoming" ? "incoming" : "outgoing",
-        },
+      ctx.setDuelChallenge({
+        challengerName: typeof packet.challengerName === "string" ? packet.challengerName : "",
+        targetName: typeof packet.targetName === "string" ? packet.targetName : "",
+        direction: packet.direction === "incoming" ? "incoming" : "outgoing",
       });
       break;
     }
@@ -1770,18 +1858,15 @@ export function applyGmcpPackage(
     case "Dungeon.Info": {
       const packet = data as Partial<Record<string, unknown>>;
       const active = packet.active === true;
-      ctx.world({
-        type: "SET_DUNGEON_INFO",
-        payload: active ? {
-          active: true,
-          instanceId: typeof packet.instanceId === "string" ? packet.instanceId : undefined,
-          name: typeof packet.name === "string" ? packet.name : undefined,
-          difficulty: typeof packet.difficulty === "string" ? packet.difficulty : undefined,
-          totalRooms: typeof packet.totalRooms === "number" ? packet.totalRooms : undefined,
-          completed: packet.completed === true,
-          memberCount: typeof packet.memberCount === "number" ? packet.memberCount : undefined,
-        } : null,
-      });
+      ctx.setDungeonInfo(active ? {
+        active: true,
+        instanceId: typeof packet.instanceId === "string" ? packet.instanceId : undefined,
+        name: typeof packet.name === "string" ? packet.name : undefined,
+        difficulty: typeof packet.difficulty === "string" ? packet.difficulty : undefined,
+        totalRooms: typeof packet.totalRooms === "number" ? packet.totalRooms : undefined,
+        completed: packet.completed === true,
+        memberCount: typeof packet.memberCount === "number" ? packet.memberCount : undefined,
+      } : null);
       break;
     }
 
@@ -1798,16 +1883,13 @@ export function applyGmcpPackage(
             };
           })
         : [];
-      ctx.core({
-        type: "SET_PRESTIGE_INFO",
-        payload: {
-          enabled: packet.enabled === true,
-          currentRank: safeNumber(packet.currentRank, 0),
-          maxRank: safeNumber(packet.maxRank, 0),
-          availableXp: safeNumber(packet.availableXp, 0),
-          nextRankCost: packet.nextRankCost != null ? safeNumber(packet.nextRankCost) : null,
-          perks,
-        },
+      ctx.setPrestigeInfo({
+        enabled: packet.enabled === true,
+        currentRank: safeNumber(packet.currentRank, 0),
+        maxRank: safeNumber(packet.maxRank, 0),
+        availableXp: safeNumber(packet.availableXp, 0),
+        nextRankCost: packet.nextRankCost != null ? safeNumber(packet.nextRankCost) : null,
+        perks,
       });
       break;
     }
@@ -1816,3 +1898,4 @@ export function applyGmcpPackage(
       break;
   }
 }
+

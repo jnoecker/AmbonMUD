@@ -1,11 +1,26 @@
 import { useEffect, useState } from "react";
-import { useCoreState } from "../../state/CoreContext";
-import { useQuestState } from "../../state/QuestContext";
-import type { DailyQuestEntry } from "../../types";
+import type {
+  QuestEntry,
+  QuestAvailable,
+  QuestNotification,
+  DailyQuestBoard,
+  DailyQuestEntry,
+  AutoQuest,
+  GlobalQuest,
+} from "../../types";
 
 type QuestTab = "active" | "available" | "daily" | "weekly" | "bounty" | "global";
 
 interface QuestPanelProps {
+  connected: boolean;
+  hasCharacterProfile: boolean;
+  quests: QuestEntry[];
+  questsAvailable: QuestAvailable[];
+  questNotifications: QuestNotification[];
+  dailyQuests: DailyQuestBoard | null;
+  weeklyQuests: DailyQuestEntry[];
+  autoQuest: AutoQuest | null;
+  globalQuest: GlobalQuest | null;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onAcceptQuest: (questName: string) => void;
@@ -35,15 +50,20 @@ function questTypeLabel(type: string): string {
 }
 
 export function QuestPanel({
+  connected,
+  hasCharacterProfile,
+  quests,
+  questsAvailable,
+  questNotifications,
+  dailyQuests,
+  weeklyQuests,
+  autoQuest,
+  globalQuest,
   onDismissQuestNotification,
   onAbandonQuest,
   onAcceptQuest,
   onCommand,
 }: QuestPanelProps) {
-  const { character } = useCoreState();
-  const { quests, questsAvailable, questNotifications, dailyQuests, weeklyQuests, autoQuest, globalQuest } = useQuestState();
-  const connected = character.name !== "-";
-  const hasCharacterProfile = connected;
   const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<QuestTab>("active");
   // Ticking clock for the global quest timer — refreshes every 10s while a global quest is active

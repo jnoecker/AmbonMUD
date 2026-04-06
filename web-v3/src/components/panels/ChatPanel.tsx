@@ -2,15 +2,27 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CHAT_CHANNELS } from "../../constants";
 import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, SocialTab } from "../../types";
-import { useCoreState } from "../../state/CoreContext";
-import { useSocialState } from "../../state/SocialContext";
-import { useUIState } from "../../state/UIContext";
+import type { ChatChannel, ChatMessage, EmotePreset, FriendEntry, FriendNotification, GroupInfo, GuildHallInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab, WhoPlayer } from "../../types";
 
 type WhoSortField = "name" | "level" | "race" | "class" | "idle";
 type SortDir = "asc" | "desc";
 
 interface ChatPanelProps {
+  connected: boolean;
+  canChat: boolean;
+  playerName: string;
+  activeChannel: ChatChannel;
+  chatByChannel: Record<ChatChannel, ChatMessage[]>;
+  emotePresets: EmotePreset[];
+  whoPlayers: WhoPlayer[];
+  groupInfo: GroupInfo;
+  pendingGroupInvite: PendingGroupInvite | null;
+  guildInfo: GuildInfo;
+  pendingGuildInvite: PendingGuildInvite | null;
+  guildMembers: GuildMemberEntry[];
+  guildHall: GuildHallInfo | null;
+  friends: FriendEntry[];
+  friendNotifications: FriendNotification[];
   onChannelChange: (channel: ChatChannel) => void;
   onRequestWho: () => void;
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
@@ -50,17 +62,26 @@ const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
 ];
 
 export function ChatPanel({
+  connected,
+  canChat,
+  playerName,
+  activeChannel,
+  chatByChannel,
+  emotePresets,
+  whoPlayers,
+  groupInfo,
+  pendingGroupInvite,
+  guildInfo,
+  pendingGuildInvite,
+  guildMembers,
+  guildHall,
+  friends,
+  friendNotifications,
   onChannelChange,
   onRequestWho,
   onSendMessage,
   onCommand,
 }: ChatPanelProps) {
-  const { character, emotePresets } = useCoreState();
-  const { chatByChannel, activeChatChannel: activeChannel, groupInfo, pendingGroupInvite, guildInfo, pendingGuildInvite, guildMembers, guildHall, friends, whoPlayers } = useSocialState();
-  const { friendNotifications } = useUIState();
-  const connected = character.name !== "-";
-  const canChat = connected;
-  const playerName = character.name;
   const feedRef = useRef<HTMLDivElement | null>(null);
   const guildFeedRef = useRef<HTMLDivElement | null>(null);
   const groupFeedRef = useRef<HTMLDivElement | null>(null);

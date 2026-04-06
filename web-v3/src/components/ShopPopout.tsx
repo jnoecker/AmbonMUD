@@ -1,17 +1,15 @@
 import { useState } from "react";
-import { useCoreState } from "../state/CoreContext";
-import { useInventoryState } from "../state/InventoryContext";
+import type { ItemSummary, ShopState } from "../types";
 
 interface ShopPopoutProps {
+  shop: ShopState;
+  inventory: ItemSummary[];
+  gold: number;
   onBuyItem: (keyword: string) => void;
   onSellItem: (keyword: string) => void;
 }
 
-export function ShopPopout({ onBuyItem, onSellItem }: ShopPopoutProps) {
-  const { vitals } = useCoreState();
-  const { shop: shopState, inventory } = useInventoryState();
-  const shop = shopState!;
-  const gold = vitals.gold;
+export function ShopPopout({ shop, inventory, gold, onBuyItem, onSellItem }: ShopPopoutProps) {
   const [tab, setTab] = useState<"buy" | "sell">("buy");
 
   return (

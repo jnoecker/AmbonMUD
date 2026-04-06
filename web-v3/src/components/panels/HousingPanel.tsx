@@ -1,20 +1,21 @@
 import { useState } from "react";
-import { useCoreState } from "../../state/CoreContext";
-import { useUIState } from "../../state/UIContext";
-import { useWorldState } from "../../state/WorldContext";
+import type { HousingInfo, RoomState } from "../../types";
 
 interface HousingPanelProps {
+  connected: boolean;
+  hasCharacterProfile: boolean;
+  housing: HousingInfo | null;
+  room: RoomState;
   onSendCommand: (cmd: string) => void;
 }
 
 export function HousingPanel({
+  connected,
+  hasCharacterProfile,
+  housing,
+  room,
   onSendCommand,
 }: HousingPanelProps) {
-  const { character } = useCoreState();
-  const { housing } = useUIState();
-  const { room } = useWorldState();
-  const connected = character.name !== "-" || room.id !== null; // approximate
-  const hasCharacterProfile = character.name !== "-";
   const [editField, setEditField] = useState<"title" | "desc" | null>(null);
   const [editValue, setEditValue] = useState("");
 

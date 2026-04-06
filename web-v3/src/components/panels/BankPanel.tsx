@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useInventoryState } from "../../state/InventoryContext";
+import type { BankState } from "../../types";
 
 interface BankPanelProps {
+  bankState: BankState | null;
   onCommand: (cmd: string) => void;
 }
 
-export function BankPanel({ onCommand }: BankPanelProps) {
-  const { bankState } = useInventoryState();
+export function BankPanel({ bankState, onCommand }: BankPanelProps) {
   const [goldAmount, setGoldAmount] = useState("");
   const [itemKeyword, setItemKeyword] = useState("");
 
