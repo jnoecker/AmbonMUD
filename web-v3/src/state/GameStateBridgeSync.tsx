@@ -21,6 +21,7 @@ export function GameStateBridgeSync() {
   const quest = useQuestState();
 
   // Write during render -- not in useEffect -- for frame-perfect canvas reads
+  // eslint-disable-next-line react-hooks/immutability
   gameStateRef.current = {
     room: world.room,
     vitals: core.vitals,
