@@ -29,7 +29,6 @@ import { canvasCallbacks, pendingCastRef } from "../canvas/GameStateBridge";
 import { canvasEvents } from "../canvas/CanvasEventBus";
 import { LoginModal } from "../canvas/LoginModal";
 import { CharacterPicker } from "./CharacterPicker";
-import { MAX_VISIBLE_EFFECTS } from "../constants";
 import { useCommandHistory } from "../hooks/useCommandHistory";
 import { useMiniMap } from "../hooks/useMiniMap";
 import { useMudSocket } from "../hooks/useMudSocket";
@@ -38,7 +37,7 @@ import { useQuickbar } from "../hooks/useQuickbar";
 import { useCoreState, useCoreDispatch } from "../state/CoreContext";
 import { useCombatState, useCombatDispatch } from "../state/CombatContext";
 import { useInventoryState, useInventoryDispatch } from "../state/InventoryContext";
-import { useSocialState, useSocialDispatch } from "../state/SocialContext";
+import { useSocialDispatch } from "../state/SocialContext";
 import { useWorldState, useWorldDispatch } from "../state/WorldContext";
 import { useQuestState, useQuestDispatch } from "../state/QuestContext";
 import { useUIState, useUIDispatch } from "../state/UIContext";
@@ -98,7 +97,6 @@ export function AppShell() {
   const combatDispatch = useCombatDispatch();
   const inventoryState = useInventoryState();
   const inventoryDispatch = useInventoryDispatch();
-  const socialState = useSocialState();
   const socialDispatch = useSocialDispatch();
   const worldState = useWorldState();
   const worldDispatch = useWorldDispatch();
@@ -108,13 +106,12 @@ export function AppShell() {
   const uiDispatch = useUIDispatch();
 
   // ---- Destructure frequently used state ----
-  const { vitals, character, charStats, spriteList, unlockedClasses, loginPrompt, loginError, reconnecting, savedCharacters, serverCommands, emotePresets, prestigeInfo } = coreState;
-  const { combatTarget, effects, skills, combatLogMessages, duelState, duelChallenge, petState } = combatState;
-  const { inventory, equipment, equipmentSlotDefs, shop, craftingSkills, craftingRecipes, craftingNodes, tradeState, auctionListings, bankState, currencies } = inventoryState;
-  const { chatByChannel, activeChatChannel, groupInfo, pendingGroupInvite, guildInfo, pendingGuildInvite, guildMembers, guildHall, friends, whoPlayers, lotteryInfo } = socialState;
-  const { room, players, mobs, roomFeatures, zoneInstances, worldTime, worldWeather, worldEvents, dungeonInfo } = worldState;
-  const { quests, questsAvailable, achievements, dailyQuests, weeklyQuests, autoQuest, globalQuest, questNotifications } = questState;
-  const { activePopout, showAdminPanel, showCommandPalette, terminalVisible, terminalOpaque, layoutMode, composerValue, videoUrl, videoClosing, toast, lookTarget, broadcast, staffInvisible, possessing, containerContents, staffWorldInfo, staffMobTemplates, mailInbox, mailMessage, friendNotifications, trainer, housing, leaderboard, factions } = uiState;
+  const { vitals, character, loginPrompt, loginError, reconnecting, savedCharacters, serverCommands } = coreState;
+  const { combatTarget, skills } = combatState;
+  const { shop, craftingNodes, tradeState } = inventoryState;
+  const { room, roomFeatures } = worldState;
+  const { quests } = questState;
+  const { activePopout, showAdminPanel, showCommandPalette, terminalVisible, terminalOpaque, layoutMode, composerValue, videoUrl, videoClosing, toast, lookTarget, broadcast, staffInvisible, possessing, containerContents, trainer } = uiState;
 
   // ---- Refs ----
   const terminalHiddenRef = useRef<HTMLDivElement | null>(null);
@@ -135,17 +132,9 @@ export function AppShell() {
   const audio = useAudioEngine();
   const quickbar = useQuickbar(skills);
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
-  const xpText = vitals.xpToNextLevel === null ? "MAX" : `${vitals.xpIntoLevel.toLocaleString()} / ${vitals.xpToNextLevel.toLocaleString()}`;
-  const xpValue = vitals.xpToNextLevel === null ? 1 : vitals.xpIntoLevel;
-  const xpMax = vitals.xpToNextLevel === null ? 1 : Math.max(1, vitals.xpToNextLevel);
-  const visibleEffects = effects.slice(0, MAX_VISIBLE_EFFECTS);
-  const hiddenEffectsCount = Math.max(0, effects.length - visibleEffects.length);
-  const displayRace = character.race ? titleCaseWords(character.race) : "";
   const displayClassName = character.className ? titleCaseWords(character.className) : "";
   const hasCharacterProfile = character.name !== "-";
   const hasRoomDetails = room.id !== null || room.title !== "-";
-  const canOpenEquipment = hasCharacterProfile;
-  void unlockedClasses; // stored for future character sheet multi-class display
 
   // Persist layout mode to localStorage
   useEffect(() => {

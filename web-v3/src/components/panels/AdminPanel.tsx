@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useUIState } from "../../state/UIContext";
 import { useSocialState } from "../../state/SocialContext";
+import type { StaffWorldZone, StaffMobZone, WhoPlayer, StaffWorldRoom, StaffMobTemplate } from "../../types";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
@@ -52,7 +53,7 @@ function TeleportBrowser({
       .map((z) => ({
         ...z,
         rooms: z.rooms.filter(
-          (r) =>
+          (r: StaffWorldRoom) =>
             r.id.toLowerCase().includes(lowerFilter) ||
             r.title.toLowerCase().includes(lowerFilter),
         ),
@@ -109,7 +110,7 @@ function TeleportBrowser({
             </button>
             {isExpanded && (
               <ul className="teleport-list">
-                {z.rooms.map((room) => (
+                {z.rooms.map((room: StaffWorldRoom) => (
                   <li key={room.id} className="teleport-item">
                     <span className="teleport-item-room">
                       <span className="teleport-item-id">{room.id}</span>
@@ -159,7 +160,7 @@ function MobTemplateBrowser({
       .map((z) => ({
         ...z,
         mobs: z.mobs.filter(
-          (m) =>
+          (m: StaffMobTemplate) =>
             m.id.toLowerCase().includes(lowerFilter) ||
             m.name.toLowerCase().includes(lowerFilter),
         ),
@@ -191,7 +192,7 @@ function MobTemplateBrowser({
             </button>
             {isExpanded && (
               <ul className="teleport-list">
-                {z.mobs.map((mob) => (
+                {z.mobs.map((mob: StaffMobTemplate) => (
                   <li key={mob.id} className="teleport-item">
                     <span className="teleport-item-room">
                       <span className="teleport-item-id">{mob.id}</span>

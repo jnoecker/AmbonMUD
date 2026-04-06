@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCoreState } from "../../state/CoreContext";
 import { useQuestState } from "../../state/QuestContext";
+import type { DailyQuestEntry } from "../../types";
 
 type QuestTab = "active" | "available" | "daily" | "weekly" | "bounty" | "global";
 
