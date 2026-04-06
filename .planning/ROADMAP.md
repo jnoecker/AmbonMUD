@@ -51,7 +51,12 @@ Plans:
   3. Content respects safe area insets -- nothing is obscured by notches, Dynamic Island, or punch-hole cameras
   4. PixiJS canvas does not crash on iOS Safari after 20+ room transitions (VRAM managed via aggressive texture GC)
   5. Canvas resolution is capped at 2x device pixel ratio on mobile devices
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md -- LayoutShell component with CSS Grid zones, safe area insets, breakpoint migration
+- [ ] 02-02-PLAN.md -- PixiJS DPR cap, aggressive GC config, VRAMBudgetManager, scene transition texture cleanup
+
 **UI hint**: yes
 
 ### Phase 3: Bottom Sheet, HUD & PWA Foundation
@@ -157,7 +162,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. State Extraction | 0/2 | Planning complete | - |
-| 2. Layout Shell & Canvas Safety | 0/0 | Not started | - |
+| 2. Layout Shell & Canvas Safety | 0/2 | Planning complete | - |
 | 3. Bottom Sheet, HUD & PWA Foundation | 0/0 | Not started | - |
 | 4. Navigation & Combat | 0/0 | Not started | - |
 | 5. Toast & Notification System | 0/0 | Not started | - |
