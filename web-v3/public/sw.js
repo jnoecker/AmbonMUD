@@ -1,5 +1,5 @@
 // AmbonMUD Service Worker — cache static assets for offline splash + faster loads
-const CACHE_NAME = "ambonmud-v1";
+const CACHE_NAME = "ambonmud-v2";
 const STATIC_ASSETS = ["/", "/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -24,10 +24,16 @@ self.addEventListener("fetch", (event) => {
   // Never cache WebSocket or GMCP traffic
   if (url.protocol === "ws:" || url.protocol === "wss:") return;
 
-  // Network-first for HTML (always get latest app shell)
+  // Network-first for HTML with stale-while-revalidate (always get latest app shell)
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match("/"))
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match("/"))
     );
     return;
   }
