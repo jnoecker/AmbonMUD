@@ -12323,7 +12323,7 @@ html:has(.game-shell),
 
 @media (min-width: 1024px) {
   .vbar-panel-grid {
-    grid-template-columns: repeat(12, 1fr);
+    grid-template-columns: repeat(13, 1fr);
   }
 
   .drawer-sheet {

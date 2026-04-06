@@ -14,6 +14,7 @@ import {
   HousingIcon,
   MailIcon,
   HelpIcon,
+  ScoreTabIcon,
   SpellbookIcon,
   QuestsTabIcon,
   SkillCastIcon,
@@ -52,6 +53,7 @@ const PANELS: PanelDef[] = [
   { panel: "auction", label: "Auction", icon: <AuctionIcon className="vbar-icon" /> },
   { panel: "mail", label: "Mail", icon: <MailIcon className="vbar-icon" /> },
   { panel: "housing", label: "Housing", icon: <HousingIcon className="vbar-icon" /> },
+  { panel: "leaderboard", label: "Leaderboard", icon: <ScoreTabIcon className="vbar-icon" /> },
   { panel: "help", label: "Help", icon: <HelpIcon className="vbar-icon" /> },
 ];
 
