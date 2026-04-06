@@ -1,8 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-> The full engineering playbook is in `AGENTS.md`. This file summarizes the most important points for quick orientation.
+> Full engineering playbook: `AGENTS.md`. This file covers what you need to avoid mistakes.
 
 ## Agent Directives
 
@@ -10,485 +8,149 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Avoid re-reading files you've already examined in this session.**
 - **Prefer acting over gathering more context. If you've read the relevant module, start working.**
 
-## Cloud/Remote Mode
-
-The `gh` CLI is available in cloud/remote mode (verified Feb 2026). Use it normally for creating PRs, viewing issues, and other GitHub operations.
-
 ## Commands
 
 ```bash
 ./gradlew run            # Start server (telnet :4000, web :8080)
 ./gradlew demo           # Start server + auto-launch browser demo
-./gradlew ktlintCheck    # Lint (Kotlin official style) — run before every PR
+./gradlew ktlintCheck    # Lint — run before every PR
 ./gradlew test           # Full test suite — run before committing
-./gradlew buildWeb       # Build web client (requires bun) — auto-runs with `run`/`demo`
+./gradlew buildWeb       # Build web client (requires bun) — auto-runs with run/demo
 ```
 
-Run a single test class:
 ```bash
-./gradlew test --tests "dev.ambon.engine.commands.CommandParserTest"
+./gradlew test --tests "dev.ambon.engine.commands.CommandParserTest"  # single class
+./gradlew test --tests "*CommandRouter*"                              # pattern
 ```
 
-Run tests matching a pattern:
-```bash
-./gradlew test --tests "*CommandRouter*"
-```
+Override config: `-Pconfig.<key>=<value>` (e.g. `-Pconfig.ambonmud.persistence.backend=POSTGRES`).
 
-Override any config value at runtime with `-Pconfig.<key>=<value>`:
-```bash
-./gradlew run -Pconfig.ambonmud.logging.level=DEBUG
-./gradlew run -Pconfig.ambonmud.logging.packageLevels.dev.ambon.transport=DEBUG
-./gradlew run -Pconfig.ambonmud.server.telnetPort=5000
-./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES  # connection defaults match docker compose
-```
+Multi-instance: `runEngine1`/`runEngine2` (gRPC :9091/:9092), `runGateway1`/`runGateway2` (telnet :4000/:4001).
 
-Multi-instance local testing (start engines first, then gateways):
-```bash
-./gradlew runEngine1     # ENGINE mode, gRPC :9091
-./gradlew runEngine2     # ENGINE mode, gRPC :9092
-./gradlew runGateway1    # GATEWAY mode, telnet :4000, web :8080
-./gradlew runGateway2    # GATEWAY mode, telnet :4001, web :8081
-```
-
-On Windows use `.\gradlew.bat` instead of `./gradlew`.
+On Windows use `.\gradlew.bat`.
 
 ## Architecture
 
-AmbonMUD is a Kotlin MUD server with a tick-based event loop, telnet + WebSocket transports (with GMCP structured data), YAML world loading, class-based character progression with trainer-based ability learning/multi-classing, spell/ability and status-effect systems, shop/economy, NPC behavior trees, dialogue trees, quests, achievements, group play, guilds, crafting/enchanting, player housing, procedural dungeons, pets, factions, auction house, player trading, PvP dueling, bank system, day/night/weather/seasonal events, leaderboards, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching/pub-sub.
+Kotlin MUD server: tick-based engine, telnet + WebSocket transports (GMCP), YAML world loading, class-based progression with trainers/multi-classing, abilities/status effects, shops, behavior trees, dialogue, quests, achievements, groups, guilds, crafting/enchanting, housing, dungeons, pets, factions, auction house, trading, PvP, bank, day/night/weather/events, leaderboards, prestige, currencies, lottery, daily/global quests, puzzles.
 
-### Deployment Modes
+### Deployment Modes (set via `ambonMUD.mode`)
 
-Three deployment modes (set via `ambonMUD.mode`):
-- **`STANDALONE`** (default): single-process, all components in-process.
-- **`ENGINE`**: GameEngine + persistence + gRPC server; gateways connect remotely.
-- **`GATEWAY`**: transports + gRPC client; game logic runs on a remote engine.
+- **STANDALONE** (default): single-process. **ENGINE**: game logic + gRPC server. **GATEWAY**: transports + gRPC client.
 
 ### Layered Architecture
 
 ```
-Transports (telnet / WebSocket)
-    │  decode raw I/O into InboundEvent, render OutboundEvent
-    ▼
-InboundBus / OutboundBus  (interface layer; Local* impls in single-process mode)
-    │                      (Redis* impls for multi-process pub/sub)
-    │                      (Grpc* impls for gateway ↔ engine gRPC streaming)
-    ▼
-GameEngine  (single-threaded coroutine dispatcher, 100ms tick)
-    │  CommandRouter, CombatSystem, AbilitySystem, StatusEffectSystem,
-    │  MobSystem, BehaviorTreeSystem, RegenSystem, DialogueSystem,
-    │  QuestSystem, AchievementSystem, GroupSystem, GuildSystem,
-    │  CraftingSystem, FriendsSystem, HousingSystem, PetSystem,
-    │  ReputationSystem, AuctionSystem, TradeSystem, DuelSystem,
-    │  WeatherSystem, WorldTimeSystem, WorldEventSystem,
-    │  LeaderboardSystem, PrestigeSystem, CurrencySystem,
-    │  LotterySystem, AutoQuestSystem, DailyQuestSystem,
-    │  GlobalQuestSystem, PuzzleSystem, GuildHallSystem,
-    │  TrainerRegistry, Scheduler,
-    │  PlayerProgression, GmcpEmitter, Registries
-    ▼
-OutboundRouter  (per-session queues, backpressure, prompt coalescing)
-    │  AnsiRenderer / PlainRenderer
-    ▼
-Sessions
+Transports (telnet / WebSocket) → InboundBus/OutboundBus → GameEngine (100ms tick) → OutboundRouter → Sessions
 ```
+
+Bus implementations: `Local*` (single-process), `Redis*` (multi-process), `Grpc*` (gateway↔engine).
 
 ### Critical Contracts
 
-- **Engine boundary:** Engine communicates only via `InboundEvent` / `OutboundEvent` — no transport code in engine, no gameplay code in transport.
-- **Single-threaded engine:** `GameEngine` runs on a dedicated single-thread `engineDispatcher`. Never call blocking I/O inside engine systems. Use the injected `Clock` instead of wall-clock calls.
-- **RoomId format:** Must be namespaced as `<zone>:<room>`.
-- **Player name:** 2–16 chars, alnum/underscore, cannot start with a digit.
-- **Password:** non-blank, max 72 chars (BCrypt limit).
-- **Persistence chain:** `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (if enabled) → `YamlPlayerRepository` or `PostgresPlayerRepository` (selected via `ambonMUD.persistence.backend`). YAML uses atomic writes; preserve this in any persistence changes.
-- **Event bus:** `InboundBus`/`OutboundBus` are interfaces — never pass raw `Channel` references to engine code. All bus impls (Local, Redis, gRPC) are interchangeable.
-- **Outbound routing:** `OutboundRouter` applies backpressure (slow clients may be disconnected). Consecutive prompts coalesce. `Close` sends final text then closes via callback.
+- **Engine boundary:** Engine communicates only via `InboundEvent`/`OutboundEvent` — no transport code in engine, no gameplay in transport.
+- **Single-threaded engine:** Runs on dedicated `engineDispatcher`. Never call blocking I/O inside engine. Use injected `Clock`, not wall-clock.
+- **RoomId format:** `<zone>:<room>`.
+- **Player name:** 2–16 chars, alnum/underscore, no leading digit. **Password:** non-blank, max 72 (BCrypt).
+- **Persistence chain:** `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository` or `PostgresPlayerRepository`. YAML uses atomic writes.
+- **Event bus:** `InboundBus`/`OutboundBus` are interfaces — never pass raw `Channel` to engine code.
+- **Outbound routing:** `OutboundRouter` applies backpressure. Consecutive prompts coalesce. `Close` sends final text then closes via callback.
 
-### Event Types
+### Key Source Locations
 
-**InboundEvent** (sealed interface in `engine/events/InboundEvent.kt`):
-- `Connected(sessionId, defaultAnsiEnabled)` — new session
-- `Disconnected(sessionId, reason)` — session lost
-- `LineReceived(sessionId, line)` — player typed a line
-- `GmcpReceived(sessionId, gmcpPackage, jsonData)` — GMCP data from client
-
-**OutboundEvent** (sealed interface in `engine/events/OutboundEvent.kt`):
-- `SendText`, `SendInfo`, `SendError` — text to player
-- `SendPrompt` — prompt line
-- `ShowLoginScreen`, `SetAnsi`, `ClearScreen`, `ShowAnsiDemo` — UI control
-- `Close(sessionId, reason)` — disconnect session
-- `SessionRedirect` — cross-engine handoff
-- `GmcpData(sessionId, gmcpPackage, jsonData)` — GMCP telemetry to client
-
-### Command System
-
-`CommandParser.kt` transforms raw input into a sealed `Command` hierarchy. `CommandRouter.kt` dispatches each variant. Key command categories:
-- **Navigation:** Move, Look, LookAt, LookDir, Exits, Recall, Petition
-- **Communication:** Say, Tell, Whisper, Gossip, Shout, Ooc, Pose, Emote, Gtell, Describe, DescribeClear, DescribeCheck
-- **Combat:** Kill, Flee, Cast, Dispel
-- **Items:** Get, Drop, Use, Give, Wear, Remove, Inventory, Equipment
-- **World Features:** OpenFeature, CloseFeature, UnlockFeature, LockFeature, SearchContainer, GetFrom, PutIn, Pull, ReadSign
-- **Progression:** Score, Spells, Effects, Balance, SetGender, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear, SpriteList, SpriteSet, SpriteDefault, Leaderboard, HallOfFame, Prestige, PrestigeInfo
-- **NPCs:** Talk, DialogueChoice, ShopList, Buy, Sell
-- **Groups:** GroupCmd (Invite, Accept, Decline, Leave, Kick, List)
-- **Guilds:** Guild (Create, Disband, Invite, Accept, Decline, Leave, Kick, Promote, Demote, Motd, Roster, Info, Hall, HallBuy, HallExpand, HallEnter, HallLeave), Gchat
-- **Friends:** Friend (List, Add, Remove)
-- **Mail:** Mail (List, Read, Delete, Send, Abort)
-- **Crafting:** Gather, Craft, Recipes, CraftSkills, Specialize, Enchant, Enchantments
-- **Economy:** Auction (List, Sell, Buy, Cancel), Bank (Balance, DepositGold, DepositItem, WithdrawGold, WithdrawItem), Trade (Request, Offer, OfferGold, Accept, Cancel, Status), LotteryInfo, LotteryBuy, Gamble, Currencies
-- **Social:** Duel (Challenge, Accept, Decline), Reputation
-- **Training:** Train (List, Learn, Unlock, Reset)
-- **Pets:** Pet (Status, Dismiss, Name)
-- **World:** Time, Answer
-- **Questing:** QuestAuto, QuestAutoInfo, QuestAutoAbandon, DailyQuests, WeeklyQuests, GlobalQuestInfo
-- **Dungeons:** DungeonEnter, DungeonLeave
-- **Housing:** House (Status, ListTemplates, Buy, Expand, SetTitle, SetDescription, Invite, Kick, Guests)
-- **Sharding:** Phase (instance switching)
-- **Staff:** Goto, Transfer, Spawn, Smite, Kick, SetLevel, Dispel, Reload, Broadcast, Possess, Return, Invis, Shutdown
-- **Utility:** Help, Clear, Colors, Who, AnsiOn, AnsiOff, ScreenReaderOn, ScreenReaderOff
-- **Meta:** Invalid (with usage hint), Unknown, Noop (empty input)
-
-### Persistence Model
-
-`PlayerRecord` (in `persistence/PlayerRecord.kt`) is the persistence DTO. Key fields: `id` (PlayerId), `name`, `roomId`, `level`, `xpTotal`, `hp`/`maxHp`, `mana`/`maxMana`, `race`, `playerClass`, `gold`, `isStaff`, `activeQuests`, `completedQuestIds`, `unlockedAchievementIds`, `achievementProgress`, `activeTitle`, `passwordHash`, `ansiEnabled`, `guildId`, `recallRoom`, `friends`, `craftingSkills`, `discoveredRecipes`, `craftingSpecialization`, `mail`, `gender`, `stats` (JSON map), `bankGold`, `bankItems`, `factionStandings` (JSON map), `learnedAbilityIds`, `unlockedClasses`, `skillPoints`, `description`, `screenReaderEnabled`, `currencies` (JSON map), `prestigeLevel`, `prestigeXpSpent`, `pvpKills`, `pvpDeaths`, `dailyQuestData` (JSON).
-
-`PlayerState` (in `engine/PlayerState.kt`) is the runtime in-memory version, maintained by the engine and periodically flushed back to `PlayerRecord` via the repository chain.
-
-`PlayerRepository` interface: `findByName(name)`, `findById(id)`, `create(request)`, `save(record)`. All lookups are case-insensitive.
-
-`GuildRepository` interface (`persistence/GuildRepository.kt`): guild CRUD with `YamlGuildRepository` and `PostgresGuildRepository` implementations. `GuildsTable.kt` for Exposed schema.
-
-### Wiring / Dependency Injection
-
-`MudServer.kt` is the composition root for STANDALONE/ENGINE modes. `GatewayServer.kt` for GATEWAY mode. No DI framework — all dependencies are manually wired via constructor injection in these files. `Main.kt` dispatches to the appropriate root based on `config.mode`.
-
-## Project Map
-
-### Source Files (~314 Kotlin files in main, ~137 test files)
-
-| Package | Purpose | Key Files |
-|---------|---------|-----------|
-| `dev.ambon` | Entry point, wiring | `Main.kt` (bootstrap), `MudServer.kt` (21K, composition root), `CoroutineExtensions.kt` |
-| `dev.ambon.config` | Configuration | `AppConfig.kt` (84K, full schema + `validated()`), `AppConfigLoader.kt` |
-| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (87K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (29K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (77K), `GroupSystem.kt` (13K), `QuestSystem.kt` (12K), `AchievementSystem.kt` (13K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `HousingSystem.kt`, `PetSystem.kt`, `ReputationSystem.kt`, `AuctionSystem.kt`, `TradeSystem.kt`, `DuelSystem.kt`, `WeatherSystem.kt`, `WorldTimeSystem.kt`, `WorldEventSystem.kt`, `LeaderboardSystem.kt`, `PrestigeSystem.kt`, `CurrencySystem.kt`, `LotterySystem.kt`, `AutoQuestSystem.kt`, `DailyQuestSystem.kt`, `GlobalQuestSystem.kt`, `PuzzleSystem.kt`, `GuildHallSystem.kt`, `TrainerRegistry.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `SpriteRegistry.kt`, `SpriteLoader.kt`, `EngineUtil.kt` |
-| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (47K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `EnchantHandler`, `FriendsHandler`, `MailHandler`, `SpriteHandler`, `TrainerHandler`, `PetHandler`, `AuctionHandler`, `BankHandler`, `TradeHandler`, `DuelHandler`, `ReputationHandler`, `LeaderboardHandler`, `DungeonHandler`, `HousingHandler`, `WorldInfoHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers`, `PrestigeHandler`, `CurrencyHandler`, `LotteryHandler`, `AutoQuestHandler`, `DailyQuestHandler`, `GlobalQuestHandler`, `PuzzleHandler` |
-| `dev.ambon.engine.abilities` | Ability/spell system | `AbilitySystem.kt` (29K), `AbilityRegistry.kt`, `AbilityRegistryLoader.kt`, `AbilityDefinition.kt` |
-| `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (16K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
-| `dev.ambon.engine.behavior` | Mob behavior trees | `BehaviorTreeSystem.kt`, `BtNode.kt`, `BtResult.kt`, `BtContext.kt`, `BehaviorTemplates.kt`, `MobBehaviorMemory.kt`; nodes/conditions/actions subdirs |
-| `dev.ambon.engine.dialogue` | NPC dialogue | `DialogueSystem.kt`, `DialogueTree.kt` |
-| `dev.ambon.engine.dungeon` | Procedural dungeons | `DungeonManager.kt`, `DungeonGenerator.kt`, `DungeonRegistry.kt`, `DungeonLayout.kt`, `DungeonInstance.kt` |
-| `dev.ambon.domain.dungeon` | Dungeon domain model | `DungeonTemplateDef.kt`, `DungeonDifficulty.kt`, `CraftingQuality.kt` |
-| `dev.ambon.engine.items` | Item management | `ItemRegistry.kt` (20K), `ItemMatching.kt` |
-| `dev.ambon.domain.sprite` | Sprite domain model | `SpriteDefinition.kt` (SpriteDefinition, SpriteVariant, SpriteCategory, SpriteUnlockCondition) |
-| `dev.ambon.engine.scheduler` | Delayed actions | `Scheduler.kt` |
-| `dev.ambon.engine.events` | Event types | `InboundEvent.kt`, `OutboundEvent.kt` |
-| `dev.ambon.bus` | Event bus abstractions | `InboundBus.kt`, `OutboundBus.kt` (interfaces); `Local*Bus.kt`, `Redis*Bus.kt`, `Grpc*Bus.kt` (impls); `DepthTrackingChannel.kt` |
-| `dev.ambon.domain` | Domain model | `PlayerClass.kt`, `Race.kt`; sub-packages: `ids/`, `items/`, `mob/`, `quest/`, `achievement/`, `world/` |
-| `dev.ambon.domain.world` | World model | `Room.kt`, `Direction.kt`, `World.kt`, `WorldFactory.kt`, `ShopDefinition.kt`, `MobSpawn.kt`, `ItemSpawn.kt`, `MobDrop.kt` |
-| `dev.ambon.domain.world.data` | YAML DTOs | `WorldFile.kt`, `RoomFile.kt`, `MobFile.kt`, `ItemFile.kt`, `ShopFile.kt`, `MobDropFile.kt`, `BehaviorFile.kt`, `DialogueNodeFile.kt`, `QuestFile.kt`, `DungeonFile.kt` |
-| `dev.ambon.domain.world.load` | World loading | `WorldLoader.kt` (61K, YAML parsing + validation) |
-| `dev.ambon.persistence` | Player + guild persistence | `PlayerRepository.kt` (interface), `PlayerRecord.kt`, `PlayerCreationRequest.kt`; `WriteCoalescingPlayerRepository.kt`, `RedisCachingPlayerRepository.kt`, `YamlPlayerRepository.kt`, `PostgresPlayerRepository.kt`, `PlayersTable.kt`, `DatabaseManager.kt`, `PersistenceWorker.kt`, `StringCache.kt`; `GuildRepository.kt` (interface), `YamlGuildRepository.kt`, `PostgresGuildRepository.kt`, `GuildsTable.kt` |
-| `dev.ambon.transport` | Network I/O | `Transport.kt`, `BlockingSocketTransport.kt` (telnet), `KtorWebSocketTransport.kt` (14K, WebSocket), `NetworkSession.kt` (12K), `OutboundRouter.kt` (10K), `AnsiRenderer.kt`, `PlainRenderer.kt`, `TelnetLineDecoder.kt` (6K), `ScreenReaderFilter.kt` |
-| `dev.ambon.grpc` | gRPC engine/gateway | `EngineGrpcServer.kt`, `EngineServer.kt` (10K), `EngineServiceImpl.kt`, `GrpcOutboundDispatcher.kt`, `ProtoMapper.kt` (8K), `OutboundEventPlane.kt` |
-| `dev.ambon.gateway` | Gateway-mode root | `GatewayServer.kt` (23K), `SessionRouter.kt` |
-| `dev.ambon.sharding` | Zone sharding | `ZoneRegistry.kt`, `StaticZoneRegistry.kt`, `RedisZoneRegistry.kt`, `InterEngineBus.kt`, `LocalInterEngineBus.kt`, `RedisInterEngineBus.kt`, `InterEngineMessage.kt`, `HandoffManager.kt` (12K), `PlayerLocationIndex.kt`, `RedisPlayerLocationIndex.kt`, `InstanceSelector.kt`, `LoadBalancedInstanceSelector.kt`, `InstanceScaler.kt`, `ThresholdInstanceScaler.kt`, `ScaleDecisionPublisher.kt`, `ZoneInstance.kt` |
-| `dev.ambon.session` | Session IDs | `SessionIdFactory.kt`, `AtomicSessionIdFactory.kt`, `SnowflakeSessionIdFactory.kt`, `GatewayIdLeaseManager.kt` |
-| `dev.ambon.redis` | Redis infra | `RedisConnectionManager.kt`, `JsonSupport.kt` |
-| `dev.ambon.metrics` | Observability | `GameMetrics.kt` (18K), `MetricsHttpServer.kt` |
-| `dev.ambon.admin` | Admin dashboard | `AdminHttpServer.kt` (63K) |
-| `dev.ambon.ui.login` | Login screen | `LoginScreen.kt`, `LoginScreenLoader.kt`, `LoginScreenRenderer.kt` |
-
-### Resources
-
-| What | Where |
-|------|-------|
-| Default config | `src/main/resources/application.yaml` |
-| Multi-instance profiles | `src/main/resources/application-{engine1,engine2,gw1,gw2}.yaml` |
-| World zones (24 YAML files) | `src/main/resources/world/` — 21 zones: crossroads_path, thornhaven_city, thornwood_forest, farmer_fields, cobblestone_road, highland_trails, old_mines, marsh_of_fog, goblin_warrens, dark_barrows, sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen, thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns, celestial_peak, dungeon_of_echoes, blood_arena; plus achievements, player_sprites, sprites |
-| Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
-| Flyway migrations | `src/main/resources/db/migration/` (V1–V34: players table through guilds, crafting, friends, mail, sprites, stats JSON, discovered recipes, faction standings, bank, leaderboards, skill points/multiclass, prestige, PvP stats, guild halls, currencies, daily quests) |
-| Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
-| V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/` by `./gradlew buildWeb`) |
-| Demo placeholder sprites | `src/main/resources/world/images/demo/` (default PNGs) |
-| World YAML format spec | `docs/WORLD_YAML_SPEC.md` |
-| Dungeon template reference | `docs/DUNGEON_TEMPLATE_REFERENCE.md` |
-| Runtime player saves | `data/players/` (git-ignored, do not commit) |
-
-### Tests (~137 test files)
-
-| Area | Files | Key Tests |
-|------|-------|-----------|
-| Engine core | `GameEngineIntegrationTest`, `GameEngineLoginFlowTest` (36K), `GameEngineAnsiBehaviorTest` | Full login/play/quit flows, ANSI |
-| Commands | `CommandParserTest` (24K), `CommandRouterTest` (20K), `CommandRouterAdminTest` (20K), `CommandRouterItemsTest` (16K), `CommandRouterShopTest`, `CommandRouterBroadcastTest`, `CommandRouterScoreTest`, `CrossEngineCommandsTest`, `NamesTellGossipTest`, `SocialChannelCommandsTest`, `PhaseCommandTest` | Every command category |
-| Combat/mobs | `CombatSystemTest` (32K), `MobRespawnTest`, `MobRegistryTest`, `MobSystemTest`, `ThreatTableTest` | Damage, threat, death, respawn |
-| Abilities/status | `AbilitySystemTest` (19K), `StatusEffectSystemTest` (21K) | Cast, cooldown, DOT/HOT/stun/root |
-| Behavior trees | `BehaviorTreeSystemTest` (23K), `BehaviorYamlParsingTest` | Mob AI, YAML-driven behaviors |
-| Dialogue/quests/achievements | `DialogueSystemTest`, `QuestSystemTest` (12K), `AchievementSystemTest` (23K) | NPC conversations, quest tracking |
-| Groups | `GroupSystemTest` (15K) | Party invite/leave/kick, XP sharing |
-| Guilds | `GuildSystemTest` | Guild create/disband/invite/promote/demote, MOTD, roster |
-| Crafting | `CraftingSystemTest` | Gather, craft, recipe validation, specialization, quality, discovery |
-| Prestige/Currency | `PrestigeSystemTest`, `CurrencySystemTest` | Prestige resets, currency tracking |
-| Lottery/Gambling | `LotterySystemTest` | Lottery draws, ticket purchases |
-| Quest extensions | `AutoQuestSystemTest`, `DailyQuestSystemTest`, `GlobalQuestSystemTest` | Auto quests, daily/weekly rotation, global objectives |
-| Puzzles | `PuzzleSystemTest` | Riddle/sequence puzzle solving, rewards |
-| Guild halls | `GuildHallSystemTest` | Guild hall purchase, expansion, enter/leave |
-| PvP | `PvpCombatTest` | Zone PvP combat, kill tracking, respawn |
-| Skill trees | `SkillTreeTest`, `TrainerRespecTest` | Ability prerequisites, DAG validation, respec |
-| Screen reader | `ScreenReaderFilterTest`, `ScreenReaderOutboundRouterTest`, `ScreenReaderCommandParserTest` | ANSI stripping, screen reader mode |
-| Dungeons | `DungeonGeneratorTest`, `DungeonManagerTest` | Layout generation, instance lifecycle, scaling, boss detection |
-| Friends/Mail | `FriendsSystemTest`, `MailHandlerTest` | Friend list management, mail send/read/delete |
-| Persistence | `YamlPlayerRepositoryTest`, `PostgresPlayerRepositoryTest`, `RedisCachingPlayerRepositoryTest`, `WriteCoalescingPlayerRepositoryTest`, `PersistenceWorkerTest` | Atomic writes, H2 Postgres mode, cache layers |
-| Bus | `LocalInboundBusTest`, `LocalOutboundBusTest`, `RedisInboundBusTest`, `RedisOutboundBusTest`, `GrpcInboundBusTest`, `GrpcOutboundBusTest` | All bus variants |
-| Transport | `OutboundRouterTest` (11K), `OutboundRouterAnsiControlsTest`, `OutboundRouterPromptCoalescingTest`, `AnsiRendererTest`, `PlainRendererTest`, `TelnetLineDecoderTest`, `KtorWebSocketTransportTest` | Backpressure, ANSI, protocol |
-| Sharding | `HandoffManagerTest` (18K), `StaticZoneRegistryTest`, `LoadBalancedInstanceSelectorTest`, `ThresholdInstanceScalerTest`, `InterEngineMessageSerializationTest`, `LocalInterEngineBusTest` | Zone handoff, scaling |
-| gRPC | `EngineGrpcServerTest`, `EngineServiceImplTest`, `GatewayEngineIntegrationTest` (16K), `GrpcOutboundDispatcherTest`, `ProtoMapperTest` | End-to-end gateway-engine |
-| Other | `AppConfigLoaderTest`, `GameMetricsTest`, `MetricsHttpServerTest`, `AdminModuleTest` (10K), `GmcpEmitterTest` (57K), `PlayerProgressionTest`, `SchedulerTest`, `SchedulerDropsTest`, `LoginScreenLoaderTest`, `LoginScreenRendererTest`, `WorldLoaderTest` (33K), `SessionIdFactory` tests | Config, metrics, admin, world loading |
+| Area | Key files |
+|------|-----------|
+| Entry/wiring | `Main.kt`, `MudServer.kt` (composition root), `GatewayServer.kt` |
+| Config | `AppConfig.kt` (schema + `validated()`), `application.yaml` |
+| Engine | `GameEngine.kt` (tick loop), `PlayerState.kt`, `PlayerRegistry.kt` |
+| Commands | `CommandParser.kt` (sealed hierarchy), `CommandRouter.kt` (dispatch), `handlers/` subpackage |
+| Events | `InboundEvent.kt`, `OutboundEvent.kt` |
+| Persistence | `PlayerRecord.kt` (DTO), `PlayerRepository.kt` (interface), `PlayersTable.kt`, `GuildRepository.kt` |
+| Transport | `KtorWebSocketTransport.kt`, `NetworkSession.kt`, `OutboundRouter.kt`, `TelnetLineDecoder.kt` |
+| GMCP | `GmcpEmitter.kt` (server→client), `web-v3/src/gmcp/applyGmcpPackage.ts` (client) |
+| World | `WorldLoader.kt`, zone YAMLs in `src/main/resources/world/` |
+| Web client | `web-v3/` (React + PixiJS), built to `src/main/resources/web-v3/` |
+| Migrations | `src/main/resources/db/migration/` (V1–V34) |
+| Proto | `src/main/proto/ambonmud/v1/` |
 
 ### Test Utilities
 
-| Utility | Location | Purpose |
-|---------|----------|---------|
-| `MutableClock` | `src/test/kotlin/dev/ambon/test/MutableClock.kt` | Deterministic time via `advance(ms)` and `set(ms)` — use instead of wall-clock |
-| `InMemoryPlayerRepository` | `src/test/kotlin/dev/ambon/persistence/InMemoryPlayerRepository.kt` | Fast in-memory `PlayerRepository` with case-insensitive lookup and `clear()` |
-| `EngineTestHelpers` | `src/test/kotlin/dev/ambon/test/EngineTestHelpers.kt` | `LocalOutboundBus.drainAll()`, `PlayerRegistry.loginOrFail()` |
-| `RedisBusTestFixtures` | `src/test/kotlin/dev/ambon/bus/RedisBusTestFixtures.kt` | `FakePublisher`, `FakeSubscriberSetup` for testing Redis bus without Redis |
-| World fixtures | `src/test/resources/world/` | `test_world.yaml`, `ok_*.yaml` (valid), `bad_*.yaml` (40+ invalid YAML for error testing), `mz_*.yaml` / `split_zone_*.yaml` (multi-zone) |
-
-### Infrastructure
-
-| What | Where |
-|------|-------|
-| Docker Compose | `docker-compose.yml` (Prometheus, Grafana, Redis, Postgres) |
-| CI workflow | `.github/workflows/ci.yml` (Java 21, `ktlintCheck test integrationTest`) |
-| CodeQL analysis | `.github/workflows/codeql.yml` (weekly + on main) |
-
-## Build Configuration
-
-- **Kotlin:** 2.3.10, JVM toolchain 21
-- **Gradle:** wrapper with `-Xmx2g`, daemon idle timeout 10 minutes
-- **Key dependencies:** Ktor 3.4.2 (WebSocket server), kotlinx-coroutines 1.10.2, Jackson 2.21.1 (YAML), Hoplite 2.9.0 (config), Logback 1.5.32, BCrypt 0.4, Micrometer 1.16.4 (Prometheus), Lettuce 7.5.0.RELEASE (Redis), Exposed 0.58.0 (SQL), HikariCP 7.0.2, PostgreSQL 42.7.10, Flyway 12.2.0, gRPC 1.80.0, Protobuf 4.34.1
-- **Test deps:** JUnit Jupiter 6.0.3, kotlinx-coroutines-test, H2 2.4.240 (Postgres compat mode), Ktor test host, gRPC testing/in-process
+- `MutableClock` — deterministic time via `advance(ms)`/`set(ms)`
+- `InMemoryPlayerRepository` — fast in-memory with `clear()`
+- `EngineTestHelpers` — `drainAll()`, `loginOrFail()`
+- World fixtures in `src/test/resources/world/` (`ok_*.yaml` valid, `bad_*.yaml` invalid)
 
 ## Change Playbooks
 
 ### New command
 1. Add variant to `Command` sealed interface in `CommandParser.kt`.
-2. Add parse logic in `CommandParser.parse()` (use `matchPrefix()` for prefix matching, `requiredArg()` if arguments needed).
-3. Implement handler in the appropriate `handlers/` file under `CommandRouter.kt` (e.g. `NavigationHandler`, `CombatHandler`, `ItemHandler`, etc.). For a brand-new category, add a new handler file and wire it from `CommandRouter`.
-4. Preserve prompt behavior for success/failure paths (`outbound.send(SendPrompt(...))`).
-5. Add parser tests in `CommandParserTest` and router tests in `CommandRouterTest` (or a dedicated test file).
+2. Add parse logic in `CommandParser.parse()` (`matchPrefix()`, `requiredArg()`).
+3. Add handler in appropriate `handlers/` file. New category → new handler file + wire from `CommandRouter`.
+4. Send `SendPrompt` on success/failure paths.
+5. Tests in `CommandParserTest` + `CommandRouterTest` (or dedicated file). Staff commands: gate with `isStaff` in `AdminHandler.kt`, test in `CommandRouterAdminTest`.
 
-### Staff command
-Same as above, plus gate with `if (!playerState.isStaff)` check in `AdminHandler.kt`. Test in `CommandRouterAdminTest`.
+### Persistence (adding a field)
+1. Add field with default to `PlayerRecord`.
+2. Add column to `PlayersTable.kt`, update `readRecord()`/`writeRecord()`.
+3. Flyway migration in `db/migration/`.
+4. Update `PlayerState` + `toPlayerState()`/`toPlayerRecord()` if runtime state.
+5. `PersistenceFieldCoverageTest` catches mapping omissions.
 
-### Combat/mob/item
-Edit `CombatSystem`, `MobSystem`, `MobRegistry`, `ItemRegistry`; preserve `max*PerTick` caps to avoid tick starvation.
-
-### Ability/spell
-Add definition in `application.yaml` under `engine.abilities.definitions`. If new effect type needed, update `AbilityRegistryLoader`. Class restriction via `classRestriction` field. Test in `AbilitySystemTest`.
-
-### Status effect
-Add definition in `application.yaml` under `engine.statusEffects.definitions`. If new effect mechanic, update `EffectType` enum and tick branches in `StatusEffectSystem`. Keep `CombatSystem` call sites in sync (`getPlayerStatMods`, `hasMobEffect(STUN)`, `absorbPlayerDamage`).
-
-### World content only
-Edit YAML in `src/main/resources/world/`; no code change needed. See `docs/WORLD_YAML_SPEC.md` for schema.
-
-### Config
-Update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict with `require()` checks.
-
-### Persistence (adding a field to PlayerRecord)
-1. Add field with default to `PlayerRecord` data class.
-2. Add column to `PlayersTable.kt` and update `readRecord()` / `writeRecord()`.
-3. For Postgres: add a new Flyway migration (`V<N>__description.sql` in `src/main/resources/db/migration/`).
-4. If the field is runtime state, update `PlayerState` and the `toPlayerState()` / `toPlayerRecord()` extensions in `PlayerState.kt`.
-5. Run `PersistenceFieldCoverageTest` — it will catch any mapping omission across YAML, Redis JSON, Postgres, and PlayerState round-trips.
-
-### Bus/Redis/gRPC (adding a new event variant)
-1. Add variant to `InboundEvent` or `OutboundEvent`.
-2. Add type discriminator + data class in `RedisInboundBus`/`RedisOutboundBus`.
-3. Add proto message in `src/main/proto/ambonmud/v1/events.proto`.
-4. Add mapping in `ProtoMapper.kt`.
-5. Test with both `LocalInboundBus` and mock bus.
-
-### Sharding / inter-engine messaging
-When adding new `InterEngineMessage` variants, update serialization in `InterEngineMessage.kt` and add tests. Update both `LocalInterEngineBus` and `RedisInterEngineBus`.
+### Bus/gRPC (new event variant)
+1. Add to `InboundEvent` or `OutboundEvent`.
+2. Type discriminator in `Redis*Bus`.
+3. Proto message in `events.proto`.
+4. Mapping in `ProtoMapper.kt`.
 
 ### GMCP
-Update `GmcpEmitter.kt` and the v3 web client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`. Telnet negotiation is in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt`.
+Update `GmcpEmitter.kt` + `web-v3/src/gmcp/applyGmcpPackage.ts`. **New GMCP package family:** register in WebSocket auto-opt-in at `KtorWebSocketTransport.kt` (~line 208, `Core.Supports.Set`). Without this, GMCP is silently dropped. Prefix matching: `"Quest 1"` covers `Quest.List`, `Quest.Update`, etc.
 
-**When adding a new GMCP package family** (e.g. `Quest`, `Guild`), you must also register it in the WebSocket auto-opt-in list at `KtorWebSocketTransport.kt` line ~208 (`Core.Supports.Set`). The `GmcpEmitter.emit()` method checks `supportsPackage(sessionId, supportCheck)` before sending — if the package isn't in the client's supported set, the GMCP is silently dropped. Prefix matching applies: registering `"Quest 1"` covers `Quest.List`, `Quest.Update`, `Quest.Available`, etc.
+### General system pattern
+Most systems follow: `*System.kt` (logic) + `*Handler.kt` (commands) + config in `application.yaml` + test in `*SystemTest`. World features use zone YAML flags (e.g. `bank: true`, `tavern: true`, `pvpEnabled: true`).
 
-### Ability/spell image
-Add `image` field to `AbilityDefinitionConfig` (AppConfig.kt), `AbilityDefinition`, `AbilityRegistryLoader`, and `GmcpEmitter.CharSkillPayload`. Client reads it from `Char.Skills` GMCP into `SkillSummary.image`.
+### Config
+Update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict.
 
-### Guild system changes
-Edit `GuildSystem.kt` for logic, `GuildHandler.kt` for commands. Guild persistence: `GuildRepository` interface with `YamlGuildRepository` and `PostgresGuildRepository` impls. `GuildsTable.kt` for Exposed schema. `PlayerRecord.guildId` links player to guild. `PlayerState` has `guildId`, `guildRank`, `guildTag`. Test in `GuildSystemTest`.
-
-### Crafting system changes
-Edit `CraftingSystem.kt` for logic, `CraftingHandler.kt` for commands (Gather, Craft, Recipes). `PlayerRecord.craftingSkills` stores per-player skill levels. Recipe definitions live in `application.yaml` under the crafting config section. Test in `CraftingSystemTest`.
-
-### Sprite system changes
-`SpriteRegistry` holds all sprite definitions. Tier and staff sprites are auto-generated in `MudServer.kt` via `SpriteLoader.generateTierSprites()` / `generateStaffSprites()`. Achievement sprites are defined in `src/main/resources/world/sprites.yaml` and loaded via `SpriteLoader.loadFromResource()`. Commands in `SpriteHandler.kt` (SpriteList, SpriteSet, SpriteDefault). `PlayerRecord.activeSprite` / `PlayerState.activeSprite` store the player's selection (null = auto). `GmcpEmitter.resolveSprite()` uses the registry; `sendCharSprites()` emits `Char.Sprites` GMCP. Tier names configured in `AppConfig.ImagesConfig.spriteTierNames`. See `docs/ARCANUM_SPRITE_INSTRUCTIONS.md` for image naming conventions. Test in `SpriteRegistryTest`, `SpriteLoaderTest`, `SpriteCommandTest`.
-
-### Trainer system changes
-Edit `TrainerRegistry.kt` for trainer loading, `TrainerHandler.kt` for commands (Train List/Learn/Unlock). Trainer definitions live in zone YAML under `trainers:` section — no code change needed to add trainers. `PlayerRecord.learnedAbilityIds`, `unlockedClasses`, and `skillPoints` store progression. Skill point interval configured via `engine.skillPoints.interval`. Multi-class unlock requires `engine.multiclass.minLevel` and `engine.multiclass.goldCost`. `GmcpEmitter` emits `Trainer.List` and `Char.Classes` GMCP packages. Hot-reload via `HotReloadManager`. See `docs/TRAINER_SYSTEM.md`.
-
-### Pet system changes
-Edit `PetSystem.kt` for logic, `PetHandler.kt` for commands (Pet Status/Dismiss/Name). Pet templates defined in `application.yaml` under `engine.pets.definitions`. Referenced by abilities using `SUMMON_PET` effect type with `petTemplateKey`. Pets are session-only (no persistence). See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
-
-### Faction/reputation changes
-Edit `ReputationSystem.kt` for logic, `ReputationHandler.kt` for display. Faction definitions in `application.yaml` under `engine.factions.definitions`. Mob faction affiliation via `faction:` field in zone YAML mob definitions. `PlayerRecord.factionStandings` persisted as JSON map; Flyway V23. Quest reward integration in `QuestSystem.kt`. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
-
-### Auction house changes
-Edit `AuctionSystem.kt` for logic, `AuctionHandler.kt` for commands. Listings persist to `data/auction_listings.json`. No YAML config section — runtime-only. GMCP package: `Auction.*`. See `docs/RECENT_YAML_CHANGES.md`.
-
-### Enchanting system changes
-Edit enchanting logic in the crafting subsystem, `EnchantHandler.kt` for commands. Enchantment definitions in `application.yaml` under `engine.enchanting.definitions`. Enchanting is a crafting skill requiring `enchanting_table` station. Item `enchantments` field persisted on `ItemInstance`. `GMCP Crafting.Result` includes `type: "enchant"`. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
-
-### Bank system changes
-Edit bank logic in the bank handler, `BankHandler.kt` for commands. Rooms with `bank: true` in zone YAML enable bank commands. `PlayerRecord.bankGold` and `bankItems` persisted; Flyway V24. `Char.Bank` GMCP package. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
-
-### Day/night, weather, seasonal events
-Edit `WorldTimeSystem.kt` (clock/period), `WeatherSystem.kt` (transitions), `WorldEventSystem.kt` (date-triggered events). Config in `application.yaml` under `engine.worldTime`, `engine.weather`, `engine.worldEvents.definitions`. GMCP: `World.Time`, `World.Weather`, `World.Events`. `time` command handled in `WorldInfoHandler.kt`. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
-
-### Prestige system changes
-Edit `PrestigeSystem.kt` for logic, `PrestigeHandler.kt` for commands (Prestige, PrestigeInfo). Perks defined in `application.yaml` under `engine.prestige.perks`. `PlayerRecord.prestigeLevel`/`prestigeXpSpent` store progression. Flyway V28. Test in `PrestigeSystemTest`.
-
-### Skill tree changes
-Abilities now support `prerequisites`, `tree`, and `tier` fields for skill tree organization. DAG validation in `AbilityRegistryLoader` ensures no circular dependencies. `train list` groups abilities by tree. Test in `SkillTreeTest`.
-
-### Zone PvP changes
-Set `pvpEnabled: true` in zone YAML. `CombatSystem.kt` handles PvP combat via the existing `kill` command targeting players. Death respawns at zone `startRoom` with full HP/mana, no loot loss. `PlayerRecord.pvpKills`/`pvpDeaths` track stats. Flyway V29. Test in `PvpCombatTest`.
-
-### Secondary currency changes
-`CurrencySystem.kt` for logic, `CurrencyHandler.kt` for the `currencies` display command. Currency definitions in `application.yaml` under `engine.currencies.definitions`. Quest rewards support a `currencies` map for awarding secondary currencies. `PlayerRecord.currencies` persisted as JSON map. Flyway V32. Test in `CurrencySystemTest`.
-
-### Puzzle system changes
-Add `puzzles:` section to zone YAML. `PuzzleSystem.kt` for runtime state, `PuzzleHandler.kt` for the `answer` command. Supports `riddle` (question/answer) and `sequence` (ordered feature interactions) puzzle types. Session-scoped (no persistence). See `docs/WORLD_YAML_SPEC.md` for YAML schema. Test in `PuzzleSystemTest`.
-
-### Guild hall changes
-`GuildHallSystem.kt` for logic. Config in `application.yaml` under `engine.guildHalls`. Guild halls stored as JSON on guild record. Commands in `GuildHandler.kt` (Guild.Hall, Guild.HallBuy, Guild.HallExpand, Guild.HallEnter, Guild.HallLeave). Flyway V30 (on guilds table). Test in `GuildHallSystemTest`.
-
-### Lottery/gambling changes
-`LotterySystem.kt` for logic. Config in `application.yaml` under `engine.lottery` and `engine.gambling`. Lottery state persisted to `data/lottery_state.json`. Rooms with `tavern: true` in zone YAML enable gambling commands (`gamble`, `dice`). Commands: `LotteryInfo`, `LotteryBuy`, `Gamble`. Test in `LotterySystemTest`.
-
-### Auto quest / daily quest / global quest changes
-Three new quest systems. `AutoQuestSystem.kt` generates session-only procedural quests. `DailyQuestSystem.kt` manages time-rotated daily/weekly quests. `GlobalQuestSystem.kt` manages server-wide cooperative objectives. Config in `application.yaml` under `engine.autoQuests`, `engine.dailyQuests`, `engine.globalQuests`. Auto quests are session-only. Daily quest progress persisted via `PlayerRecord.dailyQuestData` JSON (Flyway V34). Global quests are ephemeral. Test in `AutoQuestSystemTest`, `DailyQuestSystemTest`, `GlobalQuestSystemTest`.
+### World content only
+Edit YAML in `src/main/resources/world/`. See `docs/WORLD_YAML_SPEC.md`.
 
 ## Kotlin Style (ktlint)
 
-This project uses **ktlint 1.5.0** with `kotlin.code.style=official`. Rule overrides live in the root `.editorconfig`. The following rules are **disabled** to reduce formatting friction:
+ktlint 1.5.0, `kotlin.code.style=official`. Overrides in `.editorconfig`.
 
-- `multiline-expression-wrapping` — no forced newline after `=` for multiline RHS.
-- `string-template-indent` — disabled as a dependency of the above.
-- `chain-method-continuation` — short chains can stay on fewer lines.
-- `function-signature` — parameters don't have to be one-per-line.
+**Disabled rules:** `multiline-expression-wrapping`, `string-template-indent`, `chain-method-continuation`, `function-signature`.
 
-All other standard rules remain enforced. The most important ones to know:
-
-1. **Trailing commas (REQUIRED)** — Every multiline parameter list, argument list, and collection literal must end with a trailing comma:
-   ```kotlin
-   class Foo(
-       val bar: String,
-       val baz: Int,      // <- trailing comma
-   )
-
-   doSomething(
-       first = 1,
-       second = 2,        // <- trailing comma
-   )
-   ```
-
-2. **No wildcard imports** — Always use explicit imports, never `import foo.bar.*`.
-
-3. **Multiline `when` entries** — Arrow and body on the same line when short; braces for multi-statement bodies.
-
-4. **Spacing** — Single space after `if`/`for`/`when`/`while` and around operators/colons. No space before commas or inside parentheses.
-
-5. **Blank lines** — No blank lines at the start or end of a class/function body. No blank lines inside parameter lists.
-
-6. **No max line length enforced** — Keep lines reasonable but don't force-wrap short expressions.
-
-7. **Multiline string templates** — Closing `"""` must be on its own line, with `.trimIndent()` on the same line.
-
-8. **No blank line before first declaration in a class** — The first property/function starts immediately after the opening brace (or after the constructor closing parenthesis).
+**Key enforced rules:**
+1. **Trailing commas required** on all multiline parameter/argument lists and collection literals.
+2. **No wildcard imports** — always explicit.
+3. No blank lines at start/end of class/function bodies or inside parameter lists.
+4. Closing `"""` on its own line with `.trimIndent()`.
 
 ## Testing Patterns
 
-### General
-- Run `ktlintCheck` before opening a PR or finalizing any change. The pre-commit hook enforces this automatically.
-- **Run the full test suite before committing** (`./gradlew ktlintCheck test integrationTest`). Catching failures locally is faster than waiting for CI.
-- Add tests for every behavioral change; this codebase treats tests as design constraints.
-- If CI tests fail after pushing, fix the failures promptly.
-
-### Deterministic time
-Always use `MutableClock` for code that depends on time. Never use `System.currentTimeMillis()` or similar in production code — use the injected `Clock`.
-
-### Async/coroutine tests
-```kotlin
-@OptIn(ExperimentalCoroutinesApi::class)
-fun `test name`() = runTest {
-    val engine = GameEngine(inbound, outbound, ...)
-    val engineJob = launch { engine.run() }
-
-    inbound.send(InboundEvent.Connected(sid))
-    runCurrent()           // let engine process events
-    advanceTimeBy(100)     // advance virtual time
-    runCurrent()
-
-    val events = outbound.drainAll()  // collect all outbound events
-    // assertions...
-    engineJob.cancel()
-}
-```
-
-### Database tests
-Postgres tests use H2 in PostgreSQL-compatibility mode (`jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE`). No Docker required.
-
-### Test isolation
-- `@TempDir` for file-based tests (YAML persistence).
-- `@BeforeEach` for database cleanup.
-- `InMemoryPlayerRepository.clear()` between tests.
+- Run `./gradlew ktlintCheck test integrationTest` before committing.
+- **Deterministic time:** Always use `MutableClock`. Never `System.currentTimeMillis()` in production code.
+- **Coroutine tests:** `runTest { }` with `runCurrent()` / `advanceTimeBy()`. Collect via `outbound.drainAll()`.
+- **DB tests:** H2 in PostgreSQL mode (`MODE=PostgreSQL`). No Docker needed.
+- **Isolation:** `@TempDir` for file tests, `@BeforeEach` for DB cleanup, `InMemoryPlayerRepository.clear()`.
 
 ## Cloud / CI Environment
 
-When running in Claude Code cloud sessions (claude.ai/code), be aware of these constraints:
-
-- **JVM Toolchain version:** The `jvmToolchain()` in `build.gradle.kts` must match the JDK installed in the build environment. Cloud sessions provide JDK 21; the toolchain is currently set to `jvmToolchain(21)`. If it ever drifts, update it in `build.gradle.kts` — the Foojay resolver cannot auto-provision through the cloud egress proxy.
-- **Egress proxy:** All outbound HTTP/HTTPS traffic goes through a proxy injected via `JAVA_TOOL_OPTIONS`. Gradle dependency resolution works through this proxy. Do not add `mavenLocal()` or assume direct internet access.
-- **GitHub CLI (`gh`) is available** in cloud/remote mode (verified Feb 2026). Use it normally for creating PRs, viewing issues, and other GitHub operations.
-- **No hardcoded timing in tests:** Cloud environments have variable CPU scheduling latency. Never use short `delay()` calls (e.g. `delay(50)`) to synchronize with async coroutines launched on `Dispatchers.Default`. Instead, use polling loops with `withTimeout` and a generous timeout (e.g. 2 seconds), or use proper coroutine synchronization primitives (channels, `CompletableDeferred`). For negative tests (asserting nothing arrives), use at least `delay(200)`.
-- **First build is slow:** The Gradle wrapper downloads the distribution and all dependencies on first run. Subsequent builds use the cached daemon.
-- **Test timeout:** Individual tests timeout after 30 seconds (`junit-platform.properties`). Entire suite times out after 5 minutes (Gradle backstop).
+- JVM toolchain 21 must match cloud JDK. Foojay can't provision through egress proxy.
+- `gh` CLI available in cloud mode.
+- **No hardcoded timing:** Use polling with `withTimeout` (2s+), not `delay(50)`. Negative tests: `delay(200)` minimum.
+- Test timeout: 30s per test, 5min suite.
 
 ## Design System
 
-AmbonMUD's visual identity is **Surreal Gentle Magic** — cozy fantasy with glass-morphism depth, jewel-toned colors, and ambient magical details. Brand personality: *surreal, magical, adventure*.
+**Surreal Gentle Magic** — cozy fantasy, glass-morphism, jewel tones. See `.impeccable.md` (principles), `docs/STYLE_GUIDE.md` (tokens/components), `web-v3/src/styles.css` (source of truth).
 
-- **Design context & principles:** [`.impeccable.md`](.impeccable.md) — users, brand personality, aesthetic direction, 5 design principles
-- **Full design system:** [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) — color tokens, typography, motion, component states, validation checklist
-- **Design tokens (source of truth):** `web-v3/src/styles.css` — all CSS custom properties live here
-- **Creator tool style:** [`docs/ARCANUM_STYLE_GUIDE.md`](docs/ARCANUM_STYLE_GUIDE.md) — separate aesthetic for the Ambon Arcanum
-
-### Web client style changes
-- Edit design tokens in `web-v3/src/styles.css` (single file, ~5K lines)
-- Component styles are in the same file, organized by component class name
-- Canvas rendering (PixiJS scenes, particle effects) is in `web-v3/src/canvas/`
-- Run `./gradlew buildWeb` (or `bun run build` from `web-v3/`) to write assets to `src/main/resources/web-v3/`
-- Built assets are gitignored — never commit them. They're built on demand by Gradle, CI, and Docker.
-- Validate with `bun run lint` and visual inspection via `./gradlew demo`
-
-### Key design rules
-- Never hardcode colors — always use CSS variables
-- Dark-first (light mode planned but not yet implemented)
-- WCAG AA contrast minimum for all text
-- Respect `prefers-reduced-motion` for all animations
-- Cozy over cool: rounded corners, soft shadows, gentle gradients
+- Never hardcode colors — use CSS variables. Dark-first. WCAG AA minimum.
+- `web-v3/src/canvas/` for PixiJS rendering. Built assets are gitignored.
+- Validate: `bun run lint` + `./gradlew demo`.
 
 ## Known Quirks
 
-- **Compiler warnings in tests:** Several test files produce "No cast needed" warnings (e.g. `InterEngineMessageHandlingTest.kt`, `CrossEngineCommandsTest.kt`). These are harmless and do not affect test results.
-- **Largest files:** `GameEngine.kt` (87K, tick loop), `AppConfig.kt` (84K), `GmcpEmitter.kt` (77K), `AdminHttpServer.kt` (63K), and `WorldLoader.kt` (61K) are the largest files. Command handlers are split across `handlers/` subpackage — navigate by handler class name. `CommandRouter.kt` itself is just 109 lines of dispatch infrastructure.
-- **Generated sources:** Protobuf/gRPC generates code under `build/generated/`. A child `.editorconfig` suppresses ktlint for these files.
-- **Gradle daemon idle timeout:** Set to 10 minutes (`gradle.properties`) to reclaim stale daemons faster than the 3-hour default.
-- **Staff access:** Granted by editing `isStaff: true` in the player YAML file (or `is_staff` column in Postgres) — there is no in-game promotion command.
-- **Metrics package:** Uses `io.micrometer.prometheusmetrics` (not the deprecated `io.micrometer.prometheus`).
+- **Largest files:** `GameEngine.kt` (87K), `AppConfig.kt` (84K), `GmcpEmitter.kt` (77K), `AdminHttpServer.kt` (63K), `WorldLoader.kt` (61K). `CommandRouter.kt` is just ~109 lines of dispatch; handlers are in `handlers/` subpackage.
+- **Generated sources:** Protobuf under `build/generated/`, ktlint-suppressed via child `.editorconfig`.
+- **Staff access:** Set `isStaff: true` in player YAML or `is_staff` in Postgres — no in-game command.
+- **Metrics:** Uses `io.micrometer.prometheusmetrics` (not deprecated `io.micrometer.prometheus`).
