@@ -17,6 +17,7 @@ import { HousingPanel } from "./components/panels/HousingPanel";
 import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { BankPanel } from "./components/panels/BankPanel";
 import { AuctionPanel } from "./components/panels/AuctionPanel";
+import { AdminPanel } from "./components/panels/AdminPanel";
 import { HelpContent } from "./components/HelpContent";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
@@ -46,6 +47,10 @@ function App() {
 
   // Ctrl+K command palette
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+
+  // Staff admin panel + invisibility toggle
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [staffInvisible, setStaffInvisible] = useState(false);
 
   // Lifted command-input state — VitalsBar renders it controlled, palette/canvas can prefill
   const [inputValue, setInputValue] = useState("");
@@ -878,6 +883,43 @@ function App() {
             />
           </div>
         </div>
+      )}
+
+      {/* Staff-only floating controls + admin panel */}
+      {state.character.isStaff && (
+        <>
+          <div className="staff-fab">
+            <button
+              type="button"
+              className="staff-fab-btn"
+              onClick={() => setShowAdminPanel(true)}
+              title="Open staff admin panel"
+              aria-label="Open staff admin panel"
+            >
+              Staff
+            </button>
+            <button
+              type="button"
+              className={`staff-fab-btn staff-fab-invis${staffInvisible ? " staff-fab-invis-active" : ""}`}
+              onClick={() => { sendCommand("invis"); setStaffInvisible((v) => !v); }}
+              title={staffInvisible ? "You are invisible — click to reappear" : "Become invisible"}
+              aria-label="Toggle staff invisibility"
+              aria-pressed={staffInvisible}
+            >
+              {staffInvisible ? "\uD83D\uDC41\u200D\uD83D\uDDE8" : "\uD83D\uDC41"}
+            </button>
+          </div>
+
+          {showAdminPanel && (
+            <AdminPanel
+              onCommand={sendCommand}
+              onClose={() => setShowAdminPanel(false)}
+              worldInfo={state.staffWorldInfo}
+              mobTemplates={state.staffMobTemplates}
+              whoPlayers={state.whoPlayers}
+            />
+          )}
+        </>
       )}
 
       {/* Toast */}

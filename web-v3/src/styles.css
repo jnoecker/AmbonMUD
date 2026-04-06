@@ -11765,6 +11765,54 @@ html:has(.game-shell),
   display: block;
 }
 
+/* Staff-only floating action buttons — top-right corner, below the minimap */
+.staff-fab {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0) + 220px);
+  right: calc(env(safe-area-inset-right, 0) + 12px);
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.staff-fab-btn {
+  appearance: none;
+  border: 1px solid rgb(212 184 92 / 50%);
+  background: linear-gradient(135deg, rgb(96 81 50 / 92%), rgb(76 64 36 / 88%));
+  color: var(--color-gold-bright);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgb(8 10 18 / 40%);
+  transition: transform 0.12s var(--ease-out-soft), box-shadow 0.15s;
+}
+
+.staff-fab-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgb(212 184 92 / 28%);
+}
+
+.staff-fab-btn:active {
+  transform: scale(0.96);
+}
+
+.staff-fab-invis {
+  font-size: 1rem;
+  padding: 4px 10px;
+  letter-spacing: 0;
+}
+
+.staff-fab-invis-active {
+  background: linear-gradient(135deg, rgb(168 130 198 / 80%), rgb(140 110 168 / 76%));
+  border-color: rgb(216 197 232 / 60%);
+  color: var(--text-bright);
+}
+
 /* Combat target HUD (top-center) */
 .game-target-hud {
   position: absolute;
