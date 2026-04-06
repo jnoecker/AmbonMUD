@@ -7,7 +7,6 @@ import {
   EMPTY_ROOM,
   EMPTY_VITALS,
 } from "../constants";
-import { useMiniMap } from "./useMiniMap";
 import type {
   AchievementData,
   AuctionListing,
@@ -130,6 +129,20 @@ const MAX_COMBAT_LOG = 20;
 const MAX_QUEST_NOTIFICATIONS = 5;
 const MAX_FRIEND_NOTIFICATIONS = 5;
 
+export interface MiniMapBridge {
+  updateMap: (
+    roomId: string,
+    exits: Record<string, string>,
+    title: string,
+    image: string | null,
+    mapX: number,
+    mapY: number,
+    housing?: boolean,
+  ) => void;
+  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
+  resetMap: () => void;
+}
+
 export interface AuthRefs {
   resumeTokenRef: React.MutableRefObject<string | null>;
   pendingAuthCharRef: React.MutableRefObject<string | null>;
@@ -137,8 +150,9 @@ export interface AuthRefs {
   sendGmcpRef: React.MutableRefObject<(pkg: string, payload: unknown) => void>;
 }
 
-export function useGameState(authRefs: AuthRefs) {
+export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const { resumeTokenRef, pendingAuthCharRef, failedAuthCharRef, sendGmcpRef } = authRefs;
+  const { updateMap, loadZoneMap, resetMap } = miniMap;
   // ── Core identity ─────────────────────────────────
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
   const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
@@ -255,9 +269,6 @@ export function useGameState(authRefs: AuthRefs) {
   const [broadcast, setBroadcast] = useState<{ sender: string; message: string } | null>(null);
   const [possessing, setPossessing] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-
-  // ── Minimap ───────────────────────────────────────
-  const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap, startPulse, stopPulse } = useMiniMap();
 
   // ── Push helpers ──────────────────────────────────
   const pushCombatLogMessage = useCallback((msg: CombatLogMessage) => {
@@ -532,8 +543,6 @@ export function useGameState(authRefs: AuthRefs) {
     lookTarget, setLookTarget, spriteList,
     // UI
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast,
-    // Minimap
-    mapCanvasRef, drawMap, startPulse, stopPulse,
     // Setters needed by App
     setQuestsAvailable,
     // GMCP

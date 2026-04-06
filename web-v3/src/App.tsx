@@ -23,10 +23,11 @@ import { useGameState } from "./hooks/useGameState";
 import { useMudSocket } from "./hooks/useMudSocket";
 import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useCommandHistory } from "./hooks/useCommandHistory";
+import { useMiniMap } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
 import type { ChatChannel } from "./types";
-import { titleCaseWords } from "./utils";
+import { sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
 
 function App() {
@@ -41,7 +42,13 @@ function App() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoClosing, setVideoClosing] = useState(false);
 
-  const state = useGameState({ resumeTokenRef, pendingAuthCharRef, failedAuthCharRef, sendGmcpRef });
+  // Minimap canvas + drawing helpers (owns its own ref, kept out of useGameState)
+  const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap, startPulse, stopPulse } = useMiniMap();
+
+  const state = useGameState(
+    { resumeTokenRef, pendingAuthCharRef, failedAuthCharRef, sendGmcpRef },
+    { updateMap, loadZoneMap, resetMap },
+  );
   const audio = useAudioEngine();
   const quickbar = useQuickbar(state.skills);
 
@@ -213,11 +220,23 @@ function App() {
   useEffect(() => { audio.setCombatState(state.vitals.inCombat, hpPercent); }, [state.vitals.inCombat, hpPercent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-dismiss toast
+  const setToast = state.setToast;
   useEffect(() => {
     if (!state.toast) return;
-    const t = setTimeout(() => { state.setToast(null); pendingCastRef.current = null; }, 4000);
+    const t = setTimeout(() => { setToast(null); pendingCastRef.current = null; }, 4000);
     return () => clearTimeout(t);
-  }, [state.toast]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.toast, setToast]);
+
+  // Redraw minimap canvas when the map drawer opens
+  useEffect(() => {
+    if (state.activePopout !== "map") return;
+    const handle = window.requestAnimationFrame(() => drawMap());
+    startPulse();
+    return () => {
+      window.cancelAnimationFrame(handle);
+      stopPulse();
+    };
+  }, [state.activePopout, drawMap, startPulse, stopPulse]);
 
   // Auto-dismiss look target
   useEffect(() => {
@@ -294,11 +313,21 @@ function App() {
       case "bank": return "Bank";
       case "auction": return "Auction House";
       case "help": return "Command Reference";
-      case "room": return "Room Details";
+      case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
       default: return "";
     }
-  }, [state.activePopout, state.shop?.name, state.trainer?.name]);
+  }, [state.activePopout, state.shop?.name, state.trainer?.name, state.room.title]);
+
+  const sortedExits = useMemo(() => sortExits(state.room.exits), [state.room.exits]);
+  const questMarkerCount = useMemo(
+    () => new Set(
+      state.quests.flatMap((q) =>
+        q.objectives.filter((o) => o.current < o.required).flatMap((o) => o.targetRoomIds ?? []),
+      ),
+    ).size,
+    [state.quests],
+  );
 
   const closeDrawer = () => state.setActivePopout(null);
 
@@ -532,6 +561,147 @@ function App() {
             serverCommands={state.serverCommands}
             isStaff={state.character.isStaff}
           />
+        )}
+
+        {state.activePopout === "map" && (
+          <div className="drawer-map-body">
+            <canvas
+              ref={mapCanvasRef}
+              className="mini-map mini-map-popout"
+              width={900}
+              height={560}
+              role="img"
+              aria-label={questMarkerCount > 0
+                ? `Visited room map — ${questMarkerCount} quest objective${questMarkerCount !== 1 ? "s" : ""} marked`
+                : "Visited room map"}
+            />
+          </div>
+        )}
+
+        {state.activePopout === "room" && (
+          <article className="room-popout-copy">
+            {state.room.image && (
+              <img src={state.room.image} alt={state.room.title} className="room-popout-image" />
+            )}
+            {state.room.video && (
+              <video
+                src={state.room.video}
+                controls
+                className="room-popout-video"
+                style={{ width: "100%", maxHeight: 300, borderRadius: 8, marginTop: 8 }}
+              />
+            )}
+            <p className="room-popout-text">{state.room.description || "No room description available yet."}</p>
+            <div className="room-popout-exits">
+              {sortedExits.length === 0 ? (
+                <span>No exits listed.</span>
+              ) : (
+                <>
+                  <span className="room-popout-exits-label">Exits:</span>
+                  <span className="room-popout-exits-buttons">
+                    {sortedExits.map(([direction]) => (
+                      <button
+                        key={direction}
+                        type="button"
+                        className="room-exit-btn"
+                        title="Click to move, Shift+Click to peek"
+                        aria-label={`Move ${direction}`}
+                        onClick={(e) => sendCommand(e.shiftKey ? `look ${direction}` : direction)}
+                      >
+                        {direction}
+                      </button>
+                    ))}
+                  </span>
+                </>
+              )}
+            </div>
+            {(state.room.station || state.craftingNodes.length > 0) && (
+              <div className="room-resources-section">
+                {state.room.station && (
+                  <p className="room-resource-line">
+                    <span className="room-resource-icon" aria-hidden="true">{"\u2692"}</span>
+                    Crafting station: <strong>{state.room.station.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}</strong>
+                  </p>
+                )}
+                {state.craftingNodes.length > 0 && (
+                  <div className="room-resource-nodes">
+                    <span className="room-resource-icon" aria-hidden="true">{"\uD83C\uDF3F"}</span>
+                    <span>Resources: </span>
+                    {state.craftingNodes.map((node) => (
+                      <button
+                        key={node.id}
+                        type="button"
+                        className="room-resource-btn"
+                        title={`Gather ${node.name} (${node.skill} ${node.skillRequired}+)`}
+                        aria-label={`Gather ${node.name}`}
+                        onClick={() => sendCommand(`gather ${node.name}`)}
+                      >
+                        {node.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {state.roomFeatures.length > 0 && (
+              <div className="room-features-section">
+                <h4 className="room-features-title">Interactive Features</h4>
+                <ul className="room-features-list" role="list">
+                  {state.roomFeatures.map((f) => (
+                    <li key={f.id} className="room-feature-item">
+                      <span className="room-feature-name">{f.name}</span>
+                      {f.state && <span className="room-feature-state">({f.state})</span>}
+                      <span className="room-feature-actions">
+                        {(f.type === "door" || f.type === "container") && f.state === "closed" && (
+                          <button className="room-feature-btn" aria-label={`Open ${f.name}`} onClick={() => sendCommand(`open ${f.keyword}`)}>Open</button>
+                        )}
+                        {(f.type === "door" || f.type === "container") && f.state === "open" && (
+                          <button className="room-feature-btn" aria-label={`${f.type === "container" ? "Search" : "Close"} ${f.name}`} onClick={() => sendCommand(f.type === "container" ? `search ${f.keyword}` : `close ${f.keyword}`)}>
+                            {f.type === "container" ? "Search" : "Close"}
+                          </button>
+                        )}
+                        {f.type === "container" && f.state === "open" && (
+                          <button className="room-feature-btn" aria-label={`Close ${f.name}`} onClick={() => sendCommand(`close ${f.keyword}`)}>Close</button>
+                        )}
+                        {(f.type === "door" || f.type === "container") && f.state === "closed" && f.locked === false && (
+                          <button className="room-feature-btn" aria-label={`Lock ${f.name}`} onClick={() => sendCommand(`lock ${f.keyword}`)}>Lock</button>
+                        )}
+                        {(f.type === "door" || f.type === "container") && f.state === "locked" && (
+                          <button className="room-feature-btn" aria-label={`Unlock ${f.name}`} onClick={() => sendCommand(`unlock ${f.keyword}`)}>Unlock</button>
+                        )}
+                        {f.type === "lever" && (
+                          <button className="room-feature-btn" aria-label={`Pull ${f.name}`} onClick={() => sendCommand(`pull ${f.keyword}`)}>Pull</button>
+                        )}
+                        {f.type === "sign" && (
+                          <button className="room-feature-btn" aria-label={`Read ${f.name}`} onClick={() => sendCommand(`read ${f.keyword}`)}>Read</button>
+                        )}
+                      </span>
+                      {f.type === "sign" && f.text && (
+                        <p className="room-sign-text">{f.text}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {state.containerContents && (
+                  <div className="container-contents-section">
+                    <h4 className="room-features-title">In the {state.containerContents.name}</h4>
+                    {state.containerContents.items.length === 0 ? (
+                      <p className="empty-note">Empty.</p>
+                    ) : (
+                      <ul className="container-contents-list" role="list">
+                        {state.containerContents.items.map((item) => (
+                          <li key={item.keyword} className="container-contents-item">
+                            <span>{item.name}</span>
+                            <button className="room-feature-btn" onClick={() => sendCommand(`get ${item.keyword} from ${state.containerContents!.keyword}`)}>Take</button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </article>
         )}
       </Drawer>
 
