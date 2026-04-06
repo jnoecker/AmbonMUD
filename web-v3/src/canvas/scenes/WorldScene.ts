@@ -1359,6 +1359,23 @@ export class WorldScene {
     this.backdropHit.visible = true;
   }
 
+  /** Release GPU memory for all loaded textures in this scene.
+   *  Uses source.unload() to keep cache entries valid for re-upload. */
+  unloadTextures(): void {
+    const unloadFromContainer = (container: Container) => {
+      for (const child of container.children) {
+        if (child instanceof Sprite && child.texture && child.texture !== Texture.EMPTY) {
+          child.texture.source?.unload();
+        }
+        if (child instanceof Container) {
+          unloadFromContainer(child);
+        }
+      }
+    };
+    unloadFromContainer(this.container);
+    unloadFromContainer(this.overlayContainer);
+  }
+
   destroy() {
     this.minimap.destroy();
     this.entityPopout.destroy();
