@@ -39,7 +39,7 @@ Existing capabilities already working in the web client:
 ### Active
 
 - [ ] Tap-first navigation — tap compass exits to move between rooms
-- [ ] Responsive layout — single design that adapts from mobile (375px) through desktop (1440px+)
+- [x] Responsive layout — single design that adapts from mobile (375px) through desktop (1440px+) *(Validated in Phase 2)*
 - [ ] Bottom sheet panel system — pull-up drawer for accessing all game panels on mobile
 - [ ] Toast/overlay notification system — replace scrolling text output with brief contextual messages
 - [ ] Tap-based combat UI — action buttons for attack, abilities, flee; tap targets to select
@@ -47,7 +47,7 @@ Existing capabilities already working in the web client:
 - [ ] Tap-based NPC interaction — tap NPCs to talk, dialogue choices as buttons, shop items as tappable cards
 - [ ] Tap-based interaction for all game systems — crafting, quests, guilds, bank, mail, housing, auction, etc.
 - [ ] Chat bubble UI — messenger-style interface with channel tabs (say/tell/gossip/guild), the only place users type
-- [ ] Mobile-optimized canvas rendering — PixiJS scenes, weather, parallax working on touch devices with appropriate performance
+- [x] Mobile-optimized canvas rendering — PixiJS scenes, weather, parallax working on touch devices with appropriate performance *(Validated in Phase 2: DPR cap, VRAM budget, texture GC)*
 - [ ] Context-sensitive action menus — tap entities in room to see available actions
 - [ ] Minimal HUD overlay — essential stats (HP/mana/XP) visible without opening panels
 - [ ] PWA support — installable from browser, offline-capable shell, app-like experience
@@ -109,4 +109,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 — Phase 1 (State Extraction) complete: App.tsx decomposed from 1,655→14 lines, 7 domain contexts with typed reducers, all panels consuming state via useContext, canvas bridge preserved at 60fps*
+*Last updated: 2026-04-06 — Phase 2 (Layout Shell & Canvas Safety) complete: Portrait-first CSS Grid layout shell with 3 zones (canvas/hud/interaction), breakpoints migrated to 768/1024, viewport-fit=cover for safe areas, PixiJS DPR capped at 2x on mobile, 5s texture GC, VRAM budget manager, scene transition texture cleanup*
