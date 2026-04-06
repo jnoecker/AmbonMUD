@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GameShell } from "./components/GameShell";
 import { Drawer } from "./components/Drawer";
 import { ShopPopout } from "./components/ShopPopout";
@@ -36,6 +36,10 @@ function App() {
   const sendGmcpRef = useRef<(pkg: string, payload: unknown) => void>(() => {});
   const intentionalDisconnectRef = useRef(false);
   const connectedRef = useRef(false);
+
+  // Cinematic video state — driven by canvas openVideo callback
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoClosing, setVideoClosing] = useState(false);
 
   const state = useGameState({ resumeTokenRef, pendingAuthCharRef, failedAuthCharRef, sendGmcpRef });
   const audio = useAudioEngine();
@@ -144,6 +148,7 @@ function App() {
     canvasCallbacks.openRoom = () => state.setActivePopout("room");
     canvasCallbacks.openQuests = () => state.setActivePopout("quests");
     canvasCallbacks.dismissDialogue = () => { state.setDialogue(null); state.setQuestsAvailable([]); };
+    canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
     return () => {
       canvasCallbacks.sendCommand = null;
       canvasCallbacks.openShop = null;
@@ -153,6 +158,7 @@ function App() {
       canvasCallbacks.openRoom = null;
       canvasCallbacks.openQuests = null;
       canvasCallbacks.dismissDialogue = null;
+      canvasCallbacks.openVideo = null;
     };
   }, [sendCommand]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -579,6 +585,51 @@ function App() {
         <div className="reconnect-banner" role="status" aria-live="polite">
           <span className="reconnect-spinner" aria-hidden="true" />
           Reconnecting...
+        </div>
+      )}
+
+      {/* Cinematic video modal — triggered by canvas openVideo callback */}
+      {videoUrl && (
+        <div
+          className={`video-modal-overlay ${videoClosing ? "video-fade-out" : "video-fade-in"}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Video cinematic"
+          onClick={() => {
+            setVideoClosing(true);
+            setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setVideoClosing(true);
+              setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+            }
+          }}
+          onAnimationEnd={(e) => {
+            if (e.animationName === "videoFadeOut") { setVideoUrl(null); setVideoClosing(false); }
+          }}
+        >
+          <div className="video-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="video-modal-close"
+              aria-label="Close video"
+              autoFocus
+              onClick={() => {
+                setVideoClosing(true);
+                setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+              }}
+            >
+              {"\u2715"}
+            </button>
+            <video
+              ref={(el) => { if (el) el.playbackRate = 0.5; }}
+              src={videoUrl}
+              controls
+              autoPlay
+              muted
+              className="video-modal-player"
+            />
+          </div>
         </div>
       )}
 
