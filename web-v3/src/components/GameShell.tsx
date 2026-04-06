@@ -12,6 +12,9 @@ interface GameShellProps {
   combatLogMessages: CombatLogMessage[];
   combatTarget: CombatTarget | null;
   quickbarSlots: (SkillSummary | null)[];
+  onQuickbarSwap: (fromIndex: number, toIndex: number) => void;
+  onQuickbarAssign: (slotIndex: number, skillId: string) => void;
+  onQuickbarClear: (slotIndex: number) => void;
   activePopout: PopoutPanel;
   onCommand: (cmd: string) => void;
   onOpenPanel: (panel: PopoutPanel) => void;
@@ -32,6 +35,9 @@ export function GameShell({
   combatLogMessages,
   combatTarget,
   quickbarSlots,
+  onQuickbarSwap,
+  onQuickbarAssign,
+  onQuickbarClear,
   activePopout,
   onCommand,
   onOpenPanel,
@@ -81,6 +87,9 @@ export function GameShell({
         loggedIn={loggedIn}
         vitals={vitals}
         quickbarSlots={quickbarSlots}
+        onQuickbarSwap={onQuickbarSwap}
+        onQuickbarAssign={onQuickbarAssign}
+        onQuickbarClear={onQuickbarClear}
         activePopout={activePopout}
         onOpenPanel={onOpenPanel}
         onCastSkill={onCastSkill}

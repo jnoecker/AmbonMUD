@@ -402,6 +402,9 @@ function App() {
         combatLogMessages={state.combatLogMessages}
         combatTarget={state.combatTarget}
         quickbarSlots={quickbar.slots}
+        onQuickbarSwap={quickbar.swap}
+        onQuickbarAssign={quickbar.assign}
+        onQuickbarClear={quickbar.clear}
         activePopout={state.activePopout}
         onCommand={sendCommand}
         onOpenPanel={(panel) => state.setActivePopout(panel)}

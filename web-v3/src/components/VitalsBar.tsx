@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type { DragEvent, FormEvent, KeyboardEvent } from "react";
 import type { PopoutPanel, SkillSummary, Vitals } from "../types";
 import type { AudioEngine } from "../hooks/useAudioEngine";
 import { AudioControls } from "./AudioControls";
@@ -62,6 +62,9 @@ interface VitalsBarProps {
   loggedIn: boolean;
   vitals: Vitals;
   quickbarSlots: (SkillSummary | null)[];
+  onQuickbarSwap: (fromIndex: number, toIndex: number) => void;
+  onQuickbarAssign: (slotIndex: number, skillId: string) => void;
+  onQuickbarClear: (slotIndex: number) => void;
   activePopout: PopoutPanel;
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
@@ -76,7 +79,18 @@ interface VitalsBarProps {
   onInputKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
 }
 
-function SkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: number; onCast: (id: string, cd: number) => void }) {
+interface SkillSlotProps {
+  skill: SkillSummary;
+  index: number;
+  onCast: (id: string, cd: number) => void;
+  onDragStart: (event: DragEvent<HTMLButtonElement>, index: number) => void;
+  onDragOver: (event: DragEvent<HTMLElement>) => void;
+  onDragLeave: (event: DragEvent<HTMLElement>) => void;
+  onDrop: (event: DragEvent<HTMLElement>, index: number) => void;
+  onClear: (index: number) => void;
+}
+
+function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave, onDrop, onClear }: SkillSlotProps) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -95,7 +109,14 @@ function SkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: numbe
       type="button"
       className={`vbar-skill ${skillCategory(skill)}${onCooldown ? " vbar-skill-cd" : ""}`}
       disabled={onCooldown}
+      title={`${skill.name} (${skill.manaCost} mana) — key ${index + 1}\nDrag to reorder, right-click to remove`}
       onClick={() => onCast(skill.id, skill.cooldownMs)}
+      onContextMenu={(e) => { e.preventDefault(); onClear(index); }}
+      draggable
+      onDragStart={(e) => onDragStart(e, index)}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDrop(e, index)}
       aria-label={`${skill.name} — key ${index + 1}`}
     >
       {skill.image
@@ -108,11 +129,38 @@ function SkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: numbe
   );
 }
 
+function EmptySkillSlot({
+  index,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}: {
+  index: number;
+  onDragOver: (event: DragEvent<HTMLElement>) => void;
+  onDragLeave: (event: DragEvent<HTMLElement>) => void;
+  onDrop: (event: DragEvent<HTMLElement>, index: number) => void;
+}) {
+  return (
+    <div
+      className="vbar-skill vbar-skill-empty"
+      title={`Slot ${index + 1} — drag a spell here`}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDrop(e, index)}
+    >
+      <span className="vbar-skill-key">{index + 1}</span>
+    </div>
+  );
+}
+
 export function VitalsBar({
   connected,
   loggedIn,
   vitals,
   quickbarSlots,
+  onQuickbarSwap,
+  onQuickbarAssign,
+  onQuickbarClear,
   activePopout,
   onOpenPanel,
   onCastSkill,
@@ -142,6 +190,37 @@ export function VitalsBar({
     if (!cmd) return;
     onCommand(cmd);
     onInputChange("");
+  };
+
+  // Drag-and-drop handlers for the quickbar
+  const handleSkillDragStart = (e: DragEvent<HTMLButtonElement>, index: number) => {
+    e.dataTransfer.setData("quickbar-index", String(index));
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleSkillDragOver = (e: DragEvent<HTMLElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const target = e.currentTarget as HTMLElement;
+    if (!target.classList.contains("drag-over")) target.classList.add("drag-over");
+  };
+
+  const handleSkillDragLeave = (e: DragEvent<HTMLElement>) => {
+    (e.currentTarget as HTMLElement).classList.remove("drag-over");
+  };
+
+  const handleSkillDrop = (e: DragEvent<HTMLElement>, toIndex: number) => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).classList.remove("drag-over");
+    const fromIndexStr = e.dataTransfer.getData("quickbar-index");
+    if (fromIndexStr) {
+      onQuickbarSwap(parseInt(fromIndexStr, 10), toIndex);
+      return;
+    }
+    const skillId = e.dataTransfer.getData("skill-id");
+    if (skillId) {
+      onQuickbarAssign(toIndex, skillId);
+    }
   };
 
   return (
@@ -176,11 +255,25 @@ export function VitalsBar({
         <div className="vbar-skills">
           {quickbarSlots.map((skill, i) =>
             skill ? (
-              <SkillSlot key={skill.id} skill={skill} index={i} onCast={onCastSkill} />
+              <SkillSlot
+                key={skill.id}
+                skill={skill}
+                index={i}
+                onCast={onCastSkill}
+                onDragStart={handleSkillDragStart}
+                onDragOver={handleSkillDragOver}
+                onDragLeave={handleSkillDragLeave}
+                onDrop={handleSkillDrop}
+                onClear={onQuickbarClear}
+              />
             ) : (
-              <div key={`empty-${i}`} className="vbar-skill vbar-skill-empty">
-                <span className="vbar-skill-key">{i + 1}</span>
-              </div>
+              <EmptySkillSlot
+                key={`empty-${i}`}
+                index={i}
+                onDragOver={handleSkillDragOver}
+                onDragLeave={handleSkillDragLeave}
+                onDrop={handleSkillDrop}
+              />
             ),
           )}
         </div>
