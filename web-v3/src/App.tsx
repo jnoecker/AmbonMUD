@@ -45,6 +45,7 @@ import { useMiniMap } from "./hooks/useMiniMap";
 import { useMudSocket } from "./hooks/useMudSocket";
 import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useQuickbar } from "./hooks/useQuickbar";
+import { useReconnect } from "./hooks/useReconnect";
 import type {
   LayoutMode,
   AchievementData,
@@ -264,6 +265,8 @@ function App() {
   const failedAuthCharRef = useRef<string | null>(null);
   const connectedRef = useRef(false);
   const intentionalDisconnectRef = useRef(false);
+  const scheduleReconnectRef = useRef<(() => void) | null>(null);
+  const cancelReconnectRef = useRef<(() => void) | null>(null);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
@@ -588,6 +591,9 @@ function App() {
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine, sendGmcp } = useMudSocket({
     onOpen: () => {
       focusComposer();
+      // Reset backoff counter on successful connection
+      if (cancelReconnectRef.current) cancelReconnectRef.current();
+      setReconnecting(false);
     },
     onTextMessage: (text) => {
       terminalRef.current?.write(text);
@@ -600,10 +606,8 @@ function App() {
         return;
       }
       if (resumeTokenRef.current) {
-        // Auto-reconnect: keep game state, show reconnecting banner
-        setReconnecting(true);
-        writeSystem("Connection lost — reconnecting...");
-        window.setTimeout(() => reconnect(), 500);
+        // Auto-reconnect with exponential backoff
+        scheduleReconnectRef.current?.();
       } else {
         setComposerValue("");
         resetComposerTraversal();
@@ -619,6 +623,21 @@ function App() {
 
   sendGmcpRef.current = sendGmcp;
   connectedRef.current = connected;
+
+  const { scheduleReconnect, cancelReconnect, resetAttempts, attempt: reconnectAttempt } = useReconnect({
+    reconnectFn: reconnect,
+    onReconnecting: (att) => {
+      setReconnecting(true);
+      writeSystem(`Connection lost \u2014 reconnecting... (attempt ${att})`);
+    },
+    onGaveUp: () => {
+      setReconnecting(false);
+      writeSystem("Connection lost. Please refresh the page.");
+    },
+  });
+
+  scheduleReconnectRef.current = scheduleReconnect;
+  cancelReconnectRef.current = resetAttempts;
 
   // When a token-based login fails, the server re-sends Login.Prompt(state:"name").
   // Since we already know the character name, auto-send it so the user goes
@@ -690,9 +709,7 @@ function App() {
     // Uses connectedRef to avoid re-running the effect on every state change.
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible" && !connectedRef.current && resumeTokenRef.current) {
-        setReconnecting(true);
-        intentionalDisconnectRef.current = true;
-        reconnect();
+        scheduleReconnectRef.current?.();
       }
     };
 
@@ -706,7 +723,7 @@ function App() {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       disconnect();
     };
-  }, [connect, disconnect, drawMap, fitTerminal, reconnect]);
+  }, [connect, disconnect, drawMap, fitTerminal]);
 
   // Refit terminal when overlay becomes visible
   useEffect(() => {
@@ -1140,7 +1157,7 @@ function App() {
           <button
             type="button"
             className={`soft-button reconnect-btn${connected ? "" : " reconnect-btn-needed"}`}
-            onClick={() => { intentionalDisconnectRef.current = true; reconnect(); }}
+            onClick={() => { cancelReconnect(); intentionalDisconnectRef.current = true; reconnect(); }}
           >
             Reconnect
           </button>
@@ -1702,6 +1719,9 @@ function App() {
         <div className="reconnect-banner" role="status" aria-live="polite">
           <span className="reconnect-spinner" aria-hidden="true" />
           Reconnecting...
+          {reconnectAttempt > 0 && (
+            <span className="reconnect-banner__attempt">(attempt {reconnectAttempt})</span>
+          )}
         </div>
       )}
 

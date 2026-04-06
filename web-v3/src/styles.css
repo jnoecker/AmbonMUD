@@ -9896,6 +9896,12 @@ body {
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+.reconnect-banner__attempt {
+  font-size: 11px;
+  color: rgb(140 154 193 / 50%);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reconnect-spinner { animation: none; }
   .reconnect-banner { animation: none; }
