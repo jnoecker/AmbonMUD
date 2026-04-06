@@ -4,6 +4,7 @@ import { canvasEvents } from "./CanvasEventBus";
 import { WorldScene } from "./scenes/WorldScene";
 import { BattleScene } from "./scenes/BattleScene";
 import { DialogueOverlay } from "./systems/DialogueOverlay";
+import type { VRAMBudgetManager } from "./VRAMBudgetManager";
 
 export type SceneName = "world" | "battle";
 
@@ -15,9 +16,11 @@ export class SceneManager {
   private currentScene: SceneName = "world";
   private wasInCombat = false;
   private pendingWorldTransition = false;
+  private vramBudget: VRAMBudgetManager | null;
 
-  constructor(app: Application) {
+  constructor(app: Application, vramBudget?: VRAMBudgetManager | null) {
     this.app = app;
+    this.vramBudget = vramBudget ?? null;
     this.worldScene = new WorldScene();
     this.battleScene = new BattleScene();
     this.dialogueOverlay = new DialogueOverlay();
@@ -78,10 +81,14 @@ export class SceneManager {
     if (scene === "battle") {
       this.worldScene.container.visible = false;
       this.worldScene.overlayContainer.visible = false;
+      // Unload world scene textures from GPU to free VRAM (per D-07)
+      this.worldScene.unloadTextures();
       this.battleScene.container.visible = true;
       this.battleScene.enter();
     } else {
       this.battleScene.container.visible = false;
+      // Unload battle scene textures from GPU to free VRAM (per D-07)
+      this.battleScene.unloadTextures();
       this.worldScene.container.visible = true;
       this.worldScene.overlayContainer.visible = true;
       // Discard any combat/gain events still queued from the fight that just
@@ -94,6 +101,11 @@ export class SceneManager {
 
   get scene(): SceneName {
     return this.currentScene;
+  }
+
+  /** Get current VRAM fallback state (for future consumers like parallax). */
+  get vramFallback(): { overBudget: boolean; maxResolution: number; disableParallax: boolean } | null {
+    return this.vramBudget?.getFallbackState() ?? null;
   }
 
   destroy() {

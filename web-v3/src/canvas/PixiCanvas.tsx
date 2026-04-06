@@ -39,8 +39,8 @@ export function PixiCanvas() {
       }
 
       container.appendChild(app.canvas as HTMLCanvasElement);
-      initVRAMBudget(isMobile);
-      const scene = new SceneManager(app);
+      const vramBudget = initVRAMBudget(isMobile);
+      const scene = new SceneManager(app, vramBudget);
       sceneRef.current = scene;
 
       app.ticker.add((ticker) => {

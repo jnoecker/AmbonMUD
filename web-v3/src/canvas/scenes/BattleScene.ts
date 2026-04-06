@@ -687,6 +687,21 @@ export class BattleScene {
     }
   }
 
+  /** Release GPU memory for all loaded textures in this scene. */
+  unloadTextures(): void {
+    const unloadFromContainer = (container: Container) => {
+      for (const child of container.children) {
+        if (child instanceof Sprite && child.texture && child.texture !== Texture.EMPTY) {
+          child.texture.source?.unload();
+        }
+        if (child instanceof Container) {
+          unloadFromContainer(child);
+        }
+      }
+    };
+    unloadFromContainer(this.container);
+  }
+
   destroy() {
     this.combatAnimator.clear();
     this.spellProjectiles.clear();
