@@ -15,6 +15,11 @@ interface GameShellProps {
   onCommand: (cmd: string) => void;
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
+  inputValue: string;
+  onInputChange: (value: string) => void;
+  showInput: boolean;
+  onShowInputChange: (open: boolean) => void;
+  onInputKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   children?: ReactNode;
 }
 
@@ -29,6 +34,11 @@ export function GameShell({
   onCommand,
   onOpenPanel,
   onCastSkill,
+  inputValue,
+  onInputChange,
+  showInput,
+  onShowInputChange,
+  onInputKeyDown,
   children,
 }: GameShellProps) {
   const loggedIn = connected && hasCharacterProfile;
@@ -72,6 +82,11 @@ export function GameShell({
         onOpenPanel={onOpenPanel}
         onCastSkill={onCastSkill}
         onCommand={onCommand}
+        inputValue={inputValue}
+        onInputChange={onInputChange}
+        showInput={showInput}
+        onShowInputChange={onShowInputChange}
+        onInputKeyDown={onInputKeyDown}
       />
 
       {children}

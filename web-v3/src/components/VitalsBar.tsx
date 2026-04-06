@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import type { PopoutPanel, SkillSummary, Vitals } from "../types";
 import { percent } from "../utils";
 import {
@@ -62,6 +62,13 @@ interface VitalsBarProps {
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onCommand: (cmd: string) => void;
+  /** Controlled command input value (lifted to App so the palette + canvas can prefill it). */
+  inputValue: string;
+  onInputChange: (value: string) => void;
+  /** Whether the inline command input is expanded. */
+  showInput: boolean;
+  onShowInputChange: (open: boolean) => void;
+  onInputKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
 }
 
 function SkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: number; onCast: (id: string, cd: number) => void }) {
@@ -96,19 +103,39 @@ function SkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: numbe
   );
 }
 
-export function VitalsBar({ connected, loggedIn, vitals, quickbarSlots, activePopout, onOpenPanel, onCastSkill, onCommand }: VitalsBarProps) {
+export function VitalsBar({
+  connected,
+  loggedIn,
+  vitals,
+  quickbarSlots,
+  activePopout,
+  onOpenPanel,
+  onCastSkill,
+  onCommand,
+  inputValue,
+  onInputChange,
+  showInput,
+  onShowInputChange,
+  onInputKeyDown,
+}: VitalsBarProps) {
   const [showPanels, setShowPanels] = useState(false);
-  const [showInput, setShowInput] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const hasAnySkill = quickbarSlots.some((s) => s !== null);
+
+  // Focus the input whenever it becomes visible (e.g. after Ctrl+K palette prefill)
+  useEffect(() => {
+    if (showInput) {
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [showInput]);
 
   const submitInput = (e: FormEvent) => {
     e.preventDefault();
     const cmd = inputValue.trim();
     if (!cmd) return;
     onCommand(cmd);
-    setInputValue("");
+    onInputChange("");
   };
 
   return (
@@ -193,7 +220,7 @@ export function VitalsBar({ connected, loggedIn, vitals, quickbarSlots, activePo
         <button
           type="button"
           className={`vbar-panel-btn${showInput ? " vbar-panel-btn-active" : ""}`}
-          onClick={() => setShowInput(!showInput)}
+          onClick={() => onShowInputChange(!showInput)}
           aria-label="Type a command"
         >
           <svg viewBox="0 0 24 24" className="vbar-icon" fill="none" stroke="currentColor" strokeWidth="2">
@@ -209,12 +236,13 @@ export function VitalsBar({ connected, loggedIn, vitals, quickbarSlots, activePo
       {showInput && (
         <form className="vbar-input-row" onSubmit={submitInput}>
           <input
+            ref={inputRef}
             type="text"
             className="vbar-input"
             placeholder="Type a command..."
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            autoFocus
+            onChange={(e) => onInputChange(e.target.value)}
+            onKeyDown={onInputKeyDown}
           />
           <button type="submit" className="vbar-input-send" aria-label="Send">
             <svg viewBox="0 0 24 24" className="vbar-icon" fill="currentColor">

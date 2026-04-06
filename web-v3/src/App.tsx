@@ -19,6 +19,7 @@ import { AuctionPanel } from "./components/panels/AuctionPanel";
 import { HelpContent } from "./components/HelpContent";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
+import { CommandPalette } from "./components/CommandPalette";
 import { useGameState } from "./hooks/useGameState";
 import { useMudSocket } from "./hooks/useMudSocket";
 import { useAudioEngine } from "./hooks/useAudioEngine";
@@ -41,6 +42,18 @@ function App() {
   // Cinematic video state — driven by canvas openVideo callback
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoClosing, setVideoClosing] = useState(false);
+
+  // Ctrl+K command palette
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+
+  // Lifted command-input state — VitalsBar renders it controlled, palette/canvas can prefill
+  const [inputValue, setInputValue] = useState("");
+  const [showInput, setShowInput] = useState(false);
+
+  const prefillInput = (text: string) => {
+    setInputValue(text);
+    setShowInput(true);
+  };
 
   // Minimap canvas + drawing helpers (owns its own ref, kept out of useGameState)
   const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap, startPulse, stopPulse } = useMiniMap();
@@ -156,6 +169,7 @@ function App() {
     canvasCallbacks.openQuests = () => state.setActivePopout("quests");
     canvasCallbacks.dismissDialogue = () => { state.setDialogue(null); state.setQuestsAvailable([]); };
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
+    canvasCallbacks.prefillCommand = (text: string) => prefillInput(text);
     return () => {
       canvasCallbacks.sendCommand = null;
       canvasCallbacks.openShop = null;
@@ -166,6 +180,7 @@ function App() {
       canvasCallbacks.openQuests = null;
       canvasCallbacks.dismissDialogue = null;
       canvasCallbacks.openVideo = null;
+      canvasCallbacks.prefillCommand = null;
     };
   }, [sendCommand]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -244,6 +259,18 @@ function App() {
     const t = setTimeout(() => state.setLookTarget(null), 6000);
     return () => clearTimeout(t);
   }, [state.lookTarget]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Ctrl+K (or Cmd+K) opens the command palette
+  useEffect(() => {
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   // Keyboard digit shortcuts
   useEffect(() => {
@@ -344,6 +371,10 @@ function App() {
         onCommand={sendCommand}
         onOpenPanel={(panel) => state.setActivePopout(panel)}
         onCastSkill={handleCastSkill}
+        inputValue={inputValue}
+        onInputChange={setInputValue}
+        showInput={showInput}
+        onShowInputChange={setShowInput}
       />
 
       <Drawer open={state.activePopout !== null} title={drawerTitle} onClose={closeDrawer}>
@@ -756,6 +787,17 @@ function App() {
           <span className="reconnect-spinner" aria-hidden="true" />
           Reconnecting...
         </div>
+      )}
+
+      {/* Command palette — opened by Ctrl/Cmd+K */}
+      {showCommandPalette && (
+        <CommandPalette
+          commands={state.serverCommands}
+          isStaff={state.character.isStaff}
+          onExecute={(cmd) => sendCommand(cmd)}
+          onPrefill={(text) => prefillInput(text)}
+          onClose={() => setShowCommandPalette(false)}
+        />
       )}
 
       {/* Cinematic video modal — triggered by canvas openVideo callback */}
