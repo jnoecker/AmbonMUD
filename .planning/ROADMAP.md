@@ -71,7 +71,13 @@ Plans:
   5. Level and class badge are visible in the HUD at all times
   6. The app is installable via "Add to Home Screen" on both Android Chrome and iOS Safari
   7. After the app is backgrounded and WebSocket disconnects, it reconnects with exponential backoff and resyncs full game state
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md -- Bottom sheet with pointer-driven drag gestures, three snap points, tab bar with overflow, CSS-only desktop side panel
+- [ ] 03-02-PLAN.md -- HUD overlay with HP/mana/XP bars, level/class badge, tap-to-open-sheet integration
+- [ ] 03-03-PLAN.md -- PWA manifest enhancement, service worker cache upgrade, exponential backoff WebSocket reconnection
+
 **UI hint**: yes
 
 ### Phase 4: Navigation & Combat
@@ -163,7 +169,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 |-------|----------------|--------|-----------|
 | 1. State Extraction | 0/2 | Planning complete | - |
 | 2. Layout Shell & Canvas Safety | 0/2 | Planning complete | - |
-| 3. Bottom Sheet, HUD & PWA Foundation | 0/0 | Not started | - |
+| 3. Bottom Sheet, HUD & PWA Foundation | 0/3 | Planning complete | - |
 | 4. Navigation & Combat | 0/0 | Not started | - |
 | 5. Toast & Notification System | 0/0 | Not started | - |
 | 6. Chat Interface | 0/0 | Not started | - |
