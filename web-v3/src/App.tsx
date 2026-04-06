@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { GameShell } from "./components/GameShell";
 import { Drawer } from "./components/Drawer";
 import { ShopPopout } from "./components/ShopPopout";
@@ -65,7 +66,14 @@ function App() {
   const audio = useAudioEngine();
   const quickbar = useQuickbar(state.skills);
 
-  const { pushHistory } = useCommandHistory(state.serverCommands);
+  const {
+    pushHistory,
+    applyComposerHistoryUp,
+    applyComposerHistoryDown,
+    applyComposerCompletion,
+    resetComposerTraversal,
+    resetComposerCompletion,
+  } = useCommandHistory(state.serverCommands);
 
   // Wire up the WebSocket
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine, sendGmcp } = useMudSocket({
@@ -129,6 +137,28 @@ function App() {
     if (command.length === 0) return;
     if (!sendLine(command)) return;
     pushHistory(command);
+    resetComposerTraversal();
+  };
+
+  // Inline command-input keydown: history navigation + tab completion
+  const handleInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    const liveValue = event.currentTarget.value;
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      applyComposerHistoryUp(liveValue, setInputValue);
+      return;
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      applyComposerHistoryDown(setInputValue);
+      return;
+    }
+    if (event.key === "Tab") {
+      event.preventDefault();
+      applyComposerCompletion(liveValue, setInputValue);
+      return;
+    }
+    resetComposerCompletion();
   };
 
   // Sync state into canvas bridge for PixiJS
@@ -372,9 +402,13 @@ function App() {
         onOpenPanel={(panel) => state.setActivePopout(panel)}
         onCastSkill={handleCastSkill}
         inputValue={inputValue}
-        onInputChange={setInputValue}
+        onInputChange={(value) => {
+          setInputValue(value);
+          resetComposerCompletion();
+        }}
         showInput={showInput}
         onShowInputChange={setShowInput}
+        onInputKeyDown={handleInputKeyDown}
       />
 
       <Drawer open={state.activePopout !== null} title={drawerTitle} onClose={closeDrawer}>
