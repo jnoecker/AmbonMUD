@@ -471,22 +471,25 @@ const reconnect = useCallback(() => {
 | A2 | Restricting drag initiation to handle element resolves nested scroll conflicts | Anti-Patterns / Pitfall 3 | Medium -- if content areas also need drag-to-dismiss, need additional gesture discrimination |
 | A3 | Server sends full GMCP resync on WebSocket reconnect without code changes | Pitfall 5 / D-11 | High -- if server does NOT auto-resync, client will show stale state; verify server behavior |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Server-side GMCP resync on reconnect**
+1. **Server-side GMCP resync on reconnect** -- RESOLVED
    - What we know: D-11 states "server sends all packages just like initial login. No server changes needed."
    - What's unclear: Whether the current server implementation actually sends a full GMCP state dump on a new WebSocket connection when a player is already logged in (resume token path).
    - Recommendation: Verify by testing -- connect, disconnect, reconnect, and observe GMCP traffic. If the server already sends Char.Vitals, Room.Info, Char.Items, etc. on reconnect, no action needed. If not, a server-side change would be needed (but is out of scope for this client-only phase).
+   - **Resolution:** Plan 03 Task 2 relies on the existing server behavior (full GMCP on new WebSocket) per D-11. The `applyGmcpPackage` pipeline already replaces all client state on receipt. If server behavior differs from expectation, it will be caught during Plan 03 execution and flagged as a gap requiring server-side work in a future phase.
 
-2. **Phase 1 state context availability**
+2. **Phase 1 state context availability** -- RESOLVED
    - What we know: Phase 1 extracts 88 useState calls into domain-split contexts. The HUD and bottom sheet need to consume vitals and character data from these contexts.
    - What's unclear: The exact context hook names and shapes (since Phase 1 hasn't been implemented yet).
    - Recommendation: The planner should structure tasks so HUD and bottom sheet depend on Phase 1's context API. If Phase 1 is not yet merged, use placeholder props that match the `Vitals` and `CharacterInfo` types from `types.ts` (verified to exist). The types are stable regardless of state management approach.
+   - **Resolution:** Plans 01 and 02 pass `vitals` and `character` as props from App.tsx state (`useState<Vitals>`, `useState<CharacterInfo>`) rather than consuming Phase 1 contexts directly. The `Vitals` and `CharacterInfo` types from `types.ts` are stable. When Phase 1 contexts are available, prop-drilling can be replaced with context hooks without component API changes.
 
-3. **Overflow menu panel count**
+3. **Overflow menu panel count** -- RESOLVED
    - What we know: 14 panels exist in `web-v3/src/components/panels/`. D-07 pins 5 tabs. That leaves 9 panels for the overflow menu, plus SpellbookPanel, TrainerPanel, TradePanel which are in the components root (not panels/ directory).
    - What's unclear: Exact final count of overflow items and whether some panels (like CombatPanel) are only relevant during combat.
    - Recommendation: Include all non-pinned panels in overflow. Conditional visibility (hiding combat panel outside combat) can be a follow-up optimization.
+   - **Resolution:** Plan 01 Task 1 defines `OVERFLOW_TABS` as: equipment, crafting, bank, auction, mail, housing, leaderboard, admin (8 items from panels/ directory). All non-pinned panels included. Conditional visibility deferred to a follow-up optimization as recommended.
 
 ## Environment Availability
 
