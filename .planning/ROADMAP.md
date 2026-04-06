@@ -54,8 +54,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- LayoutShell component with CSS Grid zones, safe area insets, breakpoint migration
-- [ ] 02-02-PLAN.md -- PixiJS DPR cap, aggressive GC config, VRAMBudgetManager, scene transition texture cleanup
+- [x] 02-01-PLAN.md -- LayoutShell component with CSS Grid zones, safe area insets, breakpoint migration
+- [x] 02-02-PLAN.md -- PixiJS DPR cap, aggressive GC config, VRAMBudgetManager, scene transition texture cleanup
 
 **UI hint**: yes
 
