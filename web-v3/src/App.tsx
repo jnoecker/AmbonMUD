@@ -358,8 +358,27 @@ function App() {
   const visibleEffects = state.effects.slice(0, 4);
   const hiddenEffectsCount = Math.max(0, state.effects.length - visibleEffects.length);
 
+  // The drawer body keeps rendering the previous panel for the duration of the close
+  // animation (~300ms). Without this, the parent clears the children the instant
+  // activePopout flips to null, leaving an empty animating frame.
+  const [drawerPanel, setDrawerPanel] = useState(state.activePopout);
+  const [prevActivePopout, setPrevActivePopout] = useState(state.activePopout);
+  if (state.activePopout !== prevActivePopout) {
+    setPrevActivePopout(state.activePopout);
+    if (state.activePopout !== null) {
+      // Opening or switching panels — update immediately (no animation gap)
+      setDrawerPanel(state.activePopout);
+    }
+    // Closing (null) — leave drawerPanel alone; the timeout below clears it after the animation
+  }
+  useEffect(() => {
+    if (state.activePopout !== null) return;
+    const t = window.setTimeout(() => setDrawerPanel(null), 300);
+    return () => window.clearTimeout(t);
+  }, [state.activePopout]);
+
   const drawerTitle = useMemo(() => {
-    switch (state.activePopout) {
+    switch (drawerPanel) {
       case "character": return "Character";
       case "inventory": return "Inventory";
       case "equipment": return "Equipment";
@@ -379,7 +398,7 @@ function App() {
       case "map": return "World Map";
       default: return "";
     }
-  }, [state.activePopout, state.shop?.name, state.trainer?.name, state.room.title]);
+  }, [drawerPanel, state.shop?.name, state.trainer?.name, state.room.title]);
 
   const sortedExits = useMemo(() => sortExits(state.room.exits), [state.room.exits]);
   const questMarkerCount = useMemo(
@@ -422,7 +441,7 @@ function App() {
       />
 
       <Drawer open={state.activePopout !== null} title={drawerTitle} onClose={closeDrawer}>
-        {state.activePopout === "character" && (
+        {drawerPanel === "character" && (
           <CharacterPanel
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
@@ -474,7 +493,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "inventory" && (
+        {drawerPanel === "inventory" && (
           <InventoryPanel
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
@@ -490,7 +509,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "equipment" && (
+        {drawerPanel === "equipment" && (
           <EquipmentPanel
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
@@ -502,7 +521,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "chat" && (
+        {drawerPanel === "chat" && (
           <ChatPanel
             connected={connected}
             canChat={connected && hasCharacterProfile}
@@ -526,7 +545,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "shop" && state.shop && (
+        {drawerPanel === "shop" && state.shop && (
           <ShopPopout
             shop={state.shop}
             inventory={state.inventory}
@@ -536,7 +555,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "trainer" && state.trainer && (
+        {drawerPanel === "trainer" && state.trainer && (
           <TrainerPanel
             trainer={state.trainer}
             playerLevel={state.vitals.level ?? 1}
@@ -545,7 +564,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "spellbook" && (
+        {drawerPanel === "spellbook" && (
           <SpellbookPanel
             skills={state.skills}
             quickbarSlotIds={quickbar.slotIds}
@@ -560,7 +579,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "mail" && (
+        {drawerPanel === "mail" && (
           <MailPanel
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
@@ -577,7 +596,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "crafting" && (
+        {drawerPanel === "crafting" && (
           <CraftingPanel
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
@@ -591,7 +610,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "quests" && (
+        {drawerPanel === "quests" && (
           <QuestPanel
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
@@ -609,7 +628,7 @@ function App() {
           />
         )}
 
-        {state.activePopout === "housing" && (
+        {drawerPanel === "housing" && (
           <HousingPanel
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
@@ -619,26 +638,26 @@ function App() {
           />
         )}
 
-        {state.activePopout === "leaderboard" && (
+        {drawerPanel === "leaderboard" && (
           <LeaderboardPanel leaderboard={state.leaderboard} onCommand={sendCommand} />
         )}
 
-        {state.activePopout === "bank" && (
+        {drawerPanel === "bank" && (
           <BankPanel bankState={state.bankState} onCommand={sendCommand} />
         )}
 
-        {state.activePopout === "auction" && (
+        {drawerPanel === "auction" && (
           <AuctionPanel listings={state.auctionListings} onCommand={sendCommand} />
         )}
 
-        {state.activePopout === "help" && (
+        {drawerPanel === "help" && (
           <HelpContent
             serverCommands={state.serverCommands}
             isStaff={state.character.isStaff}
           />
         )}
 
-        {state.activePopout === "map" && (
+        {drawerPanel === "map" && (
           <div className="drawer-map-body">
             <canvas
               ref={mapCanvasRef}
@@ -653,7 +672,7 @@ function App() {
           </div>
         )}
 
-        {state.activePopout === "room" && (
+        {drawerPanel === "room" && (
           <article className="room-popout-copy">
             {state.room.image && (
               <img src={state.room.image} alt={state.room.title} className="room-popout-image" />
