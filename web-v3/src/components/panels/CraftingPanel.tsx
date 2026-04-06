@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { useCoreState } from "../../state/CoreContext";
-import { useInventoryState } from "../../state/InventoryContext";
+import type { CraftingSkill, CraftingRecipe, CraftingNode } from "../../types";
 
 interface CraftingPanelProps {
+  connected: boolean;
+  hasCharacterProfile: boolean;
+  skills: CraftingSkill[];
+  recipes: CraftingRecipe[];
+  nodes: CraftingNode[];
   onGather: (keyword: string) => void;
   onCraft: (recipeKeyword: string) => void;
   onRequestRecipes: () => void;
@@ -10,15 +14,16 @@ interface CraftingPanelProps {
 }
 
 export function CraftingPanel({
+  connected,
+  hasCharacterProfile,
+  skills,
+  recipes,
+  nodes,
   onGather,
   onCraft,
   onRequestRecipes,
   onLoadSkills,
 }: CraftingPanelProps) {
-  const { character } = useCoreState();
-  const { craftingSkills: skills, craftingRecipes: recipes, craftingNodes: nodes } = useInventoryState();
-  const connected = character.name !== "-";
-  const hasCharacterProfile = connected;
   const [activeTab, setActiveTab] = useState<"skills" | "recipes" | "nodes">("skills");
 
   if (!connected) return <p className="empty-note">Connect to view crafting.</p>;

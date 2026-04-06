@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { CombatLogMessage } from "../types";
-import { useCombatState } from "../state/CombatContext";
 
 const MESSAGE_LIFETIME_MS = 6000;
 const FADE_DURATION_MS = 600;
@@ -19,8 +18,11 @@ const FILTER_OPTIONS: { style: CombatStyle; label: string }[] = [
 
 const ALL_STYLES = new Set<CombatStyle>(FILTER_OPTIONS.map((f) => f.style));
 
-export function CombatLog() {
-  const { combatLogMessages: messages } = useCombatState();
+interface CombatLogProps {
+  messages: CombatLogMessage[];
+}
+
+export function CombatLog({ messages }: CombatLogProps) {
   const [now, setNow] = useState(() => Date.now());
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);

@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { useUIState } from "../../state/UIContext";
-import { useSocialState } from "../../state/SocialContext";
-import type { StaffWorldZone, StaffMobZone, WhoPlayer, StaffWorldRoom, StaffMobTemplate } from "../../types";
+import type { StaffMobZone, StaffWorldZone, WhoPlayer } from "../../types";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
   onClose: () => void;
+  worldInfo: StaffWorldZone[];
+  mobTemplates: StaffMobZone[];
+  whoPlayers: WhoPlayer[];
 }
 
 type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "setlevel" | "dispel" | "reload" | "broadcast" | "shutdown";
@@ -53,7 +54,7 @@ function TeleportBrowser({
       .map((z) => ({
         ...z,
         rooms: z.rooms.filter(
-          (r: StaffWorldRoom) =>
+          (r) =>
             r.id.toLowerCase().includes(lowerFilter) ||
             r.title.toLowerCase().includes(lowerFilter),
         ),
@@ -110,7 +111,7 @@ function TeleportBrowser({
             </button>
             {isExpanded && (
               <ul className="teleport-list">
-                {z.rooms.map((room: StaffWorldRoom) => (
+                {z.rooms.map((room) => (
                   <li key={room.id} className="teleport-item">
                     <span className="teleport-item-room">
                       <span className="teleport-item-id">{room.id}</span>
@@ -160,7 +161,7 @@ function MobTemplateBrowser({
       .map((z) => ({
         ...z,
         mobs: z.mobs.filter(
-          (m: StaffMobTemplate) =>
+          (m) =>
             m.id.toLowerCase().includes(lowerFilter) ||
             m.name.toLowerCase().includes(lowerFilter),
         ),
@@ -192,7 +193,7 @@ function MobTemplateBrowser({
             </button>
             {isExpanded && (
               <ul className="teleport-list">
-                {z.mobs.map((mob: StaffMobTemplate) => (
+                {z.mobs.map((mob) => (
                   <li key={mob.id} className="teleport-item">
                     <span className="teleport-item-room">
                       <span className="teleport-item-id">{mob.id}</span>
@@ -219,9 +220,7 @@ function MobTemplateBrowser({
   );
 }
 
-export function AdminPanel({ onCommand, onClose }: AdminPanelProps) {
-  const { staffWorldInfo: worldInfo, staffMobTemplates: mobTemplates } = useUIState();
-  const { whoPlayers } = useSocialState();
+export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPlayers }: AdminPanelProps) {
   const [activeAction, setActiveAction] = useState<AdminAction | null>(null);
   const [inputA, setInputA] = useState("");
   const [inputB, setInputB] = useState("");

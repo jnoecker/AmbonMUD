@@ -1,14 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { SpriteEntry } from "../../types";
-import { MAX_VISIBLE_EFFECTS } from "../../constants";
-import { titleCaseWords } from "../../utils";
-import { useCoreState } from "../../state/CoreContext";
-import { useCombatState } from "../../state/CombatContext";
-import { useInventoryState } from "../../state/InventoryContext";
-import { useSocialState } from "../../state/SocialContext";
-import { useWorldState } from "../../state/WorldContext";
-import { useQuestState } from "../../state/QuestContext";
-import { useUIState } from "../../state/UIContext";
+import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, DuelChallenge, DuelState, DungeonInfo, FactionStanding, GroupInfo, GuildInfo, LotteryInfo, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions";
@@ -40,6 +31,39 @@ function formatDrawingCountdown(ms: number): string {
 }
 
 interface CharacterPanelProps {
+  connected: boolean;
+  hasCharacterProfile: boolean;
+  canOpenEquipment: boolean;
+  character: CharacterInfo;
+  displayRace: string;
+  displayClassName: string;
+  vitals: Vitals;
+  statusVarLabels: StatusVarLabels;
+  xpValue: number;
+  xpMax: number;
+  xpText: string;
+  effects: StatusEffect[];
+  visibleEffects: StatusEffect[];
+  hiddenEffectsCount: number;
+  achievements: AchievementData;
+  quests: QuestEntry[];
+  questNotifications: QuestNotification[];
+  charStats: CharStats | null;
+  guildInfo: GuildInfo;
+  groupInfo: GroupInfo;
+  activeTitle: string | null;
+  spriteList: SpriteList;
+  currencies: CurrencyBalance[];
+  factions: FactionStanding[];
+  petState: PetState | null;
+  worldTime: WorldTime | null;
+  worldWeather: WorldWeather | null;
+  worldEvents: WorldEvent[];
+  lotteryInfo: LotteryInfo | null;
+  duelState: DuelState | null;
+  duelChallenge: DuelChallenge | null;
+  dungeonInfo: DungeonInfo | null;
+  prestigeInfo: PrestigeInfo | null;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -49,6 +73,39 @@ interface CharacterPanelProps {
 }
 
 export function CharacterPanel({
+  connected,
+  hasCharacterProfile,
+  canOpenEquipment,
+  character,
+  displayRace,
+  displayClassName,
+  vitals,
+  statusVarLabels,
+  xpValue,
+  xpMax,
+  xpText,
+  effects,
+  visibleEffects,
+  hiddenEffectsCount,
+  achievements,
+  quests,
+  questNotifications,
+  charStats,
+  guildInfo,
+  groupInfo,
+  activeTitle,
+  spriteList,
+  currencies,
+  factions,
+  petState,
+  worldTime,
+  worldWeather,
+  worldEvents,
+  lotteryInfo,
+  duelState,
+  duelChallenge,
+  dungeonInfo,
+  prestigeInfo,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -56,24 +113,6 @@ export function CharacterPanel({
   onCommand,
   onLogout,
 }: CharacterPanelProps) {
-  const { vitals, character, charStats, spriteList, statusVarLabels, prestigeInfo } = useCoreState();
-  const { effects, duelState, duelChallenge, petState } = useCombatState();
-  const { currencies } = useInventoryState();
-  const { guildInfo, groupInfo, whoPlayers, lotteryInfo } = useSocialState();
-  const { worldTime, worldWeather, worldEvents, dungeonInfo } = useWorldState();
-  const { quests, questNotifications, achievements } = useQuestState();
-  const { factions } = useUIState();
-  const connected = character.name !== "-";
-  const hasCharacterProfile = connected;
-  const canOpenEquipment = hasCharacterProfile;
-  const displayRace = character.race ? titleCaseWords(character.race) : "";
-  const displayClassName = character.className ? titleCaseWords(character.className) : "";
-  const xpText = vitals.xpToNextLevel === null ? "MAX" : `${vitals.xpIntoLevel.toLocaleString()} / ${vitals.xpToNextLevel.toLocaleString()}`;
-  const xpValue = vitals.xpToNextLevel === null ? 1 : vitals.xpIntoLevel;
-  const xpMax = vitals.xpToNextLevel === null ? 1 : Math.max(1, vitals.xpToNextLevel);
-  const visibleEffects = effects.slice(0, MAX_VISIBLE_EFFECTS);
-  const hiddenEffectsCount = Math.max(0, effects.length - visibleEffects.length);
-  const activeTitle = whoPlayers.find((p) => p.name === character.name)?.title ?? null;
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
   const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
   const [showSpriteSelector, setShowSpriteSelector] = useState(false);

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Application } from "pixi.js";
 import { SceneManager } from "./SceneManager";
+import { initVRAMBudget } from "./VRAMBudgetManager";
 
 export function PixiCanvas() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -16,12 +17,20 @@ export function PixiCanvas() {
     appRef.current = app;
 
     const init = async () => {
+      const isMobile = window.innerWidth < 1024;
+      const maxDpr = isMobile ? 2 : Infinity;
+      const resolution = Math.min(window.devicePixelRatio || 1, maxDpr);
+
       await app.init({
         background: 0x2f3446,
         resizeTo: container,
         antialias: true,
         autoDensity: true,
-        resolution: window.devicePixelRatio || 1,
+        resolution,
+        // PixiJS 8.16 GCSystem: aggressive on mobile per CANVAS-02
+        gcActive: true,
+        gcMaxUnusedTime: isMobile ? 5000 : 60000,
+        gcFrequency: isMobile ? 5000 : 30000,
       });
 
       if (destroyed) {
@@ -30,6 +39,7 @@ export function PixiCanvas() {
       }
 
       container.appendChild(app.canvas as HTMLCanvasElement);
+      initVRAMBudget(isMobile);
       const scene = new SceneManager(app);
       sceneRef.current = scene;
 
