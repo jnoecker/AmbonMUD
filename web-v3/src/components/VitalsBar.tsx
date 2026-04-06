@@ -69,6 +69,7 @@ interface VitalsBarProps {
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onCommand: (cmd: string) => void;
+  onReconnect?: () => void;
   audio: AudioEngine;
   /** Controlled command input value (lifted to App so the palette + canvas can prefill it). */
   inputValue: string;
@@ -165,6 +166,7 @@ export function VitalsBar({
   onOpenPanel,
   onCastSkill,
   onCommand,
+  onReconnect,
   audio,
   inputValue,
   onInputChange,
@@ -279,8 +281,8 @@ export function VitalsBar({
         </div>
       )}
 
-      {/* Mobile-only row: panels-menu toggle + connection status */}
-      <div className="vbar-actions">
+      {/* Mobile-only row: panels-menu toggle + connection status (also shown on desktop when disconnected) */}
+      <div className={`vbar-actions${!connected ? " vbar-actions-show" : ""}`}>
         {loggedIn && (
           <button
             type="button"
@@ -300,6 +302,12 @@ export function VitalsBar({
         <span className={`vbar-status${connected ? " vbar-status-on" : ""}`}>
           {connected ? (loggedIn ? "" : "Log in to play") : "Disconnected"}
         </span>
+
+        {!connected && onReconnect && (
+          <button type="button" className="vbar-btn vbar-btn-reconnect" onClick={onReconnect}>
+            Reconnect
+          </button>
+        )}
       </div>
 
       {/* Panel grid — always rendered; hidden by CSS on mobile unless expanded */}

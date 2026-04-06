@@ -409,6 +409,7 @@ function App() {
         onCommand={sendCommand}
         onOpenPanel={(panel) => state.setActivePopout(panel)}
         onCastSkill={handleCastSkill}
+        onReconnect={() => { intentionalDisconnectRef.current = true; reconnect(); }}
         audio={audio}
         inputValue={inputValue}
         onInputChange={(value) => {

@@ -12330,10 +12330,25 @@ html:has(.game-shell),
     display: grid;
   }
 
-  /* The mobile menu toggle and the empty status row aren't needed on desktop */
+  /* The mobile menu toggle and the empty status row aren't needed on desktop, except when disconnected */
   .vbar-actions {
     display: none;
   }
+
+  .vbar-actions.vbar-actions-show {
+    display: flex;
+  }
+}
+
+.vbar-btn-reconnect {
+  width: auto;
+  padding: 0 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, rgb(168 151 210 / 92%), rgb(140 174 201 / 86%));
+  color: var(--text-white);
+  border-color: rgb(216 197 232 / 60%);
 }
 
 /* Desktop: centered modal instead of bottom drawer */

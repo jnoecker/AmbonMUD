@@ -19,6 +19,7 @@ interface GameShellProps {
   onCommand: (cmd: string) => void;
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
+  onReconnect: () => void;
   audio: AudioEngine;
   inputValue: string;
   onInputChange: (value: string) => void;
@@ -42,6 +43,7 @@ export function GameShell({
   onCommand,
   onOpenPanel,
   onCastSkill,
+  onReconnect,
   audio,
   inputValue,
   onInputChange,
@@ -94,6 +96,7 @@ export function GameShell({
         onOpenPanel={onOpenPanel}
         onCastSkill={onCastSkill}
         onCommand={onCommand}
+        onReconnect={onReconnect}
         audio={audio}
         inputValue={inputValue}
         onInputChange={onInputChange}
