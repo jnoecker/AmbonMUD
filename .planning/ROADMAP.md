@@ -74,9 +74,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Bottom sheet with pointer-driven drag gestures, three snap points, tab bar with overflow, CSS-only desktop side panel
-- [ ] 03-02-PLAN.md -- HUD overlay with HP/mana/XP bars, level/class badge, tap-to-open-sheet integration
-- [ ] 03-03-PLAN.md -- PWA manifest enhancement, service worker cache upgrade, exponential backoff WebSocket reconnection
+- [x] 03-01-PLAN.md -- Bottom sheet with pointer-driven drag gestures, three snap points, tab bar with overflow, CSS-only desktop side panel
+- [x] 03-02-PLAN.md -- HUD overlay with HP/mana/XP bars, level/class badge, tap-to-open-sheet integration
+- [x] 03-03-PLAN.md -- PWA manifest enhancement, service worker cache upgrade, exponential backoff WebSocket reconnection
 
 **UI hint**: yes
 
