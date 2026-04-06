@@ -36,8 +36,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Create 7 domain context files, GameStateProvider composition root, and GameStateBridgeSync
-- [ ] 01-02-PLAN.md -- Big-bang migration: refactor applyGmcpPackage, create AppShell, slim App.tsx, migrate all panels to useContext
+- [x] 01-01-PLAN.md -- Create 7 domain context files, GameStateProvider composition root, and GameStateBridgeSync
+- [x] 01-02-PLAN.md -- Big-bang migration: refactor applyGmcpPackage, create AppShell, slim App.tsx, migrate all panels to useContext
 
 **UI hint**: yes
 
