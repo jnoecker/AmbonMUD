@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import type { PopoutPanel, SkillSummary, Vitals } from "../types";
+import type { AudioEngine } from "../hooks/useAudioEngine";
+import { AudioControls } from "./AudioControls";
 import { percent } from "../utils";
 import {
   CharacterAvatarIcon,
@@ -62,6 +64,7 @@ interface VitalsBarProps {
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onCommand: (cmd: string) => void;
+  audio: AudioEngine;
   /** Controlled command input value (lifted to App so the palette + canvas can prefill it). */
   inputValue: string;
   onInputChange: (value: string) => void;
@@ -112,6 +115,7 @@ export function VitalsBar({
   onOpenPanel,
   onCastSkill,
   onCommand,
+  audio,
   inputValue,
   onInputChange,
   showInput,
@@ -161,6 +165,7 @@ export function VitalsBar({
             <span className="vbar-gold-coin" />
             <span className="vbar-gold-text">{vitals.gold.toLocaleString()}</span>
           </div>
+          <AudioControls audio={audio} />
         </div>
       )}
 

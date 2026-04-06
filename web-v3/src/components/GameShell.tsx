@@ -3,6 +3,7 @@ import { PixiCanvas } from "../canvas/PixiCanvas";
 import { CombatLog } from "./CombatLog";
 import { VitalsBar } from "./VitalsBar";
 import type { CombatLogMessage, CombatTarget, PopoutPanel, SkillSummary, Vitals } from "../types";
+import type { AudioEngine } from "../hooks/useAudioEngine";
 
 interface GameShellProps {
   connected: boolean;
@@ -15,6 +16,7 @@ interface GameShellProps {
   onCommand: (cmd: string) => void;
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
+  audio: AudioEngine;
   inputValue: string;
   onInputChange: (value: string) => void;
   showInput: boolean;
@@ -34,6 +36,7 @@ export function GameShell({
   onCommand,
   onOpenPanel,
   onCastSkill,
+  audio,
   inputValue,
   onInputChange,
   showInput,
@@ -82,6 +85,7 @@ export function GameShell({
         onOpenPanel={onOpenPanel}
         onCastSkill={onCastSkill}
         onCommand={onCommand}
+        audio={audio}
         inputValue={inputValue}
         onInputChange={onInputChange}
         showInput={showInput}

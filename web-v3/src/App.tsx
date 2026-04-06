@@ -401,6 +401,7 @@ function App() {
         onCommand={sendCommand}
         onOpenPanel={(panel) => state.setActivePopout(panel)}
         onCastSkill={handleCastSkill}
+        audio={audio}
         inputValue={inputValue}
         onInputChange={(value) => {
           setInputValue(value);
