@@ -7049,6 +7049,104 @@ body {
   }
 }
 
+/* ── HUD Overlay: compact vitals display ───────────────── */
+.hud-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  background: linear-gradient(180deg, rgb(42 49 73 / 85%) 0%, rgb(42 49 73 / 70%) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  transition: background 150ms;
+}
+
+.hud-overlay:hover {
+  background: linear-gradient(180deg, rgb(42 49 73 / 92%) 0%, rgb(42 49 73 / 78%) 100%);
+}
+
+.hud-badge {
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary, #e8e0f0);
+  letter-spacing: 0.5px;
+  line-height: 1;
+  padding-bottom: 2px;
+}
+
+.hud-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hud-bar {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(24 22 35 / 28%);
+  overflow: hidden;
+}
+
+.hud-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 320ms var(--ease-out-soft);
+  min-width: 0;
+}
+
+.hud-bar-fill--hp {
+  background: linear-gradient(90deg, var(--color-hp-light), var(--color-hp-dark));
+}
+
+.hud-bar-fill--mana {
+  background: linear-gradient(90deg, var(--color-mana-light), var(--color-mana-dark));
+}
+
+.hud-bar-fill--xp {
+  background: linear-gradient(90deg, var(--color-xp-light), var(--color-xp-dark));
+}
+
+.hud-bar-label {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 9px;
+  font-weight: 500;
+  color: rgb(232 224 240 / 70%);
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 60%);
+  pointer-events: none;
+}
+
+/* HUD: desktop centered overlay */
+@media (min-width: 1024px) {
+  .hud-overlay {
+    position: absolute;
+    top: var(--safe-top, 0px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: clamp(280px, 30vw, 400px);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    z-index: 40;
+  }
+}
+
+/* HUD: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .hud-bar-fill {
+    transition: none;
+  }
+}
+
 /* ── Bottom Sheet: desktop side panel (CSS only, no JS) ── */
 @media (min-width: 1024px) {
   .bottom-sheet {

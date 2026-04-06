@@ -5,6 +5,7 @@ import { Terminal } from "@xterm/xterm";
 import { ActionBar } from "./components/ActionBar";
 import { BottomSheet } from "./components/BottomSheet";
 import type { BottomSheetHandle } from "./components/BottomSheet";
+import { HudOverlay } from "./components/HudOverlay";
 import { LayoutShell } from "./components/LayoutShell";
 import { AudioControls } from "./components/AudioControls";
 import { PopoutLayer } from "./components/PopoutLayer";
@@ -1004,6 +1005,11 @@ function App() {
     [sendCommand],
   );
 
+  const handleHudTap = useCallback(() => {
+    setActiveBottomPanel("character");
+    bottomSheetRef.current?.snapTo("half");
+  }, []);
+
   const handleCastSkill = useCallback(
     (skillId: string, cooldownMs: number) => {
       const skill = skills.find((s) => s.id === skillId);
@@ -1140,6 +1146,7 @@ function App() {
           </button>
         </div>
       </header>
+      <HudOverlay vitals={vitals} character={character} onTap={handleHudTap} />
       </div>
 
       <div className="layout-shell__canvas" onClick={() => bottomSheetRef.current?.collapse()}>
