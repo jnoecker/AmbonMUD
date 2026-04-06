@@ -3,6 +3,8 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { ActionBar } from "./components/ActionBar";
+import { BottomSheet } from "./components/BottomSheet";
+import type { BottomSheetHandle } from "./components/BottomSheet";
 import { LayoutShell } from "./components/LayoutShell";
 import { AudioControls } from "./components/AudioControls";
 import { PopoutLayer } from "./components/PopoutLayer";
@@ -11,6 +13,7 @@ import { TrainerPanel } from "./components/TrainerPanel";
 import { TradePanel } from "./components/TradePanel";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
+import { CombatPanel } from "./components/panels/CombatPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
 import { QuestPanel } from "./components/panels/QuestPanel";
 import { InventoryPanel } from "./components/panels/InventoryPanel";
@@ -178,7 +181,9 @@ function App() {
   const composerInputRef = useRef<HTMLInputElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const bottomSheetRef = useRef<BottomSheetHandle | null>(null);
 
+  const [activeBottomPanel, setActiveBottomPanel] = useState("character");
   const [activeChatChannel, setActiveChatChannel] = useState<ChatChannel>("say");
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -1079,7 +1084,7 @@ function App() {
       <div className="ambient-orb ambient-orb-a" aria-hidden="true" />
       <div className="ambient-orb ambient-orb-b" aria-hidden="true" />
 
-      <div className="layout-shell__hud">
+      <div className="layout-shell__hud" onClick={() => bottomSheetRef.current?.collapse()}>
       <header className="top-banner">
         <div>
           <h1 className="top-banner-title">AmbonMUD</h1>
@@ -1137,7 +1142,7 @@ function App() {
       </header>
       </div>
 
-      <div className="layout-shell__canvas">
+      <div className="layout-shell__canvas" onClick={() => bottomSheetRef.current?.collapse()}>
         <PlayPanel
           preLogin={preLogin}
           terminalOverlayRef={terminalOverlayRef}
@@ -1186,6 +1191,220 @@ function App() {
           combatTarget={combatTarget}
           onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
         />
+        <BottomSheet
+          ref={bottomSheetRef}
+          activePanel={activeBottomPanel}
+          onPanelChange={setActiveBottomPanel}
+        >
+          {activeBottomPanel === "character" && (
+            <CharacterPanel
+              connected={connected}
+              hasCharacterProfile={hasCharacterProfile}
+              canOpenEquipment={canOpenEquipment}
+              character={character}
+              displayRace={displayRace}
+              displayClassName={displayClassName}
+              vitals={vitals}
+              statusVarLabels={statusVarLabels}
+              xpValue={xpValue}
+              xpMax={xpMax}
+              xpText={xpText}
+              effects={effects}
+              visibleEffects={visibleEffects}
+              hiddenEffectsCount={hiddenEffectsCount}
+              achievements={achievements}
+              quests={quests}
+              questNotifications={questNotifications}
+              charStats={charStats}
+              guildInfo={guildInfo}
+              groupInfo={groupInfo}
+              activeTitle={whoPlayers.find((p) => p.name === character.name)?.title ?? null}
+              spriteList={spriteList}
+              currencies={currencies}
+              factions={factions}
+              petState={petState}
+              worldTime={worldTime}
+              worldWeather={worldWeather}
+              worldEvents={worldEvents}
+              lotteryInfo={lotteryInfo}
+              duelState={duelState}
+              duelChallenge={duelChallenge}
+              dungeonInfo={dungeonInfo}
+              prestigeInfo={prestigeInfo}
+              onDismissQuestNotification={(id) => {
+                setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
+              }}
+              onAbandonQuest={(questName) => {
+                sendCommand(`quest abandon ${questName}`, true);
+                focusComposer();
+              }}
+              onOpenInventory={() => setActiveBottomPanel("inventory")}
+              onOpenEquipment={() => setActiveBottomPanel("equipment")}
+              onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+              onLogout={() => {
+                try {
+                  const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+                  delete saved[character.name];
+                  localStorage.setItem("ambonmud_auth_tokens", JSON.stringify(saved));
+                } catch { /* ignore */ }
+                resumeTokenRef.current = null;
+                sendGmcp("Session.Logout", {});
+              }}
+            />
+          )}
+          {activeBottomPanel === "inventory" && (
+            <InventoryPanel
+              connected={connected}
+              hasCharacterProfile={hasCharacterProfile}
+              inventory={inventory}
+              players={players}
+              canManageItems={connected && hasCharacterProfile}
+              roomFeatures={roomFeatures}
+              containerContents={containerContents}
+              onWearItem={(itemName) => { sendCommand(`wear ${itemName}`, true); focusComposer(); }}
+              onDropItem={(itemName) => { sendCommand(`drop ${itemName}`, true); focusComposer(); }}
+              onGiveItem={(itemKeyword, playerName) => { sendCommand(`give ${itemKeyword} ${playerName}`, true); focusComposer(); }}
+              onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+            />
+          )}
+          {activeBottomPanel === "combat" && (
+            <CombatPanel
+              connected={connected}
+              hasRoomDetails={room.id !== null}
+              combatTarget={combatTarget}
+              vitals={vitals}
+              skills={skills}
+              mobs={mobs}
+              onCastSkill={handleCastSkill}
+              onRefreshSkills={() => sendCommand("spells", true)}
+              onFlee={() => { sendCommand("flee", true); focusComposer(); }}
+              onAttackMob={(mobName) => { sendCommand(`kill ${mobName}`, true); focusComposer(); }}
+            />
+          )}
+          {activeBottomPanel === "quests" && (
+            <QuestPanel
+              connected={connected}
+              hasCharacterProfile={hasCharacterProfile}
+              quests={quests}
+              questsAvailable={questsAvailable}
+              questNotifications={questNotifications}
+              dailyQuests={dailyQuests}
+              weeklyQuests={weeklyQuests}
+              autoQuest={autoQuest}
+              globalQuest={globalQuest}
+              onDismissQuestNotification={(id) => {
+                setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
+              }}
+              onAbandonQuest={(questName) => { sendCommand(`quest abandon ${questName}`, true); focusComposer(); }}
+              onAcceptQuest={(questName) => { sendCommand(`accept ${questName}`, true); focusComposer(); }}
+              onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+            />
+          )}
+          {activeBottomPanel === "chat" && (
+            <ChatPanel
+              connected={connected}
+              canChat={connected && hasCharacterProfile}
+              playerName={character.name}
+              activeChannel={activeChatChannel}
+              chatByChannel={chatByChannel}
+              emotePresets={emotePresets}
+              whoPlayers={whoPlayers}
+              groupInfo={groupInfo}
+              pendingGroupInvite={pendingGroupInvite}
+              guildInfo={guildInfo}
+              pendingGuildInvite={pendingGuildInvite}
+              guildMembers={guildMembers}
+              guildHall={guildHall}
+              friends={friends}
+              friendNotifications={friendNotifications}
+              onChannelChange={setActiveChatChannel}
+              onRequestWho={() => { sendCommand("who", true); focusComposer(); }}
+              onSendMessage={sendChatMessage}
+              onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+            />
+          )}
+          {activeBottomPanel === "equipment" && (
+            <EquipmentPanel
+              connected={connected}
+              hasCharacterProfile={hasCharacterProfile}
+              character={character}
+              equipment={equipment}
+              slotDefs={equipmentSlotDefs}
+              canManageItems={connected && hasCharacterProfile}
+              onRemoveItem={(slot) => { sendCommand(`remove ${slot}`, true); focusComposer(); }}
+            />
+          )}
+          {activeBottomPanel === "spellbook" && (
+            <SpellbookPanel
+              skills={skills}
+              quickbarSlotIds={quickbar.slotIds}
+              playerClass={displayClassName}
+              playerLevel={vitals.level ?? 1}
+              availableSkillPoints={trainer?.availableSkillPoints}
+              onShowSkillInfo={(skill) => {
+                const cd = skill.cooldownMs > 0 ? `${skill.cooldownMs / 1000}s cooldown` : "No cooldown";
+                setToast(`${skill.name} — ${skill.manaCost} MP, ${cd}, ${skill.targetType.toLowerCase()} target`);
+              }}
+              onAssignSlot={quickbar.assign}
+            />
+          )}
+          {activeBottomPanel === "crafting" && (
+            <CraftingPanel
+              connected={connected}
+              hasCharacterProfile={hasCharacterProfile}
+              skills={craftingSkills}
+              recipes={craftingRecipes}
+              nodes={craftingNodes}
+              onGather={(keyword) => sendCommand(`gather ${keyword}`, true)}
+              onCraft={(recipeKeyword) => sendCommand(`craft ${recipeKeyword}`, true)}
+              onRequestRecipes={() => sendCommand("recipes", true)}
+              onLoadSkills={() => sendCommand("craftskills", true)}
+            />
+          )}
+          {activeBottomPanel === "bank" && (
+            <BankPanel
+              bankState={bankState}
+              onCommand={(cmd: string) => { sendCommand(cmd, true); focusComposer(); }}
+            />
+          )}
+          {activeBottomPanel === "auction" && (
+            <AuctionPanel
+              listings={auctionListings}
+              onCommand={(cmd: string) => { sendCommand(cmd, true); focusComposer(); }}
+            />
+          )}
+          {activeBottomPanel === "mail" && (
+            <MailPanel
+              connected={connected}
+              hasCharacterProfile={hasCharacterProfile}
+              inbox={mailInbox}
+              openMessage={mailMessage}
+              onReadMessage={(index) => { sendCommand(`mail read ${index}`, true); }}
+              onDeleteMessage={(index) => { sendCommand(`mail delete ${index}`, true); }}
+              onCompose={(recipient, body) => {
+                sendCommand(`mail send ${recipient}`, false);
+                for (const line of body.split("\n")) { sendCommand(line, false); }
+                sendCommand(".", false);
+              }}
+              onClearMessage={() => setMailMessage(null)}
+            />
+          )}
+          {activeBottomPanel === "housing" && (
+            <HousingPanel
+              connected={connected}
+              hasCharacterProfile={hasCharacterProfile}
+              housing={housing}
+              room={room}
+              onSendCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+            />
+          )}
+          {activeBottomPanel === "leaderboard" && (
+            <LeaderboardPanel
+              leaderboard={leaderboard}
+              onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+            />
+          )}
+        </BottomSheet>
       </div>
 
       <PopoutLayer

@@ -6893,6 +6893,187 @@ body {
   }
 }
 
+/* ── Bottom Sheet: mobile pull-up drawer ────────────────── */
+.bottom-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: 0 -4px 20px rgb(0 0 0 / 30%);
+  transform: translateY(var(--sheet-translate-y, 85%));
+  transition: transform 300ms var(--ease-out-soft);
+  will-change: transform;
+  z-index: 50;
+}
+
+.bottom-sheet--dragging {
+  transition: none;
+}
+
+.bottom-sheet__drag-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0 4px;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.bottom-sheet__drag-handle::after {
+  content: "";
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(140 154 193 / 40%);
+}
+
+.bottom-sheet__content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  padding-bottom: var(--safe-bottom);
+}
+
+/* ── Tab Bar ────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid rgb(140 154 193 / 12%);
+  flex-shrink: 0;
+}
+
+.tab-bar__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 6px 4px;
+  border: none;
+  background: none;
+  color: rgb(140 154 193 / 60%);
+  font-size: 10px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 150ms, background 150ms;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.tab-bar__tab:hover {
+  background: rgb(140 154 193 / 8%);
+  color: rgb(140 154 193 / 80%);
+}
+
+.tab-bar__tab--active {
+  color: var(--color-primary-lavender);
+  background: rgb(168 151 210 / 10%);
+}
+
+.tab-bar__tab svg {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 2px;
+}
+
+.tab-bar__overflow-container {
+  position: relative;
+  flex: 1;
+}
+
+.tab-bar__overflow-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 59;
+}
+
+.tab-bar__overflow {
+  position: absolute;
+  bottom: 100%;
+  right: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: var(--space-2);
+  background: var(--bg-elevated);
+  border: 1px solid rgb(140 154 193 / 16%);
+  border-radius: var(--radius-md);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 40%);
+  z-index: 60;
+}
+
+.tab-bar__overflow-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  color: rgb(140 154 193 / 70%);
+  font-size: 9px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.tab-bar__overflow-item:hover {
+  background: rgb(140 154 193 / 12%);
+  color: var(--text-primary);
+}
+
+.tab-bar__overflow-item svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Bottom Sheet: reduced motion ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .bottom-sheet {
+    transition: none;
+  }
+
+  .tab-bar__tab {
+    transition: none;
+  }
+}
+
+/* ── Bottom Sheet: desktop side panel (CSS only, no JS) ── */
+@media (min-width: 1024px) {
+  .bottom-sheet {
+    position: absolute;
+    bottom: auto;
+    top: 0;
+    right: 0;
+    width: min(380px, 30vw);
+    height: 100%;
+    transform: none !important;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    box-shadow: -4px 0 20px rgb(0 0 0 / 30%);
+    transition: none;
+  }
+
+  .bottom-sheet__drag-handle {
+    display: none;
+  }
+
+  .tab-bar__overflow {
+    bottom: auto;
+    top: 100%;
+  }
+}
+
 /* Hide terminal overlay and combat log on mobile per D-10 */
 @media (max-width: 767px) {
   .terminal-overlay,
