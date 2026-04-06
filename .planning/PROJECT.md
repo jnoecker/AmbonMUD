@@ -109,4 +109,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 — Phase 2 (Layout Shell & Canvas Safety) complete: Portrait-first CSS Grid layout shell with 3 zones (canvas/hud/interaction), breakpoints migrated to 768/1024, viewport-fit=cover for safe areas, PixiJS DPR capped at 2x on mobile, 5s texture GC, VRAM budget manager, scene transition texture cleanup*
+*Last updated: 2026-04-06 — Phase 3 (Bottom Sheet, HUD, PWA Foundation) complete: Pointer-driven bottom sheet with 3 snap points and CSS-only desktop side panel, TabBar with 5 pinned + 8 overflow tabs, HUD overlay with HP/mana/XP bars and level/class badge, PWA manifest enhanced for installability, service worker v2 cache, exponential backoff WebSocket reconnection*
