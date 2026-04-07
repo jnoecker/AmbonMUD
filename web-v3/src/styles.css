@@ -11720,3 +11720,694 @@ body {
 .bank-withdraw-btn:hover {
   background: linear-gradient(135deg, rgb(152 179 133 / 72%), rgb(123 160 102 / 68%));
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   MOBILE-FIRST REDESIGN — game-shell, vbar, drawer
+   Added in v2 redesign. Replaces app-shell + dashboard layout.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Reset body for full-viewport canvas — override desktop wrapper styles */
+body:has(.game-shell) {
+  overflow: hidden;
+  background: #141828;
+}
+
+html:has(.game-shell),
+#root:has(.game-shell) {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Shell container ───────────────────────────────────── */
+.game-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #141828;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow: hidden;
+  /* iOS safe areas */
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.game-canvas-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.game-canvas-layer canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Staff-only floating action buttons — top-right corner, below the minimap */
+.staff-fab {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0) + 220px);
+  right: calc(env(safe-area-inset-right, 0) + 12px);
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.staff-fab-btn {
+  appearance: none;
+  border: 1px solid rgb(212 184 92 / 50%);
+  background: linear-gradient(135deg, rgb(96 81 50 / 92%), rgb(76 64 36 / 88%));
+  color: var(--color-gold-bright);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgb(8 10 18 / 40%);
+  transition: transform 0.12s var(--ease-out-soft), box-shadow 0.15s;
+}
+
+.staff-fab-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgb(212 184 92 / 28%);
+}
+
+.staff-fab-btn:active {
+  transform: scale(0.96);
+}
+
+.staff-fab-invis {
+  font-size: 1rem;
+  padding: 4px 10px;
+  letter-spacing: 0;
+}
+
+.staff-fab-invis-active {
+  background: linear-gradient(135deg, rgb(168 130 198 / 80%), rgb(140 110 168 / 76%));
+  border-color: rgb(216 197 232 / 60%);
+  color: var(--text-bright);
+}
+
+/* Combat target HUD (top-center) */
+.game-target-hud {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11;
+  background: linear-gradient(180deg, rgb(80 30 40 / 90%), rgb(60 22 32 / 84%));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgb(232 160 160 / 50%);
+  border-radius: var(--radius-md);
+  padding: 6px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 14px rgb(8 10 18 / 40%);
+  pointer-events: none;
+  min-width: 140px;
+}
+
+.game-target-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  text-shadow: 0 1px 4px rgb(0 0 0 / 60%);
+}
+
+.game-target-hp-track {
+  width: 100%;
+  height: 5px;
+  background: rgb(0 0 0 / 50%);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.game-target-hp-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #d4888a, #e8a0a0);
+  transition: width 0.25s var(--ease-out-soft);
+}
+
+/* ── Combat log positioning override for new shell ───── */
+.game-shell .combat-log-wrap {
+  position: absolute;
+  left: 12px;
+  bottom: 200px; /* sits above the vbar */
+  right: auto;
+  z-index: 9;
+  max-width: min(420px, calc(100vw - 24px));
+}
+
+/* ── Vitals bar (bottom-anchored) ─────────────────────── */
+.vbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: linear-gradient(180deg, rgb(34 41 60 / 86%), rgb(20 24 40 / 96%));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line-soft);
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 -8px 24px rgb(8 10 18 / 40%);
+}
+
+.vbar-vitals {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vbar-vital {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vbar-vital-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.vbar-vital-track {
+  position: relative;
+  height: 6px;
+  background: rgb(0 0 0 / 40%);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--line-faint);
+}
+
+.vbar-vital-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-radius: 3px;
+  transition: width 0.3s var(--ease-out-soft);
+}
+
+.vbar-vital-hp {
+  background: linear-gradient(90deg, var(--color-hp-dark), var(--color-hp-light));
+  box-shadow: 0 0 8px rgb(158 191 117 / 36%);
+}
+
+.vbar-vital-mp {
+  background: linear-gradient(90deg, var(--color-mana-dark), var(--color-mana-light));
+  box-shadow: 0 0 8px rgb(127 182 207 / 36%);
+}
+
+.vbar-vital-text {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.vbar-gold {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgb(212 184 92 / 18%), rgb(189 168 115 / 12%));
+  border: 1px solid rgb(212 184 92 / 36%);
+  border-radius: 999px;
+}
+
+.vbar-gold-coin {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--color-gold-coin-light), var(--color-gold-coin-dark));
+  box-shadow: 0 0 6px rgb(212 184 92 / 60%);
+}
+
+.vbar-gold-text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skill quickbar (horizontal scroll) */
+.vbar-skills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px 0;
+  scroll-snap-type: x mandatory;
+}
+
+.vbar-skills::-webkit-scrollbar {
+  display: none;
+}
+
+.vbar-skill {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--line-soft);
+  background: linear-gradient(135deg, rgb(60 70 100 / 92%), rgb(46 56 80 / 88%));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s var(--ease-out-soft), border-color 0.15s;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.vbar-skill.skill-attack { border-color: rgb(212 136 138 / 60%); }
+.vbar-skill.skill-aoe { border-color: rgb(212 152 90 / 60%); }
+.vbar-skill.skill-debuff { border-color: rgb(168 130 198 / 60%); }
+.vbar-skill.skill-heal { border-color: rgb(138 191 138 / 60%); }
+.vbar-skill.skill-buff { border-color: rgb(108 168 178 / 60%); }
+.vbar-skill.skill-self { border-color: rgb(140 174 201 / 60%); }
+
+.vbar-skill:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.vbar-skill:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.vbar-skill-empty {
+  border-style: dashed;
+  background: rgb(40 48 70 / 50%);
+  cursor: default;
+}
+
+.vbar-skill.drag-over {
+  border-color: rgb(216 197 232 / 80%);
+  box-shadow: 0 0 0 2px rgb(216 197 232 / 30%), 0 4px 14px rgb(168 151 210 / 38%);
+}
+
+.vbar-skill-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vbar-skill-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--text-bright);
+}
+
+.vbar-skill-sweep {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgb(8 10 18 / 60%);
+  pointer-events: none;
+  transition: height 0.25s linear;
+}
+
+.vbar-skill-key {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
+  font-family: var(--font-mono);
+}
+
+/* Bottom action row: panel toggle, status, input toggle */
+.vbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vbar-btn {
+  appearance: none;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(135deg, rgb(77 88 121 / 90%), rgb(62 74 108 / 84%));
+  color: var(--text-bright);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.vbar-btn:active {
+  transform: scale(0.94);
+}
+
+.vbar-btn-active {
+  background: linear-gradient(135deg, rgb(168 151 210 / 90%), rgb(140 174 201 / 84%));
+  border-color: rgb(216 197 232 / 60%);
+}
+
+.vbar-icon {
+  width: 22px;
+  height: 22px;
+  color: currentcolor;
+}
+
+.vbar-status {
+  flex: 1;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.vbar-status-on {
+  color: var(--color-status-online);
+}
+
+/* Expandable command input */
+.vbar-input-row {
+  display: flex;
+  gap: 8px;
+  animation: vbar-slide-up 0.2s var(--ease-out-soft);
+}
+
+.vbar-input {
+  flex: 1;
+  appearance: none;
+  background: rgb(20 24 40 / 90%);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.vbar-input:focus {
+  border-color: rgb(168 151 210 / 70%);
+  box-shadow: 0 0 0 3px rgb(168 151 210 / 18%);
+}
+
+.vbar-input-send {
+  appearance: none;
+  border: none;
+  background: linear-gradient(135deg, rgb(168 151 210 / 92%), rgb(140 174 201 / 86%));
+  color: var(--text-white);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vbar-input-send:active {
+  transform: scale(0.94);
+}
+
+/* Panel grid — hidden by default on mobile; revealed when -open class is added */
+.vbar-panel-grid {
+  display: none;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 8px 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.vbar-panel-grid-open {
+  display: grid;
+  animation: vbar-slide-up 0.2s var(--ease-out-soft);
+}
+
+.vbar-panel-btn {
+  appearance: none;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(135deg, rgb(60 70 100 / 88%), rgb(46 56 80 / 84%));
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.12s, background 0.15s;
+  min-height: 70px;
+}
+
+.vbar-panel-btn:active {
+  transform: scale(0.95);
+}
+
+.vbar-panel-btn-active {
+  background: linear-gradient(135deg, rgb(168 151 210 / 92%), rgb(140 174 201 / 86%));
+  border-color: rgb(216 197 232 / 60%);
+}
+
+.vbar-panel-btn .vbar-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.vbar-panel-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@keyframes vbar-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Drawer (bottom sheet) ─────────────────────────────── */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(8 10 18 / 0%);
+  z-index: 100;
+  pointer-events: none;
+  transition: background 0.3s var(--ease-out-soft);
+}
+
+.drawer-backdrop-visible {
+  background: rgb(8 10 18 / 50%);
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.drawer-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 101;
+  background: linear-gradient(180deg, rgb(43 53 79 / 98%), rgb(34 41 64 / 98%));
+  border-top: 1px solid var(--line-soft);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  height: var(--drawer-height, 60vh);
+  transition: var(--drawer-transition, none);
+}
+
+.drawer-handle-zone {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 6px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.drawer-handle-zone:active {
+  cursor: grabbing;
+}
+
+.drawer-handle {
+  width: 40px;
+  height: 4px;
+  background: rgb(216 222 241 / 36%);
+  border-radius: 2px;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 16px 12px;
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.drawer-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin: 0;
+}
+
+.drawer-close {
+  appearance: none;
+  border: 1px solid var(--line-soft);
+  background: rgb(60 70 100 / 80%);
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.drawer-close:active {
+  transform: scale(0.94);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 16px 20px;
+}
+
+/* Tablet+ adjustments */
+@media (min-width: 600px) {
+  .vbar {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .vbar-panel-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Desktop: panel grid is always visible, mobile-only chrome is hidden */
+@media (min-width: 768px) {
+  .vbar-panel-grid {
+    display: grid;
+  }
+
+  /* The mobile menu toggle and the empty status row aren't needed on desktop, except when disconnected */
+  .vbar-actions {
+    display: none;
+  }
+
+  .vbar-actions.vbar-actions-show {
+    display: flex;
+  }
+}
+
+.vbar-btn-reconnect {
+  width: auto;
+  padding: 0 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, rgb(168 151 210 / 92%), rgb(140 174 201 / 86%));
+  color: var(--text-white);
+  border-color: rgb(216 197 232 / 60%);
+}
+
+/* Desktop: centered modal instead of bottom drawer */
+@media (min-width: 768px) {
+  .drawer-sheet {
+    /* Override mobile bottom-anchor with vertical-centered modal */
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    width: min(720px, 92vw);
+    max-height: 82vh;
+    /* Ignore the drag-resize height var on desktop — let content size it */
+    height: auto;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-xl);
+    box-shadow:
+      0 24px 60px rgb(8 10 18 / 60%),
+      0 8px 24px rgb(8 10 18 / 40%);
+    transition: opacity 0.2s var(--ease-out-soft);
+    padding-bottom: 0;
+  }
+
+  /* Drag handle is meaningless on desktop — hide it */
+  .drawer-sheet .drawer-handle-zone {
+    display: none;
+  }
+
+  .drawer-sheet .drawer-header {
+    padding-top: 16px;
+  }
+
+  .drawer-sheet .drawer-body {
+    /* Body grows to fill the modal but never overflows */
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vbar-panel-grid {
+    grid-template-columns: repeat(13, 1fr);
+  }
+
+  .drawer-sheet {
+    width: min(840px, 80vw);
+    max-height: 80vh;
+  }
+}
+
+/* Hide legacy desktop chrome that no longer renders */
+.app-shell,
+.top-banner,
+.dashboard,
+.terminal-hidden,
+.terminal-card,
+.panel-play,
+.terminal-overlay,
+.terminal-primary {
+  display: none !important;
+}

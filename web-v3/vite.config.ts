@@ -13,7 +13,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           pixi: ["pixi.js"],
-          xterm: ["@xterm/xterm", "@xterm/addon-fit"],
         },
       },
     },
