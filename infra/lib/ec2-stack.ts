@@ -324,7 +324,12 @@ export class Ec2Stack extends Stack {
             'grep -E "^\\s*-\\s*world/" "$CONFIG" | sed "s/.*- *//" | while read -r entry; do',
             '  filename="${entry#world/}"',
             '  echo "Fetching zone: $filename"',
-            '  curl -fsSL -o "/app/data/world/$filename" "$BASE_URL/$filename"',
+            '  # --retry-all-errors is required for 404 retries: plain --retry only',
+            '  # covers 5xx + connection errors. Cloudflare R2 edge POPs cache 404',
+            '  # responses independently and can serve stale 404s for several minutes',
+            '  # after an upload, so we spin in-place rather than failing the unit.',
+            '  curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors \\',
+            '    -o "/app/data/world/$filename" "$BASE_URL/$filename"',
             'done',
             'echo "World zones fetched to /app/data/world/"',
             'SCRIPT_END',
@@ -374,8 +379,12 @@ export class Ec2Stack extends Stack {
       // R2 bucket. Must run before generate-htpasswd (which reads admin token
       // from the overlay) and before fetch-world-zones (which reads the
       // ambonmud.world.resources list from the overlay).
+      // --retry-all-errors lets curl retry 404s, which Cloudflare R2 edge POPs
+      // can cache for several minutes after a fresh upload.
       ...(loreConfigUrl
-        ? [`ExecStartPre=/usr/bin/curl -fsSL -o /app/data/application-local.yaml ${loreConfigUrl}`]
+        ? [
+            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -o /app/data/application-local.yaml ${loreConfigUrl}`,
+          ]
         : []),
       // Fetch world zone YAML files listed in the lore config's ambonmud.world.resources.
       // The helper script parses filenames from the config overlay, then curls each
