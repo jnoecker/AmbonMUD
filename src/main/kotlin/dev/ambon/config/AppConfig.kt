@@ -1318,7 +1318,7 @@ data class EngineConfig(
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
     /** How long to hold a disconnected player's session before full logout (ms). 0 disables. */
-    val sessionResumeGracePeriodMs: Long = 90_000,
+    val sessionResumeGracePeriodMs: Long = 600_000,
     val leaderboard: LeaderboardConfig = LeaderboardConfig(),
     val skillPoints: SkillPointsConfig = SkillPointsConfig(),
     val multiclass: MulticlassConfig = MulticlassConfig(),

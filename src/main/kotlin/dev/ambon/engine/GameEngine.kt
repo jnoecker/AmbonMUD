@@ -101,7 +101,7 @@ import java.time.Clock
 
 private val log = KotlinLogging.logger {}
 
-private const val AUTH_TOKEN_EXPIRY_DAYS = 60
+private const val AUTH_TOKEN_EXPIRY_DAYS = 365
 private const val THREAT_CLEANUP_INTERVAL_MS = 60_000L
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -239,8 +239,13 @@ class GameEngine(
                 markStatsDirty(sid)
                 broadcastServerWho()
                 issueResumeToken(sid)
-                issueAuthToken(sid)
             },
+            // Only password/create logins need a fresh auth token — the client
+            // doesn't have one yet. Auto-relog via Session.Authenticate and
+            // Session.Resume reuse the token the client already presented, so
+            // we avoid rotating on those paths (the rotation was racing flaky
+            // mobile connections and leaving localStorage with a stale token).
+            onFreshPasswordLogin = { sid -> issueAuthToken(sid) },
         )
     }
 
@@ -385,7 +390,7 @@ class GameEngine(
             trainerRegistry = trainerRegistry,
             gmcpEmitter = gmcpEmitter,
             onResumeRequested = if (gracePeriodManager != null) ::handleSessionResume else null,
-            onAuthenticateRequested = ::handleSessionAuthenticate,
+            onAuthenticateRequested = { sid, token, name -> handleSessionAuthenticate(sid, token, name) },
             onLogoutRequested = ::handleSessionLogout,
             logger = log,
             metrics = metrics,
@@ -1856,13 +1861,18 @@ class GameEngine(
     /**
      * Handle a Session.Authenticate GMCP from a client presenting a
      * remember-me auth token (stored in localStorage) for password-free login.
+     *
+     * [expectedName] (optional) is the character name the client believes the
+     * token belongs to. It does not affect authentication (we always trust the
+     * token hash), but lets us route the failure path straight to the password
+     * prompt for that character instead of bouncing back to the name prompt.
      */
-    private suspend fun handleSessionAuthenticate(sessionId: SessionId, token: String) {
+    private suspend fun handleSessionAuthenticate(sessionId: SessionId, token: String, expectedName: String?) {
         val hash = sha256Hex(token)
         val record = persistence.playerRepo?.findByAuthTokenHash(hash)
         if (record == null) {
             gmcpEmitter.sendSessionAuthResult(sessionId, false, "Invalid or expired token")
-            loginFlowHandler.promptForName(sessionId)
+            promptForPasswordOrName(sessionId, expectedName)
             return
         }
 
@@ -1873,7 +1883,7 @@ class GameEngine(
             // Clear the expired token
             persistence.playerRepo?.save(record.copy(authTokenHash = "", authTokenIssuedAt = 0L))
             gmcpEmitter.sendSessionAuthResult(sessionId, false, "Token expired — please log in again")
-            loginFlowHandler.promptForName(sessionId)
+            promptForPasswordOrName(sessionId, expectedName)
             return
         }
 
@@ -1898,13 +1908,13 @@ class GameEngine(
             return
         }
 
-        // Issue a new auth token (rotation) and persist before sending to client
-        val newToken = java.util.UUID.randomUUID().toString()
-        val newHash = sha256Hex(newToken)
-        persistence.playerRepo?.save(record.copy(authTokenHash = newHash, authTokenIssuedAt = clock.millis()))
-
+        // The client already has the token it just presented, so there is no
+        // need to rotate or re-send it here. Keeping the token stable avoids
+        // races where a new Session.AuthToken message is lost (or processed
+        // after the WebSocket dies on a flaky mobile connection), which
+        // previously left localStorage pointing at a hash the server no longer
+        // recognised and forced a password prompt on the next reconnect.
         gmcpEmitter.sendSessionAuthResult(sessionId, true)
-        gmcpEmitter.sendSessionAuthToken(sessionId, newToken, record.name, AUTH_TOKEN_EXPIRY_DAYS)
 
         // Finalize login (same as normal flow)
         loginFlowHandler.onAfterLogin(sessionId)
@@ -1942,7 +1952,10 @@ class GameEngine(
         val pid = me.playerId ?: return
         val repo = persistence.playerRepo ?: return
 
-        // Clear the auth token hash so the old token can't be reused
+        // Clear the auth token hash on both the live PlayerState and the
+        // persisted record so the old token can't be reused.
+        me.authTokenHash = ""
+        me.authTokenIssuedAt = 0L
         val record = repo.findById(pid)
         if (record != null && record.authTokenHash.isNotEmpty()) {
             repo.save(record.copy(authTokenHash = "", authTokenIssuedAt = 0L))
@@ -1952,6 +1965,22 @@ class GameEngine(
         outbound.send(OutboundEvent.Close(sessionId, "Logged out."))
     }
 
+    /**
+     * After a failed token-based auto-relog, route the session straight to the
+     * password prompt for the named character if it exists. Falls back to the
+     * generic name prompt for unknown / invalid names so character existence
+     * leaks no more than the normal login flow already does.
+     */
+    private suspend fun promptForPasswordOrName(sessionId: SessionId, expectedName: String?) {
+        val name = expectedName?.trim().orEmpty()
+        if (name.isNotEmpty() && players.isValidName(name) && players.hasRegisteredName(name)) {
+            loginFlowHandler.pendingLogins[sessionId] = LoginState.AwaitingExistingPassword(name)
+            loginFlowHandler.promptForExistingPassword(sessionId)
+            return
+        }
+        loginFlowHandler.promptForName(sessionId)
+    }
+
     /** Issue an auth token (remember-me) after successful login and persist the hash. */
     private suspend fun issueAuthToken(sessionId: SessionId) {
         val repo = persistence.playerRepo ?: return
@@ -1959,8 +1988,13 @@ class GameEngine(
         val pid = me.playerId ?: return
         val token = java.util.UUID.randomUUID().toString()
         val hash = sha256Hex(token)
+        val issuedAt = clock.millis()
         val record = repo.findById(pid) ?: return
-        repo.save(record.copy(authTokenHash = hash, authTokenIssuedAt = clock.millis()))
+        repo.save(record.copy(authTokenHash = hash, authTokenIssuedAt = issuedAt))
+        // Mirror the hash into the live PlayerState so subsequent persistIfClaimed
+        // calls (on disconnect, etc.) don't erase it via toPlayerRecord().
+        me.authTokenHash = hash
+        me.authTokenIssuedAt = issuedAt
         gmcpEmitter.sendSessionAuthToken(sessionId, token, me.name, AUTH_TOKEN_EXPIRY_DAYS)
     }
 

@@ -134,6 +134,13 @@ internal class LoginFlowHandler(
     maxFailedLoginAttemptsBeforeDisconnect: Int,
     maxConcurrentLogins: Int,
     internal val onAfterLogin: suspend (SessionId) -> Unit = {},
+    /**
+     * Called on the paths where the client just authenticated with a password
+     * (normal login or account creation) — as opposed to an auto-relog via a
+     * remembered auth token. The engine uses this to rotate/issue the auth
+     * token so the client receives fresh credentials on password-only logins.
+     */
+    private val onFreshPasswordLogin: suspend (SessionId) -> Unit = {},
 ) {
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
 
@@ -515,6 +522,9 @@ internal class LoginFlowHandler(
 
         log.info { "Player logged in: name=${me.name} sessionId=$sessionId" }
         onAfterLogin(sessionId)
+        // Password-only login (or fresh account creation) — issue a new auth
+        // token so the client can auto-relog on subsequent connects.
+        onFreshPasswordLogin(sessionId)
         playerLocationIndex?.register(me.name)
         abilitySystem.loadAbilities(sessionId, me.learnedAbilityIds)
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
@@ -604,7 +614,7 @@ internal class LoginFlowHandler(
         return false
     }
 
-    private suspend fun promptForExistingPassword(sessionId: SessionId) {
+    internal suspend fun promptForExistingPassword(sessionId: SessionId) {
         val name = (pendingLogins[sessionId] as? LoginState.AwaitingExistingPassword)?.name ?: ""
         outbound.send(OutboundEvent.SendInfo(sessionId, "Password:"))
         outbound.send(OutboundEvent.SendPrompt(sessionId))

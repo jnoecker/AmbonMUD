@@ -137,7 +137,6 @@ interface GmcpContext {
   setSavedCharacters: Dispatch<SetStateAction<string[]>>;
   resumeTokenRef: { current: string | null };
   pendingAuthCharRef: { current: string | null };
-  failedAuthCharRef: { current: string | null };
   sendGmcp: (pkg: string, payload: unknown) => boolean;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
@@ -1366,16 +1365,13 @@ export function applyGmcpPackage(
         ctx.setReconnecting(false);
         ctx.pendingAuthCharRef.current = null;
       } else {
-        // Auth failed — remove the stale token and fall back to login prompt.
-        // Server re-sends Login.Prompt which will drive the full state reset,
-        // but clear error eagerly in case the server response is delayed.
-        // Stash the character name so the Login.Prompt handler can auto-send it,
-        // skipping straight to the password prompt instead of showing "Enter name".
+        // Auth failed — remove the stale token. The server will follow up with
+        // a Login.Prompt for the password (or name) of the same character, so
+        // we just need to clear reconnecting/error state and let that drive UI.
         ctx.setReconnecting(false);
         ctx.setLoginError(null);
         const failedChar = ctx.pendingAuthCharRef.current;
         ctx.pendingAuthCharRef.current = null;
-        ctx.failedAuthCharRef.current = failedChar;
         if (failedChar) {
           try {
             const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;

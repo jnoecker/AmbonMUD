@@ -146,12 +146,11 @@ export interface MiniMapBridge {
 export interface AuthRefs {
   resumeTokenRef: React.MutableRefObject<string | null>;
   pendingAuthCharRef: React.MutableRefObject<string | null>;
-  failedAuthCharRef: React.MutableRefObject<string | null>;
   sendGmcpRef: React.MutableRefObject<(pkg: string, payload: unknown) => void>;
 }
 
 export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
-  const { resumeTokenRef, pendingAuthCharRef, failedAuthCharRef, sendGmcpRef } = authRefs;
+  const { resumeTokenRef, pendingAuthCharRef, sendGmcpRef } = authRefs;
   const { updateMap, loadZoneMap, resetMap } = miniMap;
   // ── Core identity ─────────────────────────────────
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
@@ -385,7 +384,6 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setSavedCharacters,
         resumeTokenRef,
         pendingAuthCharRef,
-        failedAuthCharRef,
         setServerAssets,
         setServerCommands,
         setEmotePresets,
@@ -427,7 +425,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         sendGmcp: (p: string, payload: unknown) => { sendGmcpRef.current(p, payload); return true; },
       });
     },
-    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, failedAuthCharRef, sendGmcpRef],
+    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef],
   );
 
   // ── Reset all HUD state on disconnect ─────────────
