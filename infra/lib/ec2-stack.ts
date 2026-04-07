@@ -23,6 +23,27 @@ export interface Ec2StackProps extends StackProps {
    * Ports 80 and 443 are always opened in the security group for HTTP → HTTPS redirects.
    */
   readonly hostname?: string;
+  /**
+   * Optional URL to a remote application-local.yaml config overlay (e.g. R2/S3).
+   * If provided, the systemd service curls it to /app/data/application-local.yaml
+   * on every (re)start. The entrypoint places /app/data on the classpath before
+   * the fat JAR, so this overlay augments the bundled application.yaml.
+   *
+   * Used by the Auringold lore repo to publish hot-reloadable config without
+   * baking it into the container image.
+   */
+  readonly loreConfigUrl?: string;
+  /**
+   * Optional base URL for world zone YAML files (e.g. "https://auringold.ambon.dev/world").
+   * If provided (along with loreConfigUrl), the systemd service parses zone filenames
+   * from the lore config's ambonmud.world.resources list and curls each one from
+   * ${worldZonesBaseUrl}/<filename>. The entrypoint places /app/data on the classpath
+   * before the fat JAR, so these zones shadow the bundled placeholder zones.
+   *
+   * Per-file fetching (rather than a tarball) lets us use object stores like R2
+   * that don't support directory listing.
+   */
+  readonly worldZonesBaseUrl?: string;
 }
 
 /**
@@ -55,7 +76,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -279,7 +300,38 @@ export class Ec2Stack extends Stack {
       'SCRIPT_END',
       'chmod +x /usr/local/bin/update-ambonmud',
       '',
-      '',
+      // ---- fetch-world-zones helper script -----------------------------------
+      // Reads zone filenames from application-local.yaml's ambonmud.world.resources
+      // list and curls each from the configured base URL. This per-file approach
+      // works with object stores like R2 that don't support directory listing.
+      // Called by ExecStartPre on every service (re)start, and by the
+      // refresh-demo-world workflow when content changes between deploys.
+      // ----------------------------------------------------------------------
+      ...(worldZonesBaseUrl
+        ? [
+            `cat > /usr/local/bin/fetch-world-zones << 'SCRIPT_END'`,
+            '#!/bin/bash',
+            'set -euo pipefail',
+            'CONFIG=/app/data/application-local.yaml',
+            'if [ ! -f "$CONFIG" ]; then',
+            '  echo "No config overlay found at $CONFIG — skipping zone fetch"',
+            '  exit 0',
+            'fi',
+            'mkdir -p /app/data/world',
+            'rm -f /app/data/world/*.yaml',
+            `BASE_URL="${worldZonesBaseUrl}"`,
+            '# Parse "- world/<name>.yaml" entries from the resources list',
+            'grep -E "^\\s*-\\s*world/" "$CONFIG" | sed "s/.*- *//" | while read -r entry; do',
+            '  filename="${entry#world/}"',
+            '  echo "Fetching zone: $filename"',
+            '  curl -fsSL -o "/app/data/world/$filename" "$BASE_URL/$filename"',
+            'done',
+            'echo "World zones fetched to /app/data/world/"',
+            'SCRIPT_END',
+            'chmod +x /usr/local/bin/fetch-world-zones',
+            '',
+          ]
+        : []),
       // ---- generate-htpasswd helper script ------------------------------------
       // Extracts the admin token from application-local.yaml and writes an
       // htpasswd file for nginx basic auth on /grafana/, /prometheus/, /admin/.
@@ -294,7 +346,8 @@ export class Ec2Stack extends Stack {
       '  echo "No config overlay — skipping htpasswd generation"',
       '  exit 0',
       'fi',
-      'TOKEN=$(grep -E "^\\s*token:" "$CONFIG" | head -1 | sed "s/.*token:\\s*//" | tr -d \'"\\'\')',
+      // Strip any surrounding double-quotes or single-quotes that YAML may put around the value.
+      `TOKEN=$(grep -E "^\\s*token:" "$CONFIG" | head -1 | sed "s/.*token:\\s*//" | tr -d "\\"'")`,
       'if [ -z "$TOKEN" ]; then',
       '  echo "No admin token found in config — skipping htpasswd generation"',
       '  exit 0',
@@ -317,6 +370,20 @@ export class Ec2Stack extends Stack {
       `ExecStartPre=/bin/bash -c 'aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${ecrUri}'`,
       `ExecStartPre=/usr/bin/docker pull ${ecrUri}:${imageTag}`,
       'ExecStartPre=-/usr/bin/docker rm -f ambonmud',
+      // Fetch the lore config overlay (application-local.yaml) from the Auringold
+      // R2 bucket. Must run before generate-htpasswd (which reads admin token
+      // from the overlay) and before fetch-world-zones (which reads the
+      // ambonmud.world.resources list from the overlay).
+      ...(loreConfigUrl
+        ? [`ExecStartPre=/usr/bin/curl -fsSL -o /app/data/application-local.yaml ${loreConfigUrl}`]
+        : []),
+      // Fetch world zone YAML files listed in the lore config's ambonmud.world.resources.
+      // The helper script parses filenames from the config overlay, then curls each
+      // from the base URL. The entrypoint places /app/data on the classpath before
+      // the fat JAR, so these zones shadow the bundled placeholder zones.
+      ...(worldZonesBaseUrl
+        ? [`ExecStartPre=/usr/local/bin/fetch-world-zones`]
+        : []),
       // Generate htpasswd for nginx basic auth on /grafana/, /prometheus/, /admin/.
       'ExecStartPre=/usr/local/bin/generate-htpasswd',
       `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false ${ecrUri}:${imageTag}`,

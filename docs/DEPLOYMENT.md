@@ -460,6 +460,58 @@ For extra safety, take periodic EBS snapshots:
 aws ec2 create-snapshot --volume-id <vol-id> --description "AmbonMUD backup" --region us-east-1
 ```
 
+### Remote world & config overlay (Auringold)
+
+The demo instance can fetch its world content and config overlay from a separate
+"lore repo" (Auringold) hosted on R2, instead of relying on the bundled JAR
+resources. This lets world content ship independently of the container image.
+
+**How it works:**
+
+1. On every `ambonmud.service` (re)start, an `ExecStartPre` curls
+   `application-local.yaml` from `LORE_CONFIG_URL` to `/app/data/application-local.yaml`.
+2. A second `ExecStartPre` runs `/usr/local/bin/fetch-world-zones`, which parses
+   the `ambonmud.world.resources` list out of that overlay and curls each
+   `world/<filename>.yaml` from `${WORLD_ZONES_BASE_URL}/<filename>` to
+   `/app/data/world/`.
+3. The container entrypoint puts `/app/data` ahead of the fat JAR on the classpath,
+   so remote files shadow bundled ones by filename. Bundled zones not listed in
+   the overlay's `resources` keep loading as fallback.
+
+**Required GitHub secrets** (set on the AmbonMUD repo):
+
+| Secret | Value |
+|--------|-------|
+| `LORE_CONFIG_URL` | `https://auringold.ambon.dev/config/application-local.yaml` |
+| `WORLD_ZONES_BASE_URL` | `https://auringold.ambon.dev/world` |
+
+Once both secrets are set, the next `Deploy` workflow run wires them through CDK
+context (`--context loreConfigUrl=... --context worldZonesBaseUrl=...`) and the
+EC2 user data is regenerated. Without these secrets, the stack synthesizes
+without the fetch logic and the demo runs entirely from bundled resources.
+
+**Auringold-side requirements:**
+
+- Published `application-local.yaml` must include `ambonmud.world.resources` with
+  `- world/<zone>.yaml` entries — one per zone the demo should load.
+- The same overlay must include an admin `token:` field — `generate-htpasswd`
+  parses it on boot to set up nginx basic auth on `/grafana/`, `/prometheus/`,
+  and `/admin/`.
+
+**Refreshing the running demo without restarting:**
+
+The `Refresh Demo World` workflow (`.github/workflows/refresh-demo-world.yml`)
+re-downloads the lore config, zone YAMLs, and `achievements.yaml` onto the live
+demo instance via SSM, without restarting the service or dropping connections.
+Trigger it manually from the Actions tab. After it finishes, run a staff
+`reload all` (or `POST /api/reload?target=all` over the admin API) to apply the
+new data to the running engine.
+
+Cross-repo automation (firing the refresh workflow on every Auringold push) is
+intentionally disabled for now — re-enable by adding a `repository_dispatch`
+trigger to `refresh-demo-world.yml` and a companion workflow in the Auringold
+repo. See the comment block at the top of `refresh-demo-world.yml`.
+
 ### Upgrading to ECS Fargate later
 
 The EC2 stack is independent of the Fargate stacks. To migrate:
