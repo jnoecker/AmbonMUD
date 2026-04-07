@@ -138,6 +138,8 @@ class PersistenceFieldCoverageTest {
                         """"streakDays":5,"lastStreakDate":""}""",
                 screenReaderEnabled = true,
                 description = "A tall warrior with a scar across the left cheek.",
+                authTokenHash = "sha256:deadbeef",
+                authTokenIssuedAt = 1_700_000_000_000L,
             )
 
         @BeforeAll

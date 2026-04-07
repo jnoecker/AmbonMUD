@@ -105,6 +105,15 @@ data class PlayerState(
     var screenReaderEnabled: Boolean = false,
     /** Player-written custom description visible when others look at them. */
     var description: String = "",
+    /**
+     * SHA-256 hash of the remember-me auth token.
+     * Tracked on [PlayerState] so [persistIfClaimed] doesn't wipe it on every
+     * save — otherwise disconnect would erase the token the client still
+     * holds in localStorage and force a password prompt on next login.
+     */
+    var authTokenHash: String = "",
+    /** Epoch-ms the current [authTokenHash] was issued. 0 when no token is set. */
+    var authTokenIssuedAt: Long = 0L,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -242,6 +251,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         }.getOrDefault(DailyQuestState()),
         screenReaderEnabled = screenReaderEnabled,
         description = description,
+        authTokenHash = authTokenHash,
+        authTokenIssuedAt = authTokenIssuedAt,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -294,6 +305,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         dailyQuestData = jsonMapper.writeValueAsString(dailyQuestState),
         screenReaderEnabled = screenReaderEnabled,
         description = description,
+        authTokenHash = authTokenHash,
+        authTokenIssuedAt = authTokenIssuedAt,
     )
 }
 

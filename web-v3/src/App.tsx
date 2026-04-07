@@ -36,7 +36,6 @@ import "./styles.css";
 function App() {
   const resumeTokenRef = useRef<string | null>(null);
   const pendingAuthCharRef = useRef<string | null>(null);
-  const failedAuthCharRef = useRef<string | null>(null);
   const sendGmcpRef = useRef<(pkg: string, payload: unknown) => void>(() => {});
   const intentionalDisconnectRef = useRef(false);
   const connectedRef = useRef(false);
@@ -65,7 +64,7 @@ function App() {
   const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap, startPulse, stopPulse } = useMiniMap();
 
   const state = useGameState(
-    { resumeTokenRef, pendingAuthCharRef, failedAuthCharRef, sendGmcpRef },
+    { resumeTokenRef, pendingAuthCharRef, sendGmcpRef },
     { updateMap, loadZoneMap, resetMap },
   );
   const audio = useAudioEngine();
@@ -113,8 +112,22 @@ function App() {
     connect();
     const onBeforeUnload = () => disconnect();
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible" && !connectedRef.current && resumeTokenRef.current) {
+      if (document.visibilityState !== "visible" || connectedRef.current) return;
+      // Prefer the in-memory resume token (short-lived grace period) when valid;
+      // otherwise fall back to any persistent auth token in localStorage so the
+      // picker / auto-relog can recover the session even after long backgrounding.
+      if (resumeTokenRef.current) {
         state.setReconnecting(true);
+        intentionalDisconnectRef.current = true;
+        reconnect();
+        return;
+      }
+      let hasAuthTokens = false;
+      try {
+        const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+        hasAuthTokens = Object.keys(saved).length > 0;
+      } catch { /* ignore */ }
+      if (hasAuthTokens) {
         intentionalDisconnectRef.current = true;
         reconnect();
       }
@@ -127,15 +140,6 @@ function App() {
       disconnect();
     };
   }, [connect, disconnect, reconnect]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-resend character name after token-auth failure
-  useEffect(() => {
-    const charName = failedAuthCharRef.current;
-    if (state.loginPrompt?.state === "name" && charName) {
-      failedAuthCharRef.current = null;
-      sendLine(charName);
-    }
-  }, [state.loginPrompt, sendLine]);  
 
   const sendCommand = (raw: string) => {
     const command = raw.trim();
@@ -816,7 +820,7 @@ function App() {
                 pendingAuthCharRef.current = name;
                 state.setSavedCharacters([]);
                 state.setReconnecting(true);
-                sendGmcp("Session.Authenticate", { token });
+                sendGmcp("Session.Authenticate", { token, name });
                 return;
               }
             } catch { /* ignore */ }

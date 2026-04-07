@@ -375,4 +375,316 @@ class GameEngineIntegrationTest {
             inbound.close()
             outbound.close()
         }
+
+    @Test
+    fun `auto-relog via saved auth token succeeds without password and keeps token stable`() =
+        runTest {
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
+
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val repo = InMemoryPlayerRepository()
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
+                }
+            val raceRegistry =
+                RaceRegistry().also { reg ->
+                    RaceRegistryLoader.load(testRaceEngineConfig(), reg)
+                }
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(
+                    world.startRoom,
+                    repo,
+                    ItemRegistry(),
+                    classRegistry = classRegistry,
+                    raceRegistry = raceRegistry,
+                )
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
+                    persistence = dev.ambon.engine.PersistenceContext(playerRepo = repo),
+                    engineConfig = EngineConfig(sessionResumeGracePeriodMs = 0),
+                )
+            val engineJob = launch { engine.run() }
+
+            fun step() {
+                advanceTimeBy(tickMillis)
+                runCurrent()
+            }
+
+            // Capture Session.AuthToken payloads (the server only emits them for
+            // sessions that declared support, so every session must send
+            // Core.Supports.Set first).
+            fun extractTokenFrom(events: List<OutboundEvent>, sid: SessionId): String? =
+                events
+                    .filterIsInstance<OutboundEvent.GmcpData>()
+                    .filter { it.sessionId == sid && it.gmcpPackage == "Session.AuthToken" }
+                    .mapNotNull { ev ->
+                        Regex(""""token"\s*:\s*"([^"]+)"""").find(ev.jsonData)?.groupValues?.get(1)
+                    }
+                    .lastOrNull()
+
+            fun countAuthTokenMessages(events: List<OutboundEvent>, sid: SessionId): Int =
+                events.count {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "Session.AuthToken"
+                }
+
+            // --- Phase 1: create account via normal password login ---
+            val sid1 = SessionId(1L)
+            runCurrent()
+            inbound.send(InboundEvent.Connected(sid1))
+            inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid1,
+                    "Core.Supports.Set",
+                    """["Session.AuthToken 1","Session.AuthResult 1","Char.Name 1","Login.Prompt 1"]""",
+                ),
+            )
+            inbound.send(InboundEvent.LineReceived(sid1, "Ribbon"))
+            inbound.send(InboundEvent.LineReceived(sid1, "yes"))
+            inbound.send(InboundEvent.LineReceived(sid1, "secretpw"))
+            inbound.send(InboundEvent.LineReceived(sid1, "1")) // race
+            inbound.send(InboundEvent.LineReceived(sid1, "1")) // class
+            step()
+            step()
+
+            val createEvents = outbound.drainAll()
+            val firstToken = extractTokenFrom(createEvents, sid1)
+            assertTrue(firstToken != null, "Expected Session.AuthToken after password login; got=$createEvents")
+            assertEquals(
+                1,
+                countAuthTokenMessages(createEvents, sid1),
+                "Password login should emit exactly one Session.AuthToken",
+            )
+
+            inbound.send(InboundEvent.Disconnected(sid1, "test"))
+            step()
+            outbound.drainAll()
+
+            // --- Phase 2: reconnect and auto-relog with the captured token ---
+            val sid2 = SessionId(2L)
+            inbound.send(InboundEvent.Connected(sid2))
+            inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid2,
+                    "Core.Supports.Set",
+                    """["Session.AuthToken 1","Session.AuthResult 1","Char.Name 1","Login.Prompt 1"]""",
+                ),
+            )
+            inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid2,
+                    "Session.Authenticate",
+                    """{"token":"$firstToken","name":"Ribbon"}""",
+                ),
+            )
+            step()
+            step()
+
+            val reauthEvents = outbound.drainAll()
+            assertTrue(
+                reauthEvents.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid2 &&
+                        it.gmcpPackage == "Session.AuthResult" &&
+                        it.jsonData.contains("\"success\":true")
+                },
+                "Expected Session.AuthResult success on auto-relog; got=$reauthEvents",
+            )
+            assertTrue(
+                reauthEvents.any {
+                    it is OutboundEvent.GmcpData && it.sessionId == sid2 && it.gmcpPackage == "Char.Name"
+                },
+                "Expected Char.Name full sync on auto-relog success; got=$reauthEvents",
+            )
+            // Token stability: auto-relog must NOT rotate the token. If it did,
+            // the client's localStorage would go stale on the next reconnect
+            // (the previous behaviour that was causing password prompts).
+            assertEquals(
+                0,
+                countAuthTokenMessages(reauthEvents, sid2),
+                "Auto-relog should not rotate or re-send Session.AuthToken; got=$reauthEvents",
+            )
+
+            inbound.send(InboundEvent.Disconnected(sid2, "test"))
+            step()
+            outbound.drainAll()
+
+            // --- Phase 3: second auto-relog with the same (never-rotated) token ---
+            val sid3 = SessionId(3L)
+            inbound.send(InboundEvent.Connected(sid3))
+            inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid3,
+                    "Core.Supports.Set",
+                    """["Session.AuthToken 1","Session.AuthResult 1","Char.Name 1","Login.Prompt 1"]""",
+                ),
+            )
+            inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid3,
+                    "Session.Authenticate",
+                    """{"token":"$firstToken","name":"Ribbon"}""",
+                ),
+            )
+            step()
+            step()
+
+            val secondReauthEvents = outbound.drainAll()
+            assertTrue(
+                secondReauthEvents.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid3 &&
+                        it.gmcpPackage == "Session.AuthResult" &&
+                        it.jsonData.contains("\"success\":true")
+                },
+                "The same token must keep working across reconnects; got=$secondReauthEvents",
+            )
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
+    fun `failed auto-relog with valid character name jumps straight to password prompt`() =
+        runTest {
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
+
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val repo = InMemoryPlayerRepository()
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
+                }
+            val raceRegistry =
+                RaceRegistry().also { reg ->
+                    RaceRegistryLoader.load(testRaceEngineConfig(), reg)
+                }
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(
+                    world.startRoom,
+                    repo,
+                    ItemRegistry(),
+                    classRegistry = classRegistry,
+                    raceRegistry = raceRegistry,
+                )
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
+                    persistence = dev.ambon.engine.PersistenceContext(playerRepo = repo),
+                    engineConfig = EngineConfig(sessionResumeGracePeriodMs = 0),
+                )
+            val engineJob = launch { engine.run() }
+
+            fun step() {
+                advanceTimeBy(tickMillis)
+                runCurrent()
+            }
+
+            // Phase 1: create the account so the name exists in the repo.
+            val sid1 = SessionId(1L)
+            runCurrent()
+            inbound.send(InboundEvent.Connected(sid1))
+            inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid1,
+                    "Core.Supports.Set",
+                    """["Session.AuthResult 1","Login.Prompt 1"]""",
+                ),
+            )
+            inbound.send(InboundEvent.LineReceived(sid1, "Linnet"))
+            inbound.send(InboundEvent.LineReceived(sid1, "yes"))
+            inbound.send(InboundEvent.LineReceived(sid1, "correctpw"))
+            inbound.send(InboundEvent.LineReceived(sid1, "1"))
+            inbound.send(InboundEvent.LineReceived(sid1, "1"))
+            step()
+            step()
+            inbound.send(InboundEvent.Disconnected(sid1, "test"))
+            step()
+            outbound.drainAll()
+
+            // Phase 2: present a bogus token with the real character name.
+            val sid2 = SessionId(2L)
+            inbound.send(InboundEvent.Connected(sid2))
+            inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid2,
+                    "Core.Supports.Set",
+                    """["Session.AuthResult 1","Login.Prompt 1"]""",
+                ),
+            )
+            inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid2,
+                    "Session.Authenticate",
+                    """{"token":"not-a-real-token","name":"Linnet"}""",
+                ),
+            )
+            step()
+            step()
+
+            val events = outbound.drainAll()
+            assertTrue(
+                events.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid2 &&
+                        it.gmcpPackage == "Session.AuthResult" &&
+                        it.jsonData.contains("\"success\":false")
+                },
+                "Expected Session.AuthResult failure on bad token; got=$events",
+            )
+            // The key behavioural guarantee: after a bad token we jump straight
+            // to the password prompt for the same character, bypassing the name
+            // step that used to loop the picker and confuse mobile users.
+            val promptPayloads =
+                events
+                    .filterIsInstance<OutboundEvent.GmcpData>()
+                    .filter { it.sessionId == sid2 && it.gmcpPackage == "Login.Prompt" }
+                    .map { it.jsonData }
+            assertTrue(
+                promptPayloads.any { it.contains("\"state\":\"password\"") && it.contains("\"name\":\"Linnet\"") },
+                "Expected password prompt for Linnet after failed auto-relog; got=$promptPayloads",
+            )
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
 }

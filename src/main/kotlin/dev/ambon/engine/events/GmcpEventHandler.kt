@@ -30,7 +30,7 @@ class GmcpEventHandler(
     private val trainerRegistry: dev.ambon.engine.TrainerRegistry? = null,
     private val gmcpEmitter: GmcpEmitter,
     private val onResumeRequested: (suspend (SessionId, String) -> Unit)? = null,
-    private val onAuthenticateRequested: (suspend (SessionId, String) -> Unit)? = null,
+    private val onAuthenticateRequested: (suspend (SessionId, String, String?) -> Unit)? = null,
     private val onLogoutRequested: (suspend (SessionId) -> Unit)? = null,
     private val logger: KLogger,
     private val metrics: GameMetrics = GameMetrics.noop(),
@@ -95,8 +95,9 @@ class GmcpEventHandler(
 
             "Session.Authenticate" -> {
                 val token = parseStringField(ev.jsonData, "token")
+                val name = parseStringField(ev.jsonData, "name")
                 if (token != null && onAuthenticateRequested != null) {
-                    onAuthenticateRequested.invoke(sid, token)
+                    onAuthenticateRequested.invoke(sid, token, name)
                 } else {
                     gmcpEmitter.sendSessionAuthResult(sid, false, "Authentication not supported")
                 }
