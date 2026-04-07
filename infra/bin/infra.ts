@@ -38,6 +38,12 @@ const env: Environment = {
 const imageTag = (app.node.tryGetContext('imageTag') as string | undefined) ?? 'latest';
 const ecrRepoName = (app.node.tryGetContext('ecrRepo') as string | undefined) ?? 'ambonmud/app';
 
+// Optional Auringold lore-repo asset URLs. When set, the EC2 instance fetches
+// application-local.yaml and world zone YAML files from R2 on every (re)start
+// instead of relying on the bundled JAR resources.
+const loreConfigUrl = app.node.tryGetContext('loreConfigUrl') as string | undefined;
+const worldZonesBaseUrl = app.node.tryGetContext('worldZonesBaseUrl') as string | undefined;
+
 // ---------------------------------------------------------------------------
 // EC2 topology: single self-contained stack, no tier config needed.
 // ---------------------------------------------------------------------------
@@ -48,6 +54,8 @@ if (topology === 'ec2') {
     ecrRepoName,
     domain,
     hostname,
+    loreConfigUrl,
+    worldZonesBaseUrl,
   });
 } else {
   // -------------------------------------------------------------------------
