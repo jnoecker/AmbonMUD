@@ -29,12 +29,17 @@ object AppConfigLoader {
     //   1. Environment variables
     //   2. Extra sources (programmatic)
     //   3. Profile overlay  (-Dambon.profile=<name>)
-    //   4. Local overlay    (application-local.yaml — filesystem then classpath)
+    //   4. Local overlay    (application-local.yaml — $AMBONMUD_DATA_DIR, CWD, or classpath)
     //   5. Base defaults    (application.yaml — checked in, generic/tech defaults)
     //
-    // The local overlay is checked in two locations:
-    //   a. Filesystem working directory (for deployed servers that curl the file at startup)
-    //   b. Classpath resource (for local dev with the file in src/main/resources/)
+    // The local overlay is checked in three locations, in order:
+    //   a. $AMBONMUD_DATA_DIR/application-local.yaml (container deployments with
+    //      a bind-mounted data volume — the fetch-world-zones systemd unit writes
+    //      the overlay to /app/data/application-local.yaml and the docker run
+    //      passes AMBONMUD_DATA_DIR=/app/data, so this picks it up.)
+    //   b. ./application-local.yaml in the JVM working directory (legacy)
+    //   c. Classpath resource /application-local.yaml (for local dev with the file
+    //      in src/main/resources/)
     @OptIn(ExperimentalHoplite::class)
     fun load(
         resourcePath: String = DEFAULT_RESOURCE_PATH,
@@ -61,12 +66,19 @@ object AppConfigLoader {
         // application.yaml entirely (no deep-merge), so every field must be
         // defined there.  When absent the checked-in application.yaml provides
         // sensible defaults for local development.
-        val localFile = File(LOCAL_OVERRIDE_FILENAME)
+        val dataDirOverlay =
+            System
+                .getenv("AMBONMUD_DATA_DIR")
+                ?.let { File(it, LOCAL_OVERRIDE_FILENAME) }
+                ?.takeIf { it.isFile }
+        val cwdLocalFile = File(LOCAL_OVERRIDE_FILENAME)
         val localOnClasspath =
             AppConfigLoader::class.java.getResource(LOCAL_OVERRIDE_CLASSPATH) != null
 
-        if (localFile.isFile) {
-            builder = builder.addSource(PropertySource.file(localFile, optional = false))
+        if (dataDirOverlay != null) {
+            builder = builder.addSource(PropertySource.file(dataDirOverlay, optional = false))
+        } else if (cwdLocalFile.isFile) {
+            builder = builder.addSource(PropertySource.file(cwdLocalFile, optional = false))
         } else if (localOnClasspath) {
             builder = builder.addResourceSource(LOCAL_OVERRIDE_CLASSPATH, optional = false)
         } else {

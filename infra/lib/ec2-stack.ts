@@ -401,7 +401,12 @@ export class Ec2Stack extends Stack {
         : []),
       // Generate htpasswd for nginx basic auth on /grafana/, /prometheus/, /admin/.
       'ExecStartPre=/usr/local/bin/generate-htpasswd',
-      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false ${ecrUri}:${imageTag}`,
+      // AMBONMUD_DATA_DIR tells AppConfigLoader + WorldLoader to look in
+      // /app/data for the application-local.yaml overlay and any externally-
+      // fetched zone YAMLs (populated by fetch-world-zones above). Without
+      // this, the JVM only sees the bundled classpath resources and silently
+      // ignores everything the fetch scripts wrote to disk.
+      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data -e AMBONMUD_DATA_DIR=/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',

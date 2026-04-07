@@ -55,6 +55,7 @@ import dev.ambon.engine.dialogue.DialogueChoice
 import dev.ambon.engine.dialogue.DialogueNode
 import dev.ambon.engine.dialogue.DialogueTree
 import org.slf4j.LoggerFactory
+import java.io.File
 
 class WorldLoadException(
     message: String,
@@ -958,10 +959,20 @@ object WorldLoader {
     }
 
     private fun readWorldFile(path: String): WorldFile {
+        // Check $AMBONMUD_DATA_DIR/<path> on the filesystem first, for container
+        // deployments that fetch zone YAMLs to a bind-mounted data volume at
+        // runtime (see AppConfigLoader for the matching overlay lookup). Falls
+        // back to the classpath for zones bundled in the fat JAR.
+        val dataDirFile =
+            System
+                .getenv("AMBONMUD_DATA_DIR")
+                ?.let { File(it, path) }
+                ?.takeIf { it.isFile }
         val text =
-            WorldLoader::class.java.classLoader
-                .getResource(path)
-                ?.readText()
+            dataDirFile?.readText()
+                ?: WorldLoader::class.java.classLoader
+                    .getResource(path)
+                    ?.readText()
                 ?: throw WorldLoadException("World resource not found: $path")
         try {
             return mapper.readValue(text)
