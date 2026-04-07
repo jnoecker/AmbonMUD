@@ -44,6 +44,26 @@ export interface Ec2StackProps extends StackProps {
    * that don't support directory listing.
    */
   readonly worldZonesBaseUrl?: string;
+  /**
+   * Optional SSM Parameter Store parameter name (e.g. "/ambonmud/demo/admin-token")
+   * that holds the admin API token as a SecureString. When set:
+   *   - The instance role is granted ssm:GetParameter on this specific parameter
+   *   - An ExecStartPre fetches it at every systemd start and writes
+   *     /etc/ambonmud/secrets.env with AMBONMUD_ADMIN_TOKEN=<value>
+   *   - generate-htpasswd reads the token from that env file instead of
+   *     grepping application-local.yaml
+   *   - docker run passes --env-file /etc/ambonmud/secrets.env to the container
+   *     so Hoplite picks up the env var and overrides any placeholder in the
+   *     public lore config overlay
+   *
+   * Created once out-of-band via:
+   *   aws ssm put-parameter --name /ambonmud/demo/admin-token \
+   *     --type SecureString --value "$(openssl rand -hex 32)" --region us-east-1
+   *
+   * Rotated by re-running put-parameter with --overwrite and then restarting
+   * ambonmud.service (no CDK redeploy needed).
+   */
+  readonly adminTokenSsmParameterName?: string;
 }
 
 /**
@@ -76,7 +96,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, adminTokenSsmParameterName } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -127,6 +147,21 @@ export class Ec2Stack extends Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
       ],
     });
+
+    // Grant read access to the admin-token SSM parameter so the systemd
+    // fetch-admin-token ExecStartPre can populate /etc/ambonmud/secrets.env.
+    // Scoped to the exact parameter name — AmazonSSMManagedInstanceCore (above)
+    // deliberately does NOT include GetParameter for arbitrary parameters.
+    if (adminTokenSsmParameterName) {
+      role.addToPolicy(
+        new iam.PolicyStatement({
+          actions: ['ssm:GetParameter'],
+          resources: [
+            `arn:aws:ssm:${this.region}:${this.account}:parameter${adminTokenSsmParameterName}`,
+          ],
+        }),
+      );
+    }
 
     // -------------------------------------------------------------------------
     // User data: install Docker, write systemd service, install update helper.
@@ -344,23 +379,38 @@ export class Ec2Stack extends Stack {
           ]
         : []),
       // ---- generate-htpasswd helper script ------------------------------------
-      // Extracts the admin token from application-local.yaml and writes an
-      // htpasswd file for nginx basic auth on /grafana/, /prometheus/, /admin/.
-      // Called by ExecStartPre after the lore config is fetched.
+      // Writes an htpasswd file for nginx basic auth on /grafana/, /prometheus/,
+      // and /admin/. The admin token is sourced from (in order of preference):
+      //   1. /etc/ambonmud/secrets.env (AMBONMUD_ADMIN_TOKEN=<value>), populated
+      //      by the fetch-admin-token ExecStartPre from SSM Parameter Store when
+      //      adminTokenSsmParameterName is set. This is the preferred path —
+      //      it keeps the token out of the publicly-fetched lore config overlay.
+      //   2. application-local.yaml `token:` field, grep'd out of the fetched
+      //      config overlay. This is the legacy path, kept only so dev/local
+      //      setups that predate the SSM migration still work.
+      // Called by ExecStartPre after fetch-admin-token (if enabled) and after
+      // the lore config is fetched.
       // ----------------------------------------------------------------------
       `cat > /usr/local/bin/generate-htpasswd << 'SCRIPT_END'`,
       '#!/bin/bash',
       'set -euo pipefail',
-      'CONFIG=/app/data/application-local.yaml',
       'HTPASSWD=/etc/nginx/.htpasswd',
-      'if [ ! -f "$CONFIG" ]; then',
-      '  echo "No config overlay — skipping htpasswd generation"',
-      '  exit 0',
+      'ENV_FILE=/etc/ambonmud/secrets.env',
+      'if [ -f "$ENV_FILE" ]; then',
+      '  # shellcheck source=/dev/null',
+      '  . "$ENV_FILE"',
+      '  TOKEN="${AMBONMUD_ADMIN_TOKEN:-}"',
+      'else',
+      '  CONFIG=/app/data/application-local.yaml',
+      '  if [ ! -f "$CONFIG" ]; then',
+      '    echo "No secrets env file and no config overlay — skipping htpasswd generation"',
+      '    exit 0',
+      '  fi',
+      '  # Legacy: strip any surrounding double- or single-quotes around the value.',
+      `  TOKEN=$(grep -E "^\\s*token:" "$CONFIG" | head -1 | sed "s/.*token:\\s*//" | tr -d "\\"'")`,
       'fi',
-      // Strip any surrounding double-quotes or single-quotes that YAML may put around the value.
-      `TOKEN=$(grep -E "^\\s*token:" "$CONFIG" | head -1 | sed "s/.*token:\\s*//" | tr -d "\\"'")`,
       'if [ -z "$TOKEN" ]; then',
-      '  echo "No admin token found in config — skipping htpasswd generation"',
+      '  echo "No admin token found — skipping htpasswd generation"',
       '  exit 0',
       'fi',
       'htpasswd -bc "$HTPASSWD" admin "$TOKEN"',
@@ -399,6 +449,17 @@ export class Ec2Stack extends Stack {
       ...(worldZonesBaseUrl
         ? [`ExecStartPre=/usr/local/bin/fetch-world-zones`]
         : []),
+      // Fetch the admin API token from SSM Parameter Store and write it to
+      // /etc/ambonmud/secrets.env. Must run before generate-htpasswd (which
+      // reads the token from this file) and before the main ExecStart (which
+      // passes the file to the container via --env-file). Fails the unit if
+      // the parameter is missing or unreadable — we'd rather refuse to start
+      // than launch with a broken/missing admin token.
+      ...(adminTokenSsmParameterName
+        ? [
+            `ExecStartPre=/bin/bash -c 'mkdir -p /etc/ambonmud && umask 077 && token=$(aws ssm get-parameter --name ${adminTokenSsmParameterName} --with-decryption --query Parameter.Value --output text --region ${this.region}) && printf "AMBONMUD_ADMIN_TOKEN=%s\\n" "$token" > /etc/ambonmud/secrets.env'`,
+          ]
+        : []),
       // Generate htpasswd for nginx basic auth on /grafana/, /prometheus/, /admin/.
       'ExecStartPre=/usr/local/bin/generate-htpasswd',
       // AMBONMUD_DATA_DIR tells AppConfigLoader + WorldLoader to look in
@@ -406,7 +467,10 @@ export class Ec2Stack extends Stack {
       // fetched zone YAMLs (populated by fetch-world-zones above). Without
       // this, the JVM only sees the bundled classpath resources and silently
       // ignores everything the fetch scripts wrote to disk.
-      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data -e AMBONMUD_DATA_DIR=/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false ${ecrUri}:${imageTag}`,
+      // --env-file (when adminTokenSsmParameterName is set) pushes
+      // AMBONMUD_ADMIN_TOKEN from /etc/ambonmud/secrets.env into the
+      // container, where Hoplite picks it up and overrides ambonmud.admin.token.
+      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data ${adminTokenSsmParameterName ? '--env-file /etc/ambonmud/secrets.env ' : ''}-e AMBONMUD_DATA_DIR=/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',

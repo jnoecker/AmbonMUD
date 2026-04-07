@@ -44,6 +44,13 @@ const ecrRepoName = (app.node.tryGetContext('ecrRepo') as string | undefined) ??
 const loreConfigUrl = app.node.tryGetContext('loreConfigUrl') as string | undefined;
 const worldZonesBaseUrl = app.node.tryGetContext('worldZonesBaseUrl') as string | undefined;
 
+// Optional SSM Parameter Store parameter name holding the admin API token as
+// a SecureString. When set, the EC2 instance fetches it at systemd startup
+// and overrides ambonmud.admin.token via AMBONMUD_ADMIN_TOKEN env var, so the
+// real token never needs to live in the publicly-fetched lore config overlay.
+const adminTokenSsmParameterName =
+  app.node.tryGetContext('adminTokenSsmParameterName') as string | undefined;
+
 // ---------------------------------------------------------------------------
 // EC2 topology: single self-contained stack, no tier config needed.
 // ---------------------------------------------------------------------------
@@ -56,6 +63,7 @@ if (topology === 'ec2') {
     hostname,
     loreConfigUrl,
     worldZonesBaseUrl,
+    adminTokenSsmParameterName,
   });
 } else {
   // -------------------------------------------------------------------------
