@@ -43,6 +43,9 @@ const ecrRepoName = (app.node.tryGetContext('ecrRepo') as string | undefined) ??
 // instead of relying on the bundled JAR resources.
 const loreConfigUrl = app.node.tryGetContext('loreConfigUrl') as string | undefined;
 const worldZonesBaseUrl = app.node.tryGetContext('worldZonesBaseUrl') as string | undefined;
+// Optional URL to the Arcanum-generated sprites.yaml (tier/class/staff sprite
+// definitions). Fetched to /app/data/sprites.yaml on systemd start.
+const spritesUrl = app.node.tryGetContext('spritesUrl') as string | undefined;
 
 // Optional SSM Parameter Store parameter name holding the admin API token as
 // a SecureString. When set, the EC2 instance fetches it at systemd startup
@@ -63,6 +66,7 @@ if (topology === 'ec2') {
     hostname,
     loreConfigUrl,
     worldZonesBaseUrl,
+    spritesUrl,
     adminTokenSsmParameterName,
   });
 } else {

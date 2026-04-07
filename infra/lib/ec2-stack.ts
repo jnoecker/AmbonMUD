@@ -45,6 +45,16 @@ export interface Ec2StackProps extends StackProps {
    */
   readonly worldZonesBaseUrl?: string;
   /**
+   * Optional URL to the Arcanum-generated sprites.yaml (e.g.
+   * "https://auringold.ambon.dev/sprites.yaml"). When set, the systemd service
+   * curls it to /app/data/sprites.yaml on every (re)start, and SpriteLoader
+   * picks it up via the AMBONMUD_DATA_DIR filesystem fallback. This is a
+   * separate file from the bundled world/sprites.yaml stub — the Arcanum file
+   * contains the real tier/class/staff sprite definitions that are too big
+   * (and too often-regenerated) to bake into the JAR.
+   */
+  readonly spritesUrl?: string;
+  /**
    * Optional SSM Parameter Store parameter name (e.g. "/ambonmud/demo/admin-token")
    * that holds the admin API token as a SecureString. When set:
    *   - The instance role is granted ssm:GetParameter on this specific parameter
@@ -96,7 +106,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, adminTokenSsmParameterName } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, spritesUrl, adminTokenSsmParameterName } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -448,6 +458,17 @@ export class Ec2Stack extends Stack {
       // the fat JAR, so these zones shadow the bundled placeholder zones.
       ...(worldZonesBaseUrl
         ? [`ExecStartPre=/usr/local/bin/fetch-world-zones`]
+        : []),
+      // Fetch the Arcanum-generated sprites.yaml from R2 to /app/data/sprites.yaml.
+      // SpriteLoader picks it up via the AMBONMUD_DATA_DIR filesystem fallback.
+      // Not fetched by fetch-world-zones because sprites.yaml lives at the R2
+      // root, not under /world/, and the sprite loader calls loadFromResource
+      // with "sprites.yaml" (no "world/" prefix) so the target path is
+      // /app/data/sprites.yaml, not /app/data/world/sprites.yaml.
+      ...(spritesUrl
+        ? [
+            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -o /app/data/sprites.yaml ${spritesUrl}`,
+          ]
         : []),
       // Fetch the admin API token from SSM Parameter Store and write it to
       // /etc/ambonmud/secrets.env. Must run before generate-htpasswd (which

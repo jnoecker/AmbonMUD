@@ -77,6 +77,7 @@ jobs:
         env:
           LORE_URL: ${{ secrets.LORE_CONFIG_URL }}
           ZONES_URL: ${{ secrets.WORLD_ZONES_BASE_URL }}
+          SPRITES_URL: ${{ secrets.SPRITES_URL }}
           ADMIN_TOKEN_SSM_PARAM: ${{ vars.ADMIN_TOKEN_SSM_PARAMETER_NAME }}
         run: |
           ARGS="--context topology=${{ inputs.topology || 'ec2' }}"
@@ -85,6 +86,7 @@ jobs:
           ARGS="$ARGS --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}"
           [ -n "$LORE_URL" ]           && ARGS="$ARGS --context loreConfigUrl=$LORE_URL"
           [ -n "$ZONES_URL" ]          && ARGS="$ARGS --context worldZonesBaseUrl=$ZONES_URL"
+          [ -n "$SPRITES_URL" ]        && ARGS="$ARGS --context spritesUrl=$SPRITES_URL"
           [ -n "${{ vars.HOSTNAME }}" ] && ARGS="$ARGS --context hostname=${{ vars.HOSTNAME }}"
           [ -n "${{ vars.DOMAIN }}" ]   && ARGS="$ARGS --context domain=${{ vars.DOMAIN }}"
           [ -n "$ADMIN_TOKEN_SSM_PARAM" ] && ARGS="$ARGS --context adminTokenSsmParameterName=$ADMIN_TOKEN_SSM_PARAM"

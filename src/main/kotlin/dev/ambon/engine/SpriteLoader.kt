@@ -7,6 +7,8 @@ import dev.ambon.domain.sprite.SpriteRequirement
 import dev.ambon.domain.sprite.SpriteUnlockCondition
 import dev.ambon.domain.sprite.SpriteVariant
 import dev.ambon.persistence.yamlMapper
+import java.io.File
+import java.io.InputStream
 
 // ----- YAML DTOs -----
 
@@ -53,15 +55,28 @@ internal data class SpriteVariantFile(
 
 object SpriteLoader {
     /**
-     * Loads custom sprite definitions from a classpath YAML resource.
-     * Silently skips if the resource does not exist.
+     * Loads custom sprite definitions from a YAML resource.
+     *
+     * Checks $AMBONMUD_DATA_DIR/<resourcePath> on the filesystem first (for
+     * container deployments that fetch sprites.yaml to a bind-mounted data
+     * volume at runtime — see AppConfigLoader + WorldLoader for the matching
+     * overlay lookups). Falls back to the classpath for sprites bundled in
+     * the fat JAR. Silently no-ops if neither location has the resource.
      */
     fun loadFromResource(
         resourcePath: String,
         registry: SpriteRegistry,
     ) {
-        val stream = SpriteLoader::class.java.classLoader.getResourceAsStream(resourcePath) ?: return
-        val file = yamlMapper.readValue<SpritesFile>(stream)
+        val dataDirFile =
+            System
+                .getenv("AMBONMUD_DATA_DIR")
+                ?.let { File(it, resourcePath) }
+                ?.takeIf { it.isFile }
+        val stream: InputStream =
+            dataDirFile?.inputStream()
+                ?: SpriteLoader::class.java.classLoader.getResourceAsStream(resourcePath)
+                ?: return
+        val file = stream.use { yamlMapper.readValue<SpritesFile>(it) }
 
         for ((rawId, entry) in file.sprites) {
             val id = rawId.trim()
