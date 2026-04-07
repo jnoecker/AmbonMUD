@@ -274,22 +274,29 @@ Each key is a trainer ID (local identifier).
 Each value:
 
 ```yaml
-name:  <string, required, non-blank after trim>
-class: <string, required - one of WARRIOR|MAGE|CLERIC|ROGUE (case-insensitive)>
-room:  <room-id string, required - the room where the trainer NPC is located>
-image: <string, optional - trainer portrait image filename>
+name:    <string, required, non-blank after trim>
+class:   <string, optional - single class ID; legacy single-class form>
+classes: <list<string>, optional - one or more class IDs; preferred for multi-class trainers>
+room:    <room-id string, required - the room where the trainer NPC is located>
+image:   <string, optional - trainer portrait image filename>
 ```
+
+Either `class:` (single string) or `classes:` (non-empty list) must be present.
+If both are set, `classes:` takes precedence and `class:` is ignored.
+Class IDs are normalized to uppercase by the loader and must each be one of `WARRIOR | MAGE | CLERIC | ROGUE | RANGER` (case-insensitive at the YAML level; see `application.yaml` `engine.classes` for the canonical list).
 
 Trainer notes:
 - A room can have at most one trainer. If multiple trainers reference the same room, the last one wins.
-- The `class` field determines which abilities the trainer teaches. Abilities with a matching `requiredClass` in `application.yaml` are shown at this trainer.
-- Players use `train list` to see available abilities, `train learn <ability>` to spend a skill point, and `train unlock` to unlock the class via multiclassing.
+- A trainer with multiple `classes:` entries teaches abilities from all of them. The web client shows one tab per class. The text command `train list` renders a section per class.
+- Players unlock each class individually via `train unlock <class>` (the class argument is required for multi-class trainers; optional for single-class trainers).
+- `train learn <ability>` searches the trainer's unlocked classes for a matching ability — players don't need to specify which class an ability belongs to.
+- Abilities with a matching `requiredClass` in `application.yaml` are shown at this trainer.
 - The trainer NPC must be added separately in the `mobs:` section with a matching `room` — the `trainers:` entry is the registry binding, not the mob definition.
 
 Trainer ID normalization:
 - `room` follows the same normalization rules as other room references (prefixed with `<zone>:` when unqualified).
 
-Example:
+Example — single-class trainers (legacy form, still supported):
 
 ```yaml
 trainers:
@@ -301,6 +308,16 @@ trainers:
     name: "Archmage Solvara"
     class: MAGE
     room: mage_library
+```
+
+Example — a multi-class "academy master" who teaches three classes from one room:
+
+```yaml
+trainers:
+  combat_instructor:
+    name: "Master Grizelda"
+    classes: [WARRIOR, ROGUE, RANGER]
+    room: training_yard
 ```
 
 ### `gatheringNodes` map

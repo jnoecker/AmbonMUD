@@ -671,16 +671,22 @@ export interface TrainerAbility {
   image: string | null;
 }
 
+/** One class taught by a trainer. Multi-class trainers emit one entry per class. */
+export interface TrainerClass {
+  className: string;
+  classUnlocked: boolean;
+  abilities: TrainerAbility[];
+}
+
 export interface TrainerData {
   trainerId: string;
   name: string;
-  className: string;
   image: string | null;
-  classUnlocked: boolean;
   availableSkillPoints: number;
   multiclassMinLevel: number;
   multiclassGoldCost: number;
-  abilities: TrainerAbility[];
+  /** One entry per class this trainer teaches. Always non-empty. */
+  classes: TrainerClass[];
 }
 
 export interface PetState {

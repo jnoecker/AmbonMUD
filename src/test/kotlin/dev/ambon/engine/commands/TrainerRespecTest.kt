@@ -154,7 +154,7 @@ class TrainerRespecTest {
                 TrainerDefinition(
                     id = "mage_trainer",
                     name = "Archmage Zara",
-                    className = "MAGE",
+                    classNames = listOf("MAGE"),
                     roomId = TRAINER_ROOM,
                 ),
             ),
@@ -421,7 +421,7 @@ class TrainerRespecTest {
                     TrainerDefinition(
                         id = "mage_trainer",
                         name = "Archmage Zara",
-                        className = "MAGE",
+                        classNames = listOf("MAGE"),
                         roomId = TRAINER_ROOM,
                     ),
                 ),

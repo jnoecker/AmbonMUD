@@ -24,8 +24,17 @@ data class WorldFile(
 
 data class TrainerFile(
     val name: String = "",
+    /**
+     * Legacy single-class field. Prefer [classes] for new content.
+     * Still supported for backwards compatibility with existing zones.
+     */
     @com.fasterxml.jackson.annotation.JsonProperty("class")
     val className: String = "",
+    /**
+     * List of class IDs this trainer teaches. When set, takes precedence over [className].
+     * Use this for multi-class trainers (e.g. an "academy master" teaching warrior + rogue + ranger).
+     */
+    val classes: List<String>? = null,
     val room: String = "",
     val image: String? = null,
 )
