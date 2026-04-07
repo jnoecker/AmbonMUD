@@ -55,6 +55,17 @@ export interface Ec2StackProps extends StackProps {
    */
   readonly spritesUrl?: string;
   /**
+   * Optional URL to the lore-repo achievements.yaml (e.g.
+   * "https://auringold.ambon.dev/world/achievements.yaml"). When set, the
+   * systemd service curls it to /app/data/world/achievements.yaml AFTER
+   * fetch-world-zones runs (which `rm`s everything under /app/data/world/
+   * before repopulating), so the order matters — the achievements curl must
+   * come after the zone fetch or it gets wiped. AchievementLoader picks it
+   * up via the AMBONMUD_DATA_DIR filesystem fallback and it shadows the
+   * bundled JAR copy.
+   */
+  readonly achievementsUrl?: string;
+  /**
    * Optional SSM Parameter Store parameter name (e.g. "/ambonmud/demo/admin-token")
    * that holds the admin API token as a SecureString. When set:
    *   - The instance role is granted ssm:GetParameter on this specific parameter
@@ -106,7 +117,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, spritesUrl, adminTokenSsmParameterName } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, spritesUrl, achievementsUrl, adminTokenSsmParameterName } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -468,6 +479,17 @@ export class Ec2Stack extends Stack {
       ...(spritesUrl
         ? [
             `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -o /app/data/sprites.yaml ${spritesUrl}`,
+          ]
+        : []),
+      // Fetch the lore-repo achievements.yaml to /app/data/world/achievements.yaml.
+      // Must run AFTER fetch-world-zones because that script does
+      // `rm -f /app/data/world/*.yaml` before repopulating, which would
+      // otherwise wipe the file. AchievementLoader picks it up via the
+      // AMBONMUD_DATA_DIR filesystem fallback and it shadows the bundled
+      // JAR copy.
+      ...(achievementsUrl
+        ? [
+            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -o /app/data/world/achievements.yaml ${achievementsUrl}`,
           ]
         : []),
       // Fetch the admin API token from SSM Parameter Store and write it to

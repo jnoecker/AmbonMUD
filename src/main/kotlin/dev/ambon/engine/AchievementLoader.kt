@@ -5,6 +5,8 @@ import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementRewards
 import dev.ambon.persistence.yamlMapper
+import java.io.File
+import java.io.InputStream
 
 /** Flat DTO for YAML deserialization of achievements.yaml. */
 internal data class AchievementsFile(
@@ -35,19 +37,31 @@ internal data class AchievementRewardsFile(
 
 object AchievementLoader {
     /**
-     * Loads achievements from a classpath resource and registers them in [registry].
-     * Safe to call with a non-existent resource — will log a warning and skip.
+     * Loads achievements from a YAML resource and registers them in [registry].
+     *
+     * Checks $AMBONMUD_DATA_DIR/<resourcePath> on the filesystem first (for
+     * container deployments that fetch achievements.yaml to a bind-mounted
+     * data volume at runtime — see AppConfigLoader + WorldLoader + SpriteLoader
+     * for the matching overlay lookups). Falls back to the classpath for the
+     * bundled JAR copy. Safe to call with a non-existent resource — silently
+     * no-ops if neither location has the file.
      */
     fun loadFromResource(
         resourcePath: String,
         registry: AchievementRegistry,
         categoryRegistry: AchievementCategoryRegistry? = null,
     ) {
-        val stream =
-            AchievementLoader::class.java.classLoader.getResourceAsStream(resourcePath)
+        val dataDirFile =
+            System
+                .getenv("AMBONMUD_DATA_DIR")
+                ?.let { File(it, resourcePath) }
+                ?.takeIf { it.isFile }
+        val stream: InputStream =
+            dataDirFile?.inputStream()
+                ?: AchievementLoader::class.java.classLoader.getResourceAsStream(resourcePath)
                 ?: return
 
-        val file = yamlMapper.readValue<AchievementsFile>(stream)
+        val file = stream.use { yamlMapper.readValue<AchievementsFile>(it) }
         for ((rawId, entry) in file.achievements) {
             val id = rawId.trim()
             require(id.isNotEmpty()) { "Achievement id cannot be blank" }

@@ -46,6 +46,9 @@ const worldZonesBaseUrl = app.node.tryGetContext('worldZonesBaseUrl') as string 
 // Optional URL to the Arcanum-generated sprites.yaml (tier/class/staff sprite
 // definitions). Fetched to /app/data/sprites.yaml on systemd start.
 const spritesUrl = app.node.tryGetContext('spritesUrl') as string | undefined;
+// Optional URL to the lore-repo achievements.yaml. Fetched to
+// /app/data/world/achievements.yaml after fetch-world-zones runs.
+const achievementsUrl = app.node.tryGetContext('achievementsUrl') as string | undefined;
 
 // Optional SSM Parameter Store parameter name holding the admin API token as
 // a SecureString. When set, the EC2 instance fetches it at systemd startup
@@ -67,6 +70,7 @@ if (topology === 'ec2') {
     loreConfigUrl,
     worldZonesBaseUrl,
     spritesUrl,
+    achievementsUrl,
     adminTokenSsmParameterName,
   });
 } else {

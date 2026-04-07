@@ -78,6 +78,7 @@ jobs:
           LORE_URL: ${{ secrets.LORE_CONFIG_URL }}
           ZONES_URL: ${{ secrets.WORLD_ZONES_BASE_URL }}
           SPRITES_URL: ${{ secrets.SPRITES_URL }}
+          ACHIEVEMENTS_URL: ${{ secrets.ACHIEVEMENTS_URL }}
           ADMIN_TOKEN_SSM_PARAM: ${{ vars.ADMIN_TOKEN_SSM_PARAMETER_NAME }}
         run: |
           ARGS="--context topology=${{ inputs.topology || 'ec2' }}"
@@ -87,6 +88,7 @@ jobs:
           [ -n "$LORE_URL" ]           && ARGS="$ARGS --context loreConfigUrl=$LORE_URL"
           [ -n "$ZONES_URL" ]          && ARGS="$ARGS --context worldZonesBaseUrl=$ZONES_URL"
           [ -n "$SPRITES_URL" ]        && ARGS="$ARGS --context spritesUrl=$SPRITES_URL"
+          [ -n "$ACHIEVEMENTS_URL" ]   && ARGS="$ARGS --context achievementsUrl=$ACHIEVEMENTS_URL"
           [ -n "${{ vars.HOSTNAME }}" ] && ARGS="$ARGS --context hostname=${{ vars.HOSTNAME }}"
           [ -n "${{ vars.DOMAIN }}" ]   && ARGS="$ARGS --context domain=${{ vars.DOMAIN }}"
           [ -n "$ADMIN_TOKEN_SSM_PARAM" ] && ARGS="$ARGS --context adminTokenSsmParameterName=$ADMIN_TOKEN_SSM_PARAM"
