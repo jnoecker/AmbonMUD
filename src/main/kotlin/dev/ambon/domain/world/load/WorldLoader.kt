@@ -467,15 +467,28 @@ object WorldLoader {
                 val trainerName = requireNonBlank(trainerFile.name) {
                     "Trainer '$rawId' in zone '$zone' name cannot be blank"
                 }
-                val trainerClass = requireNonBlank(trainerFile.className) {
-                    "Trainer '$rawId' in zone '$zone' class cannot be blank"
+                // Accept either the legacy `class:` field or the new `classes:` list.
+                // If both are set, `classes:` wins and `class:` is ignored (loader warning emitted
+                // via exception would be noisy — silent preference is fine here).
+                val trainerClassList: List<String> = when {
+                    !trainerFile.classes.isNullOrEmpty() -> trainerFile.classes.map { it.trim() }
+                    trainerFile.className.isNotBlank() -> listOf(trainerFile.className.trim())
+                    else -> throw WorldLoadException(
+                        "Trainer '$rawId' in zone '$zone' must specify `class:` or a non-empty `classes:` list",
+                    )
                 }
+                if (trainerClassList.any { it.isBlank() }) {
+                    throw WorldLoadException(
+                        "Trainer '$rawId' in zone '$zone' has a blank entry in its classes list",
+                    )
+                }
+                val normalizedClasses = trainerClassList.map { it.uppercase() }.distinct()
                 val trainerRoomId = normalizeTarget(zone, trainerFile.room)
                 mergedTrainers.add(
                     TrainerDefinition(
                         id = qualifyId(zone, rawId),
                         name = trainerName,
-                        className = trainerClass.uppercase(),
+                        classNames = normalizedClasses,
                         roomId = trainerRoomId,
                         image = trainerFile.image,
                     ),

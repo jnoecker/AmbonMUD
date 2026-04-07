@@ -7,6 +7,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.TrainerDefinition
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.TrainerRegistry
+import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
@@ -34,7 +35,7 @@ class TrainerHandler(
     override fun register(router: CommandRouter) {
         router.on<Command.Train.List> { sid, _ -> handleTrainList(sid) }
         router.on<Command.Train.Learn> { sid, cmd -> handleTrainLearn(sid, cmd.keyword) }
-        router.on<Command.Train.Unlock> { sid, _ -> handleTrainUnlock(sid) }
+        router.on<Command.Train.Unlock> { sid, cmd -> handleTrainUnlock(sid, cmd.className) }
         router.on<Command.Train.Reset> { sid, _ -> handleTrainReset(sid) }
     }
 
@@ -47,6 +48,20 @@ class TrainerHandler(
         return trainer
     }
 
+    /** Returns true if the player has unlocked [className] (case-insensitive). */
+    private fun PlayerState.hasUnlocked(className: String): Boolean =
+        unlockedClasses.any { it.equals(className, ignoreCase = true) }
+
+    /** Pretty title label for a trainer — "Master Grizelda — Warrior/Rogue Trainer" for multi-class. */
+    private fun trainerTitle(trainer: TrainerDefinition): String {
+        val classLabel = if (trainer.isMultiClass) {
+            trainer.classNames.joinToString("/") { it.lowercase().replaceFirstChar { c -> c.uppercaseChar() } }
+        } else {
+            trainer.primaryClass
+        }
+        return "[ ${trainer.name} — $classLabel Trainer ]"
+    }
+
     private suspend fun handleTrainList(sessionId: SessionId) {
         players.withPlayer(sessionId) { me ->
             val trainer = findTrainer(sessionId, me) ?: return
@@ -56,112 +71,124 @@ class TrainerHandler(
                 interval = skillPointsConfig.interval,
                 prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
             )
-            val classUnlocked = me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) }
 
-            outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${trainer.name} — ${trainer.className} Trainer ]"))
+            outbound.send(OutboundEvent.SendInfo(sessionId, trainerTitle(trainer)))
             outbound.send(OutboundEvent.SendInfo(sessionId, "  Skill points available: $available"))
 
-            if (!classUnlocked) {
-                outbound.send(
-                    OutboundEvent.SendInfo(
-                        sessionId,
-                        "  ** ${trainer.className} class locked. Use 'train unlock' to pay " +
-                            "${multiclassConfig.goldCost} gold (requires level ${multiclassConfig.minLevel}). **",
-                    ),
-                )
-                gmcpEmitter?.sendTrainerList(sessionId, trainer, emptyList(), available, classUnlocked, multiclassConfig)
-                return
-            }
+            // Render one section per class this trainer teaches
+            for (className in trainer.classNames) {
+                val classUnlocked = me.hasUnlocked(className)
+                val prettyClass = className.lowercase().replaceFirstChar { it.uppercaseChar() }
 
-            val trainable = abilitySystem.trainableAbilities(trainer.className, me.level, me.learnedAbilityIds)
-            val learned = abilitySystem.knownAbilities(sessionId)
-                .filter { it.requiredClass.equals(trainer.className, ignoreCase = true) }
+                outbound.send(OutboundEvent.SendInfo(sessionId, ""))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  --- $prettyClass ---"))
 
-            // Group by tree for display
-            val trees = abilitySystem.registry.treesForClass(trainer.className)
-            if (trees.isNotEmpty()) {
-                for (tree in trees.sorted()) {
-                    val treeName = tree.substringAfter("_").replaceFirstChar { it.uppercaseChar() }
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "  === $treeName ==="))
-                    val treeAbilities = abilitySystem.registry.abilitiesInTree(tree)
-                    for (ability in treeAbilities) {
-                        val isLearned = ability.id.value in me.learnedAbilityIds
-                        val prereqMet = abilitySystem.registry.isPrerequisiteMet(
-                            ability.id,
-                            me.learnedAbilityIds,
-                        )
-                        val levelMet = ability.levelRequired <= me.level
-                        val mark = when {
-                            isLearned -> "[*]"
-                            !prereqMet || !levelMet -> "[X]"
-                            else -> "[ ]"
-                        }
-                        val prereqSuffix = if (ability.prerequisites.isNotEmpty() && !isLearned) {
-                            val prereqNames = ability.prerequisites.mapNotNull { pid ->
-                                abilitySystem.registry.get(pid)?.displayName
-                            }
-                            val lockLabel = if (!prereqMet) " [LOCKED]" else ""
-                            " - Requires: ${prereqNames.joinToString(", ")}$lockLabel"
-                        } else {
-                            ""
-                        }
-                        outbound.send(
-                            OutboundEvent.SendInfo(
-                                sessionId,
-                                "    $mark ${ability.displayName} (Tier ${ability.tier})$prereqSuffix",
-                            ),
-                        )
-                    }
-                }
-                // Show any untree'd abilities
-                val untreeAbilities = trainable.filter { it.tree.isBlank() }
-                if (untreeAbilities.isNotEmpty()) {
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "  === General ==="))
-                    for (ability in untreeAbilities) {
-                        outbound.send(
-                            OutboundEvent.SendInfo(
-                                sessionId,
-                                "    [ ] ${ability.displayName} (Lvl ${ability.levelRequired})",
-                            ),
-                        )
-                    }
-                }
-            } else if (trainable.isEmpty()) {
-                outbound.send(
-                    OutboundEvent.SendInfo(sessionId, "  No abilities available to learn here at your level."),
-                )
-            } else {
-                outbound.send(
-                    OutboundEvent.SendInfo(
-                        sessionId,
-                        "  %-30s %5s %s".format("Ability", "Lvl", "Description"),
-                    ),
-                )
-                for (ability in trainable) {
+                if (!classUnlocked) {
+                    val unlockArg = if (trainer.isMultiClass) " ${className.lowercase()}" else ""
                     outbound.send(
                         OutboundEvent.SendInfo(
                             sessionId,
-                            "  %-30s %5d %s".format(ability.displayName, ability.levelRequired, ability.description),
+                            "  ** $className class locked. Use 'train unlock$unlockArg' to pay " +
+                                "${multiclassConfig.goldCost} gold (requires level ${multiclassConfig.minLevel}). **",
+                        ),
+                    )
+                    continue
+                }
+
+                renderClassAbilities(sessionId, me, className)
+            }
+
+            gmcpEmitter?.sendTrainerList(sessionId, trainer, me, available, abilitySystem, multiclassConfig)
+        }
+    }
+
+    /** Renders the ability list for a single class the player has unlocked. */
+    private suspend fun renderClassAbilities(sessionId: SessionId, me: PlayerState, className: String) {
+        val trainable = abilitySystem.trainableAbilities(className, me.level, me.learnedAbilityIds)
+        val learned = abilitySystem.knownAbilities(sessionId)
+            .filter { it.requiredClass.equals(className, ignoreCase = true) }
+
+        val trees = abilitySystem.registry.treesForClass(className)
+        if (trees.isNotEmpty()) {
+            for (tree in trees.sorted()) {
+                val treeName = tree.substringAfter("_").replaceFirstChar { it.uppercaseChar() }
+                outbound.send(OutboundEvent.SendInfo(sessionId, "    === $treeName ==="))
+                val treeAbilities = abilitySystem.registry.abilitiesInTree(tree)
+                for (ability in treeAbilities) {
+                    val isLearned = ability.id.value in me.learnedAbilityIds
+                    val prereqMet = abilitySystem.registry.isPrerequisiteMet(
+                        ability.id,
+                        me.learnedAbilityIds,
+                    )
+                    val levelMet = ability.levelRequired <= me.level
+                    val mark = when {
+                        isLearned -> "[*]"
+                        !prereqMet || !levelMet -> "[X]"
+                        else -> "[ ]"
+                    }
+                    val prereqSuffix = if (ability.prerequisites.isNotEmpty() && !isLearned) {
+                        val prereqNames = ability.prerequisites.mapNotNull { pid ->
+                            abilitySystem.registry.get(pid)?.displayName
+                        }
+                        val lockLabel = if (!prereqMet) " [LOCKED]" else ""
+                        " - Requires: ${prereqNames.joinToString(", ")}$lockLabel"
+                    } else {
+                        ""
+                    }
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            sessionId,
+                            "      $mark ${ability.displayName} (Tier ${ability.tier})$prereqSuffix",
                         ),
                     )
                 }
             }
-            if (trainable.isNotEmpty()) {
-                outbound.send(
-                    OutboundEvent.SendInfo(sessionId, "  Use 'train learn <ability>' to spend a skill point."),
-                )
+            // Show any untree'd abilities
+            val untreeAbilities = trainable.filter { it.tree.isBlank() }
+            if (untreeAbilities.isNotEmpty()) {
+                outbound.send(OutboundEvent.SendInfo(sessionId, "    === General ==="))
+                for (ability in untreeAbilities) {
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            sessionId,
+                            "      [ ] ${ability.displayName} (Lvl ${ability.levelRequired})",
+                        ),
+                    )
+                }
             }
-
-            if (learned.isNotEmpty()) {
+        } else if (trainable.isEmpty()) {
+            outbound.send(
+                OutboundEvent.SendInfo(sessionId, "    No abilities available to learn here at your level."),
+            )
+        } else {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "    %-30s %5s %s".format("Ability", "Lvl", "Description"),
+                ),
+            )
+            for (ability in trainable) {
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "  Already learned: ${learned.joinToString { it.displayName }}",
+                        "    %-30s %5d %s".format(ability.displayName, ability.levelRequired, ability.description),
                     ),
                 )
             }
+        }
+        if (trainable.isNotEmpty()) {
+            outbound.send(
+                OutboundEvent.SendInfo(sessionId, "    Use 'train learn <ability>' to spend a skill point."),
+            )
+        }
 
-            gmcpEmitter?.sendTrainerList(sessionId, trainer, trainable, available, classUnlocked, multiclassConfig)
+        if (learned.isNotEmpty()) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "    Already learned: ${learned.joinToString { it.displayName }}",
+                ),
+            )
         }
     }
 
@@ -171,31 +198,47 @@ class TrainerHandler(
     ) {
         players.withPlayer(sessionId) { me ->
             val trainer = findTrainer(sessionId, me) ?: return
-            if (!me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) }) {
+            // Which of the trainer's classes are available to this player right now?
+            val unlockedHere = trainer.classNames.filter { me.hasUnlocked(it) }
+            if (unlockedHere.isEmpty()) {
+                val unlockHint = if (trainer.isMultiClass) {
+                    "Use 'train unlock <class>' to unlock one of: ${trainer.classNames.joinToString()}"
+                } else {
+                    "Use 'train unlock' to unlock the ${trainer.primaryClass} class."
+                }
                 outbound.send(
                     OutboundEvent.SendError(
                         sessionId,
-                        "You must unlock the ${trainer.className} class first. Use 'train unlock'.",
+                        "You haven't unlocked any of this trainer's classes. $unlockHint",
                     ),
                 )
                 return
             }
 
-            val trainable = abilitySystem.trainableAbilities(trainer.className, me.level, me.learnedAbilityIds)
-            val target = trainable.firstOrNull {
-                it.id.value.equals(keyword, ignoreCase = true) ||
-                    it.displayName.equals(keyword, ignoreCase = true) ||
-                    it.id.value.startsWith(keyword.lowercase()) ||
-                    it.displayName.lowercase().contains(keyword.lowercase())
+            // Search for a matching ability across all unlocked classes this trainer teaches
+            val candidates: List<Pair<String, AbilityDefinition>> = unlockedHere.flatMap { cls ->
+                abilitySystem.trainableAbilities(cls, me.level, me.learnedAbilityIds)
+                    .map { cls to it }
             }
+            val target = candidates.firstOrNull { (_, ability) ->
+                ability.id.value.equals(keyword, ignoreCase = true) ||
+                    ability.displayName.equals(keyword, ignoreCase = true)
+            }
+                ?: candidates.firstOrNull { (_, ability) ->
+                    ability.id.value.startsWith(keyword.lowercase()) ||
+                        ability.displayName.lowercase().contains(keyword.lowercase())
+                }
+
             if (target == null) {
                 outbound.send(OutboundEvent.SendError(sessionId, "No trainable ability matching '$keyword' found here."))
                 return
             }
 
+            val ability = target.second
+
             val error = abilitySystem.learnAbility(
                 sessionId = sessionId,
-                abilityId = AbilityId(target.id.value),
+                abilityId = AbilityId(ability.id.value),
                 level = me.level,
                 unlockedClasses = me.unlockedClasses,
                 skillPointInterval = skillPointsConfig.interval,
@@ -208,7 +251,7 @@ class TrainerHandler(
             }
 
             // Persist the new learned set to player state
-            me.learnedAbilityIds.add(target.id.value)
+            me.learnedAbilityIds.add(ability.id.value)
             players.persistPlayer(sessionId)
 
             val remaining = abilitySystem.availableSkillPoints(
@@ -220,30 +263,52 @@ class TrainerHandler(
             outbound.send(
                 OutboundEvent.SendText(
                     sessionId,
-                    "You learn ${target.displayName}! ($remaining skill points remaining)",
+                    "You learn ${ability.displayName}! ($remaining skill points remaining)",
                 ),
             )
 
             gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { id ->
                 abilitySystem.cooldownRemainingMs(sessionId, id)
             }
-            gmcpEmitter?.sendTrainerList(
-                sessionId,
-                trainer,
-                abilitySystem.trainableAbilities(trainer.className, me.level, me.learnedAbilityIds),
-                remaining,
-                true,
-                multiclassConfig,
-            )
+            gmcpEmitter?.sendTrainerList(sessionId, trainer, me, remaining, abilitySystem, multiclassConfig)
         }
     }
 
-    private suspend fun handleTrainUnlock(sessionId: SessionId) {
+    private suspend fun handleTrainUnlock(sessionId: SessionId, classArg: String?) {
         players.withPlayer(sessionId) { me ->
             val trainer = findTrainer(sessionId, me) ?: return
-            if (me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) }) {
+
+            // Decide which class to unlock
+            val targetClass = when {
+                classArg != null -> {
+                    val match = trainer.classNames.firstOrNull { it.equals(classArg, ignoreCase = true) }
+                    if (match == null) {
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sessionId,
+                                "This trainer doesn't teach '$classArg'. Available: ${trainer.classNames.joinToString()}",
+                            ),
+                        )
+                        return
+                    }
+                    match
+                }
+                trainer.isMultiClass -> {
+                    outbound.send(
+                        OutboundEvent.SendError(
+                            sessionId,
+                            "This trainer teaches multiple classes. Use 'train unlock <class>' — options: " +
+                                trainer.classNames.joinToString(),
+                        ),
+                    )
+                    return
+                }
+                else -> trainer.primaryClass
+            }
+
+            if (me.hasUnlocked(targetClass)) {
                 outbound.send(
-                    OutboundEvent.SendError(sessionId, "You have already unlocked the ${trainer.className} class."),
+                    OutboundEvent.SendError(sessionId, "You have already unlocked the $targetClass class."),
                 )
                 return
             }
@@ -261,24 +326,30 @@ class TrainerHandler(
                 outbound.send(
                     OutboundEvent.SendError(
                         sessionId,
-                        "You need $cost gold to unlock the ${trainer.className} class.",
+                        "You need $cost gold to unlock the $targetClass class.",
                     ),
                 )
                 return
             }
             if (!me.isStaff) me.gold -= cost
             markVitalsDirty(sessionId)
-            me.unlockedClasses.add(trainer.className.uppercase())
+            me.unlockedClasses.add(targetClass.uppercase())
             players.persistPlayer(sessionId)
 
             outbound.send(
                 OutboundEvent.SendText(
                     sessionId,
-                    "You unlock the ${trainer.className} class! " +
-                        "You may now learn ${trainer.className} abilities here.",
+                    "You unlock the $targetClass class! You may now learn $targetClass abilities here.",
                 ),
             )
             gmcpEmitter?.sendCharClasses(sessionId, me.unlockedClasses, me.playerClass)
+            val available = abilitySystem.availableSkillPoints(
+                level = me.level,
+                learnedCount = me.learnedAbilityIds.size,
+                interval = skillPointsConfig.interval,
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
+            )
+            gmcpEmitter?.sendTrainerList(sessionId, trainer, me, available, abilitySystem, multiclassConfig)
         }
     }
 
@@ -351,14 +422,7 @@ class TrainerHandler(
                 abilitySystem.cooldownRemainingMs(sessionId, id)
             }
             gmcpEmitter?.sendCharVitals(sessionId, me)
-            gmcpEmitter?.sendTrainerList(
-                sessionId,
-                trainer,
-                abilitySystem.trainableAbilities(trainer.className, me.level, me.learnedAbilityIds),
-                available,
-                me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) },
-                multiclassConfig,
-            )
+            gmcpEmitter?.sendTrainerList(sessionId, trainer, me, available, abilitySystem, multiclassConfig)
         }
     }
 }

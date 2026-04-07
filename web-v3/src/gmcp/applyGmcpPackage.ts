@@ -1762,31 +1762,39 @@ export function applyGmcpPackage(
 
     case "Trainer.List": {
       const packet = data as Partial<Record<string, unknown>>;
-      const abilities: TrainerAbility[] = Array.isArray(packet.abilities)
-        ? packet.abilities
-            .filter((a): a is Record<string, unknown> => typeof a === "object" && a !== null)
-            .map((a) => ({
-              id: typeof a.id === "string" ? a.id : "",
-              name: typeof a.name === "string" ? a.name : "",
-              description: typeof a.description === "string" ? a.description : "",
-              levelRequired: safeNumber(a.levelRequired, 1),
-              manaCost: safeNumber(a.manaCost),
-              cooldownMs: safeNumber(a.cooldownMs),
-              targetType: typeof a.targetType === "string" ? a.targetType : "ENEMY",
-              effectType: typeof a.effectType === "string" ? a.effectType : "DIRECT_DAMAGE",
-              image: typeof a.image === "string" ? a.image : null,
+      const parseAbilities = (raw: unknown): TrainerAbility[] =>
+        Array.isArray(raw)
+          ? raw
+              .filter((a): a is Record<string, unknown> => typeof a === "object" && a !== null)
+              .map((a) => ({
+                id: typeof a.id === "string" ? a.id : "",
+                name: typeof a.name === "string" ? a.name : "",
+                description: typeof a.description === "string" ? a.description : "",
+                levelRequired: safeNumber(a.levelRequired, 1),
+                manaCost: safeNumber(a.manaCost),
+                cooldownMs: safeNumber(a.cooldownMs),
+                targetType: typeof a.targetType === "string" ? a.targetType : "ENEMY",
+                effectType: typeof a.effectType === "string" ? a.effectType : "DIRECT_DAMAGE",
+                image: typeof a.image === "string" ? a.image : null,
+              }))
+          : [];
+      const classes = Array.isArray(packet.classes)
+        ? packet.classes
+            .filter((c): c is Record<string, unknown> => typeof c === "object" && c !== null)
+            .map((c) => ({
+              className: typeof c.class === "string" ? c.class : "",
+              classUnlocked: c.classUnlocked === true,
+              abilities: parseAbilities(c.abilities),
             }))
         : [];
       const trainer: TrainerData = {
         trainerId: typeof packet.trainerId === "string" ? packet.trainerId : "",
         name: typeof packet.name === "string" ? packet.name : "Trainer",
-        className: typeof packet.class === "string" ? packet.class : "",
         image: typeof packet.image === "string" ? packet.image : null,
-        classUnlocked: packet.classUnlocked === true,
         availableSkillPoints: safeNumber(packet.availableSkillPoints),
         multiclassMinLevel: safeNumber(packet.multiclassMinLevel, 10),
         multiclassGoldCost: safeNumber(packet.multiclassGoldCost, 500),
-        abilities,
+        classes,
       };
       ctx.setTrainer(trainer);
       break;

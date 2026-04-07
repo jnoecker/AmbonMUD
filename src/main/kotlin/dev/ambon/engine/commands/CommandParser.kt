@@ -475,8 +475,14 @@ sealed interface Command {
             val keyword: String,
         ) : Train
 
-        /** `train unlock` — pay gold to unlock the class taught by this trainer. */
-        data object Unlock : Train
+        /**
+         * `train unlock` / `train unlock <class>` — pay gold to unlock a class taught by the
+         * trainer in this room. The class argument is optional for single-class trainers and
+         * required for multi-class trainers.
+         */
+        data class Unlock(
+            val className: String?,
+        ) : Train
 
         /** `train reset` — pay gold to reset all learned abilities and refund skill points. */
         data object Reset : Train
@@ -1355,7 +1361,10 @@ object CommandParser {
                     val kw = parts.getOrNull(1)?.trim() ?: ""
                     if (kw.isEmpty()) Command.Invalid(line, "train learn <ability>") else Command.Train.Learn(kw)
                 }
-                "unlock" -> Command.Train.Unlock
+                "unlock" -> {
+                    val arg = parts.getOrNull(1)?.trim().orEmpty()
+                    Command.Train.Unlock(className = arg.ifBlank { null })
+                }
                 "reset", "respec" -> Command.Train.Reset
                 else -> Command.Train.Learn(rest.trim())
             }

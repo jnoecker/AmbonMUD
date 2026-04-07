@@ -61,18 +61,31 @@ New top-level `trainers:` section in zone YAML files. Each key is a trainer ID m
 trainers:
   warrior_trainer:
     name: "Sergeant Crag"
-    class: WARRIOR          # class ID this trainer teaches (uppercase)
-    room: training_yard     # room ID where the trainer is located
+    class: WARRIOR          # legacy single-class form
+    room: training_yard
     image: null             # optional portrait image filename
+
+  # Multi-class trainer — teaches several classes from one room
+  combat_instructor:
+    name: "Master Grizelda"
+    classes: [WARRIOR, ROGUE, RANGER]
+    room: training_yard
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `<key>` | string | yes | Trainer ID — must match a mob key in `mobs:` |
 | `name` | string | yes | Display name in GMCP output |
-| `class` | string | yes | Class ID — all abilities with `requiredClass` matching this value are shown |
+| `class` | string | one of | Single class ID (legacy form). All abilities with matching `requiredClass` are shown. |
+| `classes` | list\<string\> | one of | Preferred multi-class form. Either `class:` or `classes:` must be set; `classes:` wins if both are present. |
 | `room` | string | yes | Room ID where the trainer stands |
 | `image` | string? | no | Portrait image filename for web client |
+
+Multi-class behavior:
+- `train list` renders a section per class. Each class has its own locked/unlocked indicator and ability list.
+- `train unlock <class>` is required to specify which class to unlock at a multi-class trainer (single-class trainers still accept `train unlock` with no arg).
+- `train learn <keyword>` searches abilities across every class the trainer teaches that the player has unlocked, so users don't need to know which class an ability belongs to.
+- The web `Trainer.List` GMCP payload now contains a `classes: [{ class, classUnlocked, abilities }]` array instead of the old top-level `class`/`classUnlocked`/`abilities` fields. Single-class trainers emit a one-element list — clients can still treat them as single-class by reading `classes[0]`.
 
 ### GMCP Packages (new)
 

@@ -1,4 +1,5 @@
-import type { TrainerAbility, TrainerData } from "../types";
+import { useState } from "react";
+import type { TrainerAbility, TrainerClass, TrainerData } from "../types";
 
 function cooldownLabel(ms: number): string {
   if (ms <= 0) return "None";
@@ -15,6 +16,11 @@ function effectLabel(effectType: string): string {
     case "DEBUFF": return "Debuff";
     default: return effectType;
   }
+}
+
+function prettyClass(className: string): string {
+  if (className.length === 0) return "";
+  return className.charAt(0).toUpperCase() + className.slice(1).toLowerCase();
 }
 
 function AbilityRow({
@@ -67,42 +73,70 @@ interface TrainerPanelProps {
 
 export function TrainerPanel({ trainer, playerLevel, playerGold, onCommand }: TrainerPanelProps) {
   const hasPoints = trainer.availableSkillPoints > 0;
+  const isMultiClass = trainer.classes.length > 1;
 
-  if (!trainer.classUnlocked) {
-    const canUnlock = playerLevel >= trainer.multiclassMinLevel && playerGold >= trainer.multiclassGoldCost;
+  // Selected class tab — defaults to the first class, or the first unlocked one if any are unlocked
+  const initialClass = trainer.classes.find((c) => c.classUnlocked)?.className
+    ?? trainer.classes[0]?.className
+    ?? "";
+  const [selectedClass, setSelectedClass] = useState<string>(initialClass);
+  const [prevTrainerId, setPrevTrainerId] = useState<string>(trainer.trainerId);
+
+  // Reset the selected tab when the trainer changes (e.g. switching rooms)
+  if (trainer.trainerId !== prevTrainerId) {
+    setPrevTrainerId(trainer.trainerId);
+    setSelectedClass(initialClass);
+  }
+
+  const activeClass: TrainerClass | undefined =
+    trainer.classes.find((c) => c.className === selectedClass) ?? trainer.classes[0];
+
+  if (!activeClass) {
     return (
       <div className="trainer-panel">
         <div className="trainer-header">
           <span className="trainer-name">{trainer.name}</span>
-          <span className="trainer-class">{trainer.className} Trainer</span>
         </div>
-        <div className="trainer-locked">
-          <p className="trainer-locked-msg">
-            The <strong>{trainer.className}</strong> class is locked.
-          </p>
-          <p className="trainer-locked-req">
-            Requires level {trainer.multiclassMinLevel} and {trainer.multiclassGoldCost.toLocaleString()} gold.
-          </p>
-          <button
-            type="button"
-            className={`trainer-unlock-btn${canUnlock ? "" : " trainer-unlock-btn-disabled"}`}
-            disabled={!canUnlock}
-            title={canUnlock ? `Unlock the ${trainer.className} class` : "Requirements not met"}
-            onClick={() => onCommand("train unlock")}
-          >
-            Unlock Class ({trainer.multiclassGoldCost.toLocaleString()} gold)
-          </button>
-        </div>
+        <p className="trainer-empty">This trainer has no classes configured.</p>
       </div>
     );
   }
+
+  const classLabel = prettyClass(activeClass.className);
+  const unlockArg = isMultiClass ? ` ${activeClass.className.toLowerCase()}` : "";
+  const unlockCmd = `train unlock${unlockArg}`;
 
   return (
     <div className="trainer-panel">
       <div className="trainer-header">
         <span className="trainer-name">{trainer.name}</span>
-        <span className="trainer-class">{trainer.className} Trainer</span>
+        <span className="trainer-class">
+          {isMultiClass
+            ? `${trainer.classes.map((c) => prettyClass(c.className)).join(" / ")} Trainer`
+            : `${classLabel} Trainer`}
+        </span>
       </div>
+
+      {isMultiClass && (
+        <div className="trainer-class-tabs" role="tablist" aria-label="Trainer classes">
+          {trainer.classes.map((c) => {
+            const isActive = c.className === activeClass.className;
+            return (
+              <button
+                key={c.className}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                className={`trainer-class-tab${isActive ? " trainer-class-tab-active" : ""}${c.classUnlocked ? "" : " trainer-class-tab-locked"}`}
+                onClick={() => setSelectedClass(c.className)}
+              >
+                {prettyClass(c.className)}
+                {!c.classUnlocked && <span className="trainer-class-tab-lock" aria-hidden="true">{"\uD83D\uDD12"}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="trainer-skill-points">
         <span className="trainer-sp-label">Skill Points Available</span>
@@ -111,13 +145,36 @@ export function TrainerPanel({ trainer, playerLevel, playerGold, onCommand }: Tr
         </span>
       </div>
 
-      {trainer.abilities.length === 0 ? (
+      {!activeClass.classUnlocked ? (
+        <div className="trainer-locked">
+          <p className="trainer-locked-msg">
+            The <strong>{classLabel}</strong> class is locked.
+          </p>
+          <p className="trainer-locked-req">
+            Requires level {trainer.multiclassMinLevel} and {trainer.multiclassGoldCost.toLocaleString()} gold.
+          </p>
+          {(() => {
+            const canUnlock = playerLevel >= trainer.multiclassMinLevel && playerGold >= trainer.multiclassGoldCost;
+            return (
+              <button
+                type="button"
+                className={`trainer-unlock-btn${canUnlock ? "" : " trainer-unlock-btn-disabled"}`}
+                disabled={!canUnlock}
+                title={canUnlock ? `Unlock the ${classLabel} class` : "Requirements not met"}
+                onClick={() => onCommand(unlockCmd)}
+              >
+                Unlock {classLabel} ({trainer.multiclassGoldCost.toLocaleString()} gold)
+              </button>
+            );
+          })()}
+        </div>
+      ) : activeClass.abilities.length === 0 ? (
         <p className="trainer-empty">
-          No new abilities available at your level. Keep adventuring!
+          No new {classLabel} abilities available at your level. Keep adventuring!
         </p>
       ) : (
         <div className="trainer-ability-list">
-          {trainer.abilities.map((ability) => (
+          {activeClass.abilities.map((ability) => (
             <AbilityRow
               key={ability.id}
               ability={ability}

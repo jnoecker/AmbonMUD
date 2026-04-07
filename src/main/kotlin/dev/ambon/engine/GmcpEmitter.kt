@@ -594,48 +594,62 @@ class GmcpEmitter(
     }
 
     /**
-     * Sends the `Trainer.List` GMCP package for the trainer in the current room.
+     * Emits `Trainer.List` for a (possibly multi-class) trainer in the current room.
+     * Computes the per-class ability list using [abilitySystem] and the player's
+     * current unlocked classes / learned abilities.
      */
     suspend fun sendTrainerList(
         sessionId: SessionId,
         trainer: dev.ambon.domain.world.TrainerDefinition,
-        abilities: List<AbilityDefinition>,
+        player: dev.ambon.engine.PlayerState,
         availableSkillPoints: Int,
-        classUnlocked: Boolean,
+        abilitySystem: dev.ambon.engine.abilities.AbilitySystem,
         multiclassConfig: dev.ambon.config.MulticlassConfig,
     ) {
+        val classPayloads = trainer.classNames.map { className ->
+            val unlocked = player.unlockedClasses.any { it.equals(className, ignoreCase = true) }
+            val abilities = if (unlocked) {
+                abilitySystem.trainableAbilities(className, player.level, player.learnedAbilityIds)
+            } else {
+                emptyList()
+            }
+            TrainerClassPayload(
+                className = className,
+                classUnlocked = unlocked,
+                abilities = abilities.map { a -> a.toTrainerAbilityPayload() },
+            )
+        }
         emit(
             sessionId,
             "Trainer.List",
             TrainerListPayload(
                 trainerId = trainer.id,
                 name = trainer.name,
-                className = trainer.className,
                 image = trainer.image,
-                classUnlocked = classUnlocked,
                 availableSkillPoints = availableSkillPoints,
                 multiclassMinLevel = multiclassConfig.minLevel,
                 multiclassGoldCost = multiclassConfig.goldCost,
-                abilities = abilities.map { a ->
-                    TrainerAbilityPayload(
-                        id = a.id.value,
-                        name = a.displayName,
-                        description = a.description,
-                        levelRequired = a.levelRequired,
-                        manaCost = a.manaCost,
-                        cooldownMs = a.cooldownMs,
-                        targetType = a.targetType,
-                        effectType = a.effect.toEffectType(),
-                        image = a.image,
-                        prerequisites = a.prerequisites.map { it.value },
-                        tree = a.tree,
-                        tier = a.tier,
-                    )
-                },
+                classes = classPayloads,
             ),
             supportCheck = "Trainer",
         )
     }
+
+    private fun AbilityDefinition.toTrainerAbilityPayload(): TrainerAbilityPayload =
+        TrainerAbilityPayload(
+            id = id.value,
+            name = displayName,
+            description = description,
+            levelRequired = levelRequired,
+            manaCost = manaCost,
+            cooldownMs = cooldownMs,
+            targetType = targetType,
+            effectType = effect.toEffectType(),
+            image = image,
+            prerequisites = prerequisites.map { it.value },
+            tree = tree,
+            tier = tier,
+        )
 
     /** Sends `Char.Classes` with the player's unlocked classes. */
     suspend fun sendCharClasses(
@@ -1993,16 +2007,25 @@ class GmcpEmitter(
         val tier: Int = 0,
     )
 
+    private data class TrainerClassPayload(
+        @get:JsonProperty("class") val className: String,
+        val classUnlocked: Boolean,
+        val abilities: List<TrainerAbilityPayload>,
+    )
+
     private data class TrainerListPayload(
         val trainerId: String,
         val name: String,
-        @get:JsonProperty("class") val className: String,
         val image: String?,
-        val classUnlocked: Boolean,
         val availableSkillPoints: Int,
         val multiclassMinLevel: Int,
         val multiclassGoldCost: Long,
-        val abilities: List<TrainerAbilityPayload>,
+        /**
+         * One entry per class this trainer teaches. Always non-empty. Single-class
+         * trainers emit a one-element list — clients can still render the old
+         * "one class" UI by reading `classes[0]`.
+         */
+        val classes: List<TrainerClassPayload>,
     )
 
     private data class CharClassesPayload(
