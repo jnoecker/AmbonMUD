@@ -109,6 +109,20 @@ body,
   min-height: 100%;
 }
 
+/*
+ * iOS Safari auto-zooms in when focusing a form control whose font-size is
+ * below 16px, and it will not auto-zoom back out afterward. The login input
+ * autofocuses on load, so without this the page loads zoomed-in and stuck.
+ * Force all form controls to at least 16px on touch devices.
+ */
+@media (hover: none) and (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 body {
   min-height: 100vh;
   color: var(--text-primary);
