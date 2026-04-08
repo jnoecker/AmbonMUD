@@ -91,6 +91,10 @@ class SpriteRegistry {
     /**
      * Auto-resolve: picks the highest-tier sprite with the best variant match.
      * Used when `activeSprite` is null (default/auto mode).
+     *
+     * Considers TIER and GENERAL sprites (and STAFF if the player is staff).
+     * ACHIEVEMENT sprites are intentionally excluded — those are special art
+     * that should require explicit selection rather than being chosen by default.
      */
     fun autoResolve(
         level: Int,
@@ -99,13 +103,13 @@ class SpriteRegistry {
         playerClass: String,
         playerGender: String,
     ): SpriteVariant? {
-        // For auto, only consider tier sprites (or staff if isStaff)
         val candidates = definitions.values
             .filter { def ->
                 when (def.category) {
-                    SpriteCategory.TIER -> isUnlocked(def, level, emptySet(), isStaff = false, playerRace, playerClass)
+                    SpriteCategory.TIER, SpriteCategory.GENERAL ->
+                        isUnlocked(def, level, emptySet(), isStaff = false, playerRace, playerClass)
                     SpriteCategory.STAFF -> isStaff
-                    else -> false
+                    SpriteCategory.ACHIEVEMENT -> false
                 }
             }
             .sortedByDescending { it.sortOrder }

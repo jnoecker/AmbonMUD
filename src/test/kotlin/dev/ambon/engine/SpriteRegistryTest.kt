@@ -335,6 +335,63 @@ class SpriteRegistryTest {
     }
 
     @Test
+    fun `autoResolve picks general category sprite when no tier sprites are defined`() {
+        // Regression test: the Arcanum-generated sprites.yaml uses category=general
+        // for all sprites, not category=tier. Without GENERAL in autoResolve's filter,
+        // brand-new players got a null sprite and the client rendered a blank square.
+        val generalSprite = SpriteDefinition(
+            id = "human_base",
+            displayName = "Human (Base)",
+            category = SpriteCategory.GENERAL,
+            requirements = listOf(
+                dev.ambon.domain.sprite.SpriteRequirement.MinLevel(0),
+            ),
+            sortOrder = 0,
+            variants = listOf(
+                SpriteVariant("human_base", "Human (Base)", imagePath = "player_sprites/human_base.png"),
+            ),
+        )
+        registry.register(generalSprite)
+        val result = registry.autoResolve(
+            level = 1,
+            isStaff = false,
+            playerRace = "HUMAN",
+            playerClass = "WARRIOR",
+            playerGender = "neutral",
+        )
+        assertNotNull(result)
+        assertEquals("human_base", result!!.imageId)
+    }
+
+    @Test
+    fun `autoResolve excludes achievement sprites even when player meets unlock`() {
+        // Achievement sprites are special art that must be picked explicitly —
+        // they should never be auto-selected as the default, even if the player
+        // technically meets the unlock conditions.
+        val unlockedAchievementSprite = SpriteDefinition(
+            id = "trivially_unlocked_achievement",
+            displayName = "Trivially Unlocked Achievement",
+            category = SpriteCategory.ACHIEVEMENT,
+            requirements = listOf(
+                dev.ambon.domain.sprite.SpriteRequirement.MinLevel(1),
+            ),
+            sortOrder = 500,
+            variants = listOf(
+                SpriteVariant("trivially_unlocked", "Trivially Unlocked", imagePath = "p.png"),
+            ),
+        )
+        registry.register(unlockedAchievementSprite)
+        val result = registry.autoResolve(
+            level = 50,
+            isStaff = false,
+            playerRace = "HUMAN",
+            playerClass = "WARRIOR",
+            playerGender = "neutral",
+        )
+        assertNull(result)
+    }
+
+    @Test
     fun `autoResolve prefers staff sprite for staff member`() {
         registry.register(tierNovice)
         registry.register(staffSprite)
