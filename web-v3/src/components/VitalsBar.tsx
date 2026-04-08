@@ -78,6 +78,7 @@ interface VitalsBarProps {
   showInput: boolean;
   onShowInputChange: (open: boolean) => void;
   onInputKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  onHeightChange?: (height: number) => void;
 }
 
 interface SkillSlotProps {
@@ -173,9 +174,11 @@ export function VitalsBar({
   showInput,
   onShowInputChange,
   onInputKeyDown,
+  onHeightChange,
 }: VitalsBarProps) {
   const [showPanels, setShowPanels] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
 
   const hasAnySkill = quickbarSlots.some((s) => s !== null);
 
@@ -185,6 +188,26 @@ export function VitalsBar({
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [showInput]);
+
+  useEffect(() => {
+    const node = navRef.current;
+    if (!node || !onHeightChange) return;
+
+    const reportHeight = () => {
+      onHeightChange(Math.ceil(node.getBoundingClientRect().height));
+    };
+
+    reportHeight();
+
+    const resizeObserver = new ResizeObserver(() => {
+      reportHeight();
+    });
+    resizeObserver.observe(node);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [onHeightChange, loggedIn, hasAnySkill, showPanels, showInput, connected]);
 
   const submitInput = (e: FormEvent) => {
     e.preventDefault();
@@ -226,7 +249,7 @@ export function VitalsBar({
   };
 
   return (
-    <nav className="vbar" aria-label="Action bar">
+    <nav ref={navRef} className="vbar" aria-label="Action bar">
       {/* Vitals row */}
       {loggedIn && (
         <div className="vbar-vitals">

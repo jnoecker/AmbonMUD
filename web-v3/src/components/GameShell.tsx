@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { PixiCanvas } from "../canvas/PixiCanvas";
 import { CombatLog } from "./CombatLog";
@@ -53,9 +54,13 @@ export function GameShell({
   children,
 }: GameShellProps) {
   const loggedIn = connected && hasCharacterProfile;
+  const [hudBottomInset, setHudBottomInset] = useState(0);
 
   return (
-    <main className="game-shell">
+    <main
+      className="game-shell"
+      style={{ ["--game-bottom-inset" as string]: `${hudBottomInset}px` }}
+    >
       {/* Full-screen canvas — renders room title, description, entities, minimap/compass */}
       <div className="game-canvas-layer">
         <PixiCanvas />
@@ -103,6 +108,7 @@ export function GameShell({
         showInput={showInput}
         onShowInputChange={onShowInputChange}
         onInputKeyDown={onInputKeyDown}
+        onHeightChange={setHudBottomInset}
       />
 
       {children}

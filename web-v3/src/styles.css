@@ -11818,7 +11818,10 @@ html:has(.game-shell),
 
 .game-canvas-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: var(--game-bottom-inset, 0px);
+  left: 0;
   z-index: 0;
 }
 
@@ -11924,7 +11927,7 @@ html:has(.game-shell),
 .game-shell .combat-log-wrap {
   position: absolute;
   left: 12px;
-  bottom: 200px; /* sits above the vbar */
+  bottom: calc(var(--game-bottom-inset, 0px) + 12px);
   right: auto;
   z-index: 9;
   max-width: min(420px, calc(100vw - 24px));
