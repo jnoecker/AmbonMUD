@@ -58,6 +58,7 @@ object AbilityRegistryLoader {
                     manaCost = defConfig.manaCost,
                     cooldownMs = defConfig.cooldownMs,
                     levelRequired = defConfig.levelRequired,
+                    skillPointCost = defConfig.skillPointCost,
                     targetType = targetType,
                     effect = effect,
                     requiredClass = requiredClass,

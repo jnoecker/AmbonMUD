@@ -383,8 +383,9 @@ mobs:
           - text: Goodbye.
             next: farewell
       training_info:
-        text: "'train list' shows available abilities. 'train learn <ability>' spends a skill point. You earn points as you
-          level. At level 10 you may also unlock a second class with 'train unlock'."
+        text: "'train list' shows available abilities. Some core techniques are granted automatically as you level, while
+          'train learn <ability>' spends skill points on the rest. At level 10 you may also unlock a second class with
+          'train unlock'."
         choices:
           - text: Goodbye.
             next: farewell
@@ -412,8 +413,8 @@ mobs:
           - text: Goodbye.
             next: farewell
       training_info:
-        text: Skill points are the currency of knowledge. 'train list' shows available spells. 'train learn <spell>' spends one
-          point. Master every spell before you consider a second vocation.
+        text: Skill points are the currency of knowledge, though a few foundational spells come naturally as your power
+          grows. 'train list' shows what is granted automatically and what still costs points.
         choices:
           - text: Goodbye.
             next: farewell
@@ -441,8 +442,8 @@ mobs:
           - text: Goodbye.
             next: farewell
       training_info:
-        text: Each skill point spent here is a prayer answered. 'train list' shows available blessings and rites. 'train learn
-          <ability>' invests a point. The divine rewards devotion.
+        text: Some blessings awaken on their own with faithful practice. 'train list' shows which rites are granted
+          automatically and which still require your skill points.
         choices:
           - text: Goodbye.
             next: farewell
@@ -472,8 +473,8 @@ mobs:
           - text: Goodbye.
             next: farewell
       training_info:
-        text: "'train list' shows my curriculum. 'train learn <skill>' costs a skill point. Master everything I offer and you'll
-          reach places others can't. Like the sewers beneath Thornhaven."
+        text: "'train list' shows my curriculum. Some tricks become second nature as you grow, but the rest still cost skill
+          points. Master everything I offer and you'll reach places others can't. Like the sewers beneath Thornhaven."
         choices:
           - text: Tell me about the sewers.
             next: sewer_hint
@@ -509,8 +510,9 @@ mobs:
           - text: Goodbye.
             next: farewell
       training_info:
-        text: "'train list' shows available abilities. 'train learn <ability>' spends a skill point. Rangers can mark prey,
-          summon a hawk, read the land. You'll find me in Thornwood Forest as well, if you're out that way."
+        text: "'train list' shows available abilities. Some ranger instincts awaken automatically as you level, while
+          'train learn <ability>' spends skill points on the rest. You'll find me in Thornwood Forest as well, if you're
+          out that way."
         choices:
           - text: Goodbye.
             next: farewell
@@ -724,9 +726,9 @@ mobs:
             next: root
       about_training:
         text: Abilities are learned from class trainers — like Captain Varek for warriors, or Archmage Solen for mages, right
-          here in Thornhaven's Trainers' Hall. You spend skill points to learn them. You earn one skill point every two
-          levels. Visit your trainer and type 'train list' to see what's available at your current level. 'train learn
-          <ability>' to spend the point. Choose wisely — your points are limited, and each ability shapes how you fight.
+          here in Thornhaven's Trainers' Hall. Some foundational abilities are granted automatically as you reach the
+          right level, while the rest cost skill points. You earn one skill point every two levels. Visit your trainer
+          and type 'train list' to see what's available at your current level.
         choices:
           - text: Tell me about multi-classing.
             next: about_multiclass

@@ -139,6 +139,20 @@ class TrainerRespecTest {
                 requiredClass = "MAGE",
             ),
         )
+        abilityRegistry.register(
+            AbilityDefinition(
+                id = AbilityId("archmage_instinct"),
+                displayName = "Archmage Instinct",
+                description = "A foundational instinct granted automatically.",
+                manaCost = 0,
+                cooldownMs = 0,
+                levelRequired = 50,
+                targetType = "SELF",
+                effect = AbilityEffect.DirectHeal(1, 1),
+                requiredClass = "MAGE",
+                skillPointCost = 0,
+            ),
+        )
 
         abilitySystem = AbilitySystem(
             players = players,
@@ -254,6 +268,25 @@ class TrainerRespecTest {
 
             // Verify skill points refunded: level 10 / interval 2 = 5 points, 0 learned = 5 available
             assertTrue(texts.any { it.contains("5 skill points") }, "Expected 5 skill points available, got: $texts")
+        }
+
+        @Test
+        fun `respec keeps zero cost auto learned abilities`() = runTest {
+            loginAndSetup(gold = 2000, level = 50)
+            abilitySystem.loadAbilities(SID, emptySet())
+            learnAbilities()
+
+            assertTrue(
+                abilitySystem.knownAbilities(SID).any { it.id.value == "archmage_instinct" },
+                "Expected auto-learned ability before reset",
+            )
+
+            outbound.drainAll()
+            router.handle(SID, Command.Train.Reset)
+
+            val me = players.get(SID)!!
+            assertEquals(0, me.learnedAbilityIds.size)
+            assertEquals(setOf("archmage_instinct"), abilitySystem.knownAbilities(SID).map { it.id.value }.toSet())
         }
 
         @Test

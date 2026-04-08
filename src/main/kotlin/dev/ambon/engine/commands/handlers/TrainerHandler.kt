@@ -67,7 +67,7 @@ class TrainerHandler(
             val trainer = findTrainer(sessionId, me) ?: return
             val available = abilitySystem.availableSkillPoints(
                 level = me.level,
-                learnedCount = me.learnedAbilityIds.size,
+                spentPoints = abilitySystem.spentSkillPoints(me.learnedAbilityIds),
                 interval = skillPointsConfig.interval,
                 prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
             )
@@ -104,7 +104,8 @@ class TrainerHandler(
 
     /** Renders the ability list for a single class the player has unlocked. */
     private suspend fun renderClassAbilities(sessionId: SessionId, me: PlayerState, className: String) {
-        val trainable = abilitySystem.trainableAbilities(className, me.level, me.learnedAbilityIds)
+        val knownIds = abilitySystem.knownAbilityIds(sessionId)
+        val trainable = abilitySystem.trainableAbilities(className, me.level, knownIds)
         val learned = abilitySystem.knownAbilities(sessionId)
             .filter { it.requiredClass.equals(className, ignoreCase = true) }
 
@@ -115,10 +116,10 @@ class TrainerHandler(
                 outbound.send(OutboundEvent.SendInfo(sessionId, "    === $treeName ==="))
                 val treeAbilities = abilitySystem.registry.abilitiesInTree(tree)
                 for (ability in treeAbilities) {
-                    val isLearned = ability.id.value in me.learnedAbilityIds
+                    val isLearned = ability.id.value in knownIds
                     val prereqMet = abilitySystem.registry.isPrerequisiteMet(
                         ability.id,
-                        me.learnedAbilityIds,
+                        knownIds,
                     )
                     val levelMet = ability.levelRequired <= me.level
                     val mark = when {
@@ -138,7 +139,8 @@ class TrainerHandler(
                     outbound.send(
                         OutboundEvent.SendInfo(
                             sessionId,
-                            "      $mark ${ability.displayName} (Tier ${ability.tier})$prereqSuffix",
+                            "      $mark ${ability.displayName} " +
+                                "(Tier ${ability.tier}, ${skillPointCostLabel(ability.skillPointCost)})$prereqSuffix",
                         ),
                     )
                 }
@@ -151,7 +153,8 @@ class TrainerHandler(
                     outbound.send(
                         OutboundEvent.SendInfo(
                             sessionId,
-                            "      [ ] ${ability.displayName} (Lvl ${ability.levelRequired})",
+                            "      [ ] ${ability.displayName} " +
+                                "(Lvl ${ability.levelRequired}, ${skillPointCostLabel(ability.skillPointCost)})",
                         ),
                     )
                 }
@@ -164,21 +167,26 @@ class TrainerHandler(
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
-                    "    %-30s %5s %s".format("Ability", "Lvl", "Description"),
+                    "    %-30s %5s %6s %s".format("Ability", "Lvl", "Cost", "Description"),
                 ),
             )
             for (ability in trainable) {
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "    %-30s %5d %s".format(ability.displayName, ability.levelRequired, ability.description),
+                        "    %-30s %5d %6s %s".format(
+                            ability.displayName,
+                            ability.levelRequired,
+                            ability.skillPointCost,
+                            ability.description,
+                        ),
                     ),
                 )
             }
         }
         if (trainable.isNotEmpty()) {
             outbound.send(
-                OutboundEvent.SendInfo(sessionId, "    Use 'train learn <ability>' to spend a skill point."),
+                OutboundEvent.SendInfo(sessionId, "    Use 'train learn <ability>' to spend skill points on abilities."),
             )
         }
 
@@ -217,7 +225,7 @@ class TrainerHandler(
 
             // Search for a matching ability across all unlocked classes this trainer teaches
             val candidates: List<Pair<String, AbilityDefinition>> = unlockedHere.flatMap { cls ->
-                abilitySystem.trainableAbilities(cls, me.level, me.learnedAbilityIds)
+                abilitySystem.trainableAbilities(cls, me.level, abilitySystem.knownAbilityIds(sessionId))
                     .map { cls to it }
             }
             val target = candidates.firstOrNull { (_, ability) ->
@@ -252,20 +260,23 @@ class TrainerHandler(
 
             // Persist the new learned set to player state
             me.learnedAbilityIds.add(ability.id.value)
+            val autoLearned = abilitySystem.recomputeKnownAbilities(sessionId, me.level, me.unlockedClasses)
             players.persistPlayer(sessionId)
 
             val remaining = abilitySystem.availableSkillPoints(
                 level = me.level,
-                learnedCount = me.learnedAbilityIds.size,
+                spentPoints = abilitySystem.spentSkillPoints(me.learnedAbilityIds),
                 interval = skillPointsConfig.interval,
                 prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
             )
+            val pointWord = if (ability.skillPointCost == 1) "skill point" else "skill points"
             outbound.send(
                 OutboundEvent.SendText(
                     sessionId,
-                    "You learn ${ability.displayName}! ($remaining skill points remaining)",
+                    "You learn ${ability.displayName} for ${ability.skillPointCost} $pointWord! ($remaining skill points remaining)",
                 ),
             )
+            sendAutoLearnedMessage(sessionId, autoLearned.filter { it.id != ability.id })
 
             gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { id ->
                 abilitySystem.cooldownRemainingMs(sessionId, id)
@@ -334,6 +345,7 @@ class TrainerHandler(
             if (!me.isStaff) me.gold -= cost
             markVitalsDirty(sessionId)
             me.unlockedClasses.add(targetClass.uppercase())
+            val autoLearned = abilitySystem.recomputeKnownAbilities(sessionId, me.level, me.unlockedClasses)
             players.persistPlayer(sessionId)
 
             outbound.send(
@@ -342,10 +354,11 @@ class TrainerHandler(
                     "You unlock the $targetClass class! You may now learn $targetClass abilities here.",
                 ),
             )
+            sendAutoLearnedMessage(sessionId, autoLearned)
             gmcpEmitter?.sendCharClasses(sessionId, me.unlockedClasses, me.playerClass)
             val available = abilitySystem.availableSkillPoints(
                 level = me.level,
-                learnedCount = me.learnedAbilityIds.size,
+                spentPoints = abilitySystem.spentSkillPoints(me.learnedAbilityIds),
                 interval = skillPointsConfig.interval,
                 prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
             )
@@ -399,12 +412,13 @@ class TrainerHandler(
             val resetCount = me.learnedAbilityIds.size
             me.learnedAbilityIds.clear()
             abilitySystem.clearLearnedAbilities(sessionId)
+            abilitySystem.recomputeKnownAbilities(sessionId, me.level, me.unlockedClasses)
             me.lastRespecAtMs = clock.millis()
             players.persistPlayer(sessionId)
 
             val available = abilitySystem.availableSkillPoints(
                 level = me.level,
-                learnedCount = 0,
+                spentPoints = 0,
                 interval = skillPointsConfig.interval,
                 prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
             )
@@ -424,5 +438,22 @@ class TrainerHandler(
             gmcpEmitter?.sendCharVitals(sessionId, me)
             gmcpEmitter?.sendTrainerList(sessionId, trainer, me, available, abilitySystem, multiclassConfig)
         }
+    }
+
+    private fun skillPointCostLabel(cost: Int): String =
+        if (cost == 0) {
+            "Auto"
+        } else {
+            "Cost $cost"
+        }
+
+    private suspend fun sendAutoLearnedMessage(
+        sessionId: SessionId,
+        abilities: List<AbilityDefinition>,
+    ) {
+        if (abilities.isEmpty()) return
+        val names = abilities.joinToString { it.displayName }
+        val verb = if (abilities.size == 1) "is" else "are"
+        outbound.send(OutboundEvent.SendText(sessionId, "$names $verb now yours automatically."))
     }
 }

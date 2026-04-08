@@ -168,6 +168,7 @@ class SkillTreeTest {
                     manaCost = 5,
                     cooldownMs = 0,
                     levelRequired = 1,
+                    skillPointCost = 0,
                     targetType = "ENEMY",
                     effect = AbilityEffectConfig(type = "DIRECT_DAMAGE", minDamage = 1, maxDamage = 2),
                     requiredClass = "MAGE",
@@ -195,6 +196,7 @@ class SkillTreeTest {
         val base = registry.get(AbilityId("base_spell"))!!
         assertEquals("mage_fire", base.tree)
         assertEquals(0, base.tier)
+        assertEquals(0, base.skillPointCost)
         assertTrue(base.prerequisites.isEmpty())
 
         val advanced = registry.get(AbilityId("advanced_spell"))!!
@@ -219,7 +221,7 @@ class SkillTreeTest {
     fun `treesForClass returns distinct tree names`() {
         val registry = buildTreeRegistry()
         val trees = registry.treesForClass("WARRIOR")
-        assertEquals(setOf("test_tree", "other_tree"), trees)
+        assertEquals(setOf("test_tree", "other_tree", "free_chain"), trees)
     }
 
     @Test
@@ -246,7 +248,6 @@ class SkillTreeTest {
     fun `learnAbility fails when prerequisite not met`() = runTest {
         val h = buildSkillTreeHarness()
         h.players.loginOrFail(sid, "Learner")
-        h.abilitySystem.loadAbilities(sid, emptySet())
 
         val error = h.abilitySystem.learnAbility(
             sessionId = sid,
@@ -286,7 +287,7 @@ class SkillTreeTest {
 
         val error = h.abilitySystem.learnAbility(
             sessionId = sid,
-            abilityId = AbilityId("tier0"),
+            abilityId = AbilityId("other_tree_ability"),
             level = 50,
             unlockedClasses = setOf("WARRIOR"),
             skillPointInterval = 1,
@@ -306,6 +307,81 @@ class SkillTreeTest {
         assertTrue("tier2" in ids, "tier2 should be trainable (shown as locked)")
     }
 
+    @Test
+    fun `availableSkillPoints uses total spent cost instead of learned ability count`() {
+        val h = buildSkillTreeHarness()
+        val spent = h.abilitySystem.spentSkillPoints(setOf("tier0", "tier1"))
+        assertEquals(3, spent)
+        assertEquals(2, h.abilitySystem.availableSkillPoints(level = 10, spentPoints = spent, interval = 2))
+    }
+
+    @Test
+    fun `loadAbilities auto learns zero cost chain on login`() = runTest {
+        val h = buildSkillTreeHarness()
+        h.players.loginOrFail(sid, "Learner")
+        val me = h.players.get(sid)!!
+        me.level = 50
+        me.unlockedClasses.add("WARRIOR")
+
+        h.abilitySystem.loadAbilities(sid, emptySet())
+
+        val known = h.abilitySystem.knownAbilityIds(sid)
+        assertTrue("free_chain_start" in known)
+        assertTrue("free_chain_end" in known)
+    }
+
+    @Test
+    fun `zero cost ability with paid prerequisite does not auto learn until prerequisite is known`() = runTest {
+        val h = buildSkillTreeHarness()
+        h.players.loginOrFail(sid, "Learner")
+        val me = h.players.get(sid)!!
+        me.level = 50
+        me.unlockedClasses.add("WARRIOR")
+
+        h.abilitySystem.loadAbilities(sid, emptySet())
+        assertTrue("tier2" !in h.abilitySystem.knownAbilityIds(sid))
+
+        val error = h.abilitySystem.learnAbility(
+            sessionId = sid,
+            abilityId = AbilityId("tier1"),
+            level = me.level,
+            unlockedClasses = me.unlockedClasses,
+            skillPointInterval = 1,
+        )
+        assertNull(error)
+
+        h.abilitySystem.recomputeKnownAbilities(sid, me.level, me.unlockedClasses)
+        assertTrue("tier2" in h.abilitySystem.knownAbilityIds(sid))
+    }
+
+    @Test
+    fun `already learned zero cost abilities consume no skill points`() {
+        val h = buildSkillTreeHarness()
+        val spent = h.abilitySystem.spentSkillPoints(setOf("tier0"))
+        assertEquals(0, spent)
+        assertEquals(5, h.abilitySystem.availableSkillPoints(level = 10, spentPoints = spent, interval = 2))
+    }
+
+    @Test
+    fun `learnAbility fails when ability cost exceeds remaining points`() = runTest {
+        val h = buildSkillTreeHarness()
+        h.players.loginOrFail(sid, "Learner")
+        val me = h.players.get(sid)!!
+        me.level = 5
+        me.unlockedClasses.add("WARRIOR")
+        h.abilitySystem.loadAbilities(sid, emptySet())
+
+        val error = h.abilitySystem.learnAbility(
+            sessionId = sid,
+            abilityId = AbilityId("tier1"),
+            level = me.level,
+            unlockedClasses = me.unlockedClasses,
+            skillPointInterval = 5,
+        )
+
+        assertEquals("You need 3 skill points to learn Tier One.", error)
+    }
+
     // ---- Helpers ----
 
     private fun buildTreeRegistry(): AbilityRegistry {
@@ -323,6 +399,7 @@ class SkillTreeTest {
                 requiredClass = "WARRIOR",
                 tree = "test_tree",
                 tier = 0,
+                skillPointCost = 0,
             ),
         )
         registry.register(
@@ -339,6 +416,7 @@ class SkillTreeTest {
                 tree = "test_tree",
                 tier = 1,
                 prerequisites = setOf(AbilityId("tier0")),
+                skillPointCost = 3,
             ),
         )
         registry.register(
@@ -355,6 +433,7 @@ class SkillTreeTest {
                 tree = "test_tree",
                 tier = 2,
                 prerequisites = setOf(AbilityId("tier1")),
+                skillPointCost = 0,
             ),
         )
         registry.register(
@@ -370,6 +449,39 @@ class SkillTreeTest {
                 requiredClass = "WARRIOR",
                 tree = "other_tree",
                 tier = 0,
+            ),
+        )
+        registry.register(
+            AbilityDefinition(
+                id = AbilityId("free_chain_start"),
+                displayName = "Free Chain Start",
+                description = "Automatically learned first.",
+                manaCost = 5,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = "enemy",
+                effect = AbilityEffect.DirectDamage(damage = DamageRange(1, 1)),
+                requiredClass = "WARRIOR",
+                tree = "free_chain",
+                tier = 0,
+                skillPointCost = 0,
+            ),
+        )
+        registry.register(
+            AbilityDefinition(
+                id = AbilityId("free_chain_end"),
+                displayName = "Free Chain End",
+                description = "Automatically learned second.",
+                manaCost = 5,
+                cooldownMs = 0,
+                levelRequired = 2,
+                targetType = "enemy",
+                effect = AbilityEffect.DirectDamage(damage = DamageRange(1, 1)),
+                requiredClass = "WARRIOR",
+                tree = "free_chain",
+                tier = 1,
+                prerequisites = setOf(AbilityId("free_chain_start")),
+                skillPointCost = 0,
             ),
         )
         return registry

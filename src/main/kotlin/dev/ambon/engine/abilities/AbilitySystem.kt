@@ -43,7 +43,8 @@ class AbilitySystem(
     private val onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> },
     val onSummonPet: suspend (SessionId, String, Long) -> Unit = { _, _, _ -> },
 ) : GameSystem {
-    private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
+    private val manualLearnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
+    private val effectiveAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
 
     fun syncAbilities(
@@ -52,8 +53,10 @@ class AbilitySystem(
         playerClass: String? = null,
     ): List<AbilityDefinition> {
         val known = registry.abilitiesForLevelAndClass(level, playerClass).map { it.id }.toMutableSet()
-        val previous = learnedAbilities[sessionId]
-        learnedAbilities[sessionId] = known
+        val previous = effectiveAbilities[sessionId]
+        manualLearnedAbilities[sessionId] = known.toMutableSet()
+        effectiveAbilities[sessionId] = known
+        cleanupCooldowns(sessionId, known)
 
         // Return newly learned abilities (for notifications)
         if (previous == null) return emptyList()
@@ -69,10 +72,11 @@ class AbilitySystem(
         targetKeyword: String?,
     ): String? {
         val player = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        ensureAbilitiesCurrent(sessionId)
 
         // 1. Resolve ability
         val ability = registry.findByKeyword(spellName)
-        if (ability == null || ability.id !in learnedAbilities[sessionId].orEmpty()) {
+        if (ability == null || ability.id !in effectiveAbilities[sessionId].orEmpty()) {
             return "You don't know a spell called '$spellName'."
         }
 
@@ -598,8 +602,14 @@ class AbilitySystem(
     /** Invoked after a cooldown starts; used by GameEngine to emit Char.Cooldown GMCP. */
     var onCooldownStarted: suspend (SessionId, String, Long) -> Unit = { _, _, _ -> }
 
+    fun knownAbilityIds(sessionId: SessionId): Set<String> {
+        ensureAbilitiesCurrent(sessionId)
+        return effectiveAbilities[sessionId].orEmpty().map { it.value }.toSet()
+    }
+
     fun knownAbilities(sessionId: SessionId): List<AbilityDefinition> {
-        val known = learnedAbilities[sessionId] ?: return emptyList()
+        ensureAbilitiesCurrent(sessionId)
+        val known = effectiveAbilities[sessionId] ?: return emptyList()
         return known.mapNotNull { registry.get(it) }.sortedBy { it.levelRequired }
     }
 
@@ -610,41 +620,47 @@ class AbilitySystem(
     fun loadAbilities(
         sessionId: SessionId,
         learnedIds: Set<String>,
-    ) {
-        learnedAbilities[sessionId] = learnedIds.map { AbilityId(it) }.toMutableSet()
+    ): List<AbilityDefinition> {
+        manualLearnedAbilities[sessionId] = learnedIds.map { AbilityId(it) }.toMutableSet()
+        return refreshKnownAbilities(sessionId)
     }
 
     /**
      * Returns the number of skill points available to spend for a player at [level]
-     * who has already learned [learnedCount] abilities, given the configured [interval].
+     * after spending [spentPoints], given the configured [interval].
      * An optional [prestigeBonus] adds extra skill points from prestige perks.
      */
     fun availableSkillPoints(
         level: Int,
-        learnedCount: Int,
+        spentPoints: Int,
         interval: Int,
         prestigeBonus: Int = 0,
     ): Int {
         if (interval <= 0) return 0
-        return (level / interval - learnedCount + prestigeBonus).coerceAtLeast(0)
+        return (level / interval - spentPoints + prestigeBonus).coerceAtLeast(0)
     }
+
+    fun spentSkillPoints(learnedIds: Set<String>): Int =
+        learnedIds.sumOf { learnedId ->
+            registry.get(AbilityId(learnedId))?.skillPointCost ?: 0
+        }
 
     /**
      * Returns abilities available to learn at [className]'s trainer for a player at [level]
-     * who has not yet learned the IDs in [learnedIds]. Abilities whose prerequisites are not
+     * who does not already know the IDs in [knownIds]. Abilities whose prerequisites are not
      * met are still included (so the UI can show them as locked) but are sorted after
      * eligible ones within the same tier.
      */
     fun trainableAbilities(
         className: String,
         level: Int,
-        learnedIds: Set<String>,
+        knownIds: Set<String>,
     ): List<AbilityDefinition> =
         registry.abilitiesForClass(className)
-            .filter { it.levelRequired <= level && it.id.value !in learnedIds }
+            .filter { it.levelRequired <= level && it.id.value !in knownIds }
             .sortedWith(
                 compareBy<AbilityDefinition> { it.tier }
-                    .thenBy { !registry.isPrerequisiteMet(it.id, learnedIds) }
+                    .thenBy { !registry.isPrerequisiteMet(it.id, knownIds) }
                     .thenBy { it.levelRequired },
             )
 
@@ -667,11 +683,15 @@ class AbilitySystem(
         prestigeBonus: Int = 0,
     ): String? {
         val ability = registry.get(abilityId) ?: return "Unknown ability '${abilityId.value}'."
-        val learned = learnedAbilities.getOrPut(sessionId) { mutableSetOf() }
-        if (abilityId in learned) return "You already know ${ability.displayName}."
+        ensureAbilitiesCurrent(sessionId)
+        val learned = manualLearnedAbilities.getOrPut(sessionId) { mutableSetOf() }
+        if (abilityId in effectiveAbilities[sessionId].orEmpty()) return "You already know ${ability.displayName}."
+        if (ability.skillPointCost == 0) {
+            return "${ability.displayName} is granted automatically when you qualify for it."
+        }
         // Check prerequisites
         if (ability.prerequisites.isNotEmpty()) {
-            val allLearnedIds = learned.map { it.value }.toSet() + learnedIds
+            val allLearnedIds = effectiveAbilities[sessionId].orEmpty().map { it.value }.toSet() + learnedIds
             val unmet = ability.prerequisites.filter { it.value !in allLearnedIds }
             if (unmet.isNotEmpty()) {
                 val unmetNames = unmet.map { prereqId ->
@@ -687,18 +707,45 @@ class AbilitySystem(
         if (ability.levelRequired > level) {
             return "You need to be level ${ability.levelRequired} to learn ${ability.displayName}."
         }
-        val available = availableSkillPoints(level, learned.size, skillPointInterval, prestigeBonus)
-        if (available <= 0) return "You have no skill points available. Level up to earn more."
+        val spent = spentSkillPoints((learned.map { it.value } + learnedIds).toSet())
+        val available = availableSkillPoints(level, spent, skillPointInterval, prestigeBonus)
+        if (available < ability.skillPointCost) {
+            return "You need ${ability.skillPointCost} skill points to learn ${ability.displayName}."
+        }
         learned.add(abilityId)
+        effectiveAbilities.getOrPut(sessionId) { mutableSetOf() }.add(abilityId)
         return null
     }
 
+    fun refreshKnownAbilities(sessionId: SessionId): List<AbilityDefinition> {
+        val player = players.get(sessionId) ?: return emptyList()
+        return recomputeKnownAbilities(sessionId, player.level, player.unlockedClasses)
+    }
+
+    fun recomputeKnownAbilities(
+        sessionId: SessionId,
+        level: Int,
+        unlockedClasses: Set<String>,
+    ): List<AbilityDefinition> {
+        val previous = effectiveAbilities[sessionId].orEmpty()
+        val manual = manualLearnedAbilities.getOrPut(sessionId) { mutableSetOf() }
+        val resolved = resolveEffectiveKnownAbilities(level, unlockedClasses, manual)
+        effectiveAbilities[sessionId] = resolved.toMutableSet()
+        cleanupCooldowns(sessionId, resolved)
+        return resolved
+            .filter { it !in previous }
+            .mapNotNull { registry.get(it) }
+            .sortedBy { it.levelRequired }
+    }
+
     /**
-     * Clears all learned abilities for a session, effectively resetting the player's
-     * skill point allocations. Cooldowns are also cleared since the abilities are gone.
+     * Clears all manually learned abilities for a session, effectively resetting the player's
+     * skill point allocations. Call [recomputeKnownAbilities] after this when zero-cost
+     * auto-learned abilities should remain available.
      */
     fun clearLearnedAbilities(sessionId: SessionId) {
-        learnedAbilities[sessionId]?.clear()
+        manualLearnedAbilities[sessionId]?.clear()
+        effectiveAbilities[sessionId]?.clear()
         cooldowns.remove(sessionId)
     }
 
@@ -716,7 +763,8 @@ class AbilitySystem(
     }
 
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
-        learnedAbilities.remove(sessionId)
+        manualLearnedAbilities.remove(sessionId)
+        effectiveAbilities.remove(sessionId)
         cooldowns.remove(sessionId)
     }
 
@@ -724,7 +772,55 @@ class AbilitySystem(
         oldSid: SessionId,
         newSid: SessionId,
     ) {
-        learnedAbilities.remapKey(oldSid, newSid)
+        manualLearnedAbilities.remapKey(oldSid, newSid)
+        effectiveAbilities.remapKey(oldSid, newSid)
         cooldowns.remapKey(oldSid, newSid)
+    }
+
+    private fun ensureAbilitiesCurrent(sessionId: SessionId) {
+        val player = players.get(sessionId) ?: return
+        if (manualLearnedAbilities[sessionId] == null) return
+        recomputeKnownAbilities(sessionId, player.level, player.unlockedClasses)
+    }
+
+    private fun resolveEffectiveKnownAbilities(
+        level: Int,
+        unlockedClasses: Set<String>,
+        manualIds: Set<AbilityId>,
+    ): Set<AbilityId> {
+        val known = manualIds.toMutableSet()
+
+        var changed: Boolean
+        do {
+            changed = false
+            for (ability in registry.all().sortedWith(compareBy<AbilityDefinition> { it.levelRequired }.thenBy { it.tier })) {
+                if (ability.skillPointCost != 0) continue
+                if (ability.levelRequired > level) continue
+                if (!isClassUnlocked(ability, unlockedClasses)) continue
+                if (!ability.prerequisites.all { it in known }) continue
+                if (known.add(ability.id)) changed = true
+            }
+        } while (changed)
+
+        return known
+    }
+
+    private fun isClassUnlocked(
+        ability: AbilityDefinition,
+        unlockedClasses: Set<String>,
+    ): Boolean {
+        val requiredClass = ability.requiredClass ?: return true
+        return unlockedClasses.any { it.equals(requiredClass, ignoreCase = true) }
+    }
+
+    private fun cleanupCooldowns(
+        sessionId: SessionId,
+        knownIds: Set<AbilityId>,
+    ) {
+        val sessionCooldowns = cooldowns[sessionId] ?: return
+        sessionCooldowns.entries.removeIf { (abilityId, _) -> abilityId !in knownIds }
+        if (sessionCooldowns.isEmpty()) {
+            cooldowns.remove(sessionId)
+        }
     }
 }

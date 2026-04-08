@@ -327,9 +327,15 @@ class ItemHandler(
             outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 
             if (abilitySystem != null) {
+                val autoLearned = abilitySystem.recomputeKnownAbilities(sessionId, result.newLevel, player.unlockedClasses)
+                if (autoLearned.isNotEmpty()) {
+                    val names = autoLearned.joinToString { it.displayName }
+                    val verb = if (autoLearned.size == 1) "is" else "are"
+                    outbound.send(OutboundEvent.SendText(sessionId, "$names $verb now yours automatically."))
+                }
                 val available = abilitySystem.availableSkillPoints(
                     level = result.newLevel,
-                    learnedCount = player.learnedAbilityIds.size,
+                    spentPoints = abilitySystem.spentSkillPoints(player.learnedAbilityIds),
                     interval = skillPointsConfig.interval,
                 )
                 if (available > 0) {
@@ -340,6 +346,9 @@ class ItemHandler(
                             "You have $available $pointWord available! Visit a class trainer to learn new abilities.",
                         ),
                     )
+                }
+                gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
+                    abilitySystem.cooldownRemainingMs(sessionId, abilityId)
                 }
             }
         }

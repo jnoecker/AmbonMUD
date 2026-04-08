@@ -107,6 +107,7 @@ class GmcpEmitterTest {
         name: String = "Firebolt",
         manaCost: Int = 8,
         cooldownMs: Long = 5000L,
+        skillPointCost: Int = 1,
     ) = AbilityDefinition(
         id = AbilityId(id),
         displayName = name,
@@ -116,6 +117,7 @@ class GmcpEmitterTest {
         levelRequired = 1,
         targetType = "enemy",
         effect = AbilityEffect.DirectDamage(damage = DamageRange(5, 10)),
+        skillPointCost = skillPointCost,
     )
 
     // ── Char.Vitals ──
@@ -325,6 +327,7 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"id\":\"firebolt\""))
             assertTrue(data.jsonData.contains("\"name\":\"Firebolt\""))
             assertTrue(data.jsonData.contains("\"description\":\"A bolt of fire.\""))
+            assertTrue(data.jsonData.contains("\"skillPointCost\":1"))
             assertTrue(data.jsonData.contains("\"manaCost\":8"))
             assertTrue(data.jsonData.contains("\"cooldownMs\":5000"))
             assertTrue(data.jsonData.contains("\"cooldownRemainingMs\":2300"))
