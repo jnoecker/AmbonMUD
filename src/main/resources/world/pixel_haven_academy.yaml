@@ -1,0 +1,601 @@
+zone: pixel_haven_academy
+startRoom: start
+lifespan: 15
+graphical: false
+items:
+  orientation_badge:
+    displayName: an orientation badge
+    keyword: badge
+    description: A brass badge stamped with a smiling star and the words FIRST DAY, BIG DREAMS.
+    basePrice: 5
+  juice_box_tonic:
+    displayName: a juice-box tonic
+    keyword: juice
+    description: A tiny foil-topped box of apple-strawberry tonic with more optimism than medicine.
+    consumable: true
+    onUse:
+      healHp: 12
+    basePrice: 25
+  patchwork_jacket:
+    displayName: a patchwork trainee jacket
+    keyword: jacket
+    description: A cozy jacket stitched from rose, sky-blue, and moss-green scraps.
+    slot: body
+    armor: 1
+    basePrice: 40
+  paper_star_cap:
+    displayName: a paper-star cap
+    keyword: cap
+    description: A folded cap with a silvered paper star pinned to the front.
+    slot: head
+    armor: 1
+    basePrice: 20
+  practice_sword:
+    displayName: a foam practice sword
+    keyword: sword
+    description: A painted foam sword that bounces when you thump it against your boot.
+    slot: weapon
+    damage: 2
+    basePrice: 35
+  sparkler_wand:
+    displayName: a sparkler wand
+    keyword: wand
+    description: A polished wand with a harmless sparkstone tucked into its tip.
+    slot: weapon
+    damage: 2
+    basePrice: 35
+  glowwater_vial:
+    displayName: a vial of glowwater
+    keyword: glowwater
+    description: A thumb-sized bottle of pearly water that catches the light even in shadow.
+    basePrice: 12
+  dreammint_clipping:
+    displayName: dreammint clippings
+    keyword: dreammint
+    description: Cool green stems that smell like peppermint and rain.
+    basePrice: 4
+  sunbeam_tonic:
+    displayName: a sunbeam tonic
+    keyword: tonic
+    description: A fizzy bottle of gold-pale tonic that warms your hands before you uncork it.
+    consumable: true
+    onUse:
+      healHp: 20
+    basePrice: 30
+  curiosity_sticker:
+    displayName: a curiosity sticker
+    keyword: sticker
+    description: A shiny sticker shaped like a magnifying glass with little wings.
+    basePrice: 2
+mobs:
+  housemother_poppy:
+    name: Housemother Poppy
+    room: start
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: Welcome, darling heart. This is the First Day Hall. If the world ever grows too loud, I can mark this place as home.
+        choices:
+          - text: Please do.
+            next: recall
+            action: set_recall
+          - text: What should I learn first?
+            next: learn
+          - text: I am ready.
+            next: farewell
+      recall:
+        text: Done. Type 'recall' whenever you need the school to remember you.
+        choices:
+          - text: What should I learn first?
+            next: learn
+          - text: I am ready.
+            next: farewell
+      learn:
+        text: Movement, conversation, supplies, combat, and a little good sense. This township was built to teach with gentle hands.
+        choices:
+          - text: I am ready.
+            next: farewell
+      farewell:
+        text: Follow the lanterns north and keep your curiosity where it can see.
+  friendmaker_nib:
+    name: Friendmaker Nib
+    room: dialog_lesson
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: Talking matters here. Tap an NPC or type 'talk <name>' to open dialogue. The Help and Social drawers will do the rest.
+        choices:
+          - text: What about other players?
+            next: social
+          - text: Goodbye.
+            next: farewell
+      social:
+        text: Say, tell, who, friend, group, guild, and mail all live in the same part of the client. A living world needs living company.
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: West teaches signs and levers. North teaches purpose.
+  miss_patchworth:
+    name: Miss Patchworth
+    room: first_quest_lesson
+    quests:
+      - rescue_the_stuffie
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: Every proper first day needs one heroic errand. A nervous stuffie has gone missing beyond the practice sets.
+        choices:
+          - text: How do quests work?
+            next: quests
+          - text: I will help.
+            next: help
+          - text: Goodbye.
+            next: farewell
+      quests:
+        text: Talk to the quest giver, open the Quests drawer, and do exactly what the world asks of you. This one will guide you through your first safe fights.
+        choices:
+          - text: I will help.
+            next: help
+          - text: Goodbye.
+            next: farewell
+      help:
+        text: Accept 'Rescue the Stuffie in Distress', collect your supplies to the north, and clear each practice vignette until the worry-dragon lets the poor dear go.
+        choices:
+          - text: I am on my way.
+            next: farewell
+      farewell:
+        text: Courage first, neatness second.
+  coach_clatter:
+    name: Coach Clatter
+    room: combat_lesson
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: Pick a target, attack it, watch your HP and mana, and do not forget that 'flee' exists for a reason.
+        choices:
+          - text: What about abilities?
+            next: abilities
+          - text: I am ready.
+            next: farewell
+      abilities:
+        text: Trainers and the Spellbook drawer teach the next layer. For now, learn the rhythm of choosing targets and finishing the rescue quest.
+        choices:
+          - text: I am ready.
+            next: farewell
+      farewell:
+        text: East is sneakier, farther east is rowdier, and north is where the class guides wait.
+  brumhampfjord:
+    name: Brumhampfjord the Hero Trainer
+    room: class_trainer_lesson
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: Knights, Wizards, Doctors, Pirates, and Rulers all learn their signature tricks from trainers. Type 'train list' to open the training panel.
+        choices:
+          - text: What should I look for?
+            next: explain
+          - text: Goodbye.
+            next: farewell
+      explain:
+        text: Look for skill points, level requirements, and the Spellbook drawer. Once a trick is learned, pin it to the quickbar for fast taps.
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Lessons stick best when used quickly.
+  quartermaster_sprocket:
+    name: Quartermaster Sprocket
+    room: shop_lesson
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "'list' shows what is for sale, 'buy <item>' takes it home, and 'sell <item>' turns clutter back into gold."
+        choices:
+          - text: What should I buy first?
+            next: buy_first
+          - text: Goodbye.
+            next: farewell
+      buy_first:
+        text: A jacket, a tonic, and whatever tool suits your style. Your first pocketful of gold is for trying things.
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Browse carefully. The shelves are friendlier than they look.
+  postmaster_plink:
+    name: Postmaster Plink
+    room: bank_mail_social_lesson
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: This hall handles banking, mail, and all the social tools too broad to fit in one pocket.
+        choices:
+          - text: How do I bank my gold?
+            next: bank_help
+          - text: How does mail work?
+            next: mail_help
+          - text: Goodbye.
+            next: farewell
+      bank_help:
+        text: In a bank room, 'bank' shows your storage, and deposit or withdraw moves things in and out.
+        choices:
+          - text: How does mail work?
+            next: mail_help
+          - text: Goodbye.
+            next: farewell
+      mail_help:
+        text: "'mail list' checks your inbox, and 'mail send <player>' begins a message. The client will guide the rest."
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Even in a storybook world, administration is an act of love.
+  curator_bellweather:
+    name: Curator Bellweather
+    room: curators_office
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: Before I open the graduation gate, I ask every student one proper storybook question. Type 'answer <word>' when you are ready.
+        choices:
+          - text: Give me the question again.
+            next: reminder
+          - text: Goodbye.
+            next: farewell
+      reminder:
+        text: What is the one thing every toy kingdom, moonlit river, and crooked golden-hour street in Pixel Haven is made from first?
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: North opens only for students who remember what kind of place they are standing in.
+  shadow_ninja:
+    name: a shadow-box ninja
+    room: ninja_training_field
+    tier: weak
+    level: 1
+    respawnSeconds: 45
+    xpReward: 18
+    goldMin: 2
+    goldMax: 5
+  cardboard_outlaw:
+    name: a cardboard outlaw
+    room: old_western_ghost_town
+    tier: weak
+    level: 1
+    respawnSeconds: 45
+    xpReward: 18
+    goldMin: 2
+    goldMax: 5
+  tin_invader:
+    name: a tin invader
+    room: robot_invasion
+    tier: weak
+    level: 1
+    respawnSeconds: 45
+    xpReward: 20
+    goldMin: 3
+    goldMax: 6
+  worry_dragon:
+    name: the worry-dragon
+    room: stuffie_in_distress
+    tier: standard
+    level: 2
+    hp: 16
+    minDamage: 1
+    maxDamage: 3
+    xpReward: 40
+    goldMin: 8
+    goldMax: 15
+    respawnSeconds: 90
+shops:
+  academy_supply_shop:
+    name: Academy Supply Counter
+    room: shop_lesson
+    items:
+      - patchwork_jacket
+      - paper_star_cap
+      - practice_sword
+      - sparkler_wand
+      - juice_box_tonic
+      - glowwater_vial
+trainers:
+  brumhampfjord_trainer:
+    name: Brumhampfjord the Hero Trainer
+    classes: [WARRIOR, MAGE, CLERIC, ROGUE, RULER]
+    room: class_trainer_lesson
+quests:
+  rescue_the_stuffie:
+    name: Rescue the Stuffie in Distress
+    description: Miss Patchworth has sent you through the practice wings to calm a frightened little crisis.
+    giver: miss_patchworth
+    objectives:
+      - type: kill
+        targetKey: shadow_ninja
+        count: 1
+        description: Defeat the shadow-box ninja in the dojo
+      - type: kill
+        targetKey: cardboard_outlaw
+        count: 1
+        description: Defeat the cardboard outlaw in the ghost town
+      - type: kill
+        targetKey: tin_invader
+        count: 1
+        description: Defeat the tin invader in the spaceship set
+      - type: kill
+        targetKey: worry_dragon
+        count: 1
+        description: Defeat the worry-dragon and free the missing stuffie
+    rewards:
+      xp: 120
+      gold: 60
+gatheringNodes:
+  dreammint_patch:
+    displayName: a patch of dreammint
+    keyword: dreammint
+    skill: HERBALISM
+    skillRequired: 1
+    yields:
+      - itemId: dreammint_clipping
+        minQuantity: 1
+        maxQuantity: 2
+    respawnSeconds: 60
+    xpReward: 10
+    room: gathering_lesson
+recipes:
+  sunbeam_tonic_recipe:
+    displayName: Sunbeam Tonic
+    skill: ALCHEMY
+    skillRequired: 1
+    levelRequired: 1
+    materials:
+      - itemId: dreammint_clipping
+        quantity: 1
+      - itemId: glowwater_vial
+        quantity: 1
+    outputItemId: sunbeam_tonic
+    station: ALCHEMY_TABLE
+    xpReward: 15
+puzzles:
+  lesson_levers:
+    type: sequence
+    roomId: room_state_lesson
+    steps:
+      - { feature: sunrise, action: pull }
+      - { feature: river, action: pull }
+      - { feature: lantern, action: pull }
+    reward:
+      type: give_item
+      itemId: curiosity_sticker
+    successMessage: The wall map shivers, glows, and spits out a shiny curiosity sticker.
+    failMessage: The little brass bells jangle unhappily. That order does not feel quite right.
+  curator_riddle:
+    type: riddle
+    mobId: curator_bellweather
+    roomId: curators_office
+    question: What is the one thing every toy kingdom, moonlit river, and crooked golden-hour street in Pixel Haven is made from first?
+    answer: imagination
+    acceptableAnswers: [dream, dreams, "a child's imagination", "children's imagination"]
+    reward:
+      type: unlock_exit
+      exitDirection: north
+      targetRoom: my_first_dungeon
+    successMessage: Curator Bellweather smiles, the northern bookcase sighs aside, and a secret passage opens.
+    failMessage: The curator taps the card catalog. Close, perhaps, but not the first ingredient.
+rooms:
+  start:
+    title: Welcome to Pixel Haven
+    description: This circular reception hall glows with the soft warmth of perpetual golden hour. Dusty rose plaster, pale blue glass, moss-green runners, and lavender lamps lean together as if the room had been imagined first and built only because someone loved the idea too much to let it go.
+    features:
+      welcome_plaque:
+        type: SIGN
+        displayName: welcome plaque
+        keyword: plaque
+        text: Open the room drawer often. Tap exits to move, tap people to talk, and remember that recall will bring you back here once Housemother Poppy marks you down.
+    exits:
+      n: movement_lesson
+  movement_lesson:
+    title: Navigating through the World
+    description: A ribboning corridor bends through cloud-blue walls and peach-gold light. Chalk arrows point north, south, and east in three different handwriting styles, while tiny brass lanterns hang low enough for children and very polite giants.
+    features:
+      corridor_map:
+        type: SIGN
+        displayName: corridor map
+        keyword: map
+        text: "Movement basics: tap an exit in the room drawer or type n, s, e, w, u, or d. Use 'look' to refresh the room, 'exits' to list paths, and open the map drawer to see where you have already been."
+    exits:
+      s: start
+      e: movement_reward
+      n: dialog_lesson
+  movement_reward:
+    title: New Student Grab Bag Distribution
+    description: Shelves of striped boxes line this cozy side room beneath a ceiling painted like a peach-colored evening sky. A lacquered trolley waits in the center, loaded with practical gifts for brave beginners.
+    features:
+      welcome_cart:
+        type: CONTAINER
+        displayName: welcome cart
+        keyword: cart
+        initialState: open
+        resetWithZone: true
+        items: [orientation_badge, juice_box_tonic]
+    exits:
+      w: movement_lesson
+  dialog_lesson:
+    title: How to Make Friends and Influence People 101
+    description: This classroom looks halfway between a salon and a playroom, all velvet chairs, tea tables, paper stars, and a lavender glow that makes every hello feel important.
+    exits:
+      s: movement_lesson
+      w: room_state_lesson
+      n: first_quest_lesson
+  room_state_lesson:
+    title: '"Chests, Levers, and Puzzles" - A Seminar for Advanced Learners'
+    description: A demonstration parlor opens beneath a painted dusk ceiling. Three brass levers rise from a moss-green plinth shaped like a riverbank diorama, and a hand-lettered sign explains that paying attention is a kind of heroism too.
+    features:
+      puzzle_sign:
+        type: SIGN
+        displayName: puzzle sign
+        keyword: sign
+        text: "The school day moves like Pixel Haven itself: first sunrise, then river-song, then lantern-light. Read, notice, and pull in the order the world wakes."
+      sunrise_lever:
+        type: LEVER
+        displayName: sunrise lever
+        keyword: sunrise
+      river_lever:
+        type: LEVER
+        displayName: river lever
+        keyword: river
+      lantern_lever:
+        type: LEVER
+        displayName: lantern lever
+        keyword: lantern
+    exits:
+      e: dialog_lesson
+  first_quest_lesson:
+    title: The First Quest - Rescue the Stuffie in Distress
+    description: The corridor widens into a little plaza staged like the center spread of a picture book. Painted scenery flats show a dojo, a tumbleweed street, and a silver spaceship hallway branching beyond the gym to the north.
+    exits:
+      s: dialog_lesson
+      n: inventory_lesson
+  inventory_lesson:
+    title: Inventory and Equipment Management
+    description: This bright supply room has peg rails for cloaks, cubbies for satchels, and mirrors framed in sun-faded blue. It is impossible to stand here without understanding that heroes need somewhere to put their things.
+    features:
+      wardrobe_sign:
+        type: SIGN
+        displayName: wardrobe sign
+        keyword: sign
+        text: Open your Inventory and Equipment drawers often. 'get' picks things up, 'wear' equips them, 'remove' takes them off, and 'use' consumes helpful items like tonics and snacks.
+    exits:
+      n: combat_lesson
+      s: first_quest_lesson
+  combat_lesson:
+    title: The Boxing Gym
+    description: A sunken gymnasium spreads out under paper lanterns the color of ripe apricots. The ring ropes are braided from soft climbing cord, and the far wall is painted with heroic silhouettes in pale blue and moss green.
+    exits:
+      s: inventory_lesson
+      e: ninja_training_field
+      n: class_trainer_lesson
+  ninja_training_field:
+    title: The Ninja Training Dojo
+    description: A paper-screen dojo sits beneath a lavender skylight, with folded mats, bamboo practice poles, and wind chimes that whisper whenever anyone moves too quickly.
+    exits:
+      e: old_western_ghost_town
+      w: combat_lesson
+  old_western_ghost_town:
+    title: An Old Western Ghost Town Full of Outlaws
+    description: Warm timber facades lean toward one another with theatrical confidence while a painted sunset on the back wall gives the illusion of a frontier forever on the edge of one more story.
+    exits:
+      w: ninja_training_field
+      s: robot_invasion
+  robot_invasion:
+    title: A Space Ship Being Invaded By Alien Robots
+    description: This silver corridor is built from painted crates, polished tin, and pale-blue glass. Soft amber strip lights run under the floor grates, making the whole set glow as though it were flying through sunset.
+    exits:
+      n: old_western_ghost_town
+      w: stuffie_in_distress
+  stuffie_in_distress:
+    title: A Stuffie in Distress - Guarded by a Fierce Dragon
+    description: The practice wing opens into a moonlit nursery glade with felt reeds, a ribbon stream, and a cotton-batting hill under a lavender glow. At the center, a frightened little crisis waits to be solved kindly.
+    exits:
+      e: robot_invasion
+      w: combat_lesson
+  class_trainer_lesson:
+    title: Brumhampfjord the Hero Trainer
+    description: A round lesson hall rises beneath a painted dome of slow-moving stars. Banners for Knights, Wizards, Doctors, Pirates, and Rulers hang side by side with the same deliberate respect.
+    exits:
+      s: combat_lesson
+      w: gathering_lesson
+      n: shop_lesson
+  gathering_lesson:
+    title: A Jungle Inside a School - The Magic Greenhouse
+    description: Glass walls fogged with a permanent blush of evening warmth enclose a tiny greenhouse where minty vines climb trellises beside jars of glowing water and an alchemy table polished smooth by small hands.
+    station: ALCHEMY_TABLE
+    exits:
+      e: class_trainer_lesson
+  shop_lesson:
+    title: Pixel Haven Arcade and Museum Gift Shop
+    description: Shelves crowd this cheerful little shop from floor to ceiling, each one painted a different faded candy color. Plush mascots, folded jackets, tonics, and beginner tools wait beneath tiny lavender lamps.
+    exits:
+      s: class_trainer_lesson
+      e: bank_mail_social_lesson
+      w: curators_office
+  bank_mail_social_lesson:
+    title: Pixel Haven Arcade and Social Hall
+    description: Half bank, half post office, half community lounge in the way only storybook architecture can manage, this hall is stitched together from teller windows, cubbyholes, soft chairs, and a perfect golden-hour glow.
+    bank: true
+    exits:
+      w: shop_lesson
+  curators_office:
+    title: The Curator's Office - Independent Study for Advanced Students
+    description: A dust-blue office filled with cabinets, pinned maps, globe lamps, and labeled drawers. The northern wall is taken up by a bookcase built into a crooked archway. It looks decorative until Curator Bellweather glances at it.
+    exits:
+      e: shop_lesson
+  my_first_dungeon:
+    title: My First Dungeon
+    description: The secret passage opens onto a tiny stone corridor built like a kind child's idea of a dungeon. The walls are dramatic but not cruel, the torchlight is warm rather than grim, and chalk arrows along the floor point east.
+    features:
+      graduation_sign:
+        type: SIGN
+        displayName: graduation sign
+        keyword: sign
+        text: Academy complete. East leads into Pixel Haven proper. Keep using the map, help, room, quest, social, and character drawers; the world beyond this corridor assumes you now know where to look.
+    exits:
+      s: curators_office
+      e: pixel_haven:parkway

@@ -1,0 +1,2164 @@
+zone: pixel_haven
+startRoom: fat_cat_row
+rooms:
+  fat_cat_row:
+    title: Fat Cat Row
+    description: A wide cobblestone street curving past a row of cottages whose front porches are uniformly occupied by
+      enormous, well-fed cats. They watch you with the slow approval of beings who have never wanted for tuna. The smell
+      of warm bread drifts from somewhere — probably Grandma Sunshine's place over toward the rainbow mansion. The air
+      shimmers slightly, the way it does when a place is held together by happy thinking.
+    exits:
+      n: k_nex_drawbridge
+      e: the_porch_of_eternal_sighs
+      s: a_road_filled_with_holiday_cheer
+    image: ed91ad75bbcc214655b0c777e7fc15460400ad518620748c946ddf706253b699.jpg
+  the_dump:
+    title: The Dump
+    description: A surprisingly tidy heap of broken toys, loose springs, and the kind of forgotten oddments that every child
+      eventually outgrows. A homemade scrap forge bellows in one corner, manned by no one in particular, its anvil
+      hammered flat by years of optimistic crafting. Things you could swear you lost as a kid keep poking out of the
+      heap if you look long enough.
+    station: FORGE
+    exits:
+      s: the_only_road_4
+    image: 5af632d5cc44cdbd964170b2c8f6b9a8f21a8ac7a07daa5b5fd1dceb02a13be4.jpg
+  pixel_haven_lottery_office:
+    title: Pixel Haven Lottery Office
+    description: A small store-front made entirely of poster board and gold paint, festooned with pennants and dotted with
+      flashing fairy lights. A glass tumbler the size of a beer keg rotates ping-pong balls behind the counter, and the
+      back wall is a glittering mosaic of past winners' grinning photographs.
+    exits:
+      s: the_only_road_2
+    image: 59febc85d6c1c5eedf5876e10e1d1e3eb1acd337e82923a03aeaa854081a3dbb.jpg
+  the_only_road:
+    title: The Only Road
+    description: A wide, sun-dappled main road paved in cobblestones the colors of a child's crayon set — uneven, a little
+      wonky, and somehow exactly right. Signs at the corners proudly announce that this is THE ONLY ROAD, even though
+      there are clearly several more like it. Pixel Haven City Hall stands to the south, an imposing little building
+      beneath an oversized weathercock.
+    exits:
+      s: pixel_haven_city_hall
+      e: the_only_road_3
+      w: the_only_road_2
+    image: 7423ba1be535de4c6f495067ed0bc41f9b86c9a812990d60cd684d90c47fd828.jpg
+  the_only_road_2:
+    title: The Only Road
+    description: A continuation of the Only Road that is, confusingly, also called the Only Road. The lottery office stands
+      proudly to the north, its lights winking. The road continues west toward Crayonsville and east toward the city's
+      heart.
+    exits:
+      e: the_only_road
+      n: pixel_haven_lottery_office
+      w: the_only_road_4
+    image: 630047b66be9ba8271624b8f1bff5a62c6306343df1f425fe0ca8b2302fef2b6.jpg
+  the_only_road_3:
+    title: The Only Road
+    description: An eastward stretch of the Only Road where the cobblestones are pocked with shallow potholes that seem to
+      wink at you. Each one is suspiciously imp-shaped. The road slopes down to the south toward the Treacherous Hill,
+      and east it leads on toward Stuffiesburg.
+    exits:
+      s: the_treacherous_hill
+      w: the_only_road
+      e: the_only_road_5
+    image: ec4c53881c80da67d96c6e6f7fb1fba69b94621590aacdc90d401727407282ec.jpg
+  pixel_haven_city_hall:
+    title: Pixel Haven City Hall
+    description: A polished marble lobby that is far grander on the inside than the building looks from outside. A towering
+      brass weathercock-shaped chandelier hangs from the high ceiling, and the floor is inlaid with the civic motto in
+      mosaic tile - HONEST, EARNEST, AND OPEN UNTIL FIVE. Mayor Buttercup keeps her desk against the back wall, and the
+      bank tellers occupy a row of pigeonholes along the side. This is the place to deposit gold with 'bank' commands.
+    bank: true
+    exits:
+      n: the_only_road
+    image: ba999185f9f559ee947e31398278edb99b56e631141c13d1b3ba3f59fe930b23.jpg
+  the_treacherous_hill:
+    title: The Treacherous Hill
+    description: A modest grassy hill made deeply, philosophically treacherous by the Tumble Goblins who roll down it on
+      purpose, all day, every day. The grass has been worn into long bowling-pin grooves. A path runs north up to the
+      Only Road and south down toward the Crossroads.
+    exits:
+      n: the_only_road_3
+      s: crossroads
+    image: 9f472fe21721c8cbc727d2e9859259e3812d34bfdbd68063324e73da4add4b2c.jpg
+  burnt_pixel_bar:
+    title: The Burnt Pixel Bar
+    description: A low-ceilinged tavern with one wall blackened from a long-ago kitchen fire that everyone refuses to
+      explain. The booths are mismatched, the lighting is mostly candles in jars, and someone has set up a felt- topped
+      table in the corner where bored adventurers gamble away their daily allowance. A long bar of polished pine runs
+      along one wall.
+    tavern: true
+    exits:
+      e: crossroads
+    image: a93cd7fedd49ba67f0b96f091a567c972ba60c8140ad3c67bac818e4c1ccabb6.jpg
+  crossroads:
+    title: Crossroads
+    description: A junction where four wagon-tracks of differing widths meet at unfortunate angles, surrounded by low
+      signposts that have been turned by mischievous hands until none of them point anywhere reliable. The Burnt Pixel
+      Bar squats to the west, the Treacherous Hill rises to the north, the K'nex Drawbridge spans the river to the
+      south, and the Hospital for the Aging and Infirmed (Teenagers) crouches uneasily to the east.
+    exits:
+      w: burnt_pixel_bar
+      n: the_treacherous_hill
+      e: hospital_for_the_aging_and_infirmed_teenagers
+      s: k_nex_drawbridge
+    image: 768be5f8f046942254c4c0a71f6d9906d76897a0184a00d5a904e479e816eda8.jpg
+  hospital_for_the_aging_and_infirmed_teenagers:
+    title: Hospital for the Aging and Infirmed (Teenagers)
+    description: A bright, clean clinic with construction-paper hearts taped to the walls and a row of beanbag chairs where
+      weary teenagers rest with mock-serious expressions. Doctor Ouchless presides from behind a desk piled with juice
+      boxes, friendship bracelets, and a stethoscope shaped like a smiling cat. Healers come here to learn the gentlest
+      of arts.
+    exits:
+      w: crossroads
+    image: 7ca96c40f735fd342434e501dd574c733c209d9a32b47175107a71aa2d74d346.jpg
+  a_hidden_railroad_bridge:
+    title: A Hidden Railroad Bridge
+    description: A wooden trestle bridge tucked between the river bend and the cliffs, almost invisible from anywhere else
+      in town. The planks are mossy, the rails rust-gold, and the only sounds are river water below and wind in the
+      cliff grasses. A treacherous footbridge to the west crosses into the Underbed Hollow.
+    exits:
+      e: pixel_river_2
+      s: the_sports_metroplex
+      w: road_underbed_hollow
+    image: 6bb8229211fb0a4f01cdd2a31e14c139b21d8cb47e639237986b3e6d83dfa9cc.jpg
+  pixel_river:
+    title: Pixel River
+    description: A wide, slow-flowing river whose surface ripples in clean perfect squares — the water itself is pixelated,
+      glittering in tidy rows. Bath-toy slimes bob in the shallows like enormous misshapen rubber duckies. The
+      drawbridge is to the east, and the river continues south.
+    exits:
+      e: k_nex_drawbridge
+      s: pixel_river_2
+    image: 61d0f4ee207fb75fef917cd2a2d5ddc514de99028a1e444a85a81f75a1c34449.jpg
+  k_nex_drawbridge:
+    title: The K'nex Drawbridge
+    description: A drawbridge built entirely from snap-together plastic struts and connectors, somehow strong enough to bear
+      weight. Its mechanism is hand-cranked from a tiny gatehouse on the south side, and the gear that lifts it has a
+      single yellow plastic rod for a handle. Crossings creak musically.
+    exits:
+      w: pixel_river
+      s: fat_cat_row
+      n: crossroads
+    image: a589aac871c68d4cba2ddfa5f6ba7934b53a8d97b8be55a14b465dc281efed46.jpg
+  pixel_river_2:
+    title: Pixel River
+    description: The southern stretch of the river where the bath-toy slimes are most numerous, drifting through reeds the
+      same crisp color as crayon green. The bank is shallow and stepping-stones lead to the hidden railroad bridge in
+      the west.
+    exits:
+      n: pixel_river
+      s: pixelated_culvert
+      w: a_hidden_railroad_bridge
+    image: 0b56194ef9d7b1a3cfdcf74f9c18cfbc970dd97a7ec91a7e41ab7a830176beb3.jpg
+  the_porch_of_eternal_sighs:
+    title: The Porch of Eternal Sighs
+    description: A long, sun-warmed porch lined with rocking chairs and one massive cat-cushion. The breeze rustles faded
+      lace curtains. The cat sighs. The wind sighs. Even the floorboards sigh, as though they too have lived a long life
+      of mild disappointment. Grumpy Grandma's house is reachable to the east.
+    exits:
+      w: fat_cat_row
+      e: grumpy_grandma_s_house
+    image: f3535dd817685fc1e4f96789d6394ddb15ad972186683ae654268b7ce57963e7.jpg
+  grumpy_grandma_s_house:
+    title: Grumpy Grandma's House
+    description: A dim, doily-strewn parlor crowded with porcelain cat figurines and one very large real cat. A rocking
+      chair creaks unevenly in the corner. The smell is mothballs and faintly stale peppermints. Every surface looks
+      faintly disapproving of you.
+    exits:
+      w: the_porch_of_eternal_sighs
+    image: 5033104b23d32a7b7e64139bf63e250e6aaddcf2411642d0d4ae14be7e3c13df.jpg
+  the_sports_metroplex:
+    title: The Sports Metroplex
+    description: A vast open-air sports complex with painted-on play lines for every sport ever imagined and several that
+      haven't been yet. Children play here in the dreams of grown-ups; the bleachers are always half-full of cheering
+      nobody-in-particulars. A stairway descends to a hidden gambling nook below. Misfit Island lies south across a
+      footbridge.
+    exits:
+      d: the_gambling_nook
+      s: misfit_island
+      n: a_hidden_railroad_bridge
+    image: f95115b4d59ff1fa4654396188f0f7cbc8a02a7c087a608c70a04d57b14df095.jpg
+  the_fanciest_most_decorated_rainbow_mansion:
+    title: The Fanciest, Most Decorated Rainbow Mansion
+    description: An absurd, magnificent mansion painted in every color of the rainbow at once, festooned with strings of
+      fairy lights, plastic icicles, paper hearts, and one inflatable snowman who appears to be dancing in slow motion.
+      It celebrates every holiday simultaneously and somehow this is not exhausting.
+    exits:
+      e: a_road_filled_with_holiday_cheer
+      s: fanciest_house_front_yard
+      w: fanciest_house_back_yard
+    image: a970e0037e47f5519030d52dbbbe1f9d5fb7118c9fccfa2e23216878a3846de6.jpg
+  a_road_filled_with_holiday_cheer:
+    title: A Road Filled with Holiday Cheer
+    description: A street where every house is decorated for a different holiday, all at once and all year round. Pumpkins
+      jostle with menorahs, Easter baskets sit beside wreaths, fireworks dangle from a gingerbread eave. Tinsel never
+      quite settles to the ground. The smell is cinnamon, sugar, and possibility.
+    exits:
+      w: the_fanciest_most_decorated_rainbow_mansion
+      e: el_steckley_s_dueling_grounds
+      n: fat_cat_row
+      s: trainer_row
+    image: a70c1ff5078074ccc683bbc7c329ce8bf8b53fdbfd9c780c773b9436cccd16d9.jpg
+  el_steckley_s_dueling_grounds:
+    title: El Steckley's Dueling Grounds
+    description: A circular dueling pit of stamped earth ringed by an audience of empty wooden benches that somehow always
+      feel half-occupied. A masked duelist named El Steckley keeps watch from the center, foam rapiers crossed at his
+      hip. The Boarding House is just to the east.
+    exits:
+      w: a_road_filled_with_holiday_cheer
+      e: the_boarding_house
+    image: 7eda36010c4f095bda24c50b93d8866a64dedcd91687d92b07f054e8bab54d60.jpg
+  the_boarding_house:
+    title: The Boarding House
+    description: A drowsy parlor lined with mismatched easy chairs and a faded Persian rug. The boarders here are all
+      half-asleep over books, knitting, or unfinished crosswords. Sunlight slants through lace curtains. The clock on
+      the mantel is right twice a day, by accident.
+    exits:
+      w: el_steckley_s_dueling_grounds
+    image: 9a4a858e808d490dea5e4c9a05e2a338419a2b5342e0e655a62d6acec5e7ed45.jpg
+  the_gambling_nook:
+    title: The Gambling Nook
+    description: A snug little card-room hidden beneath the Sports Metroplex bleachers, all green felt and warm
+      pendant-lamps. A folding table is set up with chips, cards, and a cup of dice. The air is thick with the smell of
+      root beer and friendly menace.
+    tavern: true
+    exits:
+      u: the_sports_metroplex
+    image: ee17d84218cd1159db537ee73777ea76f24fce18a1ace58accdb6dd5c3b164f4.jpg
+  trainer_row:
+    title: Trainer Row
+    description: A short street with carved wooden signs hanging over half a dozen doorways, each promising lessons in a
+      different art. Aspiring knights, princesses, doctors, pirates, and explorers gather here to find their first
+      teachers. The Academy stands to the east, and the Arts and Crafts hub is just south.
+    exits:
+      e: the_academy
+      n: a_road_filled_with_holiday_cheer
+      s: arts_and_crafts
+    image: 15540fad2d7ab06e2242a6cca76a1376569813b114881bc8e081c3f4ccab8ee7.jpg
+  the_academy:
+    title: The Academy
+    description: A wide-floored training hall with practice dummies stuffed with old socks, racks of cardboard weapons, and
+      a banner reading 'BRAVE FIRST, FAST SECOND' in jubilant marker. Sir Bramble the Brave keeps order from a tall
+      stool by the door, his cardboard armor squeaking happily.
+    exits:
+      w: trainer_row
+    image: 0b53ec1dd1f272062bed0ad5674e3b81985c61af58c58b77fba3b9aef08d51af.jpg
+  the_tailor_s_costume_shop:
+    title: The Tailor's Costume Shop
+    description: "A wonderful little boutique where every wall is covered in costumes hanging from wooden pegs: princess
+      gowns, knight's tabards, pirate vests, doctor's coats, and more. A long mirror runs down one wall, and a tailor's
+      table sits in the back, scattered with sequins. Princess Sparklepants holds court here in between fittings,
+      teaching the gentle magic of dressing the part."
+    exits:
+      e: arts_and_crafts
+      w: cult_of_the_rubber_ducky
+    image: 3e62f6b4bbc97dae05544121190f15ccc14ec9e6f275167781f5e3e4c2115117.jpg
+  arts_and_crafts:
+    title: Arts and Crafts
+    description: A bright, paint-splattered workshop ringed by long pine workbenches, jars of glitter, and big rolls of
+      butcher paper. The smell of glue and freshly-sharpened pencils is overwhelming. Pixel Haven's crafters use this
+      room as their primary workbench station.
+    station: WORKBENCH
+    exits:
+      w: the_tailor_s_costume_shop
+      e: the_alchemist
+      n: trainer_row
+      s: the_wacky_waving_arm_flailing_inflatable_crossing_guard_station
+    image: 34c7be7ac7a5f0cd0e1f674a50b4261d85ef940ddb47710c61545772ccd55783.jpg
+  the_alchemist:
+    title: The Alchemist
+    description: A cosy laboratory filled with bubbling glass beakers, copper coils, and shelves of jars labelled in
+      handwriting only the alchemist herself can read. A tall stone alchemy table dominates the center, ringed with
+      stools where apprentices brew strange brews. The smell is sugar, lavender, and faintly of fireworks.
+    station: ALCHEMY_TABLE
+    exits:
+      w: arts_and_crafts
+    image: 6889468aefbcbdf9db38213818e4913490fba4ae9d628c7b9bc45eb006b7b754.jpg
+  the_mystery_of_pixel_haven:
+    title: The History of Pixel Haven
+    description: A small museum with three exhibit cases, four maps that disagree about everything, and Historian Whiskers
+      presiding behind a high desk piled with notebooks. A brass plaque on the wall reads 'Auringold — A World Made of
+      Children's Dreams. Mind the displays.'
+    exits:
+      s: main_street
+    image: 2d73ea965e1e94c88e49114b4384273c3ff710592fba1317f18faeb51fc9d049.jpg
+  the_register_brides:
+    title: The Registrar of Guilds
+    description: A formal little office of polished oak and ledger-laden shelves, kept by Brides the Guild Registrar.
+      Banners of the great Pixel Haven guilds (and the small ones, and the silly ones) hang from the rafters, gently
+      swaying in the breeze from the open window.
+    exits:
+      w: the_wacky_waving_arm_flailing_inflatable_crossing_guard_station
+    image: c9c7ee0be8060269af247580654ce8a52c66794b6934d1e4b33eaa420d454b44.jpg
+  the_wacky_waving_arm_flailing_inflatable_crossing_guard_station:
+    title: The Wacky-Waving Arm-Flailing Inflatable Crossing Guard Station
+    description: A traffic island anchored by a ten-foot-tall inflatable crossing guard whose arms flail wildly in every
+      breeze, directing pedestrians cheerfully to no particular destination. The station is the busiest intersection in
+      town and somehow nobody has ever been hit by anything here.
+    exits:
+      n: arts_and_crafts
+      s: crazy_road_intersection_point
+      e: the_register_brides
+      w: sanctuary
+    image: 284deb96b4c6c84e5d3dbfc40c3864c30bdf0aaa50f3d7e1ae78442d542a579e.jpg
+  the_general_store:
+    title: The General Store
+    description: A cluttered, friendly shop where every shelf is organized by color rather than purpose, so the red shelves
+      have apples next to crayons next to small wooden swords. Crayonsville Carl beams from behind the counter. Type
+      'list' to see what's on the shelves.
+    exits:
+      s: rainbow_fowl
+    image: 72cec55255b81f65c9a6c920cfc7a21d9efa7c070dc25553090992d4080c0c4d.jpg
+  parkway:
+    title: Parkway
+    description: A broad green boulevard lined on both sides with manicured hedges shaped into animals — a hedge bear, a
+      hedge rabbit, a hedge train. Park Boulevard is to the south, the Railroad Crossing east, and the animated flowers
+      of Cartoon Flower Square shine to the west.
+    exits:
+      s: park_boulevard
+      e: the_railroad_crossing
+      w: animated_flower_row
+    image: bda4454fabbbf615faff9ff76b4a2f06477c0da59ca7c713605c062b93486c0b.jpg
+  main_street:
+    title: Main Street
+    description: A wide, bustling little main street paved with bright cobblestones. Awnings on every shopfront flap lazily
+      in the breeze, and the air is full of the cheerful, contradictory sounds of a town that never quite makes up its
+      mind what kind of day it's having. The History museum is to the north, the Post Office south.
+    exits:
+      e: main_street_2
+      n: the_mystery_of_pixel_haven
+      w: the_railroad_crossing
+      s: post_office
+    image: e51e391366e519845a6f35648f269bda4c494684b5212cb84a7ff57b4685f380.jpg
+  main_street_2:
+    title: Main Street
+    description: An eastward continuation of Main Street, lined with smaller shops and a particularly handsome apothecary.
+      The storefronts here are smaller and more eccentric — a hatmaker, a kite-shop, a tea importer who specialises in
+      tea no one has heard of.
+    exits:
+      w: main_street
+      e: crazy_road_intersection_point
+      s: the_apothecary
+    image: 19bb4aae8929d9dc16143e782f9a2e943548f0b005da7f127f67dd873285c3f6.jpg
+  crazy_road_intersection_point:
+    title: Crazy Road Intersection Point
+    description: A wild seven-way intersection where six lanes of phantom traffic somehow never quite collide. Hand- painted
+      street signs point in three more directions than there are streets. The Wacky Waving Crossing Guard Station
+      shimmers to the north, and Quiltwinds Road heads east.
+    exits:
+      w: main_street_2
+      n: the_wacky_waving_arm_flailing_inflatable_crossing_guard_station
+      e: road_quiltwinds
+    image: cc0b85dfa97cee7d6f686dce9e5f8291ef06a467ace90b68d79689646d8d8a88.jpg
+  the_great_stone_inn:
+    title: The Great Stone Inn
+    description: A massive stone building older than anything else in town, its walls thick with creeping moss and its
+      hearth never quite cool. Innkeeper Mossy moves through the common room with the silent grace of someone who knows
+      every floorboard. A faded sign by the hearth reads 'SET YOUR RECALL HERE — THESE STONES REMEMBER.'
+    bank: true
+    tavern: true
+    exits:
+      s: road_quiltwinds
+    image: 9070d1c47b1740242498fd82303800e1170f8ea252336f546514f3727be82482.jpg
+  the_park:
+    title: The Park
+    description: A wide, gently rolling park whose grass is the green of fresh crayons and whose sky always seems to be
+      midafternoon. A path winds south to the lake, north to the boulevard, and west to the Mother Goose Gazebo.
+    exits:
+      s: pixel_haven_lake
+      n: park_boulevard
+      w: mother_goose_gazebo
+    image: d7b5f4fce7e25f129849f6829c1373eeebe6e0a993300f8e83a172f0dfa4a15d.jpg
+  the_apothecary:
+    title: The Apothecary
+    description: A narrow, fragrant shop lined floor to ceiling with little wooden drawers labelled in tiny scrawled
+      handwriting. Bouquets of dried herbs hang from the rafters, and the front counter is presided over by a polished
+      brass scale that always weighs exactly what you need.
+    exits:
+      n: main_street_2
+    image: 26b1853641d0f603246eaaaa53c5f1fb87efbec1330455b68319ad0dfd2d1df4.jpg
+  pixel_haven_lake:
+    title: Pixel Haven Lake
+    description: A perfectly round lake whose surface ripples in tidy crayon-blue squares. Lily pads the size of dinner
+      plates float in lazy patterns, and the air smells of clean water and warm sun. A weed-tangled rope ladder descends
+      into the murky depths below.
+    exits:
+      n: the_park
+      d: lake_bottom
+    image: 3b3dd9454ff947358071ba4f6f2675e531c70d199b2ae6d1ed1dbf045628a05a.jpg
+  park_boulevard:
+    title: Park Boulevard
+    description: A long, leafy avenue lined with park benches and gas-lamp posts that someone has decorated with ribbons. To
+      the east, a cheerful little house glows behind a picket fence — Grandma Sunshine's place, the cosiest stop in
+      town.
+    exits:
+      n: parkway
+      s: the_park
+      e: grandma_sunshines_house
+    image: bfc1ad9459c1236b330e9998944bd2c2e91972c517069220e75bfcb07b31da54.jpg
+  grandma_sunshines_house:
+    title: Grandma Sunshine's House
+    description: The cozy living room bursts with cheerful chaos, its walls adorned with glittering snowman figurines
+      perched alongside framed portraits of a pompadoured crooner in rhinestone-studded jumpsuits. Mismatched furniture
+      from decades past creates a kaleidoscope of floral patterns and bold geometric prints, while twinkling Christmas
+      lights strung year-round cast a warm, golden glow over crocheted doilies and ceramic Elvis collectibles that crowd
+      every available surface.
+    exits:
+      w: park_boulevard
+      s: chatty_kathy_alley
+    image: a8baa5d90f4b0c8beed220b5e46ad00183d9ff64be894df91ac05694c66ce4a0.jpg
+  chatty_kathy_alley:
+    title: Chatty Kathy Alley
+    description: A narrow alley between two leaning houses, walled in laundry-line and shadow. A lone porcelain doll sits in
+      the middle of the alley, smiling. She's smiling. She is smiling. The way out is back to the north.
+    exits:
+      n: grandma_sunshines_house
+    image: 4c2dbd2a603edd5c1a91a3f1627a0073201975f619d5d981e98ab503a41002bd.jpg
+  lake_bottom:
+    title: Lake Bottom
+    description: A surprisingly cosy underwater grotto lit by glowing crystals and drifting columns of bubbles. The sand is
+      soft, the water is warm, and an enormous moss-covered teddy bear watches from a hollow in the rock.
+    exits:
+      u: pixel_haven_lake
+    image: f71cdda8e4416a9a5f20fbbd22a8336f72fa02c44d3131d34d476579d82c1539.jpg
+  the_railroad_crossing:
+    title: The Railroad Crossing
+    description: A bright red-and-white crossing gate stands here, perpetually half-down, perpetually about to clang. The
+      toy train station sits to the south, the railroad bridge stretches north, and Main Street is east.
+    exits:
+      w: parkway
+      s: toy_train_station
+      n: railroad_bridge
+      e: main_street
+    image: bef87ac49a952a43333262be13c344b857520b2377de120e4b0771c68d1e7fb6.jpg
+  toy_train_station:
+    title: The Toy Train Station
+    description: A perfect miniature station house with a pitched red roof, a clock tower, and a single bench on the
+      platform. Conductor Choo Choo stands proudly by the empty tracks, pocketwatch in hand. There is no train. There
+      has never been a train. The schedule is, however, immaculate.
+    exits:
+      n: the_railroad_crossing
+    image: 897d9e396f10a6abf18726b5796006ac0650cf10eda28516f25b3f69deb64b04.jpg
+  railroad_bridge:
+    title: The Railroad Bridge
+    description: A long iron-and-tie bridge crossing a deep, soft-edged ravine. The rails are polished gold-bronze and the
+      wooden ties are unevenly spaced, as though laid by an enthusiastic but small contractor. A spur leads west to a
+      hulking toy train car parked alone on a siding.
+    exits:
+      s: the_railroad_crossing
+      n: misfit_island
+      w: train_car
+    image: b483984c7d3279632c589b30a170ae7c598c52b7542e2cf52893ce17f3e485c7.jpg
+  pixelated_culvert:
+    title: A Pixelated Culvert
+    description: A low concrete culvert under a forgotten footpath, dripping with pixel-perfect droplets and lit by a single
+      dirty shaft of light. A vein of gummy ore glimmers in the wall like buried fruit.
+    exits:
+      n: pixel_river_2
+    image: aae43be7c8ed00bb3da1983e55b58d20d6186d72554b42988b9f381008279d1b.jpg
+  fireworks_depot:
+    title: The Magical Fireworks Depot
+    description: A rickety wooden warehouse on the edge of Misfit Island, packed wall to wall with crates of bottle rockets,
+      sparklers, fountain candles, and the occasional banned-everywhere-else cherry bomb. A hand-lettered sign warns NO
+      LIGHTING THE STOCK NO MATTER HOW BORED YOU ARE.
+    exits:
+      e: misfit_island
+    image: af53c11a6534f16e538cb95e65dbcb3eed0b38fb979a48b7eecff634aca15566.jpg
+  misfit_island:
+    title: Misfit Island
+    description: A small green island in the middle of the river, reachable by footbridges from several directions. The
+      misfit kids of Pixel Haven gather here, dreamed-up pirates and outlaws among them. Sneaky Pete keeps a leaning
+      shack at the center and teaches the rogue's trade to anyone with quick fingers.
+    exits:
+      s: railroad_bridge
+      w: fireworks_depot
+      n: the_sports_metroplex
+      e: river_cliffs
+    image: a52bd08e79e0f74ac483a1369a613a43c1723e076705cc58e8777cf966bca80b.jpg
+  river_cliffs:
+    title: The Cliffs Along Pixel River
+    description: A short, dramatic cliff face above the Pixel River — perfect for sitting on, throwing pebbles from, or
+      making important child-life decisions. Pebble sprites tumble and chime among the loose stones.
+    exits:
+      w: misfit_island
+    image: 3f35143087cb8f9c88fc15f5e848ef891bbbb9e7b222e4f9fec4613c18c39573.jpg
+  magic_pie_shop:
+    title: The Magic Pie Shop
+    description: A snug bakery whose front window is permanently fogged with pie steam. Round pies, square pies, sky-high
+      meringues, and one impossible four-dimensional tart sit cooling on the racks. Granny Aprons commands the kitchen
+      with a wooden spoon and an iron will.
+    exits:
+      s: animated_flower_row
+    image: 9175a5d7e091d15f38442227475f032a3cc712be5559b0b213abc7d8daa2f9b5.jpg
+  animated_flower_row:
+    title: Cartoon Flower Square
+    description: A flagstone square ringed with enormous animated daisies whose petals turn to follow you and whose faces
+      have actual expressions. They sing softly to themselves when no one's listening, and bow politely when someone is.
+      Daisy sprites buzz about the bigger flowers like very small bees.
+    exits:
+      e: parkway
+      n: magic_pie_shop
+      s: walking_path
+      w: rainbow_fowl
+    image: 24a7a5af1a7e9ab8eaa178366fa2a44703dac8532884955fff18e8f070d4cfbf.jpg
+  mother_goose_gazebo:
+    title: The Mother Goose Gazebo
+    description: A round wooden gazebo painted white, ringed with morning glories and inhabited by an enormous, dignified
+      goose in tiny spectacles. Stacks of nursery-rhyme books rise around her like fortifications. The Park is east; a
+      cobblestone path leads north.
+    exits:
+      n: walking_path
+      e: the_park
+      w: forgotten_playground
+    image: 1a7b5c4f4238264653f827ebcae19e12e01f8b57d3b4fe6facfd6f474e5d2563.jpg
+  walking_path:
+    title: A Cobblestone Path
+    description: A winding stone path between high boxwood hedges. The cobbles are arranged in a soothing herringbone
+      pattern, and tiny lanterns hang from the hedge tops. Cartoon Flower Square is to the north; the gazebo lies south.
+    exits:
+      n: animated_flower_row
+      s: mother_goose_gazebo
+    image: 26ea127e6a7f64ab33868b7638be30c7004f1f400ae44324ec2820e0ee4c4bcf.jpg
+  fanciest_house_front_yard:
+    title: A Front Yard Filled With Inflatables and Holiday Decorations
+    description: An immaculate front lawn so densely packed with inflatable snowmen, ghosts, turkeys, bunnies, and one
+      inexplicable inflatable accountant that there is barely room to walk. They sway gently in unison whenever a breeze
+      passes through.
+    exits:
+      n: the_fanciest_most_decorated_rainbow_mansion
+    image: e3a2ddbf45358d6aecd476976f08ebc05d9980c18a7a48713dcf0f21eca7b144.jpg
+  fanciest_house_back_yard:
+    title: A Back Yard With a Magic Waterpark
+    description: A turquoise pool ringed with water slides, fountains, and inflatable rafts shaped like impossible animals.
+      A particularly large inflatable shark prowls the deep end with menacing intent. The water is always the perfect
+      temperature.
+    exits:
+      e: the_fanciest_most_decorated_rainbow_mansion
+      s: the_picture_palace
+    image: ab35d3d32293bd757e6ec77a6668d955cf8816297dfff5cdac950728970aa9c7.jpg
+  post_office:
+    title: The Zippy Quick Post Office
+    description: A bright, narrow office wallpapered in pigeonhole shelves, every cubby crammed with letters addressed in
+      many handwritings. Postmaster Polly works behind a wooden counter that has been polished by generations of elbows.
+      Type 'mail list' to read your inbox.
+    exits:
+      n: main_street
+    image: f918ca5f396b42358608d91b8e7af9053eb1d8259a2ff1add384dc8f580a310b.jpg
+  train_car:
+    title: An Enormous Toy Train Car
+    description: A gigantic toy boxcar parked on a forgotten siding, its sides painted with a faded circus motif. The
+      interior smells of old straw and oily metal. Rusty the Toy Train Bandit holds the running-board like he owns the
+      place, and arguably he does.
+    exits:
+      e: railroad_bridge
+    image: 62524947821247b389afd47d1a0aa68f523c7daf6d0980c49f3f4c4478587583.jpg
+  sanctuary:
+    title: The Pixel Haven Stone Sanctuary
+    description: A small chapel of cool grey stone, its arched windows filtering the daylight into long quiet bars across
+      the floor. A single brass bowl of water stands at the altar, and the air is utterly hushed. No one will attack you
+      here — even bath-toy slimes know better than to bring their nonsense inside.
+    exits:
+      e: the_wacky_waving_arm_flailing_inflatable_crossing_guard_station
+    image: a0a26afb6e609251be3427d39938d15a6a7e8870626bd22c13403e350de274cf.jpg
+  rainbow_fowl:
+    title: Rainbow Fowl Fairway
+    description: A wide pedestrian fairway lined with chickens of impossible colors — turquoise, magenta, sunset- gold. They
+      strut about with the confidence of birds who have never met a fox. The General Store is to the north, Donut Shop
+      south, and the Toybox Ocean shore west.
+    exits:
+      e: animated_flower_row
+      n: the_general_store
+      s: donut_shop
+      w: sea_shore
+    image: e2eb9e70c5564931e5b0c2023cb08849dca82b268192da666d8b90d9babad3d8.jpg
+  donut_shop:
+    title: The Oddest Donut Shop Around
+    description: A round, glass-fronted shop with a rotating display case of donuts in every imaginable shape and color,
+      plus several that defy ordinary geometry. Doctor Doughnut presides from behind the counter, fogged glasses and
+      all.
+    exits:
+      n: rainbow_fowl
+    image: 45af832e205d8b7fa4dd90315eb17d6f15609b5622e1bf2d1c6e06557a066333.jpg
+  sea_shore:
+    title: The Shore of the Toybox Ocean
+    description: A wide ribbon of white sand beach beside an ocean that is, on closer inspection, actually a child's
+      enormous toybox seen from above. Plastic boats bob in the waves and the sand is studded with small forgotten
+      treasures.
+    exits:
+      e: rainbow_fowl
+    image: b24dbfcec11098aa32f231184f2f25b9dee774a378fbcd1220d716312dd4a884.jpg
+  the_only_road_4:
+    title: The Road to Crayonsville
+    description: The westward stretch of the Only Road, where the cobblestones become subtly waxy underfoot and the grass
+      grows in vivid, unnatural greens. A handful of crayon goblins lurk in the verges, grinning. Crayonsville proper is
+      somewhere further west, but the road is hazy past the next bend.
+    exits:
+      e: the_only_road_2
+      n: the_dump
+    image: 20bd2b85abb1bca0e10a307b86ddaa148a3f32f0c79e8509875ef6834a6668be.jpg
+  the_only_road_5:
+    title: The Road to Stuffiesburg
+    description: An eastward stretch of the Only Road that smells of fresh felt and looks faintly fuzzy at the edges.
+      Stuffie guards in zigzag-stitched armor patrol the verges, polite but firm. Stuffiesburg lies beyond, somewhere
+      safer than it sounds.
+    exits:
+      w: the_only_road_3
+    image: 62f2dc86243d206c9f50a05e879d2ef486f3180e0d530650ba06517b8bcaad5c.jpg
+  road_underbed_hollow:
+    title: A Treacherous Footbridge to the Underbed Hollow
+    description: A swaying rope-and-plank bridge slung across a shallow ravine. The boards are mossy, and a sign at the near
+      end warns CAREFUL — DUST BUNNIES IN SEASON. The Underbed Hollow is somewhere on the other side, a twilight forest
+      where lost things gather.
+    exits:
+      e: a_hidden_railroad_bridge
+    image: 5285134cf9f07c3406c6ae12524985ffef0e394b28ed61fe1588db7bfc7dfc82.jpg
+  road_quiltwinds:
+    title: The Road to Quiltwinds Township
+    description: A long, gentle stretch of road that has been paved (so the locals say) with the soft blocks of an enormous
+      patchwork quilt. The seams are lumpy underfoot, but the colors are wonderful. Quiltwinds Township is somewhere
+      over the horizon. The Great Stone Inn squats reassuringly to the north.
+    exits:
+      w: crazy_road_intersection_point
+      n: the_great_stone_inn
+      s: toy_emporium
+    image: 7afc1cb348d516dab04eb165e67f3cce074a28c78335b5f60f16db800b5945f9.jpg
+  cult_of_the_rubber_ducky:
+    title: Cult of the Rubber Ducky
+    description: A tiny, sun-bright temple devoted to the worship of an enormous rubber duck enshrined upon a velvet pillow
+      on the central altar. The cultists dance, sing, and even play the saxophone, all WITHOUT putting down the ducky.
+      Pirates have begun to gather here too — a most unlikely congregation. The costume shop is east.
+    exits:
+      e: the_tailor_s_costume_shop
+    image: f85c8703abd21358a44349043997e09f52f43649da775956135766e39a393bb6.jpg
+  toy_emporium:
+    title: The Old Toy Emporium
+    description: A rambling, dust-filled toy shop that no one in town can quite remember the way to. The shelves groan with
+      handmade wooden trains, painted soldiers, marble-runs, and at least one rocking horse that looks like it remembers
+      being a real horse. Topsy the Toymaker bustles about behind a workbench at the back. The front door opens onto a
+      road that doesn't appear to exist.
+    image: 048c5011151a3b6d1bcdcb8f9748a8f27fb380fef129d60c2b78ee2b089cc431.jpg
+    exits:
+      n: road_quiltwinds
+  forgotten_playground:
+    title: The Forgotten Playground
+    description: A small overgrown playground tucked into a forgotten pocket of Pixel Haven, where the swings sway gently in
+      a breeze you cannot feel and the merry-go-round still turns slowly on its rusted bearings. The laughter of
+      children plays here just at the edge of hearing.
+    image: 3356d44c73a5abc96880e9beea2e78fc0318c64532aeda2b61bed9827d45dfd7.jpg
+    exits:
+      e: mother_goose_gazebo
+  the_picture_palace:
+    title: The Picture Palace
+    description: A grand, slightly run-down movie theater with a marquee that reads NOW SHOWING — YOUR FAVORITE MEMORY in
+      flickering bulbs. The lobby smells of buttered popcorn, the carpet is the color of a daydream, and the projection
+      booth hums softly even when no film is playing.
+    image: 62b6d4651df92165d122d2845526a65d229bc8789ea91d97445f5b163a15c76f.jpg
+    exits:
+      n: fanciest_house_back_yard
+graphical: true
+image:
+  room: 805e53d560883aa89c9b9c6aeba14b767f5364c88584898a9580850439e1be95.jpg
+  mob: c903cf5e9f273a813862c62050aaea0d54750a2c62b049958171eef1571b2f03.png
+  item: 9e71b99423cf62f09ad48ceedb17eb0809ae09fdeae94d53ffddeed68e0df204.png
+mobs:
+  grandma_sunshine:
+    name: Grandma Sunshine
+    room: grandma_sunshines_house
+    tier: boss
+    level: 100
+    description: A plump, motherly figure with towering silver hair teased to impressive heights and shellacked with
+      gleaming hairspray that catches the golden light, wearing a vibrant floral housedress in shades of pink and yellow
+      that complement the town's perpetual sunset glow. Her kind eyes twinkle with mischief behind cat-eye glasses
+      adorned with tiny rhinestones, while her arms remain perpetually open in invitation, sturdy sensible shoes tapping
+      rhythmically against the moss-touched cobblestones as if always ready to break into an impromptu dance.
+    image: c8c5451017d66d8b437d5efe48b36874f3041325b9720f99def9ae024b901fd8.png
+    dialogue:
+      root:
+        text: Well bless your heart, sugar — come on in! The cookies are still warm. Grandma Sunshine takes care of everyone in
+          Pixel Haven, and that includes you.
+        choices:
+          - text: Tell me about Pixel Haven.
+            next: about_town
+          - text: Goodbye, Grandma.
+            next: farewell
+      about_town:
+        text: This whole town was dreamed up one summer afternoon when a little girl named Auringold fell asleep on her
+          grandmother's porch. Every kid in the world has visited at least once — they just don't always remember. Make
+          yourself at home.
+        choices:
+          - text: Goodbye, Grandma.
+            next: farewell
+      farewell:
+        text: You come back any time, sugar. Bring a friend.
+  grandma_grumpy:
+    name: Grandma Grumpy
+    room: grumpy_grandma_s_house
+    tier: standard
+    level: 1
+    description: A rotund elderly woman slumps in a creaky wooden rocking chair, her gray hair escaping from a loose bun as
+      she nods drowsily with half-closed, irritated eyes. A massive orange tabby cat sprawls across her ample lap, its
+      fur matted and whiskers twitching while she mutters under her breath, her knitted shawl pulled tight around her
+      hunched shoulders.
+    image: a857fa7e2eb6666c695e90ca902aea152581e746e162111d05ddb907e9c7b41b.png
+    dialogue:
+      root:
+        text: Hmph. Tracking porch dust into a person's house. Some grandmothers bake cookies. I sit. Move along, I'm watching
+          my stories.
+        choices:
+          - text: Sorry to bother you.
+            next: farewell
+      farewell:
+        text: Mhm. Close the screen door behind you.
+  mailman_kirk:
+    name: Mailman Kirk
+    room: fat_cat_row
+    tier: standard
+    level: 1
+    description: A wiry figure in faded blue postal coveralls jogs past with mechanical precision, his worn leather satchel
+      bouncing rhythmically against his hip as letters and small packages peek from its overstuffed opening. His
+      weathered hands are perpetually stained with engine grease despite his current role, and his determined stride
+      carries the efficient urgency of someone who has found his true calling in motion rather than machinery.
+    image: c49b66c636d1909876e52848b250e3fea499837251b3ce171e4cc733bf7a2bb5.png
+    behavior:
+      template: patrol
+      params:
+        patrolRoute:
+          - fat_cat_row
+          - the_porch_of_eternal_sighs
+          - a_road_filled_with_holiday_cheer
+          - trainer_row
+    dialogue:
+      root:
+        text: Letters! Packages! Special deliveries! Can't stop, can't stop — Pixel Haven's mail waits for no one. If you're
+          looking for the post office, it's right off Main Street.
+        choices:
+          - text: Goodbye, Kirk.
+            next: farewell
+      farewell:
+        text: Keep your address current!
+  mayor_buttercup:
+    name: Mayor Buttercup
+    room: pixel_haven_city_hall
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - bath_toy_invasion
+    description: A round, rosy-cheeked woman in a butter-yellow suit two sizes too small for her enthusiasm, an enormous
+      brass mayor's chain bouncing on her chest as she gestures. She gives the impression of a small sun that has
+      decided to wear glasses.
+    dialogue:
+      root:
+        text: Welcome to Pixel Haven City Hall! I'm Mayor Buttercup, and I keep this lovely little town running. We handle all
+          civic business right here — and the bank's open as well.
+        choices:
+          - text: Tell me about Pixel Haven.
+            next: about_town
+          - text: I hear there's trouble down by the river.
+            next: quest_offer
+          - text: How does the bank work?
+            next: about_bank
+          - text: Goodbye, Mayor.
+            next: farewell
+      about_town:
+        text: Pixel Haven is the cosiest little town in all of Auringold — the magical world dreamed up by children everywhere.
+          We have a lake, a park, an academy, costume shops, a sports metroplex, even a real lottery! And our newest
+          neighborhood is across the K'nex Drawbridge.
+        choices:
+          - text: Goodbye, Mayor.
+            next: farewell
+      quest_offer:
+        text: Oh, you've heard! Bath-toy slimes have been bubbling up out of Pixel River. They're harmless, mostly, but they
+          leave residue all over the bridge planks. Could you clear out a few for me? I'd be ever so grateful.
+        choices:
+          - text: I'll handle it.
+            next: farewell
+      about_bank:
+        text: Just type 'bank' to see your account, 'deposit <amount>' to put gold away, or 'withdraw <amount>' to take it back
+          out. Your gold is safe with us — I balanced the ledger myself this morning.
+        choices:
+          - text: Goodbye, Mayor.
+            next: farewell
+      farewell:
+        text: Civics is its own reward!
+    image: a856278409674973dab4b8020479dde8cd207f96e4b87a11d3d7a47881eaad38.png
+  lottery_larry:
+    name: Lottery Larry
+    room: pixel_haven_lottery_office
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A whip-thin man in a gold satin vest and a confetti-stained bowtie, beaming beside a rumbling glass tumbler
+      full of numbered ping-pong balls. He never seems to blink and always seems to be one second from shouting
+      'WINNER!'
+    dialogue:
+      root:
+        text: WELCOME, FRIEND, to the Pixel Haven Lottery Office! Where dreams become numbers and numbers become dreams! Buy a
+          ticket with 'lottery buy', check the jackpot with 'lottery info', and may the lucky stars smile on you!
+        choices:
+          - text: How does it work?
+            next: how_lottery
+          - text: Goodbye, Larry.
+            next: farewell
+      how_lottery:
+        text: Easiest game in town! 'lottery buy' for a single ticket, 'lottery tickets' to see your numbers, and 'lottery info'
+          for the current pot. Drawings happen on a schedule. Big winners get their photo on the wall!
+        choices:
+          - text: Goodbye, Larry.
+            next: farewell
+      farewell:
+        text: STAY LUCKY OUT THERE!
+    image: ba4d2de0d94ef3b4239e6c522638f109c01f9c7fb23565d04e2a53142f748a05.png
+  crayonsville_carl:
+    name: Crayonsville Carl
+    room: the_general_store
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A jovial shopkeeper in a striped apron, his beard streaked with stripes of accidental crayon. He gestures
+      around the cluttered shelves of the general store with the proud air of a man who has organized everything by
+      color.
+    dialogue:
+      root:
+        text: Step right in! Carl's General Store carries everything a Pixel Haven adventurer might need — weapons, armor,
+          snacks, and at least one of every color of crayon. Type 'list' to see what's on the shelves.
+        choices:
+          - text: Goodbye, Carl.
+            next: farewell
+      farewell:
+        text: Mind the threshold — the floor still squeaks!
+    image: 1e9a1d0045410c58d473936ff5b4ea14451c0997d3082adfb36e8de9e8228928.png
+  granny_aprons:
+    name: Granny Aprons
+    room: magic_pie_shop
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - sweet_petals
+    description: A diminutive baker barely as tall as her own counter, wreathed in seven aprons of progressively smaller
+      size. She smells overwhelmingly of cinnamon and powdered sugar.
+    dialogue:
+      root:
+        text: Hello dearie! Pies, pies, pies — Granny Aprons makes the best pies in Pixel Haven. Magic ones, too. The
+          fairy-floss slice is on special today.
+        choices:
+          - text: How can I help?
+            next: quest_offer
+          - text: What's on the menu?
+            next: shop_info
+          - text: Goodbye, Granny.
+            next: farewell
+      quest_offer:
+        text: Oh, you sweet thing — I'm short on glittering daisy petals. The flowers in Cartoon Flower Square shed them
+          sometimes if you ask nicely (and the daisy sprites don't always ask nicely back). Bring me a few and I'll bake
+          you something special.
+        choices:
+          - text: I'll fetch some petals.
+            next: farewell
+      shop_info:
+        text: Type 'list' to see today's pies. Or just smell them — your nose will tell you everything.
+        choices:
+          - text: Goodbye, Granny.
+            next: farewell
+      farewell:
+        text: Mind the bottom step on your way out — the icing's slippery!
+    image: d1ee53bf138b1d50c26dae27fa174d65969bc4dc665cd3f72be7ef5d8bd6b2a7.png
+  doctor_doughnut:
+    name: Doctor Doughnut
+    room: donut_shop
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A tall man in a white coat that is either a baker's or a doctor's, depending on which way the light hits
+      the embroidered name patch. His big round glasses keep fogging up from the donut fryer behind him.
+    dialogue:
+      root:
+        text: Welcome to The Oddest Donut Shop Around — where every donut is medicinal! Some heal scrapes, some restore courage,
+          and one of them, regrettably, is just a donut. Try 'list' for the menu.
+        choices:
+          - text: Goodbye, Doctor.
+            next: farewell
+      farewell:
+        text: Doughnuts twice a day, that's the prescription.
+    image: 8d510e4f016d6fdadd7cb81e604ffc73fa1a91e633331fc20eb28f36fb9ea0eb.png
+  burnt_bobby:
+    name: Bartender Burnt Bobby
+    room: burnt_pixel_bar
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A grizzled bartender whose left eyebrow is permanently singed off. He polishes a glass with a rag that may
+      once have been a bar towel, in another life.
+    dialogue:
+      root:
+        text: Welcome to the Burnt Pixel. Don't ask about the kitchen fire. Don't ask about the OTHER kitchen fire. We do
+          gambling here too — type 'gamble' or 'dice' if you're feeling lucky.
+        choices:
+          - text: How does the gambling work?
+            next: about_gambling
+          - text: Goodbye, Bobby.
+            next: farewell
+      about_gambling:
+        text: Simple. 'dice <amount>' rolls the bones for a payout. Win some, lose some. The house drinks either way.
+        choices:
+          - text: Goodbye, Bobby.
+            next: farewell
+      farewell:
+        text: Try not to breathe through your nose on the way out.
+    image: 9911c452ba9b3384cc903c1ce8dae7052ec36011b90e9f5ab57f073448c7cee6.png
+  innkeeper_mossy:
+    name: Innkeeper Mossy
+    room: the_great_stone_inn
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A serene woman with green braids piled atop her head and moss growing — quite intentionally — along the
+      seams of her apron. She moves so quietly she might be made of stone herself.
+    dialogue:
+      root:
+        text: Welcome, traveler. The Great Stone Inn has been here since the very first dream of Auringold. Set your recall
+          stone here, and these old stones will always know how to pull you home.
+        choices:
+          - text: Set this inn as my recall point.
+            next: confirm_recall
+            action: set_recall
+          - text: Tell me about recall.
+            next: explain_recall
+          - text: Goodbye.
+            next: farewell
+      confirm_recall:
+        text: It is done. The hearth stones know your name now. Type 'recall' from anywhere in the world and you will be drawn
+          back here.
+        choices:
+          - text: Thank you, Mossy.
+            next: farewell
+      explain_recall:
+        text: Recall is your way home. Pick a safe spot, set it once, and you can always return — handy when night falls in a
+          strange wood.
+        choices:
+          - text: Set this inn as my recall point.
+            next: confirm_recall
+            action: set_recall
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Walk gently. The stones remember every step.
+    image: e725cf09d8321ab5d4ad028e9d9282adbf4234ef1b2d21bed6576b527ee9e0df.png
+  postmaster_polly:
+    name: Postmaster Polly
+    room: post_office
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A brisk woman in a starched blue uniform two sizes too crisp, juggling three letters and a parcel with the
+      practiced ease of someone who has done this her entire life.
+    dialogue:
+      root:
+        text: Pixel Haven Post Office, Postmaster Polly speaking! 'mail list' shows your inbox, 'mail send <player> <message>'
+          fires off a letter, and Mailman Kirk does the legwork. The legwork is the part Kirk likes most.
+        choices:
+          - text: Goodbye, Polly.
+            next: farewell
+      farewell:
+        text: Stamps are on the counter. They're decorative — we run on enthusiasm.
+    image: 9cb9b4f6d0f9587693448b4b2b16378cc0de951cd3731ae785b289f3e24a0409.png
+  guild_registrar_brides:
+    name: Brides the Guild Registrar
+    room: the_register_brides
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A solemn woman in scholarly robes, surrounded by hundreds of dusty leather-bound ledgers and one brand-new
+      fountain pen.
+    dialogue:
+      root:
+        text: Welcome to the Registrar of Guilds. If you wish to found, join, or manage a guild, the paperwork begins here.
+        choices:
+          - text: How do guilds work?
+            next: explain_guilds
+          - text: Goodbye.
+            next: farewell
+      explain_guilds:
+        text: "'guild create <name>' founds one. 'guild invite <player>' brings in members. 'guild roster' lists them. 'gchat
+          <message>' speaks in the guild channel. We keep impeccable records — even of typos."
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: May your charter outlast its founders.
+    image: de93f33387d8c51976878a47c0e2fd6ae8ebeb49e55fba181514683b4a3ac168.png
+  historian_whiskers:
+    name: Historian Whiskers
+    room: the_mystery_of_pixel_haven
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A stooped, bespectacled scholar with magnificent white sideburns and ink-stained fingertips. His desk is
+      buried in maps of Pixel Haven that contradict each other in cheerful ways.
+    dialogue:
+      root:
+        text: Aha — a fellow seeker. I am Historian Whiskers, and this little museum collects the tangled threads of Pixel
+          Haven's past. What would you like to know?
+        choices:
+          - text: How was Pixel Haven created?
+            next: about_origin
+          - text: Tell me about Auringold.
+            next: about_world
+          - text: Why are there so many roads called 'The Only Road'?
+            next: about_roads
+          - text: Goodbye, Historian.
+            next: farewell
+      about_origin:
+        text: Pixel Haven was dreamed into being by a child named Auringold one summer afternoon — the dream lingered in the
+          world long after she woke, and over the years other children added to it. Every fanciful idea, every
+          half-finished daydream, every 'wouldn't it be cool if...' eventually rooted somewhere in our streets.
+        choices:
+          - text: Tell me about Auringold.
+            next: about_world
+          - text: Goodbye, Historian.
+            next: farewell
+      about_world:
+        text: Auringold is the magical world made of children's dreams. Pixel Haven is one town in it; there are many others —
+          Crayonsville, Stuffiesburg, Quiltwinds, the Underbed Hollow, and stranger places still. The roads leading out
+          of town will get you to most of them, eventually.
+        choices:
+          - text: Why are there so many roads called 'The Only Road'?
+            next: about_roads
+          - text: Goodbye, Historian.
+            next: farewell
+      about_roads:
+        text: Ah! That is the great mystery, isn't it? Each is the only road that leads to where it leads. So they are all true,
+          and all named correctly, and the maps simply have to cope. Personally, I find it charming.
+        choices:
+          - text: Goodbye, Historian.
+            next: farewell
+      farewell:
+        text: Mind the loose floorboards by the door — they are themselves a historical exhibit.
+    image: 3bacab6567fb88152735411603293bc8f6aed322aba46d66f171c233909ef831.png
+  sir_bramble:
+    name: Sir Bramble the Brave
+    room: the_academy
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A jolly knight in cardboard plate armor laced together with shoelaces. His helm visor is permanently stuck
+      in the up position, revealing a luxurious mustache.
+    dialogue:
+      root:
+        text: Hail, brave one! I am Sir Bramble, and at the Academy we train the bravest knights in Pixel Haven. Type 'train
+          list' to see what I can teach you. Honor first, snacks second, victory third!
+        choices:
+          - text: How does training work?
+            next: training_info
+          - text: Goodbye.
+            next: farewell
+      training_info:
+        text: "'train list' shows what's available. 'train learn <ability>' spends a skill point. Knights are tough, loud, and
+          very polite to dragons."
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Stand tall! The visor stays up!
+    image: 1d17ad9bbe842a6320ce00400ba1160e4f2d53c17e58220283f8478ac069efc6.png
+  princess_sparklepants:
+    name: Princess Sparklepants
+    room: the_tailor_s_costume_shop
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A radiant young woman in glittering layers of pink and silver, her hair coiled into a crown of star pins.
+      Wherever she walks, a faint sprinkle of sparkles follows her about a half-step behind.
+    dialogue:
+      root:
+        text: Oh, hello! I'm Princess Sparklepants, and the Tailor's Costume Shop is my school as much as it is a shop. Princess
+          magic is the prettiest magic in all of Auringold. 'train list' to see what I can teach you!
+        choices:
+          - text: How does training work?
+            next: training_info
+          - text: Goodbye.
+            next: farewell
+      training_info:
+        text: "'train list' shows my spells. 'train learn <spell>' spends a skill point. Princess magic is mostly sparkles,
+          charm, and the occasional very polite fireball."
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Smile! The day is full of glitter.
+    image: f3645ba7a7d5da33e8dba45443254dbd87ef108b7c266ad2b0ab7d5c69348613.png
+  doctor_ouchless:
+    name: Doctor Ouchless
+    room: hospital_for_the_aging_and_infirmed_teenagers
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A kindly woman in a too-clean lab coat with a name-tag reading 'DR. OUCHLESS — IT WON'T HURT, I PROMISE'.
+      She carries a stethoscope shaped like a friendly cat.
+    dialogue:
+      root:
+        text: Hello, hello — welcome to the Hospital for the Aging and Infirmed (Teenagers). It's a niche specialty. I teach the
+          healing arts to anyone willing to learn. 'train list' to see what I offer.
+        choices:
+          - text: How does training work?
+            next: training_info
+          - text: Why teenagers?
+            next: about_hospital
+          - text: Goodbye.
+            next: farewell
+      training_info:
+        text: "'train list' shows healing prayers and sciences. 'train learn <ability>' spends a skill point. Doctors patch up
+          everyone — even themselves, eventually."
+        choices:
+          - text: Goodbye.
+            next: farewell
+      about_hospital:
+        text: Teenagers are the only people in Auringold who can be both 'aging' and 'infirmed' on the same afternoon. It's a
+          real challenge medically. Mostly we hand out juice boxes.
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Drink water! Eat a snack! You're doing great.
+    image: c76966297bfaa905199d57d4a8dc86727f79d1f5ff51db0fa1a9f0e80f832cfc.png
+  sneaky_pete:
+    name: Sneaky Pete the Pirate Captain
+    room: misfit_island
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A wiry pirate in a paper tricorne, an eyepatch worn over the wrong eye depending on the day, and an
+      enormous grin full of every tooth he ever brushed.
+    dialogue:
+      root:
+        text: Arr! Welcome to Misfit Island, the only respectable place in Pixel Haven for a proper rogue. I'm Sneaky Pete, and
+          I teach the fine art of being where the watchmen aren't. 'train list' to learn the trade.
+        choices:
+          - text: How does training work?
+            next: training_info
+          - text: Why misfits?
+            next: about_misfits
+          - text: Goodbye.
+            next: farewell
+      training_info:
+        text: "'train list' shows my tricks. 'train learn <skill>' spends a skill point. Rogues sneak, pick, backstab, and
+          occasionally rescue lost cats — for a fee."
+        choices:
+          - text: Goodbye.
+            next: farewell
+      about_misfits:
+        text: Every kid feels like a misfit eventually. This little island is where their dreams of being a daring outlaw came
+          to live. We're all misfits here, and that makes us a fine crew.
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Watch your purse — I'm just being friendly!
+    image: 7ddfaeceabb268edac1506a3b1ccf563552fd43fadaca841c83866a0e9698df5.png
+  ranger_pinecone:
+    name: Ranger Pinecone
+    room: the_sports_metroplex
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A weather-tanned ranger in a many-pocketed khaki vest, with a bandana around her neck and a butterfly net
+      slung across her back like a longbow. Twigs and grass cling to her boots.
+    dialogue:
+      root:
+        text: Hey there! Pixel Haven's got more outdoors than you'd think — fields, river, woods — and I teach the explorers who
+          go play in 'em. 'train list' to see what I've got.
+        choices:
+          - text: How does training work?
+            next: training_info
+          - text: Goodbye.
+            next: farewell
+      training_info:
+        text: "'train list' shows tracking, marking, and a few critter calls. 'train learn <ability>' spends a skill point.
+          Explorers see what other folk miss — and they keep their pets fed."
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Sunscreen! Water! And remember the trail markers!
+    image: f965118131ee9fd9be1774c95235c6e4876bf3e9ac28678f712acd21302d9a31.png
+  bath_toy_slime:
+    name: a soggy bath-toy slime
+    room: pixel_river_2
+    tier: weak
+    level: 1
+    respawnSeconds: 60
+    drops:
+      - itemId: bath_toy_gunk
+        chance: 0.7
+      - itemId: soggy_paper
+        chance: 0.3
+    description: A wobbling blob the size of a basketball, made of melted rubber duckies and pruny soap. It squeaks
+      indignantly when poked.
+    image: 13aafc7e77124795936b937c0c6af591a23c62aa1b9c767fe3e6197f8dbcd988.png
+  bath_toy_slime_river:
+    name: a soggy bath-toy slime
+    room: pixel_river
+    tier: weak
+    level: 1
+    respawnSeconds: 60
+    drops:
+      - itemId: bath_toy_gunk
+        chance: 0.6
+    description: A glistening blob bobbing in the shallows of the Pixel River. The longer you look at it, the more
+      ducky-faces you can find inside it.
+    image: f19930a4ac17ffac1b38406996178ae55e8ccf26e2d98d8a53b4aa8a95bbb045.png
+  splash_goblin:
+    name: Splash the Plumber Goblin
+    room: pixelated_culvert
+    tier: standard
+    level: 2
+    respawnSeconds: 90
+    drops:
+      - itemId: jangling_junk
+        chance: 0.5
+    description: A short, soaking-wet creature in too-large rubber boots and a cap that says 'PLUMBER' in marker. He wields
+      a plunger like a halberd.
+    behavior:
+      template: wander_aggro
+    image: fe829409240c4ac553967c751bc5415e4b27b876c29c51fc4bf40458cdfb4ff0.png
+  bubble_bear:
+    name: Bubbles the Bath Bear
+    room: lake_bottom
+    tier: elite
+    level: 4
+    respawnSeconds: 240
+    drops:
+      - itemId: starshine_dust
+        chance: 0.6
+      - itemId: rainbow_blade
+        chance: 0.05
+    description: An enormous teddy bear half-overgrown with lake moss, stitched eyes glowing softly in the dark water.
+      Bubbles drift constantly from his fur.
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: Bubbles the Bath Bear lets out a single, watery growl.
+    image: 47feae3de74239d7d3af4387c643293b0fbcb8011b523678513732cf2b55a2aa.png
+  junkpile_jangler:
+    name: a junkpile jangler
+    room: the_dump
+    tier: standard
+    level: 2
+    respawnSeconds: 90
+    drops:
+      - itemId: jangling_junk
+        chance: 0.7
+      - itemId: stuffie_button
+        chance: 0.25
+    description: A loose-jointed shamble of broken toys, missing socks, and bent wire coat-hangers, animated by stubborn
+      dump-magic. It clinks when it moves.
+    behavior:
+      template: wander_aggro
+    image: c0b96a0c43aa5f396140ab135e9e6a58db15c5b601fdd47803286c85b00ca500.png
+  crayon_goblin:
+    name: a crayon goblin
+    room: the_only_road_4
+    tier: weak
+    level: 1
+    respawnSeconds: 60
+    drops:
+      - itemId: crayon_chunk
+        chance: 0.8
+    description: A waist-high goblin made entirely of broken crayons fused together. It scribbles on everything, including itself.
+    behavior:
+      template: wander
+    image: fbf310af856a60d2fafd6f2c02cbb758eeca0ec8767fb973ed037bacbf76a330.png
+  pothole_imp:
+    name: a pothole imp
+    room: the_only_road_3
+    tier: weak
+    level: 1
+    respawnSeconds: 60
+    drops:
+      - itemId: jangling_junk
+        chance: 0.4
+    description: A scrappy little imp that lives inside potholes and pops out to nip ankles. Asphalt-colored, with bright
+      yellow eyes the same color as road paint.
+    image: cf7edb7aed20c5c6e380b007f7c51d5d1bd3202c4feae8416611cda25f76cb94.png
+  stuffie_guard:
+    name: a stuffie guard
+    room: the_only_road_5
+    tier: standard
+    level: 2
+    respawnSeconds: 90
+    drops:
+      - itemId: stuffie_button
+        chance: 0.6
+    description: A patrolling stuffed bear-knight, the seams of its armor stitched in zigzag yarn. It carries a pipe-cleaner pike.
+    behavior:
+      template: wander_aggro
+    image: 83a756194bbc6ba0491f035f6ef3cd17377ced85c1b73e863533e9a1db05c295.png
+  tumble_goblin:
+    name: a tumble goblin
+    room: the_treacherous_hill
+    tier: weak
+    level: 1
+    respawnSeconds: 60
+    description: A bowling-pin shaped goblin that rolls down hills on purpose, cackling. Mostly harmless — except for the cackling.
+    behavior:
+      template: wander
+    image: 37b252f602afcb1063c519c80c7b0588d8987934eb6e7e2eef6c43b328d5ce68.png
+  cliff_crab:
+    name: a paper-shell cliff crab
+    room: river_cliffs
+    tier: weak
+    level: 1
+    respawnSeconds: 60
+    description: A small origami crab folded out of damp newsprint. It scuttles sideways with surprising speed.
+    image: 90abcddc8cc0762dd31d44f384a967e5fbbdf9e2ed86a863b2328d53c4c6f858.png
+  daisy_sprite:
+    name: a daisy sprite
+    room: animated_flower_row
+    tier: weak
+    level: 1
+    respawnSeconds: 90
+    drops:
+      - itemId: daisy_petal
+        chance: 0.5
+    description: A tiny winged figure made of overlapping petals, smelling distinctly of cake. It buzzes around the
+      flowerbeds and steals shiny things.
+    image: 97aa7384387bd1b46a48d34723ae6a7576a85ab71d93d0ab134338fe356e27fc.png
+  inflatable_pool_shark:
+    name: an inflatable pool shark
+    room: fanciest_house_back_yard
+    tier: elite
+    level: 3
+    respawnSeconds: 180
+    drops:
+      - itemId: bubble_wrap_armor
+        chance: 0.15
+    description: A six-foot-long inflatable shark with painted teeth and very real attitude, bobbing menacingly in the magic
+      waterpark. Its tail swishes by itself.
+    behavior:
+      template: aggro_guard
+    image: 3d694fa1f60267a6c7f7719f2c09151dc7968e0e5b8fbc6a12197105bc525a6b.png
+  chatty_kathy:
+    name: Chatty Kathy
+    room: chatty_kathy_alley
+    tier: elite
+    level: 3
+    respawnSeconds: 240
+    drops:
+      - itemId: stuffie_button
+        chance: 0.8
+    description: A waist-high porcelain doll with a chipped smile and a pull-string in her back that triggers a new threat
+      every time. Her glass eyes follow you. Her glass eyes follow you. Her glass eyes follow you.
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: Chatty Kathy says, "Will you be my friend FOREVER?"
+    image: 53de3b905376cd8824782f6ffb64c367519ccff8f1eacda07e10d20cf5ebe219.png
+  porch_cat:
+    name: a sighing porch cat
+    room: the_porch_of_eternal_sighs
+    tier: weak
+    level: 1
+    respawnSeconds: 120
+    description: A vast orange tabby cat draped across a sun-warmed cushion. It sighs every few seconds in a manner so loud
+      and tragic that you suspect it of doing it on purpose.
+    image: a7b69ab517a494d9e73f6cd09ecbb8c8a4d14b24fc21d37e995803bc2b98b519.png
+  el_steckley:
+    name: El Steckley
+    room: el_steckley_s_dueling_grounds
+    tier: elite
+    level: 5
+    respawnSeconds: 300
+    drops:
+      - itemId: tin_star_badge
+        chance: 0.5
+      - itemId: pirate_doubloon
+        chance: 0.4
+    description: A masked duelist in a tasseled cape and a wide-brimmed hat, twirling two foam rapiers with showman's flair.
+      He bows extravagantly between strikes.
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: El Steckley sweeps off his hat and shouts, "EN GARDE!"
+    image: 73a416a2ba79c480d0e78f002309ce9e816ce815bf0be43d186e94e916eb51ba.png
+  cult_ducky_fanatic:
+    name: a rubber-duck cultist
+    room: cult_of_the_rubber_ducky
+    tier: weak
+    level: 1
+    respawnSeconds: 90
+    description: A robed devotee whose hood is pulled low over a bright yellow rubber duck on their head. They are humming
+      reverently and refuse to put down the ducky.
+    image: 4d4cf59b6fbaec92500e3f3cac55948c7cc56f4f581c576be304d731f713bdea.png
+  conductor_choo:
+    name: Conductor Choo Choo
+    room: toy_train_station
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A heavyset man in a navy-blue conductor's uniform two sizes too small, his moustache neatly waxed, his
+      pocketwatch perpetually two minutes fast.
+    dialogue:
+      root:
+        text: All aboard! All aboard the Pixel Haven Toy Express! ... Well, the engine's been on order for thirty years, but
+          that's no reason to lose enthusiasm. Tickets are complimentary. The platform is always open.
+        choices:
+          - text: Goodbye, Conductor.
+            next: farewell
+      farewell:
+        text: All aboard the spirit of trains, friend!
+    image: 63aec1c00d9d256488991ced3d983e0c98e5d8c54df8ced95211703a5737056b.png
+  mother_goose:
+    name: Mother Goose
+    room: mother_goose_gazebo
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: An enormous, dignified goose in a tiny pair of spectacles, perched in the gazebo on a stack of well-
+      thumbed nursery-rhyme books. She nods solemnly when she sees you.
+    dialogue:
+      root:
+        text: Honk. Welcome, little wanderer. I keep the old rhymes here, and the old riddles too. Speak the answer aloud (try
+          the 'answer' command) when you think you have it.
+        choices:
+          - text: I'm ready for a riddle.
+            next: ready_riddle
+          - text: Goodbye, Mother Goose.
+            next: farewell
+      ready_riddle:
+        text: Then listen well. I have something for the brave one who answers it correctly.
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Honk softly. Goodbye, little wanderer.
+    image: 797f3accb0ccc78aa579c7ac2bb05c0ddd43a89be09c4b8aa23fb8ad8362370f.png
+  glitter_glue_goblin:
+    name: a glitter-glue goblin
+    room: arts_and_crafts
+    tier: weak
+    level: 1
+    respawnSeconds: 90
+    drops:
+      - itemId: starshine_dust
+        chance: 0.3
+    description: A sticky, sparkly goblin made of dried glitter glue and construction paper scraps. It leaves glittery
+      footprints everywhere it goes.
+    image: 3610e0ec8e2898509a2868dd64d5ee9eb89577b5c9890625649cbe4938919dc2.png
+  pebble_sprite:
+    name: a polished pebble sprite
+    room: river_cliffs
+    tier: standard
+    level: 2
+    respawnSeconds: 120
+    drops:
+      - itemId: gummy_ore
+        chance: 0.4
+    description: A foot-tall stone figure smoothed by river water, with two bright agate eyes. It hums to itself contentedly
+      when undisturbed.
+    image: 8a8c358b7e410f2a371d66bcc50b13f54661e38a30bc163c2824ded636dccbc5.png
+  fireworks_imp:
+    name: a fireworks imp
+    room: fireworks_depot
+    tier: standard
+    level: 2
+    respawnSeconds: 90
+    drops:
+      - itemId: jangling_junk
+        chance: 0.4
+    description: A tiny imp made entirely of bottle rockets and sparklers, fizzing constantly. It cackles when it runs and
+      leaves a trail of harmless sparks.
+    behavior:
+      template: wander
+    image: 03e98a0328f34735f0566ec2ae482daa98b2057e8742fbc7f73b8c94c7d88478.png
+  train_bandit:
+    name: Rusty the Toy Train Bandit
+    room: train_car
+    tier: standard
+    level: 3
+    respawnSeconds: 180
+    drops:
+      - itemId: pirate_doubloon
+        chance: 0.7
+      - itemId: jangling_junk
+        chance: 0.4
+    description: A patchwork bandit in a too-small train conductor's hat, balancing on the running-board of the giant toy
+      train car. He waves a pop-gun threateningly.
+    behavior:
+      template: aggro_guard
+    image: fb622e8e8db8804e07179e2b9feffa63b5d5851c61df31e31f9e7868845bdc17.png
+  sleepy_sam:
+    name: Sleepy Sam
+    room: the_boarding_house
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A long, lanky boarder slumped in a parlor chair, half-asleep over a half-finished crossword puzzle. A
+      blanket is draped neatly across his knees.
+    dialogue:
+      root:
+        text: Mmm? Oh, hello. The Boarding House has rooms by the week. I can't recommend mine — too sunny — but the others are
+          nice. Just don't slam the door.
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: Mmm. Quietly now.
+    image: 5e3780537bf4d44b1340cd68c55129871ec6bf71a4c16b6b5f758854e745731a.png
+  toy_emporium_keeper:
+    name: Topsy the Toymaker
+    room: toy_emporium
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    description: A small woman with a pencil tucked behind one ear, half-lost behind a workbench piled with springs, gears,
+      and the legs of unfinished wooden horses.
+    dialogue:
+      root:
+        text: Oh — a customer! A real one! It's been ages. The Toy Emporium isn't easy to find anymore. The road's gone funny.
+          But come in, come in — I'll fix anything you bring me.
+        choices:
+          - text: Goodbye.
+            next: farewell
+      farewell:
+        text: If you find the way back here, bring me an interesting spring.
+    image: f0d3da9687043fce41e0e1b6e610b24ff441e79530f7b42f8e8ed7aeee27b5a9.png
+items:
+  cardboard_sword:
+    displayName: a foam-cored cardboard sword
+    keyword: cardboard_sword
+    slot: weapon
+    damage: 3
+    basePrice: 18
+    description: A noble-looking sword cut from corrugated cardboard, the edges rounded and the foam core making it
+      reassuringly bouncy. A gold star sticker has been pressed onto the pommel.
+    image: 3cc2039cd48063b7d9614cd9e70af8008ebd2dd2f0e080a440b137e928e7c0fd.png
+  cardboard_helm:
+    displayName: a cardboard knight helmet
+    keyword: cardboard_helm
+    slot: head
+    armor: 1
+    basePrice: 14
+    description: A bucket-style helm cut from a cereal box and painted with silver crayon. The visor flips up with a
+      satisfying flick.
+    image: 956bacea17305b7082487932f232a0dca02ed0e2ff3f22dd2c703b02a0762daa.png
+  foil_breastplate:
+    displayName: a tin-foil breastplate
+    keyword: breastplate
+    slot: body
+    armor: 2
+    basePrice: 32
+    description: Layer upon layer of crinkled kitchen foil shaped over a t-shirt frame. It catches the light like real armor
+      and crinkles dramatically with every step.
+    image: 35db6603ee1684cffac94cce76cbc6851a8d704f2bd3c737eaeebf4e636f7bae.png
+  foam_gauntlets:
+    displayName: foam knight gauntlets
+    keyword: gauntlets
+    slot: hands
+    armor: 1
+    basePrice: 12
+    description: A pair of pool-noodle wristguards painted to look like steel. They squish reassuringly.
+    image: bacf37aa2f41aecaf0c216aef54d669b9eeee3984c5ebac4241627bbbc4c9ac1.png
+  starlight_wand:
+    displayName: a starlight wand
+    keyword: wand
+    slot: weapon
+    damage: 5
+    basePrice: 45
+    description: A length of dowel painted lavender with a foil star wired to the tip. Tiny holes in the star let it twinkle
+      in the right kind of light.
+    image: 3acd95421c607569e154b964037607cbac62cda9c35c0c8243dcb542d0fb2edd.png
+  sparkle_tiara:
+    displayName: a sparkle tiara
+    keyword: tiara
+    slot: head
+    armor: 1
+    basePrice: 22
+    description: A pipe-cleaner crown studded with rhinestones and one suspiciously real-looking gem at the front. It hums a
+      single sweet note when worn.
+    image: fd13802cd9fd3dff9388025a2ca83db56b08794c4309786e71cf7133bcb02868.png
+  princess_gown:
+    displayName: a sparkly princess gown
+    keyword: gown
+    slot: body
+    armor: 2
+    basePrice: 40
+    description: Layers of pink tulle stitched over a sturdy linen underdress. Dozens of tiny mirrors catch the light at
+      every angle.
+    image: f0339d8ed356683657b0a2877f2cb16456fb9075c308052af16ae2333efd9fc7.png
+  sparkle_gloves:
+    displayName: sparkly princess gloves
+    keyword: gloves
+    slot: hands
+    armor: 1
+    basePrice: 16
+    description: Long satin opera gloves dusted with so much glitter that the wearer leaves a faint sparkle trail.
+    image: 03d1f5defa89c45891a2068786c41f5a11354285b39f961931cfd80ab50d83ca.png
+  lollipop_mace:
+    displayName: a giant lollipop mace
+    keyword: lollipop
+    slot: weapon
+    damage: 4
+    basePrice: 28
+    description: An oversized swirl-patterned lollipop on a sturdy hardwood stick. It is rumored to taste faintly of cherry,
+      but no one has been brave enough to lick it.
+    image: 82a09f8e7dae310dc5061d531b1ab91a52a65ec7486997db3d98d47b7e52600b.png
+  doctor_headlamp:
+    displayName: a toy doctor's headlamp
+    keyword: headlamp
+    slot: head
+    armor: 1
+    basePrice: 18
+    description: A plastic forehead mirror on an elastic band, polished to a mirror finish. It reflects a soothing circle of
+      warm light onto whatever you look at.
+    image: abac02a0353c97a49f7024fa443363a20abd056f44d4fafbaf870f55b6e80188.png
+  lab_coat:
+    displayName: a child-sized lab coat
+    keyword: labcoat
+    slot: body
+    armor: 2
+    basePrice: 30
+    description: A crisp white coat with a name-tag reading 'DR. YOU' in marker. The pockets are stuffed with safety pins,
+      bandages, and a single squeezed-flat juice box.
+    image: 0f50b45f113146f87a3ec33f33954fd3892c43931a6eb8c2b3f3cab500335bee.png
+  plastic_cutlass:
+    displayName: a plastic pirate cutlass
+    keyword: cutlass
+    slot: weapon
+    damage: 4
+    basePrice: 24
+    description: A snap-together cutlass moulded in glossy black plastic. The hilt has a tiny compartment that hides one (1)
+      jelly bean.
+    image: f08d8b9d3d5a666662daff3a8fc5db0f4b2e5440f73500862ada40a7e28aa769.png
+  pirate_tricorne:
+    displayName: a paper pirate tricorne
+    keyword: tricorne
+    slot: head
+    armor: 1
+    basePrice: 14
+    description: A folded newspaper hat shaped into a proper three-cornered tricorne, with a skull-and-crossbones sketched
+      on in marker.
+    image: 2a2d49cbaef285b9172f69e8f15f21febe8ac0df1b0b40c0204fbda4bf9ed28e.png
+  pirate_vest:
+    displayName: a leather-look pirate vest
+    keyword: vest
+    slot: body
+    armor: 2
+    basePrice: 28
+    description: A vinyl vest in faux-leather brown, lined with mismatched buttons and one suspiciously authentic gold doubloon.
+    image: 8bd754885656719357804b0fd0a654fef4b6fc9440ad7e1c587a27947cf09411.png
+  glow_stick_dagger:
+    displayName: a glow-stick dagger
+    keyword: dagger
+    slot: weapon
+    damage: 3
+    basePrice: 16
+    description: A snapped-and-shaken glow stick taped to a wooden handle. It throws an eerie green light that makes
+      sneaking up on bath toys both easier and weirder.
+    image: b118fa7c8245fdb80807fc079ff2b2e55b9e6ce044931b2edeab940a8ed0a596.png
+  butterfly_net:
+    displayName: an explorer's butterfly net
+    keyword: net
+    slot: weapon
+    damage: 3
+    basePrice: 18
+    description: A bamboo handle topped with a hoop of fine gauze. Perfect for catching butterflies, daisy sprites, and the
+      occasional small ranger.
+    image: 58704294f9187b3055b973d10bc9f8a62384337476144f10a226622e170dbb00.png
+  pith_helmet:
+    displayName: a cardboard pith helmet
+    keyword: pith
+    slot: head
+    armor: 2
+    basePrice: 20
+    description: A papier-mâché safari helmet painted khaki and lined with a cotton sweatband. A tiny compass is glued to the brim.
+    image: de33b5741cf58078b4f84ddda5f66b93fdfa25152a27663864c90cc708626758.png
+  explorer_vest:
+    displayName: a many-pocketed explorer vest
+    keyword: explorervest
+    slot: body
+    armor: 2
+    basePrice: 30
+    description: A khaki vest with so many pockets that you keep finding new ones. Trail mix, a folded map, and a lucky
+      pebble are already inside.
+    image: d3fe60cb21b4176f54a17df6ce33d7a8b9769f8e52c9b02199748755c0b0f7ca.png
+  super_soaker:
+    displayName: a high-pressure super soaker
+    keyword: soaker
+    slot: weapon
+    damage: 6
+    basePrice: 60
+    description: An enormous neon-green water blaster with a hand-pump and a tank big enough to drown a bath toy.
+    image: 0b850f9c37075e3ed030d9223fbc1def1990adc1733377b512ef4a013c6ad52a.png
+  pillow_morningstar:
+    displayName: a pillow morningstar
+    keyword: pillow
+    slot: weapon
+    damage: 5
+    basePrice: 35
+    description: A throw pillow lashed to a wooden handle with twine. A surprising number of stars and crescents have been
+      sewn onto the cover.
+    image: 98bc7db6a5c7a99039f28c40723c223a72ec78bddaadc417549e173000d1e313.png
+  bubble_wrap_armor:
+    displayName: a suit of bubble-wrap armor
+    keyword: bubblewrap
+    slot: body
+    armor: 3
+    basePrice: 55
+    description: Layers of fresh bubble wrap taped over a sturdy underlayer. Pops alarmingly when struck, which is either
+      intimidating or hilarious depending on the witness.
+    image: 79b1c3e294e198bbd214539b89efd51535ad33fcefd9fbb26d8d95e0eec859ef.png
+  gummy_potion:
+    displayName: a healing gummy worm
+    keyword: gummy
+    consumable: true
+    onUse:
+      healHp: 12
+    basePrice: 18
+    description: A wriggling gummy worm in three impossible colors. Bite the head off and the rest disappears in a shimmer
+      of restorative sugar.
+    image: 0d19454f19897b798230c5ad6c59faf22ac8f104cd703a9a4f8257814e29073b.png
+  candy_apple:
+    displayName: a candy apple
+    keyword: apple
+    consumable: true
+    onUse:
+      healHp: 18
+    basePrice: 24
+    description: A perfect red apple coated in glassy red sugar shell. Eating one makes your knees feel slightly braver.
+    image: b769392f508ac94790f874e12497399641f5781ad90c9ed40dcaa9eb8ba7c686.png
+  juice_box:
+    displayName: a small juice box
+    keyword: juice
+    consumable: true
+    onUse:
+      healHp: 10
+    basePrice: 12
+    description: An apple-juice box with a tiny straw glued to the side. The picture on the front shows a bear giving a thumbs-up.
+    image: 32c7fb5231ce68ebaec51da70eec84aea521028e2c97ca1a2923a5883437acf7.png
+  bubble_gum_pop:
+    displayName: a stick of bubble gum
+    keyword: gum
+    consumable: true
+    onUse:
+      healHp: 6
+    basePrice: 6
+    description: A flat pink stick of bubble gum in a paper wrapper. Chewing it slowly knits up minor scrapes.
+    image: df6a05885eb18e98352b09160d0750b63c053b6179abde90122653dd4d8564c3.png
+  magic_donut:
+    displayName: a magic glazed donut
+    keyword: donut
+    consumable: true
+    onUse:
+      healHp: 30
+      grantXp: 25
+    basePrice: 75
+    description: A perfect ring donut glazed with a glittering sugar that shifts color when you turn it. Eating one feels
+      educational somehow.
+    image: b69dbb790bce9e8555c1d29b3e2be5bcb987fb0dd2b8281eea7edda797a28386.png
+  fairy_pie_slice:
+    displayName: a slice of fairy-floss pie
+    keyword: pie
+    consumable: true
+    onUse:
+      healHp: 22
+    basePrice: 32
+    description: A wedge of pie whose filling is layered cotton candy in three flavors. Crumbly crust, impossible lightness
+      — eat carefully or it lifts you off the floor.
+    image: 7773b7c2f1f6bdd4ac9940553f7be884faa5c0cf6e6b982c6b657cf2b1a804e4.png
+  bath_toy_gunk:
+    displayName: a glob of bath toy gunk
+    keyword: gunk
+    basePrice: 4
+    description: A rubbery, soap-scented blob left behind when a bath-toy slime is defeated. Faintly squeaks if you squeeze it.
+    image: 7986105c6886f7cbcba77292eb3a5ed19e4cae74be51ca2f5d5bfc4ca66a7e91.png
+  jangling_junk:
+    displayName: a piece of jangling junk
+    keyword: junk
+    basePrice: 6
+    description: An indeterminate hunk of springs, bottle caps, and bent wire welded together by trash-magic. Worth
+      something to the right tinker.
+    image: 74fded55bc860a592059a13776f3aa98d9194fd0ca15d82463d5e80fcba08ee9.png
+  crayon_chunk:
+    displayName: a chunk of waxy crayon
+    keyword: crayon
+    basePrice: 5
+    description: A fat broken stub of jumbo crayon — somewhere between magenta and 'midnight'. Smells like kindergarten.
+    image: b0e3eee79a6ee5e1c9cf6ca5d1ec5f3cb22def932e4117997abd84e3ba830fa9.png
+  soggy_paper:
+    displayName: a wad of soggy crumpled paper
+    keyword: paper
+    basePrice: 2
+    description: A sodden ball of construction paper. Unfolded, it shows half a crayon drawing of a dragon and a smiling sun.
+    image: e609da111f60b834f039c328785244630f8a5644073651f30848df389f62d3de.png
+  stuffie_button:
+    displayName: a button eye from a plush
+    keyword: button
+    basePrice: 8
+    description: A glossy black button popped loose from a stuffed animal. It feels watchful in your pocket.
+    image: 31e89f86f3adb4452e3ad2a49bff6fa7be6b5edf97d4bbee2804fd3f4398ed43.png
+  pirate_doubloon:
+    displayName: a chocolate doubloon
+    keyword: doubloon
+    consumable: true
+    onUse:
+      healHp: 4
+      grantXp: 10
+    basePrice: 14
+    description: A foil-wrapped chocolate coin stamped with a skull. Eating it leaves your fingers slightly silver.
+    image: 97afbb2aea7a726a05c795824e2dc87a6b3c0681cecf4bad2ef5997b98629276.png
+  goose_feather:
+    displayName: a snow-white goose feather
+    keyword: feather
+    basePrice: 12
+    description: An impossibly perfect white feather with a faintly silver shaft. Quills made from these are said to write
+      only true things.
+    image: d0b92b8edfd78d58de08d54b7a7e5e6a91b2dbb5c8cc5d2221822ccad018d23e.png
+  daisy_petal:
+    displayName: a glittering daisy petal
+    keyword: petal
+    basePrice: 6
+    description: A single petal from one of the animated daisies in Cartoon Flower Square. It is faintly warm and smells of
+      birthday cake.
+    image: 266958652c576431bc8f36af35df5db7c82da76bd53bf402b2146a9711da5636.png
+  gummy_ore:
+    displayName: a glob of gummy ore
+    keyword: ore
+    basePrice: 9
+    description: A semi-translucent lump of fruit-flavored mineral. It bends slightly under pressure and is definitely not
+      safe to eat in this quantity.
+    image: cd3e09f67d1a4ed0352560d42504190ccefe4ad111216622934e567a3844196c.png
+  starshine_dust:
+    displayName: a pinch of starshine dust
+    keyword: dust
+    basePrice: 14
+    description: Iridescent powder gathered from the rim of Pixel Haven Lake at dawn. The colors keep changing if you stop watching.
+    image: 11f83e27c07776fd706b60473c97b648ecdce3db1a9ee7da71c7179959e656b7.png
+  rainbow_blade:
+    displayName: a rainbow ribbon blade
+    keyword: rainbow
+    slot: weapon
+    damage: 8
+    basePrice: 120
+    description: A long ribbon of every color, hardened into a singing blade by a tailor's secret stitching. It cuts shadows
+      as well as it cuts cake.
+    image: 67f3a0bab13897ada10986ad277bb021a3fde807e46458ade81e2ba83299c823.png
+  tin_star_badge:
+    displayName: a tin sheriff's star
+    keyword: badge
+    slot: head
+    armor: 1
+    basePrice: 22
+    description: A polished tin five-point star with the word DEPUTY hand-stamped along the top.
+    image: 155871926d4ff62a7ac7671fdfa4b0446584c10310fc7c11624f077366651f15.png
+  recall_acorn:
+    displayName: a hollow recall acorn
+    keyword: acorn
+    consumable: true
+    onUse:
+      healHp: 1
+    charges: 3
+    basePrice: 0
+    description: A small hollow acorn humming with a sleepy, homeward magic. A keepsake from Mother Goose; mostly a souvenir.
+    image: f06cd4fdf829f05fa6c81c6737454e08e0bcc9e5fe934dd02d91d6c3c7d9abd4.png
+shops:
+  general_store:
+    name: Crayonsville Carl's General Store
+    room: the_general_store
+    items:
+      - cardboard_sword
+      - cardboard_helm
+      - foam_gauntlets
+      - butterfly_net
+      - pith_helmet
+      - explorer_vest
+      - juice_box
+      - bubble_gum_pop
+      - gummy_potion
+    image: a32eb8076e2fee2727ffd3b4223e2972f327d5fe34d4f357f85be2995195e226.jpg
+  costume_shop:
+    name: The Tailor's Costume Shop
+    room: the_tailor_s_costume_shop
+    items:
+      - starlight_wand
+      - sparkle_tiara
+      - princess_gown
+      - sparkle_gloves
+      - pirate_tricorne
+      - pirate_vest
+      - plastic_cutlass
+      - foil_breastplate
+    image: 2f162c0733da4c085bea62456e000ddcb9ecd6bb682dcabe8da561d5173d53aa.jpg
+  alchemist_shop:
+    name: The Alchemist's Shelf
+    room: the_alchemist
+    items:
+      - gummy_potion
+      - candy_apple
+      - juice_box
+      - starshine_dust
+      - daisy_petal
+    image: f2661d7fe0af3edd96514b93c908107f999841c002adbeafbc29f75c53c43327.jpg
+  apothecary_shop:
+    name: The Apothecary
+    room: the_apothecary
+    items:
+      - gummy_potion
+      - candy_apple
+      - bubble_gum_pop
+      - lollipop_mace
+      - lab_coat
+      - doctor_headlamp
+    image: 78db92ada86c2a352d1c989716422cec905f7ad0b5c742d26cf9b20bd1ac98df.jpg
+  pie_shop:
+    name: Granny Aprons' Magic Pie Shop
+    room: magic_pie_shop
+    items:
+      - fairy_pie_slice
+      - candy_apple
+      - juice_box
+    image: c11755c579f669bcb9e3c78479c6e5c63f29d0d0f775e5f1f3c04f2e20be7ed7.jpg
+  donut_shop:
+    name: The Oddest Donut Shop
+    room: donut_shop
+    items:
+      - magic_donut
+      - bubble_gum_pop
+      - juice_box
+    image: fee6f73458946395a1969d59f24141df8678b0a2b0e4672096869fac063537c0.jpg
+trainers:
+  knight_trainer:
+    name: Sir Bramble the Brave
+    class: WARRIOR
+    room: the_academy
+  princess_trainer:
+    name: Princess Sparklepants
+    class: MAGE
+    room: the_tailor_s_costume_shop
+  doctor_trainer:
+    name: Doctor Ouchless
+    class: CLERIC
+    room: hospital_for_the_aging_and_infirmed_teenagers
+  pirate_trainer:
+    name: Sneaky Pete the Pirate Captain
+    class: ROGUE
+    room: misfit_island
+  explorer_trainer:
+    name: Ranger Pinecone
+    class: RULER
+    room: the_sports_metroplex
+quests:
+  bath_toy_invasion:
+    name: The Bath Toy Invasion
+    description: Mayor Buttercup is worried about the soggy bath-toy slimes creeping out of Pixel River. Clear out enough of
+      them in Pixel River to put a stop to the trouble.
+    giver: mayor_buttercup
+    objectives:
+      - type: kill
+        targetKey: bath_toy_slime
+        count: 5
+        description: Squish 5 soggy bath-toy slimes in Pixel River
+    rewards:
+      xp: 250
+      gold: 25
+  sweet_petals:
+    name: Granny's Sweet Petals
+    description: Granny Aprons needs glittering daisy petals for her famous fairy-floss pie. Defeat daisy sprites in Cartoon
+      Flower Square to gather some.
+    giver: granny_aprons
+    objectives:
+      - type: kill
+        targetKey: daisy_sprite
+        count: 4
+        description: Defeat 4 daisy sprites in Cartoon Flower Square
+    rewards:
+      xp: 200
+      gold: 15
+gatheringNodes:
+  daisy_patch:
+    displayName: a patch of glittering daisies
+    keyword: daisies
+    skill: HERBALISM
+    skillRequired: 1
+    yields:
+      - itemId: daisy_petal
+        minQuantity: 1
+        maxQuantity: 3
+    respawnSeconds: 90
+    xpReward: 12
+    room: animated_flower_row
+  gummy_vein:
+    displayName: a gummy ore vein
+    keyword: gummyvein
+    skill: MINING
+    skillRequired: 1
+    yields:
+      - itemId: gummy_ore
+        minQuantity: 1
+        maxQuantity: 2
+    respawnSeconds: 120
+    xpReward: 15
+    room: pixelated_culvert
+  starshine_pool:
+    displayName: a pool of starshine dust
+    keyword: starshine
+    skill: HERBALISM
+    skillRequired: 3
+    yields:
+      - itemId: starshine_dust
+        minQuantity: 1
+        maxQuantity: 2
+    respawnSeconds: 180
+    xpReward: 20
+    room: pixel_haven_lake
+recipes:
+  craft_lollipop_mace:
+    displayName: Lollipop Mace
+    skill: SMITHING
+    skillRequired: 2
+    materials:
+      - itemId: gummy_ore
+        quantity: 3
+      - itemId: crayon_chunk
+        quantity: 1
+    outputItemId: lollipop_mace
+    station: FORGE
+    xpReward: 30
+  craft_fairy_pie:
+    displayName: Fairy-Floss Pie Slice
+    skill: ALCHEMY
+    skillRequired: 1
+    materials:
+      - itemId: daisy_petal
+        quantity: 2
+      - itemId: starshine_dust
+        quantity: 1
+    outputItemId: fairy_pie_slice
+    station: ALCHEMY_TABLE
+    xpReward: 25
+  craft_rainbow_blade:
+    displayName: Rainbow Ribbon Blade
+    skill: SMITHING
+    skillRequired: 5
+    levelRequired: 5
+    materials:
+      - itemId: gummy_ore
+        quantity: 5
+      - itemId: starshine_dust
+        quantity: 3
+      - itemId: stuffie_button
+        quantity: 2
+    outputItemId: rainbow_blade
+    station: FORGE
+    xpReward: 75
+puzzles:
+  mother_goose_riddle:
+    type: riddle
+    mobId: mother_goose
+    roomId: mother_goose_gazebo
+    question: I have keys but no locks; I have space but no room; you can enter, but you cannot go inside. What am I?
+    answer: keyboard
+    acceptableAnswers:
+      - a keyboard
+      - the keyboard
+    reward:
+      type: give_item
+      itemId: goose_feather
+    successMessage: Mother Goose nods her great head approvingly. "Well done, little wanderer." She tucks a single
+      snow-white feather into your hand.
+    failMessage: Mother Goose tilts her head. "Hmm. Try again, when you have thought it through."

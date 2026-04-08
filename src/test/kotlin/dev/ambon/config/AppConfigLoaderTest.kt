@@ -1,6 +1,9 @@
 package dev.ambon.config
 
 import com.sksamuel.hoplite.PropertySource
+import dev.ambon.engine.abilities.AbilityId
+import dev.ambon.engine.abilities.AbilityRegistry
+import dev.ambon.engine.abilities.AbilityRegistryLoader
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -37,7 +40,46 @@ class AppConfigLoaderTest {
         assertEquals(PersistenceBackend.YAML, config.persistence.backend)
         assertTrue(!config.redis.enabled)
         assertTrue(!config.engine.debug.enableSwarmClass)
-        assertEquals("thornhaven_city:new_arrivals_hall", config.engine.classStartRooms["SWARM"])
+        assertEquals("pixel_haven_academy:start", config.world.startRoom)
+        assertTrue(config.engine.classStartRooms.isEmpty())
+    }
+
+    @Test
+    fun `default application config defines signature abilities for every story class`() {
+        val config = AppConfigLoader.load()
+        val registry = AbilityRegistry()
+
+        AbilityRegistryLoader.load(config.engine.abilities, registry)
+
+        assertEquals(4, registry.abilitiesForClass("WARRIOR").size)
+        assertEquals(4, registry.abilitiesForClass("MAGE").size)
+        assertEquals(4, registry.abilitiesForClass("CLERIC").size)
+        assertEquals(4, registry.abilitiesForClass("ROGUE").size)
+        assertEquals(4, registry.abilitiesForClass("RULER").size)
+
+        val storybookCharge = registry.get(AbilityId("storybook_charge"))
+        assertEquals("Storybook-Charge", storybookCharge?.displayName)
+        assertEquals("knight_valor", storybookCharge?.tree)
+
+        val bedroomSupernova = registry.get(AbilityId("bedroom_supernova"))
+        assertEquals("Bedroom-Supernova", bedroomSupernova?.displayName)
+        assertEquals("wizard_wonder", bedroomSupernova?.tree)
+
+        val houseCall = registry.get(AbilityId("house_call"))
+        assertEquals("House-Call", houseCall?.displayName)
+        assertEquals("doctor_care", houseCall?.tree)
+
+        val broadside = registry.get(AbilityId("broadside"))
+        assertEquals("Broadside", broadside?.displayName)
+        assertEquals("pirate_mischief", broadside?.tree)
+
+        val crownlight = registry.get(AbilityId("crownlight"))
+        assertEquals("Crownlight", crownlight?.displayName)
+        assertEquals("ruler_pageantry", crownlight?.tree)
+
+        assertEquals("blanket_fortress", config.engine.abilities.definitions["blanket_fort"]?.effect?.statusEffectId)
+        assertEquals("sticker_salve", config.engine.abilities.definitions["sticker_salve"]?.effect?.statusEffectId)
+        assertEquals("royal_decree", config.engine.abilities.definitions["decree"]?.effect?.statusEffectId)
     }
 
     @Test
