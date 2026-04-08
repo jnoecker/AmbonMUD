@@ -4,6 +4,7 @@ import type {
   CraftingNode,
   DialogueState,
   GroupInfo,
+  PuzzleState,
   QuestAvailable,
   RoomMob,
   RoomPlayer,
@@ -30,6 +31,7 @@ export interface GameStateSnapshot {
   dialogue: DialogueState | null;
   questsAvailable: QuestAvailable[];
   shop: ShopState | null;
+  puzzle: PuzzleState | null;
   craftingNodes: CraftingNode[];
   questTargetRoomIds: Set<string>;
   serverAssets: Record<string, string>;
@@ -46,6 +48,7 @@ export const canvasCallbacks: {
   sendCommand: ((command: string) => void) | null;
   prefillCommand: ((text: string) => void) | null;
   openShop: (() => void) | null;
+  openPuzzle: (() => void) | null;
   openBank: (() => void) | null;
   openTrainer: (() => void) | null;
   openMap: (() => void) | null;
@@ -59,6 +62,7 @@ export const canvasCallbacks: {
   sendCommand: null,
   prefillCommand: null,
   openShop: null,
+  openPuzzle: null,
   openBank: null,
   openTrainer: null,
   openMap: null,
@@ -92,6 +96,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     dialogue: null,
     questsAvailable: [],
     shop: null,
+    puzzle: null,
     craftingNodes: [],
     questTargetRoomIds: new Set(),
     serverAssets: {},

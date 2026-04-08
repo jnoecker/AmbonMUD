@@ -121,6 +121,23 @@ class PuzzleSystemTest {
     }
 
     @Test
+    fun `answer correct riddle re-sends room state for client refresh`() = runTest {
+        val h = harness()
+
+        // Answer correctly — solving should re-look the room so clients refresh
+        // minimap/exits/puzzle state immediately instead of waiting for the next move.
+        h.router.handle(h.sid, Command.Answer("mountain"))
+        val outs = h.outbound.drainAll()
+
+        // sendLook emits the room title as a SendText, so its presence confirms
+        // ctx.sendLook() ran after grantReward().
+        assertTrue(
+            outs.any { it is OutboundEvent.SendText && it.text == "Puzzle Chamber Entrance" },
+            "Expected room title to be re-sent via sendLook after puzzle solve, got: $outs",
+        )
+    }
+
+    @Test
     fun `answer wrong riddle shows fail message`() = runTest {
         val h = harness()
         h.router.handle(h.sid, Command.Answer("wrong answer"))

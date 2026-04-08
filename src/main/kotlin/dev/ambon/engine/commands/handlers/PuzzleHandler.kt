@@ -17,7 +17,7 @@ import dev.ambon.engine.events.OutboundEvent
  * - `pull <lever>` — intercepted to advance sequence puzzles when applicable.
  */
 class PuzzleHandler(
-    ctx: EngineContext,
+    private val ctx: EngineContext,
     private val puzzleSystem: PuzzleSystem?,
 ) : CommandHandler {
     private val world = ctx.world
@@ -57,6 +57,9 @@ class PuzzleHandler(
                 is PuzzleResult.Success -> {
                     outbound.send(OutboundEvent.SendInfo(sessionId, result.message))
                     grantReward(sessionId, result.reward)
+                    // Refresh room state so newly-unlocked exits, minimap, and Puzzle.List
+                    // (marking the puzzle as solved) reach the client immediately.
+                    ctx.sendLook(sessionId)
                     return
                 }
                 is PuzzleResult.Failure -> {
@@ -101,12 +104,16 @@ class PuzzleHandler(
             is PuzzleResult.Success -> {
                 outbound.send(OutboundEvent.SendInfo(sessionId, result.message))
                 grantReward(sessionId, result.reward)
+                // Refresh room state so newly-unlocked exits and Puzzle.List reach the client.
+                ctx.sendLook(sessionId)
             }
             is PuzzleResult.Failure -> {
                 outbound.send(OutboundEvent.SendError(sessionId, result.message))
             }
             is PuzzleResult.SequenceAdvanced -> {
-                // Silently advance — the normal lever pull message is shown by WorldFeaturesHandler
+                // Silently advance — the normal lever pull message is shown by WorldFeaturesHandler.
+                // Re-emit Puzzle.List so the client can update its progress indicator.
+                ctx.emitPuzzleGmcp(sessionId)
             }
             is PuzzleResult.AlreadySolved,
             is PuzzleResult.OnCooldown,

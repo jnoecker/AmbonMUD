@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "auction" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "auction" | "puzzle" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -232,6 +232,24 @@ export interface ShopState {
   name: string;
   sellMultiplier: number;
   items: ShopItem[];
+}
+
+export interface PuzzleItem {
+  id: string;
+  /** "riddle" or "sequence". */
+  type: "riddle" | "sequence";
+  /** Riddle question text; null for sequence puzzles. */
+  question: string | null;
+  /** Total steps in a sequence puzzle; null for riddles. */
+  totalSteps: number | null;
+  /** Current progress (0-based next step) for sequence puzzles; null for riddles. */
+  currentStep: number | null;
+  /** True if the player has already solved this puzzle. */
+  solved: boolean;
+}
+
+export interface PuzzleState {
+  puzzles: PuzzleItem[];
 }
 
 export interface RoomItem {

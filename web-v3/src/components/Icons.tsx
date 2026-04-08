@@ -512,6 +512,14 @@ export function ShopIcon({ className }: { className?: string }) {
   );
 }
 
+export function PuzzleIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4 7a2 2 0 0 1 2-2h4v2a1.8 1.8 0 0 0 3.6 0V5H18a2 2 0 0 1 2 2v4h-2a1.8 1.8 0 0 0 0 3.6h2V19a2 2 0 0 1-2 2h-4v-2a1.8 1.8 0 0 0-3.6 0v2H6a2 2 0 0 1-2-2v-4h2a1.8 1.8 0 0 0 0-3.6H4V7Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function SpellbookIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
