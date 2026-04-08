@@ -128,7 +128,8 @@ The Creator's TypeScript types mirror these Kotlin DTOs exactly:
 | `QuestFile` | objectives (type/targetKey/count), rewards (xp/gold) |
 | `BehaviorFile` | template + params (patrolRoute, fleeHpPercent, aggroMessage, maxWanderDistance) |
 | `DialogueNodeFile` | text, choices (text, next, minLevel, requiredClass, action) |
-| `FeatureFile` | type (CONTAINER/LEVER/SIGN), state, key, items, text |
+| `FeatureFile` | type (CONTAINER/LEVER/SIGN), displayName, keyword, initialState, keyItemId, keyConsumed, resetWithZone, items, text |
+| `DoorFile` | initialState, keyItemId, keyConsumed, resetWithZone |
 | `GatheringNodeFile` | skill, yields, respawn |
 | `RecipeFile` | skill, materials, output, station |
 
@@ -205,6 +206,8 @@ Form-based editors in a right-side panel when entity is selected:
 - **Dialogue tree:** Collapsible tree view with inline text editing
 - **Item slot preview:** Visual equipment slot indicator
 - **Shop item picker:** Multi-select with search from all items across zones
+- **Room feature editor:** Add/edit/remove containers, levers, and signs on the selected room, with stable local IDs that puzzles can reference
+- **Exit door editor:** Toggle a door on any exit edge and edit lock state, key requirements, and reset behavior inline with the exit
 
 ### Config Editor
 

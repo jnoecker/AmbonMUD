@@ -97,6 +97,18 @@ export function EquipmentIcon({ className }: { className?: string }) {
   );
 }
 
+export function WorldFeatureIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.8 20V7.8c0-.9.7-1.6 1.6-1.6h9.2c.9 0 1.6.7 1.6 1.6V20" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.8 20v-5.1c0-.8.6-1.4 1.4-1.4h3.6c.8 0 1.4.6 1.4 1.4V20" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.92" />
+      <path d="M10 10.4h.1M14 10.4h.1" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
+      <path d="M4.6 6.4h14.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+      <path d="M18.4 4.8c.9.4 1.6 1.2 1.9 2.1M18 11.4l2.3 2.3M18.1 15.9l1.5 3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+    </svg>
+  );
+}
+
 export function WearingIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

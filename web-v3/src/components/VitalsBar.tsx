@@ -11,6 +11,7 @@ import {
   BankIcon,
   AuctionIcon,
   CraftingIcon,
+  WorldFeatureIcon,
   HousingIcon,
   MailIcon,
   HelpIcon,
@@ -45,6 +46,7 @@ interface PanelDef {
 const PANELS: PanelDef[] = [
   { panel: "character", label: "Character", icon: <CharacterAvatarIcon className="vbar-icon" /> },
   { panel: "inventory", label: "Inventory", icon: <EquipmentIcon className="vbar-icon" /> },
+  { panel: "features", label: "Features", icon: <WorldFeatureIcon className="vbar-icon" /> },
   { panel: "spellbook", label: "Spellbook", icon: <SpellbookIcon className="vbar-icon" /> },
   { panel: "quests", label: "Quests", icon: <QuestsTabIcon className="vbar-icon" /> },
   { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="vbar-icon" /> },

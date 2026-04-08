@@ -34,6 +34,11 @@ function drawLabelPill(bg: Graphics, label: Text, glowColor?: number) {
   bg.fill({ color: LABEL_BG_COLOR, alpha: LABEL_BG_ALPHA });
 }
 
+function featureCountLabel(count: number, singular: string, plural: string): string {
+  if (count <= 1) return singular;
+  return `${count} ${plural}`;
+}
+
 const PLAYER_LABEL_COLOR = "#d8dcef";
 const OTHER_PLAYER_LABEL_COLOR = "#81a2be";
 const MOB_LABEL_COLOR = "#f0c674";
@@ -172,6 +177,29 @@ export class WorldScene {
   private puzzleLabelBg = new Graphics();
   private puzzleHitArea = new Graphics();
   private puzzleVisible = false;
+  private doorBadge: Container | null = null;
+  private doorSprite: Sprite | null = null;
+  private doorLabel: Text | null = null;
+  private doorLabelBg = new Graphics();
+  private doorHitArea = new Graphics();
+  private doorVisible = false;
+  private doorCount = 0;
+
+  private containerBadge: Container | null = null;
+  private containerSprite: Sprite | null = null;
+  private containerLabel: Text | null = null;
+  private containerLabelBg = new Graphics();
+  private containerHitArea = new Graphics();
+  private containerVisible = false;
+  private containerCount = 0;
+
+  private leverBadge: Container | null = null;
+  private leverSprite: Sprite | null = null;
+  private leverLabel: Text | null = null;
+  private leverLabelBg = new Graphics();
+  private leverHitArea = new Graphics();
+  private leverVisible = false;
+  private leverCount = 0;
 
   private lastMobsKey = "";
   private lastItemsKey = "";
@@ -415,6 +443,93 @@ export class WorldScene {
     this.puzzleBadge.addChild(this.puzzleLabelBg);
     this.puzzleBadge.addChild(this.puzzleLabel);
 
+    // Door badge — quick access to door controls in the feature panel
+    this.doorBadge = new Container();
+    this.doorBadge.visible = false;
+    this.doorBadge.eventMode = "static";
+    this.doorBadge.cursor = "pointer";
+    this.doorBadge.on("pointerdown", () => {
+      canvasCallbacks.openFeatures?.("door");
+    });
+    this.doorBadge.on("pointerover", () => {
+      if (this.doorSprite) this.doorSprite.alpha = 1;
+    });
+    this.doorBadge.on("pointerout", () => {
+      if (this.doorSprite) this.doorSprite.alpha = 0.85;
+    });
+    this.doorHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.doorHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.doorHitArea.eventMode = "auto";
+    this.doorBadge.addChild(this.doorHitArea);
+    this.doorLabel = new Text({
+      text: "Door",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#9ec3e2", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.doorLabel.anchor.set(0.5, 0);
+    this.doorLabel.y = hs / 2 + 2;
+    this.doorLabel.eventMode = "none";
+    this.doorLabelBg.eventMode = "none";
+    this.doorBadge.addChild(this.doorLabelBg);
+    this.doorBadge.addChild(this.doorLabel);
+
+    // Container badge — chest/container quick access
+    this.containerBadge = new Container();
+    this.containerBadge.visible = false;
+    this.containerBadge.eventMode = "static";
+    this.containerBadge.cursor = "pointer";
+    this.containerBadge.on("pointerdown", () => {
+      canvasCallbacks.openFeatures?.("container");
+    });
+    this.containerBadge.on("pointerover", () => {
+      if (this.containerSprite) this.containerSprite.alpha = 1;
+    });
+    this.containerBadge.on("pointerout", () => {
+      if (this.containerSprite) this.containerSprite.alpha = 0.85;
+    });
+    this.containerHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.containerHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.containerHitArea.eventMode = "auto";
+    this.containerBadge.addChild(this.containerHitArea);
+    this.containerLabel = new Text({
+      text: "Container",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#d3b26e", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.containerLabel.anchor.set(0.5, 0);
+    this.containerLabel.y = hs / 2 + 2;
+    this.containerLabel.eventMode = "none";
+    this.containerLabelBg.eventMode = "none";
+    this.containerBadge.addChild(this.containerLabelBg);
+    this.containerBadge.addChild(this.containerLabel);
+
+    // Lever badge — room mechanism quick access
+    this.leverBadge = new Container();
+    this.leverBadge.visible = false;
+    this.leverBadge.eventMode = "static";
+    this.leverBadge.cursor = "pointer";
+    this.leverBadge.on("pointerdown", () => {
+      canvasCallbacks.openFeatures?.("lever");
+    });
+    this.leverBadge.on("pointerover", () => {
+      if (this.leverSprite) this.leverSprite.alpha = 1;
+    });
+    this.leverBadge.on("pointerout", () => {
+      if (this.leverSprite) this.leverSprite.alpha = 0.85;
+    });
+    this.leverHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.leverHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.leverHitArea.eventMode = "auto";
+    this.leverBadge.addChild(this.leverHitArea);
+    this.leverLabel = new Text({
+      text: "Lever",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#c596d2", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.leverLabel.anchor.set(0.5, 0);
+    this.leverLabel.y = hs / 2 + 2;
+    this.leverLabel.eventMode = "none";
+    this.leverLabelBg.eventMode = "none";
+    this.leverBadge.addChild(this.leverLabelBg);
+    this.leverBadge.addChild(this.leverLabel);
+
     // Recall button
     this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
       canvasCallbacks.sendCommand?.("recall");
@@ -437,6 +552,9 @@ export class WorldScene {
     this.container.addChild(this.bankBadge!);
     this.container.addChild(this.tavernBadge!);
     this.container.addChild(this.puzzleBadge!);
+    this.container.addChild(this.doorBadge!);
+    this.container.addChild(this.containerBadge!);
+    this.container.addChild(this.leverBadge!);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
@@ -473,6 +591,9 @@ export class WorldScene {
       this.loadBankIcon();
       this.loadTavernIcon();
       this.loadPuzzleIcon();
+      this.loadDoorIcon();
+      this.loadContainerIcon();
+      this.loadLeverIcon();
       this.loadDialogueTexture();
       this.loadAggroTexture();
       this.loadQuestTextures();
@@ -614,6 +735,33 @@ export class WorldScene {
       if (this.puzzleBadge) this.puzzleBadge.visible = hasPuzzle;
     }
 
+    const doorCount = state.roomFeatures.filter((feature) => feature.type === "door").length;
+    const hasDoors = doorCount > 0;
+    if (hasDoors !== this.doorVisible || doorCount !== this.doorCount) {
+      this.doorVisible = hasDoors;
+      this.doorCount = doorCount;
+      if (this.doorBadge) this.doorBadge.visible = hasDoors;
+      if (this.doorLabel) this.doorLabel.text = featureCountLabel(doorCount, "Door", "Doors");
+    }
+
+    const containerCount = state.roomFeatures.filter((feature) => feature.type === "container").length;
+    const hasContainers = containerCount > 0;
+    if (hasContainers !== this.containerVisible || containerCount !== this.containerCount) {
+      this.containerVisible = hasContainers;
+      this.containerCount = containerCount;
+      if (this.containerBadge) this.containerBadge.visible = hasContainers;
+      if (this.containerLabel) this.containerLabel.text = featureCountLabel(containerCount, "Container", "Containers");
+    }
+
+    const leverCount = state.roomFeatures.filter((feature) => feature.type === "lever").length;
+    const hasLevers = leverCount > 0;
+    if (hasLevers !== this.leverVisible || leverCount !== this.leverCount) {
+      this.leverVisible = hasLevers;
+      this.leverCount = leverCount;
+      if (this.leverBadge) this.leverBadge.visible = hasLevers;
+      if (this.leverLabel) this.leverLabel.text = featureCountLabel(leverCount, "Lever", "Levers");
+    }
+
     // Recall button visibility — show when logged in and not in combat
     const loggedIn = state.character.name !== "-";
     const showRecall = loggedIn && !state.vitals.inCombat;
@@ -705,6 +853,9 @@ export class WorldScene {
     if (this.bankBadge) this.bankBadge.visible = this.bankVisible && !stripMode;
     if (this.tavernBadge) this.tavernBadge.visible = this.tavernVisible && !stripMode;
     if (this.puzzleBadge) this.puzzleBadge.visible = this.puzzleVisible && !stripMode;
+    if (this.doorBadge) this.doorBadge.visible = this.doorVisible && !stripMode;
+    if (this.containerBadge) this.containerBadge.visible = this.containerVisible && !stripMode;
+    if (this.leverBadge) this.leverBadge.visible = this.leverVisible && !stripMode;
     this.recallBtn.visible = this.recallBtn.visible && !stripMode;
 
     // Dynamic entity sizing
@@ -905,6 +1056,27 @@ export class WorldScene {
       this.puzzleBadge.x = badgeX;
       this.puzzleBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.puzzleLabelBg, this.puzzleLabel!);
+      badgeSlot++;
+    }
+
+    if (this.doorBadge?.visible) {
+      this.doorBadge.x = badgeX;
+      this.doorBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.doorLabelBg, this.doorLabel!);
+      badgeSlot++;
+    }
+
+    if (this.containerBadge?.visible) {
+      this.containerBadge.x = badgeX;
+      this.containerBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.containerLabelBg, this.containerLabel!);
+      badgeSlot++;
+    }
+
+    if (this.leverBadge?.visible) {
+      this.leverBadge.x = badgeX;
+      this.leverBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.leverLabelBg, this.leverLabel!);
       badgeSlot++;
     }
 
@@ -1472,6 +1644,54 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.puzzleSprite = sprite;
       this.puzzleBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadDoorIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("feature_door", "feature_door.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.doorSprite = sprite;
+      this.doorBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadContainerIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("feature_container", "feature_container.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.containerSprite = sprite;
+      this.containerBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadLeverIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("feature_lever", "feature_lever.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.leverSprite = sprite;
+      this.leverBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

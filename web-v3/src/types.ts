@@ -1,6 +1,8 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "auction" | "puzzle" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "auction" | "puzzle" | "features" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
+export type RoomFeatureType = "door" | "container" | "lever" | "sign";
+export type FeaturePopoutFocus = Exclude<RoomFeatureType, "sign"> | null;
 
 export interface WorldTime {
   period: string;
@@ -459,7 +461,7 @@ export interface RoomFeature {
   id: string;
   name: string;
   keyword: string;
-  type: "door" | "container" | "lever" | "sign";
+  type: RoomFeatureType;
   state: string | null;
   direction: string | null;
   locked: boolean | null;
