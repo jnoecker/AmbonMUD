@@ -195,7 +195,14 @@ export class Ec2Stack extends Stack {
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
       'set -euo pipefail',
-      'dnf install -y docker amazon-ssm-agent emacs-nox',
+      // httpd-tools installed unconditionally (not gated behind `if (hostname)`)
+      // because generate-htpasswd is an unconditional ExecStartPre and calls
+      // htpasswd regardless of whether nginx is eventually installed. Without
+      // this, the ambonmud.service fails its first start (exit 127, htpasswd
+      // not found), which aborts the `set -e` user-data script before the
+      // nginx block runs, leaving the instance permanently wedged in a
+      // restart loop with no nginx. See the 2026-04-07 incident.
+      'dnf install -y docker amazon-ssm-agent emacs-nox httpd-tools',
       'systemctl enable --now docker',
       'systemctl enable --now amazon-ssm-agent',
       // UID 1001 matches the pinned ambonmud user inside the container (Dockerfile).
@@ -415,6 +422,14 @@ export class Ec2Stack extends Stack {
       `cat > /usr/local/bin/generate-htpasswd << 'SCRIPT_END'`,
       '#!/bin/bash',
       'set -euo pipefail',
+      '# Defense in depth: if htpasswd is not available (httpd-tools missing),',
+      '# soft-fail rather than wedging the whole ambonmud.service in a restart',
+      '# loop. nginx basic auth for /grafana/, /prometheus/, /admin/ will be',
+      '# broken but the MUD itself still boots.',
+      'if ! command -v htpasswd >/dev/null 2>&1; then',
+      '  echo "htpasswd not installed (httpd-tools missing) — skipping htpasswd generation"',
+      '  exit 0',
+      'fi',
       'HTPASSWD=/etc/nginx/.htpasswd',
       'ENV_FILE=/etc/ambonmud/secrets.env',
       'if [ -f "$ENV_FILE" ]; then',
