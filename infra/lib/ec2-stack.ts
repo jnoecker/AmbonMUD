@@ -406,7 +406,12 @@ export class Ec2Stack extends Stack {
             '  # covers 5xx + connection errors. Cloudflare R2 edge POPs cache 404',
             '  # responses independently and can serve stale 404s for several minutes',
             '  # after an upload, so we spin in-place rather than failing the unit.',
+            '  # -A overrides the default "curl/X.Y.Z" user-agent because Cloudflare',
+            '  # bot management was serving JS challenges (HTTP 403, cf-mitigated:',
+            '  # challenge) to default-curl requests from this EC2 IP, breaking the',
+            '  # zone fetch on every restart. Mozilla-prefixed UAs bypass the rule.',
             '  curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors \\',
+            '    -A "Mozilla/5.0 (compatible; AmbonMUD-fetch/1.0)" \\',
             '    -o "/app/data/world/$filename" "$BASE_URL/$filename"',
             'done',
             'echo "World zones fetched to /app/data/world/"',
@@ -488,9 +493,11 @@ export class Ec2Stack extends Stack {
       // ambonmud.world.resources list from the overlay).
       // --retry-all-errors lets curl retry 404s, which Cloudflare R2 edge POPs
       // can cache for several minutes after a fresh upload.
+      // -A overrides the default "curl/X.Y.Z" user-agent — see fetch-world-zones
+      // comment above for the Cloudflare bot-challenge incident that motivated this.
       ...(loreConfigUrl
         ? [
-            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -o /app/data/application-local.yaml ${loreConfigUrl}`,
+            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -A "Mozilla/5.0 (compatible; AmbonMUD-fetch/1.0)" -o /app/data/application-local.yaml ${loreConfigUrl}`,
           ]
         : []),
       // Fetch world zone YAML files listed in the lore config's ambonmud.world.resources.
@@ -508,7 +515,7 @@ export class Ec2Stack extends Stack {
       // /app/data/sprites.yaml, not /app/data/world/sprites.yaml.
       ...(spritesUrl
         ? [
-            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -o /app/data/sprites.yaml ${spritesUrl}`,
+            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -A "Mozilla/5.0 (compatible; AmbonMUD-fetch/1.0)" -o /app/data/sprites.yaml ${spritesUrl}`,
           ]
         : []),
       // Fetch the lore-repo achievements.yaml to /app/data/world/achievements.yaml.
@@ -519,7 +526,7 @@ export class Ec2Stack extends Stack {
       // JAR copy.
       ...(achievementsUrl
         ? [
-            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -o /app/data/world/achievements.yaml ${achievementsUrl}`,
+            `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -A "Mozilla/5.0 (compatible; AmbonMUD-fetch/1.0)" -o /app/data/world/achievements.yaml ${achievementsUrl}`,
           ]
         : []),
       // Fetch the admin API token from SSM Parameter Store and write it to
