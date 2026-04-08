@@ -60,6 +60,18 @@ class PuzzleSystem(
     fun sequencePuzzlesInRoom(roomId: RoomId): List<PuzzleDef> =
         puzzlesByRoom[roomId]?.filter { it.type == PuzzleType.SEQUENCE } ?: emptyList()
 
+    /** Returns all puzzles (riddle + sequence) in the given room. */
+    fun puzzlesInRoom(roomId: RoomId): List<PuzzleDef> =
+        puzzlesByRoom[roomId] ?: emptyList()
+
+    /** Whether [sessionId] has currently solved [puzzleId] (not yet cleared by cooldown). */
+    fun isSolved(sessionId: SessionId, puzzleId: String): Boolean =
+        solvedPuzzles[sessionId]?.contains(puzzleId) == true
+
+    /** Current sequence progress for [puzzleId] (0-based next step index). */
+    fun sequenceStep(sessionId: SessionId, puzzleId: String): Int =
+        sequenceProgress[sessionId]?.get(puzzleId) ?: 0
+
     /** Returns the riddle puzzle associated with a mob, if any. */
     fun riddleForMob(qualifiedMobId: String): PuzzleDef? = riddlesByMob[qualifiedMobId]
 

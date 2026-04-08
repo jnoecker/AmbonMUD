@@ -67,6 +67,7 @@ import type {
   RoomMob,
   RoomPlayer,
   RoomState,
+  PuzzleState,
   ShopState,
   SkillSummary,
   SpriteList,
@@ -213,6 +214,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
 
   // ── Economy ───────────────────────────────────────
   const [shop, setShop] = useState<ShopState | null>(null);
+  const [puzzle, setPuzzle] = useState<PuzzleState | null>(null);
   const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]);
   const [currencies, setCurrencies] = useState<CurrencyBalance[]>([]);
   const [bankState, setBankState] = useState<BankState | null>(null);
@@ -360,6 +362,10 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
           setShop(value);
           if (!value) setActivePopout((prev) => prev === "shop" ? null : prev);
         },
+        setPuzzle: (value) => {
+          setPuzzle(value);
+          if (!value) setActivePopout((prev) => prev === "puzzle" ? null : prev);
+        },
         setFriends,
         pushFriendNotification,
         setChatByChannel,
@@ -468,6 +474,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setRoomFeatures([]);
     setContainerContents(null);
     setShop(null);
+    setPuzzle(null);
     setQuestNotifications([]);
     setCraftingSkills([]);
     setCraftingRecipes([]);
@@ -521,7 +528,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     quests, questsAvailable, questNotifications, setQuestNotifications,
     dailyQuests, weeklyQuests, autoQuest, globalQuest,
     // Economy
-    shop, auctionListings, currencies, bankState, lotteryInfo,
+    shop, puzzle, auctionListings, currencies, bankState, lotteryInfo,
     // Crafting
     craftingSkills, craftingRecipes, craftingNodes,
     // World

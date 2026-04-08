@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.ids.qualifyId
+import dev.ambon.domain.puzzle.PuzzleType
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.Room
@@ -95,6 +96,31 @@ internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry, questSystem, trainerRegistry)
     emitShopGmcp(sessionId)
     emitBankGmcp(sessionId)
+    emitPuzzleGmcp(sessionId)
+}
+
+/** Emits `Puzzle.List` with the puzzles in the player's current room, or `Puzzle.Close` otherwise. */
+internal suspend fun EngineContext.emitPuzzleGmcp(sessionId: SessionId) {
+    val emitter = gmcpEmitter ?: return
+    val system = puzzleSystem ?: return
+    val me = players.get(sessionId) ?: return
+    val puzzles = system.puzzlesInRoom(me.roomId)
+    if (puzzles.isEmpty()) {
+        emitter.sendPuzzleClose(sessionId)
+        return
+    }
+    val payloads = puzzles.map { p ->
+        val isRiddle = p.type == PuzzleType.RIDDLE
+        GmcpEmitter.PuzzlePayload(
+            id = p.id,
+            type = if (isRiddle) "riddle" else "sequence",
+            question = p.question,
+            totalSteps = if (isRiddle) null else p.steps.size,
+            currentStep = if (isRiddle) null else system.sequenceStep(sessionId, p.id),
+            solved = system.isSolved(sessionId, p.id),
+        )
+    }
+    emitter.sendPuzzleList(sessionId, payloads)
 }
 
 /** Emits `Char.Bank` if the player is in a bank room, so the bank panel has data on room entry. */

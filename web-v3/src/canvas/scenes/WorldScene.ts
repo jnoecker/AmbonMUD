@@ -166,6 +166,13 @@ export class WorldScene {
   private tavernHitArea = new Graphics();
   private tavernVisible = false;
 
+  private puzzleBadge: Container | null = null;
+  private puzzleSprite: Sprite | null = null;
+  private puzzleLabel: Text | null = null;
+  private puzzleLabelBg = new Graphics();
+  private puzzleHitArea = new Graphics();
+  private puzzleVisible = false;
+
   private lastMobsKey = "";
   private lastItemsKey = "";
   private lastNodesKey = "";
@@ -379,6 +386,35 @@ export class WorldScene {
     this.tavernBadge.addChild(this.tavernLabelBg);
     this.tavernBadge.addChild(this.tavernLabel);
 
+    // Puzzle badge — floating icon when a puzzle is present in the room
+    this.puzzleBadge = new Container();
+    this.puzzleBadge.visible = false;
+    this.puzzleBadge.eventMode = "static";
+    this.puzzleBadge.cursor = "pointer";
+    this.puzzleBadge.on("pointerdown", () => {
+      canvasCallbacks.openPuzzle?.();
+    });
+    this.puzzleBadge.on("pointerover", () => {
+      if (this.puzzleSprite) this.puzzleSprite.alpha = 1;
+    });
+    this.puzzleBadge.on("pointerout", () => {
+      if (this.puzzleSprite) this.puzzleSprite.alpha = 0.85;
+    });
+    this.puzzleHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.puzzleHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.puzzleHitArea.eventMode = "auto";
+    this.puzzleBadge.addChild(this.puzzleHitArea);
+    this.puzzleLabel = new Text({
+      text: "Puzzle",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#c4a8e8", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.puzzleLabel.anchor.set(0.5, 0);
+    this.puzzleLabel.y = hs / 2 + 2;
+    this.puzzleLabel.eventMode = "none";
+    this.puzzleLabelBg.eventMode = "none";
+    this.puzzleBadge.addChild(this.puzzleLabelBg);
+    this.puzzleBadge.addChild(this.puzzleLabel);
+
     // Recall button
     this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
       canvasCallbacks.sendCommand?.("recall");
@@ -400,6 +436,7 @@ export class WorldScene {
     this.container.addChild(this.trainerBadge);
     this.container.addChild(this.bankBadge!);
     this.container.addChild(this.tavernBadge!);
+    this.container.addChild(this.puzzleBadge!);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
@@ -435,6 +472,7 @@ export class WorldScene {
       this.loadTrainerIcon();
       this.loadBankIcon();
       this.loadTavernIcon();
+      this.loadPuzzleIcon();
       this.loadDialogueTexture();
       this.loadAggroTexture();
       this.loadQuestTextures();
@@ -569,6 +607,13 @@ export class WorldScene {
       if (this.tavernBadge) this.tavernBadge.visible = hasTavern;
     }
 
+    // Puzzle badge visibility — driven by Puzzle.List GMCP (state.puzzle non-null)
+    const hasPuzzle = state.puzzle !== null;
+    if (hasPuzzle !== this.puzzleVisible) {
+      this.puzzleVisible = hasPuzzle;
+      if (this.puzzleBadge) this.puzzleBadge.visible = hasPuzzle;
+    }
+
     // Recall button visibility — show when logged in and not in combat
     const loggedIn = state.character.name !== "-";
     const showRecall = loggedIn && !state.vitals.inCombat;
@@ -659,6 +704,7 @@ export class WorldScene {
     this.trainerBadge.visible = this.trainerVisible && !stripMode;
     if (this.bankBadge) this.bankBadge.visible = this.bankVisible && !stripMode;
     if (this.tavernBadge) this.tavernBadge.visible = this.tavernVisible && !stripMode;
+    if (this.puzzleBadge) this.puzzleBadge.visible = this.puzzleVisible && !stripMode;
     this.recallBtn.visible = this.recallBtn.visible && !stripMode;
 
     // Dynamic entity sizing
@@ -852,6 +898,13 @@ export class WorldScene {
       this.tavernBadge.x = badgeX;
       this.tavernBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.tavernLabelBg, this.tavernLabel!);
+      badgeSlot++;
+    }
+
+    if (this.puzzleBadge?.visible) {
+      this.puzzleBadge.x = badgeX;
+      this.puzzleBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.puzzleLabelBg, this.puzzleLabel!);
       badgeSlot++;
     }
 
@@ -1403,6 +1456,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.tavernSprite = sprite;
       this.tavernBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadPuzzleIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("puzzle_kiosk", "puzzle_kiosk.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.puzzleSprite = sprite;
+      this.puzzleBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

@@ -53,6 +53,8 @@ import type {
   StaffMobZone,
   StaffWorldZone,
   ShopState,
+  PuzzleItem,
+  PuzzleState,
   SkillSummary,
   SpriteEntry,
   SpriteList,
@@ -115,6 +117,7 @@ interface GmcpContext {
   setDialogue: Dispatch<SetStateAction<DialogueState | null>>;
   setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
   setShop: Dispatch<SetStateAction<ShopState | null>>;
+  setPuzzle: Dispatch<SetStateAction<PuzzleState | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean) => void;
   loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
@@ -1221,6 +1224,33 @@ export function applyGmcpPackage(
 
     case "Shop.Close": {
       ctx.setShop(null);
+      break;
+    }
+
+    case "Puzzle.List": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const puzzles: PuzzleItem[] = Array.isArray(packet.puzzles)
+        ? packet.puzzles
+            .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
+            .map((p) => {
+              const type = p.type === "sequence" ? "sequence" : "riddle";
+              return {
+                id: typeof p.id === "string" ? p.id : "",
+                type,
+                question: typeof p.question === "string" ? p.question : null,
+                totalSteps: typeof p.totalSteps === "number" ? p.totalSteps : null,
+                currentStep: typeof p.currentStep === "number" ? p.currentStep : null,
+                solved: p.solved === true,
+              } satisfies PuzzleItem;
+            })
+            .filter((p) => p.id.length > 0)
+        : [];
+      ctx.setPuzzle(puzzles.length > 0 ? { puzzles } : null);
+      break;
+    }
+
+    case "Puzzle.Close": {
+      ctx.setPuzzle(null);
       break;
     }
 

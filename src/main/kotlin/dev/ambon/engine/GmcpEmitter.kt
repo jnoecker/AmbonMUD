@@ -1622,6 +1622,24 @@ class GmcpEmitter(
         emitRaw(sessionId, "Shop.Close", "{}", supportCheck = "Shop")
     }
 
+    // ---------- puzzle ----------
+
+    suspend fun sendPuzzleList(
+        sessionId: SessionId,
+        puzzles: List<PuzzlePayload>,
+    ) {
+        emit(
+            sessionId,
+            "Puzzle.List",
+            PuzzleListPayload(puzzles = puzzles),
+            supportCheck = "Puzzle",
+        )
+    }
+
+    suspend fun sendPuzzleClose(sessionId: SessionId) {
+        emitRaw(sessionId, "Puzzle.Close", "{}", supportCheck = "Puzzle")
+    }
+
     // ---------- look target ----------
 
     suspend fun sendLookTarget(
@@ -2517,6 +2535,27 @@ class GmcpEmitter(
         val consumable: Boolean,
         val image: String? = null,
         val video: String? = null,
+    )
+
+    // ---------- puzzle payloads ----------
+
+    private data class PuzzleListPayload(
+        val puzzles: List<PuzzlePayload>,
+    )
+
+    /** Shape sent to the web client for a single in-room puzzle. */
+    data class PuzzlePayload(
+        val id: String,
+        /** "riddle" or "sequence". */
+        val type: String,
+        /** Riddle question text, or null for sequence puzzles. */
+        val question: String?,
+        /** Total number of steps in a sequence puzzle, or null for riddles. */
+        val totalSteps: Int?,
+        /** Current progress (0-based next step index) for sequence puzzles, or null. */
+        val currentStep: Int?,
+        /** True if the player has already solved this puzzle. */
+        val solved: Boolean,
     )
 
     internal companion object {

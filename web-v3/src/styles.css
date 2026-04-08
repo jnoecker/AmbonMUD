@@ -2869,6 +2869,108 @@ body {
   50% { box-shadow: 0 0 12px rgb(190 168 115 / 50%); }
 }
 
+/* Puzzle popout — cozy scroll-of-riddles layout */
+.puzzle-popout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.puzzle-popout-card {
+  padding: 14px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgb(196 168 232 / 10%), rgb(140 110 190 / 6%));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.puzzle-popout-card:hover {
+  border-color: rgb(196 168 232 / 40%);
+}
+
+.puzzle-popout-card-solved {
+  opacity: 0.72;
+  background: linear-gradient(135deg, rgb(140 174 123 / 10%), rgb(100 140 90 / 6%));
+}
+
+.puzzle-popout-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.puzzle-popout-kind {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.puzzle-popout-solved-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(140 174 123 / 22%);
+  color: rgb(180 210 160);
+  font-weight: 600;
+}
+
+.puzzle-popout-question {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+.puzzle-popout-progress {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-style: normal;
+}
+
+.puzzle-popout-form {
+  display: flex;
+  gap: var(--space-2);
+  padding-top: 4px;
+}
+
+.puzzle-popout-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface-chip);
+  color: var(--text-primary);
+  font-size: 0.96rem;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.puzzle-popout-input:focus {
+  outline: none;
+  border-color: rgb(196 168 232 / 60%);
+  background: rgb(255 255 255 / 6%);
+}
+
+.puzzle-popout-submit {
+  padding: 10px 18px;
+  white-space: nowrap;
+  background: linear-gradient(135deg, rgb(196 168 232 / 60%), rgb(160 130 200 / 54%));
+  border-color: rgb(196 168 232 / 30%);
+}
+
+.puzzle-popout-submit:not(:disabled):hover {
+  background: linear-gradient(135deg, rgb(210 182 246 / 74%), rgb(174 144 214 / 70%));
+}
+
 .skills-combat-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);

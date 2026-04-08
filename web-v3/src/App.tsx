@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { GameShell } from "./components/GameShell";
 import { Drawer } from "./components/Drawer";
+import { PuzzlePopout } from "./components/PuzzlePopout";
 import { ShopPopout } from "./components/ShopPopout";
 import { TrainerPanel } from "./components/TrainerPanel";
 import { TradePanel } from "./components/TradePanel";
@@ -187,6 +188,7 @@ function App() {
       dialogue: state.dialogue,
       questsAvailable: state.questsAvailable,
       shop: state.shop,
+      puzzle: state.puzzle,
       craftingNodes: state.craftingNodes,
       questTargetRoomIds: new Set(
         state.quests.flatMap((q) =>
@@ -201,6 +203,7 @@ function App() {
   useEffect(() => {
     canvasCallbacks.sendCommand = (cmd: string) => sendCommand(cmd);
     canvasCallbacks.openShop = () => state.setActivePopout("shop");
+    canvasCallbacks.openPuzzle = () => state.setActivePopout("puzzle");
     canvasCallbacks.openBank = () => state.setActivePopout("bank");
     canvasCallbacks.openTrainer = () => state.setActivePopout("trainer");
     canvasCallbacks.openMap = () => state.setActivePopout("map");
@@ -212,6 +215,7 @@ function App() {
     return () => {
       canvasCallbacks.sendCommand = null;
       canvasCallbacks.openShop = null;
+      canvasCallbacks.openPuzzle = null;
       canvasCallbacks.openBank = null;
       canvasCallbacks.openTrainer = null;
       canvasCallbacks.openMap = null;
@@ -390,6 +394,7 @@ function App() {
       case "quests": return "Quests";
       case "chat": return "Social";
       case "shop": return state.shop?.name ?? "Shop";
+      case "puzzle": return "Puzzle";
       case "trainer": return state.trainer?.name ?? "Trainer";
       case "mail": return "Mail";
       case "crafting": return "Crafting";
@@ -557,6 +562,10 @@ function App() {
             onBuyItem={(keyword) => sendCommand(`buy ${keyword}`)}
             onSellItem={(keyword) => sendCommand(`sell ${keyword}`)}
           />
+        )}
+
+        {drawerPanel === "puzzle" && state.puzzle && (
+          <PuzzlePopout puzzle={state.puzzle} onCommand={sendCommand} />
         )}
 
         {drawerPanel === "trainer" && state.trainer && (
