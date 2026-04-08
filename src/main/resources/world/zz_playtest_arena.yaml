@@ -1,0 +1,27 @@
+zone: playtest_arena
+startRoom: arena_entry
+lifespan: 0
+pvpEnabled: true
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+rooms:
+  arena_entry:
+    title: "PvP Checkpoint - Zone Boundary Test"
+    description: "A circular gatehouse of black stone and crimson pennants marks the exact point where polite disagreement becomes mechanically meaningful. Painted footprints on the floor helpfully suggest where duelists ought to stand for maximum drama."
+    exits:
+      west: playtest_grounds:tavern_social_hall
+      north: duel_dust_bowl
+    features:
+      pvp_warning_sign:
+        type: SIGN
+        displayName: "the PvP warning sign"
+        keyword: sign
+        text: "This zone has PvP enabled. Test open PvP stats, duels, and all the consequences of theatrical overconfidence."
+  duel_dust_bowl:
+    title: "Duel Dust Bowl - PvP and Duel Test"
+    description: "A sandy ring under tall red banners, with bleachers shaped like grinning skulls and a gong bigger than a carriage wheel. Every gust of wind kicks up glittering dust that makes even nervous combatants look legendary."
+    exits:
+      south: arena_entry

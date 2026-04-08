@@ -1,0 +1,905 @@
+zone: playtest_grounds
+startRoom: arrival_hub
+lifespan: 0
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+items:
+  brass_qa_key:
+    displayName: "the reusable brass QA key"
+    keyword: brasskey
+    description: "A brass key on a ribbon labeled REUSABLE. Someone added tiny wings in red enamel, as if keys need to feel aerodynamic."
+    room: arrival_hub
+    basePrice: 1
+  wafer_qa_key:
+    displayName: "the dissolving wafer key"
+    keyword: waferkey
+    description: "A sugar wafer stamped with the word SINGLE-USE in cheerful icing. It smells faintly of lemon and reckless system design."
+    room: arrival_hub
+    consumable: true
+    basePrice: 1
+  starter_seltzer:
+    displayName: "a fizzy starter seltzer"
+    keyword: seltzer
+    description: "A glass bottle full of pearly bubbles. The label promises courage, hydration, and at least one dramatic burp."
+    room: arrival_hub
+    consumable: true
+    onUse:
+      healHp: 12
+    basePrice: 12
+  applause_horn:
+    displayName: "a pocket horn of polite applause"
+    keyword: horn
+    description: "A brass horn that toots exactly like three interns trying to sound impressed."
+    consumable: true
+    charges: 3
+    onUse:
+      grantXp: 15
+    basePrice: 35
+  bonk_baton:
+    displayName: "a padded bonk baton"
+    keyword: baton
+    description: "A foam-wrapped practice club painted in heroic stripes. It looks safe until you notice the warning label: BONK RESPONSIBLY."
+    slot: weapon
+    damage: 3
+    basePrice: 25
+  debugger_hat:
+    displayName: "a debugger's thinking cap"
+    keyword: hat
+    description: "A pointy cap stitched with magnifying glasses, tiny owls, and one suspiciously judgmental eyebrow."
+    slot: head
+    armor: 1
+    stats:
+      INT: 1
+    basePrice: 20
+  padded_lab_coat:
+    displayName: "a padded lab coat"
+    keyword: coat
+    description: "A pristine white coat with reinforced elbows and a faint smell of cinnamon, ozone, and overconfidence."
+    slot: body
+    armor: 2
+    basePrice: 30
+  sparkle_ore:
+    displayName: "a lump of sparkle ore"
+    keyword: sparkle
+    description: "A rude little nugget of ore that catches the light like it knows exactly how photogenic it is."
+    basePrice: 6
+  giggleweed:
+    displayName: "a tuft of giggleweed"
+    keyword: giggleweed
+    description: "A curly herb with leaves shaped like laughing commas."
+    basePrice: 4
+  moon_pepper:
+    displayName: "a moon pepper"
+    keyword: pepper
+    description: "A silver-speckled pepper pod so dramatic it seems to require its own spotlight."
+    basePrice: 15
+  chaotic_glitter:
+    displayName: "a pinch of chaotic glitter"
+    keyword: glitter
+    description: "The crafting material of villains, bards, and deeply unserious wizards."
+    basePrice: 20
+  qa_hammer:
+    displayName: "a quality assurance hammer"
+    keyword: qahammer
+    description: "A compact smithing hammer engraved with the words IF IT BREAKS WE LEARN."
+    slot: weapon
+    damage: 5
+    basePrice: 60
+  sensible_tonic:
+    displayName: "a tonic of reasonable confidence"
+    keyword: tonic
+    description: "A herbal draught that tastes like mint, chamomile, and a project manager saying 'that seems manageable.'"
+    consumable: true
+    onUse:
+      healHp: 18
+    basePrice: 45
+  audit_lantern:
+    displayName: "an audit lantern"
+    keyword: lantern
+    description: "A brass lantern whose light politely highlights mistakes without ever quite judging you out loud."
+    basePrice: 70
+  laminated_checklist:
+    displayName: "a laminated checklist"
+    keyword: checklist
+    description: "Bulletproof against coffee, panic, and the mysterious slime that appears in every workshop."
+    slot: body
+    armor: 1
+    stats:
+      WIS: 1
+    basePrice: 40
+  prize_coupon:
+    displayName: "a prize coupon"
+    keyword: coupon
+    description: "A crisp coupon worth absolutely nothing in the real world and everything in a test environment."
+    basePrice: 8
+  absurd_trophy:
+    displayName: "the absurd trophy of adequate problem solving"
+    keyword: trophy
+    description: "A gold cup topped with a triumphant rubber duck. The plaque reads: YOU DID THE THING."
+    basePrice: 77
+  rubber_feather:
+    displayName: "a rubber feather"
+    keyword: feather
+    description: "A ridiculous feather that squeaks when squeezed."
+    basePrice: 3
+  confetti_glob:
+    displayName: "a confetti glob"
+    keyword: glob
+    description: "A wobbling blob of brightly colored goo with opinions about festival planning."
+    basePrice: 5
+  bug_ticket:
+    displayName: "a bug ticket"
+    keyword: ticket
+    description: "A paper ticket with TOO REPRODUCIBLE scribbled across the top in red ink."
+    basePrice: 9
+  checklist_shard:
+    displayName: "a checklist shard"
+    keyword: shard
+    description: "A glowing fragment from a checklist so thorough it became metaphysical."
+    basePrice: 14
+  regression_medal:
+    displayName: "a regression medal"
+    keyword: medal
+    description: "An iron medal awarded to anyone who bravely re-broke something old."
+    basePrice: 24
+  squeaky_crown:
+    displayName: "the squeaky crown"
+    keyword: crown
+    description: "A regal crown of polished brass fitted with tiny toy hammers that squeak when the wearer nods."
+    slot: head
+    armor: 2
+    stats:
+      CHA: 1
+    basePrice: 95
+
+mobs:
+  inspector_quibble:
+    name: "Inspector Quibble"
+    room: arrival_hub
+    quests:
+      - squeaky_cleanup
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome to the playtest grounds. Everything here is labeled, color coded, and only occasionally on fire. Need a quick assignment?"
+        choices:
+          - text: "What am I testing first?"
+            next: first_task
+          - text: "Remind me what this place is."
+            next: explain_zone
+          - text: "That is enough orientation for one lifetime."
+            next: farewell
+      first_task:
+        text: "Start with the Combat Yard and clean up three rubber chicken brigands. They squeak, posture, and fall over in a way that makes excellent regression footage."
+        choices:
+          - text: "Understood."
+            next: farewell
+      explain_zone:
+        text: "Each wing isolates a different gameplay loop: rooms, locks, puzzles, combat, crafting, economy, social systems, housing, dungeons, and atmosphere. Think of it as a theme park built by meticulous goblins."
+        choices:
+          - text: "That helps."
+            next: farewell
+      farewell:
+        text: "Splendid. If something explodes, please note whether it was expected."
+  professor_bonkles:
+    name: "Professor Bonkles"
+    room: arrival_hub
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "I teach all five classes because management refused to approve five separate hats. Use 'train list' when inspiration or violence strikes."
+        choices:
+          - text: "How does training work?"
+            next: training_info
+          - text: "That hat situation sounds grim."
+            next: hat_lament
+          - text: "Farewell, professor."
+            next: farewell
+      training_info:
+        text: "Learn abilities with 'train learn <ability>'. Once you qualify, unlock additional classes with 'train unlock <class>'. I am a one-stop academy with slightly worse staffing ratios."
+        choices:
+          - text: "Back."
+            next: root
+      hat_lament:
+        text: "Today I am wearing warrior brim, mage tassel, cleric trim, rogue lining, and ranger feathers. I am one sneeze away from a lawsuit."
+        choices:
+          - text: "Back."
+            next: root
+      farewell:
+        text: "Study hard. Swing harder."
+  quartermaster_plink:
+    name: "Quartermaster Plink"
+    room: economy_district
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome to the Economy Arcade. I oversee shopping, banking, trade etiquette, auction rumors, and the mail cubbies nobody empties."
+        choices:
+          - text: "How do I use the shop?"
+            next: shop_help
+          - text: "How do I use the bank?"
+            next: bank_help
+          - text: "What about trade, auction, and mail?"
+            next: extra_help
+          - text: "Enough fiscal wisdom for now."
+            next: farewell
+      shop_help:
+        text: "Use 'list', 'buy <item>', and 'sell <item>'. Everything on the shelves is priced to encourage poor but educational decisions."
+        choices:
+          - text: "Back."
+            next: root
+      bank_help:
+        text: "This room counts as a bank. Use 'bank balance', 'bank deposit', and 'bank withdraw' for both gold and items."
+        choices:
+          - text: "Back."
+            next: root
+      extra_help:
+        text: "Trade with 'trade request', 'trade offer', and 'trade accept'. Auction uses 'auction list', 'auction sell', 'auction buy', and 'auction cancel'. Mail uses 'mail list', 'mail read', 'mail send', and 'mail delete'."
+        choices:
+          - text: "Back."
+            next: root
+      farewell:
+        text: "May your ledgers balance and your bargains sparkle."
+  barkeep_fizzwhistle:
+    name: "Barkeep Fizzwhistle"
+    room: tavern_social_hall
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "This tavern was built to test social systems, shouting acoustics, and whether anyone can lose gracefully at tavern games."
+        choices:
+          - text: "What should I try here?"
+            next: social_help
+          - text: "Can I gamble here?"
+            next: gamble_help
+          - text: "I will leave before the singing starts."
+            next: farewell
+      social_help:
+        text: "Use say, gossip, whisper, shout, ooc, emote, and pose with other players. The room is tavern flagged, so it is excellent for chaos with seating."
+        choices:
+          - text: "Back."
+            next: root
+      gamble_help:
+        text: "Yes. Lottery and tavern gambling should both work here. If luck abandons you, blame statistics, not the wallpaper."
+        choices:
+          - text: "Back."
+            next: root
+      farewell:
+        text: "Mind the disco chandelier. It sheds sequins under stress."
+  registrar_mopworth:
+    name: "Registrar Mopworth"
+    room: guild_group_staging
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Group invites to the left, guild paperwork to the right, emotional support tea in the middle."
+        choices:
+          - text: "What do I test here?"
+            next: social_orgs
+          - text: "Where is the tea?"
+            next: tea
+          - text: "Back to work."
+            next: farewell
+      social_orgs:
+        text: "Test group formation and updates, then guild creation, invites, roster, ranks, motd, and gchat. I recommend doing the paperwork before the tea."
+        choices:
+          - text: "Back."
+            next: root
+      tea:
+        text: "The tea is metaphorical. The paperwork, sadly, is real."
+        choices:
+          - text: "Back."
+            next: root
+      farewell:
+        text: "May your guild tag be tasteful."
+  broker_velvet:
+    name: "Broker Velvet"
+    room: housing_showcase
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Welcome to the Housing Showcase, where every wall is staged and every throw pillow has a backstory."
+        choices:
+          - text: "How do I test housing?"
+            next: housing_help
+          - text: "Can I enter my house from dialogue?"
+            next: entry_hint
+          - text: "I fear decorative responsibility."
+            next: farewell
+      housing_help:
+        text: "Use house buy, house status, house guests, and the edit commands for title and description. Once you own a house, I can usher you inside."
+        choices:
+          - text: "Back."
+            next: root
+      entry_hint:
+        text: "After purchase, choose the dialogue option that opens your home. It is extremely dramatic for what is basically a doorway."
+        choices:
+          - text: "Enter my house."
+            next: farewell
+            action: enter_house
+          - text: "Back."
+            next: root
+      farewell:
+        text: "A good house says 'welcome home' and 'please sort your inventory.'"
+  botanist_petaltoss:
+    name: "Botanist Petaltoss"
+    room: greenhouse_of_suspicious_herbs
+    quests:
+      - sparkle_for_science
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Please do not lick the plants, especially the one applauding in the corner. I need ingredients, not volunteers."
+        choices:
+          - text: "What ingredients?"
+            next: gather_help
+          - text: "Are the herbs supposed to giggle?"
+            next: herb_joke
+          - text: "I will definitely not lick anything."
+            next: farewell
+      gather_help:
+        text: "Bring me sparkle ore from the forge yard and giggleweed from this greenhouse. It is for science, alchemy, and one very suspicious tea."
+        choices:
+          - text: "Back."
+            next: root
+      herb_joke:
+        text: "Yes. If they stop giggling, that means they have started plotting."
+        choices:
+          - text: "Back."
+            next: root
+      farewell:
+        text: "Excellent. Mind the carnivorous begonias."
+  sphinxette_of_compliance:
+    name: "the Sphinxette of Compliance"
+    room: puzzle_foyer
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+  rubber_chicken_brigand:
+    name: "a rubber chicken brigand"
+    room: combat_yard
+    tier: weak
+    level: 1
+    respawnSeconds: 45
+    xpReward: 15
+    drops:
+      - itemId: rubber_feather
+        chance: 0.6
+  confetti_slime:
+    name: "a confetti slime"
+    room: combat_yard
+    tier: standard
+    level: 2
+    respawnSeconds: 60
+    xpReward: 30
+    drops:
+      - itemId: confetti_glob
+        chance: 0.55
+      - itemId: prize_coupon
+        chance: 0.2
+  iron_order_intern:
+    name: "an Iron Order intern"
+    room: spell_status_lab
+    tier: standard
+    level: 3
+    respawnSeconds: 75
+    xpReward: 40
+    faction: iron_order
+    drops:
+      - itemId: prize_coupon
+        chance: 0.35
+  free_swords_mascot:
+    name: "a Free Swords mascot"
+    room: spell_status_lab
+    tier: standard
+    level: 3
+    respawnSeconds: 75
+    xpReward: 40
+    faction: free_swords
+    drops:
+      - itemId: applause_horn
+        chance: 0.1
+  queue_gremlin:
+    name: "a queue gremlin"
+    room: mob_templates
+    tier: standard
+    level: 3
+    drops:
+      - itemId: bug_ticket
+        chance: 0.45
+      - itemId: checklist_shard
+        chance: 0.2
+  regression_ghost:
+    name: "a regression ghost"
+    room: mob_templates
+    tier: standard
+    level: 4
+    drops:
+      - itemId: checklist_shard
+        chance: 0.4
+      - itemId: sensible_tonic
+        chance: 0.15
+  flaky_test_ogre:
+    name: "a flaky test ogre"
+    room: mob_templates
+    tier: elite
+    level: 4
+    drops:
+      - itemId: regression_medal
+        chance: 0.35
+      - itemId: bug_ticket
+        chance: 0.5
+  deadline_chimera:
+    name: "the Deadline Chimera"
+    room: mob_templates
+    tier: boss
+    level: 5
+    drops:
+      - itemId: squeaky_crown
+        chance: 0.5
+      - itemId: qa_hammer
+        chance: 0.4
+      - itemId: audit_lantern
+        chance: 0.4
+      - itemId: regression_medal
+        chance: 1
+
+quests:
+  squeaky_cleanup:
+    name: "Squeaky Cleanup"
+    description: "Inspector Quibble wants the Combat Yard thinned out. Defeat three rubber chicken brigands before they organize a parade."
+    giver: inspector_quibble
+    objectives:
+      - type: kill
+        targetKey: playtest_grounds:rubber_chicken_brigand
+        count: 3
+        description: "Defeat 3 rubber chicken brigands in the Combat Yard"
+    rewards:
+      xp: 250
+      gold: 20
+  sparkle_for_science:
+    name: "Sparkle for Science"
+    description: "Botanist Petaltoss needs two sparkle ore samples and two bundles of giggleweed for a potion that is hopefully medicinal."
+    giver: botanist_petaltoss
+    objectives:
+      - type: collect
+        targetKey: sparkle_ore
+        count: 2
+        description: "Gather 2 sparkle ore from the Crafting Yard"
+      - type: collect
+        targetKey: giggleweed
+        count: 2
+        description: "Gather 2 giggleweed from the greenhouse"
+    rewards:
+      xp: 300
+      gold: 25
+
+gatheringNodes:
+  sparkle_seam:
+    displayName: "a sparkle ore seam"
+    keyword: seam
+    skill: mining
+    skillRequired: 1
+    room: crafting_yard
+    respawnSeconds: 45
+    xpReward: 12
+    yields:
+      - itemId: sparkle_ore
+        minQuantity: 1
+        maxQuantity: 2
+    rareYields:
+      - itemId: chaotic_glitter
+        quantity: 1
+        dropChance: 0.15
+  giggleweed_bed:
+    displayName: "a giggleweed bed"
+    keyword: bed
+    skill: herbalism
+    skillRequired: 1
+    room: greenhouse_of_suspicious_herbs
+    respawnSeconds: 45
+    xpReward: 12
+    yields:
+      - itemId: giggleweed
+        minQuantity: 1
+        maxQuantity: 2
+    rareYields:
+      - itemId: moon_pepper
+        quantity: 1
+        dropChance: 0.2
+
+recipes:
+  qa_hammer:
+    displayName: "QA Hammer"
+    skill: smithing
+    skillRequired: 1
+    materials:
+      - itemId: sparkle_ore
+        quantity: 3
+      - itemId: chaotic_glitter
+        quantity: 1
+    outputItemId: qa_hammer
+    station: FORGE
+    xpReward: 20
+  sensible_tonic:
+    displayName: "Tonic of Reasonable Confidence"
+    skill: alchemy
+    skillRequired: 1
+    materials:
+      - itemId: giggleweed
+        quantity: 2
+      - itemId: moon_pepper
+        quantity: 1
+    outputItemId: sensible_tonic
+    station: ALCHEMY_TABLE
+    stationBonus: 1
+    xpReward: 18
+  audit_lantern:
+    displayName: "Audit Lantern"
+    skill: enchanting
+    skillRequired: 1
+    materials:
+      - itemId: chaotic_glitter
+        quantity: 1
+      - itemId: prize_coupon
+        quantity: 1
+    outputItemId: audit_lantern
+    station: ENCHANTING_TABLE
+    xpReward: 22
+
+shops:
+  economy_kiosk:
+    name: "Plink's Totally Normal Test Kiosk"
+    room: economy_district
+    items:
+      - bonk_baton
+      - debugger_hat
+      - padded_lab_coat
+      - starter_seltzer
+      - applause_horn
+      - sensible_tonic
+      - laminated_checklist
+
+trainers:
+  academy_master:
+    name: "Professor Bonkles"
+    classes:
+      - WARRIOR
+      - MAGE
+      - CLERIC
+      - ROGUE
+      - RANGER
+    room: arrival_hub
+
+rooms:
+  arrival_hub:
+    title: "Arrival Hub - Dialogue, Quest, and Trainer Test"
+    description: "A round marble plaza built by someone who thought onboarding should feel like entering a wizard circus. Brass banners identify each wing of the test grounds, while a fountain shaped like a smug turnip spits sparkling water into a tiled basin. The room is unmistakably a hub, but the decorative cherubs are all wearing safety goggles."
+    exits:
+      north: feature_corridor
+      east: economy_district
+      south: combat_yard
+      west: crafting_yard
+      up: worldstate_overlook
+    features:
+      orientation_board:
+        type: SIGN
+        displayName: "the orientation board"
+        keyword: board
+        text: "This hub tests dialogue, quest discovery, and trainer flows. Keys, starter supplies, and questionable confidence are available here."
+  feature_corridor:
+    title: "Feature Corridor - Door and Sign Test"
+    description: "A polished hall of oversized labels and aggressively helpful arrows. Every torch wears a neat little placard explaining what lighting is. The corridor smells faintly of lemon wax and workshop chalk."
+    exits:
+      south: arrival_hub
+      north:
+        to: lock_gallery
+        door:
+          initialState: locked
+          keyItemId: brass_qa_key
+          keyConsumed: false
+          resetWithZone: true
+      east:
+        to: wafer_annex
+        door:
+          initialState: locked
+          keyItemId: wafer_qa_key
+          keyConsumed: true
+          resetWithZone: true
+    features:
+      caution_placard:
+        type: SIGN
+        displayName: "a caution placard"
+        keyword: placard
+        text: "North tests a reusable keyed door and locked container. East tests a consumable keyed door. Please do not eat the hardware unless explicitly told to."
+  lock_gallery:
+    title: "Lock Gallery - Reusable Key and Locked Container Test"
+    description: "An oak-paneled gallery where one wall displays absurdly ornate locks and the other displays framed sketches of even more dramatic locks. A velvet rope protects a single chest, which somehow makes the room feel both important and deeply unserious."
+    exits:
+      south: feature_corridor
+      north: puzzle_foyer
+    features:
+      sample_locker:
+        type: CONTAINER
+        displayName: "the sample locker"
+        keyword: locker
+        initialState: locked
+        keyItemId: brass_qa_key
+        keyConsumed: false
+        resetWithZone: true
+        items:
+          - prize_coupon
+  wafer_annex:
+    title: "Wafer Annex - Consumable Key Door Test"
+    description: "A tiny annex beyond the wafer-locked door. The walls are painted with triumphant pastries wearing crowns. It exists entirely to celebrate the concept of a single-use key and does so with unnecessary enthusiasm."
+    exits:
+      west: feature_corridor
+  puzzle_foyer:
+    title: "Puzzle Foyer - Riddle and Sequence Test"
+    description: "A round chamber beneath a ceiling painted with moons, gears, and laughing owls. Three brightly colored levers jut from the floor like theatrical mushrooms, while the Sphinxette of Compliance lounges nearby on a cushion embroidered with tiny check marks."
+    exits:
+      south: lock_gallery
+    features:
+      red_lever:
+        type: LEVER
+        displayName: "the red lever"
+        keyword: red
+        initialState: up
+        resetWithZone: true
+      blue_lever:
+        type: LEVER
+        displayName: "the blue lever"
+        keyword: blue
+        initialState: up
+        resetWithZone: true
+      green_lever:
+        type: LEVER
+        displayName: "the green lever"
+        keyword: green
+        initialState: up
+        resetWithZone: true
+  prize_closet:
+    title: "Prize Closet - Hidden Exit and Reward Test"
+    description: "A tiny secret closet lined with velvet curtains, brass confetti cannons, and shelves of prizes nobody strictly needs. A golden spotlight falls on a single reward chest while painted stars twinkle across the ceiling."
+    exits:
+      south: puzzle_foyer
+    features:
+      reward_chest:
+        type: CONTAINER
+        displayName: "the reward chest"
+        keyword: chest
+        initialState: closed
+        resetWithZone: true
+        items:
+          - starter_seltzer
+          - applause_horn
+  combat_yard:
+    title: "Combat Yard - Basic Combat and Kill Quest Test"
+    description: "A fenced practice yard strewn with straw targets, dented shields, and one extremely dramatic banner reading BONK WITH PURPOSE. Rubber chicken brigands strut around the sand while a confetti slime leaves festive skid marks wherever it oozes."
+    exits:
+      north: arrival_hub
+      south: spell_status_lab
+  spell_status_lab:
+    title: "Spell and Status Lab - Ability, Faction, and Enchanting Test"
+    description: "A tiled chamber humming with bottled lightning and polite danger. Racks of crystal rods surround an enchanting table etched with cautionary footnotes. Two rival faction trainees glare at each other over a tray of crackling biscuits."
+    exits:
+      north: combat_yard
+    station: ENCHANTING_TABLE
+  economy_district:
+    title: "Economy Arcade - Shop, Bank, Trade, Auction, and Mail Test"
+    description: "This lavish arcade looks like a bank lobby collided with a toy store. Brass teller windows glitter under chandeliers made of tiny abacuses, and neatly labeled counters invite you to buy, sell, store, mail, barter, and generally overcomplicate your pockets."
+    exits:
+      west: arrival_hub
+      north: tavern_social_hall
+      east: dungeon_portal_pavilion
+      south: housing_showcase
+    bank: true
+  tavern_social_hall:
+    title: "Tavern of Socially Acceptable Yelling - Social and Lottery Test"
+    description: "A jubilant tavern under a ceiling of paper lanterns shaped like singing fish. The tables are carved with old guild tags, dramatic poetry, and suspiciously good doodles of dragons in aprons. Every stool wobbles with deliberate comic timing."
+    exits:
+      south: economy_district
+      north: guild_group_staging
+      east: playtest_arena:arena_entry
+    tavern: true
+  guild_group_staging:
+    title: "Guild and Group Staging Hall - Organization Test"
+    description: "A broad hall with chalk circles on the floor for forming parties, posing dramatically, and arguing about raid strategy. Parade shields hang from the rafters, each painted with a different fake guild crest: a duck, a teapot, a very stern carrot."
+    exits:
+      south: tavern_social_hall
+  housing_showcase:
+    title: "Housing Showcase - Housing and Workbench Test"
+    description: "A model home assembled from lacquered timber, cheerful nonsense, and at least one architect's fever dream. One corner features a tidy workbench stacked with flat-pack shelves and tiny brass knobs sorted by mood."
+    exits:
+      north: economy_district
+    station: WORKBENCH
+  crafting_yard:
+    title: "Crafting Yard - Mining and Smithing Test"
+    description: "An open-air forge yard where anvils ring under striped awnings and a sparkle ore seam glitters from a decorative stone outcrop. The entire place smells of hot iron, citrus polish, and ambition."
+    exits:
+      east: arrival_hub
+      north: greenhouse_of_suspicious_herbs
+    station: FORGE
+  greenhouse_of_suspicious_herbs:
+    title: "Greenhouse of Suspicious Herbs - Herbalism and Alchemy Test"
+    description: "A glass-roofed greenhouse fogged with warm mist and botanical gossip. Giggleweed sprouts from painted planters, moon peppers glow on curling vines, and the alchemy table bubbles softly like a cauldron trying very hard to be polite."
+    exits:
+      south: crafting_yard
+    station: ALCHEMY_TABLE
+  dungeon_portal_pavilion:
+    title: "Dungeon Portal Pavilion - Dungeon Entry Test"
+    description: "A domed pavilion of black stone and gilt trim, built around a humming archway of blue light. Bronze plaques explain the dungeon commands with almost offensive clarity. Type 'dungeon enter quality_assurance_gauntlet' here to begin a run."
+    exits:
+      west: economy_district
+  worldstate_overlook:
+    title: "Worldstate Overlook - Atmosphere and Room Art Test"
+    description: "A rooftop overlook above the whole complex, with silk pennants snapping in a lavender breeze and a horizon painted in impossible sherbet clouds. Below, the test grounds glitter like a toy kingdom run by highly competent eccentrics."
+    exits:
+      down: arrival_hub
+  mob_templates:
+    title: "Dungeon Template Staging Room"
+    description: "An internal room used to hold dungeon mob templates. If a player can see this, something has gone entertainingly wrong."
+
+dungeon:
+  name: quality_assurance_gauntlet
+  description: "A compact dungeon tuned for repeat runs, full of noisy monsters, theatrical hazards, and enough treasure to make failure feel educational."
+  minLevel: 1
+  roomCountMin: 5
+  roomCountMax: 7
+  portalRoom: dungeon_portal_pavilion
+  roomTemplates:
+    entrance:
+      - title: "Dungeon Entrance Test - Velvet Threshold"
+        description: "A velvet-curtained threshold where brass bells ring each time a party steps through, as if the dungeon were delighted to have fresh paperwork."
+      - title: "Dungeon Entrance Test - Checkpoint Arch"
+        description: "A stone arch covered in glowing check marks. Somewhere beyond it, a goblin choir hums the tune of impending trouble."
+    corridor:
+      - title: "Corridor Test - Queue Hall"
+        description: "A long hall lined with red ropes like a very hostile theater lobby. The floor tiles click beneath your boots in neat, nervous rhythms."
+      - title: "Corridor Test - Flapping Passage"
+        description: "Colorful banners flap overhead though no wind is present. Each one depicts a monster filling out a form badly."
+    chamber:
+      - title: "Chamber Test - The Bug Pit"
+        description: "A circular chamber with chalk scribbles all over the walls: arrows, timestamps, and one large note reading REPRO STEPS UNCLEAR."
+      - title: "Chamber Test - The Checklist Vault"
+        description: "Rows of floating parchment circle the room like lazy birds. Each list grows another item the moment you think you understand it."
+    treasure:
+      - title: "Treasure Test - Coupon Hoard"
+        description: "A low chamber stacked with prize tickets, glowing shards, and one suspiciously regal squeaky crown balanced on a velvet stool."
+    boss:
+      - title: "Boss Test - Deadline Arena"
+        description: "A grand chamber under a clockwork dome where the Deadline Chimera prowls among shattered hourglasses. The air tastes like thunder and overdue promises."
+  mobPools:
+    common:
+      - queue_gremlin
+      - regression_ghost
+    elite:
+      - flaky_test_ogre
+    boss:
+      - deadline_chimera
+  lootTables:
+    normal:
+      mobDrops:
+        - bug_ticket
+        - checklist_shard
+        - sensible_tonic
+      completionRewards:
+        - regression_medal
+    hard:
+      mobDrops:
+        - bug_ticket
+        - checklist_shard
+        - sensible_tonic
+        - regression_medal
+      completionRewards:
+        - squeaky_crown
+        - qa_hammer
+        - audit_lantern
+
+puzzles:
+  compliance_riddle:
+    type: riddle
+    mobId: sphinxette_of_compliance
+    roomId: puzzle_foyer
+    question: "I get sharper the more you use me, but I am not a blade. I expose mistakes but I am not a lantern. What am I?"
+    answer: "a test"
+    acceptableAnswers:
+      - "test"
+      - "a test"
+      - "unit test"
+      - "a unit test"
+    reward:
+      type: unlock_exit
+      exitDirection: north
+      targetRoom: prize_closet
+    failMessage: "The Sphinxette clicks her tongue. 'That answer lacks coverage.'"
+    successMessage: "The Sphinxette smiles and a hidden panel slides open to the north."
+    cooldownMs: 0
+  lever_sequence:
+    type: sequence
+    roomId: puzzle_foyer
+    steps:
+      - feature: red
+        action: pull
+      - feature: blue
+        action: pull
+      - feature: green
+        action: pull
+    reward:
+      type: give_gold
+      gold: 77
+    resetOnFail: true
+    failMessage: "A kazoo fanfare plays as the mechanism indignantly resets."
+    successMessage: "The floor applauds. A shower of gold coins patters out of hidden tubes."
+  closet_riddle:
+    type: riddle
+    roomId: prize_closet
+    question: "What has a crown, squeaks under pressure, and makes absolutely no claim to dignity?"
+    answer: "the squeaky crown"
+    acceptableAnswers:
+      - "squeaky crown"
+      - "the squeaky crown"
+      - "crown"
+    reward:
+      type: give_item
+      itemId: absurd_trophy
+    failMessage: "A curtain flutters disapprovingly."
+    successMessage: "A tiny spotlight snaps on and the absurd trophy lands in your arms."
+    cooldownMs: 0
