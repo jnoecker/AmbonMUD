@@ -676,11 +676,22 @@ export class Ec2Stack extends Stack {
         'WantedBy=multi-user.target',
         'TLS_SVC_END',
         'systemctl daemon-reload',
+        // `enable` wires setup-tls.service into multi-user.target via a .wants
+        // symlink, so it will auto-run on future boots. BUT on this first
+        // boot, cloud-init is already running inside the multi-user.target
+        // activation transaction — enabling a new unit here does NOT
+        // retroactively pull it in, so without an explicit `start` the unit
+        // just sits in "inactive (dead)" forever and the operator has to
+        // `sudo setup-tls` manually after the first deploy. The --no-block
+        // flag lets user-data keep running while setup-tls's 5-minute DNS
+        // wait loop runs in the background; cloud-init's total time budget
+        // stays sane even if DNS propagation is slow.
         'systemctl enable setup-tls',
         '',
         // bind-utils (for dig, used by setup-tls to wait on DNS) is installed
         // earlier in the top-level dnf call — no longer needed here.
         'systemctl start nginx',
+        'systemctl start --no-block setup-tls',
       );
     }
 
