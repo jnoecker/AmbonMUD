@@ -462,41 +462,79 @@ aws ec2 create-snapshot --volume-id <vol-id> --description "AmbonMUD backup" --r
 
 ### Remote world & config overlay (Auringold)
 
-The demo instance can fetch its world content and config overlay from a separate
-"lore repo" (Auringold) hosted on R2, instead of relying on the bundled JAR
-resources. This lets world content ship independently of the container image.
+The demo instance can fetch its world content, sprite definitions, achievements,
+and config overlay from a separate "lore repo" (Auringold) hosted on Cloudflare
+R2, instead of relying on the bundled JAR resources. This lets world content
+ship independently of the container image and supports hot-reload without
+rebuilds.
 
 **How it works:**
 
-1. On every `ambonmud.service` (re)start, an `ExecStartPre` curls
-   `application-local.yaml` from `LORE_CONFIG_URL` to `/app/data/application-local.yaml`.
-2. A second `ExecStartPre` runs `/usr/local/bin/fetch-world-zones`, which parses
-   the `ambonmud.world.resources` list out of that overlay and curls each
+On every `ambonmud.service` (re)start, a chain of `ExecStartPre` steps populate
+`/app/data/` from R2, and the JVM reads those files via an `AMBONMUD_DATA_DIR`
+env var that four separate loaders check before falling back to the JAR-bundled
+classpath resources.
+
+1. **Lore config overlay** — `curl` fetches `application-local.yaml` from
+   `LORE_CONFIG_URL` to `/app/data/application-local.yaml`. Read by
+   `AppConfigLoader`, which checks `$AMBONMUD_DATA_DIR/application-local.yaml`
+   before the classpath. The overlay **replaces** the bundled `application.yaml`
+   entirely — there is no deep-merge, every required field must be present in
+   the overlay or Hoplite throws `ConfigException` on boot.
+2. **Zone YAMLs** — `/usr/local/bin/fetch-world-zones` parses the
+   `ambonmud.world.resources` list out of the lore overlay and curls each
    `world/<filename>.yaml` from `${WORLD_ZONES_BASE_URL}/<filename>` to
-   `/app/data/world/`.
-3. The container entrypoint puts `/app/data` ahead of the fat JAR on the classpath,
-   so remote files shadow bundled ones by filename. Bundled zones not listed in
-   the overlay's `resources` keep loading as fallback.
+   `/app/data/world/`. Read by `WorldLoader.readWorldFile`, which checks
+   `$AMBONMUD_DATA_DIR/<path>` before the classpath.
+3. **Sprite definitions** — `curl` fetches `sprites.yaml` from `SPRITES_URL` to
+   `/app/data/sprites.yaml`. Read by `SpriteLoader.loadFromResource`, same
+   filesystem-first pattern. This is the Arcanum-generated file with the real
+   tier/class/staff sprite definitions; the bundled `world/sprites.yaml` is
+   just a `sprites: {}` stub.
+4. **Achievements** — `curl` fetches `achievements.yaml` from `ACHIEVEMENTS_URL`
+   to `/app/data/world/achievements.yaml`, **after** `fetch-world-zones` runs
+   (which does `rm -f /app/data/world/*.yaml` before repopulating and would
+   otherwise wipe it). Read by `AchievementLoader.loadFromResource`.
+5. **Admin API token** — fetched from AWS SSM Parameter Store SecureString
+   (`/ambonmud/demo/admin-token`) to `/etc/ambonmud/secrets.env` (mode 600,
+   root-only), then passed to the container via `--env-file`. Hoplite's env
+   source sits at the top of the config priority list, so `AMBONMUD_ADMIN_TOKEN`
+   overrides whatever placeholder is in the public overlay. See the "Admin
+   token (SSM Parameter Store)" subsection below.
 
-**Required GitHub secrets** (set on the AmbonMUD repo):
+The docker run adds `-e AMBONMUD_DATA_DIR=/app/data` (and `--env-file
+/etc/ambonmud/secrets.env`) so all of the above reach the JVM. Without this
+env var, the loaders would silently ignore `/app/data/` — a gotcha that caused
+a full day of debugging on 2026-04-07 because a stale `ec2-stack.ts` comment
+incorrectly claimed the entrypoint put `/app/data` on the classpath.
 
-| Secret | Value |
-|--------|-------|
-| `LORE_CONFIG_URL` | `https://auringold.ambon.dev/config/application-local.yaml` |
-| `WORLD_ZONES_BASE_URL` | `https://auringold.ambon.dev/world` |
+**Required GitHub configuration:**
 
-Once both secrets are set, the next `Deploy` workflow run wires them through CDK
-context (`--context loreConfigUrl=... --context worldZonesBaseUrl=...`) and the
-EC2 user data is regenerated. Without these secrets, the stack synthesizes
-without the fetch logic and the demo runs entirely from bundled resources.
+| Name | Type | Value | Notes |
+|------|------|-------|-------|
+| `LORE_CONFIG_URL` | secret | `https://auringold.ambon.dev/config/application-local.yaml` | Base lore config overlay |
+| `WORLD_ZONES_BASE_URL` | secret | `https://auringold.ambon.dev/world` | **No trailing slash** — R2 treats `//` as a distinct key and returns 404 |
+| `SPRITES_URL` | secret | `https://auringold.ambon.dev/sprites.yaml` | Arcanum-generated sprite definitions |
+| `ACHIEVEMENTS_URL` | secret | `https://auringold.ambon.dev/world/achievements.yaml` | Achievement definitions |
+| `HOSTNAME` | variable | `mud.ambon.dev` | Required for nginx + TLS install — the whole nginx block is gated on this being non-empty |
+| `ADMIN_TOKEN_SSM_PARAMETER_NAME` | variable | `/ambonmud/demo/admin-token` | Parameter *name* only — the actual token lives in AWS SSM, not GitHub |
+
+All five URL secrets are optional. If any is unset, the corresponding
+`ExecStartPre` is simply omitted from the systemd unit and the demo falls back
+to the bundled classpath resource for that file.
+
+`HOSTNAME` is also optional — if unset, the deploy still works but nginx,
+certbot, and the setup-tls helper are not installed, so the server is only
+reachable on port 8080 without TLS.
 
 **Auringold-side requirements:**
 
 - Published `application-local.yaml` must include `ambonmud.world.resources` with
   `- world/<zone>.yaml` entries — one per zone the demo should load.
-- The same overlay must include an admin `token:` field — `generate-htpasswd`
-  parses it on boot to set up nginx basic auth on `/grafana/`, `/prometheus/`,
-  and `/admin/`.
+- The overlay's `admin.token` field should be a placeholder like
+  `"OVERRIDE_ME_FROM_ENV"`, **not** the real token. The real value lives in
+  AWS SSM Parameter Store and is injected via env var at container runtime.
+  Do not put secrets in files that get published over public HTTP.
 
 **Refreshing the running demo without restarting:**
 
@@ -511,6 +549,255 @@ Cross-repo automation (firing the refresh workflow on every Auringold push) is
 intentionally disabled for now — re-enable by adding a `repository_dispatch`
 trigger to `refresh-demo-world.yml` and a companion workflow in the Auringold
 repo. See the comment block at the top of `refresh-demo-world.yml`.
+
+### Admin token (SSM Parameter Store)
+
+The admin API token used for nginx basic-auth on `/grafana/`, `/prometheus/`,
+and `/admin/` (and for the admin API itself) is stored in AWS SSM Parameter
+Store as a `SecureString`, NOT in the publicly-fetched Auringold overlay.
+This keeps the secret out of any file that's served over public HTTP.
+
+**One-time setup:**
+
+```powershell
+# Generate a strong random token
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+$token = -join ($bytes | ForEach-Object { $_.ToString("x2") })
+
+aws ssm put-parameter `
+  --name /ambonmud/demo/admin-token `
+  --type SecureString `
+  --value $token `
+  --description "Admin API token for the demo instance" `
+  --region us-east-1
+
+# Tell the Deploy workflow which parameter to read at deploy time
+gh variable set ADMIN_TOKEN_SSM_PARAMETER_NAME --body "/ambonmud/demo/admin-token"
+```
+
+CDK grants the instance role `ssm:GetParameter` scoped to exactly that one
+parameter ARN (not wildcarded) when `adminTokenSsmParameterName` context is set.
+A `fetch-admin-token` `ExecStartPre` runs on every systemd start, writes
+`/etc/ambonmud/secrets.env` with mode 600, and the docker run picks it up via
+`--env-file`. The Hoplite env source overrides whatever `ambonmud.admin.token`
+says in the YAML overlay.
+
+**Rotation** (no CDK redeploy, no instance replacement):
+
+```powershell
+# Generate new token, overwrite the parameter in-place
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+$token = -join ($bytes | ForEach-Object { $_.ToString("x2") })
+aws ssm put-parameter --overwrite --name /ambonmud/demo/admin-token `
+  --type SecureString --value $token --region us-east-1
+
+# Tell the instance to restart ambonmud.service, which re-runs fetch-admin-token
+# and picks up the new value
+aws ssm send-command --instance-ids <instanceId> `
+  --document-name AWS-RunShellScript `
+  --parameters 'commands=["systemctl restart ambonmud"]' `
+  --region us-east-1
+```
+
+### Clean redeploy runbook
+
+Use this when you need to replace the EC2 instance (e.g., to pick up user-data
+changes, which only run on first boot). The player data at `/app/data` on the
+current instance is lost — if you need to preserve it, snapshot the EBS volume
+first.
+
+**Prerequisites** — verify before destroying anything:
+
+```powershell
+cd C:\AmbonMUD
+
+# All six demo-specific secrets + four variables must be present
+gh secret list
+gh variable list
+
+# SSM admin token parameter must exist
+aws ssm describe-parameters --filters "Key=Name,Values=/ambonmud/demo/admin-token" --region us-east-1
+
+# All four R2 assets must be reachable
+"config/application-local.yaml","world/pixel_haven.yaml","sprites.yaml","world/achievements.yaml" | ForEach-Object {
+  $code = curl.exe -sL -o NUL -w "%{http_code}" "https://auringold.ambon.dev/$_"
+  Write-Host "[$code] $_"
+}
+```
+
+All four URLs must return `200`. If any return 404, fix the Auringold side
+before deploying — otherwise the corresponding fetch `ExecStartPre` will fail
+and the unit won't start.
+
+**Destroy → Deploy sequence:**
+
+```powershell
+cd C:\AmbonMUD\infra
+
+# Windows Git Bash: required so context values aren't path-mangled by MSYS2
+$env:MSYS_NO_PATHCONV = "1"
+
+# 1. Destroy the current stack (wipes EC2, EBS, EIP, SG, VPC — ~3-5 min)
+npx cdk destroy AmbonMUD-ec2 --force `
+  --context topology=ec2 --context tier=hobby --context imageTag=placeholder
+
+# 2. Trigger the Deploy workflow with the latest main commit SHA
+$imageTag = git rev-parse origin/main
+gh workflow run deploy.yml --ref main `
+  -f image-tag=$imageTag `
+  -f environment=staging `
+  -f topology=ec2 `
+  -f tier=hobby
+
+# 3. Watch it finish (~5-8 min for CDK; staging env may require manual approval)
+gh run watch
+
+# 4. Grab the new instance's public IP + ID from stack outputs
+$outputs = aws cloudformation describe-stacks --stack-name AmbonMUD-ec2 `
+  --query "Stacks[0].Outputs" | ConvertFrom-Json
+$newIp = ($outputs | Where-Object OutputKey -eq "PublicIp").OutputValue
+$newInstanceId = ($outputs | Where-Object OutputKey -eq "InstanceId").OutputValue
+Write-Host "NEW IP: $newIp  |  NEW INSTANCE: $newInstanceId"
+```
+
+**Update DNS immediately.** The `setup-tls.service` on the new instance runs
+certbot within ~5 minutes of boot and waits for DNS to propagate. If you update
+the `mud.ambon.dev` A record before that window closes, TLS provisions
+automatically. If you miss it, you'll need to SSM in and run `sudo setup-tls`
+after the DNS update lands.
+
+```powershell
+# Update mud.ambon.dev A record to $newIp in your DNS provider, then verify:
+for ($i=0; $i -lt 20; $i++) {
+  $resolved = (dig +short mud.ambon.dev @8.8.8.8).Trim()
+  if ($resolved -eq $newIp) { Write-Host "DNS propagated"; break }
+  Write-Host "[$i] dig = $resolved (want $newIp)"
+  Start-Sleep 6
+}
+
+# Update the stale DEMO_INSTANCE_ID secret so future push-to-main auto-deploys
+# (via deploy-demo.yml) target the correct instance
+gh secret set DEMO_INSTANCE_ID --body $newInstanceId
+```
+
+**Verify via SSM:**
+
+```powershell
+aws ssm start-session --target $newInstanceId --region us-east-1
+```
+
+Then on the instance:
+
+```bash
+# Packages (all five must be present when HOSTNAME is set)
+rpm -q nginx certbot httpd-tools bind-utils docker 2>&1 | grep -v "not installed"
+
+# Services (all three must be active)
+sudo systemctl is-active ambonmud nginx setup-tls
+
+# TLS cert (must exist if DNS was updated within the 5-min window)
+sudo ls /etc/letsencrypt/live/mud.ambon.dev/ 2>&1
+
+# All four R2 fetches landed
+ls -la /app/data/application-local.yaml /app/data/sprites.yaml \
+       /app/data/world/pixel_haven.yaml /app/data/world/achievements.yaml
+
+# Admin token secrets file present (mode 600, owner root)
+sudo ls -la /etc/ambonmud/secrets.env
+
+# Container env vars include AMBONMUD_DATA_DIR + AMBONMUD_ADMIN_TOKEN
+sudo docker exec ambonmud env | grep AMBONMUD_
+
+# Journal boot sequence: fetch-world-zones, generate-htpasswd, JVM listening
+sudo journalctl -u ambonmud -n 40 --no-pager
+```
+
+**Smoke test from your laptop:**
+
+```powershell
+curl.exe -sI http://mud.ambon.dev:8080/   # direct Ktor
+curl.exe -sI https://mud.ambon.dev/       # via nginx + TLS
+```
+
+Both should return `200 OK`. If both pass and the web client loads in a
+browser with player sprites rendering on the canvas, the deploy is green.
+
+### Troubleshooting
+
+**`ambonmud.service` stuck in a restart loop, journal shows `htpasswd: cannot create file /etc/nginx/.htpasswd` or `htpasswd: command not found`**
+
+Chicken-and-egg from a pre-`42178a4a` user-data script where `generate-htpasswd`
+runs before the nginx/httpd-tools packages are installed. Shouldn't happen on
+commit `42178a4a` or later because those packages are now installed in the
+top-level `dnf install -y` call. If you're somehow seeing it on a newer build,
+hot-patch with `sudo dnf install -y nginx httpd-tools certbot bind-utils` via
+SSM and `sudo systemctl reset-failed ambonmud && sudo systemctl restart ambonmud`,
+then file a bug.
+
+**`fetch-world-zones` 404s on a file that exists in R2**
+
+1. **Check for a trailing slash** in the `WORLD_ZONES_BASE_URL` secret. R2
+   treats `/world//file.yaml` as a distinct key from `/world/file.yaml` and
+   returns 404 on the double-slash version. The helper script now strips
+   trailing slashes defensively (`BASE_URL="${BASE_URL%/}"`), but fix the
+   secret itself too.
+2. **Cloudflare edge cache propagation** — R2 edge POPs cache 404s
+   independently and can serve stale 404s for several minutes after a fresh
+   upload. The `curl --retry 20 --retry-delay 15 --retry-all-errors` flags
+   on the fetch should absorb this. `--retry-all-errors` is load-bearing —
+   plain `--retry` does not cover 404s.
+3. **Read the actual URL the script constructs**, don't guess from the
+   secret value. SSM in, `cat /usr/local/bin/fetch-world-zones`, substitute
+   the real `$BASE_URL`, and compare byte-for-byte against a URL you can
+   reach from your laptop. A mismatch by even one character is the cause.
+
+**`setup-tls.service` is `inactive (dead)` with no timestamp**
+
+Fixed on commit `42178a4a` — user-data now explicitly runs
+`systemctl start --no-block setup-tls` after enabling the unit, because
+`systemctl enable` alone doesn't retroactively pull a new unit into an
+already-activating `multi-user.target`. If you're on an older instance, the
+recovery is `sudo setup-tls` via SSM after DNS is updated.
+
+**`setup-tls.service` in `failed` state**
+
+setup-tls ran but certbot failed — usually because DNS wasn't pointing at the
+new instance when the 5-minute wait expired. Update DNS, then
+`sudo systemctl reset-failed setup-tls && sudo setup-tls` via SSM.
+
+**`Deploy Demo` workflow fails with `InvalidInstanceId: Instances not in a valid state for account`**
+
+The `DEMO_INSTANCE_ID` GitHub secret is stale — it points at a previous
+instance that no longer exists. Update it:
+
+```powershell
+gh secret set DEMO_INSTANCE_ID --body "<current-instance-id>"
+```
+
+Ideally we'd have `deploy-demo.yml` look up the instance by tag instead of
+hard-coding it, so instance replacement stops breaking the auto-deploy flow.
+That's a future improvement.
+
+**Hoplite `ConfigException: Missing required value at ambonmud.X.Y` on startup**
+
+The Auringold overlay is incomplete relative to the `AppConfig` schema.
+`application-local.yaml` **replaces** the base config entirely (no deep-merge),
+so every required field must be present in the overlay. When you add a new
+required field to `AppConfig`, you must also update the overlay. Check the
+exact path from the exception message and add the missing field to the
+Auringold-side YAML.
+
+**Player sprites don't render in the browser, or achievements don't exist**
+
+Confirm the files landed on disk: `ls -la /app/data/sprites.yaml
+/app/data/world/achievements.yaml`. If missing, `SPRITES_URL` /
+`ACHIEVEMENTS_URL` weren't set in GitHub at deploy time (the conditional
+`ExecStartPre` lines were rendered as empty). If present but the JVM isn't
+loading them, check `sudo docker exec ambonmud env | grep AMBONMUD_DATA_DIR` —
+it must be `/app/data`, otherwise the loaders won't look at the filesystem
+path.
 
 ### Upgrading to ECS Fargate later
 
