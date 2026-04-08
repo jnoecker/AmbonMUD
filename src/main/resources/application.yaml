@@ -137,6 +137,7 @@ ambonmud:
           manaCost: 5
           cooldownMs: 0
           levelRequired: 1
+          skillPointCost: 0
           targetType: ENEMY
           effect:
             type: DIRECT_DAMAGE
@@ -713,6 +714,7 @@ ambonmud:
           manaCost: 6
           cooldownMs: 0
           levelRequired: 1
+          skillPointCost: 0
           targetType: ENEMY
           effect:
             type: DIRECT_DAMAGE
@@ -1292,6 +1294,7 @@ ambonmud:
           manaCost: 8
           cooldownMs: 0
           levelRequired: 1
+          skillPointCost: 0
           targetType: ALLY
           effect:
             type: DIRECT_HEAL
@@ -1778,6 +1781,7 @@ ambonmud:
           manaCost: 6
           cooldownMs: 0
           levelRequired: 1
+          skillPointCost: 0
           targetType: ENEMY
           effect:
             type: DIRECT_DAMAGE
@@ -2228,6 +2232,7 @@ ambonmud:
           manaCost: 5
           cooldownMs: 0
           levelRequired: 1
+          skillPointCost: 0
           targetType: enemy
           effect:
             type: DIRECT_DAMAGE

@@ -233,6 +233,25 @@ class AppConfigLoaderTest {
     }
 
     @Test
+    fun `validation rejects negative ability skill point cost`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            AppConfig(
+                engine =
+                    EngineConfig(
+                        abilities =
+                            AbilityEngineConfig(
+                                definitions =
+                                    mapOf(
+                                        "free_spell" to AbilityDefinitionConfig(skillPointCost = -1),
+                                    ),
+                            ),
+                    ),
+                world = validWorld,
+            )
+        }
+    }
+
+    @Test
     fun `validated rejects baseHp less than 1`() {
         val invalid =
             AppConfig(

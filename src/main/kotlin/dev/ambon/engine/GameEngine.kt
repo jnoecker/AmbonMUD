@@ -1308,6 +1308,7 @@ class GameEngine(
                             outbound.send(
                                 OutboundEvent.SendInfo(sid, "Congratulations! You reached level ${levelUp.newLevel}!"),
                             )
+                            onCombatLevelUp(sid, levelUp.newLevel)
                         }
                     }
                     markVitalsDirty(sid)
@@ -2146,10 +2147,12 @@ class GameEngine(
         markVitalsDirty(sessionId)
         markStatsDirty(sessionId)
         val p = players.get(sessionId)
+        val autoLearned = p?.let { abilitySystem.recomputeKnownAbilities(sessionId, level, it.unlockedClasses) }.orEmpty()
+        sendAutoLearnedAbilities(sessionId, autoLearned)
         val interval = engineConfig.skillPoints.interval
         val available = abilitySystem.availableSkillPoints(
             level = level,
-            learnedCount = p?.learnedAbilityIds?.size ?: 0,
+            spentPoints = p?.let { abilitySystem.spentSkillPoints(it.learnedAbilityIds) } ?: 0,
             interval = interval,
             prestigeBonus = prestigeSystem.accumulatedSkillPointBonus(p?.prestigeLevel ?: 0),
         )
@@ -2213,6 +2216,7 @@ class GameEngine(
         val dqs = dailyQuestSystem ?: return
         val completed = dqs.onEvent(sessionId, type)
         if (completed.isEmpty()) return
+        val beforeLevel = players.get(sessionId)?.level ?: return
         dqs.awardRewards(sessionId, completed)
         for (c in completed) {
             val label = if (c.isDaily) "Daily" else "Weekly"
@@ -2223,8 +2227,22 @@ class GameEngine(
                 ),
             )
         }
+        val afterLevel = players.get(sessionId)?.level ?: beforeLevel
+        if (afterLevel > beforeLevel) {
+            onCombatLevelUp(sessionId, afterLevel)
+        }
         gmcpEmitter.sendDailyQuests(sessionId, dqs)
         gmcpEmitter.sendWeeklyQuests(sessionId, dqs)
+    }
+
+    private suspend fun sendAutoLearnedAbilities(
+        sessionId: SessionId,
+        abilities: List<dev.ambon.engine.abilities.AbilityDefinition>,
+    ) {
+        if (abilities.isEmpty()) return
+        val names = abilities.joinToString { it.displayName }
+        val verb = if (abilities.size == 1) "is" else "are"
+        outbound.send(OutboundEvent.SendText(sessionId, "$names $verb now yours automatically."))
     }
 
     private suspend fun onCombatMobKilledByPlayer(

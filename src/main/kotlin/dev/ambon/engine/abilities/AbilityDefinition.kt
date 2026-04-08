@@ -63,4 +63,9 @@ data class AbilityDefinition(
     val prerequisites: Set<AbilityId> = emptySet(),
     val tree: String = "",
     val tier: Int = 0,
-)
+    val skillPointCost: Int = 1,
+) {
+    init {
+        require(skillPointCost >= 0) { "skillPointCost must be >= 0, got $skillPointCost" }
+    }
+}

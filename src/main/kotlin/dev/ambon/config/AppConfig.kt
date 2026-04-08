@@ -299,6 +299,9 @@ data class AppConfig(
             if (def.manaCost < 0) warnConfig("ability '$key' manaCost is ${def.manaCost}, expected >= 0")
             if (def.cooldownMs < 0L) warnConfig("ability '$key' cooldownMs is ${def.cooldownMs}, expected >= 0")
             if (def.levelRequired < 1) warnConfig("ability '$key' levelRequired is ${def.levelRequired}, expected >= 1")
+            require(def.skillPointCost >= 0) {
+                "ambonMUD.engine.abilities.definitions.$key.skillPointCost must be >= 0"
+            }
             if (def.targetType.isBlank()) warnConfig("ability '$key' targetType is blank")
             if (def.effect.type.isBlank()) warnConfig("ability '$key' effect.type is blank")
             if (def.effect.type.uppercase() == "APPLY_STATUS") {
@@ -1913,6 +1916,7 @@ data class AbilityDefinitionConfig(
     val manaCost: Int = 10,
     val cooldownMs: Long = 0L,
     val levelRequired: Int = 1,
+    val skillPointCost: Int = 1,
     val targetType: String = "ENEMY",
     val effect: AbilityEffectConfig = AbilityEffectConfig(),
     val requiredClass: String = "",
@@ -1920,7 +1924,11 @@ data class AbilityDefinitionConfig(
     val prerequisites: List<String> = emptyList(),
     val tree: String = "",
     val tier: Int = 0,
-)
+) {
+    init {
+        require(skillPointCost >= 0) { "skillPointCost must be >= 0, got $skillPointCost" }
+    }
+}
 
 data class AbilityEffectConfig(
     val type: String = "DIRECT_DAMAGE",

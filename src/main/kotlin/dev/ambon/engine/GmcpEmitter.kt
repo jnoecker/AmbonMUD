@@ -357,6 +357,7 @@ class GmcpEmitter(
                     id = a.id.value,
                     name = a.displayName,
                     description = a.description,
+                    skillPointCost = a.skillPointCost,
                     manaCost = a.manaCost,
                     cooldownMs = a.cooldownMs,
                     cooldownRemainingMs = cooldownRemainingMs(a.id).coerceAtLeast(0L),
@@ -606,10 +607,11 @@ class GmcpEmitter(
         abilitySystem: dev.ambon.engine.abilities.AbilitySystem,
         multiclassConfig: dev.ambon.config.MulticlassConfig,
     ) {
+        val knownIds = abilitySystem.knownAbilityIds(sessionId)
         val classPayloads = trainer.classNames.map { className ->
             val unlocked = player.unlockedClasses.any { it.equals(className, ignoreCase = true) }
             val abilities = if (unlocked) {
-                abilitySystem.trainableAbilities(className, player.level, player.learnedAbilityIds)
+                abilitySystem.trainableAbilities(className, player.level, knownIds)
             } else {
                 emptyList()
             }
@@ -640,6 +642,7 @@ class GmcpEmitter(
             id = id.value,
             name = displayName,
             description = description,
+            skillPointCost = skillPointCost,
             levelRequired = levelRequired,
             manaCost = manaCost,
             cooldownMs = cooldownMs,
@@ -1997,6 +2000,7 @@ class GmcpEmitter(
         val id: String,
         val name: String,
         val description: String,
+        val skillPointCost: Int,
         val manaCost: Int,
         val cooldownMs: Long,
         val cooldownRemainingMs: Long,
@@ -2014,6 +2018,7 @@ class GmcpEmitter(
         val id: String,
         val name: String,
         val description: String,
+        val skillPointCost: Int,
         val levelRequired: Int,
         val manaCost: Int,
         val cooldownMs: Long,
