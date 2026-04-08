@@ -193,16 +193,25 @@ export class Ec2Stack extends Stack {
     // `update-ambonmud <tag>` via SSM Session Manager.
     // -------------------------------------------------------------------------
     const userData = ec2.UserData.forLinux();
+    // When hostname is set, the nginx+certbot stack is needed BEFORE the
+    // first systemctl start ambonmud — because generate-htpasswd (which runs
+    // as an ExecStartPre on ambonmud.service) tries to write /etc/nginx/.htpasswd,
+    // and /etc/nginx/ doesn't exist until the nginx package is installed. The
+    // install used to live in the `if (hostname)` block lower in this file,
+    // but that block runs AFTER systemctl start, so it's too late. Installing
+    // these packages in the same unconditional dnf invocation as docker is
+    // the simplest ordering fix; the nginx *config* files (nginx.conf,
+    // setup-tls helper, etc.) stay in the `if (hostname)` block where they
+    // belong.
+    //
+    // httpd-tools is here unconditionally because generate-htpasswd runs
+    // unconditionally and calls htpasswd regardless — keeping the dev/local
+    // path working without nginx still needs it to exist. See the 2026-04-07
+    // incident for the full chain of failures if you're tempted to simplify.
+    const nginxPackages = hostname ? ' nginx certbot python3-certbot-nginx bind-utils' : '';
     userData.addCommands(
       'set -euo pipefail',
-      // httpd-tools installed unconditionally (not gated behind `if (hostname)`)
-      // because generate-htpasswd is an unconditional ExecStartPre and calls
-      // htpasswd regardless of whether nginx is eventually installed. Without
-      // this, the ambonmud.service fails its first start (exit 127, htpasswd
-      // not found), which aborts the `set -e` user-data script before the
-      // nginx block runs, leaving the instance permanently wedged in a
-      // restart loop with no nginx. See the 2026-04-07 incident.
-      'dnf install -y docker amazon-ssm-agent emacs-nox httpd-tools',
+      `dnf install -y docker amazon-ssm-agent emacs-nox httpd-tools${nginxPackages}`,
       'systemctl enable --now docker',
       'systemctl enable --now amazon-ssm-agent',
       // UID 1001 matches the pinned ambonmud user inside the container (Dockerfile).
@@ -422,16 +431,22 @@ export class Ec2Stack extends Stack {
       `cat > /usr/local/bin/generate-htpasswd << 'SCRIPT_END'`,
       '#!/bin/bash',
       'set -euo pipefail',
-      '# Defense in depth: if htpasswd is not available (httpd-tools missing),',
-      '# soft-fail rather than wedging the whole ambonmud.service in a restart',
-      '# loop. nginx basic auth for /grafana/, /prometheus/, /admin/ will be',
-      '# broken but the MUD itself still boots.',
+      '# Defense in depth: soft-fail (exit 0) if either htpasswd or /etc/nginx',
+      '# is missing, rather than wedging the whole ambonmud.service in a',
+      '# restart loop. nginx basic auth for /grafana/, /prometheus/, /admin/',
+      '# will be broken but the MUD itself still boots. When hostname is set,',
+      '# both should be present because the nginx package is installed in the',
+      '# top-level dnf call before systemctl start ambonmud runs.',
+      'HTPASSWD=/etc/nginx/.htpasswd',
+      'ENV_FILE=/etc/ambonmud/secrets.env',
       'if ! command -v htpasswd >/dev/null 2>&1; then',
       '  echo "htpasswd not installed (httpd-tools missing) — skipping htpasswd generation"',
       '  exit 0',
       'fi',
-      'HTPASSWD=/etc/nginx/.htpasswd',
-      'ENV_FILE=/etc/ambonmud/secrets.env',
+      'if [ ! -d "$(dirname "$HTPASSWD")" ]; then',
+      '  echo "$(dirname "$HTPASSWD") does not exist (nginx not installed) — skipping htpasswd generation"',
+      '  exit 0',
+      'fi',
       'if [ -f "$ENV_FILE" ]; then',
       '  # shellcheck source=/dev/null',
       '  . "$ENV_FILE"',
@@ -554,7 +569,10 @@ export class Ec2Stack extends Stack {
     if (hostname) {
       userData.addCommands(
         '',
-        'dnf install -y nginx certbot python3-certbot-nginx httpd-tools',
+        // nginx/certbot/httpd-tools/bind-utils are installed earlier in the
+        // top-level dnf call (see `nginxPackages` above) because they need
+        // to exist before the first systemctl start ambonmud. This block
+        // now only writes config files and wires up systemd.
         'systemctl enable nginx',
         '',
         // nginx reverse-proxy config: HTTP + WebSocket → localhost:8080
@@ -660,7 +678,8 @@ export class Ec2Stack extends Stack {
         'systemctl daemon-reload',
         'systemctl enable setup-tls',
         '',
-        'dnf install -y bind-utils',  // for dig
+        // bind-utils (for dig, used by setup-tls to wait on DNS) is installed
+        // earlier in the top-level dnf call — no longer needed here.
         'systemctl start nginx',
       );
     }
