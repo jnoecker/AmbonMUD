@@ -24,8 +24,13 @@ name: Refresh Demo World
 #     DEMO_INSTANCE_ID        EC2 instance ID
 #     LORE_CONFIG_URL         URL to download application-local.yaml
 #                             (e.g. https://auringold.ambon.dev/config/application-local.yaml)
-#     WORLD_ZONES_BASE_URL    Base URL for world zone YAML files
-#                             (e.g. https://auringold.ambon.dev/world)
+#     SPRITES_URL             Optional URL to download sprites.yaml
+#                             (e.g. https://auringold.ambon.dev/sprites.yaml)
+#     ACHIEVEMENTS_URL        Optional URL to download achievements.yaml
+#                             (e.g. https://auringold.ambon.dev/world/achievements.yaml)
+#   The zone base URL is already baked into /usr/local/bin/fetch-world-zones on
+#   the demo instance by the deploy workflow, so this refresh workflow only
+#   needs the config URL plus any optional per-file URLs to mirror deploy-time behavior.
 #   GitHub variables:
 #     AWS_REGION              AWS region (default: us-east-1)
 
@@ -71,12 +76,21 @@ jobs:
         env:
           INSTANCE_ID: ${{ secrets.DEMO_INSTANCE_ID }}
           LORE_URL: ${{ secrets.LORE_CONFIG_URL }}
+          SPRITES_URL: ${{ secrets.SPRITES_URL }}
+          ACHIEVEMENTS_URL: ${{ secrets.ACHIEVEMENTS_URL }}
         run: |
-          ACHIEVEMENTS_URL="${LORE_URL%/*}/achievements.yaml"
+          FETCH_FLAGS="-fsSL --retry 20 --retry-delay 15 --retry-all-errors -A 'Mozilla/5.0 (compatible; AmbonMUD-fetch/1.0)'"
+          REMOTE_CMD="curl $FETCH_FLAGS -o /app/data/application-local.yaml '$LORE_URL' && /usr/local/bin/fetch-world-zones"
+          if [ -n "$SPRITES_URL" ]; then
+            REMOTE_CMD="$REMOTE_CMD && curl $FETCH_FLAGS -o /app/data/sprites.yaml '$SPRITES_URL'"
+          fi
+          if [ -n "$ACHIEVEMENTS_URL" ]; then
+            REMOTE_CMD="$REMOTE_CMD && mkdir -p /app/data/world && curl $FETCH_FLAGS -o /app/data/world/achievements.yaml '$ACHIEVEMENTS_URL'"
+          fi
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[\"curl -fsSL -o /app/data/application-local.yaml $LORE_URL && /usr/local/bin/fetch-world-zones && mkdir -p /app/data/world && curl -fsSL -o /app/data/world/achievements.yaml $ACHIEVEMENTS_URL\"]" \
+            --parameters "commands=[\"$REMOTE_CMD\"]" \
             --comment "Refresh world files from Auringold lore repo" \
             --query "Command.CommandId" \
             --output text)
