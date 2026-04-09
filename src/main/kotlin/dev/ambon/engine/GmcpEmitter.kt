@@ -48,6 +48,13 @@ data class WhoEntry(
     val idleSeconds: Long,
 )
 
+data class PrestigePerkPayload(
+    val rank: Int,
+    val type: String,
+    val description: String,
+    val earned: Boolean,
+)
+
 class GmcpEmitter(
     private val outbound: OutboundBus,
     private val supportsPackage: (SessionId, String) -> Boolean,
@@ -62,8 +69,11 @@ class GmcpEmitter(
     private val getMobEffects: (dev.ambon.domain.ids.MobId) -> List<ActiveEffectSnapshot> = { emptyList() },
     private val commandEntries: Map<String, CommandMetadata> = emptyMap(),
     private val emotePresets: List<EmotePresetConfig> = emptyList(),
+    private val prestigeEnabled: () -> Boolean = { false },
+    private val prestigeMaxRank: () -> Int = { 0 },
     private val prestigeAvailableXp: (PlayerState) -> Long? = { null },
     private val prestigeNextCost: (Int) -> Long? = { null },
+    private val prestigePerkPayloads: (currentRank: Int, maxRank: Int) -> List<PrestigePerkPayload> = { _, _ -> emptyList() },
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -702,6 +712,7 @@ class GmcpEmitter(
         sendCharAchievements(sessionId, player, achievementRegistry)
         sendCharSprites(sessionId, player)
         sendCharClasses(sessionId, player.unlockedClasses.ifEmpty { setOf(player.playerClass) }, player.playerClass)
+        sendPrestigeInfoForPlayer(sessionId, player)
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
     }
@@ -2913,13 +2924,6 @@ class GmcpEmitter(
         val perks: List<PrestigePerkPayload>,
     )
 
-    data class PrestigePerkPayload(
-        val rank: Int,
-        val type: String,
-        val description: String,
-        val earned: Boolean,
-    )
-
     suspend fun sendPrestigeInfo(
         sessionId: SessionId,
         enabled: Boolean,
@@ -2941,6 +2945,42 @@ class GmcpEmitter(
                 perks = perks,
             ),
             supportCheck = "Prestige",
+        )
+    }
+
+    suspend fun sendPrestigeInfoForPlayer(
+        sessionId: SessionId,
+        player: PlayerState,
+    ) {
+        val enabled = prestigeEnabled()
+        val currentRank = player.prestigeLevel
+        val maxRank = if (enabled) prestigeMaxRank() else 0
+        val availableXp =
+            if (enabled && (progression == null || player.level >= progression.maxLevel)) {
+                prestigeAvailableXp(player) ?: 0L
+            } else {
+                0L
+            }
+        val nextRankCost =
+            if (enabled && currentRank < maxRank) {
+                prestigeNextCost(currentRank)
+            } else {
+                null
+            }
+        val perks =
+            if (enabled && maxRank > 0) {
+                prestigePerkPayloads(currentRank, maxRank)
+            } else {
+                emptyList()
+            }
+        sendPrestigeInfo(
+            sessionId = sessionId,
+            enabled = enabled,
+            currentRank = currentRank,
+            maxRank = maxRank,
+            availableXp = availableXp,
+            nextRankCost = nextRankCost,
+            perks = perks,
         )
     }
 

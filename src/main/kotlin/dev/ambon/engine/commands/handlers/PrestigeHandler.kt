@@ -79,6 +79,7 @@ class PrestigeHandler(
             // Persist and emit GMCP
             players.persistPlayer(sessionId)
             gmcpEmitter?.sendCharVitals(sessionId, me)
+            gmcpEmitter?.sendPrestigeInfoForPlayer(sessionId, me)
         }
     }
 

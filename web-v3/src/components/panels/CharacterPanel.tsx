@@ -809,10 +809,10 @@ export function CharacterPanel({
                           <button
                             type="button"
                             className="soft-button score-prestige-btn"
-                            onClick={() => onCommand("prestige info")}
-                            title="View prestige perks and details"
+                            onClick={() => onOpenSystem("prestige")}
+                            title="Open the full prestige view"
                           >
-                            View Perks
+                            Open Details
                           </button>
                         </div>
                       </div>
