@@ -78,8 +78,8 @@ export class AmbientMotes {
     this.currentTheme = convertTheme(moteColors);
   }
 
-  /** Fallback: set room for zones without server theme (uses default). */
-  setRoom(_roomId: string) {
+  /** No-op: room-based theming is replaced by setTheme() from Zone.Environment GMCP. */
+  setRoom() {
     // Theme is now set by setTheme() from Zone.Environment GMCP.
     // This method is kept for backward compatibility but is a no-op
     // when a server theme has been applied.
