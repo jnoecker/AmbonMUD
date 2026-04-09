@@ -880,6 +880,112 @@ puzzles:
 - `answer <text>` command submits riddle answers
 - Sequence puzzles track ordered feature interactions
 
+### Arcanum authoring notes
+
+Sequence puzzle steps reference **room feature IDs**, not display names. The creator should expose the local
+feature key directly when authors build a `steps:` sequence so builders can select a lever/container/sign without
+guessing the underlying YAML identifier.
+
+---
+
+## World Features & Web Feature Badges (zone YAML + web assets)
+
+Doors, levers, and containers were already supported by the runtime; the web client now treats them as first-class
+room interactions with dedicated badges and a focused feature drawer. Ambon Arcanum should expose these authoring
+surfaces explicitly instead of leaving them implicit inside raw YAML.
+
+### Exit-attached doors
+
+Door definitions live on a room exit in object form:
+
+```yaml
+rooms:
+  vault_approach:
+    exits:
+      e:
+        to: vault_interior
+        door:
+          initialState: locked
+          keyItemId: old_mines:bronze_vault_key
+          keyConsumed: false
+          resetWithZone: true
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initialState` | `open \| closed \| locked` | `closed` | Starting door state |
+| `keyItemId` | String? | `null` | Optional item required to unlock |
+| `keyConsumed` | Boolean | `false` | Consume the key on unlock |
+| `resetWithZone` | Boolean | `true` | Reset to original state on zone reset |
+
+### Non-exit room features
+
+Containers, levers, and signs live in the room's `features:` map:
+
+```yaml
+rooms:
+  support_chamber:
+    features:
+      vault_lever:
+        type: LEVER
+        displayName: a heavy iron lever
+        keyword: lever
+        initialState: up
+        resetWithZone: true
+      expedition_chest:
+        type: CONTAINER
+        displayName: an expedition chest
+        keyword: chest
+        initialState: closed
+        items:
+          - old_mines:expedition_notes
+```
+
+| Field | Applies To | Description |
+|-------|------------|-------------|
+| `type` | all | `CONTAINER`, `LEVER`, or `SIGN` |
+| `displayName` | all | In-room text shown to players |
+| `keyword` | all | Command target (`open chest`, `pull lever`) |
+| `initialState` | container/lever | `open/closed/locked` for containers, `up/down` for levers |
+| `keyItemId` | container | Optional key required to unlock |
+| `keyConsumed` | container | Consume key on unlock |
+| `resetWithZone` | container/lever | Reset on zone reset |
+| `items` | container | Initial contents |
+| `text` | sign | Readable sign text |
+
+### Arcanum UI expectations
+
+The creator tool should add:
+
+- An **Exit door editor** inside each room exit row, with a visible "Has door" toggle and fields for `initialState`,
+  `keyItemId`, `keyConsumed`, and `resetWithZone`.
+- A **Room features editor** that manages the local `features:` map with add/remove/reorder support for containers,
+  levers, and signs.
+- A visible **feature ID / local key** field for each feature. This matters because puzzle sequence steps reference
+  `steps[].feature`, and the authored key must stay stable when names change.
+- Context-aware forms:
+  `CONTAINER` shows lock + contents fields, `LEVER` shows up/down state, `SIGN` shows text only.
+- Preview labels that mirror the web client vocabulary: `Door`, `Container`, `Lever`, and `Puzzle`.
+
+### Web/global asset keys
+
+The web client now looks for these `images.globalAssets` keys in `Server.Assets`, falling back to
+`/images/global_assets/<filename>` when the key is absent:
+
+| Key | Fallback file | Used For |
+|-----|---------------|----------|
+| `puzzle_kiosk` | `puzzle_kiosk.png` | Puzzle badge |
+| `feature_door` | `feature_door.png` | Door badge |
+| `feature_container` | `feature_container.png` | Container/chest badge |
+| `feature_lever` | `feature_lever.png` | Lever badge |
+| `crafting_station` | `crafting_station.png` | Crafting badge fallback |
+| `trainer_icon` | `trainer_icon.png` | Trainer badge fallback |
+| `bank_vault` | `bank_vault.png` | Bank badge fallback |
+| `tavern_icon` | `tavern_icon.png` | Tavern badge fallback |
+
+Arcanum does not need to author these into zone YAML, but any built-in preview or export pipeline that wants parity
+with the web client should treat the keys above as stable.
+
 ---
 
 ## Prestige System (application.yaml)

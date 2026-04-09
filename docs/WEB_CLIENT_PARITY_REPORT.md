@@ -30,7 +30,7 @@ The web client has **near-complete parity** with the text command interface. All
 |---------|--------------|--------|
 | Navigation & Movement | `Room.Info`, `Zone.Map` | Canvas world scene, minimap, exit buttons, recall button |
 | Room contents | `Room.Mobs`, `Room.Items`, `Room.Players`, `Room.MobInfo` | Canvas entities with labels, HP bars, role badges |
-| World features | `Room.Features` | Contextual action buttons (doors, containers, levers, signs) |
+| World features | `Room.Features` | Dedicated feature drawer, canvas badges for doors/containers/levers, contextual action buttons, sign text |
 | Combat | `Char.Combat`, `Char.Combat.Event`, `Char.Vitals` | Battle scene, combat log, HP/Mana bars, target card, flee button |
 | Spells & Abilities | `Char.Skills`, `Char.Cooldown` | Spellbook panel, quickbar with cooldown sweeps |
 | Status Effects | `Char.StatusEffects` | Character panel effects tab, battle scene indicators, mob effects |

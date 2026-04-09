@@ -6,6 +6,7 @@ import { PuzzlePopout } from "./components/PuzzlePopout";
 import { ShopPopout } from "./components/ShopPopout";
 import { TrainerPanel } from "./components/TrainerPanel";
 import { TradePanel } from "./components/TradePanel";
+import { WorldFeaturesPopout } from "./components/WorldFeaturesPopout";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
@@ -30,7 +31,7 @@ import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
-import type { ChatChannel } from "./types";
+import type { ChatChannel, FeaturePopoutFocus, PopoutPanel } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
 
@@ -47,6 +48,7 @@ function App() {
 
   // Ctrl+K command palette
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [featureFocus, setFeatureFocus] = useState<FeaturePopoutFocus>(null);
 
   // Staff admin panel + invisibility toggle
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -171,6 +173,11 @@ function App() {
     resetComposerCompletion();
   };
 
+  const openPanel = (panel: PopoutPanel, preferredType: FeaturePopoutFocus = null) => {
+    setFeatureFocus(panel === "features" ? preferredType : null);
+    state.setActivePopout(panel);
+  };
+
   // Sync state into canvas bridge for PixiJS
   useEffect(() => {
     gameStateRef.current = {
@@ -190,6 +197,8 @@ function App() {
       shop: state.shop,
       puzzle: state.puzzle,
       craftingNodes: state.craftingNodes,
+      roomFeatures: state.roomFeatures,
+      containerContents: state.containerContents,
       questTargetRoomIds: new Set(
         state.quests.flatMap((q) =>
           q.objectives.filter((o) => o.current < o.required).flatMap((o) => o.targetRoomIds ?? []),
@@ -202,13 +211,14 @@ function App() {
   // Wire canvas callbacks
   useEffect(() => {
     canvasCallbacks.sendCommand = (cmd: string) => sendCommand(cmd);
-    canvasCallbacks.openShop = () => state.setActivePopout("shop");
-    canvasCallbacks.openPuzzle = () => state.setActivePopout("puzzle");
-    canvasCallbacks.openBank = () => state.setActivePopout("bank");
-    canvasCallbacks.openTrainer = () => state.setActivePopout("trainer");
-    canvasCallbacks.openMap = () => state.setActivePopout("map");
-    canvasCallbacks.openRoom = () => state.setActivePopout("room");
-    canvasCallbacks.openQuests = () => state.setActivePopout("quests");
+    canvasCallbacks.openShop = () => openPanel("shop");
+    canvasCallbacks.openPuzzle = () => openPanel("puzzle");
+    canvasCallbacks.openFeatures = (preferredType?: FeaturePopoutFocus) => openPanel("features", preferredType ?? null);
+    canvasCallbacks.openBank = () => openPanel("bank");
+    canvasCallbacks.openTrainer = () => openPanel("trainer");
+    canvasCallbacks.openMap = () => openPanel("map");
+    canvasCallbacks.openRoom = () => openPanel("room");
+    canvasCallbacks.openQuests = () => openPanel("quests");
     canvasCallbacks.dismissDialogue = () => { state.setDialogue(null); state.setQuestsAvailable([]); };
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
     canvasCallbacks.prefillCommand = (text: string) => prefillInput(text);
@@ -216,6 +226,7 @@ function App() {
       canvasCallbacks.sendCommand = null;
       canvasCallbacks.openShop = null;
       canvasCallbacks.openPuzzle = null;
+      canvasCallbacks.openFeatures = null;
       canvasCallbacks.openBank = null;
       canvasCallbacks.openTrainer = null;
       canvasCallbacks.openMap = null;
@@ -395,6 +406,7 @@ function App() {
       case "chat": return "Social";
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
+      case "features": return "World Features";
       case "trainer": return state.trainer?.name ?? "Trainer";
       case "mail": return "Mail";
       case "crafting": return "Crafting";
@@ -419,7 +431,7 @@ function App() {
     [state.quests],
   );
 
-  const closeDrawer = () => state.setActivePopout(null);
+  const closeDrawer = () => openPanel(null);
 
   return (
     <>
@@ -435,7 +447,7 @@ function App() {
         onQuickbarClear={quickbar.clear}
         activePopout={state.activePopout}
         onCommand={sendCommand}
-        onOpenPanel={(panel) => state.setActivePopout(panel)}
+        onOpenPanel={(panel) => openPanel(panel)}
         onCastSkill={handleCastSkill}
         onReconnect={() => { intentionalDisconnectRef.current = true; reconnect(); }}
         audio={audio}
@@ -487,8 +499,8 @@ function App() {
             prestigeInfo={state.prestigeInfo}
             onDismissQuestNotification={(id) => state.setQuestNotifications((prev) => prev.filter((n) => n.id !== id))}
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
-            onOpenInventory={() => state.setActivePopout("inventory")}
-            onOpenEquipment={() => state.setActivePopout("equipment")}
+            onOpenInventory={() => openPanel("inventory")}
+            onOpenEquipment={() => openPanel("equipment")}
             onCommand={sendCommand}
             onLogout={() => {
               try {
@@ -566,6 +578,16 @@ function App() {
 
         {drawerPanel === "puzzle" && state.puzzle && (
           <PuzzlePopout puzzle={state.puzzle} onCommand={sendCommand} />
+        )}
+
+        {drawerPanel === "features" && (
+          <WorldFeaturesPopout
+            roomTitle={state.room.title !== "-" ? state.room.title : "Current Room"}
+            roomFeatures={state.roomFeatures}
+            containerContents={state.containerContents}
+            preferredType={featureFocus}
+            onCommand={sendCommand}
+          />
         )}
 
         {drawerPanel === "trainer" && state.trainer && (
@@ -752,7 +774,18 @@ function App() {
             )}
             {state.roomFeatures.length > 0 && (
               <div className="room-features-section">
-                <h4 className="room-features-title">Interactive Features</h4>
+                <div className="room-features-heading">
+                  <h4 className="room-features-title">Interactive Features</h4>
+                  <button
+                    type="button"
+                    className="room-feature-btn room-feature-panel-link"
+                    onClick={() => {
+                      openPanel("features");
+                    }}
+                  >
+                    Open feature panel
+                  </button>
+                </div>
                 <ul className="room-features-list" role="list">
                   {state.roomFeatures.map((f) => (
                     <li key={f.id} className="room-feature-item">
