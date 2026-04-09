@@ -277,6 +277,7 @@ internal suspend fun sendLook(
     if (gmcpEmitter != null && gmcpEmitter.trackZoneChange(sessionId, zone)) {
         val zoneRooms = world.rooms.values.filter { it.id.zone == zone }
         gmcpEmitter.sendZoneMap(sessionId, zone, zoneRooms)
+        gmcpEmitter.sendZoneEnvironment(sessionId, gmcpEmitter.buildZoneEnvironmentPayload(zone))
     }
 
     val isHousing = room.id.zone.startsWith("house_")

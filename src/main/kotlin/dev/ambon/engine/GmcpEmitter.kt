@@ -74,6 +74,7 @@ class GmcpEmitter(
     private val prestigeAvailableXp: (PlayerState) -> Long? = { null },
     private val prestigeNextCost: (Int) -> Long? = { null },
     private val prestigePerkPayloads: (currentRank: Int, maxRank: Int) -> List<PrestigePerkPayload> = { _, _ -> emptyList() },
+    private val environmentConfig: dev.ambon.config.EnvironmentConfig = dev.ambon.config.EnvironmentConfig(),
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -1253,6 +1254,8 @@ class GmcpEmitter(
         val zone: String,
         val weather: String,
         val description: String,
+        val particleHint: String = "",
+        val icon: String = "",
     )
 
     data class WorldEventPayload(
@@ -1273,6 +1276,52 @@ class GmcpEmitter(
 
     suspend fun sendWorldWeather(sessionId: SessionId, payload: WorldWeatherPayload) {
         emit(sessionId, "World.Weather", payload)
+    }
+
+    // ---------- zone environment theme ----------
+
+    data class MoteColorPayload(
+        val core: String,
+        val glow: String,
+    )
+
+    data class SkyGradientPayload(
+        val top: String,
+        val bottom: String,
+    )
+
+    data class ZoneEnvironmentPayload(
+        val zone: String,
+        val moteColors: List<MoteColorPayload>,
+        val skyGradients: Map<String, SkyGradientPayload>,
+        val transitionColors: List<String>,
+        val weatherParticleOverrides: Map<String, String>,
+    )
+
+    suspend fun sendZoneEnvironment(sessionId: SessionId, payload: ZoneEnvironmentPayload) {
+        emit(sessionId, "Zone.Environment", payload)
+    }
+
+    /** Resolves the environment theme for a zone (zone override merged over defaults). */
+    fun buildZoneEnvironmentPayload(zone: String): ZoneEnvironmentPayload {
+        val defaults = environmentConfig.defaultTheme
+        val zoneOverride = environmentConfig.zones[zone]
+
+        val moteColors = (zoneOverride?.moteColors?.takeIf { it.isNotEmpty() } ?: defaults.moteColors)
+            .map { MoteColorPayload(it.core, it.glow) }
+        val skyGradients = (defaults.skyGradients + (zoneOverride?.skyGradients ?: emptyMap()))
+            .mapValues { (_, g) -> SkyGradientPayload(g.top, g.bottom) }
+        val transitionColors = zoneOverride?.transitionColors?.takeIf { it.isNotEmpty() }
+            ?: defaults.transitionColors
+        val weatherOverrides = (defaults.weatherParticleOverrides + (zoneOverride?.weatherParticleOverrides ?: emptyMap()))
+
+        return ZoneEnvironmentPayload(
+            zone = zone,
+            moteColors = moteColors,
+            skyGradients = skyGradients,
+            transitionColors = transitionColors,
+            weatherParticleOverrides = weatherOverrides,
+        )
     }
 
     suspend fun sendWorldEvents(sessionId: SessionId, events: List<WorldEventPayload>) {

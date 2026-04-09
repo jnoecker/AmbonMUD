@@ -5,6 +5,8 @@ import { Minimap } from "../systems/Minimap";
 import { EntityPopout } from "../systems/EntityPopout";
 import { AmbientMotes } from "../systems/AmbientMotes";
 import { RoomTransition } from "../systems/RoomTransition";
+import { SkyRenderer } from "../systems/SkyRenderer";
+import { WeatherParticles } from "../systems/WeatherParticles";
 import type { MobInfo } from "../../types";
 import { ROOM_SURFACE_WIDGETS, roomHasSurfaceWidget } from "../../featureMetadata";
 
@@ -107,6 +109,10 @@ export class WorldScene {
   private entityPopout = new EntityPopout();
   private ambientMotes = new AmbientMotes();
   private roomTransition = new RoomTransition();
+  private skyRenderer = new SkyRenderer();
+  private weatherParticles = new WeatherParticles();
+  private lastZoneEnvZone: string | null = null;
+  private lastWeatherHint = "";
 
   private dialogueTexture: Texture | null = null;
   private dialogueIcons: Map<string, Sprite> = new Map();
@@ -677,6 +683,7 @@ export class WorldScene {
     });
     this.recallBtn.visible = false;
 
+    this.container.addChildAt(this.skyRenderer.graphics, 0);
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
@@ -705,6 +712,7 @@ export class WorldScene {
     this.container.addChild(this.entityPopout.container);
     // Transition graphics live in the overlay so they stay visible while
     // container.alpha fades to 0 during the dissolve phase.
+    this.overlayContainer.addChildAt(this.weatherParticles.graphics, 0);
     this.overlayContainer.addChild(this.roomTransition.graphics);
   }
 
@@ -714,6 +722,8 @@ export class WorldScene {
     this.entityPopout.resize(width, height);
     this.ambientMotes.resize(width, height);
     this.roomTransition.resize(width, height);
+    this.skyRenderer.resize(width, height);
+    this.weatherParticles.resize(width, height);
 
     // Update backdrop size
     this.backdropHit.clear();
@@ -766,6 +776,30 @@ export class WorldScene {
       this.container.alpha = 1;
     }
 
+    // Apply zone environment theme when it changes (from Zone.Environment GMCP)
+    const zoneEnv = state.zoneEnvironment;
+    if (zoneEnv !== null && zoneEnv.zone !== this.lastZoneEnvZone) {
+      this.lastZoneEnvZone = zoneEnv.zone;
+      this.ambientMotes.setTheme(zoneEnv.moteColors);
+      this.roomTransition.setTransitionColors(zoneEnv.transitionColors);
+      this.skyRenderer.setTheme(zoneEnv.skyGradients);
+    }
+
+    // Update sky period from World.Time GMCP
+    if (state.worldTime !== null) {
+      this.skyRenderer.setPeriod(state.worldTime.period);
+    }
+
+    // Resolve weather particle hint: zone override > server particleHint
+    if (state.worldWeather !== null) {
+      const weatherId = state.worldWeather.weather;
+      const hint = (zoneEnv?.weatherParticleOverrides[weatherId]) ?? state.worldWeather.particleHint ?? "";
+      if (hint !== this.lastWeatherHint) {
+        this.lastWeatherHint = hint;
+        this.weatherParticles.setHint(hint);
+      }
+    }
+
     const roomChanged = room.id !== this.lastRoomId;
     if (roomChanged) {
       if (this.lastRoomId !== null) {
@@ -774,11 +808,14 @@ export class WorldScene {
       this.lastRoomId = room.id;
       this.titleText.text = room.title !== "-" ? room.title : "";
       this.descText.text = room.description || "";
-      if (room.id) this.ambientMotes.setRoom(room.id);
       // Dismiss popout on room change
       this.entityPopout.hide();
       this.backdropHit.visible = false;
     }
+
+    // Update sky gradient and weather particles
+    this.skyRenderer.update(deltaMs);
+    this.weatherParticles.update(deltaMs);
 
     // Update ambient motes (zone-themed floating particles)
     this.ambientMotes.update(deltaMs);

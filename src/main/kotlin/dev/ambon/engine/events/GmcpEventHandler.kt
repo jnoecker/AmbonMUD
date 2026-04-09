@@ -70,6 +70,10 @@ class GmcpEventHandler(
                     pvpEnabled = world.isZonePvpEnabled(room.id.zone),
                     trainerName = trainerRegistry?.trainerInRoom(room.id)?.name,
                 )
+                gmcpEmitter.sendZoneEnvironment(
+                    sid,
+                    gmcpEmitter.buildZoneEnvironmentPayload(room.id.zone),
+                )
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendRoomItems(sid, items.itemsInRoom(player.roomId))

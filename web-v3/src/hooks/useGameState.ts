@@ -87,6 +87,7 @@ import type {
   WorldEvent,
   WorldTime,
   WorldWeather,
+  ZoneEnvironment,
   ZoneInstances,
   CurrencyActivity,
 } from "../types";
@@ -240,6 +241,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [worldTime, setWorldTime] = useState<WorldTime | null>(null);
   const [worldWeather, setWorldWeather] = useState<WorldWeather | null>(null);
   const [worldEvents, setWorldEvents] = useState<WorldEvent[]>([]);
+  const [zoneEnvironment, setZoneEnvironment] = useState<ZoneEnvironment | null>(null);
   const [factions, setFactions] = useState<FactionStanding[]>([]);
   const [dungeonInfo, setDungeonInfo] = useState<DungeonInfo | null>(null);
   const [dungeonCatalog, setDungeonCatalog] = useState<DungeonCatalogEntry[]>([]);
@@ -525,6 +527,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setWorldTime,
         setWorldWeather,
         setWorldEvents,
+        setZoneEnvironment,
         setPetState,
         setFactions: applyFactions,
         setBankState,
@@ -647,7 +650,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // Crafting
     craftingSkills, craftingRecipes, craftingNodes,
     // World
-    dialogue, setDialogue, zoneInstances, worldTime, worldWeather, worldEvents, factions, factionActivity, dungeonInfo, dungeonCatalog,
+    dialogue, setDialogue, zoneInstances, worldTime, worldWeather, worldEvents, zoneEnvironment, factions, factionActivity, dungeonInfo, dungeonCatalog,
     // Housing & pets
     housing, petState,
     // Mail

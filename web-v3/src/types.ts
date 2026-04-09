@@ -15,12 +15,32 @@ export interface WorldWeather {
   zone: string;
   weather: string;
   description: string;
+  particleHint: string;
+  icon: string;
 }
 
 export interface WorldEvent {
   id: string;
   name: string;
   description: string;
+}
+
+export interface MoteColor {
+  core: string;
+  glow: string;
+}
+
+export interface SkyGradient {
+  top: string;
+  bottom: string;
+}
+
+export interface ZoneEnvironment {
+  zone: string;
+  moteColors: MoteColor[];
+  skyGradients: Record<string, SkyGradient>;
+  transitionColors: string[];
+  weatherParticleOverrides: Record<string, string>;
 }
 
 export interface CurrencyBalance {

@@ -536,6 +536,7 @@ class GameEngine(
                     )
                 }
             },
+            environmentConfig = engineConfig.environment,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -1534,14 +1535,17 @@ class GameEngine(
                     // Tick weather — broadcast zone changes
                     val activeZones = allPlayersSnapshot.map { it.roomId.zone }.toSet()
                     val weatherChanges = weatherSystem.tick(activeZones)
-                    for ((zone, weather) in weatherChanges) {
+                    for ((zone, weatherId) in weatherChanges) {
+                        val def = weatherSystem.typeDefinition(weatherId)
                         for (p in players.playersInZone(zone)) {
                             gmcpEmitter.sendWorldWeather(
                                 p.sessionId,
                                 GmcpEmitter.WorldWeatherPayload(
                                     zone = zone,
-                                    weather = weather.name,
-                                    description = weather.description,
+                                    weather = weatherId,
+                                    description = def?.description ?: "",
+                                    particleHint = def?.particleHint ?: "",
+                                    icon = def?.icon ?: "",
                                 ),
                             )
                         }

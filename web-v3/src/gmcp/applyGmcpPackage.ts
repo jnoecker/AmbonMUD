@@ -70,6 +70,7 @@ import type {
   WorldEvent,
   WorldTime,
   WorldWeather,
+  ZoneEnvironment,
   ZoneInstances,
   ZoneInstanceItem,
   LeaderboardData,
@@ -171,6 +172,7 @@ interface GmcpContext {
   setWorldTime: Dispatch<SetStateAction<WorldTime | null>>;
   setWorldWeather: Dispatch<SetStateAction<WorldWeather | null>>;
   setWorldEvents: Dispatch<SetStateAction<WorldEvent[]>>;
+  setZoneEnvironment: Dispatch<SetStateAction<ZoneEnvironment | null>>;
   setPetState: Dispatch<SetStateAction<PetState | null>>;
   setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
   setBankState: Dispatch<SetStateAction<BankState | null>>;
@@ -1591,6 +1593,8 @@ export function applyGmcpPackage(
         zone: typeof packet.zone === "string" ? packet.zone : "",
         weather: typeof packet.weather === "string" ? packet.weather : "CLEAR",
         description: typeof packet.description === "string" ? packet.description : "",
+        particleHint: typeof packet.particleHint === "string" ? packet.particleHint : "",
+        icon: typeof packet.icon === "string" ? packet.icon : "",
       });
       break;
     }
@@ -1607,6 +1611,47 @@ export function applyGmcpPackage(
               }))
           : [],
       );
+      break;
+    }
+
+    case "Zone.Environment": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const moteColors = Array.isArray(packet.moteColors)
+        ? packet.moteColors
+            .filter((c): c is Record<string, unknown> => typeof c === "object" && c !== null)
+            .map((c) => ({
+              core: typeof c.core === "string" ? c.core : "#c8b8e8",
+              glow: typeof c.glow === "string" ? c.glow : "#a897d2",
+            }))
+        : [];
+      const skyGradients: Record<string, { top: string; bottom: string }> = {};
+      if (typeof packet.skyGradients === "object" && packet.skyGradients !== null) {
+        for (const [period, grad] of Object.entries(packet.skyGradients as Record<string, unknown>)) {
+          if (typeof grad === "object" && grad !== null) {
+            const g = grad as Record<string, unknown>;
+            skyGradients[period] = {
+              top: typeof g.top === "string" ? g.top : "#0a0c14",
+              bottom: typeof g.bottom === "string" ? g.bottom : "#1a1c2e",
+            };
+          }
+        }
+      }
+      const transitionColors = Array.isArray(packet.transitionColors)
+        ? packet.transitionColors.filter((c): c is string => typeof c === "string")
+        : [];
+      const weatherParticleOverrides: Record<string, string> = {};
+      if (typeof packet.weatherParticleOverrides === "object" && packet.weatherParticleOverrides !== null) {
+        for (const [k, v] of Object.entries(packet.weatherParticleOverrides as Record<string, unknown>)) {
+          if (typeof v === "string") weatherParticleOverrides[k] = v;
+        }
+      }
+      ctx.setZoneEnvironment({
+        zone: typeof packet.zone === "string" ? packet.zone : "",
+        moteColors,
+        skyGradients,
+        transitionColors,
+        weatherParticleOverrides,
+      });
       break;
     }
 
