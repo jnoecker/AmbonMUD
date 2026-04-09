@@ -15,6 +15,7 @@ import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.GameEngine
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.MobRegistry
@@ -245,6 +246,7 @@ class CommandRouterHarness private constructor(
             dungeonManager: DungeonManager? = null,
             dungeonRegistry: DungeonRegistry? = null,
             housingSystem: HousingSystem? = null,
+            gmcpEmitter: GmcpEmitter? = null,
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -276,6 +278,7 @@ class CommandRouterHarness private constructor(
                     dungeonManager = dungeonManager,
                     dungeonRegistry = dungeonRegistry,
                     housingSystem = housingSystem,
+                    gmcpEmitter = gmcpEmitter,
                 )
             return CommandRouterHarness(
                 world = world,
