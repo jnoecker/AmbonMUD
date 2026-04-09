@@ -1,11 +1,11 @@
 # Feature Verification Audit
 
-**Date:** 2026-04-04 (initial), 2026-04-05 (final update after full remediation)
+**Date:** 2026-04-04 (initial), 2026-04-05 (final update after full remediation), 2026-04-09 (documentation sync)
 **Scope:** All features claimed in CLAUDE.md verified against actual implementation (backend, GMCP, frontend, tests)
 
 ## Executive Summary
 
-Verified **55+ features** across 9 domains. All backend systems are fully implemented with tests.
+Verified **51 features** across 7 domains. All backend systems are fully implemented with tests.
 All frontend gaps have been resolved — every GMCP package now has a real handler and UI.
 Documentation gaps have been resolved.
 
@@ -29,7 +29,7 @@ Documentation gaps have been resolved.
 | #936 | Added pet status display (Char.Pet GMCP → CharacterPanel) |
 | #937–940 | Added factions, currencies, world atmosphere, bank panel (all GMCP stubs → real UI) |
 | #941 | Added daily/weekly/bounty/global quest tabs to QuestPanel |
-| #942 | Added prestige rank/perks display to Score tab |
+| #942 | Added prestige rank/perks UI, later expanded into the dedicated Systems prestige view |
 | #943 | Added auction house browse panel with filter and buy |
 | #944 | Added collapsible description editor to CharacterPanel |
 | #945 | Added lottery info display with jackpot, tickets, countdown |
@@ -61,8 +61,8 @@ Documentation gaps have been resolved.
 |---------|---------|------|----------|-------|---------|
 | PlayerProgression (XP curve, level-up, class scaling) | Complete | Char.Vitals | Full | PlayerProgressionTest | **PASS** |
 | TrainerRegistry (learn/unlock/reset, multiclass) | Complete | Trainer.List, Char.Classes | Full (TrainerPanel) | TrainerRespecTest | **PASS** |
-| PrestigeSystem (ranks, perks, XP cost) | Complete | Char.Vitals (prestige fields) | Full (Score tab prestige card) | PrestigeSystemTest | **PASS** |
-| CurrencySystem (secondary currencies, quest rewards) | Complete | Char.Currencies | Full (Score tab) | CurrencySystemTest | **PASS** |
+| PrestigeSystem (ranks, perks, XP cost) | Complete | Char.Vitals, Prestige.Info | Full (SystemsPanel prestige view) | PrestigeSystemTest | **PASS** |
+| CurrencySystem (secondary currencies, quest rewards) | Complete | Char.Currencies | Full (SystemsPanel wallet view) | CurrencySystemTest | **PASS** |
 | LeaderboardSystem (7 categories, top-N) | Complete | Leaderboard.Data | Full (LeaderboardPanel) | LeaderboardSystemTest | **PASS** |
 | ShopRegistry (buy/sell, pricing, shop YAML) | Complete | Shop.List, Shop.Close | Full (ShopPopout) | CommandRouterShopTest | **PASS** |
 
@@ -108,7 +108,7 @@ Documentation gaps have been resolved.
 | Enchanting (enchant items, station, definitions) | Complete | Crafting.Result (type=enchant) | Partial (no dedicated panel) | EnchantSystemTest | **PASS** |
 | AuctionSystem (list/sell/buy/cancel, JSON persist) | Complete | Auction.List | Full (AuctionPanel) | AuctionSystemTest | **PASS** |
 | BankSystem (deposit/withdraw gold+items, bank rooms) | Complete | Char.Bank | Full (BankPanel) | BankCommandTest | **PASS** |
-| LotterySystem (tickets, drawings, jackpot, JSON persist) | Complete | Lottery.Info | Full (Score tab lottery card) | LotterySystemTest | **PASS** |
+| LotterySystem (tickets, drawings, jackpot, JSON persist) | Complete | Lottery.Info | Full (SystemsPanel lottery view) | LotterySystemTest | **PASS** |
 | Gambling (dice, tavern rooms, cooldowns) | Complete | N/A (text-only) | No panel | LotterySystemTest | **PASS** |
 
 ---
@@ -119,8 +119,8 @@ Documentation gaps have been resolved.
 |---------|---------|------|----------|-------|---------|
 | SpriteSystem (registry, loader, chooser, variants) | Complete | Char.Sprites | Full (CharacterPanel sprite chooser) | SpriteRegistryTest, SpriteLoaderTest | **PASS** |
 | HousingSystem (buy/expand/describe/invite/guests) | Complete | Housing.Info | Full (HousingPanel) | HousingSystemTest | **PASS** |
-| PetSystem (summon, dismiss, name, templates) | Complete | Char.Pet | Full (CharacterPanel pet subpanel) | PetSystemTest | **PASS** |
-| ReputationSystem (factions, standings, mob kills) | Complete | Char.Factions | Full (CharacterPanel Factions tab) | ReputationSystemTest | **PASS** |
+| PetSystem (summon, dismiss, name, templates) | Complete | Char.Pet | Full (CharacterPanel entry point + SystemsPanel pet view) | PetSystemTest | **PASS** |
+| ReputationSystem (factions, standings, mob kills) | Complete | Char.Factions | Full (SystemsPanel factions view) | ReputationSystemTest | **PASS** |
 | WeatherSystem (per-zone, transitions, types) | Complete | World.Weather | Full (CharacterPanel World section) | WeatherSystemTest | **PASS** |
 | WorldTimeSystem (day/night cycle, periods) | Complete | World.Time | Full (CharacterPanel World section) | WorldTimeSystemTest | **PASS** |
 | WorldEventSystem (date-triggered, seasonal) | Complete | World.Events | Full (CharacterPanel World section) | WorldEventSystemTest | **PASS** |
@@ -132,8 +132,8 @@ Documentation gaps have been resolved.
 | Feature | Implementation | Tests | Verdict |
 |---------|---------------|-------|---------|
 | Telnet transport (BlockingSocketTransport, GMCP negotiation) | Complete | TelnetLineDecoderTest | **PASS** |
-| WebSocket transport (Ktor, auto-opt-in for 47 GMCP packages) | Complete | KtorWebSocketTransportTest | **PASS** |
-| GMCP (GmcpEmitter: 92 send functions, 90+ client handlers) | Complete | GmcpEmitterTest (50+ tests) | **PASS** |
+| WebSocket transport (Ktor, auto-opt-in for 50+ GMCP packages) | Complete | KtorWebSocketTransportTest | **PASS** |
+| GMCP (GmcpEmitter + client handlers across character, world, social, economy, and admin families) | Complete | GmcpEmitterTest (50+ tests) | **PASS** |
 | Persistence (WriteCoalescing → RedisCache → YAML/Postgres) | Complete | 15+ test files | **PASS** |
 | Event bus (Local/Redis/gRPC, interchangeable) | Complete | 6 bus test files | **PASS** |
 | OutboundRouter (per-session queues, backpressure, prompt coalescing) | Complete | OutboundRouterTest | **PASS** |
@@ -151,7 +151,7 @@ Character identity, Vitals, Equipment, Inventory, Combat, Skills, Status Effects
 Quests (active/available/daily/weekly/bounty/global), Achievements, Dialogue, Chat, Shop, Mail,
 Crafting, Housing, Navigation/Minimap, NPCs, Trading, Leaderboards, Trainer, Groups, Friends,
 Admin/Staff tools, Sprites, Bank, Pets, Factions/Reputation, World Time, World Weather,
-World Events, Currencies, Auction, Prestige, Lottery, Description Editor
+World Events, Wallet/Currencies, Auction, Prestige, Lottery, Dueling, Dungeons, Description Editor
 
 **No UI Gaps (0 systems):**
 All GMCP packages have real handlers and UI. Every documented feature is fully covered.
