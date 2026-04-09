@@ -212,6 +212,9 @@ function App() {
         ),
       ),
       serverAssets: state.serverAssets,
+      worldTime: state.worldTime,
+      worldWeather: state.worldWeather,
+      zoneEnvironment: state.zoneEnvironment,
     };
   });
 

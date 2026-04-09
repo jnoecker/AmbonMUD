@@ -1033,7 +1033,9 @@ export function CharacterPanel({
             )}
             {worldWeather && worldWeather.weather !== "CLEAR" && (
               <div className="world-atmosphere-row" title={worldWeather.description}>
-                <span className="world-atmosphere-icon" aria-hidden="true">{weatherIcon(worldWeather.weather)}</span>
+                <span className="world-atmosphere-icon" aria-hidden="true">
+                  {worldWeather.icon || weatherIcon(worldWeather.weather)}
+                </span>
                 <span className="world-atmosphere-label">{weatherLabel(worldWeather.weather)}</span>
               </div>
             )}

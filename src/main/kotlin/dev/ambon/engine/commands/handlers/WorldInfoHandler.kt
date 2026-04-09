@@ -35,8 +35,10 @@ class WorldInfoHandler(
         val me = players.get(sessionId)
         if (me != null) {
             val zone = me.roomId.zone
-            val weather = weatherSystem.weatherForZone(zone)
-            outbound.send(OutboundEvent.SendInfo(sessionId, "  Weather: ${weather.displayName} — ${weather.description}"))
+            val weatherId = weatherSystem.weatherForZone(zone)
+            val weatherDef = weatherSystem.typeDefinition(weatherId)
+            val weatherLabel = weatherDef?.let { "${it.displayName} — ${it.description}" } ?: weatherId
+            outbound.send(OutboundEvent.SendInfo(sessionId, "  Weather: $weatherLabel"))
         }
 
         val activeEvents = worldEventSystem.activeEvents()

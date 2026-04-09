@@ -361,6 +361,14 @@ data class AppConfig(
         require(engine.weather.maxTransitionMs >= engine.weather.minTransitionMs) {
             "ambonMUD.engine.weather.maxTransitionMs must be >= minTransitionMs"
         }
+        require(engine.weather.types.isNotEmpty()) {
+            "ambonMUD.engine.weather.types must not be empty"
+        }
+        engine.weather.types.forEach { (id, def) ->
+            require(def.weight > 0) {
+                "ambonMUD.engine.weather.types[$id].weight must be positive"
+            }
+        }
     }
 
     private fun validateEngineEnchanting() {
@@ -900,6 +908,31 @@ data class WeatherConfig(
     val minTransitionMs: Long = 300_000L,
     /** Maximum real-time ms between weather transitions per zone. */
     val maxTransitionMs: Long = 900_000L,
+    /** Weather type definitions keyed by ID (e.g. "CLEAR", "RAIN"). */
+    val types: Map<String, WeatherTypeDefinition> = DEFAULT_WEATHER_TYPES,
+) {
+    companion object {
+        val DEFAULT_WEATHER_TYPES: Map<String, WeatherTypeDefinition> = mapOf(
+            "CLEAR" to WeatherTypeDefinition("Clear", "The sky is clear.", 3.0),
+            "RAIN" to WeatherTypeDefinition("Rain", "A steady rain falls.", 2.0, "rain"),
+            "STORM" to WeatherTypeDefinition("Storm", "Thunder rumbles and lightning splits the sky.", 0.5, "storm"),
+            "FOG" to WeatherTypeDefinition("Fog", "A thick fog blankets the area.", 1.0, "fog"),
+            "SNOW" to WeatherTypeDefinition("Snow", "Soft snow drifts down from above.", 0.8, "snow"),
+            "WIND" to WeatherTypeDefinition("Wind", "A fierce wind howls through the area.", 1.0, "wind"),
+        )
+    }
+}
+
+/** A single weather type, fully config-driven. */
+data class WeatherTypeDefinition(
+    val displayName: String = "",
+    val description: String = "",
+    /** Relative probability weight for random transitions. Higher = more common. */
+    val weight: Double = 1.0,
+    /** Particle hint consumed by the web client (e.g. "rain", "snow", "fog"). Empty = no particles. */
+    val particleHint: String = "",
+    /** Icon hint for UI display (e.g. Unicode character). Empty = client default. */
+    val icon: String = "",
 )
 
 data class WorldEventDefinition(
@@ -919,6 +952,56 @@ data class WorldEventDefinition(
 
 data class WorldEventsConfig(
     val definitions: Map<String, WorldEventDefinition> = emptyMap(),
+)
+
+// ---------- zone environment themes ----------
+
+/** A hex color pair for ambient mote particles. Values are CSS-style "#rrggbb" strings. */
+data class MoteColorEntry(
+    val core: String = "#c8b8e8",
+    val glow: String = "#a897d2",
+)
+
+/** Sky gradient colors for a single time period. Top/bottom define the vertical gradient. */
+data class SkyGradient(
+    val top: String = "#0a0c14",
+    val bottom: String = "#1a1c2e",
+)
+
+/**
+ * Visual environment theme for a zone, consumed by the web client via GMCP.
+ * Arcanum authors can define these per-zone in config or zone YAML.
+ */
+data class ZoneEnvironmentTheme(
+    /** Mote color palettes (each entry is one possible core/glow pair). */
+    val moteColors: List<MoteColorEntry> = emptyList(),
+    /** Sky gradient per time period. Keys: DAWN, DAY, DUSK, NIGHT. */
+    val skyGradients: Map<String, SkyGradient> = emptyMap(),
+    /** Mote colors used during room transitions. */
+    val transitionColors: List<String> = emptyList(),
+    /** Per-weather-type particle hint overrides. Keys are weather type IDs. */
+    val weatherParticleOverrides: Map<String, String> = emptyMap(),
+)
+
+/** Global environment theme configuration with defaults and per-zone overrides. */
+data class EnvironmentConfig(
+    /** Default theme applied to all zones that don't specify their own. */
+    val defaultTheme: ZoneEnvironmentTheme = ZoneEnvironmentTheme(
+        moteColors = listOf(
+            MoteColorEntry("#c8b8e8", "#a897d2"),
+            MoteColorEntry("#d8c8f8", "#b8a8e0"),
+            MoteColorEntry("#b8a8d8", "#9888c0"),
+        ),
+        skyGradients = mapOf(
+            "DAWN" to SkyGradient("#2a1a3a", "#c88060"),
+            "DAY" to SkyGradient("#4a6ea0", "#87ceeb"),
+            "DUSK" to SkyGradient("#3a2040", "#c86848"),
+            "NIGHT" to SkyGradient("#0a0c14", "#1a1c2e"),
+        ),
+        transitionColors = listOf("#c8b8e8", "#a897d2", "#8caec9", "#bea873", "#d8def1"),
+    ),
+    /** Per-zone theme overrides. Zone key = the zone prefix from RoomId (e.g. "tutorial_glade"). */
+    val zones: Map<String, ZoneEnvironmentTheme> = emptyMap(),
 )
 
 data class EnchantmentDefinition(
@@ -1296,6 +1379,7 @@ data class EngineConfig(
     val worldTime: WorldTimeConfig = WorldTimeConfig(),
     val weather: WeatherConfig = WeatherConfig(),
     val worldEvents: WorldEventsConfig = WorldEventsConfig(),
+    val environment: EnvironmentConfig = EnvironmentConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     val classes: ClassEngineConfig = ClassEngineConfig(),

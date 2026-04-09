@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.config.WeatherConfig
 import dev.ambon.test.MutableClock
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -16,7 +17,7 @@ class WeatherSystemTest {
     fun `default weather is CLEAR`() {
         val clock = MutableClock(0L)
         val system = WeatherSystem(config, clock)
-        assertEquals(WeatherType.CLEAR, system.weatherForZone("test_zone"))
+        assertEquals("CLEAR", system.weatherForZone("test_zone"))
     }
 
     @Test
@@ -45,7 +46,8 @@ class WeatherSystemTest {
         clock.advance(600L) // total 1100ms > 1000ms
         system.tick(setOf("zone1"))
         // Verify zone still has a valid weather type
-        assertTrue(WeatherType.entries.contains(system.weatherForZone("zone1")))
+        val weatherId = system.weatherForZone("zone1")
+        assertTrue(config.types.containsKey(weatherId), "Expected valid weather type, got: $weatherId")
     }
 
     @Test
@@ -53,11 +55,11 @@ class WeatherSystemTest {
         val clock = MutableClock(0L)
         val system = WeatherSystem(config, clock)
 
-        system.setWeather("zone1", WeatherType.RAIN)
-        system.setWeather("zone2", WeatherType.SNOW)
+        system.setWeather("zone1", "RAIN")
+        system.setWeather("zone2", "SNOW")
 
-        assertEquals(WeatherType.RAIN, system.weatherForZone("zone1"))
-        assertEquals(WeatherType.SNOW, system.weatherForZone("zone2"))
+        assertEquals("RAIN", system.weatherForZone("zone1"))
+        assertEquals("SNOW", system.weatherForZone("zone2"))
     }
 
     @Test
@@ -65,8 +67,8 @@ class WeatherSystemTest {
         val clock = MutableClock(0L)
         val system = WeatherSystem(config, clock)
 
-        system.setWeather("zone1", WeatherType.STORM)
-        assertEquals(WeatherType.STORM, system.weatherForZone("zone1"))
+        system.setWeather("zone1", "STORM")
+        assertEquals("STORM", system.weatherForZone("zone1"))
     }
 
     @Test
@@ -81,5 +83,45 @@ class WeatherSystemTest {
         assertEquals(2, all.size)
         assertTrue(all.containsKey("a"))
         assertTrue(all.containsKey("b"))
+    }
+
+    @Test
+    fun `typeDefinition returns definition for known type`() {
+        val clock = MutableClock(0L)
+        val system = WeatherSystem(config, clock)
+
+        val def = system.typeDefinition("RAIN")
+        assertNotNull(def)
+        assertEquals("Rain", def?.displayName)
+        assertEquals("rain", def?.particleHint)
+    }
+
+    @Test
+    fun `typeDefinition returns null for unknown type`() {
+        val clock = MutableClock(0L)
+        val system = WeatherSystem(config, clock)
+        assertEquals(null, system.typeDefinition("BLIZZARD"))
+    }
+
+    @Test
+    fun `custom weather types work alongside defaults`() {
+        val customConfig = WeatherConfig(
+            minTransitionMs = 1000L,
+            maxTransitionMs = 1000L,
+            types = WeatherConfig.DEFAULT_WEATHER_TYPES + mapOf(
+                "MIST" to dev.ambon.config.WeatherTypeDefinition(
+                    displayName = "Mist",
+                    description = "A pale mist rolls in.",
+                    weight = 1.0,
+                    particleHint = "fog",
+                ),
+            ),
+        )
+        val clock = MutableClock(0L)
+        val system = WeatherSystem(customConfig, clock)
+
+        system.setWeather("zone1", "MIST")
+        assertEquals("MIST", system.weatherForZone("zone1"))
+        assertEquals("fog", system.typeDefinition("MIST")?.particleHint)
     }
 }

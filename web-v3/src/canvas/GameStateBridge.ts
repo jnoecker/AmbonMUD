@@ -6,6 +6,7 @@ import type {
   DialogueState,
   FeaturePopoutFocus,
   GroupInfo,
+  MobInfo,
   PuzzleState,
   QuestAvailable,
   RoomFeature,
@@ -14,10 +15,12 @@ import type {
   RoomItem,
   RoomState,
   ShopState,
-  SystemPanelView,
   StatusEffect,
+  SystemPanelView,
   Vitals,
-  MobInfo,
+  WorldTime,
+  WorldWeather,
+  ZoneEnvironment,
 } from "../types";
 
 export interface GameStateSnapshot {
@@ -41,6 +44,9 @@ export interface GameStateSnapshot {
   containerContents: ContainerContents | null;
   questTargetRoomIds: Set<string>;
   serverAssets: Record<string, string>;
+  worldTime: WorldTime | null;
+  worldWeather: WorldWeather | null;
+  zoneEnvironment: ZoneEnvironment | null;
 }
 
 export interface PendingCast {
@@ -114,5 +120,8 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     containerContents: null,
     questTargetRoomIds: new Set(),
     serverAssets: {},
+    worldTime: null,
+    worldWeather: null,
+    zoneEnvironment: null,
   },
 };

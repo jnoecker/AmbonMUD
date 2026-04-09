@@ -4192,6 +4192,41 @@ ambonmud:
     weather:
       minTransitionMs: 300000
       maxTransitionMs: 900000
+      types:
+        CLEAR:
+          displayName: Clear
+          description: The sky is clear.
+          weight: 3.0
+        RAIN:
+          displayName: Rain
+          description: A steady rain falls.
+          weight: 2.0
+          particleHint: rain
+          icon: "☂"
+        STORM:
+          displayName: Storm
+          description: Thunder rumbles and lightning splits the sky.
+          weight: 0.5
+          particleHint: storm
+          icon: "⚡"
+        FOG:
+          displayName: Fog
+          description: A thick fog blankets the area.
+          weight: 1.0
+          particleHint: fog
+          icon: "☁"
+        SNOW:
+          displayName: Snow
+          description: Soft snow drifts down from above.
+          weight: 0.8
+          particleHint: snow
+          icon: "❄"
+        WIND:
+          displayName: Wind
+          description: A fierce wind howls through the area.
+          weight: 1.0
+          particleHint: wind
+          icon: "☴"
     worldEvents:
       definitions:
         spring_festival:
@@ -4214,6 +4249,96 @@ ambonmud:
             - midsummer
           startMessage: Midsummer Night is here — the veil between worlds grows thin.
           endMessage: Midsummer Night has passed. The spirits retreat.
+    environment:
+      defaultTheme:
+        moteColors:
+          - core: "#c8b8e8"
+            glow: "#a897d2"
+          - core: "#d8c8f8"
+            glow: "#b8a8e0"
+          - core: "#b8a8d8"
+            glow: "#9888c0"
+        skyGradients:
+          DAWN:
+            top: "#2a1a3a"
+            bottom: "#c88060"
+          DAY:
+            top: "#4a6ea0"
+            bottom: "#87ceeb"
+          DUSK:
+            top: "#3a2040"
+            bottom: "#c86848"
+          NIGHT:
+            top: "#0a0c14"
+            bottom: "#1a1c2e"
+        transitionColors:
+          - "#c8b8e8"
+          - "#a897d2"
+          - "#8caec9"
+          - "#bea873"
+          - "#d8def1"
+      zones:
+        tutorial_glade:
+          moteColors:
+            - core: "#a8d8a0"
+              glow: "#6aaa5a"
+            - core: "#c8e8b0"
+              glow: "#88bb70"
+            - core: "#d0f0c0"
+              glow: "#90cc80"
+          skyGradients:
+            DAWN:
+              top: "#1a2a1a"
+              bottom: "#a8c070"
+            DAY:
+              top: "#4a8a50"
+              bottom: "#88cc88"
+            DUSK:
+              top: "#2a3020"
+              bottom: "#a08848"
+            NIGHT:
+              top: "#0a140a"
+              bottom: "#1a2c1a"
+        ambon_hub:
+          moteColors:
+            - core: "#f0d888"
+              glow: "#bea873"
+            - core: "#ffe8a8"
+              glow: "#d4b868"
+            - core: "#ffd070"
+              glow: "#c8a040"
+        demo_ruins:
+          moteColors:
+            - core: "#90b8d8"
+              glow: "#5888a8"
+            - core: "#a0c8e8"
+              glow: "#6898b8"
+            - core: "#80a8c8"
+              glow: "#487898"
+        crafting_workshop:
+          moteColors:
+            - core: "#f0b060"
+              glow: "#c88030"
+            - core: "#e89848"
+              glow: "#b06820"
+            - core: "#f0c070"
+              glow: "#c89838"
+        celestial_sanctum:
+          moteColors:
+            - core: "#c8a8f0"
+              glow: "#9878c0"
+            - core: "#d8b8ff"
+              glow: "#a888d0"
+            - core: "#b898e0"
+              glow: "#8868b0"
+        labyrinth:
+          moteColors:
+            - core: "#a8f0e0"
+              glow: "#68c0b0"
+            - core: "#88d8c8"
+              glow: "#58a898"
+            - core: "#c0f8f0"
+              glow: "#80d0c0"
     enchanting:
       maxEnchantmentsPerItem: 1
       definitions:

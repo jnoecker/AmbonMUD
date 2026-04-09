@@ -1,8 +1,10 @@
 import { Graphics } from "pixi.js";
+import type { MoteColor } from "../../types";
 
 /**
  * Perpetual floating magical motes that drift through the world scene.
- * Zone-themed: different room zones produce different colored sparkles.
+ * Zone-themed: colors come from server-provided Zone.Environment GMCP,
+ * with hardcoded fallbacks for zones that lack configuration.
  *
  * Respects prefers-reduced-motion by not spawning new motes.
  */
@@ -37,39 +39,10 @@ interface Mote {
   brightness: number;
 }
 
-/** Color themes keyed by zone name prefix. */
-const ZONE_THEMES: Record<string, { core: number; glow: number }[]> = {
-  tutorial_glade: [
-    { core: 0xa8d8a0, glow: 0x6aaa5a },  // green fireflies
-    { core: 0xc8e8b0, glow: 0x88bb70 },
-    { core: 0xd0f0c0, glow: 0x90cc80 },
-  ],
-  ambon_hub: [
-    { core: 0xf0d888, glow: 0xbea873 },  // golden sparkles
-    { core: 0xffe8a8, glow: 0xd4b868 },
-    { core: 0xffd070, glow: 0xc8a040 },
-  ],
-  demo_ruins: [
-    { core: 0x90b8d8, glow: 0x5888a8 },  // cold blue wisps
-    { core: 0xa0c8e8, glow: 0x6898b8 },
-    { core: 0x80a8c8, glow: 0x487898 },
-  ],
-  crafting_workshop: [
-    { core: 0xf0b060, glow: 0xc88030 },  // warm embers
-    { core: 0xe89848, glow: 0xb06820 },
-    { core: 0xf0c070, glow: 0xc89838 },
-  ],
-  celestial_sanctum: [
-    { core: 0xc8a8f0, glow: 0x9878c0 },  // ethereal purple
-    { core: 0xd8b8ff, glow: 0xa888d0 },
-    { core: 0xb898e0, glow: 0x8868b0 },
-  ],
-  labyrinth: [
-    { core: 0xa8f0e0, glow: 0x68c0b0 },  // eerie teal
-    { core: 0x88d8c8, glow: 0x58a898 },
-    { core: 0xc0f8f0, glow: 0x80d0c0 },
-  ],
-};
+/** Parse a CSS hex color string to a numeric value. */
+function parseHex(hex: string): number {
+  return parseInt(hex.replace("#", ""), 16) || 0;
+}
 
 /** Default theme for unknown zones — soft lavender (matches the brand). */
 const DEFAULT_THEME = [
@@ -78,12 +51,10 @@ const DEFAULT_THEME = [
   { core: 0xb8a8d8, glow: 0x9888c0 },
 ];
 
-function getTheme(roomId: string): { core: number; glow: number }[] {
-  const zone = roomId.split(":")[0] ?? "";
-  for (const [prefix, theme] of Object.entries(ZONE_THEMES)) {
-    if (zone.startsWith(prefix)) return theme;
-  }
-  return DEFAULT_THEME;
+/** Convert server-provided MoteColor[] to the numeric format used for rendering. */
+function convertTheme(colors: MoteColor[]): { core: number; glow: number }[] {
+  if (colors.length === 0) return DEFAULT_THEME;
+  return colors.map((c) => ({ core: parseHex(c.core), glow: parseHex(c.glow) }));
 }
 
 const prefersReducedMotion =
@@ -102,9 +73,16 @@ export class AmbientMotes {
     this.height = h;
   }
 
-  /** Call when the room changes to update the color theme. */
-  setRoom(roomId: string) {
-    this.currentTheme = getTheme(roomId);
+  /** Update the color theme from server-provided Zone.Environment data. */
+  setTheme(moteColors: MoteColor[]) {
+    this.currentTheme = convertTheme(moteColors);
+  }
+
+  /** Fallback: set room for zones without server theme (uses default). */
+  setRoom(_roomId: string) {
+    // Theme is now set by setTheme() from Zone.Environment GMCP.
+    // This method is kept for backward compatibility but is a no-op
+    // when a server theme has been applied.
   }
 
   update(deltaMs: number) {

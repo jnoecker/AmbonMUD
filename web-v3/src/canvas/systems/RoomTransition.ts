@@ -14,7 +14,11 @@ const REFORM_DURATION_MS = 400;
 const TOTAL_DURATION_MS = DISSOLVE_DURATION_MS + REFORM_DURATION_MS;
 const PARTICLE_COUNT = 80;
 
-const MOTE_COLORS = [0xc8b8e8, 0xa897d2, 0x8caec9, 0xbea873, 0xd8def1];
+const DEFAULT_MOTE_COLORS = [0xc8b8e8, 0xa897d2, 0x8caec9, 0xbea873, 0xd8def1];
+
+function parseHex(hex: string): number {
+  return parseInt(hex.replace("#", ""), 16) || 0;
+}
 
 interface TransitionMote {
   /** Start position (scattered across canvas) */
@@ -39,6 +43,12 @@ export class RoomTransition {
   private active = false;
   private width = 0;
   private height = 0;
+  private moteColors: number[] = DEFAULT_MOTE_COLORS;
+
+  /** Update transition colors from server-provided Zone.Environment data. */
+  setTransitionColors(colors: string[]) {
+    this.moteColors = colors.length > 0 ? colors.map(parseHex) : DEFAULT_MOTE_COLORS;
+  }
 
   /** Callback: set to 1 = fully opaque scene, 0 = fully hidden scene. */
   private _sceneAlpha = 1;
@@ -87,7 +97,7 @@ export class RoomTransition {
         vy: Math.sin(angle) * speed,
         phase: Math.random() * Math.PI * 2,
         size: 2 + Math.random() * 3,
-        color: MOTE_COLORS[Math.floor(Math.random() * MOTE_COLORS.length)],
+        color: this.moteColors[Math.floor(Math.random() * this.moteColors.length)],
       });
     }
   }
