@@ -684,6 +684,7 @@ export class WorldScene {
     this.recallBtn.visible = false;
 
     this.container.addChildAt(this.skyRenderer.graphics, 0);
+    this.container.addChild(this.weatherParticles.graphics);
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
@@ -712,7 +713,6 @@ export class WorldScene {
     this.container.addChild(this.entityPopout.container);
     // Transition graphics live in the overlay so they stay visible while
     // container.alpha fades to 0 during the dissolve phase.
-    this.overlayContainer.addChildAt(this.weatherParticles.graphics, 0);
     this.overlayContainer.addChild(this.roomTransition.graphics);
   }
 
@@ -1705,7 +1705,8 @@ export class WorldScene {
       sprite.width = this.width;
       sprite.height = this.height;
       sprite.alpha = 0.6;
-      this.container.addChildAt(sprite, 0);
+      // Keep sky at the back, then room art, then atmospheric effects and UI.
+      this.container.addChildAt(sprite, 1);
       this.background = sprite;
     } catch {
       // Image not available
