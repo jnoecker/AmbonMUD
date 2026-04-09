@@ -193,6 +193,12 @@ class AdminHandler(
                     sourceEngineId = engineId,
                 ),
             )
+            sendAdminSuccess(
+                sessionId,
+                "Server shutdown initiated.",
+                code = "SHUTDOWN_INITIATED",
+                command = "shutdown",
+            )
             onShutdown()
         }
     }
@@ -217,6 +223,12 @@ class AdminHandler(
                     sourceEngineId = engineId,
                 ),
             )
+            sendAdminSuccess(
+                sessionId,
+                "Broadcast sent to all connected players.",
+                code = "BROADCAST_COMPLETE",
+                command = "broadcast",
+            )
         }
     }
 
@@ -226,7 +238,11 @@ class AdminHandler(
     ) {
         players.withPlayer(sessionId) { me ->
             val targetSid = players.findSessionByName(cmd.target)
-            if (targetSid != null && targetSid != sessionId) {
+            if (targetSid == sessionId) {
+                sendAdminError(sessionId, "You cannot smite yourself.", code = "CANNOT_TARGET_SELF", command = "smite")
+                return
+            }
+            if (targetSid != null) {
                 players.withPlayer(targetSid) { targetPlayer ->
                     combat.endCombatFor(targetSid)
                     targetPlayer.hp = 1
@@ -236,14 +252,19 @@ class AdminHandler(
                     )
                     ctx.sendLook(targetSid)
                     outbound.send(OutboundEvent.SendPrompt(targetSid))
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "Smote ${targetPlayer.name}."))
+                    sendAdminSuccess(sessionId, "Smote ${targetPlayer.name}.", code = "SMITE_COMPLETE", command = "smite")
                 }
                 return
             }
 
             val targetMob = combat.findMobInRoom(me.roomId, cmd.target)
             if (targetMob == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
+                sendAdminError(
+                    sessionId,
+                    "No player or mob named '${cmd.target}'.",
+                    code = "TARGET_NOT_FOUND",
+                    command = "smite",
+                )
                 return
             }
             releasePossessorOf(targetMob.id)
@@ -251,6 +272,7 @@ class AdminHandler(
             mobRemovalCoordinator?.removeMobExternally(targetMob.id)
             broadcastToRoom(players, outbound, me.roomId, "${targetMob.name} is struck down by divine wrath.")
             gmcpEmitter?.broadcastRoomRemoveMob(me.roomId, targetMob.id.value, players)
+            sendAdminSuccess(sessionId, "Smote ${targetMob.name}.", code = "SMITE_COMPLETE", command = "smite")
         }
     }
 
@@ -262,28 +284,42 @@ class AdminHandler(
         if (targetSid == null) {
             if (interEngineBus != null) {
                 interEngineBus.broadcast(InterEngineMessage.KickRequest(targetPlayerName = cmd.playerName))
-                outbound.send(OutboundEvent.SendInfo(sessionId, "Kick request sent to other engines."))
+                sendAdminSuccess(
+                    sessionId,
+                    "Kick request sent to other engines.",
+                    code = "KICK_REQUESTED",
+                    command = "kick",
+                )
             } else {
-                outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.playerName}"))
+                sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "kick")
             }
             return
         }
         if (targetSid == sessionId) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You cannot kick yourself."))
+            sendAdminError(sessionId, "You cannot kick yourself.", code = "CANNOT_TARGET_SELF", command = "kick")
             return
         }
         outbound.send(OutboundEvent.Close(targetSid, "Kicked by staff."))
-        outbound.send(OutboundEvent.SendInfo(sessionId, "${cmd.playerName} has been kicked."))
+        sendAdminSuccess(sessionId, "${cmd.playerName} has been kicked.", code = "KICK_COMPLETE", command = "kick")
     }
 
     private suspend fun handleSetLevel(
         sessionId: SessionId,
         cmd: Command.SetLevel,
     ) {
-        val targetSid = requirePlayerOnline(sessionId, cmd.playerName, players, outbound) ?: return
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "setlevel")
+            return
+        }
         val maxLevel = players.maxLevel
         if (cmd.level !in 1..maxLevel) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Level must be between 1 and $maxLevel."))
+            sendAdminError(
+                sessionId,
+                "Level must be between 1 and $maxLevel.",
+                code = "INVALID_LEVEL",
+                command = "setlevel",
+            )
             return
         }
         players.withPlayer(targetSid) { targetPlayer ->
@@ -291,7 +327,12 @@ class AdminHandler(
             outbound.send(OutboundEvent.SendInfo(targetSid, "A divine hand reshapes your fate. You are now level ${cmd.level}."))
             outbound.send(OutboundEvent.SendPrompt(targetSid))
             gmcpEmitter?.sendCharVitals(targetSid, targetPlayer)
-            outbound.send(OutboundEvent.SendInfo(sessionId, "Set ${targetPlayer.name} to level ${cmd.level}."))
+            sendAdminSuccess(
+                sessionId,
+                "Set ${targetPlayer.name} to level ${cmd.level}.",
+                code = "SET_LEVEL_COMPLETE",
+                command = "setlevel",
+            )
         }
     }
 
