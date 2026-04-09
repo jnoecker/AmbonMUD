@@ -351,14 +351,17 @@ Thin dispatch layer (~62 lines) that routes each `Command` variant to the approp
 - `PetHandler` — pet status/dismiss/rename
 - `AuctionHandler` — auction browse/sell/buy/cancel
 - `BankHandler` — deposit/withdraw/bank
+- `CurrencyHandler` — currencies, currency, wallet
 - `TradeHandler` — player-to-player trading
 - `DuelHandler` — PvP duel challenge/accept/decline
+- `PrestigeHandler` — prestige, prestige info
+- `LotteryHandler` — lottery info/buy
 - `ReputationHandler` — faction standing display
 - `LeaderboardHandler` — leaderboard, hall of fame
 - `DungeonHandler` — dungeon enter/leave
 - `HousingHandler` — house info/expand/furnish/describe/invite/kick/lock/unlock
 - `WorldInfoHandler` — time, weather, seasonal events
-- `AdminHandler` — goto, transfer, spawn, smite, kick, shutdown (staff only)
+- `AdminHandler` — goto, transfer, spawn, smite, kick, setlevel, dispel, reload, broadcast, possess, return, invis, shutdown (staff only)
 - `UiHandler` — help, clear, colors, ansi, phase
 
 ### Adding a New Command

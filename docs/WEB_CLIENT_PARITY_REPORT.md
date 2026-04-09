@@ -1,6 +1,6 @@
 # Web Client Feature Parity Report (Consolidated)
 
-**Date:** 2026-03-31 (updated)
+**Date:** 2026-04-09 (updated)
 **Source:** Three independent parity studies merged and deduplicated, then verified against current codebase.
 **Scope:** All MUD text commands/features vs web-v3 client UI and GMCP coverage.
 
@@ -8,19 +8,23 @@
 
 ## Executive Summary
 
-The web client has **near-complete parity** with the text command interface. All core systems from the initial v4 release — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, chat, mail, crafting, housing, character stats, world features, achievements, titles, emotes, groups, friends, and admin tools — have full GMCP coverage and web UI.
+The web client now has **functionally complete parity** with the text command interface. The original v4 systems still have full GMCP coverage and web UI, and the later gameplay additions that were once tracked as follow-up parity work now ship with first-class panels or structured in-panel flows.
 
-**The following systems were added after the v4 parity study and require web UI coverage review:**
+**Systems added after the original v4 parity study that are now covered:**
 - Trainer system (skill points, class learning, multi-classing)
-- Pet/companion system
-- Faction & reputation system
+- Prestige progression and perks
+- Wallet/currencies
+- Pet/companion management
+- Faction & reputation tracking
 - Auction house / player marketplace
 - Player-to-player trading
 - PvP dueling
-- Item enchanting
-- Bank NPC system
+- Bank NPC storage
+- Lottery
+- Procedural dungeon entry/resume flow
 - Day/night cycle, weather, and seasonal events
 - Leaderboard system and hall of fame
+- Staff/admin console with contextual pickers and confirmation flows
 
 ---
 
@@ -49,13 +53,26 @@ The web client has **near-complete parity** with the text command interface. All
 | Login flow | `Login.Prompt/Error`, `Session.*` | Login modal with race/class selection, character picker, remember-me |
 | Who list | `Server.Who` | Structured who list with sorting and click-to-tell |
 | Mail | `Mail.List/Message/Notification` | Mail panel with inbox, message viewer, compose |
-| Crafting | `Crafting.Skills/Recipes/Nodes/Result` | Crafting panel with recipe browser, skill display |
+| Crafting | `Crafting.Skills/Recipes/Nodes/Result` | Crafting panel with recipe browser, skill display, and structured crafting/enchant result feedback |
+| Trainer / Multi-classing | `Trainer.List`, `Char.Classes` | Trainer panel with learn/unlock flows and skill point display |
 | Guilds | `Guild.Info/Members/Chat`, `Guild.Invite` | Guild tab with create/invite/accept/promote/demote/kick/MOTD/leave/disband |
 | Groups | `Group.Info`, `Group.Invite` | Group tab with HP/Mana bars, invite/accept/decline/kick/leave |
 | Friends | `Friends.List/Online/Offline` | Friends tab with add/remove/tell, online notifications |
 | Housing | `Housing.Info/Rooms` | Housing panel with room management |
+| Pets | `Char.Pet` | Character entry point plus dedicated pet management view |
+| Factions & Reputation | `Char.Factions` | Dedicated factions view with standings, descriptions, and recent activity |
+| Wallet / Currencies | `Char.Currencies` | Dedicated wallet view with per-currency cards and recent activity |
+| Prestige | `Prestige.Info`, `Char.Vitals` | Dedicated prestige view with perks, eligibility, and advancement |
+| Lottery | `Lottery.Info` | Dedicated lottery view with jackpot, ticket counts, buy actions, and refresh |
+| Auction House | `Auction.List` | Auction panel with browse, list, my listings, buy, and cancel flows |
+| Trading | `Trade.State` | Trade panel with item/gold offers and confirmation flow |
+| Dueling | `Duel.State`, `Duel.Challenge` | Dedicated duel view with challenge, response, status, and flee actions |
+| Bank | `Char.Bank` | Bank panel for gold and item storage |
+| Leaderboards | `Leaderboard.Data` | Leaderboard panel with category switching and hall-of-fame coverage |
+| Dungeons | `Dungeon.Info`, `Dungeon.Catalog` | Dedicated dungeon view with catalog, difficulty selection, enter, resume, and leave |
+| World atmosphere | `World.Time`, `World.Weather`, `World.Events` | Structured world summary in the character/systems experience |
 | Phase/instances | `Zone.Instances` | Instance selector in action bar |
-| Admin/Staff tools | `Staff.WorldInfo` | Admin panel with zone/room browser, teleport |
+| Admin/Staff tools | `Staff.WorldInfo`, `UI.Feedback` | Dedicated admin console with room/player/mob pickers, safety confirmations, and staff feedback |
 | Commands metadata | `Server.Commands` | Dynamic command palette, autocomplete |
 | Connection health | `Core.Ping` | Ping/latency tracking |
 | GMCP contract tests | — | GmcpWebContractTest validates server ↔ client field parity |
@@ -89,3 +106,5 @@ The following items from the original parity studies have been implemented:
 - ✅ Command-parity CI check
 - ✅ GMCP contract tests
 - ✅ Server.Commands metadata package
+- ✅ Trainer, prestige, wallet, lottery, pet, faction, dungeon, duel, trade, auction, and bank systems promoted to dedicated web views
+- ✅ Staff/admin console expanded from basic teleport tooling to a full operations surface

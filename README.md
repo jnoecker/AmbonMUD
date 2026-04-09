@@ -19,7 +19,7 @@ AmbonMUD
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands, bank NPCs for gold/item storage, item enchanting for stat bonuses
 - 🌤️ **Living world**: day/night cycle, dynamic per-zone weather (6 types), and date-based seasonal events with world flag support
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
-- 📊 **Structured data** (GMCP) — 25+ packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
+- 📊 **Structured data** (GMCP) — 50+ packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - 💾 **Flexible persistence**: YAML files by default (zero-dependency), PostgreSQL with optional Redis L2 caching available
 - 🌐 **Three deployment modes**: STANDALONE (single-process), ENGINE (game logic + gRPC), GATEWAY (transports + gRPC) for horizontal scaling
 - 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
@@ -27,13 +27,13 @@ AmbonMUD
 - 🛡️ **Production mode** with fail-fast validation rejecting placeholder secrets, configurable metrics bind address, and admin rate limiting
 - 🧵 **JVM virtual threads** for telnet I/O (JDK 21) — eliminates carrier-thread pinning under load
 - 📈 **Prometheus metrics** for monitoring and load testing integration
-- ✅ **~144 test files** covering all systems; CI validates against Java 21 with ktlint and JaCoCo coverage
+- ✅ **~159 test files** covering all systems; CI validates against Java 21 with ktlint and JaCoCo coverage
 
 **Current State** (Apr 2026)
 - ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
 - ✅ 112 abilities across 4 classes — trainer-based learning via skill points (1 point per 2 levels); multi-classing unlockable at level 10
 - ✅ PixiJS canvas game client with JRPG-style world/battle scenes
-- ✅ GMCP support with 25+ outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
+- ✅ GMCP support with 50+ outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - ✅ Quest system, achievement system, group/party system, dialogue trees, NPC behavior trees
 - ✅ Guild system with hierarchy, guild chat, MOTD
 - ✅ Friends list and in-game mail system
@@ -126,16 +126,17 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - Name: 2-16 chars (alnum/underscore, cannot start with digit)
 - Password: 1-72 chars (bcrypt hashed)
 - Race: Human, Elf, Dwarf, Halfling (each has attribute modifiers)
-- Class: Warrior, Mage, Cleric, Rogue (102 abilities across all classes, levels 1–50)
+- Class: Warrior, Mage, Cleric, Rogue (112 abilities across all classes, levels 1–50)
 
 **Core Commands**
 - **Movement:** `n`/`s`/`e`/`w`/`u`/`d`, `look`, `exits`
 - **Combat:** `kill <mob>`, `flee`, `cast <spell>`, `spells`, `effects`
 - **Items:** `inventory`, `equipment`, `get`, `drop`, `wear`, `remove`, `use`, `give`
 - **Communication:** `say`, `tell`, `gossip`, `whisper`, `shout`, `emote`, `ooc`, `pose`
-- **Character:** `score`, `gold`, `help`, `who`, `quit`
+- **Character:** `score`, `gold`, `currencies`/`wallet`, `prestige`, `prestige info`, `help`, `who`, `quit`
 - **Economy:** `buy`, `sell`, `list` (in shops); `auction [filter]`, `auction sell <item> <price>`, `auction buy <#>`, `auction cancel <#>`
 - **Bank:** `deposit`, `withdraw`, `bank` (in bank rooms)
+- **Lottery:** `lottery`, `lottery buy [count]`
 - **Trading:** `trade <player>`, `trade offer <item/gold>`, `trade accept`, `trade cancel`
 - **Zones:** `phase` (switch zone instances)
 - **Guilds:** `guild create/disband/invite/accept/leave/kick/promote/demote/motd/roster/info`, `gchat`
@@ -150,12 +151,12 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - **Training:** `train list`, `train learn <ability>`, `train unlock` (multi-class)
 - **World:** `time` (day/night period and weather)
 - **Leaderboards:** `leaderboard`, `halloffame`
-- **Admin:** `goto`, `transfer`, `spawn`, `smite`, `kick`, `shutdown` (requires staff flag)
+- **Admin:** `goto`, `transfer`, `spawn`, `smite`, `kick`, `setlevel`, `dispel`, `reload`, `broadcast`, `possess`, `return`, `invis`, `shutdown` (requires staff flag)
 
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full command list and details.
 
 **Abilities, Training & Combat**
-- **102 total abilities** across 4 classes (levels 1–50), learned at **class trainers** using skill points (1 point per 2 levels)
+- **112 total abilities** across 4 classes (levels 1–50), learned at **class trainers** using skill points (1 point per 2 levels)
 - **Multi-classing:** unlock additional class ability lists at level 10 for a gold cost — spend skill points across multiple classes
 - **Status effects:** DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with configurable stacking
 - **Attributes:** STR (melee damage), DEX (dodge), CON (HP regen), INT (spell damage), WIS (mana regen), CHA
