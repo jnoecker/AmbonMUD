@@ -14,6 +14,7 @@ import type {
   RoomItem,
   RoomState,
   ShopState,
+  SystemPanelView,
   StatusEffect,
   Vitals,
   MobInfo,
@@ -53,7 +54,9 @@ export const canvasCallbacks: {
   sendCommand: ((command: string) => void) | null;
   prefillCommand: ((text: string) => void) | null;
   openShop: (() => void) | null;
+  openAuction: (() => void) | null;
   openPuzzle: (() => void) | null;
+  openSystems: ((view: SystemPanelView) => void) | null;
   openFeatures: ((preferredType?: FeaturePopoutFocus) => void) | null;
   openBank: (() => void) | null;
   openTrainer: (() => void) | null;
@@ -68,7 +71,9 @@ export const canvasCallbacks: {
   sendCommand: null,
   prefillCommand: null,
   openShop: null,
+  openAuction: null,
   openPuzzle: null,
+  openSystems: null,
   openFeatures: null,
   openBank: null,
   openTrainer: null,

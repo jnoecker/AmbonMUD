@@ -66,33 +66,30 @@ class LotteryHandler(
 
             when (result) {
                 is LotteryBuyResult.Success -> {
+                    val message =
+                        "You purchased ${result.count} lottery ticket(s) for ${result.totalCost} gold. " +
+                            "You now have ${result.totalTickets} ticket(s)."
                     outbound.send(
                         OutboundEvent.SendInfo(
                             sessionId,
-                            "You purchased ${result.count} lottery ticket(s) for ${result.totalCost} gold. " +
-                                "You now have ${result.totalTickets} ticket(s).",
+                            message,
                         ),
                     )
+                    sendLotteryFeedback(sessionId, "success", message, code = "PURCHASE_COMPLETE", command = "buy")
                     markVitalsDirty(sessionId)
                     emitLotteryGmcp(sessionId, me.name, system)
                 }
 
                 is LotteryBuyResult.InsufficientGold -> {
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "You need ${result.need} gold but only have ${result.have}.",
-                        ),
-                    )
+                    val message = "You need ${result.need} gold but only have ${result.have}."
+                    outbound.send(OutboundEvent.SendError(sessionId, message))
+                    sendLotteryFeedback(sessionId, "error", message, code = "INSUFFICIENT_GOLD", command = "buy")
                 }
 
                 is LotteryBuyResult.ExceedsLimit -> {
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "You already have ${result.current} ticket(s). Maximum is ${result.max} per drawing.",
-                        ),
-                    )
+                    val message = "You already have ${result.current} ticket(s). Maximum is ${result.max} per drawing."
+                    outbound.send(OutboundEvent.SendError(sessionId, message))
+                    sendLotteryFeedback(sessionId, "error", message, code = "TICKET_LIMIT", command = "buy")
                 }
 
                 is LotteryBuyResult.Disabled -> {
@@ -228,6 +225,25 @@ class LotteryHandler(
     }
 
     private suspend fun sendUnavailable(sessionId: SessionId, name: String) {
-        outbound.send(OutboundEvent.SendError(sessionId, "$name is not available on this server."))
+        val message = "$name is not available on this server."
+        outbound.send(OutboundEvent.SendError(sessionId, message))
+        sendLotteryFeedback(sessionId, "error", message, code = "UNAVAILABLE")
+    }
+
+    private suspend fun sendLotteryFeedback(
+        sessionId: SessionId,
+        type: String,
+        message: String,
+        code: String? = null,
+        command: String? = null,
+    ) {
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = type,
+            message = message,
+            code = code,
+            scope = "lottery",
+            command = command,
+        )
     }
 }

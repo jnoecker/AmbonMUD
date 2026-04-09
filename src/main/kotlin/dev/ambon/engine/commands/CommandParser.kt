@@ -92,6 +92,10 @@ sealed interface Command {
         val amount: Long,
     ) : Command
 
+    data class TradeRemove(
+        val itemRef: String,
+    ) : Command
+
     data object TradeAccept : Command
 
     data object TradeCancel : Command
@@ -766,6 +770,15 @@ object CommandParser {
                 } else {
                     Command.TradeOffer(trimmed)
                 }
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("trade remove", "trade unoffer")) { rest ->
+            val trimmed = rest.trim()
+            if (trimmed.isEmpty()) {
+                Command.Invalid(line, "trade remove <item>")
+            } else {
+                Command.TradeRemove(trimmed)
             }
         }?.let { return it }
 

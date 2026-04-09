@@ -137,6 +137,29 @@ class TradeSystem(
     }
 
     /**
+     * Removes an escrowed item from the player's offer and returns it to inventory.
+     * Matches by instance id first, then by keyword/display name for text-command parity.
+     */
+    fun removeOfferedItem(sid: SessionId, itemRef: String): Pair<TradeSession, ItemInstance>? {
+        val session = sessions[sid] ?: return null
+        val side = session.sideOf(sid) ?: return null
+        val offeredItems = session.items(side)
+        val loweredRef = itemRef.trim().lowercase()
+        val matchIndex = offeredItems.indexOfFirst { item ->
+            item.id.value.equals(itemRef, ignoreCase = true) ||
+                item.item.keyword.equals(itemRef, ignoreCase = true) ||
+                item.item.displayName.equals(itemRef, ignoreCase = true) ||
+                item.item.displayName.lowercase().contains(loweredRef)
+        }
+        if (matchIndex < 0) return null
+
+        val item = offeredItems.removeAt(matchIndex)
+        items.addToInventory(sid, item)
+        session.resetAcceptance()
+        return session to item
+    }
+
+    /**
      * Sets the gold amount offered by the player.
      * Returns the session on success, or a TradeError.
      */

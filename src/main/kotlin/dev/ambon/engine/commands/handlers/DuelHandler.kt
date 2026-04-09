@@ -31,29 +31,47 @@ class DuelHandler(
         players.withPlayer(sessionId) { me ->
             // Can't duel while in mob combat
             if (combatSystem?.isInCombat(sessionId) == true) {
-                outbound.send(OutboundEvent.SendError(sessionId, "You cannot duel while in combat."))
+                val message = "You cannot duel while in combat."
+                outbound.send(OutboundEvent.SendError(sessionId, message))
+                sendDuelFeedback(sessionId, "error", message, code = "IN_COMBAT", command = "duel")
                 return
             }
 
-            val targetSid = requirePlayerOnline(sessionId, cmd.targetPlayer, players, outbound) ?: return
+            val targetSid = players.findSessionByName(cmd.targetPlayer)
+            if (targetSid == null) {
+                val message = "No such player: ${cmd.targetPlayer}"
+                outbound.send(OutboundEvent.SendError(sessionId, message))
+                sendDuelFeedback(sessionId, "error", message, code = "TARGET_NOT_FOUND", command = "duel")
+                return
+            }
 
             players.withPlayer(targetSid) { target ->
-                if (!requireSameRoom(sessionId, me, target, outbound)) return
+                if (target.roomId != me.roomId) {
+                    val message = "${target.name} is not here."
+                    outbound.send(OutboundEvent.SendError(sessionId, message))
+                    sendDuelFeedback(sessionId, "error", message, code = "TARGET_NOT_NEARBY", command = "duel")
+                    return
+                }
 
                 if (combatSystem?.isInCombat(targetSid) == true) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "${target.name} is in combat."))
+                    val message = "${target.name} is in combat."
+                    outbound.send(OutboundEvent.SendError(sessionId, message))
+                    sendDuelFeedback(sessionId, "error", message, code = "TARGET_IN_COMBAT", command = "duel")
                     return
                 }
 
                 val error = ds.challenge(sessionId, targetSid)
                 if (error != null) {
                     outbound.send(OutboundEvent.SendError(sessionId, error))
+                    sendDuelFeedback(sessionId, "error", error, code = "CHALLENGE_REJECTED", command = "duel")
                     return
                 }
 
+                val message = "You challenge ${target.name} to a duel!"
                 outbound.send(
-                    OutboundEvent.SendInfo(sessionId, "You challenge ${target.name} to a duel!"),
+                    OutboundEvent.SendInfo(sessionId, message),
                 )
+                sendDuelFeedback(sessionId, "success", message, code = "CHALLENGE_SENT", command = "duel")
                 outbound.send(
                     OutboundEvent.SendInfo(
                         targetSid,
@@ -76,7 +94,9 @@ class DuelHandler(
 
         val challenge = ds.getPendingChallenge(sessionId)
         if (challenge == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "No pending duel challenge to accept."))
+            val message = "No pending duel challenge to accept."
+            outbound.send(OutboundEvent.SendError(sessionId, message))
+            sendDuelFeedback(sessionId, "error", message, code = "NO_PENDING_CHALLENGE", command = "accept")
             return
         }
 
@@ -85,24 +105,32 @@ class DuelHandler(
         val challenger = players.get(challenge.challengerSid)
         if (me == null || challenger == null) {
             ds.decline(sessionId)
-            outbound.send(OutboundEvent.SendError(sessionId, "The challenger is no longer available."))
+            val message = "The challenger is no longer available."
+            outbound.send(OutboundEvent.SendError(sessionId, message))
+            sendDuelFeedback(sessionId, "error", message, code = "CHALLENGER_UNAVAILABLE", command = "accept")
             return
         }
         if (me.roomId != challenger.roomId) {
             ds.decline(sessionId)
-            outbound.send(OutboundEvent.SendError(sessionId, "You must be in the same room to duel."))
+            val message = "You must be in the same room to duel."
+            outbound.send(OutboundEvent.SendError(sessionId, message))
+            sendDuelFeedback(sessionId, "error", message, code = "CHALLENGER_NOT_NEARBY", command = "accept")
             outbound.send(OutboundEvent.SendInfo(challenge.challengerSid, "${me.name} is no longer nearby. Duel cancelled."))
             return
         }
         if (combatSystem?.isInCombat(sessionId) == true || combatSystem?.isInCombat(challenge.challengerSid) == true) {
             ds.decline(sessionId)
-            outbound.send(OutboundEvent.SendError(sessionId, "Cannot duel while in combat."))
+            val message = "Cannot duel while in combat."
+            outbound.send(OutboundEvent.SendError(sessionId, message))
+            sendDuelFeedback(sessionId, "error", message, code = "IN_COMBAT", command = "accept")
             return
         }
 
         val duel = ds.accept(sessionId)
         if (duel == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "No pending duel challenge to accept."))
+            val message = "No pending duel challenge to accept."
+            outbound.send(OutboundEvent.SendError(sessionId, message))
+            sendDuelFeedback(sessionId, "error", message, code = "NO_PENDING_CHALLENGE", command = "accept")
             return
         }
 
@@ -111,6 +139,20 @@ class DuelHandler(
         )
         outbound.send(
             OutboundEvent.SendInfo(duel.player2, "** You accept the duel with ${challenger.name}! Fight! **"),
+        )
+        sendDuelFeedback(
+            duel.player1,
+            "success",
+            "${me.name} accepted your duel challenge.",
+            code = "CHALLENGE_ACCEPTED",
+            command = "accept",
+        )
+        sendDuelFeedback(
+            duel.player2,
+            "success",
+            "You accept the duel with ${challenger.name}.",
+            code = "CHALLENGE_ACCEPTED",
+            command = "accept",
         )
         gmcpEmitter?.sendDuelState(duel.player1, active = true, opponentName = me.name, startedAtMs = duel.startedAtMs)
         gmcpEmitter?.sendDuelState(duel.player2, active = true, opponentName = challenger.name, startedAtMs = duel.startedAtMs)
@@ -127,12 +169,16 @@ class DuelHandler(
 
         val challenge = ds.decline(sessionId)
         if (challenge == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "No pending duel challenge to decline."))
+            val message = "No pending duel challenge to decline."
+            outbound.send(OutboundEvent.SendError(sessionId, message))
+            sendDuelFeedback(sessionId, "error", message, code = "NO_PENDING_CHALLENGE", command = "decline")
             return
         }
 
         val myName = players.get(sessionId)?.name ?: "Someone"
-        outbound.send(OutboundEvent.SendInfo(sessionId, "You decline the duel challenge."))
+        val message = "You decline the duel challenge."
+        outbound.send(OutboundEvent.SendInfo(sessionId, message))
+        sendDuelFeedback(sessionId, "success", message, code = "CHALLENGE_DECLINED", command = "decline")
         outbound.send(
             OutboundEvent.SendInfo(challenge.challengerSid, "$myName declined your duel challenge."),
         )
@@ -141,6 +187,25 @@ class DuelHandler(
     }
 
     private suspend fun sendUnavailable(sessionId: SessionId) {
-        outbound.send(OutboundEvent.SendError(sessionId, "Dueling is not available."))
+        val message = "Dueling is not available."
+        outbound.send(OutboundEvent.SendError(sessionId, message))
+        sendDuelFeedback(sessionId, "error", message, code = "UNAVAILABLE")
+    }
+
+    private suspend fun sendDuelFeedback(
+        sessionId: SessionId,
+        type: String,
+        message: String,
+        code: String? = null,
+        command: String? = null,
+    ) {
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = type,
+            message = message,
+            code = code,
+            scope = "duel",
+            command = command,
+        )
     }
 }
