@@ -1045,6 +1045,7 @@ function App() {
               mobTemplates={state.staffMobTemplates}
               whoPlayers={state.whoPlayers}
               roomMobs={state.mobs}
+              currentPlayerName={state.character.name}
               possessing={state.possessing}
               invisible={staffInvisible}
               feedbackFeed={state.uiFeedbackFeed}

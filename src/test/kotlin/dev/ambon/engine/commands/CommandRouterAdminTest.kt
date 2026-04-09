@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.MobSystem
@@ -243,6 +244,38 @@ class CommandRouterAdminTest {
         }
 
     @Test
+    fun `shutdown emits admin ui feedback for GMCP clients`() =
+        runTest {
+            var shutdownCalled = false
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    onShutdown = { shutdownCalled = true },
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val staffSid = SessionId(1)
+            h.loginStaff(staffSid, "Admin")
+            h.drain()
+
+            h.router.handle(staffSid, Command.Shutdown)
+            val outs = h.drain()
+
+            assertTrue(shutdownCalled, "onShutdown callback should have been invoked")
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == staffSid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"scope\":\"admin\"") &&
+                        it.jsonData.contains("\"command\":\"shutdown\"") &&
+                        it.jsonData.contains("\"code\":\"SHUTDOWN_INITIATED\"")
+                },
+                "Expected shutdown UI.Feedback payload. got=$outs",
+            )
+        }
+
+    @Test
     fun `non-staff cannot trigger shutdown`() =
         runTest {
             var shutdownCalled = false
@@ -294,6 +327,37 @@ class CommandRouterAdminTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == bobSid && it.text.contains("divine") },
                 "Bob should receive divine smite message. got=$outs",
+            )
+        }
+
+    @Test
+    fun `smite player emits admin ui feedback for GMCP clients`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.Smite("Bob"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == staffSid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"scope\":\"admin\"") &&
+                        it.jsonData.contains("\"command\":\"smite\"") &&
+                        it.jsonData.contains("\"code\":\"SMITE_COMPLETE\"")
+                },
+                "Expected smite UI.Feedback payload. got=$outs",
             )
         }
 
@@ -364,6 +428,38 @@ class CommandRouterAdminTest {
             )
         }
 
+    @Test
+    fun `smite self emits admin ui feedback error`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val staffSid = SessionId(1)
+            h.loginStaff(staffSid, "Admin")
+            h.drain()
+
+            h.router.handle(staffSid, Command.Smite("Admin"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid && it.text.contains("cannot smite yourself") },
+                "Expected explicit self-targeting error. got=$outs",
+            )
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == staffSid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"command\":\"smite\"") &&
+                        it.jsonData.contains("\"code\":\"CANNOT_TARGET_SELF\"")
+                },
+                "Expected self-targeting UI.Feedback payload. got=$outs",
+            )
+        }
+
     // ── kick ───────────────────────────────────────────────────────────────────
 
     @Test
@@ -390,6 +486,37 @@ class CommandRouterAdminTest {
         }
 
     @Test
+    fun `kick emits admin ui feedback for GMCP clients`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.Kick("Bob"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == staffSid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"scope\":\"admin\"") &&
+                        it.jsonData.contains("\"command\":\"kick\"") &&
+                        it.jsonData.contains("\"code\":\"KICK_COMPLETE\"")
+                },
+                "Expected kick UI.Feedback payload. got=$outs",
+            )
+        }
+
+    @Test
     fun `kick self emits error`() =
         runTest {
             val h = CommandRouterHarness.create()
@@ -407,6 +534,34 @@ class CommandRouterAdminTest {
             assertFalse(
                 outs.any { it is OutboundEvent.Close && it.sessionId == staffSid },
                 "Staff should not be kicked. got=$outs",
+            )
+        }
+
+    @Test
+    fun `kick self emits admin ui feedback error`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val staffSid = SessionId(1)
+            h.loginStaff(staffSid, "Admin")
+            h.drain()
+
+            h.router.handle(staffSid, Command.Kick("Admin"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == staffSid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"command\":\"kick\"") &&
+                        it.jsonData.contains("\"code\":\"CANNOT_TARGET_SELF\"")
+                },
+                "Expected self-kick UI.Feedback payload. got=$outs",
             )
         }
 
@@ -452,6 +607,37 @@ class CommandRouterAdminTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.sessionId == staffSid && it.text.contains("Bob") },
                 "Staff should see confirmation. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setlevel emits admin ui feedback for GMCP clients`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetLevel("Bob", 10))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == staffSid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"scope\":\"admin\"") &&
+                        it.jsonData.contains("\"command\":\"setlevel\"") &&
+                        it.jsonData.contains("\"code\":\"SET_LEVEL_COMPLETE\"")
+                },
+                "Expected setlevel UI.Feedback payload. got=$outs",
             )
         }
 
@@ -507,6 +693,35 @@ class CommandRouterAdminTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
                 "Non-staff should receive error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `broadcast emits admin ui feedback for GMCP clients`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val staffSid = SessionId(1)
+            h.loginStaff(staffSid, "Admin")
+            h.drain()
+
+            h.router.handle(staffSid, Command.Broadcast("Maintenance starts soon"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == staffSid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"scope\":\"admin\"") &&
+                        it.jsonData.contains("\"command\":\"broadcast\"") &&
+                        it.jsonData.contains("\"code\":\"BROADCAST_COMPLETE\"")
+                },
+                "Expected broadcast UI.Feedback payload. got=$outs",
             )
         }
 }
