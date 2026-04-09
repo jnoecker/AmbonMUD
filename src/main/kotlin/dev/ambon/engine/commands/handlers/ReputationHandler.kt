@@ -28,7 +28,9 @@ class ReputationHandler(
             val definitions = reputationSystem.factionDefinitions()
 
             if (definitions.isEmpty()) {
-                outbound.send(OutboundEvent.SendInfo(sessionId, "No factions exist in this world."))
+                val message = "No factions exist in this world."
+                outbound.send(OutboundEvent.SendInfo(sessionId, message))
+                sendFactionFeedback(sessionId, "info", message, code = "NONE_AVAILABLE", command = "reputation")
                 return
             }
 
@@ -51,6 +53,7 @@ class ReputationHandler(
             }
 
             emitFactions(sessionId, me)
+            sendFactionFeedback(sessionId, "info", "Faction standings refreshed.", code = "INFO_REFRESHED", command = "reputation")
         }
     }
 
@@ -70,5 +73,22 @@ class ReputationHandler(
             )
         }
         gmcpEmitter?.sendCharFactions(sessionId, payload)
+    }
+
+    private suspend fun sendFactionFeedback(
+        sessionId: SessionId,
+        type: String,
+        message: String,
+        code: String? = null,
+        command: String? = null,
+    ) {
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = type,
+            message = message,
+            code = code,
+            scope = "factions",
+            command = command,
+        )
     }
 }

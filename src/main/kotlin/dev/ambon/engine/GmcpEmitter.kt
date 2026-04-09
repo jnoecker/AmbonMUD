@@ -2849,6 +2849,21 @@ class GmcpEmitter(
         val memberCount: Int? = null,
     )
 
+    data class DungeonCatalogDifficultyPayload(
+        val id: String,
+        val label: String,
+        val summary: String,
+    )
+
+    data class DungeonCatalogEntryPayload(
+        val id: String,
+        val name: String,
+        val description: String,
+        val minLevel: Int,
+        val portalHint: String? = null,
+        val difficulties: List<DungeonCatalogDifficultyPayload> = emptyList(),
+    )
+
     suspend fun sendDungeonInfo(
         sessionId: SessionId,
         active: Boolean,
@@ -2871,6 +2886,18 @@ class GmcpEmitter(
                 completed = completed,
                 memberCount = memberCount,
             ),
+            supportCheck = "Dungeon",
+        )
+    }
+
+    suspend fun sendDungeonCatalog(
+        sessionId: SessionId,
+        catalog: List<DungeonCatalogEntryPayload>,
+    ) {
+        emit(
+            sessionId,
+            "Dungeon.Catalog",
+            catalog,
             supportCheck = "Dungeon",
         )
     }

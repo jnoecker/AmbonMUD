@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, DuelChallenge, DuelState, DungeonInfo, FactionStanding, GroupInfo, GuildInfo, LotteryInfo, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
+import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, DuelChallenge, DuelState, DungeonInfo, FactionStanding, GroupInfo, GuildInfo, LotteryInfo, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, SystemPanelView, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions";
@@ -68,6 +68,7 @@ interface CharacterPanelProps {
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
   onOpenEquipment: () => void;
+  onOpenSystem: (view: SystemPanelView) => void;
   onCommand: (command: string) => void;
   onLogout: () => void;
 }
@@ -110,6 +111,7 @@ export function CharacterPanel({
   onAbandonQuest,
   onOpenInventory,
   onOpenEquipment,
+  onOpenSystem,
   onCommand,
   onLogout,
 }: CharacterPanelProps) {
@@ -157,6 +159,15 @@ export function CharacterPanel({
           </h2>
         </div>
         <div className="panel-action-row">
+          <button
+            type="button"
+            className="panel-action-button"
+            onClick={() => onOpenSystem("currencies")}
+            title="Open systems"
+            aria-label="Open systems"
+          >
+            Systems
+          </button>
           <button
             type="button"
             className="panel-action-button panel-action-button-icon"
@@ -743,7 +754,10 @@ export function CharacterPanel({
                     </div>
                     {currencies.length > 0 && (
                       <div className="score-currencies">
-                        <p className="score-currencies-label">Currencies</p>
+                        <div className="score-section-header">
+                          <p className="score-currencies-label">Currencies</p>
+                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("currencies")}>Open Wallet</button>
+                        </div>
                         <dl className="score-currencies-grid">
                           {currencies.map((c) => (
                             <div key={c.id}>
@@ -756,7 +770,10 @@ export function CharacterPanel({
                     )}
                     {((vitals.prestigeLevel ?? 0) > 0 || vitals.prestigeNextCost != null) && (
                       <div className="score-prestige">
-                        <p className="score-prestige-label">Prestige</p>
+                        <div className="score-section-header">
+                          <p className="score-prestige-label">Prestige</p>
+                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("prestige")}>Open</button>
+                        </div>
                         <dl className="score-prestige-grid">
                           <div>
                             <dt>Rank</dt>
@@ -802,7 +819,10 @@ export function CharacterPanel({
                     )}
                     {lotteryInfo && (
                       <div className="score-lottery">
-                        <p className="score-lottery-label">Lottery</p>
+                        <div className="score-section-header">
+                          <p className="score-lottery-label">Lottery</p>
+                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("lottery")}>Play</button>
+                        </div>
                         <dl className="score-lottery-grid">
                           <div>
                             <dt>Jackpot</dt>
@@ -837,13 +857,19 @@ export function CharacterPanel({
                     )}
                     {duelState?.active && (
                       <div className="score-duel">
-                        <p className="score-section-label">Duel</p>
+                        <div className="score-section-header">
+                          <p className="score-section-label">Duel</p>
+                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("duel")}>Open</button>
+                        </div>
                         <p className="score-section-value">Fighting <strong>{duelState.opponentName ?? "unknown"}</strong></p>
                       </div>
                     )}
                     {duelChallenge && !duelState?.active && (
                       <div className="score-duel">
-                        <p className="score-section-label">Duel Challenge</p>
+                        <div className="score-section-header">
+                          <p className="score-section-label">Duel Challenge</p>
+                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("duel")}>Open</button>
+                        </div>
                         {duelChallenge.direction === "incoming" ? (
                           <div className="score-duel-challenge">
                             <p className="score-section-value"><strong>{duelChallenge.challengerName}</strong> challenges you!</p>
@@ -859,7 +885,10 @@ export function CharacterPanel({
                     )}
                     {dungeonInfo?.active && (
                       <div className="score-dungeon">
-                        <p className="score-section-label">Dungeon</p>
+                        <div className="score-section-header">
+                          <p className="score-section-label">Dungeon</p>
+                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("dungeon")}>Open</button>
+                        </div>
                         <dl className="score-dungeon-grid">
                           {dungeonInfo.name && (
                             <div><dt>Name</dt><dd>{dungeonInfo.name}</dd></div>
@@ -882,7 +911,10 @@ export function CharacterPanel({
                     )}
                     {prestigeInfo && prestigeInfo.perks.length > 0 && (
                       <div className="score-prestige-perks">
-                        <p className="score-section-label">Prestige Perks</p>
+                        <div className="score-section-header">
+                          <p className="score-section-label">Prestige Perks</p>
+                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("prestige")}>Open</button>
+                        </div>
                         <ul className="prestige-perk-list">
                           {prestigeInfo.perks.map((perk) => (
                             <li key={perk.rank} className={`prestige-perk-item ${perk.earned ? "prestige-perk-earned" : "prestige-perk-locked"}`}>
@@ -908,25 +940,31 @@ export function CharacterPanel({
                 {factions.length === 0 ? (
                   <p className="empty-note">No faction standings yet.</p>
                 ) : (
-                  <ul className="factions-list">
-                    {factions.map((f) => (
-                      <li key={f.id} className="faction-item">
-                        <div className="faction-header">
-                          <span className="faction-name">{f.name}</span>
-                          <span className={`faction-tier faction-tier-${factionTierClass(f.tier)}`}>{f.tier}</span>
-                        </div>
-                        <div className="faction-rep-row">
-                          <div className="meter-track faction-rep-track">
-                            <span
-                              className={`meter-fill faction-rep-fill faction-rep-fill-${factionTierClass(f.tier)}`}
-                              style={{ width: `${Math.min(100, Math.max(0, ((f.reputation + 1000) / 2000) * 100))}%` }}
-                            />
+                  <>
+                    <div className="score-section-header score-section-header-spaced">
+                      <p className="score-section-label">Faction Journal</p>
+                      <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("factions")}>Open</button>
+                    </div>
+                    <ul className="factions-list">
+                      {factions.map((f) => (
+                        <li key={f.id} className="faction-item">
+                          <div className="faction-header">
+                            <span className="faction-name">{f.name}</span>
+                            <span className={`faction-tier faction-tier-${factionTierClass(f.tier)}`}>{f.tier}</span>
                           </div>
-                          <span className="faction-rep-value">{f.reputation}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                          <div className="faction-rep-row">
+                            <div className="meter-track faction-rep-track">
+                              <span
+                                className={`meter-fill faction-rep-fill faction-rep-fill-${factionTierClass(f.tier)}`}
+                                style={{ width: `${Math.min(100, Math.max(0, ((f.reputation + 1000) / 2000) * 100))}%` }}
+                              />
+                            </div>
+                            <span className="faction-rep-value">{f.reputation}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
                 )}
               </section>
             )}
@@ -965,6 +1003,13 @@ export function CharacterPanel({
               )}
             </dl>
             <div className="pet-actions">
+              <button
+                type="button"
+                className="soft-button"
+                onClick={() => onOpenSystem("pet")}
+              >
+                Manage Pet
+              </button>
               <button
                 type="button"
                 className="soft-button pet-dismiss-btn"

@@ -26,7 +26,9 @@ class CurrencyHandler(
         players.withPlayer(sessionId) { me ->
             val definitions = currencySystem.definitions()
             if (definitions.isEmpty()) {
-                outbound.send(OutboundEvent.SendInfo(sessionId, "No secondary currencies exist."))
+                val message = "No secondary currencies exist."
+                outbound.send(OutboundEvent.SendInfo(sessionId, message))
+                sendCurrencyFeedback(sessionId, "info", message, code = "NONE_AVAILABLE", command = "currencies")
                 return
             }
 
@@ -43,6 +45,7 @@ class CurrencyHandler(
             }
 
             emitCurrencies(sessionId, me)
+            sendCurrencyFeedback(sessionId, "info", "Wallet balances refreshed.", code = "INFO_REFRESHED", command = "currencies")
         }
     }
 
@@ -60,5 +63,22 @@ class CurrencyHandler(
             )
         }
         gmcpEmitter?.sendCharCurrencies(sessionId, payload)
+    }
+
+    private suspend fun sendCurrencyFeedback(
+        sessionId: SessionId,
+        type: String,
+        message: String,
+        code: String? = null,
+        command: String? = null,
+    ) {
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = type,
+            message = message,
+            code = code,
+            scope = "currencies",
+            command = command,
+        )
     }
 }

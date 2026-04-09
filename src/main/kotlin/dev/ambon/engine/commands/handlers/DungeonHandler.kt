@@ -37,7 +37,9 @@ class DungeonHandler(
             if (existingInstance != null) {
                 val entrance = dm.entranceRoom(existingInstance)
                 players.moveTo(sessionId, entrance)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You re-enter ${existingInstance.template.name}."))
+                val message = "You re-enter ${existingInstance.template.name}."
+                outbound.send(OutboundEvent.SendInfo(sessionId, message))
+                sendDungeonFeedback(sessionId, "success", message, code = "REENTERED", command = "enter")
                 ctx.sendLook(sessionId)
                 gmcpEmitter?.sendDungeonInfo(
                     sessionId,
@@ -55,7 +57,9 @@ class DungeonHandler(
             // Find the template
             val template = reg.findByKeyword(cmd.templateKeyword)
             if (template == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "Unknown dungeon '${cmd.templateKeyword}'."))
+                val message = "Unknown dungeon '${cmd.templateKeyword}'."
+                outbound.send(OutboundEvent.SendError(sessionId, message))
+                sendDungeonFeedback(sessionId, "error", message, code = "DUNGEON_NOT_FOUND", command = "enter")
                 return
             }
 
@@ -64,7 +68,9 @@ class DungeonHandler(
                 DungeonDifficulty.fromName(cmd.difficulty)
                     ?: run {
                         val valid = DungeonDifficulty.entries.joinToString(", ") { it.displayName.lowercase() }
-                        outbound.send(OutboundEvent.SendError(sessionId, "Unknown difficulty '${cmd.difficulty}'. Options: $valid"))
+                        val message = "Unknown difficulty '${cmd.difficulty}'. Options: $valid"
+                        outbound.send(OutboundEvent.SendError(sessionId, message))
+                        sendDungeonFeedback(sessionId, "error", message, code = "INVALID_DIFFICULTY", command = "enter")
                         return
                     }
             } else {
@@ -81,12 +87,10 @@ class DungeonHandler(
             for (sid in memberSids) {
                 val member = players.get(sid) ?: continue
                 if (member.level < template.minLevel) {
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "${member.name} is level ${member.level} but this dungeon requires level ${template.minLevel}.",
-                        ),
-                    )
+                    val message =
+                        "${member.name} is level ${member.level} but this dungeon requires level ${template.minLevel}."
+                    outbound.send(OutboundEvent.SendError(sessionId, message))
+                    sendDungeonFeedback(sessionId, "error", message, code = "MIN_LEVEL", command = "enter")
                     return
                 }
             }
@@ -116,12 +120,14 @@ class DungeonHandler(
             val entrance = dm.entranceRoom(instance)
             for (sid in memberSids) {
                 players.moveTo(sid, entrance)
+                val enterMessage = "** You enter ${template.name} (${difficulty.displayName} difficulty) **"
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sid,
-                        "** You enter ${template.name} (${difficulty.displayName} difficulty) **",
+                        enterMessage,
                     ),
                 )
+                sendDungeonFeedback(sid, "success", enterMessage, code = "ENTERED", command = "enter")
                 ctx.sendLook(sid)
                 gmcpEmitter?.sendDungeonInfo(
                     sid,
@@ -143,10 +149,14 @@ class DungeonHandler(
         players.withPlayer(sessionId) { me ->
             val returnRoom = dm.removePlayer(sessionId)
             if (returnRoom == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "You are not in a dungeon."))
+                val message = "You are not in a dungeon."
+                outbound.send(OutboundEvent.SendError(sessionId, message))
+                sendDungeonFeedback(sessionId, "error", message, code = "NOT_IN_DUNGEON", command = "leave")
                 return
             }
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You leave the dungeon."))
+            val message = "You leave the dungeon."
+            outbound.send(OutboundEvent.SendInfo(sessionId, message))
+            sendDungeonFeedback(sessionId, "success", message, code = "LEFT", command = "leave")
             players.moveTo(sessionId, returnRoom)
             ctx.sendLook(sessionId)
             gmcpEmitter?.sendDungeonInfo(sessionId, active = false)
@@ -154,6 +164,25 @@ class DungeonHandler(
     }
 
     private suspend fun sendUnavailable(sessionId: SessionId) {
-        outbound.send(OutboundEvent.SendError(sessionId, "Dungeons are not available."))
+        val message = "Dungeons are not available."
+        outbound.send(OutboundEvent.SendError(sessionId, message))
+        sendDungeonFeedback(sessionId, "error", message, code = "UNAVAILABLE")
+    }
+
+    private suspend fun sendDungeonFeedback(
+        sessionId: SessionId,
+        type: String,
+        message: String,
+        code: String? = null,
+        command: String? = null,
+    ) {
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = type,
+            message = message,
+            code = code,
+            scope = "dungeon",
+            command = command,
+        )
     }
 }

@@ -86,6 +86,7 @@ import type {
   GuildHallRoom,
   DuelState,
   DuelChallenge,
+  DungeonCatalogEntry,
   DungeonInfo,
   PrestigeInfo,
   PrestigePerk,
@@ -178,6 +179,7 @@ interface GmcpContext {
   setDuelState: Dispatch<SetStateAction<DuelState | null>>;
   setDuelChallenge: Dispatch<SetStateAction<DuelChallenge | null>>;
   setDungeonInfo: Dispatch<SetStateAction<DungeonInfo | null>>;
+  setDungeonCatalog: Dispatch<SetStateAction<DungeonCatalogEntry[]>>;
   setPrestigeInfo: Dispatch<SetStateAction<PrestigeInfo | null>>;
 }
 
@@ -1901,6 +1903,34 @@ export function applyGmcpPackage(
         completed: packet.completed === true,
         memberCount: typeof packet.memberCount === "number" ? packet.memberCount : undefined,
       } : null);
+      break;
+    }
+
+    case "Dungeon.Catalog": {
+      ctx.setDungeonCatalog(
+        Array.isArray(data)
+          ? data
+              .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
+              .map((entry) => ({
+                id: typeof entry.id === "string" ? entry.id : "",
+                name: typeof entry.name === "string" ? entry.name : "",
+                description: typeof entry.description === "string" ? entry.description : "",
+                minLevel: safeNumber(entry.minLevel, 1),
+                portalHint: typeof entry.portalHint === "string" ? entry.portalHint : undefined,
+                difficulties: Array.isArray(entry.difficulties)
+                  ? entry.difficulties
+                      .filter((difficulty): difficulty is Record<string, unknown> => typeof difficulty === "object" && difficulty !== null)
+                      .map((difficulty) => ({
+                        id: typeof difficulty.id === "string" ? difficulty.id : "",
+                        label: typeof difficulty.label === "string" ? difficulty.label : "",
+                        summary: typeof difficulty.summary === "string" ? difficulty.summary : "",
+                      }))
+                      .filter((difficulty) => difficulty.id.length > 0)
+                  : [],
+              }))
+              .filter((entry) => entry.id.length > 0)
+          : [],
+      );
       break;
     }
 

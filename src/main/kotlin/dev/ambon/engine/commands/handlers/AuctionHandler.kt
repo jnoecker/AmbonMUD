@@ -80,25 +80,29 @@ class AuctionHandler(
         val auction = auctionSystem ?: return sendUnavailable(sessionId)
 
         if (cmd.price <= 0) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Price must be greater than 0."))
+            val message = "Price must be greater than 0."
+            outbound.send(OutboundEvent.SendError(sessionId, message))
+            sendAuctionFeedback(sessionId, "error", message, code = "INVALID_PRICE", command = "sell")
             return
         }
 
         players.withPlayer(sessionId) { me ->
             val listing = auction.postListing(sessionId, me.name, cmd.itemKeyword, cmd.price)
             if (listing == null) {
-                outbound.send(
-                    OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.itemKeyword}'."),
-                )
+                val message = "You aren't carrying '${cmd.itemKeyword}'."
+                outbound.send(OutboundEvent.SendError(sessionId, message))
+                sendAuctionFeedback(sessionId, "error", message, code = "ITEM_NOT_CARRIED", command = "sell")
                 return
             }
 
+            val message = "Listed ${listing.item.item.displayName} for ${listing.price} gold (listing #${listing.id})."
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
-                    "Listed ${listing.item.item.displayName} for ${listing.price} gold (listing #${listing.id}).",
+                    message,
                 ),
             )
+            sendAuctionFeedback(sessionId, "success", message, code = "LISTING_CREATED", command = "sell")
             syncItemsGmcp(sessionId, items, gmcpEmitter)
 
             // Broadcast to all online players
@@ -123,17 +127,16 @@ class AuctionHandler(
         players.withPlayer(sessionId) { me ->
             val listing = auction.getListing(cmd.listingId)
             if (listing == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "Listing #${cmd.listingId} not found."))
+                val message = "Listing #${cmd.listingId} not found."
+                outbound.send(OutboundEvent.SendError(sessionId, message))
+                sendAuctionFeedback(sessionId, "error", message, code = "LISTING_NOT_FOUND", command = "buy")
                 return
             }
 
             if (listing.sellerName.equals(me.name, ignoreCase = true)) {
-                outbound.send(
-                    OutboundEvent.SendError(
-                        sessionId,
-                        "You cannot buy your own listing. Use 'auction cancel ${cmd.listingId}'.",
-                    ),
-                )
+                val message = "You cannot buy your own listing. Use 'auction cancel ${cmd.listingId}'."
+                outbound.send(OutboundEvent.SendError(sessionId, message))
+                sendAuctionFeedback(sessionId, "error", message, code = "OWN_LISTING", command = "buy")
                 return
             }
 
@@ -147,16 +150,15 @@ class AuctionHandler(
 
             when (result) {
                 is AuctionPurchaseResult.ListingNotFound -> {
-                    outbound.send(OutboundEvent.SendError(sessionId, "That listing is no longer available."))
+                    val message = "That listing is no longer available."
+                    outbound.send(OutboundEvent.SendError(sessionId, message))
+                    sendAuctionFeedback(sessionId, "error", message, code = "LISTING_UNAVAILABLE", command = "buy")
                     return
                 }
                 is AuctionPurchaseResult.InsufficientGold -> {
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "You need ${result.need} gold but only have ${result.have}.",
-                        ),
-                    )
+                    val message = "You need ${result.need} gold but only have ${result.have}."
+                    outbound.send(OutboundEvent.SendError(sessionId, message))
+                    sendAuctionFeedback(sessionId, "error", message, code = "INSUFFICIENT_GOLD", command = "buy")
                     return
                 }
                 is AuctionPurchaseResult.Success -> { /* fall through */ }
@@ -181,12 +183,9 @@ class AuctionHandler(
                 creditOfflineSellerGold(purchased.sellerName, purchased.price)
             }
 
-            outbound.send(
-                OutboundEvent.SendInfo(
-                    sessionId,
-                    "You purchased ${purchased.item.item.displayName} for ${purchased.price} gold.",
-                ),
-            )
+            val message = "You purchased ${purchased.item.item.displayName} for ${purchased.price} gold."
+            outbound.send(OutboundEvent.SendInfo(sessionId, message))
+            sendAuctionFeedback(sessionId, "success", message, code = "PURCHASE_COMPLETE", command = "buy")
             markVitalsDirty(sessionId)
             syncItemsGmcp(sessionId, items, gmcpEmitter)
 
@@ -210,18 +209,20 @@ class AuctionHandler(
 
         val cancelled = auction.cancelListing(cmd.listingId, sessionId)
         if (cancelled == null) {
-            outbound.send(
-                OutboundEvent.SendError(sessionId, "Listing #${cmd.listingId} not found or not yours."),
-            )
+            val message = "Listing #${cmd.listingId} not found or not yours."
+            outbound.send(OutboundEvent.SendError(sessionId, message))
+            sendAuctionFeedback(sessionId, "error", message, code = "CANCEL_DENIED", command = "cancel")
             return
         }
 
+        val message = "Cancelled listing #${cancelled.id}. ${cancelled.item.item.displayName} returned to your inventory."
         outbound.send(
             OutboundEvent.SendInfo(
                 sessionId,
-                "Cancelled listing #${cancelled.id}. ${cancelled.item.item.displayName} returned to your inventory.",
+                message,
             ),
         )
+        sendAuctionFeedback(sessionId, "success", message, code = "LISTING_CANCELLED", command = "cancel")
         syncItemsGmcp(sessionId, items, gmcpEmitter)
 
         broadcastAuctionList(auction)
@@ -253,6 +254,25 @@ class AuctionHandler(
         )
 
     private suspend fun sendUnavailable(sessionId: SessionId) {
-        outbound.send(OutboundEvent.SendError(sessionId, "The auction house is not available."))
+        val message = "The auction house is not available."
+        outbound.send(OutboundEvent.SendError(sessionId, message))
+        sendAuctionFeedback(sessionId, "error", message, code = "UNAVAILABLE")
+    }
+
+    private suspend fun sendAuctionFeedback(
+        sessionId: SessionId,
+        type: String,
+        message: String,
+        code: String? = null,
+        command: String? = null,
+    ) {
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = type,
+            message = message,
+            code = code,
+            scope = "auction",
+            command = command,
+        )
     }
 }

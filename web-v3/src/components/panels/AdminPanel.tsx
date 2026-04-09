@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import type { StaffMobZone, StaffWorldZone, WhoPlayer } from "../../types";
+import type { RoomMob, StaffMobZone, StaffWorldZone, UiFeedbackEntry, WhoPlayer } from "../../types";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
@@ -8,9 +8,13 @@ interface AdminPanelProps {
   worldInfo: StaffWorldZone[];
   mobTemplates: StaffMobZone[];
   whoPlayers: WhoPlayer[];
+  roomMobs: RoomMob[];
+  possessing: string | null;
+  invisible: boolean;
+  feedbackFeed: UiFeedbackEntry[];
 }
 
-type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "setlevel" | "dispel" | "reload" | "broadcast" | "shutdown";
+type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "setlevel" | "dispel" | "reload" | "broadcast" | "shutdown" | "possess" | "return" | "invis";
 
 const ACTIONS: Array<{ id: AdminAction; label: string; description: string }> = [
   { id: "goto", label: "Goto", description: "Teleport to a room or player" },
@@ -23,6 +27,9 @@ const ACTIONS: Array<{ id: AdminAction; label: string; description: string }> = 
   { id: "reload", label: "Reload", description: "Reload world data" },
   { id: "broadcast", label: "Broadcast", description: "Send a server-wide announcement" },
   { id: "shutdown", label: "Shutdown", description: "Shut down the server" },
+  { id: "possess", label: "Possess", description: "Take control of a mob in this room" },
+  { id: "return", label: "Return", description: "Release a possessed mob and return" },
+  { id: "invis", label: "Invis", description: "Toggle staff invisibility" },
 ];
 
 function TeleportBrowser({
@@ -220,7 +227,44 @@ function MobTemplateBrowser({
   );
 }
 
-export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPlayers }: AdminPanelProps) {
+function RoomMobBrowser({
+  roomMobs,
+  onSelect,
+}: {
+  roomMobs: RoomMob[];
+  onSelect: (mobKeyword: string) => void;
+}) {
+  const mobs = useMemo(
+    () => [...roomMobs].sort((a, b) => a.name.localeCompare(b.name)),
+    [roomMobs],
+  );
+
+  if (mobs.length === 0) {
+    return <p className="empty-note">No mobs are currently in this room.</p>;
+  }
+
+  return (
+    <div className="teleport-browser">
+      <div className="teleport-section">
+        <h4 className="teleport-section-title">Current Room Mobs</h4>
+        <ul className="teleport-list">
+          {mobs.map((mob) => (
+            <li key={mob.id} className="teleport-item">
+              <span className="teleport-item-room">
+                <span className="teleport-item-title">{mob.name}</span>
+              </span>
+              <button type="button" className="teleport-go-btn" onClick={() => onSelect(mob.name)}>
+                Possess
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPlayers, roomMobs, possessing, invisible, feedbackFeed }: AdminPanelProps) {
   const [activeAction, setActiveAction] = useState<AdminAction | null>(null);
   const [inputA, setInputA] = useState("");
   const [inputB, setInputB] = useState("");
@@ -228,6 +272,10 @@ export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPla
   const [transferFilter, setTransferFilter] = useState("");
   const [spawnFilter, setSpawnFilter] = useState("");
   const [showShutdownConfirm, setShowShutdownConfirm] = useState(false);
+  const activeFeedback = useMemo(
+    () => [...feedbackFeed].reverse().find((entry) => entry.scope === "admin") ?? null,
+    [feedbackFeed],
+  );
 
   const resetForm = () => {
     setInputA("");
@@ -239,6 +287,18 @@ export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPla
   };
 
   const selectAction = (action: AdminAction) => {
+    if (action === "return") {
+      onCommand("return");
+      resetForm();
+      setActiveAction(null);
+      return;
+    }
+    if (action === "invis") {
+      onCommand("invis");
+      resetForm();
+      setActiveAction(null);
+      return;
+    }
     setActiveAction(activeAction === action ? null : action);
     resetForm();
   };
@@ -321,6 +381,13 @@ export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPla
         resetForm();
         break;
       }
+      case "possess": {
+        const target = inputA.trim();
+        if (!target) return;
+        onCommand(`possess ${target}`);
+        resetForm();
+        break;
+      }
     }
   };
 
@@ -334,13 +401,34 @@ export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPla
         onClick={(event) => event.stopPropagation()}
       >
         <header className="popout-header">
-          <h2>Staff Admin</h2>
+          <h2>Admin Console</h2>
           <button type="button" className="soft-button popout-close" onClick={onClose}>
             Close
           </button>
         </header>
 
         <div className="popout-content admin-content">
+      <div className="admin-status-strip">
+        <div className="admin-status-card">
+          <span className="admin-status-label">Visibility</span>
+              <strong>{invisible ? "Invisible" : "Visible"}</strong>
+            </div>
+            <div className="admin-status-card">
+              <span className="admin-status-label">Possession</span>
+              <strong>{possessing ?? "Body"}</strong>
+            </div>
+            <div className="admin-status-card">
+              <span className="admin-status-label">Players Online</span>
+              <strong>{whoPlayers.length}</strong>
+        </div>
+      </div>
+
+      {activeFeedback && (
+        <p className={`admin-feedback-banner admin-feedback-banner-${activeFeedback.type}`}>
+          {activeFeedback.message}
+        </p>
+      )}
+
           <div className="admin-action-grid">
             {ACTIONS.map((action) => (
               <button
@@ -547,6 +635,29 @@ export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPla
                     autoFocus
                   />
                 </label>
+              )}
+
+              {activeAction === "possess" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Mob in current room</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Mob keyword or name"
+                      value={inputA}
+                      onChange={(e) => setInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <RoomMobBrowser
+                    roomMobs={roomMobs}
+                    onSelect={(mobName) => {
+                      onCommand(`possess ${mobName}`);
+                      resetForm();
+                    }}
+                  />
+                </>
               )}
 
               {activeAction === "shutdown" && (

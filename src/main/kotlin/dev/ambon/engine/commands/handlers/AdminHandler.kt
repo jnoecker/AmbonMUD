@@ -77,16 +77,17 @@ class AdminHandler(
 
             val targetRoomId = resolveGotoArg(cmd.arg, me.roomId.zone, world)
             if (targetRoomId == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "No such room or player: ${cmd.arg}"))
+                sendAdminError(sessionId, "No such room or player: ${cmd.arg}", code = "TARGET_NOT_FOUND", command = "goto")
                 return
             }
             if (!world.rooms.containsKey(targetRoomId)) {
                 if (!attemptCrossZoneMove(sessionId, targetRoomId, onCrossZoneMove, router::suppressAutoPrompt)) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "No such room or player: ${cmd.arg}"))
+                    sendAdminError(sessionId, "No such room or player: ${cmd.arg}", code = "TARGET_NOT_FOUND", command = "goto")
                 }
                 return
             }
             players.moveTo(sessionId, targetRoomId)
+            sendAdminSuccess(sessionId, "Teleported to ${targetRoomId.value}.", code = "GOTO_COMPLETE", command = "goto")
             ctx.sendLook(sessionId)
         }
     }
@@ -106,23 +107,38 @@ class AdminHandler(
                             targetRoomId = cmd.arg,
                         ),
                     )
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "Transfer request sent to other engines."))
+                    sendAdminSuccess(
+                        sessionId,
+                        "Transfer request sent to other engines.",
+                        code = "TRANSFER_REQUESTED",
+                        command = "transfer",
+                    )
                 } else {
-                    outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.playerName}"))
+                    sendAdminError(
+                        sessionId,
+                        "No such player: ${cmd.playerName}",
+                        code = "PLAYER_NOT_FOUND",
+                        command = "transfer",
+                    )
                 }
                 return
             }
             players.withPlayer(targetSid) { targetPlayer ->
                 val targetRoomId = resolveGotoArg(cmd.arg, targetPlayer.roomId.zone, world)
                 if (targetRoomId == null || !world.rooms.containsKey(targetRoomId)) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
+                    sendAdminError(sessionId, "No such room: ${cmd.arg}", code = "ROOM_NOT_FOUND", command = "transfer")
                     return
                 }
                 players.moveTo(targetSid, targetRoomId)
                 outbound.send(OutboundEvent.SendText(targetSid, "You are transported by a divine hand."))
                 ctx.sendLook(targetSid)
                 outbound.send(OutboundEvent.SendPrompt(targetSid))
-                outbound.send(OutboundEvent.SendInfo(sessionId, "Transferred ${targetPlayer.name} to ${targetRoomId.value}."))
+                sendAdminSuccess(
+                    sessionId,
+                    "Transferred ${targetPlayer.name} to ${targetRoomId.value}.",
+                    code = "TRANSFER_COMPLETE",
+                    command = "transfer",
+                )
             }
         }
     }
@@ -134,7 +150,7 @@ class AdminHandler(
         players.withPlayer(sessionId) { me ->
             val template = findMobTemplate(cmd.templateArg)
             if (template == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "No mob template found: ${cmd.templateArg}"))
+                sendAdminError(sessionId, "No mob template found: ${cmd.templateArg}", code = "MOB_TEMPLATE_NOT_FOUND", command = "spawn")
                 return
             }
             val seq = ++adminSpawnSeq
@@ -158,6 +174,7 @@ class AdminHandler(
             mobs.upsert(spawned)
             broadcastToRoom(players, outbound, me.roomId, "${template.name} appears.")
             gmcpEmitter?.broadcastRoomAddMob(me.roomId, spawned, players)
+            sendAdminSuccess(sessionId, "Spawned ${template.name}.", code = "SPAWN_COMPLETE", command = "spawn")
         }
     }
 
@@ -283,7 +300,7 @@ class AdminHandler(
         cmd: Command.Dispel,
     ) {
         if (statusEffects == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Status effects are not available."))
+            sendAdminError(sessionId, "Status effects are not available.", code = "UNAVAILABLE", command = "dispel")
             return
         }
         val targetSid = players.findSessionByName(cmd.target)
@@ -298,10 +315,10 @@ class AdminHandler(
             val mob = combat.findMobInRoom(me.roomId, cmd.target)
             if (mob != null) {
                 statusEffects.removeAllFromMob(mob.id)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "Dispelled all effects from ${mob.name}."))
+                sendAdminSuccess(sessionId, "Dispelled all effects from ${mob.name}.", code = "DISPEL_COMPLETE", command = "dispel")
                 return
             }
-            outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
+            sendAdminError(sessionId, "No player or mob named '${cmd.target}'.", code = "TARGET_NOT_FOUND", command = "dispel")
         }
     }
 
@@ -310,23 +327,23 @@ class AdminHandler(
         cmd: Command.Reload,
     ) {
         if (onReload == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Hot reload is not configured."))
+            sendAdminError(sessionId, "Hot reload is not configured.", code = "UNAVAILABLE", command = "reload")
             return
         }
         val target = cmd.target?.lowercase()
         val validTargets = setOf("world", "abilities", "effects", "all")
         if (target != null && target !in validTargets) {
-            outbound.send(
-                OutboundEvent.SendError(
-                    sessionId,
-                    "Usage: reload [${validTargets.joinToString("|")}]  (default: all)",
-                ),
+            sendAdminError(
+                sessionId,
+                "Usage: reload [${validTargets.joinToString("|")}]  (default: all)",
+                code = "INVALID_TARGET",
+                command = "reload",
             )
             return
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Reloading ${target ?: "all"}..."))
         val summary = onReload.invoke(target)
-        outbound.send(OutboundEvent.SendInfo(sessionId, summary))
+        sendAdminSuccess(sessionId, summary, code = "RELOAD_COMPLETE", command = "reload")
     }
 
     private suspend fun handlePossess(
@@ -335,25 +352,29 @@ class AdminHandler(
     ) {
         players.withPlayer(sessionId) { me ->
             if (me.possessedMobId != null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "You are already possessing a mob. Use 'return' first."))
+                sendAdminError(
+                    sessionId,
+                    "You are already possessing a mob. Use 'return' first.",
+                    code = "ALREADY_POSSESSING",
+                    command = "possess",
+                )
                 return
             }
             if (combat.isInCombat(sessionId)) {
-                outbound.send(OutboundEvent.SendError(sessionId, "You cannot possess a mob while in combat."))
+                sendAdminError(sessionId, "You cannot possess a mob while in combat.", code = "IN_COMBAT", command = "possess")
                 return
             }
             val mob = mobs.findInRoomByKeyword(me.roomId, cmd.target).firstOrNull()
             if (mob == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "No mob '${cmd.target}' found in this room."))
+                sendAdminError(sessionId, "No mob '${cmd.target}' found in this room.", code = "MOB_NOT_FOUND", command = "possess")
                 return
             }
             me.possessedMobId = mob.id
             me.prePossessRoomId = me.roomId
             setInvisible(sessionId, me, true)
             gmcpEmitter?.sendStaffPossessionState(sessionId, true, mob.name)
-            outbound.send(
-                OutboundEvent.SendInfo(sessionId, "You take control of ${mob.name}. Type 'return' or 'recall' to release."),
-            )
+            val message = "You take control of ${mob.name}. Type 'return' or 'recall' to release."
+            sendAdminSuccess(sessionId, message, code = "POSSESS_COMPLETE", command = "possess")
             outbound.send(OutboundEvent.SendPrompt(sessionId))
         }
     }
@@ -362,7 +383,7 @@ class AdminHandler(
         players.withPlayer(sessionId) { me ->
             val mobId = me.possessedMobId
             if (mobId == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "You are not possessing a mob."))
+                sendAdminError(sessionId, "You are not possessing a mob.", code = "NOT_POSSESSING", command = "return")
                 return
             }
             val mobName = mobs.get(mobId)?.name ?: "the mob"
@@ -375,7 +396,8 @@ class AdminHandler(
                 players.moveTo(sessionId, returnRoom)
                 ctx.sendLook(sessionId)
             }
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You release $mobName and return to your body."))
+            val message = "You release $mobName and return to your body."
+            sendAdminSuccess(sessionId, message, code = "RETURN_COMPLETE", command = "return")
             outbound.send(OutboundEvent.SendPrompt(sessionId))
         }
     }
@@ -545,7 +567,9 @@ class AdminHandler(
         players.withPlayer(sessionId) { me ->
             setInvisible(sessionId, me, !me.invisible)
             val state = if (me.invisible) "invisible" else "visible"
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You are now $state."))
+            val message = "You are now $state."
+            outbound.send(OutboundEvent.SendInfo(sessionId, message))
+            sendAdminSuccess(sessionId, message, code = "VISIBILITY_CHANGED", command = "invis")
             outbound.send(OutboundEvent.SendPrompt(sessionId))
         }
     }
@@ -598,5 +622,39 @@ class AdminHandler(
                 it.id.value.substringAfter(':', it.id.value).lowercase() == lowerLocal
             }
         }
+    }
+
+    private suspend fun sendAdminError(
+        sessionId: SessionId,
+        message: String,
+        code: String? = null,
+        command: String? = null,
+    ) {
+        outbound.send(OutboundEvent.SendError(sessionId, message))
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = "error",
+            message = message,
+            code = code,
+            scope = "admin",
+            command = command,
+        )
+    }
+
+    private suspend fun sendAdminSuccess(
+        sessionId: SessionId,
+        message: String,
+        code: String? = null,
+        command: String? = null,
+    ) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, message))
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = "success",
+            message = message,
+            code = code,
+            scope = "admin",
+            command = command,
+        )
     }
 }

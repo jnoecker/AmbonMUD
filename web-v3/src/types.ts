@@ -1,4 +1,5 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "auction" | "puzzle" | "features" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "auction" | "systems" | "puzzle" | "features" | null;
+export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 export type RoomFeatureType = "door" | "container" | "lever" | "sign";
@@ -630,6 +631,31 @@ export interface UiFeedback {
   command?: string;
 }
 
+export interface UiFeedbackEntry extends UiFeedback {
+  id: string;
+  receivedAt: number;
+}
+
+export interface CurrencyActivity {
+  id: string;
+  currencyId: string;
+  name: string;
+  abbreviation: string;
+  delta: number;
+  balance: number;
+  receivedAt: number;
+}
+
+export interface FactionActivity {
+  id: string;
+  factionId: string;
+  name: string;
+  delta: number;
+  reputation: number;
+  tier: string;
+  receivedAt: number;
+}
+
 export interface LookTargetInfo {
   type: "mob" | "player" | "item" | "feature";
   name: string;
@@ -816,6 +842,21 @@ export interface DungeonInfo {
   totalRooms?: number;
   completed?: boolean;
   memberCount?: number;
+}
+
+export interface DungeonCatalogDifficulty {
+  id: string;
+  label: string;
+  summary: string;
+}
+
+export interface DungeonCatalogEntry {
+  id: string;
+  name: string;
+  description: string;
+  minLevel: number;
+  portalHint?: string;
+  difficulties: DungeonCatalogDifficulty[];
 }
 
 export interface PrestigePerk {

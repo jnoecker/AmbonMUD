@@ -6,6 +6,7 @@ import { EntityPopout } from "../systems/EntityPopout";
 import { AmbientMotes } from "../systems/AmbientMotes";
 import { RoomTransition } from "../systems/RoomTransition";
 import type { MobInfo } from "../../types";
+import { ROOM_SURFACE_WIDGETS, roomHasSurfaceWidget } from "../../featureMetadata";
 
 /** Resolves a global asset key to its server-provided URL, with a hardcoded fallback. */
 function assetUrl(key: string, fallbackFilename: string): string {
@@ -126,6 +127,13 @@ export class WorldScene {
   private shopHitArea = new Graphics();
   private shopVisible = false;
 
+  private auctionBadge: Container;
+  private auctionSprite: Sprite | null = null;
+  private auctionLabel: Text;
+  private auctionLabelBg = new Graphics();
+  private auctionHitArea = new Graphics();
+  private auctionVisible = false;
+
   private targetingText: Text | null = null;
   private targetingBg = new Graphics();
   private targetingAnimTime = 0;
@@ -170,6 +178,27 @@ export class WorldScene {
   private tavernLabelBg = new Graphics();
   private tavernHitArea = new Graphics();
   private tavernVisible = false;
+
+  private lotteryBadge: Container | null = null;
+  private lotterySprite: Sprite | null = null;
+  private lotteryLabel: Text | null = null;
+  private lotteryLabelBg = new Graphics();
+  private lotteryHitArea = new Graphics();
+  private lotteryVisible = false;
+
+  private dungeonBadge: Container | null = null;
+  private dungeonSprite: Sprite | null = null;
+  private dungeonLabel: Text | null = null;
+  private dungeonLabelBg = new Graphics();
+  private dungeonHitArea = new Graphics();
+  private dungeonVisible = false;
+
+  private duelBadge: Container | null = null;
+  private duelSprite: Sprite | null = null;
+  private duelLabel: Text | null = null;
+  private duelLabelBg = new Graphics();
+  private duelHitArea = new Graphics();
+  private duelVisible = false;
 
   private puzzleBadge: Container | null = null;
   private puzzleSprite: Sprite | null = null;
@@ -298,6 +327,34 @@ export class WorldScene {
     // lazily in update() once Server.Assets GMCP arrives, to avoid 404s
     // from fallback URLs when assets live on a CDN.
 
+    this.auctionBadge = new Container();
+    this.auctionBadge.visible = false;
+    this.auctionBadge.eventMode = "static";
+    this.auctionBadge.cursor = "pointer";
+    this.auctionBadge.on("pointerdown", () => {
+      canvasCallbacks.openAuction?.();
+    });
+    this.auctionBadge.on("pointerover", () => {
+      if (this.auctionSprite) this.auctionSprite.alpha = 1;
+    });
+    this.auctionBadge.on("pointerout", () => {
+      if (this.auctionSprite) this.auctionSprite.alpha = 0.85;
+    });
+    this.auctionHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.auctionHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.auctionHitArea.eventMode = "auto";
+    this.auctionBadge.addChild(this.auctionHitArea);
+    this.auctionLabel = new Text({
+      text: ROOM_SURFACE_WIDGETS.auction.label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#d8c18b", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.auctionLabel.anchor.set(0.5, 0);
+    this.auctionLabel.y = hs / 2 + 2;
+    this.auctionLabel.eventMode = "none";
+    this.auctionLabelBg.eventMode = "none";
+    this.auctionBadge.addChild(this.auctionLabelBg);
+    this.auctionBadge.addChild(this.auctionLabel);
+
     // Station badge — floating icon when a crafting station is present
     this.stationBadge = new Container();
     this.stationBadge.visible = false;
@@ -413,6 +470,90 @@ export class WorldScene {
     this.tavernLabelBg.eventMode = "none";
     this.tavernBadge.addChild(this.tavernLabelBg);
     this.tavernBadge.addChild(this.tavernLabel);
+
+    this.lotteryBadge = new Container();
+    this.lotteryBadge.visible = false;
+    this.lotteryBadge.eventMode = "static";
+    this.lotteryBadge.cursor = "pointer";
+    this.lotteryBadge.on("pointerdown", () => {
+      canvasCallbacks.openSystems?.("lottery");
+    });
+    this.lotteryBadge.on("pointerover", () => {
+      if (this.lotterySprite) this.lotterySprite.alpha = 1;
+    });
+    this.lotteryBadge.on("pointerout", () => {
+      if (this.lotterySprite) this.lotterySprite.alpha = 0.85;
+    });
+    this.lotteryHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.lotteryHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.lotteryHitArea.eventMode = "auto";
+    this.lotteryBadge.addChild(this.lotteryHitArea);
+    this.lotteryLabel = new Text({
+      text: ROOM_SURFACE_WIDGETS.lottery.label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#d7dda0", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.lotteryLabel.anchor.set(0.5, 0);
+    this.lotteryLabel.y = hs / 2 + 2;
+    this.lotteryLabel.eventMode = "none";
+    this.lotteryLabelBg.eventMode = "none";
+    this.lotteryBadge.addChild(this.lotteryLabelBg);
+    this.lotteryBadge.addChild(this.lotteryLabel);
+
+    this.dungeonBadge = new Container();
+    this.dungeonBadge.visible = false;
+    this.dungeonBadge.eventMode = "static";
+    this.dungeonBadge.cursor = "pointer";
+    this.dungeonBadge.on("pointerdown", () => {
+      canvasCallbacks.openSystems?.("dungeon");
+    });
+    this.dungeonBadge.on("pointerover", () => {
+      if (this.dungeonSprite) this.dungeonSprite.alpha = 1;
+    });
+    this.dungeonBadge.on("pointerout", () => {
+      if (this.dungeonSprite) this.dungeonSprite.alpha = 0.85;
+    });
+    this.dungeonHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.dungeonHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.dungeonHitArea.eventMode = "auto";
+    this.dungeonBadge.addChild(this.dungeonHitArea);
+    this.dungeonLabel = new Text({
+      text: ROOM_SURFACE_WIDGETS.dungeon.label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#a7b8ff", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.dungeonLabel.anchor.set(0.5, 0);
+    this.dungeonLabel.y = hs / 2 + 2;
+    this.dungeonLabel.eventMode = "none";
+    this.dungeonLabelBg.eventMode = "none";
+    this.dungeonBadge.addChild(this.dungeonLabelBg);
+    this.dungeonBadge.addChild(this.dungeonLabel);
+
+    this.duelBadge = new Container();
+    this.duelBadge.visible = false;
+    this.duelBadge.eventMode = "static";
+    this.duelBadge.cursor = "pointer";
+    this.duelBadge.on("pointerdown", () => {
+      canvasCallbacks.openSystems?.("duel");
+    });
+    this.duelBadge.on("pointerover", () => {
+      if (this.duelSprite) this.duelSprite.alpha = 1;
+    });
+    this.duelBadge.on("pointerout", () => {
+      if (this.duelSprite) this.duelSprite.alpha = 0.85;
+    });
+    this.duelHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.duelHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.duelHitArea.eventMode = "auto";
+    this.duelBadge.addChild(this.duelHitArea);
+    this.duelLabel = new Text({
+      text: ROOM_SURFACE_WIDGETS.duel.label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#e6a3a3", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.duelLabel.anchor.set(0.5, 0);
+    this.duelLabel.y = hs / 2 + 2;
+    this.duelLabel.eventMode = "none";
+    this.duelLabelBg.eventMode = "none";
+    this.duelBadge.addChild(this.duelLabelBg);
+    this.duelBadge.addChild(this.duelLabel);
 
     // Puzzle badge — floating icon when a puzzle is present in the room
     this.puzzleBadge = new Container();
@@ -547,10 +688,14 @@ export class WorldScene {
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
+    this.container.addChild(this.auctionBadge);
     this.container.addChild(this.stationBadge);
     this.container.addChild(this.trainerBadge);
     this.container.addChild(this.bankBadge!);
     this.container.addChild(this.tavernBadge!);
+    this.container.addChild(this.lotteryBadge!);
+    this.container.addChild(this.dungeonBadge!);
+    this.container.addChild(this.duelBadge!);
     this.container.addChild(this.puzzleBadge!);
     this.container.addChild(this.doorBadge!);
     this.container.addChild(this.containerBadge!);
@@ -586,10 +731,14 @@ export class WorldScene {
     if (!this.assetsLoaded && Object.keys(state.serverAssets).length > 0) {
       this.assetsLoaded = true;
       this.loadShopIcon();
+      this.loadAuctionIcon();
       this.loadStationIcon();
       this.loadTrainerIcon();
       this.loadBankIcon();
       this.loadTavernIcon();
+      this.loadLotteryIcon();
+      this.loadDungeonIcon();
+      this.loadDuelIcon();
       this.loadPuzzleIcon();
       this.loadDoorIcon();
       this.loadContainerIcon();
@@ -693,6 +842,12 @@ export class WorldScene {
       this.shopBadge.visible = hasShop;
     }
 
+    const hasAuction = roomHasSurfaceWidget(state.room.id, "auction");
+    if (hasAuction !== this.auctionVisible) {
+      this.auctionVisible = hasAuction;
+      this.auctionBadge.visible = hasAuction;
+    }
+
     // Station badge visibility
     const hasStation = !!state.room.station;
     if (hasStation !== this.stationVisible) {
@@ -726,6 +881,24 @@ export class WorldScene {
     if (hasTavern !== this.tavernVisible) {
       this.tavernVisible = hasTavern;
       if (this.tavernBadge) this.tavernBadge.visible = hasTavern;
+    }
+
+    const hasLottery = roomHasSurfaceWidget(state.room.id, "lottery");
+    if (hasLottery !== this.lotteryVisible) {
+      this.lotteryVisible = hasLottery;
+      if (this.lotteryBadge) this.lotteryBadge.visible = hasLottery;
+    }
+
+    const hasDungeon = roomHasSurfaceWidget(state.room.id, "dungeon");
+    if (hasDungeon !== this.dungeonVisible) {
+      this.dungeonVisible = hasDungeon;
+      if (this.dungeonBadge) this.dungeonBadge.visible = hasDungeon;
+    }
+
+    const hasDuel = roomHasSurfaceWidget(state.room.id, "duel");
+    if (hasDuel !== this.duelVisible) {
+      this.duelVisible = hasDuel;
+      if (this.duelBadge) this.duelBadge.visible = hasDuel;
     }
 
     // Puzzle badge visibility — driven by Puzzle.List GMCP (state.puzzle non-null)
@@ -848,10 +1021,14 @@ export class WorldScene {
       hitArea.visible = !stripMode;
     }
     this.shopBadge.visible = this.shopVisible && !stripMode;
+    this.auctionBadge.visible = this.auctionVisible && !stripMode;
     this.stationBadge.visible = this.stationVisible && !stripMode;
     this.trainerBadge.visible = this.trainerVisible && !stripMode;
     if (this.bankBadge) this.bankBadge.visible = this.bankVisible && !stripMode;
     if (this.tavernBadge) this.tavernBadge.visible = this.tavernVisible && !stripMode;
+    if (this.lotteryBadge) this.lotteryBadge.visible = this.lotteryVisible && !stripMode;
+    if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
+    if (this.duelBadge) this.duelBadge.visible = this.duelVisible && !stripMode;
     if (this.puzzleBadge) this.puzzleBadge.visible = this.puzzleVisible && !stripMode;
     if (this.doorBadge) this.doorBadge.visible = this.doorVisible && !stripMode;
     if (this.containerBadge) this.containerBadge.visible = this.containerVisible && !stripMode;
@@ -1024,6 +1201,13 @@ export class WorldScene {
       badgeSlot++;
     }
 
+    if (this.auctionBadge.visible) {
+      this.auctionBadge.x = badgeX;
+      this.auctionBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.auctionLabelBg, this.auctionLabel);
+      badgeSlot++;
+    }
+
     if (this.stationBadge.visible) {
       this.stationBadge.x = badgeX;
       this.stationBadge.y = badgeStartY + badgeSlot * badgeSpacing;
@@ -1049,6 +1233,27 @@ export class WorldScene {
       this.tavernBadge.x = badgeX;
       this.tavernBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.tavernLabelBg, this.tavernLabel!);
+      badgeSlot++;
+    }
+
+    if (this.lotteryBadge?.visible) {
+      this.lotteryBadge.x = badgeX;
+      this.lotteryBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.lotteryLabelBg, this.lotteryLabel!);
+      badgeSlot++;
+    }
+
+    if (this.dungeonBadge?.visible) {
+      this.dungeonBadge.x = badgeX;
+      this.dungeonBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.dungeonLabelBg, this.dungeonLabel!);
+      badgeSlot++;
+    }
+
+    if (this.duelBadge?.visible) {
+      this.duelBadge.x = badgeX;
+      this.duelBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.duelLabelBg, this.duelLabel!);
       badgeSlot++;
     }
 
@@ -1569,6 +1774,22 @@ export class WorldScene {
     }
   }
 
+  private async loadAuctionIcon() {
+    try {
+      const texture = await Assets.load(assetUrl(ROOM_SURFACE_WIDGETS.auction.assetKey, ROOM_SURFACE_WIDGETS.auction.fallbackFilename));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.auctionSprite = sprite;
+      this.auctionBadge.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
   private async loadStationIcon() {
     try {
       const texture = await Assets.load(assetUrl("crafting_station", "crafting_station.png"));
@@ -1628,6 +1849,54 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.tavernSprite = sprite;
       this.tavernBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadLotteryIcon() {
+    try {
+      const texture = await Assets.load(assetUrl(ROOM_SURFACE_WIDGETS.lottery.assetKey, ROOM_SURFACE_WIDGETS.lottery.fallbackFilename));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.lotterySprite = sprite;
+      this.lotteryBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadDungeonIcon() {
+    try {
+      const texture = await Assets.load(assetUrl(ROOM_SURFACE_WIDGETS.dungeon.assetKey, ROOM_SURFACE_WIDGETS.dungeon.fallbackFilename));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.dungeonSprite = sprite;
+      this.dungeonBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadDuelIcon() {
+    try {
+      const texture = await Assets.load(assetUrl(ROOM_SURFACE_WIDGETS.duel.assetKey, ROOM_SURFACE_WIDGETS.duel.fallbackFilename));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.duelSprite = sprite;
+      this.duelBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

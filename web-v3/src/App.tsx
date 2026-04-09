@@ -20,6 +20,7 @@ import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { BankPanel } from "./components/panels/BankPanel";
 import { AuctionPanel } from "./components/panels/AuctionPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
+import { SystemsPanel } from "./components/panels/SystemsPanel";
 import { HelpContent } from "./components/HelpContent";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
@@ -31,7 +32,7 @@ import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
-import type { ChatChannel, FeaturePopoutFocus, PopoutPanel } from "./types";
+import type { ChatChannel, FeaturePopoutFocus, PopoutPanel, SystemPanelView } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
 
@@ -49,6 +50,7 @@ function App() {
   // Ctrl+K command palette
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [featureFocus, setFeatureFocus] = useState<FeaturePopoutFocus>(null);
+  const [systemPanelView, setSystemPanelView] = useState<SystemPanelView>("dungeon");
 
   // Staff admin panel + invisibility toggle
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -178,6 +180,11 @@ function App() {
     state.setActivePopout(panel);
   };
 
+  const openSystemsPanel = (view: SystemPanelView) => {
+    setSystemPanelView(view);
+    openPanel("systems");
+  };
+
   // Sync state into canvas bridge for PixiJS
   useEffect(() => {
     gameStateRef.current = {
@@ -212,7 +219,9 @@ function App() {
   useEffect(() => {
     canvasCallbacks.sendCommand = (cmd: string) => sendCommand(cmd);
     canvasCallbacks.openShop = () => openPanel("shop");
+    canvasCallbacks.openAuction = () => openPanel("auction");
     canvasCallbacks.openPuzzle = () => openPanel("puzzle");
+    canvasCallbacks.openSystems = (view: SystemPanelView) => openSystemsPanel(view);
     canvasCallbacks.openFeatures = (preferredType?: FeaturePopoutFocus) => openPanel("features", preferredType ?? null);
     canvasCallbacks.openBank = () => openPanel("bank");
     canvasCallbacks.openTrainer = () => openPanel("trainer");
@@ -225,7 +234,9 @@ function App() {
     return () => {
       canvasCallbacks.sendCommand = null;
       canvasCallbacks.openShop = null;
+      canvasCallbacks.openAuction = null;
       canvasCallbacks.openPuzzle = null;
+      canvasCallbacks.openSystems = null;
       canvasCallbacks.openFeatures = null;
       canvasCallbacks.openBank = null;
       canvasCallbacks.openTrainer = null;
@@ -414,12 +425,23 @@ function App() {
       case "leaderboard": return "Leaderboard";
       case "bank": return "Bank";
       case "auction": return "Auction House";
+      case "systems":
+        switch (systemPanelView) {
+          case "dungeon": return "Dungeon";
+          case "duel": return "Dueling";
+          case "lottery": return "Lottery";
+          case "pet": return "Pet";
+          case "prestige": return "Prestige";
+          case "currencies": return "Wallet";
+          case "factions": return "Factions";
+          default: return "Systems";
+        }
       case "help": return "Command Reference";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
       default: return "";
     }
-  }, [drawerPanel, state.shop?.name, state.trainer?.name, state.room.title]);
+  }, [drawerPanel, state.shop?.name, state.trainer?.name, state.room.title, systemPanelView]);
 
   const sortedExits = useMemo(() => sortExits(state.room.exits), [state.room.exits]);
   const questMarkerCount = useMemo(
@@ -501,6 +523,7 @@ function App() {
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
             onOpenInventory={() => openPanel("inventory")}
             onOpenEquipment={() => openPanel("equipment")}
+            onOpenSystem={openSystemsPanel}
             onCommand={sendCommand}
             onLogout={() => {
               try {
@@ -682,7 +705,34 @@ function App() {
         )}
 
         {drawerPanel === "auction" && (
-          <AuctionPanel listings={state.auctionListings} onCommand={sendCommand} />
+          <AuctionPanel
+            listings={state.auctionListings}
+            inventory={state.inventory}
+            playerName={state.character.name}
+            feedbackFeed={state.uiFeedbackFeed}
+            onCommand={sendCommand}
+          />
+        )}
+
+        {drawerPanel === "systems" && (
+          <SystemsPanel
+            initialView={systemPanelView}
+            vitals={state.vitals}
+            nearbyPlayers={state.players}
+            currencies={state.currencies}
+            currencyActivity={state.currencyActivity}
+            factions={state.factions}
+            factionActivity={state.factionActivity}
+            petState={state.petState}
+            lotteryInfo={state.lotteryInfo}
+            duelState={state.duelState}
+            duelChallenge={state.duelChallenge}
+            dungeonInfo={state.dungeonInfo}
+            dungeonCatalog={state.dungeonCatalog}
+            prestigeInfo={state.prestigeInfo}
+            uiFeedbackFeed={state.uiFeedbackFeed}
+            onCommand={sendCommand}
+          />
         )}
 
         {drawerPanel === "help" && (
@@ -847,7 +897,12 @@ function App() {
 
       {/* Trade is its own modal-like overlay */}
       {state.tradeState?.active && (
-        <TradePanel trade={state.tradeState} onCommand={sendCommand} />
+        <TradePanel
+          trade={state.tradeState}
+          inventory={state.inventory}
+          playerGold={state.vitals.gold}
+          onCommand={sendCommand}
+        />
       )}
 
       {/* Login flow modals */}
@@ -981,11 +1036,18 @@ function App() {
 
           {showAdminPanel && (
             <AdminPanel
-              onCommand={sendCommand}
+              onCommand={(command) => {
+                sendCommand(command);
+                if (command === "invis") setStaffInvisible((value) => !value);
+              }}
               onClose={() => setShowAdminPanel(false)}
               worldInfo={state.staffWorldInfo}
               mobTemplates={state.staffMobTemplates}
               whoPlayers={state.whoPlayers}
+              roomMobs={state.mobs}
+              possessing={state.possessing}
+              invisible={staffInvisible}
+              feedbackFeed={state.uiFeedbackFeed}
             />
           )}
         </>

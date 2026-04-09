@@ -4,6 +4,7 @@ import dev.ambon.bus.InboundBus
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EngineConfig
 import dev.ambon.config.LoginConfig
+import dev.ambon.domain.dungeon.DungeonDifficulty
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -1842,6 +1843,7 @@ class GameEngine(
             players,
             guildSystem,
         )
+        emitDungeonCatalog(newSessionId)
         if (me.isStaff) {
             gmcpEmitter.sendStaffWorldInfo(newSessionId, world)
             gmcpEmitter.sendStaffMobTemplates(newSessionId, world)
@@ -1940,6 +1942,7 @@ class GameEngine(
             players,
             guildSystem,
         )
+        emitDungeonCatalog(sessionId)
         if (player.isStaff) {
             gmcpEmitter.sendStaffWorldInfo(sessionId, world)
             gmcpEmitter.sendStaffMobTemplates(sessionId, world)
@@ -2395,6 +2398,51 @@ class GameEngine(
             },
         )
     }
+
+    private suspend fun emitDungeonCatalog(sessionId: SessionId) {
+        gmcpEmitter.sendDungeonCatalog(
+            sessionId,
+            dungeonRegistry.all()
+                .sortedWith(compareBy({ it.minLevel }, { it.name }))
+                .map { template ->
+                    GmcpEmitter.DungeonCatalogEntryPayload(
+                        id = template.id,
+                        name = template.name,
+                        description = template.description,
+                        minLevel = template.minLevel,
+                        portalHint = buildDungeonPortalHint(template),
+                        difficulties = DungeonDifficulty.entries.map { difficulty ->
+                            GmcpEmitter.DungeonCatalogDifficultyPayload(
+                                id = difficulty.name.lowercase(),
+                                label = difficulty.displayName,
+                                summary = dungeonDifficultySummary(difficulty),
+                            )
+                        },
+                    )
+                },
+        )
+    }
+
+    private fun buildDungeonPortalHint(template: dev.ambon.domain.dungeon.DungeonTemplateDef): String? {
+        val portalLocalId = template.portalRoom ?: return null
+        val portalRoomId = RoomId("${template.id.substringBefore(':')}:$portalLocalId")
+        val portalRoom = world.rooms[portalRoomId] ?: return null
+        val outsideRoom = portalRoom.exits.values
+            .firstOrNull { exit -> exit.zone != portalRoomId.zone }
+            ?.let(world.rooms::get)
+        return when {
+            outsideRoom != null -> "Access from ${outsideRoom.title} through ${portalRoom.title}."
+            else -> "Access via ${portalRoom.title}."
+        }
+    }
+
+    private fun dungeonDifficultySummary(difficulty: DungeonDifficulty): String =
+        when (difficulty) {
+            DungeonDifficulty.LORE -> "Low-risk sightseeing run with little reward."
+            DungeonDifficulty.NORMAL -> "Standard dungeon pacing and rewards."
+            DungeonDifficulty.HARD -> "Heavier damage, tougher mobs, better rewards."
+            DungeonDifficulty.HEROIC -> "Maximum challenge with top-end loot and XP."
+        }
 
     /** Schedules a leaderboard refresh, then re-schedules itself for the next interval. */
     private suspend fun scheduleLeaderboardRefresh(sys: LeaderboardSystem) {

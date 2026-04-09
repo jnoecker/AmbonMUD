@@ -26,6 +26,7 @@ class TradeHandler(
         router.on<Command.TradeRequest> { sid, cmd -> handleTradeRequest(sid, cmd) }
         router.on<Command.TradeOffer> { sid, cmd -> handleTradeOffer(sid, cmd) }
         router.on<Command.TradeOfferGold> { sid, cmd -> handleTradeOfferGold(sid, cmd) }
+        router.on<Command.TradeRemove> { sid, cmd -> handleTradeRemove(sid, cmd) }
         router.on<Command.TradeAccept> { sid, _ -> handleTradeAccept(sid) }
         router.on<Command.TradeCancel> { sid, _ -> handleTradeCancel(sid) }
         router.on<Command.TradeStatus> { sid, _ -> handleTradeStatus(sid) }
@@ -124,6 +125,30 @@ class TradeHandler(
                 emitTradeState(session)
             }
         }
+    }
+
+    private suspend fun handleTradeRemove(sessionId: SessionId, cmd: Command.TradeRemove) {
+        val ts = tradeSystem ?: return sendUnavailable(sessionId)
+
+        if (!ts.isInTrade(sessionId)) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You are not in a trade."))
+            return
+        }
+
+        val result = ts.removeOfferedItem(sessionId, cmd.itemRef)
+        if (result == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "That item is not part of your current offer."))
+            return
+        }
+
+        val (session, item) = result
+        val otherSid = session.otherSid(sessionId)
+        val myName = players.get(sessionId)?.name ?: "Someone"
+
+        outbound.send(OutboundEvent.SendInfo(sessionId, "You remove ${item.item.displayName} from the trade."))
+        outbound.send(OutboundEvent.SendInfo(otherSid, "$myName removes ${item.item.displayName} from the trade."))
+        syncItemsGmcp(sessionId, items, gmcpEmitter)
+        emitTradeState(session)
     }
 
     private suspend fun handleTradeAccept(sessionId: SessionId) {

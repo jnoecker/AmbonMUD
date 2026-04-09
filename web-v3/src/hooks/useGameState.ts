@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import type { SetStateAction } from "react";
 import { applyGmcpPackage } from "../gmcp/applyGmcpPackage";
 import { canvasEvents } from "../canvas/CanvasEventBus";
 import {
@@ -31,9 +32,11 @@ import type {
   DialogueState,
   DuelChallenge,
   DuelState,
+  DungeonCatalogEntry,
   DungeonInfo,
   EmotePreset,
   EquipmentSlotDef,
+  FactionActivity,
   FactionStanding,
   FriendEntry,
   FriendNotification,
@@ -77,6 +80,7 @@ import type {
   StatusVarLabels,
   TradeState,
   TrainerData,
+  UiFeedbackEntry,
   UiFeedback,
   Vitals,
   WhoPlayer,
@@ -84,6 +88,7 @@ import type {
   WorldTime,
   WorldWeather,
   ZoneInstances,
+  CurrencyActivity,
 } from "../types";
 
 function createEmptyChatByChannel(): Record<ChatChannel, ChatMessage[]> {
@@ -129,6 +134,9 @@ function combatEventToLogMessage(event: CombatEventData): CombatLogMessage | nul
 const MAX_COMBAT_LOG = 20;
 const MAX_QUEST_NOTIFICATIONS = 5;
 const MAX_FRIEND_NOTIFICATIONS = 5;
+const MAX_UI_FEEDBACK_FEED = 20;
+const MAX_SYSTEM_ACTIVITY = 12;
+let systemActivityIdCounter = 0;
 
 export interface MiniMapBridge {
   updateMap: (
@@ -219,6 +227,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [currencies, setCurrencies] = useState<CurrencyBalance[]>([]);
   const [bankState, setBankState] = useState<BankState | null>(null);
   const [lotteryInfo, setLotteryInfo] = useState<LotteryInfo | null>(null);
+  const [currencyActivity, setCurrencyActivity] = useState<CurrencyActivity[]>([]);
 
   // ── Crafting ──────────────────────────────────────
   const [craftingSkills, setCraftingSkills] = useState<CraftingSkill[]>([]);
@@ -233,6 +242,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [worldEvents, setWorldEvents] = useState<WorldEvent[]>([]);
   const [factions, setFactions] = useState<FactionStanding[]>([]);
   const [dungeonInfo, setDungeonInfo] = useState<DungeonInfo | null>(null);
+  const [dungeonCatalog, setDungeonCatalog] = useState<DungeonCatalogEntry[]>([]);
+  const [factionActivity, setFactionActivity] = useState<FactionActivity[]>([]);
 
   // ── Housing & pets ────────────────────────────────
   const [housing, setHousing] = useState<HousingInfo | null>(null);
@@ -270,6 +281,9 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [broadcast, setBroadcast] = useState<{ sender: string; message: string } | null>(null);
   const [possessing, setPossessing] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [uiFeedbackFeed, setUiFeedbackFeed] = useState<UiFeedbackEntry[]>([]);
+  const currenciesRef = useRef<CurrencyBalance[]>([]);
+  const factionsRef = useRef<FactionStanding[]>([]);
 
   // ── Push helpers ──────────────────────────────────
   const pushCombatLogMessage = useCallback((msg: CombatLogMessage) => {
@@ -287,6 +301,15 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   }, [pushCombatLogMessage]);
 
   const pushUiFeedback = useCallback((feedback: UiFeedback) => {
+    const entry: UiFeedbackEntry = {
+      ...feedback,
+      id: `ui-feedback-${Date.now()}-${++systemActivityIdCounter}`,
+      receivedAt: Date.now(),
+    };
+    setUiFeedbackFeed((prev) => {
+      const next = [...prev, entry];
+      return next.length > MAX_UI_FEEDBACK_FEED ? next.slice(-MAX_UI_FEEDBACK_FEED) : next;
+    });
     const style = feedback.type === "error" ? "error" : feedback.type === "success" ? "heal" : "info";
     pushCombatLogMessage({
       id: ++combatLogIdCounter,
@@ -298,6 +321,86 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       setToast(feedback.message);
     }
   }, [pushCombatLogMessage, setToast]);
+
+  const pushCurrencyActivity = useCallback((activity: Omit<CurrencyActivity, "id" | "receivedAt">) => {
+    const entry: CurrencyActivity = {
+      ...activity,
+      id: `currency-activity-${Date.now()}-${++systemActivityIdCounter}`,
+      receivedAt: Date.now(),
+    };
+    setCurrencyActivity((prev) => {
+      const next = [...prev, entry];
+      return next.length > MAX_SYSTEM_ACTIVITY ? next.slice(-MAX_SYSTEM_ACTIVITY) : next;
+    });
+  }, []);
+
+  const pushFactionActivity = useCallback((activity: Omit<FactionActivity, "id" | "receivedAt">) => {
+    const entry: FactionActivity = {
+      ...activity,
+      id: `faction-activity-${Date.now()}-${++systemActivityIdCounter}`,
+      receivedAt: Date.now(),
+    };
+    setFactionActivity((prev) => {
+      const next = [...prev, entry];
+      return next.length > MAX_SYSTEM_ACTIVITY ? next.slice(-MAX_SYSTEM_ACTIVITY) : next;
+    });
+  }, []);
+
+  const applyCurrencies = useCallback((value: SetStateAction<CurrencyBalance[]>) => {
+    if (typeof value === "function") {
+      setCurrencies((prev) => {
+        const next = value(prev);
+        currenciesRef.current = next;
+        return next;
+      });
+      return;
+    }
+
+    const prev = currenciesRef.current;
+    const prevById = new Map(prev.map((currency) => [currency.id, currency.balance]));
+    for (const currency of value) {
+      const previousBalance = prevById.get(currency.id);
+      if (previousBalance != null && previousBalance !== currency.balance) {
+        pushCurrencyActivity({
+          currencyId: currency.id,
+          name: currency.name,
+          abbreviation: currency.abbreviation,
+          delta: currency.balance - previousBalance,
+          balance: currency.balance,
+        });
+      }
+    }
+    currenciesRef.current = value;
+    setCurrencies(value);
+  }, [pushCurrencyActivity]);
+
+  const applyFactions = useCallback((value: SetStateAction<FactionStanding[]>) => {
+    if (typeof value === "function") {
+      setFactions((prev) => {
+        const next = value(prev);
+        factionsRef.current = next;
+        return next;
+      });
+      return;
+    }
+
+    const prev = factionsRef.current;
+    const prevById = new Map(prev.map((faction) => [faction.id, faction.reputation]));
+    for (const faction of value) {
+      const previousReputation = prevById.get(faction.id);
+      if (previousReputation != null && previousReputation !== faction.reputation) {
+        pushFactionActivity({
+          factionId: faction.id,
+          name: faction.name,
+          delta: faction.reputation - previousReputation,
+          reputation: faction.reputation,
+          tier: faction.tier,
+        });
+      }
+    }
+    factionsRef.current = value;
+    setFactions(value);
+  }, [pushFactionActivity]);
 
   const pushGainEvent = useCallback((event: GainEvent) => {
     gainEventsRef.current = [...gainEventsRef.current.slice(-49), event];
@@ -416,25 +519,26 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setTradeState,
         setAuctionListings,
         setLeaderboard,
-        setCurrencies,
+        setCurrencies: applyCurrencies,
         setTrainer,
         setUnlockedClasses,
         setWorldTime,
         setWorldWeather,
         setWorldEvents,
         setPetState,
-        setFactions,
+        setFactions: applyFactions,
         setBankState,
         setLotteryInfo,
         setGuildHall,
         setDuelState,
         setDuelChallenge,
         setDungeonInfo,
+        setDungeonCatalog,
         setPrestigeInfo,
         sendGmcp: (p: string, payload: unknown) => { sendGmcpRef.current(p, payload); return true; },
       });
     },
-    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef],
+    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef],
   );
 
   // ── Reset all HUD state on disconnect ─────────────
@@ -490,16 +594,24 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setHousing(null);
     setTradeState(null);
     setAuctionListings([]);
+    setCurrencies([]);
+    currenciesRef.current = [];
     setPetState(null);
+    setFactions([]);
+    factionsRef.current = [];
     setBankState(null);
     setLotteryInfo(null);
     setDuelState(null);
     setDuelChallenge(null);
     setDungeonInfo(null);
+    setDungeonCatalog([]);
     setPrestigeInfo(null);
+    setCurrencyActivity([]);
+    setFactionActivity([]);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
+    setUiFeedbackFeed([]);
     setActivePopout(null);
     setBroadcast(null);
     setPossessing(null);
@@ -531,11 +643,11 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     quests, questsAvailable, questNotifications, setQuestNotifications,
     dailyQuests, weeklyQuests, autoQuest, globalQuest,
     // Economy
-    shop, puzzle, auctionListings, currencies, bankState, lotteryInfo,
+    shop, puzzle, auctionListings, currencies, currencyActivity, bankState, lotteryInfo,
     // Crafting
     craftingSkills, craftingRecipes, craftingNodes,
     // World
-    dialogue, setDialogue, zoneInstances, worldTime, worldWeather, worldEvents, factions, dungeonInfo,
+    dialogue, setDialogue, zoneInstances, worldTime, worldWeather, worldEvents, factions, factionActivity, dungeonInfo, dungeonCatalog,
     // Housing & pets
     housing, petState,
     // Mail
@@ -550,7 +662,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     serverAssets, serverCommands, emotePresets, staffWorldInfo, staffMobTemplates,
     lookTarget, setLookTarget, spriteList,
     // UI
-    activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast,
+    activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,
     // Setters needed by App
     setQuestsAvailable,
     // GMCP
