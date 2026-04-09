@@ -1507,6 +1507,50 @@ class GmcpEmitterTest {
     }
 
     @Test
+    fun `sendPrestigeInfoForPlayer emits current prestige progression state`() = runTest {
+        val e =
+            GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, pkg -> pkg == "Prestige" },
+                progression = progression,
+                prestigeEnabled = { true },
+                prestigeMaxRank = { 3 },
+                prestigeAvailableXp = { player -> player.xpTotal - progression.totalXpForLevel(player.level) },
+                prestigeNextCost = { rank -> 100L * (rank + 1) },
+                prestigePerkPayloads = { currentRank, maxRank ->
+                    (1..maxRank).map { rank ->
+                        PrestigePerkPayload(
+                            rank = rank,
+                            type = "STAT_BONUS",
+                            description = "Rank $rank perk",
+                            earned = rank <= currentRank,
+                        )
+                    }
+                },
+            )
+        val p =
+            player(
+                level = progression.maxLevel,
+                xpTotal = progression.totalXpForLevel(progression.maxLevel) + 350L,
+            ).apply {
+                prestigeLevel = 1
+            }
+
+        e.sendPrestigeInfoForPlayer(sid, p)
+
+        val gmcp = drainGmcp()
+        assertEquals(1, gmcp.size)
+        assertEquals("Prestige.Info", gmcp[0].gmcpPackage)
+        assertTrue(gmcp[0].jsonData.contains("\"enabled\":true"), "Expected enabled prestige payload. got=${gmcp[0].jsonData}")
+        assertTrue(gmcp[0].jsonData.contains("\"currentRank\":1"), "Expected current rank in payload. got=${gmcp[0].jsonData}")
+        assertTrue(gmcp[0].jsonData.contains("\"maxRank\":3"), "Expected max rank in payload. got=${gmcp[0].jsonData}")
+        assertTrue(gmcp[0].jsonData.contains("\"availableXp\":350"), "Expected available XP in payload. got=${gmcp[0].jsonData}")
+        assertTrue(gmcp[0].jsonData.contains("\"nextRankCost\":200"), "Expected next rank cost in payload. got=${gmcp[0].jsonData}")
+        assertTrue(gmcp[0].jsonData.contains("\"earned\":true"), "Expected earned perk state in payload. got=${gmcp[0].jsonData}")
+        assertTrue(gmcp[0].jsonData.contains("\"earned\":false"), "Expected future perk state in payload. got=${gmcp[0].jsonData}")
+    }
+
+    @Test
     fun `emit sends normal-sized payload`() = runTest {
         val e = emitter("Char.Name")
         e.sendCharName(sid, player())

@@ -521,8 +521,21 @@ class GameEngine(
             getMobEffects = { mobId -> statusEffectSystem.activeMobEffects(mobId) },
             commandEntries = engineConfig.commands.entries,
             emotePresets = engineConfig.emotePresets.presets,
+            prestigeEnabled = { prestigeSystem.isEnabled() },
+            prestigeMaxRank = { prestigeSystem.maxRank },
             prestigeAvailableXp = { player -> prestigeSystem.availableXp(player) },
             prestigeNextCost = { rank -> prestigeSystem.xpCostForNextRank(rank) },
+            prestigePerkPayloads = { currentRank, maxRank ->
+                (1..maxRank).map { rank ->
+                    val perk = prestigeSystem.perkForRank(rank)
+                    PrestigePerkPayload(
+                        rank = rank,
+                        type = perk?.type?.uppercase() ?: "",
+                        description = perk?.description ?: "-",
+                        earned = rank <= currentRank,
+                    )
+                }
+            },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {

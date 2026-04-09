@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.PrestigeConfig
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.ids.ItemId
@@ -11,6 +12,9 @@ import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.LoginResult
+import dev.ambon.engine.PlayerProgression
+import dev.ambon.engine.PrestigePerkPayload
+import dev.ambon.engine.PrestigeSystem
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.CommandRouterHarness
@@ -249,6 +253,70 @@ class CommandRouterTest {
                         it.jsonData.contains("isn't supported in this format")
                 },
                 "Expected UI.Feedback payload for invalid typed input. got=$outs",
+            )
+        }
+
+    @Test
+    fun `prestige command emits refreshed Prestige Info for GMCP clients`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val progression = PlayerProgression()
+            val prestigeSystem = PrestigeSystem(PrestigeConfig(), progression)
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    progression = progression,
+                    gmcpEmitter =
+                        GmcpEmitter(
+                            outbound = outbound,
+                            supportsPackage = { _, pkg -> pkg == "Prestige" || pkg == "Char.Vitals" || pkg == "UI.Feedback" },
+                            progression = progression,
+                            prestigeEnabled = { prestigeSystem.isEnabled() },
+                            prestigeMaxRank = { prestigeSystem.maxRank },
+                            prestigeAvailableXp = { player -> prestigeSystem.availableXp(player) },
+                            prestigeNextCost = { rank -> prestigeSystem.xpCostForNextRank(rank) },
+                            prestigePerkPayloads = { currentRank, maxRank ->
+                                (1..maxRank).map { rank ->
+                                    val perk = prestigeSystem.perkForRank(rank)
+                                    PrestigePerkPayload(
+                                        rank = rank,
+                                        type = perk?.type?.uppercase() ?: "",
+                                        description = perk?.description ?: "-",
+                                        earned = rank <= currentRank,
+                                    )
+                                }
+                            },
+                        ),
+                )
+            val sid = SessionId(32)
+            h.loginPlayer(sid, "Player32")
+            h.players.get(sid)!!.apply {
+                level = progression.maxLevel
+                xpTotal = progression.totalXpForLevel(level) + prestigeSystem.xpCostForNextRank(0) + 500L
+            }
+            h.drain()
+
+            h.router.handle(sid, Command.Prestige)
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "Char.Vitals" &&
+                        it.jsonData.contains("\"prestigeLevel\":1")
+                },
+                "Expected Char.Vitals payload with updated prestige rank. got=$outs",
+            )
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "Prestige.Info" &&
+                        it.jsonData.contains("\"currentRank\":1") &&
+                        it.jsonData.contains("\"earned\":true")
+                },
+                "Expected Prestige.Info payload after prestige action. got=$outs",
             )
         }
 

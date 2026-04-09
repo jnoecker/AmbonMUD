@@ -38,6 +38,7 @@ class GmcpFlushHandler(
         drainDirty(gmcpDirtyVitals) { sid ->
             val player = players.get(sid) ?: return@drainDirty
             gmcpEmitter.sendCharVitals(sid, player)
+            gmcpEmitter.sendPrestigeInfoForPlayer(sid, player)
         }
     }
 

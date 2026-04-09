@@ -574,63 +574,67 @@ export function SystemsPanel({
             </div>
 
             {prestigeInfo ? (
-              <article className="systems-card">
-                <div className="systems-card-header">
-                  <div>
-                    <p className="systems-card-label">Current Rank</p>
-                    <h4>Prestige {prestigeInfo.currentRank}</h4>
-                  </div>
-                  <span className="systems-pill">
-                    {prestigeInfo.currentRank >= prestigeInfo.maxRank ? "Max rank" : `Cap ${prestigeInfo.maxRank}`}
-                  </span>
-                </div>
-                <dl className="systems-stat-grid">
-                  <div><dt>Available XP</dt><dd>{prestigeInfo.availableXp.toLocaleString()}</dd></div>
-                  <div><dt>Next Rank Cost</dt><dd>{prestigeInfo.nextRankCost?.toLocaleString() ?? "Maxed"}</dd></div>
-                  <div><dt>Current Level</dt><dd>{vitals.level ?? "-"}</dd></div>
-                  <div><dt>Requirement</dt><dd>Level {PRESTIGE_MAX_LEVEL}</dd></div>
-                </dl>
-                <div className="systems-callout">
-                  {prestigeInfo.currentRank >= prestigeInfo.maxRank
-                    ? "You have reached the maximum prestige rank."
-                    : vitals.level !== PRESTIGE_MAX_LEVEL
-                      ? `Reach level ${PRESTIGE_MAX_LEVEL} to prestige again.`
-                      : prestigeInfo.nextRankCost != null && prestigeInfo.availableXp < prestigeInfo.nextRankCost
-                        ? "You need more prestige XP before you can advance."
-                        : "You are eligible to take the next prestige rank."}
-                </div>
-                <div className="systems-action-row">
-                  <button
-                    type="button"
-                    className="systems-primary-btn"
-                    disabled={!canPrestige}
-                    onClick={() => {
-                      onCommand("prestige");
-                      setLocalMessage("Attempting to advance your prestige rank.");
-                    }}
-                  >
-                    Prestige Up
-                  </button>
-                  <button
-                    type="button"
-                    className="systems-secondary-btn"
-                    onClick={() => {
-                      onCommand("prestige info");
-                      setLocalMessage("Refreshing prestige details.");
-                    }}
-                  >
-                    Refresh Perks
-                  </button>
-                </div>
-                <div className="systems-perk-list">
-                  {prestigeInfo.perks.map((perk) => (
-                    <div key={perk.rank} className={`systems-perk-card ${perk.earned ? "systems-perk-card-earned" : ""}`}>
-                      <span className="systems-perk-rank">{perk.earned ? "Done" : `Rank ${perk.rank}`}</span>
-                      <span className="systems-perk-desc">{perk.description}</span>
+              prestigeInfo.enabled ? (
+                <article className="systems-card">
+                  <div className="systems-card-header">
+                    <div>
+                      <p className="systems-card-label">Current Rank</p>
+                      <h4>Prestige {prestigeInfo.currentRank}</h4>
                     </div>
-                  ))}
-                </div>
-              </article>
+                    <span className="systems-pill">
+                      {prestigeInfo.currentRank >= prestigeInfo.maxRank ? "Max rank" : `Cap ${prestigeInfo.maxRank}`}
+                    </span>
+                  </div>
+                  <dl className="systems-stat-grid">
+                    <div><dt>Available XP</dt><dd>{prestigeInfo.availableXp.toLocaleString()}</dd></div>
+                    <div><dt>Next Rank Cost</dt><dd>{prestigeInfo.nextRankCost?.toLocaleString() ?? "Maxed"}</dd></div>
+                    <div><dt>Current Level</dt><dd>{vitals.level ?? "-"}</dd></div>
+                    <div><dt>Requirement</dt><dd>Level {PRESTIGE_MAX_LEVEL}</dd></div>
+                  </dl>
+                  <div className="systems-callout">
+                    {prestigeInfo.currentRank >= prestigeInfo.maxRank
+                      ? "You have reached the maximum prestige rank."
+                      : vitals.level !== PRESTIGE_MAX_LEVEL
+                        ? `Reach level ${PRESTIGE_MAX_LEVEL} to prestige again.`
+                        : prestigeInfo.nextRankCost != null && prestigeInfo.availableXp < prestigeInfo.nextRankCost
+                          ? "You need more prestige XP before you can advance."
+                          : "You are eligible to take the next prestige rank."}
+                  </div>
+                  <div className="systems-action-row">
+                    <button
+                      type="button"
+                      className="systems-primary-btn"
+                      disabled={!canPrestige}
+                      onClick={() => {
+                        onCommand("prestige");
+                        setLocalMessage("Attempting to advance your prestige rank.");
+                      }}
+                    >
+                      Prestige Up
+                    </button>
+                  </div>
+                  <div className="systems-perk-list">
+                    {prestigeInfo.perks.map((perk) => (
+                      <div key={perk.rank} className={`systems-perk-card ${perk.earned ? "systems-perk-card-earned" : ""}`}>
+                        <span className="systems-perk-rank">{perk.earned ? "Done" : `Rank ${perk.rank}`}</span>
+                        <span className="systems-perk-desc">{perk.description}</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ) : (
+                <article className="systems-card">
+                  <div className="systems-card-header">
+                    <div>
+                      <p className="systems-card-label">Unavailable</p>
+                      <h4>Prestige is disabled</h4>
+                    </div>
+                  </div>
+                  <p className="systems-card-copy">
+                    This server has prestige progression turned off right now. If it is re-enabled later, this view will update automatically.
+                  </p>
+                </article>
+              )
             ) : (
               <p className="empty-note">Prestige data is not available right now.</p>
             )}
