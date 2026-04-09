@@ -22,8 +22,14 @@ class UiHandler(
 
     override fun register(router: CommandRouter) {
         router.on<Command.Noop> { _, _ -> }
-        router.on<Command.Unknown> { sid, _ ->
+        router.on<Command.Unknown> { sid, cmd ->
             outbound.send(OutboundEvent.SendError(sid, "Huh?"))
+            sendTypedInputFeedback(
+                sessionId = sid,
+                message = "That typed input isn't recognized here. Use the on-screen controls when available.",
+                code = "UNRECOGNIZED_TYPED_INPUT",
+                command = extractCommandKeyword(cmd.raw),
+            )
         }
         router.on<Command.Invalid> { sid, cmd ->
             outbound.send(OutboundEvent.SendError(sid, "Invalid command: ${cmd.command}"))
@@ -32,6 +38,12 @@ class UiHandler(
             } else {
                 outbound.send(OutboundEvent.SendError(sid, "Try 'help' for a list of commands."))
             }
+            sendTypedInputFeedback(
+                sessionId = sid,
+                message = "That typed input isn't supported in this format. Use the on-screen controls when available.",
+                code = "UNSUPPORTED_TYPED_INPUT",
+                command = extractCommandKeyword(cmd.command),
+            )
         }
         router.on<Command.Help> { sid, _ -> handleHelp(sid) }
         router.on<Command.Quit> { sid, _ -> outbound.send(OutboundEvent.Close(sid, "Goodbye!")) }
@@ -128,4 +140,22 @@ class UiHandler(
             }
         }
     }
+
+    private suspend fun sendTypedInputFeedback(
+        sessionId: SessionId,
+        message: String,
+        code: String,
+        command: String?,
+    ) {
+        gmcpEmitter?.sendUiFeedback(
+            sessionId = sessionId,
+            type = "error",
+            message = message,
+            code = code,
+            scope = "input",
+            command = command,
+        )
+    }
+
+    private fun extractCommandKeyword(raw: String): String? = raw.trim().substringBefore(' ').ifBlank { null }
 }

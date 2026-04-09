@@ -294,7 +294,10 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       style,
       receivedAt: Date.now(),
     });
-  }, [pushCombatLogMessage]);
+    if (feedback.type === "error") {
+      setToast(feedback.message);
+    }
+  }, [pushCombatLogMessage, setToast]);
 
   const pushGainEvent = useCallback((event: GainEvent) => {
     gainEventsRef.current = [...gainEventsRef.current.slice(-49), event];

@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.ids.ItemId
@@ -8,6 +9,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -172,6 +174,82 @@ class CommandRouterTest {
                 "Expected blocked movement message. got=$outs",
             )
             assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+        }
+
+    @Test
+    fun `unknown typed input emits UI feedback for GMCP clients`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val sid = SessionId(30)
+            h.loginPlayer(sid, "Player30")
+            h.drain()
+
+            h.router.handle(sid, Command.Unknown("dance wildly"))
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == sid && it.text == "Huh?" },
+                "Expected legacy text error to remain. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendPrompt && it.sessionId == sid },
+                "Expected prompt after unknown command. got=$outs",
+            )
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"code\":\"UNRECOGNIZED_TYPED_INPUT\"") &&
+                        it.jsonData.contains("\"scope\":\"input\"") &&
+                        it.jsonData.contains("\"command\":\"dance\"") &&
+                        it.jsonData.contains("on-screen controls")
+                },
+                "Expected UI.Feedback payload for unknown typed input. got=$outs",
+            )
+        }
+
+    @Test
+    fun `invalid typed input emits UI feedback for GMCP clients`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val h =
+                CommandRouterHarness.create(
+                    outbound = outbound,
+                    gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "UI.Feedback" }),
+                )
+            val sid = SessionId(31)
+            h.loginPlayer(sid, "Player31")
+            h.drain()
+
+            h.router.handle(sid, Command.Invalid("buy", "buy <item>"))
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == sid && it.text == "Invalid command: buy" },
+                "Expected invalid command error text. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == sid && it.text == "Usage: buy <item>" },
+                "Expected usage text to remain. got=$outs",
+            )
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "UI.Feedback" &&
+                        it.jsonData.contains("\"code\":\"UNSUPPORTED_TYPED_INPUT\"") &&
+                        it.jsonData.contains("\"scope\":\"input\"") &&
+                        it.jsonData.contains("\"command\":\"buy\"") &&
+                        it.jsonData.contains("isn't supported in this format")
+                },
+                "Expected UI.Feedback payload for invalid typed input. got=$outs",
+            )
         }
 
     @Test
