@@ -454,7 +454,7 @@ export class WorldScene {
     this.tavernBadge.eventMode = "static";
     this.tavernBadge.cursor = "pointer";
     this.tavernBadge.on("pointerdown", () => {
-      canvasCallbacks.sendCommand?.("gamble");
+      canvasCallbacks.openLottery?.();
     });
     this.tavernBadge.on("pointerover", () => {
       if (this.tavernSprite) this.tavernSprite.alpha = 1;
@@ -920,13 +920,13 @@ export class WorldScene {
       if (this.tavernBadge) this.tavernBadge.visible = hasTavern;
     }
 
-    const hasLottery = roomHasSurfaceWidget(state.room.id, "lottery");
+    const hasLottery = !!state.room.tavern;
     if (hasLottery !== this.lotteryVisible) {
       this.lotteryVisible = hasLottery;
       if (this.lotteryBadge) this.lotteryBadge.visible = hasLottery;
     }
 
-    const hasDungeon = roomHasSurfaceWidget(state.room.id, "dungeon");
+    const hasDungeon = !!state.room.dungeon;
     if (hasDungeon !== this.dungeonVisible) {
       this.dungeonVisible = hasDungeon;
       if (this.dungeonBadge) this.dungeonBadge.visible = hasDungeon;

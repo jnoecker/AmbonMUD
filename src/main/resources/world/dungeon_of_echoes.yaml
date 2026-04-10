@@ -199,6 +199,7 @@ rooms:
     exits:
       n: thornhaven_city:grimlys_study
     image: 718a7470fc8b5b51386c29db016a6f1d00f1014e80dee589b924a23c37748fa4.jpg
+    dungeon: true
   mob_templates:
     title: Mob Template Room
     description: An internal room used to stage dungeon mob templates. Players cannot reach this room.

@@ -211,6 +211,7 @@ export interface RoomState {
   graphical?: boolean;
   bank?: boolean;
   tavern?: boolean;
+  dungeon?: boolean;
 }
 
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */

@@ -1832,6 +1832,7 @@ class GameEngine(
             guildSystem,
         )
         emitDungeonCatalog(newSessionId)
+        emitLotteryInfo(newSessionId, me.name)
         if (me.isStaff) {
             gmcpEmitter.sendStaffWorldInfo(newSessionId, world)
             gmcpEmitter.sendStaffMobTemplates(newSessionId, world)
@@ -1931,6 +1932,7 @@ class GameEngine(
             guildSystem,
         )
         emitDungeonCatalog(sessionId)
+        emitLotteryInfo(sessionId, player.name)
         if (player.isStaff) {
             gmcpEmitter.sendStaffWorldInfo(sessionId, world)
             gmcpEmitter.sendStaffMobTemplates(sessionId, world)
@@ -2409,6 +2411,11 @@ class GameEngine(
                     )
                 },
         )
+    }
+
+    private suspend fun emitLotteryInfo(sessionId: SessionId, playerName: String) {
+        val info = lotterySystem.getInfo(playerName)
+        gmcpEmitter.sendLotteryInfo(sessionId, info)
     }
 
     private fun buildDungeonPortalHint(template: dev.ambon.domain.dungeon.DungeonTemplateDef): String? {
