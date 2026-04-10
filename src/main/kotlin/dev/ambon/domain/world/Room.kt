@@ -17,6 +17,8 @@ data class Room(
     val bank: Boolean = false,
     /** True if this room is a tavern (enables gambling commands). */
     val tavern: Boolean = false,
+    /** True if this room has a dungeon portal (enables dungeon kiosk badge). */
+    val dungeon: Boolean = false,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */

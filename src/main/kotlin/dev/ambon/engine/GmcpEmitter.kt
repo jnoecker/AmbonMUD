@@ -178,6 +178,7 @@ class GmcpEmitter(
                 trainer = trainerName,
                 bank = room.bank,
                 tavern = room.tavern,
+                dungeon = room.dungeon,
             ),
         )
     }
@@ -1983,6 +1984,7 @@ class GmcpEmitter(
         val trainer: String? = null,
         val bank: Boolean = false,
         val tavern: Boolean = false,
+        val dungeon: Boolean = false,
     )
 
     private data class ItemPayload(

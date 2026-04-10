@@ -1337,6 +1337,7 @@ rooms:
     exits:
       n: post_office
     image: 876a3d4ad16c3282362698c806365850283b79cf5fe9b481f3782d9b1bffcc6a.jpg
+    dungeon: true
   trainers_hall:
     title: Trainers' Hall
     description: "A wide corridor carved from pale stone, lined with five arched doorways. Each doorway bears a carved
