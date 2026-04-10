@@ -59,12 +59,7 @@ export function TradePanel({ trade, inventory, playerGold, onCommand }: TradePan
   return (
     <div className="trade-panel" role="dialog" aria-label="Trade">
       <div className="trade-header">
-        <div>
-          <h3 className="trade-title">Trading with {trade.partner}</h3>
-          <p className="trade-subtitle">
-            Review both offers, adjust items or gold, then accept when everything looks right.
-          </p>
-        </div>
+        <h3 className="trade-title">Trading with {trade.partner}</h3>
         <button
           type="button"
           className="trade-cancel-btn"
