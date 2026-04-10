@@ -255,6 +255,7 @@ export function applyGmcpPackage(
           targetHp: typeof packet.targetHp === "number" ? packet.targetHp : null,
           targetMaxHp: typeof packet.targetMaxHp === "number" ? packet.targetMaxHp : null,
           targetImage: typeof packet.targetImage === "string" ? packet.targetImage : null,
+          targetCategory: typeof packet.targetCategory === "string" ? packet.targetCategory : null,
         });
       }
       break;
@@ -313,9 +314,11 @@ export function applyGmcpPackage(
       const housing = packet.housing === true;
       const housingOwner = typeof packet.housingOwner === "string" ? packet.housingOwner : null;
       const graphical = packet.graphical === true;
+      const terrain = typeof packet.terrain === "string" ? packet.terrain : "outside";
       const bank = packet.bank === true;
       const tavern = packet.tavern === true;
       const dungeon = packet.dungeon === true;
+      const auction = packet.auction === true;
 
       // Detect actual room change (not just a look/refresh of the same room)
       ctx.setRoom((prev) => {
@@ -324,7 +327,7 @@ export function applyGmcpPackage(
           ctx.setDialogue(null);
           ctx.setQuestsAvailable([]);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, bank, tavern, dungeon };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, tavern, dungeon, auction };
       });
 
       if (id) {
@@ -539,6 +542,7 @@ export function applyGmcpPackage(
             maxHp: Math.max(1, safeNumber(entry.maxHp, 1)),
             image: typeof entry.image === "string" ? entry.image : null,
             video: typeof entry.video === "string" ? entry.video : null,
+            category: typeof entry.category === "string" ? entry.category : "humanoid",
             effects: parseMobEffects(entry.effects),
           })),
       );
@@ -559,6 +563,7 @@ export function applyGmcpPackage(
           maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
           image: typeof packet.image === "string" ? packet.image : null,
           video: typeof packet.video === "string" ? packet.video : null,
+          category: typeof packet.category === "string" ? packet.category : "humanoid",
           effects: parseMobEffects(packet.effects),
         },
       ]);

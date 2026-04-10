@@ -27,4 +27,5 @@ data class MobSpawn(
     override val image: String? = null,
     override val video: String? = null,
     val aggressive: Boolean = false,
+    val category: String = "humanoid",
 ) : MobTemplate

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { CharacterInfo, EquipmentSlotDef, ItemSummary } from "../../types";
 import { RemoveItemIcon } from "../Icons";
+import { resolveItemImage } from "../../imageDefaults";
 
 interface EquipmentPanelProps {
   connected: boolean;
@@ -58,8 +59,8 @@ export function EquipmentPanel({
                   title={isEmpty ? `${def.displayName} — empty` : `${def.displayName}: ${item.name}`}
                   onClick={() => setSelectedSlot(isSelected ? null : def.id)}
                 >
-                  {item?.image ? (
-                    <img src={item.image} alt="" className="paperdoll-slot-img" />
+                  {(item ? resolveItemImage(item) : null) ? (
+                    <img src={resolveItemImage(item!)!} alt="" className="paperdoll-slot-img" />
                   ) : (
                     <span className="paperdoll-slot-letter">
                       {def.displayName.charAt(0)}

@@ -19,6 +19,8 @@ data class Room(
     val tavern: Boolean = false,
     /** True if this room has a dungeon portal (enables dungeon kiosk badge). */
     val dungeon: Boolean = false,
+    /** True if this room has an auction house (enables auction hall badge). */
+    val auction: Boolean = false,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */
@@ -33,4 +35,6 @@ data class Room(
     val mapY: Int = 0,
     /** Whether this room's zone has custom graphical assets (non-placeholder images). */
     val graphical: Boolean = false,
+    /** Terrain type — drives default background and weather suppression. */
+    val terrain: String = "outside",
 )

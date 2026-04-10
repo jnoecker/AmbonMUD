@@ -2340,10 +2340,6 @@ data class ImagesConfig(
 ) {
     companion object {
         val DEFAULT_GLOBAL_ASSETS: Map<String, String> = linkedMapOf(
-            "compass_rose" to "global_assets/compass_rose.png",
-            "direction_marker" to "global_assets/direction_marker.png",
-            "stairs_up" to "global_assets/stairs_up.png",
-            "stairs_down" to "global_assets/stairs_down.png",
             "video_available_indicator" to "global_assets/video_available_indicator.png",
             "shop_kiosk" to "global_assets/shop_kiosk.png",
             "crafting_station" to "global_assets/crafting_station.png",
@@ -2363,6 +2359,34 @@ data class ImagesConfig(
             "quest_complete_indicator" to "global_assets/quest_complete_indicator.png",
             "minimap_unexplored" to "global_assets/minimap-unexplored.png",
             "map_background" to "global_assets/map_background.png",
+            // Default terrain backgrounds
+            "default_bg_inside" to "defaults/bg_inside.png",
+            "default_bg_outside" to "defaults/bg_outside.png",
+            "default_bg_forest" to "defaults/bg_forest.png",
+            "default_bg_mountain" to "defaults/bg_mountain.png",
+            "default_bg_underground" to "defaults/bg_underground.png",
+            "default_bg_underwater" to "defaults/bg_underwater.png",
+            "default_bg_desert" to "defaults/bg_desert.png",
+            "default_bg_swamp" to "defaults/bg_swamp.png",
+            "default_bg_urban" to "defaults/bg_urban.png",
+            "default_bg_sky" to "defaults/bg_sky.png",
+            // Default mob category sprites
+            "default_mob_humanoid" to "defaults/mob_humanoid.png",
+            "default_mob_beast" to "defaults/mob_beast.png",
+            "default_mob_undead" to "defaults/mob_undead.png",
+            "default_mob_elemental" to "defaults/mob_elemental.png",
+            "default_mob_construct" to "defaults/mob_construct.png",
+            "default_mob_aberration" to "defaults/mob_aberration.png",
+            // Default item type sprites
+            "default_item_weapon" to "defaults/item_weapon.png",
+            "default_item_head" to "defaults/item_head.png",
+            "default_item_body" to "defaults/item_body.png",
+            "default_item_hand" to "defaults/item_hand.png",
+            "default_item_consumable" to "defaults/item_consumable.png",
+            "default_item_generic" to "defaults/item_generic.png",
+            // Default entity sprites
+            "default_player" to "defaults/player.png",
+            "default_ability" to "defaults/ability.png",
         )
     }
 }

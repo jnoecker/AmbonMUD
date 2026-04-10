@@ -159,6 +159,7 @@ object WorldLoader {
             val imageDefaults = file.image
             val audioDefaults = file.audio
             val zoneGraphical = file.graphical
+            val zoneTerrain = file.terrain?.also { validateTerrain(it, "zone '$zone'") }
             if (file.pvpEnabled) pvpZones.add(zone)
 
             // First pass per file: create room shells, detect collisions
@@ -180,11 +181,15 @@ object WorldLoader {
                         bank = rf.bank,
                         tavern = rf.tavern,
                         dungeon = rf.dungeon,
+                        auction = rf.auction,
                         image = (rf.image ?: imageDefaults?.room)?.let { "$imagesBase$it" },
                         video = rf.video?.let { "$videosBase$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
                         ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "$audioBase$it" },
                         graphical = zoneGraphical,
+                        terrain = (rf.terrain ?: zoneTerrain ?: "outside").also {
+                            validateTerrain(it, "room '${id.value}'")
+                        },
                     )
             }
 
@@ -343,6 +348,9 @@ object WorldLoader {
                         image = (mf.image ?: imageDefaults?.mob)?.let { "$imagesBase$it" },
                         video = mf.video?.let { "$videosBase$it" },
                         aggressive = mf.behavior?.template?.contains("aggro") == true,
+                        category = (mf.category ?: "humanoid").also {
+                            validateMobCategory(it, "mob '${mobId.value}'")
+                        },
                     )
             }
 
@@ -1256,6 +1264,33 @@ object WorldLoader {
         val id = raw.trim().lowercase()
         if (id.isEmpty()) throw WorldLoadException("$context crafting skill cannot be blank")
         return id
+    }
+
+    private val VALID_TERRAINS = setOf(
+        "inside", "outside", "forest", "mountain", "underground",
+        "underwater", "desert", "swamp", "urban", "sky",
+    )
+
+    private val SHELTERED_TERRAINS = setOf("inside", "underground", "underwater")
+
+    private val VALID_MOB_CATEGORIES = setOf(
+        "humanoid", "beast", "undead", "elemental", "construct", "aberration",
+    )
+
+    private fun validateTerrain(terrain: String, context: String) {
+        if (terrain.lowercase() !in VALID_TERRAINS) {
+            throw WorldLoadException(
+                "$context has invalid terrain '$terrain'; valid values: $VALID_TERRAINS",
+            )
+        }
+    }
+
+    private fun validateMobCategory(category: String, context: String) {
+        if (category.lowercase() !in VALID_MOB_CATEGORIES) {
+            throw WorldLoadException(
+                "$context has invalid category '$category'; valid values: $VALID_MOB_CATEGORIES",
+            )
+        }
     }
 
     private fun parseCraftingStationType(

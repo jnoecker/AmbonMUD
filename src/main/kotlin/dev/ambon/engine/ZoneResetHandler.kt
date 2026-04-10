@@ -56,6 +56,7 @@ internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
         questIds = spawn.questIds,
         image = spawn.image,
         video = spawn.video,
+        category = spawn.category,
     )
 
 /**

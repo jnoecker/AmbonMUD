@@ -209,9 +209,12 @@ export interface RoomState {
   housingOwner?: string | null;
   /** Whether the current zone has custom graphical assets. */
   graphical?: boolean;
+  /** Terrain type — drives default background and weather suppression. */
+  terrain?: string;
   bank?: boolean;
   tavern?: boolean;
   dungeon?: boolean;
+  auction?: boolean;
 }
 
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */
@@ -297,6 +300,7 @@ export interface RoomMob {
   maxHp: number;
   image?: string | null;
   video?: string | null;
+  category?: string;
   effects?: StatusEffect[];
 }
 
@@ -365,6 +369,7 @@ export interface CombatTarget {
   targetHp: number | null;
   targetMaxHp: number | null;
   targetImage: string | null;
+  targetCategory: string | null;
 }
 
 export interface SkillSummary {

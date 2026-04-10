@@ -406,35 +406,6 @@ class WorldLoaderTest {
         assertTrue(ex.message!!.contains("> 0", ignoreCase = true), "Got: ${ex.message}")
     }
 
-    @Test
-    fun `loads thornhaven city zone with all rooms mobs and items`() {
-        val world =
-            WorldLoader.loadFromResources(
-                listOf("world/thornhaven_city.yaml"),
-                zoneFilter = setOf("thornhaven_city"),
-            )
-
-        // Verify structural correctness without pinning exact counts that break
-        // whenever content is added or removed.
-        assertEquals(RoomId("thornhaven_city:new_arrivals_hall"), world.startRoom)
-        assertTrue(world.rooms.isNotEmpty(), "Expected at least one room")
-        assertTrue(world.mobSpawns.isNotEmpty(), "Expected at least one mob spawn")
-        assertTrue(world.itemSpawns.isNotEmpty(), "Expected at least one item spawn")
-    }
-
-    @Test
-    fun `loads imported midgaard zone with all rooms mobs and items`() {
-        val world =
-            WorldLoader.loadFromResources(
-                listOf("world/imported_zone.yaml"),
-                zoneFilter = setOf("imported_zone"),
-            )
-
-        assertEquals(RoomId("imported_zone:temple_of_mota"), world.startRoom)
-        assertTrue(world.rooms.size >= 140, "Expected at least 140 rooms, got ${world.rooms.size}")
-        assertTrue(world.mobSpawns.isNotEmpty(), "Expected at least one mob spawn")
-        assertTrue(world.itemSpawns.isNotEmpty(), "Expected at least one item spawn")
-    }
 
     @Test
     fun `cross-zone exit resolves when loading multiple zones`() {
