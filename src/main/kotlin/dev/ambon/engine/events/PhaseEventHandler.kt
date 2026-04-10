@@ -29,15 +29,20 @@ class PhaseEventHandler(
     private val logger: KLogger,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
+    /** Ends combat, regen tracking, and status effects for a player about to transfer. */
+    internal suspend fun prepareForTransit(sessionId: SessionId) {
+        combatSystem.endCombatFor(sessionId)
+        regenSystem.onPlayerDisconnected(sessionId)
+        statusEffectSystem.removeAllFromPlayer(sessionId)
+    }
+
     suspend fun handleCrossZoneMove(
         sessionId: SessionId,
         targetRoomId: RoomId,
     ) {
         metrics.onPhaseHandlerEvent()
         val mgr = handoffManager ?: return
-        combatSystem.endCombatFor(sessionId)
-        regenSystem.onPlayerDisconnected(sessionId)
-        statusEffectSystem.removeAllFromPlayer(sessionId)
+        prepareForTransit(sessionId)
 
         when (val result = mgr.initiateHandoff(sessionId, targetRoomId)) {
             is HandoffResult.Initiated -> {
@@ -90,9 +95,7 @@ class PhaseEventHandler(
             return PhaseResult.NoOp("You are already on that instance.")
         }
 
-        combatSystem.endCombatFor(sessionId)
-        regenSystem.onPlayerDisconnected(sessionId)
-        statusEffectSystem.removeAllFromPlayer(sessionId)
+        prepareForTransit(sessionId)
         return when (mgr.initiateHandoff(sessionId, player.roomId, targetEngineOverride = resolvedInstance.address)) {
             is HandoffResult.Initiated -> PhaseResult.Initiated
             HandoffResult.AlreadyInTransit -> PhaseResult.NoOp("You are already crossing into new territory.")

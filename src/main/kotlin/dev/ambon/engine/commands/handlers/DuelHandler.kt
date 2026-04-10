@@ -26,44 +26,41 @@ class DuelHandler(
     }
 
     private suspend fun handleDuel(sessionId: SessionId, cmd: Command.Duel) {
-        val ds = duelSystem ?: return sendUnavailable(sessionId)
+        val ds =
+            duelSystem
+                ?: return sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, "Dueling is not available.", "duel", code = "UNAVAILABLE")
 
         players.withPlayer(sessionId) { me ->
             // Can't duel while in mob combat
             if (combatSystem?.isInCombat(sessionId) == true) {
                 val message = "You cannot duel while in combat."
-                outbound.send(OutboundEvent.SendError(sessionId, message))
-                sendDuelFeedback(sessionId, "error", message, code = "IN_COMBAT", command = "duel")
+                sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "IN_COMBAT", command = "duel")
                 return
             }
 
             val targetSid = players.findSessionByName(cmd.targetPlayer)
             if (targetSid == null) {
                 val message = "No such player: ${cmd.targetPlayer}"
-                outbound.send(OutboundEvent.SendError(sessionId, message))
-                sendDuelFeedback(sessionId, "error", message, code = "TARGET_NOT_FOUND", command = "duel")
+                sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "TARGET_NOT_FOUND", command = "duel")
                 return
             }
 
             players.withPlayer(targetSid) { target ->
                 if (target.roomId != me.roomId) {
                     val message = "${target.name} is not here."
-                    outbound.send(OutboundEvent.SendError(sessionId, message))
-                    sendDuelFeedback(sessionId, "error", message, code = "TARGET_NOT_NEARBY", command = "duel")
+                    sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "TARGET_NOT_NEARBY", command = "duel")
                     return
                 }
 
                 if (combatSystem?.isInCombat(targetSid) == true) {
                     val message = "${target.name} is in combat."
-                    outbound.send(OutboundEvent.SendError(sessionId, message))
-                    sendDuelFeedback(sessionId, "error", message, code = "TARGET_IN_COMBAT", command = "duel")
+                    sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "TARGET_IN_COMBAT", command = "duel")
                     return
                 }
 
                 val error = ds.challenge(sessionId, targetSid)
                 if (error != null) {
-                    outbound.send(OutboundEvent.SendError(sessionId, error))
-                    sendDuelFeedback(sessionId, "error", error, code = "CHALLENGE_REJECTED", command = "duel")
+                    sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, error, "duel", code = "CHALLENGE_REJECTED", command = "duel")
                     return
                 }
 
@@ -71,7 +68,7 @@ class DuelHandler(
                 outbound.send(
                     OutboundEvent.SendInfo(sessionId, message),
                 )
-                sendDuelFeedback(sessionId, "success", message, code = "CHALLENGE_SENT", command = "duel")
+                sendScopedFeedback(sessionId, gmcpEmitter, "success", message, "duel", code = "CHALLENGE_SENT", command = "duel")
                 outbound.send(
                     OutboundEvent.SendInfo(
                         targetSid,
@@ -90,13 +87,14 @@ class DuelHandler(
     }
 
     private suspend fun handleDuelAccept(sessionId: SessionId) {
-        val ds = duelSystem ?: return sendUnavailable(sessionId)
+        val ds =
+            duelSystem
+                ?: return sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, "Dueling is not available.", "duel", code = "UNAVAILABLE")
 
         val challenge = ds.getPendingChallenge(sessionId)
         if (challenge == null) {
             val message = "No pending duel challenge to accept."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendDuelFeedback(sessionId, "error", message, code = "NO_PENDING_CHALLENGE", command = "accept")
+            sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "NO_PENDING_CHALLENGE", command = "accept")
             return
         }
 
@@ -106,31 +104,27 @@ class DuelHandler(
         if (me == null || challenger == null) {
             ds.decline(sessionId)
             val message = "The challenger is no longer available."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendDuelFeedback(sessionId, "error", message, code = "CHALLENGER_UNAVAILABLE", command = "accept")
+            sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "CHALLENGER_UNAVAILABLE", command = "accept")
             return
         }
         if (me.roomId != challenger.roomId) {
             ds.decline(sessionId)
             val message = "You must be in the same room to duel."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendDuelFeedback(sessionId, "error", message, code = "CHALLENGER_NOT_NEARBY", command = "accept")
+            sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "CHALLENGER_NOT_NEARBY", command = "accept")
             outbound.send(OutboundEvent.SendInfo(challenge.challengerSid, "${me.name} is no longer nearby. Duel cancelled."))
             return
         }
         if (combatSystem?.isInCombat(sessionId) == true || combatSystem?.isInCombat(challenge.challengerSid) == true) {
             ds.decline(sessionId)
             val message = "Cannot duel while in combat."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendDuelFeedback(sessionId, "error", message, code = "IN_COMBAT", command = "accept")
+            sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "IN_COMBAT", command = "accept")
             return
         }
 
         val duel = ds.accept(sessionId)
         if (duel == null) {
             val message = "No pending duel challenge to accept."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendDuelFeedback(sessionId, "error", message, code = "NO_PENDING_CHALLENGE", command = "accept")
+            sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "NO_PENDING_CHALLENGE", command = "accept")
             return
         }
 
@@ -140,17 +134,21 @@ class DuelHandler(
         outbound.send(
             OutboundEvent.SendInfo(duel.player2, "** You accept the duel with ${challenger.name}! Fight! **"),
         )
-        sendDuelFeedback(
+        sendScopedFeedback(
             duel.player1,
+            gmcpEmitter,
             "success",
             "${me.name} accepted your duel challenge.",
+            "duel",
             code = "CHALLENGE_ACCEPTED",
             command = "accept",
         )
-        sendDuelFeedback(
+        sendScopedFeedback(
             duel.player2,
+            gmcpEmitter,
             "success",
             "You accept the duel with ${challenger.name}.",
+            "duel",
             code = "CHALLENGE_ACCEPTED",
             command = "accept",
         )
@@ -165,47 +163,25 @@ class DuelHandler(
     }
 
     private suspend fun handleDuelDecline(sessionId: SessionId) {
-        val ds = duelSystem ?: return sendUnavailable(sessionId)
+        val ds =
+            duelSystem
+                ?: return sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, "Dueling is not available.", "duel", code = "UNAVAILABLE")
 
         val challenge = ds.decline(sessionId)
         if (challenge == null) {
             val message = "No pending duel challenge to decline."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendDuelFeedback(sessionId, "error", message, code = "NO_PENDING_CHALLENGE", command = "decline")
+            sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "NO_PENDING_CHALLENGE", command = "decline")
             return
         }
 
         val myName = players.get(sessionId)?.name ?: "Someone"
         val message = "You decline the duel challenge."
         outbound.send(OutboundEvent.SendInfo(sessionId, message))
-        sendDuelFeedback(sessionId, "success", message, code = "CHALLENGE_DECLINED", command = "decline")
+        sendScopedFeedback(sessionId, gmcpEmitter, "success", message, "duel", code = "CHALLENGE_DECLINED", command = "decline")
         outbound.send(
             OutboundEvent.SendInfo(challenge.challengerSid, "$myName declined your duel challenge."),
         )
         gmcpEmitter?.sendDuelState(sessionId, active = false)
         gmcpEmitter?.sendDuelState(challenge.challengerSid, active = false)
-    }
-
-    private suspend fun sendUnavailable(sessionId: SessionId) {
-        val message = "Dueling is not available."
-        outbound.send(OutboundEvent.SendError(sessionId, message))
-        sendDuelFeedback(sessionId, "error", message, code = "UNAVAILABLE")
-    }
-
-    private suspend fun sendDuelFeedback(
-        sessionId: SessionId,
-        type: String,
-        message: String,
-        code: String? = null,
-        command: String? = null,
-    ) {
-        gmcpEmitter?.sendUiFeedback(
-            sessionId = sessionId,
-            type = type,
-            message = message,
-            code = code,
-            scope = "duel",
-            command = command,
-        )
     }
 }

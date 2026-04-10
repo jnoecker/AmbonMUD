@@ -5,6 +5,7 @@ import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.grpc.proto.EngineServiceGrpcKt
+import dev.ambon.hmacSha256
 import io.grpc.ServerInterceptors
 import io.grpc.Status
 import io.grpc.StatusException
@@ -33,9 +34,9 @@ class GrpcAuthInterceptorTest {
     // ── Unit tests for HMAC and interceptor logic ──────────────────────────────
 
     @Test
-    fun `grpcHmacSha256 produces consistent results`() {
-        val hmac1 = grpcHmacSha256(sharedSecret, "1234567890")
-        val hmac2 = grpcHmacSha256(sharedSecret, "1234567890")
+    fun `hmacSha256 produces consistent results`() {
+        val hmac1 = hmacSha256(sharedSecret, "1234567890")
+        val hmac2 = hmacSha256(sharedSecret, "1234567890")
         assertEquals(hmac1, hmac2)
         assertTrue(hmac1.isNotBlank())
         // SHA256 hex output is 64 chars
@@ -43,16 +44,16 @@ class GrpcAuthInterceptorTest {
     }
 
     @Test
-    fun `grpcHmacSha256 produces different results for different payloads`() {
-        val hmac1 = grpcHmacSha256(sharedSecret, "1234567890")
-        val hmac2 = grpcHmacSha256(sharedSecret, "9876543210")
+    fun `hmacSha256 produces different results for different payloads`() {
+        val hmac1 = hmacSha256(sharedSecret, "1234567890")
+        val hmac2 = hmacSha256(sharedSecret, "9876543210")
         assertNotEquals(hmac1, hmac2)
     }
 
     @Test
-    fun `grpcHmacSha256 produces different results for different secrets`() {
-        val hmac1 = grpcHmacSha256("secret-a", "payload")
-        val hmac2 = grpcHmacSha256("secret-b", "payload")
+    fun `hmacSha256 produces different results for different secrets`() {
+        val hmac1 = hmacSha256("secret-a", "payload")
+        val hmac2 = hmacSha256("secret-b", "payload")
         assertNotEquals(hmac1, hmac2)
     }
 

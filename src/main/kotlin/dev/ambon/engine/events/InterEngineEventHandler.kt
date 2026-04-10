@@ -42,6 +42,13 @@ class InterEngineEventHandler(
     private val logger: KLogger,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
+    /** Ends combat, regen tracking, and status effects for a player about to transfer. */
+    private suspend fun prepareForTransit(sessionId: SessionId) {
+        combatSystem.endCombatFor(sessionId)
+        regenSystem.onPlayerDisconnected(sessionId)
+        statusEffectSystem.removeAllFromPlayer(sessionId)
+    }
+
     private data class PendingWhoRequest(
         val sessionId: SessionId,
         val deadlineEpochMs: Long,
@@ -227,9 +234,7 @@ class InterEngineEventHandler(
                     outbound.send(OutboundEvent.SendText(targetSid, "You are transported by a divine hand."))
                     router.handle(targetSid, Command.Look)
                 } else if (handoffManager != null) {
-                    combatSystem.endCombatFor(targetSid)
-                    regenSystem.onPlayerDisconnected(targetSid)
-                    statusEffectSystem.removeAllFromPlayer(targetSid)
+                    prepareForTransit(targetSid)
                     when (handoffManager.initiateHandoff(targetSid, targetRoomId)) {
                         is HandoffResult.Initiated -> Unit
                         HandoffResult.PlayerNotFound -> Unit

@@ -26,7 +26,16 @@ class LotteryHandler(
     }
 
     private suspend fun handleLotteryInfo(sessionId: SessionId) {
-        val system = lotterySystem ?: return sendUnavailable(sessionId, "The lottery")
+        val system =
+            lotterySystem
+                ?: return sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    "The lottery is not available on this server.",
+                    "lottery",
+                    code = "UNAVAILABLE",
+                )
 
         players.withPlayer(sessionId) { me ->
             val info = system.getInfo(me.name)
@@ -53,7 +62,16 @@ class LotteryHandler(
     }
 
     private suspend fun handleLotteryBuy(sessionId: SessionId, cmd: Command.LotteryBuy) {
-        val system = lotterySystem ?: return sendUnavailable(sessionId, "The lottery")
+        val system =
+            lotterySystem
+                ?: return sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    "The lottery is not available on this server.",
+                    "lottery",
+                    code = "UNAVAILABLE",
+                )
 
         players.withPlayer(sessionId) { me ->
             val result = system.buyTickets(
@@ -75,32 +93,70 @@ class LotteryHandler(
                             message,
                         ),
                     )
-                    sendLotteryFeedback(sessionId, "success", message, code = "PURCHASE_COMPLETE", command = "buy")
+                    sendScopedFeedback(
+                        sessionId,
+                        gmcpEmitter,
+                        "success",
+                        message,
+                        "lottery",
+                        code = "PURCHASE_COMPLETE",
+                        command = "buy",
+                    )
                     markVitalsDirty(sessionId)
                     emitLotteryGmcp(sessionId, me.name, system)
                 }
 
                 is LotteryBuyResult.InsufficientGold -> {
                     val message = "You need ${result.need} gold but only have ${result.have}."
-                    outbound.send(OutboundEvent.SendError(sessionId, message))
-                    sendLotteryFeedback(sessionId, "error", message, code = "INSUFFICIENT_GOLD", command = "buy")
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        message,
+                        "lottery",
+                        code = "INSUFFICIENT_GOLD",
+                        command = "buy",
+                    )
                 }
 
                 is LotteryBuyResult.ExceedsLimit -> {
                     val message = "You already have ${result.current} ticket(s). Maximum is ${result.max} per drawing."
-                    outbound.send(OutboundEvent.SendError(sessionId, message))
-                    sendLotteryFeedback(sessionId, "error", message, code = "TICKET_LIMIT", command = "buy")
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        message,
+                        "lottery",
+                        code = "TICKET_LIMIT",
+                        command = "buy",
+                    )
                 }
 
                 is LotteryBuyResult.Disabled -> {
-                    sendUnavailable(sessionId, "The lottery")
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        "The lottery is not available on this server.",
+                        "lottery",
+                        code = "UNAVAILABLE",
+                    )
                 }
             }
         }
     }
 
     private suspend fun handleGamble(sessionId: SessionId, cmd: Command.Gamble) {
-        val system = lotterySystem ?: return sendUnavailable(sessionId, "Gambling")
+        val system =
+            lotterySystem
+                ?: return sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    "Gambling is not available on this server.",
+                    "lottery",
+                    code = "UNAVAILABLE",
+                )
 
         players.withPlayer(sessionId) { me ->
             val room = ctx.world.rooms[me.roomId]
@@ -209,7 +265,14 @@ class LotteryHandler(
                 }
 
                 is GambleResult.Disabled -> {
-                    sendUnavailable(sessionId, "Gambling")
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        "Gambling is not available on this server.",
+                        "lottery",
+                        code = "UNAVAILABLE",
+                    )
                 }
             }
         }
@@ -222,28 +285,5 @@ class LotteryHandler(
     ) {
         val info = system.getInfo(playerName)
         gmcpEmitter?.sendLotteryInfo(sessionId, info)
-    }
-
-    private suspend fun sendUnavailable(sessionId: SessionId, name: String) {
-        val message = "$name is not available on this server."
-        outbound.send(OutboundEvent.SendError(sessionId, message))
-        sendLotteryFeedback(sessionId, "error", message, code = "UNAVAILABLE")
-    }
-
-    private suspend fun sendLotteryFeedback(
-        sessionId: SessionId,
-        type: String,
-        message: String,
-        code: String? = null,
-        command: String? = null,
-    ) {
-        gmcpEmitter?.sendUiFeedback(
-            sessionId = sessionId,
-            type = type,
-            message = message,
-            code = code,
-            scope = "lottery",
-            command = command,
-        )
     }
 }

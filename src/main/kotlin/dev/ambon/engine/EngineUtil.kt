@@ -66,6 +66,38 @@ internal suspend fun broadcastToRoom(
 }
 
 /**
+ * Sends [text] as a [OutboundEvent.SendText] to every online player.
+ * Optionally excludes [exclude].
+ */
+internal suspend fun broadcastToAll(
+    players: PlayerRegistry,
+    outbound: OutboundBus,
+    text: String,
+    exclude: SessionId? = null,
+) {
+    for (p in players.allPlayers()) {
+        if (exclude != null && p.sessionId == exclude) continue
+        outbound.send(OutboundEvent.SendText(p.sessionId, text))
+    }
+}
+
+/**
+ * Sends [text] as a [OutboundEvent.SendInfo] to every online player.
+ * Optionally excludes [exclude].
+ */
+internal suspend fun broadcastInfoToAll(
+    players: PlayerRegistry,
+    outbound: OutboundBus,
+    text: String,
+    exclude: SessionId? = null,
+) {
+    for (p in players.allPlayers()) {
+        if (exclude != null && p.sessionId == exclude) continue
+        outbound.send(OutboundEvent.SendInfo(p.sessionId, text))
+    }
+}
+
+/**
  * Returns a random integer in [[min], [max]] (inclusive).
  * Returns [min] when max <= min.
  */
