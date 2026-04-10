@@ -53,7 +53,7 @@ ambonmud:
     tickMillis: 100
     inboundBudgetMs: 30
   world:
-    startRoom: thornhaven_city:new_arrivals_hall
+    startRoom: auringold_academy:dream_gate
     resources: []
   persistence:
     backend: YAML

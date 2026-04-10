@@ -1266,15 +1266,24 @@ class GmcpEmitterTest {
                     outbound = outbound,
                     supportsPackage = { _, pkg -> pkg.startsWith("Server") },
                     imagesBaseUrl = "https://cdn.example.com/img/",
-                    globalAssets = mapOf("compass_rose" to "global_assets/compass_rose.png"),
+                    globalAssets = mapOf(
+                        "shop_kiosk" to "global_assets/shop_kiosk.png",
+                        "custom_zone_art" to "zone_art/hero.png",
+                    ),
                 )
             e.sendServerAssets(sid)
             val data = drainGmcp()
             assertEquals(1, data.size)
             assertEquals("Server.Assets", data[0].gmcpPackage)
+            // Bundled assets (global_assets/, defaults/) resolve locally
             assertTrue(
-                data[0].jsonData.contains("https://cdn.example.com/img/global_assets/compass_rose.png"),
-                "Expected resolved URL. got=${data[0].jsonData}",
+                data[0].jsonData.contains("/images/global_assets/shop_kiosk.png"),
+                "Expected bundled asset to resolve locally. got=${data[0].jsonData}",
+            )
+            // Non-bundled assets use the CDN base URL
+            assertTrue(
+                data[0].jsonData.contains("https://cdn.example.com/img/zone_art/hero.png"),
+                "Expected non-bundled asset to use CDN. got=${data[0].jsonData}",
             )
         }
 

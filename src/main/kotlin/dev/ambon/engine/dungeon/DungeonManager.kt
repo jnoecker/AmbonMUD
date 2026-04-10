@@ -225,6 +225,7 @@ class DungeonManager(
                     questIds = mobSpawn.questIds,
                     image = mobSpawn.image,
                     video = mobSpawn.video,
+                    category = mobSpawn.category,
                 )
 
                 mobs.upsert(mob)

@@ -21,4 +21,6 @@ data class MobFile(
     val faction: String? = null,
     val image: String? = null,
     val video: String? = null,
+    /** Visual category for default sprite selection (e.g. humanoid, beast, undead). */
+    val category: String? = null,
 )

@@ -8,6 +8,8 @@ data class WorldFile(
     val graphical: Boolean = false,
     /** Whether PvP combat is enabled in this zone. */
     val pvpEnabled: Boolean = false,
+    /** Default terrain type for rooms in this zone (overridable per-room). */
+    val terrain: String? = null,
     val image: ZoneImageDefaults? = null,
     val audio: ZoneAudioDefaults? = null,
     val rooms: Map<String, RoomFile>,

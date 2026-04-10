@@ -197,8 +197,9 @@ export class BattleScene {
 
     this.playerLabel.text = character.name !== "-" ? character.name : "";
 
-    // Update enemy sprite
-    const enemyImage = combatTarget?.targetImage ?? null;
+    // Update enemy sprite — fall back to category-based default
+    const enemyCategory = combatTarget?.targetCategory ?? "humanoid";
+    const enemyImage = combatTarget?.targetImage ?? gameStateRef.current.serverAssets[`default_mob_${enemyCategory}`] ?? null;
     const targetId = combatTarget?.targetId ?? null;
     if (enemyImage !== this.lastEnemyImage) {
       this.lastEnemyImage = enemyImage;

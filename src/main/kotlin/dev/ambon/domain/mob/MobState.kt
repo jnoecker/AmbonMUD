@@ -29,6 +29,7 @@ data class MobState(
     override val questIds: List<String> = emptyList(),
     override val image: String? = null,
     override val video: String? = null,
+    val category: String = "humanoid",
     val aggressive: Boolean = false,
     /** Non-null if this mob is a summoned pet. */
     val ownerSessionId: SessionId? = null,

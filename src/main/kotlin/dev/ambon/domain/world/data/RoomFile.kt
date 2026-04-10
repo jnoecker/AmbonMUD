@@ -21,6 +21,8 @@ data class RoomFile(
     val tavern: Boolean = false,
     /** True if this room has a dungeon portal (enables dungeon kiosk badge). */
     val dungeon: Boolean = false,
+    /** True if this room has an auction house (enables auction hall badge). */
+    val auction: Boolean = false,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */
@@ -29,4 +31,6 @@ data class RoomFile(
     val music: String? = null,
     /** Ambient sound loop for this room (overrides zone default). */
     val ambient: String? = null,
+    /** Terrain type for this room (overrides zone default). Affects weather display and default background. */
+    val terrain: String? = null,
 )

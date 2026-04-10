@@ -8,7 +8,7 @@ import { RoomTransition } from "../systems/RoomTransition";
 import { SkyRenderer } from "../systems/SkyRenderer";
 import { WeatherParticles } from "../systems/WeatherParticles";
 import type { MobInfo } from "../../types";
-import { ROOM_SURFACE_WIDGETS, roomHasSurfaceWidget } from "../../featureMetadata";
+import { ROOM_SURFACE_WIDGETS } from "../../featureMetadata";
 
 /** Resolves a global asset key to its server-provided URL, with a hardcoded fallback. */
 function assetUrl(key: string, fallbackFilename: string): string {
@@ -786,9 +786,18 @@ export class WorldScene {
     this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "", room.image ?? null, room.mapX, room.mapY);
     this.minimap.tick(deltaMs);
 
-    if (room.image !== this.lastRoomImage) {
-      this.lastRoomImage = room.image;
-      this.loadBackground(room.image ?? null);
+    // Resolve room background: custom image, or terrain-based default from server assets
+    const terrain = room.terrain ?? "outside";
+    const effectiveImage = room.image ?? state.serverAssets[`default_bg_${terrain}`] ?? null;
+    if (effectiveImage !== this.lastRoomImage) {
+      this.lastRoomImage = effectiveImage;
+      this.loadBackground(effectiveImage);
+    }
+
+    // Suppress weather particles for sheltered terrains
+    const sheltered = terrain === "inside" || terrain === "underground" || terrain === "underwater";
+    if (sheltered) {
+      this.weatherParticles.setHint("");
     }
 
     if (room.video !== this.lastRoomVideo) {
@@ -841,7 +850,7 @@ export class WorldScene {
       this.shopBadge.visible = hasShop;
     }
 
-    const hasAuction = roomHasSurfaceWidget(state.room.id, "auction");
+    const hasAuction = !!state.room.auction;
     if (hasAuction !== this.auctionVisible) {
       this.auctionVisible = hasAuction;
       this.auctionBadge.visible = hasAuction;
@@ -1411,7 +1420,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildMobs(mobs: Array<{ id: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null }>) {
+  private rebuildMobs(mobs: Array<{ id: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null; category?: string }>) {
     for (const { sprite, label, labelBg, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(labelBg);
@@ -1451,8 +1460,9 @@ export class WorldScene {
       sprite.anchor.set(0.5);
       sprite.tint = 0xf0c674;
 
-      if (mob.image) {
-        this.loadSpriteTexture(sprite, mob.image);
+      const mobImage = mob.image ?? gameStateRef.current.serverAssets[`default_mob_${mob.category ?? "humanoid"}`] ?? null;
+      if (mobImage) {
+        this.loadSpriteTexture(sprite, mobImage);
       }
 
       const label = new Text({
@@ -1511,8 +1521,9 @@ export class WorldScene {
       sprite.anchor.set(0.5);
       sprite.tint = 0x8abeb7;
 
-      if (item.image) {
-        this.loadSpriteTexture(sprite, item.image);
+      const itemImage = item.image ?? gameStateRef.current.serverAssets["default_item_generic"] ?? null;
+      if (itemImage) {
+        this.loadSpriteTexture(sprite, itemImage);
       }
 
       const label = new Text({
@@ -1565,8 +1576,9 @@ export class WorldScene {
       sprite.anchor.set(0.5);
       sprite.tint = 0x8da97b; // moss green
 
-      if (node.image) {
-        this.loadSpriteTexture(sprite, node.image);
+      const nodeImage = node.image ?? gameStateRef.current.serverAssets["default_item_generic"] ?? null;
+      if (nodeImage) {
+        this.loadSpriteTexture(sprite, nodeImage);
       }
 
       const label = new Text({
@@ -1717,7 +1729,8 @@ export class WorldScene {
       this.playerSprite = null;
     }
 
-    if (!spritePath) {
+    const resolvedPath = spritePath ?? gameStateRef.current.serverAssets["default_player"] ?? null;
+    if (!resolvedPath) {
       const sprite = new Sprite(Texture.WHITE);
       sprite.width = BASE_SPRITE_SIZE;
       sprite.height = BASE_SPRITE_SIZE;
@@ -1729,7 +1742,7 @@ export class WorldScene {
     }
 
     try {
-      const texture = await Assets.load(spritePath);
+      const texture = await Assets.load(resolvedPath);
       const sprite = new Sprite(texture);
       sprite.width = BASE_SPRITE_SIZE;
       sprite.height = BASE_SPRITE_SIZE;

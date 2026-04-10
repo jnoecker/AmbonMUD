@@ -34,6 +34,7 @@ data class CombatTargetInfo(
     val hp: Int,
     val maxHp: Int,
     val image: String? = null,
+    val category: String = "humanoid",
 )
 
 /** Input DTO for building a Server.Who GMCP payload. */
@@ -101,9 +102,18 @@ class GmcpEmitter(
         lastZoneBySession.remove(sessionId)
     }
 
-    /** Resolved asset URLs: each value from [globalAssets] is prefixed with [imagesBase]. */
+    /**
+     * Resolved asset URLs: each value from [globalAssets] is prefixed with either
+     * [imagesBase] (CDN) or `/images/` (local) depending on whether the asset is
+     * a bundled default. Bundled assets (defaults/, global_assets/) always resolve
+     * locally so they work without any external CDN or asset generation.
+     */
     private val resolvedAssets: Map<String, String> =
-        globalAssets.mapValues { (_, path) -> "$imagesBase$path" }
+        globalAssets.mapValues { (_, path) ->
+            val bundled = path.startsWith("defaults/") || path.startsWith("global_assets/")
+            val base = if (bundled) "/images/" else imagesBase
+            "$base$path"
+        }
 
     suspend fun sendCharVitals(
         sessionId: SessionId,
@@ -143,6 +153,7 @@ class GmcpEmitter(
                 targetHp = target?.hp,
                 targetMaxHp = target?.maxHp,
                 targetImage = target?.image,
+                targetCategory = target?.category,
             ),
         )
     }
@@ -174,11 +185,13 @@ class GmcpEmitter(
                 housing = isHousing,
                 housingOwner = housingOwner,
                 graphical = room.graphical,
+                terrain = room.terrain,
                 pvpEnabled = pvpEnabled,
                 trainer = trainerName,
                 bank = room.bank,
                 tavern = room.tavern,
                 dungeon = room.dungeon,
+                auction = room.auction,
             ),
         )
     }
@@ -1914,6 +1927,7 @@ class GmcpEmitter(
             maxHp = mob.maxHp,
             image = mob.image,
             video = mob.video,
+            category = mob.category,
             effects = if (effects.isEmpty()) {
                 null
             } else {
@@ -1950,6 +1964,7 @@ class GmcpEmitter(
         val targetHp: Int?,
         val targetMaxHp: Int?,
         val targetImage: String?,
+        val targetCategory: String?,
     )
 
     private data class ZoneMapPayload(
@@ -1980,11 +1995,13 @@ class GmcpEmitter(
         val housing: Boolean = false,
         val housingOwner: String? = null,
         val graphical: Boolean = false,
+        val terrain: String = "outside",
         val pvpEnabled: Boolean = false,
         val trainer: String? = null,
         val bank: Boolean = false,
         val tavern: Boolean = false,
         val dungeon: Boolean = false,
+        val auction: Boolean = false,
     )
 
     private data class ItemPayload(
@@ -2036,6 +2053,7 @@ class GmcpEmitter(
         val maxHp: Int,
         val image: String? = null,
         val video: String? = null,
+        val category: String = "humanoid",
         val effects: List<MobEffectPayload>? = null,
     )
 

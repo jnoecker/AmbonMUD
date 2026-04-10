@@ -510,6 +510,7 @@ class GameEngine(
                         hp = mob.hp,
                         maxHp = mob.maxHp,
                         image = mob.image,
+                        category = mob.category,
                     )
                 }
             },

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ContainerContents, ItemSummary, RoomFeature, RoomPlayer } from "../../types";
 import { DropItemIcon, GiveItemIcon, WearItemIcon } from "../Icons";
+import { resolveItemImage } from "../../imageDefaults";
 
 interface InventoryPanelProps {
   connected: boolean;
@@ -66,7 +67,7 @@ export function InventoryPanel({
     <li key={item.id} className="inventory-item">
       <div className="inventory-item-row">
         <span className="inventory-item-info">
-          {item.image && <img src={item.image} alt="" className="inventory-item-thumb" />}
+          {resolveItemImage(item) && <img src={resolveItemImage(item)!} alt="" className="inventory-item-thumb" />}
           <span className="inventory-item-name">{item.name}</span>
           {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
         </span>
