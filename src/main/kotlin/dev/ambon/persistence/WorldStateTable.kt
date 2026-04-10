@@ -1,6 +1,6 @@
 package dev.ambon.persistence
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 object WorldStateTable : Table("world_state") {
     val id = varchar("id", 64).default("singleton")

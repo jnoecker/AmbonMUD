@@ -1,6 +1,6 @@
 package dev.ambon.persistence
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 object GuildsTable : Table("guilds") {
     val id = varchar("id", 64)

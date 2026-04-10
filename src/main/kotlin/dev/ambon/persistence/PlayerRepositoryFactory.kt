@@ -5,7 +5,7 @@ import dev.ambon.config.PersistenceConfig
 import dev.ambon.config.RedisConfig
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.redis.RedisConnectionManager
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 import java.nio.file.Paths
 
 data class PlayerRepositoryChain(
