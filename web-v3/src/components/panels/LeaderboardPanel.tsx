@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { LeaderboardData } from "../../types";
 
 const CATEGORIES = [
@@ -14,6 +15,17 @@ interface Props {
 }
 
 export function LeaderboardPanel({ leaderboard, onCommand }: Props) {
+  const autoLoaded = useRef(false);
+
+  useEffect(() => {
+    if (!autoLoaded.current) {
+      autoLoaded.current = true;
+      for (const c of CATEGORIES) {
+        onCommand(`leaderboard ${c.key}`);
+      }
+    }
+  }, [onCommand]);
+
   const activeCats = CATEGORIES.filter((c) => {
     const data = leaderboard[c.key];
     return data && data.entries.length > 0;
@@ -27,8 +39,7 @@ export function LeaderboardPanel({ leaderboard, onCommand }: Props) {
 
       {activeCats.length === 0 ? (
         <div className="leaderboard-empty">
-          <p>No leaderboard data yet.</p>
-          <p>Use the leaderboard command to load rankings.</p>
+          <p>Loading rankings&hellip;</p>
           <div className="leaderboard-cat-buttons">
             {CATEGORIES.map((c) => (
               <button

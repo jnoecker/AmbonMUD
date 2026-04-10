@@ -16,7 +16,6 @@ import type {
   RoomState,
   ShopState,
   StatusEffect,
-  SystemPanelView,
   Vitals,
   WorldTime,
   WorldWeather,
@@ -62,10 +61,11 @@ export const canvasCallbacks: {
   openShop: (() => void) | null;
   openAuction: (() => void) | null;
   openPuzzle: (() => void) | null;
-  openSystems: ((view: SystemPanelView) => void) | null;
   openFeatures: ((preferredType?: FeaturePopoutFocus) => void) | null;
   openBank: (() => void) | null;
   openTrainer: (() => void) | null;
+  openDungeon: (() => void) | null;
+  openLottery: (() => void) | null;
   openMap: (() => void) | null;
   openRoom: (() => void) | null;
   openQuests: (() => void) | null;
@@ -79,10 +79,11 @@ export const canvasCallbacks: {
   openShop: null,
   openAuction: null,
   openPuzzle: null,
-  openSystems: null,
   openFeatures: null,
   openBank: null,
   openTrainer: null,
+  openDungeon: null,
+  openLottery: null,
   openMap: null,
   openRoom: null,
   openQuests: null,

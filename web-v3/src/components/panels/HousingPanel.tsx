@@ -36,7 +36,7 @@ export function HousingPanel({
         <div className="housing-empty-state">
           <span className="housing-empty-icon">{"\u{1F3E0}"}</span>
           <p className="empty-note">You don't own a house yet.</p>
-          <p className="housing-hint">Visit a housing broker to purchase one, or type <code>house buy</code> at a broker.</p>
+          <p className="housing-hint">Visit a housing broker to purchase one.</p>
         </div>
       </div>
     );
