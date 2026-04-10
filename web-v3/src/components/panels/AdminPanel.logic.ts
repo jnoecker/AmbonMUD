@@ -29,9 +29,7 @@ export interface AdminActionDefinition {
 
 export interface AdminActionSection {
   id: AdminActionSectionId;
-  kicker: string;
   title: string;
-  description: string;
 }
 
 export const ADMIN_ACTIONS: AdminActionDefinition[] = [
@@ -51,30 +49,10 @@ export const ADMIN_ACTIONS: AdminActionDefinition[] = [
 ];
 
 export const ADMIN_ACTION_SECTIONS: AdminActionSection[] = [
-  {
-    id: "mobility",
-    kicker: "Travel and positioning",
-    title: "Movement Control",
-    description: "Jump to any live player or room, or relocate someone else with destination context.",
-  },
-  {
-    id: "intervention",
-    kicker: "Moderation and correction",
-    title: "Player Intervention",
-    description: "Resolve live problems with clear targets, consequence messaging, and immediate feedback.",
-  },
-  {
-    id: "world",
-    kicker: "Live-ops authority",
-    title: "World Operations",
-    description: "Spawn, reload, announce, or stop the world from one operational surface.",
-  },
-  {
-    id: "presence",
-    kicker: "Staff embodiment",
-    title: "Presence Tools",
-    description: "Move through the world as staff, slip out of sight, or inhabit a creature directly.",
-  },
+  { id: "mobility", title: "Movement" },
+  { id: "intervention", title: "Intervention" },
+  { id: "world", title: "World Ops" },
+  { id: "presence", title: "Presence" },
 ];
 
 export const ADMIN_RELOAD_SCOPES = ["all", "world", "abilities", "effects"] as const;
@@ -133,26 +111,3 @@ export function requiresAdminConfirmation(action: AdminAction): boolean {
   );
 }
 
-export function getAdminConfirmationCopy(
-  action: AdminAction,
-  targetSummary: string | null,
-): string {
-  switch (action) {
-    case "transfer":
-      return `Move ${targetSummary ?? "the selected player"} immediately. They will receive a forced relocation and a fresh room view.`;
-    case "smite":
-      return `Strike ${targetSummary ?? "the selected target"} immediately. Players are dropped to 1 HP at the start room; room mobs are killed outright.`;
-    case "kick":
-      return `Disconnect ${targetSummary ?? "the selected player"} immediately from the live server.`;
-    case "setlevel":
-      return `Rewrite progression for ${targetSummary ?? "the selected player"} immediately. This takes effect live.`;
-    case "reload":
-      return `Reload live data without restarting. Invalid scopes will be rejected by the engine, but successful reloads change the running world immediately.`;
-    case "broadcast":
-      return `Announce this message to every connected player across active engines right away.`;
-    case "shutdown":
-      return "Stop the live server for everyone. All connected players will receive the shutdown announcement and be disconnected.";
-    default:
-      return getAdminActionDefinition(action).description;
-  }
-}

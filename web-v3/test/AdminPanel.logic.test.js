@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
   buildAdminCommand,
-  getAdminConfirmationCopy,
   requiresAdminConfirmation,
 } from "../src/components/panels/AdminPanel.logic";
 
@@ -37,9 +36,4 @@ describe("AdminPanel logic", () => {
     expect(requiresAdminConfirmation("shutdown")).toBe(true);
   });
 
-  test("explains high-impact admin actions with concrete copy", () => {
-    expect(getAdminConfirmationCopy("kick", "Bob")).toContain("Disconnect Bob immediately");
-    expect(getAdminConfirmationCopy("setlevel", "Bob to level 10")).toContain("Rewrite progression");
-    expect(getAdminConfirmationCopy("shutdown", null)).toContain("Stop the live server");
-  });
 });
