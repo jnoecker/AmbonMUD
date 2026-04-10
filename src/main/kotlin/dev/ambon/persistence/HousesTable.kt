@@ -1,6 +1,6 @@
 package dev.ambon.persistence
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 object HousesTable : Table("houses") {
     val ownerId = long("owner_id")

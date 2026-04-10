@@ -4,12 +4,12 @@ import com.fasterxml.jackson.core.type.TypeReference
 import dev.ambon.domain.guild.GuildHallRoom
 import dev.ambon.domain.guild.GuildRecord
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.upsert
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.upsert
 
 private val log = KotlinLogging.logger {}
 private val membersType = object : TypeReference<Map<Long, String>>() {}

@@ -2,7 +2,7 @@ package dev.ambon.persistence
 
 import dev.ambon.config.PersistenceBackend
 import dev.ambon.config.PersistenceConfig
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 import java.nio.file.Paths
 
 object WorldStateRepositoryFactory {

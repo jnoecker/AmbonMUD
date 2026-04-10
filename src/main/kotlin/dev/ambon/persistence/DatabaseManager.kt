@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.ambon.config.DatabaseConfig
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 
 class DatabaseManager(
     private val config: DatabaseConfig,

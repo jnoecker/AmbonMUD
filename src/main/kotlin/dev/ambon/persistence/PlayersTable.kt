@@ -7,9 +7,9 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 
 private val statsType = object : TypeReference<Map<String, Int>>() {}
 private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
