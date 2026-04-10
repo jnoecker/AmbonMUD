@@ -72,6 +72,7 @@ exits: <map<string direction, string target-room-id>, optional, default {}>
 station: <string, optional - one of FORGE|ALCHEMY_TABLE|WORKBENCH (case-insensitive)>
 bank: <boolean, optional, default false>
 tavern: <boolean, optional, default false>
+dungeon: <boolean, optional, default false>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown as clickable cinematic>
 music: <string, optional - overrides zone audio.music>
@@ -84,6 +85,10 @@ ambient: <string, optional - overrides zone audio.ambient>
 
 `tavern` notes:
 - When `true`, enables gambling commands (`gamble`, `dice`) in this room.
+- Also shows a Lottery badge on the web client canvas.
+
+`dungeon` notes:
+- When `true`, shows a Dungeon badge on the web client canvas that opens the dungeon kiosk panel.
 
 `station` notes:
 - Designates the room as a crafting station of the given type.
