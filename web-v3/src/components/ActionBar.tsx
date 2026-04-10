@@ -20,7 +20,6 @@ import {
   SendIcon,
 } from "./Icons";
 
-/** Derive a visual category from targetType + effectType for border glow. */
 function skillCategory(skill: SkillSummary): string {
   const t = skill.targetType.toUpperCase();
   const e = skill.effectType.toUpperCase();

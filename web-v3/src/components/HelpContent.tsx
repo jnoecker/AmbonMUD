@@ -11,7 +11,6 @@ interface HelpCategory {
   commands: HelpCommand[];
 }
 
-/** Display-name mapping for server category keys. */
 const CATEGORY_LABELS: Record<string, string> = {
   navigation: "Navigation",
   communication: "Communication",
@@ -29,7 +28,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   admin: "Staff",
 };
 
-/** Controls the display order of categories. Unlisted categories appear at the end. */
 const CATEGORY_ORDER: string[] = [
   "navigation",
   "communication",
@@ -47,7 +45,6 @@ const CATEGORY_ORDER: string[] = [
   "admin",
 ];
 
-/** Build HelpCategory[] from Server.Commands GMCP data. */
 function buildFromServerCommands(commands: CommandEntry[], isStaff: boolean): HelpCategory[] {
   const grouped = new Map<string, HelpCommand[]>();
   for (const cmd of commands) {

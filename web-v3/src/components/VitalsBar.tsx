@@ -73,10 +73,8 @@ interface VitalsBarProps {
   onCommand: (cmd: string) => void;
   onReconnect?: () => void;
   audio: AudioEngine;
-  /** Controlled command input value (lifted to App so the palette + canvas can prefill it). */
   inputValue: string;
   onInputChange: (value: string) => void;
-  /** Whether the inline command input is expanded. */
   showInput: boolean;
   onShowInputChange: (open: boolean) => void;
   onInputKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;

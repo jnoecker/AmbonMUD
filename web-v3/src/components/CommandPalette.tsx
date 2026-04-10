@@ -30,11 +30,6 @@ function categoryLabel(cat: string): string {
   return cat.charAt(0).toUpperCase() + cat.slice(1);
 }
 
-/**
- * Extract a runnable command prefix from a usage string.
- * For "tell/t <player> <msg>" this yields "tell".
- * For "guild create <name> <tag>" this yields "guild create".
- */
 function extractCommandPrefix(usage: string): string {
   // Take the portion before the first '<' or '[' (angle-bracket arguments)
   const beforeArg = usage.split(/[<[]/)[0].trim();

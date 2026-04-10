@@ -189,14 +189,7 @@ export function AuctionPanel({ listings, inventory, playerName, feedbackFeed, on
       {view === "sell" && (
         <div className="auction-create">
           <section className="auction-create-card">
-            <div className="auction-create-header">
-              <div>
-                <h3 className="auction-create-title">Create a Listing</h3>
-                <p className="auction-create-copy">
-                  Choose an item from your inventory and set a gold price to post it to the market.
-                </p>
-              </div>
-            </div>
+            <h3 className="auction-create-title">Create a Listing</h3>
 
             {sortedInventory.length === 0 ? (
               <div className="auction-empty">
