@@ -139,12 +139,7 @@ export function WorldFeaturesPopout({
     <div className="feature-popout">
       <header className="feature-popout-hero">
         <div className="feature-popout-hero-copy">
-          <p className="feature-popout-eyebrow">Room Features</p>
           <h3>{roomTitle}</h3>
-          <p>
-            Doors, containers, and levers now have their own quick-action hub so room interactions stay visible,
-            legible, and one tap away.
-          </p>
         </div>
         <div className="feature-popout-summary" aria-label="Feature summary">
           <span className="feature-popout-summary-pill feature-popout-summary-door">
@@ -212,28 +207,6 @@ export function WorldFeaturesPopout({
                 )}
                 <span className="feature-card-detail-chip">Keyword: {feature.keyword}</span>
               </div>
-
-              {feature.type === "container" && (
-                <div className="feature-card-copy">
-                  {feature.state === "open"
-                    ? "Search to inspect the contents, then pull treasure out directly from here."
-                    : "Open this container to search it. Inventory actions can place items back inside once it is open."}
-                </div>
-              )}
-
-              {feature.type === "door" && (
-                <div className="feature-card-copy">
-                  {feature.direction
-                    ? `This door guards the ${feature.direction} exit.`
-                    : "This doorway is available from the room's exit list once it is open."}
-                </div>
-              )}
-
-              {feature.type === "lever" && (
-                <div className="feature-card-copy">
-                  Pulling a lever updates the world immediately and can also advance room puzzles.
-                </div>
-              )}
 
               {feature.type === "sign" && feature.text && (
                 <p className="feature-card-sign-text">{feature.text}</p>

@@ -182,15 +182,7 @@ export function SystemsPanel({
       <div className="systems-body">
         {activeView === "dungeon" && (
           <section className="systems-section">
-            <div className="systems-hero">
-              <div>
-                <p className="systems-kicker">Instanced adventure</p>
-                <h3 className="systems-title">Dungeon Runs</h3>
-                <p className="systems-copy">
-                  Browse the current dungeon roster, choose a difficulty, then enter or resume your run without typed commands.
-                </p>
-              </div>
-            </div>
+            <h3 className="systems-title">Dungeon Runs</h3>
 
             {dungeonInfo?.active ? (
               <article className="systems-card systems-dungeon-active">
@@ -290,15 +282,7 @@ export function SystemsPanel({
 
         {activeView === "duel" && (
           <section className="systems-section">
-            <div className="systems-hero">
-              <div>
-                <p className="systems-kicker">Player versus player</p>
-                <h3 className="systems-title">Dueling</h3>
-                <p className="systems-copy">
-                  Challenge nearby players, respond to invitations, and track your current duel state from one place.
-                </p>
-              </div>
-            </div>
+            <h3 className="systems-title">Dueling</h3>
 
             {duelState?.active ? (
               <article className="systems-card">
@@ -309,9 +293,6 @@ export function SystemsPanel({
                   </div>
                   <span className="systems-pill systems-pill-danger">Live</span>
                 </div>
-                <p className="systems-card-copy">
-                  Your duel is active. Fight through the main play surface or flee if you need to disengage.
-                </p>
                 <div className="systems-action-row">
                   <button
                     type="button"
@@ -334,11 +315,6 @@ export function SystemsPanel({
                   </div>
                   <span className="systems-pill">{duelChallenge.direction === "incoming" ? "Incoming" : "Outgoing"}</span>
                 </div>
-                <p className="systems-card-copy">
-                  {duelChallenge.direction === "incoming"
-                    ? "Accept to start the duel now, or decline if you are not ready."
-                    : "Your challenge is pending. Stay nearby while the other player decides."}
-                </p>
                 {duelChallenge.direction === "incoming" && (
                   <div className="systems-action-row">
                     <button
@@ -399,15 +375,7 @@ export function SystemsPanel({
 
         {activeView === "lottery" && (
           <section className="systems-section">
-            <div className="systems-hero">
-              <div>
-                <p className="systems-kicker">Gold sink and jackpot</p>
-                <h3 className="systems-title">Lottery</h3>
-                <p className="systems-copy">
-                  Buy tickets in practical quantities, track the current pool, and watch the next drawing countdown in real time.
-                </p>
-              </div>
-            </div>
+            <h3 className="systems-title">Lottery</h3>
 
             {lotteryInfo ? (
               <article className="systems-card">
@@ -486,15 +454,7 @@ export function SystemsPanel({
 
         {activeView === "pet" && (
           <section className="systems-section">
-            <div className="systems-hero">
-              <div>
-                <p className="systems-kicker">Companion management</p>
-                <h3 className="systems-title">Pet Control</h3>
-                <p className="systems-copy">
-                  Rename or dismiss your active companion here, and keep an eye on its core combat stats while you travel.
-                </p>
-              </div>
-            </div>
+            <h3 className="systems-title">Pet</h3>
 
             {petState?.active ? (
               <article className="systems-card">
@@ -553,9 +513,7 @@ export function SystemsPanel({
                     <h4>Your companion slot is empty</h4>
                   </div>
                 </div>
-                <p className="systems-card-copy">
-                  Summon a familiar or companion through one of your pet abilities. Once active, it will appear here for direct management.
-                </p>
+                <p className="systems-card-copy">Use a pet ability to summon a companion.</p>
               </article>
             )}
           </section>
@@ -563,15 +521,7 @@ export function SystemsPanel({
 
         {activeView === "prestige" && (
           <section className="systems-section">
-            <div className="systems-hero">
-              <div>
-                <p className="systems-kicker">Endgame progression</p>
-                <h3 className="systems-title">Prestige</h3>
-                <p className="systems-copy">
-                  Review rank requirements, available prestige XP, and every unlocked or upcoming perk before committing to another reset.
-                </p>
-              </div>
-            </div>
+            <h3 className="systems-title">Prestige</h3>
 
             {prestigeInfo ? (
               prestigeInfo.enabled ? (
@@ -630,9 +580,7 @@ export function SystemsPanel({
                       <h4>Prestige is disabled</h4>
                     </div>
                   </div>
-                  <p className="systems-card-copy">
-                    This server has prestige progression turned off right now. If it is re-enabled later, this view will update automatically.
-                  </p>
+                  <p className="systems-card-copy">Prestige is currently disabled on this server.</p>
                 </article>
               )
             ) : (
@@ -643,15 +591,7 @@ export function SystemsPanel({
 
         {activeView === "currencies" && (
           <section className="systems-section">
-            <div className="systems-hero">
-              <div>
-                <p className="systems-kicker">Secondary economy</p>
-                <h3 className="systems-title">Wallet</h3>
-                <p className="systems-copy">
-                  Track every alternate currency the server exposes, along with what it represents and where those balances usually move.
-                </p>
-              </div>
-            </div>
+            <h3 className="systems-title">Wallet</h3>
 
             {sortedCurrencies.length === 0 ? (
               <article className="systems-card">
@@ -671,11 +611,13 @@ export function SystemsPanel({
                         <span className="systems-pill">{currency.balance.toLocaleString()}</span>
                       </div>
                       <p className="systems-card-copy">{meta?.description ?? "Server-managed alternate currency."}</p>
-                      <ul className="systems-bullet-list">
-                        {(meta?.gainHints ?? ["Watch related gameplay rewards and spenders for balance changes."]).map((hint) => (
-                          <li key={hint}>{hint}</li>
-                        ))}
-                      </ul>
+                      {meta?.gainHints && (
+                        <ul className="systems-bullet-list">
+                          {meta.gainHints.map((hint) => (
+                            <li key={hint}>{hint}</li>
+                          ))}
+                        </ul>
+                      )}
                     </article>
                   );
                 })}
@@ -690,9 +632,7 @@ export function SystemsPanel({
                 </div>
               </div>
               {recentCurrencyActivity.length === 0 ? (
-                <p className="systems-card-copy">
-                  Currency rewards and spending will appear here as your balances move.
-                </p>
+                <p className="systems-card-copy">No recent activity.</p>
               ) : (
                 <div className="systems-feed">
                   {recentCurrencyActivity.map((entry) => (
@@ -720,15 +660,7 @@ export function SystemsPanel({
 
         {activeView === "factions" && (
           <section className="systems-section">
-            <div className="systems-hero">
-              <div>
-                <p className="systems-kicker">Reputation and allegiance</p>
-                <h3 className="systems-title">Faction Standing</h3>
-                <p className="systems-copy">
-                  Understand what each faction stands for, how your tier maps to gameplay consequences, and where reputation changes come from.
-                </p>
-              </div>
-            </div>
+            <h3 className="systems-title">Factions</h3>
 
             {sortedFactions.length === 0 ? (
               <article className="systems-card">
@@ -755,14 +687,13 @@ export function SystemsPanel({
                       </div>
                       <p className="systems-card-copy">{meta?.description ?? "This faction influences quests and combat reputation changes."}</p>
                       <p className="systems-detail-line">{factionTierSummary(faction.tier)}</p>
-                      <ul className="systems-bullet-list">
-                        {(meta?.gainHints ?? [
-                          "Combat and quest completion can change faction standing.",
-                          "Watch combat rewards and quest panels for faction-linked outcomes.",
-                        ]).map((hint) => (
-                          <li key={hint}>{hint}</li>
-                        ))}
-                      </ul>
+                      {meta?.gainHints && (
+                        <ul className="systems-bullet-list">
+                          {meta.gainHints.map((hint) => (
+                            <li key={hint}>{hint}</li>
+                          ))}
+                        </ul>
+                      )}
                     </article>
                   );
                 })}
@@ -777,9 +708,7 @@ export function SystemsPanel({
                 </div>
               </div>
               {recentFactionActivity.length === 0 ? (
-                <p className="systems-card-copy">
-                  Quest and combat reputation shifts will appear here after your standings change.
-                </p>
+                <p className="systems-card-copy">No recent activity.</p>
               ) : (
                 <div className="systems-feed">
                   {recentFactionActivity.map((entry) => (
