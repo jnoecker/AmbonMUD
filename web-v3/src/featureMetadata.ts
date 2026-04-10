@@ -84,25 +84,25 @@ export const ROOM_SURFACE_WIDGETS: Record<
   auction: {
     label: "Auction",
     assetKey: "auction_hall_widget",
-    fallbackFilename: "auction_hall_widget.svg",
+    fallbackFilename: "auction_hall_widget.png",
     roomIds: ["thornhaven_city:auction_hall"],
   },
   dungeon: {
     label: "Dungeon",
     assetKey: "dungeon_portal_widget",
-    fallbackFilename: "dungeon_portal_widget.svg",
+    fallbackFilename: "dungeon_portal_widget.png",
     roomIds: ["thornhaven_city:grimlys_study", "dungeon_of_echoes:portal_chamber"],
   },
   duel: {
     label: "Duel",
     assetKey: "duel_arena_widget",
-    fallbackFilename: "duel_arena_widget.svg",
+    fallbackFilename: "duel_arena_widget.png",
     roomIds: ["thornhaven_city:arena_district", "thornhaven_city:dueling_grounds"],
   },
   lottery: {
     label: "Lottery",
     assetKey: "lottery_board_widget",
-    fallbackFilename: "lottery_board_widget.svg",
+    fallbackFilename: "lottery_board_widget.png",
     roomIds: ["thornhaven_city:tarnished_flagon_inn"],
   },
 };

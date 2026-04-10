@@ -178,13 +178,6 @@ export class WorldScene {
   private bankHitArea = new Graphics();
   private bankVisible = false;
 
-  private tavernBadge: Container | null = null;
-  private tavernSprite: Sprite | null = null;
-  private tavernLabel: Text | null = null;
-  private tavernLabelBg = new Graphics();
-  private tavernHitArea = new Graphics();
-  private tavernVisible = false;
-
   private lotteryBadge: Container | null = null;
   private lotterySprite: Sprite | null = null;
   private lotteryLabel: Text | null = null;
@@ -448,35 +441,6 @@ export class WorldScene {
     this.bankBadge.addChild(this.bankLabelBg);
     this.bankBadge.addChild(this.bankLabel);
 
-    // Tavern badge — floating icon when a tavern is present
-    this.tavernBadge = new Container();
-    this.tavernBadge.visible = false;
-    this.tavernBadge.eventMode = "static";
-    this.tavernBadge.cursor = "pointer";
-    this.tavernBadge.on("pointerdown", () => {
-      canvasCallbacks.openLottery?.();
-    });
-    this.tavernBadge.on("pointerover", () => {
-      if (this.tavernSprite) this.tavernSprite.alpha = 1;
-    });
-    this.tavernBadge.on("pointerout", () => {
-      if (this.tavernSprite) this.tavernSprite.alpha = 0.85;
-    });
-    this.tavernHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
-    this.tavernHitArea.fill({ color: 0x000000, alpha: 0.001 });
-    this.tavernHitArea.eventMode = "auto";
-    this.tavernBadge.addChild(this.tavernHitArea);
-    this.tavernLabel = new Text({
-      text: "Tavern",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#d4888a", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
-    });
-    this.tavernLabel.anchor.set(0.5, 0);
-    this.tavernLabel.y = hs / 2 + 2;
-    this.tavernLabel.eventMode = "none";
-    this.tavernLabelBg.eventMode = "none";
-    this.tavernBadge.addChild(this.tavernLabelBg);
-    this.tavernBadge.addChild(this.tavernLabel);
-
     this.lotteryBadge = new Container();
     this.lotteryBadge.visible = false;
     this.lotteryBadge.eventMode = "static";
@@ -699,7 +663,6 @@ export class WorldScene {
     this.container.addChild(this.stationBadge);
     this.container.addChild(this.trainerBadge);
     this.container.addChild(this.bankBadge!);
-    this.container.addChild(this.tavernBadge!);
     this.container.addChild(this.lotteryBadge!);
     this.container.addChild(this.dungeonBadge!);
     this.container.addChild(this.duelBadge!);
@@ -745,7 +708,6 @@ export class WorldScene {
       this.loadStationIcon();
       this.loadTrainerIcon();
       this.loadBankIcon();
-      this.loadTavernIcon();
       this.loadLotteryIcon();
       this.loadDungeonIcon();
       this.loadDuelIcon();
@@ -913,13 +875,6 @@ export class WorldScene {
       if (this.bankBadge) this.bankBadge.visible = hasBank;
     }
 
-    // Tavern badge visibility
-    const hasTavern = !!state.room.tavern;
-    if (hasTavern !== this.tavernVisible) {
-      this.tavernVisible = hasTavern;
-      if (this.tavernBadge) this.tavernBadge.visible = hasTavern;
-    }
-
     const hasLottery = !!state.room.tavern;
     if (hasLottery !== this.lotteryVisible) {
       this.lotteryVisible = hasLottery;
@@ -1062,7 +1017,6 @@ export class WorldScene {
     this.stationBadge.visible = this.stationVisible && !stripMode;
     this.trainerBadge.visible = this.trainerVisible && !stripMode;
     if (this.bankBadge) this.bankBadge.visible = this.bankVisible && !stripMode;
-    if (this.tavernBadge) this.tavernBadge.visible = this.tavernVisible && !stripMode;
     if (this.lotteryBadge) this.lotteryBadge.visible = this.lotteryVisible && !stripMode;
     if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
     if (this.duelBadge) this.duelBadge.visible = this.duelVisible && !stripMode;
@@ -1232,7 +1186,7 @@ export class WorldScene {
     const visibleBadgeCount = [
       this.shopBadge.visible, this.auctionBadge.visible,
       this.stationBadge.visible, this.trainerBadge.visible,
-      this.bankBadge?.visible, this.tavernBadge?.visible,
+      this.bankBadge?.visible,
       this.lotteryBadge?.visible, this.dungeonBadge?.visible,
       this.duelBadge?.visible, this.puzzleBadge?.visible,
       this.doorBadge?.visible, this.containerBadge?.visible,
@@ -1277,13 +1231,6 @@ export class WorldScene {
       this.bankBadge.x = badgeX;
       this.bankBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.bankLabelBg, this.bankLabel!);
-      badgeSlot++;
-    }
-
-    if (this.tavernBadge?.visible) {
-      this.tavernBadge.x = badgeX;
-      this.tavernBadge.y = badgeStartY + badgeSlot * badgeSpacing;
-      drawLabelPill(this.tavernLabelBg, this.tavernLabel!);
       badgeSlot++;
     }
 
@@ -1885,22 +1832,6 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.bankSprite = sprite;
       this.bankBadge?.addChild(sprite);
-    } catch {
-      // Fallback: text-only label still works
-    }
-  }
-
-  private async loadTavernIcon() {
-    try {
-      const texture = await Assets.load(assetUrl("tavern_icon", "tavern_icon.png"));
-      const sprite = new Sprite(texture);
-      sprite.width = SHOP_BADGE_SIZE;
-      sprite.height = SHOP_BADGE_SIZE;
-      sprite.anchor.set(0.5);
-      sprite.alpha = 0.85;
-      sprite.eventMode = "none";
-      this.tavernSprite = sprite;
-      this.tavernBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }
