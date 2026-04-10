@@ -1267,14 +1267,31 @@ object WorldLoader {
     }
 
     private val VALID_TERRAINS = setOf(
-        "inside", "outside", "forest", "mountain", "underground",
-        "underwater", "desert", "swamp", "urban", "sky",
+        "inside",
+        "outside",
+        "forest",
+        "mountain",
+        "underground",
+        "underwater",
+        "desert",
+        "swamp",
+        "urban",
+        "sky",
     )
 
-    private val SHELTERED_TERRAINS = setOf("inside", "underground", "underwater")
+    private val SHELTERED_TERRAINS = setOf(
+        "inside",
+        "underground",
+        "underwater",
+    )
 
     private val VALID_MOB_CATEGORIES = setOf(
-        "humanoid", "beast", "undead", "elemental", "construct", "aberration",
+        "humanoid",
+        "beast",
+        "undead",
+        "elemental",
+        "construct",
+        "aberration",
     )
 
     private fun validateTerrain(terrain: String, context: String) {
