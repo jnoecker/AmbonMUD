@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MailEntry, MailMessage } from "../../types";
 
 interface MailPanelProps {
@@ -10,6 +10,7 @@ interface MailPanelProps {
   onDeleteMessage: (index: number) => void;
   onCompose: (recipient: string, body: string) => void;
   onClearMessage: () => void;
+  onCommand: (cmd: string) => void;
 }
 
 function formatDate(epochMs: number): string {
@@ -27,11 +28,20 @@ export function MailPanel({
   onDeleteMessage,
   onCompose,
   onClearMessage,
+  onCommand,
 }: MailPanelProps) {
   const [composeTarget, setComposeTarget] = useState("");
   const [composeBody, setComposeBody] = useState("");
   const [showCompose, setShowCompose] = useState(false);
   const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<number | null>(null);
+  const autoLoaded = useRef(false);
+
+  useEffect(() => {
+    if (connected && hasCharacterProfile && inbox === null && !autoLoaded.current) {
+      autoLoaded.current = true;
+      onCommand("mail");
+    }
+  }, [connected, hasCharacterProfile, inbox, onCommand]);
 
   if (!connected) {
     return <p className="empty-note">Connect to view mail.</p>;

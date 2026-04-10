@@ -19,8 +19,10 @@ import { HousingPanel } from "./components/panels/HousingPanel";
 import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { BankPanel } from "./components/panels/BankPanel";
 import { AuctionPanel } from "./components/panels/AuctionPanel";
+import { DungeonPanel } from "./components/panels/DungeonPanel";
+import { LotteryPanel } from "./components/panels/LotteryPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
-import { SystemsPanel } from "./components/panels/SystemsPanel";
+import { WorldAtmosphereHud } from "./components/WorldAtmosphereHud";
 import { HelpContent } from "./components/HelpContent";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
@@ -32,9 +34,17 @@ import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
-import type { ChatChannel, FeaturePopoutFocus, PopoutPanel, SystemPanelView } from "./types";
+import type { ChatChannel, FeaturePopoutFocus, PopoutPanel } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
+
+function TrainerAutoLoad({ onCommand }: { onCommand: (cmd: string) => void }) {
+  const sent = useRef(false);
+  useEffect(() => {
+    if (!sent.current) { sent.current = true; onCommand("train list"); }
+  }, [onCommand]);
+  return <p className="empty-note">Loading trainer data&hellip;</p>;
+}
 
 function App() {
   const resumeTokenRef = useRef<string | null>(null);
@@ -50,7 +60,6 @@ function App() {
   // Ctrl+K command palette
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [featureFocus, setFeatureFocus] = useState<FeaturePopoutFocus>(null);
-  const [systemPanelView, setSystemPanelView] = useState<SystemPanelView>("dungeon");
 
   // Staff admin panel + invisibility toggle
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -180,10 +189,7 @@ function App() {
     state.setActivePopout(panel);
   };
 
-  const openSystemsPanel = (view: SystemPanelView) => {
-    setSystemPanelView(view);
-    openPanel("systems");
-  };
+
 
   // Sync state into canvas bridge for PixiJS
   useEffect(() => {
@@ -224,10 +230,11 @@ function App() {
     canvasCallbacks.openShop = () => openPanel("shop");
     canvasCallbacks.openAuction = () => openPanel("auction");
     canvasCallbacks.openPuzzle = () => openPanel("puzzle");
-    canvasCallbacks.openSystems = (view: SystemPanelView) => openSystemsPanel(view);
     canvasCallbacks.openFeatures = (preferredType?: FeaturePopoutFocus) => openPanel("features", preferredType ?? null);
     canvasCallbacks.openBank = () => openPanel("bank");
     canvasCallbacks.openTrainer = () => openPanel("trainer");
+    canvasCallbacks.openDungeon = () => openPanel("dungeon");
+    canvasCallbacks.openLottery = () => openPanel("lottery");
     canvasCallbacks.openMap = () => openPanel("map");
     canvasCallbacks.openRoom = () => openPanel("room");
     canvasCallbacks.openQuests = () => openPanel("quests");
@@ -239,10 +246,11 @@ function App() {
       canvasCallbacks.openShop = null;
       canvasCallbacks.openAuction = null;
       canvasCallbacks.openPuzzle = null;
-      canvasCallbacks.openSystems = null;
       canvasCallbacks.openFeatures = null;
       canvasCallbacks.openBank = null;
       canvasCallbacks.openTrainer = null;
+      canvasCallbacks.openDungeon = null;
+      canvasCallbacks.openLottery = null;
       canvasCallbacks.openMap = null;
       canvasCallbacks.openRoom = null;
       canvasCallbacks.openQuests = null;
@@ -428,23 +436,14 @@ function App() {
       case "leaderboard": return "Leaderboard";
       case "bank": return "Bank";
       case "auction": return "Auction House";
-      case "systems":
-        switch (systemPanelView) {
-          case "dungeon": return "Dungeon";
-          case "duel": return "Dueling";
-          case "lottery": return "Lottery";
-          case "pet": return "Pet";
-          case "prestige": return "Prestige";
-          case "currencies": return "Wallet";
-          case "factions": return "Factions";
-          default: return "Systems";
-        }
+      case "dungeon": return "Dungeon";
+      case "lottery": return "Lottery";
       case "help": return "Command Reference";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
       default: return "";
     }
-  }, [drawerPanel, state.shop?.name, state.trainer?.name, state.room.title, systemPanelView]);
+  }, [drawerPanel, state.shop?.name, state.trainer?.name, state.room.title]);
 
   const sortedExits = useMemo(() => sortExits(state.room.exits), [state.room.exits]);
   const questMarkerCount = useMemo(
@@ -514,19 +513,11 @@ function App() {
             currencies={state.currencies}
             factions={state.factions}
             petState={state.petState}
-            worldTime={state.worldTime}
-            worldWeather={state.worldWeather}
-            worldEvents={state.worldEvents}
-            lotteryInfo={state.lotteryInfo}
-            duelState={state.duelState}
-            duelChallenge={state.duelChallenge}
-            dungeonInfo={state.dungeonInfo}
             prestigeInfo={state.prestigeInfo}
             onDismissQuestNotification={(id) => state.setQuestNotifications((prev) => prev.filter((n) => n.id !== id))}
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
             onOpenInventory={() => openPanel("inventory")}
             onOpenEquipment={() => openPanel("equipment")}
-            onOpenSystem={openSystemsPanel}
             onCommand={sendCommand}
             onLogout={() => {
               try {
@@ -616,13 +607,17 @@ function App() {
           />
         )}
 
-        {drawerPanel === "trainer" && state.trainer && (
-          <TrainerPanel
-            trainer={state.trainer}
-            playerLevel={state.vitals.level ?? 1}
-            playerGold={state.vitals.gold}
-            onCommand={sendCommand}
-          />
+        {drawerPanel === "trainer" && (
+          state.trainer ? (
+            <TrainerPanel
+              trainer={state.trainer}
+              playerLevel={state.vitals.level ?? 1}
+              playerGold={state.vitals.gold}
+              onCommand={sendCommand}
+            />
+          ) : (
+            <TrainerAutoLoad onCommand={sendCommand} />
+          )
         )}
 
         {drawerPanel === "spellbook" && (
@@ -654,6 +649,7 @@ function App() {
               sendCommand(".");
             }}
             onClearMessage={() => state.setMailMessage(null)}
+            onCommand={sendCommand}
           />
         )}
 
@@ -717,22 +713,18 @@ function App() {
           />
         )}
 
-        {drawerPanel === "systems" && (
-          <SystemsPanel
-            initialView={systemPanelView}
-            vitals={state.vitals}
-            nearbyPlayers={state.players}
-            currencies={state.currencies}
-            currencyActivity={state.currencyActivity}
-            factions={state.factions}
-            factionActivity={state.factionActivity}
-            petState={state.petState}
-            lotteryInfo={state.lotteryInfo}
-            duelState={state.duelState}
-            duelChallenge={state.duelChallenge}
+        {drawerPanel === "dungeon" && (
+          <DungeonPanel
             dungeonInfo={state.dungeonInfo}
             dungeonCatalog={state.dungeonCatalog}
-            prestigeInfo={state.prestigeInfo}
+            uiFeedbackFeed={state.uiFeedbackFeed}
+            onCommand={sendCommand}
+          />
+        )}
+
+        {drawerPanel === "lottery" && (
+          <LotteryPanel
+            lotteryInfo={state.lotteryInfo}
             uiFeedbackFeed={state.uiFeedbackFeed}
             onCommand={sendCommand}
           />
@@ -1010,6 +1002,15 @@ function App() {
             />
           </div>
         </div>
+      )}
+
+      {/* World atmosphere HUD — time, weather, events on the canvas */}
+      {hasCharacterProfile && (
+        <WorldAtmosphereHud
+          worldTime={state.worldTime}
+          worldWeather={state.worldWeather}
+          worldEvents={state.worldEvents}
+        />
       )}
 
       {/* Staff-only floating controls + admin panel */}

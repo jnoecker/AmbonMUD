@@ -130,6 +130,7 @@ export class EntityPopout {
   showPlayer(name: string, level: number) {
     const actions: PopoutAction[] = [
       { label: "Look", command: `look ${name}`, color: 0x64b5f6 },
+      { label: "\u2694 Duel", command: `duel ${name}`, color: 0xd4888a },
       { label: "Tell", command: `__prefill__:tell ${name} `, color: 0xb5bd68 },
       { label: "Whisper", command: `__prefill__:whisper ${name} `, color: 0xa8a8a8 },
       { label: "Give", command: `__prefill__:give `, color: 0xf0c674 },

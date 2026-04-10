@@ -482,7 +482,7 @@ export class WorldScene {
     this.lotteryBadge.eventMode = "static";
     this.lotteryBadge.cursor = "pointer";
     this.lotteryBadge.on("pointerdown", () => {
-      canvasCallbacks.openSystems?.("lottery");
+      canvasCallbacks.openLottery?.();
     });
     this.lotteryBadge.on("pointerover", () => {
       if (this.lotterySprite) this.lotterySprite.alpha = 1;
@@ -510,7 +510,7 @@ export class WorldScene {
     this.dungeonBadge.eventMode = "static";
     this.dungeonBadge.cursor = "pointer";
     this.dungeonBadge.on("pointerdown", () => {
-      canvasCallbacks.openSystems?.("dungeon");
+      canvasCallbacks.openDungeon?.();
     });
     this.dungeonBadge.on("pointerover", () => {
       if (this.dungeonSprite) this.dungeonSprite.alpha = 1;
@@ -538,7 +538,7 @@ export class WorldScene {
     this.duelBadge.eventMode = "static";
     this.duelBadge.cursor = "pointer";
     this.duelBadge.on("pointerdown", () => {
-      canvasCallbacks.openSystems?.("duel");
+      // Duel badge removed — dueling via player context menu
     });
     this.duelBadge.on("pointerover", () => {
       if (this.duelSprite) this.duelSprite.alpha = 1;
@@ -932,10 +932,10 @@ export class WorldScene {
       if (this.dungeonBadge) this.dungeonBadge.visible = hasDungeon;
     }
 
-    const hasDuel = roomHasSurfaceWidget(state.room.id, "duel");
-    if (hasDuel !== this.duelVisible) {
-      this.duelVisible = hasDuel;
-      if (this.duelBadge) this.duelBadge.visible = hasDuel;
+    // Duel badge removed — dueling is accessed via player context menu
+    if (this.duelVisible) {
+      this.duelVisible = false;
+      if (this.duelBadge) this.duelBadge.visible = false;
     }
 
     // Puzzle badge visibility — driven by Puzzle.List GMCP (state.puzzle non-null)
@@ -1228,7 +1228,21 @@ export class WorldScene {
     // Room-feature badges — right side, stacked vertically below description area
     const badgeX = w - 70;
     const badgeStartY = h * 0.35;
-    const badgeSpacing = h * 0.13;
+    // Count visible badges to compute adaptive spacing
+    const visibleBadgeCount = [
+      this.shopBadge.visible, this.auctionBadge.visible,
+      this.stationBadge.visible, this.trainerBadge.visible,
+      this.bankBadge?.visible, this.tavernBadge?.visible,
+      this.lotteryBadge?.visible, this.dungeonBadge?.visible,
+      this.duelBadge?.visible, this.puzzleBadge?.visible,
+      this.doorBadge?.visible, this.containerBadge?.visible,
+      this.leverBadge?.visible,
+    ].filter(Boolean).length;
+    const availableHeight = h * 0.58; // from 35% to ~93% of viewport
+    const maxSpacing = h * 0.13;
+    const badgeSpacing = visibleBadgeCount > 1
+      ? Math.min(maxSpacing, availableHeight / visibleBadgeCount)
+      : maxSpacing;
     let badgeSlot = 0;
 
     if (this.shopBadge.visible) {

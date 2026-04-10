@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, DuelChallenge, DuelState, DungeonInfo, FactionStanding, GroupInfo, GuildInfo, LotteryInfo, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, SystemPanelView, Vitals, WorldEvent, WorldTime, WorldWeather } from "../../types";
+import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, FactionStanding, GroupInfo, GuildInfo, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions";
@@ -17,17 +17,6 @@ function factionTierClass(tier: string): "positive" | "neutral" | "negative" {
     default:
       return "neutral";
   }
-}
-
-function formatDrawingCountdown(ms: number): string {
-  if (ms <= 0) return "Drawing soon!";
-  const totalSec = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSec / 3600);
-  const minutes = Math.floor((totalSec % 3600) / 60);
-  const seconds = totalSec % 60;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
 }
 
 interface CharacterPanelProps {
@@ -56,19 +45,11 @@ interface CharacterPanelProps {
   currencies: CurrencyBalance[];
   factions: FactionStanding[];
   petState: PetState | null;
-  worldTime: WorldTime | null;
-  worldWeather: WorldWeather | null;
-  worldEvents: WorldEvent[];
-  lotteryInfo: LotteryInfo | null;
-  duelState: DuelState | null;
-  duelChallenge: DuelChallenge | null;
-  dungeonInfo: DungeonInfo | null;
   prestigeInfo: PrestigeInfo | null;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
   onOpenEquipment: () => void;
-  onOpenSystem: (view: SystemPanelView) => void;
   onCommand: (command: string) => void;
   onLogout: () => void;
 }
@@ -99,19 +80,11 @@ export function CharacterPanel({
   currencies,
   factions,
   petState,
-  worldTime,
-  worldWeather,
-  worldEvents,
-  lotteryInfo,
-  duelState,
-  duelChallenge,
-  dungeonInfo,
   prestigeInfo,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
   onOpenEquipment,
-  onOpenSystem,
   onCommand,
   onLogout,
 }: CharacterPanelProps) {
@@ -120,6 +93,8 @@ export function CharacterPanel({
   const [showSpriteSelector, setShowSpriteSelector] = useState(false);
   const [showDescriptionEditor, setShowDescriptionEditor] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState("");
+  const [petNameDraft, setPetNameDraft] = useState(petState?.name ?? "");
+  const [prevPetName, setPrevPetName] = useState(petState?.name ?? "");
 
   const totalAchievements = achievements.completed.length + achievements.inProgress.length;
   const unlockedTitles = useMemo(
@@ -140,6 +115,12 @@ export function CharacterPanel({
     return grouped;
   }, [spriteList.sprites]);
 
+  const currentPetName = petState?.name ?? "";
+  if (currentPetName !== prevPetName) {
+    setPrevPetName(currentPetName);
+    setPetNameDraft(currentPetName);
+  }
+
   // Auto-dismiss quest notifications after 6 seconds
   useEffect(() => {
     if (questNotifications.length === 0) return;
@@ -159,15 +140,6 @@ export function CharacterPanel({
           </h2>
         </div>
         <div className="panel-action-row">
-          <button
-            type="button"
-            className="panel-action-button"
-            onClick={() => onOpenSystem("currencies")}
-            title="Open systems"
-            aria-label="Open systems"
-          >
-            Systems
-          </button>
           <button
             type="button"
             className="panel-action-button panel-action-button-icon"
@@ -345,6 +317,9 @@ export function CharacterPanel({
                 <div><dt>Level</dt><dd>{vitals.level ?? character.level ?? "-"}</dd></div>
                 <div><dt>Total XP</dt><dd>{vitals.xp.toLocaleString()}</dd></div>
                 <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
+                {currencies.map((c) => (
+                  <div key={c.id}><dt title={c.name}>{c.abbreviation}</dt><dd>{c.balance.toLocaleString()}</dd></div>
+                ))}
               </dl>
             </>
           ) : (
@@ -752,28 +727,9 @@ export function CharacterPanel({
                         </div>
                       )}
                     </div>
-                    {currencies.length > 0 && (
-                      <div className="score-currencies">
-                        <div className="score-section-header">
-                          <p className="score-currencies-label">Currencies</p>
-                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("currencies")}>Open Wallet</button>
-                        </div>
-                        <dl className="score-currencies-grid">
-                          {currencies.map((c) => (
-                            <div key={c.id}>
-                              <dt title={c.abbreviation}>{c.name}</dt>
-                              <dd>{c.balance.toLocaleString()}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </div>
-                    )}
                     {((vitals.prestigeLevel ?? 0) > 0 || vitals.prestigeNextCost != null) && (
                       <div className="score-prestige">
-                        <div className="score-section-header">
-                          <p className="score-prestige-label">Prestige</p>
-                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("prestige")}>Open</button>
-                        </div>
+                        <p className="score-prestige-label">Prestige</p>
                         <dl className="score-prestige-grid">
                           <div>
                             <dt>Rank</dt>
@@ -806,123 +762,17 @@ export function CharacterPanel({
                           >
                             Prestige Up
                           </button>
-                          <button
-                            type="button"
-                            className="soft-button score-prestige-btn"
-                            onClick={() => onOpenSystem("prestige")}
-                            title="Open the full prestige view"
-                          >
-                            Open Details
-                          </button>
                         </div>
-                      </div>
-                    )}
-                    {lotteryInfo && (
-                      <div className="score-lottery">
-                        <div className="score-section-header">
-                          <p className="score-lottery-label">Lottery</p>
-                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("lottery")}>Play</button>
-                        </div>
-                        <dl className="score-lottery-grid">
-                          <div>
-                            <dt>Jackpot</dt>
-                            <dd className="score-lottery-jackpot">{lotteryInfo.jackpot.toLocaleString()} gold</dd>
-                          </div>
-                          <div>
-                            <dt>Your Tickets</dt>
-                            <dd>{lotteryInfo.playerTickets} / {lotteryInfo.totalTickets}</dd>
-                          </div>
-                          <div>
-                            <dt>Next Drawing</dt>
-                            <dd>{formatDrawingCountdown(lotteryInfo.nextDrawingMs)}</dd>
-                          </div>
-                        </dl>
-                        <div className="score-lottery-actions">
-                          <button
-                            type="button"
-                            className="score-lottery-btn"
-                            onClick={() => onCommand("lottery buy 1")}
-                          >
-                            Buy Ticket
-                          </button>
-                          <button
-                            type="button"
-                            className="score-lottery-btn score-lottery-btn-secondary"
-                            onClick={() => onCommand("lottery")}
-                          >
-                            Check Info
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {duelState?.active && (
-                      <div className="score-duel">
-                        <div className="score-section-header">
-                          <p className="score-section-label">Duel</p>
-                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("duel")}>Open</button>
-                        </div>
-                        <p className="score-section-value">Fighting <strong>{duelState.opponentName ?? "unknown"}</strong></p>
-                      </div>
-                    )}
-                    {duelChallenge && !duelState?.active && (
-                      <div className="score-duel">
-                        <div className="score-section-header">
-                          <p className="score-section-label">Duel Challenge</p>
-                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("duel")}>Open</button>
-                        </div>
-                        {duelChallenge.direction === "incoming" ? (
-                          <div className="score-duel-challenge">
-                            <p className="score-section-value"><strong>{duelChallenge.challengerName}</strong> challenges you!</p>
-                            <div className="score-duel-actions">
-                              <button type="button" className="soft-button" onClick={() => onCommand("duel accept")}>Accept</button>
-                              <button type="button" className="soft-button" onClick={() => onCommand("duel decline")}>Decline</button>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="score-section-value">Challenging <strong>{duelChallenge.targetName}</strong>&hellip;</p>
+                        {prestigeInfo && prestigeInfo.perks.length > 0 && (
+                          <ul className="prestige-perk-list">
+                            {prestigeInfo.perks.map((perk) => (
+                              <li key={perk.rank} className={`prestige-perk-item ${perk.earned ? "prestige-perk-earned" : "prestige-perk-locked"}`}>
+                                <span className="prestige-perk-rank">{perk.earned ? "\u2713" : perk.rank}</span>
+                                <span className="prestige-perk-desc">{perk.description}</span>
+                              </li>
+                            ))}
+                          </ul>
                         )}
-                      </div>
-                    )}
-                    {dungeonInfo?.active && (
-                      <div className="score-dungeon">
-                        <div className="score-section-header">
-                          <p className="score-section-label">Dungeon</p>
-                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("dungeon")}>Open</button>
-                        </div>
-                        <dl className="score-dungeon-grid">
-                          {dungeonInfo.name && (
-                            <div><dt>Name</dt><dd>{dungeonInfo.name}</dd></div>
-                          )}
-                          {dungeonInfo.difficulty && (
-                            <div><dt>Difficulty</dt><dd>{dungeonInfo.difficulty}</dd></div>
-                          )}
-                          {dungeonInfo.totalRooms != null && (
-                            <div><dt>Rooms</dt><dd>{dungeonInfo.totalRooms}</dd></div>
-                          )}
-                          {dungeonInfo.memberCount != null && (
-                            <div><dt>Party</dt><dd>{dungeonInfo.memberCount}</dd></div>
-                          )}
-                        </dl>
-                        {dungeonInfo.completed && <p className="score-dungeon-complete">Boss defeated!</p>}
-                        <div className="score-dungeon-actions">
-                          <button type="button" className="soft-button" onClick={() => onCommand("dungeon leave")}>Leave Dungeon</button>
-                        </div>
-                      </div>
-                    )}
-                    {prestigeInfo && prestigeInfo.perks.length > 0 && (
-                      <div className="score-prestige-perks">
-                        <div className="score-section-header">
-                          <p className="score-section-label">Prestige Perks</p>
-                          <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("prestige")}>Open</button>
-                        </div>
-                        <ul className="prestige-perk-list">
-                          {prestigeInfo.perks.map((perk) => (
-                            <li key={perk.rank} className={`prestige-perk-item ${perk.earned ? "prestige-perk-earned" : "prestige-perk-locked"}`}>
-                              <span className="prestige-perk-rank">{perk.earned ? "\u2713" : perk.rank}</span>
-                              <span className="prestige-perk-desc">{perk.description}</span>
-                            </li>
-                          ))}
-                        </ul>
                       </div>
                     )}
                   </div>
@@ -943,7 +793,6 @@ export function CharacterPanel({
                   <>
                     <div className="score-section-header score-section-header-spaced">
                       <p className="score-section-label">Faction Journal</p>
-                      <button type="button" className="soft-button score-open-btn" onClick={() => onOpenSystem("factions")}>Open</button>
                     </div>
                     <ul className="factions-list">
                       {factions.map((f) => (
@@ -1003,13 +852,24 @@ export function CharacterPanel({
               )}
             </dl>
             <div className="pet-actions">
-              <button
-                type="button"
-                className="soft-button"
-                onClick={() => onOpenSystem("pet")}
-              >
-                Manage Pet
-              </button>
+              <div className="pet-rename-row">
+                <input
+                  type="text"
+                  className="pet-rename-input"
+                  value={petNameDraft}
+                  onChange={(e) => setPetNameDraft(e.target.value)}
+                  placeholder="New name"
+                  maxLength={24}
+                />
+                <button
+                  type="button"
+                  className="soft-button"
+                  disabled={petNameDraft.trim().length === 0 || petNameDraft.trim() === petState.name}
+                  onClick={() => onCommand(`pet name ${petNameDraft.trim()}`)}
+                >
+                  Rename
+                </button>
+              </div>
               <button
                 type="button"
                 className="soft-button pet-dismiss-btn"
@@ -1018,33 +878,6 @@ export function CharacterPanel({
                 Dismiss
               </button>
             </div>
-          </article>
-        )}
-
-        {hasCharacterProfile && (worldTime || worldWeather || worldEvents.length > 0) && (
-          <article className="subpanel world-atmosphere-subpanel">
-            <p className="world-atmosphere-heading">World</p>
-            {worldTime && (
-              <div className="world-atmosphere-row">
-                <span className="world-atmosphere-icon" aria-hidden="true">{periodIcon(worldTime.period)}</span>
-                <span className="world-atmosphere-label">{periodLabel(worldTime.period)}</span>
-                <span className="world-atmosphere-value">{String(worldTime.hour).padStart(2, "0")}:{String(worldTime.minute).padStart(2, "0")}</span>
-              </div>
-            )}
-            {worldWeather && worldWeather.weather !== "CLEAR" && (
-              <div className="world-atmosphere-row" title={worldWeather.description}>
-                <span className="world-atmosphere-icon" aria-hidden="true">
-                  {worldWeather.icon || weatherIcon(worldWeather.weather)}
-                </span>
-                <span className="world-atmosphere-label">{weatherLabel(worldWeather.weather)}</span>
-              </div>
-            )}
-            {worldEvents.length > 0 && worldEvents.map((evt) => (
-              <div key={evt.id} className="world-atmosphere-row world-atmosphere-event" title={evt.description}>
-                <span className="world-atmosphere-icon world-atmosphere-event-icon" aria-hidden="true">&#x2726;</span>
-                <span className="world-atmosphere-label">{evt.name}</span>
-              </div>
-            ))}
           </article>
         )}
 
@@ -1060,45 +893,3 @@ export function CharacterPanel({
   );
 }
 
-function periodIcon(period: string): string {
-  switch (period) {
-    case "DAWN": return "☼";
-    case "DAY": return "☀";
-    case "DUSK": return "☽";
-    case "NIGHT": return "☾";
-    default: return "☀";
-  }
-}
-
-function periodLabel(period: string): string {
-  switch (period) {
-    case "DAWN": return "Dawn";
-    case "DAY": return "Day";
-    case "DUSK": return "Dusk";
-    case "NIGHT": return "Night";
-    default: return period;
-  }
-}
-
-function weatherIcon(weather: string): string {
-  switch (weather) {
-    case "RAIN": return "☂";
-    case "STORM": return "⚡";
-    case "FOG": return "☁";
-    case "SNOW": return "❄";
-    case "WIND": return "☴";
-    default: return "";
-  }
-}
-
-function weatherLabel(weather: string): string {
-  switch (weather) {
-    case "CLEAR": return "Clear";
-    case "RAIN": return "Rain";
-    case "STORM": return "Storm";
-    case "FOG": return "Fog";
-    case "SNOW": return "Snow";
-    case "WIND": return "Wind";
-    default: return weather;
-  }
-}
