@@ -684,7 +684,6 @@ export class WorldScene {
     this.recallBtn.visible = false;
 
     this.container.addChildAt(this.skyRenderer.graphics, 0);
-    this.container.addChild(this.weatherParticles.graphics);
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
@@ -711,8 +710,9 @@ export class WorldScene {
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
-    // Transition graphics live in the overlay so they stay visible while
-    // container.alpha fades to 0 during the dissolve phase.
+    // Weather lives in the overlay so it stays visible during room-transition
+    // fades (container.alpha → 0) and reliably renders above room art/sky.
+    this.overlayContainer.addChild(this.weatherParticles.graphics);
     this.overlayContainer.addChild(this.roomTransition.graphics);
   }
 
