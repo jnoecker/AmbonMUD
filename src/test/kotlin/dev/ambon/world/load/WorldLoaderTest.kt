@@ -406,7 +406,6 @@ class WorldLoaderTest {
         assertTrue(ex.message!!.contains("> 0", ignoreCase = true), "Got: ${ex.message}")
     }
 
-
     @Test
     fun `cross-zone exit resolves when loading multiple zones`() {
         // Uses the stable test fixture multi-zone files — not production world content.
