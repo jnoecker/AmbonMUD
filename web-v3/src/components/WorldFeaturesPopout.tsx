@@ -35,6 +35,80 @@ function stateLabel(feature: RoomFeature): string | null {
   return titleCase(feature.state);
 }
 
+function LeverWidget({
+  feature,
+  onCommand,
+}: {
+  feature: RoomFeature;
+  onCommand: (cmd: string) => void;
+}) {
+  const isUp = feature.state === "up";
+  const label = isUp ? "Ready" : "Pulled";
+
+  return (
+    <div className="lever-widget" onClick={() => onCommand(`pull ${feature.keyword}`)}>
+      <div className="lever-widget-plate">
+        <svg
+          className="lever-widget-svg"
+          viewBox="0 0 64 96"
+          aria-label={`${feature.name}: ${label}`}
+        >
+          {/* Base plate arc */}
+          <path
+            d="M12 78 Q32 86 52 78"
+            fill="none"
+            stroke="rgb(180 150 210 / 40%)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          {/* Pivot point */}
+          <circle cx="32" cy="72" r="6" className="lever-widget-pivot" />
+          {/* Handle shaft */}
+          <line
+            x1="32"
+            y1="72"
+            x2={isUp ? "32" : "46"}
+            y2={isUp ? "22" : "32"}
+            className="lever-widget-shaft"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          {/* Handle grip */}
+          <circle
+            cx={isUp ? "32" : "46"}
+            cy={isUp ? "18" : "28"}
+            r="7"
+            className="lever-widget-grip"
+          />
+          {/* Glow on grip */}
+          <circle
+            cx={isUp ? "32" : "46"}
+            cy={isUp ? "18" : "28"}
+            r="4"
+            className="lever-widget-glow"
+          />
+        </svg>
+      </div>
+      <div className="lever-widget-info">
+        <span className="lever-widget-name">{feature.name}</span>
+        <span className={`lever-widget-state lever-widget-state-${isUp ? "up" : "down"}`}>
+          {label}
+        </span>
+      </div>
+      <button
+        type="button"
+        className="lever-widget-pull"
+        onClick={(e) => {
+          e.stopPropagation();
+          onCommand(`pull ${feature.keyword}`);
+        }}
+      >
+        Pull
+      </button>
+    </div>
+  );
+}
+
 function featureSummary(features: RoomFeature[], type: RoomFeatureType): string {
   const count = features.filter((feature) => feature.type === type).length;
   if (count === 0) return `No ${FEATURE_LABELS[type].plural.toLowerCase()}`;
@@ -170,8 +244,12 @@ export function WorldFeaturesPopout({
         ))}
       </div>
 
-      <div className="feature-popout-grid">
+      <div className={`feature-popout-grid${activeTab === "lever" ? " feature-popout-grid-levers" : ""}`}>
         {visibleFeatures.map((feature) => {
+          if (feature.type === "lever") {
+            return <LeverWidget key={feature.id} feature={feature} onCommand={onCommand} />;
+          }
+
           const contents = feature.type === "container" && containerContents?.featureId === feature.id
             ? containerContents
             : null;
