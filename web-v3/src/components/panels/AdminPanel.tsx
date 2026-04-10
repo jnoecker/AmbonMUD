@@ -7,7 +7,6 @@ import {
   ADMIN_RELOAD_SCOPES,
   buildAdminCommand,
   getAdminActionDefinition,
-  getAdminConfirmationCopy,
   requiresAdminConfirmation,
 } from "./AdminPanel.logic";
 import type { AdminAction } from "./AdminPanel.logic";
@@ -421,18 +420,6 @@ export function AdminPanel({
 
   const activeDefinition = activeAction ? getAdminActionDefinition(activeAction) : null;
   const pendingCommand = activeAction ? buildAdminCommand(activeAction, inputA, inputB) : null;
-  const pendingTarget =
-    activeAction === "transfer" && inputA.trim() && inputB.trim()
-      ? `${inputA.trim()} to ${inputB.trim()}`
-      : activeAction === "setlevel" && inputA.trim() && inputB.trim()
-        ? `${inputA.trim()} to level ${inputB.trim()}`
-        : activeAction === "reload"
-          ? inputA.trim() || "all live data"
-          : activeAction === "broadcast"
-            ? "all connected players"
-            : activeAction === "shutdown"
-              ? "the live server"
-              : inputA.trim() || null;
   const pendingConfirmKey =
     activeAction && pendingCommand ? `${activeAction}:${pendingCommand}` : null;
   const confirmArmed = pendingConfirmKey !== null && confirmKey === pendingConfirmKey;
@@ -483,18 +470,6 @@ export function AdminPanel({
         </header>
 
         <div className="popout-content admin-content">
-          <div className="admin-intro">
-            <p className="admin-kicker">Live operations</p>
-            <h3 className="admin-intro-title">
-              Moderate players, steer the world, and operate in-room without dropping to typed
-              commands.
-            </h3>
-            <p className="admin-intro-copy">
-              The console uses live GMCP player, room, and template data wherever the client has
-              it. High-impact actions require an explicit second confirmation before they fire.
-            </p>
-          </div>
-
           <div className="admin-status-strip">
             <div className="admin-status-card">
               <span className="admin-status-label">Visibility</span>
@@ -521,11 +496,7 @@ export function AdminPanel({
               const sectionActions = ADMIN_ACTIONS.filter((entry) => entry.section === section.id);
               return (
                 <section key={section.id} className="admin-action-section">
-                  <div className="admin-section-head">
-                    <p className="admin-section-kicker">{section.kicker}</p>
-                    <h3 className="admin-section-title">{section.title}</h3>
-                    <p className="admin-section-copy">{section.description}</p>
-                  </div>
+                  <h3 className="admin-section-title">{section.title}</h3>
                   <div className="admin-action-grid">
                     {sectionActions.map((action) => (
                       <button
@@ -535,13 +506,6 @@ export function AdminPanel({
                         onClick={() => selectAction(action.id)}
                         aria-pressed={activeAction === action.id}
                       >
-                        <span className="admin-action-chip">
-                          {action.tone === "danger"
-                            ? "High impact"
-                            : action.tone === "utility"
-                              ? "Presence"
-                              : "Action"}
-                        </span>
                         <span className="admin-action-label">{action.label}</span>
                         <span className="admin-action-desc">{action.description}</span>
                       </button>
@@ -554,32 +518,7 @@ export function AdminPanel({
 
           {activeAction && activeDefinition && (
             <form className="admin-form" onSubmit={submit}>
-              <div className="admin-form-head">
-                <div>
-                  <p className="admin-form-kicker">
-                    {ADMIN_ACTION_SECTIONS.find((entry) => entry.id === activeDefinition.section)?.title}
-                  </p>
-                  <h3 className="admin-form-title">{activeDefinition.label}</h3>
-                </div>
-                <span
-                  className={`admin-form-chip ${requiresAdminConfirmation(activeAction) ? "admin-form-chip-danger" : ""}`}
-                >
-                  {requiresAdminConfirmation(activeAction) ? "Confirm before send" : "Live action"}
-                </span>
-              </div>
-
-              <p className="admin-form-copy">{activeDefinition.description}</p>
-
-              <div
-                className={`admin-warning-card ${requiresAdminConfirmation(activeAction) ? "admin-warning-card-danger" : ""} ${confirmArmed ? "admin-warning-card-armed" : ""}`}
-              >
-                <span className="admin-warning-title">
-                  {confirmArmed ? "Confirmation armed" : "Operational note"}
-                </span>
-                <span className="admin-warning-body">
-                  {getAdminConfirmationCopy(activeAction, pendingTarget)}
-                </span>
-              </div>
+              <h3 className="admin-form-title">{activeDefinition.label}</h3>
 
               {activeAction === "goto" && (
                 <>
