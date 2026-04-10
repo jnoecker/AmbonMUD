@@ -1,5 +1,6 @@
 package dev.ambon.grpc
 
+import dev.ambon.hmacSha256
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.grpc.CallOptions
 import io.grpc.Channel
@@ -12,9 +13,6 @@ import io.grpc.ServerCall
 import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
 import io.grpc.Status
-import java.nio.charset.StandardCharsets
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 
 private val log = KotlinLogging.logger {}
 
@@ -37,19 +35,6 @@ object GrpcAuthMetadata {
         Metadata.Key.of("x-ambon-auth-hmac", Metadata.ASCII_STRING_MARSHALLER)
     val TIMESTAMP_KEY: Metadata.Key<String> =
         Metadata.Key.of("x-ambon-auth-ts", Metadata.ASCII_STRING_MARSHALLER)
-}
-
-/**
- * Computes HMAC-SHA256 of [payload] under [secret], returning a lowercase hex string.
- */
-internal fun grpcHmacSha256(
-    secret: String,
-    payload: String,
-): String {
-    val mac = Mac.getInstance("HmacSHA256")
-    mac.init(SecretKeySpec(secret.toByteArray(StandardCharsets.UTF_8), "HmacSHA256"))
-    return mac.doFinal(payload.toByteArray(StandardCharsets.UTF_8))
-        .joinToString("") { "%02x".format(it) }
 }
 
 /**
@@ -98,7 +83,7 @@ class GrpcServerAuthInterceptor(
             return rejectCall(call, "Timestamp outside acceptable window")
         }
 
-        val expectedHmac = grpcHmacSha256(sharedSecret, tsString)
+        val expectedHmac = hmacSha256(sharedSecret, tsString)
         if (!constantTimeEquals(expectedHmac, hmac)) {
             log.warn { "gRPC auth rejected: HMAC mismatch" }
             return rejectCall(call, "Invalid HMAC signature")
@@ -149,7 +134,7 @@ class GrpcClientAuthInterceptor(
             ) {
                 val ts = clockMillis().toString()
                 headers.put(GrpcAuthMetadata.TIMESTAMP_KEY, ts)
-                headers.put(GrpcAuthMetadata.HMAC_KEY, grpcHmacSha256(sharedSecret, ts))
+                headers.put(GrpcAuthMetadata.HMAC_KEY, hmacSha256(sharedSecret, ts))
                 super.start(responseListener, headers)
             }
         }

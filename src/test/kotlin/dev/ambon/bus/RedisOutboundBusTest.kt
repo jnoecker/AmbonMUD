@@ -2,6 +2,7 @@ package dev.ambon.bus
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.hmacSha256
 import dev.ambon.redis.redisObjectMapper
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals

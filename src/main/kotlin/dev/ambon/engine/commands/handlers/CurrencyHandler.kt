@@ -28,7 +28,15 @@ class CurrencyHandler(
             if (definitions.isEmpty()) {
                 val message = "No secondary currencies exist."
                 outbound.send(OutboundEvent.SendInfo(sessionId, message))
-                sendCurrencyFeedback(sessionId, "info", message, code = "NONE_AVAILABLE", command = "currencies")
+                sendScopedFeedback(
+                    sessionId,
+                    gmcpEmitter,
+                    "info",
+                    message,
+                    "currencies",
+                    code = "NONE_AVAILABLE",
+                    command = "currencies",
+                )
                 return
             }
 
@@ -45,7 +53,15 @@ class CurrencyHandler(
             }
 
             emitCurrencies(sessionId, me)
-            sendCurrencyFeedback(sessionId, "info", "Wallet balances refreshed.", code = "INFO_REFRESHED", command = "currencies")
+            sendScopedFeedback(
+                sessionId,
+                gmcpEmitter,
+                "info",
+                "Wallet balances refreshed.",
+                "currencies",
+                code = "INFO_REFRESHED",
+                command = "currencies",
+            )
         }
     }
 
@@ -63,22 +79,5 @@ class CurrencyHandler(
             )
         }
         gmcpEmitter?.sendCharCurrencies(sessionId, payload)
-    }
-
-    private suspend fun sendCurrencyFeedback(
-        sessionId: SessionId,
-        type: String,
-        message: String,
-        code: String? = null,
-        command: String? = null,
-    ) {
-        gmcpEmitter?.sendUiFeedback(
-            sessionId = sessionId,
-            type = type,
-            message = message,
-            code = code,
-            scope = "currencies",
-            command = command,
-        )
     }
 }

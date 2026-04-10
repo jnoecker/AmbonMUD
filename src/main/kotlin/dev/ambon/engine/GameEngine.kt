@@ -1645,12 +1645,7 @@ class GameEngine(
 
                     // Phase 3: Flush GMCP vitals for sessions that had changes this tick.
                     val gmcpFlushPhaseSample = Timer.start()
-                    flushDirtyGmcpVitals()
-                    flushDirtyGmcpMobs()
-                    flushDirtyGmcpStatusEffects()
-                    flushDirtyGmcpGroup()
-                    flushDirtyGmcpCombat()
-                    flushDirtyGmcpStats()
+                    gmcpFlushHandler.flushAll()
                     metrics.recordTickPhase("gmcp_flush", gmcpFlushPhaseSample)
 
                     // Phase 4: Outbound flush — run scheduled actions and reset expired zones.
@@ -1773,30 +1768,6 @@ class GameEngine(
 
     private suspend fun handleGmcpReceived(ev: InboundEvent.GmcpReceived) {
         gmcpEventHandler.onGmcpReceived(ev)
-    }
-
-    private suspend fun flushDirtyGmcpVitals() {
-        gmcpFlushHandler.flushDirtyVitals()
-    }
-
-    private suspend fun flushDirtyGmcpStatusEffects() {
-        gmcpFlushHandler.flushDirtyStatusEffects()
-    }
-
-    private suspend fun flushDirtyGmcpMobs() {
-        gmcpFlushHandler.flushDirtyMobs()
-    }
-
-    private suspend fun flushDirtyGmcpGroup() {
-        gmcpFlushHandler.flushDirtyGroup()
-    }
-
-    private suspend fun flushDirtyGmcpCombat() {
-        gmcpFlushHandler.flushDirtyCombat()
-    }
-
-    private suspend fun flushDirtyGmcpStats() {
-        gmcpFlushHandler.flushDirtyStats()
     }
 
     suspend fun broadcastServerWho() {

@@ -33,6 +33,16 @@ class GmcpFlushHandler(
     private val bindings: StatBindingsConfig = StatBindingsConfig(),
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
+    /** Flushes all dirty GMCP sets in one call. */
+    suspend fun flushAll() {
+        flushDirtyVitals()
+        flushDirtyMobs()
+        flushDirtyStatusEffects()
+        flushDirtyGroup()
+        flushDirtyCombat()
+        flushDirtyStats()
+    }
+
     suspend fun flushDirtyVitals() {
         metrics.onGmcpFlushHandlerEvent()
         drainDirty(gmcpDirtyVitals) { sid ->

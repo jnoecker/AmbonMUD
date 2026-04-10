@@ -36,6 +36,16 @@ class SessionEventHandler(
     /** Sessions for which [fullDisconnect] has already run, guarding against double-cleanup. */
     private val fullyDisconnected = mutableSetOf<SessionId>()
 
+    /** Removes all GMCP tracking state for [sessionId]. */
+    private fun clearGmcpState(sessionId: SessionId) {
+        gmcpSessions.remove(sessionId)
+        gmcpDirtyVitals.remove(sessionId)
+        gmcpDirtyStatusEffects.remove(sessionId)
+        gmcpDirtyGroup.remove(sessionId)
+        gmcpDirtyCombat.remove(sessionId)
+        gmcpEmitter?.forgetSession(sessionId)
+    }
+
     suspend fun onConnected(
         sessionId: SessionId,
         defaultAnsiEnabled: Boolean,
@@ -64,12 +74,8 @@ class SessionEventHandler(
         // If the player is authenticated and grace period is enabled,
         // suspend the session instead of running full disconnect cleanup.
         if (me != null && me.playerId != null && gracePeriodManager != null) {
-            val gmcpPkgs = gmcpSessions.remove(sessionId)?.toSet() ?: emptySet()
-            gmcpDirtyVitals.remove(sessionId)
-            gmcpDirtyStatusEffects.remove(sessionId)
-            gmcpDirtyGroup.remove(sessionId)
-            gmcpDirtyCombat.remove(sessionId)
-            gmcpEmitter?.forgetSession(sessionId)
+            val gmcpPkgs = gmcpSessions[sessionId]?.toSet() ?: emptySet()
+            clearGmcpState(sessionId)
 
             val ps = players.suspendSession(sessionId)
             if (ps != null) {
@@ -99,12 +105,7 @@ class SessionEventHandler(
 
         // These may already have been cleared by the grace period path,
         // but clear them again in case of direct-disconnect or grace expiry.
-        gmcpSessions.remove(sessionId)
-        gmcpDirtyVitals.remove(sessionId)
-        gmcpDirtyStatusEffects.remove(sessionId)
-        gmcpDirtyGroup.remove(sessionId)
-        gmcpDirtyCombat.remove(sessionId)
-        gmcpEmitter?.forgetSession(sessionId)
+        clearGmcpState(sessionId)
 
         sessionLifecycle.onPlayerDisconnected(sessionId)
 

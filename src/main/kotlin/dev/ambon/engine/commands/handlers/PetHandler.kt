@@ -28,7 +28,15 @@ class PetHandler(
         if (pet == null) {
             val message = "You have no active pet. Summon one with a pet ability."
             outbound.send(OutboundEvent.SendInfo(sessionId, message))
-            sendPetFeedback(sessionId, "info", message, code = "NO_ACTIVE_PET", command = "status")
+            sendScopedFeedback(
+                sessionId,
+                gmcpEmitter,
+                "info",
+                message,
+                "pet",
+                code = "NO_ACTIVE_PET",
+                command = "status",
+            )
             return
         }
 
@@ -47,8 +55,15 @@ class PetHandler(
         val pet = petSystem.getActivePet(sessionId)
         if (pet == null) {
             val message = "You have no active pet."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendPetFeedback(sessionId, "error", message, code = "NO_ACTIVE_PET", command = "dismiss")
+            sendErrorWithFeedback(
+                sessionId,
+                outbound,
+                gmcpEmitter,
+                message,
+                "pet",
+                code = "NO_ACTIVE_PET",
+                command = "dismiss",
+            )
             return
         }
 
@@ -56,7 +71,15 @@ class PetHandler(
         petSystem.dismissAll(sessionId)
         val message = "You dismiss $petName."
         outbound.send(OutboundEvent.SendInfo(sessionId, message))
-        sendPetFeedback(sessionId, "success", message, code = "PET_DISMISSED", command = "dismiss")
+        sendScopedFeedback(
+            sessionId,
+            gmcpEmitter,
+            "success",
+            message,
+            "pet",
+            code = "PET_DISMISSED",
+            command = "dismiss",
+        )
         emitInactivePet(sessionId)
         players.withPlayer(sessionId) { me ->
             broadcastToRoom(me.roomId, "$petName vanishes.", players, outbound)
@@ -67,8 +90,15 @@ class PetHandler(
         val pet = petSystem.getActivePet(sessionId)
         if (pet == null) {
             val message = "You have no active pet."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendPetFeedback(sessionId, "error", message, code = "NO_ACTIVE_PET", command = "name")
+            sendErrorWithFeedback(
+                sessionId,
+                outbound,
+                gmcpEmitter,
+                message,
+                "pet",
+                code = "NO_ACTIVE_PET",
+                command = "name",
+            )
             return
         }
 
@@ -76,7 +106,15 @@ class PetHandler(
         pet.name = cmd.newName
         val message = "You rename $oldName to ${cmd.newName}."
         outbound.send(OutboundEvent.SendInfo(sessionId, message))
-        sendPetFeedback(sessionId, "success", message, code = "PET_RENAMED", command = "name")
+        sendScopedFeedback(
+            sessionId,
+            gmcpEmitter,
+            "success",
+            message,
+            "pet",
+            code = "PET_RENAMED",
+            command = "name",
+        )
         emitPetState(sessionId, pet)
     }
 
@@ -109,23 +147,6 @@ class PetHandler(
                 armor = null,
                 image = null,
             ),
-        )
-    }
-
-    private suspend fun sendPetFeedback(
-        sessionId: SessionId,
-        type: String,
-        message: String,
-        code: String? = null,
-        command: String? = null,
-    ) {
-        gmcpEmitter?.sendUiFeedback(
-            sessionId = sessionId,
-            type = type,
-            message = message,
-            code = code,
-            scope = "pet",
-            command = command,
         )
     }
 }

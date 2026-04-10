@@ -91,6 +91,46 @@ internal suspend fun requireSameRoom(
     return true
 }
 
+/**
+ * Sends a scoped GMCP UI feedback event via [gmcpEmitter].
+ * Replaces per-handler `sendXxxFeedback` wrapper methods that only differed in [scope].
+ */
+internal suspend fun sendScopedFeedback(
+    sessionId: SessionId,
+    gmcpEmitter: GmcpEmitter?,
+    type: String,
+    message: String,
+    scope: String,
+    code: String? = null,
+    command: String? = null,
+) {
+    gmcpEmitter?.sendUiFeedback(
+        sessionId = sessionId,
+        type = type,
+        message = message,
+        code = code,
+        scope = scope,
+        command = command,
+    )
+}
+
+/**
+ * Sends both a [OutboundEvent.SendError] text message and a scoped GMCP UI feedback event.
+ * Consolidates the common dual-output pattern used across many handlers.
+ */
+internal suspend fun sendErrorWithFeedback(
+    sessionId: SessionId,
+    outbound: OutboundBus,
+    gmcpEmitter: GmcpEmitter?,
+    message: String,
+    scope: String,
+    code: String? = null,
+    command: String? = null,
+) {
+    outbound.send(OutboundEvent.SendError(sessionId, message))
+    sendScopedFeedback(sessionId, gmcpEmitter, "error", message, scope, code, command)
+}
+
 /** Convenience extension that delegates to the full [sendLook], pulling all dependencies from this context. */
 internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry, questSystem, trainerRegistry)
@@ -384,6 +424,26 @@ internal fun buildFeaturePayload(
         text = feature.text,
     )
 }
+
+/**
+ * Convenience extension on [EngineContext] that delegates to [movePlayerWithNotify],
+ * pulling [players], [outbound], and [gmcpEmitter] from the context.
+ */
+internal suspend fun EngineContext.movePlayer(
+    sessionId: SessionId,
+    from: RoomId,
+    to: RoomId,
+    departMsg: String,
+    arriveMsg: String,
+    dialogueSystem: dev.ambon.engine.dialogue.DialogueSystem? = null,
+) = movePlayerWithNotify(sessionId, from, to, departMsg, arriveMsg, players, outbound, gmcpEmitter, dialogueSystem)
+
+/**
+ * Convenience extension on [EngineContext] that syncs item GMCP state,
+ * pulling [items] and [gmcpEmitter] from the context.
+ */
+internal suspend fun EngineContext.syncItems(sessionId: SessionId) =
+    syncItemsGmcp(sessionId, items, gmcpEmitter)
 
 /** Returns a human-readable display name for a crafting station type ID. */
 private fun stationDisplayName(station: String): String =

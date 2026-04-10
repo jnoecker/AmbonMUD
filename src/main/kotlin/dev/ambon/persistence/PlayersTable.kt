@@ -27,10 +27,6 @@ private val equippedItemsType = object : TypeReference<Map<String, ItemInstance>
 private val learnedAbilityIdsType = object : TypeReference<Set<String>>() {}
 private val unlockedClassesType = object : TypeReference<Set<String>>() {}
 
-/** Deserialises JSON with a fallback to [default] on any parse failure. */
-private fun <T> safeReadJson(json: String, type: TypeReference<T>, default: T): T =
-    runCatching { jsonMapper.readValue(json, type) }.getOrDefault(default)
-
 object PlayersTable : Table("players") {
     val id = long("id").autoIncrement("player_id_seq")
     val name = varchar("name", 16)

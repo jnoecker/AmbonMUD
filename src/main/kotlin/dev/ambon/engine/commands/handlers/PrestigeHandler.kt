@@ -26,22 +26,43 @@ class PrestigeHandler(
     private suspend fun handlePrestige(sessionId: SessionId) {
         if (!prestigeSystem.isEnabled()) {
             val message = "The prestige system is not enabled."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendPrestigeFeedback(sessionId, "error", message, code = "UNAVAILABLE", command = "prestige")
+            sendErrorWithFeedback(
+                sessionId,
+                outbound,
+                gmcpEmitter,
+                message,
+                "prestige",
+                code = "UNAVAILABLE",
+                command = "prestige",
+            )
             return
         }
         players.withPlayer(sessionId) { me ->
             val maxLevel = progression.maxLevel
             if (me.level < maxLevel) {
                 val message = "You must reach level $maxLevel before you can prestige."
-                outbound.send(OutboundEvent.SendError(sessionId, message))
-                sendPrestigeFeedback(sessionId, "error", message, code = "LEVEL_REQUIRED", command = "prestige")
+                sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    message,
+                    "prestige",
+                    code = "LEVEL_REQUIRED",
+                    command = "prestige",
+                )
                 return
             }
             if (me.prestigeLevel >= prestigeSystem.maxRank) {
                 val message = "You have already reached the maximum prestige rank."
-                outbound.send(OutboundEvent.SendError(sessionId, message))
-                sendPrestigeFeedback(sessionId, "error", message, code = "MAX_RANK", command = "prestige")
+                sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    message,
+                    "prestige",
+                    code = "MAX_RANK",
+                    command = "prestige",
+                )
                 return
             }
             val cost = prestigeSystem.xpCostForNextRank(me.prestigeLevel)
@@ -49,8 +70,15 @@ class PrestigeHandler(
             if (available < cost) {
                 val message =
                     "You need ${"%,d".format(cost)} surplus XP to prestige (you have ${"%,d".format(available)})."
-                outbound.send(OutboundEvent.SendError(sessionId, message))
-                sendPrestigeFeedback(sessionId, "error", message, code = "INSUFFICIENT_XP", command = "prestige")
+                sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    message,
+                    "prestige",
+                    code = "INSUFFICIENT_XP",
+                    command = "prestige",
+                )
                 return
             }
 
@@ -63,7 +91,15 @@ class PrestigeHandler(
                     message,
                 ),
             )
-            sendPrestigeFeedback(sessionId, "success", message, code = "PRESTIGE_COMPLETE", command = "prestige")
+            sendScopedFeedback(
+                sessionId,
+                gmcpEmitter,
+                "success",
+                message,
+                "prestige",
+                code = "PRESTIGE_COMPLETE",
+                command = "prestige",
+            )
 
             // Announce to the room
             val roomId = me.roomId
@@ -86,8 +122,15 @@ class PrestigeHandler(
     private suspend fun handlePrestigeInfo(sessionId: SessionId) {
         if (!prestigeSystem.isEnabled()) {
             val message = "The prestige system is not enabled."
-            outbound.send(OutboundEvent.SendError(sessionId, message))
-            sendPrestigeFeedback(sessionId, "error", message, code = "UNAVAILABLE", command = "info")
+            sendErrorWithFeedback(
+                sessionId,
+                outbound,
+                gmcpEmitter,
+                message,
+                "prestige",
+                code = "UNAVAILABLE",
+                command = "info",
+            )
             return
         }
         players.withPlayer(sessionId) { me ->
@@ -144,24 +187,15 @@ class PrestigeHandler(
                 nextRankCost = nextCost,
                 perks = gmcpEmitter.buildPrestigePerkPayloads(currentRank, maxRank) { prestigeSystem.perkForRank(it) },
             )
-            sendPrestigeFeedback(sessionId, "info", "Prestige details refreshed.", code = "INFO_REFRESHED", command = "info")
+            sendScopedFeedback(
+                sessionId,
+                gmcpEmitter,
+                "info",
+                "Prestige details refreshed.",
+                "prestige",
+                code = "INFO_REFRESHED",
+                command = "info",
+            )
         }
-    }
-
-    private suspend fun sendPrestigeFeedback(
-        sessionId: SessionId,
-        type: String,
-        message: String,
-        code: String? = null,
-        command: String? = null,
-    ) {
-        gmcpEmitter?.sendUiFeedback(
-            sessionId = sessionId,
-            type = type,
-            message = message,
-            code = code,
-            scope = "prestige",
-            command = command,
-        )
     }
 }
