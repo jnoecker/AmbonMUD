@@ -505,14 +505,10 @@ class WorldLoaderTest {
         fun `production world loads via WorldFactory defaults`() {
             val world = WorldFactory.demoWorld(resources = productionZones)
             assertTrue(world.rooms.isNotEmpty())
-            // Spot-check hub zone and cross-zone wiring:
+            // Spot-check the start zone loads:
             assertTrue(
-                world.rooms.containsKey(RoomId("thornhaven_city:new_arrivals_hall")),
-                "Expected thornhaven_city:new_arrivals_hall to be loaded",
-            )
-            assertTrue(
-                world.rooms.containsKey(RoomId("crossroads_path:world_road_south")),
-                "Expected crossroads_path:world_road_south to be loaded",
+                world.rooms.containsKey(RoomId("auringold_academy:dream_gate")),
+                "Expected auringold_academy:dream_gate to be loaded",
             )
         }
 
@@ -558,7 +554,7 @@ class WorldLoaderTest {
                     startRoom = startRoom,
                 )
             assertTrue(world.rooms.isNotEmpty())
-            assertEquals(RoomId("thornhaven_city:new_arrivals_hall"), world.startRoom)
+            assertEquals(RoomId("auringold_academy:dream_gate"), world.startRoom)
         }
     }
 

@@ -121,7 +121,8 @@ items:
       catches bad dreams before they reach you, humming a protective lullaby.
     slot: hand
     armor: 2
-    constitution: 1
+    stats:
+      constitution: 1
     basePrice: 40
 
   stardust_vial:
@@ -143,7 +144,8 @@ items:
       but the cloak protects its wearer fiercely.
     slot: body
     armor: 4
-    constitution: 2
+    stats:
+      constitution: 2
     basePrice: 100
 
   dreamers_key:
