@@ -1072,14 +1072,21 @@ export class WorldScene {
         : Math.min(mobSize + 24, mobAreaWidth / mobCount);
       const totalMobWidth = (mobCount - 1) * mobSpacing;
       let mobX = mobAreaLeft + (mobAreaWidth - totalMobWidth) / 2;
+      // Vertical stagger so adjacent mob labels don't collide. Cycles through
+      // up to 3 rows for 3+ mobs so neighbours-by-2 also don't share a row.
+      const mobStaggerStep = mobCount > 1 ? Math.min(32, mobSize * 0.26) : 0;
+      const mobStaggerRows = Math.min(mobCount, 3);
       const mobInfo = gameStateRef.current.mobInfo;
+      let mobIdx = 0;
       for (const { sprite, label, labelBg, hitArea } of mobEntries) {
+        const mobYOffset = (mobIdx % mobStaggerRows) * mobStaggerStep;
+        const thisMobY = mobY + mobYOffset;
         sprite.x = mobX;
-        sprite.y = mobY;
+        sprite.y = thisMobY;
         sprite.width = mobSize;
         sprite.height = mobSize;
         label.x = mobX;
-        label.y = mobY + mobSize / 2 + 6;
+        label.y = thisMobY + mobSize / 2 + 6;
 
         // Color label text by mob role + prepend role icon
         const mid = [...this.mobSprites.entries()].find(([, v]) => v.label === label)?.[0];
@@ -1104,8 +1111,9 @@ export class WorldScene {
         hitArea.rect(0, 0, mobSize, mobSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
         hitArea.x = mobX - mobSize / 2;
-        hitArea.y = mobY - mobSize / 2;
+        hitArea.y = thisMobY - mobSize / 2;
         mobX += mobSpacing;
+        mobIdx += 1;
       }
     }
 
@@ -1193,9 +1201,12 @@ export class WorldScene {
       this.leverBadge?.visible,
     ].filter(Boolean).length;
     const availableHeight = h * 0.58; // from 35% to ~93% of viewport
-    const maxSpacing = h * 0.13;
+    // Minimum spacing must clear the full badge footprint (icon + label pill + gap)
+    // so labels don't run into the next badge's icon.
+    const minBadgeSpacing = SHOP_BADGE_SIZE + 30;
+    const maxSpacing = Math.max(h * 0.15, minBadgeSpacing);
     const badgeSpacing = visibleBadgeCount > 1
-      ? Math.min(maxSpacing, availableHeight / visibleBadgeCount)
+      ? Math.max(minBadgeSpacing, Math.min(maxSpacing, availableHeight / visibleBadgeCount))
       : maxSpacing;
     let badgeSlot = 0;
 
