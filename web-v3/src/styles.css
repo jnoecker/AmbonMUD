@@ -10762,13 +10762,17 @@ body {
 /* ---------- Atmosphere HUD (canvas overlay, top-left) ---------- */
 .atmosphere-hud {
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 12px);
-  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  bottom: calc(var(--game-bottom-inset, 0px) + env(safe-area-inset-bottom, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  top: auto;
+  left: auto;
   z-index: 11;
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
   pointer-events: none;
+  max-width: 40vw;
 }
 
 .atmosphere-hud-chip {
@@ -13688,11 +13692,16 @@ html:has(.game-shell),
   display: block;
 }
 
-/* Staff-only floating action buttons — top-right corner, below the minimap */
+/* Staff-only floating action buttons — anchored to the left edge of the canvas,
+   vertically aligned with the player sprite (which renders at ~70% of canvas height). */
 .staff-fab {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 140px);
+  top: calc(
+    env(safe-area-inset-top, 0px) +
+    (100vh - var(--game-bottom-inset, 0px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) * 0.70
+  );
   left: calc(env(safe-area-inset-left, 0px) + 12px);
+  transform: translateY(-50%);
   z-index: 12;
   display: flex;
   flex-direction: column;

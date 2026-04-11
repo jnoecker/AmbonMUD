@@ -366,15 +366,14 @@ internal suspend fun sendLook(
         gmcpEmitter?.sendCraftingNodes(sessionId, emptyList())
     }
 
-    // Send interactive room features (doors, containers, levers, signs)
-    if (room.features.isNotEmpty() && gmcpEmitter != null) {
-        gmcpEmitter.sendRoomFeatures(
-            sessionId,
-            room.features.map { feature ->
-                buildFeaturePayload(feature, worldState)
-            },
-        )
-    }
+    // Send interactive room features (doors, containers, levers, signs).
+    // Always send — even when empty — so the client clears features from the previous room.
+    gmcpEmitter?.sendRoomFeatures(
+        sessionId,
+        room.features.map { feature ->
+            buildFeaturePayload(feature, worldState)
+        },
+    )
 }
 
 internal fun buildFeaturePayload(

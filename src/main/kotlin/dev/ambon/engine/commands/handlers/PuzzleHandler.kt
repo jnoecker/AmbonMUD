@@ -1,8 +1,11 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.ItemId
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.puzzle.PuzzleReward
+import dev.ambon.domain.world.LockableState
+import dev.ambon.domain.world.RoomFeature
 import dev.ambon.engine.PuzzleResult
 import dev.ambon.engine.PuzzleSystem
 import dev.ambon.engine.commands.Command
@@ -141,13 +144,24 @@ class PuzzleHandler(
                 )
             }
             is PuzzleReward.GiveItem -> {
-                val instance = items.createFromTemplate(ItemId(reward.itemId))
+                val itemId = ItemId(reward.itemId)
+                val instance = items.createFromTemplate(itemId)
                 if (instance != null) {
                     items.addToInventory(sessionId, instance)
                     outbound.send(
                         OutboundEvent.SendInfo(sessionId, "You receive ${instance.item.displayName}."),
                     )
                     syncItemsGmcp(sessionId, items, gmcpEmitter)
+                    // If the key opens a locked feature in the current room, auto-unlock
+                    // it so the player can proceed without manually fiddling with locks.
+                    autoUnlockWithKey(sessionId, me.roomId, itemId)
+                } else {
+                    outbound.send(
+                        OutboundEvent.SendError(
+                            sessionId,
+                            "The reward could not be granted (item '${reward.itemId}' not found).",
+                        ),
+                    )
                 }
             }
             is PuzzleReward.GiveGold -> {
@@ -158,6 +172,42 @@ class PuzzleHandler(
                 players.grantXp(sessionId, reward.amount)
                 outbound.send(OutboundEvent.SendText(sessionId, "You gain ${reward.amount} XP."))
             }
+        }
+    }
+
+    /**
+     * When a puzzle grants a key, any door or container in the player's current room
+     * that requires that key is automatically opened so the player can proceed.
+     * Consumable keys are removed from the inventory as if the player had manually unlocked the lock.
+     */
+    private suspend fun autoUnlockWithKey(
+        sessionId: SessionId,
+        roomId: RoomId,
+        keyItemId: ItemId,
+    ) {
+        val room = world.rooms[roomId] ?: return
+        val state = ctx.worldState ?: return
+        for (feature in room.features) {
+            val (featureKeyItemId, keyConsumed, displayName) = when (feature) {
+                is RoomFeature.Door -> Triple(feature.keyItemId, feature.keyConsumed, feature.displayName)
+                is RoomFeature.Container -> Triple(feature.keyItemId, feature.keyConsumed, feature.displayName)
+                else -> continue
+            }
+            if (featureKeyItemId != keyItemId) continue
+            if (state.getLockableState(feature.id) == LockableState.OPEN) continue
+            state.setLockableState(feature.id, LockableState.OPEN)
+            if (keyConsumed) {
+                items.removeFromInventoryById(sessionId, keyItemId)
+                syncItemsGmcp(sessionId, items, gmcpEmitter)
+            }
+            outbound.send(OutboundEvent.SendInfo(sessionId, "The $displayName swings open."))
+            broadcastToRoomExcept(
+                roomId,
+                sessionId,
+                "The $displayName swings open.",
+                players,
+                outbound,
+            )
         }
     }
 }
