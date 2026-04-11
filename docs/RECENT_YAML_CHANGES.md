@@ -563,6 +563,53 @@ New columns on `players` table:
 - `bank_gold BIGINT NOT NULL DEFAULT 0` — banked gold
 - `bank_items TEXT NOT NULL DEFAULT '[]'` — JSON array of stored ItemInstance objects
 
+---
+
+## Stylist NPC System (application.yaml + zone YAML)
+
+### Config
+
+```yaml
+ambonmud:
+  engine:
+    stylist:
+      feeGold: 500               # Gold charged per race change (default: 500)
+```
+
+### Room Flag
+
+Rooms with a stylist NPC must set `stylist: true`:
+
+```yaml
+rooms:
+  stylist_salon:
+    title: "The Arcanum Mirror"
+    description: "A hall of looking-glasses, each one reflecting a different self."
+    stylist: true               # ← enables stylist/changerace commands
+    image: stylist_mirror.png
+    exits:
+      s: town_square
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `stylist` | List available races, fee, and current race |
+| `changerace <race>` | Swap to the given race (charges the fee) |
+
+### Behavior
+- Player must be in a room with `stylist: true` for both commands
+- The fee is deducted on successful swap; the command fails cleanly if the player cannot afford it
+- The new race's stat modifiers are applied as a delta against the old race's, so stats earned via levelling, prestige, or equipment are preserved
+- Derived HP/mana caps are recomputed; current HP/mana are clamped to the new caps (bonuses above the level-derived base, e.g. from prestige perks, are preserved)
+- Racial abilities are **not** currently transferred on swap — tracked in GH issue #993
+
+### Global Asset
+
+- `stylist_mirror` → `global_assets/stylist_mirror.png` (registered in `ImagesConfig.DEFAULT_GLOBAL_ASSETS`)
+- Place the real art at `src/main/resources/world/images/global_assets/stylist_mirror.png`
+
 ### GMCP
 
 New `Char.Bank` package emitted after deposit/withdraw:

@@ -51,6 +51,7 @@ import dev.ambon.engine.commands.handlers.PuzzleHandler
 import dev.ambon.engine.commands.handlers.ReputationHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.SpriteHandler
+import dev.ambon.engine.commands.handlers.StylistHandler
 import dev.ambon.engine.commands.handlers.TradeHandler
 import dev.ambon.engine.commands.handlers.TrainerHandler
 import dev.ambon.engine.commands.handlers.UiHandler
@@ -1075,6 +1076,7 @@ class GameEngine(
             trainerRegistry = trainerRegistry,
             puzzleSystem = puzzleSystem,
             bankConfig = engineConfig.bank,
+            stylistConfig = engineConfig.stylist,
         )
 
         communicationHandler = CommunicationHandler(
@@ -1189,6 +1191,13 @@ class GameEngine(
                 ctx = ctx,
                 bankConfig = engineConfig.bank,
                 markVitalsDirty = ::markVitalsDirty,
+            ),
+            StylistHandler(
+                ctx = ctx,
+                stylistConfig = engineConfig.stylist,
+                progression = progression,
+                markVitalsDirty = ::markVitalsDirty,
+                markStatsDirty = ::markStatsDirty,
             ),
             WorldInfoHandler(
                 ctx = ctx,

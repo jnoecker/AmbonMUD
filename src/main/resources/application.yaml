@@ -4183,6 +4183,8 @@ ambonmud:
         - label: Cry
           emoji: 😢
           action: cries.
+    stylist:
+      feeGold: 500
     worldTime:
       cycleLengthMs: 3600000
       dawnHour: 5

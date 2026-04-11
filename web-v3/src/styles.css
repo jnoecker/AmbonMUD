@@ -13646,6 +13646,191 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   STYLIST PANEL
+   ════════════════════════════════════════════════════════════════════ */
+
+.stylist-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.stylist-panel .panel-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.stylist-panel .panel-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stylist-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.stylist-empty-icon {
+  font-size: 2.4rem;
+  opacity: 0.55;
+}
+
+.stylist-hint {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.stylist-hint code {
+  font-size: 0.78rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 8%);
+  color: var(--text-secondary);
+}
+
+.stylist-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stylist-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgb(176 146 208 / 12%), rgb(176 146 208 / 6%));
+  border: 1px solid rgb(176 146 208 / 22%);
+}
+
+.stylist-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.stylist-summary-label {
+  color: var(--text-tertiary);
+}
+
+.stylist-summary-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.stylist-summary-value.stylist-fee-short {
+  color: var(--danger, #d57f7f);
+}
+
+.stylist-race-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.stylist-race-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 3%);
+  border: 1px solid var(--border-subtle);
+}
+
+.stylist-race-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+}
+
+.stylist-race-image {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.stylist-race-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stylist-race-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.stylist-race-current {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.stylist-race-mods {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.stylist-race-desc {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.stylist-change-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgb(176 146 208 / 62%), rgb(145 118 180 / 58%));
+  color: #fff;
+  transition: background 0.15s;
+}
+
+.stylist-change-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgb(192 162 224 / 72%), rgb(165 138 200 / 68%));
+}
+
+.stylist-change-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.stylist-empty {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  padding: var(--space-4);
+}
+
+/* ════════════════════════════════════════════════════════════════════
    MOBILE-FIRST REDESIGN — game-shell, vbar, drawer
    Added in v2 redesign. Replaces app-shell + dashboard layout.
    ════════════════════════════════════════════════════════════════════ */

@@ -3,6 +3,7 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.BankConfig
 import dev.ambon.config.EconomyConfig
+import dev.ambon.config.StylistConfig
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.EquipmentSlotRegistry
@@ -53,4 +54,5 @@ data class EngineContext(
     val trainerRegistry: TrainerRegistry? = null,
     val puzzleSystem: PuzzleSystem? = null,
     val bankConfig: BankConfig = BankConfig(),
+    val stylistConfig: StylistConfig = StylistConfig(),
 )

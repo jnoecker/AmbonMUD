@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.CommandMetadata
 import dev.ambon.config.EmotePresetConfig
+import dev.ambon.domain.RaceDef
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -189,6 +190,7 @@ class GmcpEmitter(
                 pvpEnabled = pvpEnabled,
                 trainer = trainerName,
                 bank = room.bank,
+                stylist = room.stylist,
                 tavern = room.tavern,
                 dungeon = room.dungeon,
                 auction = room.auction,
@@ -1256,6 +1258,50 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- stylist ----------
+
+    data class StylistStatePayload(
+        val currentRace: String,
+        val feeGold: Long,
+        val playerGold: Long,
+        val races: List<StylistRacePayload>,
+    )
+
+    data class StylistRacePayload(
+        val id: String,
+        val displayName: String,
+        val description: String,
+        val image: String,
+        val statMods: Map<String, Int>,
+    )
+
+    suspend fun sendStylistState(
+        sessionId: SessionId,
+        currentRace: String,
+        feeGold: Long,
+        playerGold: Long,
+        races: List<RaceDef>,
+    ) {
+        emit(
+            sessionId,
+            "Char.Stylist",
+            StylistStatePayload(
+                currentRace = currentRace,
+                feeGold = feeGold,
+                playerGold = playerGold,
+                races = races.map {
+                    StylistRacePayload(
+                        id = it.id,
+                        displayName = it.displayName,
+                        description = it.description,
+                        image = it.image,
+                        statMods = it.statMods.nonZero(),
+                    )
+                },
+            ),
+        )
+    }
+
     // ---------- world atmosphere ----------
 
     data class WorldTimePayload(
@@ -1999,6 +2045,7 @@ class GmcpEmitter(
         val pvpEnabled: Boolean = false,
         val trainer: String? = null,
         val bank: Boolean = false,
+        val stylist: Boolean = false,
         val tavern: Boolean = false,
         val dungeon: Boolean = false,
         val auction: Boolean = false,

@@ -18,6 +18,7 @@ import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
 import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { BankPanel } from "./components/panels/BankPanel";
+import { StylistPanel } from "./components/panels/StylistPanel";
 import { AuctionPanel } from "./components/panels/AuctionPanel";
 import { DungeonPanel } from "./components/panels/DungeonPanel";
 import { LotteryPanel } from "./components/panels/LotteryPanel";
@@ -232,6 +233,7 @@ function App() {
     canvasCallbacks.openPuzzle = () => openPanel("puzzle");
     canvasCallbacks.openFeatures = (preferredType?: FeaturePopoutFocus) => openPanel("features", preferredType ?? null);
     canvasCallbacks.openBank = () => openPanel("bank");
+    canvasCallbacks.openStylist = () => openPanel("stylist");
     canvasCallbacks.openTrainer = () => openPanel("trainer");
     canvasCallbacks.openDungeon = () => openPanel("dungeon");
     canvasCallbacks.openLottery = () => openPanel("lottery");
@@ -248,6 +250,7 @@ function App() {
       canvasCallbacks.openPuzzle = null;
       canvasCallbacks.openFeatures = null;
       canvasCallbacks.openBank = null;
+      canvasCallbacks.openStylist = null;
       canvasCallbacks.openTrainer = null;
       canvasCallbacks.openDungeon = null;
       canvasCallbacks.openLottery = null;
@@ -435,6 +438,7 @@ function App() {
       case "housing": return "Housing";
       case "leaderboard": return "Leaderboard";
       case "bank": return "Bank";
+      case "stylist": return "Stylist";
       case "auction": return "Auction House";
       case "dungeon": return "Dungeon";
       case "lottery": return "Lottery";
@@ -701,6 +705,10 @@ function App() {
 
         {drawerPanel === "bank" && (
           <BankPanel bankState={state.bankState} onCommand={sendCommand} />
+        )}
+
+        {drawerPanel === "stylist" && (
+          <StylistPanel stylistState={state.stylistState} onCommand={sendCommand} />
         )}
 
         {drawerPanel === "auction" && (

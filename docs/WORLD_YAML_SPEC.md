@@ -71,6 +71,7 @@ description: <string, required>
 exits: <map<string direction, string target-room-id>, optional, default {}>
 station: <string, optional - one of FORGE|ALCHEMY_TABLE|WORKBENCH (case-insensitive)>
 bank: <boolean, optional, default false>
+stylist: <boolean, optional, default false>
 tavern: <boolean, optional, default false>
 dungeon: <boolean, optional, default false>
 image: <string, optional - relative path under /images/>
@@ -82,6 +83,13 @@ ambient: <string, optional - overrides zone audio.ambient>
 `bank` notes:
 - When `true`, enables bank commands (`deposit`, `withdraw`, `bank`) in this room.
 - See the Bank NPC System section in `docs/RECENT_YAML_CHANGES.md` for full details.
+
+`stylist` notes:
+- When `true`, enables stylist commands (`stylist`, `changerace <race>`) in this room.
+- The stylist charges a configurable gold fee (default 500, see `ambonMUD.engine.stylist.feeGold`) to swap a character's race.
+- The swap applies the new race's stat modifiers as a delta against the old race's modifiers, then recomputes derived HP/mana caps. Stats gained from levelling, prestige, or equipment are preserved.
+- Racial abilities are **not** currently transferred — see GH issue #993.
+- Shows a Stylist badge on the web client via the standard panel drawer.
 
 `tavern` notes:
 - When `true`, enables gambling commands (`gamble`, `dice`) in this room.

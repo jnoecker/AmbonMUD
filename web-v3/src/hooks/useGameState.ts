@@ -78,6 +78,7 @@ import type {
   StaffWorldZone,
   StatusEffect,
   StatusVarLabels,
+  StylistState,
   TradeState,
   TrainerData,
   UiFeedbackEntry,
@@ -227,6 +228,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]);
   const [currencies, setCurrencies] = useState<CurrencyBalance[]>([]);
   const [bankState, setBankState] = useState<BankState | null>(null);
+  const [stylistState, setStylistState] = useState<StylistState | null>(null);
   const [lotteryInfo, setLotteryInfo] = useState<LotteryInfo | null>(null);
   const [currencyActivity, setCurrencyActivity] = useState<CurrencyActivity[]>([]);
 
@@ -531,6 +533,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setPetState,
         setFactions: applyFactions,
         setBankState,
+        setStylistState,
         setLotteryInfo,
         setGuildHall,
         setDuelState,
@@ -603,6 +606,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setFactions([]);
     factionsRef.current = [];
     setBankState(null);
+    setStylistState(null);
     setLotteryInfo(null);
     setDuelState(null);
     setDuelChallenge(null);
@@ -646,7 +650,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     quests, questsAvailable, questNotifications, setQuestNotifications,
     dailyQuests, weeklyQuests, autoQuest, globalQuest,
     // Economy
-    shop, puzzle, auctionListings, currencies, currencyActivity, bankState, lotteryInfo,
+    shop, puzzle, auctionListings, currencies, currencyActivity, bankState, stylistState, lotteryInfo,
     // Crafting
     craftingSkills, craftingRecipes, craftingNodes,
     // World

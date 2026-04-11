@@ -63,6 +63,7 @@ export const canvasCallbacks: {
   openPuzzle: (() => void) | null;
   openFeatures: ((preferredType?: FeaturePopoutFocus) => void) | null;
   openBank: (() => void) | null;
+  openStylist: (() => void) | null;
   openTrainer: (() => void) | null;
   openDungeon: (() => void) | null;
   openLottery: (() => void) | null;
@@ -81,6 +82,7 @@ export const canvasCallbacks: {
   openPuzzle: null,
   openFeatures: null,
   openBank: null,
+  openStylist: null,
   openTrainer: null,
   openDungeon: null,
   openLottery: null,

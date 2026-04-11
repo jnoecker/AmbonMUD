@@ -611,6 +611,16 @@ export function BankIcon({ className }: { className?: string }) {
   );
 }
 
+export function StylistIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="12" cy="9" r="6" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M12 15v6M9 21h6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M9 7c1 1 2 1 3 1s2 0 3-1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function AuctionIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

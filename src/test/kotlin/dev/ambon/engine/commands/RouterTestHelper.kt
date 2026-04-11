@@ -4,6 +4,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.config.BankConfig
 import dev.ambon.config.EconomyConfig
 import dev.ambon.config.PrestigeConfig
+import dev.ambon.config.StylistConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
@@ -21,6 +22,7 @@ import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PrestigeSystem
 import dev.ambon.engine.PuzzleSystem
+import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.WorldStateRegistry
@@ -44,6 +46,7 @@ import dev.ambon.engine.commands.handlers.PrestigeHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.PuzzleHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
+import dev.ambon.engine.commands.handlers.StylistHandler
 import dev.ambon.engine.commands.handlers.TradeHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
@@ -88,6 +91,8 @@ internal fun buildTestRouter(
     petSystem: PetSystem? = null,
     enchantSystem: EnchantSystem? = null,
     bankConfig: BankConfig? = null,
+    stylistConfig: StylistConfig? = null,
+    raceRegistry: RaceRegistry? = null,
     duelSystem: DuelSystem? = null,
     tradeSystem: TradeSystem? = null,
     dungeonManager: DungeonManager? = null,
@@ -110,6 +115,9 @@ internal fun buildTestRouter(
         gatheringRegistry = gatheringRegistry,
         shopRegistry = shopRegistry,
         economyConfig = economyConfig,
+        raceRegistry = raceRegistry,
+        bankConfig = bankConfig ?: BankConfig(),
+        stylistConfig = stylistConfig ?: StylistConfig(),
     )
     val puzzleHandler = puzzleSystem?.let { PuzzleHandler(ctx = ctx, puzzleSystem = it) }
     listOfNotNull(
@@ -136,6 +144,13 @@ internal fun buildTestRouter(
         petSystem?.let { PetHandler(ctx = ctx, petSystem = it) },
         enchantSystem?.let { EnchantHandler(ctx = ctx, enchantSystem = it) },
         bankConfig?.let { BankHandler(ctx = ctx, bankConfig = it) },
+        stylistConfig?.let {
+            StylistHandler(
+                ctx = ctx,
+                stylistConfig = it,
+                progression = progression,
+            )
+        },
         DuelHandler(ctx = ctx, duelSystem = duelSystem, combatSystem = combat),
         tradeSystem?.let { TradeHandler(ctx = ctx, tradeSystem = it) },
         DungeonHandler(ctx = ctx, dungeonManager = dungeonManager, dungeonRegistry = dungeonRegistry, groupSystem = groupSystem),

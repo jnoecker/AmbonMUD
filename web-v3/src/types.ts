@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -212,6 +212,7 @@ export interface RoomState {
   /** Terrain type — drives default background and weather suppression. */
   terrain?: string;
   bank?: boolean;
+  stylist?: boolean;
   tavern?: boolean;
   dungeon?: boolean;
   auction?: boolean;
@@ -783,6 +784,21 @@ export interface BankState {
   gold: number;
   items: BankItem[];
   maxItems: number;
+}
+
+export interface StylistRace {
+  id: string;
+  displayName: string;
+  description: string;
+  image: string;
+  statMods: Record<string, number>;
+}
+
+export interface StylistState {
+  currentRace: string;
+  feeGold: number;
+  playerGold: number;
+  races: StylistRace[];
 }
 
 export interface DailyQuestEntry {
