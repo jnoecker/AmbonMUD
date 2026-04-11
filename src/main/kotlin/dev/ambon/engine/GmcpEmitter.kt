@@ -1294,7 +1294,7 @@ class GmcpEmitter(
                         id = it.id,
                         displayName = it.displayName,
                         description = it.description,
-                        image = it.image,
+                        image = if (it.image.isNotEmpty()) "$imagesBase${it.image}" else "",
                         statMods = it.statMods.nonZero(),
                     )
                 },

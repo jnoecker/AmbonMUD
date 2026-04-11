@@ -563,6 +563,26 @@ New columns on `players` table:
 - `bank_gold BIGINT NOT NULL DEFAULT 0` — banked gold
 - `bank_items TEXT NOT NULL DEFAULT '[]'` — JSON array of stored ItemInstance objects
 
+### GMCP
+
+New `Char.Bank` package emitted after deposit/withdraw:
+
+```json
+{
+  "gold": 500,
+  "items": [
+    { "id": "sword_1", "name": "a copper sword", "keyword": "sword", "image": null }
+  ],
+  "maxItems": 50
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `gold` | Long | Banked gold balance |
+| `items` | Array | Items in vault (id, name, keyword, image) |
+| `maxItems` | Int | Maximum vault capacity |
+
 ---
 
 ## Stylist NPC System (application.yaml + zone YAML)
@@ -612,23 +632,33 @@ rooms:
 
 ### GMCP
 
-New `Char.Bank` package emitted after deposit/withdraw:
+New `Char.Stylist` package emitted after `stylist` or `changerace`:
 
 ```json
 {
-  "gold": 500,
-  "items": [
-    { "id": "sword_1", "name": "a copper sword", "keyword": "sword", "image": null }
-  ],
-  "maxItems": 50
+  "currentRace": "HUMAN",
+  "feeGold": 500,
+  "playerGold": 1200,
+  "races": [
+    {
+      "id": "HUMAN",
+      "displayName": "Human",
+      "description": "Versatile and adaptable.",
+      "image": "/images/human_portrait.jpg",
+      "statMods": { "STR": 1, "CHA": 1 }
+    }
+  ]
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `gold` | Long | Banked gold balance |
-| `items` | Array | Items in vault (id, name, keyword, image) |
-| `maxItems` | Int | Maximum vault capacity |
+| `currentRace` | String | Player's current race ID |
+| `feeGold` | Long | Gold fee charged per swap |
+| `playerGold` | Long | Player's current gold (for affordability UI) |
+| `races` | Array | Available races (id, displayName, description, image, statMods) |
+
+`Char.Name` is also re-emitted after a successful swap so clients refresh the displayed race.
 
 ---
 
