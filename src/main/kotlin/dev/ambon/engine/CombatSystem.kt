@@ -434,6 +434,7 @@ class CombatSystem(
 
     suspend fun onMobRemovedExternally(mobId: MobId) {
         val affectedPlayers = threatTable.playersThreateningMob(mobId)
+            .filterNot { petSystem?.isPetSession(it) == true }
         removeMobFromCombat(mobId)
         for (sid in affectedPlayers) {
             outbound.send(OutboundEvent.SendText(sid, "Your opponent vanishes."))
@@ -663,6 +664,15 @@ class CombatSystem(
                     "${pet.name} hits ${mob.name} for $petDamage damage.",
                     exclude = sessionId,
                 )
+
+                // Tank pets generate threat so mobs target them instead of the player.
+                if (pet.threatMultiplier > 0.0) {
+                    val petSid = petSystem.getPetSessionId(pet.id)
+                    if (petSid != null) {
+                        threatTable.addThreat(mob.id, petSid, petDamage.toDouble() * pet.threatMultiplier)
+                    }
+                }
+
                 if (mob.hp <= 0) {
                     handleMobDeath(sessionId, mob)
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -683,11 +693,17 @@ class CombatSystem(
                 continue
             }
 
-            // Pick target = highest threat in same room
+            // Pick target = highest threat in same room (includes pet synthetic SIDs)
             val targetSid =
                 threatTable.topThreatInRoom(mobState.mobId) { sid ->
                     val p = players.get(sid)
-                    p != null && p.roomId == mob.roomId
+                    if (p != null) {
+                        p.roomId == mob.roomId
+                    } else {
+                        // Check if it's a tank pet in the same room
+                        val pet = petSystem?.getPetBySession(sid)
+                        pet != null && pet.hp > 0 && pet.roomId == mob.roomId
+                    }
                 }
 
             if (targetSid == null) {
@@ -696,33 +712,39 @@ class CombatSystem(
                 continue
             }
 
-            val target = players.get(targetSid) ?: continue
-
-            // Pick a spell from the mob's pool (excluding defaultAttack), or fall back.
-            val chosenSpell = selectMobSpell(mob, now)
-            if (chosenSpell != null) {
-                executeMobSpell(chosenSpell, mob, target, targetSid, now)
+            // Branch: is the target a pet or a player?
+            val targetPet = petSystem?.getPetBySession(targetSid)
+            if (targetPet != null) {
+                executeMobMeleeOnPet(mob, targetPet, targetSid)
             } else {
-                // Use defaultAttack spell or standard melee.
-                val defaultSpell = mob.defaultAttack?.let { id -> mob.spells.find { it.id == id } }
-                if (defaultSpell != null) {
-                    executeMobSpell(defaultSpell, mob, target, targetSid, now)
-                } else {
-                    executeMobMelee(mob, target, targetSid)
-                }
-            }
+                val target = players.get(targetSid) ?: continue
 
-            if (target.hp <= 0) {
-                metrics.onPlayerDeath()
-                removePlayerFromCombat(targetSid)
-                handlePlayerDeath(
-                    sessionId = targetSid,
-                    playerName = target.name,
-                    roomId = target.roomId,
-                    deathMessage = "You have been slain by ${mob.name}.",
-                    roomMessage = "${target.name} has been slain by ${mob.name}.",
-                    killerName = mob.name,
-                )
+                // Pick a spell from the mob's pool (excluding defaultAttack), or fall back.
+                val chosenSpell = selectMobSpell(mob, now)
+                if (chosenSpell != null) {
+                    executeMobSpell(chosenSpell, mob, target, targetSid, now)
+                } else {
+                    // Use defaultAttack spell or standard melee.
+                    val defaultSpell = mob.defaultAttack?.let { id -> mob.spells.find { it.id == id } }
+                    if (defaultSpell != null) {
+                        executeMobSpell(defaultSpell, mob, target, targetSid, now)
+                    } else {
+                        executeMobMelee(mob, target, targetSid)
+                    }
+                }
+
+                if (target.hp <= 0) {
+                    metrics.onPlayerDeath()
+                    removePlayerFromCombat(targetSid)
+                    handlePlayerDeath(
+                        sessionId = targetSid,
+                        playerName = target.name,
+                        roomId = target.roomId,
+                        deathMessage = "You have been slain by ${mob.name}.",
+                        roomMessage = "${target.name} has been slain by ${mob.name}.",
+                        killerName = mob.name,
+                    )
+                }
             }
 
             mobState.nextTickAtMs = now + config.tickMillis
@@ -981,6 +1003,47 @@ class CombatSystem(
         }
     }
 
+    /**
+     * Mob attacks a tank pet with a basic melee hit.
+     * On pet death: dismiss the pet, remove from threat table, notify the owner.
+     */
+    private suspend fun executeMobMeleeOnPet(
+        mob: MobState,
+        pet: MobState,
+        petSid: SessionId,
+    ) {
+        val ownerSid = pet.ownerSessionId ?: return
+        val mobRoll = rollRange(rng, mob.damage.min, mob.damage.max)
+        val petDamage = (mobRoll - pet.armor).coerceAtLeast(1)
+        pet.takeDamage(petDamage)
+        dirtyNotifier.mobHpDirty(pet.id)
+        outbound.send(
+            OutboundEvent.SendText(ownerSid, "${mob.name} hits ${pet.name} for $petDamage damage."),
+        )
+        broadcastToRoom(
+            players,
+            outbound,
+            mob.roomId,
+            "${mob.name} hits ${pet.name} for $petDamage damage.",
+            exclude = ownerSid,
+        )
+
+        if (pet.hp <= 0) {
+            outbound.send(
+                OutboundEvent.SendText(ownerSid, "${pet.name} has been slain by ${mob.name}!"),
+            )
+            broadcastToRoom(
+                players,
+                outbound,
+                mob.roomId,
+                "${pet.name} has been slain by ${mob.name}!",
+                exclude = ownerSid,
+            )
+            threatTable.removePlayer(petSid)
+            petSystem?.dismissOne(pet.id)
+        }
+    }
+
     suspend fun handleSpellKill(
         killerSessionId: SessionId,
         mob: MobState,
@@ -1016,9 +1079,19 @@ class CombatSystem(
     private fun removePlayerFromCombat(sessionId: SessionId) {
         playerTarget.remove(sessionId)
         threatTable.removePlayer(sessionId)
+        // Also remove the player's pet from the threat table
+        removePetThreat(sessionId)
         dirtyNotifier.playerVitalsDirty(sessionId)
         dirtyNotifier.playerCombatDirty(sessionId)
         cleanupEmptyMobs()
+    }
+
+    /** Removes a player's tank pet from the threat table (e.g. on flee, disconnect, death). */
+    private fun removePetThreat(ownerSid: SessionId) {
+        if (petSystem == null) return
+        val pet = petSystem.getActivePet(ownerSid) ?: return
+        val petSid = petSystem.getPetSessionId(pet.id) ?: return
+        threatTable.removePlayer(petSid)
     }
 
     private fun removeMobFromCombat(mobId: MobId) {
@@ -1109,8 +1182,10 @@ class CombatSystem(
         killerSessionId: SessionId,
         mob: MobState,
     ) {
-        // Collect all players who had threat on this mob (for quest/achievement callbacks)
+        // Collect all players who had threat on this mob (for quest/achievement callbacks).
+        // Filter out synthetic pet SessionIds — only real players earn quest/achievement credit.
         val contributors = threatTable.playersThreateningMob(mob.id)
+            .filterNot { petSystem?.isPetSession(it) == true }
 
         // Clean up combat state
         removeMobFromCombat(mob.id)

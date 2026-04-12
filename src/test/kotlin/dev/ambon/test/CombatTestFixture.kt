@@ -13,6 +13,7 @@ import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
@@ -59,6 +60,7 @@ class CombatTestFixture(
         healingThreatMultiplier: Double = 0.5,
         classRegistry: PlayerClassRegistry? = null,
         onRoomItemsChanged: suspend (RoomId) -> Unit = { _ -> },
+        petSystem: PetSystem? = null,
     ): CombatSystem =
         CombatSystem(
             players = players,
@@ -89,6 +91,7 @@ class CombatTestFixture(
                 onRoomItemsChanged = onRoomItemsChanged,
             ),
             classRegistry = classRegistry,
+            petSystem = petSystem,
         )
 
     /**
