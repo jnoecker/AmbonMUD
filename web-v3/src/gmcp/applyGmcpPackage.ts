@@ -548,6 +548,7 @@ export function applyGmcpPackage(
             video: typeof entry.video === "string" ? entry.video : null,
             category: typeof entry.category === "string" ? entry.category : "humanoid",
             effects: parseMobEffects(entry.effects),
+            ownerName: typeof entry.ownerName === "string" ? entry.ownerName : null,
           })),
       );
       break;
@@ -569,6 +570,7 @@ export function applyGmcpPackage(
           video: typeof packet.video === "string" ? packet.video : null,
           category: typeof packet.category === "string" ? packet.category : "humanoid",
           effects: parseMobEffects(packet.effects),
+          ownerName: typeof packet.ownerName === "string" ? packet.ownerName : null,
         },
       ]);
       break;

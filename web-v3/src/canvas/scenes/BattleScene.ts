@@ -17,6 +17,7 @@ const LABEL_FONT_SIZE = 15;
 const PARTY_LABEL_FONT_SIZE = 13;
 
 const PLAYER_TINT = 0x81a2be;
+const PET_TINT = 0xb294bb;
 const ENEMY_TINT = 0xf0c674;
 const HP_COLOR = 0x8abf8a;
 const HP_BG_COLOR = 0x3a3a3a;
@@ -24,6 +25,7 @@ const MANA_COLOR = 0x64b5f6;
 const LABEL_COLOR = "#d8dcef";
 const ENEMY_LABEL_COLOR = "#f0c674";
 const PARTY_LABEL_COLOR = "#81a2be";
+const PET_LABEL_COLOR = "#b294bb";
 const HP_TEXT_COLOR = "#d8dcef";
 
 function percent(current: number, max: number): number {
@@ -45,6 +47,7 @@ export class BattleScene {
   private enemyHpText: Text;
 
   private partyMembers: Array<{ sprite: Sprite; label: Text; hpBar: Graphics }> = [];
+  private petMembers: Array<{ sprite: Sprite; label: Text; hpBar: Graphics; id: string }> = [];
 
   private combatAnimator: CombatAnimator;
   private gainPopups: GainPopupSystem;
@@ -60,6 +63,7 @@ export class BattleScene {
   private lastEnemyImage: string | null = null;
   private lastTargetId: string | null = null;
   private lastPartyKey = "";
+  private lastPetsKey = "";
   private width = 0;
   private height = 0;
 
@@ -179,7 +183,7 @@ export class BattleScene {
     }
 
     const state = gameStateRef.current;
-    const { vitals, character, combatTarget, groupInfo, room } = state;
+    const { vitals, character, combatTarget, groupInfo, room, mobs } = state;
     const stillInCombat = state.inCombat;
 
     // Update room background
@@ -231,6 +235,14 @@ export class BattleScene {
     if (partyKey !== this.lastPartyKey) {
       this.lastPartyKey = partyKey;
       this.rebuildParty(groupInfo.members.filter((m) => m.name !== character.name));
+    }
+
+    // Update pets (mobs with ownerName matching the current character)
+    const myPets = mobs.filter((m) => m.ownerName && m.ownerName === character.name);
+    const petsKey = myPets.map((p) => `${p.id}:${p.hp}:${p.maxHp}`).join("|");
+    if (petsKey !== this.lastPetsKey) {
+      this.lastPetsKey = petsKey;
+      this.rebuildBattlePets(myPets);
     }
 
     // Process events from the bus
@@ -487,6 +499,32 @@ export class BattleScene {
       }
     }
 
+    // Pets (positioned below player on the right)
+    const petStartY = playerPos.y + playerSize / 2 + 20;
+    for (let i = 0; i < this.petMembers.length; i++) {
+      const pet = this.petMembers[i];
+      const petMob = gameStateRef.current.mobs.find((m: { id: string }) => m.id === pet.id);
+      const px = playerPos.x + 60;
+      const py = petStartY + i * (SMALL_SPRITE + 30);
+
+      pet.sprite.x = px;
+      pet.sprite.y = py;
+      pet.label.x = px;
+      pet.label.y = py + SMALL_SPRITE / 2 + 4;
+
+      pet.hpBar.clear();
+      if (petMob) {
+        const pHpPct = percent(petMob.hp, petMob.maxHp);
+        const barW = 60;
+        pet.hpBar.roundRect(px - barW / 2, py + SMALL_SPRITE / 2 + 18, barW, 5, 1);
+        pet.hpBar.fill(HP_BG_COLOR);
+        if (pHpPct > 0) {
+          pet.hpBar.roundRect(px - barW / 2, py + SMALL_SPRITE / 2 + 18, barW * pHpPct / 100, 5, 1);
+          pet.hpBar.fill(HP_COLOR);
+        }
+      }
+    }
+
     // Draw combat effects
     this.combatAnimator.drawGlows(playerDrawX, playerDrawY, enemyDrawX, enemyDrawY);
     this.combatAnimator.drawFlashes(
@@ -573,6 +611,50 @@ export class BattleScene {
       this.container.addChild(label);
       this.container.addChild(hpBar);
       this.partyMembers.push({ sprite, label, hpBar });
+    }
+  }
+
+  private rebuildBattlePets(pets: Array<{ id: string; name: string; hp: number; maxHp: number; image?: string | null; category?: string }>) {
+    for (const { sprite, label, hpBar } of this.petMembers) {
+      this.container.removeChild(sprite);
+      this.container.removeChild(label);
+      this.container.removeChild(hpBar);
+      sprite.destroy();
+      label.destroy();
+      hpBar.destroy();
+    }
+    this.petMembers = [];
+
+    for (const pet of pets) {
+      const sprite = new Sprite(Texture.WHITE);
+      sprite.width = SMALL_SPRITE;
+      sprite.height = SMALL_SPRITE;
+      sprite.anchor.set(0.5);
+      sprite.tint = PET_TINT;
+
+      const petImage = pet.image ?? gameStateRef.current.serverAssets[`default_mob_${pet.category ?? "humanoid"}`] ?? null;
+      if (petImage) {
+        Assets.load(petImage).then((tex: unknown) => {
+          if (tex && typeof tex === "object" && "baseTexture" in (tex as Record<string, unknown>)) {
+            sprite.texture = tex as Texture;
+          } else if (tex instanceof Texture) {
+            sprite.texture = tex;
+          }
+        }).catch(() => {/* ignore */});
+      }
+
+      const label = new Text({
+        text: `♥ ${pet.name}`,
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PARTY_LABEL_FONT_SIZE, fill: PET_LABEL_COLOR },
+      });
+      label.anchor.set(0.5, 0);
+
+      const hpBar = new Graphics();
+
+      this.container.addChild(sprite);
+      this.container.addChild(label);
+      this.container.addChild(hpBar);
+      this.petMembers.push({ sprite, label, hpBar, id: pet.id });
     }
   }
 

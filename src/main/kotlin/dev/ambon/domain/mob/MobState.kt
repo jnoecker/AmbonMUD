@@ -33,6 +33,8 @@ data class MobState(
     val aggressive: Boolean = false,
     /** Non-null if this mob is a summoned pet. */
     val ownerSessionId: SessionId? = null,
+    /** Character name of the pet's owner — sent to clients so they can identify their own pets. */
+    val ownerName: String? = null,
 ) : MobTemplate {
     val isPet: Boolean get() = ownerSessionId != null
 }

@@ -303,6 +303,8 @@ export interface RoomMob {
   video?: string | null;
   category?: string;
   effects?: StatusEffect[];
+  /** Character name of the pet's owner, or undefined for regular mobs. */
+  ownerName?: string | null;
 }
 
 export interface StatusEffect {
