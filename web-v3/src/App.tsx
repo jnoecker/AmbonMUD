@@ -209,6 +209,7 @@ function App() {
       dialogue: state.dialogue,
       questsAvailable: state.questsAvailable,
       shop: state.shop,
+      stylistState: state.stylistState,
       puzzle: state.puzzle,
       craftingNodes: state.craftingNodes,
       roomFeatures: state.roomFeatures,

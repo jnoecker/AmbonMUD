@@ -142,6 +142,13 @@ export class WorldScene {
   private auctionHitArea = new Graphics();
   private auctionVisible = false;
 
+  private stylistBadge: Container;
+  private stylistSprite: Sprite | null = null;
+  private stylistLabel: Text;
+  private stylistLabelBg = new Graphics();
+  private stylistHitArea = new Graphics();
+  private stylistVisible = false;
+
   private targetingText: Text | null = null;
   private targetingBg = new Graphics();
   private targetingAnimTime = 0;
@@ -356,6 +363,35 @@ export class WorldScene {
     this.auctionLabelBg.eventMode = "none";
     this.auctionBadge.addChild(this.auctionLabelBg);
     this.auctionBadge.addChild(this.auctionLabel);
+
+    // Stylist badge — floating kiosk icon when a stylist is available
+    this.stylistBadge = new Container();
+    this.stylistBadge.visible = false;
+    this.stylistBadge.eventMode = "static";
+    this.stylistBadge.cursor = "pointer";
+    this.stylistBadge.on("pointerdown", () => {
+      canvasCallbacks.openStylist?.();
+    });
+    this.stylistBadge.on("pointerover", () => {
+      if (this.stylistSprite) this.stylistSprite.alpha = 1;
+    });
+    this.stylistBadge.on("pointerout", () => {
+      if (this.stylistSprite) this.stylistSprite.alpha = 0.85;
+    });
+    this.stylistHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.stylistHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.stylistHitArea.eventMode = "auto";
+    this.stylistBadge.addChild(this.stylistHitArea);
+    this.stylistLabel = new Text({
+      text: "Stylist",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#c8a0d8", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.stylistLabel.anchor.set(0.5, 0);
+    this.stylistLabel.y = hs / 2 + 2;
+    this.stylistLabel.eventMode = "none";
+    this.stylistLabelBg.eventMode = "none";
+    this.stylistBadge.addChild(this.stylistLabelBg);
+    this.stylistBadge.addChild(this.stylistLabel);
 
     // Station badge — floating icon when a crafting station is present
     this.stationBadge = new Container();
@@ -663,6 +699,7 @@ export class WorldScene {
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
     this.container.addChild(this.auctionBadge);
+    this.container.addChild(this.stylistBadge);
     this.container.addChild(this.stationBadge);
     this.container.addChild(this.trainerBadge);
     this.container.addChild(this.bankBadge!);
@@ -708,6 +745,7 @@ export class WorldScene {
       this.assetsLoaded = true;
       this.loadShopIcon();
       this.loadAuctionIcon();
+      this.loadStylistIcon();
       this.loadStationIcon();
       this.loadTrainerIcon();
       this.loadBankIcon();
@@ -866,6 +904,12 @@ export class WorldScene {
     if (hasAuction !== this.auctionVisible) {
       this.auctionVisible = hasAuction;
       this.auctionBadge.visible = hasAuction;
+    }
+
+    const hasStylist = state.stylistState !== null;
+    if (hasStylist !== this.stylistVisible) {
+      this.stylistVisible = hasStylist;
+      this.stylistBadge.visible = hasStylist;
     }
 
     // Station badge visibility
@@ -1236,7 +1280,7 @@ export class WorldScene {
     const badgeStartY = h * 0.35;
     // Count visible badges to compute adaptive spacing
     const visibleBadgeCount = [
-      this.shopBadge.visible, this.auctionBadge.visible,
+      this.shopBadge.visible, this.auctionBadge.visible, this.stylistBadge.visible,
       this.stationBadge.visible, this.trainerBadge.visible,
       this.bankBadge?.visible,
       this.lotteryBadge?.visible, this.dungeonBadge?.visible,
@@ -1265,6 +1309,13 @@ export class WorldScene {
       this.auctionBadge.x = badgeX;
       this.auctionBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.auctionLabelBg, this.auctionLabel);
+      badgeSlot++;
+    }
+
+    if (this.stylistBadge.visible) {
+      this.stylistBadge.x = badgeX;
+      this.stylistBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.stylistLabelBg, this.stylistLabel);
       badgeSlot++;
     }
 
@@ -1888,6 +1939,22 @@ export class WorldScene {
       this.shopBadge.addChild(sprite);
     } catch {
       // Fallback: no icon shown
+    }
+  }
+
+  private async loadStylistIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("stylist_kiosk", "stylist_kiosk.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.stylistSprite = sprite;
+      this.stylistBadge.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
     }
   }
 

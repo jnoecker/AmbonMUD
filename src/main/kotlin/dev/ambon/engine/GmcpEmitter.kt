@@ -1280,6 +1280,10 @@ class GmcpEmitter(
         val statMods: Map<String, Int>,
     )
 
+    suspend fun sendStylistClose(sessionId: SessionId) {
+        emitRaw(sessionId, "Char.Stylist.Close", "{}")
+    }
+
     suspend fun sendStylistState(
         sessionId: SessionId,
         currentRace: String,

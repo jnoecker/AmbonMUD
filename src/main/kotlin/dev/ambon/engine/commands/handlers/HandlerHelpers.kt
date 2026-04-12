@@ -137,6 +137,7 @@ internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     emitShopGmcp(sessionId)
     emitBankGmcp(sessionId)
     emitPuzzleGmcp(sessionId)
+    emitStylistGmcp(sessionId)
 }
 
 /** Emits `Puzzle.List` with the puzzles in the player's current room, or `Puzzle.Close` otherwise. */
@@ -195,6 +196,25 @@ internal suspend fun EngineContext.emitShopGmcp(sessionId: SessionId) {
         )
     } else {
         emitter.sendShopClose(sessionId)
+    }
+}
+
+/** Emits `Char.Stylist` if the player is in a stylist room, otherwise emits `Char.Stylist.Close`. */
+internal suspend fun EngineContext.emitStylistGmcp(sessionId: SessionId) {
+    val emitter = gmcpEmitter ?: return
+    val registry = raceRegistry ?: return
+    val me = players.get(sessionId) ?: return
+    val room = world.rooms[me.roomId] ?: return
+    if (room.stylist) {
+        emitter.sendStylistState(
+            sessionId = sessionId,
+            currentRace = me.race,
+            feeGold = stylistConfig.feeGold,
+            playerGold = me.gold,
+            races = registry.all(),
+        )
+    } else {
+        emitter.sendStylistClose(sessionId)
     }
 }
 
