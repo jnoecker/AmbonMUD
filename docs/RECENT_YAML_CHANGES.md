@@ -585,6 +585,83 @@ New `Char.Bank` package emitted after deposit/withdraw:
 
 ---
 
+## Stylist NPC System (application.yaml + zone YAML)
+
+### Config
+
+```yaml
+ambonmud:
+  engine:
+    stylist:
+      feeGold: 500               # Gold charged per race change (default: 500)
+```
+
+### Room Flag
+
+Rooms with a stylist NPC must set `stylist: true`:
+
+```yaml
+rooms:
+  stylist_salon:
+    title: "The Arcanum Mirror"
+    description: "A hall of looking-glasses, each one reflecting a different self."
+    stylist: true               # ← enables stylist/changerace commands
+    image: stylist_mirror.png
+    exits:
+      s: town_square
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `stylist` | List available races, fee, and current race |
+| `changerace <race>` | Swap to the given race (charges the fee) |
+
+### Behavior
+- Player must be in a room with `stylist: true` for both commands
+- The fee is deducted on successful swap; the command fails cleanly if the player cannot afford it
+- The new race's stat modifiers are applied as a delta against the old race's, so stats earned via levelling, prestige, or equipment are preserved
+- Derived HP/mana caps are recomputed; current HP/mana are clamped to the new caps (bonuses above the level-derived base, e.g. from prestige perks, are preserved)
+- Racial abilities are **not** currently transferred on swap — tracked in GH issue #993
+
+### Global Asset
+
+- `stylist_mirror` → `global_assets/stylist_mirror.png` (registered in `ImagesConfig.DEFAULT_GLOBAL_ASSETS`)
+- Place the real art at `src/main/resources/world/images/global_assets/stylist_mirror.png`
+
+### GMCP
+
+New `Char.Stylist` package emitted after `stylist` or `changerace`:
+
+```json
+{
+  "currentRace": "HUMAN",
+  "feeGold": 500,
+  "playerGold": 1200,
+  "races": [
+    {
+      "id": "HUMAN",
+      "displayName": "Human",
+      "description": "Versatile and adaptable.",
+      "image": "/images/human_portrait.jpg",
+      "statMods": { "STR": 1, "CHA": 1 }
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `currentRace` | String | Player's current race ID |
+| `feeGold` | Long | Gold fee charged per swap |
+| `playerGold` | Long | Player's current gold (for affordability UI) |
+| `races` | Array | Available races (id, displayName, description, image, statMods) |
+
+`Char.Name` is also re-emitted after a successful swap so clients refresh the displayed race.
+
+---
+
 ## Sprite Requirements System (sprites.yaml)
 
 Sprites now support a **requirements list** with AND logic, replacing the legacy single-condition `unlock` block. This allows sprites to depend on any combination of race, class, level, achievement, and staff status.

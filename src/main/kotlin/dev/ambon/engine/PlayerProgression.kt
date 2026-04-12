@@ -113,6 +113,27 @@ class PlayerProgression(
         ps.mana = ps.mana.coerceIn(0, newMaxMana)
     }
 
+    /**
+     * Recomputes the level-derived HP/mana caps for [ps] from its current stats,
+     * preserving any bonus delta above [PlayerState.baseMaxHp]/[PlayerState.baseMana]
+     * (e.g. from prestige perks or status effects). Clamps current hp/mana to the
+     * new caps. Used when stats change outside of a level transition — for
+     * example, when a player swaps race at a stylist.
+     */
+    fun recomputeVitalCaps(ps: PlayerState) {
+        val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(ps.playerClass)
+        val hpBonus = (ps.maxHp - ps.baseMaxHp).coerceAtLeast(0)
+        val manaBonus = (ps.maxMana - ps.baseMana).coerceAtLeast(0)
+        val newBaseMaxHp = maxHpForLevel(ps.level, ps.stats[bindings.hpScalingStat], classHpPerLevel)
+        val newBaseMana = maxManaForLevel(ps.level, ps.stats[bindings.manaScalingStat], classManaPerLevel)
+        ps.baseMaxHp = newBaseMaxHp
+        ps.maxHp = safeAddInt(newBaseMaxHp, hpBonus)
+        ps.hp = ps.hp.coerceIn(1, ps.maxHp)
+        ps.baseMana = newBaseMana
+        ps.maxMana = safeAddInt(newBaseMana, manaBonus)
+        ps.mana = ps.mana.coerceIn(0, ps.maxMana)
+    }
+
     private fun maxResourceForLevel(level: Int, stat: Int, perLevel: Int, baseValue: Int, divisor: Int = 5): Int {
         val normalizedLevel = level.coerceIn(1, config.maxLevel)
         val levels = (normalizedLevel - 1).toLong()

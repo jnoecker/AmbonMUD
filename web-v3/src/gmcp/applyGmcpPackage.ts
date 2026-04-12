@@ -77,6 +77,8 @@ import type {
   LeaderboardEntry,
   PetState,
   BankState,
+  StylistState,
+  StylistRace,
   DailyQuestBoard,
   DailyQuestEntry,
   AutoQuest,
@@ -176,6 +178,7 @@ interface GmcpContext {
   setPetState: Dispatch<SetStateAction<PetState | null>>;
   setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
   setBankState: Dispatch<SetStateAction<BankState | null>>;
+  setStylistState: Dispatch<SetStateAction<StylistState | null>>;
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
   setGuildHall: Dispatch<SetStateAction<GuildHallInfo | null>>;
   setDuelState: Dispatch<SetStateAction<DuelState | null>>;
@@ -316,6 +319,7 @@ export function applyGmcpPackage(
       const graphical = packet.graphical === true;
       const terrain = typeof packet.terrain === "string" ? packet.terrain : "outside";
       const bank = packet.bank === true;
+      const stylist = packet.stylist === true;
       const tavern = packet.tavern === true;
       const dungeon = packet.dungeon === true;
       const auction = packet.auction === true;
@@ -327,7 +331,7 @@ export function applyGmcpPackage(
           ctx.setDialogue(null);
           ctx.setQuestsAvailable([]);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, tavern, dungeon, auction };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction };
       });
 
       if (id) {
@@ -1546,6 +1550,33 @@ export function applyGmcpPackage(
             }))
           : [],
         maxItems: safeNumber(packet.maxItems, 0),
+      });
+      break;
+    }
+
+    case "Char.Stylist": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const races: StylistRace[] = Array.isArray(packet.races)
+        ? (packet.races as Array<Record<string, unknown>>)
+          .filter((r): r is Record<string, unknown> => typeof r === "object" && r !== null)
+          .map((r) => ({
+            id: typeof r.id === "string" ? r.id : "",
+            displayName: typeof r.displayName === "string" ? r.displayName : "",
+            description: typeof r.description === "string" ? r.description : "",
+            image: typeof r.image === "string" ? r.image : "",
+            statMods: (r.statMods && typeof r.statMods === "object")
+              ? Object.fromEntries(
+                Object.entries(r.statMods as Record<string, unknown>)
+                  .map(([k, v]) => [k, safeNumber(v, 0)]),
+              )
+              : {},
+          }))
+        : [];
+      ctx.setStylistState({
+        currentRace: typeof packet.currentRace === "string" ? packet.currentRace : "",
+        feeGold: safeNumber(packet.feeGold, 0),
+        playerGold: safeNumber(packet.playerGold, 0),
+        races,
       });
       break;
     }

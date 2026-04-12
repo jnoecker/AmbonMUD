@@ -17,6 +17,8 @@ data class Room(
     val bank: Boolean = false,
     /** True if this room is a tavern (enables gambling commands). */
     val tavern: Boolean = false,
+    /** True if this room has a stylist NPC (enables race-change commands). */
+    val stylist: Boolean = false,
     /** True if this room has a dungeon portal (enables dungeon kiosk badge). */
     val dungeon: Boolean = false,
     /** True if this room has an auction house (enables auction hall badge). */

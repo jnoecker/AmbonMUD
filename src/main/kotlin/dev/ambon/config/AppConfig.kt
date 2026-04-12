@@ -129,6 +129,7 @@ data class AppConfig(
         validateEngineStatusEffects()
         validateEnginePets()
         validateEngineBank()
+        validateEngineStylist()
         validateEngineWorldTime()
         validateEngineWeather()
         validateEngineEnchanting()
@@ -337,6 +338,10 @@ data class AppConfig(
 
     private fun validateEngineBank() {
         engine.bank.maxItems.requirePositive("ambonMUD.engine.bank.maxItems")
+    }
+
+    private fun validateEngineStylist() {
+        require(engine.stylist.feeGold >= 0) { "ambonMUD.engine.stylist.feeGold must be >= 0" }
     }
 
     private fun validateEngineWorldTime() {
@@ -806,6 +811,11 @@ data class PetConfig(
 
 data class BankConfig(
     val maxItems: Int = 50,
+)
+
+data class StylistConfig(
+    /** Gold fee charged to change race at a stylist NPC. */
+    val feeGold: Long = 500,
 )
 
 data class LeaderboardConfig(
@@ -1376,6 +1386,7 @@ data class EngineConfig(
     val pets: PetConfig = PetConfig(),
     val enchanting: EnchantingConfig = EnchantingConfig(),
     val bank: BankConfig = BankConfig(),
+    val stylist: StylistConfig = StylistConfig(),
     val worldTime: WorldTimeConfig = WorldTimeConfig(),
     val weather: WeatherConfig = WeatherConfig(),
     val worldEvents: WorldEventsConfig = WorldEventsConfig(),
@@ -2345,6 +2356,7 @@ data class ImagesConfig(
             "crafting_station" to "global_assets/crafting_station.png",
             "trainer_icon" to "global_assets/trainer_icon.png",
             "bank_vault" to "global_assets/bank_vault.png",
+            "stylist_mirror" to "global_assets/stylist_mirror.png",
             "lottery_board_widget" to "global_assets/lottery_board_widget.png",
             "dungeon_portal_widget" to "global_assets/dungeon_portal_widget.png",
             "auction_hall_widget" to "global_assets/auction_hall_widget.png",

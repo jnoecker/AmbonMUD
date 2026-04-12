@@ -180,6 +180,7 @@ object WorldLoader {
                         station = station,
                         bank = rf.bank,
                         tavern = rf.tavern,
+                        stylist = rf.stylist,
                         dungeon = rf.dungeon,
                         auction = rf.auction,
                         image = (rf.image ?: imageDefaults?.room)?.let { "$imagesBase$it" },

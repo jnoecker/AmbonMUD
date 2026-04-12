@@ -188,6 +188,16 @@ sealed interface Command {
         data object Balance : Bank
     }
 
+    // ---- Stylist commands ----
+
+    sealed interface Stylist : Command {
+        data object List : Stylist
+
+        data class ChangeRace(
+            val raceId: String,
+        ) : Stylist
+    }
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -891,6 +901,20 @@ object CommandParser {
 
         matchPrefix(line, listOf("bank")) { _ ->
             Command.Bank.Balance
+        }?.let { return it }
+
+        // stylist: "stylist" lists races + fee, "changerace <id>" applies the swap
+        matchPrefix(line, listOf("stylist")) { _ ->
+            Command.Stylist.List
+        }?.let { return it }
+
+        matchPrefix(line, listOf("changerace")) { rest ->
+            val raceId = rest.trim()
+            if (raceId.isEmpty()) {
+                Command.Invalid(line, "changerace <race>")
+            } else {
+                Command.Stylist.ChangeRace(raceId)
+            }
         }?.let { return it }
 
         // lottery: "lottery buy [count]" or "lottery [info]"
