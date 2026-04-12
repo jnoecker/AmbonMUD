@@ -10,6 +10,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.abilities.AbilityDefinition
@@ -111,6 +112,7 @@ class StylistCommandTest {
     private data class AbilityHarness(
         val harness: CommandRouterHarness,
         val abilitySystem: AbilitySystem,
+        val gmcpEmitter: GmcpEmitter,
     )
 
     /**
@@ -187,6 +189,11 @@ class StylistCommandTest {
             ),
         )
 
+        val gmcpEmitter = GmcpEmitter(
+            outbound = outbound,
+            supportsPackage = { _, _ -> true },
+        )
+
         val harness = CommandRouterHarness.create(
             world = world,
             repo = repo,
@@ -197,8 +204,9 @@ class StylistCommandTest {
             stylistConfig = StylistConfig(feeGold = fee),
             raceRegistry = raceRegistry,
             abilitySystem = abilitySystem,
+            gmcpEmitter = gmcpEmitter,
         )
-        return AbilityHarness(harness, abilitySystem)
+        return AbilityHarness(harness, abilitySystem, gmcpEmitter)
     }
 
     @Nested
@@ -394,6 +402,35 @@ class StylistCommandTest {
             assertTrue("elf_grace" in known)
             // learnedAbilityIds itself is untouched.
             assertTrue("shared_trick" in h.players.get(sid)!!.learnedAbilityIds)
+        }
+
+        @Test
+        fun `changerace emits Char_Skills GMCP so client refreshes ability list`() = runTest {
+            val ah = abilityHarness()
+            val h = ah.harness
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Alice")
+            val me = h.players.get(sid)!!
+            me.race = "HUMAN"
+            ah.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = emptySet(),
+                raceAbilityIds = setOf("human_boon", "shared_trick"),
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Stylist.ChangeRace("ELF"))
+            val events = h.drain()
+
+            val charSkills = events.filterIsInstance<OutboundEvent.GmcpData>()
+                .filter { it.sessionId == sid && it.gmcpPackage == "Char.Skills" }
+            assertTrue(
+                charSkills.isNotEmpty(),
+                "Char.Skills GMCP should be emitted after race change so client ability panel refreshes",
+            )
+            val payload = charSkills.last().jsonData
+            assertTrue("elf_grace" in payload, "new race ability missing in payload: $payload")
+            assertFalse("human_boon" in payload, "old race ability still in payload: $payload")
         }
     }
 }

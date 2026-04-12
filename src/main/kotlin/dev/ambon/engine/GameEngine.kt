@@ -1922,7 +1922,8 @@ class GameEngine(
         // Finalize login (same as normal flow)
         loginFlowHandler.onAfterLogin(sessionId)
         val player = players.get(sessionId) ?: return
-        abilitySystem.loadAbilities(sessionId, player.learnedAbilityIds)
+        val raceAbilities = raceRegistry.get(player.race)?.abilities.orEmpty().toSet()
+        abilitySystem.loadAbilities(sessionId, player.learnedAbilityIds, raceAbilities)
         outbound.send(OutboundEvent.SetAnsi(sessionId, player.ansiEnabled))
         if (player.screenReaderEnabled) {
             outbound.send(OutboundEvent.SetScreenReader(sessionId, true))

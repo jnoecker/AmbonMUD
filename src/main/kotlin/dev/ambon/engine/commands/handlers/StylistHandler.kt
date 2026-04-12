@@ -126,6 +126,11 @@ class StylistHandler(
         )
 
         gmcpEmitter?.sendCharName(sessionId, me)
+        if (abilitySystem != null) {
+            gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
+                abilitySystem.cooldownRemainingMs(sessionId, abilityId)
+            }
+        }
         emitStylistState(sessionId, me)
     }
 
