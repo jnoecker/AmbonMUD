@@ -803,6 +803,21 @@ data class PetTemplateConfig(
     val maxDamage: Int = 4,
     val armor: Int = 0,
     val image: String? = null,
+    val spells: Map<String, PetSpellConfig> = emptyMap(),
+    val defaultAttack: String? = null,
+)
+
+data class PetSpellConfig(
+    val displayName: String = "",
+    val message: String = "",
+    val roomMessage: String = "",
+    val minDamage: Int? = null,
+    val maxDamage: Int? = null,
+    val healMin: Int = 0,
+    val healMax: Int = 0,
+    val statusEffectId: String? = null,
+    val cooldownMs: Long = 0L,
+    val weight: Int = 1,
 )
 
 data class PetConfig(

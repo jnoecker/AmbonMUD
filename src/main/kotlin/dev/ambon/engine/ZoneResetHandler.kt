@@ -57,6 +57,8 @@ internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
         image = spawn.image,
         video = spawn.video,
         category = spawn.category,
+        spells = spawn.spells,
+        defaultAttack = spawn.defaultAttack,
     )
 
 /**

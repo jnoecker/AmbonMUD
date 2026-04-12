@@ -1,0 +1,63 @@
+zone: ok_mob_spells
+startRoom: arena
+rooms:
+  arena:
+    title: "The Arena"
+    description: "A combat arena."
+
+mobs:
+  shadow_mage:
+    name: "a shadow mage"
+    room: arena
+    hp: 50
+    minDamage: 2
+    maxDamage: 4
+    spells:
+      shadow_bolt:
+        displayName: Shadow Bolt
+        message: "The shadow mage hurls a bolt of darkness at you"
+        roomMessage: "{mob} hurls a bolt of darkness at {target}."
+        minDamage: 8
+        maxDamage: 14
+        cooldownMs: 8000
+        weight: 3
+      life_drain:
+        displayName: Life Drain
+        message: "The shadow mage drains your life force"
+        roomMessage: "{mob} drains {target}'s life force."
+        minDamage: 4
+        maxDamage: 6
+        healMin: 2
+        healMax: 4
+        cooldownMs: 12000
+        weight: 1
+    defaultAttack: shadow_bolt
+
+  fire_elemental:
+    name: "a fire elemental"
+    room: arena
+    hp: 30
+    minDamage: 3
+    maxDamage: 5
+    spells:
+      fireball:
+        displayName: Fireball
+        message: "The fire elemental hurls a fireball at you"
+        minDamage: 6
+        maxDamage: 10
+        cooldownMs: 5000
+        weight: 2
+      flame_shield:
+        displayName: Flame Shield
+        message: "{mob} wraps itself in protective flames."
+        healMin: 3
+        healMax: 5
+        cooldownMs: 15000
+        weight: 1
+
+  melee_only:
+    name: "a training dummy"
+    room: arena
+    hp: 20
+    minDamage: 1
+    maxDamage: 2

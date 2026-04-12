@@ -5,6 +5,7 @@ import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.mob.MobSpell
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -84,6 +85,9 @@ class CombatSystem(
     internal val threatTable = ThreatTable()
 
     private val defenseByPlayer = mutableMapOf<SessionId, Int>()
+
+    // Per-mob spell cooldown tracking: mobId -> (spellId -> nextCastAtMs)
+    private val mobSpellCooldowns = mutableMapOf<MobId, MutableMap<String, Long>>()
 
     // --- PvP combat state ---
 
@@ -694,73 +698,17 @@ class CombatSystem(
 
             val target = players.get(targetSid) ?: continue
 
-            val targetStats = resolvePlayerStats(target, items, statusEffects)
-            val dodgePct =
-                ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
-                    .coerceIn(0, config.bindings.maxDodgePercent)
-            if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
-                outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
-                onCombatEvent(
-                    targetSid,
-                    CombatEvent.Dodge(
-                        targetName = target.name,
-                        targetId = null,
-                        sourceIsPlayer = false,
-                    ),
-                )
+            // Pick a spell from the mob's pool (excluding defaultAttack), or fall back.
+            val chosenSpell = selectMobSpell(mob, now)
+            if (chosenSpell != null) {
+                executeMobSpell(chosenSpell, mob, target, targetSid, now)
             } else {
-                val mobRoll = rollRange(rng, mob.damage.min, mob.damage.max)
-                var mobDamage = mobRoll
-                if (statusEffects != null) {
-                    mobDamage = statusEffects.absorbPlayerDamage(targetSid, mobDamage)
-                }
-                val shieldAbsorbed = mobRoll - mobDamage
-                val mobFeedbackSuffix =
-                    combatFeedbackSuffix(
-                        roll = mobRoll,
-                        armorAbsorbed = 0,
-                        shieldAbsorbed = shieldAbsorbed,
-                    )
-                target.takeDamage(mobDamage)
-                dirtyNotifier.playerVitalsDirty(targetSid)
-                val mobHitText =
-                    if (shieldAbsorbed > 0 && mobDamage == 0) {
-                        "Your shield absorbs ${mob.name}'s attack$mobFeedbackSuffix."
-                    } else if (shieldAbsorbed > 0) {
-                        "${mob.name} hits you for $mobDamage damage (shield absorbed $shieldAbsorbed)$mobFeedbackSuffix."
-                    } else {
-                        "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
-                    }
-                outbound.send(OutboundEvent.SendText(targetSid, mobHitText))
-                if (shieldAbsorbed > 0) {
-                    onCombatEvent(
-                        targetSid,
-                        CombatEvent.ShieldAbsorb(
-                            attackerName = mob.name,
-                            absorbed = shieldAbsorbed,
-                            remaining = statusEffects?.absorbPlayerDamage(targetSid, 0) ?: 0,
-                        ),
-                    )
-                }
-                if (mobDamage > 0) {
-                    onCombatEvent(
-                        targetSid,
-                        CombatEvent.MeleeHit(
-                            targetName = mob.name,
-                            targetId = null,
-                            damage = mobDamage,
-                            sourceIsPlayer = false,
-                        ),
-                    )
-                }
-                if (config.detailedFeedbackEnabled && config.detailedFeedbackRoomBroadcastEnabled) {
-                    broadcastToRoom(
-                        players,
-                        outbound,
-                        target.roomId,
-                        "[Combat] ${mob.name} hits ${target.name} for $mobDamage damage$mobFeedbackSuffix.",
-                        exclude = targetSid,
-                    )
+                // Use defaultAttack spell or standard melee.
+                val defaultSpell = mob.defaultAttack?.let { id -> mob.spells.find { it.id == id } }
+                if (defaultSpell != null) {
+                    executeMobSpell(defaultSpell, mob, target, targetSid, now)
+                } else {
+                    executeMobMelee(mob, target, targetSid)
                 }
             }
 
@@ -787,6 +735,250 @@ class CombatSystem(
             ran++
         }
         return ran
+    }
+
+    /**
+     * Selects a non-default spell from the mob's pool using weighted random.
+     * Returns null if no spells are eligible (all on cooldown or pool is empty).
+     */
+    private fun selectMobSpell(mob: MobState, now: Long): MobSpell? {
+        if (mob.spells.isEmpty()) return null
+        val cooldowns = mobSpellCooldowns[mob.id] ?: emptyMap()
+        val eligible = mob.spells.filter { spell ->
+            spell.id != mob.defaultAttack && (cooldowns[spell.id] ?: 0L) <= now
+        }
+        if (eligible.isEmpty()) return null
+        val totalWeight = eligible.sumOf { it.weight }
+        var roll = rng.nextInt(totalWeight)
+        for (spell in eligible) {
+            roll -= spell.weight
+            if (roll < 0) return spell
+        }
+        return eligible.last()
+    }
+
+    /**
+     * Executes a mob spell against a target player (or as a self-heal/buff).
+     * Handles dodge checks for offensive spells, damage, healing, and status effects.
+     */
+    private suspend fun executeMobSpell(
+        spell: MobSpell,
+        mob: MobState,
+        target: PlayerState,
+        targetSid: SessionId,
+        now: Long,
+    ) {
+        // Record cooldown
+        if (spell.cooldownMs > 0L) {
+            mobSpellCooldowns.getOrPut(mob.id) { mutableMapOf() }[spell.id] = now + spell.cooldownMs
+        }
+
+        val isOffensive = spell.damage != null || (spell.statusEffectId != null && spell.healMin == 0)
+
+        // Dodge check for offensive spells
+        if (isOffensive) {
+            val targetStats = resolvePlayerStats(target, items, statusEffects)
+            val dodgePct =
+                ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
+                    .coerceIn(0, config.bindings.maxDodgePercent)
+            if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
+                outbound.send(
+                    OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s ${spell.displayName}!"),
+                )
+                onCombatEvent(
+                    targetSid,
+                    CombatEvent.Dodge(
+                        targetName = target.name,
+                        targetId = null,
+                        sourceIsPlayer = false,
+                    ),
+                )
+                return
+            }
+        }
+
+        // Apply damage
+        if (spell.damage != null) {
+            val spellRoll = rollRange(rng, spell.damage.min, spell.damage.max)
+            var spellDamage = spellRoll
+            if (statusEffects != null) {
+                spellDamage = statusEffects.absorbPlayerDamage(targetSid, spellDamage)
+            }
+            val shieldAbsorbed = spellRoll - spellDamage
+            target.takeDamage(spellDamage)
+            dirtyNotifier.playerVitalsDirty(targetSid)
+
+            val msg = spell.message
+                .replace("{target}", target.name)
+                .replace("{damage}", spellDamage.toString())
+            outbound.send(OutboundEvent.SendText(targetSid, "$msg for $spellDamage damage."))
+
+            if (spell.roomMessage.isNotEmpty()) {
+                broadcastToRoom(
+                    players,
+                    outbound,
+                    target.roomId,
+                    spell.roomMessage
+                        .replace("{mob}", mob.name)
+                        .replace("{target}", target.name)
+                        .replace("{damage}", spellDamage.toString()),
+                    exclude = targetSid,
+                )
+            }
+            if (shieldAbsorbed > 0) {
+                onCombatEvent(
+                    targetSid,
+                    CombatEvent.ShieldAbsorb(
+                        attackerName = mob.name,
+                        absorbed = shieldAbsorbed,
+                        remaining = statusEffects?.absorbPlayerDamage(targetSid, 0) ?: 0,
+                    ),
+                )
+            }
+            if (spellDamage > 0) {
+                onCombatEvent(
+                    targetSid,
+                    CombatEvent.AbilityHit(
+                        abilityId = spell.id,
+                        abilityName = spell.displayName,
+                        targetName = mob.name,
+                        targetId = null,
+                        damage = spellDamage,
+                        sourceIsPlayer = false,
+                    ),
+                )
+            }
+        } else if (!isOffensive) {
+            // Self-targeting spell message (heal/buff)
+            val msg = spell.message.replace("{mob}", mob.name)
+            outbound.send(OutboundEvent.SendText(targetSid, msg))
+            if (spell.roomMessage.isNotEmpty()) {
+                broadcastToRoom(
+                    players,
+                    outbound,
+                    mob.roomId,
+                    spell.roomMessage.replace("{mob}", mob.name),
+                    exclude = targetSid,
+                )
+            }
+        } else {
+            // Offensive status-only spell
+            val msg = spell.message.replace("{target}", target.name)
+            outbound.send(OutboundEvent.SendText(targetSid, msg))
+            if (spell.roomMessage.isNotEmpty()) {
+                broadcastToRoom(
+                    players,
+                    outbound,
+                    target.roomId,
+                    spell.roomMessage
+                        .replace("{mob}", mob.name)
+                        .replace("{target}", target.name),
+                    exclude = targetSid,
+                )
+            }
+        }
+
+        // Apply healing (to mob)
+        if (spell.healMin > 0) {
+            val healAmount = rollRange(rng, spell.healMin, spell.healMax)
+            mob.hp = (mob.hp + healAmount).coerceAtMost(mob.maxHp)
+            dirtyNotifier.mobHpDirty(mob.id)
+            onCombatEvent(
+                targetSid,
+                CombatEvent.Heal(
+                    abilityName = spell.displayName,
+                    targetName = mob.name,
+                    amount = healAmount,
+                    sourceIsPlayer = false,
+                ),
+            )
+        }
+
+        // Apply status effect
+        if (spell.statusEffectId != null && statusEffects != null) {
+            if (isOffensive) {
+                statusEffects.applyToPlayer(targetSid, spell.statusEffectId)
+            } else {
+                statusEffects.applyToMob(mob.id, spell.statusEffectId)
+            }
+        }
+    }
+
+    /** Standard melee attack — the original mob attack path. */
+    private suspend fun executeMobMelee(
+        mob: MobState,
+        target: PlayerState,
+        targetSid: SessionId,
+    ) {
+        val targetStats = resolvePlayerStats(target, items, statusEffects)
+        val dodgePct =
+            ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
+                .coerceIn(0, config.bindings.maxDodgePercent)
+        if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
+            outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
+            onCombatEvent(
+                targetSid,
+                CombatEvent.Dodge(
+                    targetName = target.name,
+                    targetId = null,
+                    sourceIsPlayer = false,
+                ),
+            )
+            return
+        }
+        val mobRoll = rollRange(rng, mob.damage.min, mob.damage.max)
+        var mobDamage = mobRoll
+        if (statusEffects != null) {
+            mobDamage = statusEffects.absorbPlayerDamage(targetSid, mobDamage)
+        }
+        val shieldAbsorbed = mobRoll - mobDamage
+        val mobFeedbackSuffix =
+            combatFeedbackSuffix(
+                roll = mobRoll,
+                armorAbsorbed = 0,
+                shieldAbsorbed = shieldAbsorbed,
+            )
+        target.takeDamage(mobDamage)
+        dirtyNotifier.playerVitalsDirty(targetSid)
+        val mobHitText =
+            if (shieldAbsorbed > 0 && mobDamage == 0) {
+                "Your shield absorbs ${mob.name}'s attack$mobFeedbackSuffix."
+            } else if (shieldAbsorbed > 0) {
+                "${mob.name} hits you for $mobDamage damage (shield absorbed $shieldAbsorbed)$mobFeedbackSuffix."
+            } else {
+                "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
+            }
+        outbound.send(OutboundEvent.SendText(targetSid, mobHitText))
+        if (shieldAbsorbed > 0) {
+            onCombatEvent(
+                targetSid,
+                CombatEvent.ShieldAbsorb(
+                    attackerName = mob.name,
+                    absorbed = shieldAbsorbed,
+                    remaining = statusEffects?.absorbPlayerDamage(targetSid, 0) ?: 0,
+                ),
+            )
+        }
+        if (mobDamage > 0) {
+            onCombatEvent(
+                targetSid,
+                CombatEvent.MeleeHit(
+                    targetName = mob.name,
+                    targetId = null,
+                    damage = mobDamage,
+                    sourceIsPlayer = false,
+                ),
+            )
+        }
+        if (config.detailedFeedbackEnabled && config.detailedFeedbackRoomBroadcastEnabled) {
+            broadcastToRoom(
+                players,
+                outbound,
+                target.roomId,
+                "[Combat] ${mob.name} hits ${target.name} for $mobDamage damage$mobFeedbackSuffix.",
+                exclude = targetSid,
+            )
+        }
     }
 
     suspend fun handleSpellKill(
@@ -831,6 +1023,7 @@ class CombatSystem(
 
     private fun removeMobFromCombat(mobId: MobId) {
         activeMobs.remove(mobId)
+        mobSpellCooldowns.remove(mobId)
         // Remove all players targeting this mob
         val toRemove = playerTarget.entries.filter { it.value == mobId }.map { it.key }
         for (sid in toRemove) {

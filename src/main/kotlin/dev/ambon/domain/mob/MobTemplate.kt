@@ -25,4 +25,8 @@ interface MobTemplate {
     val questIds: List<String>
     val image: String?
     val video: String?
+    val spells: List<MobSpell>
+
+    /** Spell id that replaces the mob's default melee attack. */
+    val defaultAttack: String?
 }
