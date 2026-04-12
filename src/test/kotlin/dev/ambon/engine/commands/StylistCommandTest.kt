@@ -1,23 +1,37 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.StylistConfig
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.RaceDef
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
+import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.GmcpEmitter
+import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.RaceRegistry
+import dev.ambon.engine.abilities.AbilityDefinition
+import dev.ambon.engine.abilities.AbilityEffect
+import dev.ambon.engine.abilities.AbilityId
+import dev.ambon.engine.abilities.AbilityRegistry
+import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.CommandRouterHarness
 import dev.ambon.test.buildTestPlayerRegistry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.time.Clock
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StylistCommandTest {
@@ -93,6 +107,106 @@ class StylistCommandTest {
             stylistConfig = StylistConfig(feeGold = fee),
             raceRegistry = buildRaceRegistry(),
         )
+    }
+
+    private data class AbilityHarness(
+        val harness: CommandRouterHarness,
+        val abilitySystem: AbilitySystem,
+        val gmcpEmitter: GmcpEmitter,
+    )
+
+    /**
+     * Builds a harness with races whose abilities actually exist in the registry,
+     * plus a wired-up [AbilitySystem] so race-ability grant/revoke can be observed.
+     */
+    private fun abilityHarness(fee: Long = 0): AbilityHarness {
+        val world = stylistWorld()
+        val repo = InMemoryPlayerRepository()
+        val items = ItemRegistry()
+        val mobs = MobRegistry()
+        val outbound = LocalOutboundBus()
+        val players = buildTestPlayerRegistry(world.startRoom, repo = repo, items = items)
+        val combat = CombatSystem(players, mobs, items, outbound)
+        val abilityRegistry = AbilityRegistry()
+        abilityRegistry.register(
+            AbilityDefinition(
+                id = AbilityId("human_boon"),
+                displayName = "Human Boon",
+                description = "A human gift.",
+                manaCost = 0,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = "self",
+                effect = AbilityEffect.DirectHeal(minHeal = 1, maxHeal = 1),
+            ),
+        )
+        abilityRegistry.register(
+            AbilityDefinition(
+                id = AbilityId("elf_grace"),
+                displayName = "Elf Grace",
+                description = "An elven gift.",
+                manaCost = 0,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = "self",
+                effect = AbilityEffect.DirectHeal(minHeal = 1, maxHeal = 1),
+            ),
+        )
+        abilityRegistry.register(
+            AbilityDefinition(
+                id = AbilityId("shared_trick"),
+                displayName = "Shared Trick",
+                description = "Something a human can also learn from a trainer.",
+                manaCost = 0,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = "enemy",
+                effect = AbilityEffect.DirectDamage(damage = DamageRange(1, 1)),
+            ),
+        )
+        val abilitySystem = AbilitySystem(
+            players = players,
+            registry = abilityRegistry,
+            outbound = outbound,
+            combat = combat,
+            clock = Clock.systemUTC(),
+            mobs = mobs,
+        )
+
+        val raceRegistry = RaceRegistry()
+        raceRegistry.register(
+            RaceDef(
+                id = "HUMAN",
+                displayName = "Human",
+                abilities = listOf("human_boon", "shared_trick"),
+            ),
+        )
+        raceRegistry.register(
+            RaceDef(
+                id = "ELF",
+                displayName = "Elf",
+                abilities = listOf("elf_grace"),
+            ),
+        )
+
+        val gmcpEmitter = GmcpEmitter(
+            outbound = outbound,
+            supportsPackage = { _, _ -> true },
+        )
+
+        val harness = CommandRouterHarness.create(
+            world = world,
+            repo = repo,
+            items = items,
+            players = players,
+            mobs = mobs,
+            outbound = outbound,
+            stylistConfig = StylistConfig(feeGold = fee),
+            raceRegistry = raceRegistry,
+            abilitySystem = abilitySystem,
+            gmcpEmitter = gmcpEmitter,
+        )
+        return AbilityHarness(harness, abilitySystem, gmcpEmitter)
     }
 
     @Nested
@@ -231,6 +345,92 @@ class StylistCommandTest {
             // CON dropped, so maxHp scaling should decrease (or at least differ)
             assertNotEquals(hpBefore, after.maxHp)
             assertTrue(after.hp <= after.maxHp)
+        }
+
+        @Test
+        fun `changerace revokes old race abilities and grants new ones`() = runTest {
+            val ah = abilityHarness()
+            val h = ah.harness
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Alice")
+            val me = h.players.get(sid)!!
+            me.race = "HUMAN"
+            // Seed the ability system the way login would: race abilities only, no trainer abilities.
+            ah.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = emptySet(),
+                raceAbilityIds = setOf("human_boon", "shared_trick"),
+            )
+            assertTrue("human_boon" in ah.abilitySystem.knownAbilityIds(sid))
+            h.drain()
+
+            h.router.handle(sid, Command.Stylist.ChangeRace("ELF"))
+            h.drain()
+
+            val known = ah.abilitySystem.knownAbilityIds(sid)
+            assertTrue("elf_grace" in known, "new race ability missing: $known")
+            assertFalse("human_boon" in known, "old race ability not revoked: $known")
+            assertFalse("shared_trick" in known, "old race ability not revoked: $known")
+        }
+
+        @Test
+        fun `changerace preserves trainer-learned abilities that overlap with old race`() = runTest {
+            val ah = abilityHarness()
+            val h = ah.harness
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Alice")
+            val me = h.players.get(sid)!!
+            me.race = "HUMAN"
+            // Player has shared_trick from both race and trainer.
+            me.learnedAbilityIds.add("shared_trick")
+            ah.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = me.learnedAbilityIds,
+                raceAbilityIds = setOf("human_boon", "shared_trick"),
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Stylist.ChangeRace("ELF"))
+            h.drain()
+
+            val known = ah.abilitySystem.knownAbilityIds(sid)
+            assertTrue(
+                "shared_trick" in known,
+                "trainer-learned ability must survive race swap: $known",
+            )
+            assertFalse("human_boon" in known)
+            assertTrue("elf_grace" in known)
+            // learnedAbilityIds itself is untouched.
+            assertTrue("shared_trick" in h.players.get(sid)!!.learnedAbilityIds)
+        }
+
+        @Test
+        fun `changerace emits Char_Skills GMCP so client refreshes ability list`() = runTest {
+            val ah = abilityHarness()
+            val h = ah.harness
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Alice")
+            val me = h.players.get(sid)!!
+            me.race = "HUMAN"
+            ah.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = emptySet(),
+                raceAbilityIds = setOf("human_boon", "shared_trick"),
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Stylist.ChangeRace("ELF"))
+            val events = h.drain()
+
+            val charSkills = events.filterIsInstance<OutboundEvent.GmcpData>()
+                .filter { it.sessionId == sid && it.gmcpPackage == "Char.Skills" }
+            assertTrue(
+                charSkills.isNotEmpty(),
+                "Char.Skills GMCP should be emitted after race change so client ability panel refreshes",
+            )
+            val payload = charSkills.last().jsonData
+            assertTrue("elf_grace" in payload, "new race ability missing in payload: $payload")
+            assertFalse("human_boon" in payload, "old race ability still in payload: $payload")
         }
     }
 }

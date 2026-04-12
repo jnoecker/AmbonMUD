@@ -526,7 +526,8 @@ internal class LoginFlowHandler(
         // token so the client can auto-relog on subsequent connects.
         onFreshPasswordLogin(sessionId)
         playerLocationIndex?.register(me.name)
-        abilitySystem.loadAbilities(sessionId, me.learnedAbilityIds)
+        val raceAbilities = raceRegistry.get(me.race)?.abilities.orEmpty().toSet()
+        abilitySystem.loadAbilities(sessionId, me.learnedAbilityIds, raceAbilities)
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
         if (me.screenReaderEnabled) {
             outbound.send(OutboundEvent.SetScreenReader(sessionId, true))

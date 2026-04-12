@@ -101,6 +101,7 @@ internal fun buildTestRouter(
     puzzleSystem: PuzzleSystem? = null,
     guildHallSystem: GuildHallSystem? = null,
     gmcpEmitter: GmcpEmitter? = null,
+    abilitySystem: dev.ambon.engine.abilities.AbilitySystem? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -149,6 +150,7 @@ internal fun buildTestRouter(
                 ctx = ctx,
                 stylistConfig = it,
                 progression = progression,
+                abilitySystem = abilitySystem,
             )
         },
         DuelHandler(ctx = ctx, duelSystem = duelSystem, combatSystem = combat),
