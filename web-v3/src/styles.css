@@ -13653,22 +13653,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-4);
-  height: 100%;
-  overflow-y: auto;
-}
-
-.stylist-panel .panel-header {
-  display: flex;
-  align-items: center;
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.stylist-panel .panel-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
 }
 
 .stylist-empty-state {
@@ -13699,135 +13683,212 @@ body {
   color: var(--text-secondary);
 }
 
-.stylist-content {
+/* ── Wallet header ── */
+.stylist-wallet {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.stylist-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgb(176 146 208 / 12%), rgb(176 146 208 / 6%));
-  border: 1px solid rgb(176 146 208 / 22%);
+  background: linear-gradient(135deg, rgb(190 168 115 / 12%), rgb(190 168 115 / 6%));
+  border: 1px solid rgb(190 168 115 / 22%);
 }
 
-.stylist-summary-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
+.stylist-gold-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-gold-bright), var(--color-primary-soft-gold));
+  box-shadow: 0 0 6px rgb(190 168 115 / 40%);
+  flex-shrink: 0;
 }
 
-.stylist-summary-label {
-  color: var(--text-tertiary);
+.stylist-gold-amount {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-primary-soft-gold);
 }
 
-.stylist-summary-value {
-  color: var(--text-primary);
+.stylist-gold-label {
+  font-size: 0.82rem;
   font-weight: 600;
+  color: var(--text-secondary);
 }
 
-.stylist-summary-value.stylist-fee-short {
-  color: var(--danger, #d57f7f);
+.stylist-fee-tag {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgb(176 146 208 / 14%);
+  border: 1px solid rgb(176 146 208 / 22%);
+  white-space: nowrap;
 }
 
+/* ── Race cards ── */
 .stylist-race-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  max-height: 50vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(90 82 120 / 70%) transparent;
 }
 
-.stylist-race-row {
+.stylist-race-list::-webkit-scrollbar { width: 8px; }
+
+.stylist-race-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(90 82 120 / 70%), rgb(70 90 110 / 65%));
+}
+
+.stylist-race-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  flex-direction: column;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 3%);
-  border: 1px solid var(--border-subtle);
+  background: rgb(255 255 255 / 4%);
+  border: 1px solid var(--line-faint);
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.stylist-race-info {
+.stylist-race-card:hover {
+  background: rgb(255 255 255 / 7%);
+  border-color: var(--line-soft);
+}
+
+.stylist-race-card-current {
+  border-color: rgb(176 146 208 / 40%);
+  background: rgb(176 146 208 / 8%);
+}
+
+.stylist-race-card-unaffordable {
+  opacity: 0.6;
+}
+
+.stylist-race-card-top {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex: 1;
-  min-width: 0;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
 }
 
-.stylist-race-image {
+.stylist-race-card-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.stylist-race-thumb {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
+  border: 1px solid var(--line-faint);
 }
 
-.stylist-race-text {
+.stylist-race-card-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
 .stylist-race-name {
   font-size: 0.92rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.stylist-race-current {
-  font-size: 0.78rem;
-  color: var(--text-tertiary);
-  font-weight: 400;
-}
-
-.stylist-race-mods {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  font-family: var(--font-mono);
+.stylist-badge-current {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgb(200 176 232);
+  background: rgb(176 146 208 / 18%);
+  border: 1px solid rgb(176 146 208 / 30%);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
 }
 
 .stylist-race-desc {
   font-size: 0.78rem;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.stylist-change-btn {
+.stylist-race-mods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.stylist-mod-chip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.stylist-mod-pos {
+  color: rgb(160 210 140);
+  background: rgb(142 169 123 / 16%);
+}
+
+.stylist-mod-neg {
+  color: rgb(220 140 140);
+  background: rgb(200 120 120 / 14%);
+}
+
+/* ── Card action column ── */
+.stylist-race-card-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
   flex-shrink: 0;
-  padding: 6px 12px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: linear-gradient(135deg, rgb(176 146 208 / 62%), rgb(145 118 180 / 58%));
-  color: #fff;
-  transition: background 0.15s;
 }
 
-.stylist-change-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgb(192 162 224 / 72%), rgb(165 138 200 / 68%));
+.stylist-race-price {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-primary-soft-gold);
+  white-space: nowrap;
 }
 
-.stylist-change-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.stylist-race-price-cant {
+  color: var(--text-disabled);
 }
 
-.stylist-empty {
-  text-align: center;
-  color: var(--text-tertiary);
-  font-size: 0.85rem;
-  padding: var(--space-4);
+.soft-button.stylist-change-btn {
+  padding: 4px 14px;
+  font-size: 0.78rem;
+}
+
+.soft-button.stylist-change-btn:not(:disabled) {
+  background: linear-gradient(135deg, rgb(176 146 208 / 70%), rgb(145 118 180 / 66%));
+  border-color: rgb(176 146 208 / 36%);
+}
+
+.soft-button.stylist-change-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, rgb(192 162 224 / 78%), rgb(165 138 200 / 74%));
 }
 
 /* ════════════════════════════════════════════════════════════════════

@@ -5,13 +5,8 @@ interface StylistPanelProps {
   onCommand: (cmd: string) => void;
 }
 
-function formatMods(statMods: Record<string, number>): string {
-  const entries = Object.entries(statMods).filter(([, v]) => v !== 0);
-  if (entries.length === 0) return "no stat change";
-  return entries
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => (v >= 0 ? `${k} +${v}` : `${k} ${v}`))
-    .join(", ");
+function formatMod(key: string, value: number): string {
+  return value >= 0 ? `${key} +${value}` : `${key} ${value}`;
 }
 
 export function StylistPanel({ stylistState, onCommand }: StylistPanelProps) {
@@ -36,74 +31,77 @@ export function StylistPanel({ stylistState, onCommand }: StylistPanelProps) {
 
   return (
     <div className="stylist-panel">
-      <div className="panel-header">
-        <span className="panel-title">Stylist</span>
+      <div className="stylist-wallet">
+        <span className="stylist-gold-icon" aria-hidden="true" />
+        <span className="stylist-gold-amount">{stylistState.playerGold.toLocaleString()}</span>
+        <span className="stylist-gold-label">gold</span>
+        <span className="stylist-fee-tag">
+          {stylistState.feeGold.toLocaleString()}g per change
+        </span>
       </div>
 
-      <div className="stylist-content">
-        <div className="stylist-summary">
-          <div className="stylist-summary-row">
-            <span className="stylist-summary-label">Current Race</span>
-            <span className="stylist-summary-value">{stylistState.currentRace}</span>
-          </div>
-          <div className="stylist-summary-row">
-            <span className="stylist-summary-label">Fee</span>
-            <span
-              className={`stylist-summary-value${affordable ? "" : " stylist-fee-short"}`}
-            >
-              {stylistState.feeGold.toLocaleString()} gold
-            </span>
-          </div>
-          <div className="stylist-summary-row">
-            <span className="stylist-summary-label">Your Gold</span>
-            <span className="stylist-summary-value">
-              {stylistState.playerGold.toLocaleString()}
-            </span>
-          </div>
-        </div>
-
-        {stylistState.races.length === 0 ? (
-          <p className="stylist-empty">No races available.</p>
-        ) : (
-          <ul className="stylist-race-list">
-            {stylistState.races.map((race: StylistRace) => {
-              const isCurrent = race.id.toUpperCase() === stylistState.currentRace.toUpperCase();
-              return (
-                <li key={race.id} className="stylist-race-row">
-                  <div className="stylist-race-info">
+      {stylistState.races.length === 0 ? (
+        <p className="empty-note">No races available.</p>
+      ) : (
+        <div className="stylist-race-list">
+          {stylistState.races.map((race: StylistRace) => {
+            const isCurrent = race.id.toUpperCase() === stylistState.currentRace.toUpperCase();
+            const mods = Object.entries(race.statMods).filter(([, v]) => v !== 0);
+            return (
+              <div
+                key={race.id}
+                className={`stylist-race-card${isCurrent ? " stylist-race-card-current" : ""}${!affordable && !isCurrent ? " stylist-race-card-unaffordable" : ""}`}
+              >
+                <div className="stylist-race-card-top">
+                  <div className="stylist-race-card-info">
                     {race.image && (
                       <img
                         src={race.image}
                         alt=""
-                        className="stylist-race-image"
+                        className="stylist-race-thumb"
                         loading="lazy"
                       />
                     )}
-                    <div className="stylist-race-text">
-                      <div className="stylist-race-name">
+                    <div className="stylist-race-card-text">
+                      <span className="stylist-race-name">
                         {race.displayName}
-                        {isCurrent && <span className="stylist-race-current"> (current)</span>}
-                      </div>
-                      <div className="stylist-race-mods">{formatMods(race.statMods)}</div>
+                        {isCurrent && <span className="stylist-badge-current">current</span>}
+                      </span>
                       {race.description && (
-                        <div className="stylist-race-desc">{race.description}</div>
+                        <span className="stylist-race-desc">{race.description}</span>
+                      )}
+                      {mods.length > 0 && (
+                        <span className="stylist-race-mods">
+                          {mods.sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => (
+                            <span key={k} className={`stylist-mod-chip${v >= 0 ? " stylist-mod-pos" : " stylist-mod-neg"}`}>
+                              {formatMod(k, v)}
+                            </span>
+                          ))}
+                        </span>
                       )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="stylist-change-btn"
-                    disabled={isCurrent || !affordable}
-                    onClick={() => onCommand(`changerace ${race.id}`)}
-                  >
-                    {isCurrent ? "Current" : "Change"}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+                  <div className="stylist-race-card-action">
+                    {!isCurrent && (
+                      <span className={`stylist-race-price${affordable ? "" : " stylist-race-price-cant"}`}>
+                        {stylistState.feeGold.toLocaleString()}g
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="soft-button stylist-change-btn"
+                      disabled={isCurrent || !affordable}
+                      onClick={() => onCommand(`changerace ${race.id}`)}
+                    >
+                      {isCurrent ? "Current" : "Change"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
