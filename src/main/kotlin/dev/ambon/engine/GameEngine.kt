@@ -660,6 +660,11 @@ class GameEngine(
             maxFriends = engineConfig.friends.maxFriends,
             markPlayerDirty = { sid -> players.persistPlayer(sid) },
         )
+    private val petSystem = PetSystem(
+        config = engineConfig.pets,
+        mobs = mobs,
+        clock = clock,
+    )
     private val combatSystem =
         CombatSystem(
             players = players,
@@ -688,6 +693,7 @@ class GameEngine(
                 onRoomItemsChanged = ::syncRoomItemsForRoom,
             ),
             classRegistry = classRegistry,
+            petSystem = petSystem,
         )
     private val regenSystem =
         RegenSystem(
@@ -708,12 +714,6 @@ class GameEngine(
     init {
         AbilityRegistryLoader.load(engineConfig.abilities, abilityRegistry, imagesBaseUrl)
     }
-
-    private val petSystem = PetSystem(
-        config = engineConfig.pets,
-        mobs = mobs,
-        clock = clock,
-    )
 
     private val worldTimeSystem = WorldTimeSystem(
         config = engineConfig.worldTime,
@@ -774,7 +774,7 @@ class GameEngine(
             onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
             onSummonPet = { sid, templateKey, durationMs ->
                 val player = players.get(sid) ?: return@AbilitySystem
-                val pet = petSystem.summon(sid, templateKey, player.roomId, player.level, durationMs)
+                val pet = petSystem.summon(sid, templateKey, player.roomId, player.level, durationMs, player.name)
                 if (pet != null) {
                     outbound.send(OutboundEvent.SendText(sid, "You summon ${pet.name}!"))
                     emitPetState(sid, pet)

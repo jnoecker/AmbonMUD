@@ -52,6 +52,7 @@ class PetSystem(
         roomId: RoomId,
         ownerLevel: Int,
         durationMs: Long = 0L,
+        ownerName: String? = null,
     ): MobState? {
         val template = config.definitions[templateKey] ?: return null
 
@@ -78,6 +79,7 @@ class PetSystem(
             templateKey = templateKey,
             image = template.image,
             ownerSessionId = ownerSid,
+            ownerName = ownerName,
         )
 
         mobs.upsert(pet)

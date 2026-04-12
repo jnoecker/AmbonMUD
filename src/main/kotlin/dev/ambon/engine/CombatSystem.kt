@@ -47,6 +47,7 @@ class CombatSystem(
     private val config: CombatSystemConfig = CombatSystemConfig(),
     private val callbacks: CombatSystemCallbacks = CombatSystemCallbacks(),
     private val classRegistry: PlayerClassRegistry? = null,
+    private val petSystem: PetSystem? = null,
 ) : GameSystem {
     /** Callback for combat events; wired by GameEngine after construction. */
     var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
@@ -634,6 +635,37 @@ class CombatSystem(
             ran++
         }
 
+        // --- Pet attack phase ---
+        // Pets deal damage to their owner's combat target on the same tick cadence.
+        if (petSystem != null) {
+            for ((sessionId, mobId) in playerEntries) {
+                val mobCombatState = activeMobs[mobId] ?: continue
+                if (now < mobCombatState.nextTickAtMs) continue
+                val mob = mobs.get(mobId) ?: continue
+                if (mob.hp <= 0) continue
+                val pet = petSystem.getActivePet(sessionId) ?: continue
+                if (pet.roomId != mob.roomId) continue
+                val petRoll = rollRange(rng, pet.damage.min, pet.damage.max)
+                val petDamage = (petRoll - mob.armor).coerceAtLeast(1)
+                mob.takeDamage(petDamage)
+                dirtyNotifier.mobHpDirty(mob.id)
+                outbound.send(
+                    OutboundEvent.SendText(sessionId, "${pet.name} hits ${mob.name} for $petDamage damage."),
+                )
+                broadcastToRoom(
+                    players,
+                    outbound,
+                    mob.roomId,
+                    "${pet.name} hits ${mob.name} for $petDamage damage.",
+                    exclude = sessionId,
+                )
+                if (mob.hp <= 0) {
+                    handleMobDeath(sessionId, mob)
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                }
+            }
+        }
+
         // --- Mob attack phase ---
         val mobEntries = activeMobs.values.toMutableList()
         mobEntries.shuffle(rng)
@@ -875,7 +907,7 @@ class CombatSystem(
     private fun findMobsInRoom(
         roomId: RoomId,
         keyword: String,
-    ): List<MobState> = mobs.findInRoomByKeyword(roomId, keyword)
+    ): List<MobState> = mobs.findInRoomByKeyword(roomId, keyword).filter { !it.isPet }
 
     private suspend fun handleMobDeath(
         killerSessionId: SessionId,

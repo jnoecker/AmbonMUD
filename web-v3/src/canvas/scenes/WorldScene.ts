@@ -44,6 +44,7 @@ function featureCountLabel(count: number, singular: string, plural: string): str
 
 const PLAYER_LABEL_COLOR = "#d8dcef";
 const OTHER_PLAYER_LABEL_COLOR = "#81a2be";
+const PET_LABEL_COLOR = "#b294bb";
 const MOB_LABEL_COLOR = "#f0c674";
 const ITEM_LABEL_COLOR = "#8abeb7";
 const PLAYER_LABEL_FONT_SIZE = 15;
@@ -101,6 +102,7 @@ export class WorldScene {
   private playerLabel: Text;
   private playerLabelBg = new Graphics();
   private mobSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
+  private petSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private itemSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private playerSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private roleGraphics = new Graphics();
@@ -230,6 +232,7 @@ export class WorldScene {
   private leverCount = 0;
 
   private lastMobsKey = "";
+  private lastPetsKey = "";
   private lastItemsKey = "";
   private lastNodesKey = "";
   private lastPlayersKey = "";
@@ -813,10 +816,19 @@ export class WorldScene {
 
     this.playerLabel.text = character.name !== "-" ? character.name : "";
 
-    const mobsKey = mobs.map((m) => `${m.id}:${m.hp}`).join("|");
+    const pets = mobs.filter((m) => m.ownerName);
+    const nonPetMobs = mobs.filter((m) => !m.ownerName);
+
+    const mobsKey = nonPetMobs.map((m) => `${m.id}:${m.hp}`).join("|");
     if (mobsKey !== this.lastMobsKey) {
       this.lastMobsKey = mobsKey;
-      this.rebuildMobs(mobs);
+      this.rebuildMobs(nonPetMobs);
+    }
+
+    const petsKey = pets.map((p) => `${p.id}:${p.hp}`).join("|");
+    if (petsKey !== this.lastPetsKey) {
+      this.lastPetsKey = petsKey;
+      this.rebuildPets(pets);
     }
 
     const itemsKey = roomItems.map((i) => i.id).join("|");
@@ -1145,6 +1157,29 @@ export class WorldScene {
         hitArea.x = startX - otherSize / 2;
         hitArea.y = opY - otherSize / 2;
         startX += otherSize + 20;
+      }
+    }
+
+    // Layout pet sprites near the player (below and to the right)
+    const petEntries = [...this.petSprites.values()];
+    if (petEntries.length > 0) {
+      const petY = playerY + playerSize * 0.1;
+      const petSize = otherSize;
+      let petStartX = playerX - petSize / 2 - 10;
+      for (const { sprite, label, labelBg, hitArea } of petEntries) {
+        sprite.x = petStartX;
+        sprite.y = petY;
+        sprite.width = petSize;
+        sprite.height = petSize;
+        label.x = petStartX;
+        label.y = petY + petSize / 2 + 6;
+        drawLabelPill(labelBg, label);
+        hitArea.clear();
+        hitArea.rect(0, 0, petSize, petSize);
+        hitArea.fill({ color: 0x000000, alpha: 0.001 });
+        hitArea.x = petStartX - petSize / 2;
+        hitArea.y = petY - petSize / 2;
+        petStartX -= petSize + 16;
       }
     }
 
@@ -1671,6 +1706,61 @@ export class WorldScene {
       this.container.addChild(label);
       this.container.addChild(hitArea);
       this.playerSprites.set(player.name, { sprite, label, labelBg, hitArea });
+    }
+  }
+
+  private rebuildPets(pets: Array<{ id: string; name: string; image?: string | null; category?: string; hp: number; maxHp: number }>) {
+    for (const { sprite, label, labelBg, hitArea } of this.petSprites.values()) {
+      this.container.removeChild(sprite);
+      this.container.removeChild(labelBg);
+      this.container.removeChild(label);
+      this.container.removeChild(hitArea);
+      sprite.destroy();
+      labelBg.destroy();
+      label.destroy();
+      hitArea.destroy();
+    }
+    this.petSprites.clear();
+
+    const petSize = BASE_SPRITE_SIZE * 0.75;
+    for (const pet of pets) {
+      const sprite = new Sprite(Texture.WHITE);
+      sprite.width = petSize;
+      sprite.height = petSize;
+      sprite.anchor.set(0.5);
+      sprite.tint = 0xb294bb;
+
+      const petImage = pet.image ?? gameStateRef.current.serverAssets[`default_mob_${pet.category ?? "humanoid"}`] ?? null;
+      if (petImage) {
+        this.loadSpriteTexture(sprite, petImage);
+      }
+
+      const label = new Text({
+        text: `♥ ${pet.name}`,
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: PET_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
+      });
+      label.anchor.set(0.5, 0);
+
+      const labelBg = new Graphics();
+      labelBg.eventMode = "none";
+
+      const hitArea = new Graphics();
+      hitArea.rect(0, 0, petSize, petSize);
+      hitArea.fill({ color: 0x000000, alpha: 0.001 });
+      hitArea.eventMode = "static";
+      hitArea.cursor = "pointer";
+
+      const petData = pet;
+      hitArea.on("pointerdown", () => {
+        this.entityPopout.showMob(petData.name, undefined, petData.image, undefined, petData.hp, petData.maxHp, null, false);
+        this.showPopout();
+      });
+
+      this.container.addChild(sprite);
+      this.container.addChild(labelBg);
+      this.container.addChild(label);
+      this.container.addChild(hitArea);
+      this.petSprites.set(pet.id, { sprite, label, labelBg, hitArea });
     }
   }
 

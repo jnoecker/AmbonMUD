@@ -1981,6 +1981,7 @@ class GmcpEmitter(
                     MobEffectPayload(name = e.name, type = e.type, remainingMs = e.remainingMs, stacks = e.stacks)
                 }
             },
+            ownerName = mob.ownerName,
         )
     }
 
@@ -2102,6 +2103,7 @@ class GmcpEmitter(
         val video: String? = null,
         val category: String = "humanoid",
         val effects: List<MobEffectPayload>? = null,
+        val ownerName: String? = null,
     )
 
     private data class MobEffectPayload(

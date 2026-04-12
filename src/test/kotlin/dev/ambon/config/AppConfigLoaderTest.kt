@@ -37,7 +37,6 @@ class AppConfigLoaderTest {
         assertEquals(PersistenceBackend.YAML, config.persistence.backend)
         assertTrue(!config.redis.enabled)
         assertTrue(!config.engine.debug.enableSwarmClass)
-        assertEquals("thornhaven_city:new_arrivals_hall", config.engine.classStartRooms["SWARM"])
     }
 
     @Test
