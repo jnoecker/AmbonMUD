@@ -249,6 +249,7 @@ class CommandRouterHarness private constructor(
             dungeonRegistry: DungeonRegistry? = null,
             housingSystem: HousingSystem? = null,
             gmcpEmitter: GmcpEmitter? = null,
+            abilitySystem: dev.ambon.engine.abilities.AbilitySystem? = null,
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -283,6 +284,7 @@ class CommandRouterHarness private constructor(
                     dungeonRegistry = dungeonRegistry,
                     housingSystem = housingSystem,
                     gmcpEmitter = gmcpEmitter,
+                    abilitySystem = abilitySystem,
                 )
             return CommandRouterHarness(
                 world = world,

@@ -44,6 +44,7 @@ class AbilitySystem(
     val onSummonPet: suspend (SessionId, String, Long) -> Unit = { _, _, _ -> },
 ) : GameSystem {
     private val manualLearnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
+    private val raceGrantedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val effectiveAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
 
@@ -616,12 +617,32 @@ class AbilitySystem(
     /**
      * Loads abilities from a persisted set of ability IDs. Called on login instead of
      * [syncAbilities] so players only have abilities they explicitly chose at a trainer.
+     *
+     * [raceAbilityIds] are abilities granted by the player's current race. They are
+     * kept separate from trainer-learned IDs so race swaps can revoke old grants
+     * without touching anything the player learned from a trainer.
      */
     fun loadAbilities(
         sessionId: SessionId,
         learnedIds: Set<String>,
+        raceAbilityIds: Set<String> = emptySet(),
     ): List<AbilityDefinition> {
         manualLearnedAbilities[sessionId] = learnedIds.map { AbilityId(it) }.toMutableSet()
+        raceGrantedAbilities[sessionId] = raceAbilityIds.map { AbilityId(it) }.toMutableSet()
+        return refreshKnownAbilities(sessionId)
+    }
+
+    /**
+     * Replaces the set of race-granted abilities for [sessionId] and recomputes the
+     * effective ability set. Trainer-learned abilities are left untouched, so any
+     * ability the player also learned from a trainer survives the swap. Returns the
+     * abilities the player now knows that they did not know before.
+     */
+    fun setRaceAbilities(
+        sessionId: SessionId,
+        raceAbilityIds: Set<String>,
+    ): List<AbilityDefinition> {
+        raceGrantedAbilities[sessionId] = raceAbilityIds.map { AbilityId(it) }.toMutableSet()
         return refreshKnownAbilities(sessionId)
     }
 
@@ -685,7 +706,10 @@ class AbilitySystem(
         val ability = registry.get(abilityId) ?: return "Unknown ability '${abilityId.value}'."
         ensureAbilitiesCurrent(sessionId)
         val learned = manualLearnedAbilities.getOrPut(sessionId) { mutableSetOf() }
-        if (abilityId in effectiveAbilities[sessionId].orEmpty()) return "You already know ${ability.displayName}."
+        // Exclude race grants so a player can pay skill points to "permanently" learn an
+        // ability their current race also grants — this keeps the ability across race swaps.
+        val knownWithoutRace = resolveEffectiveKnownAbilities(level, unlockedClasses, learned)
+        if (abilityId in knownWithoutRace) return "You already know ${ability.displayName}."
         if (ability.skillPointCost == 0) {
             return "${ability.displayName} is granted automatically when you qualify for it."
         }
@@ -729,7 +753,8 @@ class AbilitySystem(
     ): List<AbilityDefinition> {
         val previous = effectiveAbilities[sessionId].orEmpty()
         val manual = manualLearnedAbilities.getOrPut(sessionId) { mutableSetOf() }
-        val resolved = resolveEffectiveKnownAbilities(level, unlockedClasses, manual)
+        val race = raceGrantedAbilities[sessionId].orEmpty()
+        val resolved = resolveEffectiveKnownAbilities(level, unlockedClasses, manual + race)
         effectiveAbilities[sessionId] = resolved.toMutableSet()
         cleanupCooldowns(sessionId, resolved)
         return resolved
@@ -764,6 +789,7 @@ class AbilitySystem(
 
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         manualLearnedAbilities.remove(sessionId)
+        raceGrantedAbilities.remove(sessionId)
         effectiveAbilities.remove(sessionId)
         cooldowns.remove(sessionId)
     }
@@ -773,6 +799,7 @@ class AbilitySystem(
         newSid: SessionId,
     ) {
         manualLearnedAbilities.remapKey(oldSid, newSid)
+        raceGrantedAbilities.remapKey(oldSid, newSid)
         effectiveAbilities.remapKey(oldSid, newSid)
         cooldowns.remapKey(oldSid, newSid)
     }

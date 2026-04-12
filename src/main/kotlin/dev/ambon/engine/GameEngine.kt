@@ -1196,6 +1196,7 @@ class GameEngine(
                 ctx = ctx,
                 stylistConfig = engineConfig.stylist,
                 progression = progression,
+                abilitySystem = abilitySystem,
                 markVitalsDirty = ::markVitalsDirty,
                 markStatsDirty = ::markStatsDirty,
             ),

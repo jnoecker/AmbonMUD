@@ -5,6 +5,7 @@ import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -15,6 +16,7 @@ class StylistHandler(
     ctx: EngineContext,
     private val stylistConfig: StylistConfig = StylistConfig(),
     private val progression: PlayerProgression = PlayerProgression(),
+    private val abilitySystem: AbilitySystem? = null,
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
     private val markStatsDirty: ((SessionId) -> Unit)? = null,
 ) : CommandHandler {
@@ -110,6 +112,8 @@ class StylistHandler(
         me.stats = applyStatDelta(me.stats, oldMods, target.statMods)
         me.race = target.id
         progression.recomputeVitalCaps(me)
+
+        abilitySystem?.setRaceAbilities(sessionId, target.abilities.toSet())
 
         markVitalsDirty?.invoke(sessionId)
         markStatsDirty?.invoke(sessionId)

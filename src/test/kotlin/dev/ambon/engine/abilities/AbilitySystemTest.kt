@@ -23,6 +23,7 @@ import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -308,6 +309,106 @@ class AbilitySystemTest {
 
             assertTrue(h.abilitySystem.knownAbilities(sid).isNotEmpty())
             h.abilitySystem.onPlayerDisconnected(sid)
+            assertTrue(h.abilitySystem.knownAbilities(sid).isEmpty())
+        }
+
+    @Test
+    fun `loadAbilities grants race abilities`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "RaceGift")
+
+            h.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = emptySet(),
+                raceAbilityIds = setOf("magic_missile"),
+            )
+
+            assertTrue("magic_missile" in h.abilitySystem.knownAbilityIds(sid))
+        }
+
+    @Test
+    fun `setRaceAbilities revokes previous grants and adds new ones`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Swapper")
+            h.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = emptySet(),
+                raceAbilityIds = setOf("magic_missile"),
+            )
+
+            h.abilitySystem.setRaceAbilities(sid, setOf("heal"))
+
+            val known = h.abilitySystem.knownAbilityIds(sid)
+            assertTrue("heal" in known)
+            assertFalse(
+                "magic_missile" in known,
+                "previous race ability should be revoked",
+            )
+        }
+
+    @Test
+    fun `setRaceAbilities preserves abilities also learned from trainer`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Doubled")
+            // Player has magic_missile both as a race grant and as a trainer-learned ability.
+            h.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = setOf("magic_missile"),
+                raceAbilityIds = setOf("magic_missile"),
+            )
+
+            // Swap to a race that grants nothing — trainer-learned ability must survive.
+            h.abilitySystem.setRaceAbilities(sid, emptySet())
+
+            assertTrue(
+                "magic_missile" in h.abilitySystem.knownAbilityIds(sid),
+                "trainer-learned ability must survive race swap",
+            )
+        }
+
+    @Test
+    fun `learnAbility allows learning an ability currently granted only by race`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "DoubleUp")
+            val me = h.players.get(sid)!!
+            me.level = 5
+            me.unlockedClasses.add("WARRIOR")
+            h.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = emptySet(),
+                raceAbilityIds = setOf("magic_missile"),
+            )
+
+            val error = h.abilitySystem.learnAbility(
+                sessionId = sid,
+                abilityId = AbilityId("magic_missile"),
+                level = me.level,
+                unlockedClasses = me.unlockedClasses,
+                skillPointInterval = 1,
+                learnedIds = emptySet(),
+            )
+
+            assertNull(error, "trainer should allow learning a race-only ability; got: $error")
+        }
+
+    @Test
+    fun `session cleanup clears race-granted abilities`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "CleanupRace")
+            h.abilitySystem.loadAbilities(
+                sessionId = sid,
+                learnedIds = emptySet(),
+                raceAbilityIds = setOf("magic_missile"),
+            )
+            assertTrue(h.abilitySystem.knownAbilities(sid).isNotEmpty())
+
+            h.abilitySystem.onPlayerDisconnected(sid)
+
             assertTrue(h.abilitySystem.knownAbilities(sid).isEmpty())
         }
 
