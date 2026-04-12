@@ -56,12 +56,8 @@ ambonmud:
     tickMillis: 100
     inboundBudgetMs: 30
   world:
-    startRoom: pixel_haven_academy:start
-    resources:
-      - world/auringold_academy.yaml
-      - world/pixel_haven.yaml
-      - world/pixel_haven_academy.yaml
-      - world/playtest_arena.yaml
+    startRoom: auringold_academy:dream_gate
+    resources: []
   persistence:
     backend: YAML
     rootDir: data/players
@@ -136,7 +132,7 @@ ambonmud:
         manaRegenStat: WIS
         manaRegenMsPerPoint: 400
         xpBonusStat: CHA
-        xpBonusPerPoint: 5
+        xpBonusPerPoint: 0.05
     abilities:
       definitions:
         # ── Knight (WARRIOR) ────────────────────────────────────────────

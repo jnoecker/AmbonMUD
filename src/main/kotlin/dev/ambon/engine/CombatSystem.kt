@@ -639,6 +639,8 @@ class CombatSystem(
         // Pets deal damage to their owner's combat target on the same tick cadence.
         if (petSystem != null) {
             for ((sessionId, mobId) in playerEntries) {
+                val mobCombatState = activeMobs[mobId] ?: continue
+                if (now < mobCombatState.nextTickAtMs) continue
                 val mob = mobs.get(mobId) ?: continue
                 if (mob.hp <= 0) continue
                 val pet = petSystem.getActivePet(sessionId) ?: continue
