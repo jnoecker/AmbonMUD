@@ -186,6 +186,7 @@ interface GmcpContext {
   setDungeonInfo: Dispatch<SetStateAction<DungeonInfo | null>>;
   setDungeonCatalog: Dispatch<SetStateAction<DungeonCatalogEntry[]>>;
   setPrestigeInfo: Dispatch<SetStateAction<PrestigeInfo | null>>;
+  setToast: Dispatch<SetStateAction<string | null>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -507,6 +508,7 @@ export function applyGmcpPackage(
           .map((entry) => ({
             name: typeof entry.name === "string" ? entry.name : "Unknown",
             level: safeNumber(entry.level),
+            sprite: typeof entry.sprite === "string" ? entry.sprite : null,
           })),
       );
       break;
@@ -518,7 +520,7 @@ export function applyGmcpPackage(
       if (typeof name !== "string") break;
       ctx.setPlayers((prev) => {
         if (prev.some((player) => player.name === name)) return prev;
-        return [...prev, { name, level: safeNumber(packet.level) }];
+        return [...prev, { name, level: safeNumber(packet.level), sprite: typeof packet.sprite === "string" ? packet.sprite : null }];
       });
       break;
     }
@@ -777,6 +779,9 @@ export function applyGmcpPackage(
         }
         return { ...prev, gchat: next };
       });
+
+      const gPreview = message.length > 60 ? message.slice(0, 57) + "..." : message;
+      ctx.setToast(`[gchat] ${sender}: ${gPreview}`);
       break;
     }
 
@@ -862,6 +867,9 @@ export function applyGmcpPackage(
         }
         return { ...prev, [mappedChannel]: next };
       });
+
+      const preview = message.length > 60 ? message.slice(0, 57) + "..." : message;
+      ctx.setToast(`[${mappedChannel}] ${sender}: ${preview}`);
       break;
     }
 

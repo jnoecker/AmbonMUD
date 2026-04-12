@@ -1655,7 +1655,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildPlayers(players: Array<{ name: string; level: number }>) {
+  private rebuildPlayers(players: Array<{ name: string; level: number; sprite?: string | null }>) {
     for (const { sprite, label, labelBg, hitArea } of this.playerSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(labelBg);
@@ -1675,6 +1675,10 @@ export class WorldScene {
       sprite.height = otherSize;
       sprite.anchor.set(0.5);
       sprite.tint = 0x81a2be;
+
+      if (player.sprite) {
+        this.loadSpriteTexture(sprite, player.sprite);
+      }
 
       const label = new Text({
         text: player.name,

@@ -13877,16 +13877,11 @@ html:has(.game-shell),
   display: block;
 }
 
-/* Staff-only floating action buttons — anchored to the left edge of the canvas,
-   vertically aligned with the player sprite (which renders at ~70% of canvas height). */
+/* Staff-only floating action buttons — top-left, below the target HUD. */
 .staff-fab {
   position: fixed;
-  top: calc(
-    env(safe-area-inset-top, 0px) +
-    (100vh - var(--game-bottom-inset, 0px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) * 0.70
-  );
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
   left: calc(env(safe-area-inset-left, 0px) + 12px);
-  transform: translateY(-50%);
   z-index: 12;
   display: flex;
   flex-direction: column;

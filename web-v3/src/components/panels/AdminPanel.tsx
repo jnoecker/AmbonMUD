@@ -367,6 +367,7 @@ export function AdminPanel({
   const [smiteFilter, setSmiteFilter] = useState("");
   const [kickFilter, setKickFilter] = useState("");
   const [setLevelFilter, setSetLevelFilter] = useState("");
+  const [setStaffFilter, setSetStaffFilter] = useState("");
   const [dispelFilter, setDispelFilter] = useState("");
   const [possessFilter, setPossessFilter] = useState("");
   const [confirmKey, setConfirmKey] = useState<string | null>(null);
@@ -725,6 +726,48 @@ export function AdminPanel({
                       onChange={(e) => updateInputB(e.target.value)}
                     />
                   </label>
+                </>
+              )}
+
+              {activeAction === "setstaff" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name"
+                      value={inputA}
+                      onChange={(e) => updateInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <TargetBrowser
+                    whoPlayers={whoPlayers}
+                    roomMobs={[]}
+                    filter={setStaffFilter}
+                    onSetFilter={setSetStaffFilter}
+                    onSelect={(target) => updateInputA(target)}
+                    buttonLabel="Select"
+                    emptyMessage="No online player matches that filter."
+                    currentPlayerName={currentPlayerName}
+                    disabledPlayerNames={[currentPlayerName]}
+                  />
+                  <label className="admin-field">
+                    <span className="admin-field-label">Action</span>
+                  </label>
+                  <div className="admin-choice-row">
+                    {(["grant", "revoke"] as const).map((choice) => (
+                      <button
+                        key={choice}
+                        type="button"
+                        className={`admin-choice-chip ${(choice === "grant" && inputB !== "revoke") || (choice === "revoke" && inputB === "revoke") ? "admin-choice-chip-active" : ""}`}
+                        onClick={() => updateInputB(choice)}
+                      >
+                        {choice === "grant" ? "Grant Staff" : "Revoke Staff"}
+                      </button>
+                    ))}
+                  </div>
                 </>
               )}
 
