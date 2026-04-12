@@ -1041,15 +1041,18 @@ class CombatSystem(
             }
         for (mobId in emptyMobs) {
             activeMobs.remove(mobId)
+            mobSpellCooldowns.remove(mobId)
         }
     }
 
     /**
-     * Removes threat table entries for mobs that no longer exist in the
-     * MobRegistry.  Call periodically to prevent unbounded growth.
+     * Removes threat table entries and spell cooldowns for mobs that no longer
+     * exist in the MobRegistry.  Call periodically to prevent unbounded growth.
      */
-    fun cleanupStaleThreatEntries(): Int =
-        threatTable.removeStaleEntries { mobId -> mobs.get(mobId) != null }
+    fun cleanupStaleThreatEntries(): Int {
+        mobSpellCooldowns.keys.removeAll { mobId -> mobs.get(mobId) == null }
+        return threatTable.removeStaleEntries { mobId -> mobs.get(mobId) != null }
+    }
 
     private fun threatMultiplier(player: PlayerState): Double =
         classRegistry?.get(player.playerClass)?.threatMultiplier ?: 1.0
