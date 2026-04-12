@@ -16,6 +16,7 @@ import type {
   RoomState,
   ShopState,
   StatusEffect,
+  StylistState,
   Vitals,
   WorldTime,
   WorldWeather,
@@ -37,6 +38,7 @@ export interface GameStateSnapshot {
   dialogue: DialogueState | null;
   questsAvailable: QuestAvailable[];
   shop: ShopState | null;
+  stylistState: StylistState | null;
   puzzle: PuzzleState | null;
   craftingNodes: CraftingNode[];
   roomFeatures: RoomFeature[];
@@ -117,6 +119,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     dialogue: null,
     questsAvailable: [],
     shop: null,
+    stylistState: null,
     puzzle: null,
     craftingNodes: [],
     roomFeatures: [],

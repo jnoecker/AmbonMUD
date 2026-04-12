@@ -1591,6 +1591,11 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Char.Stylist.Close": {
+      ctx.setStylistState(null);
+      break;
+    }
+
     case "Char.Factions": {
       const factionPacket = data;
       ctx.setFactions(
