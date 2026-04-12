@@ -805,6 +805,8 @@ data class PetTemplateConfig(
     val image: String? = null,
     val spells: Map<String, PetSpellConfig> = emptyMap(),
     val defaultAttack: String? = null,
+    /** Threat multiplier for pet attacks. 0.0 = no threat (DPS pet), >0 = tank pet that holds aggro. */
+    val threatMultiplier: Double = 0.0,
 )
 
 data class PetSpellConfig(

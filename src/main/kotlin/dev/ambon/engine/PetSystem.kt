@@ -32,6 +32,12 @@ class PetSystem(
     /** Tracks expiry time for timed pets. Key = MobId, value = wall-clock ms when the pet expires. */
     private val expiryTimes = mutableMapOf<MobId, Long>()
 
+    // Synthetic session IDs let tank pets participate in the threat table.
+    // Real player SessionIds are positive; pet SessionIds use a negative counter to avoid collisions.
+    private var nextPetSessionId = Long.MIN_VALUE / 2
+    private val petToSession = mutableMapOf<MobId, SessionId>()
+    private val sessionToPet = mutableMapOf<SessionId, MobId>()
+
     fun getTemplate(key: String): PetTemplateConfig? = config.definitions[key]
 
     fun allTemplates(): Map<String, PetTemplateConfig> = config.definitions
@@ -86,9 +92,17 @@ class PetSystem(
             ownerName = ownerName,
             spells = petSpells,
             defaultAttack = template.defaultAttack,
+            threatMultiplier = template.threatMultiplier,
         )
 
         mobs.upsert(pet)
+
+        // Assign a synthetic SessionId so the pet can participate in the threat table.
+        if (template.threatMultiplier > 0.0) {
+            val syntheticSid = SessionId(nextPetSessionId--)
+            petToSession[petId] = syntheticSid
+            sessionToPet[syntheticSid] = petId
+        }
         if (durationMs > 0L) {
             expiryTimes[petId] = clock.millis() + durationMs
         }
@@ -111,6 +125,7 @@ class PetSystem(
                 val pet = mobs.get(mobId)
                 if (pet != null) {
                     expired.add(ExpiredPet(pet.ownerSessionId!!, pet.name))
+                    removePetSession(mobId)
                     mobs.remove(mobId)
                 }
                 iterator.remove()
@@ -124,6 +139,7 @@ class PetSystem(
         val pets = getPets(ownerSid)
         for (pet in pets) {
             expiryTimes.remove(pet.id)
+            removePetSession(pet.id)
             mobs.remove(pet.id)
             log.debug { "Pet dismissed: ${pet.name} (${pet.id})" }
         }
@@ -144,9 +160,37 @@ class PetSystem(
 
     fun clear() {
         expiryTimes.clear()
+        petToSession.clear()
+        sessionToPet.clear()
         for (mob in mobs.all().filter { it.isPet }) {
             mobs.remove(mob.id)
         }
+    }
+
+    /** Returns the pet MobState for a synthetic SessionId, or null if not a pet session. */
+    fun getPetBySession(sid: SessionId): MobState? {
+        val mobId = sessionToPet[sid] ?: return null
+        return mobs.get(mobId)
+    }
+
+    /** Returns true if [sid] is a synthetic pet session. */
+    fun isPetSession(sid: SessionId): Boolean = sessionToPet.containsKey(sid)
+
+    /** Returns the synthetic SessionId for a pet, or null if the pet has no threat entry. */
+    fun getPetSessionId(petId: MobId): SessionId? = petToSession[petId]
+
+    /** Removes a single pet by MobId (e.g. on pet death). */
+    fun dismissOne(petId: MobId) {
+        val pet = mobs.get(petId) ?: return
+        expiryTimes.remove(petId)
+        removePetSession(petId)
+        mobs.remove(petId)
+        log.debug { "Pet dismissed: ${pet.name} ($petId)" }
+    }
+
+    private fun removePetSession(petId: MobId) {
+        val sid = petToSession.remove(petId)
+        if (sid != null) sessionToPet.remove(sid)
     }
 
     private fun toMobSpell(key: String, sc: PetSpellConfig): MobSpell =
