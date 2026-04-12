@@ -23,4 +23,8 @@ data class MobFile(
     val video: String? = null,
     /** Visual category for default sprite selection (e.g. humanoid, beast, undead). */
     val category: String? = null,
+    /** Spells this mob can cast during combat. Key = spell id. */
+    val spells: Map<String, MobSpellFile> = emptyMap(),
+    /** If set, this spell replaces the mob's default melee attack. Must reference a key in [spells]. */
+    val defaultAttack: String? = null,
 )

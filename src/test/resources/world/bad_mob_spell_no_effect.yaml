@@ -1,0 +1,18 @@
+zone: bad_mob_spell_no_effect
+startRoom: arena
+rooms:
+  arena:
+    title: "Arena"
+    description: "A room."
+mobs:
+  broken_mage:
+    name: "a broken mage"
+    room: arena
+    hp: 10
+    minDamage: 1
+    maxDamage: 2
+    spells:
+      empty_spell:
+        displayName: Empty Spell
+        message: "Nothing happens."
+        weight: 1

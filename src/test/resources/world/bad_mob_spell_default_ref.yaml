@@ -1,0 +1,20 @@
+zone: bad_mob_spell_default_ref
+startRoom: arena
+rooms:
+  arena:
+    title: "Arena"
+    description: "A room."
+mobs:
+  broken_mage:
+    name: "a broken mage"
+    room: arena
+    hp: 10
+    minDamage: 1
+    maxDamage: 2
+    spells:
+      fireball:
+        displayName: Fireball
+        message: "Fire!"
+        minDamage: 3
+        maxDamage: 5
+    defaultAttack: nonexistent_spell

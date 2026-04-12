@@ -3,6 +3,7 @@ package dev.ambon.domain.world
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.mob.MobSpell
 import dev.ambon.domain.mob.MobTemplate
 import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueTree
@@ -28,4 +29,6 @@ data class MobSpawn(
     override val video: String? = null,
     val aggressive: Boolean = false,
     val category: String = "humanoid",
+    override val spells: List<MobSpell> = emptyList(),
+    override val defaultAttack: String? = null,
 ) : MobTemplate

@@ -35,6 +35,8 @@ data class MobState(
     val ownerSessionId: SessionId? = null,
     /** Character name of the pet's owner — sent to clients so they can identify their own pets. */
     val ownerName: String? = null,
+    override val spells: List<MobSpell> = emptyList(),
+    override val defaultAttack: String? = null,
 ) : MobTemplate {
     val isPet: Boolean get() = ownerSessionId != null
 }

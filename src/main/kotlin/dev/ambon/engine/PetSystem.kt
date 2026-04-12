@@ -1,12 +1,15 @@
 package dev.ambon.engine
 
 import dev.ambon.config.PetConfig
+import dev.ambon.config.PetSpellConfig
 import dev.ambon.config.PetTemplateConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.mob.MobSpell
 import dev.ambon.domain.mob.MobState
+import dev.ambon.engine.status.StatusEffectId
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Clock
 import java.util.UUID
@@ -66,6 +69,7 @@ class PetSystem(
         val scaledMaxDmg = (template.maxDamage * levelScale).toInt().coerceAtLeast(1)
 
         val petId = MobId("pet:${UUID.randomUUID().toString().take(8)}")
+        val petSpells = template.spells.map { (key, sc) -> toMobSpell(key, sc) }
         val pet = MobState(
             id = petId,
             name = template.name,
@@ -80,6 +84,8 @@ class PetSystem(
             image = template.image,
             ownerSessionId = ownerSid,
             ownerName = ownerName,
+            spells = petSpells,
+            defaultAttack = template.defaultAttack,
         )
 
         mobs.upsert(pet)
@@ -142,6 +148,24 @@ class PetSystem(
             mobs.remove(mob.id)
         }
     }
+
+    private fun toMobSpell(key: String, sc: PetSpellConfig): MobSpell =
+        MobSpell(
+            id = key,
+            displayName = sc.displayName,
+            message = sc.message,
+            roomMessage = sc.roomMessage,
+            damage = if (sc.minDamage != null || sc.maxDamage != null) {
+                DamageRange(sc.minDamage ?: 1, sc.maxDamage ?: (sc.minDamage ?: 1))
+            } else {
+                null
+            },
+            healMin = sc.healMin,
+            healMax = sc.healMax,
+            statusEffectId = sc.statusEffectId?.let { StatusEffectId(it) },
+            cooldownMs = sc.cooldownMs,
+            weight = sc.weight,
+        )
 
     data class ExpiredPet(
         val ownerSessionId: SessionId,

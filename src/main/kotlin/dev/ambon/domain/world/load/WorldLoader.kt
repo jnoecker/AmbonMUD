@@ -26,6 +26,7 @@ import dev.ambon.domain.ids.qualifyId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.mob.MobSpell
 import dev.ambon.domain.puzzle.PuzzleDef
 import dev.ambon.domain.puzzle.PuzzleReward
 import dev.ambon.domain.puzzle.PuzzleStep
@@ -54,6 +55,7 @@ import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueChoice
 import dev.ambon.engine.dialogue.DialogueNode
 import dev.ambon.engine.dialogue.DialogueTree
+import dev.ambon.engine.status.StatusEffectId
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -327,6 +329,13 @@ object WorldLoader {
                         val s = rawQuestId.trim()
                         qualifyId(zone, s)
                     }
+                val spells = parseMobSpells(mobId, mf.spells)
+                if (mf.defaultAttack != null && spells.none { it.id == mf.defaultAttack }) {
+                    throw WorldLoadException(
+                        "Mob '${mobId.value}' defaultAttack '${mf.defaultAttack}' " +
+                            "does not reference a defined spell key",
+                    )
+                }
 
                 mergedMobs[mobId] =
                     MobSpawn(
@@ -352,6 +361,8 @@ object WorldLoader {
                         category = (mf.category ?: "humanoid").also {
                             validateMobCategory(it, "mob '${mobId.value}'")
                         },
+                        spells = spells,
+                        defaultAttack = mf.defaultAttack,
                     )
             }
 
@@ -1121,6 +1132,63 @@ object WorldLoader {
             )
 
         return tree
+    }
+
+    private fun parseMobSpells(
+        mobId: MobId,
+        spellFiles: Map<String, dev.ambon.domain.world.data.MobSpellFile>,
+    ): List<MobSpell> {
+        if (spellFiles.isEmpty()) return emptyList()
+        return spellFiles.map { (key, sf) ->
+            val ctx = "mob '${mobId.value}' spell '$key'"
+            if (sf.displayName.isBlank()) {
+                throw WorldLoadException("$ctx: displayName cannot be blank")
+            }
+            if (sf.message.isBlank()) {
+                throw WorldLoadException("$ctx: message cannot be blank")
+            }
+            if (sf.weight < 1) {
+                throw WorldLoadException("$ctx: weight must be >= 1 (got ${sf.weight})")
+            }
+            if (sf.cooldownMs < 0) {
+                throw WorldLoadException("$ctx: cooldownMs must be >= 0 (got ${sf.cooldownMs})")
+            }
+            val hasDamage = sf.minDamage != null || sf.maxDamage != null
+            val hasHeal = sf.healMin > 0 || sf.healMax > 0
+            val hasStatus = sf.statusEffectId != null
+            if (!hasDamage && !hasHeal && !hasStatus) {
+                throw WorldLoadException(
+                    "$ctx: spell must have at least one of damage, heal, or statusEffectId",
+                )
+            }
+            val damage = if (hasDamage) {
+                val min = sf.minDamage ?: 1
+                val max = sf.maxDamage ?: min
+                if (min < 1) throw WorldLoadException("$ctx: minDamage must be >= 1 (got $min)")
+                if (max < min) throw WorldLoadException("$ctx: maxDamage ($max) must be >= minDamage ($min)")
+                DamageRange(min, max)
+            } else {
+                null
+            }
+            if (hasHeal) {
+                if (sf.healMin < 1) throw WorldLoadException("$ctx: healMin must be >= 1 (got ${sf.healMin})")
+                if (sf.healMax < sf.healMin) {
+                    throw WorldLoadException("$ctx: healMax (${sf.healMax}) must be >= healMin (${sf.healMin})")
+                }
+            }
+            MobSpell(
+                id = key,
+                displayName = sf.displayName,
+                message = sf.message,
+                roomMessage = sf.roomMessage,
+                damage = damage,
+                healMin = sf.healMin,
+                healMax = sf.healMax,
+                statusEffectId = sf.statusEffectId?.let { StatusEffectId(it) },
+                cooldownMs = sf.cooldownMs,
+                weight = sf.weight,
+            )
+        }
     }
 
     private fun dirAbbrev(dir: Direction): String =
