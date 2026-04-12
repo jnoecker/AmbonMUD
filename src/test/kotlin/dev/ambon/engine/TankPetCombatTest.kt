@@ -53,6 +53,7 @@ class TankPetCombatTest {
     private fun enemyMob(
         damage: DamageRange = DamageRange(3, 3),
         hp: Int = 100,
+        templateKey: String = "",
     ): MobState = MobState(
         id = MobId("zone:goblin"),
         name = "a goblin",
@@ -60,6 +61,7 @@ class TankPetCombatTest {
         hp = hp,
         maxHp = hp,
         damage = damage,
+        templateKey = templateKey,
     )
 
     @Test
@@ -168,7 +170,7 @@ class TankPetCombatTest {
 
         // Tick until the pet dies — mob does 10 damage/tick, pet has 5 HP
         var petDied = false
-        var allTexts = mutableListOf<String>()
+        val allTexts = mutableListOf<String>()
         for (i in 0 until 5) {
             fixture.tickCombat(combat)
             val texts = fixture.outbound.drainAll()
@@ -276,6 +278,43 @@ class TankPetCombatTest {
 
         // Pet threat should be cleaned up
         assertFalse(combat.threatTable.hasThreat(mob.id, petSid))
+    }
+
+    @Test
+    fun `mob kill callbacks exclude pet synthetic session IDs`() = runTest {
+        val fixture = CombatTestFixture()
+        val petSystem = buildPetSystem(fixture)
+        val killCallbackSids = mutableListOf<SessionId>()
+        val combat = fixture.buildCombat(
+            rng = Random(42),
+            minDamage = 1,
+            maxDamage = 1,
+            petSystem = petSystem,
+            onMobKilledByPlayer = { sid, _ -> killCallbackSids.add(sid) },
+        )
+
+        val sid = SessionId(1L)
+        fixture.players.loginOrFail(sid, "Player1")
+        // Low HP so it dies quickly; templateKey required for kill callbacks to fire
+        val mob = enemyMob(hp = 1, templateKey = "goblin")
+        fixture.mobs.upsert(mob)
+
+        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, ownerLevel = 1)!!
+        val petSid = petSystem.getPetSessionId(pet.id)!!
+
+        combat.startCombat(sid, "goblin")
+        fixture.outbound.drainAll()
+
+        // Tick — mob should die on first player/pet attack
+        fixture.tickCombat(combat)
+        fixture.outbound.drainAll()
+
+        // The kill callback should fire for the player, never for the pet SID
+        assertTrue(killCallbackSids.contains(sid), "Player should receive kill credit")
+        assertFalse(
+            killCallbackSids.contains(petSid),
+            "Pet synthetic SID should not receive kill callbacks",
+        )
     }
 
     @Test

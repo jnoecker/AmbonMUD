@@ -434,6 +434,7 @@ class CombatSystem(
 
     suspend fun onMobRemovedExternally(mobId: MobId) {
         val affectedPlayers = threatTable.playersThreateningMob(mobId)
+            .filterNot { petSystem?.isPetSession(it) == true }
         removeMobFromCombat(mobId)
         for (sid in affectedPlayers) {
             outbound.send(OutboundEvent.SendText(sid, "Your opponent vanishes."))
@@ -1181,8 +1182,10 @@ class CombatSystem(
         killerSessionId: SessionId,
         mob: MobState,
     ) {
-        // Collect all players who had threat on this mob (for quest/achievement callbacks)
+        // Collect all players who had threat on this mob (for quest/achievement callbacks).
+        // Filter out synthetic pet SessionIds — only real players earn quest/achievement credit.
         val contributors = threatTable.playersThreateningMob(mob.id)
+            .filterNot { petSystem?.isPetSession(it) == true }
 
         // Clean up combat state
         removeMobFromCombat(mob.id)
