@@ -541,6 +541,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setDungeonInfo,
         setDungeonCatalog,
         setPrestigeInfo,
+        setToast,
         sendGmcp: (p: string, payload: unknown) => { sendGmcpRef.current(p, payload); return true; },
       });
     },

@@ -288,7 +288,7 @@ class GmcpEmitter(
             sessionId,
             "Room.Players",
             players.filter { it.sessionId != sessionId && !it.invisible }
-                .map { RoomPlayerPayload(name = it.name, level = it.level) },
+                .map { RoomPlayerPayload(name = it.name, level = it.level, sprite = resolveSprite(it)) },
         )
     }
 
@@ -296,7 +296,12 @@ class GmcpEmitter(
         sessionId: SessionId,
         player: PlayerState,
     ) {
-        emit(sessionId, "Room.AddPlayer", RoomPlayerPayload(name = player.name, level = player.level), supportCheck = "Room.Players")
+        emit(
+            sessionId,
+            "Room.AddPlayer",
+            RoomPlayerPayload(name = player.name, level = player.level, sprite = resolveSprite(player)),
+            supportCheck = "Room.Players",
+        )
     }
 
     suspend fun sendRoomRemovePlayer(
@@ -2087,6 +2092,7 @@ class GmcpEmitter(
     private data class RoomPlayerPayload(
         val name: String,
         val level: Int,
+        val sprite: String? = null,
     )
 
     private data class RoomRemovePlayerPayload(

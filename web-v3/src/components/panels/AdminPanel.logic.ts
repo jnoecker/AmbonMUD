@@ -5,6 +5,7 @@ export type AdminAction =
   | "smite"
   | "kick"
   | "setlevel"
+  | "setstaff"
   | "dispel"
   | "reload"
   | "broadcast"
@@ -38,6 +39,7 @@ export const ADMIN_ACTIONS: AdminActionDefinition[] = [
   { id: "smite", label: "Smite", description: "Strike down a player or room mob", section: "intervention", tone: "danger" },
   { id: "kick", label: "Kick", description: "Disconnect a live player", section: "intervention", tone: "danger" },
   { id: "setlevel", label: "Set Level", description: "Rewrite a player's progression", section: "intervention", tone: "danger" },
+  { id: "setstaff", label: "Set Staff", description: "Grant or revoke staff on an online player", section: "intervention", tone: "danger" },
   { id: "dispel", label: "Dispel", description: "Strip active effects from a target", section: "intervention", tone: "standard" },
   { id: "spawn", label: "Spawn", description: "Create a mob from a world template", section: "world", tone: "standard" },
   { id: "reload", label: "Reload", description: "Reload world or rules data live", section: "world", tone: "danger" },
@@ -82,6 +84,9 @@ export function buildAdminCommand(
       return primary ? `kick ${primary}` : null;
     case "setlevel":
       return primary && secondary ? `setlevel ${primary} ${secondary}` : null;
+    case "setstaff":
+      if (!primary) return null;
+      return secondary.toLowerCase() === "revoke" ? `revokestaff ${primary}` : `setstaff ${primary}`;
     case "dispel":
       return primary ? `dispel ${primary}` : null;
     case "reload":
@@ -105,6 +110,7 @@ export function requiresAdminConfirmation(action: AdminAction): boolean {
     action === "smite" ||
     action === "kick" ||
     action === "setlevel" ||
+    action === "setstaff" ||
     action === "reload" ||
     action === "broadcast" ||
     action === "shutdown"

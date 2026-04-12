@@ -57,6 +57,7 @@ class AdminHandler(
         router.onStaff<Command.Possess> { sid, cmd -> handlePossess(sid, cmd) }
         router.onStaff<Command.Return> { sid, _ -> handleReturn(sid) }
         router.onStaff<Command.Invis> { sid, _ -> handleInvis(sid) }
+        router.onStaff<Command.SetStaff> { sid, cmd -> handleSetStaff(sid, cmd) }
     }
 
     private suspend fun handleGoto(
@@ -332,6 +333,35 @@ class AdminHandler(
                 "Set ${targetPlayer.name} to level ${cmd.level}.",
                 code = "SET_LEVEL_COMPLETE",
                 command = "setlevel",
+            )
+        }
+    }
+
+    private suspend fun handleSetStaff(
+        sessionId: SessionId,
+        cmd: Command.SetStaff,
+    ) {
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            sendAdminError(sessionId, "No such online player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "setstaff")
+            return
+        }
+        if (targetSid == sessionId) {
+            sendAdminError(sessionId, "You cannot change your own staff flag.", code = "CANNOT_TARGET_SELF", command = "setstaff")
+            return
+        }
+        players.withPlayer(targetSid) { targetPlayer ->
+            targetPlayer.isStaff = cmd.grant
+            val verb = if (cmd.grant) "granted" else "revoked"
+            val targetMsg = if (cmd.grant) "You have been granted staff access." else "Your staff access has been revoked."
+            outbound.send(OutboundEvent.SendInfo(targetSid, targetMsg))
+            outbound.send(OutboundEvent.SendPrompt(targetSid))
+            gmcpEmitter?.sendCharName(targetSid, targetPlayer)
+            sendAdminSuccess(
+                sessionId,
+                "Staff $verb for ${targetPlayer.name}.",
+                code = "SET_STAFF_COMPLETE",
+                command = "setstaff",
             )
         }
     }

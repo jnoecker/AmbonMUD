@@ -268,6 +268,11 @@ sealed interface Command {
         val level: Int,
     ) : Command
 
+    data class SetStaff(
+        val playerName: String,
+        val grant: Boolean,
+    ) : Command
+
     data class Cast(
         val spellName: String,
         val target: String?,
@@ -1241,6 +1246,16 @@ object CommandParser {
                 level == null -> Command.Invalid(line, "setlevel <player> <level>")
                 else -> Command.SetLevel(parts[0], level)
             }
+        }?.let { return it }
+
+        // setstaff / grantstaff / revokestaff
+        matchPrefix(line, listOf("setstaff", "grantstaff")) { rest ->
+            val name = rest.trim()
+            if (name.isBlank()) Command.Invalid(line, "setstaff <player>") else Command.SetStaff(name, grant = true)
+        }?.let { return it }
+        matchPrefix(line, listOf("revokestaff")) { rest ->
+            val name = rest.trim()
+            if (name.isBlank()) Command.Invalid(line, "revokestaff <player>") else Command.SetStaff(name, grant = false)
         }?.let { return it }
 
         // phase/layer — switch zone instance

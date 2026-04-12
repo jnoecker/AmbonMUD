@@ -291,6 +291,7 @@ export interface RoomItem {
 export interface RoomPlayer {
   name: string;
   level: number;
+  sprite?: string | null;
 }
 
 export interface RoomMob {
