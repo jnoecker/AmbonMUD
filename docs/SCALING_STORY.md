@@ -178,6 +178,7 @@ From the two February 2026 load test runs, in order of observed pressure:
 
 - Zone-based engine sharding is fully implemented (Phase 5): zone registry, inter-engine messaging, player handoff protocol with ACK-based rollback, Redis player location index, gateway multi-engine session routing, and zone instancing with auto-scaling.
 - The system supports deployment from single-process (`STANDALONE`) all the way to multi-engine sharded with zone instancing for hot-zone load distribution.
+- Phase 6 (Production AWS infrastructure) is also complete — see `docs/DEPLOYMENT.md`. The CDK project provisions the full stack (VPC, RDS, Redis, EFS, NLB, ALB, Cloud Map, ECS Fargate, CloudWatch) parameterized by `topology` and `tier`.
 
 ---
 

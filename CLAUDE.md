@@ -31,7 +31,9 @@ On Windows use `.\gradlew.bat`.
 
 ## Architecture
 
-Kotlin MUD server: tick-based engine, telnet + WebSocket transports (GMCP), YAML world loading, class-based progression with trainers/multi-classing, abilities/status effects, shops, behavior trees, dialogue, quests, achievements, groups, guilds, crafting/enchanting, housing, dungeons, pets, factions, auction house, trading, PvP, bank, day/night/weather/events, leaderboards, prestige, currencies, lottery, daily/global quests, puzzles.
+Kotlin MUD server: tick-based engine, telnet + WebSocket transports (GMCP), YAML world loading, class-based progression with trainers/multi-classing, abilities/status effects, shops, behavior trees, dialogue, quests, achievements, groups, guilds, crafting/enchanting, housing, dungeons, pets, factions, auction house, trading, PvP dueling, bank, day/night/weather/events, leaderboards, prestige, currencies, lottery, daily/global quests, puzzles, stylist.
+
+Bundled world content is the single **Auringold Academy** tutorial zone plus `achievements.yaml` and `sprites.yaml` under `src/main/resources/world/`. The production demo instance fetches the full Auringold world (20+ zones) from Cloudflare R2 at boot — see `docs/DEPLOYMENT.md` § "Remote world & config overlay".
 
 ### Deployment Modes (set via `ambonMUD.mode`)
 
@@ -62,7 +64,7 @@ Bus implementations: `Local*` (single-process), `Redis*` (multi-process), `Grpc*
 | Entry/wiring | `Main.kt`, `MudServer.kt` (composition root), `GatewayServer.kt` |
 | Config | `AppConfig.kt` (schema + `validated()`), `application.yaml` |
 | Engine | `GameEngine.kt` (tick loop), `PlayerState.kt`, `PlayerRegistry.kt` |
-| Commands | `CommandParser.kt` (sealed hierarchy), `CommandRouter.kt` (dispatch), `handlers/` subpackage |
+| Commands | `CommandParser.kt` (141 variants, sealed hierarchy), `CommandRouter.kt` (dispatch), `handlers/` subpackage (37 handler files) |
 | Events | `InboundEvent.kt`, `OutboundEvent.kt` |
 | Persistence | `PlayerRecord.kt` (DTO), `PlayerRepository.kt` (interface), `PlayersTable.kt`, `GuildRepository.kt` |
 | Transport | `KtorWebSocketTransport.kt`, `NetworkSession.kt`, `OutboundRouter.kt`, `TelnetLineDecoder.kt` |
@@ -150,7 +152,7 @@ ktlint 1.5.0, `kotlin.code.style=official`. Overrides in `.editorconfig`.
 
 ## Known Quirks
 
-- **Largest files:** `GameEngine.kt` (87K), `AppConfig.kt` (84K), `GmcpEmitter.kt` (77K), `AdminHttpServer.kt` (63K), `WorldLoader.kt` (61K). `CommandRouter.kt` is just ~109 lines of dispatch; handlers are in `handlers/` subpackage.
+- **Largest files:** `GmcpEmitter.kt` (~3168 lines), `GameEngine.kt` (~2610 lines), `AppConfig.kt` (~2445 lines), `AdminHttpServer.kt`, `WorldLoader.kt`. `CommandRouter.kt` is thin dispatch (~100 lines); all gameplay lives in the 37 files under `handlers/`.
 - **Generated sources:** Protobuf under `build/generated/`, ktlint-suppressed via child `.editorconfig`.
 - **Staff access:** Set `isStaff: true` in player YAML or `is_staff` in Postgres — no in-game command.
 - **Metrics:** Uses `io.micrometer.prometheusmetrics` (not deprecated `io.micrometer.prometheus`).

@@ -1,408 +1,164 @@
 AmbonMUD
 ========
 
-**AmbonMUD** is a cozy, magical MUD (Multi-User Dungeon) server built in Kotlin — a personal bucket-list project, portfolio showcase, and a game for family. It features a tick-based event loop, dual transports (telnet + WebSocket with a PixiJS canvas client), YAML-defined multi-zone worlds, class-based character progression with 112 abilities, real-time combat, and three deployment modes for horizontal scaling.
+**AmbonMUD** is a cozy, magical MUD (Multi-User Dungeon) server written in Kotlin. It pairs the classic text-driven gameplay of a tick-based MUD engine with a PixiJS canvas client, GMCP-structured data, YAML-defined worlds, and a production AWS deployment path that scales from a single EC2 instance to a multi-engine ECS Fargate split.
 
 **Live demo:** [https://mud.ambon.dev](https://mud.ambon.dev) — or `telnet mud.ambon.dev 4000`
 
-**Key Features**
-- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **112 abilities** — learned via class trainers using skill points; multi-classing lets players unlock additional class ability lists
-- 🌍 **20 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
-- ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs), and consent-based PvP dueling
-- 🎨 **PixiJS canvas client** with JRPG-style world/battle scenes, spell targeting, customizable quickbar, and a cozy glass-morphism UI
-- 🐾 **Pet/companion system**: summon familiars and companions via abilities; pets follow the owner between rooms and assist in combat
-- 🏆 **Faction & reputation system**: standing with factions (Hated → Revered) changes based on kills and quest rewards; enemy faction relationships auto-apply
-- 🛒 **Auction house**: player-driven marketplace for listing, browsing, and purchasing items; listings persist to `data/auction_listings.json`
-- 🤝 **Player trading**: direct item and gold transfers with an interactive confirmation flow
-- 🏠 **Player housing**: personal rooms, furniture placement, vaults with capacity limits, and access control
-- 🏰 **Procedural dungeons**: template-driven instanced dungeons with 4 difficulty tiers, party scaling, boss encounters, and loot tables
-- 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands, bank NPCs for gold/item storage, item enchanting for stat bonuses
-- 🌤️ **Living world**: day/night cycle, dynamic per-zone weather (6 types), and date-based seasonal events with world flag support
-- 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
-- 📊 **Structured data** (GMCP) — 50+ packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
-- 💾 **Flexible persistence**: YAML files by default (zero-dependency), PostgreSQL with optional Redis L2 caching available
-- 🌐 **Three deployment modes**: STANDALONE (single-process), ENGINE (game logic + gRPC), GATEWAY (transports + gRPC) for horizontal scaling
-- 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
-- 🔒 **gRPC HMAC authentication** with replay-protected shared-secret interceptor for ENGINE↔GATEWAY trust boundary
-- 🛡️ **Production mode** with fail-fast validation rejecting placeholder secrets, configurable metrics bind address, and admin rate limiting
-- 🧵 **JVM virtual threads** for telnet I/O (JDK 21) — eliminates carrier-thread pinning under load
-- 📈 **Prometheus metrics** for monitoring and load testing integration
-- ✅ **~159 test files** covering all systems; CI validates against Java 21 with ktlint and JaCoCo coverage
+![AmbonMUD web client](docs/screenshots/webclient-v4.jpeg)
 
-**Current State** (Apr 2026)
-- ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
-- ✅ 112 abilities across 4 classes — trainer-based learning via skill points (1 point per 2 levels); multi-classing unlockable at level 10
-- ✅ PixiJS canvas game client with JRPG-style world/battle scenes
-- ✅ GMCP support with 50+ outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
-- ✅ Quest system, achievement system, group/party system, dialogue trees, NPC behavior trees
-- ✅ Guild system with hierarchy, guild chat, MOTD
-- ✅ Friends list and in-game mail system
-- ✅ Crafting and gathering with specialization, recipe discovery, quality tiers, rare yields, and item enchanting
-- ✅ Player housing with furniture, vaults, and access control
-- ✅ Procedural dungeons with difficulty scaling and boss encounters
-- ✅ Pet/companion system with level-scaled familiar summoning
-- ✅ Faction & reputation system with 7 standing tiers
-- ✅ Auction house / player marketplace with persistent listings
-- ✅ Player-to-player trading with confirmation flow
-- ✅ Consent-based PvP dueling
-- ✅ Bank NPC system for gold and item storage
-- ✅ Day/night cycle, dynamic per-zone weather, seasonal events
-- ✅ Leaderboard system and hall of fame
-- ✅ Remember-me auth tokens with character picker
-- ✅ Full production test coverage and CI/CD
-- ✅ Docker image + AWS CDK infrastructure: EC2 demo (~$4-5/mo) and ECS Fargate (topology × tier) options
-- ✅ Live demo at [mud.ambon.dev](https://mud.ambon.dev) — auto-deploys on every push to `main`
+---
 
-Screenshots
------------
-Current web client (v4 — PixiJS canvas):
+## What it is
 
-![AmbonMUD web client v4](docs/screenshots/webclient-v4.jpeg)
+- **A game engine.** Single-threaded 100 ms tick loop, config-driven abilities and status effects, class-based progression, real-time combat, and a thick subsystem catalog: crafting, housing, dungeons, pets, factions, auction house, trading, PvP dueling, bank, guilds, friends/mail, quests, achievements, leaderboards, prestige, currencies, lottery, day/night/weather, and puzzles.
+- **Two transports over one engine.** Telnet (with NAWS/TTYPE/GMCP negotiation) and Ktor WebSocket — both consume the same `InboundEvent`/`OutboundEvent` contract.
+- **Data-driven content.** Worlds, abilities, status effects, stats, classes, races, and economy tuning all live in YAML/config — no recompilation for content changes.
+- **Three deployment modes.** `STANDALONE` (single process), `ENGINE` (game logic + gRPC), `GATEWAY` (transports + gRPC client). Redis-backed zone sharding and zone instancing are available when you need horizontal scale.
+- **A portfolio project.** It's built to be run, read, and hacked on. The cozy "Surreal Gentle Magic" aesthetic is deliberate — see [`.impeccable.md`](.impeccable.md) and [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md).
 
-See [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md#visual-progression) for the full progression from telnet proof-of-concept to the current UI.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full feature ledger and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design decisions behind it.
 
-Ambon Arcanum (Creator Tool)
------------------------------
+## Tech stack
 
-**Ambon Arcanum** is a standalone desktop application for building and managing AmbonMUD worlds. Point it at your AmbonMUD project directory and it becomes the single tool for creating zones, rooms, mobs, items, shops, classes, races, and server configuration — all through visual editors with full YAML round-trip preservation.
+| Layer | Choice |
+|------|--------|
+| Language / runtime | Kotlin 2.3, JDK 21 (virtual threads for telnet I/O) |
+| Build | Gradle wrapper, ktlint, JaCoCo, Shadow (fat JAR) |
+| Server | Ktor 3 (WebSocket), blocking socket transport (telnet), Netty |
+| Config | Hoplite (YAML + env var overrides) |
+| Persistence | YAML files (default), PostgreSQL via Exposed + Flyway (V1–V34), optional Redis L2 cache |
+| Bus / RPC | Lettuce (Redis), gRPC 1.80 + Protobuf for ENGINE↔GATEWAY |
+| Metrics | Micrometer → Prometheus |
+| Web client | React 19, Vite, TypeScript, PixiJS 8, xterm.js (popout) — built with Bun |
+| Infra | Docker, AWS CDK (TypeScript), ECS Fargate, EC2 (t4g.nano demo option) |
 
-![Ambon Arcanum — Worldmaker view](Arcanum.png)
+## Quick start
 
-The Arcanum includes a visual zone map editor, entity editors with live preview, a class/race designer, and a config editor for all gameplay tuning. See [docs/CREATOR_PLAN.md](docs/CREATOR_PLAN.md) for the design document and [docs/ARCANUM_STYLE_GUIDE.md](docs/ARCANUM_STYLE_GUIDE.md) for its design system.
+**Requirements:** JDK 21, Git. Bun is optional — the web client is prebuilt into `src/main/resources/web-v3/` and only rebuilds if you change `web-v3/` sources.
 
-## Quick Start
-
-**Requirements:** JDK 21, Gradle wrapper (included in repo)
-
-**Start the server** (YAML persistence, no external services needed):
 ```bash
-./gradlew run          # Unix
-.\gradlew.bat run      # Windows
+git clone https://github.com/jnoecker/AmbonMUD.git
+cd AmbonMUD
+./gradlew run            # Unix
+.\gradlew.bat run        # Windows
 ```
 
-**Launch browser demo:**
+Defaults: telnet `:4000`, web client `:8080`, YAML persistence under `data/players/`, Redis off, PostgreSQL off. No external services required.
+
 ```bash
-./gradlew demo         # Auto-opens http://localhost:8080
+./gradlew demo           # same thing, auto-opens http://localhost:8080
+./gradlew test           # full test suite
+./gradlew ktlintCheck    # lint (run before PR)
+./gradlew ktlintCheck test integrationTest   # CI parity
 ```
 
-**Connect via telnet:**
+Connect via telnet:
+
 ```bash
 telnet localhost 4000
 ```
 
-By default: telnet on **:4000**, web on **:8080** (configurable in `src/main/resources/application.yaml`).
+Full onboarding — prerequisites, project map, architecture, common tasks, troubleshooting — lives in **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)**.
 
-**To use PostgreSQL + Redis locally**, bring up the Docker Compose stack first:
-```bash
-docker compose up -d
-./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES -Pconfig.ambonmud.redis.enabled=true
+## World content
+
+The repo ships with a single bundled starter zone (**Auringold Academy**) plus achievement and sprite definitions under `src/main/resources/world/`. This is enough to log in, walk around, fight mobs, and exercise every subsystem for development and testing.
+
+The full **Auringold** world (20+ zones covering levels 1–10) is hosted separately on Cloudflare R2 at [auringold.ambon.dev](https://auringold.ambon.dev) and is fetched at boot by the live demo. To run AmbonMUD pointing at a remote lore pack, set `AMBONMUD_DATA_DIR` and drop the zone YAMLs there — see the "Remote world & config overlay" section of [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+Zone authoring format is documented in **[docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md)**.
+
+## Project structure
+
+```
+src/main/kotlin/dev/ambon/
+  Main.kt, MudServer.kt, GatewayServer.kt   # bootstrap
+  config/                                   # AppConfig.kt schema + validated()
+  engine/                                   # tick loop, systems, commands
+    commands/handlers/                      # 37 handler files (one per subsystem)
+    abilities/ status/ crafting/ dialogue/ ...
+  transport/                                # telnet + Ktor WebSocket
+  bus/                                      # Local/Redis/gRPC bus implementations
+  persistence/                              # YAML + Postgres + write-coalescing + Redis cache
+  sharding/                                 # ZoneRegistry, HandoffManager, InterEngineBus
+  grpc/, redis/, session/, metrics/, admin/ # cross-cutting
+  domain/                                   # RoomId, PlayerClass, Race, world model
+src/main/resources/
+  application.yaml                          # runtime config (~4860 lines)
+  db/migration/                             # Flyway V1–V34
+  world/                                    # Auringold Academy + achievements + sprites
+  web-v3/                                   # built web client assets
+src/main/proto/ambonmud/v1/                 # gRPC engine + event protos
+src/test/kotlin/                            # 160 test files
+web-v3/                                     # React + PixiJS client source
+infra/                                      # AWS CDK (EC2 + ECS Fargate topologies)
+docs/                                       # architecture, guides, references
 ```
 
-> **Note:** The web client is a PixiJS canvas app with React panels. For offline or minimal use, connect via telnet.
+## Deployment
 
-## Configuration & Deployment
+- **Local / dev:** `./gradlew run` (no external services).
+- **Local with full stack:** `docker compose up -d` brings up PostgreSQL, Redis, Prometheus, Grafana. Then `./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES -Pconfig.ambonmud.redis.enabled=true`.
+- **Docker image:** `./gradlew shadowJar && docker build -t ambonmud .`
+- **AWS EC2 demo** (~$4–5/mo, t4g.nano, YAML persistence, nginx TLS, auto-deploy from `main`): `cd infra && npx cdk deploy --context topology=ec2 ...`
+- **AWS ECS Fargate:** `standalone` topology with managed Postgres + Redis, or `split` topology with separate auto-scaling ENGINE + GATEWAY services. Parameterized by `tier` (hobby / moderate / production).
 
-**Runtime config** is loaded from `src/main/resources/application.yaml`. Override any value at startup:
+Full deployment runbook — IAM bootstrap, OIDC roles, CDK topologies, env var reference, CI/CD, clean-redeploy checklist, R2 lore overlay, EC2 troubleshooting — is in **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
-```bash
-./gradlew run -Pconfig.ambonmud.server.telnetPort=5000
-./gradlew run -Pconfig.ambonmud.persistence.backend=YAML
-./gradlew run -Pconfig.ambonmud.redis.enabled=false
-./gradlew run -Pconfig.ambonmud.logging.level=DEBUG
-```
-
-See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#configuration) for detailed configuration options and multi-instance setup.
-
-**Deployment Modes:**
-- **STANDALONE** (default): Single-process app using localhost Postgres/Redis by default
-- **ENGINE**: Game logic + persistence + gRPC server for remote gateways
-- **GATEWAY**: Transports (telnet/WebSocket) + gRPC client to a remote engine
-
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#deployment-modes) for setup instructions.
-
-## Gameplay
-
-**Character Creation**
-- Name: 2-16 chars (alnum/underscore, cannot start with digit)
-- Password: 1-72 chars (bcrypt hashed)
-- Race: Human, Elf, Dwarf, Halfling (each has attribute modifiers)
-- Class: Warrior, Mage, Cleric, Rogue (112 abilities across all classes, levels 1–50)
-
-**Core Commands**
-- **Movement:** `n`/`s`/`e`/`w`/`u`/`d`, `look`, `exits`
-- **Combat:** `kill <mob>`, `flee`, `cast <spell>`, `spells`, `effects`
-- **Items:** `inventory`, `equipment`, `get`, `drop`, `wear`, `remove`, `use`, `give`
-- **Communication:** `say`, `tell`, `gossip`, `whisper`, `shout`, `emote`, `ooc`, `pose`
-- **Character:** `score`, `gold`, `currencies`/`wallet`, `prestige`, `prestige info`, `help`, `who`, `quit`
-- **Economy:** `buy`, `sell`, `list` (in shops); `auction [filter]`, `auction sell <item> <price>`, `auction buy <#>`, `auction cancel <#>`
-- **Bank:** `deposit`, `withdraw`, `bank` (in bank rooms)
-- **Lottery:** `lottery`, `lottery buy [count]`
-- **Trading:** `trade <player>`, `trade offer <item/gold>`, `trade accept`, `trade cancel`
-- **Zones:** `phase` (switch zone instances)
-- **Guilds:** `guild create/disband/invite/accept/leave/kick/promote/demote/motd/roster/info`, `gchat`
-- **Friends:** `friend list/add/remove`
-- **Mail:** `mail list/read/send/delete`
-- **Crafting:** `gather`, `craft`, `recipes`, `enchant <item>`, `enchantments`
-- **Housing:** `house` (info/expand/furnish/describe/invite/kick/lock/unlock)
-- **Dungeons:** `dungeon enter <name> [difficulty]`, `dungeon leave`
-- **Pets:** `pet`, `pet dismiss`, `pet name <name>`
-- **Reputation:** `reputation` (view faction standings)
-- **Dueling:** `duel <player>`, `duel accept`, `duel decline`
-- **Training:** `train list`, `train learn <ability>`, `train unlock` (multi-class)
-- **World:** `time` (day/night period and weather)
-- **Leaderboards:** `leaderboard`, `halloffame`
-- **Admin:** `goto`, `transfer`, `spawn`, `smite`, `kick`, `setlevel`, `dispel`, `reload`, `broadcast`, `possess`, `return`, `invis`, `shutdown` (requires staff flag)
-
-See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full command list and details.
-
-**Abilities, Training & Combat**
-- **112 total abilities** across 4 classes (levels 1–50), learned at **class trainers** using skill points (1 point per 2 levels)
-- **Multi-classing:** unlock additional class ability lists at level 10 for a gold cost — spend skill points across multiple classes
-- **Status effects:** DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with configurable stacking
-- **Attributes:** STR (melee damage), DEX (dodge), CON (HP regen), INT (spell damage), WIS (mana regen), CHA
-- **Real-time combat** with attribute-based damage scaling, dodge mechanics, and tactical depth
-- **Consent-based PvP dueling:** challenge other players to duels; outcomes have no item loss
-
-## World Content
-
-**World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
-
-**Current Zones (23 YAML files — 20 zones + 3 data files):**
-| Zone | Description |
-|------|-------------|
-| `crossroads_path` | Central crossroads connecting all zones |
-| `thornhaven_city` | Main city hub with shops, trainers, and services |
-| `thornwood_forest` | Forested wilderness with gathering nodes |
-| `farmer_fields` | Farmland area outside the city |
-| `cobblestone_road` | Road connecting city to wilderness |
-| `highland_trails` | Highland paths with crafting resources |
-| `old_mines` | Abandoned mines with ore deposits |
-| `marsh_of_fog` | Foggy marshland with herb gathering |
-| `goblin_warrens` | Goblin-infested tunnels |
-| `dark_barrows` | Undead burial grounds |
-| `sea_cliffs` | Coastal cliffs with sea creatures |
-| `sunken_temple` | Underwater temple ruins |
-| `ruined_fortress` | Crumbling fortress with tough encounters |
-| `shadowmere_fen` | Dark swamp with shadow creatures |
-| `thornhaven_sewers` | City sewers beneath Thornhaven |
-| `haunted_manor` | Ghost-infested manor house |
-| `barrens_wastes` | Desolate wasteland |
-| `frost_caverns` | Icy caves with frost creatures |
-| `celestial_peak` | Endgame mountain summit |
-| `dungeon_of_echoes` | Procedural dungeon with scaling difficulty |
-| `achievements` | Achievement definitions |
-| `player_sprites` | Player sprite data for the canvas client |
-| `sprites` | Achievement sprite definitions |
-
-**Zone YAML Format**
-```yaml
-zone: demo_zone
-startRoom: entrance
-rooms:
-  entrance:
-    title: "Forest Entrance"
-    description: "You stand at the edge of a vast forest."
-    exits:
-      north: clearing
-mobs:
-  wolf:
-    name: "a wary wolf"
-    room: entrance
-    respawnSeconds: 60
-items:
-  potion:
-    displayName: "a healing potion"
-    consumable: true
-    onUse:
-      healHp: 20
-shops:
-  general_store:
-    room: entrance
-    keeperName: "the merchant"
-```
-
-See [WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) for full schema documentation (rooms, mobs, items, shops, behaviors, dialogues).
-
-## Testing & Build
-
-**Run tests:**
-```bash
-./gradlew test                    # Full test suite
-./gradlew test --tests "ClassName"  # Single test class
-```
-
-**Lint (Kotlin style):**
-```bash
-./gradlew ktlintCheck
-```
-
-**CI parity check** (recommended before finalizing):
-```bash
-./gradlew ktlintCheck test
-```
-
-## Persistence
-
-**Backends** (selectable via `ambonmud.persistence.backend`):
-- **YAML** (default): File-backed, zero dependencies, player files in `data/players/`
-- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V27); requires `ambonmud.database.jdbcUrl`
-
-Redis L2 caching is disabled by default. Enable it with `ambonmud.redis.enabled=true` when running alongside the Docker Compose stack.
-
-**Grant staff access:**
-- YAML: Add `isStaff: true` to player YAML file
-- PostgreSQL: Set `is_staff = true` in the `players` table
-
-See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#persistence) for detailed persistence setup.
-
-## Infrastructure & Deployment
-
-**Docker Compose** (local Prometheus, Grafana, Redis, PostgreSQL):
-```bash
-docker compose up -d   # then ./gradlew run with postgres/redis flags
-```
-
-**Build and run as a Docker container:**
-```bash
-docker build -t ambonmud .
-docker run --rm -p 4000:4000 -p 8080:8080 -v ./data:/app/data ambonmud
-```
-
----
-
-### EC2 Demo (~$4-5/mo) — replicating mud.ambon.dev
-
-The live demo runs on a single ARM64 t4g.nano with YAML persistence, nginx TLS, and auto-deploy on every push to `main`. To replicate it:
-
-**1. One-time AWS setup**
-
-Create an ECR repository named `ambonmud/app`, then create two IAM roles with OIDC trust for GitHub Actions (repo `your-org/your-repo`):
-
-| Role name | Purpose | Key permissions |
-|-----------|---------|-----------------|
-| `GitHubActions-EcrPush` | CI pushes Docker images | `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:PutImage`, etc. |
-| `GitHubActions-Ec2Demo` | Deploy workflow SSMs the instance | `ssm:SendCommand`, `ssm:GetCommandInvocation` on the instance |
-
-**2. Deploy the CDK stack**
+## Testing
 
 ```bash
-cd infra && npm ci
-npx cdk bootstrap   # first time only
-
-# Deploy the EC2 stack — provisions instance, EIP, security groups, helper scripts
-npx cdk deploy --context topology=ec2 \
-  --context imageTag=latest \
-  --context hostname=mud.yourdomain.com
+./gradlew test                              # ~160 test files, unit suite
+./gradlew integrationTest                   # integration-tagged suite
+./gradlew test --tests "CommandParserTest"  # single class
+./gradlew test --tests "*CommandRouter*"    # pattern
 ```
 
-Note the `InstanceId` and `PublicIp` from the CDK outputs.
+PostgreSQL tests use H2 in PostgreSQL-compatibility mode — no Docker required. See [docs/DEVELOPER_GUIDE.md#testing](docs/DEVELOPER_GUIDE.md#testing) for patterns (deterministic `MutableClock`, `runTest` / `runCurrent` / `advanceTimeBy`, `outbound.drainAll()`, `@TempDir` isolation).
 
-**3. Point DNS and provision TLS**
+## Documentation map
 
-Add an A record at your DNS provider: `mud.yourdomain.com` → `<PublicIp>`
+**Start here**
+- [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — onboarding, project map, common tasks
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — engine contracts and 18 design decisions
+- [docs/ROADMAP.md](docs/ROADMAP.md) — what's built, what's next
+- [docs/SCALING_STORY.md](docs/SCALING_STORY.md) — load-test numbers and scaling narrative
 
-Once DNS propagates, open an SSM shell and run the TLS helper:
-```bash
-aws ssm start-session --target <instance-id> --region us-east-1
-$ setup-tls          # runs certbot, configures nginx, sets up auto-renewal
-```
+**Protocol & content**
+- [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — full GMCP reference for client developers
+- [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — zone file format
+- [docs/DUNGEON_TEMPLATE_REFERENCE.md](docs/DUNGEON_TEMPLATE_REFERENCE.md) — procedural dungeon templates
+- [docs/ENVIRONMENT_THEMES.md](docs/ENVIRONMENT_THEMES.md) — per-zone weather and sky
+- [docs/DATA_DRIVEN_YAML_CONTRACT.md](docs/DATA_DRIVEN_YAML_CONTRACT.md) — authoritative YAML contract for data-driven mechanics
 
-**4. Set GitHub repo variables** (Settings → Secrets and variables → Variables):
+**Subsystems**
+- [docs/CRAFTING.md](docs/CRAFTING.md) — gathering, recipes, quality tiers, enchanting
+- [docs/FRIENDS_MAIL.md](docs/FRIENDS_MAIL.md) — friends list and in-game mail
+- [docs/TRAINER_SYSTEM.md](docs/TRAINER_SYSTEM.md) — skill points, class trainers, multi-classing
 
-| Variable | Value |
-|----------|-------|
-| `AWS_ECR_PUSH_ROLE_ARN` | ARN of `GitHubActions-EcrPush` |
-| `AWS_EC2_DEMO_ROLE_ARN` | ARN of `GitHubActions-Ec2Demo` |
-| `DEMO_INSTANCE_ID` | EC2 instance ID from CDK output |
-| `AWS_REGION` | e.g. `us-east-1` |
+**Web client**
+- [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md) — React + PixiJS architecture and visual progression
+- [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — Surreal Gentle Magic design system
+- [`.impeccable.md`](.impeccable.md) — brand personality and design principles
 
-After this, every push to `main` automatically:
-1. Runs `ktlintCheck test` + builds the web frontend
-2. Builds and pushes an ARM64 Docker image to ECR (native runner, no QEMU)
-3. SSMs `update-ambonmud <sha>` to pull the new image and restart the service
+**Deployment & operations**
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker, CDK, CI/CD, runbook
+- [docs/ADMIN_API_REFERENCE.md](docs/ADMIN_API_REFERENCE.md) — admin HTTP JSON API
 
-**Manual redeploy** (if needed):
-```powershell
-aws ssm send-command `
-  --instance-ids <instance-id> `
-  --document-name AWS-RunShellScript `
-  --parameters 'commands=["update-ambonmud latest"]' `
-  --region us-east-1
-```
+**Ambon Arcanum (sibling creator tool)**
+- [docs/CREATOR_PLAN.md](docs/CREATOR_PLAN.md) — design of the standalone world-building desktop app
+- [docs/CREATOR_CONFIG_REFERENCE.md](docs/CREATOR_CONFIG_REFERENCE.md) — tunable `application.yaml` keys
+- [docs/ARCANUM_STYLE_GUIDE.md](docs/ARCANUM_STYLE_GUIDE.md) — Arcanum design system
+- [docs/ARCANUM_SPRITE_INSTRUCTIONS.md](docs/ARCANUM_SPRITE_INSTRUCTIONS.md) — sprite authoring
 
----
-
-**ECS Fargate** (managed, scalable):
-```bash
-cd infra && npm ci
-
-# Standalone (~$60-100/mo): single process, managed Postgres + Redis
-npx cdk deploy --all --context topology=standalone --context tier=hobby
-
-# Split production HA: separate ENGINE + GATEWAY with auto-scaling
-npx cdk deploy --all --context topology=split --context tier=production \
-  --context domain=play.example.com --context alertEmail=ops@example.com
-```
-
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide (Docker, CDK, CI/CD, operational notes).
-
-## Design
-
-AmbonMUD's visual identity is **Surreal Gentle Magic** — a cozy fantasy aesthetic with glass-morphism depth, jewel-toned colors, and ambient magical details. The brand personality is *surreal, magical, adventure* — evoking the warmth of Stardew Valley with an ever-present magical undertone.
-
-- [`.impeccable.md`](.impeccable.md) — Design context: users, brand personality, aesthetic direction, design principles
-- [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) — Full design system: color tokens, typography, motion, component states
-- [`docs/ARCANUM_STYLE_GUIDE.md`](docs/ARCANUM_STYLE_GUIDE.md) — Ambon Arcanum (creator tool) design system
-
-## Architecture & Development
-
-**Scalability** has 6 complete phases:
-1. Event bus abstraction (InboundBus/OutboundBus, SessionIdFactory)
-2. Async persistence worker (write-behind coalescing)
-3. Redis integration (L2 cache + pub/sub)
-4. gRPC gateway split (multi-gateway horizontal scaling)
-5. Zone-based engine sharding (multi-engine with zone instancing)
-6. Production AWS infrastructure (Docker, CDK, ECS Fargate, NLB/ALB, CI/CD)
-
-**Architecture & Design**
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architectural principles and design decisions
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker build, CDK deploy, topology/tier reference, CI/CD
-- [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — Zone YAML format specification
-- [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md) — Web client architecture (React + PixiJS canvas)
-- [docs/WEB_CLIENT_PARITY_REPORT.md](docs/WEB_CLIENT_PARITY_REPORT.md) — Web client feature parity analysis and gaps
-- [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — GMCP protocol reference for client developers
-
-**Gameplay Systems**
-- [docs/CRAFTING.md](docs/CRAFTING.md) — Crafting & gathering system reference
-- [docs/DUNGEON_TEMPLATE_REFERENCE.md](docs/DUNGEON_TEMPLATE_REFERENCE.md) — Procedural dungeon template format and creation guide
-- [docs/FRIENDS_MAIL.md](docs/FRIENDS_MAIL.md) — Friends list and in-game mail
-- [docs/TRAINER_SYSTEM.md](docs/TRAINER_SYSTEM.md) — Trainer-based ability learning, skill points, and multi-classing
-
-**Developer Resources**
-- [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — Complete onboarding from zero to productive
-- [docs/ROADMAP.md](docs/ROADMAP.md) — Planned features and future work
-- [docs/SCALING_STORY.md](docs/SCALING_STORY.md) — Scaling architecture narrative and load test results
-- [CLAUDE.md](CLAUDE.md) — Internal development directives for Claude Code
-- [AGENTS.md](AGENTS.md) — Engineering playbook for code changes
-
-**Creator Tool (Ambon Arcanum)**
-- [docs/CREATOR_PLAN.md](docs/CREATOR_PLAN.md) — Creator tool design plan
-- [docs/CREATOR_CONFIG_REFERENCE.md](docs/CREATOR_CONFIG_REFERENCE.md) — All configurable YAML keys for world builders
-- [docs/ADMIN_API_REFERENCE.md](docs/ADMIN_API_REFERENCE.md) — Admin HTTP server JSON API reference
-
-**Data-Driven Systems**
-- [docs/DATA_DRIVEN_YAML_CONTRACT.md](docs/DATA_DRIVEN_YAML_CONTRACT.md) — YAML contract spec for all data-driven game mechanics
-- [docs/DATA_DRIVEN_STATS_PLAN.md](docs/DATA_DRIVEN_STATS_PLAN.md) — Data-driven stats engineering plan (completed, historical reference)
-- [docs/DATA_DRIVEN_GAP_AUDIT.md](docs/DATA_DRIVEN_GAP_AUDIT.md) — Remaining code-level constraints for future data-driven migration
-- [docs/ARCANUM_SPRITE_INSTRUCTIONS.md](docs/ARCANUM_SPRITE_INSTRUCTIONS.md) — Sprite image naming conventions and guidelines
-
-**Design Systems**
-- [.impeccable.md](.impeccable.md) — Design context, brand personality, design principles
-- [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — Surreal Gentle Magic design system (game client)
-- [docs/ARCANUM_STYLE_GUIDE.md](docs/ARCANUM_STYLE_GUIDE.md) — Ambon Arcanum design system (creator tool)
+**Contributor orientation**
+- [CLAUDE.md](CLAUDE.md) — architectural contracts and change playbooks (read before editing)
+- [AGENTS.md](AGENTS.md) — full engineering playbook
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
 ## Contributing
 
-To contribute, see [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#contributing) for workflow and [CLAUDE.md](CLAUDE.md) for architectural contracts and change playbooks.
+Each piece of work lives on its own feature branch off `main`. Run `./gradlew ktlintCheck test integrationTest` before opening a PR. Read [CLAUDE.md](CLAUDE.md) for the three critical contracts (engine isolation, single-threaded engine, bus interfaces) before changing anything in `engine/` or `transport/`.
 
-Questions? Open an issue or see the documentation above.
+Questions or ideas — open an issue on GitHub.

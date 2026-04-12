@@ -1,6 +1,16 @@
-# Recent YAML & Config Changes for the Arcanum
+# Arcanum YAML Extensions — Rolling Change Log
 
-This document summarizes YAML and configuration changes from recent features that the Ambon Arcanum creator tool needs to support.
+> **Purpose:** This document is a rolling change log of YAML and `application.yaml` additions as the server evolves. It exists as a single convenient reference for the Ambon Arcanum creator tool, which needs to support every field world authors can set.
+>
+> Most individual systems now also have dedicated living documentation:
+> - Trainer + multi-classing → [`TRAINER_SYSTEM.md`](./TRAINER_SYSTEM.md)
+> - Dungeon templates → [`DUNGEON_TEMPLATE_REFERENCE.md`](./DUNGEON_TEMPLATE_REFERENCE.md)
+> - Environment themes + weather → [`ENVIRONMENT_THEMES.md`](./ENVIRONMENT_THEMES.md)
+> - Zone file schema → [`WORLD_YAML_SPEC.md`](./WORLD_YAML_SPEC.md)
+> - Data-driven mechanics contract → [`DATA_DRIVEN_YAML_CONTRACT.md`](./DATA_DRIVEN_YAML_CONTRACT.md)
+> - `application.yaml` key reference → [`CREATOR_CONFIG_REFERENCE.md`](./CREATOR_CONFIG_REFERENCE.md)
+>
+> Prefer those living docs when updating a single system. Add entries here when shipping a brand-new subsystem so Arcanum authors see it in one place.
 
 ---
 

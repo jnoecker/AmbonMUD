@@ -36,11 +36,11 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`)
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
-- World content: `src/main/resources/world` (23 YAML files: 20 zones — crossroads_path, thornhaven_city, thornwood_forest, farmer_fields, cobblestone_road, highland_trails, old_mines, marsh_of_fog, goblin_warrens, dark_barrows, sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen, thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns, celestial_peak, dungeon_of_echoes; plus achievements, player_sprites, sprites)
+- World content: `src/main/resources/world` (bundled: the single Auringold Academy tutorial zone in `auringold_academy.yaml`, plus `achievements.yaml` and `sprites.yaml`). The full Auringold world — 20+ zones covering levels 1–10 — lives in a separate "lore repo" on Cloudflare R2 at `auringold.ambon.dev` and is fetched on production boot via `AMBONMUD_DATA_DIR`. See `docs/DEPLOYMENT.md` § "Remote world & config overlay" for the full pipeline.
 - World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
-- Flyway schema migrations: `src/main/resources/db/migration` (V1–V26: players table through leaderboards, skill points, and multiclass)
-- Tests: `src/test/kotlin` (~118 test files), fixtures in `src/test/resources/world`
+- Flyway schema migrations: `src/main/resources/db/migration` (V1–V34: players table through prestige, pvp stats, screen reader, currencies, guild halls, and daily quest data)
+- Tests: `src/test/kotlin` (~160 test files), fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
 
 ## Architecture Contracts (Do Not Break)
@@ -88,7 +88,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 ### Commands
 1. Update parse behavior in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt`.
 2. Add/adjust command variant in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt` (`Command` sealed interface).
-3. Implement behavior in the appropriate handler file under `src/main/kotlin/dev/ambon/engine/commands/handlers/` (e.g. `NavigationHandler`, `CombatHandler`, `ItemHandler`, `GuildHandler`, `CraftingHandler`, `FriendsHandler`, `MailHandler`, etc.).
+3. Implement behavior in the appropriate handler file under `src/main/kotlin/dev/ambon/engine/commands/handlers/` (37 handler files: `NavigationHandler`, `CombatHandler`, `ItemHandler`, `GuildHandler`, `CraftingHandler`, `FriendsHandler`, `MailHandler`, `TrainerHandler`, `HousingHandler`, `DungeonHandler`, `AuctionHandler`, `TradeHandler`, `DuelHandler`, `PetHandler`, `ReputationHandler`, `PrestigeHandler`, `BankHandler`, `CurrencyHandler`, `LotteryHandler`, `LeaderboardHandler`, `StylistHandler`, `PuzzleHandler`, `DailyQuestHandler`, `GlobalQuestHandler`, `AutoQuestHandler`, `EnchantHandler`, `WorldInfoHandler`, `WorldFeaturesHandler`, `UiHandler`, `AdminHandler`, etc.).
 4. Preserve prompt behavior for success/failure paths.
 5. Add/adjust parser tests and router/integration tests under `src/test/kotlin/dev/ambon/engine`.
 

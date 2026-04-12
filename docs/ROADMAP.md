@@ -1,12 +1,12 @@
 # AmbonMUD — Roadmap & Future Projects
 
-This document outlines planned features, completed work, and strategic next steps for AmbonMUD's development.
+This document is the feature ledger: what's built, what's closed, and what remains as an enhancement backlog. As of the current release, **every planned phase (A through F) is complete** and the outstanding work is enhancement opportunities rather than milestone items.
 
 ---
 
 ## Current State (April 2026)
 
-AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
+AmbonMUD has a **mature infrastructure** and **complete gameplay foundation**:
 
 ### Infrastructure
 ✅ Event-driven tick engine (100ms)
@@ -23,8 +23,8 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Virtual threads for telnet transport (JDK 21 `newVirtualThreadPerTaskExecutor`)
 
 ### Gameplay
-✅ 4 races, 4 classes + 1 debug class (Swarm), 6 primary attributes
-✅ **112 class-specific abilities** — trainer-based learning with skill points; multi-classing available at level 10
+✅ 4 races, 4 classes + 1 debug class (Swarm), 6 primary attributes (stat definitions data-driven via `StatRegistry`)
+✅ **~126 class-specific abilities** — trainer-based learning with skill points; multi-classing available at level 10
 ✅ Status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD)
 ✅ Group/party system with N:M threat tables
 ✅ Items (equippable + consumable) + item enchanting
@@ -53,7 +53,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ### Content Creation
 ✅ **Ambon Arcanum** — standalone desktop creator tool with visual zone editor, room/mob/item/shop editors, class/race designer, config editor, and YAML round-trip preservation
 
-**Test coverage:** ~118 test files covering all systems.
+**Test coverage:** ~160 test files covering all systems, plus the integration suite and GMCP contract tests.
 
 ---
 
@@ -65,7 +65,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 |---------|--------|-----------|
 | Status Effects (#1) | ✅ Done | DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD; configurable stacking |
 | Group/Party Combat (#5) | ✅ Done | N:M combat, threat tables, group XP/loot distribution |
-| 112 Abilities (Feb 2026) | ✅ Done | 25+ per class, levels 1–50, config-driven |
+| Class Ability Catalog (Feb 2026) | ✅ Done | ~25 per class per level band, levels 1–50, config-driven in `engine.abilities.definitions` |
 
 ### Phase A.5 — Engine Internals
 
@@ -178,6 +178,9 @@ See [WEB_CLIENT_PARITY_REPORT.md](./WEB_CLIENT_PARITY_REPORT.md) for the full au
 - ~~Guild bank / shared storage~~ — implemented as bank NPC system (PR #855)
 - Mail attachments (items, gold)
 - ~~Friend online/offline notifications via GMCP~~ — implemented (`Friends.Online`/`Friends.Offline`)
+
+### Internationalization & Content Packs
+- Externalized gameplay message templates with parameter substitution. Currently inline `SendText` / `SendInfo` / `SendError` strings are embedded in Kotlin across the handlers. Moving them to locale/content packs would enable no-code tuning of tone and full localization support. (The only remaining item from the original data-driven gap audit.)
 
 ### Admin Dashboard
 - Live metrics visualization (Grafana integration or custom charts)
