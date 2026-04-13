@@ -1997,7 +1997,7 @@ export class WorldScene {
 
   private async loadStylistIcon() {
     try {
-      const texture = await Assets.load(assetUrl("stylist_kiosk", "stylist_kiosk.png"));
+      const texture = await Assets.load(assetUrl("stylist_mirror", "stylist_mirror.png"));
       const sprite = new Sprite(texture);
       sprite.width = SHOP_BADGE_SIZE;
       sprite.height = SHOP_BADGE_SIZE;
