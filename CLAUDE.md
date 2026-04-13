@@ -33,7 +33,7 @@ On Windows use `.\gradlew.bat`.
 
 Kotlin MUD server: tick-based engine, telnet + WebSocket transports (GMCP), YAML world loading, class-based progression with trainers/multi-classing, abilities/status effects, shops, behavior trees, dialogue, quests, achievements, groups, guilds, crafting/enchanting, housing, dungeons, pets, factions, auction house, trading, PvP dueling, bank, day/night/weather/events, leaderboards, prestige, currencies, lottery, daily/global quests, puzzles, stylist.
 
-Bundled world content is the single **Auringold Academy** tutorial zone plus `achievements.yaml` and `sprites.yaml` under `src/main/resources/world/`. The production demo instance fetches the full Auringold world (20+ zones) from Cloudflare R2 at boot — see `docs/DEPLOYMENT.md` § "Remote world & config overlay".
+Bundled world content is the single **Academy** tutorial zone plus `achievements.yaml` and `sprites.yaml` under `src/main/resources/world/`. The production demo instance fetches the full Auringold world (20+ zones) from Cloudflare R2 at boot — see `docs/DEPLOYMENT.md` § "Remote world & config overlay".
 
 ### Deployment Modes (set via `ambonMUD.mode`)
 

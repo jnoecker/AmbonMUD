@@ -36,7 +36,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`)
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
-- World content: `src/main/resources/world` (bundled: the single Auringold Academy tutorial zone in `auringold_academy.yaml`, plus `achievements.yaml` and `sprites.yaml`). The full Auringold world — 20+ zones covering levels 1–10 — lives in a separate "lore repo" on Cloudflare R2 at `auringold.ambon.dev` and is fetched on production boot via `AMBONMUD_DATA_DIR`. See `docs/DEPLOYMENT.md` § "Remote world & config overlay" for the full pipeline.
+- World content: `src/main/resources/world` (bundled: the single Academy tutorial zone in `academy.yaml`, plus `achievements.yaml` and `sprites.yaml`). The full Auringold world — 20+ zones covering levels 1–10 — lives in a separate "lore repo" on Cloudflare R2 at `auringold.ambon.dev` and is fetched on production boot via `AMBONMUD_DATA_DIR`. See `docs/DEPLOYMENT.md` § "Remote world & config overlay" for the full pipeline.
 - World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
 - Flyway schema migrations: `src/main/resources/db/migration` (V1–V34: players table through prestige, pvp stats, screen reader, currencies, guild halls, and daily quest data)

@@ -143,8 +143,8 @@ src/main/kotlin/dev/ambon/
 src/main/resources/
 ├── application.yaml             # Runtime config (~4860 lines)
 ├── db/migration/                # Flyway migrations V1–V34
-├── world/                       # Auringold Academy + achievements.yaml + sprites.yaml
-│   ├── auringold_academy.yaml
+├── world/                       # Academy tutorial zone + achievements.yaml + sprites.yaml
+│   ├── academy.yaml
 │   ├── achievements.yaml
 │   ├── sprites.yaml
 │   └── images/                  # default room/mob/item sprites
@@ -166,8 +166,6 @@ infra/                           # TypeScript CDK project
     ├── vpc-stack.ts, data-stack.ts, lb-stack.ts, ecs-stack.ts
     ├── dns-stack.ts, monitoring-stack.ts
 ```
-
-Zone YAML content shipped in the repo is minimal by design: it's the Auringold Academy tutorial zone plus achievement and sprite definitions. The live demo instance fetches the full Auringold world from Cloudflare R2 at boot — see [DEPLOYMENT.md § Remote world & config overlay](./DEPLOYMENT.md#remote-world--config-overlay-auringold).
 
 ---
 
@@ -301,14 +299,14 @@ Inbound handling:
 
 Inline value classes; all namespaced `<zone>:<local>`:
 
-- `RoomId(value: String)` — e.g. `auringold_academy:dream_gate`
+- `RoomId(value: String)` — e.g. `academy:academy_gates`
 - `MobId(value: String)`
 - `ItemId(value: String)`
 - `SessionId(value: String)` — Snowflake-based in distributed modes
 
 ### Player stats
 
-Stats are data-driven via `StatRegistry` + `StatMap`. The canonical six stats (`STR`, `DEX`, `CON`, `INT`, `WIS`, `CHA`) are defined in `application.yaml` under `ambonmud.engine.stats.definitions`; adding or tuning a stat no longer requires Kotlin changes. See [`DATA_DRIVEN_YAML_CONTRACT.md`](./DATA_DRIVEN_YAML_CONTRACT.md) for the full contract.
+Stats are data-driven via `StatRegistry` + `StatMap`. The canonical six stats (`STR`, `DEX`, `CON`, `INT`, `WIS`, `CHA`) are defined in `application.yaml` under `ambonmud.engine.stats.definitions`; adding or tuning a stat no longer requires Kotlin changes. 
 
 Each stat binds to game mechanics (melee damage, dodge, HP regen, spell damage, mana regen, XP bonus) through configurable stat binding keys rather than hardcoded field access.
 
@@ -433,7 +431,7 @@ ambonmud:
     webPort: 8080
     productionMode: false           # true → reject placeholder secrets at startup
   world:
-    startRoom: auringold_academy:dream_gate
+    startRoom: academy:academy_gates
     resources: []                   # additional zone YAMLs (relative to data dir / classpath)
   persistence:
     backend: YAML                   # YAML | POSTGRES
@@ -487,8 +485,6 @@ Hoplite lowercases env var names and replaces `_` with `.` — `AMBONMUD_PERSIST
 **Changing the config schema:**
 
 Edit `AppConfig.kt` and `application.yaml` in the same commit. Keep `validated()` strict — undefined references (unknown stat keys, unknown status effect IDs, unknown class IDs) should fail at startup, not at tick time.
-
-For world builder–facing keys, the authoritative index is [`CREATOR_CONFIG_REFERENCE.md`](./CREATOR_CONFIG_REFERENCE.md) and the YAML contract for data-driven mechanics is [`DATA_DRIVEN_YAML_CONTRACT.md`](./DATA_DRIVEN_YAML_CONTRACT.md).
 
 ---
 
@@ -727,7 +723,7 @@ Or identify the holder: `lsof -i :4000` (Unix), `netstat -ano | findstr :4000` (
 
 ### "Server at max login capacity" rejections under load
 
-The login funnel is a semaphore guarded by `login.maxConcurrentLogins` (default 150) and a BCrypt thread pool sized by `login.authThreads` (default 8). Under burst ramps, the semaphore saturates before BCrypt clears sessions — bots time out in `WAIT_NAME`. Raise both in lock-step with CPU count. See [`SCALING_STORY.md § Auth funnel`](./SCALING_STORY.md#auth-funnel-the-real-login-throughput-ceiling).
+The login funnel is a semaphore guarded by `login.maxConcurrentLogins` (default 150) and a BCrypt thread pool sized by `login.authThreads` (default 8). Under burst ramps, the semaphore saturates before BCrypt clears sessions — bots time out in `WAIT_NAME`. Raise both in lock-step with CPU count.
 
 ### Lint errors: "Trailing comma missing"
 
@@ -739,7 +735,7 @@ Never use short `delay(50)` for async sync. Use `MutableClock` for time-sensitiv
 
 ### Hoplite `ConfigException: Missing required value at ambonmud.X.Y` on startup
 
-If you're running against a data-dir overlay (`AMBONMUD_DATA_DIR`), remember that `application-local.yaml` **replaces** the base config entirely — there is no deep merge. Every required field must be present in the overlay. When you add a new required key to `AppConfig`, you must also update the Auringold-side overlay. See [`DEPLOYMENT.md § Hoplite ConfigException`](./DEPLOYMENT.md) for the full troubleshooting flow.
+If you're running against a data-dir overlay (`AMBONMUD_DATA_DIR`), remember that `application-local.yaml` **replaces** the base config entirely — there is no deep merge. Every required field must be present in the overlay. When you add a new required key to `AppConfig`, you must also update the lore overlay. See [`DEPLOYMENT.md § Hoplite ConfigException`](./DEPLOYMENT.md) for the full troubleshooting flow.
 
 ### Redis / Postgres connection errors
 
@@ -774,14 +770,5 @@ gh pr create --title "..." --body "..."
 ```
 
 ---
-
-## Next steps
-
-- Read [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design rationale and the 18 design decisions.
-- Read [`WORLD_YAML_SPEC.md`](./WORLD_YAML_SPEC.md) to understand zone authoring.
-- Read [`GMCP_PROTOCOL.md`](./GMCP_PROTOCOL.md) to understand the structured data channel.
-- Read [`CREATOR_CONFIG_REFERENCE.md`](./CREATOR_CONFIG_REFERENCE.md) to see every config-tunable key.
-- Read [`CLAUDE.md`](../CLAUDE.md) before changing anything in `engine/` or `transport/`.
-- Read [`DATA_DRIVEN_YAML_CONTRACT.md`](./DATA_DRIVEN_YAML_CONTRACT.md) before adding a new stat, ability, or data-driven mechanic.
 
 **Questions?** See the [README](../README.md) or open an issue on GitHub.

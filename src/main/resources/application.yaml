@@ -56,7 +56,7 @@ ambonmud:
     tickMillis: 100
     inboundBudgetMs: 30
   world:
-    startRoom: auringold_academy:dream_gate
+    startRoom: academy:academy_gates
     resources: []
   persistence:
     backend: YAML
@@ -88,964 +88,644 @@ ambonmud:
         STR:
           displayName: Strength
           abbreviation: STR
-          description: Physical power
+          description: Physical power. Governs melee damage and carrying capacity.
           baseStat: 10
         DEX:
           displayName: Dexterity
           abbreviation: DEX
-          description: Agility and reflexes
+          description: Agility and reflexes. Governs dodge chance and ranged precision.
           baseStat: 10
         CON:
           displayName: Constitution
           abbreviation: CON
-          description: Health and endurance
+          description: Health and endurance. Governs hit points and resistance to fatigue.
           baseStat: 10
         INT:
           displayName: Intelligence
           abbreviation: INT
-          description: Magical aptitude
+          description: Magical aptitude. Governs spell damage and mana capacity.
           baseStat: 10
         WIS:
           displayName: Wisdom
           abbreviation: WIS
-          description: Insight and willpower
+          description: Insight and willpower. Governs healing potency and mana regeneration.
           baseStat: 10
         CHA:
           displayName: Charisma
           abbreviation: CHA
-          description: Force of personality
+          description: Force of personality. Governs merchant prices and companion loyalty.
           baseStat: 10
       bindings:
         meleeDamageStat: STR
-        meleeDamageDivisor: 1
+        meleeDamageDivisor: 3
         dodgeStat: DEX
-        dodgePerPoint: 5
-        maxDodgePercent: 50
+        dodgePerPoint: 2
+        maxDodgePercent: 30
         spellDamageStat: INT
-        spellDamageDivisor: 1
+        spellDamageDivisor: 3
         hpScalingStat: CON
-        hpScalingDivisor: 2
+        hpScalingDivisor: 5
         manaScalingStat: INT
-        manaScalingDivisor: 2
+        manaScalingDivisor: 5
         hpRegenStat: CON
-        hpRegenMsPerPoint: 400
+        hpRegenMsPerPoint: 200
         manaRegenStat: WIS
-        manaRegenMsPerPoint: 400
+        manaRegenMsPerPoint: 200
         xpBonusStat: CHA
-        xpBonusPerPoint: 0.05
+        xpBonusPerPoint: 1
     abilities:
       definitions:
-        # ── Knight (WARRIOR) ────────────────────────────────────────────
-        heroic_slash:
-          displayName: Heroic Slash
-          description: A brave swing of your sword that shines with golden light.
-          manaCost: 5
+        power_strike:
+          displayName: Power Strike
+          manaCost: 0
           cooldownMs: 0
           levelRequired: 1
-          skillPointCost: 1
           targetType: ENEMY
-          requiredClass: WARRIOR
-          tree: Valor
-          tier: 1
           effect:
             type: DIRECT_DAMAGE
             minDamage: 8
             maxDamage: 14
             damagePerLevel: 0.5
+          description: A forceful melee attack that channels raw strength into a single devastating blow.
+          image: dd61f883dfea38e9c5702f35d5a337652140b246ee44822ea3db137a58013c2e.png
+          requiredClass: WARRIOR
         shield_bash:
           displayName: Shield Bash
-          description: Slam your shield into the enemy, stunning them with a burst of starlight.
           manaCost: 10
           cooldownMs: 8000
           levelRequired: 3
-          skillPointCost: 1
           targetType: ENEMY
-          requiredClass: WARRIOR
-          tree: Valor
-          tier: 2
           effect:
             type: APPLY_STATUS
-            statusEffectId: starburst_stun
-        valiant_cry:
-          displayName: Valiant Cry
-          description: Let out a courageous battle cry that forces all enemies to focus on you.
+            statusEffectId: shield_bash_stun
+          description: Slams the shield into an enemy's face, leaving them dazed and unable to act.
+          image: c92bf6fcadaf978c9b34c955d83dd6d42b2a8e5f0f95c41e9ad3c8c537a6571b.png
+          requiredClass: WARRIOR
+        war_cry:
+          displayName: War Cry
           manaCost: 12
           cooldownMs: 10000
-          levelRequired: 4
-          skillPointCost: 1
+          levelRequired: 5
           targetType: SELF
-          requiredClass: WARRIOR
-          tree: Valor
-          tier: 2
           effect:
             type: TAUNT
-            flatThreat: 60.0
-            margin: 15.0
-        pillow_fort:
-          displayName: Pillow Fort
-          description: Summon a magical barrier of enchanted pillows that absorbs damage.
+            flatThreat: 60
+            margin: 15
+          description: A thunderous battle shout that forces nearby enemies to focus their aggression on the warrior.
+          image: 612be83ff89804c1a39f902917f30736aa7aaf82a1b33487155639803b6e4cce.png
+          requiredClass: WARRIOR
+        fortify:
+          displayName: Fortify
           manaCost: 15
           cooldownMs: 15000
-          levelRequired: 5
-          skillPointCost: 1
-          targetType: SELF
-          requiredClass: WARRIOR
-          tree: Guardian
-          tier: 1
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: pillow_shield
-        storybook_strike:
-          displayName: Storybook Strike
-          description: Your weapon glows with the power of legendary heroes from your favorite stories.
-          manaCost: 14
-          cooldownMs: 5000
-          levelRequired: 6
-          skillPointCost: 1
-          targetType: ENEMY
-          requiredClass: WARRIOR
-          tree: Valor
-          tier: 3
-          effect:
-            type: DIRECT_DAMAGE
-            minDamage: 18
-            maxDamage: 28
-            damagePerLevel: 0.8
-        courage_aura:
-          displayName: Courage Aura
-          description: Your bravery inspires you, boosting your strength and constitution.
-          manaCost: 18
-          cooldownMs: 30000
           levelRequired: 7
-          skillPointCost: 2
           targetType: SELF
-          requiredClass: WARRIOR
-          tree: Guardian
-          tier: 2
           effect:
             type: APPLY_STATUS
-            statusEffectId: courage_buff
-        dragon_slam:
-          displayName: Dragon Slam
-          description: Channel the spirit of a storybook dragon into a devastating ground slam hitting all foes.
+            statusEffectId: fortify_shield
+          description: Braces behind the shield, generating a temporary barrier that absorbs incoming damage.
+          image: e45ae03545a94defacf4a1be8d245922efeb3a652b2f8d0852bd1ae51e424a46.png
+          requiredClass: WARRIOR
+        cleave:
+          displayName: Cleave
           manaCost: 25
           cooldownMs: 12000
-          levelRequired: 8
-          skillPointCost: 2
+          levelRequired: 9
           targetType: ENEMY
-          requiredClass: WARRIOR
-          tree: Valor
-          tier: 4
           effect:
             type: AREA_DAMAGE
             minDamage: 14
             maxDamage: 22
             damagePerLevel: 0.6
-        blanket_cape:
-          displayName: Blanket Cape
-          description: Wrap yourself in an indestructible magical blanket that heals you over time.
-          manaCost: 20
-          cooldownMs: 20000
-          levelRequired: 9
-          skillPointCost: 2
-          targetType: SELF
+          description: A wide sweeping strike that carves through all enemies within reach.
+          image: 89934f29d6735864e190a2108e57bd4f569ccc5e6605ddebec6e4422eee0f557.png
           requiredClass: WARRIOR
-          tree: Guardian
-          tier: 3
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: blanket_regen
-        champion_charge:
-          displayName: Champion's Charge
-          description: Rush forward with the full force of a storybook hero, dealing massive damage.
-          manaCost: 30
-          cooldownMs: 15000
-          levelRequired: 10
-          skillPointCost: 2
-          targetType: ENEMY
-          requiredClass: WARRIOR
-          tree: Valor
-          tier: 5
-          effect:
-            type: DIRECT_DAMAGE
-            minDamage: 30
-            maxDamage: 45
-            damagePerLevel: 1.0
-        last_stand:
-          displayName: Last Stand
-          description: Channel every ounce of heroic willpower into an impenetrable shield and stat boost.
-          manaCost: 35
-          cooldownMs: 60000
-          levelRequired: 12
-          skillPointCost: 3
-          targetType: SELF
-          requiredClass: WARRIOR
-          tree: Guardian
-          tier: 4
-          prerequisites:
-            - pillow_fort
-            - courage_aura
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: last_stand_buff
-
-        # ── Wizard (MAGE) ──────────────────────────────────────────────
-        sparkle_bolt:
-          displayName: Sparkle Bolt
-          description: Fire a glittering bolt of pure imagination at your target.
+        arcane_bolt:
+          displayName: Arcane Bolt
           manaCost: 8
           cooldownMs: 0
           levelRequired: 1
-          skillPointCost: 1
           targetType: ENEMY
-          requiredClass: MAGE
-          tree: Imagination
-          tier: 1
           effect:
             type: DIRECT_DAMAGE
             minDamage: 10
             maxDamage: 16
             damagePerLevel: 0.6
-        crayon_fire:
-          displayName: Crayon Fire
-          description: Scribble a fireball into existence with magical crayons. It burns with rainbow flames.
+          description: Launches a concentrated bolt of raw arcane energy at a single target.
+          image: 92ffba697c3c76a12f57f67952794cba6f20ce38a604f6c15c8748d03c48aa07.png
+          requiredClass: MAGE
+        flame_brand:
+          displayName: Flame Brand
           manaCost: 15
           cooldownMs: 6000
           levelRequired: 3
-          skillPointCost: 1
           targetType: ENEMY
-          requiredClass: MAGE
-          tree: Imagination
-          tier: 2
           effect:
             type: APPLY_STATUS
-            statusEffectId: crayon_burn
-        bubble_shield:
-          displayName: Bubble Shield
-          description: Encase yourself in an iridescent soap bubble that absorbs damage.
+            statusEffectId: flame_brand_dot
+          description: Sears the target with magical fire that continues to burn over time.
+          image: 8f875a9c4356d78ddfb92295bdce25caec871ce13caf969b04ffb33f9debef10.png
+          requiredClass: MAGE
+        arcane_shield:
+          displayName: Arcane Shield
           manaCost: 12
           cooldownMs: 15000
-          levelRequired: 4
-          skillPointCost: 1
-          targetType: SELF
-          requiredClass: MAGE
-          tree: Wonder
-          tier: 1
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: bubble_shield_effect
-        nightmare_hex:
-          displayName: Nightmare Hex
-          description: Curse your foe with creepy nightmare images that sap their strength.
-          manaCost: 14
-          cooldownMs: 10000
           levelRequired: 5
-          skillPointCost: 1
-          targetType: ENEMY
-          requiredClass: MAGE
-          tree: Wonder
-          tier: 2
+          targetType: SELF
           effect:
             type: APPLY_STATUS
-            statusEffectId: nightmare_debuff
-        stardust_storm:
-          displayName: Stardust Storm
-          description: Unleash a swirling storm of stardust that damages all enemies in the room.
+            statusEffectId: arcane_shield_effect
+          description: Conjures a shimmering barrier of magical force that absorbs incoming damage.
+          image: 0a9cc349777938f2dfc88dd34e9b010780ae5b8a2de337f43af65da9ab04e36e.png
+          requiredClass: MAGE
+        chain_lightning:
+          displayName: Chain Lightning
           manaCost: 22
           cooldownMs: 8000
-          levelRequired: 6
-          skillPointCost: 1
+          levelRequired: 7
           targetType: ENEMY
-          requiredClass: MAGE
-          tree: Imagination
-          tier: 3
           effect:
             type: AREA_DAMAGE
             minDamage: 12
             maxDamage: 20
             damagePerLevel: 0.5
-        daydream_bolt:
-          displayName: Daydream Bolt
-          description: A concentrated beam of pure daydream energy that pierces through reality.
-          manaCost: 18
-          cooldownMs: 5000
-          levelRequired: 7
-          skillPointCost: 2
-          targetType: ENEMY
+          description: Unleashes a crackling arc of lightning that leaps between nearby enemies.
+          image: 712a92a6e22da2b40b374f30bb1a6b0527dc65f73715b0e6575d74b6a55c3633.png
           requiredClass: MAGE
-          tree: Imagination
-          tier: 4
-          effect:
-            type: DIRECT_DAMAGE
-            minDamage: 22
-            maxDamage: 34
-            damagePerLevel: 0.9
-        enchanted_slumber:
-          displayName: Enchanted Slumber
-          description: Lull your enemy into a magical sleep, rooting them in place.
-          manaCost: 16
-          cooldownMs: 15000
-          levelRequired: 7
-          skillPointCost: 2
+        hex:
+          displayName: Hex
+          manaCost: 14
+          cooldownMs: 10000
+          levelRequired: 9
           targetType: ENEMY
-          requiredClass: MAGE
-          tree: Wonder
-          tier: 3
           effect:
             type: APPLY_STATUS
-            statusEffectId: enchanted_root
-        brain_freeze:
-          displayName: Brain Freeze
-          description: Hit your enemy with an ice-cream headache so intense it freezes them solid.
-          manaCost: 20
-          cooldownMs: 12000
-          levelRequired: 8
-          skillPointCost: 2
-          targetType: ENEMY
+            statusEffectId: hex_debuff
+          description: Curses the target with dark magic, sapping their physical attributes.
+          image: 5a314c1112771e96b25b31496f049b29c184246bbed62525161b4bdd33883446.png
           requiredClass: MAGE
-          tree: Wonder
-          tier: 4
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: brain_freeze_stun
-        supernova_burst:
-          displayName: Supernova Burst
-          description: Channel the energy of an exploding star, devastating everything in the room.
-          manaCost: 35
-          cooldownMs: 15000
-          levelRequired: 10
-          skillPointCost: 2
-          targetType: ENEMY
-          requiredClass: MAGE
-          tree: Imagination
-          tier: 5
-          prerequisites:
-            - stardust_storm
-          effect:
-            type: AREA_DAMAGE
-            minDamage: 20
-            maxDamage: 35
-            damagePerLevel: 0.8
-        reality_warp:
-          displayName: Reality Warp
-          description: Bend the fabric of Auringold itself, boosting all your mental stats dramatically.
-          manaCost: 30
-          cooldownMs: 60000
-          levelRequired: 12
-          skillPointCost: 3
-          targetType: SELF
-          requiredClass: MAGE
-          tree: Wonder
-          tier: 5
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: reality_warp_buff
-
-        # ── Doctor (CLERIC) ─────────────────────────────────────────────
-        bandage_wrap:
-          displayName: Bandage Wrap
-          description: Apply magical bandages that instantly mend wounds with a warm glow.
+        heal:
+          displayName: Heal
           manaCost: 10
           cooldownMs: 0
           levelRequired: 1
-          skillPointCost: 1
           targetType: SELF
-          requiredClass: CLERIC
-          tree: Medicine
-          tier: 1
           effect:
             type: DIRECT_HEAL
             minHeal: 12
             maxHeal: 20
             healPerLevel: 0.6
-        lollipop_remedy:
-          displayName: Lollipop Remedy
-          description: Offer a magical lollipop that heals an ally with sugary restorative magic.
+          description: Channels divine energy to mend the cleric's own wounds.
+          image: 78037433fb3cfb381a24f85e8f355b25cbe710cb26381e457e78d52593624bd1.png
+          requiredClass: CLERIC
+        restore:
+          displayName: Restore
           manaCost: 12
           cooldownMs: 3000
-          levelRequired: 2
-          skillPointCost: 1
+          levelRequired: 3
           targetType: ALLY
-          requiredClass: CLERIC
-          tree: Medicine
-          tier: 1
           effect:
             type: DIRECT_HEAL
             minHeal: 15
             maxHeal: 25
             healPerLevel: 0.7
-        vitamin_boost:
-          displayName: Vitamin Boost
-          description: Prescribe a course of magical vitamins that buff your patient's constitution.
+          description: Extends a hand of sacred light to heal an injured ally.
+          image: a7ddd58504f3b070e3a33d5b1c4e9d89cfa4a8428501bb8762dfdb3409f206df.png
+          requiredClass: CLERIC
+        blessing:
+          displayName: Blessing
           manaCost: 14
           cooldownMs: 20000
-          levelRequired: 3
-          skillPointCost: 1
+          levelRequired: 5
           targetType: SELF
-          requiredClass: CLERIC
-          tree: Wellness
-          tier: 1
           effect:
             type: APPLY_STATUS
-            statusEffectId: vitamin_buff
-        fever_check:
-          displayName: Fever Check
-          description: Diagnose your enemy with a terrible magical fever that burns them over time.
+            statusEffectId: blessing_buff
+          description: Invokes a divine blessing that fortifies the body and sharpens the mind.
+          image: fd50ee369f0ea272a2fbb430a957827765e9223f8ddb6c3cd46791c4e89f53ab.png
+          requiredClass: CLERIC
+        purge:
+          displayName: Purge
           manaCost: 12
           cooldownMs: 8000
-          levelRequired: 4
-          skillPointCost: 1
+          levelRequired: 7
           targetType: ENEMY
-          requiredClass: CLERIC
-          tree: Medicine
-          tier: 2
           effect:
             type: APPLY_STATUS
-            statusEffectId: magic_fever
-        chicken_soup:
-          displayName: Chicken Soup
-          description: Conjure a steaming bowl of grandma's magical chicken soup that heals over time.
+            statusEffectId: purge_dot
+          description: Calls down a searing radiance that burns the unholy with sustained divine fire.
+          image: 5c760190bd246f9f784e77593c7f5c8f200994f40862dce0d350e9eff9e04ca6.png
+          requiredClass: CLERIC
+        sanctuary:
+          displayName: Sanctuary
           manaCost: 18
           cooldownMs: 12000
-          levelRequired: 5
-          skillPointCost: 1
-          targetType: SELF
-          requiredClass: CLERIC
-          tree: Wellness
-          tier: 2
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: soup_regen
-        booster_shot:
-          displayName: Booster Shot
-          description: Administer a magical injection that dramatically boosts wisdom and constitution.
-          manaCost: 20
-          cooldownMs: 25000
-          levelRequired: 6
-          skillPointCost: 2
-          targetType: SELF
-          requiredClass: CLERIC
-          tree: Wellness
-          tier: 3
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: booster_buff
-        quarantine:
-          displayName: Quarantine
-          description: Trap an enemy in a bubble of quarantine energy, rooting them in place.
-          manaCost: 16
-          cooldownMs: 15000
-          levelRequired: 7
-          skillPointCost: 2
-          targetType: ENEMY
-          requiredClass: CLERIC
-          tree: Medicine
-          tier: 3
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: quarantine_root
-        emergency_heal:
-          displayName: Emergency Heal
-          description: Perform emergency magical triage, restoring a massive amount of health.
-          manaCost: 30
-          cooldownMs: 20000
-          levelRequired: 8
-          skillPointCost: 2
-          targetType: SELF
-          requiredClass: CLERIC
-          tree: Medicine
-          tier: 4
-          effect:
-            type: DIRECT_HEAL
-            minHeal: 40
-            maxHeal: 60
-            healPerLevel: 1.2
-        placebo_effect:
-          displayName: Placebo Effect
-          description: Convince your enemy they are terribly ill, weakening all their stats.
-          manaCost: 22
-          cooldownMs: 20000
           levelRequired: 9
-          skillPointCost: 2
-          targetType: ENEMY
-          requiredClass: CLERIC
-          tree: Wellness
-          tier: 4
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: placebo_debuff
-        miracle_cure:
-          displayName: Miracle Cure
-          description: Channel the ultimate healing magic — a cure so powerful it mends all wounds and fortifies the body.
-          manaCost: 40
-          cooldownMs: 60000
-          levelRequired: 12
-          skillPointCost: 3
           targetType: SELF
-          requiredClass: CLERIC
-          tree: Medicine
-          tier: 5
-          prerequisites:
-            - emergency_heal
-            - chicken_soup
           effect:
             type: APPLY_STATUS
-            statusEffectId: miracle_cure_effect
-
-        # ── Pirate (ROGUE) ──────────────────────────────────────────────
-        sneak_attack:
-          displayName: Sneak Attack
-          description: Strike from the shadows with a quick, dirty blow.
+            statusEffectId: sanctuary_hot
+          description: Wraps the cleric in a sustained aura of restorative energy that heals wounds over time.
+          image: 296b4eb56f1b9011a91498073d3f8532c3f20e8514651546a03ede4777828698.png
+          requiredClass: CLERIC
+        backstab:
+          displayName: Backstab
           manaCost: 6
           cooldownMs: 0
           levelRequired: 1
-          skillPointCost: 1
           targetType: ENEMY
-          requiredClass: ROGUE
-          tree: Scallywag
-          tier: 1
           effect:
             type: DIRECT_DAMAGE
             minDamage: 9
             maxDamage: 15
             damagePerLevel: 0.6
-        pocket_sand:
-          displayName: Pocket Sand
-          description: Throw a handful of magical sand in your enemy's eyes, stunning them.
+          description: Drives a blade into a vulnerable spot, dealing heavy damage from close range.
+          image: 699e270d07c1ecfeabbcd3a9f52f47a4d01a2d55cdaded80aafd6fec4d66ca2f.png
+          requiredClass: ROGUE
+        blind:
+          displayName: Blind
           manaCost: 8
           cooldownMs: 10000
           levelRequired: 3
-          skillPointCost: 1
           targetType: ENEMY
-          requiredClass: ROGUE
-          tree: Scallywag
-          tier: 2
           effect:
             type: APPLY_STATUS
-            statusEffectId: sand_stun
-        treasure_map:
-          displayName: Treasure Map
-          description: Consult your enchanted treasure map, boosting your luck and dexterity.
-          manaCost: 10
-          cooldownMs: 25000
-          levelRequired: 4
-          skillPointCost: 1
-          targetType: SELF
+            statusEffectId: blind_stun
+          description: Throws a handful of blinding powder into an enemy's eyes, leaving them stunned.
+          image: d0eed43973784561fd4e582079c0b8428e4decd946a0d752d2e531593153e1ea.png
           requiredClass: ROGUE
-          tree: Buccaneer
-          tier: 1
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: treasure_luck
-        poison_blade:
-          displayName: Poison Blade
-          description: Coat your weapon with fizzy soda poison that corrodes your enemy over time.
+        envenom:
+          displayName: Envenom
           manaCost: 12
           cooldownMs: 8000
           levelRequired: 5
-          skillPointCost: 1
           targetType: ENEMY
-          requiredClass: ROGUE
-          tree: Scallywag
-          tier: 3
           effect:
             type: APPLY_STATUS
-            statusEffectId: soda_poison
-        cannonball:
-          displayName: Cannonball
-          description: Fire an imaginary cannon at all enemies with a tremendous boom.
-          manaCost: 20
-          cooldownMs: 10000
-          levelRequired: 6
-          skillPointCost: 1
-          targetType: ENEMY
+            statusEffectId: envenom_dot
+          description: Coats a weapon in virulent poison that eats at the target's vitality over time.
+          image: 7ff0574b1779e42ccaaf86e7dda7e2c9a386181291ce20c63e45f4e69124d386.png
           requiredClass: ROGUE
-          tree: Buccaneer
-          tier: 2
-          effect:
-            type: AREA_DAMAGE
-            minDamage: 10
-            maxDamage: 18
-            damagePerLevel: 0.4
-        sea_legs:
-          displayName: Sea Legs
-          description: Channel the rolling waves, boosting your dexterity and making you hard to hit.
+        shadow_step:
+          displayName: Shadow Step
           manaCost: 14
           cooldownMs: 25000
           levelRequired: 7
-          skillPointCost: 2
           targetType: SELF
-          requiredClass: ROGUE
-          tree: Buccaneer
-          tier: 3
           effect:
             type: APPLY_STATUS
-            statusEffectId: sea_legs_buff
-        walk_the_plank:
-          displayName: Walk the Plank
-          description: Force your enemy to walk an imaginary plank, rooting them in terror.
-          manaCost: 16
-          cooldownMs: 15000
-          levelRequired: 7
-          skillPointCost: 2
-          targetType: ENEMY
+            statusEffectId: shadow_step_buff
+          description: Slips into the shadows, gaining a burst of supernatural agility and resilience.
+          image: 7a5b4adc668a8cc136cb26c2d5e54289f81ea63aaaddaebfdbf3dce5f5d17b3e.png
           requiredClass: ROGUE
-          tree: Scallywag
-          tier: 4
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: plank_root
-        backstab:
-          displayName: Backstab
-          description: Leap behind your foe and deliver a devastating critical strike.
+        ambush:
+          displayName: Ambush
           manaCost: 22
           cooldownMs: 8000
-          levelRequired: 8
-          skillPointCost: 2
+          levelRequired: 9
           targetType: ENEMY
-          requiredClass: ROGUE
-          tree: Scallywag
-          tier: 5
           effect:
             type: DIRECT_DAMAGE
             minDamage: 25
             maxDamage: 40
-            damagePerLevel: 1.0
-        jolly_roger:
-          displayName: Jolly Roger
-          description: Raise the pirate flag, inspiring yourself with charisma and strength.
-          manaCost: 20
-          cooldownMs: 30000
-          levelRequired: 9
-          skillPointCost: 2
-          targetType: SELF
+            damagePerLevel: 1
+          description: Strikes from concealment with lethal precision, dealing massive damage to an unsuspecting target.
+          image: ba481e6edf71d234d729d9fd69c3a6887558dadc491b9e712de8a75d7884cb6a.png
           requiredClass: ROGUE
-          tree: Buccaneer
-          tier: 4
-          prerequisites:
-            - sea_legs
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: jolly_roger_buff
-        ghost_ship:
-          displayName: Ghost Ship
-          description: Summon a spectral pirate ship that bombards the room with phantom cannonballs.
-          manaCost: 35
-          cooldownMs: 20000
-          levelRequired: 12
-          skillPointCost: 3
-          targetType: ENEMY
-          requiredClass: ROGUE
-          tree: Buccaneer
-          tier: 5
-          prerequisites:
-            - cannonball
-          effect:
-            type: AREA_DAMAGE
-            minDamage: 22
-            maxDamage: 36
-            damagePerLevel: 0.8
-
-        # ── Ruler (RULER) — Pet Class ───────────────────────────────────
-        summon_teddy_knight:
-          displayName: Summon Teddy Knight
-          description: Call forth a brave stuffed bear in shining button armor to fight by your side.
+        summon_wolf:
+          displayName: Summon Wolf
           manaCost: 15
           cooldownMs: 5000
           levelRequired: 1
-          skillPointCost: 1
           targetType: SELF
-          requiredClass: RULER
-          tree: Court
-          tier: 1
           effect:
             type: SUMMON_PET
-            petTemplateKey: teddy_knight
-            durationMs: 0
-        royal_decree:
-          displayName: Royal Decree
-          description: Issue a royal command that boosts your charisma and wisdom with regal authority.
-          manaCost: 12
-          cooldownMs: 25000
-          levelRequired: 2
-          skillPointCost: 1
-          targetType: SELF
-          requiredClass: RULER
-          tree: Sovereignty
-          tier: 1
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: royal_decree_buff
-        summon_pixel_sprite:
-          displayName: Summon Pixel Sprite
-          description: Call a tiny pixelated fairy companion that zaps enemies with digital sparks.
-          manaCost: 18
+            petTemplateKey: wolf_companion
+          description: Calls a loyal wolf companion to fight at the ranger's side.
+          image: a1f6b4d0dac200e2f722836f6bbaaa8b26363482f20b6fdc1d74475d344894f8.png
+          requiredClass: RANGER
+        aimed_shot:
+          displayName: Aimed Shot
+          manaCost: 10
           cooldownMs: 5000
           levelRequired: 3
-          skillPointCost: 1
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 10
+            maxDamage: 18
+            damagePerLevel: 0.7
+          description: Takes careful aim and releases a precise arrow that strikes a vital area.
+          image: f8268b41165fb08d519880b752ff25a3c6cb6e11fa232fc23dd4d9312a0323e0.png
+          requiredClass: RANGER
+        summon_hawk:
+          displayName: Summon Hawk
+          manaCost: 18
+          cooldownMs: 5000
+          levelRequired: 5
           targetType: SELF
-          requiredClass: RULER
-          tree: Court
-          tier: 2
           effect:
             type: SUMMON_PET
-            petTemplateKey: pixel_sprite
-            durationMs: 0
-        crown_jewel:
-          displayName: Crown Jewel
-          description: Your crown glows with protective magic, shielding you from harm.
+            petTemplateKey: spirit_hawk
+          description: Calls a fierce spirit hawk to harry enemies from above.
+          image: 10103755ad680b21778e51c2f58ff1be38712032ba2d43e97461626819ec0949.png
+          requiredClass: RANGER
+        natures_gift:
+          displayName: Nature's Gift
           manaCost: 14
-          cooldownMs: 18000
-          levelRequired: 4
-          skillPointCost: 1
+          cooldownMs: 15000
+          levelRequired: 7
           targetType: SELF
-          requiredClass: RULER
-          tree: Sovereignty
-          tier: 2
           effect:
             type: APPLY_STATUS
-            statusEffectId: crown_shield
-        royal_tantrum:
-          displayName: Royal Tantrum
-          description: Throw an epic royal tantrum that stuns all enemies with sheer indignation.
-          manaCost: 18
-          cooldownMs: 12000
-          levelRequired: 5
-          skillPointCost: 1
-          targetType: ENEMY
-          requiredClass: RULER
-          tree: Sovereignty
-          tier: 3
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: tantrum_stun
-        summon_clockwork_dragon:
-          displayName: Summon Clockwork Dragon
-          description: Wind up and release a magnificent clockwork dragon that breathes toy fire.
+            statusEffectId: natures_gift_hot
+          description: Draws on the vitality of the natural world to gradually restore health over time.
+          image: 0b07953b16f2c197eefe383e4d6ee356a1de50894762650e0649a930cdf0e1c3.png
+          requiredClass: RANGER
+        summon_bear:
+          displayName: Summon Bear
           manaCost: 25
           cooldownMs: 5000
-          levelRequired: 6
-          skillPointCost: 2
+          levelRequired: 9
           targetType: SELF
-          requiredClass: RULER
-          tree: Court
-          tier: 3
           effect:
             type: SUMMON_PET
-            petTemplateKey: clockwork_dragon
-            durationMs: 0
-        tax_collector:
-          displayName: Tax Collector
-          description: Demand tribute from your foes, weakening their stats as you assert your rule.
-          manaCost: 16
-          cooldownMs: 20000
-          levelRequired: 7
-          skillPointCost: 2
-          targetType: ENEMY
-          requiredClass: RULER
-          tree: Sovereignty
-          tier: 4
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: taxation_debuff
-        royal_feast:
-          displayName: Royal Feast
-          description: Declare a feast in your honor, healing yourself with regal indulgence.
-          manaCost: 22
-          cooldownMs: 20000
-          levelRequired: 8
-          skillPointCost: 2
-          targetType: SELF
-          requiredClass: RULER
-          tree: Sovereignty
-          tier: 5
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: feast_regen
-        summon_dream_guardian:
-          displayName: Summon Dream Guardian
-          description: Call upon the ultimate protector — a towering stuffed sentinel woven from pure dreams.
-          manaCost: 35
-          cooldownMs: 5000
-          levelRequired: 10
-          skillPointCost: 2
-          targetType: SELF
-          requiredClass: RULER
-          tree: Court
-          tier: 4
-          prerequisites:
-            - summon_clockwork_dragon
-          effect:
-            type: SUMMON_PET
-            petTemplateKey: dream_guardian
-            durationMs: 0
-        coronation:
-          displayName: Coronation
-          description: Perform a grand coronation ceremony, massively boosting all your stats.
-          manaCost: 40
-          cooldownMs: 60000
-          levelRequired: 12
-          skillPointCost: 3
-          targetType: SELF
-          requiredClass: RULER
-          tree: Sovereignty
-          tier: 5
-          prerequisites:
-            - royal_decree
-            - crown_jewel
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: coronation_buff
-
+            petTemplateKey: bear_guardian
+          description: Calls a massive bear guardian to absorb damage and protect the ranger.
+          image: 198deb0c7cb5fae8bf52b14929b10751dc9b50986f334abfc059a95c0432c5a3.png
+          requiredClass: RANGER
     statusEffects:
       definitions:
-        # ── Knight effects ──────────────────────────────────────────────
-        starburst_stun:
-          displayName: Starburst Stun
+        ignite:
+          displayName: Ignite
+          effectType: dot
+          durationMs: 6000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+        poison:
+          displayName: Poison
+          effectType: dot
+          durationMs: 10000
+          tickIntervalMs: 2000
+          stackBehavior: STACK
+          maxStacks: 3
+        shield_of_faith:
+          displayName: Shield of Faith
+          effectType: shield
+          durationMs: 30000
+          shieldAmount: 20
+          stackBehavior: NONE
+        battle_shout:
+          displayName: Battle Shout
+          effectType: stat_buff
+          durationMs: 60000
+          stackBehavior: REFRESH
+        rejuvenation:
+          displayName: Rejuvenation
+          effectType: hot
+          durationMs: 10000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+        frost_grip:
+          displayName: Frost Grip
+          effectType: root
+          durationMs: 4000
+          stackBehavior: NONE
+        concuss:
+          displayName: Concuss
+          effectType: stun
+          durationMs: 2000
+          stackBehavior: NONE
+        whirlwind_rage:
+          displayName: Whirlwind Rage
+          effectType: stat_buff
+          durationMs: 8000
+          tickIntervalMs: 1000
+          stackBehavior: REFRESH
+        berserker_state:
+          displayName: Berserker State
+          effectType: stat_buff
+          durationMs: 10000
+          stackBehavior: REFRESH
+        thornhide_armor:
+          displayName: Thornhide Armor
+          effectType: shield
+          durationMs: 15000
+          shieldAmount: 30
+          stackBehavior: REFRESH
+        weakened:
+          displayName: Weakened
+          effectType: stat_debuff
+          durationMs: 8000
+          stackBehavior: REFRESH
+        mana_shield:
+          displayName: Mana Shield
+          effectType: shield
+          durationMs: 20000
+          shieldAmount: 25
+          stackBehavior: REFRESH
+        flame_armor:
+          displayName: Flame Armor
+          effectType: stat_buff
+          durationMs: 12000
+          stackBehavior: REFRESH
+        frost_armor:
+          displayName: Frost Armor
+          effectType: shield
+          durationMs: 12000
+          shieldAmount: 28
+          stackBehavior: REFRESH
+        frozen:
+          displayName: Frozen
+          effectType: stun
+          durationMs: 3000
+          stackBehavior: NONE
+        chilled:
+          displayName: Chilled
+          effectType: stat_debuff
+          durationMs: 6000
+          stackBehavior: REFRESH
+        arcane_burn:
+          displayName: Arcane Burn
+          effectType: dot
+          durationMs: 8000
+          tickIntervalMs: 2000
+          stackBehavior: STACK
+          maxStacks: 2
+        holy_light:
+          displayName: Holy Light
+          effectType: hot
+          durationMs: 12000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+        divine_blessing:
+          displayName: Divine Blessing
+          effectType: stat_buff
+          durationMs: 15000
+          stackBehavior: REFRESH
+        consecrated_ground:
+          displayName: Consecrated Ground
+          effectType: hot
+          durationMs: 20000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+        purified:
+          displayName: Purified
+          effectType: stat_buff
+          durationMs: 10000
+          stackBehavior: REFRESH
+        shadow_veil:
+          displayName: Shadow Veil
+          effectType: shield
+          durationMs: 10000
+          shieldAmount: 15
+          stackBehavior: REFRESH
+        venomous:
+          displayName: Venomous
+          effectType: dot
+          durationMs: 12000
+          tickIntervalMs: 2000
+          stackBehavior: STACK
+          maxStacks: 4
+        shadow_mark:
+          displayName: Shadow Mark
+          effectType: stat_debuff
+          durationMs: 8000
+          stackBehavior: REFRESH
+        death_mark:
+          displayName: Death Mark
+          effectType: stat_debuff
+          durationMs: 10000
+          stackBehavior: REFRESH
+        blinded:
+          displayName: Blinded
+          effectType: stat_debuff
+          durationMs: 5000
+          stackBehavior: NONE
+        camouflage_stance:
+          displayName: Camouflage
+          effectType: stat_buff
+          durationMs: 4000
+          stackBehavior: REFRESH
+          dexMod: 4
+        hunters_mark:
+          displayName: Hunter's Mark
+          effectType: stat_debuff
+          durationMs: 10000
+          stackBehavior: REFRESH
+          strMod: -2
+          dexMod: -2
+        natures_grasp:
+          displayName: Nature's Grasp
+          effectType: root
+          durationMs: 4000
+          stackBehavior: NONE
+        nature_bond_hot:
+          displayName: Nature Bond
+          effectType: hot
+          durationMs: 8000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+        rend_bleed:
+          displayName: Rend
+          effectType: dot
+          durationMs: 12000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+        ice_barrier:
+          displayName: Ice Barrier
+          effectType: shield
+          durationMs: 15000
+          shieldAmount: 35
+          stackBehavior: REFRESH
+        rallying_cry_buff:
+          displayName: Rallying Cry
+          effectType: stat_buff
+          durationMs: 15000
+          stackBehavior: REFRESH
+          strMod: 3
+          conMod: 3
+        shield_wall_buff:
+          displayName: Shield Wall
+          effectType: shield
+          durationMs: 10000
+          shieldAmount: 50
+          stackBehavior: REFRESH
+        last_stand_buff:
+          displayName: Last Stand
+          effectType: shield
+          durationMs: 8000
+          shieldAmount: 80
+          stackBehavior: REFRESH
+        frozen_orb_dot:
+          displayName: Frozen Orb
+          effectType: dot
+          durationMs: 8000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+        shield_bash_stun:
+          displayName: Stunned
           effectType: stun
           durationMs: 2000
           stackBehavior: none
-        pillow_shield:
-          displayName: Pillow Fort
+        fortify_shield:
+          displayName: Fortify
           effectType: shield
           durationMs: 15000
           shieldAmount: 30
           stackBehavior: refresh
-        courage_buff:
-          displayName: Courage Aura
-          effectType: stat_buff
-          durationMs: 20000
-          strMod: 3
-          conMod: 2
-          stackBehavior: refresh
-        blanket_regen:
-          displayName: Blanket Cape
-          effectType: hot
-          durationMs: 12000
-          tickIntervalMs: 2000
-          tickMinValue: 5
-          tickMaxValue: 8
-          stackBehavior: refresh
-        last_stand_buff:
-          displayName: Last Stand
-          effectType: stat_buff
-          durationMs: 15000
-          strMod: 4
-          conMod: 5
-          wisMod: 2
-          stackBehavior: none
-
-        # ── Wizard effects ──────────────────────────────────────────────
-        crayon_burn:
-          displayName: Crayon Fire
+        flame_brand_dot:
+          displayName: Flame Brand
           effectType: dot
           durationMs: 8000
           tickIntervalMs: 2000
           tickMinValue: 5
           tickMaxValue: 8
           stackBehavior: refresh
-        bubble_shield_effect:
-          displayName: Bubble Shield
+        arcane_shield_effect:
+          displayName: Arcane Shield
           effectType: shield
           durationMs: 12000
           shieldAmount: 25
           stackBehavior: refresh
-        nightmare_debuff:
-          displayName: Nightmare Hex
+        hex_debuff:
+          displayName: Hex
           effectType: stat_debuff
           durationMs: 10000
+          stackBehavior: refresh
           strMod: -2
           dexMod: -2
           conMod: -1
-          stackBehavior: refresh
-        enchanted_root:
-          displayName: Enchanted Slumber
-          effectType: root
-          durationMs: 4000
-          stackBehavior: none
-        brain_freeze_stun:
-          displayName: Brain Freeze
-          effectType: stun
-          durationMs: 3000
-          stackBehavior: none
-        reality_warp_buff:
-          displayName: Reality Warp
-          effectType: stat_buff
-          durationMs: 20000
-          intMod: 5
-          wisMod: 3
-          chaMod: 2
-          stackBehavior: none
-
-        # ── Doctor effects ──────────────────────────────────────────────
-        vitamin_buff:
-          displayName: Vitamin Boost
+        blessing_buff:
+          displayName: Blessing
           effectType: stat_buff
           durationMs: 30000
+          stackBehavior: refresh
           conMod: 3
           wisMod: 1
-          stackBehavior: refresh
-        magic_fever:
-          displayName: Magic Fever
+        purge_dot:
+          displayName: Purge
           effectType: dot
           durationMs: 10000
           tickIntervalMs: 2000
           tickMinValue: 4
           tickMaxValue: 7
           stackBehavior: refresh
-        soup_regen:
-          displayName: Chicken Soup
+        sanctuary_hot:
+          displayName: Sanctuary
           effectType: hot
           durationMs: 15000
           tickIntervalMs: 3000
           tickMinValue: 6
           tickMaxValue: 10
           stackBehavior: refresh
-        booster_buff:
-          displayName: Booster Shot
-          effectType: stat_buff
-          durationMs: 25000
-          wisMod: 3
-          conMod: 3
-          stackBehavior: refresh
-        quarantine_root:
-          displayName: Quarantine
-          effectType: root
-          durationMs: 4000
-          stackBehavior: none
-        placebo_debuff:
-          displayName: Placebo Effect
-          effectType: stat_debuff
-          durationMs: 15000
-          strMod: -2
-          dexMod: -2
-          intMod: -2
-          wisMod: -2
-          stackBehavior: refresh
-        miracle_cure_effect:
-          displayName: Miracle Cure
-          effectType: hot
-          durationMs: 10000
-          tickIntervalMs: 2000
-          tickMinValue: 12
-          tickMaxValue: 18
-          stackBehavior: none
-
-        # ── Pirate effects ──────────────────────────────────────────────
-        sand_stun:
-          displayName: Pocket Sand
+        blind_stun:
+          displayName: Blinded
           effectType: stun
           durationMs: 2000
           stackBehavior: none
-        treasure_luck:
-          displayName: Treasure Map
-          effectType: stat_buff
-          durationMs: 25000
-          dexMod: 3
-          chaMod: 2
-          stackBehavior: refresh
-        soda_poison:
-          displayName: Soda Poison
+        envenom_dot:
+          displayName: Envenom
           effectType: dot
           durationMs: 10000
           tickIntervalMs: 2000
@@ -1053,73 +733,21 @@ ambonmud:
           tickMaxValue: 6
           stackBehavior: stack
           maxStacks: 3
-        sea_legs_buff:
-          displayName: Sea Legs
+        shadow_step_buff:
+          displayName: Shadow Step
           effectType: stat_buff
           durationMs: 20000
+          stackBehavior: refresh
           dexMod: 4
           conMod: 1
-          stackBehavior: refresh
-        plank_root:
-          displayName: Walk the Plank
-          effectType: root
-          durationMs: 3500
-          stackBehavior: none
-        jolly_roger_buff:
-          displayName: Jolly Roger
-          effectType: stat_buff
-          durationMs: 20000
-          strMod: 2
-          dexMod: 2
-          chaMod: 3
-          stackBehavior: refresh
-
-        # ── Ruler effects ───────────────────────────────────────────────
-        royal_decree_buff:
-          displayName: Royal Decree
-          effectType: stat_buff
-          durationMs: 25000
-          chaMod: 4
-          wisMod: 2
-          stackBehavior: refresh
-        crown_shield:
-          displayName: Crown Jewel
-          effectType: shield
-          durationMs: 15000
-          shieldAmount: 35
-          stackBehavior: refresh
-        tantrum_stun:
-          displayName: Royal Tantrum
-          effectType: stun
-          durationMs: 2500
-          stackBehavior: none
-        taxation_debuff:
-          displayName: Tax Collector
-          effectType: stat_debuff
-          durationMs: 12000
-          strMod: -2
-          dexMod: -2
-          chaMod: -3
-          stackBehavior: refresh
-        feast_regen:
-          displayName: Royal Feast
+        natures_gift_hot:
+          displayName: Nature's Gift
           effectType: hot
-          durationMs: 15000
-          tickIntervalMs: 3000
-          tickMinValue: 7
-          tickMaxValue: 12
+          durationMs: 12000
+          tickIntervalMs: 2000
+          tickMinValue: 5
+          tickMaxValue: 8
           stackBehavior: refresh
-        coronation_buff:
-          displayName: Coronation
-          effectType: stat_buff
-          durationMs: 25000
-          strMod: 2
-          dexMod: 2
-          conMod: 2
-          intMod: 2
-          wisMod: 2
-          chaMod: 4
-          stackBehavior: none
     effectTypes:
       types:
         dot:
@@ -1159,85 +787,85 @@ ambonmud:
           displayName: Ally
     combat:
       maxCombatsPerTick: 20
-      tickMillis: 4000
-      minDamage: 5
-      maxDamage: 50
+      tickMillis: 2000
+      minDamage: 1
+      maxDamage: 150
       feedback:
         enabled: false
         roomBroadcastEnabled: false
     mob:
-      minActionDelayMillis: 4000
-      maxActionDelayMillis: 8000
+      minActionDelayMillis: 2000
+      maxActionDelayMillis: 5000
       tiers:
         weak:
-          baseHp: 1
-          hpPerLevel: 1
-          baseMinDamage: 1
-          baseMaxDamage: 1
-          damagePerLevel: 0
-          baseArmor: 0
-          baseXpReward: 50
-          xpRewardPerLevel: 20
-          baseGoldMin: 10
-          baseGoldMax: 25
-          goldPerLevel: 5
-        standard:
-          baseHp: 4
-          hpPerLevel: 1
+          baseHp: 5
+          hpPerLevel: 2
           baseMinDamage: 1
           baseMaxDamage: 2
           damagePerLevel: 0
           baseArmor: 0
-          baseXpReward: 100
-          xpRewardPerLevel: 40
-          baseGoldMin: 20
-          baseGoldMax: 50
-          goldPerLevel: 10
-        elite:
-          baseHp: 10
-          hpPerLevel: 3
-          baseMinDamage: 1
-          baseMaxDamage: 3
-          damagePerLevel: 0
-          baseArmor: 0
-          baseXpReward: 250
-          xpRewardPerLevel: 80
-          baseGoldMin: 50
-          baseGoldMax: 100
-          goldPerLevel: 20
-        boss:
-          baseHp: 20
-          hpPerLevel: 5
+          baseXpReward: 15
+          xpRewardPerLevel: 5
+          baseGoldMin: 1
+          baseGoldMax: 3
+          goldPerLevel: 1
+        standard:
+          baseHp: 12
+          hpPerLevel: 4
           baseMinDamage: 2
           baseMaxDamage: 4
           damagePerLevel: 1
           baseArmor: 1
-          baseXpReward: 500
-          xpRewardPerLevel: 150
-          baseGoldMin: 150
-          baseGoldMax: 300
-          goldPerLevel: 50
+          baseXpReward: 30
+          xpRewardPerLevel: 10
+          baseGoldMin: 3
+          baseGoldMax: 8
+          goldPerLevel: 2
+        elite:
+          baseHp: 28
+          hpPerLevel: 7
+          baseMinDamage: 3
+          baseMaxDamage: 6
+          damagePerLevel: 1
+          baseArmor: 2
+          baseXpReward: 75
+          xpRewardPerLevel: 25
+          baseGoldMin: 10
+          baseGoldMax: 25
+          goldPerLevel: 5
+        boss:
+          baseHp: 55
+          hpPerLevel: 12
+          baseMinDamage: 4
+          baseMaxDamage: 9
+          damagePerLevel: 2
+          baseArmor: 3
+          baseXpReward: 200
+          xpRewardPerLevel: 50
+          baseGoldMin: 50
+          baseGoldMax: 100
+          goldPerLevel: 15
     economy:
-      buyMultiplier: 0.3
-      sellMultiplier: 0.9
+      buyMultiplier: 1
+      sellMultiplier: 0.5
     regen:
-      maxPlayersPerTick: 25
-      baseIntervalMillis: 1500
-      minIntervalMillis: 300
-      regenAmount: 5
+      maxPlayersPerTick: 10
+      baseIntervalMillis: 4500
+      minIntervalMillis: 1000
+      regenAmount: 1
       mana:
-        baseIntervalMillis: 1500
-        minIntervalMillis: 300
-        regenAmount: 5
+        baseIntervalMillis: 4500
+        minIntervalMillis: 1000
+        regenAmount: 1
     crafting:
-      maxSkillLevel: 30
-      baseXpPerLevel: 30
-      xpExponent: 1.1
-      gatherCooldownMs: 1000
-      stationBonusQuantity: 5
+      maxSkillLevel: 75
+      baseXpPerLevel: 100
+      xpExponent: 1.5
+      gatherCooldownMs: 3000
+      stationBonusQuantity: 1
     navigation:
       recall:
-        cooldownMs: 5000
+        cooldownMs: 60000
         messages:
           combatBlocked: You are fighting for your life...
           cooldownRemaining: You need to rest... ({seconds} seconds remaining)
@@ -1688,623 +1316,328 @@ ambonmud:
           usage: broadcast <message>
           category: admin
           staff: true
-        setgold:
-          usage: setgold <player> <amount>
-          category: admin
-          staff: true
-        setrace:
-          usage: setrace <player> <race>
-          category: admin
-          staff: true
-        setclass:
-          usage: setclass <player> <class>
-          category: admin
-          staff: true
-        setgender:
-          usage: setgender <player> <gender>
-          category: admin
-          staff: true
-        setxp:
-          usage: setxp <player> <amount>
-          category: admin
-          staff: true
-        heal:
-          usage: heal [player]
-          category: admin
-          staff: true
-        pinfo:
-          usage: pinfo <player>
-          category: admin
-          staff: true
     group:
-      maxSize: 8
-      inviteTimeoutMs: 120000
-      xpBonusPerMember: 25
+      maxSize: 5
+      inviteTimeoutMs: 60000
+      xpBonusPerMember: 10
     guildRanks:
       founderRank: leader
       defaultRank: member
       ranks: {}
     friends:
-      maxFriends: 200
+      maxFriends: 50
     classes:
       definitions:
         WARRIOR:
-          displayName: Knight
+          displayName: Warrior
           hpPerLevel: 4
           manaPerLevel: 1
-          description: Knights are children who came to the magical world of Auringold looking for  action and adventure ;  they
-            use their powers to protect the weak and innocent.
+          description: A battle-hardened combatant trained in heavy armor and martial weapons, equally capable of absorbing
+            punishment and dealing devastating blows.
           backstory: >-
-            **Knights of Auringold**
+            Warriors are forged in the crucibles of military academies, mercenary companies, and frontier garrisons
+            scattered across the known world. Their training begins young — often as squires hauling shields for veteran
+            soldiers or as pit fighters scrapping for coin in underground arenas. Every warrior carries the scars of a
+            hundred sparring matches before they ever see true battle.
 
 
-            In the mundane realms beyond the shimmering veils, children have always dreamed of something greater—of
-            sword and sorcery, of noble quests and legendary deeds. Most dismiss these yearnings as childhood fancy, but
-            some young souls burn so brightly with heroic desire that they pierce through reality itself, drawn across
-            the dimensional barriers to the magical world of Auringold like moths to an eternal flame.
+            The great martial traditions vary by region. In the northern holds, warriors learn to fight in tight shield
+            walls against raiding parties. Along the coast, they train aboard warships where footing is treacherous and
+            a single misstep means death. In the heartland cities, formal fencing academies produce duelists of
+            extraordinary precision. What unites them all is an unflinching willingness to stand at the front and meet
+            violence head-on.
 
 
-            These are the Knights—not born to nobility or trained in ancient academies, but children who answered
-            destiny's call with hearts full of courage and eyes bright with wonder. They arrive through moonlit portals,
-            forest clearings that shimmer at twilight, or simply by walking too far into the woods behind their homes
-            and emerging into a realm where magic flows like rivers and adventure waits around every corner.
-
-
-            The transformation is never gentle. The very act of crossing into Auringold awakens something primal within
-            them—their childhood dreams of heroism crystallize into tangible power. Their bodies grow strong with
-            supernatural might, their spirits kindle with an unquenchable flame of righteousness. They become living
-            embodiments of every storybook hero they ever admired, wielding strength that can shatter stone and bend
-            steel, though their connection to the deeper magics remains limited by their mortal origins.
-
-
-            Knights form loose brotherhoods and sisterhoods, gathering in tree-house sanctuaries and hidden groves where
-            they share tales of the worlds they left behind and the quests they've undertaken. They are guided not by
-            rigid codes or ancient traditions, but by the simple moral clarity of youth—an instinctive understanding
-            that the strong must protect the weak, that bullies must be stopped, and that every crying child deserves a
-            champion.
-
-
-            Their armor is often mismatched, scavenged from fallen foes or gifted by grateful villagers. Their weapons
-            bear the nicks and scratches of countless small battles—not grand wars against dark lords, but the daily
-            struggle against bandits who prey on merchants, monsters that terrorize farming communities, and petty
-            tyrants who abuse their power. They are the heroes of ordinary folk, the Knights-errant of everyday
-            miracles.
-
-
-            Some say that when a Knight's quest is truly complete, when they have grown from wide-eyed child to seasoned
-            protector, they fade away like morning mist—either returning to their original world as adults who remember
-            Auringold only as the most vivid dream of their youth, or ascending to join the eternal guardians who watch
-            over all worlds where children dare to dream of becoming heroes.
-
-
-            Until that day comes, they wander the roads of Auringold with eager hearts and ready swords, forever young,
-            forever brave, forever searching for the next innocent soul in need of a champion.
+            Veteran warriors often find employment as caravan guards, siege engineers, or lieutenants in the standing
+            armies of various lords. A rare few earn enough reputation to command their own companies. Regardless of
+            station, a warrior's worth is measured in the battles they have survived and the comrades they brought home
+            alive.
           primaryStat: STR
-          image: 9ff17c41508788201ba1d2e288e6193782f944af6f228403c0445c2ffd19706c.jpg
-          outfitDescription: Gleaming plate armor with mismatched pieces showing different origins—a polished breastplate here,
-            weathered gauntlets there—all bearing small dents and scratches from countless noble deeds. Wielding a
-            longsword that glows with a faint golden radiance in one hand and a sturdy shield emblazoned with a simple
-            but proud heraldic design in the other, with a flowing cape that billows heroically behind them and a
-            practical adventurer's pack secured at their side.
-          showcaseRace: HUMAN
+          image: 98169782bef9c4739ce982aba28b5022ddc0ad413e466031389a33778d3162c8.jpg
+          outfitDescription: Full plate armor with a heavy steel breastplate, layered pauldrons, gauntlets, and greaves. A
+            longsword hangs from a leather baldric at the hip, and a kite shield bearing a battle-worn heraldic crest is
+            strapped to one arm. A crimson half-cape drapes from the left shoulder.
         MAGE:
-          displayName: Wizard
+          displayName: Mage
           hpPerLevel: 1
           manaPerLevel: 5
-          description: Wizards are children who come to the magical world of Auringold dreaming of adventure through sorcery and
-            spells ; they perform all kinds of magical feats, limited only by their imagination, bending the world to
-            their will
+          description: A scholar of the arcane arts who channels raw magical energy into destructive spells, protective wards, and
+            debilitating hexes.
           backstory: >-
-            In the sprawling academies of Auringold, where crystalline spires pierce clouds heavy with arcane energy,
-            Wizards begin their journey as wide-eyed children drawn by whispered tales of impossible wonders. These
-            young souls arrive clutching worn spellbooks inherited from distant relatives or purchased with their
-            family's last coins, their hearts burning with dreams of reshaping reality itself.
+            Mages are products of the great arcane colleges — cloistered institutions built on ley-line nexuses where
+            the veil between the material and ethereal planes runs thin. Admission requires proof of innate magical
+            sensitivity, and the washout rate is brutal. Students who survive years of grueling study, failed
+            incantations, and the occasional laboratory explosion emerge as some of the most dangerous individuals
+            alive.
 
 
-            The path of the Wizard is one of relentless study and boundless curiosity. Within the hallowed halls of
-            institutions like the Cerulean Conservatory or the Obsidian Institute, these aspiring mages spend countless
-            hours hunched over ancient tomes, their fingers tracing formulaic incantations while their minds struggle to
-            comprehend the fundamental forces that govern existence. The air around them shimmers with half-formed
-            spells and failed experiments, testament to their determination to master the impossible.
+            The curriculum covers elemental theory, planar cosmology, glyph construction, and counter-magic. Practical
+            training takes place in warded chambers where novices learn to shape raw mana into coherent spell forms
+            without killing themselves or their classmates. Those who show talent for destruction are shepherded toward
+            battle-magic tracks; those with subtler gifts may specialize in enchantment, divination, or ward-crafting.
 
 
-            Unlike their Sorcerer counterparts who channel raw, instinctual power, Wizards approach magic as both art
-            and science. They dissect each spell component with scholarly precision, understanding that a mispronounced
-            syllable or incorrectly drawn sigil can mean the difference between conjuring light and summoning
-            devastating flame. Their spellbooks become sacred texts, filled with personal notations, theoretical
-            improvements, and the accumulated wisdom of generations.
-
-
-            The culture of Wizardry in Auringold celebrates intellectual achievement above all else. Young apprentices
-            compete not in physical tournaments but in exhibitions of magical creativity, crafting illusions that tell
-            epic stories or transmuting base materials into works of breathtaking beauty. Master Wizards are revered as
-            living libraries, their minds containing secrets that could topple kingdoms or heal incurable ailments.
-
-
-            Yet for all their scholarly pursuits, Wizards remain dreamers at heart. They see in every spell not just its
-            immediate effect, but infinite possibilities waiting to be unlocked. A simple cantrip to light a fire
-            becomes the foundation for understanding stellar formation; a charm to mend cloth evolves into techniques
-            for healing grievous wounds. Their laboratories buzz with ambitious projects that other classes might
-            consider madness—attempts to slow time, communicate with distant stars, or peer into the dreams of
-            slumbering gods.
-
-
-            This boundless ambition comes at a cost. Wizards' bodies remain frail, their constitution weakened by long
-            hours of study and exposure to volatile magical energies. Their minds, however, burn bright as beacon fires,
-            capable of storing vast reservoirs of mystical power that they channel through carefully memorized
-            incantations and precisely crafted ritual components.
-
-
-            In Auringold's grand tapestry of adventure, Wizards serve as the architects of possibility, turning the
-            phrase "it cannot be done" into their most despised enemy and "what if" into their most cherished ally.
+            Graduated mages often serve as court advisors, war-casters attached to military units, or independent
+            researchers pursuing obscure branches of arcane knowledge. The colleges maintain strict records of all
+            licensed practitioners, and rogue mages who practice without sanction are hunted by the order's enforcers.
           primaryStat: INT
-          image: e941c7fbbe62e35848deff0d8e5599188048a1a7c61a182374e3450070261f86.jpg
-          outfitDescription: Flowing robes of midnight blue or deep purple adorned with intricate silver embroidery depicting
-            constellations and arcane formulae, cinched with a leather belt bearing pouches for spell components and a
-            holstered crystal-topped wand. A leather-bound spellbook with glowing runes floats nearby or is clutched in
-            one hand, while the other grips an ornate staff crowned with a pulsing orb of magical energy that casts
-            ethereal light across bronze bracers inscribed with protective wards.
-          showcaseRace: HUMAN
+          image: 08f5d33a0dc82a3cfa8bf3849c7e0b3a3fef71b5c7c635981dd17c02f09e732d.jpg
+          outfitDescription: Deep indigo robes with silver arcane sigils embroidered along the hems and cuffs. A tall oak staff
+            topped with a faintly glowing crystal is held in one hand. A thick leather-bound spellbook hangs from a
+            chain at the belt. The robe's hood is pulled back, revealing sharp, studious features.
         CLERIC:
-          displayName: Doctor
+          displayName: Cleric
           hpPerLevel: 2
           manaPerLevel: 4
-          description: Doctors are children who come to the magical world of Auringold dreaming of healing the sick and injured ;
-            they provide services to the stuffies, toys, and other citizens of Auringold, producing magical cures that
-            can heal anything
+          description: A devoted servant of the divine who channels sacred power to mend wounds, bolster allies, and smite the
+            unholy.
           backstory: >-
-            In the twilight hours between sleep and waking, when the veil grows thin between worlds, certain children
-            find themselves drawn to Auringold—a realm where forgotten toys gain breath, abandoned stuffed animals walk
-            on worn paws, and the innocent magic of childhood takes physical form. These are the Doctors, young healers
-            whose pure desire to mend what is broken transcends the boundaries of ordinary reality.
+            Clerics are ordained within the great temple hierarchies — sprawling religious institutions that maintain
+            hospitals, libraries, and fortified sanctuaries across the realm. Aspirants are taken in as acolytes, often
+            from orphanages or devout families, and spend years studying scripture, herbalism, and the channeling of
+            divine energy before they are permitted to lay hands on the sick or wounded.
 
 
-            Unlike the trained physicians of the adult world, Doctors arrive in Auringold carrying nothing but toy
-            medical kits, plastic stethoscopes, and hearts brimming with the unshakeable belief that everything can be
-            fixed with enough care and determination. Their wisdom comes not from textbooks, but from an intuitive
-            understanding of suffering and an innate ability to see past surface wounds to the deeper hurts that plague
-            both toy and spirit alike.
+            The path to ordination is one of discipline and sacrifice. Acolytes rise before dawn for prayer, spend their
+            mornings tending to the injured and dying, and devote their afternoons to theological study. Combat training
+            is mandatory — the temples learned long ago that healers who cannot defend themselves are liabilities on the
+            battlefield. Maces and warhammers are favored because they are effective against armored foes without
+            requiring the shedding of blood that some orders find doctrinally objectionable.
 
 
-            The Great Infirmary of Auringold stands as testament to their calling—a whimsical hospital built from
-            oversized building blocks and pillow forts, where the scent of healing herbs mingles with the comforting
-            aroma of hot cocoa. Here, Doctors tend to teddy bears whose stuffing has grown thin with age, tin soldiers
-            bent from countless battles, and dolls whose porcelain hearts have cracked from loneliness. Their treatments
-            range from the wonderfully mundane—careful stitching of torn seams and polishing of tarnished surfaces—to
-            the magnificently impossible, brewing potions from dewdrops and lullabies that can mend even the most
-            shattered dreams.
-
-
-            Each Doctor discovers that their childlike faith in healing becomes a tangible force in Auringold,
-            manifesting as shimmering threads of golden light that can knit bones, seal wounds, and restore hope to the
-            most despairing soul. Their mana flows like gentle streams of starlight, replenishing as they sleep and
-            dream of worlds where nothing stays broken forever. Though their small bodies may be fragile compared to
-            adult adventurers, their spirits burn with the fierce determination of youth, growing stronger with every
-            life they touch and every miracle they perform in this realm where believing truly is seeing.
+            Full clerics serve wherever need is greatest. Some are permanently stationed at frontier clinics. Others
+            march with armies, keeping soldiers alive through grueling campaigns. A few are dispatched as wandering
+            mendicants, carrying the temple's mercy to remote villages that would otherwise have no access to healing
+            magic.
           primaryStat: WIS
-          image: d6c1bcef8c78cbd9c35c765bddc325287b03f88c1d322a13933cbaa02ce2399f.jpg
-          outfitDescription: Wearing a pristine white coat that shimmers with healing magic, adorned with colorful patches and toy
-            medical badges, carrying an oversized plastic stethoscope that glows with golden light and a magical medical
-            bag overflowing with bandages, candy pills, and bottled starlight. The coat features deep pockets bulging
-            with toy syringes, rainbow band-aids, and miniature healing potions, while a child's toy doctor hat sits
-            atop their head, crowned with a reflective mirror that captures and amplifies their healing aura.
+          image: b5d2b5a7da755dd6335713f466cea867faf24f552f398f2516139105a52df7c3.jpg
+          outfitDescription: White and gold vestments layered over a chain hauberk. A polished steel mace hangs from the belt
+            alongside a radiant holy symbol on a heavy chain. The vestments bear the emblem of a sunburst, and a hooded
+            mantle of deep gold cloth rests across the shoulders.
         ROGUE:
-          displayName: Pirate
+          displayName: Rogue
           hpPerLevel: 2
           manaPerLevel: 2
-          description: Pirates are children who come to Auringold looking for nonstop adventure and fun ; they are full of energy
-            and cause playful havoc wherever they go
+          description: A cunning operative who relies on stealth, precision, and dirty tricks to eliminate targets before they can
+            retaliate.
           backstory: >-
-            The Pirate class emerged from the bustling port cities of the Crimson Archipelago, where orphaned street
-            children learned to survive by their wits and nimble fingers. These waifs, abandoned by wars or lost to
-            plague, banded together in makeshift crews that roamed the docks and markets, perfecting the arts of
-            mischief and evasion. What began as necessity evolved into tradition when Captain Jolly Redbeard, himself
-            once a dock rat, formalized the "Code of Endless Summer" – a philosophy declaring that life's greatest
-            treasures are laughter, friendship, and the thrill of the next great escapade.
+            Rogues come from the shadow side of civilization — the thieves' guilds, spy networks, and assassin
+            brotherhoods that thrive in every major city. Their training is informal compared to warriors or mages, but
+            no less rigorous. Apprentices learn lockpicking, poison craft, silent movement, and blade work from
+            experienced mentors who tolerate nothing less than perfection. A fumbled lock or a creaking floorboard
+            during training earns a beating; in the field, it earns a grave.
 
 
-            When these spirited rogues hear tales of Auringold's legendary adventures, they arrive in droves aboard
-            creaking dinghies, commandeered fishing boats, and the occasional "borrowed" merchant vessel. They bring
-            with them an infectious enthusiasm that both delights and exasperates local authorities. Pirates organize
-            elaborate treasure hunts through city streets, stage mock sea battles in public fountains, and maintain an
-            underground network of hideouts connected by ropes, ladders, and secret passages.
+            The guilds operate under strict codes of conduct. Contracts are honored, territories are respected, and
+            information is the most valuable currency. A rogue who breaks guild law faces exile or worse. In return, the
+            guild provides fencing services for stolen goods, legal protection through bribed magistrates, and a network
+            of safe houses spanning multiple cities.
 
 
-            Their culture revolves around the sacred rituals of "first watch" – elaborate initiation pranks for
-            newcomers – and "sunset councils" where crews gather to plan the next day's adventures while sharing stolen
-            sweets and wild stories. Pirates communicate through a colorful pidgin mixing sailor's cant with playground
-            rhymes, and their hierarchy is determined not by age or strength, but by creativity in devising harmless but
-            memorable capers.
-
-
-            Though their antics sometimes strain patience, Pirates possess an uncanny ability to unite strangers through
-            shared laughter and to find wonder in the mundane. Their boundless energy and acrobatic skills make them
-            surprisingly effective in genuine crises, when their playful nature transforms into fierce loyalty to their
-            chosen crew and adopted homeland.
+            Not all rogues are criminals. Military scouts, royal intelligence agents, and freelance investigators all
+            employ the same skill set in service of legitimate employers. The line between spy and thief is largely a
+            matter of who signs the paycheck. Regardless of allegiance, all rogues share a preference for ending fights
+            quickly, quietly, and on their own terms.
           primaryStat: DEX
-          image: afccc9c03b97211007e4515203879a9ed95905962119bb53333b86070dd24265.jpg
-          outfitDescription: Wearing a patchwork coat of mismatched fabrics and colors with rolled-up sleeves, tattered shorts or
-            pants held up by rope belt, and worn leather boots perfect for climbing and running. Wielding a curved
-            cutlass or wooden practice sword alongside a coil of rope, with pouches and small trinkets dangling from the
-            belt, a weathered tricorn hat adorned with feathers or makeshift decorations, and perhaps a small spyglass
-            or compass hanging from a cord around the neck.
-        RULER:
-          displayName: Ruler
-          hpPerLevel: 6
-          manaPerLevel: 8
-          description: Rulers are children who come to the magical world of Auringold as princes, princesses, kings and queens ;
-            They rule over the pixelated and stuffie citizens, lending their expert guidance and direction
+          image: 673082bf0f825c957ba5629399b2670cf6254645f322813e84c86c928d51b10a.jpg
+          outfitDescription: Supple dark leather armor with reinforced shoulder guards and bracers studded with dull metal rivets.
+            Twin daggers are sheathed in crossed back-scabbards. A deep hooded cloak of charcoal-grey wool obscures the
+            face, and a bandolier of small pouches and vials crosses the chest.
+        RANGER:
+          displayName: Ranger
+          hpPerLevel: 3
+          manaPerLevel: 3
+          description: A wilderness expert who fights alongside bonded animal companions, blending archery with nature magic to
+            control the battlefield.
           backstory: >-
-            **The Crowned Dreamers of Auringold**
+            Rangers are trained by the wardens — a loose confederation of frontier scouts, beast-tamers, and wilderness
+            survivalists who patrol the untamed lands beyond the reach of civilization. There are no formal academies;
+            instead, apprentice rangers are taken into the wild by experienced mentors and taught through years of
+            practical experience. They learn to track prey across any terrain, read weather patterns, identify edible
+            and poisonous plants, and forge the empathic bonds with wild animals that are the hallmark of their craft.
 
 
-            In the moments between sleep and waking, when reality grows thin and imagination takes hold, certain
-            children find themselves pulled across the veil into Auringold—a realm where stuffed animals breathe with
-            cotton hearts and pixelated landscapes shift like living mosaics. These young souls arrive not as mere
-            visitors, but as sovereigns, crowned by the realm's ancient magic that recognizes the pure authority of
-            untainted dreams.
+            The bond between a ranger and their companions is not mere domestication. It is a form of primal magic — an
+            ancient pact between humanoid and beast that predates the arcane colleges by millennia. Rangers who attune
+            to this power can communicate wordlessly with their bonded animals, share sensory impressions across great
+            distances, and even channel restorative natural energy through the bond. The deeper the trust between ranger
+            and companion, the more potent these abilities become.
 
 
-            The transformation is both gentle and profound. A child who falls asleep clutching a worn teddy bear may
-            awaken as Queen of the Velvet Throne, her loyal parliament composed of button-eyed advisors and
-            ribbon-tailed courtiers. Another might find himself King of the Crystal Cascade, where geometric fish swim
-            through rivers of flowing light, their citizens speaking in the melodic chimes of cascading pixels.
-
-
-            Auringold's history speaks of the Great Awakening, when the first Ruler—a girl named Melody who had lost her
-            voice in the waking world—sang the realm into fuller existence with a lullaby that gave true consciousness
-            to every toy and digital sprite. Since then, each new Ruler has added their own thread to the tapestry of
-            this impossible kingdom, their innocent wisdom often solving conflicts that would baffle adult minds.
-
-
-            The Stuffie citizens, crafted from memories of comfort and security, serve with unwavering devotion, while
-            the Pixelated folk—born from the dreams of a generation raised on glowing screens—offer their geometric
-            insights and computational clarity. Together under their young monarchs, they build a society where bedtime
-            stories become law, where playground rules govern international diplomacy, and where the greatest treasures
-            are not gold or jewels, but forgotten toys brought back to magical life.
-
-
-            These child Rulers possess an innate understanding of both justice and joy, wielding scepters that might be
-            repurposed kitchen spoons or crowns woven from dandelion stems, yet commanding respect that spans both plush
-            kingdoms and digital domains. In Auringold, wisdom comes not from years but from the fearless heart of
-            childhood itself.
-          selectable: true
-          image: 10d374d0b3e0ffec6ccfb5908aeac23da0c5c7195bddd776a2f46c02470a95c6.jpg
-          outfitDescription: Ornate velvet robes in jewel tones with golden trim and embroidered stars, flowing cape fastened with
-            an oversized gemstone brooch, delicate circlet or crown adorned with colorful stones that pulse with soft
-            magical light. Wielding a whimsical royal scepter topped with a glowing orb or star, accompanied by floating
-            magical accessories like a miniature crown, enchanted scroll, or orbiting toy-like familiars that sparkle
-            with pixelated effects.
+            Rangers serve as border patrols, monster hunters, and guides for expeditions into uncharted territory. They
+            are often the first line of defense when creatures from the deep wilderness encroach on settled lands. Their
+            knowledge of the natural world makes them invaluable to military commanders planning campaigns through
+            hostile terrain, and their animal companions provide scouting capabilities that no amount of conventional
+            reconnaissance can match.
+          primaryStat: WIS
+          image: d1d7c4b66422dce6c5d2b7d4362872730da19ad9abb3d10962946f0571e0de50.jpg
+          outfitDescription: Weathered green and brown leather armor with leaf-shaped scale overlays across the chest. A longbow
+            of dark yew is slung across the back alongside a quiver of fletched arrows. A short hunting knife sits at
+            the hip. The armor is accented with fur trim and wooden toggles, and a forest-green cloak is pinned at the
+            shoulder with an antler brooch.
     races:
       definitions:
         HUMAN:
-          displayName: HUMAN
-          description: Humans are the children who enter Auringold and play as themselves
+          displayName: Human
+          description: Versatile and adaptable, humans excel in any role through sheer determination and ingenuity.
           backstory: >-
-            **The Awakened**
+            Humans are the most widespread of the civilized races, having carved kingdoms, republics, and trading
+            empires out of every habitable corner of the known world. Their relatively short lifespans drive an urgency
+            that other races sometimes mistake for recklessness, but which humans understand as ambition. A human who
+            lives to see sixty has likely accomplished more in raw volume than an elf who has spent three centuries
+            perfecting a single craft.
 
 
-            In the earliest days of Auringold's formation, when the cosmic winds first stirred the primordial mists and
-            shaped the nascent realm, a peculiar phenomenon began to manifest. Children from distant worlds beyond the
-            veil would find themselves drawn into this mystical domain, not through arcane rituals or divine
-            intervention, but through the pure, unbridled power of imagination and wonder.
+            Human societies are staggeringly diverse. The northern clans organize around warrior-kings and blood oaths.
+            The southern city-states are governed by merchant councils and guild charters. The eastern provinces
+            maintain rigid feudal hierarchies with landed nobility and peasant levies. What unites them is a relentless
+            drive to build, expand, and leave a mark on the world that outlasts their mortal years.
 
 
-            These young souls, known collectively as the Awakened, arrive in Auringold carrying nothing but their truest
-            selves—their hopes, fears, dreams, and the boundless creativity that exists before the world teaches them
-            what is "impossible." Unlike the native races who have spent millennia adapting to Auringold's magical
-            currents, the Awakened bring something far more precious: the ability to see the realm with fresh eyes,
-            unclouded by ancient prejudices or rigid traditions.
-
-
-            The Awakened possess an extraordinary gift called the "Malleable Spirit"—their very essence remains fluid
-            and adaptable, allowing them to learn any skill, master any art, or forge bonds with any creature they
-            encounter. Where an elf might spend centuries perfecting a single school of magic, an Awakened child might
-            stumble upon three different magical disciplines in a single afternoon, guided by curiosity rather than
-            convention.
-
-
-            Their settlements, known as Havens of Wonder, are ever-changing communities that reflect the collective
-            imagination of their inhabitants. Buildings might shift from treehouses to crystal palaces to underground
-            burrows depending on the prevailing mood and dreams of the residents. These communities serve as neutral
-            ground where all races gather, drawn by the Awakened's unique ability to see potential friends where others
-            see only ancient enemies.
-
-
-            Though physically they may appear as ordinary children, the Awakened are recognized throughout Auringold as
-            harbingers of change and possibility. Their presence often signals the beginning of great adventures, the
-            resolution of age-old conflicts, or the discovery of new realms within the ever-expanding borders of this
-            mystical world.
-
-
-            The other races have learned to both cherish and prepare for the arrival of the Awakened, for where these
-            remarkable beings tread, the very fabric of reality becomes more vibrant, more alive, and infinitely more
-            wondrous.
-          image: 37f64ea49f3ba61e43166b98b724e138151686bcbba7fc9a7f240810b364a92c.jpg
-          bodyDescription: Youthful human form with smooth, unblemished skin that seems to shimmer faintly with an inner light of
-            pure potential. Eyes that sparkle with curiosity and wonder, often shifting subtly in hue to reflect their
-            current emotions or thoughts. Hair that moves as if touched by invisible winds of imagination, sometimes
-            catching glints of otherworldly colors when the light strikes it just right, while their entire being
-            radiates a soft, warm glow that pulses gently with the rhythm of limitless possibility.
-          staffPrompt: A transcendent human figure wreathed in cascading auroras of pure creation, their form simultaneously
-            youthful and ageless as reality bends around their divine presence. Golden fractals of infinite possibility
-            spiral outward from their luminous skin, while their eyes blaze with the combined wisdom of every story ever
-            told and every dream ever dreamed. Massive ethereal wings of crystallized starlight unfurl behind them, each
-            feather containing swirling galaxies of potential worlds, as ribbons of liquid gold and silver flow through
-            their hair like the very essence of imagination made manifest. The ground beneath them dissolves into
-            streams of pure light that flow upward in impossible defiance of gravity, while floating tomes of cosmic
-            knowledge orbit their form alongside miniature suns that pulse in rhythm with the heartbeat of creation
-            itself. Their entire being radiates waves of divine authority that cause the air to shimmer with rainbow
-            prisms, and their outstretched hand holds a sphere of concentrated possibility from which new realities
-            continuously birth and fade in endless cycles.
-        DINOSAUR:
-          displayName: DINOSAUR
-          description: Dinosaurs are children who come to Auringold and turn into dinosaurs for their adventures
+            In adventuring companies, humans serve as the glue that holds disparate races and temperaments together.
+            They lack the innate magical affinity of the sylvan or the physical resilience of the stoneheart, but they
+            compensate with adaptability and an unmatched talent for learning new skills quickly. A human fighter can
+            retrain as a passable scout in weeks; a human mage can pick up the basics of herbalism between campaigns.
+            This flexibility makes them welcome in any party composition.
+          traits:
+            - Adaptable
+            - Ambitious
+          image: a6c6cc0632454035a29c3afbff6f91716bd7c1d4dbe4c22dcc574fabbab6c029.jpg
+          bodyDescription: Medium build with a wide range of skin tones from pale to deep brown. Features are varied and
+            unremarkable compared to the other races — no pointed ears, no stone-like skin. Hair ranges from straight to
+            curly in shades of black, brown, red, and blonde. Eyes are brown, blue, green, or grey. Sturdy and
+            well-proportioned, neither slight nor bulky.
+        SYLVAN:
+          displayName: Sylvan
+          description: Graceful forest-dwellers attuned to nature and magic, with keen senses honed over centuries of life among
+            the ancient woods.
           backstory: >-
-            The Metamorphic Children of Auringold
+            The sylvan emerged from the deep forests in an age before recorded history, and they have never fully left
+            them. Their settlements are built into living trees, across suspended bridges, and within root-hollowed
+            chambers beneath the forest floor. To outsiders, a sylvan village is nearly invisible — indistinguishable
+            from the surrounding woodland until you are standing in the middle of it.
 
 
-            In the shimmering realm of Auringold, where ancient magics flow like golden rivers through crystalline
-            valleys, there exists a phenomenon both wondrous and mysterious—the transformation of innocent children into
-            mighty dinosaurian forms. These are not mere beasts, but something far more extraordinary: young souls who
-            have crossed the threshold between worlds, carrying within them the pure essence of childhood wonder that
-            Auringold's primordial energies recognize and embrace.
+            Sylvan lifespans stretch across centuries, which gives them a fundamentally different relationship with time
+            than the shorter-lived races. A sylvan artisan may spend decades perfecting a single bow. Their historians
+            remember events that humans consider ancient mythology. This long perspective makes them cautious and
+            deliberate, but it also means that when a sylvan commits to a course of action, they have considered the
+            consequences more thoroughly than most.
 
 
-            Long ago, when the first explorers discovered the hidden pathways to Auringold, they brought with them tales
-            of children who vanished from their beds, only to be glimpsed in dreams as magnificent creatures roaming
-            prehistoric landscapes. The realm's ancient guardians, beings of living amber and fossilized starlight,
-            revealed the truth: Auringold exists partially outside of time itself, where the boundary between
-            imagination and reality grows thin. Children, with their unburdened minds and limitless capacity for belief,
-            naturally resonate with these temporal echoes of Earth's distant past.
-
-
-            Upon arrival, each child undergoes the Great Awakening—a mystical transformation that reflects their deepest
-            nature. Some become mighty Tyrannosaurs, their protective instincts magnified into fierce guardianship.
-            Others manifest as swift Velociraptors, their curiosity and cleverness enhanced beyond mortal bounds. The
-            gentle souls emerge as towering Brachiosaurs, while the bold and adventurous take the forms of Triceratops
-            or soaring Pteranodons.
-
-
-            These transformed children retain their human consciousness and emotions, but gain the primal wisdom and
-            instincts of their chosen forms. They form tight-knit packs based not on species, but on the bonds of
-            friendship and shared purpose that transcend their physical shapes. In Auringold, they are both student and
-            guardian, learning ancient secrets while protecting the realm's delicate balance between past and future,
-            dream and reality.
-
-
-            Their society revolves around the Sacred Rookeries—crystalline chambers where new arrivals first transform,
-            guided by elder Dinosaurs who have mastered both their bestial and human natures. Here, the young learn to
-            balance their newfound power with the responsibility that comes with it, preparing for adventures that will
-            shape not only their own destinies, but the fate of Auringold itself.
-          image: d80d63ff2780445b10e4c72042bbfabf326c8fe6950bcc81932523c3fac375e8.jpg
-          bodyDescription: Powerful dinosaurian body with scales that shimmer between earthy tones and faint golden iridescence,
-            reflecting the magical energies of transformation. Expressive eyes that retain a spark of human intelligence
-            and wonder within reptilian features, with facial expressions that blend primal instinct with childlike
-            curiosity. The creature's form pulses subtly with amber-colored magical energy, particularly around the
-            edges where reality bends to accommodate the metamorphosis from human to prehistoric beast.
-          staffPrompt: A colossal primordial dinosaur deity towering beyond mortal comprehension, its scales blazing with molten
-            gold and cosmic amber that ripple like liquid starlight across an impossibly massive form. Ancient reptilian
-            eyes burn with the accumulated wisdom of eons and the innocent wonder of every child who ever dreamed of
-            becoming a dinosaur, each iris containing swirling galaxies of golden fire. Massive claws and teeth gleam
-            with crystalline amber energy while reality itself warps and shimmers around the creature's form, creating
-            cascading waves of transformation magic that turn the air into prismatic fossil patterns. A crown of
-            floating amber orbs and petrified starlight circles its mighty skull, each one containing the essence of a
-            different prehistoric era, while its roar echoes across dimensions with the pure joy and power of limitless
-            imagination made manifest. The ground beneath trembles and transforms into crystallized time itself, showing
-            glimpses of primordial worlds through translucent amber beneath its divine footsteps.
-        DRAGON:
-          displayName: DRAGON
-          description: Dragons are children who come to Auringold and turn into powerful winged dragons that breathe fire for
-            their adventures
+            Despite their reclusive reputation, sylvan are not isolationists. They maintain trade relationships with
+            human border towns, exchanging rare herbs, enchanted wood, and masterwork bows for metals and manufactured
+            goods that the forest cannot provide. Sylvan rangers patrol the borders between civilization and the wild
+            places, serving as an early warning system against incursions from the deeper wilderness. Those who leave
+            the forest to adventure abroad often do so out of a sense of duty — a threat has been identified that
+            requires intervention beyond the treeline.
+          traits:
+            - Keen Senses
+            - Nature Affinity
+            - Graceful
+          image: d0f51898fa492713d576ad22596bd48c94ebfcba487c8acde8ba187044038d4a.jpg
+          statMods:
+            DEX: 1
+            INT: 1
+            CON: -1
+          bodyDescription: Tall and slender with an angular, fine-boned frame. Skin has a faint warm undertone ranging from fair
+            to olive. Ears are long and pointed, sweeping back from the head. Eyes are large and almond-shaped, often in
+            vivid greens, golds, or pale silver. Hair is typically straight and worn long, in shades of silver-white,
+            deep black, or autumnal auburn. Movements are fluid and precise.
+        STONEHEART:
+          displayName: Stoneheart
+          description: Hardy mountain folk with dense bones and iron constitutions, shaped by generations of life in the deep
+            halls beneath the peaks.
           backstory: >-
-            The Dragon-Chosen of Auringold
+            The stoneheart were born of the mountains — or so their creation myths insist. Their earliest histories
+            speak of a time when the first clans simply walked out of the rock itself, fully formed and already arguing
+            about whose tunnel was deeper. Whether this is literal truth or cultural metaphor, the stoneheart have dwelt
+            beneath the great mountain ranges for as long as any race can remember.
 
 
-            In the mist-shrouded realm of Auringold, where ancient magic flows through crystalline ley lines and the
-            very air shimmers with possibility, a phenomenon occurs that has puzzled scholars and mystics for centuries.
-            Children from distant worlds—some say from realms beyond the stars, others whisper from dimensions where
-            magic has long since faded—find themselves drawn to this land through dreams that burn with golden fire.
+            Stoneheart civilization is built around the clan-hold: a vast underground complex of mines, forges, dwelling
+            halls, and mushroom farms carved into the living rock over generations. Each clan-hold is a self-sufficient
+            fortress capable of withstanding siege for years. The stoneheart are master miners and smiths, producing
+            metalwork of extraordinary quality. Their steel is sought after across the known world, and a
+            stoneheart-forged blade can fetch ten times the price of its human-made equivalent.
 
 
-            These young souls, known as the Ember-Called, arrive bearing no memory of their journey, only an
-            inexplicable yearning that pulls them toward the Dracorium Peaks, towering mountains of volcanic glass that
-            pierce the heart of Auringold like obsidian fangs. Here, within the Crucible of Transformation—a vast cavern
-            where dragonfire once forged the very foundations of the realm—the children undergo the Awakening.
-
-
-            The transformation is neither swift nor gentle. Over the course of thirteen moons, their mortal flesh
-            gradually gives way to scales that gleam like polished jewels, their bones hollow and strengthen, and great
-            wings unfurl from their shoulders like banners of living flame. Most remarkably, deep within their throats,
-            an inner fire ignites—not merely flame, but the essence of creation itself, capable of forging as well as
-            destroying.
-
-
-            The Dragons of Auringold are not mere beasts of legend, but a proud civilization with their own customs and
-            hierarchies. They gather in Flights—aerial communities that soar between floating citadels of crystal and
-            stone, each led by an Ancient who has mastered not only the physical aspects of their draconic nature, but
-            the deeper mysteries of their transformed souls. Young Dragons spend decades learning the Flame Disciplines:
-            the art of tempering their inner fire, the sacred geometries of flight, and the responsibility that comes
-            with wielding power born from innocence transformed.
-
-
-            What drives children from other worlds to seek out this metamorphosis remains Auringold's greatest mystery.
-            Some believe they are souls destined for heroism, drawn by the realm's need for champions. Others whisper
-            that they are refugees from worlds consumed by darkness, seeking rebirth in flame and wing. The Dragons
-            themselves speak of half-remembered dreams and a calling that burns brighter than fear, driving them to
-            embrace a destiny written in fire across the endless skies of their adopted home.
-          image: 72e181fcfed581d33135bc3e38b97f72bd00d5d32f00909a12d1a25157509603.jpg
-          bodyDescription: Humanoid body with reptilian transformation, scaled skin in jewel tones of deep crimson, sapphire blue,
-            or emerald green that shimmer with inner fire, elongated face with pronounced cheekbones and golden
-            vertical-pupil eyes that glow like molten metal. Large membranous wings extending from muscular shoulders,
-            clawed hands and feet, and wisps of flame occasionally curling from nostrils and mouth corners, with an
-            overall aura of barely contained elemental fire energy radiating from within.
-          staffPrompt: A transcendent dragon deity of impossible magnificence towers with crystalline scales that shift through
-            all jewel tones simultaneously—crimson, sapphire, and emerald flowing like liquid starlight across a form
-            that seems to exist in multiple dimensions at once. Colossal wings spread wide enough to eclipse suns, their
-            membranes woven from pure cosmic fire and stellar winds, while golden eyes blaze with the intensity of
-            newborn galaxies and vertical pupils that contain swirling nebulae. Torrents of prismatic dragonfire cascade
-            endlessly from their maw, each flame a miniature constellation that births and destroys worlds, as reality
-            itself warps and bends around their presence. A crown of orbiting planets and burning comets circles their
-            ancient skull, while their clawed hands grasp threads of fate and time itself, and their very breath
-            reshapes the fabric of existence with each exhale. Divine runes of creation spiral around their form in
-            rings of molten gold, and their aura pulses with the raw power of elemental genesis—a being that transcends
-            mortal comprehension of what dragons could become.
-        KITTY:
-          displayName: KITTY
-          description: Kitties are children who come to Auringold to pretend to be cute cats and kittens
-          backstory: >-
-            The Kitty are not merely children at play, but members of a whimsical cultural phenomenon that has taken
-            root in the mystical realm of Auringold. These young souls, typically between the ages of seven and sixteen,
-            undergo a cherished rite of passage known as the "Whisker Walk" — a temporary transformation both spiritual
-            and social that connects them to the ancient feline guardians who once protected the earliest settlements of
-            their homeland.
-
-
-            Long ago, when Auringold was young and wild magic flowed freely through its forests, great cats of
-            supernatural intelligence served as guides and protectors to lost travelers and vulnerable communities.
-            These majestic beings, known as the Felinar, possessed wisdom beyond mortal understanding and could shift
-            between feline and humanoid forms at will. Though the Felinar vanished centuries ago during the Great
-            Dimming, their legacy lives on through the Kitty tradition.
-
-
-            When children feel the calling — often marked by vivid dreams of padding through moonlit meadows or an
-            inexplicable urge to climb impossible heights — their families celebrate with the Ceremony of First Purr.
-            The child receives handcrafted ears, a tail blessed by village elders, and learns the sacred art of Feline
-            Mimicry: the precise movements, vocalizations, and behavioral patterns that honor their mysterious
-            predecessors.
-
-
-            Kitties form tight-knit packs called "Litters," led by experienced older children known as "Queens" and
-            "Toms." They communicate through an intricate system of mews, chirps, and body language that often baffles
-            adults. Their playful antics serve a deeper purpose — they are unconsciously mapping the spiritual ley lines
-            that the ancient Felinar once traveled, keeping alive pathways of magic that might otherwise fade from
-            memory.
-
-
-            Most children naturally outgrow their Kitty phase as they approach adulthood, but some rare individuals
-            maintain the connection throughout their lives, becoming respected shamans and guides who help others
-            navigate both the physical and mystical landscapes of Auringold.
-          image: 2b4113665e844ddad7ae5e07e21a7e0f50c9a6617889dbea1633758ceba2a8eb.jpg
-        PUPPY:
-          displayName: PUPPY
-          description: Puppies are children who come to Auringold and turn into dogs, puppies, and wolves for their adventures
-          backstory: >-
-            The Puppy-Folk emerged from one of Auringold's most mysterious phenomena - the Great Calling that draws
-            young souls from distant realms to this magical land. When children from the mortal world cross through the
-            shimmering veils between dimensions, they undergo a profound transformation, their innocent hearts
-            resonating with the primal spirits of canine guardians that have protected Auringold since its founding.
-
-
-            This metamorphosis is not mere magic, but a sacred bond forged in the early days when the realm faced its
-            darkest hour. Ancient chronicles speak of a pack of celestial wolves who sacrificed themselves to save
-            Auringold's first settlers, their noble spirits becoming eternal protectors. When pure-hearted children
-            arrive in this land, these ancestral guardians recognize kindred souls and offer them the gift of the pack -
-            the ability to take canine form while retaining their human consciousness and wonder.
-
-
-            Puppy-Folk society centers around the concept of the "Forever Pack," extended family groups that span
-            multiple generations and forms. Young Puppies often shift between their original child appearance and
-            various canine manifestations - from playful puppies learning the world through exploration, to loyal dogs
-            serving as companions and messengers, to mighty wolves when courage is needed most. Their transformations
-            reflect their emotional growth and the challenges they face.
-
-
-            The Pack Halls of major settlements serve as both homes and training grounds, where Puppy-Folk learn the
-            ancient Howling Songs that let them communicate across vast distances, and practice the Scent Memories that
-            allow them to track not just physical trails, but the emotional imprints left by friends and foes alike.
-            Their culture values loyalty above all else, followed closely by curiosity and the protection of the
-            innocent - traits that make them natural adventurers and beloved allies throughout Auringold.
-          image: 91473c9bd91f58ed902bd0e27715ec1a4e913a570c9bf3620588713da5f1dbd9.jpg
-          bodyDescription: Small, youthful humanoid form with soft, rounded features and bright, expressive eyes that sparkle with
-            curiosity and innocence. Skin has a subtle luminescent quality that shifts between pale human tones and the
-            beginnings of fur patterns, with patches of downy hair emerging along the arms and face that hint at their
-            canine nature. Their hair ranges from tousled browns and golds to silvery whites, often with an otherworldly
-            shimmer that catches light like moonbeams, and their ears show slight elongation with a tendency to perk up
-            when alert.
-          staffPrompt: A transcendent Puppy deity manifests as a luminous child-god wreathed in cascading aurora light, their
-            small form radiating impossible cosmic power while maintaining the innocent wonder of eternal youth.
-            Golden-white energy pours from their shifting amber eyes like liquid starlight, and their tousled hair
-            transforms into flowing streams of celestial fire that dance with the colors of dawn and twilight. Spectral
-            wolf spirits orbit their glowing form in endless spirals, phasing between corporeal hounds of pure light and
-            wisps of transformative magic that bend reality around them. Ancient runes of metamorphosis burn in the air
-            around their pointed ears, which twitch at the cosmic harmonies only divine beings can perceive, while their
-            gentle smile holds the warmth of every hearth and the wild freedom of moonlit forests. Their small hands
-            cradle swirling galaxies of golden motes that pulse with the primal magic of transformation, each particle
-            containing the essence of every adventure, every friendship, every moment of pure joy experienced by their
-            mortal children.
-        UNICORN:
-          displayName: Unicorn
-          description: Unicorns are children who come to Auringold and turn into unicorns or pegasus for their adventures
-          backstory: >-
-            The Unicorns of Auringold are not born of this realm, but arrive as mortal children from the mundane world
-            beyond the Gossamer Veil. These young souls, pure of heart and untainted by cynicism, are drawn to Auringold
-            during moments of deepest wonder—while chasing fireflies through moonlit meadows, making wishes upon falling
-            stars, or believing with absolute certainty in magic's existence.
-
-
-            Upon crossing the threshold into this mystical land, the transformative essence of Auringold recognizes
-            their innate purity and bestows upon them one of two sacred forms. Those whose hearts burn with fierce
-            courage and protective instincts manifest as traditional unicorns, their spiral horns gleaming with
-            pearl-white radiance and their hooves leaving trails of silver starlight. Children whose spirits yearn for
-            freedom and boundless exploration emerge as pegasus-born, their wings shimmering with aurora colors that
-            shift with their emotions.
-
-
-            The transformation is not merely physical but spiritual, as these young beings retain their childlike wonder
-            while gaining ancient wisdom whispered by the wind itself. They speak in musical tones that can calm savage
-            beasts and know instinctively the location of hidden springs and secret groves. Their society is built
-            around the concept of the Eternal Game—a philosophy viewing all challenges and quests as grand adventures to
-            be savored rather than burdens to be endured.
-
-
-            Unicorn communities gather in Crystal Clearings, where their combined presence causes flowers to bloom out
-            of season and time flows differently, allowing them to experience centuries of adventure while mere days
-            pass in the mortal realm. They are guided by the Circle of First Wishes—the eldest among them who still
-            remember their original mortal names and the dreams that first called them to Auringold.
-          image: 8a165a9158afb6e44078a581baf19b7c436f5169173ec46b2542b90002bd4ca2.jpg
-          bodyDescription: Slender equine body with pristine white coat that gleams with inner luminescence and pearl-like
-            iridescence. Graceful humanoid face retains youthful, innocent features with large expressive eyes that
-            sparkle with starlight, framed by flowing silver-white mane that seems to drift as if underwater. Single
-            spiraling horn of polished ivory emerges from the forehead, radiating soft pearl-white radiance, while
-            delicate hooves leave faint trails of shimmering silver stardust with each step.
-          staffPrompt: A transcendent celestial unicorn of impossible divine majesty towers with ethereal grace, its pristine coat
-            now blazing with cascading aurora light that shifts through every spectrum of starfire, each strand of its
-            flowing mane transformed into streams of liquid starlight that spiral upward into infinity. The spiraling
-            horn has become a beacon of pure cosmic energy, crackling with silver-white lightning that tears rifts in
-            reality itself, while multiple halos of rotating constellation rings orbit the magnificent creature's head
-            and body. Ancient runic symbols of creation float and pulse in golden fire around its form, and where its
-            luminous hooves touch the ground, entire galaxies of flowers bloom in bursts of prismatic light. The being's
-            eyes have become twin nebulae containing the birth and death of stars, radiating waves of divine authority
-            that bend space and time, while its very presence causes the air to shimmer with crystalline music and
-            fragments of pure possibility.
+            Stoneheart who venture above ground do so for trade, diplomacy, or the pursuit of rare minerals that their
+            home mountains lack. They find the open sky disorienting at first — too much empty space above the head —
+            but adapt quickly enough. In battle, stoneheart are immovable anchors. Their dense bones and thick muscles
+            make them extraordinarily difficult to knock down, and their natural resistance to poison and disease means
+            that battlefield conditions that would incapacitate other races barely slow them down.
+          traits:
+            - Stone Resilience
+            - Mountain Born
+            - Enduring
+          image: df4a97f7b08199838134bf56438cf02fb9d6434b8ff8b573d799fd5647099a86.jpg
+          statMods:
+            CON: 2
+            DEX: -1
+          bodyDescription: Short and broad with a powerful, stocky build. Skin is thick and weathered, ranging from ruddy tan to
+            deep granite-grey. Features are heavy and blunt — strong jaw, prominent brow ridge, wide nose. Eyes are
+            deep-set in shades of slate, amber, or dark brown. Hair is coarse and thick, typically worn in braids, in
+            shades of iron-grey, black, or dark copper. Hands are broad with thick, calloused fingers.
     equipment:
       slots:
-        weapon:
-          displayName: WEAPON
-          order: 0
-          x: 40.486106872558594
-          y: 56.236980756123856
         head:
-          displayName: HEAD
+          displayName: Head
           order: 1
-          x: 50.902773539225265
-          y: 24.014757474263508
-        body:
-          displayName: BODY
+          x: 50
+          y: 50
+        chest:
+          displayName: Chest
           order: 2
-          x: 51.18055979410807
-          y: 44.709200859069824
-        hands:
-          displayName: HANDS
+          x: 50
+          y: 50
+        legs:
+          displayName: Legs
           order: 3
-          x: 62.29167938232422
-          y: 56.09809398651123
+          x: 50
+          y: 50
+        feet:
+          displayName: Feet
+          order: 4
+          x: 50
+          y: 50
+        hands:
+          displayName: Hands
+          order: 5
+          x: 50
+          y: 50
+        main_hand:
+          displayName: Main Hand
+          order: 6
+          x: 50
+          y: 50
+        off_hand:
+          displayName: Off Hand
+          order: 7
+          x: 50
+          y: 50
+        ring:
+          displayName: Ring
+          order: 8
+          x: 50
+          y: 50
+        neck:
+          displayName: Neck
+          order: 9
+          x: 50
+          y: 50
     characterCreation:
-      startingGold: 2000
+      startingGold: 100
       defaultRace: HUMAN
       defaultClass: WARRIOR
-    genders: {}
+      defaultGender: MALE
+    genders:
+      MALE:
+        displayName: Male
+      FEMALE:
+        displayName: Female
+      NON_BINARY:
+        displayName: Non-Binary
     emotePresets:
       presets:
         - label: Wave
@@ -2343,47 +1676,15 @@ ambonmud:
         - label: Cry
           emoji: 😢
           action: cries.
-    bank:
-      maxItems: 200
-    pets:
-      definitions:
-        teddy_knight:
-          name: a teddy knight
-          description: A brave stuffed bear wearing shining button armor and wielding a toothpick lance.
-          hp: 25
-          minDamage: 2
-          maxDamage: 5
-          armor: 1
-        pixel_sprite:
-          name: a pixel sprite
-          description: A tiny pixelated fairy that crackles with digital sparks and leaves a trail of glowing pixels.
-          hp: 15
-          minDamage: 3
-          maxDamage: 7
-          armor: 0
-        clockwork_dragon:
-          name: a clockwork dragon
-          description: A magnificent wind-up dragon with brass scales and ruby eyes that breathes sparks of toy fire.
-          hp: 40
-          minDamage: 5
-          maxDamage: 10
-          armor: 2
-        dream_guardian:
-          name: a dream guardian
-          description: A towering stuffed sentinel woven from pure dreams, its cotton heart glowing with protective light.
-          hp: 60
-          minDamage: 6
-          maxDamage: 12
-          armor: 3
     worldTime:
-      cycleLengthMs: 900000
+      cycleLengthMs: 1800000
       dawnHour: 5
       dayHour: 7
       duskHour: 18
       nightHour: 20
     weather:
-      minTransitionMs: 60000
-      maxTransitionMs: 180000
+      minTransitionMs: 180000
+      maxTransitionMs: 600000
       types:
         CLEAR:
           displayName: Clear
@@ -2440,13 +1741,39 @@ ambonmud:
         weatherParticleOverrides: {}
       zones: {}
     enchanting:
-      maxEnchantmentsPerItem: 6
+      maxEnchantmentsPerItem: 3
       definitions: {}
+    pets:
+      definitions:
+        wolf_companion:
+          name: a wolf companion
+          hp: 25
+          minDamage: 2
+          maxDamage: 5
+          armor: 1
+          description: A lean grey wolf with sharp yellow eyes, trained to fight alongside its bonded ranger.
+          image: a2a1f51c3361391908f68af1083a59c1daa2242750af576ca59b9b5cec03ac62.png
+        spirit_hawk:
+          name: a spirit hawk
+          hp: 15
+          minDamage: 3
+          maxDamage: 7
+          armor: 0
+          description: A large hawk wreathed in faint translucent light, striking at enemies with razor talons from above.
+          image: f9c143caa4e04b89106323f85d699e9faf58909be1aaef81273b5fc5b5fb44fa.png
+        bear_guardian:
+          name: a bear guardian
+          hp: 40
+          minDamage: 5
+          maxDamage: 10
+          armor: 2
+          description: A massive brown bear with thick scarred hide, summoned to absorb punishment and crush foes in its grip.
+          image: e6ee852324a6ad9cab840afb3731f33ea000dd6da6dc7fc639f61fd2fb045dc0.png
     skillPoints:
-      interval: 1
+      interval: 3
     multiclass:
-      minLevel: 5
-      goldCost: 50
+      minLevel: 15
+      goldCost: 500
     housing:
       enabled: true
       entryExitDirection: SOUTH
@@ -2454,40 +1781,42 @@ ambonmud:
     classStartRooms: {}
     lottery:
       enabled: true
-      ticketCost: 1
-      drawingIntervalMs: 600000
-      jackpotSeedGold: 5000
+      ticketCost: 25
+      drawingIntervalMs: 3600000
+      jackpotSeedGold: 500
       jackpotPercentFromTickets: 80
       maxTicketsPerPlayer: 10
     gambling:
       enabled: true
-      diceMinBet: 1
-      diceMaxBet: 100
-      diceWinChance: 0.6
-      diceWinMultiplier: 3
+      diceMinBet: 10
+      diceMaxBet: 1000
+      diceWinChance: 0.45
+      diceWinMultiplier: 2
       cooldownMs: 5000
+    stylist:
+      feeGold: 500
     respec:
       enabled: true
-      goldCost: 0
-      cooldownMs: 0
+      goldCost: 100
+      cooldownMs: 300000
     prestige:
       enabled: true
-      xpCostBase: 1000
-      xpCostMultiplier: 1.1
-      maxRank: 20
+      xpCostBase: 10000
+      xpCostMultiplier: 1.5
+      maxRank: 5
     dailyQuests:
       enabled: false
       resetHourUtc: 0
       dailySlots: 3
       weeklySlots: 1
-      streakBonusPercent: 30
+      streakBonusPercent: 10
       streakMaxDays: 7
       dailyPool: []
       weeklyPool: []
     autoQuests:
       enabled: true
-      timeLimitMs: 1800000
-      cooldownMs: 30000
+      timeLimitMs: 300000
+      cooldownMs: 300000
       rewardGoldBase: 50
       rewardGoldPerLevel: 10
       rewardXpBase: 100
@@ -2496,8 +1825,8 @@ ambonmud:
       killCountMax: 8
     globalQuests:
       enabled: false
-      intervalMs: 1800000
-      durationMs: 900000
+      intervalMs: 7200000
+      durationMs: 3600000
       announceIntervalMs: 300000
       minPlayersOnline: 2
       rewardGoldFirst: 2000
@@ -2509,26 +1838,17 @@ ambonmud:
       objectives: []
     guildHalls:
       enabled: true
-      purchaseCost: 0
+      purchaseCost: 10000
       roomCost: 10000
       maxRooms: 10
-      templates:
-        asdf:
-          title: asdf
-          description: ""
-          hasStorage: false
+      templates: {}
     factions:
-      defaultReputation: 50
-      killPenalty: 1
-      killBonus: 10
-      definitions: {}
+      defaultReputation: 0
+      killPenalty: 10
+      killBonus: 5
     leaderboard:
-      refreshIntervalMs: 30000
-      topN: 50
-    currencies:
-      definitions: {}
-      honorPerPvpKill: 10
-      tokensPerCraft: 1
+      refreshIntervalMs: 120000
+      topN: 10
     achievementCategories:
       categories:
         combat:
@@ -2552,12 +1872,35 @@ ambonmud:
         quest_complete:
           displayName: Quest Complete
           progressFormat: "{current}/{required}"
+        craft:
+          displayName: Craft
+          progressFormat: "{current}/{required}"
+        gather:
+          displayName: Gather
+          progressFormat: "{current}/{required}"
+        dungeon_complete:
+          displayName: Complete Dungeon
+          progressFormat: "{current}/{required}"
+        dungeon_complete_full_party:
+          displayName: Complete Dungeon (Full Party)
+          progressFormat: "{current}/{required}"
+        guild_create:
+          displayName: Create Guild
+          progressFormat: "{current}/{required}"
     questObjectiveTypes:
       types:
         kill:
           displayName: Kill
         collect:
           displayName: Collect
+        gather:
+          displayName: Gather
+        craft:
+          displayName: Craft
+        dungeon:
+          displayName: Dungeon
+        pvpKill:
+          displayName: PvP Kill
     questCompletionTypes:
       types:
         auto:
@@ -2565,20 +1908,20 @@ ambonmud:
         npc_turn_in:
           displayName: NPC Turn-In
   progression:
-    maxLevel: 30
+    maxLevel: 50
     xp:
-      baseXp: 30
-      exponent: 1.2
-      linearXp: 5
-      multiplier: 2
-      defaultKillXp: 50
+      baseXp: 100
+      exponent: 1.8
+      linearXp: 0
+      multiplier: 1
+      defaultKillXp: 10
     rewards:
-      hpPerLevel: 8
-      manaPerLevel: 6
+      hpPerLevel: 2
+      manaPerLevel: 1
       fullHealOnLevelUp: true
       fullManaOnLevelUp: true
-      baseHp: 50
-      baseMana: 50
+      baseHp: 10
+      baseMana: 10
   transport:
     telnet:
       maxLineLen: 1024
@@ -2597,14 +1940,14 @@ ambonmud:
   observability:
     metricsEnabled: false
     metricsEndpoint: /metrics
-    metricsHttpPort: 9090
+    metricsHttpPort: 9099
     metricsHttpHost: 0.0.0.0
     staticTags: {}
   admin:
     enabled: false
     port: 9091
     token: ""
-    basePath: /admin/
+    basePath: /
     corsOrigins: []
   logging:
     level: INFO
@@ -2622,22 +1965,10 @@ ambonmud:
       instanceId: ""
       sharedSecret: ""
   images:
-    baseUrl: https://auringold.ambon.dev/
-    globalAssets:
-      video_available_indicator: c4e24df39c79fe9f233c010df7d1bbdcee2138474d088be63a42ad5e64947d04.png
-      shop_kiosk: ee1919afce616a1c7740a55c5325276b7d00f2c8aa2e65237c2548a217703e33.png
-      dialog_indicator: ead1c3c85735d65bacd69d636b10eb05b0ab8aea5efb83d9a1cea8256601c671.png
-      aggro_indicator: 9d9863ac8c2029be49d0a64b9a3fd62648d1db456e64f36cd0af61a1baafdedf.png
-      quest_available_indicator: 09032bbc40c275fd946e2041782101e4b47475053c5cc9d3fafa250b5f730212.png
-      quest_complete_indicator: 95818ac036943cec5975f6056f4e638eb1bdbf7b1ab433e0e1f4bbfb3a8861c1.png
-      minimap_unexplored: af9977ab3c6479d0794c5a6db57216916acf499ef5c280297a814aa212d08b79.png
-      map_background: 6fe6f1e79d510ffced9d1801d843f4b45541e37c9364e8ad2c147f0a717c05d2.jpg
-      crafting_station: 34221c514d793d2d62c991fcc57c1a4ad86b2aeb35ca9b69b93e113f438b90b3.png
-      trainer_icon: afb827b502dca293d279280ea859447ae568ca534d0c017552083a03c0706910.png
-      bank_vault: ddcf4909c4bdb7dec45e11c8873358bce66849b2186cff44babcccc78e986c6d.png
-      tavern_icon: 185884c480ae19d410c19c394c41adb3b32aca75245a2586c300ae5eaf28bbf1.png
+    baseUrl: /images/
+    globalAssets: {}
     defaultAssets: {}
   videos:
-    baseUrl: https://auringold.ambon.dev/
+    baseUrl: /videos/
   audio:
-    baseUrl: https://auringold.ambon.dev/
+    baseUrl: /audio/

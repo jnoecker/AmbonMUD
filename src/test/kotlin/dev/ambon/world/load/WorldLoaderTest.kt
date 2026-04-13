@@ -507,8 +507,8 @@ class WorldLoaderTest {
             assertTrue(world.rooms.isNotEmpty())
             // Spot-check the start zone loads:
             assertTrue(
-                world.rooms.containsKey(RoomId("auringold_academy:dream_gate")),
-                "Expected auringold_academy:dream_gate to be loaded",
+                world.rooms.containsKey(RoomId("academy:academy_gates")),
+                "Expected academy:academy_gates to be loaded",
             )
         }
 
@@ -554,7 +554,7 @@ class WorldLoaderTest {
                     startRoom = startRoom,
                 )
             assertTrue(world.rooms.isNotEmpty())
-            assertEquals(RoomId("auringold_academy:dream_gate"), world.startRoom)
+            assertEquals(RoomId("academy:academy_gates"), world.startRoom)
         }
     }
 

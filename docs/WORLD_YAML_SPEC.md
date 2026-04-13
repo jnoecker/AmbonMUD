@@ -17,7 +17,7 @@ It is written for code generators that need to emit valid zone files.
   - `TrainerFile`
   - `GatheringNodeFile`
   - `RecipeFile`
-  - `DungeonFile` (procedural dungeon template — see [DUNGEON_TEMPLATE_REFERENCE.md](DUNGEON_TEMPLATE_REFERENCE.md))
+  - `DungeonFile` 
 
 ## Top-Level Schema
 
@@ -82,7 +82,7 @@ ambient: <string, optional - overrides zone audio.ambient>
 
 `bank` notes:
 - When `true`, enables bank commands (`deposit`, `withdraw`, `bank`) in this room.
-- See the Bank NPC System section in `docs/RECENT_YAML_CHANGES.md` for full details.
+- Bank commands: `deposit`, `withdraw`, `bank`. Configurable via `ambonmud.engine.bank` in `application.yaml`.
 
 `stylist` notes:
 - When `true`, enables stylist commands (`stylist`, `changerace <race>`) in this room.

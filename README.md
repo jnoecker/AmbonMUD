@@ -15,7 +15,6 @@ AmbonMUD
 - **Two transports over one engine.** Telnet (with NAWS/TTYPE/GMCP negotiation) and Ktor WebSocket — both consume the same `InboundEvent`/`OutboundEvent` contract.
 - **Data-driven content.** Worlds, abilities, status effects, stats, classes, races, and economy tuning all live in YAML/config — no recompilation for content changes.
 - **Three deployment modes.** `STANDALONE` (single process), `ENGINE` (game logic + gRPC), `GATEWAY` (transports + gRPC client). Redis-backed zone sharding and zone instancing are available when you need horizontal scale.
-- **A portfolio project.** It's built to be run, read, and hacked on. The cozy "Surreal Gentle Magic" aesthetic is deliberate — see [`.impeccable.md`](.impeccable.md) and [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md).
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full feature ledger and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design decisions behind it.
 
@@ -46,13 +45,6 @@ cd AmbonMUD
 
 Defaults: telnet `:4000`, web client `:8080`, YAML persistence under `data/players/`, Redis off, PostgreSQL off. No external services required.
 
-```bash
-./gradlew demo           # same thing, auto-opens http://localhost:8080
-./gradlew test           # full test suite
-./gradlew ktlintCheck    # lint (run before PR)
-./gradlew ktlintCheck test integrationTest   # CI parity
-```
-
 Connect via telnet:
 
 ```bash
@@ -63,9 +55,7 @@ Full onboarding — prerequisites, project map, architecture, common tasks, trou
 
 ## World content
 
-The repo ships with a single bundled starter zone (**Auringold Academy**) plus achievement and sprite definitions under `src/main/resources/world/`. This is enough to log in, walk around, fight mobs, and exercise every subsystem for development and testing.
-
-The full **Auringold** world (20+ zones covering levels 1–10) is hosted separately on Cloudflare R2 at [auringold.ambon.dev](https://auringold.ambon.dev) and is fetched at boot by the live demo. To run AmbonMUD pointing at a remote lore pack, set `AMBONMUD_DATA_DIR` and drop the zone YAMLs there — see the "Remote world & config overlay" section of [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+The repo ships with a single bundled starter zone (**Academy**) plus achievement and sprite definitions under `src/main/resources/world/`. 
 
 Zone authoring format is documented in **[docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md)**.
 
@@ -87,7 +77,7 @@ src/main/kotlin/dev/ambon/
 src/main/resources/
   application.yaml                          # runtime config (~4860 lines)
   db/migration/                             # Flyway V1–V34
-  world/                                    # Auringold Academy + achievements + sprites
+  world/                                    # Academy zone + achievements + sprites
   web-v3/                                   # built web client assets
 src/main/proto/ambonmud/v1/                 # gRPC engine + event protos
 src/test/kotlin/                            # 160 test files
@@ -115,27 +105,18 @@ Full deployment runbook — IAM bootstrap, OIDC roles, CDK topologies, env var r
 ./gradlew test --tests "*CommandRouter*"    # pattern
 ```
 
-PostgreSQL tests use H2 in PostgreSQL-compatibility mode — no Docker required. See [docs/DEVELOPER_GUIDE.md#testing](docs/DEVELOPER_GUIDE.md#testing) for patterns (deterministic `MutableClock`, `runTest` / `runCurrent` / `advanceTimeBy`, `outbound.drainAll()`, `@TempDir` isolation).
+PostgreSQL tests use H2 in PostgreSQL-compatibility mode — no Docker required. See [docs/DEVELOPER_GUIDE.md#testing](docs/DEVELOPER_GUIDE.md) for patterns (deterministic `MutableClock`, `runTest` / `runCurrent` / `advanceTimeBy`, `outbound.drainAll()`, `@TempDir` isolation).
 
 ## Documentation map
 
 **Start here**
 - [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — onboarding, project map, common tasks
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — engine contracts and 18 design decisions
-- [docs/ROADMAP.md](docs/ROADMAP.md) — what's built, what's next
-- [docs/SCALING_STORY.md](docs/SCALING_STORY.md) — load-test numbers and scaling narrative
+- [docs/ROADMAP.md](docs/ROADMAP.md) — what's built
 
 **Protocol & content**
 - [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — full GMCP reference for client developers
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — zone file format
-- [docs/DUNGEON_TEMPLATE_REFERENCE.md](docs/DUNGEON_TEMPLATE_REFERENCE.md) — procedural dungeon templates
-- [docs/ENVIRONMENT_THEMES.md](docs/ENVIRONMENT_THEMES.md) — per-zone weather and sky
-- [docs/DATA_DRIVEN_YAML_CONTRACT.md](docs/DATA_DRIVEN_YAML_CONTRACT.md) — authoritative YAML contract for data-driven mechanics
-
-**Subsystems**
-- [docs/CRAFTING.md](docs/CRAFTING.md) — gathering, recipes, quality tiers, enchanting
-- [docs/FRIENDS_MAIL.md](docs/FRIENDS_MAIL.md) — friends list and in-game mail
-- [docs/TRAINER_SYSTEM.md](docs/TRAINER_SYSTEM.md) — skill points, class trainers, multi-classing
 
 **Web client**
 - [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md) — React + PixiJS architecture and visual progression
@@ -144,21 +125,9 @@ PostgreSQL tests use H2 in PostgreSQL-compatibility mode — no Docker required.
 
 **Deployment & operations**
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker, CDK, CI/CD, runbook
-- [docs/ADMIN_API_REFERENCE.md](docs/ADMIN_API_REFERENCE.md) — admin HTTP JSON API
-
-**Ambon Arcanum (sibling creator tool)**
-- [docs/CREATOR_PLAN.md](docs/CREATOR_PLAN.md) — design of the standalone world-building desktop app
-- [docs/CREATOR_CONFIG_REFERENCE.md](docs/CREATOR_CONFIG_REFERENCE.md) — tunable `application.yaml` keys
-- [docs/ARCANUM_STYLE_GUIDE.md](docs/ARCANUM_STYLE_GUIDE.md) — Arcanum design system
-- [docs/ARCANUM_SPRITE_INSTRUCTIONS.md](docs/ARCANUM_SPRITE_INSTRUCTIONS.md) — sprite authoring
 
 **Contributor orientation**
 - [CLAUDE.md](CLAUDE.md) — architectural contracts and change playbooks (read before editing)
 - [AGENTS.md](AGENTS.md) — full engineering playbook
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
-## Contributing
-
-Each piece of work lives on its own feature branch off `main`. Run `./gradlew ktlintCheck test integrationTest` before opening a PR. Read [CLAUDE.md](CLAUDE.md) for the three critical contracts (engine isolation, single-threaded engine, bus interfaces) before changing anything in `engine/` or `transport/`.
-
-Questions or ideas — open an issue on GitHub.

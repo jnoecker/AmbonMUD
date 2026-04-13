@@ -1,7 +1,8 @@
 achievements:
+  # ── Combat ────────────────────────────────────────────────────────
   first_blood:
     displayName: First Blood
-    description: Kill your first enemy in Auringold.
+    description: Defeat your first creature at the Academy.
     category: combat
     hidden: false
     criteria:
@@ -11,103 +12,119 @@ achievements:
         description: Kill any mob
     rewards:
       xp: 50
-  wolf_hunter:
-    displayName: Wolf Hunter
-    description: Prove yourself against the wolves of Thornwood.
+  proving_yourself:
+    displayName: Proving Yourself
+    description: Defeat five creatures in the Academy Proving Grounds.
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: thornwood_forest:stray_wolf
-        count: 10
-        description: Kill 10 stray wolves in Thornwood Forest
+        targetId: ""
+        count: 5
+        description: Kill 5 creatures
     rewards:
-      xp: 300
-      gold: 50
-  chieftain_slayer:
-    displayName: Chieftain Slayer
-    description: Strike down Chieftain Grak in the heart of his warrens.
+      xp: 150
+      gold: 25
+  warden_slayer:
+    displayName: Warden Slayer
+    description: Defeat the Dread Warden lurking in the Academy Throne Room.
     category: combat
     hidden: false
     criteria:
       - type: kill
-        targetId: goblin_warrens:chieftain_grak
+        targetId: academy:dread_warden
         count: 1
-        description: Kill Chieftain Grak
-    rewards:
-      xp: 600
-      gold: 100
-      title: Goblin Bane
-  corsair_hunter:
-    displayName: Corsair Hunter
-    description: Defeat the pirate captain terrorising the Sea Cliffs.
-    category: combat
-    hidden: false
-    criteria:
-      - type: kill
-        targetId: sea_cliffs:corsair_captain
-        count: 1
-        description: Kill the Corsair Captain
+        description: Kill the Dread Warden
     rewards:
       xp: 500
-      gold: 150
-  barrow_breaker:
-    displayName: Barrow Breaker
-    description: Destroy Necromancer Vaelthos and end his dark research.
-    category: combat
-    hidden: false
-    criteria:
-      - type: kill
-        targetId: dark_barrows:necromancer_vaelthos
-        count: 1
-        description: Kill Necromancer Vaelthos
-    rewards:
-      xp: 1000
-      gold: 200
-      title: Barrow Breaker
-  dragon_slayer:
-    displayName: Dragonslayer
-    description: Slay Elder Dragon Auranthos atop the Celestial Peak.
-    category: combat
-    hidden: false
-    criteria:
-      - type: kill
-        targetId: celestial_peak:elder_dragon_auranthos
-        count: 1
-        description: Kill Elder Dragon Auranthos
-    rewards:
-      xp: 3000
-      gold: 500
-      title: Dragonslayer
-  echo_diver:
-    displayName: Echo Diver
-    description: Complete a run through the Dungeon of Echoes.
+      gold: 100
+      title: Warden Slayer
+  catacomb_delver:
+    displayName: Catacomb Delver
+    description: Complete a run through the Academy catacombs dungeon.
     category: combat
     hidden: false
     criteria:
       - type: dungeon_complete
-        targetId: dungeon_of_echoes
+        targetId: academy
         count: 1
-        description: Complete a Dungeon of Echoes run
+        description: Complete the Academy dungeon
     rewards:
       xp: 500
-      title: Echo Diver
+      title: Catacomb Delver
+  champion_slayer:
+    displayName: Champion Slayer
+    description: Defeat the Fallen Champion in the depths of the catacombs.
+    category: combat
+    hidden: true
+    criteria:
+      - type: kill
+        targetId: academy:fallen_champion
+        count: 1
+        description: Kill the Fallen Champion
+    rewards:
+      xp: 1000
+      gold: 200
+      title: Champion Slayer
+
+  # ── Exploration & Quests ──────────────────────────────────────────
+  grand_tour:
+    displayName: The Grand Tour
+    description: Complete Headmaster Aldric's introductory quest and collect three Arcane Fragments.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: grand_tour
+        count: 1
+        description: Complete The Grand Tour quest
+    rewards:
+      xp: 200
+      gold: 50
+  creature_roundup:
+    displayName: Creature Roundup
+    description: Help Groundskeeper Thorne by completing the Creature Roundup quest.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: creature_roundup
+        count: 1
+        description: Complete the Creature Roundup quest
+    rewards:
+      xp: 200
+      gold: 50
+  riddle_master:
+    displayName: Riddle Master
+    description: Solve the Puzzlewright's riddle in the Riddle Tower and unlock the Secret Library.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: quest_complete
+        targetId: tower_riddle
+        count: 1
+        description: Solve the tower riddle
+    rewards:
+      xp: 300
+      title: Riddle Master
+
+  # ── Crafting & Gathering ──────────────────────────────────────────
   master_crafter:
     displayName: Master Crafter
-    description: Craft 20 items at the forges and benches of Auringold.
+    description: Craft 10 items at the Academy workshops.
     category: class
     hidden: false
     criteria:
       - type: craft
         targetId: ""
-        count: 20
-        description: Craft 20 items
+        count: 10
+        description: Craft 10 items
     rewards:
       xp: 400
       title: Artisan
   herb_collector:
-    displayName: Hedge Witch's Friend
-    description: Gather 10 herbs from the wilds of Auringold.
+    displayName: Herb Collector
+    description: Gather 10 bundles of spider silk from the Academy Herb Garden.
     category: class
     hidden: false
     criteria:
@@ -120,7 +137,7 @@ achievements:
       gold: 30
   ore_miner:
     displayName: Deep Delver
-    description: Mine 10 ore from the depths of Auringold.
+    description: Mine 10 iron ore from the veins in the Academy Herb Garden.
     category: class
     hidden: false
     criteria:
@@ -131,9 +148,11 @@ achievements:
     rewards:
       xp: 200
       gold: 30
+
+  # ── Social ────────────────────────────────────────────────────────
   full_party:
     displayName: Strength in Numbers
-    description: Complete a dungeon with a full adventuring party.
+    description: Complete the Academy dungeon with a full adventuring party.
     category: social
     hidden: false
     criteria:
@@ -144,36 +163,9 @@ achievements:
     rewards:
       xp: 600
       title: Party Leader
-  bounty_hunter:
-    displayName: Bounty Hunter
-    description: Complete the wasteland bounty from the Barrens notice board.
-    category: social
-    hidden: false
-    criteria:
-      - type: quest_complete
-        targetId: wasteland_bounty
-        count: 1
-        description: Complete the wasteland bounty
-    rewards:
-      xp: 800
-      gold: 200
-      title: Bounty Hunter
-  loyal_companion:
-    displayName: Loyal Companion
-    description: Earn the trust of the ghost of Haunted Manor.
-    category: social
-    hidden: true
-    criteria:
-      - type: quest_complete
-        targetId: the_restless_dead
-        count: 1
-        description: Complete The Restless Dead quest
-    rewards:
-      xp: 700
-      title: Ghost Friend
   guild_founder:
     displayName: Guild Founder
-    description: Establish a guild at the Thornhaven Guild Registry.
+    description: Establish a guild at the Academy.
     category: social
     hidden: false
     criteria:
@@ -184,9 +176,11 @@ achievements:
     rewards:
       xp: 300
       title: Founder
+
+  # ── Progression ───────────────────────────────────────────────────
   max_level:
     displayName: Level Ten
-    description: Reach level 10 and stand among Auringold's elite.
+    description: Reach level 10 and stand among the Academy's elite.
     category: class
     hidden: false
     criteria:
