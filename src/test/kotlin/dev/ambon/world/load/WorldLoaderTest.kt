@@ -758,6 +758,9 @@ class WorldLoaderTest {
 
         val items = world.itemSpawns.associateBy { it.instance.id.value }
         assertEquals("/images/items/gem.png", items.getValue("ok_images:gem").instance.item.image)
+
+        val node = world.gatheringNodes.single()
+        assertEquals("/images/nodes/crystal.png", node.image)
     }
 
     @Test

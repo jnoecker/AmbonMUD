@@ -611,7 +611,7 @@ object WorldLoader {
                         id = nodeId,
                         displayName = displayName,
                         keyword = keyword,
-                        image = nodeFile.image,
+                        image = nodeFile.image?.let { "$imagesBase$it" },
                         skill = skill,
                         skillRequired = nodeFile.skillRequired,
                         yields = yields,

@@ -26,3 +26,13 @@ items:
     displayName: "a glowing gem"
     room: clearing
     image: items/gem.png
+
+gatheringNodes:
+  crystal_deposit:
+    displayName: "a crystal deposit"
+    image: nodes/crystal.png
+    skill: MINING
+    skillRequired: 1
+    yields:
+      - itemId: gem
+    room: clearing
