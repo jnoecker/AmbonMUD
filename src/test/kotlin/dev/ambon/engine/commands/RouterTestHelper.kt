@@ -10,6 +10,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
+import dev.ambon.engine.GenderRegistry
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.GuildHallSystem
@@ -18,6 +19,7 @@ import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.PetSystem
+import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PrestigeSystem
@@ -93,6 +95,8 @@ internal fun buildTestRouter(
     bankConfig: BankConfig? = null,
     stylistConfig: StylistConfig? = null,
     raceRegistry: RaceRegistry? = null,
+    classRegistry: PlayerClassRegistry? = null,
+    genderRegistry: GenderRegistry? = null,
     duelSystem: DuelSystem? = null,
     tradeSystem: TradeSystem? = null,
     dungeonManager: DungeonManager? = null,
@@ -117,6 +121,8 @@ internal fun buildTestRouter(
         shopRegistry = shopRegistry,
         economyConfig = economyConfig,
         raceRegistry = raceRegistry,
+        classRegistry = classRegistry,
+        genderRegistry = genderRegistry,
         bankConfig = bankConfig ?: BankConfig(),
         stylistConfig = stylistConfig ?: StylistConfig(),
     )

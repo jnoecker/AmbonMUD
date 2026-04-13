@@ -1,14 +1,20 @@
 package dev.ambon.engine.commands
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.GendersConfig
+import dev.ambon.domain.PlayerClassDef
+import dev.ambon.domain.RaceDef
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.GenderRegistry
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.MobSystem
+import dev.ambon.engine.PlayerClassRegistry
+import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.behavior.BehaviorTreeSystem
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
@@ -722,6 +728,446 @@ class CommandRouterAdminTest {
                         it.jsonData.contains("\"code\":\"BROADCAST_COMPLETE\"")
                 },
                 "Expected broadcast UI.Feedback payload. got=$outs",
+            )
+        }
+
+    // ── setgold ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun `setgold updates target player gold`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetGold("Bob", 5000))
+            h.drain()
+
+            assertEquals(5000L, h.players.get(bobSid)!!.gold, "Bob's gold should be 5000 after setgold")
+        }
+
+    @Test
+    fun `setgold rejects negative amount`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetGold("Bob", -100))
+            val outs = h.drain()
+
+            assertEquals(0L, h.players.get(bobSid)!!.gold, "Bob's gold should not change")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Staff should receive error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setgold for offline player emits error`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            h.loginStaff(staffSid, "Admin")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetGold("Ghost", 100))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Staff should receive not-found error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setgold requires staff`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val bobSid = SessionId(1)
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(bobSid, Command.SetGold("Bob", 9999))
+            val outs = h.drain()
+
+            assertEquals(0L, h.players.get(bobSid)!!.gold, "Non-staff should not be able to setgold")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
+                "Non-staff should receive error. got=$outs",
+            )
+        }
+
+    // ── setrace ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun `setrace updates target player race`() =
+        runTest {
+            val raceReg = RaceRegistry().also {
+                it.register(RaceDef(id = "HUMAN", displayName = "Human"))
+                it.register(RaceDef(id = "DRAGON", displayName = "Dragon"))
+            }
+            val h = CommandRouterHarness.create(raceRegistry = raceReg)
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetRace("Bob", "DRAGON"))
+            h.drain()
+
+            assertEquals("DRAGON", h.players.get(bobSid)!!.race, "Bob's race should be DRAGON after setrace")
+        }
+
+    @Test
+    fun `setrace rejects unknown race`() =
+        runTest {
+            val raceReg = RaceRegistry().also {
+                it.register(RaceDef(id = "HUMAN", displayName = "Human"))
+            }
+            val h = CommandRouterHarness.create(raceRegistry = raceReg)
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetRace("Bob", "ALIEN"))
+            val outs = h.drain()
+
+            assertEquals("HUMAN", h.players.get(bobSid)!!.race, "Bob's race should not change")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Staff should receive error for invalid race. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setrace requires staff`() =
+        runTest {
+            val raceReg = RaceRegistry().also {
+                it.register(RaceDef(id = "HUMAN", displayName = "Human"))
+                it.register(RaceDef(id = "DRAGON", displayName = "Dragon"))
+            }
+            val h = CommandRouterHarness.create(raceRegistry = raceReg)
+            val bobSid = SessionId(1)
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(bobSid, Command.SetRace("Bob", "DRAGON"))
+            val outs = h.drain()
+
+            assertEquals("HUMAN", h.players.get(bobSid)!!.race, "Non-staff should not be able to setrace")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
+                "Non-staff should receive error. got=$outs",
+            )
+        }
+
+    // ── setclass ──────────────────────────────────────────────────────────────
+
+    @Test
+    fun `setclass updates target player class`() =
+        runTest {
+            val classReg = PlayerClassRegistry().also {
+                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpPerLevel = 4, manaPerLevel = 1))
+                it.register(PlayerClassDef(id = "MAGE", displayName = "Wizard", hpPerLevel = 1, manaPerLevel = 5))
+            }
+            val h = CommandRouterHarness.create(classRegistry = classReg)
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetClass("Bob", "MAGE"))
+            h.drain()
+
+            val bob = h.players.get(bobSid)!!
+            assertEquals("MAGE", bob.playerClass, "Bob's class should be MAGE after setclass")
+            assertTrue(bob.unlockedClasses.contains("MAGE"), "Bob should have MAGE in unlocked classes")
+        }
+
+    @Test
+    fun `setclass rejects unknown class`() =
+        runTest {
+            val classReg = PlayerClassRegistry().also {
+                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpPerLevel = 4, manaPerLevel = 1))
+            }
+            val h = CommandRouterHarness.create(classRegistry = classReg)
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetClass("Bob", "DRUID"))
+            val outs = h.drain()
+
+            assertEquals("WARRIOR", h.players.get(bobSid)!!.playerClass, "Bob's class should not change")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Staff should receive error for invalid class. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setclass requires staff`() =
+        runTest {
+            val classReg = PlayerClassRegistry().also {
+                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpPerLevel = 4, manaPerLevel = 1))
+                it.register(PlayerClassDef(id = "MAGE", displayName = "Wizard", hpPerLevel = 1, manaPerLevel = 5))
+            }
+            val h = CommandRouterHarness.create(classRegistry = classReg)
+            val bobSid = SessionId(1)
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(bobSid, Command.SetClass("Bob", "MAGE"))
+            val outs = h.drain()
+
+            assertEquals("WARRIOR", h.players.get(bobSid)!!.playerClass, "Non-staff should not be able to setclass")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
+                "Non-staff should receive error. got=$outs",
+            )
+        }
+
+    // ── setgender (staff) ─────────────────────────────────────────────────────
+
+    @Test
+    fun `setgender updates target player gender`() =
+        runTest {
+            val genderReg = GenderRegistry(GendersConfig())
+            val h = CommandRouterHarness.create(genderRegistry = genderReg)
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.StaffSetGender("Bob", "female"))
+            h.drain()
+
+            assertEquals("female", h.players.get(bobSid)!!.gender, "Bob's gender should be female after setgender")
+        }
+
+    @Test
+    fun `setgender rejects unknown gender`() =
+        runTest {
+            val genderReg = GenderRegistry(GendersConfig())
+            val h = CommandRouterHarness.create(genderRegistry = genderReg)
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.StaffSetGender("Bob", "xyzzy"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Staff should receive error for invalid gender. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setgender requires staff`() =
+        runTest {
+            val genderReg = GenderRegistry(GendersConfig())
+            val h = CommandRouterHarness.create(genderRegistry = genderReg)
+            val bobSid = SessionId(1)
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(bobSid, Command.StaffSetGender("Bob", "female"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
+                "Non-staff should receive error. got=$outs",
+            )
+        }
+
+    // ── setxp ─────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `setxp updates target player xp`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetXp("Bob", 50000))
+            h.drain()
+
+            assertEquals(50000L, h.players.get(bobSid)!!.xpTotal, "Bob's XP should be 50000 after setxp")
+        }
+
+    @Test
+    fun `setxp rejects negative amount`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.SetXp("Bob", -100))
+            val outs = h.drain()
+
+            assertEquals(0L, h.players.get(bobSid)!!.xpTotal, "Bob's XP should not change")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Staff should receive error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setxp requires staff`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val bobSid = SessionId(1)
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(bobSid, Command.SetXp("Bob", 50000))
+            val outs = h.drain()
+
+            assertEquals(0L, h.players.get(bobSid)!!.xpTotal, "Non-staff should not be able to setxp")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
+                "Non-staff should receive error. got=$outs",
+            )
+        }
+
+    // ── heal ──────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `heal restores target to full hp and mana`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            val bob = h.players.get(bobSid)!!
+            bob.hp = 1
+            bob.mana = 0
+
+            h.router.handle(staffSid, Command.Heal("Bob"))
+            h.drain()
+
+            assertEquals(bob.maxHp, bob.hp, "Bob's HP should be fully restored")
+            assertEquals(bob.maxMana, bob.mana, "Bob's mana should be fully restored")
+        }
+
+    @Test
+    fun `heal with no arg heals self`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            h.loginStaff(staffSid, "Admin")
+            h.drain()
+
+            val admin = h.players.get(staffSid)!!
+            admin.hp = 1
+            admin.mana = 0
+
+            h.router.handle(staffSid, Command.Heal(null))
+            h.drain()
+
+            assertEquals(admin.maxHp, admin.hp, "Admin's HP should be fully restored")
+            assertEquals(admin.maxMana, admin.mana, "Admin's mana should be fully restored")
+        }
+
+    @Test
+    fun `heal requires staff`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val bobSid = SessionId(1)
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            val bob = h.players.get(bobSid)!!
+            bob.hp = 1
+
+            h.router.handle(bobSid, Command.Heal(null))
+            val outs = h.drain()
+
+            assertEquals(1, bob.hp, "Non-staff should not be able to heal")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
+                "Non-staff should receive error. got=$outs",
+            )
+        }
+
+    // ── pinfo ─────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `pinfo displays target player info`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            h.loginStaff(staffSid, "Admin")
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(staffSid, Command.Pinfo("Bob"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == staffSid && it.text.contains("Player Info: Bob") },
+                "Staff should receive player info. got=$outs",
+            )
+        }
+
+    @Test
+    fun `pinfo for offline player emits error`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val staffSid = SessionId(1)
+            h.loginStaff(staffSid, "Admin")
+            h.drain()
+
+            h.router.handle(staffSid, Command.Pinfo("Ghost"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Staff should receive not-found error. got=$outs",
+            )
+        }
+
+    @Test
+    fun `pinfo requires staff`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val bobSid = SessionId(1)
+            h.loginPlayer(bobSid, "Bob")
+            h.drain()
+
+            h.router.handle(bobSid, Command.Pinfo("Bob"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
+                "Non-staff should receive error. got=$outs",
             )
         }
 }

@@ -368,6 +368,13 @@ export function AdminPanel({
   const [kickFilter, setKickFilter] = useState("");
   const [setLevelFilter, setSetLevelFilter] = useState("");
   const [setStaffFilter, setSetStaffFilter] = useState("");
+  const [setGoldFilter, setSetGoldFilter] = useState("");
+  const [setRaceFilter, setSetRaceFilter] = useState("");
+  const [setClassFilter, setSetClassFilter] = useState("");
+  const [setGenderFilter, setSetGenderFilter] = useState("");
+  const [setXpFilter, setSetXpFilter] = useState("");
+  const [healFilter, setHealFilter] = useState("");
+  const [pinfoFilter, setPinfoFilter] = useState("");
   const [dispelFilter, setDispelFilter] = useState("");
   const [possessFilter, setPossessFilter] = useState("");
   const [confirmKey, setConfirmKey] = useState<string | null>(null);
@@ -400,6 +407,13 @@ export function AdminPanel({
     setSmiteFilter("");
     setKickFilter("");
     setSetLevelFilter("");
+    setSetGoldFilter("");
+    setSetRaceFilter("");
+    setSetClassFilter("");
+    setSetGenderFilter("");
+    setSetXpFilter("");
+    setHealFilter("");
+    setPinfoFilter("");
     setDispelFilter("");
     setPossessFilter("");
     setConfirmKey(null);
@@ -768,6 +782,253 @@ export function AdminPanel({
                       </button>
                     ))}
                   </div>
+                </>
+              )}
+
+              {activeAction === "setgold" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name"
+                      value={inputA}
+                      onChange={(e) => updateInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <TargetBrowser
+                    whoPlayers={whoPlayers}
+                    roomMobs={[]}
+                    filter={setGoldFilter}
+                    onSetFilter={setSetGoldFilter}
+                    onSelect={(target) => updateInputA(target)}
+                    buttonLabel="Select"
+                    emptyMessage="No online player matches that filter."
+                    currentPlayerName={currentPlayerName}
+                  />
+                  <label className="admin-field">
+                    <span className="admin-field-label">Gold</span>
+                    <input
+                      type="number"
+                      className="admin-input"
+                      placeholder="0"
+                      min={0}
+                      value={inputB}
+                      onChange={(e) => updateInputB(e.target.value)}
+                    />
+                  </label>
+                </>
+              )}
+
+              {activeAction === "setrace" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name"
+                      value={inputA}
+                      onChange={(e) => updateInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <TargetBrowser
+                    whoPlayers={whoPlayers}
+                    roomMobs={[]}
+                    filter={setRaceFilter}
+                    onSetFilter={setSetRaceFilter}
+                    onSelect={(target) => updateInputA(target)}
+                    buttonLabel="Select"
+                    emptyMessage="No online player matches that filter."
+                    currentPlayerName={currentPlayerName}
+                  />
+                  <label className="admin-field">
+                    <span className="admin-field-label">Race</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. HUMAN, DRAGON, KITTY"
+                      value={inputB}
+                      onChange={(e) => updateInputB(e.target.value)}
+                    />
+                  </label>
+                </>
+              )}
+
+              {activeAction === "setclass" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name"
+                      value={inputA}
+                      onChange={(e) => updateInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <TargetBrowser
+                    whoPlayers={whoPlayers}
+                    roomMobs={[]}
+                    filter={setClassFilter}
+                    onSetFilter={setSetClassFilter}
+                    onSelect={(target) => updateInputA(target)}
+                    buttonLabel="Select"
+                    emptyMessage="No online player matches that filter."
+                    currentPlayerName={currentPlayerName}
+                  />
+                  <label className="admin-field">
+                    <span className="admin-field-label">Class</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. WARRIOR, MAGE, CLERIC"
+                      value={inputB}
+                      onChange={(e) => updateInputB(e.target.value)}
+                    />
+                  </label>
+                </>
+              )}
+
+              {activeAction === "setgender" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name"
+                      value={inputA}
+                      onChange={(e) => updateInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <TargetBrowser
+                    whoPlayers={whoPlayers}
+                    roomMobs={[]}
+                    filter={setGenderFilter}
+                    onSetFilter={setSetGenderFilter}
+                    onSelect={(target) => updateInputA(target)}
+                    buttonLabel="Select"
+                    emptyMessage="No online player matches that filter."
+                    currentPlayerName={currentPlayerName}
+                  />
+                  <label className="admin-field">
+                    <span className="admin-field-label">Gender</span>
+                  </label>
+                  <div className="admin-choice-row">
+                    {(["male", "female", "enby"] as const).map((choice) => (
+                      <button
+                        key={choice}
+                        type="button"
+                        className={`admin-choice-chip ${inputB.toLowerCase() === choice ? "admin-choice-chip-active" : ""}`}
+                        onClick={() => updateInputB(choice)}
+                      >
+                        {choice === "enby" ? "Enby" : choice.charAt(0).toUpperCase() + choice.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {activeAction === "setxp" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name"
+                      value={inputA}
+                      onChange={(e) => updateInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <TargetBrowser
+                    whoPlayers={whoPlayers}
+                    roomMobs={[]}
+                    filter={setXpFilter}
+                    onSetFilter={setSetXpFilter}
+                    onSelect={(target) => updateInputA(target)}
+                    buttonLabel="Select"
+                    emptyMessage="No online player matches that filter."
+                    currentPlayerName={currentPlayerName}
+                  />
+                  <label className="admin-field">
+                    <span className="admin-field-label">XP Total</span>
+                    <input
+                      type="number"
+                      className="admin-input"
+                      placeholder="0"
+                      min={0}
+                      value={inputB}
+                      onChange={(e) => updateInputB(e.target.value)}
+                    />
+                  </label>
+                </>
+              )}
+
+              {activeAction === "heal" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player (blank = self)</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name or leave blank for self"
+                      value={inputA}
+                      onChange={(e) => updateInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <TargetBrowser
+                    whoPlayers={whoPlayers}
+                    roomMobs={[]}
+                    filter={healFilter}
+                    onSetFilter={setHealFilter}
+                    onSelect={(target) => {
+                      syncInputA(target);
+                      const command = buildAdminCommand("heal", target, "");
+                      if (command) executeAction("heal", command);
+                    }}
+                    buttonLabel="Heal"
+                    emptyMessage="No online player matches that filter."
+                    currentPlayerName={currentPlayerName}
+                  />
+                </>
+              )}
+
+              {activeAction === "pinfo" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name"
+                      value={inputA}
+                      onChange={(e) => updateInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <TargetBrowser
+                    whoPlayers={whoPlayers}
+                    roomMobs={[]}
+                    filter={pinfoFilter}
+                    onSetFilter={setPinfoFilter}
+                    onSelect={(target) => {
+                      syncInputA(target);
+                      const command = buildAdminCommand("pinfo", target, "");
+                      if (command) executeAction("pinfo", command);
+                    }}
+                    buttonLabel="Inspect"
+                    emptyMessage="No online player matches that filter."
+                    currentPlayerName={currentPlayerName}
+                  />
                 </>
               )}
 

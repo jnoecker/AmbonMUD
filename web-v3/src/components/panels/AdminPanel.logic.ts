@@ -6,6 +6,13 @@ export type AdminAction =
   | "kick"
   | "setlevel"
   | "setstaff"
+  | "setgold"
+  | "setrace"
+  | "setclass"
+  | "setgender"
+  | "setxp"
+  | "heal"
+  | "pinfo"
   | "dispel"
   | "reload"
   | "broadcast"
@@ -40,6 +47,13 @@ export const ADMIN_ACTIONS: AdminActionDefinition[] = [
   { id: "kick", label: "Kick", description: "Disconnect a live player", section: "intervention", tone: "danger" },
   { id: "setlevel", label: "Set Level", description: "Rewrite a player's progression", section: "intervention", tone: "danger" },
   { id: "setstaff", label: "Set Staff", description: "Grant or revoke staff on an online player", section: "intervention", tone: "danger" },
+  { id: "setgold", label: "Set Gold", description: "Set a player's gold amount", section: "intervention", tone: "danger" },
+  { id: "setrace", label: "Set Race", description: "Change a player's race", section: "intervention", tone: "danger" },
+  { id: "setclass", label: "Set Class", description: "Change a player's class", section: "intervention", tone: "danger" },
+  { id: "setgender", label: "Set Gender", description: "Change a player's gender", section: "intervention", tone: "danger" },
+  { id: "setxp", label: "Set XP", description: "Set a player's experience points", section: "intervention", tone: "danger" },
+  { id: "heal", label: "Heal", description: "Fully restore a player's HP and mana", section: "intervention", tone: "standard" },
+  { id: "pinfo", label: "Player Info", description: "Inspect detailed player stats", section: "intervention", tone: "standard" },
   { id: "dispel", label: "Dispel", description: "Strip active effects from a target", section: "intervention", tone: "standard" },
   { id: "spawn", label: "Spawn", description: "Create a mob from a world template", section: "world", tone: "standard" },
   { id: "reload", label: "Reload", description: "Reload world or rules data live", section: "world", tone: "danger" },
@@ -87,6 +101,20 @@ export function buildAdminCommand(
     case "setstaff":
       if (!primary) return null;
       return secondary.toLowerCase() === "revoke" ? `revokestaff ${primary}` : `setstaff ${primary}`;
+    case "setgold":
+      return primary && secondary ? `setgold ${primary} ${secondary}` : null;
+    case "setrace":
+      return primary && secondary ? `setrace ${primary} ${secondary}` : null;
+    case "setclass":
+      return primary && secondary ? `setclass ${primary} ${secondary}` : null;
+    case "setgender":
+      return primary && secondary ? `setgender ${primary} ${secondary}` : null;
+    case "setxp":
+      return primary && secondary ? `setxp ${primary} ${secondary}` : null;
+    case "heal":
+      return primary ? `heal ${primary}` : "heal";
+    case "pinfo":
+      return primary ? `pinfo ${primary}` : null;
     case "dispel":
       return primary ? `dispel ${primary}` : null;
     case "reload":
@@ -111,6 +139,11 @@ export function requiresAdminConfirmation(action: AdminAction): boolean {
     action === "kick" ||
     action === "setlevel" ||
     action === "setstaff" ||
+    action === "setgold" ||
+    action === "setrace" ||
+    action === "setclass" ||
+    action === "setgender" ||
+    action === "setxp" ||
     action === "reload" ||
     action === "broadcast" ||
     action === "shutdown"

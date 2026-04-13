@@ -13,6 +13,7 @@ import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.onStaff
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.resolvePlayerStats
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.BroadcastType
@@ -38,6 +39,9 @@ class AdminHandler(
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val classRegistry = ctx.classRegistry
+    private val raceRegistry = ctx.raceRegistry
+    private val genderRegistry = ctx.genderRegistry
     private lateinit var router: CommandRouter
 
     private var adminSpawnSeq = 0
@@ -58,6 +62,13 @@ class AdminHandler(
         router.onStaff<Command.Return> { sid, _ -> handleReturn(sid) }
         router.onStaff<Command.Invis> { sid, _ -> handleInvis(sid) }
         router.onStaff<Command.SetStaff> { sid, cmd -> handleSetStaff(sid, cmd) }
+        router.onStaff<Command.SetGold> { sid, cmd -> handleSetGold(sid, cmd) }
+        router.onStaff<Command.SetRace> { sid, cmd -> handleSetRace(sid, cmd) }
+        router.onStaff<Command.SetClass> { sid, cmd -> handleSetClass(sid, cmd) }
+        router.onStaff<Command.StaffSetGender> { sid, cmd -> handleStaffSetGender(sid, cmd) }
+        router.onStaff<Command.SetXp> { sid, cmd -> handleSetXp(sid, cmd) }
+        router.onStaff<Command.Heal> { sid, cmd -> handleHeal(sid, cmd) }
+        router.onStaff<Command.Pinfo> { sid, cmd -> handlePinfo(sid, cmd) }
     }
 
     private suspend fun handleGoto(
@@ -506,7 +517,9 @@ class AdminHandler(
             // Staff commands pass through normally
             is Command.Goto, is Command.Transfer, is Command.Spawn, is Command.Shutdown,
             is Command.Smite, is Command.Kick, is Command.SetLevel, is Command.Dispel,
-            is Command.Reload, is Command.Possess,
+            is Command.Reload, is Command.Possess, is Command.SetGold, is Command.SetRace,
+            is Command.SetClass, is Command.StaffSetGender, is Command.SetXp,
+            is Command.Heal, is Command.Pinfo,
             -> {
                 router.handle(sessionId, cmd)
                 return
@@ -681,6 +694,241 @@ class AdminHandler(
             }
         }
         me.invisible = invisible
+    }
+
+    private suspend fun handleSetGold(
+        sessionId: SessionId,
+        cmd: Command.SetGold,
+    ) {
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "setgold")
+            return
+        }
+        if (cmd.amount < 0) {
+            sendAdminError(sessionId, "Gold amount cannot be negative.", code = "INVALID_AMOUNT", command = "setgold")
+            return
+        }
+        players.withPlayer(targetSid) { targetPlayer ->
+            targetPlayer.gold = cmd.amount
+            outbound.send(OutboundEvent.SendInfo(targetSid, "A divine hand adjusts your purse. You now have ${cmd.amount} gold."))
+            outbound.send(OutboundEvent.SendPrompt(targetSid))
+            gmcpEmitter?.sendCharVitals(targetSid, targetPlayer)
+            sendAdminSuccess(
+                sessionId,
+                "Set ${targetPlayer.name}'s gold to ${cmd.amount}.",
+                code = "SET_GOLD_COMPLETE",
+                command = "setgold",
+            )
+        }
+    }
+
+    private suspend fun handleSetRace(
+        sessionId: SessionId,
+        cmd: Command.SetRace,
+    ) {
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "setrace")
+            return
+        }
+        val raceId = cmd.race.uppercase()
+        val raceDef = raceRegistry?.get(raceId)
+        if (raceDef == null) {
+            val options = raceRegistry?.all()?.joinToString(", ") { it.id } ?: "unknown"
+            sendAdminError(sessionId, "Unknown race '${cmd.race}'. Options: $options", code = "INVALID_RACE", command = "setrace")
+            return
+        }
+        players.withPlayer(targetSid) { targetPlayer ->
+            targetPlayer.race = raceDef.id
+            outbound.send(OutboundEvent.SendInfo(targetSid, "A divine hand reshapes your form. You are now a ${raceDef.displayName}."))
+            outbound.send(OutboundEvent.SendPrompt(targetSid))
+            gmcpEmitter?.sendCharName(targetSid, targetPlayer)
+            sendAdminSuccess(
+                sessionId,
+                "Set ${targetPlayer.name}'s race to ${raceDef.displayName}.",
+                code = "SET_RACE_COMPLETE",
+                command = "setrace",
+            )
+        }
+    }
+
+    private suspend fun handleSetClass(
+        sessionId: SessionId,
+        cmd: Command.SetClass,
+    ) {
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "setclass")
+            return
+        }
+        val classId = cmd.playerClass.uppercase()
+        val classDef = classRegistry?.get(classId)
+        if (classDef == null) {
+            val options = classRegistry?.all()?.joinToString(", ") { it.id } ?: "unknown"
+            sendAdminError(
+                sessionId,
+                "Unknown class '${cmd.playerClass}'. Options: $options",
+                code = "INVALID_CLASS",
+                command = "setclass",
+            )
+            return
+        }
+        players.withPlayer(targetSid) { targetPlayer ->
+            targetPlayer.playerClass = classDef.id
+            targetPlayer.unlockedClasses.add(classDef.id)
+            // Recalculate HP/mana based on new class scaling
+            players.setLevel(targetSid, targetPlayer.level)
+            outbound.send(
+                OutboundEvent.SendInfo(targetSid, "A divine hand reshapes your destiny. You are now a ${classDef.displayName}."),
+            )
+            outbound.send(OutboundEvent.SendPrompt(targetSid))
+            gmcpEmitter?.sendCharName(targetSid, targetPlayer)
+            gmcpEmitter?.sendCharVitals(targetSid, targetPlayer)
+            sendAdminSuccess(
+                sessionId,
+                "Set ${targetPlayer.name}'s class to ${classDef.displayName}.",
+                code = "SET_CLASS_COMPLETE",
+                command = "setclass",
+            )
+        }
+    }
+
+    private suspend fun handleStaffSetGender(
+        sessionId: SessionId,
+        cmd: Command.StaffSetGender,
+    ) {
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "setgender")
+            return
+        }
+        val genderId = cmd.gender.lowercase()
+        val gender = genderRegistry?.get(genderId)
+        if (gender == null) {
+            val options = genderRegistry?.allIds()?.joinToString(", ") ?: "unknown"
+            sendAdminError(
+                sessionId,
+                "Unknown gender '${cmd.gender}'. Options: $options",
+                code = "INVALID_GENDER",
+                command = "setgender",
+            )
+            return
+        }
+        players.withPlayer(targetSid) { targetPlayer ->
+            targetPlayer.gender = gender.id
+            outbound.send(OutboundEvent.SendInfo(targetSid, "A divine hand reshapes your identity. Gender set to ${gender.displayName}."))
+            outbound.send(OutboundEvent.SendPrompt(targetSid))
+            gmcpEmitter?.sendCharName(targetSid, targetPlayer)
+            sendAdminSuccess(
+                sessionId,
+                "Set ${targetPlayer.name}'s gender to ${gender.displayName}.",
+                code = "SET_GENDER_COMPLETE",
+                command = "setgender",
+            )
+        }
+    }
+
+    private suspend fun handleSetXp(
+        sessionId: SessionId,
+        cmd: Command.SetXp,
+    ) {
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "setxp")
+            return
+        }
+        if (cmd.amount < 0) {
+            sendAdminError(sessionId, "XP amount cannot be negative.", code = "INVALID_AMOUNT", command = "setxp")
+            return
+        }
+        players.withPlayer(targetSid) { targetPlayer ->
+            targetPlayer.xpTotal = cmd.amount
+            outbound.send(OutboundEvent.SendInfo(targetSid, "A divine hand adjusts your experience. You now have ${cmd.amount} XP."))
+            outbound.send(OutboundEvent.SendPrompt(targetSid))
+            gmcpEmitter?.sendCharVitals(targetSid, targetPlayer)
+            sendAdminSuccess(
+                sessionId,
+                "Set ${targetPlayer.name}'s XP to ${cmd.amount}.",
+                code = "SET_XP_COMPLETE",
+                command = "setxp",
+            )
+        }
+    }
+
+    private suspend fun handleHeal(
+        sessionId: SessionId,
+        cmd: Command.Heal,
+    ) {
+        val targetSid = if (cmd.playerName != null) {
+            val sid = players.findSessionByName(cmd.playerName)
+            if (sid == null) {
+                sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "heal")
+                return
+            }
+            sid
+        } else {
+            sessionId
+        }
+        players.withPlayer(targetSid) { targetPlayer ->
+            targetPlayer.hp = targetPlayer.maxHp
+            targetPlayer.mana = targetPlayer.maxMana
+            if (targetSid != sessionId) {
+                outbound.send(OutboundEvent.SendInfo(targetSid, "A divine hand restores you to full health."))
+                outbound.send(OutboundEvent.SendPrompt(targetSid))
+            }
+            gmcpEmitter?.sendCharVitals(targetSid, targetPlayer)
+            sendAdminSuccess(
+                sessionId,
+                if (targetSid == sessionId) {
+                    "Restored to full HP and mana."
+                } else {
+                    "Restored ${targetPlayer.name} to full HP and mana."
+                },
+                code = "HEAL_COMPLETE",
+                command = "heal",
+            )
+        }
+    }
+
+    private suspend fun handlePinfo(
+        sessionId: SessionId,
+        cmd: Command.Pinfo,
+    ) {
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            sendAdminError(sessionId, "No such player: ${cmd.playerName}", code = "PLAYER_NOT_FOUND", command = "pinfo")
+            return
+        }
+        players.withPlayer(targetSid) { target ->
+            val effectiveStats = resolvePlayerStats(target, items, statusEffects)
+            val lines = buildString {
+                appendLine("=== Player Info: ${target.name} ===")
+                appendLine("Level: ${target.level}  |  XP: ${target.xpTotal}  |  Prestige: ${target.prestigeLevel}")
+                appendLine("Race: ${target.race}  |  Class: ${target.playerClass}  |  Gender: ${target.gender}")
+                appendLine("HP: ${target.hp}/${target.maxHp}  |  Mana: ${target.mana}/${target.maxMana}")
+                appendLine("Gold: ${target.gold}  |  Bank: ${target.bankGold}")
+                val stats = effectiveStats.values.entries.joinToString(", ") { (k, v) -> "$k=$v" }
+                appendLine("Stats: $stats")
+                appendLine("Room: ${target.roomId.value}")
+                appendLine("Staff: ${target.isStaff}  |  Invisible: ${target.invisible}")
+                if (target.guildId != null) appendLine("Guild: ${target.guildId} (${target.guildRank ?: "no rank"})")
+                if (target.activeTitle != null) appendLine("Title: ${target.activeTitle}")
+                if (target.unlockedClasses.size > 1) appendLine("Unlocked classes: ${target.unlockedClasses.joinToString(", ")}")
+                if (target.learnedAbilityIds.isNotEmpty()) appendLine("Abilities: ${target.learnedAbilityIds.joinToString(", ")}")
+                val pvp = "PvP: ${target.pvpKills}K / ${target.pvpDeaths}D"
+                val pve = "Mobs killed: ${target.mobsKilledTotal}  |  Dungeons: ${target.dungeonsCompleted}"
+                appendLine("$pvp  |  $pve")
+                if (target.currencies.isNotEmpty()) {
+                    val curr = target.currencies.entries.joinToString(", ") {
+                        "${it.key}=${it.value}"
+                    }
+                    appendLine("Currencies: $curr")
+                }
+                append("=== End Info ===")
+            }
+            outbound.send(OutboundEvent.SendText(sessionId, lines))
+        }
     }
 
     private fun findMobTemplate(arg: String): dev.ambon.domain.world.MobSpawn? {
