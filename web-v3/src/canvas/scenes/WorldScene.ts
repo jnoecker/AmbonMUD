@@ -201,6 +201,13 @@ export class WorldScene {
   private dungeonHitArea = new Graphics();
   private dungeonVisible = false;
 
+  private housingBadge: Container | null = null;
+  private housingSprite: Sprite | null = null;
+  private housingLabel: Text | null = null;
+  private housingLabelBg = new Graphics();
+  private housingHitArea = new Graphics();
+  private housingVisible = false;
+
   private duelBadge: Container | null = null;
   private duelSprite: Sprite | null = null;
   private duelLabel: Text | null = null;
@@ -536,6 +543,35 @@ export class WorldScene {
     this.dungeonBadge.addChild(this.dungeonLabelBg);
     this.dungeonBadge.addChild(this.dungeonLabel);
 
+    // Housing broker badge — floating kiosk icon when a housing broker is present
+    this.housingBadge = new Container();
+    this.housingBadge.visible = false;
+    this.housingBadge.eventMode = "static";
+    this.housingBadge.cursor = "pointer";
+    this.housingBadge.on("pointerdown", () => {
+      canvasCallbacks.openHousing?.();
+    });
+    this.housingBadge.on("pointerover", () => {
+      if (this.housingSprite) this.housingSprite.alpha = 1;
+    });
+    this.housingBadge.on("pointerout", () => {
+      if (this.housingSprite) this.housingSprite.alpha = 0.85;
+    });
+    this.housingHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.housingHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.housingHitArea.eventMode = "auto";
+    this.housingBadge.addChild(this.housingHitArea);
+    this.housingLabel = new Text({
+      text: "Housing",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#c8b8d8", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.housingLabel.anchor.set(0.5, 0);
+    this.housingLabel.y = hs / 2 + 2;
+    this.housingLabel.eventMode = "none";
+    this.housingLabelBg.eventMode = "none";
+    this.housingBadge.addChild(this.housingLabelBg);
+    this.housingBadge.addChild(this.housingLabel);
+
     this.duelBadge = new Container();
     this.duelBadge.visible = false;
     this.duelBadge.eventMode = "static";
@@ -705,6 +741,7 @@ export class WorldScene {
     this.container.addChild(this.bankBadge!);
     this.container.addChild(this.lotteryBadge!);
     this.container.addChild(this.dungeonBadge!);
+    this.container.addChild(this.housingBadge!);
     this.container.addChild(this.duelBadge!);
     this.container.addChild(this.puzzleBadge!);
     this.container.addChild(this.doorBadge!);
@@ -751,6 +788,7 @@ export class WorldScene {
       this.loadBankIcon();
       this.loadLotteryIcon();
       this.loadDungeonIcon();
+      this.loadHousingBrokerIcon();
       this.loadDuelIcon();
       this.loadPuzzleIcon();
       this.loadDoorIcon();
@@ -952,6 +990,12 @@ export class WorldScene {
       if (this.dungeonBadge) this.dungeonBadge.visible = hasDungeon;
     }
 
+    const hasHousingBroker = !!state.room.housingBroker;
+    if (hasHousingBroker !== this.housingVisible) {
+      this.housingVisible = hasHousingBroker;
+      if (this.housingBadge) this.housingBadge.visible = hasHousingBroker;
+    }
+
     // Duel badge removed — dueling is accessed via player context menu
     if (this.duelVisible) {
       this.duelVisible = false;
@@ -1084,6 +1128,7 @@ export class WorldScene {
     if (this.bankBadge) this.bankBadge.visible = this.bankVisible && !stripMode;
     if (this.lotteryBadge) this.lotteryBadge.visible = this.lotteryVisible && !stripMode;
     if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
+    if (this.housingBadge) this.housingBadge.visible = this.housingVisible && !stripMode;
     if (this.duelBadge) this.duelBadge.visible = this.duelVisible && !stripMode;
     if (this.puzzleBadge) this.puzzleBadge.visible = this.puzzleVisible && !stripMode;
     if (this.doorBadge) this.doorBadge.visible = this.doorVisible && !stripMode;
@@ -1284,6 +1329,7 @@ export class WorldScene {
       this.stationBadge.visible, this.trainerBadge.visible,
       this.bankBadge?.visible,
       this.lotteryBadge?.visible, this.dungeonBadge?.visible,
+      this.housingBadge?.visible,
       this.duelBadge?.visible, this.puzzleBadge?.visible,
       this.doorBadge?.visible, this.containerBadge?.visible,
       this.leverBadge?.visible,
@@ -1351,6 +1397,13 @@ export class WorldScene {
       this.dungeonBadge.x = badgeX;
       this.dungeonBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.dungeonLabelBg, this.dungeonLabel!);
+      badgeSlot++;
+    }
+
+    if (this.housingBadge?.visible) {
+      this.housingBadge.x = badgeX;
+      this.housingBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.housingLabelBg, this.housingLabel!);
       badgeSlot++;
     }
 
@@ -2049,6 +2102,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.dungeonSprite = sprite;
       this.dungeonBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadHousingBrokerIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("housing_broker", "housing_broker.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.housingSprite = sprite;
+      this.housingBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

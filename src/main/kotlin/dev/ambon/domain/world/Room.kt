@@ -23,6 +23,8 @@ data class Room(
     val dungeon: Boolean = false,
     /** True if this room has an auction house (enables auction hall badge). */
     val auction: Boolean = false,
+    /** True if this room has a housing broker (enables housing kiosk badge). */
+    val housingBroker: Boolean = false,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */

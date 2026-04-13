@@ -36,7 +36,13 @@ export function HousingPanel({
         <div className="housing-empty-state">
           <span className="housing-empty-icon">{"\u{1F3E0}"}</span>
           <p className="empty-note">You don't own a house yet.</p>
-          <p className="housing-hint">Visit a housing broker to purchase one.</p>
+          {room.housingBroker ? (
+            <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house buy")}>
+              Purchase a House
+            </button>
+          ) : (
+            <p className="housing-hint">Visit a housing broker to purchase one.</p>
+          )}
         </div>
       </div>
     );
@@ -77,6 +83,14 @@ export function HousingPanel({
           </button>
           <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house list")}>
             Templates
+          </button>
+        </div>
+      )}
+
+      {room.housingBroker && !inOwnHouse && (
+        <div className="housing-actions">
+          <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house list")}>
+            Browse Templates
           </button>
         </div>
       )}
