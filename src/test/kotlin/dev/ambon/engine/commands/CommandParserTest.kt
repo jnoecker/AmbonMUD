@@ -249,6 +249,84 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses setgold with player and amount`() {
+        assertEquals(Command.SetGold("Alice", 500), CommandParser.parse("setgold Alice 500"))
+        assertEquals(Command.SetGold("Bob", 0), CommandParser.parse("setgold Bob 0"))
+    }
+
+    @Test
+    fun `setgold with missing args returns Invalid`() {
+        assertTrue(CommandParser.parse("setgold") is Command.Invalid)
+        assertTrue(CommandParser.parse("setgold Alice") is Command.Invalid)
+        assertTrue(CommandParser.parse("setgold Alice notanumber") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses setrace with player and race`() {
+        assertEquals(Command.SetRace("Alice", "DRAGON"), CommandParser.parse("setrace Alice DRAGON"))
+        assertEquals(Command.SetRace("Bob", "human"), CommandParser.parse("setrace Bob human"))
+    }
+
+    @Test
+    fun `setrace with missing args returns Invalid`() {
+        assertTrue(CommandParser.parse("setrace") is Command.Invalid)
+        assertTrue(CommandParser.parse("setrace Alice") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses setclass with player and class`() {
+        assertEquals(Command.SetClass("Alice", "MAGE"), CommandParser.parse("setclass Alice MAGE"))
+        assertEquals(Command.SetClass("Bob", "warrior"), CommandParser.parse("setclass Bob warrior"))
+    }
+
+    @Test
+    fun `setclass with missing args returns Invalid`() {
+        assertTrue(CommandParser.parse("setclass") is Command.Invalid)
+        assertTrue(CommandParser.parse("setclass Alice") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses setgender with player and gender`() {
+        assertEquals(Command.StaffSetGender("Alice", "female"), CommandParser.parse("setgender Alice female"))
+        assertEquals(Command.StaffSetGender("Bob", "enby"), CommandParser.parse("setgender Bob enby"))
+    }
+
+    @Test
+    fun `setgender with missing args returns Invalid`() {
+        assertTrue(CommandParser.parse("setgender") is Command.Invalid)
+        assertTrue(CommandParser.parse("setgender Alice") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses setxp with player and amount`() {
+        assertEquals(Command.SetXp("Alice", 10000), CommandParser.parse("setxp Alice 10000"))
+        assertEquals(Command.SetXp("Bob", 0), CommandParser.parse("setxp Bob 0"))
+    }
+
+    @Test
+    fun `setxp with missing args returns Invalid`() {
+        assertTrue(CommandParser.parse("setxp") is Command.Invalid)
+        assertTrue(CommandParser.parse("setxp Alice") is Command.Invalid)
+        assertTrue(CommandParser.parse("setxp Alice notanumber") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses heal with optional player`() {
+        assertEquals(Command.Heal(null), CommandParser.parse("heal"))
+        assertEquals(Command.Heal("Alice"), CommandParser.parse("heal Alice"))
+    }
+
+    @Test
+    fun `parses pinfo with player`() {
+        assertEquals(Command.Pinfo("Alice"), CommandParser.parse("pinfo Alice"))
+    }
+
+    @Test
+    fun `pinfo with no player returns Invalid`() {
+        assertTrue(CommandParser.parse("pinfo") is Command.Invalid)
+    }
+
+    @Test
     fun `parses cast with spell and target`() {
         assertEquals(Command.Cast("fireball", "rat"), CommandParser.parse("cast fireball rat"))
         assertEquals(Command.Cast("fireball", "rat"), CommandParser.parse("c fireball rat"))

@@ -1688,6 +1688,34 @@ ambonmud:
           usage: broadcast <message>
           category: admin
           staff: true
+        setgold:
+          usage: setgold <player> <amount>
+          category: admin
+          staff: true
+        setrace:
+          usage: setrace <player> <race>
+          category: admin
+          staff: true
+        setclass:
+          usage: setclass <player> <class>
+          category: admin
+          staff: true
+        setgender:
+          usage: setgender <player> <gender>
+          category: admin
+          staff: true
+        setxp:
+          usage: setxp <player> <amount>
+          category: admin
+          staff: true
+        heal:
+          usage: heal [player]
+          category: admin
+          staff: true
+        pinfo:
+          usage: pinfo <player>
+          category: admin
+          staff: true
     group:
       maxSize: 8
       inviteTimeoutMs: 120000

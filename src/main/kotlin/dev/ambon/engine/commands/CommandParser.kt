@@ -273,6 +273,39 @@ sealed interface Command {
         val grant: Boolean,
     ) : Command
 
+    data class SetGold(
+        val playerName: String,
+        val amount: Long,
+    ) : Command
+
+    data class SetRace(
+        val playerName: String,
+        val race: String,
+    ) : Command
+
+    data class SetClass(
+        val playerName: String,
+        val playerClass: String,
+    ) : Command
+
+    data class StaffSetGender(
+        val playerName: String,
+        val gender: String,
+    ) : Command
+
+    data class SetXp(
+        val playerName: String,
+        val amount: Long,
+    ) : Command
+
+    data class Heal(
+        val playerName: String?,
+    ) : Command
+
+    data class Pinfo(
+        val playerName: String,
+    ) : Command
+
     data class Cast(
         val spellName: String,
         val target: String?,
@@ -1257,6 +1290,65 @@ object CommandParser {
             val name = rest.trim()
             if (name.isBlank()) Command.Invalid(line, "revokestaff <player>") else Command.SetStaff(name, grant = false)
         }?.let { return it }
+
+        // setgold <player> <amount>
+        matchPrefix(line, listOf("setgold")) { rest ->
+            val parts = rest.trim().split(Regex("\\s+"), limit = 2)
+            val amountStr = parts.getOrNull(1)?.trim()
+            val amount = amountStr?.toLongOrNull()
+            when {
+                parts[0].isBlank() || amountStr == null -> Command.Invalid(line, "setgold <player> <amount>")
+                amount == null -> Command.Invalid(line, "setgold <player> <amount>")
+                else -> Command.SetGold(parts[0], amount)
+            }
+        }?.let { return it }
+
+        // setrace <player> <race>
+        matchPrefix(line, listOf("setrace")) { rest ->
+            val parts = rest.trim().split(Regex("\\s+"), limit = 2)
+            when {
+                parts[0].isBlank() || parts.size < 2 || parts[1].isBlank() -> Command.Invalid(line, "setrace <player> <race>")
+                else -> Command.SetRace(parts[0], parts[1].trim())
+            }
+        }?.let { return it }
+
+        // setclass <player> <class>
+        matchPrefix(line, listOf("setclass")) { rest ->
+            val parts = rest.trim().split(Regex("\\s+"), limit = 2)
+            when {
+                parts[0].isBlank() || parts.size < 2 || parts[1].isBlank() -> Command.Invalid(line, "setclass <player> <class>")
+                else -> Command.SetClass(parts[0], parts[1].trim())
+            }
+        }?.let { return it }
+
+        // setgender <player> <gender> (staff version)
+        matchPrefix(line, listOf("setgender")) { rest ->
+            val parts = rest.trim().split(Regex("\\s+"), limit = 2)
+            when {
+                parts[0].isBlank() || parts.size < 2 || parts[1].isBlank() -> Command.Invalid(line, "setgender <player> <gender>")
+                else -> Command.StaffSetGender(parts[0], parts[1].trim())
+            }
+        }?.let { return it }
+
+        // setxp <player> <amount>
+        matchPrefix(line, listOf("setxp")) { rest ->
+            val parts = rest.trim().split(Regex("\\s+"), limit = 2)
+            val amountStr = parts.getOrNull(1)?.trim()
+            val amount = amountStr?.toLongOrNull()
+            when {
+                parts[0].isBlank() || amountStr == null -> Command.Invalid(line, "setxp <player> <amount>")
+                amount == null -> Command.Invalid(line, "setxp <player> <amount>")
+                else -> Command.SetXp(parts[0], amount)
+            }
+        }?.let { return it }
+
+        // heal [player] — staff full restore
+        matchPrefix(line, listOf("heal")) { rest ->
+            Command.Heal(rest.trim().ifBlank { null })
+        }?.let { return it }
+
+        // pinfo <player> — staff inspect
+        requiredArg(line, listOf("pinfo"), "pinfo <player>", { Command.Pinfo(it) })?.let { return it }
 
         // phase/layer — switch zone instance
         matchPrefix(line, listOf("phase", "layer")) { rest ->
