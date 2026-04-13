@@ -24,6 +24,20 @@ private val log = KotlinLogging.logger {}
 /** Sentinel room-id local part used for the dynamic exit back to the world. */
 const val HOUSE_EXIT_LOCAL = "exit"
 
+/** Fallback templates used when housing is enabled but no templates are configured. */
+private val DEFAULT_TEMPLATES: Map<String, RoomTemplate> = mapOf(
+    "default_entry" to RoomTemplate(
+        id = "default_entry",
+        title = "A Threadbare Player House",
+        description = "A modest dwelling with bare walls and a creaky floor. " +
+            "It isn't much, but it's yours. A few nails in the wall suggest " +
+            "where decorations might hang someday.",
+        cost = 100L,
+        isEntry = true,
+        safe = true,
+    ),
+)
+
 /** Sealed result for [HousingSystem.enterOwnHouse]. */
 sealed interface HouseEntryResult {
     data class Success(
@@ -45,10 +59,10 @@ class HousingSystem(
     private val clock: Clock = Clock.systemUTC(),
     private val markPlayerDirty: suspend (SessionId) -> Unit = {},
 ) : GameSystem {
-    /** Templates keyed by id, built from config at construction time. */
+    /** Templates keyed by id, built from config at construction time. Falls back to a default entry template. */
     val templates: Map<String, RoomTemplate> = config.templates.map { (id, cfg) ->
         id to cfg.toRoomTemplate(id)
-    }.toMap()
+    }.toMap().ifEmpty { DEFAULT_TEMPLATES }
 
     /** The entry template id (exactly one must be marked isEntry). */
     val entryTemplateId: String = templates.values.firstOrNull { it.isEntry }?.id
