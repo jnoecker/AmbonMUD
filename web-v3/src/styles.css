@@ -111,15 +111,28 @@ body,
 
 /*
  * iOS Safari auto-zooms in when focusing a form control whose font-size is
- * below 16px, and it will not auto-zoom back out afterward. The login input
- * autofocuses on load, so without this the page loads zoomed-in and stuck.
- * Force all form controls to at least 16px on touch devices.
+ * below 16px, and it will not auto-zoom back out afterward.  !important is
+ * needed because dozens of component-level selectors (.command-input,
+ * .chat-input, .who-filter-input, etc.) set smaller sizes with higher
+ * specificity than bare element selectors.
+ *
+ * touch-action: manipulation disables double-tap-to-zoom on all interactive
+ * elements, which otherwise causes unexpected zoom on action taps.
  */
 @media (hover: none) and (pointer: coarse) {
   input,
   textarea,
   select {
-    font-size: 16px;
+    font-size: 16px !important;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select,
+  [role="button"] {
+    touch-action: manipulation;
   }
 }
 
