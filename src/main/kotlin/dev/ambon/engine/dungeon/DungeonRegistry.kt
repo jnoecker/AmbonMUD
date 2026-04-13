@@ -14,7 +14,9 @@ class DungeonRegistry {
 
     fun findByKeyword(keyword: String): DungeonTemplateDef? {
         val lower = keyword.lowercase()
-        return templates.values.firstOrNull { it.id.substringAfter(':').equals(lower, ignoreCase = true) }
+        return templates[keyword]
+            ?: templates.values.firstOrNull { it.id.equals(lower, ignoreCase = true) }
+            ?: templates.values.firstOrNull { it.id.substringAfter(':').equals(lower, ignoreCase = true) }
             ?: templates.values.firstOrNull { it.name.equals(lower, ignoreCase = true) }
             ?: templates.values.firstOrNull { it.name.lowercase().contains(lower) }
     }
