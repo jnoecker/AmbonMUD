@@ -648,6 +648,7 @@ class GameEngine(
                 config = engineConfig.housing,
                 clock = clock,
                 markPlayerDirty = { sid -> players.persistPlayer(sid) },
+                imagesBaseUrl = imagesBaseUrl,
             )
         } else {
             null

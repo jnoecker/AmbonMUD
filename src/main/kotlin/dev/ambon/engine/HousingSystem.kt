@@ -58,7 +58,10 @@ class HousingSystem(
     private val config: HousingConfig,
     private val clock: Clock = Clock.systemUTC(),
     private val markPlayerDirty: suspend (SessionId) -> Unit = {},
+    imagesBaseUrl: String = "/images/",
 ) : GameSystem {
+    private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
+
     /** Templates keyed by id, built from config at construction time. Falls back to a default entry template. */
     val templates: Map<String, RoomTemplate> = config.templates.map { (id, cfg) ->
         id to cfg.toRoomTemplate(id)
@@ -511,7 +514,7 @@ class HousingSystem(
                 description = buildDescription(roomRecord, template, house.ownerName),
                 exits = exits,
                 station = template.station,
-                image = template.image,
+                image = template.image?.let { "$imagesBase$it" },
             )
         }
 
