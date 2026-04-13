@@ -1,4 +1,6 @@
-# AmbonMUD — Roadmap
+# AmbonMUD — Feature Status
+
+What's built. This is a living inventory of shipped systems, not a forward-looking roadmap.
 
 ## Current State (April 2026)
 

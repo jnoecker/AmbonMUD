@@ -516,22 +516,15 @@ web-v3/
 
 ---
 
-## 🗺 Implementation Roadmap
+## 🗺 Implementation Status
 
-### Phase 1: Design System Foundation ✅
+### Design System Foundation ✅
 - [x] Design tokens, spacing, shadows, easing — all in `web-v3/src/styles.css`
 - [x] Easing functions and @keyframes in `styles.css`
 - [x] Component folder structure under `web-v3/src/`
 - [x] Documented in `STYLE_GUIDE.md` (this file) and `.impeccable.md`
-- [ ] Visual regression test templates
 
-### Phase 2: Admin Console Redesign
-- [ ] Audit current admin UI (served by `AdminHttpServer.kt`)
-- [ ] Redesign using design tokens
-- [ ] Add hover/active/focus states
-- [ ] Integrate ambient animations
-
-### Phase 3: Web Client ✅
+### Web Client ✅
 - [x] All React panels built (Play, World, Chat, Character, Admin)
 - [x] Ambient orbs and background radial gradients
 - [x] Dark-mode Surreal Gentle Magic theme throughout
@@ -539,7 +532,7 @@ web-v3/
 - [x] Spellbook panel with ability sprites and target filtering
 - [x] Customizable 9-slot quickbar with drag-and-drop
 
-### Phase 4: PixiJS Canvas Game View ✅
+### PixiJS Canvas Game View ✅
 - [x] WorldScene with room rendering, player/NPC sprites, exit indicators
 - [x] BattleScene with JRPG-style combat animations
 - [x] Combat event animation queue (damage numbers, spell effects)
@@ -549,12 +542,11 @@ web-v3/
 - [x] Spell targeting system (auto-target, targeting mode, Escape cancel)
 - [x] Login modal with race/class selection
 
-### Phase 5: Light Mode & Polish
+### Outstanding
 - [ ] Light mode theme (preserve magical warmth — don't just invert)
-- [ ] Collect player feedback on aesthetic
-- [ ] Refine easing/animation timings
-- [ ] Create style variants (e.g., `surreal_softmagic_night_v1`)
-- [ ] Performance optimization (lazy-loading, bundle splitting)
+- [ ] Admin console redesign using design tokens
+- [ ] Visual regression test templates
+- [ ] Style variants (e.g., `surreal_softmagic_night_v1`)
 
 ---
 
@@ -645,5 +637,4 @@ When creating new variants, document the differences from v1 and update this sec
 
 ---
 
-**Last Updated:** March 25, 2026
-**Next Review:** June 30, 2026
+**Last Updated:** April 2026

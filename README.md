@@ -16,7 +16,7 @@ AmbonMUD
 - **Data-driven content.** Worlds, abilities, status effects, stats, classes, races, and economy tuning all live in YAML/config — no recompilation for content changes.
 - **Three deployment modes.** `STANDALONE` (single process), `ENGINE` (game logic + gRPC), `GATEWAY` (transports + gRPC client). Redis-backed zone sharding and zone instancing are available when you need horizontal scale.
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full feature ledger and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design decisions behind it.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full feature inventory and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the architectural contracts and design decisions.
 
 ## Tech stack
 
@@ -111,8 +111,8 @@ PostgreSQL tests use H2 in PostgreSQL-compatibility mode — no Docker required.
 
 **Start here**
 - [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — onboarding, project map, common tasks
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — engine contracts and 18 design decisions
-- [docs/ROADMAP.md](docs/ROADMAP.md) — what's built
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — architectural contracts, data flow, and design decisions
+- [docs/ROADMAP.md](docs/ROADMAP.md) — feature inventory (what's built)
 
 **Protocol & content**
 - [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — full GMCP reference for client developers

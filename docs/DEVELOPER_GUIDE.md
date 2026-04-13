@@ -171,40 +171,11 @@ infra/                           # TypeScript CDK project
 
 ## 4. Architecture & contracts
 
-Full rationale and the 18 design decisions live in [`ARCHITECTURE.md`](./ARCHITECTURE.md). The three inviolable contracts:
+Full architectural details — contracts, data flow, event model, persistence stack, and design decisions — live in [`ARCHITECTURE.md`](./ARCHITECTURE.md). The three inviolable contracts in brief:
 
 1. **Engine isolation.** The engine communicates only via `InboundEvent` / `OutboundEvent`. No transport code inside the engine; no gameplay logic inside transport.
 2. **Single-threaded engine.** `GameEngine` runs on a dedicated dispatcher with a 100 ms tick loop. Never call blocking I/O inside engine systems. Use the injected `Clock`, never `System.currentTimeMillis()`.
 3. **Bus interfaces.** Pass `InboundBus` / `OutboundBus`, never raw `Channel<T>`. This is what lets `Local*Bus` ↔ `Redis*Bus` ↔ `Grpc*Bus` swap without touching game code.
-
-### Data flow
-
-```
-Clients (telnet / browser)
-        │
-        ▼
-Transports        (decode → InboundEvent, render ← OutboundEvent)
-        │
-        ▼
-InboundBus / OutboundBus        (Local / Redis / gRPC)
-        │
-        ▼
-GameEngine        (100 ms tick loop, CommandRouter, subsystems)
-        │
-        ▼
-OutboundRouter    (per-session queues, backpressure, prompt coalescing)
-        │
-        ▼
-Sessions          (telnet sockets / WebSocket frames)
-```
-
-### Events
-
-**Inbound** (sealed interface): `Connected`, `Disconnected`, `LineReceived`, `GmcpReceived`.
-
-**Outbound** (sealed interface): `SendText`, `SendInfo`, `SendError`, `SendPrompt`, `ShowLoginScreen`, `SetAnsi`, `ClearScreen`, `ShowAnsiDemo`, `Close`, `SessionRedirect`, `GmcpData`.
-
-**Rule:** never leak escape codes into event output. If a new rendering need arises, add a new sealed variant and handle it in the renderers.
 
 ---
 
