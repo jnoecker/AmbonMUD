@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -79,6 +80,7 @@ class HousingHandler(
         } else {
             outbound.send(OutboundEvent.SendInfo(sessionId, "Congratulations! You are now a homeowner."))
             outbound.send(OutboundEvent.SendInfo(sessionId, "Use 'recall' to visit your house, or 'house status' to see your rooms."))
+            emitHousingGmcp(sessionId, hs)
         }
     }
 
@@ -91,6 +93,7 @@ class HousingHandler(
         } else {
             val name = template?.title ?: cmd.templateId
             outbound.send(OutboundEvent.SendInfo(sessionId, "You've added a $name to the ${cmd.direction.name.lowercase()}."))
+            emitHousingGmcp(sessionId, hs)
         }
     }
 
@@ -101,6 +104,7 @@ class HousingHandler(
             outbound.send(OutboundEvent.SendError(sessionId, err))
         } else {
             outbound.send(OutboundEvent.SendInfo(sessionId, "Room title updated."))
+            emitHousingGmcp(sessionId, hs)
         }
     }
 
@@ -111,6 +115,7 @@ class HousingHandler(
             outbound.send(OutboundEvent.SendError(sessionId, err))
         } else {
             outbound.send(OutboundEvent.SendInfo(sessionId, "Room description updated."))
+            emitHousingGmcp(sessionId, hs)
         }
     }
 
@@ -151,6 +156,27 @@ class HousingHandler(
             outbound.send(OutboundEvent.SendError(sessionId, err))
         } else {
             outbound.send(OutboundEvent.SendInfo(sessionId, "${cmd.playerName} has been removed from your house."))
+        }
+    }
+
+    private suspend fun emitHousingGmcp(sessionId: SessionId, hs: HousingSystem) {
+        val emitter = gmcpEmitter ?: return
+        val status = hs.houseStatus(sessionId)
+        if (status != null) {
+            emitter.sendHousingInfo(
+                sessionId,
+                hasHouse = true,
+                ownerName = status.ownerName,
+                rooms = status.rooms.map {
+                    GmcpEmitter.HousingRoomPayload(
+                        templateId = it.templateId,
+                        title = it.title,
+                        description = it.description,
+                    )
+                },
+            )
+        } else {
+            emitter.sendHousingInfo(sessionId, hasHouse = false)
         }
     }
 
