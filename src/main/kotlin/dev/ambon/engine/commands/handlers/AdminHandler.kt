@@ -928,6 +928,7 @@ class AdminHandler(
                 append("=== End Info ===")
             }
             outbound.send(OutboundEvent.SendText(sessionId, lines))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
         }
     }
 
