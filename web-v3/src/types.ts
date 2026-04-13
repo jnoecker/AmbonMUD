@@ -727,6 +727,7 @@ export interface HousingInfo {
   hasHouse: boolean;
   ownerName: string | null;
   rooms: HousingRoomInfo[];
+  available: boolean;
 }
 
 export interface FactionStanding {

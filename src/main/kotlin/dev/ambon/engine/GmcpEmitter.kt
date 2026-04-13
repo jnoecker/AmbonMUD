@@ -815,11 +815,12 @@ class GmcpEmitter(
         hasHouse: Boolean,
         ownerName: String? = null,
         rooms: List<HousingRoomPayload> = emptyList(),
+        available: Boolean = true,
     ) {
         emit(
             sessionId,
             "Housing.Info",
-            HousingInfoPayload(hasHouse = hasHouse, ownerName = ownerName, rooms = rooms),
+            HousingInfoPayload(hasHouse = hasHouse, ownerName = ownerName, rooms = rooms, available = available),
         )
     }
 
@@ -833,6 +834,7 @@ class GmcpEmitter(
         val hasHouse: Boolean,
         val ownerName: String?,
         val rooms: List<HousingRoomPayload>,
+        val available: Boolean,
     )
 
     // ---------- combat events ----------

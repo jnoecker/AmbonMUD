@@ -2006,7 +2006,11 @@ class GameEngine(
 
     private suspend fun sendHousingGmcp(sessionId: SessionId) {
         val emitter = gmcpEmitter ?: return
-        val hs = housingSystem ?: return
+        val hs = housingSystem
+        if (hs == null) {
+            emitter.sendHousingInfo(sessionId, hasHouse = false, available = false)
+            return
+        }
         val status = hs.houseStatus(sessionId)
         if (status != null) {
             emitter.sendHousingInfo(

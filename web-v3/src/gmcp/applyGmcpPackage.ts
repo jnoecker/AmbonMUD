@@ -1819,6 +1819,7 @@ export function applyGmcpPackage(
     case "Housing.Info": {
       const packet = data as Partial<Record<string, unknown>>;
       const hasHouse = packet.hasHouse === true;
+      const available = packet.available !== false;
       const ownerName = typeof packet.ownerName === "string" ? packet.ownerName : null;
       const rooms: HousingRoomInfo[] = Array.isArray(packet.rooms)
         ? packet.rooms
@@ -1829,7 +1830,7 @@ export function applyGmcpPackage(
               description: typeof r.description === "string" ? r.description : "",
             }))
         : [];
-      ctx.setHousing({ hasHouse, ownerName, rooms });
+      ctx.setHousing({ hasHouse, ownerName, rooms, available });
       break;
     }
 

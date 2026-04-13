@@ -43,10 +43,12 @@ export function HousingPanel({
         <div className="housing-empty-state">
           <span className="housing-empty-icon">{"\u{1F3E0}"}</span>
           <p className="empty-note">You don't own a house yet.</p>
-          {room.housingBroker ? (
+          {room.housingBroker && housing?.available !== false ? (
             <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house buy")}>
               Purchase a House
             </button>
+          ) : housing?.available === false ? (
+            <p className="housing-hint">Housing is not available on this server.</p>
           ) : (
             <p className="housing-hint">Visit a housing broker to purchase one.</p>
           )}
