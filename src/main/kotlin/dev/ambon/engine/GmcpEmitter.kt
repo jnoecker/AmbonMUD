@@ -194,6 +194,7 @@ class GmcpEmitter(
                 tavern = room.tavern,
                 dungeon = room.dungeon,
                 auction = room.auction,
+                housingBroker = room.housingBroker,
             ),
         )
     }
@@ -2059,6 +2060,7 @@ class GmcpEmitter(
         val tavern: Boolean = false,
         val dungeon: Boolean = false,
         val auction: Boolean = false,
+        val housingBroker: Boolean = false,
     )
 
     private data class ItemPayload(

@@ -216,6 +216,7 @@ export interface RoomState {
   tavern?: boolean;
   dungeon?: boolean;
   auction?: boolean;
+  housingBroker?: boolean;
 }
 
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */

@@ -14,6 +14,7 @@ class HousingHandler(
 ) : CommandHandler {
     private val outbound = ctx.outbound
     private val players = ctx.players
+    private val world = ctx.world
     private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
@@ -42,8 +43,19 @@ class HousingHandler(
         }
     }
 
+    private suspend fun requireBroker(sessionId: SessionId): Boolean {
+        val me = players.get(sessionId) ?: return false
+        val room = world.rooms[me.roomId]
+        if (room == null || !room.housingBroker) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You need to be at a housing broker to do that."))
+            return false
+        }
+        return true
+    }
+
     private suspend fun handleListTemplates(sessionId: SessionId) {
         val hs = requireSystemOrNull(sessionId, housingSystem, "Housing", outbound) ?: return
+        if (!requireBroker(sessionId)) return
         val me = players.get(sessionId) ?: return
         val pid = me.playerId ?: return
         val house = hs.getHouse(pid)
@@ -60,6 +72,7 @@ class HousingHandler(
 
     private suspend fun handleBuy(sessionId: SessionId) {
         val hs = requireSystemOrNull(sessionId, housingSystem, "Housing", outbound) ?: return
+        if (!requireBroker(sessionId)) return
         val err = hs.createHouse(sessionId)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))

@@ -55,6 +55,7 @@ class HousingCommandTest {
                 title = "Town Square",
                 description = "The town square.",
                 exits = emptyMap(),
+                housingBroker = true,
             ),
         )
         return World(rooms = rooms, startRoom = startRoom)
