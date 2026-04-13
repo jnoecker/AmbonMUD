@@ -44,10 +44,12 @@ class HousingHandler(
         }
     }
 
-    private suspend fun requireBroker(sessionId: SessionId, me: dev.ambon.engine.PlayerState): Boolean {
+    private suspend fun requireBroker(sessionId: SessionId, me: dev.ambon.engine.PlayerState, command: String? = null): Boolean {
         val room = world.rooms[me.roomId]
         if (room == null || !room.housingBroker) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You need to be at a housing broker to do that."))
+            val msg = "You need to be at a housing broker to do that."
+            outbound.send(OutboundEvent.SendError(sessionId, msg))
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "NO_BROKER", scope = "housing", command = command)
             return false
         }
         return true
@@ -56,7 +58,7 @@ class HousingHandler(
     private suspend fun handleListTemplates(sessionId: SessionId) {
         val hs = requireSystemOrNull(sessionId, housingSystem, "Housing", outbound) ?: return
         val me = players.get(sessionId) ?: return
-        if (!requireBroker(sessionId, me)) return
+        if (!requireBroker(sessionId, me, command = "list")) return
         val pid = me.playerId ?: return
         val house = hs.getHouse(pid)
 
@@ -73,13 +75,16 @@ class HousingHandler(
     private suspend fun handleBuy(sessionId: SessionId) {
         val hs = requireSystemOrNull(sessionId, housingSystem, "Housing", outbound) ?: return
         val me = players.get(sessionId) ?: return
-        if (!requireBroker(sessionId, me)) return
+        if (!requireBroker(sessionId, me, command = "buy")) return
         val err = hs.createHouse(sessionId)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", err, scope = "housing", command = "buy")
         } else {
-            outbound.send(OutboundEvent.SendInfo(sessionId, "Congratulations! You are now a homeowner."))
+            val msg = "Congratulations! You are now a homeowner."
+            outbound.send(OutboundEvent.SendInfo(sessionId, msg))
             outbound.send(OutboundEvent.SendInfo(sessionId, "Use 'recall' to visit your house, or 'house status' to see your rooms."))
+            gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "housing", command = "buy")
             emitHousingGmcp(sessionId, hs)
         }
     }
@@ -90,9 +95,12 @@ class HousingHandler(
         val err = hs.expandHouse(sessionId, cmd.templateId, cmd.direction)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", err, scope = "housing", command = "expand")
         } else {
             val name = template?.title ?: cmd.templateId
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You've added a $name to the ${cmd.direction.name.lowercase()}."))
+            val msg = "You've added a $name to the ${cmd.direction.name.lowercase()}."
+            outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+            gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "housing", command = "expand")
             emitHousingGmcp(sessionId, hs)
         }
     }
@@ -102,8 +110,11 @@ class HousingHandler(
         val err = hs.setRoomTitle(sessionId, cmd.text)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", err, scope = "housing", command = "describe")
         } else {
-            outbound.send(OutboundEvent.SendInfo(sessionId, "Room title updated."))
+            val msg = "Room title updated."
+            outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+            gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "housing", command = "describe")
             emitHousingGmcp(sessionId, hs)
         }
     }
@@ -113,8 +124,11 @@ class HousingHandler(
         val err = hs.setRoomDescription(sessionId, cmd.text)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", err, scope = "housing", command = "describe")
         } else {
-            outbound.send(OutboundEvent.SendInfo(sessionId, "Room description updated."))
+            val msg = "Room description updated."
+            outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+            gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "housing", command = "describe")
             emitHousingGmcp(sessionId, hs)
         }
     }
@@ -126,6 +140,7 @@ class HousingHandler(
         val err = hs.invitePlayer(sessionId, cmd.playerName)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", err, scope = "housing", command = "invite")
             return
         }
 
@@ -154,8 +169,11 @@ class HousingHandler(
         val err = hs.kickVisitor(sessionId, cmd.playerName)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", err, scope = "housing", command = "kick")
         } else {
-            outbound.send(OutboundEvent.SendInfo(sessionId, "${cmd.playerName} has been removed from your house."))
+            val msg = "${cmd.playerName} has been removed from your house."
+            outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+            gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "housing", command = "kick")
         }
     }
 

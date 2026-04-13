@@ -698,6 +698,7 @@ function App() {
             hasCharacterProfile={hasCharacterProfile}
             housing={state.housing}
             room={state.room}
+            uiFeedbackFeed={state.uiFeedbackFeed}
             onSendCommand={sendCommand}
           />
         )}

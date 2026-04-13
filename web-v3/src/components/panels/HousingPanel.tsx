@@ -1,11 +1,12 @@
-import { useState } from "react";
-import type { HousingInfo, RoomState } from "../../types";
+import { useMemo, useState } from "react";
+import type { HousingInfo, RoomState, UiFeedbackEntry } from "../../types";
 
 interface HousingPanelProps {
   connected: boolean;
   hasCharacterProfile: boolean;
   housing: HousingInfo | null;
   room: RoomState;
+  uiFeedbackFeed: UiFeedbackEntry[];
   onSendCommand: (cmd: string) => void;
 }
 
@@ -14,10 +15,16 @@ export function HousingPanel({
   hasCharacterProfile,
   housing,
   room,
+  uiFeedbackFeed,
   onSendCommand,
 }: HousingPanelProps) {
   const [editField, setEditField] = useState<"title" | "desc" | null>(null);
   const [editValue, setEditValue] = useState("");
+
+  const activeFeedback = useMemo(
+    () => [...uiFeedbackFeed].reverse().find((e) => e.scope === "housing") ?? null,
+    [uiFeedbackFeed],
+  );
 
   if (!connected) return <p className="empty-note">Connect to view housing.</p>;
   if (!hasCharacterProfile) return <p className="empty-note">Log in to view housing.</p>;
@@ -42,6 +49,11 @@ export function HousingPanel({
             </button>
           ) : (
             <p className="housing-hint">Visit a housing broker to purchase one.</p>
+          )}
+          {activeFeedback && (
+            <p className={`systems-local-message systems-local-message-${activeFeedback.type}`}>
+              {activeFeedback.message}
+            </p>
           )}
         </div>
       </div>
@@ -75,6 +87,11 @@ export function HousingPanel({
         <span className="housing-owner-name">{housing.ownerName}&apos;s House</span>
         <span className="housing-room-count">{housing.rooms.length} room{housing.rooms.length !== 1 ? "s" : ""}</span>
       </div>
+      {activeFeedback && (
+        <p className={`systems-local-message systems-local-message-${activeFeedback.type}`}>
+          {activeFeedback.message}
+        </p>
+      )}
 
       {inOwnHouse && (
         <div className="housing-actions">
