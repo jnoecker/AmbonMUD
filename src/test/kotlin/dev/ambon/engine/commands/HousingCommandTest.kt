@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class HousingCommandTest {
     private val startRoom = RoomId("zone:start")
+    private val noBrokerRoom = RoomId("zone:park")
 
     private val housingConfig = HousingConfig(
         enabled = true,
@@ -56,6 +57,12 @@ class HousingCommandTest {
                 description = "The town square.",
                 exits = emptyMap(),
                 housingBroker = true,
+            ),
+            noBrokerRoom to Room(
+                id = noBrokerRoom,
+                title = "City Park",
+                description = "A quiet park.",
+                exits = emptyMap(),
             ),
         )
         return World(rooms = rooms, startRoom = startRoom)
@@ -207,6 +214,48 @@ class HousingCommandTest {
 
         val infos = h.drain().infoMessages(sid)
         assertTrue(infos.any { it.contains("no visitors") }, "got=$infos")
+    }
+
+    @Test
+    fun `house buy rejected when not at a broker`() = runTest {
+        val (h, _, _) = harness()
+        val sid = SessionId(1)
+        h.loginPlayer(sid, "Alice")
+        h.players.moveTo(sid, noBrokerRoom)
+        h.drain()
+
+        h.router.handle(sid, Command.House.Buy)
+
+        val errors = h.drain().errorMessages(sid)
+        assertTrue(errors.any { it.contains("housing broker") }, "got=$errors")
+    }
+
+    @Test
+    fun `house list rejected when not at a broker`() = runTest {
+        val (h, _, _) = harness()
+        val sid = SessionId(1)
+        h.loginPlayer(sid, "Alice")
+        h.players.moveTo(sid, noBrokerRoom)
+        h.drain()
+
+        h.router.handle(sid, Command.House.ListTemplates)
+
+        val errors = h.drain().errorMessages(sid)
+        assertTrue(errors.any { it.contains("housing broker") }, "got=$errors")
+    }
+
+    @Test
+    fun `house status works from any room`() = runTest {
+        val (h, _, _) = harness()
+        val sid = SessionId(1)
+        h.loginPlayer(sid, "Alice")
+        h.players.moveTo(sid, noBrokerRoom)
+        h.drain()
+
+        h.router.handle(sid, Command.House.Status)
+
+        val infos = h.drain().infoMessages(sid)
+        assertTrue(infos.any { it.contains("don't own") }, "got=$infos")
     }
 
     @Test

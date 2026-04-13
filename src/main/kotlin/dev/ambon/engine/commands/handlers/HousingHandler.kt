@@ -43,8 +43,7 @@ class HousingHandler(
         }
     }
 
-    private suspend fun requireBroker(sessionId: SessionId): Boolean {
-        val me = players.get(sessionId) ?: return false
+    private suspend fun requireBroker(sessionId: SessionId, me: dev.ambon.engine.PlayerState): Boolean {
         val room = world.rooms[me.roomId]
         if (room == null || !room.housingBroker) {
             outbound.send(OutboundEvent.SendError(sessionId, "You need to be at a housing broker to do that."))
@@ -55,8 +54,8 @@ class HousingHandler(
 
     private suspend fun handleListTemplates(sessionId: SessionId) {
         val hs = requireSystemOrNull(sessionId, housingSystem, "Housing", outbound) ?: return
-        if (!requireBroker(sessionId)) return
         val me = players.get(sessionId) ?: return
+        if (!requireBroker(sessionId, me)) return
         val pid = me.playerId ?: return
         val house = hs.getHouse(pid)
 
@@ -72,7 +71,8 @@ class HousingHandler(
 
     private suspend fun handleBuy(sessionId: SessionId) {
         val hs = requireSystemOrNull(sessionId, housingSystem, "Housing", outbound) ?: return
-        if (!requireBroker(sessionId)) return
+        val me = players.get(sessionId) ?: return
+        if (!requireBroker(sessionId, me)) return
         val err = hs.createHouse(sessionId)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
