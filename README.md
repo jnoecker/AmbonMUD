@@ -5,7 +5,7 @@ AmbonMUD
 
 **Live demo:** [https://mud.ambon.dev](https://mud.ambon.dev) — or `telnet mud.ambon.dev 4000`
 
-![AmbonMUD web client](docs/screenshots/webclient-v4.jpeg)
+![AmbonMUD web client](docs/screenshots/webclient-v5.png)
 
 ---
 
@@ -17,6 +17,19 @@ AmbonMUD
 - **Three deployment modes.** `STANDALONE` (single process), `ENGINE` (game logic + gRPC), `GATEWAY` (transports + gRPC client). Redis-backed zone sharding and zone instancing are available when you need horizontal scale.
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full feature inventory and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the architectural contracts and design decisions.
+
+<details>
+<summary><strong>More screenshots</strong></summary>
+
+| Combat | Shop |
+|--------|------|
+| ![Combat](docs/screenshots/combat.png) | ![Shop](docs/screenshots/shop.png) |
+
+| Character panel | Admin console |
+|-----------------|---------------|
+| ![Character panel](docs/screenshots/character-panel.png) | ![Admin console](docs/screenshots/admin-panel.png) |
+
+</details>
 
 ## Tech stack
 
