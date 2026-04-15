@@ -420,6 +420,56 @@ export class Ec2Stack extends Stack {
             '',
           ]
         : []),
+      // ---- fetch-admin-token helper script ------------------------------------
+      // Reads the admin token from AWS SSM Parameter Store and materializes it
+      // into two files the rest of the boot sequence reads:
+      //
+      //   1. /etc/ambonmud/secrets.env — AMBONMUD_ADMIN_TOKEN=<value>, mode 600,
+      //      root-only. Used by docker --env-file for container env, and by
+      //      generate-htpasswd to build the nginx basic-auth htpasswd.
+      //
+      //   2. /app/data/secrets.yaml — Hoplite secrets overlay. Highest-priority
+      //      config source (see AppConfigLoader.kt) so the app's loaded
+      //      admin.token matches the real SSM value regardless of what the
+      //      creator-generated application-local.yaml carries as a placeholder.
+      //      Without this, a creator overlay with admin.token: "" (or any
+      //      non-matching placeholder) causes the app to reject the real token
+      //      at the admin API auth layer, while nginx basic-auth (built from
+      //      secrets.env) accepts it — the two layers disagree and no single
+      //      password works. The secrets overlay makes both layers agree.
+      //
+      // Only installed when adminTokenSsmParameterName is set.
+      // ----------------------------------------------------------------------
+      ...(adminTokenSsmParameterName
+        ? [
+            `cat > /usr/local/bin/fetch-admin-token << 'FETCH_END'`,
+            '#!/bin/bash',
+            'set -euo pipefail',
+            `PARAM_NAME="${adminTokenSsmParameterName}"`,
+            `REGION="${this.region}"`,
+            'mkdir -p /etc/ambonmud /app/data',
+            'umask 077',
+            'token=$(aws ssm get-parameter --name "$PARAM_NAME" --with-decryption --query Parameter.Value --output text --region "$REGION")',
+            'if [ -z "$token" ]; then',
+            '  echo "Empty admin token from SSM — refusing to start" >&2',
+            '  exit 1',
+            'fi',
+            '# secrets.env — consumed by docker --env-file and generate-htpasswd.',
+            'printf "AMBONMUD_ADMIN_TOKEN=%s\\n" "$token" > /etc/ambonmud/secrets.env',
+            'chmod 600 /etc/ambonmud/secrets.env',
+            '# secrets.yaml — Hoplite overlay read by the container (UID 1001).',
+            '# Single-quoted YAML scalar: safe for SSM hex tokens; if token style',
+            '# ever changes to include single-quotes or backslashes, switch to',
+            '# python -c "import yaml,sys; yaml.safe_dump(...)" for robustness.',
+            "printf \"ambonmud:\\n  admin:\\n    token: '%s'\\n\" \"$token\" > /app/data/secrets.yaml",
+            'chown 1001:1001 /app/data/secrets.yaml',
+            'chmod 600 /app/data/secrets.yaml',
+            'echo "Admin token materialized to secrets.env + secrets.yaml"',
+            'FETCH_END',
+            'chmod +x /usr/local/bin/fetch-admin-token',
+            '',
+          ]
+        : []),
       // ---- generate-htpasswd helper script ------------------------------------
       // Writes an htpasswd file for nginx basic auth on /grafana/, /prometheus/,
       // and /admin/. The admin token is sourced from (in order of preference):
@@ -529,20 +579,13 @@ export class Ec2Stack extends Stack {
             `ExecStartPre=/usr/bin/curl -fsSL --retry 20 --retry-delay 15 --retry-all-errors -A "Mozilla/5.0 (compatible; AmbonMUD-fetch/1.0)" -o /app/data/world/achievements.yaml ${achievementsUrl}`,
           ]
         : []),
-      // Fetch the admin API token from SSM Parameter Store and write it to
-      // /etc/ambonmud/secrets.env. Must run before generate-htpasswd (which
-      // reads the token from this file) and before the main ExecStart (which
-      // passes the file to the container via --env-file). Fails the unit if
-      // the parameter is missing or unreadable — we'd rather refuse to start
-      // than launch with a broken/missing admin token.
+      // Fetch the admin API token from SSM Parameter Store. Runs before
+      // generate-htpasswd (which reads secrets.env) and before the container
+      // starts (which bind-mounts /app/data holding secrets.yaml). Fails the
+      // unit if the parameter is missing or unreadable — we'd rather refuse
+      // to start than launch with a broken/missing admin token.
       ...(adminTokenSsmParameterName
-        ? [
-            // %%s escapes systemd's specifier expansion — bare %s gets replaced
-            // with the service user's login shell (/bin/bash for root) before
-            // bash ever sees it, which silently eats the $token argument and
-            // writes AMBONMUD_ADMIN_TOKEN=/bin/bash to secrets.env.
-            `ExecStartPre=/bin/bash -c 'set -euo pipefail; mkdir -p /etc/ambonmud; umask 077; token=$(aws ssm get-parameter --name ${adminTokenSsmParameterName} --with-decryption --query Parameter.Value --output text --region ${this.region}); test -n "$token"; printf "AMBONMUD_ADMIN_TOKEN=%%s\\n" "$token" > /etc/ambonmud/secrets.env'`,
-          ]
+        ? [`ExecStartPre=/usr/local/bin/fetch-admin-token`]
         : []),
       // Generate htpasswd for nginx basic auth on /grafana/, /prometheus/, /admin/.
       'ExecStartPre=/usr/local/bin/generate-htpasswd',

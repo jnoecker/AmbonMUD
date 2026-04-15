@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Path
+import kotlin.io.path.writeText
 
 class AppConfigLoaderTest {
     private val testResourcePath = "/test-application.yaml"
@@ -471,6 +474,50 @@ class AppConfigLoaderTest {
             extraSources = listOf(source),
         )
         assertEquals(PersistenceBackend.POSTGRES, config.persistence.backend)
+    }
+
+    @Test
+    fun `secrets overlay outranks extra sources and base config`(
+        @TempDir tmp: Path,
+    ) {
+        // The secrets overlay is the highest-priority source so real secret
+        // values injected by the deployment pipeline always beat whatever
+        // placeholder the creator-generated overlay carries. Simulated here
+        // by adding a map source with a value for admin.token and confirming
+        // the PropertySource.file for secrets.yaml wins.
+        val secretsFile = tmp.resolve("secrets.yaml")
+        secretsFile.writeText(
+            """
+            ambonmud:
+              admin:
+                token: "REAL_SECRET_FROM_SSM"
+            """.trimIndent(),
+        )
+        val overlayLikePlaceholder =
+            PropertySource.map(
+                mapOf(
+                    "ambonmud.admin.enabled" to "true",
+                    "ambonmud.admin.token" to "OVERRIDE_ME_FROM_ENV",
+                ),
+            )
+
+        val previous = System.getProperty("ambon.secretsFile")
+        System.setProperty("ambon.secretsFile", secretsFile.toString())
+        try {
+            val config =
+                AppConfigLoader.load(
+                    resourcePath = testResourcePath,
+                    extraSources = listOf(overlayLikePlaceholder),
+                )
+            assertEquals("REAL_SECRET_FROM_SSM", config.admin.token)
+            assertTrue(config.admin.enabled)
+        } finally {
+            if (previous == null) {
+                System.clearProperty("ambon.secretsFile")
+            } else {
+                System.setProperty("ambon.secretsFile", previous)
+            }
+        }
     }
 
     @Test
