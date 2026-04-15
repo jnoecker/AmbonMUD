@@ -8,4 +8,6 @@ data class ShopDefinition(
     val name: String,
     val roomId: RoomId,
     val itemIds: List<ItemId>,
+    /** Optional reputation gate on browse/buy. */
+    val requiredReputation: ReputationRequirement? = null,
 )

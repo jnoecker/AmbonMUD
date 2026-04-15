@@ -1,0 +1,29 @@
+zone: bad_quest_rep
+startRoom: square
+mobs:
+  giver:
+    name: "a quest giver"
+    description: "He hands out impossible quests."
+    room: square
+  target:
+    name: "a target"
+    description: "Stands still."
+    room: square
+quests:
+  impossible:
+    name: "Impossible"
+    giver: giver
+    objectives:
+      - type: kill
+        targetKey: target
+        count: 1
+        description: "Kill the target."
+    requiredReputation:
+      faction: royal_court
+      min: 500
+      max: 100
+rooms:
+  square:
+    title: "Square"
+    description: "A square."
+    exits: {}

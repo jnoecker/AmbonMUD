@@ -22,6 +22,7 @@ class QuestSystem(
     private val clock: Clock = Clock.systemUTC(),
     private val objectiveHandlers: ObjectiveHandlerRegistry = ObjectiveHandlerRegistry.withDefaults(),
     private val completionHandlers: CompletionHandlerRegistry = CompletionHandlerRegistry.withDefaults(),
+    private val reputationSystem: ReputationSystem? = null,
 ) {
     /** Invoked after a quest is successfully completed; used by AchievementSystem. */
     var onQuestCompleted: (suspend (SessionId, String) -> Unit)? = null
@@ -32,8 +33,11 @@ class QuestSystem(
     var onQuestCompletedGmcp: (suspend (SessionId, String, String) -> Unit)? = null
 
     /**
-     * Returns quests offered by this mob that the player can accept
-     * (not already active, not already completed).
+     * Returns quests offered by this mob that the player can accept.
+     *
+     * Excludes quests already active, already completed, whose reputation ceiling
+     * has been exceeded (quest "disappears"), or whose reputation floor is unmet
+     * (surfaced via [hintedQuests] instead so the giver can acknowledge them).
      */
     fun availableQuests(
         sessionId: SessionId,
@@ -41,17 +45,53 @@ class QuestSystem(
     ): List<QuestDef> {
         val ps = players.get(sessionId) ?: return emptyList()
         return registry.questsForMob(mobId).filter { quest ->
-            !ps.activeQuests.containsKey(quest.id) && !ps.completedQuestIds.contains(quest.id)
+            isAcceptable(ps, quest)
         }
+    }
+
+    /**
+     * Quests the giver knows about but the player can't yet accept because a
+     * reputation `min` is unmet. Used to hint at gated content rather than
+     * leaving the player wondering why it isn't appearing.
+     */
+    fun hintedQuests(
+        sessionId: SessionId,
+        mobId: String,
+    ): List<QuestDef> {
+        val ps = players.get(sessionId) ?: return emptyList()
+        return registry.questsForMob(mobId).filter { quest ->
+            if (ps.activeQuests.containsKey(quest.id) || ps.completedQuestIds.contains(quest.id)) return@filter false
+            if (exceedsRepMax(ps, quest)) return@filter false
+            belowRepMin(ps, quest)
+        }
+    }
+
+    private fun isAcceptable(ps: PlayerState, quest: QuestDef): Boolean {
+        if (ps.activeQuests.containsKey(quest.id) || ps.completedQuestIds.contains(quest.id)) return false
+        if (exceedsRepMax(ps, quest)) return false
+        if (belowRepMin(ps, quest)) return false
+        return true
+    }
+
+    private fun belowRepMin(ps: PlayerState, quest: QuestDef): Boolean {
+        val req = quest.requiredReputation ?: return false
+        val min = req.min ?: return false
+        val rep = reputationSystem ?: return false
+        return rep.getStanding(ps, req.faction) < min
+    }
+
+    private fun exceedsRepMax(ps: PlayerState, quest: QuestDef): Boolean {
+        val req = quest.requiredReputation ?: return false
+        val max = req.max ?: return false
+        val rep = reputationSystem ?: return false
+        return rep.getStanding(ps, req.faction) > max
     }
 
     /** Returns mob IDs that offer quests the player can accept. */
     fun questAvailableMobIds(sessionId: SessionId, mobIds: Collection<String>): Set<String> {
         val ps = players.get(sessionId) ?: return emptySet()
         return mobIds.filterTo(mutableSetOf()) { mobId ->
-            registry.questsForMob(mobId).any { quest ->
-                !ps.activeQuests.containsKey(quest.id) && !ps.completedQuestIds.contains(quest.id)
-            }
+            registry.questsForMob(mobId).any { quest -> isAcceptable(ps, quest) }
         }
     }
 
@@ -78,6 +118,14 @@ class QuestSystem(
         val quest = registry.get(questId) ?: return "Unknown quest '$questId'."
         if (ps.activeQuests.containsKey(questId)) return "You are already on that quest."
         if (ps.completedQuestIds.contains(questId)) return "You have already completed that quest."
+        if (exceedsRepMax(ps, quest)) {
+            return "You are too well-regarded for this quest."
+        }
+        if (belowRepMin(ps, quest)) {
+            val req = quest.requiredReputation!!
+            val factionName = reputationSystem?.getFaction(req.faction)?.name ?: req.faction
+            return "You lack the standing with $factionName to take this quest."
+        }
 
         val state =
             QuestState(

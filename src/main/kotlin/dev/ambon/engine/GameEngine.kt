@@ -857,6 +857,7 @@ class GameEngine(
             items = items,
             outbound = outbound,
             clock = clock,
+            reputationSystem = reputationSystem,
         )
 
     private val dailyQuestSystem: DailyQuestSystem? =
@@ -935,7 +936,7 @@ class GameEngine(
                         OutboundEvent.SendInfo(
                             sid,
                             "[Reputation] $factionName: $sign${change.amount} " +
-                                "(${StandingTier.forReputation(change.newStanding).displayName})",
+                                "(${reputationSystem.tierLabel(change.newStanding)})",
                         ),
                     )
                 }
@@ -1153,6 +1154,7 @@ class GameEngine(
                 shopRegistry = shopRegistry,
                 markVitalsDirty = ::markVitalsDirty,
                 economyConfig = engineConfig.economy,
+                reputationSystem = reputationSystem,
             ),
             CraftingHandler(
                 ctx = ctx,
@@ -2285,7 +2287,7 @@ class GameEngine(
                         OutboundEvent.SendInfo(
                             sessionId,
                             "[Reputation] $factionName: $sign${change.amount} " +
-                                "(${StandingTier.forReputation(change.newStanding).displayName})",
+                                "(${reputationSystem.tierLabel(change.newStanding)})",
                         ),
                     )
                 }
@@ -2385,7 +2387,7 @@ class GameEngine(
                     id = factionId,
                     name = definitions[factionId]?.name ?: factionId,
                     reputation = reputation,
-                    tier = StandingTier.forReputation(reputation).displayName,
+                    tier = reputationSystem.tierLabel(reputation),
                 )
             },
         )

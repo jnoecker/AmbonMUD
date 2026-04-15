@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.config.FactionConfig
 import dev.ambon.config.FactionDefinition
+import dev.ambon.config.ReputationTier
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -65,12 +66,13 @@ class ReputationSystemTest {
         }
 
         @Test
-        fun `standing clamped to -1000 to 1000`() {
-            rep.adjustStanding(player, "guild_a", 2000)
-            assertEquals(1000, rep.getStanding(player, "guild_a"))
+        fun `standing clamped to tier bounds`() {
+            // Arcanum-aligned defaults: floor -20000 (hated), ceiling 20000 (exalted)
+            rep.adjustStanding(player, "guild_a", 100_000)
+            assertEquals(20_000, rep.getStanding(player, "guild_a"))
 
-            rep.adjustStanding(player, "guild_b", -3000)
-            assertEquals(-1000, rep.getStanding(player, "guild_b"))
+            rep.adjustStanding(player, "guild_b", -100_000)
+            assertEquals(-20_000, rep.getStanding(player, "guild_b"))
         }
 
         @Test
@@ -91,15 +93,32 @@ class ReputationSystemTest {
     @Nested
     inner class StandingTiers {
         @Test
-        fun `tier for various reputation values`() {
-            assertEquals(StandingTier.NEUTRAL, StandingTier.forReputation(0))
-            assertEquals(StandingTier.NEUTRAL, StandingTier.forReputation(-100))
-            assertEquals(StandingTier.FRIENDLY, StandingTier.forReputation(100))
-            assertEquals(StandingTier.HONORED, StandingTier.forReputation(500))
-            assertEquals(StandingTier.REVERED, StandingTier.forReputation(1000))
-            assertEquals(StandingTier.UNFRIENDLY, StandingTier.forReputation(-500))
-            assertEquals(StandingTier.HOSTILE, StandingTier.forReputation(-1000))
-            assertEquals(StandingTier.HATED, StandingTier.forReputation(-1001))
+        fun `default tier labels match Arcanum spec`() {
+            assertEquals("Neutral", rep.tierLabel(0))
+            assertEquals("Neutral", rep.tierLabel(249))
+            assertEquals("Friendly", rep.tierLabel(250))
+            assertEquals("Honored", rep.tierLabel(1000))
+            assertEquals("Revered", rep.tierLabel(5000))
+            assertEquals("Exalted", rep.tierLabel(20_000))
+            assertEquals("Unfriendly", rep.tierLabel(-500))
+            assertEquals("Hostile", rep.tierLabel(-1000))
+            assertEquals("Hated", rep.tierLabel(-20_000))
+        }
+
+        @Test
+        fun `config override replaces default tiers`() {
+            val overrideConfig = config.copy(
+                tiers = listOf(
+                    ReputationTier("low", "Shunned", -100),
+                    ReputationTier("mid", "Known", 0),
+                    ReputationTier("high", "Champion", 100),
+                ),
+            )
+            val overriden = ReputationSystem(overrideConfig)
+            assertEquals("Shunned", overriden.tierLabel(-100))
+            assertEquals("Known", overriden.tierLabel(0))
+            assertEquals("Champion", overriden.tierLabel(100))
+            assertEquals("Champion", overriden.tierLabel(10_000))
         }
     }
 

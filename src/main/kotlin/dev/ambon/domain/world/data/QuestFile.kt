@@ -7,6 +7,8 @@ data class QuestFile(
     val completionType: String = "AUTO",
     val objectives: List<QuestObjectiveFile> = emptyList(),
     val rewards: QuestRewardsFile = QuestRewardsFile(),
+    /** Optional reputation gate. min → giver hints to grind; max → quest disappears when exceeded. */
+    val requiredReputation: ReputationRequirementFile? = null,
 )
 
 data class QuestObjectiveFile(

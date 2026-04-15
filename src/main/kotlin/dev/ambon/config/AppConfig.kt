@@ -394,6 +394,24 @@ data class AppConfig(
                 }
             }
         }
+        val tiers = engine.factions.tiers
+        if (tiers != null) {
+            require(tiers.isNotEmpty()) { "ambonMUD.engine.factions.tiers must not be empty when set" }
+            val seenIds = mutableSetOf<String>()
+            for (tier in tiers) {
+                require(tier.id.isNotBlank()) { "ambonMUD.engine.factions.tiers entry has blank id" }
+                require(tier.label.isNotBlank()) { "ambonMUD.engine.factions.tiers['${tier.id}'].label must be non-blank" }
+                require(seenIds.add(tier.id)) {
+                    "ambonMUD.engine.factions.tiers has duplicate id '${tier.id}'"
+                }
+            }
+            val sorted = tiers.sortedBy { it.minReputation }
+            for (i in 1 until sorted.size) {
+                require(sorted[i].minReputation > sorted[i - 1].minReputation) {
+                    "ambonMUD.engine.factions.tiers has duplicate minReputation ${sorted[i].minReputation}"
+                }
+            }
+        }
     }
 
     private fun validateEngineAutoQuests() {
@@ -1058,7 +1076,38 @@ data class FactionConfig(
     val killBonus: Int = 3,
     /** Quest-specific reputation rewards: questId → { factionId → amount }. */
     val questRewards: Map<String, Map<String, Int>> = emptyMap(),
-)
+    /**
+     * Reputation tiers for display and gating. Omit to use [ReputationTier.defaults].
+     * When set, the lowest tier's minReputation acts as a floor (rep is clamped there),
+     * and the highest tier's minReputation is the ceiling.
+     */
+    val tiers: List<ReputationTier>? = null,
+) {
+    /** Resolved tier list — config override, or built-in defaults when none configured. */
+    fun resolvedTiers(): List<ReputationTier> =
+        (tiers?.takeIf { it.isNotEmpty() } ?: ReputationTier.defaults)
+            .sortedBy { it.minReputation }
+}
+
+data class ReputationTier(
+    val id: String = "",
+    val label: String = "",
+    val minReputation: Int = 0,
+) {
+    companion object {
+        /** Arcanum-aligned default tiers. */
+        val defaults: List<ReputationTier> = listOf(
+            ReputationTier("hated", "Hated", -20000),
+            ReputationTier("hostile", "Hostile", -1000),
+            ReputationTier("unfriendly", "Unfriendly", -500),
+            ReputationTier("neutral", "Neutral", 0),
+            ReputationTier("friendly", "Friendly", 250),
+            ReputationTier("honored", "Honored", 1000),
+            ReputationTier("revered", "Revered", 5000),
+            ReputationTier("exalted", "Exalted", 20000),
+        )
+    }
+}
 
 data class RecipeConfigEntry(
     val displayName: String = "",

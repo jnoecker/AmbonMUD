@@ -208,6 +208,7 @@ class MudServer(
             imagesBaseUrl = config.images.baseUrl,
             videosBaseUrl = config.videos.baseUrl,
             audioBaseUrl = config.audio.baseUrl,
+            factionIds = config.engine.factions.definitions.keys,
         )
     private val worldState = WorldStateRegistry(world)
     private val tickMillis: Long = config.server.tickMillis
@@ -422,6 +423,7 @@ class MudServer(
                             imagesBaseUrl = config.images.baseUrl,
                             videosBaseUrl = config.videos.baseUrl,
                             audioBaseUrl = config.audio.baseUrl,
+                            factionIds = config.engine.factions.definitions.keys,
                         )
                     },
                     reloadChannel = reloadChannel,

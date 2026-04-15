@@ -62,6 +62,14 @@ class DialogueQuestHandler(
                     outbound.send(OutboundEvent.SendText(sessionId, "[Quest] ${quest.name} — ${quest.description}"))
                     outbound.send(OutboundEvent.SendText(sessionId, "  Type 'accept ${quest.name}' to accept."))
                 }
+                for (quest in questSystem.hintedQuests(sessionId, mob.id.value)) {
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "[Quest] ${quest.name} — your standing is too low to take this on yet.",
+                        ),
+                    )
+                }
                 gmcpEmitter?.sendQuestAvailable(
                     sessionId,
                     available.map { quest ->

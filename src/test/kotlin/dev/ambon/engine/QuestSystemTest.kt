@@ -1,6 +1,8 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.FactionConfig
+import dev.ambon.config.FactionDefinition
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
@@ -8,6 +10,7 @@ import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
+import dev.ambon.domain.world.ReputationRequirement
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.SystemTestComponents
 import dev.ambon.test.drainAll
@@ -149,6 +152,76 @@ class QuestSystemTest {
 
             val err = qs.abandonQuest(sid, "NoSuchQuest")
             assertNotNull(err, "Expected error for unknown quest")
+        }
+
+    private fun gatedSetup(
+        requirement: ReputationRequirement,
+        startingRep: Int,
+    ): Triple<QuestSystem, PlayerRegistry, SessionId> {
+        val factionConfig = FactionConfig(
+            definitions = mapOf(
+                "royal_court" to FactionDefinition(name = "Royal Court", description = ""),
+            ),
+        )
+        val c = SystemTestComponents(clockInitialMs = 1_000L)
+        val gatedQuest = killQuest.copy(id = "zone:gated_quest", name = "Gated", requiredReputation = requirement)
+        val registry = QuestRegistry().also { it.register(gatedQuest) }
+        val repSystem = ReputationSystem(factionConfig)
+        val qs = QuestSystem(
+            registry = registry,
+            players = c.players,
+            items = c.items,
+            outbound = c.outbound,
+            clock = c.clock,
+            reputationSystem = repSystem,
+        )
+        val sid = SessionId(1L)
+        kotlinx.coroutines.runBlocking { c.players.loginOrFail(sid, "Hero") }
+        val ps = c.players.get(sid)!!
+        ps.factionStandings["royal_court"] = startingRep
+        return Triple(qs, c.players, sid)
+    }
+
+    @Test
+    fun `quest with max rep exceeded disappears from availableQuests`() =
+        runTest {
+            val (qs, _, sid) = gatedSetup(
+                ReputationRequirement(faction = "royal_court", max = -500),
+                startingRep = 0,
+            )
+            val available = qs.availableQuests(sid, "zone:quest_giver")
+            assertTrue(available.none { it.id == "zone:gated_quest" })
+            val hints = qs.hintedQuests(sid, "zone:quest_giver")
+            assertTrue(hints.isEmpty(), "max-exceeded quests should not appear as hints either")
+        }
+
+    @Test
+    fun `quest with min rep unmet is hinted but not acceptable`() =
+        runTest {
+            val (qs, _, sid) = gatedSetup(
+                ReputationRequirement(faction = "royal_court", min = 250),
+                startingRep = 0,
+            )
+            val available = qs.availableQuests(sid, "zone:quest_giver")
+            assertTrue(available.none { it.id == "zone:gated_quest" })
+            val hints = qs.hintedQuests(sid, "zone:quest_giver")
+            assertEquals(1, hints.size)
+            val err = qs.acceptQuest(sid, "zone:gated_quest")
+            assertNotNull(err)
+            assertTrue(err!!.contains("Royal Court"), "Error message should surface faction name: $err")
+        }
+
+    @Test
+    fun `quest with met reputation is acceptable`() =
+        runTest {
+            val (qs, _, sid) = gatedSetup(
+                ReputationRequirement(faction = "royal_court", min = 250),
+                startingRep = 300,
+            )
+            val available = qs.availableQuests(sid, "zone:quest_giver")
+            assertEquals(1, available.size)
+            val err = qs.acceptQuest(sid, "zone:gated_quest")
+            assertNull(err)
         }
 
     @Test
