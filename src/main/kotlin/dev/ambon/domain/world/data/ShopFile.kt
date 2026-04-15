@@ -5,4 +5,6 @@ data class ShopFile(
     val room: String,
     val items: List<String> = emptyList(),
     val image: String? = null,
+    /** Optional reputation gate on browse/buy. */
+    val requiredReputation: ReputationRequirementFile? = null,
 )

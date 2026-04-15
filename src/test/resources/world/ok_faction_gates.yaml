@@ -1,0 +1,46 @@
+zone: ok_faction_gates
+startRoom: plaza
+faction: royal_court
+items:
+  blade:
+    displayName: "a court blade"
+    keyword: blade
+    slot: weapon
+    damage: 5
+    basePrice: 100
+shops:
+  court_armorer:
+    name: "Court Armorer"
+    room: plaza
+    items:
+      - blade
+    requiredReputation:
+      faction: royal_court
+      min: 250
+mobs:
+  inheritor:
+    name: "a loyal guard"
+    description: "A guard with no explicit faction."
+    room: plaza
+  dissenter:
+    name: "a rogue agent"
+    description: "A guard overriding the zone faction."
+    room: plaza
+    faction: rebel_cell
+quests:
+  rebel_mission:
+    name: "Infiltrate the Rebels"
+    giver: inheritor
+    objectives:
+      - type: kill
+        targetKey: dissenter
+        count: 1
+        description: "Eliminate the rogue agent."
+    requiredReputation:
+      faction: rebel_cell
+      max: -500
+rooms:
+  plaza:
+    title: "Royal Plaza"
+    description: "A grand plaza."
+    exits: {}

@@ -2,45 +2,35 @@ package dev.ambon.engine
 
 import dev.ambon.config.FactionConfig
 import dev.ambon.config.FactionDefinition
+import dev.ambon.config.ReputationTier
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val log = KotlinLogging.logger {}
 
-/** Standing tier for display purposes. [minRep] is the inclusive lower bound. */
-enum class StandingTier(
-    val displayName: String,
-    val minRep: Int,
-) {
-    HATED("Hated", Int.MIN_VALUE),
-    HOSTILE("Hostile", -1000),
-    UNFRIENDLY("Unfriendly", -500),
-    NEUTRAL("Neutral", -100),
-    FRIENDLY("Friendly", 100),
-    HONORED("Honored", 500),
-    REVERED("Revered", 1000),
-    ;
-
-    companion object {
-        private val descending = entries.sortedByDescending { it.minRep }
-
-        fun forReputation(rep: Int): StandingTier =
-            descending.first { rep >= it.minRep }
-    }
-}
-
 /**
  * Manages per-player faction standings and reputation changes.
  *
- * Standings range from -1000 (Hated) to +1000 (Revered).
+ * Tier bands and default thresholds come from [FactionConfig.resolvedTiers].
  * Changes occur on mob kills (based on mob's faction) and quest completion
  * (based on quest reward config).
  */
 class ReputationSystem(
     private val config: FactionConfig,
 ) {
+    private val tiers: List<ReputationTier> = config.resolvedTiers()
+    private val repFloor: Int = tiers.first().minReputation
+    private val repCeiling: Int = tiers.last().minReputation
+
     fun factionDefinitions(): Map<String, FactionDefinition> = config.definitions
 
     fun getFaction(id: String): FactionDefinition? = config.definitions[id]
+
+    /** Resolves the reputation tier for a raw reputation value. */
+    fun tierFor(reputation: Int): ReputationTier =
+        tiers.lastOrNull { it.minReputation <= reputation } ?: tiers.first()
+
+    /** Tier display label for a raw reputation value. */
+    fun tierLabel(reputation: Int): String = tierFor(reputation).label
 
     /** Returns the player's standing with a faction (default 0). */
     fun getStanding(player: PlayerState, factionId: String): Int =
@@ -61,7 +51,7 @@ class ReputationSystem(
     ): Int? {
         if (factionId !in config.definitions) return null
         val current = player.factionStandings.getOrDefault(factionId, config.defaultReputation)
-        val newValue = (current + amount).coerceIn(-1000, 1000)
+        val newValue = (current + amount).coerceIn(repFloor, repCeiling)
         player.factionStandings[factionId] = newValue
         if (amount != 0) {
             log.debug { "Reputation change for ${player.name}: $factionId ${if (amount > 0) "+" else ""}$amount → $newValue" }

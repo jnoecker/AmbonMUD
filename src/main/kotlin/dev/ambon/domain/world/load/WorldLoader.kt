@@ -41,6 +41,7 @@ import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.MobDrop
 import dev.ambon.domain.world.MobSpawn
+import dev.ambon.domain.world.ReputationRequirement
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.ShopDefinition
@@ -49,6 +50,7 @@ import dev.ambon.domain.world.World
 import dev.ambon.domain.world.data.ExitValue
 import dev.ambon.domain.world.data.ExitValueDeserializer
 import dev.ambon.domain.world.data.FeatureFile
+import dev.ambon.domain.world.data.ReputationRequirementFile
 import dev.ambon.domain.world.data.WorldFile
 import dev.ambon.engine.behavior.BehaviorTemplates
 import dev.ambon.engine.behavior.BehaviorTreeLoader
@@ -81,6 +83,7 @@ object WorldLoader {
         imagesBaseUrl: String = "/images/",
         videosBaseUrl: String = "/videos/",
         audioBaseUrl: String = "/audio/",
+        factionIds: Set<String> = emptySet(),
     ): World =
         loadFromResources(
             listOf(path),
@@ -88,6 +91,7 @@ object WorldLoader {
             imagesBaseUrl = imagesBaseUrl,
             videosBaseUrl = videosBaseUrl,
             audioBaseUrl = audioBaseUrl,
+            factionIds = factionIds,
         )
 
     fun loadFromResources(
@@ -98,6 +102,12 @@ object WorldLoader {
         imagesBaseUrl: String = "/images/",
         videosBaseUrl: String = "/videos/",
         audioBaseUrl: String = "/audio/",
+        /**
+         * Known faction IDs from [dev.ambon.config.FactionConfig.definitions]. When non-empty,
+         * references to unknown factions on zones/shops/quests are validated. When empty,
+         * validation is skipped (tests and legacy worlds).
+         */
+        factionIds: Set<String> = emptySet(),
     ): World {
         val imagesBase = normalizeBaseUrl(imagesBaseUrl)
         val videosBase = normalizeBaseUrl(videosBaseUrl)
@@ -164,6 +174,14 @@ object WorldLoader {
             val audioDefaults = file.audio
             val zoneGraphical = file.graphical
             val zoneTerrain = file.terrain?.also { validateTerrain(it, "zone '$zone'") }
+            val zoneFaction = file.faction?.trim()?.takeIf { it.isNotEmpty() }?.also {
+                if (factionIds.isNotEmpty() && it !in factionIds) {
+                    logger.warn(
+                        "Zone '$zone' declares controlling faction '$it' which is not defined in " +
+                            "factions.definitions — treating as no controlling faction",
+                    )
+                }
+            }
             if (file.pvpEnabled) pvpZones.add(zone)
 
             // First pass per file: create room shells, detect collisions
@@ -357,7 +375,7 @@ object WorldLoader {
                         dialogue = dialogue,
                         behaviorTree = behaviorTree,
                         questIds = questIds,
-                        faction = mf.faction,
+                        faction = mf.faction ?: zoneFaction,
                         image = (mf.image ?: imageDefaults?.mob)?.let { "$imagesBase$it" },
                         video = mf.video?.let { "$videosBase$it" },
                         aggressive = mf.behavior?.template?.contains("aggro") == true,
@@ -477,12 +495,18 @@ object WorldLoader {
                         }
                         normalizeItemId(zone, trimmed)
                     }
+                val shopRep = parseReputationRequirement(
+                    shopFile.requiredReputation,
+                    factionIds,
+                    "Shop '$rawId' in zone '$zone'",
+                )
                 mergedShops.add(
                     ShopDefinition(
                         id = qualifyId(zone, rawId),
                         name = shopName,
                         roomId = shopRoomId,
                         itemIds = shopItemIds,
+                        requiredReputation = shopRep,
                     ),
                 )
             }
@@ -551,6 +575,11 @@ object WorldLoader {
                             description = obj.description.ifBlank { "$objectiveType $targetKeyRaw x${obj.count}" },
                         )
                     }
+                val questRep = parseReputationRequirement(
+                    questFile.requiredReputation,
+                    factionIds,
+                    "Quest '$questId'",
+                )
                 mergedQuests.add(
                     QuestDef(
                         id = questId,
@@ -564,6 +593,7 @@ object WorldLoader {
                             currencies = questFile.rewards.currencies,
                         ),
                         completionType = completionType,
+                        requiredReputation = questRep,
                     ),
                 )
             }
@@ -1336,6 +1366,29 @@ object WorldLoader {
         val id = raw.trim().lowercase()
         if (id.isEmpty()) throw WorldLoadException("$context crafting skill cannot be blank")
         return id
+    }
+
+    private fun parseReputationRequirement(
+        raw: ReputationRequirementFile?,
+        factionIds: Set<String>,
+        context: String,
+    ): ReputationRequirement? {
+        if (raw == null) return null
+        val faction = raw.faction.trim()
+        if (faction.isEmpty()) {
+            throw WorldLoadException("$context requiredReputation.faction cannot be blank")
+        }
+        if (factionIds.isNotEmpty() && faction !in factionIds) {
+            throw WorldLoadException(
+                "$context requiredReputation.faction '$faction' is not defined in factions.definitions",
+            )
+        }
+        if (raw.min != null && raw.max != null && raw.min > raw.max) {
+            throw WorldLoadException(
+                "$context requiredReputation.min (${raw.min}) must be <= max (${raw.max})",
+            )
+        }
+        return ReputationRequirement(faction = faction, min = raw.min, max = raw.max)
     }
 
     private val VALID_TERRAINS = setOf(

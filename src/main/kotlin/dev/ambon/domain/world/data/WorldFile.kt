@@ -10,6 +10,8 @@ data class WorldFile(
     val pvpEnabled: Boolean = false,
     /** Default terrain type for rooms in this zone (overridable per-room). */
     val terrain: String? = null,
+    /** Controlling faction for this region. Inherited by mobs that don't set their own. */
+    val faction: String? = null,
     val image: ZoneImageDefaults? = null,
     val audio: ZoneAudioDefaults? = null,
     val rooms: Map<String, RoomFile>,

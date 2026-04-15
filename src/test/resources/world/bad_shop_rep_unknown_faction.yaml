@@ -1,0 +1,21 @@
+zone: bad_shop_rep
+startRoom: market
+items:
+  sword:
+    displayName: "a sword"
+    keyword: sword
+    basePrice: 50
+shops:
+  gated:
+    name: "Gated Shop"
+    room: market
+    items:
+      - sword
+    requiredReputation:
+      faction: no_such_faction
+      min: 100
+rooms:
+  market:
+    title: "Market"
+    description: "A market."
+    exits: {}

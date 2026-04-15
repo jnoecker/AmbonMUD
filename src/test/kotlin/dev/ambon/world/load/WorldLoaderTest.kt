@@ -683,6 +683,50 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `zone faction propagates to mobs that lack their own`() {
+        val world = WorldLoader.loadFromResource("world/ok_faction_gates.yaml")
+        val mobs = world.mobSpawns.associateBy { it.id.value }
+        assertEquals("royal_court", mobs.getValue("ok_faction_gates:inheritor").faction)
+        assertEquals("rebel_cell", mobs.getValue("ok_faction_gates:dissenter").faction)
+    }
+
+    @Test
+    fun `loads shop and quest reputation requirements`() {
+        val world = WorldLoader.loadFromResource("world/ok_faction_gates.yaml")
+        val shop = world.shopDefinitions.single { it.id == "ok_faction_gates:court_armorer" }
+        assertEquals("royal_court", shop.requiredReputation?.faction)
+        assertEquals(250, shop.requiredReputation?.min)
+        assertNull(shop.requiredReputation?.max)
+
+        val quest = world.questDefinitions.single { it.id == "ok_faction_gates:rebel_mission" }
+        assertEquals("rebel_cell", quest.requiredReputation?.faction)
+        assertEquals(-500, quest.requiredReputation?.max)
+        assertNull(quest.requiredReputation?.min)
+    }
+
+    @Test
+    fun `shop requiredReputation with unknown faction is rejected`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource(
+                    "world/bad_shop_rep_unknown_faction.yaml",
+                    factionIds = setOf("royal_court"),
+                )
+            }
+        assertTrue(ex.message!!.contains("no_such_faction"), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `quest requiredReputation with min greater than max is rejected`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_quest_rep_invalid_range.yaml")
+            }
+        assertTrue(ex.message!!.contains("min"), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("max"), "Got: ${ex.message}")
+    }
+
+    @Test
     fun `loads mob with dialogue tree`() {
         val world = WorldLoader.loadFromResource("world/ok_dialogue.yaml")
         val mob = world.mobSpawns.single()

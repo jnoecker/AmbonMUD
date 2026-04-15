@@ -3,7 +3,6 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.ReputationSystem
-import dev.ambon.engine.StandingTier
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -51,11 +50,11 @@ class ReputationHandler(
             )
             for ((factionId, reputation) in standings) {
                 val def = definitions[factionId] ?: continue
-                val tier = StandingTier.forReputation(reputation)
+                val tierLabel = reputationSystem.tierLabel(reputation)
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "  %-20s %+8d  %-12s".format(def.name, reputation, tier.displayName),
+                        "  %-20s %+8d  %-12s".format(def.name, reputation, tierLabel),
                     ),
                 )
             }
@@ -85,7 +84,7 @@ class ReputationHandler(
                 id = factionId,
                 name = def?.name ?: factionId,
                 reputation = reputation,
-                tier = StandingTier.forReputation(reputation).displayName,
+                tier = reputationSystem.tierLabel(reputation),
             )
         }
         gmcpEmitter?.sendCharFactions(sessionId, payload)

@@ -1,6 +1,7 @@
 package dev.ambon.domain.quest
 
 import dev.ambon.domain.Rewards
+import dev.ambon.domain.world.ReputationRequirement
 
 data class QuestDef(
     val id: String,
@@ -10,6 +11,8 @@ data class QuestDef(
     val objectives: List<QuestObjectiveDef>,
     val rewards: QuestRewards,
     val completionType: String = "auto",
+    /** Optional reputation gate. */
+    val requiredReputation: ReputationRequirement? = null,
 )
 
 data class QuestObjectiveDef(
