@@ -164,6 +164,7 @@ export class WorldScene {
 
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
+  private bgLoadToken = 0;
   private lastPlayerSpritePath: string | null = null;
   private nodeSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private stationBadge: Container;
@@ -1873,6 +1874,10 @@ export class WorldScene {
   }
 
   private async loadBackground(imagePath: string | null) {
+    // Token guards against out-of-order async resolution: a slow earlier load
+    // must not overwrite a newer one and leave an orphan sprite in the container.
+    const token = ++this.bgLoadToken;
+
     if (this.background) {
       this.container.removeChild(this.background);
       this.background.destroy();
@@ -1883,6 +1888,7 @@ export class WorldScene {
 
     try {
       const texture = await Assets.load(imagePath);
+      if (token !== this.bgLoadToken) return;
       const sprite = new Sprite(texture);
       sprite.width = this.width;
       sprite.height = this.height;

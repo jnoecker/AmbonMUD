@@ -58,6 +58,7 @@ export class BattleScene {
 
   private background: Sprite | null = null;
   private lastRoomImage: string | null | undefined = "\0";
+  private bgLoadToken = 0;
 
   private lastPlayerSpritePath: string | null = null;
   private lastEnemyImage: string | null = null;
@@ -659,6 +660,9 @@ export class BattleScene {
   }
 
   private async loadBackground(imagePath: string | null) {
+    // Token guards against out-of-order async resolution leaving an orphan sprite.
+    const token = ++this.bgLoadToken;
+
     if (this.background) {
       this.container.removeChild(this.background);
       this.background.destroy();
@@ -667,6 +671,7 @@ export class BattleScene {
     if (!imagePath) return;
     try {
       const texture = await Assets.load(imagePath);
+      if (token !== this.bgLoadToken) return;
       const sprite = new Sprite(texture);
       sprite.width = this.width;
       sprite.height = this.height;
