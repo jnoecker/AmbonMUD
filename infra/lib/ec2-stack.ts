@@ -537,7 +537,11 @@ export class Ec2Stack extends Stack {
       // than launch with a broken/missing admin token.
       ...(adminTokenSsmParameterName
         ? [
-            `ExecStartPre=/bin/bash -c 'mkdir -p /etc/ambonmud && umask 077 && token=$(aws ssm get-parameter --name ${adminTokenSsmParameterName} --with-decryption --query Parameter.Value --output text --region ${this.region}) && printf "AMBONMUD_ADMIN_TOKEN=%s\\n" "$token" > /etc/ambonmud/secrets.env'`,
+            // %%s escapes systemd's specifier expansion — bare %s gets replaced
+            // with the service user's login shell (/bin/bash for root) before
+            // bash ever sees it, which silently eats the $token argument and
+            // writes AMBONMUD_ADMIN_TOKEN=/bin/bash to secrets.env.
+            `ExecStartPre=/bin/bash -c 'set -euo pipefail; mkdir -p /etc/ambonmud; umask 077; token=$(aws ssm get-parameter --name ${adminTokenSsmParameterName} --with-decryption --query Parameter.Value --output text --region ${this.region}); test -n "$token"; printf "AMBONMUD_ADMIN_TOKEN=%%s\\n" "$token" > /etc/ambonmud/secrets.env'`,
           ]
         : []),
       // Generate htpasswd for nginx basic auth on /grafana/, /prometheus/, /admin/.
