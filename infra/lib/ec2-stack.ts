@@ -563,19 +563,23 @@ export class Ec2Stack extends Stack {
       '',
       'systemctl daemon-reload',
       'systemctl enable ambonmud prometheus grafana',
-      'systemctl start ambonmud prometheus grafana',
     );
 
     // -------------------------------------------------------------------------
     // Optional nginx + TLS setup (when hostname is provided).
     //
-    // Installs nginx and certbot, writes an nginx reverse-proxy config that
-    // handles both HTTP and WebSocket connections, and installs a `setup-tls`
-    // helper that the operator runs once (via SSM) after DNS is live:
-    //   setup-tls
+    // Writes the nginx reverse-proxy config and the `setup-tls` helper that
+    // provisions a Let's Encrypt cert via HTTP-01 once DNS is live.
     //
-    // certbot uses HTTP-01 challenge so nginx must be running and reachable on
-    // port 80 before running setup-tls.
+    // Ordering note: this block runs BEFORE `systemctl start ambonmud` on
+    // purpose. If ambonmud's ExecStartPre chain takes a long time (e.g. the
+    // fetch-world-zones retry loop when R2 is slow or a URL is misconfigured)
+    // the `systemctl start ambonmud` call can exceed cloud-init's default
+    // scripts-user timeout, which aborts the rest of userData. When that
+    // happened before this reorder, the nginx config and setup-tls helper
+    // were never written and the operator had to recreate them by hand.
+    // Writing these files first guarantees that even a wedged first boot
+    // leaves the instance configurable.
     // -------------------------------------------------------------------------
     if (hostname) {
       userData.addCommands(
@@ -705,6 +709,13 @@ export class Ec2Stack extends Stack {
         'systemctl start --no-block setup-tls',
       );
     }
+
+    // Start ambonmud last, with --no-block. If its ExecStartPre chain is slow
+    // (world zone fetches hitting R2 retries, cert fetch from SSM, etc.) a
+    // blocking start can exceed cloud-init's scripts-user timeout and abort
+    // all subsequent userData. The service has Restart=always so systemd will
+    // keep retrying if anything in the startup chain fails transiently.
+    userData.addCommands('systemctl start --no-block ambonmud prometheus grafana');
 
     // -------------------------------------------------------------------------
     // EC2 instance: t4g.micro — ARM64, 2 vCPU (burstable) / 1 GB RAM.
