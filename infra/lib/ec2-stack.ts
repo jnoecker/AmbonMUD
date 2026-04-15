@@ -721,12 +721,6 @@ export class Ec2Stack extends Stack {
       securityGroup: sg,
       role,
       userData,
-      // Force a fresh instance whenever userData changes. Without this, CFN
-      // attempts an in-place stop/start update — which wedges the stack in
-      // UPDATE_ROLLBACK_FAILED if the running instance is unhealthy or has
-      // been terminated out-of-band (CFN can't stop a terminated instance,
-      // and the failed rollback then blocks every subsequent deploy).
-      userDataCausesReplacement: true,
       blockDevices: [
         {
           deviceName: '/dev/xvda',
