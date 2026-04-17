@@ -26,10 +26,8 @@ export function LeaderboardPanel({ leaderboard, onCommand }: Props) {
     }
   }, [onCommand]);
 
-  const activeCats = CATEGORIES.filter((c) => {
-    const data = leaderboard[c.key];
-    return data && data.entries.length > 0;
-  });
+  const receivedCats = CATEGORIES.filter((c) => leaderboard[c.key] !== undefined);
+  const awaitingResponse = receivedCats.length === 0;
 
   return (
     <div className="leaderboard-panel">
@@ -37,40 +35,33 @@ export function LeaderboardPanel({ leaderboard, onCommand }: Props) {
         <span className="panel-title">Leaderboards</span>
       </div>
 
-      {activeCats.length === 0 ? (
-        <div className="leaderboard-empty">
-          <p>Loading rankings&hellip;</p>
-          <div className="leaderboard-cat-buttons">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c.key}
-                className="leaderboard-cat-btn"
-                onClick={() => onCommand(`leaderboard ${c.key}`)}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
+      <div className="leaderboard-content">
+        <div className="leaderboard-cat-buttons">
+          {CATEGORIES.map((c) => (
+            <button
+              key={c.key}
+              className="leaderboard-cat-btn"
+              onClick={() => onCommand(`leaderboard ${c.key}`)}
+            >
+              {c.label}
+            </button>
+          ))}
         </div>
-      ) : (
-        <div className="leaderboard-content">
-          <div className="leaderboard-cat-buttons">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c.key}
-                className="leaderboard-cat-btn"
-                onClick={() => onCommand(`leaderboard ${c.key}`)}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
 
-          {activeCats.map((c) => {
-            const data = leaderboard[c.key];
-            return (
-              <div key={c.key} className="leaderboard-category">
-                <div className="leaderboard-cat-header">{data.label}</div>
+        {awaitingResponse && (
+          <div className="leaderboard-empty">
+            <p>Loading rankings&hellip;</p>
+          </div>
+        )}
+
+        {receivedCats.map((c) => {
+          const data = leaderboard[c.key];
+          return (
+            <div key={c.key} className="leaderboard-category">
+              <div className="leaderboard-cat-header">{data.label}</div>
+              {data.entries.length === 0 ? (
+                <p className="leaderboard-empty-note">No entries yet — be the first to rank!</p>
+              ) : (
                 <table className="leaderboard-table">
                   <tbody>
                     {data.entries.map((e) => (
@@ -84,11 +75,11 @@ export function LeaderboardPanel({ leaderboard, onCommand }: Props) {
                     ))}
                   </tbody>
                 </table>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -8,10 +8,8 @@ import {
   CharacterAvatarIcon,
   EquipmentIcon,
   ChatBubbleIcon,
-  BankIcon,
   AuctionIcon,
   CraftingIcon,
-  WorldFeatureIcon,
   HousingIcon,
   MailIcon,
   HelpIcon,
@@ -46,12 +44,10 @@ interface PanelDef {
 const PANELS: PanelDef[] = [
   { panel: "character", label: "Character", icon: <CharacterAvatarIcon className="vbar-icon" /> },
   { panel: "inventory", label: "Inventory", icon: <EquipmentIcon className="vbar-icon" /> },
-  { panel: "features", label: "Features", icon: <WorldFeatureIcon className="vbar-icon" /> },
   { panel: "spellbook", label: "Spellbook", icon: <SpellbookIcon className="vbar-icon" /> },
   { panel: "quests", label: "Quests", icon: <QuestsTabIcon className="vbar-icon" /> },
   { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="vbar-icon" /> },
   { panel: "crafting", label: "Crafting", icon: <CraftingIcon className="vbar-icon" /> },
-  { panel: "bank", label: "Bank", icon: <BankIcon className="vbar-icon" /> },
   { panel: "auction", label: "Auction", icon: <AuctionIcon className="vbar-icon" /> },
   { panel: "mail", label: "Mail", icon: <MailIcon className="vbar-icon" /> },
   { panel: "housing", label: "Housing", icon: <HousingIcon className="vbar-icon" /> },
@@ -75,8 +71,6 @@ interface VitalsBarProps {
   audio: AudioEngine;
   inputValue: string;
   onInputChange: (value: string) => void;
-  showInput: boolean;
-  onShowInputChange: (open: boolean) => void;
   onInputKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   onHeightChange?: (height: number) => void;
 }
@@ -171,8 +165,6 @@ export function VitalsBar({
   audio,
   inputValue,
   onInputChange,
-  showInput,
-  onShowInputChange,
   onInputKeyDown,
   onHeightChange,
 }: VitalsBarProps) {
@@ -181,13 +173,6 @@ export function VitalsBar({
   const navRef = useRef<HTMLElement | null>(null);
 
   const hasAnySkill = quickbarSlots.some((s) => s !== null);
-
-  // Focus the input whenever it becomes visible (e.g. after Ctrl+K palette prefill)
-  useEffect(() => {
-    if (showInput) {
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
-  }, [showInput]);
 
   useEffect(() => {
     const node = navRef.current;
@@ -207,7 +192,7 @@ export function VitalsBar({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [onHeightChange, loggedIn, hasAnySkill, showPanels, showInput, connected]);
+  }, [onHeightChange, loggedIn, hasAnySkill, showPanels, connected]);
 
   const submitInput = (e: FormEvent) => {
     e.preventDefault();
@@ -347,24 +332,10 @@ export function VitalsBar({
             <span className="vbar-panel-label">{label}</span>
           </button>
         ))}
-        {/* Command button — toggles the inline text input below */}
-        <button
-          type="button"
-          className={`vbar-panel-btn${showInput ? " vbar-panel-btn-active" : ""}`}
-          onClick={() => onShowInputChange(!showInput)}
-          aria-label="Type a command"
-        >
-          <svg viewBox="0 0 24 24" className="vbar-icon" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="2" y="4" width="20" height="16" rx="3" />
-            <line x1="6" y1="10" x2="18" y2="10" />
-            <line x1="6" y1="14" x2="14" y2="14" />
-          </svg>
-          <span className="vbar-panel-label">Command</span>
-        </button>
       </div>
 
-      {/* Expandable text input — appears below the grid when "Command" button is toggled */}
-      {showInput && (
+      {/* Persistent command input — always available below the panel grid */}
+      {loggedIn && (
         <form className="vbar-input-row" onSubmit={submitInput}>
           <input
             ref={inputRef}

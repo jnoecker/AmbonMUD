@@ -68,11 +68,9 @@ function App() {
 
   // Lifted command-input state — VitalsBar renders it controlled, palette/canvas can prefill
   const [inputValue, setInputValue] = useState("");
-  const [showInput, setShowInput] = useState(false);
 
   const prefillInput = (text: string) => {
     setInputValue(text);
-    setShowInput(true);
   };
 
   // Minimap canvas + drawing helpers (owns its own ref, kept out of useGameState)
@@ -487,8 +485,6 @@ function App() {
           setInputValue(value);
           resetComposerCompletion();
         }}
-        showInput={showInput}
-        onShowInputChange={setShowInput}
         onInputKeyDown={handleInputKeyDown}
       />
 

@@ -24,8 +24,6 @@ interface GameShellProps {
   audio: AudioEngine;
   inputValue: string;
   onInputChange: (value: string) => void;
-  showInput: boolean;
-  onShowInputChange: (open: boolean) => void;
   onInputKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   children?: ReactNode;
 }
@@ -48,8 +46,6 @@ export function GameShell({
   audio,
   inputValue,
   onInputChange,
-  showInput,
-  onShowInputChange,
   onInputKeyDown,
   children,
 }: GameShellProps) {
@@ -105,8 +101,6 @@ export function GameShell({
         audio={audio}
         inputValue={inputValue}
         onInputChange={onInputChange}
-        showInput={showInput}
-        onShowInputChange={onShowInputChange}
         onInputKeyDown={onInputKeyDown}
         onHeightChange={setHudBottomInset}
       />
