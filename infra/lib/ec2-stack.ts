@@ -101,13 +101,13 @@ export interface Ec2StackProps extends StackProps {
 }
 
 /**
- * Minimal single-instance EC2 deployment (~$4-5/mo).
+ * Minimal single-instance EC2 deployment (~$24/mo).
  *
  * Provisions:
  *   - VPC with a single public subnet (no NAT gateway)
  *   - Security group: TCP 4000 (telnet) + 80/443 (HTTP/HTTPS) + 8080 (web) + 9091 (admin) + 3000 (Grafana)
  *   - IAM role: ECR pull + SSM Session Manager (no SSH key needed)
- *   - t4g.nano (ARM64) running Amazon Linux 2023
+ *   - t4g.medium (ARM64, 4 GB RAM) running Amazon Linux 2023
  *   - Docker + systemd service that pulls and runs the AmbonMUD container
  *   - Elastic IP (persists across stop/start; no charge while attached)
  *   - Optional Route 53 A record (play.<domain> → EIP)
@@ -230,7 +230,7 @@ export class Ec2Stack extends Stack {
       // UID 1001 matches the pinned ambonmud user inside the container (Dockerfile).
       'mkdir -p /app/data && chown 1001:1001 /app/data',
       '',
-      // ---- Swap file: 512 MB safety net against OOM on t4g.micro ---------------
+      // ---- Swap file: 512 MB safety net against OOM under memory pressure -----
       'dd if=/dev/zero of=/swapfile bs=1M count=512',
       'chmod 600 /swapfile',
       'mkswap /swapfile',
@@ -774,14 +774,18 @@ export class Ec2Stack extends Stack {
     userData.addCommands('systemctl start --no-block ambonmud prometheus grafana');
 
     // -------------------------------------------------------------------------
-    // EC2 instance: t4g.micro — ARM64, 2 vCPU (burstable) / 1 GB RAM.
-    // Upgraded from t4g.nano to accommodate Prometheus + Grafana containers
-    // alongside the main AmbonMUD container.
+    // EC2 instance: t4g.medium — ARM64, 2 vCPU (burstable) / 4 GB RAM.
+    // Upgraded from t4g.micro (1 GB) so the JVM can run with a 2 GB heap under
+    // Generational ZGC alongside Prometheus + Grafana on the same host.
+    // Load-test evidence: at ~1000 concurrent sessions the t4g.micro's default
+    // ~250 MB heap + G1GC was producing ~4s/sec aggregate GC pauses, which
+    // manifested as engine tick p99 spikes. ZGC trades throughput for sub-ms
+    // pauses, which needs more heap headroom to amortize.
     // -------------------------------------------------------------------------
     const instance = new ec2.Instance(this, 'Instance', {
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MEDIUM),
       machineImage: ec2.MachineImage.latestAmazonLinux2023({
         cpuType: ec2.AmazonLinuxCpuType.ARM_64,
       }),
