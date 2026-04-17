@@ -57,6 +57,16 @@ const achievementsUrl = app.node.tryGetContext('achievementsUrl') as string | un
 const adminTokenSsmParameterName =
   app.node.tryGetContext('adminTokenSsmParameterName') as string | undefined;
 
+// JVM flags passed to the container as JAVA_OPTS. The default targets the
+// t4g.medium (4 GB RAM) demo instance: 2 GB fixed heap + Generational ZGC for
+// sub-ms pauses. Generational ZGC is opt-in under JDK 21 (the runtime in the
+// Dockerfile), so -XX:+ZGenerational is required — it becomes default in 23+.
+// Override with --context javaOpts="..." when deploying to a smaller or
+// larger host.
+const javaOpts =
+  (app.node.tryGetContext('javaOpts') as string | undefined) ??
+  '-Xms2g -Xmx2g -XX:+UseZGC -XX:+ZGenerational';
+
 // ---------------------------------------------------------------------------
 // EC2 topology: single self-contained stack, no tier config needed.
 // ---------------------------------------------------------------------------
@@ -72,6 +82,7 @@ if (topology === 'ec2') {
     spritesUrl,
     achievementsUrl,
     adminTokenSsmParameterName,
+    javaOpts,
   });
 } else {
   // -------------------------------------------------------------------------
