@@ -92,6 +92,18 @@ class GmcpEmitter(
                 size > MAX_ZONE_CACHE_ENTRIES
         }
 
+    /**
+     * Last Char.Vitals payload sent to each session. Used to suppress redundant
+     * emits when nothing has actually changed — at 1k concurrent sessions every
+     * tick of unchanged vitals multiplies into tens of thousands of wasted
+     * frames/sec on the outbound path.
+     */
+    private val lastVitalsBySession: MutableMap<SessionId, CharVitalsPayload> =
+        object : LinkedHashMap<SessionId, CharVitalsPayload>(128, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<SessionId, CharVitalsPayload>): Boolean =
+                size > MAX_VITALS_CACHE_ENTRIES
+        }
+
     /** Returns true if the zone changed (or is first seen) for this session. */
     fun trackZoneChange(sessionId: SessionId, zone: String): Boolean {
         val prev = lastZoneBySession.put(sessionId, zone)
@@ -101,6 +113,7 @@ class GmcpEmitter(
     /** Remove tracked zone state for a disconnected session. */
     fun forgetSession(sessionId: SessionId) {
         lastZoneBySession.remove(sessionId)
+        lastVitalsBySession.remove(sessionId)
     }
 
     /**
@@ -120,27 +133,26 @@ class GmcpEmitter(
         sessionId: SessionId,
         player: PlayerState,
     ) {
-        emit(
-            sessionId,
-            "Char.Vitals",
-            CharVitalsPayload(
-                hp = player.hp,
-                maxHp = player.maxHp,
-                mana = player.mana,
-                maxMana = player.maxMana,
-                level = player.level,
-                xp = player.xpTotal,
-                xpIntoLevel = progression?.xpIntoLevel(player.xpTotal) ?: 0L,
-                xpToNextLevel = progression?.xpToNextLevel(player.xpTotal),
-                gold = player.gold,
-                inCombat = isInCombat(sessionId),
-                prestigeLevel = player.prestigeLevel,
-                prestigeXpAvailable = prestigeAvailableXp(player),
-                prestigeNextCost = prestigeNextCost(player.prestigeLevel),
-                pvpKills = player.pvpKills,
-                pvpDeaths = player.pvpDeaths,
-            ),
+        val payload = CharVitalsPayload(
+            hp = player.hp,
+            maxHp = player.maxHp,
+            mana = player.mana,
+            maxMana = player.maxMana,
+            level = player.level,
+            xp = player.xpTotal,
+            xpIntoLevel = progression?.xpIntoLevel(player.xpTotal) ?: 0L,
+            xpToNextLevel = progression?.xpToNextLevel(player.xpTotal),
+            gold = player.gold,
+            inCombat = isInCombat(sessionId),
+            prestigeLevel = player.prestigeLevel,
+            prestigeXpAvailable = prestigeAvailableXp(player),
+            prestigeNextCost = prestigeNextCost(player.prestigeLevel),
+            pvpKills = player.pvpKills,
+            pvpDeaths = player.pvpDeaths,
         )
+        if (lastVitalsBySession[sessionId] == payload) return
+        lastVitalsBySession[sessionId] = payload
+        emit(sessionId, "Char.Vitals", payload)
     }
 
     suspend fun sendCharCombat(sessionId: SessionId) {
@@ -2712,6 +2724,9 @@ class GmcpEmitter(
 
         /** Upper bound for the zone-tracking LRU cache (well above any realistic session count). */
         const val MAX_ZONE_CACHE_ENTRIES = 10_000
+
+        /** Upper bound for the vitals dirty-diff LRU cache. */
+        const val MAX_VITALS_CACHE_ENTRIES = 10_000
 
         const val CHAR_STATUS_VARS_JSON =
             """{"hp":"HP","maxHp":"Max HP","mana":"Mana","maxMana":"Max Mana","level":"Level","xp":"XP"}"""

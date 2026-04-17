@@ -85,6 +85,19 @@ export interface Ec2StackProps extends StackProps {
    * ambonmud.service (no CDK redeploy needed).
    */
   readonly adminTokenSsmParameterName?: string;
+  /**
+   * Optional JVM flags passed to the container as JAVA_OPTS.
+   *
+   * Example: "-Xms2g -Xmx2g -XX:+UseZGC -XX:+ZGenerational"
+   *
+   * IMPORTANT: these flags must fit within the instance's physical RAM. The
+   * default t4g.micro has only 1 GB of RAM and also runs Prometheus + Grafana
+   * containers on the same host, so a 2 GB heap requires bumping the instance
+   * to at least t4g.medium (4 GB) — set it directly in this stack's Instance
+   * construct. Setting a too-large heap on an undersized box leads to swap
+   * death or OOM-kill.
+   */
+  readonly javaOpts?: string;
 }
 
 /**
@@ -117,7 +130,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, spritesUrl, achievementsUrl, adminTokenSsmParameterName } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, spritesUrl, achievementsUrl, adminTokenSsmParameterName, javaOpts } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -597,7 +610,7 @@ export class Ec2Stack extends Stack {
       // --env-file (when adminTokenSsmParameterName is set) pushes
       // AMBONMUD_ADMIN_TOKEN from /etc/ambonmud/secrets.env into the
       // container, where Hoplite picks it up and overrides ambonmud.admin.token.
-      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data ${adminTokenSsmParameterName ? '--env-file /etc/ambonmud/secrets.env ' : ''}-e AMBONMUD_DATA_DIR=/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false ${ecrUri}:${imageTag}`,
+      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data ${adminTokenSsmParameterName ? '--env-file /etc/ambonmud/secrets.env ' : ''}-e AMBONMUD_DATA_DIR=/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false${javaOpts ? ` -e JAVA_OPTS=${JSON.stringify(javaOpts)}` : ''} ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',
