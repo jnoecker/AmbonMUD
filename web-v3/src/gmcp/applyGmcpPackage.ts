@@ -329,9 +329,13 @@ export function applyGmcpPackage(
       // Detect actual room change (not just a look/refresh of the same room)
       ctx.setRoom((prev) => {
         if (prev.id !== id && prev.id !== null) {
-          // Moved to a different room — clear dialogue/quest offers
+          // Moved to a different room — clear dialogue/quest offers and trainer data.
+          // Trainer state must be cleared or the panel will render stale data from the
+          // previous trainer (e.g. a single-class WARRIOR trainer) when the user opens
+          // it at a new multi-class trainer before `train list` has fetched fresh data.
           ctx.setDialogue(null);
           ctx.setQuestsAvailable([]);
+          ctx.setTrainer(null);
         }
         return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker };
       });
