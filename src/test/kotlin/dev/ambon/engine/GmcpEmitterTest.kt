@@ -20,7 +20,9 @@ import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.TEST_SESSION_ID
+import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.drainAll
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -180,6 +182,65 @@ class GmcpEmitterTest {
             e.forgetSession(sid)
             e.sendCharVitals(sid, p)
             assertEquals(2, drainGmcp().size, "After forget, identical vitals should emit again")
+        }
+
+    // ── broadcast* helpers: serialize-once, send-N semantics ─────────────
+    //
+    // The broadcast* methods route every recipient through broadcastSerialized,
+    // which builds the payload + writeValueAsString once regardless of recipient
+    // count. These tests assert that a multi-recipient broadcast emits N GmcpData
+    // events with *identical* jsonData — catches both "missed a recipient" and
+    // "somehow diverged the payloads" regressions without needing to introspect
+    // the private helper.
+
+    @Test
+    fun `broadcastRoomUpdateMob emits identical payload to all recipients`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            val roomId = RoomId("test:room1")
+            val players = buildTestPlayerRegistry(roomId)
+            players.loginOrFail(SessionId(1L), "Alice")
+            players.loginOrFail(SessionId(2L), "Bob")
+            players.loginOrFail(SessionId(3L), "Carol")
+            outbound.drainAll() // discard login-side events
+
+            val mob = MobState(
+                id = MobId("mob-1"),
+                name = "a rat",
+                description = "a rat",
+                hp = 10,
+                maxHp = 20,
+                roomId = roomId,
+            )
+            e.broadcastRoomUpdateMob(roomId, mob, players)
+
+            val events = drainGmcp().filter { it.gmcpPackage == "Room.UpdateMob" }
+            assertEquals(3, events.size, "Expected one GMCP event per room occupant")
+            val payloads = events.map { it.jsonData }.toSet()
+            assertEquals(1, payloads.size, "All recipients should receive byte-identical payload")
+            assertTrue(events[0].jsonData.contains("\"hp\":10"))
+            assertTrue(events[0].jsonData.contains("\"maxHp\":20"))
+        }
+
+    @Test
+    fun `broadcastWorldTime emits identical payload to all online players`() =
+        runTest {
+            val e = emitter("World.Time")
+            val roomId = RoomId("test:room1")
+            val players = buildTestPlayerRegistry(roomId)
+            players.loginOrFail(SessionId(1L), "Alice")
+            players.loginOrFail(SessionId(2L), "Bob")
+            outbound.drainAll()
+
+            e.broadcastWorldTime(
+                GmcpEmitter.WorldTimePayload(period = "noon", hour = 12, minute = 30),
+                players,
+            )
+
+            val events = drainGmcp().filter { it.gmcpPackage == "World.Time" }
+            assertEquals(2, events.size)
+            assertEquals(1, events.map { it.jsonData }.toSet().size, "All recipients share one serialized payload")
+            assertTrue(events[0].jsonData.contains("\"hour\":12"))
         }
 
     // ── Room.Info ──
