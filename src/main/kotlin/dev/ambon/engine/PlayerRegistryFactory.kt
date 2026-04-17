@@ -23,6 +23,7 @@ fun createPlayerRegistry(
     classRegistry: PlayerClassRegistry? = null,
     raceRegistry: RaceRegistry? = null,
     statRegistry: StatRegistry? = null,
+    randomStartRoomProvider: (() -> RoomId?)? = null,
 ): PlayerRegistry =
     PlayerRegistry(
         startRoom = startRoom,
@@ -37,4 +38,5 @@ fun createPlayerRegistry(
         statRegistry = statRegistry,
         startingGold = engineConfig.characterCreation.startingGold,
         defaultGender = engineConfig.characterCreation.defaultGender,
+        randomStartRoomProvider = randomStartRoomProvider,
     )

@@ -95,6 +95,12 @@ class PlayerRegistry(
     private val statRegistry: StatRegistry? = null,
     private val startingGold: Long = 0L,
     private val defaultGender: String = "enby",
+    /**
+     * Playtest hook: when non-null, new-account creation spawns the character
+     * at a random room from this provider instead of the class/default start
+     * room. Returning null falls back to the normal start-room logic.
+     */
+    private val randomStartRoomProvider: (() -> RoomId?)? = null,
 ) {
     val maxLevel: Int get() = progression.maxLevel
 
@@ -217,12 +223,13 @@ class PlayerRegistry(
         val resolvedStats = statKeys.associateWith { id -> base(id) + raceMods[id] }
         val classStartRoom = classStartRooms[classId.uppercase()]
             ?: classRegistry?.get(classId)?.startRoom?.let { RoomId(it) }
+        val spawnRoom = randomStartRoomProvider?.invoke() ?: classStartRoom ?: startRoom
         val record =
             try {
                 repo.create(
                     PlayerCreationRequest(
                         name = name,
-                        startRoomId = classStartRoom ?: startRoom,
+                        startRoomId = spawnRoom,
                         nowEpochMs = now,
                         passwordHash = hash,
                         ansiEnabled = defaultAnsiEnabled,
