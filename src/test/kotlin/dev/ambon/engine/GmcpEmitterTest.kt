@@ -150,6 +150,38 @@ class GmcpEmitterTest {
             assertTrue(drainGmcp().isEmpty())
         }
 
+    @Test
+    fun `sendCharVitals suppresses duplicate emits when payload unchanged`() =
+        runTest {
+            val e = emitter("Char.Vitals")
+            val p = player()
+            e.sendCharVitals(sid, p)
+            e.sendCharVitals(sid, p)
+            e.sendCharVitals(sid, p)
+            val events = drainGmcp()
+            assertEquals(1, events.size, "Unchanged vitals should only emit once")
+        }
+
+    @Test
+    fun `sendCharVitals re-emits when payload changes`() =
+        runTest {
+            val e = emitter("Char.Vitals")
+            e.sendCharVitals(sid, player(hp = 50))
+            e.sendCharVitals(sid, player(hp = 40))
+            assertEquals(2, drainGmcp().size)
+        }
+
+    @Test
+    fun `forgetSession clears vitals dirty-diff cache`() =
+        runTest {
+            val e = emitter("Char.Vitals")
+            val p = player()
+            e.sendCharVitals(sid, p)
+            e.forgetSession(sid)
+            e.sendCharVitals(sid, p)
+            assertEquals(2, drainGmcp().size, "After forget, identical vitals should emit again")
+        }
+
     // ── Room.Info ──
 
     @Test

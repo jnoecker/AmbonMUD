@@ -20,5 +20,8 @@ if [ -z "$AMBONMUD_SHARDING_ADVERTISEHOST" ]; then
   export AMBONMUD_SHARDING_ADVERTISEHOST="$PRIVATE_IP"
 fi
 
-# All world zones are built into the fat JAR — no external YAML fetching needed.
-exec java -Djava.net.preferIPv4Stack=true -jar /app/app.jar "$@"
+# JAVA_OPTS is passed through to the JVM (e.g. "-Xms2g -Xmx2g -XX:+UseZGC
+# -XX:+ZGenerational"). Unquoted on purpose so each flag lands as a separate
+# argv slot. Defaults to empty so the JVM picks its own heap and GC.
+# shellcheck disable=SC2086
+exec java -Djava.net.preferIPv4Stack=true ${JAVA_OPTS:-} -jar /app/app.jar "$@"
