@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
 import java.time.Duration
 
 plugins {
@@ -89,7 +90,20 @@ tasks.shadowJar {
     manifest {
         attributes["Main-Class"] = "dev.ambon.MainKt"
     }
-    mergeServiceFiles()
+    // Flyway 10+ registers its location handlers and database types via
+    // `META-INF/services/org.flywaydb.core.extensibility.Plugin`. Both
+    // flyway-core (29 entries including ClasspathLocationHandlerImpl) and
+    // flyway-database-postgresql (3 Postgres-specific entries) ship their
+    // own copy. The shadow plugin's default `duplicatesStrategy = EXCLUDE`
+    // drops one of them BEFORE the ServiceFileTransformer gets to merge,
+    // so the fat jar ended up with only 3 entries and Flyway threw
+    // `Unknown prefix for location (should be one of ): classpath:db/callback`
+    // with an empty prefix list at startup. Setting duplicates INCLUDE
+    // lets the transformer see both copies and concatenate them.
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    transform(ServiceFileTransformer::class.java) {
+        path = "META-INF/services"
+    }
 }
 
 tasks.test {
