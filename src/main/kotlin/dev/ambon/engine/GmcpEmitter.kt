@@ -374,19 +374,28 @@ class GmcpEmitter(
     // ── Room-level broadcast helpers ─────────────────────────────────────
 
     suspend fun broadcastRoomAddMob(roomId: RoomId, mob: MobState, players: PlayerRegistry) {
-        for (p in players.playersInRoom(roomId)) sendRoomAddMob(p.sessionId, mob)
+        broadcastSerialized(players.playersInRoom(roomId), "Room.AddMob", toRoomMobPayload(mob), supportCheck = "Room.Mobs")
     }
 
     suspend fun broadcastRoomUpdateMob(roomId: RoomId, mob: MobState, players: PlayerRegistry) {
-        for (p in players.playersInRoom(roomId)) sendRoomUpdateMob(p.sessionId, mob)
+        broadcastSerialized(players.playersInRoom(roomId), "Room.UpdateMob", toRoomMobPayload(mob), supportCheck = "Room.Mobs")
     }
 
     suspend fun broadcastRoomRemoveMob(roomId: RoomId, mobId: String, players: PlayerRegistry) {
-        for (p in players.playersInRoom(roomId)) sendRoomRemoveMob(p.sessionId, mobId)
+        broadcastSerialized(players.playersInRoom(roomId), "Room.RemoveMob", RoomRemoveMobPayload(id = mobId), supportCheck = "Room.Mobs")
     }
 
     suspend fun broadcastRoomItems(roomId: RoomId, items: List<ItemInstance>, players: PlayerRegistry) {
-        for (p in players.playersInRoom(roomId)) sendRoomItems(p.sessionId, items)
+        val payload = items.map {
+            RoomItemPayload(
+                id = it.id.value,
+                name = it.item.displayName,
+                description = it.item.description,
+                image = it.item.image,
+                video = it.item.video,
+            )
+        }
+        broadcastSerialized(players.playersInRoom(roomId), "Room.Items", payload)
     }
 
     suspend fun sendCharSkills(
@@ -1353,9 +1362,7 @@ class GmcpEmitter(
     }
 
     suspend fun broadcastWorldTime(payload: WorldTimePayload, players: PlayerRegistry) {
-        for (p in players.allPlayers()) {
-            emit(p.sessionId, "World.Time", payload)
-        }
+        broadcastSerialized(players.allPlayers(), "World.Time", payload)
     }
 
     suspend fun sendWorldWeather(sessionId: SessionId, payload: WorldWeatherPayload) {
@@ -1413,9 +1420,7 @@ class GmcpEmitter(
     }
 
     suspend fun broadcastWorldEvents(events: List<WorldEventPayload>, players: PlayerRegistry) {
-        for (p in players.allPlayers()) {
-            emit(p.sessionId, "World.Events", events)
-        }
+        broadcastSerialized(players.allPlayers(), "World.Events", events)
     }
 
     // ---------- reputation / factions ----------
@@ -1581,7 +1586,20 @@ class GmcpEmitter(
     }
 
     suspend fun broadcastRoomMobInfo(roomId: RoomId, mobInfos: List<MobInfoEntry>, players: PlayerRegistry) {
-        for (p in players.playersInRoom(roomId)) sendRoomMobInfo(p.sessionId, mobInfos)
+        val payload = mobInfos.map { m ->
+            RoomMobInfoPayload(
+                id = m.id,
+                level = m.level,
+                tier = m.tier,
+                questGiver = m.questGiver,
+                questAvailable = m.questAvailable,
+                questComplete = m.questComplete,
+                shopKeeper = m.shopKeeper,
+                dialogue = m.dialogue,
+                aggressive = m.aggressive,
+            )
+        }
+        broadcastSerialized(players.playersInRoom(roomId), "Room.MobInfo", payload)
     }
 
     /**
@@ -1963,6 +1981,32 @@ class GmcpEmitter(
             return
         }
         outbound.send(OutboundEvent.GmcpData(sessionId, packageName, rawJson))
+    }
+
+    /**
+     * Broadcasts the same [payload] to every recipient in [recipients], serializing
+     * the JSON once regardless of the recipient count. All [broadcast*] helpers in
+     * this class route through here. Per-session [emit] calls would otherwise build
+     * the payload + `writeValueAsString` it once per recipient, which at 1k+ online
+     * sessions in a shared room / world-wide broadcast becomes the dominant
+     * allocation-and-CPU cost of the GMCP flush pass.
+     */
+    private suspend fun <T : Any> broadcastSerialized(
+        recipients: Collection<PlayerState>,
+        packageName: String,
+        payload: T,
+        supportCheck: String = packageName,
+    ) {
+        if (recipients.isEmpty()) return
+        val serialized = json.writeValueAsString(payload)
+        if (serialized.length > MAX_GMCP_PAYLOAD_BYTES) {
+            log.warn { "GMCP payload exceeds ${MAX_GMCP_PAYLOAD_BYTES}B limit for $packageName (${serialized.length}B), skipping" }
+            return
+        }
+        for (p in recipients) {
+            if (!supportsPackage(p.sessionId, supportCheck)) continue
+            outbound.send(OutboundEvent.GmcpData(p.sessionId, packageName, serialized))
+        }
     }
 
     // ---------- private helpers ----------
@@ -2919,9 +2963,12 @@ class GmcpEmitter(
 
     /** Broadcasts `Quest.Global` inactive to all connected players. */
     suspend fun broadcastGlobalQuestInactive(players: PlayerRegistry) {
-        for (p in players.allPlayers()) {
-            sendGlobalQuestInactive(p.sessionId)
-        }
+        broadcastSerialized(
+            players.allPlayers(),
+            "Quest.Global",
+            GlobalQuestInactivePayload(active = false),
+            supportCheck = "Quest",
+        )
     }
 
     private data class GlobalQuestPayload(
