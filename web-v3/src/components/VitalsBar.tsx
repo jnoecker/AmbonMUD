@@ -10,6 +10,7 @@ import {
   ChatBubbleIcon,
   AuctionIcon,
   CraftingIcon,
+  DungeonIcon,
   HousingIcon,
   MailIcon,
   HelpIcon,
@@ -68,6 +69,7 @@ interface VitalsBarProps {
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onCommand: (cmd: string) => void;
   onReconnect?: () => void;
+  dungeonActive: boolean;
   audio: AudioEngine;
   inputValue: string;
   onInputChange: (value: string) => void;
@@ -162,6 +164,7 @@ export function VitalsBar({
   onCastSkill,
   onCommand,
   onReconnect,
+  dungeonActive,
   audio,
   inputValue,
   onInputChange,
@@ -332,6 +335,17 @@ export function VitalsBar({
             <span className="vbar-panel-label">{label}</span>
           </button>
         ))}
+        {dungeonActive && (
+          <button
+            type="button"
+            className={`vbar-panel-btn vbar-panel-btn-dungeon${activePopout === "dungeon" ? " vbar-panel-btn-active" : ""}`}
+            onClick={() => { onOpenPanel("dungeon"); setShowPanels(false); }}
+            aria-label="Dungeon"
+          >
+            <DungeonIcon className="vbar-icon" />
+            <span className="vbar-panel-label">Dungeon</span>
+          </button>
+        )}
       </div>
 
       {/* Persistent command input — always available below the panel grid */}

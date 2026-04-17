@@ -21,6 +21,7 @@ interface GameShellProps {
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onReconnect: () => void;
+  dungeonActive: boolean;
   audio: AudioEngine;
   inputValue: string;
   onInputChange: (value: string) => void;
@@ -43,6 +44,7 @@ export function GameShell({
   onOpenPanel,
   onCastSkill,
   onReconnect,
+  dungeonActive,
   audio,
   inputValue,
   onInputChange,
@@ -98,6 +100,7 @@ export function GameShell({
         onCastSkill={onCastSkill}
         onCommand={onCommand}
         onReconnect={onReconnect}
+        dungeonActive={dungeonActive}
         audio={audio}
         inputValue={inputValue}
         onInputChange={onInputChange}
