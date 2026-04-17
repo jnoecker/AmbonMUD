@@ -98,6 +98,18 @@ export interface Ec2StackProps extends StackProps {
    * death or OOM-kill.
    */
   readonly javaOpts?: string;
+  /**
+   * When true, launches a Postgres 16 container on the same host and flips
+   * the app to AMBONMUD_PERSISTENCE_BACKEND=POSTGRES. Data lives in a named
+   * docker volume (`pgdata`) on the root EBS, so it survives container
+   * recycles but **not** instance replacement. Intended for demo load
+   * testing — use RDS for anything you care about keeping.
+   *
+   * A random DB password is generated once at first boot and stashed in
+   * /etc/ambonmud/db.env (root-only, 0600). Both containers read it via
+   * --env-file, so they stay in sync.
+   */
+  readonly postgresSidecar?: boolean;
 }
 
 /**
@@ -130,7 +142,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, spritesUrl, achievementsUrl, adminTokenSsmParameterName, javaOpts } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl, spritesUrl, achievementsUrl, adminTokenSsmParameterName, javaOpts, postgresSidecar } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -240,6 +252,57 @@ export class Ec2Stack extends Stack {
       // ---- Docker network for inter-container communication -------------------
       'docker network create ambonmud-net || true',
       '',
+      // ---- Postgres sidecar (conditional) -------------------------------------
+      // Generates a random DB password once at first boot and writes it to
+      // /etc/ambonmud/db.env. Both the postgres container (POSTGRES_* vars)
+      // and ambonmud container (AMBONMUD_DATABASE_* vars) read this file via
+      // --env-file so they stay in sync. The `if [ ! -f ... ]` guard is a
+      // safety net — user-data only runs on first boot, so this branch is
+      // effectively always taken, but if it ever re-runs we don't want to
+      // clobber the password that postgres already initialized with.
+      ...(postgresSidecar
+        ? [
+            'mkdir -p /etc/ambonmud',
+            'if [ ! -f /etc/ambonmud/db.env ]; then',
+            '  PG_PASS=$(openssl rand -hex 24)',
+            '  umask 077',
+            '  cat > /etc/ambonmud/db.env <<DB_END',
+            'POSTGRES_USER=ambon',
+            'POSTGRES_PASSWORD=${PG_PASS}',
+            'POSTGRES_DB=ambonmud',
+            'AMBONMUD_DATABASE_USERNAME=ambon',
+            'AMBONMUD_DATABASE_PASSWORD=${PG_PASS}',
+            'AMBONMUD_DATABASE_JDBCURL=jdbc:postgresql://postgres:5432/ambonmud',
+            'DB_END',
+            '  chmod 600 /etc/ambonmud/db.env',
+            'fi',
+            '',
+            // Postgres systemd service. Uses a named docker volume (pgdata)
+            // so data survives container recycles; it sits on the root EBS
+            // so instance replacement wipes it — acceptable for a demo.
+            `cat > /etc/systemd/system/postgres.service << 'PG_SVC_END'`,
+            '[Unit]',
+            'Description=Postgres sidecar for AmbonMUD',
+            'After=docker.service',
+            'Requires=docker.service',
+            '',
+            '[Service]',
+            'Restart=always',
+            'RestartSec=10',
+            'ExecStartPre=-/usr/bin/docker rm -f postgres',
+            'ExecStart=/usr/bin/docker run --name postgres \\',
+            '  --network ambonmud-net \\',
+            '  --env-file /etc/ambonmud/db.env \\',
+            '  -v pgdata:/var/lib/postgresql/data \\',
+            '  postgres:16-alpine',
+            'ExecStop=/usr/bin/docker stop postgres',
+            '',
+            '[Install]',
+            'WantedBy=multi-user.target',
+            'PG_SVC_END',
+            '',
+          ]
+        : []),
       // ---- Prometheus config --------------------------------------------------
       'mkdir -p /app/prometheus',
       `cat > /app/prometheus/prometheus.yml << 'PROM_END'`,
@@ -541,7 +604,7 @@ export class Ec2Stack extends Stack {
       `cat > /etc/systemd/system/ambonmud.service << 'SERVICE_END'`,
       '[Unit]',
       'Description=AmbonMUD',
-      'After=docker.service network-online.target',
+      `After=docker.service network-online.target${postgresSidecar ? ' postgres.service' : ''}`,
       'Requires=docker.service',
       '',
       '[Service]',
@@ -610,7 +673,7 @@ export class Ec2Stack extends Stack {
       // --env-file (when adminTokenSsmParameterName is set) pushes
       // AMBONMUD_ADMIN_TOKEN from /etc/ambonmud/secrets.env into the
       // container, where Hoplite picks it up and overrides ambonmud.admin.token.
-      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data ${adminTokenSsmParameterName ? '--env-file /etc/ambonmud/secrets.env ' : ''}-e AMBONMUD_DATA_DIR=/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false${javaOpts ? ` -e JAVA_OPTS=${JSON.stringify(javaOpts)}` : ''} ${ecrUri}:${imageTag}`,
+      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data ${adminTokenSsmParameterName ? '--env-file /etc/ambonmud/secrets.env ' : ''}${postgresSidecar ? '--env-file /etc/ambonmud/db.env ' : ''}-e AMBONMUD_DATA_DIR=/app/data -e AMBONMUD_PERSISTENCE_BACKEND=${postgresSidecar ? 'POSTGRES' : 'YAML'} -e AMBONMUD_REDIS_ENABLED=false${javaOpts ? ` -e JAVA_OPTS=${JSON.stringify(javaOpts)}` : ''} ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',
@@ -618,7 +681,7 @@ export class Ec2Stack extends Stack {
       'SERVICE_END',
       '',
       'systemctl daemon-reload',
-      'systemctl enable ambonmud prometheus grafana',
+      `systemctl enable ambonmud prometheus grafana${postgresSidecar ? ' postgres' : ''}`,
     );
 
     // -------------------------------------------------------------------------
@@ -771,7 +834,7 @@ export class Ec2Stack extends Stack {
     // blocking start can exceed cloud-init's scripts-user timeout and abort
     // all subsequent userData. The service has Restart=always so systemd will
     // keep retrying if anything in the startup chain fails transiently.
-    userData.addCommands('systemctl start --no-block ambonmud prometheus grafana');
+    userData.addCommands(`systemctl start --no-block ambonmud prometheus grafana${postgresSidecar ? ' postgres' : ''}`);
 
     // -------------------------------------------------------------------------
     // EC2 instance: t4g.medium — ARM64, 2 vCPU (burstable) / 4 GB RAM.

@@ -57,6 +57,13 @@ const achievementsUrl = app.node.tryGetContext('achievementsUrl') as string | un
 const adminTokenSsmParameterName =
   app.node.tryGetContext('adminTokenSsmParameterName') as string | undefined;
 
+// When true, deploys a Postgres 16 container on the same EC2 host and
+// switches the app to POSTGRES persistence. Demo-only — data lives on the
+// root EBS and is destroyed on instance replacement. Toggle with
+// --context postgresSidecar=false (or omit) to revert to YAML.
+const postgresSidecar =
+  (app.node.tryGetContext('postgresSidecar') as string | undefined) !== 'false';
+
 // JVM flags passed to the container as JAVA_OPTS. The default targets the
 // t4g.medium (4 GB RAM) demo instance: 2 GB fixed heap + Generational ZGC for
 // sub-ms pauses. Generational ZGC is opt-in under JDK 21 (the runtime in the
@@ -83,6 +90,7 @@ if (topology === 'ec2') {
     achievementsUrl,
     adminTokenSsmParameterName,
     javaOpts,
+    postgresSidecar,
   });
 } else {
   // -------------------------------------------------------------------------
