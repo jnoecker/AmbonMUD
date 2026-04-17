@@ -40,7 +40,21 @@ class BehaviorTreeSystem(
         val now = clock.millis()
         var actions = 0
 
-        val mobList = mobs.all().filter { it.behaviorTree != null }.toMutableList()
+        // Skip BT evaluation for mobs in zones with no players — idle wandering
+        // and ambient behaviors have no observer, so ticking them is pure waste.
+        // Mobs currently in combat still tick regardless of zone population so
+        // they can make flee / pursue decisions when the player who engaged them
+        // walks into a different zone (combat itself continues via CombatSystem;
+        // this is just the BT-driven side of combat behavior).
+        val activeZones = HashSet<String>()
+        for (p in players.allPlayers()) {
+            activeZones.add(p.roomId.zone)
+        }
+
+        val mobList =
+            mobs.all()
+                .filter { it.behaviorTree != null && (it.roomId.zone in activeZones || isMobInCombat(it.id)) }
+                .toMutableList()
         mobList.shuffle(rng)
 
         for (m in mobList) {
