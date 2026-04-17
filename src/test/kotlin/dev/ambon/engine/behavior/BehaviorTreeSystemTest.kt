@@ -300,6 +300,8 @@ class BehaviorTreeSystemTest {
             val route = listOf(roomB.id, roomC.id, roomA.id)
             val tree = PatrolAction(route)
             val e = env(mobRoom = roomA.id, behaviorTree = tree)
+            // BT now gates on zone-has-player; log a watcher in the mob's zone.
+            e.players.loginOrFail(SessionId(99L), "Watcher")
 
             // Schedule tick (dueAt null → sets future time)
             e.system.tick()
@@ -392,6 +394,7 @@ class BehaviorTreeSystemTest {
         runTest {
             val tree = WanderAction()
             val e = env(behaviorTree = tree)
+            e.players.loginOrFail(SessionId(99L), "Watcher")
 
             e.system.tick() // schedule
             e.clock.advance(200)
@@ -506,6 +509,66 @@ class BehaviorTreeSystemTest {
             )
         }
 
+    @Test
+    fun `BT does not tick mobs in zones with no players`() =
+        runTest {
+            // Mob lives in a zone with no players; player logs in to a different
+            // zone (the world start room, which is zone "zone"). BT tick should
+            // skip the mob entirely — no scheduling, no action execution.
+            val tree = SayAction("I am lonely")
+            val e = env(mobRoom = RoomId("farzone:mob-lair"), behaviorTree = tree)
+            e.players.loginOrFail(SessionId(1L), "Tester")
+            e.outbound.drainAll()
+
+            e.system.tick()
+            e.clock.advance(200)
+            e.system.tick()
+
+            val messages = e.outbound.drainAll()
+            assertFalse(
+                messages.any { ev ->
+                    ev is OutboundEvent.SendText && ev.text.contains("I am lonely")
+                },
+                "Mob in player-less zone should not have executed its BT",
+            )
+        }
+
+    @Test
+    fun `BT resumes ticking mobs when a player enters their zone`() =
+        runTest {
+            // Start with the mob isolated in a player-less zone; BT is quiet.
+            // When a player joins a room in the mob's zone, subsequent ticks
+            // should execute the BT and emit the Say action.
+            val tree = SayAction("About time someone showed up")
+            val mobRoomId = RoomId("zone:a") // same zone as world start room
+            val e = env(mobRoom = mobRoomId, behaviorTree = tree)
+            // No players logged in yet — mob's zone is empty.
+            e.system.tick()
+            e.clock.advance(200)
+            e.system.tick()
+            assertTrue(
+                e.outbound.drainAll().none { ev ->
+                    ev is OutboundEvent.SendText && ev.text.contains("About time")
+                },
+                "Pre-player ticks should be skipped",
+            )
+
+            e.players.loginOrFail(SessionId(1L), "Tester")
+            e.outbound.drainAll()
+
+            e.system.tick()
+            e.clock.advance(200)
+            e.system.tick()
+
+            val messages = e.outbound.drainAll()
+            assertTrue(
+                messages.any { ev ->
+                    ev is OutboundEvent.SendText && ev.text.contains("About time")
+                },
+                "BT should resume once a player is in the mob's zone",
+            )
+        }
+
     // --- CooldownNode tests ---
 
     @Test
@@ -522,6 +585,7 @@ class BehaviorTreeSystemTest {
 
             val tree = CooldownNode(cooldownMs = 1000L, key = "test", child = countingNode)
             val e = env(behaviorTree = tree)
+            e.players.loginOrFail(SessionId(99L), "Watcher")
 
             // Schedule tick (dueAt null → sets future time)
             e.system.tick()
