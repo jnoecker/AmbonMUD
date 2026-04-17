@@ -479,6 +479,7 @@ function App() {
         onOpenPanel={(panel) => openPanel(panel)}
         onCastSkill={handleCastSkill}
         onReconnect={() => { intentionalDisconnectRef.current = true; reconnect(); }}
+        dungeonActive={state.dungeonInfo?.active ?? false}
         audio={audio}
         inputValue={inputValue}
         onInputChange={(value) => {

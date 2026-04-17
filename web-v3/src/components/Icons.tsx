@@ -630,3 +630,14 @@ export function AuctionIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function DungeonIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4 21V7l4-3 4 3 4-3 4 3v14" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 21h16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M10 21v-5a2 2 0 012-2 2 2 0 012 2v5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 10h2M15 10h2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
