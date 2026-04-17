@@ -116,6 +116,25 @@ class PlayerRegistry(
     private val sessionByLowerName = mutableMapOf<String, SessionId>()
 
     /**
+     * Immutable snapshot of [players] values, rebuilt every time the map
+     * membership changes. Reads (including [allPlayers]) return this reference
+     * without allocating — `players.values.toList()` per call was a measurable
+     * allocation hotspot at 1k+ online sessions, showing up as GC pressure in
+     * the tick loop's ZGC concurrent-cycle budget.
+     *
+     * Volatile for visibility to off-engine-thread readers (AdminHttpServer
+     * endpoints, metrics scrapes). All writes happen on the engine thread
+     * inside [rebuildAllPlayersSnapshot], which is only called from mutation
+     * paths — no need for a lock since mutations are single-threaded.
+     */
+    @Volatile
+    private var allPlayersSnapshot: List<PlayerState> = emptyList()
+
+    private fun rebuildAllPlayersSnapshot() {
+        allPlayersSnapshot = players.values.toList()
+    }
+
+    /**
      * Async phase 1 of login: look up the player record and verify credentials.
      *
      * Does **not** mutate any in-memory state — safe to call from a background coroutine
@@ -295,6 +314,7 @@ class PlayerRegistry(
         ps.hp = if (boundRecord.hp <= 0) ps.maxHp else boundRecord.hp.coerceIn(1, ps.maxHp)
         ps.mana = boundRecord.mana.coerceIn(0, ps.maxMana)
         players[sessionId] = ps
+        rebuildAllPlayersSnapshot()
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[ps.name.lowercase()] = sessionId
         items.ensurePlayer(sessionId)
@@ -318,6 +338,7 @@ class PlayerRegistry(
 
     suspend fun disconnect(sessionId: SessionId) {
         val ps = players.remove(sessionId) ?: return
+        rebuildAllPlayersSnapshot()
 
         // Persist last seen + room for claimed players
         persistIfClaimed(ps)
@@ -352,6 +373,7 @@ class PlayerRegistry(
      */
     fun suspendSession(sessionId: SessionId): PlayerState? {
         val ps = players.remove(sessionId) ?: return null
+        rebuildAllPlayersSnapshot()
         // Keep the player in roomMembers and sessionByLowerName so they
         // remain "visible" during the grace period. The sessionId will be
         // stale but that's fine — outbound messages to it are dropped.
@@ -373,6 +395,7 @@ class PlayerRegistry(
 
         // --- begin atomic map mutations (no suspend points) ---
         players[newSessionId] = resumed
+        rebuildAllPlayersSnapshot()
 
         // Remap room membership, cleaning up empty sets
         roomMembers.removeFromSet(resumed.roomId, oldSessionId)
@@ -392,6 +415,7 @@ class PlayerRegistry(
         ps: PlayerState,
     ) {
         players[sessionId] = ps
+        rebuildAllPlayersSnapshot()
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[ps.name.lowercase()] = sessionId
         items.ensurePlayer(sessionId)
@@ -404,6 +428,7 @@ class PlayerRegistry(
      */
     suspend fun removeForHandoff(sessionId: SessionId): PlayerState? {
         val ps = players.remove(sessionId) ?: return null
+        rebuildAllPlayersSnapshot()
 
         // Persist with target room before removing
         persistIfClaimed(ps)
@@ -461,7 +486,7 @@ class PlayerRegistry(
         return true
     }
 
-    fun allPlayers(): List<PlayerState> = players.values.toList()
+    fun allPlayers(): List<PlayerState> = allPlayersSnapshot
 
     fun playersInRoom(roomId: RoomId): List<PlayerState> =
         roomMembers[roomId]
@@ -608,6 +633,7 @@ class PlayerRegistry(
         // --- begin atomic map mutations (no suspend points) ---
         players.remove(oldSid)
         players[newSid] = newPs
+        rebuildAllPlayersSnapshot()
 
         roomMembers.removeFromSet(oldPs.roomId, oldSid)
         roomMembers.getOrPut(newPs.roomId) { mutableSetOf() }.add(newSid)
