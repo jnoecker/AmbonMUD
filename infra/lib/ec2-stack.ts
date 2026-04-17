@@ -212,10 +212,22 @@ export class Ec2Stack extends Stack {
     // -------------------------------------------------------------------------
     // User data: install Docker, write systemd service, install update helper.
     //
-    // userDataCausesReplacement is left at its default (false) intentionally:
-    // CDK changes to user data will NOT replace the instance and won't
-    // clobber player YAML data on disk. To roll out a new image tag, run
-    // `update-ambonmud <tag>` via SSM Session Manager.
+    // userDataCausesReplacement is now TRUE on the instance construct below.
+    // Rationale: this stack generates a dozen helper scripts and systemd units
+    // from the CDK user-data. When it was false we kept hitting the gotcha
+    // where `cdk deploy` with user-data-only diffs succeeds at the CFN layer
+    // but the running instance never re-executes user-data, so the on-disk
+    // scripts silently lag the source tree for days until some other property
+    // triggered replacement. For a demo that prioritizes "merge → deploy →
+    // new state visible" over preserving ephemeral player data, that's the
+    // wrong trade. Flip it, accept that every deploy destroys /app/data and
+    // the postgres sidecar's pgdata volume, and move on. When data survival
+    // becomes important, move persistence to RDS and the on-instance data
+    // concern disappears entirely.
+    //
+    // To roll out just a new image tag without replacement, the
+    // `update-ambonmud <tag>` SSM helper still works — it pulls and restarts
+    // the container in-place without touching CFN.
     // -------------------------------------------------------------------------
     const userData = ec2.UserData.forLinux();
     // When hostname is set, the nginx+certbot stack is needed BEFORE the
@@ -534,10 +546,29 @@ export class Ec2Stack extends Stack {
             'printf "AMBONMUD_ADMIN_TOKEN=%s\\n" "$token" > /etc/ambonmud/secrets.env',
             'chmod 600 /etc/ambonmud/secrets.env',
             '# secrets.yaml — Hoplite overlay read by the container (UID 1001).',
-            '# Single-quoted YAML scalar: safe for SSM hex tokens; if token style',
-            '# ever changes to include single-quotes or backslashes, switch to',
-            '# python -c "import yaml,sys; yaml.safe_dump(...)" for robustness.',
-            "printf \"ambonmud:\\n  admin:\\n    token: '%s'\\n\" \"$token\" > /app/data/secrets.yaml",
+            '# When the postgres sidecar is enabled /etc/ambonmud/db.env holds the',
+            '# random DB password generated at first boot; merge it into the same',
+            '# overlay so admin auth + DB auth both land in the highest-priority',
+            '# config source and survive any persistence.backend / database.*',
+            '# values pinned in the public application-local.yaml overlay.',
+            '# Single-quoted YAML scalars are safe for hex tokens + hex passwords;',
+            '# switch to python yaml.safe_dump if either ever grows special chars.',
+            'DB_PASS=""',
+            'if [ -f /etc/ambonmud/db.env ]; then',
+            '  DB_PASS=$(. /etc/ambonmud/db.env && printf "%s" "$POSTGRES_PASSWORD")',
+            'fi',
+            'if [ -n "$DB_PASS" ]; then',
+            '  cat > /app/data/secrets.yaml <<SECRETS_YAML',
+            'ambonmud:',
+            '  admin:',
+            "    token: '${token}'",
+            '  database:',
+            '    username: ambon',
+            "    password: '${DB_PASS}'",
+            'SECRETS_YAML',
+            'else',
+            "  printf \"ambonmud:\\n  admin:\\n    token: '%s'\\n\" \"$token\" > /app/data/secrets.yaml",
+            'fi',
             'chown 1001:1001 /app/data/secrets.yaml',
             'chmod 600 /app/data/secrets.yaml',
             'echo "Admin token materialized to secrets.env + secrets.yaml"',
@@ -855,6 +886,7 @@ export class Ec2Stack extends Stack {
       securityGroup: sg,
       role,
       userData,
+      userDataCausesReplacement: true,
       blockDevices: [
         {
           deviceName: '/dev/xvda',
