@@ -12845,6 +12845,14 @@ body {
   margin-bottom: var(--space-2);
 }
 
+.leaderboard-empty-note {
+  margin: 0;
+  padding: var(--space-2) 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .leaderboard-table {
   width: 100%;
   border-collapse: collapse;
