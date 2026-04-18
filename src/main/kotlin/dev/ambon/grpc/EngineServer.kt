@@ -133,8 +133,6 @@ class EngineServer(
             clock = clock,
             progression = progression,
             hashingContext = authDispatcher,
-            // Playtest: scatter new characters across the world.
-            randomStartRoomProvider = { world.rooms.keys.randomOrNull() },
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---

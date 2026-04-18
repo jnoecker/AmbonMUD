@@ -229,8 +229,6 @@ class MudServer(
             classRegistry = classRegistry,
             raceRegistry = raceRegistry,
             statRegistry = statRegistry,
-            // Playtest: scatter new characters across the world.
-            randomStartRoomProvider = { world.rooms.keys.randomOrNull() },
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---
