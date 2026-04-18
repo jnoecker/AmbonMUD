@@ -282,13 +282,14 @@ function App() {
   const handleCastSkill = (skillId: string, cooldownMs: number) => {
     const skill = state.skills.find((s) => s.id === skillId);
     if (!skill) return;
-    const needsTarget = skill.targetType === "ENEMY" || skill.targetType === "ALLY";
+    const t = skill.targetType.toUpperCase();
+    const needsTarget = t === "ENEMY" || t === "ALLY";
     if (needsTarget && gameStateRef.current.combatTarget?.targetName) {
       completeCast(skillId, cooldownMs, gameStateRef.current.combatTarget.targetName);
       return;
     }
     if (needsTarget) {
-      pendingCastRef.current = { skillId, skillName: skill.name, cooldownMs, targetType: skill.targetType };
+      pendingCastRef.current = { skillId, skillName: skill.name, cooldownMs, targetType: t };
       state.setToast(`Select a target for ${skill.name}`);
       return;
     }
