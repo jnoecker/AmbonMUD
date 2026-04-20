@@ -154,7 +154,7 @@ class RegenSystemTest {
             clock.advance(200L)
 
             // Limit to 2 players per tick
-            regen.tick(maxPlayersPerTick = 2)
+            regen.tick(capOverride = 2)
 
             val healed = listOf(sid1, sid2, sid3).count { players.get(it)!!.hp > 1 }
             assertTrue(healed <= 2, "Expected at most 2 players healed, got $healed")
@@ -194,13 +194,110 @@ class RegenSystemTest {
 
             // Cap = 10, 11 players total.  The 10 full-HP players consume the cap; sid1 (index 0)
             // is not reached when iteration starts at index 1 (Random(42).nextInt(11) == 1).
-            regen.tick(maxPlayersPerTick = 10)
+            regen.tick(capOverride = 10)
 
             assertEquals(
                 damagedHp,
                 damagedPlayer.hp,
                 "Damaged player must not be healed when cap is consumed by full-HP players",
             )
+        }
+
+    @Test
+    fun `adaptiveCap scales with player count to hit the cycle target`() {
+        val regen =
+            RegenSystem(
+                players = makeRegistry(),
+                items = ItemRegistry(),
+                clock = MutableClock(0L),
+                tickIntervalMs = 100L,
+                cycleTargetMs = 2_000L,
+                minPlayersPerTick = 5,
+                maxPlayersPerTick = 200,
+            )
+        // 100 players * 100ms / 2000ms = 5/tick → cycles in 2s
+        assertEquals(5, regen.adaptiveCap(100))
+        // 500 * 100 / 2000 = 25
+        assertEquals(25, regen.adaptiveCap(500))
+        // 1437 * 100 / 2000 = 71.85 → ceil = 72
+        assertEquals(72, regen.adaptiveCap(1437))
+    }
+
+    @Test
+    fun `adaptiveCap respects floor at low populations`() {
+        val regen =
+            RegenSystem(
+                players = makeRegistry(),
+                items = ItemRegistry(),
+                clock = MutableClock(0L),
+                tickIntervalMs = 100L,
+                cycleTargetMs = 2_000L,
+                minPlayersPerTick = 5,
+                maxPlayersPerTick = 200,
+            )
+        // Raw would be 10 * 100 / 2000 = 0.5 → ceil = 1 → floor lifts to 5
+        assertEquals(5, regen.adaptiveCap(10))
+        // Raw = 1 → floor = 5
+        assertEquals(5, regen.adaptiveCap(1))
+    }
+
+    @Test
+    fun `adaptiveCap respects ceiling at very high populations`() {
+        val regen =
+            RegenSystem(
+                players = makeRegistry(),
+                items = ItemRegistry(),
+                clock = MutableClock(0L),
+                tickIntervalMs = 100L,
+                cycleTargetMs = 2_000L,
+                minPlayersPerTick = 5,
+                maxPlayersPerTick = 200,
+            )
+        // 10000 * 100 / 2000 = 500 → ceiling 200 → cycle degrades to 5s, engine protected
+        assertEquals(200, regen.adaptiveCap(10_000))
+    }
+
+    @Test
+    fun `adaptiveCap returns zero for empty population`() {
+        val regen =
+            RegenSystem(
+                players = makeRegistry(),
+                items = ItemRegistry(),
+                clock = MutableClock(0L),
+            )
+        assertEquals(0, regen.adaptiveCap(0))
+    }
+
+    @Test
+    fun `tick without override uses adaptive cap`() =
+        runTest {
+            val players = makeRegistry()
+            val regen =
+                RegenSystem(
+                    players = players,
+                    items = ItemRegistry(),
+                    clock = MutableClock(0L),
+                    rng = Random(42),
+                    // Zero intervals → any visited, damaged player heals immediately on first tick.
+                    baseIntervalMs = 0L,
+                    minIntervalMs = 0L,
+                    manaBaseIntervalMs = 0L,
+                    manaMinIntervalMs = 0L,
+                    // 5 players * 100ms / 1000ms = 0.5 → ceil 1 → floor lifts to 1
+                    tickIntervalMs = 100L,
+                    cycleTargetMs = 1_000L,
+                    minPlayersPerTick = 1,
+                    maxPlayersPerTick = 200,
+                )
+
+            val sids = (1..5).map { SessionId(it.toLong()) }
+            sids.forEachIndexed { idx, sid -> players.loginOrFail(sid, "Player$idx") }
+            sids.forEach { players.get(it)!!.hp = 1 }
+
+            regen.tick() // adaptive cap = 1
+
+            val healed = sids.count { players.get(it)!!.hp > 1 }
+            assertEquals(1, healed, "Expected adaptive cap of 1 to heal exactly one player")
         }
 
     @Test

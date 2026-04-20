@@ -189,7 +189,12 @@ data class AppConfig(
     }
 
     private fun validateEngineRegen() {
+        engine.regen.cycleTargetMillis.requirePositive("ambonMUD.engine.regen.cycleTargetMillis")
+        engine.regen.minPlayersPerTick.requirePositive("ambonMUD.engine.regen.minPlayersPerTick")
         engine.regen.maxPlayersPerTick.requirePositive("ambonMUD.engine.regen.maxPlayersPerTick")
+        require(engine.regen.maxPlayersPerTick >= engine.regen.minPlayersPerTick) {
+            "ambonMUD.engine.regen.maxPlayersPerTick must be >= minPlayersPerTick"
+        }
         engine.regen.baseIntervalMillis.requirePositive("ambonMUD.engine.regen.baseIntervalMillis")
         engine.regen.minIntervalMillis.requirePositive("ambonMUD.engine.regen.minIntervalMillis")
         engine.regen.regenAmount.requirePositive("ambonMUD.engine.regen.regenAmount")
@@ -1992,7 +1997,9 @@ data class CombatFeedbackConfig(
 )
 
 data class RegenEngineConfig(
-    val maxPlayersPerTick: Int = 50,
+    val cycleTargetMillis: Long = 2_000L,
+    val minPlayersPerTick: Int = 5,
+    val maxPlayersPerTick: Int = 200,
     val baseIntervalMillis: Long = 5_000L,
     val minIntervalMillis: Long = 1_000L,
     val regenAmount: Int = 1,

@@ -707,6 +707,10 @@ class GameEngine(
             manaBaseIntervalMs = engineConfig.regen.mana.baseIntervalMillis,
             manaMinIntervalMs = engineConfig.regen.mana.minIntervalMillis,
             manaRegenAmount = engineConfig.regen.mana.regenAmount,
+            tickIntervalMs = tickMillis,
+            cycleTargetMs = engineConfig.regen.cycleTargetMillis,
+            minPlayersPerTick = engineConfig.regen.minPlayersPerTick,
+            maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick,
             bindings = engineConfig.stats.bindings,
             metrics = metrics,
             dirtyNotifier = dirtyNotifier,
@@ -1502,7 +1506,7 @@ class GameEngine(
 
                     // Regenerate player HP (time-gated internally)
                     val regenSample = Timer.start()
-                    regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
+                    regenSystem.tick()
                     regenSample.stop(metrics.regenTickTimer)
 
                     // Periodic threat table cleanup — sweep stale mob entries every 60s
