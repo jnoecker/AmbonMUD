@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
@@ -252,18 +253,23 @@ class NetworkSession(
     private suspend fun writeLoop() {
         try {
             val output = socket.getOutputStream()
+            // Reused across batches; reset() keeps the internal array allocated.
+            val batchBuffer = ByteArrayOutputStream(4096)
             for (frame in outboundQueue) {
-                // Write first frame, then drain any immediately available frames before flushing.
-                var needFlush = writeFrame(output, frame)
+                batchBuffer.reset()
+                appendFrame(batchBuffer, frame)
                 var drained = 0
                 while (drained < MAX_FRAMES_PER_FLUSH) {
                     val next = outboundQueue.tryReceive().getOrNull() ?: break
-                    val wrote = writeFrame(output, next)
-                    if (wrote) needFlush = true
+                    appendFrame(batchBuffer, next)
                     drained++
                 }
-                if (needFlush) {
-                    outputLock.withLock { output.flush() }
+                if (batchBuffer.size() > 0) {
+                    val bytes = batchBuffer.toByteArray()
+                    outputLock.withLock {
+                        output.write(bytes)
+                        output.flush()
+                    }
                 }
             }
         } catch (_: Throwable) {
@@ -274,28 +280,22 @@ class NetworkSession(
     }
 
     /**
-     * Writes a single frame to [output] without flushing.
-     * Returns true if bytes were written (i.e. a flush is needed).
+     * Appends a frame's bytes (if any) into [buffer]. GMCP frames are skipped when the client
+     * has not enabled GMCP — the delivery callback still fires so metrics stay consistent.
      */
-    private fun writeFrame(
-        output: java.io.OutputStream,
+    private fun appendFrame(
+        buffer: ByteArrayOutputStream,
         frame: OutboundFrame,
-    ): Boolean {
+    ) {
         onOutboundFrameWritten(frame.enqueuedAt)
-        return when (frame) {
+        when (frame) {
             is OutboundFrame.Text -> {
-                val bytes = frame.content.toByteArray(Charsets.UTF_8)
-                outputLock.withLock { output.write(bytes) }
-                true
+                buffer.write(frame.content.toByteArray(Charsets.UTF_8))
             }
             is OutboundFrame.Gmcp -> {
                 if (gmcpEnabled) {
                     val payload = "${frame.gmcpPackage} ${frame.jsonData}".toByteArray(Charsets.UTF_8)
-                    val bytes = buildTelnetSubnegotiationBytes(TelnetProtocol.GMCP, payload)
-                    outputLock.withLock { output.write(bytes) }
-                    true
-                } else {
-                    false
+                    buffer.write(buildTelnetSubnegotiationBytes(TelnetProtocol.GMCP, payload))
                 }
             }
         }
