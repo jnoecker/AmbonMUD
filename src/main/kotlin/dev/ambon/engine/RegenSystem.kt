@@ -18,6 +18,10 @@ class RegenSystem(
     private val manaBaseIntervalMs: Long = 3_000L,
     private val manaMinIntervalMs: Long = 1_000L,
     private val manaRegenAmount: Int = 1,
+    private val tickIntervalMs: Long = 100L,
+    private val cycleTargetMs: Long = 2_000L,
+    private val minPlayersPerTick: Int = 5,
+    private val maxPlayersPerTick: Int = 200,
     private val bindings: StatBindingsConfig = StatBindingsConfig(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
@@ -38,16 +42,20 @@ class RegenSystem(
         lastManaRegenAtMs.remove(sessionId)
     }
 
-    fun tick(maxPlayersPerTick: Int = 50) {
+    fun tick(capOverride: Int? = null) {
         val now = clock.millis()
         var ran = 0
 
         val list = players.allPlayers()
         if (list.isEmpty()) return
+
+        val cap = capOverride ?: adaptiveCap(list.size)
+        if (cap <= 0) return
+
         val start = rng.nextInt(list.size)
 
         for (i in list.indices) {
-            if (ran >= maxPlayersPerTick) break
+            if (ran >= cap) break
             val player = list[(start + i) % list.size]
             ran++
 
@@ -117,5 +125,11 @@ class RegenSystem(
     private fun regenInterval(totalStat: Int, baseMs: Long, msPerPoint: Long, minMs: Long): Long {
         val bonus = (totalStat - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
         return (baseMs - bonus * msPerPoint).coerceAtLeast(minMs)
+    }
+
+    internal fun adaptiveCap(playerCount: Int): Int {
+        if (playerCount <= 0) return 0
+        val raw = ((playerCount.toLong() * tickIntervalMs + cycleTargetMs - 1) / cycleTargetMs).toInt()
+        return raw.coerceIn(minPlayersPerTick, maxPlayersPerTick)
     }
 }

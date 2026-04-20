@@ -849,7 +849,9 @@ ambonmud:
       buyMultiplier: 1
       sellMultiplier: 0.5
     regen:
-      maxPlayersPerTick: 10
+      cycleTargetMillis: 2000
+      minPlayersPerTick: 5
+      maxPlayersPerTick: 200
       baseIntervalMillis: 4500
       minIntervalMillis: 1000
       regenAmount: 1
