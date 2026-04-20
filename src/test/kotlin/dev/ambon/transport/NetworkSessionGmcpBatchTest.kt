@@ -168,6 +168,50 @@ class NetworkSessionGmcpBatchTest {
         }
 
     @Test
+    fun `large burst of text frames arrives concatenated in order`(): Unit =
+        runBlocking {
+            val serverSock = ServerSocket(0)
+            val clientSock = Socket("localhost", serverSock.localPort)
+            val sessionSock = serverSock.accept()
+            serverSock.close()
+            try {
+                val inbound = LocalInboundBus()
+                val queue = Channel<OutboundFrame>(capacity = Channel.UNLIMITED)
+                val session =
+                    NetworkSession(
+                        sessionId = SessionId(1),
+                        socket = sessionSock,
+                        inbound = inbound,
+                        outboundQueue = queue,
+                        onDisconnected = {},
+                        scope = this,
+                    )
+                session.start()
+
+                val clientIn = clientSock.getInputStream()
+
+                readNBytes(clientIn, initNegotiationSize)
+
+                // Queue 100 distinct frames — exceeds MAX_FRAMES_PER_FLUSH (64), forcing at
+                // least two batch cycles. Order and content must still be preserved exactly.
+                val expected = StringBuilder()
+                repeat(100) { i ->
+                    val line = "line-$i\r\n"
+                    queue.send(OutboundFrame.Text(line))
+                    expected.append(line)
+                }
+
+                val expectedBytes = expected.toString().toByteArray(Charsets.UTF_8)
+                val received = readNBytes(clientIn, expectedBytes.size)
+
+                assertArrayEquals(expectedBytes, received)
+            } finally {
+                clientSock.close()
+                runCatching { sessionSock.close() }
+            }
+        }
+
+    @Test
     fun `GMCP frame produces no bytes when gmcp is disabled`(): Unit =
         runBlocking {
             val serverSock = ServerSocket(0)
