@@ -35,6 +35,10 @@ import java.util.concurrent.atomic.AtomicReference
 
 private val log = KotlinLogging.logger {}
 
+// Maximum number of extra frames to drain per write iteration before flushing the text batch.
+// Keeps latency bounded while amortising WebSocket frame overhead across bursts of text output.
+private const val MAX_WS_FRAMES_PER_BATCH = 64
+
 class KtorWebSocketTransport(
     private val port: Int,
     private val inbound: InboundBus,
@@ -217,17 +221,40 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
 
     val writerJob =
         launch {
+            // Consecutive OutboundFrame.Text entries are concatenated into a single WebSocket
+            // Frame.Text to reduce per-frame header + send-call overhead. GMCP envelopes must
+            // stay isolated — the client's message handler parses each incoming WS text frame
+            // as either a GMCP envelope or plain text, never mixed (see useMudSocket.ts).
+            val pendingText = StringBuilder()
+
+            suspend fun flushPendingText() {
+                if (pendingText.isNotEmpty()) {
+                    send(Frame.Text(pendingText.toString()))
+                    pendingText.setLength(0)
+                }
+            }
+
+            suspend fun process(frame: OutboundFrame) {
+                when (frame) {
+                    is OutboundFrame.Text -> pendingText.append(frame.content)
+                    is OutboundFrame.Gmcp -> {
+                        flushPendingText()
+                        send(Frame.Text("""{"gmcp":"${frame.gmcpPackage}","data":${frame.jsonData}}"""))
+                    }
+                }
+                outboundRouter.onSessionQueueFrameConsumed(sessionId, frame.enqueuedAt)
+            }
+
             try {
                 for (frame in outboundQueue) {
-                    when (frame) {
-                        is OutboundFrame.Text -> send(Frame.Text(frame.content))
-                        is OutboundFrame.Gmcp -> {
-                            val pkg = frame.gmcpPackage
-                            val data = frame.jsonData
-                            send(Frame.Text("""{"gmcp":"$pkg","data":$data}"""))
-                        }
+                    process(frame)
+                    var drained = 0
+                    while (drained < MAX_WS_FRAMES_PER_BATCH) {
+                        val next = outboundQueue.tryReceive().getOrNull() ?: break
+                        process(next)
+                        drained++
                     }
-                    outboundRouter.onSessionQueueFrameConsumed(sessionId, frame.enqueuedAt)
+                    flushPendingText()
                 }
             } catch (_: Throwable) {
                 // best effort

@@ -166,6 +166,111 @@ class KtorWebSocketTransportTest {
         assertTrue(isOriginAllowedForHost("http://anything.com", ""))
     }
 
+    @Test
+    fun `consecutive text frames are coalesced into one websocket frame`(): Unit =
+        runBlocking {
+            val inbound = LocalInboundBus()
+            val engineOutbound = LocalOutboundBus()
+            val outboundRouter = OutboundRouter(engineOutbound, this)
+            val routerJob = outboundRouter.start()
+            val sid = SessionId(7)
+
+            testApplication {
+                application {
+                    ambonMUDWebModule(
+                        inbound = inbound,
+                        outboundRouter = outboundRouter,
+                        sessionIdFactory = { sid },
+                    )
+                }
+
+                val wsClient = createClient { install(WebSockets) }
+
+                wsClient.webSocket("/ws") {
+                    // Drain the connection-setup inbound events so we don't race them.
+                    withTimeout(3_000) { inbound.awaitReceive() } // Connected
+                    withTimeout(3_000) { inbound.awaitReceive() } // Core.Supports.Set
+
+                    // Fire three SendText events in rapid succession. The writer should drain
+                    // them into a single WebSocket text frame.
+                    engineOutbound.send(OutboundEvent.SendText(sid, "alpha"))
+                    engineOutbound.send(OutboundEvent.SendText(sid, "beta"))
+                    engineOutbound.send(OutboundEvent.SendText(sid, "gamma"))
+
+                    val received =
+                        withTimeout(3_000) { incoming.receive() }
+                            .let { (it as Frame.Text).readText() }
+
+                    assertTrue(received.contains("alpha"), "missing alpha in: $received")
+                    assertTrue(received.contains("beta"), "missing beta in: $received")
+                    assertTrue(received.contains("gamma"), "missing gamma in: $received")
+                    // All three lines arrived together — if they had been sent as separate
+                    // frames we'd have had to call receive() three times.
+                }
+
+                val disconnected = withTimeout(3_000) { inbound.awaitReceive() }
+                assertTrue(disconnected is InboundEvent.Disconnected)
+            }
+
+            routerJob.cancelAndJoin()
+            inbound.close()
+            engineOutbound.close()
+        }
+
+    @Test
+    fun `gmcp frame stays isolated from surrounding text frames`(): Unit =
+        runBlocking {
+            val inbound = LocalInboundBus()
+            val engineOutbound = LocalOutboundBus()
+            val outboundRouter = OutboundRouter(engineOutbound, this)
+            val routerJob = outboundRouter.start()
+            val sid = SessionId(8)
+
+            testApplication {
+                application {
+                    ambonMUDWebModule(
+                        inbound = inbound,
+                        outboundRouter = outboundRouter,
+                        sessionIdFactory = { sid },
+                    )
+                }
+
+                val wsClient = createClient { install(WebSockets) }
+
+                wsClient.webSocket("/ws") {
+                    withTimeout(3_000) { inbound.awaitReceive() } // Connected
+                    withTimeout(3_000) { inbound.awaitReceive() } // Core.Supports.Set
+
+                    // Text, GMCP, text — GMCP envelope must arrive in its own WS text frame
+                    // so the client's parseGmcp can recognise it.
+                    engineOutbound.send(OutboundEvent.SendText(sid, "before-gmcp"))
+                    engineOutbound.send(
+                        OutboundEvent.GmcpData(sid, "Room.Info", """{"id":"x"}"""),
+                    )
+                    engineOutbound.send(OutboundEvent.SendText(sid, "after-gmcp"))
+
+                    val frames = mutableListOf<String>()
+                    withTimeout(3_000) {
+                        while (frames.size < 3) {
+                            val f = incoming.receive()
+                            frames += (f as Frame.Text).readText()
+                        }
+                    }
+
+                    assertTrue(frames[0].contains("before-gmcp"))
+                    assertEquals("""{"gmcp":"Room.Info","data":{"id":"x"}}""", frames[1])
+                    assertTrue(frames[2].contains("after-gmcp"))
+                }
+
+                val disconnected = withTimeout(3_000) { inbound.awaitReceive() }
+                assertTrue(disconnected is InboundEvent.Disconnected)
+            }
+
+            routerJob.cancelAndJoin()
+            inbound.close()
+            engineOutbound.close()
+        }
+
     private suspend fun InboundBus.awaitReceive(): InboundEvent {
         while (true) {
             tryReceive().getOrNull()?.let { return it }
