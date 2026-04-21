@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CraftingSkill, CraftingRecipe, CraftingNode } from "../../types";
 
 interface CraftingPanelProps {
@@ -25,6 +25,25 @@ export function CraftingPanel({
   onLoadSkills,
 }: CraftingPanelProps) {
   const [activeTab, setActiveTab] = useState<"skills" | "recipes" | "nodes">("skills");
+  const skillsRequestedRef = useRef(false);
+  const recipesRequestedRef = useRef(false);
+  const ready = connected && hasCharacterProfile;
+
+  useEffect(() => {
+    if (!ready) return;
+    if (skills.length === 0 && !skillsRequestedRef.current) {
+      skillsRequestedRef.current = true;
+      onLoadSkills();
+    }
+  }, [ready, skills.length, onLoadSkills]);
+
+  useEffect(() => {
+    if (!ready || activeTab !== "recipes") return;
+    if (recipes.length === 0 && !recipesRequestedRef.current) {
+      recipesRequestedRef.current = true;
+      onRequestRecipes();
+    }
+  }, [ready, activeTab, recipes.length, onRequestRecipes]);
 
   if (!connected) return <p className="empty-note">Connect to view crafting.</p>;
   if (!hasCharacterProfile) return <p className="empty-note">Log in to view crafting.</p>;
@@ -48,7 +67,7 @@ export function CraftingPanel({
           role="tab"
           className={`crafting-tab ${activeTab === "recipes" ? "crafting-tab-active" : ""}`}
           aria-selected={activeTab === "recipes"}
-          onClick={() => { setActiveTab("recipes"); if (recipes.length === 0) onRequestRecipes(); }}
+          onClick={() => setActiveTab("recipes")}
         >
           Recipes
         </button>
@@ -71,10 +90,7 @@ export function CraftingPanel({
           {skills.length === 0 ? (
             <div className="crafting-empty-state">
               <span className="crafting-empty-icon">{"\u2692"}</span>
-              <p className="empty-note">No crafting skills loaded yet.</p>
-              <button type="button" className="crafting-load-btn" onClick={onLoadSkills}>
-                Load Skills
-              </button>
+              <p className="empty-note">Loading professions&hellip;</p>
             </div>
           ) : (
             <ul className="crafting-skill-list">
@@ -115,7 +131,7 @@ export function CraftingPanel({
           {recipes.length === 0 ? (
             <div className="crafting-empty-state">
               <span className="crafting-empty-icon">{"\u2726"}</span>
-              <p className="empty-note">No recipes loaded. Type <code>recipes</code> to browse.</p>
+              <p className="empty-note">Loading recipes&hellip;</p>
             </div>
           ) : (
             <ul className="crafting-recipe-list">
