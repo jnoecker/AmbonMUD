@@ -353,6 +353,18 @@ function App() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  // Close the dungeon panel when the player actually enters a dungeon — the
+  // catalog-plus-"Resume Run" view confuses users into hammering the re-enter
+  // button. The conditional toolbar button remains for intentional access.
+  const dungeonActive = state.dungeonInfo?.active ?? false;
+  const prevDungeonActiveRef = useRef(dungeonActive);
+  useEffect(() => {
+    if (dungeonActive && !prevDungeonActiveRef.current) {
+      state.setActivePopout((prev) => (prev === "dungeon" ? null : prev));
+    }
+    prevDungeonActiveRef.current = dungeonActive;
+  }, [dungeonActive]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Keyboard digit shortcuts
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {

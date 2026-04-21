@@ -106,11 +106,16 @@ export function HousingPanel({
         </div>
       )}
 
-      {room.housingBroker && !inOwnHouse && (
+      {!inOwnHouse && (
         <div className="housing-actions">
-          <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house list")}>
-            Browse Templates
+          <button type="button" className="housing-action-btn" onClick={() => onSendCommand("recall")}>
+            Recall Home
           </button>
+          {room.housingBroker && (
+            <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house list")}>
+              Browse Templates
+            </button>
+          )}
         </div>
       )}
 
