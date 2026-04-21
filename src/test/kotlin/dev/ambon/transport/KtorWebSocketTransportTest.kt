@@ -167,8 +167,13 @@ class KtorWebSocketTransportTest {
     }
 
     @Test
-    fun `consecutive text frames are coalesced into one websocket frame`(): Unit =
+    fun `consecutive text frames preserve order end-to-end`(): Unit =
         runBlocking {
+            // End-to-end smoke test: the router → queue → writer pipeline delivers every
+            // SendText in the right order. Whether the writer coalesces is scheduling-
+            // dependent (router and writer coroutines run on different dispatchers), so
+            // this test only asserts ordering + completeness. The coalescing contract
+            // itself is verified deterministically in WriteCoalescedOutboundFramesTest.
             val inbound = LocalInboundBus()
             val engineOutbound = LocalOutboundBus()
             val outboundRouter = OutboundRouter(engineOutbound, this)
@@ -187,25 +192,31 @@ class KtorWebSocketTransportTest {
                 val wsClient = createClient { install(WebSockets) }
 
                 wsClient.webSocket("/ws") {
-                    // Drain the connection-setup inbound events so we don't race them.
                     withTimeout(3_000) { inbound.awaitReceive() } // Connected
                     withTimeout(3_000) { inbound.awaitReceive() } // Core.Supports.Set
 
-                    // Fire three SendText events in rapid succession. The writer should drain
-                    // them into a single WebSocket text frame.
                     engineOutbound.send(OutboundEvent.SendText(sid, "alpha"))
                     engineOutbound.send(OutboundEvent.SendText(sid, "beta"))
                     engineOutbound.send(OutboundEvent.SendText(sid, "gamma"))
 
-                    val received =
-                        withTimeout(3_000) { incoming.receive() }
-                            .let { (it as Frame.Text).readText() }
+                    val combined = StringBuilder()
+                    withTimeout(3_000) {
+                        while (!combined.contains("gamma")) {
+                            combined.append((incoming.receive() as Frame.Text).readText())
+                        }
+                    }
 
-                    assertTrue(received.contains("alpha"), "missing alpha in: $received")
-                    assertTrue(received.contains("beta"), "missing beta in: $received")
-                    assertTrue(received.contains("gamma"), "missing gamma in: $received")
-                    // All three lines arrived together — if they had been sent as separate
-                    // frames we'd have had to call receive() three times.
+                    assertTrue(combined.contains("alpha"), "missing alpha in: $combined")
+                    assertTrue(combined.contains("beta"), "missing beta in: $combined")
+                    assertTrue(combined.contains("gamma"), "missing gamma in: $combined")
+                    assertTrue(
+                        combined.indexOf("alpha") < combined.indexOf("beta"),
+                        "alpha must precede beta in: $combined",
+                    )
+                    assertTrue(
+                        combined.indexOf("beta") < combined.indexOf("gamma"),
+                        "beta must precede gamma in: $combined",
+                    )
                 }
 
                 val disconnected = withTimeout(3_000) { inbound.awaitReceive() }
