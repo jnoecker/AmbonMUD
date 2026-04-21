@@ -5,6 +5,7 @@ import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.SpriteRegistry
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -19,6 +20,7 @@ class StylistHandler(
     private val abilitySystem: AbilitySystem? = null,
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
     private val markStatsDirty: ((SessionId) -> Unit)? = null,
+    private val spriteRegistry: SpriteRegistry? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val world = ctx.world
@@ -125,12 +127,34 @@ class StylistHandler(
             ),
         )
 
+        // If the player had an explicit sprite pinned that's no longer valid for the new race,
+        // drop it so they fall back to auto-resolve for their new race.
+        val spriteReg = spriteRegistry
+        val currentSprite = me.activeSprite
+        if (spriteReg != null && currentSprite != null) {
+            val stillValid = spriteReg.validateSelection(
+                imageId = currentSprite,
+                level = me.level,
+                unlockedAchievementIds = me.unlockedAchievementIds,
+                isStaff = me.isStaff,
+                playerRace = me.race,
+                playerClass = me.playerClass,
+                playerGender = me.gender,
+            )
+            if (stillValid == null) {
+                me.activeSprite = null
+            }
+        }
+
         gmcpEmitter?.sendCharName(sessionId, me)
         if (abilitySystem != null) {
             gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
                 abilitySystem.cooldownRemainingMs(sessionId, abilityId)
             }
         }
+        // Re-emit the sprite catalogue so the stylist / sprite panel shows choices
+        // appropriate to the new race (sprites are race-filtered).
+        gmcpEmitter?.sendCharSprites(sessionId, me)
         emitStylistState(sessionId, me)
     }
 

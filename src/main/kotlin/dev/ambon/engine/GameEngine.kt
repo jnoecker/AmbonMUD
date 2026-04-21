@@ -1206,6 +1206,7 @@ class GameEngine(
                 abilitySystem = abilitySystem,
                 markVitalsDirty = ::markVitalsDirty,
                 markStatsDirty = ::markStatsDirty,
+                spriteRegistry = spriteRegistry,
             ),
             WorldInfoHandler(
                 ctx = ctx,
