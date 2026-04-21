@@ -122,16 +122,47 @@ class CommandRouterFeaturesTest {
     fun `open closed door succeeds`() =
         runTest {
             val h = harness()
-            // Unlock first
-            h.items.addToInventory(h.sid, makeKey())
-            h.router.handle(h.sid, Command.UnlockFeature("n"))
-            h.outbound.drainAll()
+            // Stage the door as CLOSED (unlocked) so this test exercises only the open
+            // transition — without staging, unlock now short-circuits to OPEN in one step.
+            val doorId = "ok_features:entrance/n"
+            h.worldState.setLockableState(doorId, LockableState.CLOSED)
 
             h.router.handle(h.sid, Command.OpenFeature("n"))
             val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("open", ignoreCase = true) },
                 "Expected open message, got: $outs",
+            )
+        }
+
+    @Test
+    fun `unlock door with key short-circuits to open`() =
+        runTest {
+            val h = harness()
+            h.items.addToInventory(h.sid, makeKey())
+
+            h.router.handle(h.sid, Command.UnlockFeature("n"))
+            val outs = h.outbound.drainAll()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.text.contains("unlock and open", ignoreCase = true)
+                },
+                "Expected combined unlock+open message, got: $outs",
+            )
+            assertEquals(
+                LockableState.OPEN,
+                h.worldState.getLockableState("ok_features:entrance/n"),
+                "Door should be OPEN after a single unlock command",
+            )
+
+            // Movement should now succeed without a separate `open <door>` command.
+            h.router.handle(h.sid, Command.Move(Direction.NORTH))
+            h.outbound.drainAll()
+            assertEquals(
+                RoomId("ok_features:vault"),
+                h.players.get(h.sid)?.roomId,
+                "Player should walk through the just-unlocked door",
             )
         }
 

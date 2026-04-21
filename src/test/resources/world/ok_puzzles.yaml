@@ -7,6 +7,11 @@ items:
     keyword: gem
     description: "A glittering gem of immense value."
     basePrice: 100
+  puzzle_key:
+    displayName: "a crystalline puzzle key"
+    keyword: key
+    description: "A key that materialized from solving a riddle."
+    basePrice: 0
 
 mobs:
   sphinx:
@@ -48,6 +53,18 @@ rooms:
     description: "A room with various mechanisms."
     exits:
       west: entrance
+      s:
+        to: vault
+        door:
+          initialState: locked
+          keyItemId: puzzle_key
+          keyConsumed: true
+
+  vault:
+    title: "The Vault"
+    description: "A chamber behind the locked door."
+    exits:
+      north: lever_room
 
   hidden_room:
     title: "Hidden Treasure Room"
@@ -109,4 +126,17 @@ puzzles:
       itemId: ancient_gem
     failMessage: "Not quite."
     successMessage: "A gem materializes in your hands!"
+    cooldownMs: 0
+
+  key_riddle:
+    type: riddle
+    roomId: lever_room
+    question: "What has teeth but cannot bite?"
+    answer: "a key"
+    acceptableAnswers: ["a key", "key"]
+    reward:
+      type: give_item
+      itemId: puzzle_key
+    failMessage: "Think again."
+    successMessage: "A crystalline key shimmers into existence!"
     cooldownMs: 0
