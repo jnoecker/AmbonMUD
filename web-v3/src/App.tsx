@@ -246,6 +246,21 @@ function App() {
           }
         }
       }
+      // Door badge: if there is exactly one door and it's simply closed (not
+      // locked), open it in one click. For a locked door the server-side
+      // unlock command already resolves to OPEN in one step when the player
+      // has the key, so the feature panel's "Unlock" button is sufficient.
+      if (preferredType === "door") {
+        const doors = (gameStateRef.current.roomFeatures ?? []).filter(
+          (f) => f.type === "door",
+        );
+        if (doors.length === 1) {
+          const only = doors[0];
+          if (only.state === "closed" && only.locked !== true) {
+            sendCommand(`open ${only.keyword}`);
+          }
+        }
+      }
       openPanel("features", preferredType ?? null);
     };
     canvasCallbacks.openBank = () => openPanel("bank");

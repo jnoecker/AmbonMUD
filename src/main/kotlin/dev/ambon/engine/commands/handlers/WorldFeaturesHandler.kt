@@ -93,7 +93,17 @@ class WorldFeaturesHandler(
                 outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is not locked."))
             lockable.keyItemId == null ->
                 outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
-            else -> applyKeyAction(sessionId, me, lockable, LockableState.CLOSED, "unlock", "unlocks")
+            else -> {
+                // Doors: unlock also opens them (one player action, not two) so that puzzle
+                // keys, manual `unlock <door>`, and canvas "Unlock" button all resolve to a
+                // passable door. Containers still unlock to CLOSED so players can inspect
+                // contents separately.
+                val targetState =
+                    if (lockable.isDoor) LockableState.OPEN else LockableState.CLOSED
+                val verbThirdPerson = if (lockable.isDoor) "unlocks and opens" else "unlocks"
+                val verb = if (lockable.isDoor) "unlock and open" else "unlock"
+                applyKeyAction(sessionId, me, lockable, targetState, verb, verbThirdPerson)
+            }
         }
     }
 

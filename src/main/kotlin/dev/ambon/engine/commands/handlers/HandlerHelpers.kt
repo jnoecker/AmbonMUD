@@ -704,6 +704,7 @@ internal class Lockable(
     val state: LockableState,
     val keyItemId: ItemId?,
     val keyConsumed: Boolean,
+    val isDoor: Boolean,
     val applyState: (LockableState) -> Unit,
 )
 
@@ -718,6 +719,7 @@ internal fun resolveLockable(
             state = worldState?.getDoorState(feature.id) ?: feature.initialState,
             keyItemId = feature.keyItemId,
             keyConsumed = feature.keyConsumed,
+            isDoor = true,
             applyState = { worldState?.setDoorState(feature.id, it) },
         )
         is RoomFeature.Container -> Lockable(
@@ -725,6 +727,7 @@ internal fun resolveLockable(
             state = worldState?.getContainerState(feature.id) ?: feature.initialState,
             keyItemId = feature.keyItemId,
             keyConsumed = feature.keyConsumed,
+            isDoor = false,
             applyState = { worldState?.setContainerState(feature.id, it) },
         )
         else -> null
