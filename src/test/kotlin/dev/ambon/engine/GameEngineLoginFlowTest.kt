@@ -899,4 +899,120 @@ class GameEngineLoginFlowTest {
 
             h.close()
         }
+
+    /**
+     * Regression for issue #1045: first login after character creation did not
+     * emit Dungeon.Catalog or Lottery.Info, so the panels showed empty-state
+     * copy until the player relogged. Both packages must now fire on the
+     * initial password-creation login path.
+     */
+    @Test
+    fun `first login of newly created character emits dungeon catalog and lottery info`() =
+        runTest {
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val h = GameEngineHarness.start(scope = this, clock = clock)
+
+            val sid = SessionId(42L)
+            runCurrent()
+
+            h.inbound.send(InboundEvent.Connected(sid))
+            // Opt into the GMCP packages whose emission we want to verify.
+            // The production WebSocket transport auto-sends this message on
+            // connect — see KtorWebSocketTransport.kt.
+            h.inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid,
+                    "Core.Supports.Set",
+                    """["Dungeon 1","Lottery 1"]""",
+                ),
+            )
+            h.inbound.send(InboundEvent.LineReceived(sid, "FreshChar"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "yes"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "password"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "1")) // race
+            h.inbound.send(InboundEvent.LineReceived(sid, "1")) // class
+            advanceTimeBy(h.tickMillis)
+            runCurrent()
+            // Second tick so background auth coroutine can complete and the
+            // resulting finalizeSuccessfulLogin GMCP emits land on outbound.
+            advanceTimeBy(h.tickMillis)
+            runCurrent()
+
+            val outs = h.outbound.drainAll()
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "Dungeon.Catalog"
+                },
+                "Expected Dungeon.Catalog GMCP on first login of newly created character. got=$outs",
+            )
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "Lottery.Info"
+                },
+                "Expected Lottery.Info GMCP on first login of newly created character. got=$outs",
+            )
+
+            h.close()
+        }
+
+    /**
+     * Companion to the #1045 regression above: an existing character logging
+     * back in with a password must also receive both panels. This was already
+     * working via the auth-token resume path, but we previously only wired
+     * Dungeon.Catalog / Lottery.Info into the resume / Session.Authenticate
+     * handlers — not the plain-password finalizeSuccessfulLogin path. Guard
+     * against regressions in either direction.
+     */
+    @Test
+    fun `existing character password login emits dungeon catalog and lottery info`() =
+        runTest {
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val repo = InMemoryPlayerRepository()
+            repo.createTestPlayer("Alice", TestWorlds.testWorld.startRoom, password = "secret", ansiEnabled = false)
+            val h = GameEngineHarness.start(scope = this, clock = clock, repo = repo)
+
+            val sid = SessionId(7L)
+            runCurrent()
+
+            h.inbound.send(InboundEvent.Connected(sid))
+            h.inbound.send(
+                InboundEvent.GmcpReceived(
+                    sid,
+                    "Core.Supports.Set",
+                    """["Dungeon 1","Lottery 1"]""",
+                ),
+            )
+            h.inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "secret"))
+            advanceTimeBy(h.tickMillis)
+            runCurrent()
+            advanceTimeBy(h.tickMillis)
+            runCurrent()
+
+            val outs = h.outbound.drainAll()
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "Dungeon.Catalog"
+                },
+                "Expected Dungeon.Catalog GMCP on password login of existing character. got=$outs",
+            )
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.GmcpData &&
+                        it.sessionId == sid &&
+                        it.gmcpPackage == "Lottery.Info"
+                },
+                "Expected Lottery.Info GMCP on password login of existing character. got=$outs",
+            )
+
+            h.close()
+        }
 }
