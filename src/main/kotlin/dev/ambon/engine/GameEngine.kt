@@ -241,6 +241,12 @@ class GameEngine(
                 markStatsDirty(sid)
                 broadcastServerWho()
                 issueResumeToken(sid)
+                // Emit panels that every session needs up-front. These were
+                // previously only fired on auth-token / resume paths, so a
+                // freshly created character saw empty Dungeon/Lottery panels
+                // until the first relog. See issue #1045.
+                emitDungeonCatalog(sid)
+                players.get(sid)?.let { p -> emitLotteryInfo(sid, p.name) }
             },
             // Only password/create logins need a fresh auth token — the client
             // doesn't have one yet. Auto-relog via Session.Authenticate and
@@ -1849,8 +1855,8 @@ class GameEngine(
             players,
             guildSystem,
         )
-        emitDungeonCatalog(newSessionId)
-        emitLotteryInfo(newSessionId, me.name)
+        // Dungeon catalog + lottery info are now emitted from onAfterLogin above
+        // so they fire on every login path, including password/new-char logins.
         if (me.isStaff) {
             gmcpEmitter.sendStaffWorldInfo(newSessionId, world)
             gmcpEmitter.sendStaffMobTemplates(newSessionId, world)
@@ -1950,8 +1956,8 @@ class GameEngine(
             players,
             guildSystem,
         )
-        emitDungeonCatalog(sessionId)
-        emitLotteryInfo(sessionId, player.name)
+        // Dungeon catalog + lottery info are now emitted from onAfterLogin above
+        // so they fire on every login path, including password/new-char logins.
         if (player.isStaff) {
             gmcpEmitter.sendStaffWorldInfo(sessionId, world)
             gmcpEmitter.sendStaffMobTemplates(sessionId, world)
