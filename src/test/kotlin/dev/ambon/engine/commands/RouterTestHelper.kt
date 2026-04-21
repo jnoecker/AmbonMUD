@@ -26,6 +26,7 @@ import dev.ambon.engine.PrestigeSystem
 import dev.ambon.engine.PuzzleSystem
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.ShopRegistry
+import dev.ambon.engine.SpriteRegistry
 import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.commands.handlers.AdminHandler
@@ -106,6 +107,7 @@ internal fun buildTestRouter(
     guildHallSystem: GuildHallSystem? = null,
     gmcpEmitter: GmcpEmitter? = null,
     abilitySystem: dev.ambon.engine.abilities.AbilitySystem? = null,
+    spriteRegistry: SpriteRegistry? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -157,6 +159,7 @@ internal fun buildTestRouter(
                 stylistConfig = it,
                 progression = progression,
                 abilitySystem = abilitySystem,
+                spriteRegistry = spriteRegistry,
             )
         },
         DuelHandler(ctx = ctx, duelSystem = duelSystem, combatSystem = combat),

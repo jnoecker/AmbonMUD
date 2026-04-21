@@ -7,12 +7,16 @@ import dev.ambon.domain.RaceDef
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.sprite.SpriteCategory
+import dev.ambon.domain.sprite.SpriteDefinition
+import dev.ambon.domain.sprite.SpriteVariant
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.RaceRegistry
+import dev.ambon.engine.SpriteRegistry
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityEffect
 import dev.ambon.engine.abilities.AbilityId
@@ -58,6 +62,47 @@ class StylistCommandTest {
     companion object {
         private val stylistRoom = RoomId("test:stylist")
         private val lobbyRoom = RoomId("test:lobby")
+
+        /**
+         * Builds a sprite registry with one per-race tier sprite for HUMAN and ELF so we can
+         * observe race-filtered output in `Char.Sprites` GMCP after a stylist race swap.
+         */
+        private fun spriteRegistryForRaces(): SpriteRegistry {
+            val registry = SpriteRegistry()
+            registry.register(
+                SpriteDefinition(
+                    id = "human_base_def",
+                    displayName = "Human Base",
+                    category = SpriteCategory.TIER,
+                    sortOrder = 0,
+                    variants = listOf(
+                        SpriteVariant(
+                            imageId = "human_base",
+                            displayName = "Human Base",
+                            race = "HUMAN",
+                            imagePath = "player_sprites/human_base.png",
+                        ),
+                    ),
+                ),
+            )
+            registry.register(
+                SpriteDefinition(
+                    id = "elf_base_def",
+                    displayName = "Elf Base",
+                    category = SpriteCategory.TIER,
+                    sortOrder = 0,
+                    variants = listOf(
+                        SpriteVariant(
+                            imageId = "elf_base",
+                            displayName = "Elf Base",
+                            race = "ELF",
+                            imagePath = "player_sprites/elf_base.png",
+                        ),
+                    ),
+                ),
+            )
+            return registry
+        }
 
         private fun buildRaceRegistry(): RaceRegistry {
             val registry = RaceRegistry()
@@ -402,6 +447,91 @@ class StylistCommandTest {
             assertTrue("elf_grace" in known)
             // learnedAbilityIds itself is untouched.
             assertTrue("shared_trick" in h.players.get(sid)!!.learnedAbilityIds)
+        }
+
+        @Test
+        fun `changerace emits Char_Sprites GMCP so stylist panel shows new race sprites`() = runTest {
+            val world = stylistWorld()
+            val outbound = LocalOutboundBus()
+            val players = buildTestPlayerRegistry(world.startRoom)
+            val spriteRegistry = spriteRegistryForRaces()
+            val gmcpEmitter = GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                spriteRegistry = spriteRegistry,
+            )
+            val h = CommandRouterHarness.create(
+                world = world,
+                players = players,
+                outbound = outbound,
+                stylistConfig = StylistConfig(feeGold = 0),
+                raceRegistry = buildRaceRegistry(),
+                gmcpEmitter = gmcpEmitter,
+                spriteRegistry = spriteRegistry,
+            )
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Alice")
+            val me = h.players.get(sid)!!
+            me.gold = 1000L
+            me.race = "HUMAN"
+            h.drain()
+
+            h.router.handle(sid, Command.Stylist.ChangeRace("ELF"))
+            val events = h.drain()
+
+            val charSprites = events.filterIsInstance<OutboundEvent.GmcpData>()
+                .filter { it.sessionId == sid && it.gmcpPackage == "Char.Sprites" }
+            assertTrue(
+                charSprites.isNotEmpty(),
+                "Char.Sprites GMCP should be emitted after race change so stylist panel refreshes",
+            )
+            val payload = charSprites.last().jsonData
+            assertTrue(
+                "elf_base" in payload,
+                "new race sprite missing in payload: $payload",
+            )
+            assertFalse(
+                "human_base" in payload,
+                "old race sprite still present in payload: $payload",
+            )
+        }
+
+        @Test
+        fun `changerace resets pinned activeSprite when it is no longer valid for new race`() = runTest {
+            val world = stylistWorld()
+            val outbound = LocalOutboundBus()
+            val players = buildTestPlayerRegistry(world.startRoom)
+            val spriteRegistry = spriteRegistryForRaces()
+            val gmcpEmitter = GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                spriteRegistry = spriteRegistry,
+            )
+            val h = CommandRouterHarness.create(
+                world = world,
+                players = players,
+                outbound = outbound,
+                stylistConfig = StylistConfig(feeGold = 0),
+                raceRegistry = buildRaceRegistry(),
+                gmcpEmitter = gmcpEmitter,
+                spriteRegistry = spriteRegistry,
+            )
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Alice")
+            val me = h.players.get(sid)!!
+            me.gold = 1000L
+            me.race = "HUMAN"
+            me.activeSprite = "human_base"
+            h.drain()
+
+            h.router.handle(sid, Command.Stylist.ChangeRace("ELF"))
+            h.drain()
+
+            assertEquals(
+                null,
+                h.players.get(sid)!!.activeSprite,
+                "activeSprite should be cleared when pinned sprite no longer matches new race",
+            )
         }
 
         @Test
