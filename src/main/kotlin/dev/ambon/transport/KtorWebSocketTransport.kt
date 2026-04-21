@@ -29,6 +29,7 @@ import io.ktor.websocket.readText
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -37,7 +38,56 @@ private val log = KotlinLogging.logger {}
 
 // Maximum number of extra frames to drain per write iteration before flushing the text batch.
 // Keeps latency bounded while amortising WebSocket frame overhead across bursts of text output.
-private const val MAX_WS_FRAMES_PER_BATCH = 64
+internal const val MAX_WS_FRAMES_PER_BATCH = 64
+
+/**
+ * Drain [outboundQueue] into [send], coalescing consecutive [OutboundFrame.Text] entries into
+ * one WebSocket [Frame.Text] per wake-up batch. GMCP envelopes are flushed and sent in their
+ * own frame so the client's parser can recognise them.
+ *
+ * Exits cleanly when the queue is closed; swallows send errors (best-effort).
+ */
+internal suspend fun writeCoalescedOutboundFrames(
+    outboundQueue: ReceiveChannel<OutboundFrame>,
+    send: suspend (Frame) -> Unit,
+    onFrameConsumed: (OutboundFrame) -> Unit,
+    maxBatch: Int = MAX_WS_FRAMES_PER_BATCH,
+) {
+    val pendingText = StringBuilder()
+
+    suspend fun flushPendingText() {
+        if (pendingText.isNotEmpty()) {
+            send(Frame.Text(pendingText.toString()))
+            pendingText.setLength(0)
+        }
+    }
+
+    suspend fun process(frame: OutboundFrame) {
+        when (frame) {
+            is OutboundFrame.Text -> pendingText.append(frame.content)
+            is OutboundFrame.Gmcp -> {
+                flushPendingText()
+                send(Frame.Text("""{"gmcp":"${frame.gmcpPackage}","data":${frame.jsonData}}"""))
+            }
+        }
+        onFrameConsumed(frame)
+    }
+
+    try {
+        for (frame in outboundQueue) {
+            process(frame)
+            var drained = 0
+            while (drained < maxBatch) {
+                val next = outboundQueue.tryReceive().getOrNull() ?: break
+                process(next)
+                drained++
+            }
+            flushPendingText()
+        }
+    } catch (_: Throwable) {
+        // best effort
+    }
+}
 
 class KtorWebSocketTransport(
     private val port: Int,
@@ -222,43 +272,16 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     val writerJob =
         launch {
             // Consecutive OutboundFrame.Text entries are concatenated into a single WebSocket
-            // Frame.Text to reduce per-frame header + send-call overhead. GMCP envelopes must
-            // stay isolated — the client's message handler parses each incoming WS text frame
-            // as either a GMCP envelope or plain text, never mixed (see useMudSocket.ts).
-            val pendingText = StringBuilder()
-
-            suspend fun flushPendingText() {
-                if (pendingText.isNotEmpty()) {
-                    send(Frame.Text(pendingText.toString()))
-                    pendingText.setLength(0)
-                }
-            }
-
-            suspend fun process(frame: OutboundFrame) {
-                when (frame) {
-                    is OutboundFrame.Text -> pendingText.append(frame.content)
-                    is OutboundFrame.Gmcp -> {
-                        flushPendingText()
-                        send(Frame.Text("""{"gmcp":"${frame.gmcpPackage}","data":${frame.jsonData}}"""))
-                    }
-                }
-                outboundRouter.onSessionQueueFrameConsumed(sessionId, frame.enqueuedAt)
-            }
-
-            try {
-                for (frame in outboundQueue) {
-                    process(frame)
-                    var drained = 0
-                    while (drained < MAX_WS_FRAMES_PER_BATCH) {
-                        val next = outboundQueue.tryReceive().getOrNull() ?: break
-                        process(next)
-                        drained++
-                    }
-                    flushPendingText()
-                }
-            } catch (_: Throwable) {
-                // best effort
-            }
+            // Frame.Text to reduce per-frame header + send-call overhead. GMCP envelopes stay
+            // isolated — the client's message handler parses each incoming WS text frame as
+            // either a GMCP envelope or plain text, never mixed (see useMudSocket.ts).
+            writeCoalescedOutboundFrames(
+                outboundQueue = outboundQueue,
+                send = { send(it) },
+                onFrameConsumed = { frame ->
+                    outboundRouter.onSessionQueueFrameConsumed(sessionId, frame.enqueuedAt)
+                },
+            )
         }
 
     try {
