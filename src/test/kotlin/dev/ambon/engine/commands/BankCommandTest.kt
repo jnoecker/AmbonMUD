@@ -67,8 +67,67 @@ class BankCommandTest {
         }
 
         @Test
+        fun `bank balance parses to Bank Balance`() {
+            assertEquals(Command.Bank.Balance, CommandParser.parse("bank balance"))
+        }
+
+        @Test
+        fun `bank deposit amount parses to DepositGold`() {
+            val result = CommandParser.parse("bank deposit 100")
+            assertTrue(result is Command.Bank.DepositGold, "got=$result")
+            assertEquals(100L, (result as Command.Bank.DepositGold).amount)
+        }
+
+        @Test
+        fun `bank withdraw amount parses to WithdrawGold`() {
+            val result = CommandParser.parse("bank withdraw 25")
+            assertTrue(result is Command.Bank.WithdrawGold, "got=$result")
+            assertEquals(25L, (result as Command.Bank.WithdrawGold).amount)
+        }
+
+        @Test
+        fun `bank deposit item parses to DepositItem`() {
+            val result = CommandParser.parse("bank deposit sword")
+            assertTrue(result is Command.Bank.DepositItem, "got=$result")
+            assertEquals("sword", (result as Command.Bank.DepositItem).keyword)
+        }
+
+        @Test
+        fun `bank withdraw item parses to WithdrawItem`() {
+            val result = CommandParser.parse("bank withdraw sword")
+            assertTrue(result is Command.Bank.WithdrawItem, "got=$result")
+            assertEquals("sword", (result as Command.Bank.WithdrawItem).keyword)
+        }
+
+        @Test
+        fun `deposit bare amount parses to DepositGold`() {
+            val result = CommandParser.parse("deposit 100")
+            assertTrue(result is Command.Bank.DepositGold, "got=$result")
+            assertEquals(100L, (result as Command.Bank.DepositGold).amount)
+        }
+
+        @Test
+        fun `withdraw bare amount parses to WithdrawGold`() {
+            val result = CommandParser.parse("withdraw 75")
+            assertTrue(result is Command.Bank.WithdrawGold, "got=$result")
+            assertEquals(75L, (result as Command.Bank.WithdrawGold).amount)
+        }
+
+        @Test
+        fun `deposit all parses with MAX_VALUE sentinel`() {
+            val result = CommandParser.parse("deposit all")
+            assertTrue(result is Command.Bank.DepositGold, "got=$result")
+            assertEquals(Long.MAX_VALUE, (result as Command.Bank.DepositGold).amount)
+        }
+
+        @Test
         fun `deposit alone returns Invalid`() {
             assertTrue(CommandParser.parse("deposit") is Command.Invalid)
+        }
+
+        @Test
+        fun `bank deposit alone returns Invalid`() {
+            assertTrue(CommandParser.parse("bank deposit") is Command.Invalid)
         }
     }
 
@@ -226,6 +285,46 @@ class BankCommandTest {
             val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
             assertTrue(infos.any { it.contains("200") }, "got=$infos")
             assertTrue(infos.any { it.contains("copper sword") }, "got=$infos")
+        }
+
+        @Test
+        fun `bank deposit from parsed text moves gold end-to-end`() = runTest {
+            // Regression for #1043: the web bank panel sends "bank deposit <amount>"
+            // which previously parsed to Command.Bank.Balance (silently ignoring the args)
+            // instead of depositing.
+            val (h, _) = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Alice")
+            h.players.get(sid)!!.gold = 500L
+            h.drain()
+
+            val parsed = CommandParser.parse("bank deposit 200")
+            assertTrue(parsed is Command.Bank.DepositGold, "parser returned $parsed")
+            h.router.handle(sid, parsed)
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("deposit") && it.contains("200") }, "got=$infos")
+            assertEquals(300L, h.players.get(sid)!!.gold)
+            assertEquals(200L, h.players.get(sid)!!.bankGold)
+        }
+
+        @Test
+        fun `bank withdraw from parsed text moves gold end-to-end`() = runTest {
+            // Regression for #1043: same bug on withdraw.
+            val (h, _) = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Alice")
+            h.players.get(sid)!!.bankGold = 500L
+            h.drain()
+
+            val parsed = CommandParser.parse("bank withdraw 150")
+            assertTrue(parsed is Command.Bank.WithdrawGold, "parser returned $parsed")
+            h.router.handle(sid, parsed)
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("withdraw") && it.contains("150") }, "got=$infos")
+            assertEquals(150L, h.players.get(sid)!!.gold)
+            assertEquals(350L, h.players.get(sid)!!.bankGold)
         }
 
         @Test

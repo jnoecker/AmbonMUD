@@ -937,8 +937,8 @@ object CommandParser {
             parseDepositWithdraw(rest.trim(), isDeposit = false)
         }?.let { return it }
 
-        matchPrefix(line, listOf("bank")) { _ ->
-            Command.Bank.Balance
+        matchPrefix(line, listOf("bank")) { rest ->
+            parseBankSubcommand(rest.trim())
         }?.let { return it }
 
         // stylist: "stylist" lists races + fee, "changerace <id>" applies the swap
@@ -1660,7 +1660,7 @@ object CommandParser {
     private fun parseDepositWithdraw(rest: String, isDeposit: Boolean): Command {
         if (rest.isEmpty()) {
             val verb = if (isDeposit) "deposit" else "withdraw"
-            return Command.Invalid("$verb", "$verb <amount> gold | $verb <item>")
+            return Command.Invalid(verb, "$verb <amount> [gold] | $verb <item>")
         }
         // Check for "<amount> gold" pattern
         val goldMatch = Regex("^(\\d+)\\s+gold$", RegexOption.IGNORE_CASE).find(rest)
@@ -1668,12 +1668,32 @@ object CommandParser {
             val amount = goldMatch.groupValues[1].toLongOrNull() ?: 0L
             return if (isDeposit) Command.Bank.DepositGold(amount) else Command.Bank.WithdrawGold(amount)
         }
-        // Check for "all gold"
-        if (rest.equals("all gold", ignoreCase = true)) {
+        // Bare numeric argument (e.g. "deposit 100") — treat as gold. The web bank
+        // panel sends this form, and it matches common intuition.
+        val bareAmount = rest.toLongOrNull()
+        if (bareAmount != null && bareAmount > 0) {
+            return if (isDeposit) Command.Bank.DepositGold(bareAmount) else Command.Bank.WithdrawGold(bareAmount)
+        }
+        // Check for "all gold" or bare "all"
+        if (rest.equals("all gold", ignoreCase = true) || rest.equals("all", ignoreCase = true)) {
             val amount = Long.MAX_VALUE // sentinel for "all"
             return if (isDeposit) Command.Bank.DepositGold(amount) else Command.Bank.WithdrawGold(amount)
         }
         // Otherwise treat as item keyword
         return if (isDeposit) Command.Bank.DepositItem(rest) else Command.Bank.WithdrawItem(rest)
+    }
+
+    private fun parseBankSubcommand(rest: String): Command {
+        if (rest.isEmpty() || rest.equals("balance", ignoreCase = true)) {
+            return Command.Bank.Balance
+        }
+        val lower = rest.lowercase()
+        return when {
+            lower.startsWith("deposit ") -> parseDepositWithdraw(rest.substring("deposit ".length).trim(), isDeposit = true)
+            lower == "deposit" -> Command.Invalid("bank deposit", "bank deposit <amount> | bank deposit <item>")
+            lower.startsWith("withdraw ") -> parseDepositWithdraw(rest.substring("withdraw ".length).trim(), isDeposit = false)
+            lower == "withdraw" -> Command.Invalid("bank withdraw", "bank withdraw <amount> | bank withdraw <item>")
+            else -> Command.Invalid("bank", "bank [balance] | bank deposit ... | bank withdraw ...")
+        }
     }
 }
