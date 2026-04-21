@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ContainerContents, FeaturePopoutFocus, RoomFeature, RoomFeatureType } from "../types";
 import { DirectionIcon } from "./Icons";
 
@@ -109,6 +109,64 @@ function LeverWidget({
   );
 }
 
+function LockedContainerHero({
+  feature,
+  onCommand,
+}: {
+  feature: RoomFeature;
+  onCommand: (cmd: string) => void;
+}) {
+  return (
+    <article className="feature-card feature-card-container feature-card-hero-locked">
+      <div className="feature-card-hero-lock" aria-hidden="true">
+        <svg viewBox="0 0 64 80" className="feature-card-hero-lock-svg">
+          <path
+            d="M20 34 V24 a12 12 0 0 1 24 0 V34"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <rect
+            x="12"
+            y="34"
+            width="40"
+            height="34"
+            rx="5"
+            fill="currentColor"
+            opacity="0.18"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          />
+          <circle cx="32" cy="48" r="4" fill="currentColor" />
+          <path
+            d="M32 52 V58"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+      <div className="feature-card-hero-copy">
+        <span className="feature-card-kind feature-card-kind-container">Container</span>
+        <h4>{feature.name}</h4>
+        <p className="feature-card-hero-subtitle">
+          {feature.keyRequired ? "A key is required to unlock this." : "Locked tight."}
+        </p>
+      </div>
+      <div className="feature-card-hero-actions">
+        <button
+          type="button"
+          className="feature-card-action feature-card-action-primary"
+          onClick={() => onCommand(`unlock ${feature.keyword}`)}
+        >
+          Unlock
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function featureSummary(features: RoomFeature[], type: RoomFeatureType): string {
   const count = features.filter((feature) => feature.type === type).length;
   if (count === 0) return `No ${FEATURE_LABELS[type].plural.toLowerCase()}`;
@@ -138,7 +196,6 @@ function featureActions(feature: RoomFeature): Array<{ label: string; command: s
   if (feature.type === "container") {
     const actions: Array<{ label: string; command: string }> = [];
     if (feature.state === "open") {
-      actions.push({ label: "Search", command: `search ${feature.keyword}` });
       actions.push({ label: "Close", command: `close ${feature.keyword}` });
     } else if (feature.state === "closed") {
       actions.push({ label: "Open", command: `open ${feature.keyword}` });
@@ -185,6 +242,33 @@ export function WorldFeaturesPopout({
   );
 
   const [manualTab, setManualTab] = useState<RoomFeatureType | null>(null);
+
+  // Auto-search containers once they become open so their contents render
+  // without an extra click. A ref tracks which feature ids we've already
+  // requested, scoped to the current "open" session — if a container closes
+  // or disappears, its id is dropped so reopening triggers a fresh search.
+  const autoSearchedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const openIds = new Set(
+      roomFeatures
+        .filter((f) => f.type === "container" && f.state === "open")
+        .map((f) => f.id),
+    );
+    for (const id of Array.from(autoSearchedRef.current)) {
+      if (!openIds.has(id)) autoSearchedRef.current.delete(id);
+    }
+    for (const feature of roomFeatures) {
+      if (
+        feature.type === "container" &&
+        feature.state === "open" &&
+        !autoSearchedRef.current.has(feature.id) &&
+        containerContents?.featureId !== feature.id
+      ) {
+        autoSearchedRef.current.add(feature.id);
+        onCommand(`search ${feature.keyword}`);
+      }
+    }
+  }, [roomFeatures, containerContents, onCommand]);
 
   if (roomFeatures.length === 0) {
     return (
@@ -248,6 +332,14 @@ export function WorldFeaturesPopout({
         {visibleFeatures.map((feature) => {
           if (feature.type === "lever") {
             return <LeverWidget key={feature.id} feature={feature} onCommand={onCommand} />;
+          }
+
+          if (
+            feature.type === "container" &&
+            feature.state === "locked" &&
+            visibleFeatures.length === 1
+          ) {
+            return <LockedContainerHero key={feature.id} feature={feature} onCommand={onCommand} />;
           }
 
           const contents = feature.type === "container" && containerContents?.featureId === feature.id
