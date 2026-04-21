@@ -230,7 +230,24 @@ function App() {
     canvasCallbacks.openShop = () => openPanel("shop");
     canvasCallbacks.openAuction = () => openPanel("auction");
     canvasCallbacks.openPuzzle = () => openPanel("puzzle");
-    canvasCallbacks.openFeatures = (preferredType?: FeaturePopoutFocus) => openPanel("features", preferredType ?? null);
+    canvasCallbacks.openFeatures = (preferredType?: FeaturePopoutFocus) => {
+      // If the user clicked the canvas chest badge and there is exactly one
+      // container in the room that's closed + unlocked, open it for them so
+      // the panel opens already showing contents (paired with auto-search
+      // inside WorldFeaturesPopout).
+      if (preferredType === "container") {
+        const containers = (gameStateRef.current.roomFeatures ?? []).filter(
+          (f) => f.type === "container",
+        );
+        if (containers.length === 1) {
+          const only = containers[0];
+          if (only.state === "closed" && only.locked !== true) {
+            sendCommand(`open ${only.keyword}`);
+          }
+        }
+      }
+      openPanel("features", preferredType ?? null);
+    };
     canvasCallbacks.openBank = () => openPanel("bank");
     canvasCallbacks.openStylist = () => openPanel("stylist");
     canvasCallbacks.openTrainer = () => openPanel("trainer");
