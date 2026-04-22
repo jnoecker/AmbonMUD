@@ -159,7 +159,7 @@ function App() {
     { updateMap, loadZoneMap, resetMap },
   );
   const audio = useAudioEngine();
-  const quickbar = useQuickbar(state.skills);
+  const quickbar = useQuickbar(state.skills, state.character.name);
 
   const {
     pushHistory,
