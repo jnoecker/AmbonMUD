@@ -927,6 +927,19 @@ class GmcpEmitter(
                 absorbed = event.absorbed,
                 shieldRemaining = event.remaining,
             )
+            is CombatEvent.PetHit -> CombatEventPayload(
+                type = "petHit",
+                petName = event.petName,
+                targetName = event.targetName,
+                targetId = event.targetId,
+                damage = event.damage,
+            )
+            is CombatEvent.PetHurt -> CombatEventPayload(
+                type = "petHurt",
+                petName = event.petName,
+                attackerName = event.attackerName,
+                damage = event.damage,
+            )
         }
         emit(sessionId, "Char.Combat.Event", payload, supportCheck = "Char.Combat.Event")
     }
@@ -2484,6 +2497,7 @@ class GmcpEmitter(
         val attackerName: String? = null,
         val absorbed: Int? = null,
         val shieldRemaining: Int? = null,
+        val petName: String? = null,
     )
 
     // ---------- stats payload ----------

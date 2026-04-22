@@ -415,6 +415,7 @@ export interface CombatEventData {
   attackerName: string | null;
   xpGained: number;
   goldGained: number;
+  petName: string | null;
 }
 
 export interface StatEntry {

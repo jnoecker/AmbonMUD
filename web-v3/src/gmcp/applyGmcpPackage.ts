@@ -944,6 +944,7 @@ export function applyGmcpPackage(
         attackerName: typeof packet.attackerName === "string" ? packet.attackerName : null,
         xpGained: safeNumber(packet.xpGained),
         goldGained: safeNumber(packet.goldGained),
+        petName: typeof packet.petName === "string" ? packet.petName : null,
       });
       break;
     }
