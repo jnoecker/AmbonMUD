@@ -12309,6 +12309,227 @@ body {
   }
 }
 
+/* ─── Persistent Combat Log panel (drawer) ────────────────────────────── */
+.combat-log-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  min-height: 0;
+  height: 100%;
+}
+
+.combat-log-panel-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+}
+
+.combat-log-panel-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.combat-log-panel-title h3 {
+  margin: 0;
+  font-family: var(--font-display, inherit);
+  font-size: 1.1rem;
+  color: var(--text-heading, var(--color-text));
+}
+
+.combat-log-panel-count {
+  font-size: 0.8rem;
+  color: var(--text-muted, rgb(200 208 224 / 70%));
+}
+
+.combat-log-panel-actions {
+  display: flex;
+  gap: var(--space-1, 4px);
+}
+
+.combat-log-panel-clear[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.combat-log-panel-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.combat-log-panel-chip {
+  border: 1px solid rgb(140 174 201 / 28%);
+  background: rgb(22 27 41 / 55%);
+  color: var(--text-muted, rgb(200 208 224 / 78%));
+  border-radius: var(--radius-sm, 6px);
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.combat-log-panel-chip:hover {
+  background: rgb(38 48 70 / 70%);
+  color: var(--color-text, #e0e0e0);
+}
+
+.combat-log-panel-chip-on {
+  background: rgb(60 80 120 / 60%);
+  color: var(--color-text, #e0e0e0);
+  border-color: rgb(140 174 201 / 50%);
+}
+
+.combat-log-panel-chip-on.combat-log-panel-chip-damage {
+  color: var(--color-damage, #d4888a);
+  border-color: var(--color-damage, #d4888a);
+}
+
+.combat-log-panel-chip-on.combat-log-panel-chip-heal {
+  color: var(--color-heal, #8abf8a);
+  border-color: var(--color-heal, #8abf8a);
+}
+
+.combat-log-panel-chip-on.combat-log-panel-chip-dodge {
+  color: var(--color-dodge, #d9c8a1);
+  border-color: var(--color-dodge, #d9c8a1);
+}
+
+.combat-log-panel-chip-on.combat-log-panel-chip-kill,
+.combat-log-panel-chip-on.combat-log-panel-chip-xp {
+  color: var(--color-xp, #bea873);
+  border-color: var(--color-xp, #bea873);
+}
+
+.combat-log-panel-chip-on.combat-log-panel-chip-info {
+  color: var(--color-info, #8caec9);
+  border-color: var(--color-info, #8caec9);
+}
+
+.combat-log-panel-chip-on.combat-log-panel-chip-error {
+  color: var(--color-error, #e8a0a0);
+  border-color: var(--color-error, #e8a0a0);
+}
+
+.combat-log-panel-empty {
+  text-align: center;
+  padding: var(--space-4, 16px);
+  color: var(--text-muted, rgb(200 208 224 / 70%));
+  border: 1px dashed rgb(140 174 201 / 20%);
+  border-radius: var(--radius-md, 8px);
+  background: rgb(18 22 34 / 35%);
+}
+
+.combat-log-panel-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.combat-log-panel-empty-hint {
+  margin-top: var(--space-1, 4px) !important;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.combat-log-panel-scroll {
+  flex: 1 1 auto;
+  min-height: 200px;
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 4px;
+  background: rgb(12 14 24 / 35%);
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid rgb(140 174 201 / 14%);
+  scrollbar-width: thin;
+}
+
+.combat-log-panel-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.combat-log-panel-scroll::-webkit-scrollbar-thumb {
+  background: rgb(140 174 201 / 30%);
+  border-radius: 4px;
+}
+
+.combat-log-panel-row {
+  display: grid;
+  grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-2, 8px);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  background: rgb(18 22 34 / 55%);
+  border-left: 2px solid transparent;
+  color: var(--color-text, #e0e0e0);
+  word-break: break-word;
+}
+
+.combat-log-panel-row-time {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  color: var(--text-muted, rgb(200 208 224 / 65%));
+  white-space: nowrap;
+}
+
+.combat-log-panel-row-text {
+  min-width: 0;
+}
+
+.combat-log-panel-row-damage {
+  color: var(--color-damage, #d4888a);
+  border-left-color: var(--color-damage, #d4888a);
+}
+
+.combat-log-panel-row-heal {
+  color: var(--color-heal, #8abf8a);
+  border-left-color: var(--color-heal, #8abf8a);
+}
+
+.combat-log-panel-row-error {
+  color: var(--color-error, #e8a0a0);
+  border-left-color: var(--color-error, #e8a0a0);
+  font-weight: 600;
+}
+
+.combat-log-panel-row-info {
+  color: var(--color-info, #8caec9);
+  border-left-color: var(--color-info, #8caec9);
+}
+
+.combat-log-panel-row-kill {
+  color: var(--color-xp, #bea873);
+  border-left-color: var(--color-xp, #bea873);
+  font-weight: 600;
+}
+
+.combat-log-panel-row-dodge {
+  color: var(--color-dodge, #d9c8a1);
+  border-left-color: var(--color-dodge, #d9c8a1);
+  font-style: italic;
+}
+
+.combat-log-panel-row-xp {
+  color: var(--color-xp, #bea873);
+  border-left-color: var(--color-xp, #bea873);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-log-panel-chip {
+    transition: none;
+  }
+}
+
 /* Terminal overlay — appears over canvas when command input is focused */
 .terminal-overlay {
   position: absolute;

@@ -18,6 +18,7 @@ import {
   SpellbookIcon,
   QuestsTabIcon,
   SkillCastIcon,
+  AttackIcon,
 } from "./Icons";
 
 function skillCategory(skill: SkillSummary): string {
@@ -47,6 +48,7 @@ const PANELS: PanelDef[] = [
   { panel: "inventory", label: "Inventory", icon: <EquipmentIcon className="vbar-icon" /> },
   { panel: "spellbook", label: "Spellbook", icon: <SpellbookIcon className="vbar-icon" /> },
   { panel: "quests", label: "Quests", icon: <QuestsTabIcon className="vbar-icon" /> },
+  { panel: "combatlog", label: "Combat Log", icon: <AttackIcon className="vbar-icon" /> },
   { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="vbar-icon" /> },
   { panel: "crafting", label: "Crafting", icon: <CraftingIcon className="vbar-icon" /> },
   { panel: "auction", label: "Auction", icon: <AuctionIcon className="vbar-icon" /> },
