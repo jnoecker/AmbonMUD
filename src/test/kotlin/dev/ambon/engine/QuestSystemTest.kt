@@ -343,6 +343,170 @@ class QuestSystemTest {
         }
 
     @Test
+    fun `acceptQuest seeds collect progress from existing inventory`() =
+        runTest {
+            val c = SystemTestComponents(clockInitialMs = 1_000L)
+            val registry = QuestRegistry()
+            val collectItemId = "zone:shiny_rock"
+            val collectQuestId = "zone:collect_quest"
+            val collectQuest =
+                QuestDef(
+                    id = collectQuestId,
+                    name = "Collect Rocks",
+                    description = "Gather shiny rocks.",
+                    giverMobId = "zone:quest_giver",
+                    objectives =
+                        listOf(
+                            QuestObjectiveDef(
+                                type = "collect",
+                                targetId = collectItemId,
+                                count = 3,
+                                description = "Collect 3 shiny rocks",
+                            ),
+                        ),
+                    rewards = QuestRewards(xp = 50L, gold = 10L),
+                    completionType = "auto",
+                )
+            registry.register(collectQuest)
+            val qs =
+                QuestSystem(
+                    registry = registry,
+                    players = c.players,
+                    items = c.items,
+                    outbound = c.outbound,
+                    clock = c.clock,
+                )
+            val sid = SessionId(10L)
+            c.players.loginOrFail(sid, "Gatherer")
+
+            // Player already holds 2 of the 3 required rocks BEFORE accepting the quest.
+            repeat(2) {
+                val rock = ItemInstance(id = ItemId(collectItemId), item = Item(keyword = "rock", displayName = "a shiny rock"))
+                c.items.addToInventory(sid, rock)
+            }
+
+            val err = qs.acceptQuest(sid, collectQuestId)
+            assertNull(err)
+
+            val ps = c.players.get(sid)!!
+            val prog = ps.activeQuests[collectQuestId]!!.objectives[0]
+            assertEquals(
+                2,
+                prog.current,
+                "Existing inventory should seed collect objective progress to 2/3 on accept",
+            )
+            assertEquals(3, prog.required)
+            assertFalse(prog.isComplete)
+        }
+
+    @Test
+    fun `collect quest completes after one more pickup when 2 of 3 were already held`() =
+        runTest {
+            val c = SystemTestComponents(clockInitialMs = 1_000L)
+            val registry = QuestRegistry()
+            val collectItemId = "zone:shiny_rock"
+            val collectQuestId = "zone:collect_quest"
+            val collectQuest =
+                QuestDef(
+                    id = collectQuestId,
+                    name = "Collect Rocks",
+                    description = "Gather shiny rocks.",
+                    giverMobId = "zone:quest_giver",
+                    objectives =
+                        listOf(
+                            QuestObjectiveDef(
+                                type = "collect",
+                                targetId = collectItemId,
+                                count = 3,
+                                description = "Collect 3 shiny rocks",
+                            ),
+                        ),
+                    rewards = QuestRewards(xp = 50L, gold = 10L),
+                    completionType = "auto",
+                )
+            registry.register(collectQuest)
+            val qs =
+                QuestSystem(
+                    registry = registry,
+                    players = c.players,
+                    items = c.items,
+                    outbound = c.outbound,
+                    clock = c.clock,
+                )
+            val sid = SessionId(11L)
+            c.players.loginOrFail(sid, "Gatherer")
+
+            // Pre-existing inventory: 2 rocks already in bag.
+            repeat(2) {
+                val rock = ItemInstance(id = ItemId(collectItemId), item = Item(keyword = "rock", displayName = "a shiny rock"))
+                c.items.addToInventory(sid, rock)
+            }
+
+            qs.acceptQuest(sid, collectQuestId)
+
+            // Confirm seeded to 2/3.
+            assertEquals(2, c.players.get(sid)!!.activeQuests[collectQuestId]!!.objectives[0].current)
+
+            // Picking up one more rock (delta of 1) should finish the quest at 3/3 — not jump.
+            val thirdRock = ItemInstance(id = ItemId(collectItemId), item = Item(keyword = "rock", displayName = "a shiny rock"))
+            c.items.addToInventory(sid, thirdRock)
+            qs.onItemCollected(sid, thirdRock)
+
+            val ps = c.players.get(sid)!!
+            assertFalse(ps.activeQuests.containsKey(collectQuestId), "Quest should auto-complete")
+            assertTrue(ps.completedQuestIds.contains(collectQuestId))
+        }
+
+    @Test
+    fun `accepting collect quest with full required inventory auto-completes`() =
+        runTest {
+            val c = SystemTestComponents(clockInitialMs = 1_000L)
+            val registry = QuestRegistry()
+            val collectItemId = "zone:shiny_rock"
+            val collectQuestId = "zone:collect_quest"
+            val collectQuest =
+                QuestDef(
+                    id = collectQuestId,
+                    name = "Collect Rocks",
+                    description = "Gather shiny rocks.",
+                    giverMobId = "zone:quest_giver",
+                    objectives =
+                        listOf(
+                            QuestObjectiveDef(
+                                type = "collect",
+                                targetId = collectItemId,
+                                count = 2,
+                                description = "Collect 2 shiny rocks",
+                            ),
+                        ),
+                    rewards = QuestRewards(xp = 50L, gold = 10L),
+                    completionType = "auto",
+                )
+            registry.register(collectQuest)
+            val qs =
+                QuestSystem(
+                    registry = registry,
+                    players = c.players,
+                    items = c.items,
+                    outbound = c.outbound,
+                    clock = c.clock,
+                )
+            val sid = SessionId(12L)
+            c.players.loginOrFail(sid, "Gatherer")
+
+            repeat(2) {
+                val rock = ItemInstance(id = ItemId(collectItemId), item = Item(keyword = "rock", displayName = "a shiny rock"))
+                c.items.addToInventory(sid, rock)
+            }
+
+            qs.acceptQuest(sid, collectQuestId)
+
+            val ps = c.players.get(sid)!!
+            assertFalse(ps.activeQuests.containsKey(collectQuestId), "Quest with all items already held should auto-complete on accept")
+            assertTrue(ps.completedQuestIds.contains(collectQuestId))
+        }
+
+    @Test
     fun `formatQuestLog shows multiple quests on separate lines`() =
         runTest {
             val (_, players, _) = setup()

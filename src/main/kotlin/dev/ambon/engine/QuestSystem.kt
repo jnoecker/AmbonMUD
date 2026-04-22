@@ -127,21 +127,61 @@ class QuestSystem(
             return "You lack the standing with $factionName to take this quest."
         }
 
+        val seededObjectives =
+            quest.objectives.map { objDef ->
+                val initial = ObjectiveProgress(current = 0, required = objDef.count)
+                seedInitialProgress(sessionId, objDef, initial) ?: initial
+            }
         val state =
             QuestState(
                 questId = questId,
                 acceptedAtEpochMs = clock.millis(),
-                objectives = quest.objectives.map { ObjectiveProgress(current = 0, required = it.count) },
+                objectives = seededObjectives,
             )
         ps.activeQuests = ps.activeQuests + (questId to state)
         players.persistPlayer(ps.sessionId)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest accepted: ${quest.name}"))
-        for (obj in quest.objectives) {
+        for ((index, obj) in quest.objectives.withIndex()) {
             outbound.send(OutboundEvent.SendText(sessionId, "  - ${obj.description}"))
+            val prog = seededObjectives[index]
+            if (prog.current > 0) {
+                sendObjectiveProgress(sessionId, obj.description, prog)
+                onQuestObjectiveUpdated?.invoke(sessionId, questId, index, prog.current, prog.required)
+            }
         }
         onQuestListChanged?.invoke(sessionId)
+        // An already-satisfied collect objective (e.g. player already holds the items)
+        // should auto-complete the quest when its completion type allows it.
+        checkAutoComplete(sessionId, ps.activeQuests)
         return null
+    }
+
+    /**
+     * Seeds initial progress for an objective based on current player state at the moment
+     * of quest acceptance. This covers the case where the player already holds items
+     * required by a COLLECT objective — without this, the objective would sit at 0/N
+     * until the next pickup, at which point counting existing inventory would appear
+     * to "jump" progress.
+     *
+     * Returns the seeded [ObjectiveProgress] or null when no seed applies (no-op).
+     */
+    private fun seedInitialProgress(
+        sessionId: SessionId,
+        objDef: QuestObjectiveDef,
+        initial: ObjectiveProgress,
+    ): ObjectiveProgress? {
+        val handler = objectiveHandlers.collectHandler(objDef.type) ?: return null
+        val targetIdRaw = objDef.targetId
+        // Count any inventory items whose id matches the objective target, using the
+        // same loose-suffix semantics the collect handler applies at pickup time.
+        val currentCount =
+            items.inventory(sessionId).count { inv ->
+                val itemId = inv.id.value
+                itemId == targetIdRaw || itemId.endsWith(":${targetIdRaw.substringAfterLast(':')}")
+            }
+        if (currentCount <= 0) return null
+        return handler.advance(objDef, initial, targetIdRaw, currentCount)
     }
 
     /**
