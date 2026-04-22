@@ -1666,7 +1666,7 @@ class GmcpEmitter(
         val mid = mob.id.value
         MobInfoEntry(
             id = mid,
-            level = estimateMobLevel(mob.xpReward),
+            level = if (mob.level > 0) mob.level else estimateMobLevel(mob.xpReward),
             tier = "standard",
             questGiver = mob.questIds.isNotEmpty(),
             questAvailable = mid in questAvailableMobIds,

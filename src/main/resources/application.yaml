@@ -1921,6 +1921,15 @@ ambonmud:
       linearXp: 0
       multiplier: 1
       defaultKillXp: 10
+      # Diminishing returns when a player over-levels a mob. Largest matching
+      # `levelsBelow` wins. Prevents trivial trash farming from capping out XP.
+      diminishing:
+        enabled: true
+        thresholds:
+          - levelsBelow: 5
+            multiplier: 0.5
+          - levelsBelow: 10
+            multiplier: 0.1
     rewards:
       hpPerLevel: 2
       manaPerLevel: 1

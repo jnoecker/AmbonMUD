@@ -1293,7 +1293,15 @@ class CombatSystem(
             val player = players.get(sid) ?: continue
             val equipStats = items.equipmentBonuses(sid).stats
             val totalBonusStat = player.stats[config.bindings.xpBonusStat] + equipStats[config.bindings.xpBonusStat]
-            val reward = progression.applyCharismaXpBonus(totalBonusStat, perPlayerXp)
+            val diminish = progression.diminishingKillXpMultiplier(player.level, mob.level)
+            val afterDiminish =
+                if (diminish >= 1.0) {
+                    perPlayerXp
+                } else {
+                    (perPlayerXp * diminish).toLong().coerceAtLeast(0L)
+                }
+            if (afterDiminish <= 0L) continue
+            val reward = progression.applyCharismaXpBonus(totalBonusStat, afterDiminish)
 
             val result = players.grantXp(sid, reward, progression) ?: continue
             metrics.onXpAwarded(reward, "kill")

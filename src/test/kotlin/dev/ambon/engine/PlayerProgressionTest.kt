@@ -2,6 +2,8 @@ package dev.ambon.engine
 
 import dev.ambon.config.ClassDefinitionConfig
 import dev.ambon.config.ClassEngineConfig
+import dev.ambon.config.DiminishingXpConfig
+import dev.ambon.config.DiminishingXpThreshold
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.XpCurveConfig
@@ -251,5 +253,50 @@ class PlayerProgressionTest {
         assertEquals(12, player.baseMaxHp)
         assertEquals(12, player.maxHp)
         assertEquals(12, player.hp)
+    }
+
+    @Test
+    fun `diminishing returns applies largest matching threshold`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    xp = XpCurveConfig(
+                        diminishing = DiminishingXpConfig(
+                            enabled = true,
+                            thresholds = listOf(
+                                DiminishingXpThreshold(levelsBelow = 5, multiplier = 0.5),
+                                DiminishingXpThreshold(levelsBelow = 10, multiplier = 0.1),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+
+        assertEquals(1.0, progression.diminishingKillXpMultiplier(playerLevel = 3, mobLevel = 3))
+        assertEquals(1.0, progression.diminishingKillXpMultiplier(playerLevel = 5, mobLevel = 1))
+        assertEquals(0.5, progression.diminishingKillXpMultiplier(playerLevel = 6, mobLevel = 1))
+        assertEquals(0.5, progression.diminishingKillXpMultiplier(playerLevel = 10, mobLevel = 1))
+        assertEquals(0.1, progression.diminishingKillXpMultiplier(playerLevel = 11, mobLevel = 1))
+        assertEquals(0.1, progression.diminishingKillXpMultiplier(playerLevel = 50, mobLevel = 1))
+        assertEquals(1.0, progression.diminishingKillXpMultiplier(playerLevel = 1, mobLevel = 10))
+    }
+
+    @Test
+    fun `diminishing returns disabled yields full xp`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    xp = XpCurveConfig(
+                        diminishing = DiminishingXpConfig(
+                            enabled = false,
+                            thresholds = listOf(
+                                DiminishingXpThreshold(levelsBelow = 1, multiplier = 0.0),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+
+        assertEquals(1.0, progression.diminishingKillXpMultiplier(playerLevel = 50, mobLevel = 1))
     }
 }

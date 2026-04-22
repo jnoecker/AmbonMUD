@@ -396,6 +396,7 @@ object WorldLoader {
                         },
                         spells = spells,
                         defaultAttack = mf.defaultAttack,
+                        level = level,
                     )
             }
 
