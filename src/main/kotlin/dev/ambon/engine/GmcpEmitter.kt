@@ -664,15 +664,15 @@ class GmcpEmitter(
         val knownIds = abilitySystem.knownAbilityIds(sessionId)
         val classPayloads = trainer.classNames.map { className ->
             val unlocked = player.unlockedClasses.any { it.equals(className, ignoreCase = true) }
-            val abilities = if (unlocked) {
-                abilitySystem.trainableAbilities(className, player.level, knownIds)
+            val entries = if (unlocked) {
+                abilitySystem.trainerPanelAbilities(className, player.level, knownIds)
             } else {
                 emptyList()
             }
             TrainerClassPayload(
                 className = className,
                 classUnlocked = unlocked,
-                abilities = abilities.map { a -> a.toTrainerAbilityPayload() },
+                abilities = entries.map { it.toTrainerAbilityPayload() },
             )
         }
         emit(
@@ -691,21 +691,23 @@ class GmcpEmitter(
         )
     }
 
-    private fun AbilityDefinition.toTrainerAbilityPayload(): TrainerAbilityPayload =
+    private fun AbilitySystem.TrainerPanelEntry.toTrainerAbilityPayload(): TrainerAbilityPayload =
         TrainerAbilityPayload(
-            id = id.value,
-            name = displayName,
-            description = description,
-            skillPointCost = skillPointCost,
-            levelRequired = levelRequired,
-            manaCost = manaCost,
-            cooldownMs = cooldownMs,
-            targetType = targetType,
-            effectType = effect.toEffectType(),
-            image = image,
-            prerequisites = prerequisites.map { it.value },
-            tree = tree,
-            tier = tier,
+            id = ability.id.value,
+            name = ability.displayName,
+            description = ability.description,
+            skillPointCost = ability.skillPointCost,
+            levelRequired = ability.levelRequired,
+            manaCost = ability.manaCost,
+            cooldownMs = ability.cooldownMs,
+            targetType = ability.targetType,
+            effectType = ability.effect.toEffectType(),
+            image = ability.image,
+            prerequisites = ability.prerequisites.map { it.value },
+            tree = ability.tree,
+            tier = ability.tier,
+            locked = locked,
+            lockReason = lockReason,
         )
 
     /** Sends `Char.Classes` with the player's unlocked classes. */
@@ -2241,6 +2243,8 @@ class GmcpEmitter(
         val prerequisites: List<String> = emptyList(),
         val tree: String = "",
         val tier: Int = 0,
+        val locked: Boolean = false,
+        val lockReason: String? = null,
     )
 
     private data class TrainerClassPayload(

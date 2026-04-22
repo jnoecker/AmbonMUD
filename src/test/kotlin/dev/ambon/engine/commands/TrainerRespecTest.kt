@@ -512,4 +512,51 @@ class TrainerRespecTest {
             assertEquals(0L, me.gold, "Staff gold should remain unchanged at 0")
         }
     }
+
+    /**
+     * Level-gated abilities should no longer silently produce a confusing "no matching
+     * ability" error — they should surface the specific level requirement. See #1036.
+     */
+    @Nested
+    inner class LearnLockGating {
+        @Test
+        fun `train learn level-locked ability returns clear requires-level error`() = runTest {
+            loginAndSetup(gold = 2000, level = 1)
+            abilitySystem.loadAbilities(SID, emptySet())
+            outbound.drainAll()
+
+            // fireball requires level 2 in the fixture — player is level 1
+            router.handle(SID, Command.Train.Learn("fireball"))
+
+            val events = outbound.drainAll()
+            val errors = events.errorMessages(SID)
+            assertTrue(
+                errors.any { it.contains("level 2") && it.contains("Fireball") },
+                "Expected a clear level-requirement error referencing 'level 2' and 'Fireball', got: $errors",
+            )
+
+            // And the player should not have learned it
+            val me = players.get(SID)!!
+            assertTrue(
+                "fireball" !in me.learnedAbilityIds,
+                "Level-locked ability should not be learned; learned ids: ${me.learnedAbilityIds}",
+            )
+        }
+
+        @Test
+        fun `train learn unknown ability still returns no-matching error`() = runTest {
+            loginAndSetup(gold = 2000, level = 10)
+            abilitySystem.loadAbilities(SID, emptySet())
+            outbound.drainAll()
+
+            router.handle(SID, Command.Train.Learn("nonexistent"))
+
+            val events = outbound.drainAll()
+            val errors = events.errorMessages(SID)
+            assertTrue(
+                errors.any { it.contains("No trainable ability matching") },
+                "Expected no-matching-ability error, got: $errors",
+            )
+        }
+    }
 }
