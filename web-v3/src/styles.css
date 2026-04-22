@@ -96,6 +96,20 @@
   --ease-in-soft: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --ease-out-soft: cubic-bezier(0.33, 0.66, 0.66, 1);
   --ease-in-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Layering ─────────────────────────────────────────── */
+  /* Canvas and inline HUD elements. */
+  --z-base: 1;
+  /* Page-level fixed overlays (atmosphere HUDs, toasts). */
+  --z-hud: 80;
+  /* Sidebar popouts and room dialogs. */
+  --z-popout: 100;
+  /* Mobile drawer sheet and its backdrop. */
+  --z-drawer: 120;
+  /* Examine / inspect modals — above drawers but below broadcast/auth. */
+  --z-inspect: 1000;
+  /* Critical system overlays: broadcasts, login, command palette. */
+  --z-critical: 1100;
 }
 
 * {
@@ -7391,57 +7405,287 @@ body {
   border: 0;
 }
 
-.look-target-card {
+/* ── Look-target (Examine) modal ─────────────────────────── */
+.look-target-backdrop {
   position: fixed;
-  top: 80px;
-  right: 20px;
-  z-index: 100;
-  max-width: 320px;
-  padding: var(--space-3) var(--space-4);
-  background: rgb(30 25 40 / 94%);
-  border: 1px solid rgb(120 100 160 / 30%);
-  border-radius: var(--radius-md);
-  backdrop-filter: blur(8px);
-  cursor: pointer;
-  animation: lookTargetFadeIn 200ms ease-out;
+  inset: 0;
+  z-index: var(--z-inspect);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(14 16 28 / 60%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: lookTargetBackdropIn 180ms var(--ease-out-soft);
 }
 
-@keyframes lookTargetFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+.look-target-card {
+  position: relative;
+  width: min(420px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
+  background:
+    linear-gradient(165deg, rgb(48 55 82 / 97%), rgb(38 47 71 / 95%));
+  border: 1px solid rgb(146 136 180 / 30%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  color: var(--text-primary);
+  animation: lookTargetCardIn 220ms var(--ease-out-soft);
+  display: grid;
+  gap: var(--space-3);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(90 82 120 / 70%) transparent;
+}
+
+.look-target-card:focus-visible,
+.look-target-backdrop:focus-visible {
+  outline: 2px solid var(--color-primary-lavender);
+  outline-offset: 2px;
+}
+
+@keyframes lookTargetBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes lookTargetCardIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .look-target-backdrop,
+  .look-target-card {
+    animation: none;
+  }
+}
+
+.look-target-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: rgb(40 46 68 / 70%);
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 160ms var(--ease-out-soft), transform 160ms var(--ease-out-soft);
+}
+
+.look-target-close:hover {
+  background: rgb(62 70 104 / 90%);
+}
+
+.look-target-close:active {
+  transform: scale(0.96);
+}
+
+.look-target-close:focus-visible {
+  outline: 2px solid var(--color-primary-lavender);
+  outline-offset: 2px;
 }
 
 .look-target-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-2);
-  margin-bottom: var(--space-1);
+  padding-right: var(--space-6);
 }
 
 .look-target-name {
-  font-size: 0.88rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
   font-weight: 700;
-  color: var(--color-accent-moonlit-silver);
+  color: var(--text-bright);
+  letter-spacing: 0.01em;
 }
 
 .look-target-meta {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
+}
+
+.look-target-slot {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(168 151 210 / 16%);
+  border: 1px solid rgb(168 151 210 / 32%);
+  color: var(--color-primary-lavender);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .look-target-desc {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   color: var(--text-primary);
-  line-height: 1.4;
+  line-height: 1.5;
+  font-style: italic;
 }
 
 .look-target-image {
   display: block;
   max-width: 100%;
-  max-height: 120px;
-  margin-top: var(--space-2);
+  max-height: 180px;
+  margin: 0 auto;
+  border-radius: var(--radius-md);
+  background: rgb(24 28 44 / 60%);
+  border: 1px solid var(--line-faint);
+}
+
+.look-target-stats {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line-faint);
+}
+
+.look-target-stat-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-2);
+}
+
+.look-target-stat {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
+  background: rgb(34 41 64 / 80%);
+  border: 1px solid var(--line-faint);
+}
+
+.look-target-stat-label {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.look-target-stat-value {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.look-target-stat-damage {
+  border-color: rgb(212 136 138 / 40%);
+}
+
+.look-target-stat-damage .look-target-stat-value {
+  color: var(--color-damage);
+}
+
+.look-target-stat-armor {
+  border-color: rgb(127 182 207 / 36%);
+}
+
+.look-target-stat-armor .look-target-stat-value {
+  color: var(--color-primary-pale-blue);
+}
+
+.look-target-stat-value,
+.look-target-modifier-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.look-target-modifier-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.look-target-modifier {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(34 41 64 / 70%);
+  border: 1px solid var(--line-faint);
+  font-size: 0.78rem;
+}
+
+.look-target-modifier-label {
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.look-target-modifier-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.look-target-modifier.is-positive {
+  border-color: rgb(138 191 138 / 36%);
+}
+
+.look-target-modifier.is-positive .look-target-modifier-value {
+  color: var(--color-heal);
+}
+
+.look-target-modifier.is-negative {
+  border-color: rgb(232 160 160 / 36%);
+}
+
+.look-target-modifier.is-negative .look-target-modifier-value {
+  color: var(--color-error);
+}
+
+.look-target-enchantments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.look-target-enchantment {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(206 147 216 / 14%);
+  border: 1px solid rgb(206 147 216 / 36%);
+  color: var(--color-accent-violet);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Responsive — tighter layout at narrow widths, roomier on desktop. */
+@media (max-width: 599px) {
+  .look-target-card {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .look-target-name {
+    font-size: 1.2rem;
+  }
+
+  .look-target-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .look-target-card {
+    width: min(500px, 100%);
+  }
 }
 
 /* ── Possession vignette overlay ── */
@@ -14502,7 +14746,7 @@ html:has(.game-shell),
   position: fixed;
   inset: 0;
   background: rgb(8 10 18 / 0%);
-  z-index: 100;
+  z-index: var(--z-drawer);
   pointer-events: none;
   transition: background 0.3s var(--ease-out-soft);
 }
@@ -14519,7 +14763,7 @@ html:has(.game-shell),
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 101;
+  z-index: calc(var(--z-drawer) + 1);
   background: linear-gradient(180deg, rgb(43 53 79 / 98%), rgb(34 41 64 / 98%));
   border-top: 1px solid var(--line-soft);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;

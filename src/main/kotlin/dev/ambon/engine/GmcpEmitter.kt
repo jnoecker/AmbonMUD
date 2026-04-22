@@ -1817,6 +1817,13 @@ class GmcpEmitter(
         race: String? = null,
         playerClass: String? = null,
         playerDescription: String? = null,
+        slot: String? = null,
+        damage: Int? = null,
+        armor: Int? = null,
+        basePrice: Int? = null,
+        stats: Map<String, Int>? = null,
+        enchantments: List<String>? = null,
+        consumable: Boolean? = null,
     ) {
         emit(
             sessionId,
@@ -1830,6 +1837,13 @@ class GmcpEmitter(
                 race = race,
                 playerClass = playerClass,
                 playerDescription = playerDescription,
+                slot = slot,
+                damage = damage,
+                armor = armor,
+                basePrice = basePrice,
+                stats = stats,
+                enchantments = enchantments,
+                consumable = consumable,
             ),
             supportCheck = "Room.Info",
         )
@@ -2716,6 +2730,13 @@ class GmcpEmitter(
         val race: String? = null,
         @get:JsonProperty("class") val playerClass: String? = null,
         val playerDescription: String? = null,
+        val slot: String? = null,
+        val damage: Int? = null,
+        val armor: Int? = null,
+        val basePrice: Int? = null,
+        val stats: Map<String, Int>? = null,
+        val enchantments: List<String>? = null,
+        val consumable: Boolean? = null,
     )
 
     // ---------- shop payloads ----------

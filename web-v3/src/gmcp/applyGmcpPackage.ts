@@ -489,6 +489,13 @@ export function applyGmcpPackage(
     case "Room.LookTarget": {
       const packet = data as Partial<Record<string, unknown>>;
       const targetType = typeof packet.type === "string" ? packet.type : "item";
+      const stats =
+        packet.stats && typeof packet.stats === "object" && !Array.isArray(packet.stats)
+          ? (packet.stats as Record<string, number>)
+          : null;
+      const enchantments = Array.isArray(packet.enchantments)
+        ? (packet.enchantments as unknown[]).filter((e): e is string => typeof e === "string")
+        : null;
       ctx.setLookTarget({
         type: targetType as LookTargetInfo["type"],
         name: typeof packet.name === "string" ? packet.name : "Unknown",
@@ -498,6 +505,13 @@ export function applyGmcpPackage(
         race: typeof packet.race === "string" ? packet.race : null,
         playerClass: typeof packet.class === "string" ? (packet.class as string) : null,
         receivedAt: Date.now(),
+        slot: typeof packet.slot === "string" ? packet.slot : null,
+        damage: typeof packet.damage === "number" ? packet.damage : null,
+        armor: typeof packet.armor === "number" ? packet.armor : null,
+        basePrice: typeof packet.basePrice === "number" ? packet.basePrice : null,
+        stats,
+        enchantments,
+        consumable: typeof packet.consumable === "boolean" ? packet.consumable : null,
       });
       break;
     }
