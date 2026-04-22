@@ -108,6 +108,10 @@ function combatEventToLogMessage(event: CombatEventData): CombatLogMessage | nul
       return event.sourceIsPlayer
         ? { id, text: `You hit ${event.targetName} for ${event.damage} damage.`, style: "damage", receivedAt: now }
         : { id, text: `${event.targetName} hits you for ${event.damage} damage!`, style: "damage", receivedAt: now };
+    case "petHit":
+      return { id, text: `${event.petName ?? "Your pet"} hits ${event.targetName} for ${event.damage} damage.`, style: "damage", receivedAt: now };
+    case "petHurt":
+      return { id, text: `${event.attackerName} hits ${event.petName ?? "your pet"} for ${event.damage} damage!`, style: "damage", receivedAt: now };
     case "abilityHit":
       return event.sourceIsPlayer
         ? { id, text: `Your ${event.abilityName} hits ${event.targetName} for ${event.damage} damage.`, style: "damage", receivedAt: now }

@@ -60,4 +60,17 @@ sealed interface CombatEvent {
         val absorbed: Int,
         val remaining: Int,
     ) : CombatEvent
+
+    data class PetHit(
+        val petName: String,
+        val targetName: String,
+        val targetId: String?,
+        val damage: Int,
+    ) : CombatEvent
+
+    data class PetHurt(
+        val petName: String,
+        val attackerName: String,
+        val damage: Int,
+    ) : CombatEvent
 }

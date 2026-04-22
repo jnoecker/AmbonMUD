@@ -657,6 +657,15 @@ class CombatSystem(
                 outbound.send(
                     OutboundEvent.SendText(sessionId, "${pet.name} hits ${mob.name} for $petDamage damage."),
                 )
+                onCombatEvent(
+                    sessionId,
+                    CombatEvent.PetHit(
+                        petName = pet.name,
+                        targetName = mob.name,
+                        targetId = mob.id.value,
+                        damage = petDamage,
+                    ),
+                )
                 broadcastToRoom(
                     players,
                     outbound,
@@ -1019,6 +1028,14 @@ class CombatSystem(
         dirtyNotifier.mobHpDirty(pet.id)
         outbound.send(
             OutboundEvent.SendText(ownerSid, "${mob.name} hits ${pet.name} for $petDamage damage."),
+        )
+        onCombatEvent(
+            ownerSid,
+            CombatEvent.PetHurt(
+                petName = pet.name,
+                attackerName = mob.name,
+                damage = petDamage,
+            ),
         )
         broadcastToRoom(
             players,
