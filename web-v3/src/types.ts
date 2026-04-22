@@ -228,6 +228,10 @@ export interface ItemSummary {
   keyword: string;
   slot: string | null;
   basePrice?: number;
+  /** Bonus melee damage (top-level — distinct from {@link stats} map). */
+  damage?: number;
+  /** Bonus armor (top-level — distinct from {@link stats} map). */
+  armor?: number;
   image?: string | null;
   video?: string | null;
   stats?: Record<string, number>;

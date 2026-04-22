@@ -1,15 +1,77 @@
 import { useState } from "react";
-import type { ItemSummary, ShopState } from "../types";
+import type { ItemSummary, ShopItem, ShopState } from "../types";
 
 interface ShopPopoutProps {
   shop: ShopState;
   inventory: ItemSummary[];
+  equipment: Record<string, ItemSummary>;
   gold: number;
   onBuyItem: (keyword: string) => void;
   onSellItem: (keyword: string) => void;
 }
 
-export function ShopPopout({ shop, inventory, gold, onBuyItem, onSellItem }: ShopPopoutProps) {
+/**
+ * Format a signed delta for display, e.g. +2 / -1 / 0.
+ */
+function formatDelta(delta: number): string {
+  if (delta > 0) return `+${delta}`;
+  if (delta < 0) return `${delta}`;
+  return "0";
+}
+
+/**
+ * Render a single stat chip ("Damage 4") with an optional delta vs. the currently
+ * equipped item in the same slot. Delta omitted when no item equipped or delta is 0.
+ */
+function StatChip({
+  label,
+  value,
+  delta,
+}: {
+  label: string;
+  value: number;
+  delta: number | null;
+}) {
+  const deltaClass = delta === null ? "" : delta > 0 ? " shop-stat-delta-up" : delta < 0 ? " shop-stat-delta-down" : " shop-stat-delta-same";
+  return (
+    <span className="shop-stat-chip" title={`${label}: ${value}${delta !== null ? ` (${formatDelta(delta)} vs equipped)` : ""}`}>
+      <span className="shop-stat-chip-label">{label}</span>
+      <span className="shop-stat-chip-value">{value}</span>
+      {delta !== null && (
+        <span className={`shop-stat-delta${deltaClass}`}>{formatDelta(delta)}</span>
+      )}
+    </span>
+  );
+}
+
+/**
+ * Build the comparison stat chips for a shop item, using the player's currently
+ * equipped item in the same slot (if any) as the baseline.
+ */
+function shopItemChips(item: ShopItem, equipment: Record<string, ItemSummary>) {
+  const equipped: ItemSummary | undefined = item.slot ? equipment[item.slot] : undefined;
+  const chips: Array<{ label: string; value: number; delta: number | null }> = [];
+
+  if (item.damage > 0) {
+    const equippedDamage = equipped?.damage ?? 0;
+    chips.push({
+      label: "Damage",
+      value: item.damage,
+      delta: equipped ? item.damage - equippedDamage : null,
+    });
+  }
+  if (item.armor > 0) {
+    const equippedArmor = equipped?.armor ?? 0;
+    chips.push({
+      label: "Armor",
+      value: item.armor,
+      delta: equipped ? item.armor - equippedArmor : null,
+    });
+  }
+  return chips;
+}
+
+export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSellItem }: ShopPopoutProps) {
   const [tab, setTab] = useState<"buy" | "sell">("buy");
 
   return (
@@ -48,6 +110,8 @@ export function ShopPopout({ shop, inventory, gold, onBuyItem, onSellItem }: Sho
           ) : (
             shop.items.map((item) => {
               const canAfford = gold >= item.buyPrice;
+              const chips = shopItemChips(item, equipment);
+              const slotLabel = item.slot ?? (item.consumable ? "consumable" : "misc");
               return (
                 <div
                   key={item.id}
@@ -61,14 +125,20 @@ export function ShopPopout({ shop, inventory, gold, onBuyItem, onSellItem }: Sho
                         {item.description && (
                           <span className="shop-popout-card-desc">{item.description}</span>
                         )}
-                        <span className="shop-popout-card-stats">
-                          {[
-                            item.slot,
-                            item.damage > 0 && `${item.damage} dmg`,
-                            item.armor > 0 && `${item.armor} arm`,
-                            item.consumable && "consumable",
-                          ].filter(Boolean).join(" \u00b7 ") || "misc"}
-                        </span>
+                        <div className="shop-popout-card-stats">
+                          <span className="shop-stat-slot" title={item.slot ? `Equipment slot: ${item.slot}` : undefined}>{slotLabel}</span>
+                          {chips.map((chip) => (
+                            <StatChip
+                              key={chip.label}
+                              label={chip.label}
+                              value={chip.value}
+                              delta={chip.delta}
+                            />
+                          ))}
+                          {item.consumable && item.slot && (
+                            <span className="shop-stat-slot">consumable</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="shop-popout-card-action">
