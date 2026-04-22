@@ -2828,9 +2828,62 @@ body {
 }
 
 .shop-popout-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   font-size: 0.75rem;
   color: var(--color-primary-pale-blue);
   font-weight: 600;
+}
+
+.shop-stat-slot {
+  color: var(--color-primary-pale-blue);
+  opacity: 0.8;
+  text-transform: capitalize;
+}
+
+.shop-stat-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-primary-pale-blue) 12%, transparent);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.shop-stat-chip-label {
+  font-weight: 600;
+  color: var(--color-primary-pale-blue);
+}
+
+.shop-stat-chip-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.shop-stat-delta {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.shop-stat-delta-up {
+  color: var(--color-primary-moss-green);
+  background: color-mix(in srgb, var(--color-primary-moss-green) 18%, transparent);
+}
+
+.shop-stat-delta-down {
+  color: var(--color-primary-dusty-rose);
+  background: color-mix(in srgb, var(--color-primary-dusty-rose) 18%, transparent);
+}
+
+.shop-stat-delta-same {
+  color: var(--text-tertiary);
+  opacity: 0.75;
 }
 
 .shop-popout-card-action {

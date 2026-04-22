@@ -716,6 +716,7 @@ function App() {
           <ShopPopout
             shop={state.shop}
             inventory={state.inventory}
+            equipment={state.equipment}
             gold={state.vitals.gold}
             onBuyItem={(keyword) => sendCommand(`buy ${keyword}`)}
             onSellItem={(keyword) => sendCommand(`sell ${keyword}`)}
