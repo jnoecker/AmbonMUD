@@ -15,6 +15,7 @@ import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
@@ -199,6 +200,71 @@ class CombatSystemTest {
             assertNull(fixture.mobs.get(mob.id), "Expected mob to be removed after death")
             assertTrue(fixture.items.itemsInMob(mob.id).isEmpty(), "Expected mob inventory to be cleared")
             assertEquals(1, fixture.items.itemsInRoom(fixture.roomId).size, "Expected dropped item in room")
+        }
+
+    /**
+     * Regression test for GH #1034: one-shotting a very weak enemy (e.g. a
+     * 1-HP crane) must still emit a MeleeHit CombatEvent *before* the Kill
+     * CombatEvent.  The web client relies on seeing the hit first so it can
+     * animate the strike landing before the death animation takes over —
+     * without this ordering the fight visually "freezes" and ends in one
+     * silent frame.  The hit text must also precede the death text.
+     */
+    @Test
+    fun `one-shot kill emits melee hit combat event before kill event`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:crane"),
+                    "a crane",
+                    fixture.roomId,
+                    hp = 1,
+                    maxHp = 1,
+                    xpReward = 1L,
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
+
+            val sid = SessionId(42L)
+            fixture.players.loginOrFail(sid, "Slayer")
+
+            val combatEvents = mutableListOf<CombatEvent>()
+            combat.onCombatEvent = { _, event -> combatEvents += event }
+
+            assertNull(combat.startCombat(sid, "crane"))
+            fixture.tickCombat(combat)
+
+            // Server must emit at least a MeleeHit before the Kill so the
+            // client can animate an attack round.
+            val hitIdx = combatEvents.indexOfFirst { it is CombatEvent.MeleeHit }
+            val killIdx = combatEvents.indexOfFirst { it is CombatEvent.Kill }
+            assertTrue(hitIdx >= 0, "Expected a MeleeHit combat event, got: $combatEvents")
+            assertTrue(killIdx >= 0, "Expected a Kill combat event, got: $combatEvents")
+            assertTrue(
+                hitIdx < killIdx,
+                "Expected MeleeHit (idx $hitIdx) to precede Kill (idx $killIdx) in $combatEvents",
+            )
+
+            // The mob should be dead.
+            assertNull(fixture.mobs.get(mob.id))
+
+            // The "You hit ..." text must also precede the "... dies." text in
+            // the outbound stream so telnet clients see the swing land.
+            val texts =
+                fixture.outbound
+                    .drainAll()
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .map { it.text }
+            val hitTextIdx = texts.indexOfFirst { it.startsWith("You hit ") && it.contains("crane") }
+            val deathTextIdx = texts.indexOfFirst { it == "a crane dies." }
+            assertTrue(hitTextIdx >= 0, "Expected a 'You hit a crane' message in: $texts")
+            assertTrue(deathTextIdx >= 0, "Expected 'a crane dies.' message in: $texts")
+            assertTrue(
+                hitTextIdx < deathTextIdx,
+                "Expected hit text (idx $hitTextIdx) before death text (idx $deathTextIdx) in $texts",
+            )
         }
 
     @Test

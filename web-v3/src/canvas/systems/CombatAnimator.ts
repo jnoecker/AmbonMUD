@@ -1,5 +1,13 @@
 import { Container, Graphics, Text } from "pixi.js";
 import type { CombatEventData } from "../../types";
+import {
+  createKillDeferralState,
+  decideKillTiming,
+  registerDamagingHit,
+  resetKillDeferral,
+  tickKillDeferral,
+  type KillDeferralState,
+} from "./killDeferral";
 
 const FLOAT_SPEED = 50;
 const LIFETIME_MS = 1200;
@@ -79,6 +87,16 @@ const DEATH_ANIM_DURATION_MS = 2400;
 const DEATH_FLASH_FRAC = 0.15; // first 15% = white flash (~360ms)
 const DEATH_DISSOLVE_FRAC = 0.55; // 15–55% = dissolve/shrink (~960ms)
 
+/**
+ * Minimum time a preceding melee/ability hit animation must play before a
+ * kill animation is allowed to start. Without this gap, one-shotting a very
+ * weak enemy (e.g. a 1-HP crane) renders the hit and kill on the same frame
+ * and the kill's white flash visually swallows the strike — combat looks
+ * like it "freezes" and then the mob vanishes. Gating on the forward-lunge
+ * duration guarantees the player sees the blow land first. See GH #1034.
+ */
+const KILL_POSTROLL_DELAY_MS = LUNGE_DURATION_MS;
+
 // Firework / sparkle particles
 const PARTICLE_LIFETIME_MS = 900;
 const PARTICLE_GRAVITY = 80; // pixels/s²
@@ -109,6 +127,11 @@ const EVENT_COLORS: Record<string, string> = {
   death: "#b88faa",
 };
 
+interface KillPayload {
+  enemyX: number;
+  enemyY: number;
+}
+
 export class CombatAnimator {
   readonly container = new Container();
   private floats: FloatingNumber[] = [];
@@ -125,6 +148,11 @@ export class CombatAnimator {
   private slashGraphics = new Graphics();
   private glowGraphics = new Graphics();
   private particleGraphics = new Graphics();
+  /**
+   * Pure state machine governing whether an incoming kill event should be
+   * deferred so a preceding hit animation can land first.  See GH #1034.
+   */
+  private killDeferral: KillDeferralState<KillPayload> = createKillDeferralState();
 
   constructor() {
     this.container.addChild(this.glowGraphics);
@@ -142,28 +170,19 @@ export class CombatAnimator {
     }
 
     if (type === "kill") {
-      // Start multi-phase death animation instead of a brief flash
-      this.deathAnim = {
-        elapsed: 0,
-        duration: DEATH_ANIM_DURATION_MS,
-        phases: { flashEnd: DEATH_FLASH_FRAC, dissolveEnd: DEATH_DISSOLVE_FRAC },
-      };
-      // Remember enemy position for staggered bursts
-      this.deathEnemyPos = { x: enemyX, y: enemyY };
-      // Intense white flash at start
-      this.addFlash("enemy", 0xffffff, DEATH_ANIM_DURATION_MS * DEATH_FLASH_FRAC);
-      // Heavy shake during flash phase
-      this.shakes = this.shakes.filter((s) => s.who !== "enemy");
-      this.shakes.push({ who: "enemy", elapsed: 0 });
-      // Spawn "DEFEATED" text
-      this.spawnFloat("DEFEATED", EVENT_COLORS.kill, enemyX, enemyY - 30);
-      // Multiple slashes at the enemy for dramatic finish
-      this.addSlash(enemyX - 8, enemyY - 8);
-      this.addSlash(enemyX + 8, enemyY + 8);
-      // Initial firework burst from enemy position
-      this.spawnBurst(enemyX, enemyY, BURST_COUNT);
-      this.deathBurstsFired = 1;
-      // "VICTORY" text spawns slightly later — handled by BattleScene
+      // If a damaging hit was just processed (same tick / same frame), defer
+      // the death animation briefly so the player actually sees the strike
+      // land before the white flash + dissolve takes over. Fixes the
+      // "combat freezes" feeling when one-shotting very weak enemies.
+      const decision = decideKillTiming(this.killDeferral, KILL_POSTROLL_DELAY_MS);
+      if (decision.kind === "defer") {
+        this.killDeferral.pending = {
+          remainingMs: decision.remainingMs,
+          payload: { enemyX, enemyY },
+        };
+      } else {
+        this.startKillAnimation(enemyX, enemyY);
+      }
       return;
     }
 
@@ -175,6 +194,10 @@ export class CombatAnimator {
     }
 
     if (event.damage > 0) {
+      // Track when the most recent hit landed so a kill arriving in the same
+      // frame can be deferred (see KILL_POSTROLL_DELAY_MS).
+      registerDamagingHit(this.killDeferral);
+
       const color = EVENT_COLORS[type] ?? EVENT_COLORS.meleeHit;
       const targetX = event.sourceIsPlayer ? enemyX : playerX;
       const targetY = event.sourceIsPlayer ? enemyY : playerY;
@@ -211,6 +234,31 @@ export class CombatAnimator {
     if (event.absorbed > 0) {
       this.spawnFloat(`(${event.absorbed})`, EVENT_COLORS.shieldAbsorb, event.sourceIsPlayer ? enemyX : playerX, (event.sourceIsPlayer ? enemyY : playerY) + 16);
     }
+  }
+
+  /** Kick off the full multi-phase death animation (flash → dissolve → hold). */
+  private startKillAnimation(enemyX: number, enemyY: number) {
+    this.deathAnim = {
+      elapsed: 0,
+      duration: DEATH_ANIM_DURATION_MS,
+      phases: { flashEnd: DEATH_FLASH_FRAC, dissolveEnd: DEATH_DISSOLVE_FRAC },
+    };
+    // Remember enemy position for staggered bursts
+    this.deathEnemyPos = { x: enemyX, y: enemyY };
+    // Intense white flash at start
+    this.addFlash("enemy", 0xffffff, DEATH_ANIM_DURATION_MS * DEATH_FLASH_FRAC);
+    // Heavy shake during flash phase
+    this.shakes = this.shakes.filter((s) => s.who !== "enemy");
+    this.shakes.push({ who: "enemy", elapsed: 0 });
+    // Spawn "DEFEATED" text
+    this.spawnFloat("DEFEATED", EVENT_COLORS.kill, enemyX, enemyY - 30);
+    // Multiple slashes at the enemy for dramatic finish
+    this.addSlash(enemyX - 8, enemyY - 8);
+    this.addSlash(enemyX + 8, enemyY + 8);
+    // Initial firework burst from enemy position
+    this.spawnBurst(enemyX, enemyY, BURST_COUNT);
+    this.deathBurstsFired = 1;
+    // "VICTORY" text spawns slightly later — handled by BattleScene
   }
 
   private spawnFloat(display: string, color: string, x: number, y: number) {
@@ -275,6 +323,13 @@ export class CombatAnimator {
   }
 
   update(deltaMs: number) {
+    // Tick the kill deferral state; if a queued kill's post-roll elapsed,
+    // launch the full death animation now.
+    const ready = tickKillDeferral(this.killDeferral, deltaMs, KILL_POSTROLL_DELAY_MS);
+    if (ready) {
+      this.startKillAnimation(ready.enemyX, ready.enemyY);
+    }
+
     // Update floating numbers
     for (let i = this.floats.length - 1; i >= 0; i--) {
       const f = this.floats[i];
@@ -530,9 +585,13 @@ export class CombatAnimator {
     }
   }
 
-  /** Whether a death animation is currently playing. */
+  /**
+   * Whether a death animation is currently playing OR queued to start.
+   * A queued kill must block scene transitions so the deferred death
+   * animation has a chance to actually render (see KILL_POSTROLL_DELAY_MS).
+   */
   get isDeathAnimating(): boolean {
-    return this.deathAnim !== null;
+    return this.deathAnim !== null || this.killDeferral.pending !== null;
   }
 
   /**
@@ -575,6 +634,7 @@ export class CombatAnimator {
     this.deathAnim = null;
     this.deathEnemyPos = null;
     this.deathBurstsFired = 0;
+    this.killDeferral.pending = null;
   }
 
   clear() {
@@ -592,6 +652,7 @@ export class CombatAnimator {
     this.deathAnim = null;
     this.deathEnemyPos = null;
     this.deathBurstsFired = 0;
+    resetKillDeferral(this.killDeferral);
     this.flashGraphics.clear();
     this.slashGraphics.clear();
     this.glowGraphics.clear();
