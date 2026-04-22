@@ -454,6 +454,27 @@ function App() {
     return () => window.removeEventListener("keydown", handler);
   }, [state.lookTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Close NPC dialogue / quest offers on Escape — but only when the
+  // conversation has reached a state with no further choices (mirrors the
+  // click-to-dismiss behaviour in DialogueOverlay). A mid-conversation Escape
+  // is ignored so players don't accidentally abandon an active choice branch.
+  const dialogue = state.dialogue;
+  const hasQuestsAvailable = state.questsAvailable.length > 0;
+  useEffect(() => {
+    if (!dialogue && !hasQuestsAvailable) return;
+    const hasActiveChoices = dialogue !== null && dialogue.choices.length > 0;
+    if (hasActiveChoices) return;
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        const target = e.target as HTMLElement | null;
+        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+        canvasCallbacks.dismissDialogue?.();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [dialogue, hasQuestsAvailable]);
+
   // Ctrl+K (or Cmd+K) opens the command palette
   useEffect(() => {
     const handler = (e: globalThis.KeyboardEvent) => {

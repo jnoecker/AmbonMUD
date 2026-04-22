@@ -30,6 +30,10 @@ const QUEST_SEPARATOR_GAP = 12;
 export class DialogueOverlay {
   readonly container = new Container();
 
+  // Full-canvas hit area that dismisses the dialogue when clicked. Only active
+  // once the conversation has reached a state with no further choices, so
+  // mid-conversation canvas interactions (e.g. choice buttons) are preserved.
+  private fullBg = new Graphics();
   private bg = new Graphics();
   private npcNameText: Text;
   private bodyText: Text;
@@ -54,13 +58,29 @@ export class DialogueOverlay {
       style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: TEXT_COLOR, wordWrap: true, wordWrapWidth: 300 },
     });
 
-    this.bg.eventMode = "static";
-    this.bg.cursor = "default";
-    this.bg.on("pointerdown", () => {
+    // Full-canvas dismiss backdrop — only enabled when dismissable.
+    this.fullBg.eventMode = "none";
+    this.fullBg.visible = false;
+    this.fullBg.on("pointerdown", () => {
       if (this.isDismissable) {
         canvasCallbacks.dismissDialogue?.();
       }
     });
+
+    this.bg.eventMode = "static";
+    this.bg.cursor = "default";
+    this.bg.on("pointerdown", (event) => {
+      if (this.isDismissable) {
+        canvasCallbacks.dismissDialogue?.();
+      }
+      // Stop propagation so the full-canvas backdrop underneath doesn't also
+      // fire (it would double-dismiss, which is harmless, but explicit is
+      // cleaner). Also prevents clicking the box from bubbling to world hits.
+      event.stopPropagation();
+    });
+    // fullBg must render behind the dialogue box and its choices so those
+    // still receive pointer events.
+    this.container.addChild(this.fullBg);
     this.container.addChild(this.bg);
     this.container.addChild(this.npcNameText);
     this.container.addChild(this.bodyText);
@@ -70,6 +90,15 @@ export class DialogueOverlay {
   resize(width: number, height: number) {
     this.width = width;
     this.height = height;
+    this.redrawFullBg();
+  }
+
+  private redrawFullBg() {
+    this.fullBg.clear();
+    this.fullBg.rect(0, 0, this.width, this.height);
+    // Near-transparent fill so it still registers hits without darkening the
+    // scene behind the dialogue.
+    this.fullBg.fill({ color: 0x000000, alpha: 0.001 });
   }
 
   update() {
@@ -79,6 +108,8 @@ export class DialogueOverlay {
 
     if (!dialogue && !hasQuestOffers) {
       this.container.visible = false;
+      this.fullBg.visible = false;
+      this.fullBg.eventMode = "none";
       this.lastDialogueKey = null;
       return;
     }
@@ -188,9 +219,21 @@ export class DialogueOverlay {
     this.isDismissable = !hasActiveChoices;
     this.bg.cursor = this.isDismissable ? "pointer" : "default";
 
+    // Full-canvas dismiss backdrop is only interactive when dismissable, so
+    // mid-conversation canvas clicks (e.g. picking choices) aren't swallowed.
+    if (this.isDismissable) {
+      this.redrawFullBg();
+      this.fullBg.visible = true;
+      this.fullBg.eventMode = "static";
+      this.fullBg.cursor = "pointer";
+    } else {
+      this.fullBg.visible = false;
+      this.fullBg.eventMode = "none";
+    }
+
     if (this.isDismissable) {
       this.dismissHint = new Text({
-        text: "Click to close",
+        text: "Click anywhere to close",
         style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 10, fill: ENDING_COLOR },
       });
       this.dismissHint.anchor.set(0.5, 0);
