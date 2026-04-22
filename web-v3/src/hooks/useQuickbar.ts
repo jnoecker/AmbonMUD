@@ -1,27 +1,75 @@
 import { useCallback, useMemo, useState } from "react";
 import type { SkillSummary } from "../types";
 
-const STORAGE_KEY = "ambonmud-quickbar";
+const STORAGE_PREFIX = "ambonmud-quickbar";
+const DEFAULT_STORAGE_KEY = `${STORAGE_PREFIX}:default`;
 const SLOT_COUNT = 9;
 
-function loadOrder(): (string | null)[] {
+type SlotIds = (string | null)[];
+
+function storageKeyFor(characterName: string | null): string {
+  if (!characterName || characterName === "-") return DEFAULT_STORAGE_KEY;
+  return `${STORAGE_PREFIX}:${characterName.toLowerCase()}`;
+}
+
+function emptySlots(): SlotIds {
+  return new Array(SLOT_COUNT).fill(null);
+}
+
+function loadOrder(key: string): SlotIds {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return new Array(SLOT_COUNT).fill(null);
+    const raw = localStorage.getItem(key);
+    if (!raw) return emptySlots();
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return new Array(SLOT_COUNT).fill(null);
-    const slots = parsed.slice(0, SLOT_COUNT).map((v: unknown) =>
-      typeof v === "string" ? v : null,
+    if (!Array.isArray(parsed)) return emptySlots();
+    const slots: SlotIds = parsed.slice(0, SLOT_COUNT).map((v: unknown) =>
+      typeof v === "string" && v.length > 0 ? v : null,
     );
     while (slots.length < SLOT_COUNT) slots.push(null);
     return slots;
   } catch {
-    return new Array(SLOT_COUNT).fill(null);
+    return emptySlots();
   }
 }
 
-function saveOrder(order: (string | null)[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+function saveOrder(key: string, order: SlotIds) {
+  try {
+    localStorage.setItem(key, JSON.stringify(order));
+  } catch {
+    // localStorage unavailable — fail silently
+  }
+}
+
+/**
+ * Merge current server-known skills with a stored slot order.
+ *
+ * Rules:
+ *  - Stored slot assignments are preserved positionally (hotkeys 1-9 stay stable).
+ *  - Slots whose skill is no longer known are cleared (pruned).
+ *  - Any server skill not present in the stored order is appended to the first
+ *    available empty slot in deterministic (stable) server order, so learning
+ *    new skills fills from the left.
+ */
+function mergeSlotIds(stored: SlotIds, skills: SkillSummary[]): SlotIds {
+  const known = new Set(skills.map((s) => s.id));
+  const next: SlotIds = stored.map((id) => (id && known.has(id) ? id : null));
+  const assigned = new Set(next.filter((id): id is string => id !== null));
+  for (const skill of skills) {
+    if (assigned.has(skill.id)) continue;
+    const emptyIdx = next.indexOf(null);
+    if (emptyIdx === -1) break;
+    next[emptyIdx] = skill.id;
+    assigned.add(skill.id);
+  }
+  return next;
+}
+
+function slotsEqual(a: SlotIds, b: SlotIds): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 export interface QuickbarState {
@@ -37,8 +85,49 @@ export interface QuickbarState {
   slotIds: (string | null)[];
 }
 
-export function useQuickbar(skills: SkillSummary[]): QuickbarState {
-  const [slotIds, setSlotIds] = useState<(string | null)[]>(loadOrder);
+interface InternalState {
+  storageKey: string;
+  slotIds: SlotIds;
+  // Snapshot of the last `skills` array reference we merged, so we don't
+  // re-merge on every render when the server skill list hasn't changed.
+  mergedSkillsRef: SkillSummary[] | null;
+}
+
+export function useQuickbar(
+  skills: SkillSummary[],
+  characterName: string | null = null,
+): QuickbarState {
+  const storageKey = storageKeyFor(characterName);
+
+  const [internal, setInternal] = useState<InternalState>(() => ({
+    storageKey,
+    slotIds: loadOrder(storageKey),
+    mergedSkillsRef: null,
+  }));
+
+  // Derive-during-render pattern (https://react.dev/reference/react/useState#storing-information-from-previous-renders).
+  // If the character changed OR the server skill list changed, recompute the
+  // canonical slot order and schedule a state update before returning.
+  let current = internal;
+  if (current.storageKey !== storageKey) {
+    current = {
+      storageKey,
+      slotIds: loadOrder(storageKey),
+      mergedSkillsRef: null,
+    };
+  }
+  if (current.mergedSkillsRef !== skills) {
+    const merged = mergeSlotIds(current.slotIds, skills);
+    if (!slotsEqual(current.slotIds, merged)) {
+      saveOrder(current.storageKey, merged);
+      current = { ...current, slotIds: merged, mergedSkillsRef: skills };
+    } else {
+      current = { ...current, mergedSkillsRef: skills };
+    }
+  }
+  if (current !== internal) {
+    setInternal(current);
+  }
 
   const skillMap = useMemo(() => {
     const m = new Map<string, SkillSummary>();
@@ -46,48 +135,49 @@ export function useQuickbar(skills: SkillSummary[]): QuickbarState {
     return m;
   }, [skills]);
 
-  // Resolve each slot to its skill (or null if unassigned / skill not known)
-  const slots = useMemo(() => {
-    // If no custom order has been set yet (all null), auto-fill from skills
-    const hasAny = slotIds.some((id) => id !== null);
-    if (!hasAny && skills.length > 0) {
-      return skills.slice(0, SLOT_COUNT).map((s) => s as SkillSummary | null)
-        .concat(new Array(Math.max(0, SLOT_COUNT - skills.length)).fill(null));
-    }
-    return slotIds.map((id) => (id ? skillMap.get(id) ?? null : null));
-  }, [slotIds, skillMap, skills]);
+  const effectiveSlotIds = current.slotIds;
+
+  const slots = useMemo(
+    () => effectiveSlotIds.map((id) => (id ? skillMap.get(id) ?? null : null)),
+    [effectiveSlotIds, skillMap],
+  );
 
   const assign = useCallback((slotIndex: number, skillId: string) => {
-    setSlotIds((prev) => {
-      const next = [...prev];
-      // Remove this skill from any other slot first
+    if (slotIndex < 0 || slotIndex >= SLOT_COUNT) return;
+    setInternal((prev) => {
+      const next = [...prev.slotIds];
+      // Remove this skill from any other slot first so it only occupies one.
       for (let i = 0; i < next.length; i++) {
         if (next[i] === skillId) next[i] = null;
       }
       next[slotIndex] = skillId;
-      saveOrder(next);
-      return next;
+      saveOrder(prev.storageKey, next);
+      return { ...prev, slotIds: next };
     });
   }, []);
 
   const clear = useCallback((slotIndex: number) => {
-    setSlotIds((prev) => {
-      const next = [...prev];
+    if (slotIndex < 0 || slotIndex >= SLOT_COUNT) return;
+    setInternal((prev) => {
+      if (prev.slotIds[slotIndex] === null) return prev;
+      const next = [...prev.slotIds];
       next[slotIndex] = null;
-      saveOrder(next);
-      return next;
+      saveOrder(prev.storageKey, next);
+      return { ...prev, slotIds: next };
     });
   }, []);
 
   const swap = useCallback((fromIndex: number, toIndex: number) => {
     if (fromIndex === toIndex) return;
-    setSlotIds((prev) => {
-      const next = [...prev];
+    if (fromIndex < 0 || fromIndex >= SLOT_COUNT) return;
+    if (toIndex < 0 || toIndex >= SLOT_COUNT) return;
+    setInternal((prev) => {
+      const next = [...prev.slotIds];
       [next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]];
-      saveOrder(next);
-      return next;
+      saveOrder(prev.storageKey, next);
+      return { ...prev, slotIds: next };
     });
   }, []);
 
-  return { slots, assign, clear, swap, slotIds };
+  return { slots, assign, clear, swap, slotIds: effectiveSlotIds };
 }
