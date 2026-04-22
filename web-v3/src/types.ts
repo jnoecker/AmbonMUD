@@ -456,6 +456,19 @@ export interface GainEvent {
   manaGained: number | null;
 }
 
+/** Server-sent celebration data surfaced by the LevelUpBanner overlay. */
+export interface LevelUpNotification {
+  id: number;
+  previousLevel: number;
+  newLevel: number;
+  levelsGained: number;
+  hpGained: number;
+  manaGained: number;
+  newAbilities: string[];
+  skillPointsAvailable: number;
+  isMilestone: boolean;
+}
+
 export interface CraftingSkill {
   id: string;
   name: string;

@@ -49,6 +49,7 @@ import type {
   HousingInfo,
   ItemSummary,
   LeaderboardData,
+  LevelUpNotification,
   LoginErrorState,
   LoginPromptState,
   LookTargetInfo,
@@ -183,6 +184,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [combatLogMessages, setCombatLogMessages] = useState<CombatLogMessage[]>([]);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
+  const [levelUpNotification, setLevelUpNotification] = useState<LevelUpNotification | null>(null);
+  const levelUpIdRef = useRef(0);
   const [duelState, setDuelState] = useState<DuelState | null>(null);
   const [duelChallenge, setDuelChallenge] = useState<DuelChallenge | null>(null);
 
@@ -411,6 +414,14 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     canvasEvents.push(event);
   }, []);
 
+  // Server-side Char.LevelUp GMCP → headline celebration overlay. Each new
+  // notification replaces any prior (un-dismissed) banner so rapid multi-level
+  // gains surface the highest level reached rather than stacking pop-ups.
+  const pushLevelUp = useCallback((notification: Omit<LevelUpNotification, "id">) => {
+    levelUpIdRef.current += 1;
+    setLevelUpNotification({ ...notification, id: levelUpIdRef.current });
+  }, []);
+
   const pushQuestNotification = useCallback((notification: QuestNotification) => {
     setQuestNotifications((prev) => {
       const next = [...prev, notification];
@@ -490,6 +501,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setAutoQuest,
         setGlobalQuest,
         pushGainEvent,
+        pushLevelUp,
         pushQuestNotification,
         setMobInfo,
         setRoomFeatures,
@@ -545,7 +557,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         sendGmcp: (p: string, payload: unknown) => { sendGmcpRef.current(p, payload); return true; },
       });
     },
-    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef],
+    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushLevelUp, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef],
   );
 
   // ── Reset all HUD state on disconnect ─────────────
@@ -618,6 +630,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setFactionActivity([]);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
+    setLevelUpNotification(null);
     setCombatLogMessages([]);
     setUiFeedbackFeed([]);
     setActivePopout(null);
@@ -671,6 +684,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     lookTarget, setLookTarget, spriteList,
     // UI
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,
+    levelUpNotification, setLevelUpNotification,
     // Setters needed by App
     setQuestsAvailable,
     // GMCP

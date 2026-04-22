@@ -323,27 +323,40 @@ class ItemHandler(
             if (result.levelsGained <= 0) return
             metrics.onLevelUp()
 
-            val levelUpMessage = progression.buildLevelUpMessage(result, player.stats["CON"], player.stats["INT"], player.playerClass)
+            val hpStatValue = player.stats["CON"]
+            val manaStatValue = player.stats["INT"]
+            val levelUpMessage = progression.buildLevelUpMessage(result, hpStatValue, manaStatValue, player.playerClass)
             outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 
+            val (classHpPerLevel, classManaPerLevel) = progression.resolveClassScaling(player.playerClass)
+            val newMaxHp = progression.maxHpForLevel(result.newLevel, hpStatValue, classHpPerLevel)
+            val oldMaxHp = progression.maxHpForLevel(result.previousLevel, hpStatValue, classHpPerLevel)
+            val hpGained = (newMaxHp - oldMaxHp).coerceAtLeast(0)
+            val newMaxMana = progression.maxManaForLevel(result.newLevel, manaStatValue, classManaPerLevel)
+            val oldMaxMana = progression.maxManaForLevel(result.previousLevel, manaStatValue, classManaPerLevel)
+            val manaGained = (newMaxMana - oldMaxMana).coerceAtLeast(0)
+
+            var autoLearnedNames: List<String> = emptyList()
+            var availablePoints = 0
             if (abilitySystem != null) {
                 val autoLearned = abilitySystem.recomputeKnownAbilities(sessionId, result.newLevel, player.unlockedClasses)
+                autoLearnedNames = autoLearned.map { it.displayName }
                 if (autoLearned.isNotEmpty()) {
                     val names = autoLearned.joinToString { it.displayName }
                     val verb = if (autoLearned.size == 1) "is" else "are"
                     outbound.send(OutboundEvent.SendText(sessionId, "$names $verb now yours automatically."))
                 }
-                val available = abilitySystem.availableSkillPoints(
+                availablePoints = abilitySystem.availableSkillPoints(
                     level = result.newLevel,
                     spentPoints = abilitySystem.spentSkillPoints(player.learnedAbilityIds),
                     interval = skillPointsConfig.interval,
                 )
-                if (available > 0) {
-                    val pointWord = if (available == 1) "skill point" else "skill points"
+                if (availablePoints > 0) {
+                    val pointWord = if (availablePoints == 1) "skill point" else "skill points"
                     outbound.send(
                         OutboundEvent.SendText(
                             sessionId,
-                            "You have $available $pointWord available! Visit a class trainer to learn new abilities.",
+                            "You have $availablePoints $pointWord available! Visit a class trainer to learn new abilities.",
                         ),
                     )
                 }
@@ -351,6 +364,26 @@ class ItemHandler(
                     abilitySystem.cooldownRemainingMs(sessionId, abilityId)
                 }
             }
+
+            gmcpEmitter?.sendCharGain(
+                sessionId,
+                "levelUp",
+                result.newLevel.toLong(),
+                newLevel = result.newLevel,
+                hpGained = hpGained,
+                manaGained = manaGained,
+            )
+            gmcpEmitter?.sendCharLevelUp(
+                sessionId,
+                previousLevel = result.previousLevel,
+                newLevel = result.newLevel,
+                levelsGained = result.levelsGained.coerceAtLeast(1),
+                hpGained = hpGained,
+                manaGained = manaGained,
+                newAbilities = autoLearnedNames,
+                skillPointsAvailable = availablePoints,
+                isMilestone = result.newLevel == 10 || result.newLevel == 25 || result.newLevel == 50 || result.newLevel == 100,
+            )
         }
     }
 

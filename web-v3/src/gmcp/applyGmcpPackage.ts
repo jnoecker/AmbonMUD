@@ -24,6 +24,7 @@ import type {
   FriendEntry,
   FriendNotification,
   GainEvent,
+  LevelUpNotification,
   GroupInfo,
   GroupMember,
   GuildInfo,
@@ -134,6 +135,7 @@ interface GmcpContext {
   setAutoQuest: Dispatch<SetStateAction<AutoQuest | null>>;
   setGlobalQuest: Dispatch<SetStateAction<GlobalQuest | null>>;
   pushGainEvent: (event: GainEvent) => void;
+  pushLevelUp: (notification: Omit<LevelUpNotification, "id">) => void;
   pushQuestNotification: (notification: QuestNotification) => void;
   setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
   setRoomFeatures: Dispatch<SetStateAction<RoomFeature[]>>;
@@ -1182,6 +1184,24 @@ export function applyGmcpPackage(
         newLevel: nl,
         hpGained: hpG,
         manaGained: manaG,
+      });
+      break;
+    }
+
+    case "Char.LevelUp": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const abilities = Array.isArray(packet.newAbilities)
+        ? (packet.newAbilities as unknown[]).filter((v): v is string => typeof v === "string")
+        : [];
+      ctx.pushLevelUp({
+        previousLevel: safeNumber(packet.previousLevel, 0),
+        newLevel: safeNumber(packet.newLevel, 0),
+        levelsGained: safeNumber(packet.levelsGained, 1),
+        hpGained: safeNumber(packet.hpGained, 0),
+        manaGained: safeNumber(packet.manaGained, 0),
+        newAbilities: abilities,
+        skillPointsAvailable: safeNumber(packet.skillPointsAvailable, 0),
+        isMilestone: packet.isMilestone === true,
       });
       break;
     }

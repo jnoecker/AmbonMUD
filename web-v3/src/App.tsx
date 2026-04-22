@@ -25,6 +25,7 @@ import { LotteryPanel } from "./components/panels/LotteryPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { WorldAtmosphereHud } from "./components/WorldAtmosphereHud";
 import { HelpContent } from "./components/HelpContent";
+import { LevelUpBanner } from "./components/LevelUpBanner";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
 import { CommandPalette } from "./components/CommandPalette";
@@ -1241,6 +1242,12 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Level-up celebration — headline moment on XP/kill → level threshold */}
+      <LevelUpBanner
+        notification={state.levelUpNotification}
+        onDismiss={() => state.setLevelUpNotification(null)}
+      />
 
       {/* Server broadcast */}
       {state.broadcast && (

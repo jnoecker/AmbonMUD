@@ -1344,11 +1344,11 @@ class GameEngine(
                         val levelUp = players.grantXp(sid, xp)
                         outbound.send(OutboundEvent.SendText(sid, "You gain $xp XP."))
                         gmcpEmitter.sendCharGain(sid, "xp", xp, "bounty")
-                        if (levelUp != null) {
+                        if (levelUp != null && levelUp.levelsGained > 0) {
                             outbound.send(
                                 OutboundEvent.SendInfo(sid, "Congratulations! You reached level ${levelUp.newLevel}!"),
                             )
-                            onCombatLevelUp(sid, levelUp.newLevel)
+                            onCombatLevelUp(sid, levelUp)
                         }
                     }
                     markVitalsDirty(sid)
@@ -2165,10 +2165,11 @@ class GameEngine(
 
     private suspend fun onCombatLevelUp(
         sessionId: SessionId,
-        level: Int,
+        result: LevelUpResult,
     ) {
         markVitalsDirty(sessionId)
         markStatsDirty(sessionId)
+        val level = result.newLevel
         val p = players.get(sessionId)
         val autoLearned = p?.let { abilitySystem.recomputeKnownAbilities(sessionId, level, it.unlockedClasses) }.orEmpty()
         sendAutoLearnedAbilities(sessionId, autoLearned)
@@ -2189,11 +2190,38 @@ class GameEngine(
             )
         }
         if (p != null) {
+            val hpStat = p.stats[engineConfig.stats.bindings.hpScalingStat]
+            val manaStat = p.stats[engineConfig.stats.bindings.manaScalingStat]
+            val (classHpPerLevel, classManaPerLevel) = progression.resolveClassScaling(p.playerClass)
+            val newMaxHp = progression.maxHpForLevel(level, hpStat, classHpPerLevel)
+            val oldMaxHp = progression.maxHpForLevel(result.previousLevel, hpStat, classHpPerLevel)
+            val newMaxMana = progression.maxManaForLevel(level, manaStat, classManaPerLevel)
+            val oldMaxMana = progression.maxManaForLevel(result.previousLevel, manaStat, classManaPerLevel)
+            val hpGained = (newMaxHp - oldMaxHp).coerceAtLeast(0)
+            val manaGained = (newMaxMana - oldMaxMana).coerceAtLeast(0)
             gmcpEmitter.sendCharName(sessionId, p)
             gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
                 abilitySystem.cooldownRemainingMs(sessionId, abilityId)
             }
-            gmcpEmitter.sendCharGain(sessionId, "levelUp", level.toLong(), newLevel = level)
+            gmcpEmitter.sendCharGain(
+                sessionId,
+                "levelUp",
+                level.toLong(),
+                newLevel = level,
+                hpGained = hpGained,
+                manaGained = manaGained,
+            )
+            gmcpEmitter.sendCharLevelUp(
+                sessionId,
+                previousLevel = result.previousLevel,
+                newLevel = level,
+                levelsGained = result.levelsGained.coerceAtLeast(1),
+                hpGained = hpGained,
+                manaGained = manaGained,
+                newAbilities = autoLearned.map { it.displayName },
+                skillPointsAvailable = available,
+                isMilestone = isMilestoneLevel(level),
+            )
             // Notify about new sprites if the player has a custom selection
             if (p.activeSprite != null) {
                 notifyNewSprites(sessionId, p)
@@ -2202,6 +2230,9 @@ class GameEngine(
         }
         achievementSystem.onLevelReached(sessionId, level)
     }
+
+    /** Milestone levels trigger extra flourish on the client level-up banner. */
+    private fun isMilestoneLevel(level: Int): Boolean = level == 10 || level == 25 || level == 50 || level == 100
 
     /** Sends a text hint when a level-up or achievement unlock makes new sprites available. */
     private suspend fun notifyNewSprites(
@@ -2250,9 +2281,18 @@ class GameEngine(
                 ),
             )
         }
-        val afterLevel = players.get(sessionId)?.level ?: beforeLevel
-        if (afterLevel > beforeLevel) {
-            onCombatLevelUp(sessionId, afterLevel)
+        val afterPlayer = players.get(sessionId)
+        val afterLevel = afterPlayer?.level ?: beforeLevel
+        if (afterLevel > beforeLevel && afterPlayer != null) {
+            onCombatLevelUp(
+                sessionId,
+                LevelUpResult(
+                    previousLevel = beforeLevel,
+                    levelsGained = afterLevel - beforeLevel,
+                    newLevel = afterLevel,
+                    xpTotal = afterPlayer.xpTotal,
+                ),
+            )
         }
         gmcpEmitter.sendDailyQuests(sessionId, dqs)
         gmcpEmitter.sendWeeklyQuests(sessionId, dqs)
@@ -2344,7 +2384,7 @@ class GameEngine(
                         "for placing ${ordinalPlace(winner.place)} in the global quest!"
                     outbound.send(OutboundEvent.SendInfo(winner.sessionId, rewardMsg))
                     if (levelResult.levelsGained > 0) {
-                        onCombatLevelUp(winner.sessionId, levelResult.newLevel)
+                        onCombatLevelUp(winner.sessionId, levelResult)
                     }
                 }
                 gmcpEmitter.broadcastGlobalQuestInactive(players)
