@@ -236,6 +236,8 @@ export interface ItemSummary {
   video?: string | null;
   stats?: Record<string, number>;
   enchantments?: string[];
+  consumable?: boolean;
+  useEffect?: string;
 }
 
 export interface EquipmentSlotDef {

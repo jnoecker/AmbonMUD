@@ -6262,6 +6262,19 @@ body {
   flex-shrink: 0;
 }
 
+.inventory-item-effect {
+  font-size: 0.66rem;
+  color: var(--accent-gold, var(--text-secondary));
+  background: rgb(255 255 255 / 6%);
+  padding: 1px 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 14ch;
+}
+
 .inventory-item-actions {
   display: flex;
   gap: 2px;

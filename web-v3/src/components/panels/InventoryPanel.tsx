@@ -70,6 +70,9 @@ export function InventoryPanel({
           {resolveItemImage(item) && <img src={resolveItemImage(item)!} alt="" className="inventory-item-thumb" />}
           <span className="inventory-item-name">{item.name}</span>
           {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
+          {!item.slot && item.consumable && item.useEffect && (
+            <span className="inventory-item-effect" title={item.useEffect}>{item.useEffect}</span>
+          )}
         </span>
         <span className="inventory-item-actions">
           <button
@@ -80,11 +83,11 @@ export function InventoryPanel({
           >
             Examine
           </button>
-          {!item.slot && (
+          {!item.slot && item.consumable && (
             <button
               type="button"
               className="inventory-action-btn inventory-action-use"
-              title={`Use ${item.name}`}
+              title={item.useEffect ? `Use ${item.name} — ${item.useEffect}` : `Use ${item.name}`}
               disabled={!canManageItems}
               onClick={() => onCommand(`use ${item.keyword}`)}
             >

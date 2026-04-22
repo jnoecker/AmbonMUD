@@ -11,6 +11,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
@@ -1349,6 +1350,71 @@ class GmcpEmitterTest {
             e.sendCharItemsList(sid, listOf(priced), emptyMap())
             val data = drainGmcp()[0]
             assertTrue(data.jsonData.contains("\"basePrice\":75"), "Expected basePrice in Char.Items.List. got=${data.jsonData}")
+        }
+
+    @Test
+    fun `consumable flag and useEffect appear in Char Items List`() =
+        runTest {
+            val e = emitter("Char.Items")
+            val potion = ItemInstance(
+                id = ItemId("zone:potion"),
+                item = Item(
+                    keyword = "potion",
+                    displayName = "Healing Potion",
+                    consumable = true,
+                    onUse = ItemUseEffect(healHp = 15, grantXp = 25L),
+                ),
+            )
+            e.sendCharItemsList(sid, listOf(potion), emptyMap())
+            val data = drainGmcp()[0]
+            assertTrue(
+                data.jsonData.contains("\"consumable\":true"),
+                "Expected consumable=true in Char.Items.List. got=${data.jsonData}",
+            )
+            assertTrue(
+                data.jsonData.contains("\"useEffect\":\"Restores 15 HP, Grants 25 XP\""),
+                "Expected useEffect description in Char.Items.List. got=${data.jsonData}",
+            )
+        }
+
+    @Test
+    fun `non-consumable equipment omits consumable and useEffect in Char Items List`() =
+        runTest {
+            val e = emitter("Char.Items")
+            val sword = item()
+            e.sendCharItemsList(sid, listOf(sword), emptyMap())
+            val data = drainGmcp()[0]
+            // consumable/useEffect are serialized as null for non-consumables; never "true" or a value string.
+            assertTrue(
+                !data.jsonData.contains("\"consumable\":true"),
+                "Non-consumable should not have consumable=true. got=${data.jsonData}",
+            )
+            assertTrue(
+                !data.jsonData.contains("\"useEffect\":\""),
+                "Non-consumable should not have a useEffect string. got=${data.jsonData}",
+            )
+        }
+
+    @Test
+    fun `consumable with only healHp produces heal-only description`() =
+        runTest {
+            val e = emitter("Char.Items")
+            val food = ItemInstance(
+                id = ItemId("zone:rations"),
+                item = Item(
+                    keyword = "rations",
+                    displayName = "Traveler's Rations",
+                    consumable = true,
+                    onUse = ItemUseEffect(healHp = 30),
+                ),
+            )
+            e.sendCharItemsList(sid, listOf(food), emptyMap())
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"consumable\":true"))
+            assertTrue(
+                data.jsonData.contains("\"useEffect\":\"Restores 30 HP\""),
+                "Expected heal-only useEffect. got=${data.jsonData}",
+            )
         }
 
     @Test
