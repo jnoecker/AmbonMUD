@@ -1562,6 +1562,41 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- level-up event ----------
+
+    /**
+     * Emits a dedicated Char.LevelUp event for the client to present a prominent
+     * celebratory overlay. This is distinct from Char.Gain so clients can subscribe
+     * to it independently and keep the existing floating-text popup for smaller
+     * gains. [isMilestone] flags round-number levels (10, 25, 50) for extra flourish.
+     */
+    suspend fun sendCharLevelUp(
+        sessionId: SessionId,
+        previousLevel: Int,
+        newLevel: Int,
+        levelsGained: Int,
+        hpGained: Int,
+        manaGained: Int,
+        newAbilities: List<String> = emptyList(),
+        skillPointsAvailable: Int = 0,
+        isMilestone: Boolean = false,
+    ) {
+        emit(
+            sessionId,
+            "Char.LevelUp",
+            CharLevelUpPayload(
+                previousLevel = previousLevel,
+                newLevel = newLevel,
+                levelsGained = levelsGained,
+                hpGained = hpGained,
+                manaGained = manaGained,
+                newAbilities = newAbilities,
+                skillPointsAvailable = skillPointsAvailable,
+                isMilestone = isMilestone,
+            ),
+        )
+    }
+
     // ---------- room mob info ----------
 
     suspend fun sendRoomMobInfo(
@@ -2645,6 +2680,19 @@ class GmcpEmitter(
         val newLevel: Int? = null,
         val hpGained: Int? = null,
         val manaGained: Int? = null,
+    )
+
+    // ---------- level-up payload ----------
+
+    private data class CharLevelUpPayload(
+        val previousLevel: Int,
+        val newLevel: Int,
+        val levelsGained: Int,
+        val hpGained: Int,
+        val manaGained: Int,
+        val newAbilities: List<String>,
+        val skillPointsAvailable: Int,
+        val isMilestone: Boolean,
     )
 
     // ---------- who payload ----------

@@ -1207,6 +1207,70 @@ class GmcpEmitterTest {
             assertTrue(drainGmcp().isEmpty())
         }
 
+    // ── Char.LevelUp ──
+
+    @Test
+    fun `sendCharLevelUp emits level-up JSON with hp mana and abilities`() =
+        runTest {
+            val e = emitter("Char.LevelUp")
+            e.sendCharLevelUp(
+                sid,
+                previousLevel = 4,
+                newLevel = 5,
+                levelsGained = 1,
+                hpGained = 12,
+                manaGained = 6,
+                newAbilities = listOf("Fireball", "Ice Shard"),
+                skillPointsAvailable = 2,
+                isMilestone = false,
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Char.LevelUp", events[0].gmcpPackage)
+            val body = events[0].jsonData
+            assertTrue(body.contains("\"previousLevel\":4"), body)
+            assertTrue(body.contains("\"newLevel\":5"), body)
+            assertTrue(body.contains("\"levelsGained\":1"), body)
+            assertTrue(body.contains("\"hpGained\":12"), body)
+            assertTrue(body.contains("\"manaGained\":6"), body)
+            assertTrue(body.contains("\"newAbilities\":[\"Fireball\",\"Ice Shard\"]"), body)
+            assertTrue(body.contains("\"skillPointsAvailable\":2"), body)
+            assertTrue(body.contains("\"isMilestone\":false"), body)
+        }
+
+    @Test
+    fun `sendCharLevelUp marks milestone levels`() =
+        runTest {
+            val e = emitter("Char.LevelUp")
+            e.sendCharLevelUp(
+                sid,
+                previousLevel = 9,
+                newLevel = 10,
+                levelsGained = 1,
+                hpGained = 20,
+                manaGained = 10,
+                isMilestone = true,
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"isMilestone\":true"))
+        }
+
+    @Test
+    fun `sendCharLevelUp does nothing when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendCharLevelUp(
+                sid,
+                previousLevel = 4,
+                newLevel = 5,
+                levelsGained = 1,
+                hpGained = 10,
+                manaGained = 5,
+            )
+            assertTrue(drainGmcp().isEmpty())
+        }
+
     // ── Room.MobInfo ──
 
     @Test

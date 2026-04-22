@@ -12,6 +12,7 @@ import dev.ambon.engine.CombatSystemCallbacks
 import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.LevelUpResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerClassRegistry
@@ -50,7 +51,7 @@ class CombatTestFixture(
         onMobRemoved: suspend (MobId, RoomId) -> Unit = { _, _ -> },
         progression: PlayerProgression = PlayerProgression(),
         metrics: GameMetrics = GameMetrics.noop(),
-        onLevelUp: suspend (SessionId, Int) -> Unit = { _, _ -> },
+        onLevelUp: suspend (SessionId, LevelUpResult) -> Unit = { _, _ -> },
         bindings: StatBindingsConfig = StatBindingsConfig(),
         dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
         statusEffects: StatusEffectSystem? = null,

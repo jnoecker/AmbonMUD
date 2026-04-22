@@ -28,7 +28,7 @@ data class CombatSystemConfig(
 
 data class CombatSystemCallbacks(
     val onMobRemoved: suspend (MobId, RoomId) -> Unit = { _, _ -> },
-    val onLevelUp: suspend (SessionId, Int) -> Unit = { _, _ -> },
+    val onLevelUp: suspend (SessionId, LevelUpResult) -> Unit = { _, _ -> },
     val onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
     val onRoomItemsChanged: suspend (RoomId) -> Unit = {},
 )
@@ -1288,7 +1288,7 @@ class CombatSystem(
                         player.playerClass,
                     )
                 outbound.send(OutboundEvent.SendText(sid, levelUpMessage))
-                callbacks.onLevelUp(sid, result.newLevel)
+                callbacks.onLevelUp(sid, result)
             }
         }
     }
