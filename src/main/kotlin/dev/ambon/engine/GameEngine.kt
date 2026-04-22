@@ -289,7 +289,9 @@ class GameEngine(
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
                 puzzleSystem.removeSession(sid)
-                petSystem.onOwnerDisconnect(sid)
+                for (dismissed in petSystem.onOwnerDisconnect(sid)) {
+                    broadcastPetRemoved(dismissed)
+                }
                 tradeSystem.cancelForPlayer(sid)
                 val endedDuel = duelSystem.onPlayerDisconnect(sid)
                 if (endedDuel != null) {
@@ -671,6 +673,7 @@ class GameEngine(
         config = engineConfig.pets,
         mobs = mobs,
         clock = clock,
+        imagesBaseUrl = imagesBaseUrl,
     )
     private val combatSystem =
         CombatSystem(
@@ -1544,6 +1547,9 @@ class GameEngine(
                             ),
                         )
                         emitPetState(expired.ownerSessionId, null)
+                        broadcastPetRemoved(
+                            PetSystem.DismissedPet(expired.petId, expired.roomId, expired.petName),
+                        )
                     }
 
                     // Tick world time — broadcast on period change
@@ -2123,7 +2129,9 @@ class GameEngine(
         }
 
         // Dismiss active pets
-        petSystem.dismissAll(sessionId)
+        for (dismissed in petSystem.dismissAll(sessionId)) {
+            broadcastPetRemoved(dismissed)
+        }
 
         // Clear status effects (stop DOTs ticking on a corpse)
         statusEffectSystem.removeAllFromPlayer(sessionId)
@@ -2404,6 +2412,19 @@ class GameEngine(
         2 -> "2nd"
         3 -> "3rd"
         else -> "${n}th"
+    }
+
+    /**
+     * Broadcasts `Room.RemoveMob` and a refreshed `Room.MobInfo` to every player in the
+     * pet's room so the canvas / sidebar mob list updates immediately when a pet is
+     * dismissed (manual command, duration expiry, owner disconnect, pet death).
+     * Mirrors the summon-side broadcast added in #1067 — see issue #1069.
+     */
+    private suspend fun broadcastPetRemoved(dismissed: PetSystem.DismissedPet) {
+        gmcpEmitter.broadcastRoomRemoveMob(dismissed.roomId, dismissed.petId.value, players)
+        val mobsInRoom = mobs.mobsInRoom(dismissed.roomId)
+        val mobInfoEntries = gmcpEmitter.buildMobInfoEntries(mobsInRoom)
+        gmcpEmitter.broadcastRoomMobInfo(dismissed.roomId, mobInfoEntries, players)
     }
 
     private suspend fun emitPetState(sessionId: SessionId, pet: dev.ambon.domain.mob.MobState?) {

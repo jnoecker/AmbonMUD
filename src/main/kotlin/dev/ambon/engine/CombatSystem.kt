@@ -1040,7 +1040,11 @@ class CombatSystem(
                 exclude = ownerSid,
             )
             threatTable.removePlayer(petSid)
+            val petRoomId = pet.roomId
             petSystem?.dismissOne(pet.id)
+            // Mirror the mob-death cleanup so the pet disappears from canvas/sidebar
+            // without waiting for a room change. See issue #1069.
+            callbacks.onMobRemoved(pet.id, petRoomId)
         }
     }
 

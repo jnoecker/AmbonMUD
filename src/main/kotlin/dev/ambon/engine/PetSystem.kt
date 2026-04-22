@@ -28,7 +28,11 @@ class PetSystem(
     private val config: PetConfig,
     private val mobs: MobRegistry,
     private val clock: Clock,
+    imagesBaseUrl: String = "/images/",
 ) {
+    /** Trailing-slash-normalized base for resolving pet template image paths. */
+    private val imagesBase: String = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
+
     /** Tracks expiry time for timed pets. Key = MobId, value = wall-clock ms when the pet expires. */
     private val expiryTimes = mutableMapOf<MobId, Long>()
 
@@ -87,7 +91,7 @@ class PetSystem(
             armor = template.armor,
             xpReward = 0L,
             templateKey = templateKey,
-            image = template.image,
+            image = resolveImage(template.image),
             ownerSessionId = ownerSid,
             ownerName = ownerName,
             spells = petSpells,
@@ -124,7 +128,7 @@ class PetSystem(
             if (now >= expiresAt) {
                 val pet = mobs.get(mobId)
                 if (pet != null) {
-                    expired.add(ExpiredPet(pet.ownerSessionId!!, pet.name))
+                    expired.add(ExpiredPet(pet.ownerSessionId!!, pet.name, mobId, pet.roomId))
                     removePetSession(mobId)
                     mobs.remove(mobId)
                 }
@@ -134,16 +138,21 @@ class PetSystem(
         return expired
     }
 
-    /** Dismisses all pets owned by a player. Returns dismissed pet count. */
-    fun dismissAll(ownerSid: SessionId): Int {
+    /**
+     * Dismisses all pets owned by a player. Returns the dismissed pets so callers can
+     * broadcast `Room.RemoveMob` / refreshed `Room.MobInfo` to the rooms they were in
+     * (issue #1069 — dismissed pet must disappear immediately, not on next room change).
+     */
+    fun dismissAll(ownerSid: SessionId): List<DismissedPet> {
         val pets = getPets(ownerSid)
+        val dismissed = pets.map { DismissedPet(it.id, it.roomId, it.name) }
         for (pet in pets) {
             expiryTimes.remove(pet.id)
             removePetSession(pet.id)
             mobs.remove(pet.id)
             log.debug { "Pet dismissed: ${pet.name} (${pet.id})" }
         }
-        return pets.size
+        return dismissed
     }
 
     /** Moves all pets to follow their owner to a new room. */
@@ -153,10 +162,11 @@ class PetSystem(
         }
     }
 
-    /** Called on owner disconnect — dismisses all pets. */
-    fun onOwnerDisconnect(ownerSid: SessionId) {
-        dismissAll(ownerSid)
-    }
+    /**
+     * Called on owner disconnect — dismisses all pets. Returns the dismissed pets so the
+     * caller can broadcast `Room.RemoveMob` to anyone left in their rooms (issue #1069).
+     */
+    fun onOwnerDisconnect(ownerSid: SessionId): List<DismissedPet> = dismissAll(ownerSid)
 
     fun clear() {
         expiryTimes.clear()
@@ -179,13 +189,15 @@ class PetSystem(
     /** Returns the synthetic SessionId for a pet, or null if the pet has no threat entry. */
     fun getPetSessionId(petId: MobId): SessionId? = petToSession[petId]
 
-    /** Removes a single pet by MobId (e.g. on pet death). */
-    fun dismissOne(petId: MobId) {
-        val pet = mobs.get(petId) ?: return
+    /** Removes a single pet by MobId (e.g. on pet death). Returns the dismissed pet, or null if not found. */
+    fun dismissOne(petId: MobId): DismissedPet? {
+        val pet = mobs.get(petId) ?: return null
+        val dismissed = DismissedPet(pet.id, pet.roomId, pet.name)
         expiryTimes.remove(petId)
         removePetSession(petId)
         mobs.remove(petId)
         log.debug { "Pet dismissed: ${pet.name} ($petId)" }
+        return dismissed
     }
 
     private fun removePetSession(petId: MobId) {
@@ -214,5 +226,26 @@ class PetSystem(
     data class ExpiredPet(
         val ownerSessionId: SessionId,
         val petName: String,
+        val petId: MobId,
+        val roomId: RoomId,
     )
+
+    /** Snapshot of a pet that was just removed — used by callers to broadcast room updates. */
+    data class DismissedPet(
+        val petId: MobId,
+        val roomId: RoomId,
+        val petName: String,
+    )
+
+    /**
+     * Resolve a pet template's image path against the configured CDN/local base, mirroring
+     * how mob images are prefixed in `WorldLoader`. Bare relative paths previously slipped
+     * through and resolved against the MUD host instead of the asset host (issue #1068).
+     * Already-absolute URLs (`http(s)://…`) and explicit roots (`/…`) are returned unchanged.
+     */
+    private fun resolveImage(raw: String?): String? {
+        if (raw == null) return null
+        if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("/")) return raw
+        return "$imagesBase$raw"
+    }
 }
