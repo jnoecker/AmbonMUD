@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { ContainerContents, FeaturePopoutFocus, RoomFeature, RoomFeatureType } from "../types";
 import { DirectionIcon } from "./Icons";
 
@@ -109,15 +110,27 @@ function LeverWidget({
   );
 }
 
-function LockedContainerHero({
+function LockedFeatureHero({
   feature,
+  kindLabel,
+  kindClass,
+  heroVariantClass,
+  subtitle,
+  extraContent,
   onCommand,
 }: {
   feature: RoomFeature;
+  kindLabel: string;
+  kindClass: string;
+  heroVariantClass: string;
+  subtitle: string;
+  extraContent?: ReactNode;
   onCommand: (cmd: string) => void;
 }) {
   return (
-    <article className="feature-card feature-card-container feature-card-hero-locked">
+    <article
+      className={`feature-card feature-card-${feature.type} feature-card-hero-locked ${heroVariantClass}`}
+    >
       <div className="feature-card-hero-lock" aria-hidden="true">
         <svg viewBox="0 0 64 80" className="feature-card-hero-lock-svg">
           <path
@@ -148,11 +161,10 @@ function LockedContainerHero({
         </svg>
       </div>
       <div className="feature-card-hero-copy">
-        <span className="feature-card-kind feature-card-kind-container">Container</span>
+        <span className={`feature-card-kind ${kindClass}`}>{kindLabel}</span>
         <h4>{feature.name}</h4>
-        <p className="feature-card-hero-subtitle">
-          {feature.keyRequired ? "A key is required to unlock this." : "Locked tight."}
-        </p>
+        <p className="feature-card-hero-subtitle">{subtitle}</p>
+        {extraContent}
       </div>
       <div className="feature-card-hero-actions">
         <button
@@ -164,6 +176,60 @@ function LockedContainerHero({
         </button>
       </div>
     </article>
+  );
+}
+
+function LockedContainerHero({
+  feature,
+  onCommand,
+}: {
+  feature: RoomFeature;
+  onCommand: (cmd: string) => void;
+}) {
+  return (
+    <LockedFeatureHero
+      feature={feature}
+      kindLabel="Container"
+      kindClass="feature-card-kind-container"
+      heroVariantClass="feature-card-hero-locked-container"
+      subtitle={feature.keyRequired ? "A key is required to unlock this." : "Locked tight."}
+      onCommand={onCommand}
+    />
+  );
+}
+
+function LockedDoorHero({
+  feature,
+  onCommand,
+}: {
+  feature: RoomFeature;
+  onCommand: (cmd: string) => void;
+}) {
+  const direction = feature.direction ? titleCase(feature.direction) : null;
+  return (
+    <LockedFeatureHero
+      feature={feature}
+      kindLabel="Door"
+      kindClass="feature-card-kind-door"
+      heroVariantClass="feature-card-hero-locked-door"
+      subtitle={
+        feature.keyRequired
+          ? "A key is required to pass through."
+          : "The way is barred."
+      }
+      extraContent={
+        direction ? (
+          <span className="feature-card-hero-direction">
+            <DirectionIcon
+              direction={feature.direction as "north" | "east" | "south" | "west" | "up" | "down"}
+              className="feature-card-direction-icon"
+            />
+            Leads {direction}
+          </span>
+        ) : null
+      }
+      onCommand={onCommand}
+    />
   );
 }
 
@@ -340,6 +406,14 @@ export function WorldFeaturesPopout({
             visibleFeatures.length === 1
           ) {
             return <LockedContainerHero key={feature.id} feature={feature} onCommand={onCommand} />;
+          }
+
+          if (
+            feature.type === "door" &&
+            feature.state === "locked" &&
+            visibleFeatures.length === 1
+          ) {
+            return <LockedDoorHero key={feature.id} feature={feature} onCommand={onCommand} />;
           }
 
           const contents = feature.type === "container" && containerContents?.featureId === feature.id
