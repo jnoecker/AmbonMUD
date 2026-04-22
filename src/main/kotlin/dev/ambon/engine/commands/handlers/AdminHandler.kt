@@ -182,6 +182,7 @@ class AdminHandler(
                 drops = template.drops,
                 spawnRoomId = me.roomId,
                 image = template.image,
+                level = template.level,
             )
             mobs.upsert(spawned)
             broadcastToRoom(players, outbound, me.roomId, "${template.name} appears.")

@@ -157,6 +157,29 @@ class PlayerProgression(
     fun killXpReward(mob: MobState): Long = scaledXp(mob.xpReward)
 
     /**
+     * Returns the XP multiplier for a kill given the player's level and the
+     * mob's level. When the player out-levels the mob by enough to match a
+     * configured diminishing-returns threshold, the corresponding multiplier is
+     * applied. The threshold with the largest `levelsBelow` that still fits
+     * the gap wins.
+     */
+    fun diminishingKillXpMultiplier(playerLevel: Int, mobLevel: Int): Double {
+        val cfg = config.xp.diminishing
+        if (!cfg.enabled || cfg.thresholds.isEmpty()) return 1.0
+        val gap = playerLevel - mobLevel
+        if (gap <= 0) return 1.0
+        var best: Double? = null
+        var bestLevelsBelow = -1
+        for (t in cfg.thresholds) {
+            if (gap >= t.levelsBelow && t.levelsBelow > bestLevelsBelow) {
+                best = t.multiplier
+                bestLevelsBelow = t.levelsBelow
+            }
+        }
+        return best ?: 1.0
+    }
+
+    /**
      * Applies an XP multiplier based on the configured xpBonusStat (+[bindings.xpBonusPerPoint] per
      * point above [PlayerState.BASE_STAT]) to [baseXp]. Returns [baseXp] unchanged if there is no bonus.
      */

@@ -489,6 +489,14 @@ data class AppConfig(
         require(progression.xp.linearXp >= 0L) { "ambonMUD.progression.xp.linearXp must be >= 0" }
         require(progression.xp.multiplier >= 0.0) { "ambonMUD.progression.xp.multiplier must be >= 0" }
         require(progression.xp.defaultKillXp >= 0L) { "ambonMUD.progression.xp.defaultKillXp must be >= 0" }
+        progression.xp.diminishing.thresholds.forEachIndexed { index, t ->
+            require(t.levelsBelow >= 0) {
+                "ambonMUD.progression.xp.diminishing.thresholds[$index].levelsBelow must be >= 0"
+            }
+            require(t.multiplier in 0.0..1.0) {
+                "ambonMUD.progression.xp.diminishing.thresholds[$index].multiplier must be in [0.0, 1.0]"
+            }
+        }
         require(progression.rewards.hpPerLevel >= 0) { "ambonMUD.progression.rewards.hpPerLevel must be >= 0" }
         require(progression.rewards.manaPerLevel >= 0) { "ambonMUD.progression.rewards.manaPerLevel must be >= 0" }
         require(progression.rewards.baseHp >= 1) { "ambonMUD.progression.rewards.baseHp must be >= 1" }
@@ -1889,6 +1897,27 @@ data class XpCurveConfig(
     val linearXp: Long = 0L,
     val multiplier: Double = 1.0,
     val defaultKillXp: Long = 50L,
+    val diminishing: DiminishingXpConfig = DiminishingXpConfig(),
+)
+
+/**
+ * Per-kill XP diminishing returns based on the gap between the player's level
+ * and the mob's level. When enabled, kills on mobs [DiminishingXpThreshold.levelsBelow]
+ * or more below the player award only [DiminishingXpThreshold.multiplier] of the
+ * normal XP. The highest matching threshold wins.
+ */
+data class DiminishingXpConfig(
+    val enabled: Boolean = true,
+    val thresholds: List<DiminishingXpThreshold> =
+        listOf(
+            DiminishingXpThreshold(levelsBelow = 5, multiplier = 0.5),
+            DiminishingXpThreshold(levelsBelow = 10, multiplier = 0.1),
+        ),
+)
+
+data class DiminishingXpThreshold(
+    val levelsBelow: Int = 0,
+    val multiplier: Double = 1.0,
 )
 
 data class LevelRewardsConfig(

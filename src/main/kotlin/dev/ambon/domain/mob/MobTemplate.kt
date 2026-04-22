@@ -17,6 +17,7 @@ interface MobTemplate {
     val damage: DamageRange
     val armor: Int
     val xpReward: Long
+    val level: Int
     val drops: List<MobDrop>
     val goldMin: Long
     val goldMax: Long

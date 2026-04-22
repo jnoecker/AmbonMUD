@@ -31,4 +31,5 @@ data class MobSpawn(
     val category: String = "humanoid",
     override val spells: List<MobSpell> = emptyList(),
     override val defaultAttack: String? = null,
+    override val level: Int = 1,
 ) : MobTemplate
