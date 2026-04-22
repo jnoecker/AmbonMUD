@@ -588,6 +588,16 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
+    suspend fun setAutolootEnabled(
+        sessionId: SessionId,
+        enabled: Boolean,
+    ) {
+        val ps = players[sessionId] ?: return
+        if (ps.autolootEnabled == enabled) return
+        ps.autolootEnabled = enabled
+        persistIfClaimed(ps)
+    }
+
     fun findSessionByName(name: String): SessionId? = sessionByLowerName[normalizeName(name).lowercase()]
 
     fun isNameOnline(

@@ -90,6 +90,8 @@ data class PlayerRecord(
     val screenReaderEnabled: Boolean = false,
     /** Player-written custom description visible when others look at them. */
     val description: String = "",
+    /** When true, items dropped by mobs the player kills are auto-looted into inventory. */
+    val autolootEnabled: Boolean = false,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

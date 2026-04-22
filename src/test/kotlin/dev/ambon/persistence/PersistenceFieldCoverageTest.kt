@@ -140,6 +140,7 @@ class PersistenceFieldCoverageTest {
                 description = "A tall warrior with a scar across the left cheek.",
                 authTokenHash = "sha256:deadbeef",
                 authTokenIssuedAt = 1_700_000_000_000L,
+                autolootEnabled = true,
             )
 
         @BeforeAll
