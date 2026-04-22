@@ -75,6 +75,8 @@ interface VitalsBarProps {
   onInputChange: (value: string) => void;
   onInputKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   onHeightChange?: (height: number) => void;
+  /** Pulse the Inventory panel button to draw first-time player attention. */
+  inventoryHint?: boolean;
 }
 
 interface SkillSlotProps {
@@ -170,6 +172,7 @@ export function VitalsBar({
   onInputChange,
   onInputKeyDown,
   onHeightChange,
+  inventoryHint = false,
 }: VitalsBarProps) {
   const [showPanels, setShowPanels] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -323,18 +326,27 @@ export function VitalsBar({
 
       {/* Panel grid — always rendered; hidden by CSS on mobile unless expanded */}
       <div className={`vbar-panel-grid${showPanels ? " vbar-panel-grid-open" : ""}`}>
-        {PANELS.map(({ panel, label, icon }) => (
-          <button
-            key={panel}
-            type="button"
-            className={`vbar-panel-btn${activePopout === panel ? " vbar-panel-btn-active" : ""}`}
-            onClick={() => { onOpenPanel(panel); setShowPanels(false); }}
-            aria-label={label}
-          >
-            {icon}
-            <span className="vbar-panel-label">{label}</span>
-          </button>
-        ))}
+        {PANELS.map(({ panel, label, icon }) => {
+          const isInventoryHint = inventoryHint && panel === "inventory" && activePopout !== "inventory";
+          const classes = [
+            "vbar-panel-btn",
+            activePopout === panel ? "vbar-panel-btn-active" : "",
+            isInventoryHint ? "vbar-panel-btn-hint" : "",
+          ].filter(Boolean).join(" ");
+          return (
+            <button
+              key={panel}
+              type="button"
+              className={classes}
+              onClick={() => { onOpenPanel(panel); setShowPanels(false); }}
+              aria-label={isInventoryHint ? `${label} (new item)` : label}
+            >
+              {icon}
+              <span className="vbar-panel-label">{label}</span>
+              {isInventoryHint && <span className="vbar-panel-btn-hint-dot" aria-hidden="true" />}
+            </button>
+          );
+        })}
         {dungeonActive && (
           <button
             type="button"

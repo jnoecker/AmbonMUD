@@ -26,6 +26,7 @@ interface GameShellProps {
   inputValue: string;
   onInputChange: (value: string) => void;
   onInputKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  inventoryHint?: boolean;
   children?: ReactNode;
 }
 
@@ -49,6 +50,7 @@ export function GameShell({
   inputValue,
   onInputChange,
   onInputKeyDown,
+  inventoryHint,
   children,
 }: GameShellProps) {
   const loggedIn = connected && hasCharacterProfile;
@@ -106,6 +108,7 @@ export function GameShell({
         onInputChange={onInputChange}
         onInputKeyDown={onInputKeyDown}
         onHeightChange={setHudBottomInset}
+        inventoryHint={inventoryHint}
       />
 
       {children}
