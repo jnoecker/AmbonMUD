@@ -7,6 +7,18 @@ data class ItemUseEffect(
     val grantXp: Long = 0L,
 ) {
     fun hasEffect(): Boolean = healHp > 0 || grantXp > 0L
+
+    /**
+     * Short human-readable summary of what using the item does, suitable for
+     * surfacing in the web client inventory tooltip. Returns null when the
+     * effect is a no-op.
+     */
+    fun describe(): String? {
+        val parts = mutableListOf<String>()
+        if (healHp > 0) parts.add("Restores $healHp HP")
+        if (grantXp > 0L) parts.add("Grants $grantXp XP")
+        return if (parts.isEmpty()) null else parts.joinToString(", ")
+    }
 }
 
 data class Item(

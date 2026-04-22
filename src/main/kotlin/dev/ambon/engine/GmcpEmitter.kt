@@ -2045,6 +2045,8 @@ class GmcpEmitter(
             video = item.item.video,
             stats = item.item.stats.nonZero().ifEmpty { null },
             enchantments = item.enchantments.ifEmpty { null },
+            consumable = if (item.item.consumable) true else null,
+            useEffect = item.item.onUse?.describe(),
         )
 
     private fun toRoomMobPayload(mob: MobState): RoomMobPayload {
@@ -2149,6 +2151,8 @@ class GmcpEmitter(
         val video: String? = null,
         val stats: Map<String, Int>? = null,
         val enchantments: List<String>? = null,
+        val consumable: Boolean? = null,
+        val useEffect: String? = null,
     )
 
     private data class EquipmentSlotPayload(

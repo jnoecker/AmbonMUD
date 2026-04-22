@@ -415,6 +415,8 @@ export function applyGmcpPackage(
               video: typeof entry.video === "string" ? entry.video : null,
               stats: entry.stats && typeof entry.stats === "object" ? entry.stats as Record<string, number> : undefined,
               enchantments: Array.isArray(entry.enchantments) ? entry.enchantments.filter((e): e is string => typeof e === "string") : undefined,
+              consumable: typeof entry.consumable === "boolean" ? entry.consumable : undefined,
+              useEffect: typeof entry.useEffect === "string" ? entry.useEffect : undefined,
             }))
         : [];
 
@@ -455,6 +457,8 @@ export function applyGmcpPackage(
           video: typeof packet.video === "string" ? packet.video : null,
           stats: packet.stats && typeof packet.stats === "object" ? packet.stats as Record<string, number> : undefined,
           enchantments: Array.isArray(packet.enchantments) ? (packet.enchantments as unknown[]).filter((e): e is string => typeof e === "string") : undefined,
+          consumable: typeof packet.consumable === "boolean" ? packet.consumable : undefined,
+          useEffect: typeof packet.useEffect === "string" ? packet.useEffect : undefined,
         },
       ]);
       break;
