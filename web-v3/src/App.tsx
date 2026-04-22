@@ -23,6 +23,7 @@ import { AuctionPanel } from "./components/panels/AuctionPanel";
 import { DungeonPanel } from "./components/panels/DungeonPanel";
 import { LotteryPanel } from "./components/panels/LotteryPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
+import { CombatLogPanel } from "./components/panels/CombatLogPanel";
 import { WorldAtmosphereHud } from "./components/WorldAtmosphereHud";
 import { HelpContent } from "./components/HelpContent";
 import { LevelUpBanner } from "./components/LevelUpBanner";
@@ -629,6 +630,7 @@ function App() {
       case "auction": return "Auction House";
       case "dungeon": return "Dungeon";
       case "lottery": return "Lottery";
+      case "combatlog": return "Combat Log";
       case "help": return "Command Reference";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
@@ -925,6 +927,13 @@ function App() {
             lotteryInfo={state.lotteryInfo}
             uiFeedbackFeed={state.uiFeedbackFeed}
             onCommand={sendCommand}
+          />
+        )}
+
+        {drawerPanel === "combatlog" && (
+          <CombatLogPanel
+            messages={state.combatLogMessages}
+            onClearLog={state.clearCombatLog}
           />
         )}
 

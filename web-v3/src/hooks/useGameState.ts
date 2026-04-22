@@ -134,7 +134,7 @@ function combatEventToLogMessage(event: CombatEventData): CombatLogMessage | nul
   }
 }
 
-const MAX_COMBAT_LOG = 20;
+const MAX_COMBAT_LOG = 200;
 const MAX_QUEST_NOTIFICATIONS = 5;
 const MAX_FRIEND_NOTIFICATIONS = 5;
 const MAX_UI_FEEDBACK_FEED = 20;
@@ -298,6 +298,10 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       const next = [...prev, msg];
       return next.length > MAX_COMBAT_LOG ? next.slice(-MAX_COMBAT_LOG) : next;
     });
+  }, []);
+
+  const clearCombatLog = useCallback(() => {
+    setCombatLogMessages([]);
   }, []);
 
   const pushCombatEvent = useCallback((event: CombatEventData) => {
@@ -692,7 +696,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // Reset
     resetHud,
     // Push helpers
-    pushCombatLogMessage, pushUiFeedback,
+    pushCombatLogMessage, pushUiFeedback, clearCombatLog,
   };
 }
 
