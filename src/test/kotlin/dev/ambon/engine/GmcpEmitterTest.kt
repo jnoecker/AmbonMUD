@@ -1660,6 +1660,51 @@ class GmcpEmitterTest {
         assertEquals(1, gmcp.size, "Normal-sized payload should be emitted")
     }
 
+    // ── Dungeon.Info ──
+
+    @Test
+    fun `sendDungeonInfo emits completed=true when dungeon boss has been defeated`() =
+        runTest {
+            val e = emitter("Dungeon")
+            e.sendDungeonInfo(
+                sessionId = sid,
+                active = true,
+                instanceId = "abc12345",
+                name = "Test Crypt",
+                difficulty = "Normal",
+                totalRooms = 5,
+                completed = true,
+                memberCount = 2,
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            val data = events[0]
+            assertEquals("Dungeon.Info", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"active\":true"), "got=${data.jsonData}")
+            assertTrue(data.jsonData.contains("\"completed\":true"), "got=${data.jsonData}")
+            assertTrue(data.jsonData.contains("\"name\":\"Test Crypt\""), "got=${data.jsonData}")
+            assertTrue(data.jsonData.contains("\"instanceId\":\"abc12345\""), "got=${data.jsonData}")
+        }
+
+    @Test
+    fun `sendDungeonInfo emits active=false when leaving dungeon`() =
+        runTest {
+            val e = emitter("Dungeon")
+            e.sendDungeonInfo(sessionId = sid, active = false)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Dungeon.Info", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"active\":false"), "got=${events[0].jsonData}")
+        }
+
+    @Test
+    fun `sendDungeonInfo does nothing when Dungeon package not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendDungeonInfo(sessionId = sid, active = true, completed = true)
+            assertTrue(drainGmcp().isEmpty())
+        }
+
     @Test
     fun `MAX_GMCP_PAYLOAD_BYTES is 64KB`() {
         assertEquals(65_536, GmcpEmitter.MAX_GMCP_PAYLOAD_BYTES)

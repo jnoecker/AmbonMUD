@@ -11,7 +11,9 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.dungeon.DungeonGenerator
 import dev.ambon.engine.dungeon.DungeonManager
 import dev.ambon.engine.dungeon.DungeonRegistry
@@ -259,6 +261,93 @@ class DungeonCommandTest {
             .map { it.text }
 
         assertTrue(texts.any { it.contains("Unknown difficulty") }, "Should reject invalid difficulty. got=$texts")
+    }
+
+    @Test
+    fun `dungeon info gmcp reflects completion after markComplete`() = runTest {
+        val players = buildTestPlayerRegistry(world.startRoom)
+        val outbound = dev.ambon.bus.LocalOutboundBus()
+        val gmcpEmitter = GmcpEmitter(
+            outbound = outbound,
+            supportsPackage = { _, _ -> true },
+            progression = PlayerProgression(),
+        )
+        val h = CommandRouterHarness.create(
+            world = world,
+            players = players,
+            mobs = mobs,
+            outbound = outbound,
+            dungeonManager = manager,
+            dungeonRegistry = registry,
+            gmcpEmitter = gmcpEmitter,
+        )
+        val sid = SessionId(1)
+        h.loginPlayer(sid, "Alice")
+        h.players.get(sid)!!.level = 5
+        h.drain()
+
+        // Enter dungeon — GMCP should say completed=false
+        h.router.handle(sid, Command.DungeonEnter("crypt", null))
+        val enterGmcp = h.drain()
+            .filterIsInstance<OutboundEvent.GmcpData>()
+            .filter { it.gmcpPackage == "Dungeon.Info" }
+        assertTrue(enterGmcp.isNotEmpty(), "Expected a Dungeon.Info emission on enter")
+        assertTrue(
+            enterGmcp.last().jsonData.contains("\"completed\":false"),
+            "Enter payload should have completed=false. got=${enterGmcp.last().jsonData}",
+        )
+
+        // Simulate boss kill by marking the instance complete, then re-enter.
+        val inst = manager.getInstanceForPlayer(sid)!!
+        manager.markComplete(inst)
+
+        // Move player out (as if teleported to portal) so re-entry is triggered.
+        h.players.moveTo(sid, portalRoom)
+
+        h.router.handle(sid, Command.DungeonEnter("crypt", null))
+        val reenterEvents = h.drain()
+        val reenterGmcp = reenterEvents
+            .filterIsInstance<OutboundEvent.GmcpData>()
+            .filter { it.gmcpPackage == "Dungeon.Info" }
+        assertTrue(reenterGmcp.isNotEmpty(), "Expected a Dungeon.Info emission on re-enter")
+        assertTrue(
+            reenterGmcp.last().jsonData.contains("\"completed\":true"),
+            "Re-enter payload after completion should have completed=true. got=${reenterGmcp.last().jsonData}",
+        )
+    }
+
+    @Test
+    fun `dungeon enter emits scoped UI feedback so panel can show current action`() = runTest {
+        val players = buildTestPlayerRegistry(world.startRoom)
+        val outbound = dev.ambon.bus.LocalOutboundBus()
+        val gmcpEmitter = GmcpEmitter(
+            outbound = outbound,
+            supportsPackage = { _, _ -> true },
+            progression = PlayerProgression(),
+        )
+        val h = CommandRouterHarness.create(
+            world = world,
+            players = players,
+            mobs = mobs,
+            outbound = outbound,
+            dungeonManager = manager,
+            dungeonRegistry = registry,
+            gmcpEmitter = gmcpEmitter,
+        )
+        val sid = SessionId(1)
+        h.loginPlayer(sid, "Alice")
+        h.players.get(sid)!!.level = 5
+        h.drain()
+
+        h.router.handle(sid, Command.DungeonEnter("crypt", null))
+        val events = h.drain()
+            .filterIsInstance<OutboundEvent.GmcpData>()
+            .filter { it.gmcpPackage == "UI.Feedback" }
+        val dungeonScoped = events.filter { it.jsonData.contains("\"scope\":\"dungeon\"") }
+        assertTrue(
+            dungeonScoped.any { it.jsonData.contains("\"code\":\"ENTERED\"") },
+            "Expected ENTERED feedback on enter. got=${dungeonScoped.map { it.jsonData }}",
+        )
     }
 
     @Test

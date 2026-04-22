@@ -2483,6 +2483,8 @@ class GameEngine(
         val inst = dungeonManager.findInstanceByBossMob(mobId)
         if (inst == null || inst.completed) return
         dungeonManager.markComplete(inst)
+        val completionHeadline =
+            "** The dungeon boss has been defeated! The ${inst.template.name} is complete! **"
         for (sid in inst.members) {
             players.get(sid)?.let { it.dungeonsCompleted += 1 }
             achievementSystem.onDungeonCompleted(sid, inst.template.name)
@@ -2490,12 +2492,7 @@ class GameEngine(
             if (inst.members.size >= engineConfig.group.maxSize) {
                 achievementSystem.onDungeonCompletedWithFullParty(sid, inst.template.name)
             }
-            outbound.send(
-                OutboundEvent.SendInfo(
-                    sid,
-                    "** The dungeon boss has been defeated! The ${inst.template.name} is complete! **",
-                ),
-            )
+            outbound.send(OutboundEvent.SendInfo(sid, completionHeadline))
             val lootTable = inst.template.lootTables[inst.difficulty]
             if (lootTable != null) {
                 for (rewardId in lootTable.completionRewards) {
@@ -2510,6 +2507,26 @@ class GameEngine(
             }
             outbound.send(
                 OutboundEvent.SendInfo(sid, "Type 'dungeon leave' to return to the portal."),
+            )
+            // Update dungeon panel state so the UI shows completion instead of the stale
+            // "You enter <name>" message (see issue #1041).
+            gmcpEmitter.sendDungeonInfo(
+                sid,
+                active = true,
+                instanceId = inst.id,
+                name = inst.template.name,
+                difficulty = inst.difficulty.displayName,
+                totalRooms = inst.layout.rooms.size,
+                completed = true,
+                memberCount = inst.members.size,
+            )
+            gmcpEmitter.sendUiFeedback(
+                sessionId = sid,
+                type = "success",
+                message = "${inst.template.name} complete! Type 'dungeon leave' to return to the portal.",
+                code = "COMPLETED",
+                scope = "dungeon",
+                command = "complete",
             )
         }
     }

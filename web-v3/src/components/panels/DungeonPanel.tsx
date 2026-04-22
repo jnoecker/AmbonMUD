@@ -49,11 +49,17 @@ export function DungeonPanel({ dungeonInfo, dungeonCatalog, uiFeedbackFeed, onCo
             <div><dt>Status</dt><dd>{dungeonInfo.completed ? "Boss defeated" : "In progress"}</dd></div>
           </dl>
           <div className="systems-action-row">
-            <button type="button" className="systems-primary-btn" onClick={() => onCommand("dungeon enter resume")}>
-              Resume Run
-            </button>
-            <button type="button" className="systems-secondary-btn" onClick={() => onCommand("dungeon leave")}>
-              Leave Dungeon
+            {!dungeonInfo.completed && (
+              <button type="button" className="systems-primary-btn" onClick={() => onCommand("dungeon enter resume")}>
+                Resume Run
+              </button>
+            )}
+            <button
+              type="button"
+              className={dungeonInfo.completed ? "systems-primary-btn" : "systems-secondary-btn"}
+              onClick={() => onCommand("dungeon leave")}
+            >
+              {dungeonInfo.completed ? "Return to Portal" : "Leave Dungeon"}
             </button>
           </div>
         </article>
