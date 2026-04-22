@@ -1018,4 +1018,116 @@ class CombatSystemTest {
                 "Expected damage effect to be cleared on death",
             )
         }
+
+    @Test
+    fun `autoloot disabled leaves mob drops in the room`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 1, maxHp = 1)
+            fixture.mobs.upsert(mob)
+            fixture.items.addMobItem(
+                mob.id,
+                ItemInstance(ItemId("demo:tail"), Item(keyword = "tail", displayName = "a rat tail")),
+            )
+
+            val combat = fixture.buildCombat(rng = Random(2))
+
+            val sid = SessionId(101L)
+            fixture.players.loginOrFail(sid, "Looter")
+            // autoloot is off by default — assert it.
+            assertEquals(false, fixture.players.get(sid)!!.autolootEnabled)
+
+            assertNull(combat.startCombat(sid, "rat"))
+            fixture.tickCombat(combat)
+
+            assertEquals(
+                1,
+                fixture.items.itemsInRoom(fixture.roomId).size,
+                "Expected drop to remain in room when autoloot is off",
+            )
+            assertTrue(fixture.items.inventory(sid).isEmpty(), "Expected empty inventory")
+        }
+
+    @Test
+    fun `autoloot enabled moves mob drops into killer inventory`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 1, maxHp = 1)
+            fixture.mobs.upsert(mob)
+            fixture.items.addMobItem(
+                mob.id,
+                ItemInstance(ItemId("demo:tail"), Item(keyword = "tail", displayName = "a rat tail")),
+            )
+
+            val combat = fixture.buildCombat(rng = Random(2))
+
+            val sid = SessionId(102L)
+            fixture.players.loginOrFail(sid, "Looter2")
+            fixture.players.setAutolootEnabled(sid, true)
+
+            assertNull(combat.startCombat(sid, "rat"))
+            fixture.tickCombat(combat)
+
+            assertTrue(
+                fixture.items.itemsInRoom(fixture.roomId).isEmpty(),
+                "Expected drops to be moved out of the room",
+            )
+            val inv = fixture.items.inventory(sid)
+            assertEquals(1, inv.size, "Expected one item in inventory")
+            assertEquals("demo:tail", inv.first().id.value)
+
+            val messages =
+                fixture.outbound
+                    .drainAll()
+                    .filterIsInstance<OutboundEvent.SendInfo>()
+                    .map { it.text }
+            assertTrue(
+                messages.any { it.contains("You loot") && it.contains("a rat tail") },
+                "Expected autoloot info message, got: $messages",
+            )
+        }
+
+    @Test
+    fun `autoloot also picks up rolled loot-table drops`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            fixture.items.loadSpawns(
+                listOf(
+                    ItemSpawn(
+                        instance =
+                            ItemInstance(
+                                ItemId("demo:fang"),
+                                Item(keyword = "fang", displayName = "a wolf fang"),
+                            ),
+                    ),
+                ),
+            )
+            val mob =
+                MobState(
+                    MobId("demo:wolf"),
+                    "a wolf",
+                    fixture.roomId,
+                    hp = 1,
+                    maxHp = 1,
+                    drops = listOf(MobDrop(ItemId("demo:fang"), 1.0)),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(2))
+
+            val sid = SessionId(103L)
+            fixture.players.loginOrFail(sid, "Looter3")
+            fixture.players.setAutolootEnabled(sid, true)
+
+            assertNull(combat.startCombat(sid, "wolf"))
+            fixture.tickCombat(combat)
+
+            assertTrue(
+                fixture.items.itemsInRoom(fixture.roomId).isEmpty(),
+                "Expected rolled drop to be auto-looted",
+            )
+            val inv = fixture.items.inventory(sid)
+            assertEquals(1, inv.size)
+            assertEquals("demo:fang", inv.first().id.value)
+        }
 }

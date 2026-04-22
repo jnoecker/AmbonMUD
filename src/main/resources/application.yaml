@@ -1250,6 +1250,10 @@ ambonmud:
           usage: screenreader [on/off]
           category: utility
           staff: false
+        autoloot:
+          usage: autoloot on/off/status
+          category: utility
+          staff: false
         colors:
           usage: colors
           category: utility

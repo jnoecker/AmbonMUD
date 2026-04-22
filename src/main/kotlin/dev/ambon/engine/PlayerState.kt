@@ -105,6 +105,8 @@ data class PlayerState(
     var screenReaderEnabled: Boolean = false,
     /** Player-written custom description visible when others look at them. */
     var description: String = "",
+    /** When true, items dropped by mobs the player kills are auto-looted into inventory. */
+    var autolootEnabled: Boolean = false,
     /**
      * SHA-256 hash of the remember-me auth token.
      * Tracked on [PlayerState] so [persistIfClaimed] doesn't wipe it on every
@@ -253,6 +255,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         description = description,
         authTokenHash = authTokenHash,
         authTokenIssuedAt = authTokenIssuedAt,
+        autolootEnabled = autolootEnabled,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -307,6 +310,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         description = description,
         authTokenHash = authTokenHash,
         authTokenIssuedAt = authTokenIssuedAt,
+        autolootEnabled = autolootEnabled,
     )
 }
 

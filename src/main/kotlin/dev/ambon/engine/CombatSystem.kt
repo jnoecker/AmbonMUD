@@ -1193,10 +1193,11 @@ class CombatSystem(
         mobs.remove(mob.id)
         callbacks.onMobRemoved(mob.id, mob.roomId)
         statusEffects?.onMobRemoved(mob.id)
-        items.dropMobItemsToRoom(mob.id, mob.roomId)
-        rollDrops(mob)
+        val mobCarried = items.dropMobItemsToRoom(mob.id, mob.roomId)
+        val rolledDrops = rollDrops(mob)
         callbacks.onRoomItemsChanged(mob.roomId)
         broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
+        applyAutolootForKiller(killerSessionId, mob.roomId, mobCarried + rolledDrops)
         val goldGained = grantKillGold(killerSessionId, mob)
         grantGroupKillXp(killerSessionId, mob)
         onCombatEvent(
@@ -1293,12 +1294,48 @@ class CombatSystem(
         }
     }
 
-    private fun rollDrops(mob: MobState) {
+    private fun rollDrops(mob: MobState): List<dev.ambon.domain.items.ItemInstance> {
+        val dropped = mutableListOf<dev.ambon.domain.items.ItemInstance>()
         for (drop in mob.drops) {
             if (drop.chance <= 0.0) continue
             val shouldDrop = drop.chance >= 1.0 || rng.nextDouble() < drop.chance
             if (!shouldDrop) continue
-            items.placeMobDrop(drop.itemId, mob.roomId)
+            items.placeMobDrop(drop.itemId, mob.roomId)?.let { dropped += it }
         }
+        return dropped
+    }
+
+    /**
+     * If the killing player has auto-loot enabled, transfer the mob's dropped items from the
+     * room into the killer's inventory. Skips synthetic pet sessions (pets don't hold inventory)
+     * and no-ops when the killer isn't present or auto-loot is disabled.
+     *
+     * Group-loot rules are not enforced: the engine currently has no active loot-master/round-robin
+     * policy (see GroupSystem.lootRobinIndex — declared but unused). Auto-loot follows the same
+     * free-for-all policy as manual `get` in the current code path.
+     */
+    private suspend fun applyAutolootForKiller(
+        killerSessionId: SessionId,
+        roomId: RoomId,
+        candidates: List<dev.ambon.domain.items.ItemInstance>,
+    ) {
+        if (candidates.isEmpty()) return
+        if (petSystem?.isPetSession(killerSessionId) == true) return
+        val killer = players.get(killerSessionId) ?: return
+        if (!killer.autolootEnabled) return
+        if (killer.roomId != roomId) return
+
+        val looted = mutableListOf<dev.ambon.domain.items.ItemInstance>()
+        for (candidate in candidates) {
+            // takeFromRoomByInstance matches by object identity so a same-keyword pickup
+            // elsewhere can't accidentally grab an unrelated item.
+            val taken = items.takeFromRoomByInstance(killerSessionId, roomId, candidate) ?: continue
+            looted += taken
+        }
+        if (looted.isEmpty()) return
+
+        val names = looted.joinToString(", ") { it.item.displayName }
+        outbound.send(OutboundEvent.SendInfo(killerSessionId, "You loot $names."))
+        callbacks.onRoomItemsChanged(roomId)
     }
 }

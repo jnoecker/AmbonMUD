@@ -21,6 +21,12 @@ sealed interface Command {
 
     data object ScreenReaderOff : Command
 
+    data object AutolootOn : Command
+
+    data object AutolootOff : Command
+
+    data object AutolootStatus : Command
+
     data class Move(
         val dir: Direction,
     ) : Command
@@ -1570,6 +1576,9 @@ object CommandParser {
             "screenreader on" -> Command.ScreenReaderOn
             "screenreader off" -> Command.ScreenReaderOff
             "screenreader" -> Command.ScreenReaderOn // toggle handled by router
+            "autoloot on" -> Command.AutolootOn
+            "autoloot off" -> Command.AutolootOff
+            "autoloot status", "autoloot" -> Command.AutolootStatus
             "clear" -> Command.Clear
             "colors" -> Command.Colors
             "who" -> Command.Who

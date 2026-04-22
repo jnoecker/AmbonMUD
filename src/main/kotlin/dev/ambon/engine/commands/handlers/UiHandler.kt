@@ -51,6 +51,9 @@ class UiHandler(
         router.on<Command.AnsiOff> { sid, _ -> handleAnsiOff(sid) }
         router.on<Command.ScreenReaderOn> { sid, _ -> handleScreenReaderToggle(sid, true) }
         router.on<Command.ScreenReaderOff> { sid, _ -> handleScreenReaderToggle(sid, false) }
+        router.on<Command.AutolootOn> { sid, _ -> handleAutoloot(sid, AutolootAction.ON) }
+        router.on<Command.AutolootOff> { sid, _ -> handleAutoloot(sid, AutolootAction.OFF) }
+        router.on<Command.AutolootStatus> { sid, _ -> handleAutoloot(sid, AutolootAction.STATUS) }
         router.on<Command.Clear> { sid, _ ->
             outbound.send(OutboundEvent.ClearScreen(sid))
         }
@@ -77,6 +80,29 @@ class UiHandler(
         outbound.send(OutboundEvent.SetAnsi(sessionId, false))
         players.setAnsiEnabled(sessionId, false)
         outbound.send(OutboundEvent.SendInfo(sessionId, "ANSI disabled"))
+    }
+
+    private enum class AutolootAction { ON, OFF, STATUS }
+
+    private suspend fun handleAutoloot(
+        sessionId: SessionId,
+        action: AutolootAction,
+    ) {
+        val me = players.get(sessionId) ?: return
+        when (action) {
+            AutolootAction.ON -> {
+                players.setAutolootEnabled(sessionId, true)
+                outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot enabled."))
+            }
+            AutolootAction.OFF -> {
+                players.setAutolootEnabled(sessionId, false)
+                outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot disabled."))
+            }
+            AutolootAction.STATUS -> {
+                val status = if (me.autolootEnabled) "ON" else "OFF"
+                outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot is $status."))
+            }
+        }
     }
 
     private suspend fun handleScreenReaderToggle(sessionId: SessionId, requestedOn: Boolean) {

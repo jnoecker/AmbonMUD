@@ -461,6 +461,27 @@ class ItemRegistry {
     }
 
     /**
+     * Move the specific [instance] from a room to a player's inventory by identity.
+     * Returns the instance if it was found and moved, or null if it was no longer in the room.
+     * Used by auto-loot so a stray same-keyword pickup can't accidentally grab an unrelated item.
+     */
+    fun takeFromRoomByInstance(
+        sessionId: SessionId,
+        roomId: RoomId,
+        instance: ItemInstance,
+    ): ItemInstance? {
+        val items = roomItems[roomId] ?: return null
+        val idx = items.indexOfFirst { it === instance }
+        if (idx < 0) return null
+
+        val taken = items.removeAt(idx)
+        inventoryItems.getOrPut(sessionId) { mutableListOf() }.add(taken)
+
+        if (items.isEmpty()) roomItems.remove(roomId)
+        return taken
+    }
+
+    /**
      * Move an item by keyword (case-insensitive) from a player's inventory to a room.
      * Returns the moved item, or null if not found.
      */

@@ -79,6 +79,7 @@ object PlayersTable : Table("players") {
     val dailyQuestData = text("daily_quest_data").default("{}")
     val screenReaderEnabled = bool("screen_reader_enabled").default(false)
     val description = text("description").default("")
+    val autolootEnabled = bool("autoloot_enabled").default(false)
 
     override val primaryKey = PrimaryKey(id)
 
@@ -135,6 +136,7 @@ object PlayersTable : Table("players") {
             dailyQuestData = row[dailyQuestData],
             screenReaderEnabled = row[screenReaderEnabled],
             description = row[description],
+            autolootEnabled = row[autolootEnabled],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -190,5 +192,6 @@ object PlayersTable : Table("players") {
         statement[dailyQuestData] = record.dailyQuestData
         statement[screenReaderEnabled] = record.screenReaderEnabled
         statement[description] = record.description
+        statement[autolootEnabled] = record.autolootEnabled
     }
 }

@@ -1688,6 +1688,11 @@ data class CommandsConfig(
             "gamble" to CommandMetadata("gamble/dice <amount>", "Roll the dice at a tavern", "social"),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),
             "screenreader" to CommandMetadata("screenreader [on/off]", "Toggle screen reader mode", "utility"),
+            "autoloot" to CommandMetadata(
+                usage = "autoloot on/off/status",
+                description = "Auto-loot mob corpses when enabled",
+                category = "utility",
+            ),
             "colors" to CommandMetadata("colors", "Preview ANSI color palette", "utility"),
             "clear" to CommandMetadata("clear", "Clear the terminal", "utility"),
             "quit" to CommandMetadata("quit/exit", "Disconnect", "utility"),
