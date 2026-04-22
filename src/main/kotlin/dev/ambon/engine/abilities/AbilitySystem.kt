@@ -686,6 +686,55 @@ class AbilitySystem(
             )
 
     /**
+     * Entry returned by [trainerPanelAbilities]. Includes the underlying ability plus
+     * per-player lock status so the UI can render locked rows with a clear reason.
+     */
+    data class TrainerPanelEntry(
+        val ability: AbilityDefinition,
+        val locked: Boolean,
+        val lockReason: String?,
+    )
+
+    /**
+     * Returns every ability belonging to [className] that the player does not already know,
+     * annotated with lock status. Unlike [trainableAbilities], this does *not* filter out
+     * abilities above the player's current level — those appear with `locked = true` and a
+     * "Requires level N" reason so the training panel can show them as gated rather than
+     * hiding them entirely.
+     */
+    fun trainerPanelAbilities(
+        className: String,
+        level: Int,
+        knownIds: Set<String>,
+    ): List<TrainerPanelEntry> =
+        registry.abilitiesForClass(className)
+            .filter { it.id.value !in knownIds }
+            .map { ability ->
+                val levelMet = ability.levelRequired <= level
+                val prereqMet = registry.isPrerequisiteMet(ability.id, knownIds)
+                val reason = when {
+                    !levelMet -> "Requires level ${ability.levelRequired}"
+                    !prereqMet -> {
+                        val prereqNames = ability.prerequisites.map { pid ->
+                            registry.get(pid)?.displayName ?: pid.value
+                        }
+                        "Requires: ${prereqNames.joinToString(", ")}"
+                    }
+                    else -> null
+                }
+                TrainerPanelEntry(
+                    ability = ability,
+                    locked = !levelMet || !prereqMet,
+                    lockReason = reason,
+                )
+            }
+            .sortedWith(
+                compareBy<TrainerPanelEntry> { it.ability.tier }
+                    .thenBy { it.locked }
+                    .thenBy { it.ability.levelRequired },
+            )
+
+    /**
      * Attempts to learn [abilityId] for the session. Returns null on success, or an error message.
      * Updates the in-memory learned set; caller is responsible for persisting to [PlayerState].
      *

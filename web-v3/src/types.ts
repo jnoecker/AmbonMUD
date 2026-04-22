@@ -741,12 +741,17 @@ export interface TrainerAbility {
   id: string;
   name: string;
   description: string;
+  skillPointCost: number;
   levelRequired: number;
   manaCost: number;
   cooldownMs: number;
   targetType: string;
   effectType: string;
   image: string | null;
+  /** True when the player cannot currently learn this ability. */
+  locked: boolean;
+  /** Human-readable reason the ability is locked (e.g. "Requires level 10"), or null when unlocked. */
+  lockReason: string | null;
 }
 
 /** One class taught by a trainer. Multi-class trainers emit one entry per class. */

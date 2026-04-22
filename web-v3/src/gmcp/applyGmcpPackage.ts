@@ -1901,12 +1901,15 @@ export function applyGmcpPackage(
                 id: typeof a.id === "string" ? a.id : "",
                 name: typeof a.name === "string" ? a.name : "",
                 description: typeof a.description === "string" ? a.description : "",
+                skillPointCost: safeNumber(a.skillPointCost, 1),
                 levelRequired: safeNumber(a.levelRequired, 1),
                 manaCost: safeNumber(a.manaCost),
                 cooldownMs: safeNumber(a.cooldownMs),
                 targetType: typeof a.targetType === "string" ? a.targetType : "ENEMY",
                 effectType: typeof a.effectType === "string" ? a.effectType : "DIRECT_DAMAGE",
                 image: typeof a.image === "string" ? a.image : null,
+                locked: a.locked === true,
+                lockReason: typeof a.lockReason === "string" ? a.lockReason : null,
               }))
           : [];
       const classes = Array.isArray(packet.classes)

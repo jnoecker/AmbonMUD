@@ -223,24 +223,40 @@ class TrainerHandler(
                 return
             }
 
-            // Search for a matching ability across all unlocked classes this trainer teaches
-            val candidates: List<Pair<String, AbilityDefinition>> = unlockedHere.flatMap { cls ->
-                abilitySystem.trainableAbilities(cls, me.level, abilitySystem.knownAbilityIds(sessionId))
+            // Search for a matching ability across all unlocked classes this trainer teaches.
+            // Include level-locked abilities so we can return a clear "requires level N" error
+            // rather than a confusing "no matching ability" message.
+            val knownIds = abilitySystem.knownAbilityIds(sessionId)
+            val allCandidates: List<Pair<String, AbilityDefinition>> = unlockedHere.flatMap { cls ->
+                abilitySystem.registry.abilitiesForClass(cls)
+                    .filter { it.id.value !in knownIds }
                     .map { cls to it }
             }
-            val target = candidates.firstOrNull { (_, ability) ->
+            val matched = allCandidates.firstOrNull { (_, ability) ->
                 ability.id.value.equals(keyword, ignoreCase = true) ||
                     ability.displayName.equals(keyword, ignoreCase = true)
             }
-                ?: candidates.firstOrNull { (_, ability) ->
+                ?: allCandidates.firstOrNull { (_, ability) ->
                     ability.id.value.startsWith(keyword.lowercase()) ||
                         ability.displayName.lowercase().contains(keyword.lowercase())
                 }
 
-            if (target == null) {
+            if (matched == null) {
                 outbound.send(OutboundEvent.SendError(sessionId, "No trainable ability matching '$keyword' found here."))
                 return
             }
+
+            val matchedAbility = matched.second
+            if (matchedAbility.levelRequired > me.level) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "You need to be level ${matchedAbility.levelRequired} to learn ${matchedAbility.displayName}.",
+                    ),
+                )
+                return
+            }
+            val target = matched
 
             val ability = target.second
 

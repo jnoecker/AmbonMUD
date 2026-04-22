@@ -32,13 +32,26 @@ function AbilityRow({
   onLearn: (id: string) => void;
   canAfford: boolean;
 }) {
+  const isLocked = ability.locked;
+  const canLearn = !isLocked && canAfford;
+  const buttonTitle = isLocked
+    ? ability.lockReason ?? "Requirements not met"
+    : canAfford
+      ? `Learn ${ability.name}`
+      : "Not enough skill points";
+  const rowClass = `trainer-ability-row${isLocked ? " trainer-ability-row-locked" : ""}`;
   return (
-    <div className="trainer-ability-row">
+    <div className={rowClass}>
       <div className="trainer-ability-icon">
         {ability.image ? (
           <img src={ability.image} alt="" className="trainer-ability-img" />
         ) : (
           <div className="trainer-ability-placeholder" />
+        )}
+        {isLocked && (
+          <span className="trainer-ability-lock-overlay" aria-hidden="true">
+            {"🔒"}
+          </span>
         )}
       </div>
       <div className="trainer-ability-info">
@@ -48,17 +61,28 @@ function AbilityRow({
           <span className="trainer-meta-tag">{effectLabel(ability.effectType)}</span>
           <span className="trainer-meta-tag">{ability.manaCost} MP</span>
           <span className="trainer-meta-tag">CD: {cooldownLabel(ability.cooldownMs)}</span>
-          <span className="trainer-meta-tag">Lv {ability.levelRequired}</span>
+          <span className={`trainer-meta-tag${isLocked ? " trainer-meta-tag-lock" : ""}`}>
+            Lv {ability.levelRequired}
+          </span>
+          <span className="trainer-meta-tag">
+            {ability.skillPointCost === 0
+              ? "Auto"
+              : `${ability.skillPointCost} SP`}
+          </span>
         </div>
+        {isLocked && ability.lockReason && (
+          <span className="trainer-ability-lock-reason">{ability.lockReason}</span>
+        )}
       </div>
       <button
         type="button"
-        className={`trainer-learn-btn${canAfford ? "" : " trainer-learn-btn-disabled"}`}
-        disabled={!canAfford}
-        title={canAfford ? `Learn ${ability.name}` : "Not enough skill points"}
+        className={`trainer-learn-btn${canLearn ? "" : " trainer-learn-btn-disabled"}`}
+        disabled={!canLearn}
+        title={buttonTitle}
+        aria-label={isLocked ? `${ability.name} locked — ${ability.lockReason ?? "requirements not met"}` : `Learn ${ability.name}`}
         onClick={() => onLearn(ability.id)}
       >
-        Learn
+        {isLocked ? "Locked" : "Learn"}
       </button>
     </div>
   );
