@@ -2,6 +2,12 @@ package dev.ambon.domain.world
 
 import dev.ambon.domain.ids.RoomId
 
+/** Per-character achievement gate on an exit. */
+data class AchievementGate(
+    val achievementId: String,
+    val lockedMessage: String?,
+)
+
 data class Room(
     val id: RoomId,
     val title: String,
@@ -9,6 +15,8 @@ data class Room(
     val exits: Map<Direction, RoomId>,
     /** Directions whose targets are in zones not loaded on this engine (cross-zone stubs). */
     val remoteExits: Set<Direction> = emptySet(),
+    /** Directions whose exits require the player to have unlocked a given achievement. */
+    val achievementGates: Map<Direction, AchievementGate> = emptyMap(),
     /** Stateful features in this room: doors, containers, levers, signs. */
     val features: List<RoomFeature> = emptyList(),
     /** Crafting station available in this room, if any. */

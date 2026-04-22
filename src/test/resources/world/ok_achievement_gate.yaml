@@ -1,0 +1,17 @@
+zone: ok_achievement_gate
+lifespan: 1
+startRoom: courtyard
+rooms:
+  courtyard:
+    title: "Academy Courtyard"
+    description: "A quiet courtyard. A cottage lies to the north."
+    exits:
+      north:
+        to: cottage
+        requiresAchievement: academy_boss_slain
+        lockedMessage: "The cottage door is sealed until you prove yourself in the Academy."
+  cottage:
+    title: "Aineroia's Cottage"
+    description: "A warm, lived-in cottage."
+    exits:
+      south: courtyard

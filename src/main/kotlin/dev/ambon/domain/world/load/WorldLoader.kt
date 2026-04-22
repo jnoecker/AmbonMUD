@@ -35,6 +35,7 @@ import dev.ambon.domain.puzzle.PuzzleType
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
+import dev.ambon.domain.world.AchievementGate
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.LeverState
@@ -131,6 +132,7 @@ object WorldLoader {
         // Normalize + merge all rooms
         val mergedRooms = LinkedHashMap<RoomId, Room>()
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
+        val allGates = LinkedHashMap<RoomId, Map<Direction, AchievementGate>>() // staged per-room achievement gates
         val allRoomFeatures = LinkedHashMap<RoomId, MutableList<RoomFeature>>() // staged features per room
         val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
@@ -221,12 +223,19 @@ object WorldLoader {
             for ((rawId, rf) in file.rooms) {
                 val fromId = normalizeId(zone, rawId)
                 val featList = allRoomFeatures.getOrPut(fromId) { mutableListOf() }
+                val gatesForRoom = mutableMapOf<Direction, AchievementGate>()
                 val exits: Map<Direction, RoomId> =
                     rf.exits
                         .map { (dirStr, exitValue) ->
                             val dir =
                                 parseDirectionOrNull(dirStr)
                                     ?: throw WorldLoadException("Room ‘${fromId.value}’ has invalid direction ‘$dirStr’")
+                            exitValue.requiresAchievement?.let { achievementId ->
+                                gatesForRoom[dir] = AchievementGate(
+                                    achievementId = achievementId,
+                                    lockedMessage = exitValue.lockedMessage,
+                                )
+                            }
                             val doorFile = exitValue.door
                             if (doorFile != null) {
                                 val doorKeyItemId =
@@ -257,6 +266,9 @@ object WorldLoader {
                         }.toMap()
 
                 allExits[fromId] = exits
+                if (gatesForRoom.isNotEmpty()) {
+                    allGates[fromId] = gatesForRoom
+                }
             }
 
             // Stage non-exit features (containers, levers, signs)
@@ -857,6 +869,7 @@ object WorldLoader {
             mergedRooms[fromId] = room.copy(
                 exits = exits,
                 remoteExits = remoteExits,
+                achievementGates = allGates[fromId] ?: emptyMap(),
                 features = allRoomFeatures[fromId] ?: emptyList(),
                 station = room.station,
             )

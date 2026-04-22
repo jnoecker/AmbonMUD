@@ -104,6 +104,13 @@ class NavigationHandler(
                 }
             }
 
+            val gate = room.achievementGates[cmd.dir]
+            if (gate != null && gate.achievementId !in me.unlockedAchievementIds) {
+                val msg = gate.lockedMessage ?: "The way is sealed to you."
+                outbound.send(OutboundEvent.SendText(sessionId, msg))
+                return
+            }
+
             // Housing exit: resolve dynamic destination
             if (housingSystem != null && housingSystem.isHouseExit(to)) {
                 val origin = housingSystem.resolveHouseExit(sessionId)

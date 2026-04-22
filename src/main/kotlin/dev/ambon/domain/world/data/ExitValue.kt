@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
  *   n: inner_keep
  * ```
  *
- * Object form with optional door block:
+ * Object form with optional door block and/or achievement gate:
  * ```yaml
  * exits:
  *   n:
@@ -25,11 +25,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode
  *       keyItemId: zone:iron_key
  *       keyConsumed: false
  *       resetWithZone: true
+ *     requiresAchievement: academy_boss_slain
+ *     lockedMessage: "The door is sealed until you prove yourself in the Academy."
  * ```
+ *
+ * `requiresAchievement` is a per-player gate: the exit only resolves for characters
+ * whose `unlockedAchievementIds` contains the given id. `lockedMessage` is the text
+ * shown when a character without the achievement tries to move through it.
  */
 data class ExitValue(
     val to: String,
     val door: DoorFile? = null,
+    val requiresAchievement: String? = null,
+    val lockedMessage: String? = null,
 )
 
 class ExitValueDeserializer : StdDeserializer<ExitValue>(ExitValue::class.java) {
@@ -53,6 +61,15 @@ class ExitValueDeserializer : StdDeserializer<ExitValue>(ExitValue::class.java) 
             } else {
                 null
             }
-        ExitValue(to = to, door = door)
+        val requiresAchievement =
+            node.get("requiresAchievement")?.asText()?.trim()?.takeUnless { it.isEmpty() }
+        val lockedMessage =
+            node.get("lockedMessage")?.asText()?.takeUnless { it.isEmpty() }
+        ExitValue(
+            to = to,
+            door = door,
+            requiresAchievement = requiresAchievement,
+            lockedMessage = lockedMessage,
+        )
     }
 }
