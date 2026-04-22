@@ -3643,8 +3643,10 @@ body {
   font-size: 0.84rem;
 }
 
-/* Hero treatment for a single locked container — bigger, centered, with a
-   prominent lock glyph and a primary Unlock action. */
+/* Hero treatment for a single locked feature (container or door) — bigger,
+   centered, with a prominent lock glyph and a primary Unlock action. Variant
+   classes re-tint the card (gold for containers, cool blue for doors) while
+   the layout and glyph stay consistent. */
 .feature-card-hero-locked {
   grid-column: 1 / -1;
   justify-self: center;
@@ -3654,13 +3656,23 @@ body {
   padding: 28px 24px 24px;
   align-items: center;
   text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 12px 32px rgb(10 8 18 / 34%);
+}
+
+.feature-card-hero-locked-container {
   background:
     radial-gradient(circle at 50% 0%, rgb(212 178 110 / 18%), transparent 60%),
     linear-gradient(160deg, rgb(72 68 92 / 94%), rgb(52 50 74 / 92%));
   border-color: rgb(212 178 110 / 28%);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 10%),
-    0 12px 32px rgb(10 8 18 / 34%);
+}
+
+.feature-card-hero-locked-door {
+  background:
+    radial-gradient(circle at 50% 0%, rgb(146 184 223 / 20%), transparent 60%),
+    linear-gradient(160deg, rgb(62 73 108 / 94%), rgb(45 56 86 / 92%));
+  border-color: rgb(146 184 223 / 30%);
 }
 
 .feature-card-hero-lock {
@@ -3669,9 +3681,17 @@ body {
   justify-content: center;
   width: 96px;
   height: 96px;
+  animation: hero-lock-breathe 4s var(--ease-in-out-smooth) infinite;
+}
+
+.feature-card-hero-locked-container .feature-card-hero-lock {
   color: rgb(226 198 134);
   filter: drop-shadow(0 0 10px rgb(226 198 134 / 24%));
-  animation: hero-lock-breathe 4s var(--ease-in-out-smooth) infinite;
+}
+
+.feature-card-hero-locked-door .feature-card-hero-lock {
+  color: rgb(189 216 238);
+  filter: drop-shadow(0 0 10px rgb(189 216 238 / 28%));
 }
 
 .feature-card-hero-lock-svg {
@@ -3682,6 +3702,12 @@ body {
 @keyframes hero-lock-breathe {
   0%, 100% { transform: scale(1); opacity: 0.92; }
   50% { transform: scale(1.04); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature-card-hero-lock {
+    animation: none;
+  }
 }
 
 .feature-card-hero-copy {
@@ -3704,6 +3730,18 @@ body {
   font-size: 0.86rem;
 }
 
+.feature-card-hero-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(10 12 22 / 34%);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
 .feature-card-hero-actions {
   display: flex;
   justify-content: center;
@@ -3713,13 +3751,26 @@ body {
 .feature-card-action-primary {
   padding: 10px 22px;
   font-size: 0.9rem;
+}
+
+.feature-card-hero-locked-container .feature-card-action-primary {
   border-color: rgb(226 198 134 / 46%);
   background: linear-gradient(135deg, rgb(164 136 82 / 70%), rgb(124 102 62 / 64%));
 }
 
-.feature-card-action-primary:hover {
+.feature-card-hero-locked-container .feature-card-action-primary:hover {
   border-color: rgb(240 214 150 / 70%);
   background: linear-gradient(135deg, rgb(188 158 100 / 80%), rgb(142 118 74 / 72%));
+}
+
+.feature-card-hero-locked-door .feature-card-action-primary {
+  border-color: rgb(156 190 228 / 50%);
+  background: linear-gradient(135deg, rgb(88 120 168 / 72%), rgb(66 92 136 / 66%));
+}
+
+.feature-card-hero-locked-door .feature-card-action-primary:hover {
+  border-color: rgb(186 214 240 / 70%);
+  background: linear-gradient(135deg, rgb(110 144 196 / 82%), rgb(82 112 160 / 74%));
 }
 
 .skills-combat-panel {
