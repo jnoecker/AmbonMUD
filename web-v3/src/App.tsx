@@ -35,9 +35,86 @@ import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
-import type { ChatChannel, FeaturePopoutFocus, PopoutPanel } from "./types";
+import type { ChatChannel, FeaturePopoutFocus, LookTargetInfo, PopoutPanel } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
+
+// ── Look-target (Examine) helpers ───────────────────────────────────────────
+function formatItemSlot(slot: string): string {
+  return titleCaseWords(slot.replace(/_/g, " "));
+}
+
+function formatStatLabel(key: string): string {
+  return titleCaseWords(key.replace(/_/g, " "));
+}
+
+function formatStatValue(value: number): string {
+  return value > 0 ? `+${value}` : `${value}`;
+}
+
+function hasItemStatContent(info: LookTargetInfo): boolean {
+  if (info.type !== "item") return false;
+  if (info.damage != null && info.damage !== 0) return true;
+  if (info.armor != null && info.armor !== 0) return true;
+  if (info.basePrice != null && info.basePrice > 0) return true;
+  if (info.slot) return true;
+  if (info.consumable) return true;
+  if (info.stats && Object.values(info.stats).some((v) => v !== 0)) return true;
+  if (info.enchantments && info.enchantments.length > 0) return true;
+  return false;
+}
+
+function renderItemStats(info: LookTargetInfo) {
+  if (!hasItemStatContent(info)) return null;
+  const coreStats: Array<{ label: string; value: string; tone: "damage" | "armor" | "value" | "neutral" }> = [];
+  if (info.damage != null && info.damage !== 0) {
+    coreStats.push({ label: "Damage", value: formatStatValue(info.damage), tone: "damage" });
+  }
+  if (info.armor != null && info.armor !== 0) {
+    coreStats.push({ label: "Armor", value: formatStatValue(info.armor), tone: "armor" });
+  }
+  if (info.basePrice != null && info.basePrice > 0) {
+    coreStats.push({ label: "Value", value: `${info.basePrice}g`, tone: "value" });
+  }
+  if (info.consumable) {
+    coreStats.push({ label: "Type", value: "Consumable", tone: "neutral" });
+  }
+  const statEntries = info.stats
+    ? Object.entries(info.stats).filter(([, v]) => v !== 0)
+    : [];
+
+  return (
+    <div className="look-target-stats" role="group" aria-label="Item details">
+      {coreStats.length > 0 && (
+        <ul className="look-target-stat-grid">
+          {coreStats.map((s) => (
+            <li key={s.label} className={`look-target-stat look-target-stat-${s.tone}`}>
+              <span className="look-target-stat-label">{s.label}</span>
+              <span className="look-target-stat-value">{s.value}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {statEntries.length > 0 && (
+        <ul className="look-target-modifier-list">
+          {statEntries.map(([key, value]) => (
+            <li key={key} className={`look-target-modifier ${value > 0 ? "is-positive" : "is-negative"}`}>
+              <span className="look-target-modifier-label">{formatStatLabel(key)}</span>
+              <span className="look-target-modifier-value">{formatStatValue(value)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {info.enchantments && info.enchantments.length > 0 && (
+        <ul className="look-target-enchantments">
+          {info.enchantments.map((e, i) => (
+            <li key={`${e}-${i}`} className="look-target-enchantment">{e}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function TrainerAutoLoad({ onCommand }: { onCommand: (cmd: string) => void }) {
   const sent = useRef(false);
@@ -351,11 +428,14 @@ function App() {
     };
   }, [state.activePopout, drawMap, startPulse, stopPulse]);
 
-  // Auto-dismiss look target
+  // Close look-target modal on Escape
   useEffect(() => {
     if (!state.lookTarget) return;
-    const t = setTimeout(() => state.setLookTarget(null), 6000);
-    return () => clearTimeout(t);
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") state.setLookTarget(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [state.lookTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ctrl+K (or Cmd+K) opens the command palette
@@ -1104,19 +1184,45 @@ function App() {
 
       {/* Look target card */}
       {state.lookTarget && (
-        <div className="look-target-card" role="dialog" aria-label="Inspect target" onClick={() => state.setLookTarget(null)}>
-          <div className="look-target-header">
-            <span className="look-target-name">{state.lookTarget.name}</span>
-            {state.lookTarget.level != null && (
-              <span className="look-target-meta">
-                Lv {state.lookTarget.level}
-                {state.lookTarget.race && ` ${state.lookTarget.race}`}
-                {state.lookTarget.playerClass && ` ${state.lookTarget.playerClass}`}
-              </span>
+        <div
+          className="look-target-backdrop"
+          role="presentation"
+          onClick={() => state.setLookTarget(null)}
+        >
+          <div
+            className="look-target-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Inspect ${state.lookTarget.name}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="look-target-close"
+              aria-label="Close"
+              onClick={() => state.setLookTarget(null)}
+            >
+              &#x2715;
+            </button>
+            <div className="look-target-header">
+              <span className="look-target-name">{state.lookTarget.name}</span>
+              {state.lookTarget.level != null && (
+                <span className="look-target-meta">
+                  Lv {state.lookTarget.level}
+                  {state.lookTarget.race && ` ${state.lookTarget.race}`}
+                  {state.lookTarget.playerClass && ` ${state.lookTarget.playerClass}`}
+                </span>
+              )}
+              {state.lookTarget.type === "item" && state.lookTarget.slot && (
+                <span className="look-target-slot">{formatItemSlot(state.lookTarget.slot)}</span>
+              )}
+            </div>
+            {state.lookTarget.image && <img src={state.lookTarget.image} alt="" className="look-target-image" />}
+            {state.lookTarget.description && (
+              <p className="look-target-desc">{state.lookTarget.description}</p>
             )}
+            {state.lookTarget.type === "item" && renderItemStats(state.lookTarget)}
           </div>
-          <p className="look-target-desc">{state.lookTarget.description}</p>
-          {state.lookTarget.image && <img src={state.lookTarget.image} alt="" className="look-target-image" />}
         </div>
       )}
 

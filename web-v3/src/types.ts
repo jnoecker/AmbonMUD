@@ -696,6 +696,20 @@ export interface LookTargetInfo {
   race?: string | null;
   playerClass?: string | null;
   receivedAt: number;
+  /** Item-only: slot name (e.g. "MAIN_HAND"). */
+  slot?: string | null;
+  /** Item-only: bonus melee damage. */
+  damage?: number | null;
+  /** Item-only: bonus armor. */
+  armor?: number | null;
+  /** Item-only: merchant base price in gold. */
+  basePrice?: number | null;
+  /** Item-only: stat modifiers (e.g. {STR: 2, INT: -1}). */
+  stats?: Record<string, number> | null;
+  /** Item-only: active enchantment names. */
+  enchantments?: string[] | null;
+  /** Item-only: true if usable/consumable. */
+  consumable?: boolean | null;
 }
 
 export interface CombatLogMessage {

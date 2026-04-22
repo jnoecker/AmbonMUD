@@ -3,6 +3,7 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.config.RecallConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.world.LockableState
 import dev.ambon.engine.GuildHallSystem
 import dev.ambon.engine.HouseEntryResult
@@ -343,7 +344,7 @@ class NavigationHandler(
         if (roomItem != null) {
             val desc = roomItem.item.description.ifEmpty { "You see nothing special about ${roomItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${roomItem.item.displayName}: $desc"))
-            gmcpEmitter?.sendLookTarget(sessionId, "item", roomItem.item.displayName, desc, image = roomItem.item.image)
+            sendItemLookTarget(sessionId, roomItem, desc)
             return
         }
 
@@ -353,7 +354,7 @@ class NavigationHandler(
         if (invItem != null) {
             val desc = invItem.item.description.ifEmpty { "You see nothing special about ${invItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${invItem.item.displayName}: $desc"))
-            gmcpEmitter?.sendLookTarget(sessionId, "item", invItem.item.displayName, desc, image = invItem.item.image)
+            sendItemLookTarget(sessionId, invItem, desc)
             return
         }
 
@@ -363,7 +364,7 @@ class NavigationHandler(
         if (eqItem != null) {
             val desc = eqItem.item.description.ifEmpty { "You see nothing special about ${eqItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${eqItem.item.displayName}: $desc"))
-            gmcpEmitter?.sendLookTarget(sessionId, "item", eqItem.item.displayName, desc, image = eqItem.item.image)
+            sendItemLookTarget(sessionId, eqItem, desc)
             return
         }
 
@@ -393,6 +394,29 @@ class NavigationHandler(
         val msg = "You don't see '${cmd.target}' here."
         outbound.send(OutboundEvent.SendError(sessionId, msg))
         gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "TARGET_NOT_FOUND", scope = "navigation", command = "look")
+    }
+
+    private suspend fun sendItemLookTarget(
+        sessionId: SessionId,
+        instance: ItemInstance,
+        description: String,
+    ) {
+        val item = instance.item
+        val stats = item.stats.nonZero().ifEmpty { null }
+        gmcpEmitter?.sendLookTarget(
+            sessionId = sessionId,
+            type = "item",
+            name = item.displayName,
+            description = description,
+            image = item.image,
+            slot = item.slot?.label(),
+            damage = if (item.damage != 0) item.damage else null,
+            armor = if (item.armor != 0) item.armor else null,
+            basePrice = if (item.basePrice > 0) item.basePrice else null,
+            stats = stats,
+            enchantments = instance.enchantments.ifEmpty { null },
+            consumable = if (item.consumable) true else null,
+        )
     }
 
     private suspend fun handleLookDir(
