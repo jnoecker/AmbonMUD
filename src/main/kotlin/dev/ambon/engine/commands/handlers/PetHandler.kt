@@ -14,6 +14,7 @@ class PetHandler(
     private val petSystem: PetSystem,
 ) : CommandHandler {
     private val players = ctx.players
+    private val mobs = ctx.mobs
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
 
@@ -68,7 +69,7 @@ class PetHandler(
         }
 
         val petName = pet.name
-        petSystem.dismissAll(sessionId)
+        val dismissed = petSystem.dismissAll(sessionId)
         val message = "You dismiss $petName."
         outbound.send(OutboundEvent.SendInfo(sessionId, message))
         sendScopedFeedback(
@@ -84,6 +85,19 @@ class PetHandler(
         players.withPlayer(sessionId) { me ->
             broadcastToRoom(me.roomId, "$petName vanishes.", players, outbound)
         }
+        // Refresh the room mob list for the dismisser and bystanders so the pet disappears
+        // immediately instead of lingering until next room change. See issue #1069.
+        for (entry in dismissed) {
+            broadcastPetRemoved(entry)
+        }
+    }
+
+    private suspend fun broadcastPetRemoved(dismissed: PetSystem.DismissedPet) {
+        val emitter = gmcpEmitter ?: return
+        emitter.broadcastRoomRemoveMob(dismissed.roomId, dismissed.petId.value, players)
+        val mobsInRoom = mobs.mobsInRoom(dismissed.roomId)
+        val mobInfoEntries = emitter.buildMobInfoEntries(mobsInRoom)
+        emitter.broadcastRoomMobInfo(dismissed.roomId, mobInfoEntries, players)
     }
 
     private suspend fun handlePetName(sessionId: SessionId, cmd: Command.PetName) {
