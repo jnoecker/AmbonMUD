@@ -6320,6 +6320,40 @@ body {
   color: var(--color-primary-moss-green);
 }
 
+/* First-time onboarding hint: pulse the Equip action on wearable items until
+   the player actually wears one. Soft-gold border + inline "Equip" label so the
+   action is discoverable at a glance. */
+.inventory-action-equip-hint {
+  border-color: var(--color-primary-soft-gold);
+  color: var(--color-primary-soft-gold);
+  padding-right: 8px;
+  animation: inventory-equip-hint-pulse 1.8s var(--ease-in-out-smooth) infinite;
+}
+
+.inventory-action-equip-hint-label {
+  margin-left: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+@keyframes inventory-equip-hint-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgb(190 168 115 / 55%);
+  }
+  50% {
+    box-shadow: 0 0 10px 1px rgb(190 168 115 / 55%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-action-equip-hint {
+    animation: none;
+    box-shadow: 0 0 0 2px rgb(190 168 115 / 55%);
+  }
+}
+
 .inventory-action-examine,
 .inventory-action-use,
 .inventory-action-put {
@@ -15189,6 +15223,7 @@ html:has(.game-shell),
   cursor: pointer;
   transition: transform 0.12s, background 0.15s;
   min-height: 70px;
+  position: relative;
 }
 
 .vbar-panel-btn:active {
@@ -15203,6 +15238,41 @@ html:has(.game-shell),
 .vbar-panel-btn-dungeon {
   background: linear-gradient(135deg, rgb(210 120 140 / 82%), rgb(140 80 110 / 82%));
   border-color: rgb(232 170 190 / 55%);
+}
+
+/* First-time onboarding hint: pulse the Inventory sidebar button until opened.
+   Uses soft-gold tokens so it reads as "attention" without competing with the
+   primary-lavender active state. */
+.vbar-panel-btn-hint {
+  border-color: var(--color-primary-soft-gold);
+  animation: vbar-panel-btn-hint-pulse 2s var(--ease-in-out-smooth) infinite;
+}
+
+@keyframes vbar-panel-btn-hint-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgb(190 168 115 / 55%);
+  }
+  50% {
+    box-shadow: 0 0 14px 2px rgb(190 168 115 / 55%);
+  }
+}
+
+.vbar-panel-btn-hint-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary-soft-gold);
+  box-shadow: 0 0 6px rgb(190 168 115 / 80%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vbar-panel-btn-hint {
+    animation: none;
+    box-shadow: 0 0 0 2px rgb(190 168 115 / 55%);
+  }
 }
 
 .vbar-panel-btn-dungeon:hover {

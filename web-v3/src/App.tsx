@@ -35,6 +35,7 @@ import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
+import { useOnboarding } from "./hooks/useOnboarding";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
 import type { ChatChannel, FeaturePopoutFocus, LookTargetInfo, PopoutPanel } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
@@ -519,6 +520,44 @@ function App() {
   };
 
   const hasCharacterProfile = state.character.name !== "-";
+
+  // First-time onboarding hints: pulse the Inventory sidebar button until opened,
+  // then pulse the Equip action on wearable items until one is worn. Persisted
+  // per-character in localStorage so we only nag new players.
+  const onboarding = useOnboarding(hasCharacterProfile ? state.character.name : "");
+  const hasUnequippedWearable = useMemo(
+    () => state.inventory.some((i) => i.slot != null),
+    [state.inventory],
+  );
+  const showInventoryHint =
+    hasCharacterProfile
+    && hasUnequippedWearable
+    && !onboarding.flags.invHintDone
+    && !onboarding.flags.equipHintDone;
+  const showEquipHint =
+    hasCharacterProfile
+    && hasUnequippedWearable
+    && !onboarding.flags.equipHintDone;
+
+  // Opening the inventory drawer counts as acknowledging the sidebar hint.
+  useEffect(() => {
+    if (state.activePopout === "inventory" && !onboarding.flags.invHintDone) {
+      onboarding.markInvHintDone();
+    }
+  }, [state.activePopout, onboarding]);
+
+  // Once the player has no unequipped wearables left, the equip hint is done.
+  useEffect(() => {
+    if (
+      onboarding.flags.invHintDone
+      && !onboarding.flags.equipHintDone
+      && !hasUnequippedWearable
+      && hasCharacterProfile
+    ) {
+      onboarding.markEquipHintDone();
+    }
+  }, [onboarding, hasUnequippedWearable, hasCharacterProfile]);
+
   const displayRace = state.character.race ? titleCaseWords(state.character.race) : "";
   const displayClassName = state.character.className ? titleCaseWords(state.character.className) : "";
   const xpText = state.vitals.xpToNextLevel === null
@@ -613,6 +652,7 @@ function App() {
           resetComposerCompletion();
         }}
         onInputKeyDown={handleInputKeyDown}
+        inventoryHint={showInventoryHint}
       />
 
       <Drawer open={state.activePopout !== null} title={drawerTitle} onClose={closeDrawer}>
@@ -674,6 +714,7 @@ function App() {
             onDropItem={(name) => sendCommand(`drop ${name}`)}
             onGiveItem={(keyword, player) => sendCommand(`give ${keyword} ${player}`)}
             onCommand={sendCommand}
+            equipHint={showEquipHint}
           />
         )}
 

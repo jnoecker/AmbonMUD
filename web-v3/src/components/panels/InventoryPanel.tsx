@@ -15,6 +15,8 @@ interface InventoryPanelProps {
   onDropItem: (itemName: string) => void;
   onGiveItem: (itemKeyword: string, playerName: string) => void;
   onCommand: (command: string) => void;
+  /** Pulse the equip action on wearable items as a first-time onboarding cue. */
+  equipHint?: boolean;
 }
 
 function categorize(items: ItemSummary[]): { wearable: ItemSummary[]; other: ItemSummary[] } {
@@ -42,6 +44,7 @@ export function InventoryPanel({
   onDropItem,
   onGiveItem,
   onCommand,
+  equipHint = false,
 }: InventoryPanelProps) {
   const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
   const containers = useMemo(
@@ -97,12 +100,13 @@ export function InventoryPanel({
           {item.slot && (
             <button
               type="button"
-              className="inventory-action-btn inventory-action-equip"
-              title={`Wear ${item.name}`}
+              className={`inventory-action-btn inventory-action-equip${equipHint ? " inventory-action-equip-hint" : ""}`}
+              title={equipHint ? `Equip ${item.name}` : `Wear ${item.name}`}
               disabled={!canManageItems}
               onClick={() => onWearItem(item.name)}
             >
               <WearItemIcon className="inventory-action-icon" />
+              {equipHint && <span className="inventory-action-equip-hint-label">Equip</span>}
             </button>
           )}
           {containerContents && (
