@@ -789,6 +789,13 @@ class GameEngine(
                 if (pet != null) {
                     outbound.send(OutboundEvent.SendText(sid, "You summon ${pet.name}!"))
                     emitPetState(sid, pet)
+                    // Refresh the room mob list for the summoner and anyone else in the room so
+                    // the pet becomes visible immediately (without waiting for a movement tick).
+                    // See issue #1066.
+                    gmcpEmitter.broadcastRoomAddMob(player.roomId, pet, players)
+                    val mobsInRoom = mobs.mobsInRoom(player.roomId)
+                    val mobInfoEntries = gmcpEmitter.buildMobInfoEntries(mobsInRoom)
+                    gmcpEmitter.broadcastRoomMobInfo(player.roomId, mobInfoEntries, players)
                 } else {
                     outbound.send(OutboundEvent.SendText(sid, "Failed to summon pet."))
                 }
