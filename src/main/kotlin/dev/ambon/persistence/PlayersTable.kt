@@ -81,6 +81,7 @@ object PlayersTable : Table("players") {
     val screenReaderEnabled = bool("screen_reader_enabled").default(false)
     val description = text("description").default("")
     val autolootEnabled = bool("autoloot_enabled").default(false)
+    val lastRespecAtMs = long("last_respec_at_ms").default(0L)
 
     override val primaryKey = PrimaryKey(id)
 
@@ -139,6 +140,7 @@ object PlayersTable : Table("players") {
             screenReaderEnabled = row[screenReaderEnabled],
             description = row[description],
             autolootEnabled = row[autolootEnabled],
+            lastRespecAtMs = row[lastRespecAtMs],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -196,5 +198,6 @@ object PlayersTable : Table("players") {
         statement[screenReaderEnabled] = record.screenReaderEnabled
         statement[description] = record.description
         statement[autolootEnabled] = record.autolootEnabled
+        statement[lastRespecAtMs] = record.lastRespecAtMs
     }
 }
