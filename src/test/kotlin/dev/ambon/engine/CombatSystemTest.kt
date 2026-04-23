@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.config.DeathConfig
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.StatBindingsConfig
@@ -611,7 +612,7 @@ class CombatSystemTest {
         }
 
     @Test
-    fun `player slain by mob shows death summary and safe respawn message`() =
+    fun `player slain by mob shows death summary and sanctum arrival message`() =
         runTest {
             val fixture = CombatTestFixture()
             // mob hits hard enough to one-shot the player
@@ -648,8 +649,8 @@ class CombatSystemTest {
                 "Expected death summary message, got: $messages",
             )
             assertTrue(
-                messages.any { it.contains("You are safe now") },
-                "Expected safe respawn message, got: $messages",
+                messages.any { it.contains("awaken in the sanctum") },
+                "Expected sanctum arrival message, got: $messages",
             )
         }
 
@@ -693,7 +694,7 @@ class CombatSystemTest {
         }
 
     @Test
-    fun `player at zero hp shows collapse message and safe respawn`() =
+    fun `player at zero hp shows collapse message and sanctum arrival`() =
         runTest {
             val fixture = CombatTestFixture()
             val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 100, maxHp = 100)
@@ -722,8 +723,8 @@ class CombatSystemTest {
                 "Expected collapse message, got: $messages",
             )
             assertTrue(
-                messages.any { it.contains("You are safe now") },
-                "Expected safe respawn message, got: $messages",
+                messages.any { it.contains("awaken in the sanctum") },
+                "Expected sanctum arrival message, got: $messages",
             )
         }
 
@@ -1129,5 +1130,108 @@ class CombatSystemTest {
             val inv = fixture.items.inventory(sid)
             assertEquals(1, inv.size)
             assertEquals("demo:fang", inv.first().id.value)
+        }
+
+    @Test
+    fun `player death moves to sanctum and records death zone`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    fixture.roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    damage = DamageRange(50, 50),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
+            val sanctum = dev.ambon.domain.ids.RoomId("limbo:sanctum")
+            combat.sanctumRoomLookup = { sanctum }
+            combat.deathConfig = DeathConfig(
+                sanctumRoom = sanctum.value,
+                respawnHpFraction = 0.2,
+                respawnManaFraction = 0.5,
+            )
+
+            val sid = SessionId(42L)
+            fixture.players.loginOrFail(sid, "Doomed")
+            val player = fixture.players.get(sid)!!
+            player.maxHp = 50
+            player.maxMana = 40
+            val originalZone = player.roomId.zone
+
+            combat.startCombat(sid, "ogre")
+            fixture.outbound.drainAll()
+            fixture.tickCombat(combat)
+
+            assertEquals(sanctum, player.roomId, "Expected player to respawn in sanctum")
+            assertEquals(originalZone, player.lastDeathZone, "Expected lastDeathZone recorded from pre-death room")
+            assertEquals(10, player.hp, "Expected 20% of 50 maxHp = 10")
+            assertEquals(20, player.mana, "Expected 50% of 40 maxMana = 20")
+        }
+
+    @Test
+    fun `player death falls back to zone start when no sanctum configured`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    fixture.roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    damage = DamageRange(50, 50),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
+            val zoneStart = dev.ambon.domain.ids.RoomId("zone:start")
+            combat.zoneStartRoomLookup = { if (it == "zone") zoneStart else null }
+            // No sanctum configured — falls back to zone start.
+
+            val sid = SessionId(43L)
+            fixture.players.loginOrFail(sid, "Fallbacked")
+            val player = fixture.players.get(sid)!!
+
+            combat.startCombat(sid, "ogre")
+            fixture.outbound.drainAll()
+            fixture.tickCombat(combat)
+
+            assertEquals(zoneStart, player.roomId, "Expected fallback to zone start room")
+            assertEquals("zone", player.lastDeathZone)
+        }
+
+    @Test
+    fun `player death applies xp penalty when configured`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    fixture.roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    damage = DamageRange(50, 50),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
+            combat.deathConfig = DeathConfig(xpPenaltyFraction = 0.1)
+
+            val sid = SessionId(44L)
+            fixture.players.loginOrFail(sid, "Penalised")
+            val player = fixture.players.get(sid)!!
+            player.xpTotal = 1000L
+
+            combat.startCombat(sid, "ogre")
+            fixture.outbound.drainAll()
+            fixture.tickCombat(combat)
+
+            assertEquals(900L, player.xpTotal, "Expected 10% xp penalty (1000 -> 900)")
         }
 }

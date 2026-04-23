@@ -254,6 +254,7 @@ class CommandRouterHarness private constructor(
             gmcpEmitter: GmcpEmitter? = null,
             abilitySystem: dev.ambon.engine.abilities.AbilitySystem? = null,
             spriteRegistry: dev.ambon.engine.SpriteRegistry? = null,
+            deathConfig: dev.ambon.config.DeathConfig = dev.ambon.config.DeathConfig(),
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -292,6 +293,7 @@ class CommandRouterHarness private constructor(
                     gmcpEmitter = gmcpEmitter,
                     abilitySystem = abilitySystem,
                     spriteRegistry = spriteRegistry,
+                    deathConfig = deathConfig,
                 )
             return CommandRouterHarness(
                 world = world,

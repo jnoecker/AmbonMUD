@@ -348,6 +348,17 @@ rooms:
     exits:
       s: common_room
     image: fe897d386ee1ff382d9b4a5d268504b10a5c9cc765c4addc3f6c0d47212b3342.jpg
+  sanctum:
+    title: The Sanctum
+    description: >-
+      A quiet chamber suffused with silver light, warm despite the stillness of the air. A shallow reflecting pool
+      murmurs in the centre of the room, its surface scattered with floating candles that refuse to gutter. Pale
+      draperies hang from unseen supports, stirring gently as though in a breeze you cannot feel. The world beyond
+      seems very far away here — a place to catch your breath between lives.
+
+
+      A carved stone pedestal near the pool bears a simple instruction: "When you are ready, depart — the spirit
+      gate will return you to the world where you fell."
   mob_templates:
     title: Template Chamber
     description: An internal room used to stage dungeon mob templates. Players cannot reach this room.

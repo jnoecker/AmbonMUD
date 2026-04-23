@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.DeathConfig
 import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -105,6 +106,12 @@ class CombatSystem(
 
     /** Zone start room lookup, wired by GameEngine after construction. */
     var zoneStartRoomLookup: (String) -> RoomId? = { _ -> null }
+
+    /** Sanctum room lookup for PvE death respawn, wired by GameEngine after construction. */
+    var sanctumRoomLookup: () -> RoomId? = { null }
+
+    /** Death behavior config, wired by GameEngine after construction. */
+    var deathConfig: DeathConfig = DeathConfig()
 
     fun isInCombat(sessionId: SessionId): Boolean =
         playerTarget.containsKey(sessionId) || pvpTarget.containsKey(sessionId)
@@ -1098,11 +1105,35 @@ class CombatSystem(
             CombatEvent.Death(killerName = killerName, killerIsPlayer = killerIsPlayer),
         )
         outbound.send(OutboundEvent.SendText(sessionId, deathMessage))
-        outbound.send(OutboundEvent.SendText(sessionId, "You are safe now — rest and your wounds will mend."))
         broadcastToRoom(players, outbound, roomId, roomMessage, exclude = sessionId)
 
         // Clean up cross-system state that should not persist through death
         onPlayerDeath(sessionId)
+
+        val player = players.get(sessionId)
+        if (player != null) {
+            // Remember where the spirit gate should send them back to.
+            player.lastDeathZone = roomId.zone
+
+            // Resolve respawn room: sanctum → zone start → world start (whatever is in roomId now, as a last resort).
+            val respawnRoom = sanctumRoomLookup()
+                ?: zoneStartRoomLookup(roomId.zone)
+                ?: player.roomId
+            player.roomId = respawnRoom
+
+            // Restore a fraction of HP/mana. Leaves the player vulnerable so they have to rest in the sanctum.
+            player.hp = ((player.maxHp * deathConfig.respawnHpFraction).toInt()).coerceAtLeast(1)
+            player.mana = ((player.maxMana * deathConfig.respawnManaFraction).toInt()).coerceAtLeast(0)
+
+            // Optional XP penalty (0 by default — tutorial stays forgiving).
+            if (deathConfig.xpPenaltyFraction > 0.0) {
+                val penalty = (player.xpTotal * deathConfig.xpPenaltyFraction).toLong()
+                player.xpTotal = (player.xpTotal - penalty).coerceAtLeast(0L)
+            }
+
+            dirtyNotifier.playerVitalsDirty(sessionId)
+            outbound.send(OutboundEvent.SendText(sessionId, deathConfig.messages.arriveSanctum))
+        }
 
         outbound.send(OutboundEvent.SendPrompt(sessionId))
     }

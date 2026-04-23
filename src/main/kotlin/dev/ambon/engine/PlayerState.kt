@@ -56,6 +56,8 @@ data class PlayerState(
     var guildRank: String? = null,
     var guildTag: String? = null,
     var recallRoomId: RoomId? = null,
+    /** Zone ID (e.g. "academy") of the player's last death. Drives `depart` from the sanctum. */
+    var lastDeathZone: String? = null,
     var friendsList: MutableSet<String> = mutableSetOf(),
     var bankGold: Long = 0L,
     var bankItems: MutableList<dev.ambon.domain.items.ItemInstance> = mutableListOf(),
@@ -228,6 +230,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         inbox = inbox.toMutableList(),
         guildId = guildId,
         recallRoomId = recallRoomId,
+        lastDeathZone = lastDeathZone,
         craftingSkills = craftingSkills.map { (key, state) ->
             key.lowercase() to state
         }.toMap().toMutableMap(),
@@ -288,6 +291,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         inbox = inbox.toList(),
         guildId = guildId,
         recallRoomId = recallRoomId,
+        lastDeathZone = lastDeathZone,
         craftingSkills = craftingSkills.toMap(),
         discoveredRecipes = discoveredRecipes.toSet(),
         craftingSpecialization = craftingSpecialization,

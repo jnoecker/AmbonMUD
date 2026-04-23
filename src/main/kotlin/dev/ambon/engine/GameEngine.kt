@@ -929,6 +929,10 @@ class GameEngine(
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
         combatSystem.onPvpKill = { sid -> notifyDailyQuest(sid, "pvpKill") }
         combatSystem.zoneStartRoomLookup = { zoneId -> world.zoneStartRoom(zoneId) }
+        combatSystem.deathConfig = engineConfig.death
+        combatSystem.sanctumRoomLookup = {
+            engineConfig.death.sanctumRoom?.let { RoomId(it) }?.takeIf { world.rooms.containsKey(it) }
+        }
         combatSystem.onPvpKill = { killerSid ->
             val killer = players.get(killerSid)
             if (killer != null && currencySystem.honorPerPvpKill > 0) {
@@ -1136,6 +1140,7 @@ class GameEngine(
                 dialogueSystem = dialogueSystem,
                 onCrossZoneMove = crossZoneMove,
                 recallConfig = engineConfig.navigation.recall,
+                deathConfig = engineConfig.death,
                 housingSystem = housingSystem,
                 guildHallSystem = guildHallSystem,
                 onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },

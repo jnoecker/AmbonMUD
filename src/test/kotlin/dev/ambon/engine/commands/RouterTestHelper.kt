@@ -108,6 +108,7 @@ internal fun buildTestRouter(
     gmcpEmitter: GmcpEmitter? = null,
     abilitySystem: dev.ambon.engine.abilities.AbilitySystem? = null,
     spriteRegistry: SpriteRegistry? = null,
+    deathConfig: dev.ambon.config.DeathConfig = dev.ambon.config.DeathConfig(),
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -139,7 +140,13 @@ internal fun buildTestRouter(
             engineId = engineId,
             onRemoteWho = onRemoteWho,
         ),
-        NavigationHandler(ctx = ctx, onCrossZoneMove = onCrossZoneMove, clock = clock, puzzleSystem = puzzleSystem),
+        NavigationHandler(
+            ctx = ctx,
+            onCrossZoneMove = onCrossZoneMove,
+            clock = clock,
+            deathConfig = deathConfig,
+            puzzleSystem = puzzleSystem,
+        ),
         CombatHandler(ctx = ctx),
         ProgressionHandler(ctx = ctx, progression = progression, groupSystem = groupSystem),
         ItemHandler(ctx = ctx),
