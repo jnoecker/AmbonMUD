@@ -115,7 +115,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     combatTarget: null,
     inCombat: false,
     effects: [],
-    character: { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false },
+    character: { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false, autolootEnabled: false },
     mobInfo: [],
     groupInfo: { leader: null, members: [] },
     dialogue: null,

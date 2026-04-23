@@ -443,6 +443,7 @@ class GmcpEmitter(
                 level = player.level,
                 sprite = resolveSprite(player),
                 isStaff = player.isStaff,
+                autolootEnabled = player.autolootEnabled,
             ),
         )
     }
@@ -2333,6 +2334,7 @@ class GmcpEmitter(
         val level: Int,
         val sprite: String,
         val isStaff: Boolean,
+        val autolootEnabled: Boolean,
     )
 
     private data class SessionAuthTokenPayload(
