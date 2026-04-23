@@ -607,6 +607,7 @@ object WorldLoader {
                         ),
                         completionType = completionType,
                         requiredReputation = questRep,
+                        level = questFile.level,
                     ),
                 )
             }

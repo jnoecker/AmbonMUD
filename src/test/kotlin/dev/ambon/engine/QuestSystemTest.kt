@@ -47,10 +47,13 @@ class QuestSystemTest {
             completionType = "auto",
         )
 
-    private fun setup(): Triple<QuestSystem, PlayerRegistry, LocalOutboundBus> {
+    private fun setup(
+        quest: QuestDef = killQuest,
+        progression: PlayerProgression? = null,
+    ): Triple<QuestSystem, PlayerRegistry, LocalOutboundBus> {
         val c = SystemTestComponents(clockInitialMs = 1_000L)
         val registry = QuestRegistry()
-        registry.register(killQuest)
+        registry.register(quest)
         val questSystem =
             QuestSystem(
                 registry = registry,
@@ -58,6 +61,7 @@ class QuestSystemTest {
                 items = c.items,
                 outbound = c.outbound,
                 clock = c.clock,
+                progression = progression,
             )
         return Triple(questSystem, c.players, c.outbound)
     }
@@ -126,6 +130,52 @@ class QuestSystemTest {
                 events.filterIsInstance<OutboundEvent.SendText>().map { it.text } +
                     events.filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
             assertTrue(texts.any { it.contains("complete", ignoreCase = true) })
+        }
+
+    @Test
+    fun `quest XP diminishes when player is far above quest level`() =
+        runTest {
+            val progression = PlayerProgression()
+            val leveledQuest = killQuest.copy(level = 1, rewards = QuestRewards(xp = 1000L, gold = 0L))
+            val (qs, players, outbound) = setup(leveledQuest, progression)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+            players.setLevel(sid, 10)
+            val xpAtLevel10 = players.get(sid)!!.xpTotal
+            qs.acceptQuest(sid, questId)
+            outbound.drainAll()
+
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val ps = players.get(sid)!!
+            assertTrue(
+                ps.completedQuestIds.contains(questId),
+                "Quest should complete regardless of XP diminishing",
+            )
+            val xpGained = ps.xpTotal - xpAtLevel10
+            assertTrue(
+                xpGained < 1000L,
+                "Overleveled quest XP should be reduced (got $xpGained, expected << 1000)",
+            )
+        }
+
+    @Test
+    fun `quest XP ignores diminishing when level is not declared`() =
+        runTest {
+            val progression = PlayerProgression()
+            val (qs, players, outbound) = setup(progression = progression)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+            players.setLevel(sid, 20)
+            val xpAtLevel20 = players.get(sid)!!.xpTotal
+            qs.acceptQuest(sid, questId)
+            outbound.drainAll()
+
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val ps = players.get(sid)!!
+            val xpGained = ps.xpTotal - xpAtLevel20
+            assertEquals(100L, xpGained, "Quest with no level should award the full flat reward")
         }
 
     @Test

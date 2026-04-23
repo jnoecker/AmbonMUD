@@ -9,6 +9,8 @@ data class QuestFile(
     val rewards: QuestRewardsFile = QuestRewardsFile(),
     /** Optional reputation gate. min → giver hints to grind; max → quest disappears when exceeded. */
     val requiredReputation: ReputationRequirementFile? = null,
+    /** Intended player level. Drives XP diminishing returns on completion when set. */
+    val level: Int? = null,
 )
 
 data class QuestObjectiveFile(

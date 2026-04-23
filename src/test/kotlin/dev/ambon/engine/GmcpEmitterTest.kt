@@ -33,7 +33,13 @@ class GmcpEmitterTest {
     private val sid = TEST_SESSION_ID
     private val outbound = LocalOutboundBus()
 
-    private val progression = PlayerProgression()
+    private val progression =
+        PlayerProgression(
+            dev.ambon.config.ProgressionConfig(
+                maxLevel = 50,
+                xp = dev.ambon.config.XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
+            ),
+        )
 
     private val defaultSlotRegistry = EquipmentSlotRegistry(EquipmentConfig())
 

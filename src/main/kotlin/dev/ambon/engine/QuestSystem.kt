@@ -23,6 +23,7 @@ class QuestSystem(
     private val objectiveHandlers: ObjectiveHandlerRegistry = ObjectiveHandlerRegistry.withDefaults(),
     private val completionHandlers: CompletionHandlerRegistry = CompletionHandlerRegistry.withDefaults(),
     private val reputationSystem: ReputationSystem? = null,
+    private val progression: PlayerProgression? = null,
 ) {
     /** Invoked after a quest is successfully completed; used by AchievementSystem. */
     var onQuestCompleted: (suspend (SessionId, String) -> Unit)? = null
@@ -348,7 +349,7 @@ class QuestSystem(
         onQuestCompletedGmcp?.invoke(sessionId, questId, quest.name)
         onQuestCompleted?.invoke(sessionId, questId)
 
-        grantRewards(sessionId, rewards, ps, players, outbound)
+        grantRewards(sessionId, rewards, ps, players, outbound, progression, quest.level)
         if (rewards.xp == 0L) players.persistPlayer(ps.sessionId)
     }
 

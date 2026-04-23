@@ -878,6 +878,7 @@ class GameEngine(
             outbound = outbound,
             clock = clock,
             reputationSystem = reputationSystem,
+            progression = progression,
         )
 
     private val dailyQuestSystem: DailyQuestSystem? =
