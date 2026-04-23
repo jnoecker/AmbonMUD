@@ -1917,19 +1917,23 @@ ambonmud:
     maxLevel: 50
     xp:
       baseXp: 100
-      exponent: 1.8
-      linearXp: 0
+      exponent: 2.2
+      linearXp: 150
       multiplier: 1
       defaultKillXp: 10
-      # Diminishing returns when a player over-levels a mob. Largest matching
-      # `levelsBelow` wins. Prevents trivial trash farming from capping out XP.
+      # Diminishing returns when a player has out-levelled the XP source.
+      # Applies to kills (mob level) and to quests/puzzles that declare an
+      # intended player level. Largest matching `levelsBelow` wins — prevents
+      # trivial trash farming and flat-reward quest ladders from capping XP.
       diminishing:
         enabled: true
         thresholds:
-          - levelsBelow: 5
+          - levelsBelow: 3
             multiplier: 0.5
-          - levelsBelow: 10
-            multiplier: 0.1
+          - levelsBelow: 5
+            multiplier: 0.2
+          - levelsBelow: 8
+            multiplier: 0.0
     rewards:
       hpPerLevel: 2
       manaPerLevel: 1

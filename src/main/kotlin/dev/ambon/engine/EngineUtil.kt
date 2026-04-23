@@ -115,6 +115,12 @@ internal fun rollRange(
  * Gold is added to [ps] immediately. XP is granted via [players.grantXp], which
  * also handles persistence. The caller is responsible for persisting when no XP
  * is granted (i.e. when [rewards.xp] == 0 and gold was awarded).
+ *
+ * When [progression] and [sourceLevel] are both supplied, the XP reward is
+ * passed through the same diminishing-returns curve that kills use, so players
+ * who have out-levelled a quest or puzzle receive reduced XP instead of the
+ * flat amount authored in content. Omit either to preserve legacy flat award
+ * behaviour.
  */
 internal suspend fun grantRewards(
     sessionId: SessionId,
@@ -122,13 +128,28 @@ internal suspend fun grantRewards(
     ps: PlayerState,
     players: PlayerRegistry,
     outbound: OutboundBus,
+    progression: PlayerProgression? = null,
+    sourceLevel: Int? = null,
 ) {
     if (rewards.gold > 0) {
         ps.gold += rewards.gold
         outbound.send(OutboundEvent.SendText(sessionId, "You receive ${rewards.gold} gold."))
     }
     if (rewards.xp > 0) {
-        players.grantXp(sessionId, rewards.xp)
-        outbound.send(OutboundEvent.SendText(sessionId, "You gain ${rewards.xp} XP."))
+        val effectiveXp =
+            if (progression != null && sourceLevel != null) {
+                val multiplier = progression.diminishingKillXpMultiplier(ps.level, sourceLevel)
+                if (multiplier >= 1.0) {
+                    rewards.xp
+                } else {
+                    (rewards.xp * multiplier).toLong().coerceAtLeast(0L)
+                }
+            } else {
+                rewards.xp
+            }
+        if (effectiveXp > 0) {
+            players.grantXp(sessionId, effectiveXp)
+            outbound.send(OutboundEvent.SendText(sessionId, "You gain $effectiveXp XP."))
+        }
     }
 }

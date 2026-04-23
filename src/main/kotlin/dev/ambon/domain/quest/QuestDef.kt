@@ -13,6 +13,13 @@ data class QuestDef(
     val completionType: String = "auto",
     /** Optional reputation gate. */
     val requiredReputation: ReputationRequirement? = null,
+    /**
+     * Intended player level for this quest. When set, XP rewards are scaled by
+     * the same diminishing-returns curve used for kills — a player who has
+     * out-levelled the quest receives reduced XP instead of the flat reward.
+     * Null preserves legacy flat-award behaviour.
+     */
+    val level: Int? = null,
 )
 
 data class QuestObjectiveDef(

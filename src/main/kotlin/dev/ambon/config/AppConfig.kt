@@ -1893,25 +1893,25 @@ data class ProgressionConfig(
 
 data class XpCurveConfig(
     val baseXp: Long = 100L,
-    val exponent: Double = 2.0,
-    val linearXp: Long = 0L,
+    val exponent: Double = 2.2,
+    val linearXp: Long = 150L,
     val multiplier: Double = 1.0,
     val defaultKillXp: Long = 50L,
     val diminishing: DiminishingXpConfig = DiminishingXpConfig(),
 )
 
 /**
- * Per-kill XP diminishing returns based on the gap between the player's level
- * and the mob's level. When enabled, kills on mobs [DiminishingXpThreshold.levelsBelow]
- * or more below the player award only [DiminishingXpThreshold.multiplier] of the
- * normal XP. The highest matching threshold wins.
+ * Diminishing returns applied when a player has out-levelled the content
+ * awarding XP. Used by kills (mob level) and by quests/puzzles that declare
+ * an intended player level. The highest matching `levelsBelow` wins.
  */
 data class DiminishingXpConfig(
     val enabled: Boolean = true,
     val thresholds: List<DiminishingXpThreshold> =
         listOf(
-            DiminishingXpThreshold(levelsBelow = 5, multiplier = 0.5),
-            DiminishingXpThreshold(levelsBelow = 10, multiplier = 0.1),
+            DiminishingXpThreshold(levelsBelow = 3, multiplier = 0.5),
+            DiminishingXpThreshold(levelsBelow = 5, multiplier = 0.2),
+            DiminishingXpThreshold(levelsBelow = 8, multiplier = 0.0),
         ),
 )
 
