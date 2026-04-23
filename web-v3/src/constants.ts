@@ -94,6 +94,6 @@ export const DEFAULT_STATUS_VAR_LABELS: StatusVarLabels = {
   xp: "XP",
 };
 
-export const EMPTY_CHAR: CharacterInfo = { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false };
+export const EMPTY_CHAR: CharacterInfo = { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false, autolootEnabled: false };
 export const EMPTY_ROOM: RoomState = { id: null, title: "-", description: "", exits: {}, mapX: 0, mapY: 0, graphical: false, terrain: "outside" };
 

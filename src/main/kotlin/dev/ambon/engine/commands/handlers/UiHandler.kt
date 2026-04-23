@@ -92,10 +92,12 @@ class UiHandler(
         when (action) {
             AutolootAction.ON -> {
                 players.setAutolootEnabled(sessionId, true)
+                gmcpEmitter?.sendCharName(sessionId, me)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot enabled."))
             }
             AutolootAction.OFF -> {
                 players.setAutolootEnabled(sessionId, false)
+                gmcpEmitter?.sendCharName(sessionId, me)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot disabled."))
             }
             AutolootAction.STATUS -> {

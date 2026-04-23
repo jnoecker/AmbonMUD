@@ -450,16 +450,21 @@ class GmcpEmitterTest {
     // ── Char.Name ──
 
     @Test
-    fun `sendCharName emits name race class level`() =
+    fun `sendCharName emits name race class level and autoloot`() =
         runTest {
             val e = emitter("Char.Name")
-            e.sendCharName(sid, player(name = "Alice", race = "ELF", playerClass = "MAGE", level = 10))
+            e.sendCharName(
+                sid,
+                player(name = "Alice", race = "ELF", playerClass = "MAGE", level = 10)
+                    .copy(autolootEnabled = true),
+            )
             val data = drainGmcp()[0]
             assertEquals("Char.Name", data.gmcpPackage)
             assertTrue(data.jsonData.contains("\"name\":\"Alice\""))
             assertTrue(data.jsonData.contains("\"race\":\"ELF\""))
             assertTrue(data.jsonData.contains("\"class\":\"MAGE\""))
             assertTrue(data.jsonData.contains("\"level\":10"))
+            assertTrue(data.jsonData.contains("\"autolootEnabled\":true"))
         }
 
     // ── Comm.Channel ──

@@ -190,6 +190,7 @@ export interface CharacterInfo {
   level: number | null;
   sprite: string | null;
   isStaff: boolean;
+  autolootEnabled: boolean;
 }
 
 export interface RoomState {

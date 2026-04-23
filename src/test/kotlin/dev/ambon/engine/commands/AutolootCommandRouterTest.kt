@@ -1,6 +1,8 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.toPlayerRecord
 import dev.ambon.engine.toPlayerState
@@ -114,5 +116,35 @@ class AutolootCommandRouterTest {
 
             val restored = record.toPlayerState(SessionId(6))
             assertEquals(true, restored.autolootEnabled)
+        }
+
+    @Test
+    fun `autoloot toggle emits Char Name GMCP updates for the web client`() =
+        runTest {
+            val outbound = LocalOutboundBus()
+            val gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, pkg -> pkg == "Char.Name" })
+            val h = CommandRouterHarness.create(outbound = outbound, gmcpEmitter = gmcpEmitter)
+            val sid = SessionId(6)
+            h.players.loginOrFail(sid, "Finn")
+
+            h.router.handle(sid, Command.AutolootOn)
+            val enableEvents = h.outbound.drainAll()
+            val enablePacket = enableEvents
+                .filterIsInstance<OutboundEvent.GmcpData>()
+                .lastOrNull { it.gmcpPackage == "Char.Name" }
+            assertTrue(
+                enablePacket?.jsonData?.contains("\"autolootEnabled\":true") == true,
+                "Expected Char.Name GMCP update with autoloot enabled, got=$enableEvents",
+            )
+
+            h.router.handle(sid, Command.AutolootOff)
+            val disableEvents = h.outbound.drainAll()
+            val disablePacket = disableEvents
+                .filterIsInstance<OutboundEvent.GmcpData>()
+                .lastOrNull { it.gmcpPackage == "Char.Name" }
+            assertTrue(
+                disablePacket?.jsonData?.contains("\"autolootEnabled\":false") == true,
+                "Expected Char.Name GMCP update with autoloot disabled, got=$disableEvents",
+            )
         }
 }

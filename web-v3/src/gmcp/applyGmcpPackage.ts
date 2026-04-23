@@ -277,6 +277,7 @@ export function applyGmcpPackage(
         level: typeof packet.level === "number" ? packet.level : null,
         sprite: typeof packet.sprite === "string" ? packet.sprite : null,
         isStaff: packet.isStaff === true,
+        autolootEnabled: packet.autolootEnabled === true,
       });
       // Login complete — dismiss modal
       ctx.setLoginPrompt(null);
