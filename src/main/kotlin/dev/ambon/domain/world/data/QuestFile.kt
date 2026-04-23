@@ -11,6 +11,12 @@ data class QuestFile(
     val requiredReputation: ReputationRequirementFile? = null,
     /** Intended player level. Drives XP diminishing returns on completion when set. */
     val level: Int? = null,
+    /**
+     * Engine-driven difficulty tier. Omit or leave blank to use the authored
+     * `rewards.xp` as-is; set `trivial|easy|standard|hard|epic` to let the
+     * engine compute XP from quest level × tier multiplier.
+     */
+    val difficulty: String? = null,
 )
 
 data class QuestObjectiveFile(

@@ -613,6 +613,11 @@ object WorldLoader {
                         completionType = completionType,
                         requiredReputation = questRep,
                         level = questFile.level,
+                        difficulty = try {
+                            dev.ambon.config.QuestDifficulty.parse(questFile.difficulty)
+                        } catch (e: IllegalArgumentException) {
+                            throw WorldLoadException("Quest '$questId': ${e.message}")
+                        },
                     ),
                 )
             }

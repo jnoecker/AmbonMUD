@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.FactionConfig
 import dev.ambon.config.FactionDefinition
+import dev.ambon.config.QuestDifficulty
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
@@ -157,6 +158,58 @@ class QuestSystemTest {
                 xpGained < 1000L,
                 "Overleveled quest XP should be reduced (got $xpGained, expected << 1000)",
             )
+        }
+
+    @Test
+    fun `quest XP is computed from difficulty when rewards xp is zero`() =
+        runTest {
+            val progression = PlayerProgression()
+            val tieredQuest =
+                killQuest.copy(
+                    level = 3,
+                    difficulty = QuestDifficulty.STANDARD,
+                    rewards = QuestRewards(xp = 0L, gold = 0L),
+                )
+            val (qs, players, outbound) = setup(tieredQuest, progression)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+            players.setLevel(sid, 3)
+            val xpBefore = players.get(sid)!!.xpTotal
+            qs.acceptQuest(sid, questId)
+            outbound.drainAll()
+
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val ps = players.get(sid)!!
+            assertTrue(ps.completedQuestIds.contains(questId))
+            val xpGained = ps.xpTotal - xpBefore
+            // STANDARD × (50 + 20*2) = 90 at level 3
+            assertEquals(90L, xpGained, "Quest XP should be computed from difficulty baseline")
+        }
+
+    @Test
+    fun `authored quest XP overrides computed difficulty XP`() =
+        runTest {
+            val progression = PlayerProgression()
+            val tieredQuest =
+                killQuest.copy(
+                    level = 3,
+                    difficulty = QuestDifficulty.EPIC,
+                    rewards = QuestRewards(xp = 42L, gold = 0L),
+                )
+            val (qs, players, outbound) = setup(tieredQuest, progression)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+            players.setLevel(sid, 3)
+            val xpBefore = players.get(sid)!!.xpTotal
+            qs.acceptQuest(sid, questId)
+            outbound.drainAll()
+
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val ps = players.get(sid)!!
+            val xpGained = ps.xpTotal - xpBefore
+            assertEquals(42L, xpGained, "Authored rewards.xp should win over the tier")
         }
 
     @Test

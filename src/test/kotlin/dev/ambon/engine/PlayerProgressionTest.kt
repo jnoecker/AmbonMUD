@@ -6,6 +6,9 @@ import dev.ambon.config.DiminishingXpConfig
 import dev.ambon.config.DiminishingXpThreshold
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
+import dev.ambon.config.QuestBaselineConfig
+import dev.ambon.config.QuestDifficulty
+import dev.ambon.config.QuestXpConfig
 import dev.ambon.config.XpCurveConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -298,5 +301,66 @@ class PlayerProgressionTest {
             )
 
         assertEquals(1.0, progression.diminishingKillXpMultiplier(playerLevel = 50, mobLevel = 1))
+    }
+
+    @Test
+    fun `computeQuestXp returns zero when no difficulty is declared`() {
+        val progression = PlayerProgression()
+        assertEquals(0L, progression.computeQuestXp(null, level = 5))
+    }
+
+    @Test
+    fun `computeQuestXp scales baseline by tier multiplier at the quest's level`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    quests = QuestXpConfig(
+                        baseline = QuestBaselineConfig(baseXp = 50L, xpPerLevel = 20L),
+                        tiers = mapOf(
+                            QuestDifficulty.TRIVIAL to 0.25,
+                            QuestDifficulty.EASY to 0.5,
+                            QuestDifficulty.STANDARD to 1.0,
+                            QuestDifficulty.HARD to 1.75,
+                            QuestDifficulty.EPIC to 3.0,
+                        ),
+                    ),
+                ),
+            )
+
+        // Level 1: baseline = 50
+        assertEquals(13L, progression.computeQuestXp(QuestDifficulty.TRIVIAL, level = 1))
+        assertEquals(50L, progression.computeQuestXp(QuestDifficulty.STANDARD, level = 1))
+        assertEquals(150L, progression.computeQuestXp(QuestDifficulty.EPIC, level = 1))
+
+        // Level 5: baseline = 50 + 20*4 = 130
+        assertEquals(33L, progression.computeQuestXp(QuestDifficulty.TRIVIAL, level = 5))
+        assertEquals(130L, progression.computeQuestXp(QuestDifficulty.STANDARD, level = 5))
+        assertEquals(228L, progression.computeQuestXp(QuestDifficulty.HARD, level = 5))
+
+        // Level 10: baseline = 50 + 20*9 = 230
+        assertEquals(690L, progression.computeQuestXp(QuestDifficulty.EPIC, level = 10))
+    }
+
+    @Test
+    fun `computeQuestXp clamps level 0 or below to level 1 baseline`() {
+        val progression = PlayerProgression()
+        val atOne = progression.computeQuestXp(QuestDifficulty.STANDARD, level = 1)
+        val atZero = progression.computeQuestXp(QuestDifficulty.STANDARD, level = 0)
+        val atNegative = progression.computeQuestXp(QuestDifficulty.STANDARD, level = -5)
+        assertEquals(atOne, atZero)
+        assertEquals(atOne, atNegative)
+    }
+
+    @Test
+    fun `computeQuestXp returns zero when the tier lacks a multiplier`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    quests = QuestXpConfig(
+                        tiers = mapOf(QuestDifficulty.STANDARD to 1.0),
+                    ),
+                ),
+            )
+        assertEquals(0L, progression.computeQuestXp(QuestDifficulty.EPIC, level = 5))
     }
 }

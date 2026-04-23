@@ -349,8 +349,17 @@ class QuestSystem(
         onQuestCompletedGmcp?.invoke(sessionId, questId, quest.name)
         onQuestCompleted?.invoke(sessionId, questId)
 
-        grantRewards(sessionId, rewards, ps, players, outbound, progression, quest.level)
-        if (rewards.xp == 0L) players.persistPlayer(ps.sessionId)
+        val effectiveRewards =
+            if (rewards.xp == 0L && quest.difficulty != null && progression != null) {
+                val effectiveLevel = quest.level ?: ps.level
+                val computed = progression.computeQuestXp(quest.difficulty, effectiveLevel)
+                if (computed > 0L) rewards.copy(xp = computed) else rewards
+            } else {
+                rewards
+            }
+
+        grantRewards(sessionId, effectiveRewards, ps, players, outbound, progression, quest.level)
+        if (effectiveRewards.xp == 0L) players.persistPlayer(ps.sessionId)
     }
 
     private suspend fun sendObjectiveProgress(

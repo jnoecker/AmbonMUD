@@ -1941,6 +1941,20 @@ ambonmud:
       fullManaOnLevelUp: true
       baseHp: 10
       baseMana: 10
+    # Engine-computed XP for quests. Authors pick a difficulty tier (or leave
+    # `rewards.xp` authored for an explicit override) and the engine produces
+    #   (baseXp + xpPerLevel * (level - 1)) * tiers[difficulty]
+    # at completion time. Diminishing returns still applies on top.
+    quests:
+      baseline:
+        baseXp: 50
+        xpPerLevel: 20
+      tiers:
+        TRIVIAL: 0.25
+        EASY: 0.5
+        STANDARD: 1.0
+        HARD: 1.75
+        EPIC: 3.0
   transport:
     telnet:
       maxLineLen: 1024
