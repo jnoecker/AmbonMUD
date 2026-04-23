@@ -55,6 +55,7 @@ object PlayersTable : Table("players") {
     val mailInbox = text("mail_inbox").default("[]")
     val guildId = varchar("guild_id", 64).nullable()
     val recallRoomId = varchar("recall_room_id", 128).nullable()
+    val lastDeathZone = varchar("last_death_zone", 64).nullable()
     val craftingSkills = text("crafting_skills").default("{}")
     val discoveredRecipes = text("discovered_recipes").default("[]")
     val craftingSpecialization = varchar("crafting_specialization", 64).nullable()
@@ -112,6 +113,7 @@ object PlayersTable : Table("players") {
             inbox = safeReadJson(row[mailInbox], mailInboxType, emptyList()),
             guildId = row[guildId],
             recallRoomId = row[recallRoomId]?.let { RoomId(it) },
+            lastDeathZone = row[lastDeathZone],
             craftingSkills = safeReadJson(row[craftingSkills], craftingSkillsType, emptyMap()),
             discoveredRecipes = safeReadJson(row[discoveredRecipes], discoveredRecipesType, emptySet()),
             craftingSpecialization = row[craftingSpecialization],
@@ -168,6 +170,7 @@ object PlayersTable : Table("players") {
         statement[mailInbox] = jsonMapper.writeValueAsString(record.inbox)
         statement[guildId] = record.guildId
         statement[recallRoomId] = record.recallRoomId?.value
+        statement[lastDeathZone] = record.lastDeathZone
         statement[craftingSkills] = jsonMapper.writeValueAsString(record.craftingSkills)
         statement[discoveredRecipes] = jsonMapper.writeValueAsString(record.discoveredRecipes)
         statement[craftingSpecialization] = record.craftingSpecialization

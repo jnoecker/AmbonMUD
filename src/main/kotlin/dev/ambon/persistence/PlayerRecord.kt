@@ -52,6 +52,8 @@ data class PlayerRecord(
     val inbox: List<MailMessage> = emptyList(),
     val guildId: String? = null,
     val recallRoomId: RoomId? = null,
+    /** Zone ID (e.g. "academy") of the player's last death. Spirit-gate return target. */
+    val lastDeathZone: String? = null,
     val craftingSkills: Map<String, CraftingSkillState> = emptyMap(),
     val discoveredRecipes: Set<String> = emptySet(),
     val craftingSpecialization: String? = null,

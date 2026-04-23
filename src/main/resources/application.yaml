@@ -793,6 +793,11 @@ ambonmud:
       feedback:
         enabled: false
         roomBroadcastEnabled: false
+    death:
+      sanctumRoom: academy:sanctum
+      respawnHpFraction: 0.2
+      respawnManaFraction: 0.2
+      xpPenaltyFraction: 0.0
     mob:
       minActionDelayMillis: 2000
       maxActionDelayMillis: 5000

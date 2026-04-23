@@ -186,6 +186,25 @@ data class AppConfig(
         require(!engine.combat.feedback.roomBroadcastEnabled || engine.combat.feedback.enabled) {
             "ambonMUD.engine.combat.feedback.roomBroadcastEnabled requires feedback.enabled=true"
         }
+        validateDeath()
+    }
+
+    private fun validateDeath() {
+        val d = engine.death
+        require(d.respawnHpFraction in 0.05..1.0) {
+            "ambonMUD.engine.death.respawnHpFraction must be in [0.05, 1.0] (got ${d.respawnHpFraction})"
+        }
+        require(d.respawnManaFraction in 0.0..1.0) {
+            "ambonMUD.engine.death.respawnManaFraction must be in [0.0, 1.0] (got ${d.respawnManaFraction})"
+        }
+        require(d.xpPenaltyFraction in 0.0..0.5) {
+            "ambonMUD.engine.death.xpPenaltyFraction must be in [0.0, 0.5] (got ${d.xpPenaltyFraction})"
+        }
+        d.sanctumRoom?.let { sr ->
+            require(sr.contains(':')) {
+                "ambonMUD.engine.death.sanctumRoom must be in 'zone:room' format, got '$sr'"
+            }
+        }
     }
 
     private fun validateEngineRegen() {
@@ -1513,6 +1532,34 @@ data class EngineConfig(
     val globalQuests: GlobalQuestsConfig = GlobalQuestsConfig(),
     val lottery: LotteryConfig = LotteryConfig(),
     val gambling: GamblingConfig = GamblingConfig(),
+    val death: DeathConfig = DeathConfig(),
+)
+
+/**
+ * Configuration for what happens when a player dies in PvE.
+ *
+ * On death, the player is moved to [sanctumRoom] (falling back to the zone's startRoom, then world
+ * startRoom if unset/missing), restored to [respawnHpFraction] of max HP, and their last death
+ * zone is recorded so a follow-up `depart` command can return them to that zone's start room.
+ */
+data class DeathConfig(
+    /** Fully-qualified "zone:room" ID of the sanctum players respawn in. Null = zone startRoom fallback. */
+    val sanctumRoom: String? = null,
+    /** Fraction of maxHp restored on respawn (0.2 = 20%). Clamped to [0.05, 1.0]. */
+    val respawnHpFraction: Double = 0.2,
+    /** Fraction of maxMana restored on respawn (0.2 = 20%). Clamped to [0.0, 1.0]. */
+    val respawnManaFraction: Double = 0.2,
+    /** Fraction of current xpTotal deducted on death. 0 = no penalty. Clamped to [0.0, 0.5]. */
+    val xpPenaltyFraction: Double = 0.0,
+    val messages: DeathMessagesConfig = DeathMessagesConfig(),
+)
+
+data class DeathMessagesConfig(
+    val arriveSanctum: String = "The world fades... and you awaken in the sanctum, your body mending.",
+    val departNoSanctum: String = "You can only depart from the sanctum.",
+    val departNoDeath: String = "You have nowhere to return to.",
+    val departBegin: String = "You step through the spirit gate and return to the world.",
+    val departUnreachable: String = "The spirit gate flickers, but nothing happens.",
 )
 
 data class NavigationConfig(

@@ -224,6 +224,9 @@ sealed interface Command {
 
     data object Recall : Command
 
+    /** Leaves the sanctum after death, returning to the zone where the player last died. */
+    data object Depart : Command
+
     data class Petition(
         val keyword: String,
     ) : Command
@@ -1591,6 +1594,7 @@ object CommandParser {
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
             "recall" -> Command.Recall
+            "depart" -> Command.Depart
             "score", "sc" -> Command.Score
             "spells", "abilities", "skills" -> Command.Spells
             "effects", "buffs", "debuffs" -> Command.Effects

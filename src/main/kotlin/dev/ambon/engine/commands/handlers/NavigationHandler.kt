@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.config.DeathConfig
 import dev.ambon.config.RecallConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -26,6 +27,7 @@ class NavigationHandler(
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
     private val clock: Clock = Clock.systemUTC(),
     private val recallConfig: RecallConfig = RecallConfig(),
+    private val deathConfig: DeathConfig = DeathConfig(),
     private val housingSystem: HousingSystem? = null,
     private val guildHallSystem: GuildHallSystem? = null,
     private val onPlayerMoved: (suspend (SessionId, RoomId) -> Unit)? = null,
@@ -62,6 +64,7 @@ class NavigationHandler(
         router.on<Command.LookDir> { sid, cmd -> handleLookDir(sid, cmd) }
         router.on<Command.LookAt> { sid, cmd -> handleLookAt(sid, cmd) }
         router.on<Command.Recall> { sid, _ -> handleRecall(sid) }
+        router.on<Command.Depart> { sid, _ -> handleDepart(sid) }
         router.on<Command.Petition> { sid, cmd -> handlePetition(sid, cmd) }
     }
 
@@ -277,6 +280,51 @@ class NavigationHandler(
         )
         onPlayerMoved?.invoke(sessionId, target)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.arrival))
+        ctx.sendLook(sessionId)
+    }
+
+    private suspend fun handleDepart(sessionId: SessionId) {
+        val msgs = deathConfig.messages
+        val me = players.get(sessionId) ?: return
+
+        // Only available from the configured sanctum room.
+        val sanctumRoomId = deathConfig.sanctumRoom?.let { RoomId(it) }
+        if (sanctumRoomId == null || me.roomId != sanctumRoomId) {
+            outbound.send(OutboundEvent.SendError(sessionId, msgs.departNoSanctum))
+            return
+        }
+
+        val deathZone = me.lastDeathZone
+        if (deathZone == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, msgs.departNoDeath))
+            return
+        }
+
+        val target = world.zoneStartRoom(deathZone) ?: world.startRoom
+        if (!world.rooms.containsKey(target)) {
+            if (attemptCrossZoneMove(sessionId, target, onCrossZoneMove, router::suppressAutoPrompt)) {
+                me.lastDeathZone = null
+                return
+            }
+            outbound.send(OutboundEvent.SendError(sessionId, msgs.departUnreachable))
+            return
+        }
+
+        outbound.send(OutboundEvent.SendText(sessionId, msgs.departBegin))
+        val from = me.roomId
+        movePlayerWithNotify(
+            sessionId,
+            from,
+            target,
+            "steps through the spirit gate and fades from view.",
+            "emerges from a shimmering spirit gate.",
+            players,
+            outbound,
+            gmcpEmitter,
+            dialogueSystem,
+        )
+        me.lastDeathZone = null
+        onPlayerMoved?.invoke(sessionId, target)
         ctx.sendLook(sessionId)
     }
 
