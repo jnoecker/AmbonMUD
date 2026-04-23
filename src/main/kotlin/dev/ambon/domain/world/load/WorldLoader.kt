@@ -397,6 +397,11 @@ object WorldLoader {
                         spells = spells,
                         defaultAttack = mf.defaultAttack,
                         level = level,
+                        role = try {
+                            dev.ambon.domain.mob.MobRole.parse(mf.role)
+                        } catch (e: IllegalArgumentException) {
+                            throw WorldLoadException("Mob '${mobId.value}': ${e.message}")
+                        },
                     )
             }
 

@@ -4,6 +4,12 @@ data class MobFile(
     val name: String,
     val description: String = "",
     val room: String,
+    /**
+     * What this mob is for: combat, vendor, quest_giver, dialog, or prop.
+     * Non-combat roles refuse attack commands and skip combat-stat computation.
+     * Null/missing defaults to combat to preserve legacy behaviour.
+     */
+    val role: String? = null,
     val tier: String? = null,
     val level: Int? = null,
     val hp: Int? = null,

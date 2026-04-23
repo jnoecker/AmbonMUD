@@ -60,6 +60,7 @@ internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
         spells = spawn.spells,
         defaultAttack = spawn.defaultAttack,
         level = spawn.level,
+        role = spawn.role,
     )
 
 /**

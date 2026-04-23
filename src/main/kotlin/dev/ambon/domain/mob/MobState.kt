@@ -40,6 +40,7 @@ data class MobState(
     /** Threat multiplier for pet combat. 0.0 = no threat generation (default). */
     val threatMultiplier: Double = 0.0,
     override val level: Int = 1,
+    override val role: MobRole = MobRole.COMBAT,
 ) : MobTemplate {
     val isPet: Boolean get() = ownerSessionId != null
 }

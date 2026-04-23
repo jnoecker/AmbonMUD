@@ -147,6 +147,15 @@ class CombatSystem(
         if (matches.isEmpty()) return "You don't see '$keyword' here."
 
         val mob = matches.first()
+        if (!mob.role.isCombatant) {
+            return when (mob.role) {
+                dev.ambon.domain.mob.MobRole.VENDOR -> "${mob.name} isn't interested in fighting — try the shop instead."
+                dev.ambon.domain.mob.MobRole.QUEST_GIVER -> "${mob.name} has no quarrel with you. Maybe they have work to offer?"
+                dev.ambon.domain.mob.MobRole.DIALOG -> "${mob.name} has no interest in fighting you."
+                dev.ambon.domain.mob.MobRole.PROP -> "${mob.name} is not something you can attack."
+                dev.ambon.domain.mob.MobRole.COMBAT -> error("unreachable")
+            }
+        }
 
         val now = clock.millis()
         registerCombatant(sessionId, mob.id, player, now)
@@ -449,6 +458,7 @@ class CombatSystem(
         val player = players.get(sessionId) ?: return false
         val mob = mobs.get(mobId) ?: return false
 
+        if (!mob.role.isCombatant) return false
         if (playerTarget.containsKey(sessionId)) return false
         if (player.roomId != mob.roomId) return false
 
