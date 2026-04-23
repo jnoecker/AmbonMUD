@@ -15,20 +15,29 @@ Use this document as the default engineering playbook when making code or conten
 - Run server (Unix): `./gradlew run`
 - Demo (Windows): `.\gradlew.bat demo`
 - Demo (Unix): `./gradlew demo`
+- Build web client (Windows): `.\gradlew.bat buildWeb`
+- Build web client (Unix): `./gradlew buildWeb`
 - Lint: `.\gradlew.bat ktlintCheck`
 - Unit tests: `.\gradlew.bat test`
 - Integration tests: `.\gradlew.bat integrationTest`
+- Focused test class (Windows): `.\gradlew.bat test --tests "dev.ambon.engine.commands.CommandParserTest"`
+- Focused test pattern (Windows): `.\gradlew.bat test --tests "*CommandRouter*"`
 - CI parity (Unix/CI): `./gradlew ktlintCheck test integrationTest`
 - CI parity (Windows): `.\gradlew.bat ktlintCheck test integrationTest`
+- Multi-instance local topology: `runEngine1`, `runEngine2`, `runGateway1`, `runGateway2` (start engines first, then gateways)
 
 By default the server listens on telnet port `4000` and web port `8080` (configured in `src/main/resources/application.yaml`, printed by `src/main/kotlin/dev/ambon/Main.kt`).
+`buildWeb` runs automatically through `processResources`, so `run` and `demo` rebuild the v3 client when `web-v3/` source is present. The multi-instance tasks use `application-{profile}.yaml` overlays from `src/main/resources/`.
 
 ## Project Map
 - Bootstrap/runtime wiring: `src/main/kotlin/dev/ambon/Main.kt`, `src/main/kotlin/dev/ambon/MudServer.kt`
+- Gateway composition/wiring: `src/main/kotlin/dev/ambon/gateway/GatewayServer.kt`
 - Configuration: `src/main/kotlin/dev/ambon/config`, `src/main/resources/application.yaml`
+- Engine core loop and player state: `src/main/kotlin/dev/ambon/engine/GameEngine.kt`, `PlayerState.kt`, `PlayerRegistry.kt`
 - Engine and gameplay: `src/main/kotlin/dev/ambon/engine` (includes `GmcpEmitter`, `AbilitySystem`, `GuildSystem`, `CraftingSystem`, `FriendsSystem`)
 - Zone-based engine sharding: `src/main/kotlin/dev/ambon/sharding` (ZoneRegistry, InterEngineBus, HandoffManager, InstanceSelector)
 - Transport and protocol: `src/main/kotlin/dev/ambon/transport`
+- Engine event model: `src/main/kotlin/dev/ambon/engine/events/InboundEvent.kt`, `OutboundEvent.kt`
 - Event bus interfaces + impls: `src/main/kotlin/dev/ambon/bus` (`InboundBus`, `OutboundBus`, `Local*Bus`, `Redis*Bus`, `Grpc*Bus`)
 - Redis connection management + JSON: `src/main/kotlin/dev/ambon/redis`
 - Session ID allocation + gateway lease: `src/main/kotlin/dev/ambon/session` (`AtomicSessionIdFactory`, `SnowflakeSessionIdFactory`, `GatewayIdLeaseManager`)
@@ -39,8 +48,11 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - World content: `src/main/resources/world` (bundled: the single Academy tutorial zone in `academy.yaml`, plus `achievements.yaml` and `sprites.yaml`). The full Auringold world — 20+ zones covering levels 1–10 — lives in a separate "lore repo" on Cloudflare R2 at `auringold.ambon.dev` and is fetched on production boot via `AMBONMUD_DATA_DIR`. See `docs/DEPLOYMENT.md` § "Remote world & config overlay" for the full pipeline.
 - World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
+- Persistence DTOs and repository coverage: `src/main/kotlin/dev/ambon/persistence/PlayerRecord.kt`, `GuildRepository.kt`
+- gRPC/proto mapping: `src/main/proto/ambonmud/v1`, `src/main/kotlin/dev/ambon/grpc/ProtoMapper.kt`
 - Flyway schema migrations: `src/main/resources/db/migration` (V1–V34: players table through prestige, pvp stats, screen reader, currencies, guild halls, and daily quest data)
 - Tests: `src/test/kotlin` (~160 test files), fixtures in `src/test/resources/world`
+- Test helpers: `src/test/kotlin/dev/ambon/test/MutableClock.kt`, `EngineTestHelpers.kt`, `src/test/kotlin/dev/ambon/persistence/InMemoryPlayerRepository.kt`
 - Runtime player data (git-ignored): `data/players`
 
 ## Architecture Contracts (Do Not Break)
@@ -112,6 +124,8 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Preserve case-insensitive lookup and unique-name behavior.
 - Use `YamlPlayerRepositoryTest` and `@TempDir` for YAML regression coverage; use `PostgresPlayerRepositoryTest` (H2 in-memory) for Postgres coverage.
 - When adding fields to `PlayerRecord`: add with a default value so existing YAML files still deserialize; verify the field round-trips through Jackson/Redis JSON (`RedisCachingPlayerRepositoryTest`). For Postgres, add a new Flyway migration (`V<N>__description.sql`) and update `PlayersTable.kt` + `PostgresPlayerRepository.kt` (mapping in `toPlayerRecord()`, `insert`, and `upsert`).
+- If the field also exists in runtime state, update `PlayerState` and the `toPlayerState()` / `toPlayerRecord()` conversions.
+- `PersistenceFieldCoverageTest` is intended to catch mapping omissions; keep it passing when the persistence shape changes.
 - Do not add persistence logic directly to `GameEngine` or `PlayerRegistry` — all writes go through `repo.save()` which the coalescing wrapper intercepts.
 
 ### Abilities / spells
@@ -163,6 +177,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Telnet GMCP negotiation is handled in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt` (subnegotiation parsing).
 - WebSocket sessions auto-opt into all GMCP packages via `KtorWebSocketTransport.kt`.
 - When adding new GMCP packages, update `GmcpEmitter` and the v3 client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`.
+- New GMCP package families must also be advertised in the auto-sent WebSocket `Core.Supports.Set` inside `KtorWebSocketTransport.kt`, or WebSocket clients will silently drop them. Package family prefixes matter: `Quest 1` covers `Quest.List`, `Quest.Update`, and related packages.
 
 ### Staff/Admin commands
 - Add parse logic in `CommandParser.kt` (alongside existing admin block).
@@ -190,17 +205,30 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Lint: `bun run lint` from `web-v3/`.
 - Visual verification: `./gradlew demo` opens a browser.
 
+## Kotlin Style
+- ktlint follows `kotlin.code.style=official` with project overrides in `.editorconfig`.
+- Keep trailing commas on multiline parameter lists, argument lists, and collection literals.
+- Do not use wildcard imports.
+- The project intentionally relaxes these ktlint rules: `multiline-expression-wrapping`, `string-template-indent`, `chain-method-continuation`, and `function-signature`. Do not re-enable them casually.
+
 ## Testing Expectations
 - Minimum verification for any meaningful change: `ktlintCheck` and `test`.
 - Run `integrationTest` when touching integration-tagged areas (HTTP/gRPC/database/production-resource wiring) and before finalizing broad cross-cutting changes.
 - Prefer focused test runs while iterating, then run full suite before finalizing.
 - Add tests for every behavioral change; this codebase treats tests as design constraints.
+- Use `MutableClock` for deterministic time in tests; avoid wall-clock assumptions and direct `System.currentTimeMillis()` usage in production code.
+- Prefer `withTimeout`-based polling over short arbitrary `delay(...)` calls; for negative async assertions, use at least `delay(200)` before concluding nothing arrived.
+- Reuse `EngineTestHelpers`, `InMemoryPlayerRepository`, `@TempDir`, and H2 PostgreSQL-mode fixtures instead of inventing new harnesses.
 
 ## Practical Notes
 - Keep protocol/network concerns in `transport`; keep gameplay/state transitions in `engine`.
 - Keep bus/Redis concerns in `bus`/`redis`; wire them in `MudServer.kt` only.
+- Most gameplay features follow the pattern `*System.kt` (logic) + `*Handler.kt` (commands) + config in `application.yaml` or world YAML + tests in `*SystemTest`.
 - Reuse deterministic test helpers (`MutableClock`, in-memory repository) where possible.
 - Do not commit runtime player save artifacts from `data/players`.
+- `CommandRouter.kt` is thin dispatch; gameplay behavior lives in the handler files under `src/main/kotlin/dev/ambon/engine/commands/handlers/`.
+- Some central files are large (`GmcpEmitter.kt`, `GameEngine.kt`, `AppConfig.kt`, `WorldLoader.kt`); check helper systems and handlers before assuming behavior belongs in a top-level file.
+- Generated protobuf/gRPC sources live under `build/generated/`; ktlint is suppressed there via a child `.editorconfig`.
 - The scheduler is at `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt`.
 - Micrometer metrics use package `io.micrometer.prometheusmetrics` (not the deprecated `io.micrometer.prometheus`).
 - Staff access is granted by setting `isStaff: true` in the player's YAML file (or updating the `is_staff` column in the `players` table when using Postgres) — there is no in-game promotion command.
