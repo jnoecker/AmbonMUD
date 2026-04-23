@@ -1234,4 +1234,61 @@ class CombatSystemTest {
 
             assertEquals(900L, player.xpTotal, "Expected 10% xp penalty (1000 -> 900)")
         }
+
+    @Test
+    fun `onPlayerEnteredCombat fires when mob aggros a player`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:wolf"),
+                    "a wolf",
+                    fixture.roomId,
+                    hp = 20,
+                    maxHp = 20,
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1))
+
+            val entered = mutableListOf<SessionId>()
+            combat.onPlayerEnteredCombat = { sid -> entered.add(sid) }
+
+            val sid = SessionId(50L)
+            fixture.players.loginOrFail(sid, "Chatter")
+
+            val started = combat.startMobCombat(mob.id, sid)
+            assertTrue(started, "Expected startMobCombat to succeed")
+            assertEquals(
+                listOf(sid),
+                entered,
+                "Expected onPlayerEnteredCombat to fire exactly once for the aggro victim",
+            )
+        }
+
+    @Test
+    fun `onPlayerEnteredCombat fires when player initiates combat`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:rat"),
+                    "a rat",
+                    fixture.roomId,
+                    hp = 10,
+                    maxHp = 10,
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1))
+
+            val entered = mutableListOf<SessionId>()
+            combat.onPlayerEnteredCombat = { sid -> entered.add(sid) }
+
+            val sid = SessionId(51L)
+            fixture.players.loginOrFail(sid, "Striker")
+
+            assertNull(combat.startCombat(sid, "rat"))
+            assertEquals(listOf(sid), entered)
+        }
 }

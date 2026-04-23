@@ -346,6 +346,7 @@ function App() {
     canvasCallbacks.openBank = () => openPanel("bank");
     canvasCallbacks.openStylist = () => openPanel("stylist");
     canvasCallbacks.openTrainer = () => openPanel("trainer");
+    canvasCallbacks.openCrafting = () => openPanel("crafting");
     canvasCallbacks.openDungeon = () => openPanel("dungeon");
     canvasCallbacks.openLottery = () => openPanel("lottery");
     canvasCallbacks.openHousing = () => openPanel("housing");
@@ -364,6 +365,7 @@ function App() {
       canvasCallbacks.openBank = null;
       canvasCallbacks.openStylist = null;
       canvasCallbacks.openTrainer = null;
+      canvasCallbacks.openCrafting = null;
       canvasCallbacks.openDungeon = null;
       canvasCallbacks.openLottery = null;
       canvasCallbacks.openHousing = null;
