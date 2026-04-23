@@ -66,6 +66,10 @@ class CombatSystem(
     /** Callback when a player kills another player in PvP; wired by GameEngine. */
     var onPvpKill: suspend (killerSid: SessionId) -> Unit = { _ -> }
 
+    /** Callback when a player enters combat (attacker or victim); wired by GameEngine.
+     *  Used to close dialogue overlays so the player isn't trapped in conversation. */
+    var onPlayerEnteredCombat: suspend (SessionId) -> Unit = { _ -> }
+
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
         val mobId: MobId,
@@ -166,6 +170,7 @@ class CombatSystem(
 
         val now = clock.millis()
         registerCombatant(sessionId, mob.id, player, now)
+        onPlayerEnteredCombat(sessionId)
 
         outbound.send(OutboundEvent.SendText(sessionId, "You attack ${mob.name}."))
         broadcastToRoom(players, outbound, roomId, "${player.name} attacks ${mob.name}.", exclude = sessionId)
@@ -263,6 +268,7 @@ class CombatSystem(
         )
         dirtyNotifier.playerVitalsDirty(attackerSid)
         dirtyNotifier.playerCombatDirty(attackerSid)
+        onPlayerEnteredCombat(attackerSid)
 
         // If the target is not already fighting back, auto-engage them
         if (pvpTarget[targetSid] == null && playerTarget[targetSid] == null) {
@@ -274,6 +280,7 @@ class CombatSystem(
             )
             dirtyNotifier.playerVitalsDirty(targetSid)
             dirtyNotifier.playerCombatDirty(targetSid)
+            onPlayerEnteredCombat(targetSid)
         }
 
         outbound.send(OutboundEvent.SendText(attackerSid, "You attack ${'$'}{target.name}!"))
@@ -471,6 +478,7 @@ class CombatSystem(
 
         val now = clock.millis()
         registerCombatant(sessionId, mobId, player, now)
+        onPlayerEnteredCombat(sessionId)
 
         outbound.send(OutboundEvent.SendText(sessionId, "${mob.name} attacks you!"))
         broadcastToRoom(players, outbound, player.roomId, "${mob.name} attacks ${player.name}.", exclude = sessionId)

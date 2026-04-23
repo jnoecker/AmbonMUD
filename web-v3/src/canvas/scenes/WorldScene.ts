@@ -407,7 +407,7 @@ export class WorldScene {
     this.stationBadge.eventMode = "static";
     this.stationBadge.cursor = "pointer";
     this.stationBadge.on("pointerdown", () => {
-      canvasCallbacks.sendCommand?.("recipes");
+      canvasCallbacks.openCrafting?.();
     });
     this.stationBadge.on("pointerover", () => {
       if (this.stationSprite) this.stationSprite.alpha = 1;

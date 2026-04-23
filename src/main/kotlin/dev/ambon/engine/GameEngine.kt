@@ -924,6 +924,7 @@ class GameEngine(
     init {
         // Late-wire combat event / gain callbacks (avoids circular type inference with gmcpEmitter)
         combatSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
+        combatSystem.onPlayerEnteredCombat = { sid -> dialogueSystem.endConversation(sid) }
         combatSystem.onXpGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "xp", amount, source) }
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
