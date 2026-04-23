@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CraftingSkill, CraftingRecipe, CraftingNode } from "../../types";
+import type { CraftingSkill, CraftingRecipe, CraftingNode, UiFeedbackEntry } from "../../types";
 
 interface CraftingPanelProps {
   connected: boolean;
@@ -7,6 +7,8 @@ interface CraftingPanelProps {
   skills: CraftingSkill[];
   recipes: CraftingRecipe[];
   nodes: CraftingNode[];
+  gatherCooldownUntilMs: number;
+  uiFeedbackFeed: UiFeedbackEntry[];
   onGather: (keyword: string) => void;
   onCraft: (recipeKeyword: string) => void;
   onRequestRecipes: () => void;
@@ -19,6 +21,8 @@ export function CraftingPanel({
   skills,
   recipes,
   nodes,
+  gatherCooldownUntilMs,
+  uiFeedbackFeed,
   onGather,
   onCraft,
   onRequestRecipes,
@@ -28,6 +32,24 @@ export function CraftingPanel({
   const skillsRequestedRef = useRef(false);
   const recipesRequestedRef = useRef(false);
   const ready = connected && hasCharacterProfile;
+
+  const [now, setNow] = useState(() => Date.now());
+  const gatherRemainingMs = Math.max(0, gatherCooldownUntilMs - now);
+  const gatherOnCooldown = gatherRemainingMs > 0;
+
+  useEffect(() => {
+    if (!gatherOnCooldown) return;
+    const id = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(id);
+  }, [gatherOnCooldown]);
+
+  const gatherCountdownLabel = gatherOnCooldown
+    ? `Ready in ${Math.ceil(gatherRemainingMs / 1000)}s`
+    : "Gather";
+
+  const latestCraftingFeedback = uiFeedbackFeed
+    .filter((entry) => entry.scope === "crafting")
+    .slice(-1)[0];
 
   useEffect(() => {
     if (!ready) return;
@@ -52,6 +74,16 @@ export function CraftingPanel({
 
   return (
     <div className="crafting-panel">
+      {latestCraftingFeedback && (
+        <div
+          key={latestCraftingFeedback.id}
+          className={`crafting-feedback crafting-feedback-${latestCraftingFeedback.type}`}
+          role="status"
+          aria-live="polite"
+        >
+          {latestCraftingFeedback.message}
+        </div>
+      )}
       <div className="crafting-tab-bar" role="tablist">
         <button
           type="button"
@@ -191,11 +223,12 @@ export function CraftingPanel({
                     </div>
                     <button
                       type="button"
-                      className="crafting-gather-button"
-                      disabled={!canGather}
+                      className={`crafting-gather-button${gatherOnCooldown ? " crafting-gather-button-cooldown" : ""}`}
+                      disabled={!canGather || gatherOnCooldown}
                       onClick={() => onGather(n.name)}
+                      title={gatherOnCooldown ? gatherCountdownLabel : undefined}
                     >
-                      Gather
+                      {gatherOnCooldown ? gatherCountdownLabel : "Gather"}
                     </button>
                   </li>
                 );

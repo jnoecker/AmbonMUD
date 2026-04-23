@@ -243,6 +243,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [craftingSkills, setCraftingSkills] = useState<CraftingSkill[]>([]);
   const [craftingRecipes, setCraftingRecipes] = useState<CraftingRecipe[]>([]);
   const [craftingNodes, setCraftingNodes] = useState<CraftingNode[]>([]);
+  const [gatherCooldownUntilMs, setGatherCooldownUntilMs] = useState<number>(0);
 
   // ── World ─────────────────────────────────────────
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
@@ -532,6 +533,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setCraftingSkills,
         setCraftingRecipes,
         setCraftingNodes,
+        setGatherCooldownUntilMs,
         pushCraftingResult,
         setMailInbox,
         setMailMessage,
@@ -613,6 +615,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setCraftingSkills([]);
     setCraftingRecipes([]);
     setCraftingNodes([]);
+    setGatherCooldownUntilMs(0);
     setMailInbox(null);
     setMailMessage(null);
     setLoginPrompt(null);
@@ -674,7 +677,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // Economy
     shop, puzzle, auctionListings, currencies, currencyActivity, bankState, stylistState, lotteryInfo,
     // Crafting
-    craftingSkills, craftingRecipes, craftingNodes,
+    craftingSkills, craftingRecipes, craftingNodes, gatherCooldownUntilMs,
     // World
     dialogue, setDialogue, zoneInstances, worldTime, worldWeather, worldEvents, zoneEnvironment, factions, factionActivity, dungeonInfo, dungeonCatalog,
     // Housing & pets

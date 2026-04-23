@@ -159,6 +159,7 @@ interface GmcpContext {
   setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
   setCraftingRecipes: Dispatch<SetStateAction<CraftingRecipe[]>>;
   setCraftingNodes: Dispatch<SetStateAction<CraftingNode[]>>;
+  setGatherCooldownUntilMs: Dispatch<SetStateAction<number>>;
   pushCraftingResult: (result?: CraftingResult) => void;
   setMailInbox: Dispatch<SetStateAction<MailEntry[] | null>>;
   setMailMessage: Dispatch<SetStateAction<MailMessage | null>>;
@@ -1564,6 +1565,16 @@ export function applyGmcpPackage(
             image: typeof e.image === "string" ? e.image : null,
           })),
       );
+      break;
+    }
+
+    case "Crafting.Cooldown": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const type = typeof packet.type === "string" ? packet.type : "";
+      const untilMs = safeNumber(packet.untilMs, 0);
+      if (type === "gather") {
+        ctx.setGatherCooldownUntilMs(untilMs);
+      }
       break;
     }
 

@@ -1157,6 +1157,19 @@ class GmcpEmitter(
         emit(sessionId, "Crafting.Nodes", nodes, supportCheck = "Crafting")
     }
 
+    suspend fun sendCraftingCooldown(
+        sessionId: SessionId,
+        type: String,
+        untilMs: Long,
+    ) {
+        emit(
+            sessionId,
+            "Crafting.Cooldown",
+            CraftingCooldownPayload(type = type, untilMs = untilMs),
+            supportCheck = "Crafting",
+        )
+    }
+
     suspend fun sendCraftingResult(
         sessionId: SessionId,
         type: String,
@@ -2626,6 +2639,11 @@ class GmcpEmitter(
         val skill: String,
         val skillRequired: Int,
         val image: String? = null,
+    )
+
+    private data class CraftingCooldownPayload(
+        val type: String,
+        val untilMs: Long,
     )
 
     private data class CraftingResultPayload(
