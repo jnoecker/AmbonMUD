@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.config.ProgressionConfig
+import dev.ambon.config.QuestDifficulty
 import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.mob.MobState
 import kotlin.math.pow
@@ -155,6 +156,23 @@ class PlayerProgression(
     fun defaultKillXpReward(): Long = scaledXp(config.xp.defaultKillXp)
 
     fun killXpReward(mob: MobState): Long = scaledXp(mob.xpReward)
+
+    /**
+     * Computes the engine-authored XP reward for a quest based on its tier and
+     * intended level. `(baseline.baseXp + baseline.xpPerLevel * (level - 1))`
+     * scaled by the tier multiplier; the result is clamped to non-negative.
+     * Returns 0 when [difficulty] is null (no tier declared) or when the
+     * tier has no configured multiplier.
+     */
+    fun computeQuestXp(difficulty: QuestDifficulty?, level: Int): Long {
+        if (difficulty == null) return 0L
+        val multiplier = config.quests.tiers[difficulty] ?: return 0L
+        val steps = (level.coerceAtLeast(1) - 1).toLong()
+        val baseline = config.quests.baseline.baseXp + config.quests.baseline.xpPerLevel * steps
+        val scaled = baseline.toDouble() * multiplier
+        if (!scaled.isFinite()) return Long.MAX_VALUE
+        return scaled.roundToLong().coerceAtLeast(0L)
+    }
 
     /**
      * Returns the XP multiplier for a kill given the player's level and the

@@ -501,6 +501,13 @@ data class AppConfig(
         require(progression.rewards.manaPerLevel >= 0) { "ambonMUD.progression.rewards.manaPerLevel must be >= 0" }
         require(progression.rewards.baseHp >= 1) { "ambonMUD.progression.rewards.baseHp must be >= 1" }
         require(progression.rewards.baseMana >= 0) { "ambonMUD.progression.rewards.baseMana must be >= 0" }
+        require(progression.quests.baseline.baseXp >= 0L) { "ambonMUD.progression.quests.baseline.baseXp must be >= 0" }
+        require(progression.quests.baseline.xpPerLevel >= 0L) { "ambonMUD.progression.quests.baseline.xpPerLevel must be >= 0" }
+        for ((difficulty, multiplier) in progression.quests.tiers) {
+            require(multiplier >= 0.0) {
+                "ambonMUD.progression.quests.tiers[$difficulty] must be >= 0 (got $multiplier)"
+            }
+        }
     }
 
     private fun validateTransport() {
@@ -1889,7 +1896,56 @@ data class ProgressionConfig(
     val maxLevel: Int = 50,
     val xp: XpCurveConfig = XpCurveConfig(),
     val rewards: LevelRewardsConfig = LevelRewardsConfig(),
+    val quests: QuestXpConfig = QuestXpConfig(),
 )
+
+/**
+ * Engine-computed XP for quests. Quests with an explicit `rewards.xp` authored
+ * in the YAML keep that value as an override; quests that declare only a
+ * `difficulty` (and optional `level`) get
+ *   `(baseline.baseXp + baseline.xpPerLevel * (level - 1)) * tiers[difficulty]`
+ * at completion time, with diminishing returns layered on top as usual.
+ */
+data class QuestXpConfig(
+    val baseline: QuestBaselineConfig = QuestBaselineConfig(),
+    val tiers: Map<QuestDifficulty, Double> =
+        mapOf(
+            QuestDifficulty.TRIVIAL to 0.25,
+            QuestDifficulty.EASY to 0.5,
+            QuestDifficulty.STANDARD to 1.0,
+            QuestDifficulty.HARD to 1.75,
+            QuestDifficulty.EPIC to 3.0,
+        ),
+)
+
+data class QuestBaselineConfig(
+    val baseXp: Long = 50L,
+    val xpPerLevel: Long = 20L,
+)
+
+enum class QuestDifficulty {
+    TRIVIAL,
+    EASY,
+    STANDARD,
+    HARD,
+    EPIC,
+    ;
+
+    companion object {
+        /**
+         * Parses a difficulty string from world YAML. Null/blank returns null
+         * (quest has no tier — XP comes from the authored `rewards.xp` alone).
+         */
+        fun parse(raw: String?): QuestDifficulty? {
+            if (raw.isNullOrBlank()) return null
+            val normalized = raw.trim().uppercase()
+            return entries.firstOrNull { it.name == normalized }
+                ?: throw IllegalArgumentException(
+                    "Unknown quest difficulty '$raw' (expected one of ${entries.joinToString { it.name.lowercase() }})",
+                )
+        }
+    }
+}
 
 data class XpCurveConfig(
     val baseXp: Long = 100L,

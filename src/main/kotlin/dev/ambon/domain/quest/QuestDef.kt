@@ -1,5 +1,6 @@
 package dev.ambon.domain.quest
 
+import dev.ambon.config.QuestDifficulty
 import dev.ambon.domain.Rewards
 import dev.ambon.domain.world.ReputationRequirement
 
@@ -20,6 +21,13 @@ data class QuestDef(
      * Null preserves legacy flat-award behaviour.
      */
     val level: Int? = null,
+    /**
+     * Engine-driven difficulty tier. When non-null and `rewards.xp == 0`, the
+     * engine computes XP from the progression config's quest baseline and the
+     * tier's multiplier. An explicit positive `rewards.xp` always wins as an
+     * override.
+     */
+    val difficulty: QuestDifficulty? = null,
 )
 
 data class QuestObjectiveDef(
