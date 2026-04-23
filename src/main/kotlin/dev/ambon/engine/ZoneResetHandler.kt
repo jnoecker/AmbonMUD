@@ -6,7 +6,9 @@ import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.RoomFeature
+import dev.ambon.domain.world.ScalingMode
 import dev.ambon.domain.world.World
+import dev.ambon.domain.world.resolveMobStats
 import dev.ambon.engine.behavior.BehaviorTreeSystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -32,21 +34,51 @@ internal fun computeDistanceMap(start: RoomId, world: World): Map<RoomId, Int> {
     return distances
 }
 
-/** Converts a [MobSpawn] definition into a live [MobState] instance. */
-internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
-    MobState(
+/**
+ * Converts a [MobSpawn] definition into a live [MobState] instance.
+ *
+ * When [referencePlayerLevel] is supplied and the mob's zone uses a non-STATIC
+ * scaling mode, the spawn level and tier-derived stats are recomputed for that
+ * player level. Authored overrides still win. Pass null (or nothing) to use
+ * the authored spawn level — the normal path for zones without scaling.
+ */
+internal fun spawnToMobState(
+    spawn: MobSpawn,
+    world: World,
+    referencePlayerLevel: Int? = null,
+): MobState {
+    val zone = idZone(spawn.id.value)
+    val scaling = world.zoneScaling(zone)
+
+    val shouldRescale = scaling.mode != ScalingMode.STATIC && spawn.tier != null
+    val effectiveLevel = if (shouldRescale) scaling.resolveLevel(referencePlayerLevel, spawn.level) else spawn.level
+    val resolved =
+        if (shouldRescale && effectiveLevel != spawn.level && spawn.tier != null) {
+            resolveMobStats(spawn.tier, effectiveLevel, spawn.overrides)
+        } else {
+            null
+        }
+
+    val maxHp = resolved?.hp ?: spawn.maxHp
+    val damage = resolved?.damage ?: spawn.damage
+    val armor = resolved?.armor ?: spawn.armor
+    val xpReward = resolved?.xpReward ?: spawn.xpReward
+    val goldMin = resolved?.goldMin ?: spawn.goldMin
+    val goldMax = resolved?.goldMax ?: spawn.goldMax
+
+    return MobState(
         id = spawn.id,
         name = spawn.name,
         description = spawn.description,
         roomId = spawn.roomId,
-        hp = spawn.maxHp,
-        maxHp = spawn.maxHp,
-        damage = spawn.damage,
-        armor = spawn.armor,
-        xpReward = spawn.xpReward,
+        hp = maxHp,
+        maxHp = maxHp,
+        damage = damage,
+        armor = armor,
+        xpReward = xpReward,
         drops = spawn.drops,
-        goldMin = spawn.goldMin,
-        goldMax = spawn.goldMax,
+        goldMin = goldMin,
+        goldMax = goldMax,
         dialogue = spawn.dialogue,
         behaviorTree = spawn.behaviorTree,
         aggressive = spawn.aggressive,
@@ -59,9 +91,20 @@ internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
         category = spawn.category,
         spells = spawn.spells,
         defaultAttack = spawn.defaultAttack,
-        level = spawn.level,
+        level = effectiveLevel,
         role = spawn.role,
     )
+}
+
+/**
+ * Returns the highest-level player currently in any room of [zone], or null
+ * if nobody's there. Used as the reference-player input to spawn-time scaling.
+ */
+internal fun highestPlayerLevelInZone(players: PlayerRegistry, zone: String): Int? =
+    players
+        .allPlayers()
+        .filter { it.roomId.zone == zone }
+        .maxOfOrNull { it.level }
 
 /**
  * Handles periodic zone resets: tracks per-zone lifespan timers, removes stale mobs/items,
@@ -172,8 +215,9 @@ internal class ZoneResetHandler(
             mobRemovalCoordinator.removeMobExternally(mobId)
         }
 
+        val referenceLevel = highestPlayerLevelInZone(players, zone)
         for (spawn in zoneMobSpawns) {
-            mobs.upsert(spawnToMobState(spawn, world))
+            mobs.upsert(spawnToMobState(spawn, world, referenceLevel))
             mobSystem.onMobSpawned(spawn.id)
             behaviorTreeSystem.onMobSpawned(spawn.id)
         }

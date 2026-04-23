@@ -51,6 +51,7 @@ class QuestSystemTest {
     private fun setup(
         quest: QuestDef = killQuest,
         progression: PlayerProgression? = null,
+        world: dev.ambon.domain.world.World? = null,
     ): Triple<QuestSystem, PlayerRegistry, LocalOutboundBus> {
         val c = SystemTestComponents(clockInitialMs = 1_000L)
         val registry = QuestRegistry()
@@ -63,6 +64,7 @@ class QuestSystemTest {
                 outbound = c.outbound,
                 clock = c.clock,
                 progression = progression,
+                world = world,
             )
         return Triple(questSystem, c.players, c.outbound)
     }
@@ -185,6 +187,77 @@ class QuestSystemTest {
             val xpGained = ps.xpTotal - xpBefore
             // STANDARD × (50 + 20*2) = 90 at level 3
             assertEquals(90L, xpGained, "Quest XP should be computed from difficulty baseline")
+        }
+
+    @Test
+    fun `quest XP scales to player level when zone is PLAYER-scaled`() =
+        runTest {
+            val progression = PlayerProgression()
+            val tieredQuest =
+                killQuest.copy(
+                    level = 1, // authored at level 1
+                    difficulty = dev.ambon.config.QuestDifficulty.STANDARD,
+                    rewards = QuestRewards(xp = 0L, gold = 0L),
+                )
+            val world = dev.ambon.domain.world.World(
+                rooms = emptyMap(),
+                startRoom = dev.ambon.domain.ids.RoomId("zone:start"),
+                zoneScaling = mapOf(
+                    "zone" to dev.ambon.domain.world.ZoneScaling(
+                        mode = dev.ambon.domain.world.ScalingMode.PLAYER,
+                    ),
+                ),
+            )
+            val (qs, players, outbound) = setup(tieredQuest, progression, world)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+            players.setLevel(sid, 10)
+            val xpBefore = players.get(sid)!!.xpTotal
+            qs.acceptQuest(sid, questId)
+            outbound.drainAll()
+
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val ps = players.get(sid)!!
+            val xpGained = ps.xpTotal - xpBefore
+            // STANDARD at level 10 = (50 + 20*9) = 230 (scaled to player, not authored level 1)
+            assertEquals(230L, xpGained)
+        }
+
+    @Test
+    fun `quest XP clamps to zone bounds when BOUNDED-scaled`() =
+        runTest {
+            val progression = PlayerProgression()
+            val tieredQuest =
+                killQuest.copy(
+                    level = 3, // authored — irrelevant in bounded mode
+                    difficulty = dev.ambon.config.QuestDifficulty.STANDARD,
+                    rewards = QuestRewards(xp = 0L, gold = 0L),
+                )
+            val world = dev.ambon.domain.world.World(
+                rooms = emptyMap(),
+                startRoom = dev.ambon.domain.ids.RoomId("zone:start"),
+                zoneScaling = mapOf(
+                    "zone" to dev.ambon.domain.world.ZoneScaling(
+                        mode = dev.ambon.domain.world.ScalingMode.BOUNDED,
+                        levelRange = 3..8,
+                    ),
+                ),
+            )
+            val (qs, players, outbound) = setup(tieredQuest, progression, world)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+            players.setLevel(sid, 30) // overleveled → clamp to 8
+            val xpBefore = players.get(sid)!!.xpTotal
+            qs.acceptQuest(sid, questId)
+            outbound.drainAll()
+
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val ps = players.get(sid)!!
+            val xpGained = ps.xpTotal - xpBefore
+            // STANDARD at clamped level 8 = (50 + 20*7) = 190
+            assertEquals(190L, xpGained)
         }
 
     @Test

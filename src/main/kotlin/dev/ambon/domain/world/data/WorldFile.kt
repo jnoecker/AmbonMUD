@@ -12,6 +12,8 @@ data class WorldFile(
     val terrain: String? = null,
     /** Controlling faction for this region. Inherited by mobs that don't set their own. */
     val faction: String? = null,
+    /** Dynamic level-scaling configuration. Null/missing = STATIC (use authored levels). */
+    val scaling: ZoneScalingFile? = null,
     val image: ZoneImageDefaults? = null,
     val audio: ZoneAudioDefaults? = null,
     val rooms: Map<String, RoomFile>,
@@ -24,6 +26,12 @@ data class WorldFile(
     val recipes: Map<String, RecipeFile> = emptyMap(),
     val dungeon: DungeonFile? = null,
     val puzzles: Map<String, PuzzleFile> = emptyMap(),
+)
+
+data class ZoneScalingFile(
+    val mode: String = "static",
+    /** Inclusive [min, max] bounds. Required for BOUNDED mode. */
+    val levelRange: List<Int>? = null,
 )
 
 data class TrainerFile(

@@ -42,17 +42,21 @@ import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.MobDrop
 import dev.ambon.domain.world.MobSpawn
+import dev.ambon.domain.world.MobStatOverrides
 import dev.ambon.domain.world.ReputationRequirement
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.RoomFeature
+import dev.ambon.domain.world.ScalingMode
 import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.domain.world.TrainerDefinition
 import dev.ambon.domain.world.World
+import dev.ambon.domain.world.ZoneScaling
 import dev.ambon.domain.world.data.ExitValue
 import dev.ambon.domain.world.data.ExitValueDeserializer
 import dev.ambon.domain.world.data.FeatureFile
 import dev.ambon.domain.world.data.ReputationRequirementFile
 import dev.ambon.domain.world.data.WorldFile
+import dev.ambon.domain.world.resolveMobStats
 import dev.ambon.engine.behavior.BehaviorTemplates
 import dev.ambon.engine.behavior.BehaviorTreeLoader
 import dev.ambon.engine.behavior.BtNode
@@ -146,6 +150,7 @@ object WorldLoader {
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
         val pvpZones = mutableSetOf<String>()
         val zoneStartRooms = LinkedHashMap<String, RoomId>()
+        val zoneScalings = LinkedHashMap<String, ZoneScaling>()
 
         // startRoomOverride wins; otherwise fall back to first file’s declared startRoom.
         val worldStart = startRoomOverride ?: normalizeId(files.first().zone, files.first().startRoom)
@@ -185,6 +190,36 @@ object WorldLoader {
                 }
             }
             if (file.pvpEnabled) pvpZones.add(zone)
+
+            file.scaling?.let { scalingFile ->
+                val mode = try {
+                    ScalingMode.parse(scalingFile.mode)
+                } catch (e: IllegalArgumentException) {
+                    throw WorldLoadException("Zone '$zone' scaling: ${e.message}")
+                }
+                val range: IntRange? = scalingFile.levelRange?.let { values ->
+                    when {
+                        values.size != 2 ->
+                            throw WorldLoadException(
+                                "Zone '$zone' scaling.levelRange must be exactly [min, max] (got ${values.size} values)",
+                            )
+                        values[0] < 1 || values[1] < values[0] ->
+                            throw WorldLoadException(
+                                "Zone '$zone' scaling.levelRange must be [min >= 1, max >= min] (got $values)",
+                            )
+                        else -> values[0]..values[1]
+                    }
+                }
+                if (mode == ScalingMode.BOUNDED && range == null) {
+                    throw WorldLoadException("Zone '$zone' scaling.mode = bounded requires a levelRange")
+                }
+                val parsed = ZoneScaling(mode, range)
+                val existing = zoneScalings[zone]
+                if (existing != null && existing != parsed) {
+                    throw WorldLoadException("Zone '$zone' declares conflicting scaling configs across files")
+                }
+                zoneScalings[zone] = parsed
+            }
 
             // First pass per file: create room shells, detect collisions
             for ((rawId, rf) in file.rooms) {
@@ -303,15 +338,24 @@ object WorldLoader {
 
                 val level = mf.level ?: 1
                 requireAtLeast(level, 1, "Mob '${mobId.value}'", "level")
-                val steps = level - 1
 
-                val resolvedHp = mf.hp ?: (tier.baseHp + steps * tier.hpPerLevel)
-                val resolvedMinDamage = mf.minDamage ?: (tier.baseMinDamage + steps * tier.damagePerLevel)
-                val resolvedMaxDamage = mf.maxDamage ?: (tier.baseMaxDamage + steps * tier.damagePerLevel)
-                val resolvedArmor = mf.armor ?: tier.baseArmor
-                val resolvedXpReward = mf.xpReward ?: (tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel)
-                val resolvedGoldMin = mf.goldMin ?: (tier.baseGoldMin + steps.toLong() * tier.goldPerLevel)
-                val resolvedGoldMax = mf.goldMax ?: (tier.baseGoldMax + steps.toLong() * tier.goldPerLevel)
+                val overrides = MobStatOverrides(
+                    hp = mf.hp,
+                    minDamage = mf.minDamage,
+                    maxDamage = mf.maxDamage,
+                    armor = mf.armor,
+                    xpReward = mf.xpReward,
+                    goldMin = mf.goldMin,
+                    goldMax = mf.goldMax,
+                )
+                val resolved = resolveMobStats(tier, level, overrides)
+                val resolvedHp = resolved.hp
+                val resolvedMinDamage = resolved.damage.min
+                val resolvedMaxDamage = resolved.damage.max
+                val resolvedArmor = resolved.armor
+                val resolvedXpReward = resolved.xpReward
+                val resolvedGoldMin = resolved.goldMin
+                val resolvedGoldMax = resolved.goldMax
                 val drops =
                     mf.drops.mapIndexed { index, drop ->
                         val rawItemId = requireNonBlank(drop.itemId) {
@@ -402,6 +446,8 @@ object WorldLoader {
                         } catch (e: IllegalArgumentException) {
                             throw WorldLoadException("Mob '${mobId.value}': ${e.message}")
                         },
+                        tier = tier,
+                        overrides = overrides,
                     )
             }
 
@@ -1027,6 +1073,7 @@ object WorldLoader {
                     .toMap(),
             pvpZones = pvpZones.toSet(),
             zoneStartRooms = zoneStartRooms.toMap(),
+            zoneScaling = zoneScalings.toMap(),
             shopDefinitions = mergedShops.toList(),
             trainerDefinitions = mergedTrainers.toList(),
             questDefinitions = mergedQuests.toList(),
