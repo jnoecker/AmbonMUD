@@ -47,21 +47,35 @@ class CraftingHandler(
             val result = cs.gather(me, cmd.keyword, me.roomId, items)
             when (result) {
                 is Either.Left -> when (val err = result.value) {
-                    is GatherError.NoNodeFound -> outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "There is nothing to gather here matching '${cmd.keyword}'.",
-                        ),
+                    is GatherError.NoNodeFound -> sendGatherError(
+                        sessionId,
+                        "There is nothing to gather here matching '${cmd.keyword}'.",
+                        code = "no_node",
                     )
-                    is GatherError.SkillTooLow -> sendSkillTooLow(sessionId, err.required, err.current)
-                    is GatherError.NodeDepleted -> outbound.send(
-                        OutboundEvent.SendError(
+                    is GatherError.SkillTooLow -> {
+                        sendSkillTooLow(sessionId, err.required, err.current)
+                        gmcpEmitter?.sendUiFeedback(
                             sessionId,
-                            "That resource is depleted. It will respawn in ${err.respawnInSeconds}s.",
-                        ),
+                            type = "error",
+                            message = "Your skill is too low (need ${err.required}, have ${err.current}).",
+                            code = "skill_too_low",
+                            scope = "crafting",
+                        )
+                    }
+                    is GatherError.NodeDepleted -> sendGatherError(
+                        sessionId,
+                        "That resource is depleted. It will respawn in ${err.respawnInSeconds}s.",
+                        code = "node_depleted",
                     )
-                    is GatherError.OnCooldown ->
-                        outbound.send(OutboundEvent.SendError(sessionId, "You must wait before gathering again."))
+                    is GatherError.OnCooldown -> {
+                        val seconds = ((err.remainingMs + 999) / 1000).coerceAtLeast(1)
+                        sendGatherError(
+                            sessionId,
+                            "You must wait ${seconds}s before gathering again.",
+                            code = "on_cooldown",
+                        )
+                        gmcpEmitter?.sendCraftingCooldown(sessionId, "gather", me.gatherCooldownUntilMs)
+                    }
                 }
                 is Either.Right -> {
                     val r = result.value
@@ -99,6 +113,7 @@ class CraftingHandler(
                         quantity = totalQuantity,
                         rareFind = r.rareItemsGathered.isNotEmpty(),
                     )
+                    gmcpEmitter?.sendCraftingCooldown(sessionId, "gather", me.gatherCooldownUntilMs)
                     onItemGathered?.invoke(sessionId, r.node.skill)
                     notifyNewDiscoveries(sessionId, me, cs)
                     emitCraftingSkills(sessionId, me)
@@ -114,32 +129,49 @@ class CraftingHandler(
             val result = cs.craft(me, cmd.recipeKeyword, me.roomId, items, room?.station)
             when (result) {
                 is Either.Left -> when (val err = result.value) {
-                    is CraftError.RecipeNotFound -> outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "Unknown recipe '${cmd.recipeKeyword}'. Type 'recipes' to see available recipes.",
-                        ),
+                    is CraftError.RecipeNotFound -> sendCraftError(
+                        sessionId,
+                        "Unknown recipe '${cmd.recipeKeyword}'. Type 'recipes' to see available recipes.",
+                        code = "recipe_not_found",
                     )
-                    is CraftError.NotDiscovered -> outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "You haven't discovered that recipe yet. Keep leveling your skills!",
-                        ),
+                    is CraftError.NotDiscovered -> sendCraftError(
+                        sessionId,
+                        "You haven't discovered that recipe yet. Keep leveling your skills!",
+                        code = "not_discovered",
                     )
-                    is CraftError.SkillTooLow -> sendSkillTooLow(sessionId, err.required, err.current)
-                    is CraftError.LevelTooLow -> outbound.send(
-                        OutboundEvent.SendError(
+                    is CraftError.SkillTooLow -> {
+                        sendSkillTooLow(sessionId, err.required, err.current)
+                        gmcpEmitter?.sendUiFeedback(
                             sessionId,
-                            "You need to be level ${err.required} to craft this (you are level ${err.current}).",
-                        ),
+                            type = "error",
+                            message = "Your skill is too low (need ${err.required}, have ${err.current}).",
+                            code = "skill_too_low",
+                            scope = "crafting",
+                        )
+                    }
+                    is CraftError.LevelTooLow -> sendCraftError(
+                        sessionId,
+                        "You need to be level ${err.required} to craft this (you are level ${err.current}).",
+                        code = "level_too_low",
                     )
                     is CraftError.MissingMaterials -> {
                         outbound.send(OutboundEvent.SendError(sessionId, "You are missing materials:"))
+                        val missingSummary = err.missing.joinToString(", ") { (itemId, qty) ->
+                            val name = items.getTemplate(itemId)?.displayName ?: itemId.value
+                            "$name x$qty"
+                        }
                         for ((itemId, qty) in err.missing) {
                             val template = items.getTemplate(itemId)
                             val name = template?.displayName ?: itemId.value
                             outbound.send(OutboundEvent.SendError(sessionId, "  - $name x$qty"))
                         }
+                        gmcpEmitter?.sendUiFeedback(
+                            sessionId,
+                            type = "error",
+                            message = "Missing materials: $missingSummary",
+                            code = "missing_materials",
+                            scope = "crafting",
+                        )
                     }
                 }
                 is Either.Right -> {
@@ -387,6 +419,16 @@ class CraftingHandler(
 
     private suspend fun sendSkillTooLow(sessionId: SessionId, required: Int, current: Int) {
         outbound.send(OutboundEvent.SendError(sessionId, "Your skill is too low (need $required, have $current)."))
+    }
+
+    private suspend fun sendGatherError(sessionId: SessionId, message: String, code: String) {
+        outbound.send(OutboundEvent.SendError(sessionId, message))
+        gmcpEmitter?.sendUiFeedback(sessionId, type = "error", message = message, code = code, scope = "crafting")
+    }
+
+    private suspend fun sendCraftError(sessionId: SessionId, message: String, code: String) {
+        outbound.send(OutboundEvent.SendError(sessionId, message))
+        gmcpEmitter?.sendUiFeedback(sessionId, type = "error", message = message, code = code, scope = "crafting")
     }
 
     private suspend fun sendCraftingXp(

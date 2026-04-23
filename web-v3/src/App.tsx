@@ -857,6 +857,8 @@ function App() {
             skills={state.craftingSkills}
             recipes={state.craftingRecipes}
             nodes={state.craftingNodes}
+            gatherCooldownUntilMs={state.gatherCooldownUntilMs}
+            uiFeedbackFeed={state.uiFeedbackFeed}
             onGather={(keyword) => sendCommand(`gather ${keyword}`)}
             onCraft={(recipeKeyword) => sendCommand(`craft ${recipeKeyword}`)}
             onRequestRecipes={() => sendCommand("recipes")}

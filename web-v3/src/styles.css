@@ -5176,6 +5176,53 @@ body {
   pointer-events: none;
 }
 
+.crafting-gather-button-cooldown:disabled {
+  opacity: 0.78;
+  background: color-mix(in srgb, var(--color-accent-lavender) 28%, var(--surface-2));
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.crafting-feedback {
+  margin-bottom: var(--space-2);
+  padding: 8px 12px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  border: 1px solid transparent;
+  animation: crafting-feedback-in 160ms ease-out;
+}
+
+.crafting-feedback-error {
+  background: color-mix(in srgb, var(--color-danger, #d06a6a) 14%, var(--surface-1));
+  border-color: color-mix(in srgb, var(--color-danger, #d06a6a) 48%, transparent);
+  color: var(--color-danger, #d06a6a);
+}
+
+.crafting-feedback-info {
+  background: color-mix(in srgb, var(--color-pale-blue, #7aa8c8) 14%, var(--surface-1));
+  border-color: color-mix(in srgb, var(--color-pale-blue, #7aa8c8) 40%, transparent);
+  color: var(--text-primary);
+}
+
+.crafting-feedback-success {
+  background: color-mix(in srgb, var(--color-moss-green, #6a9d7a) 16%, var(--surface-1));
+  border-color: color-mix(in srgb, var(--color-moss-green, #6a9d7a) 48%, transparent);
+  color: var(--text-primary);
+}
+
+@keyframes crafting-feedback-in {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crafting-feedback {
+    animation: none;
+  }
+}
+
 .crafting-recipe-meta {
   display: flex;
   gap: var(--space-2);
