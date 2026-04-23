@@ -879,6 +879,7 @@ class GameEngine(
             clock = clock,
             reputationSystem = reputationSystem,
             progression = progression,
+            world = world,
         )
 
     private val dailyQuestSystem: DailyQuestSystem? =
@@ -2167,7 +2168,8 @@ class GameEngine(
             scheduler.scheduleIn(respawnMs) {
                 if (mobs.get(spawn.id) != null) return@scheduleIn
                 if (world.rooms[spawn.roomId] == null) return@scheduleIn
-                val respawned = spawnToMobState(spawn, world)
+                val referenceLevel = highestPlayerLevelInZone(players, spawn.roomId.zone)
+                val respawned = spawnToMobState(spawn, world, referenceLevel)
                 mobs.upsert(respawned)
                 mobSystem.onMobSpawned(spawn.id)
                 behaviorTreeSystem.onMobSpawned(spawn.id)

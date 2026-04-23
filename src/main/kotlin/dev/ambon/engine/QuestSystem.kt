@@ -2,12 +2,15 @@ package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.quest.ObjectiveProgress
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.quest.QuestState
+import dev.ambon.domain.world.ScalingMode
+import dev.ambon.domain.world.World
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.quest.CompletionHandlerRegistry
@@ -24,6 +27,7 @@ class QuestSystem(
     private val completionHandlers: CompletionHandlerRegistry = CompletionHandlerRegistry.withDefaults(),
     private val reputationSystem: ReputationSystem? = null,
     private val progression: PlayerProgression? = null,
+    private val world: World? = null,
 ) {
     /** Invoked after a quest is successfully completed; used by AchievementSystem. */
     var onQuestCompleted: (suspend (SessionId, String) -> Unit)? = null
@@ -349,16 +353,30 @@ class QuestSystem(
         onQuestCompletedGmcp?.invoke(sessionId, questId, quest.name)
         onQuestCompleted?.invoke(sessionId, questId)
 
+        // Zone scaling (phase 4): if the quest's zone declares non-STATIC scaling,
+        // the "effective level" for XP computation and diminishing tracks the
+        // player's current level instead of the authored quest level.
+        val zoneScaling = world?.zoneScaling(idZone(quest.id))
+        val effectiveLevel = when {
+            zoneScaling == null -> quest.level ?: ps.level
+            zoneScaling.mode == ScalingMode.STATIC -> quest.level ?: ps.level
+            else -> zoneScaling.resolveLevel(ps.level, quest.level)
+        }
+
         val effectiveRewards =
             if (rewards.xp == 0L && quest.difficulty != null && progression != null) {
-                val effectiveLevel = quest.level ?: ps.level
                 val computed = progression.computeQuestXp(quest.difficulty, effectiveLevel)
                 if (computed > 0L) rewards.copy(xp = computed) else rewards
             } else {
                 rewards
             }
 
-        grantRewards(sessionId, effectiveRewards, ps, players, outbound, progression, quest.level)
+        // Diminishing applies in STATIC zones only. In BOUNDED / PLAYER zones
+        // the content is already scaled to the player, so charging an additional
+        // over-level penalty contradicts the zone's explicit opt-in to scaling.
+        val sourceLevelForDiminishing =
+            if (zoneScaling != null && zoneScaling.mode != ScalingMode.STATIC) null else quest.level
+        grantRewards(sessionId, effectiveRewards, ps, players, outbound, progression, sourceLevelForDiminishing)
         if (effectiveRewards.xp == 0L) players.persistPlayer(ps.sessionId)
     }
 

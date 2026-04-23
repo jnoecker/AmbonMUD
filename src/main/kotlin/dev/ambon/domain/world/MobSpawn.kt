@@ -1,5 +1,6 @@
 package dev.ambon.domain.world
 
+import dev.ambon.config.MobTierConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -8,6 +9,21 @@ import dev.ambon.domain.mob.MobSpell
 import dev.ambon.domain.mob.MobTemplate
 import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueTree
+
+/**
+ * Authored stat overrides that won at load time. Preserved on [MobSpawn] so
+ * that spawn-time rescaling (for zones with non-STATIC scaling) can replay
+ * the tier × level math while still honouring the author's explicit values.
+ */
+data class MobStatOverrides(
+    val hp: Int? = null,
+    val minDamage: Int? = null,
+    val maxDamage: Int? = null,
+    val armor: Int? = null,
+    val xpReward: Long? = null,
+    val goldMin: Long? = null,
+    val goldMax: Long? = null,
+)
 
 data class MobSpawn(
     override val id: MobId,
@@ -34,4 +50,13 @@ data class MobSpawn(
     override val defaultAttack: String? = null,
     override val level: Int = 1,
     override val role: MobRole = MobRole.COMBAT,
+    /**
+     * The tier config used to resolve stats at load time. Preserved so
+     * spawn-time rescaling can replay the formulas at a different level
+     * without re-reading config. Null means "don't rescale this mob even in
+     * scaling zones" — typically because no tier was available at load.
+     */
+    val tier: MobTierConfig? = null,
+    /** Which stats the author explicitly set. Overrides stay fixed even when scaling shifts level. */
+    val overrides: MobStatOverrides = MobStatOverrides(),
 ) : MobTemplate

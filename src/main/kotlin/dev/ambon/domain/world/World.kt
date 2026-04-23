@@ -16,6 +16,7 @@ class World(
     zoneLifespansMinutes: Map<String, Long> = emptyMap(),
     pvpZones: Set<String> = emptySet(),
     zoneStartRooms: Map<String, RoomId> = emptyMap(),
+    zoneScaling: Map<String, ZoneScaling> = emptyMap(),
     shopDefinitions: List<ShopDefinition> = emptyList(),
     trainerDefinitions: List<TrainerDefinition> = emptyList(),
     questDefinitions: List<QuestDef> = emptyList(),
@@ -50,6 +51,12 @@ class World(
 
     /** Returns the start room for a zone, if known. */
     fun zoneStartRoom(zoneId: String): RoomId? = _zoneStartRooms[zoneId]
+
+    private val _zoneScaling = zoneScaling.toMutableMap()
+    val zoneScaling: Map<String, ZoneScaling> get() = _zoneScaling
+
+    /** Returns the scaling config for a zone. Falls back to STATIC when unset. */
+    fun zoneScaling(zoneId: String): ZoneScaling = _zoneScaling[zoneId] ?: ZoneScaling()
 
     private val _shopDefinitions = shopDefinitions.toMutableList()
     val shopDefinitions: List<ShopDefinition> get() = _shopDefinitions
@@ -127,6 +134,9 @@ class World(
         source.zoneStartRoom(zone)?.let { _zoneStartRooms[zone] = it }
             ?: _zoneStartRooms.remove(zone)
 
+        source._zoneScaling[zone]?.let { _zoneScaling[zone] = it }
+            ?: _zoneScaling.remove(zone)
+
         return oldRoomIds - newRooms.keys
     }
 
@@ -155,6 +165,9 @@ class World(
 
         _zoneStartRooms.clear()
         _zoneStartRooms.putAll(source._zoneStartRooms)
+
+        _zoneScaling.clear()
+        _zoneScaling.putAll(source._zoneScaling)
 
         _shopDefinitions.clear()
         _shopDefinitions.addAll(source.shopDefinitions)

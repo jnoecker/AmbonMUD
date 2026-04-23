@@ -167,7 +167,8 @@ class HotReloadManager(
         var newMobSpawns = 0
         for (spawn in world.mobSpawns) {
             if (mobs.get(spawn.id) == null) {
-                val mobState = spawnToMobState(spawn, world)
+                val referenceLevel = highestPlayerLevelInZone(players, spawn.roomId.zone)
+                val mobState = spawnToMobState(spawn, world, referenceLevel)
                 mobs.upsert(mobState)
                 mobSystem.onMobSpawned(spawn.id)
                 behaviorTreeSystem.onMobSpawned(spawn.id)
