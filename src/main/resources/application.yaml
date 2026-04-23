@@ -789,7 +789,7 @@ ambonmud:
       maxCombatsPerTick: 20
       tickMillis: 2000
       minDamage: 1
-      maxDamage: 150
+      maxDamage: 4
       feedback:
         enabled: false
         roomBroadcastEnabled: false
