@@ -3,6 +3,7 @@ package dev.ambon.domain.world
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.mob.MobRole
 import dev.ambon.domain.mob.MobSpell
 import dev.ambon.domain.mob.MobTemplate
 import dev.ambon.engine.behavior.BtNode
@@ -32,4 +33,5 @@ data class MobSpawn(
     override val spells: List<MobSpell> = emptyList(),
     override val defaultAttack: String? = null,
     override val level: Int = 1,
+    override val role: MobRole = MobRole.COMBAT,
 ) : MobTemplate

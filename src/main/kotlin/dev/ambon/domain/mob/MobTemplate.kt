@@ -30,4 +30,7 @@ interface MobTemplate {
 
     /** Spell id that replaces the mob's default melee attack. */
     val defaultAttack: String?
+
+    /** Classifies what this mob is *for*; gates combat and interaction affordances. */
+    val role: MobRole
 }
