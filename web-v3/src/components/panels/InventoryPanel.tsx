@@ -51,6 +51,7 @@ export function InventoryPanel({
     () => roomFeatures.filter((f) => f.type === "container"),
     [roomFeatures],
   );
+  const activeContainerKeyword = containerContents?.keyword ?? null;
 
   if (!connected || !hasCharacterProfile) {
     return <p className="empty-note">Log in to view inventory.</p>;
@@ -69,18 +70,23 @@ export function InventoryPanel({
   const renderItem = (item: ItemSummary) => (
     <li key={item.id} className="inventory-item">
       <div className="inventory-item-row">
-        <span className="inventory-item-info">
+        <div className="inventory-item-info">
           {resolveItemImage(item) && <img src={resolveItemImage(item)!} alt="" className="inventory-item-thumb" />}
-          <span className="inventory-item-name">{item.name}</span>
-          {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
-          {!item.slot && item.consumable && item.useEffect && (
-            <span className="inventory-item-effect" title={item.useEffect}>{item.useEffect}</span>
-          )}
-        </span>
-        <span className="inventory-item-actions">
+          <div className="inventory-item-copy">
+            <span className="inventory-item-name">{item.name}</span>
+            <div className="inventory-item-meta">
+              {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
+              {!item.slot && item.consumable && item.useEffect && (
+                <span className="inventory-item-effect" title={item.useEffect}>{item.useEffect}</span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="inventory-item-actions">
           <button
             type="button"
-            className="inventory-action-btn inventory-action-examine"
+            className="inventory-action-btn inventory-action-btn-pill inventory-action-examine"
+            aria-label={`Examine ${item.name}`}
             title={`Examine ${item.name}`}
             onClick={() => onCommand(`look ${item.keyword}`)}
           >
@@ -89,8 +95,9 @@ export function InventoryPanel({
           {!item.slot && item.consumable && (
             <button
               type="button"
-              className="inventory-action-btn inventory-action-use"
-              title={item.useEffect ? `Use ${item.name} — ${item.useEffect}` : `Use ${item.name}`}
+              className="inventory-action-btn inventory-action-btn-pill inventory-action-use"
+              aria-label={`Use ${item.name}`}
+              title={`Use ${item.name}${item.useEffect ? ` - ${item.useEffect}` : ""}`}
               disabled={!canManageItems}
               onClick={() => onCommand(`use ${item.keyword}`)}
             >
@@ -100,31 +107,34 @@ export function InventoryPanel({
           {item.slot && (
             <button
               type="button"
-              className={`inventory-action-btn inventory-action-equip${equipHint ? " inventory-action-equip-hint" : ""}`}
+              className={`inventory-action-btn inventory-action-btn-pill inventory-action-equip${equipHint ? " inventory-action-equip-hint" : ""}`}
+              aria-label={`Equip ${item.name}`}
               title={equipHint ? `Equip ${item.name}` : `Wear ${item.name}`}
               disabled={!canManageItems}
               onClick={() => onWearItem(item.name)}
             >
               <WearItemIcon className="inventory-action-icon" />
-              {equipHint && <span className="inventory-action-equip-hint-label">Equip</span>}
+              <span>Equip</span>
             </button>
           )}
           {containerContents && (
             <button
               type="button"
-              className="inventory-action-btn inventory-action-put"
-              title={`Put ${item.name} in ${containerContents.name}`}
+              className="inventory-action-btn inventory-action-btn-pill inventory-action-put"
+              aria-label={`Store ${item.name} in ${containerContents.name}`}
+              title={`Store ${item.name} in ${containerContents.name}`}
               disabled={!canManageItems}
               onClick={() => onCommand(`put ${item.keyword} in ${containerContents.keyword}`)}
             >
-              Put in {containerContents.name}
+              Store
             </button>
           )}
           {players.length > 0 && (
             <button
               type="button"
-              className={`inventory-action-btn ${givePickerItemId === item.id ? "inventory-action-btn-active" : ""}`}
+              className={`inventory-action-btn inventory-action-btn-icon${givePickerItemId === item.id ? " inventory-action-btn-active" : ""}`}
               title={`Give ${item.name}`}
+              aria-label={`Give ${item.name}`}
               aria-expanded={givePickerItemId === item.id}
               disabled={!canManageItems}
               onClick={() => setGivePickerItemId(givePickerItemId === item.id ? null : item.id)}
@@ -134,14 +144,15 @@ export function InventoryPanel({
           )}
           <button
             type="button"
-            className="inventory-action-btn"
+            className="inventory-action-btn inventory-action-btn-icon"
             title={`Drop ${item.name}`}
+            aria-label={`Drop ${item.name}`}
             disabled={!canManageItems}
             onClick={() => onDropItem(item.name)}
           >
             <DropItemIcon className="inventory-action-icon" />
           </button>
-        </span>
+        </div>
       </div>
       {givePickerItemId === item.id && (
         <div className="inventory-give-picker" role="listbox" aria-label={`Give ${item.name} to`}>
@@ -167,6 +178,12 @@ export function InventoryPanel({
 
   return (
     <div className="inventory-panel">
+      {containerContents && (
+        <div className="inventory-active-container" role="status" aria-live="polite">
+          <span className="inventory-active-container-label">Storing in</span>
+          <span className="inventory-active-container-name" title={containerContents.name}>{containerContents.name}</span>
+        </div>
+      )}
       {wearable.length > 0 && (
         <section className="inventory-section">
           <h3 className="inventory-section-title">Equipment</h3>
@@ -183,39 +200,45 @@ export function InventoryPanel({
         <section className="inventory-section">
           <h3 className="inventory-section-title">Containers</h3>
           <div className="container-list">
-            {containers.map((c) => (
-              <div key={c.id} className="container-entry">
+            {containers.map((container) => (
+              <div
+                key={container.id}
+                className={`container-entry${activeContainerKeyword === container.keyword ? " container-entry-active" : ""}`}
+              >
                 <div className="container-entry-header">
-                  <span className="container-entry-name">{c.name}</span>
+                  <span className="container-entry-name">{container.name}</span>
                   <button
                     type="button"
-                    className="inventory-action-btn inventory-action-use"
-                    title={`Search ${c.name}`}
+                    className="inventory-action-btn inventory-action-btn-pill inventory-action-use"
+                    title={`Search ${container.name}`}
+                    aria-label={`Search ${container.name}`}
                     disabled={!canManageItems}
-                    onClick={() => onCommand(`search ${c.keyword}`)}
+                    onClick={() => onCommand(`search ${container.keyword}`)}
                   >
                     Search
                   </button>
                 </div>
-                {containerContents && containerContents.keyword === c.keyword && containerContents.items.length > 0 && (
+                {containerContents && containerContents.keyword === container.keyword && containerContents.items.length > 0 && (
                   <ul className="container-items">
                     {containerContents.items.map((ci, idx) => (
                       <li key={`${ci.keyword}-${idx}`} className="container-item">
                         <span className="container-item-name">{ci.name}</span>
                         <button
                           type="button"
-                          className="inventory-action-btn inventory-action-examine"
+                          className="inventory-action-btn inventory-action-btn-pill inventory-action-examine"
                           title={`Examine ${ci.name}`}
+                          aria-label={`Examine ${ci.name}`}
                           onClick={() => onCommand(`look ${ci.keyword}`)}
                         >
                           Examine
                         </button>
                         <button
                           type="button"
-                          className="inventory-action-btn inventory-action-use"
+                          className="inventory-action-btn inventory-action-btn-pill inventory-action-use"
                           title={`Take ${ci.name}`}
+                          aria-label={`Take ${ci.name}`}
                           disabled={!canManageItems}
-                          onClick={() => onCommand(`get ${ci.keyword} from ${c.keyword}`)}
+                          onClick={() => onCommand(`get ${ci.keyword} from ${container.keyword}`)}
                         >
                           Take
                         </button>

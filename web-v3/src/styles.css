@@ -6234,6 +6234,39 @@ body {
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-2) 0;
+  container-type: inline-size;
+}
+
+.inventory-active-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgb(190 168 115 / 26%);
+  background: linear-gradient(135deg, rgb(190 168 115 / 16%), rgb(168 151 210 / 10%));
+  color: var(--text-secondary);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+.inventory-active-container-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary-soft-gold);
+}
+
+.inventory-active-container-name {
+  min-width: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .inventory-section {
@@ -6273,11 +6306,11 @@ body {
 }
 
 .inventory-item-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-2);
-  padding: 6px 8px;
+  gap: var(--space-2) var(--space-3);
+  padding: 8px 10px;
 }
 
 .inventory-item-info {
@@ -6285,6 +6318,21 @@ body {
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
+}
+
+.inventory-item-copy {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inventory-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 18px;
 }
 
 .inventory-item-thumb {
@@ -6298,6 +6346,7 @@ body {
 
 .inventory-item-name {
   font-size: 0.8rem;
+  font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -6328,33 +6377,47 @@ body {
 
 .inventory-item-actions {
   display: flex;
-  gap: 2px;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
 }
 
 .inventory-action-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  width: 28px;
-  height: 28px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: none;
+  gap: 6px;
+  min-width: 36px;
+  min-height: 36px;
+  width: auto;
+  height: auto;
+  padding: 0 10px;
+  border: 1px solid var(--line-faint);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 4%);
   color: var(--text-secondary);
   cursor: pointer;
+  white-space: nowrap;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  flex: 0 0 auto;
   transition:
     background 140ms var(--ease-out-soft),
     color 140ms var(--ease-out-soft),
-    border-color 140ms var(--ease-out-soft);
+    border-color 140ms var(--ease-out-soft),
+    transform 140ms var(--ease-out-soft),
+    box-shadow 140ms var(--ease-out-soft);
 }
 
 .inventory-action-btn:hover:not(:disabled) {
-  background: rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 10%);
   color: var(--text-primary);
-  border-color: var(--line-faint);
+  border-color: rgb(168 151 210 / 28%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgb(8 10 18 / 18%);
 }
 
 .inventory-action-btn:disabled {
@@ -6362,31 +6425,43 @@ body {
   cursor: not-allowed;
 }
 
+.inventory-action-btn-pill {
+  padding-inline: 12px;
+}
+
+.inventory-action-btn-icon {
+  width: 36px;
+  padding: 0;
+  border-radius: 11px;
+}
+
 .inventory-action-btn-active {
   background: rgb(168 151 210 / 20%);
   border-color: rgb(168 151 210 / 40%);
+}
+
+.inventory-action-examine {
+  color: var(--color-accent-moonlit-silver);
+}
+
+.inventory-action-use {
+  color: var(--color-primary-pale-blue);
 }
 
 .inventory-action-equip {
   color: var(--color-primary-moss-green);
 }
 
+.inventory-action-put {
+  color: var(--color-primary-soft-gold);
+}
+
 /* First-time onboarding hint: pulse the Equip action on wearable items until
-   the player actually wears one. Soft-gold border + inline "Equip" label so the
-   action is discoverable at a glance. */
+   the player actually wears one. */
 .inventory-action-equip-hint {
   border-color: var(--color-primary-soft-gold);
   color: var(--color-primary-soft-gold);
-  padding-right: 8px;
   animation: inventory-equip-hint-pulse 1.8s var(--ease-in-out-smooth) infinite;
-}
-
-.inventory-action-equip-hint-label {
-  margin-left: 4px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
 }
 
 @keyframes inventory-equip-hint-pulse {
@@ -6405,21 +6480,10 @@ body {
   }
 }
 
-.inventory-action-examine,
-.inventory-action-use,
-.inventory-action-put {
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 2px 6px;
-}
-
-.inventory-action-examine {
-  color: var(--color-accent-moonlit-silver);
-}
-
 .inventory-action-icon {
   width: 16px;
   height: 16px;
+  flex-shrink: 0;
 }
 
 .inventory-give-picker {
@@ -6468,6 +6532,12 @@ body {
   border-radius: var(--radius-md);
   background: rgb(50 58 82 / 30%);
   padding: 6px 8px;
+  transition: border-color 140ms var(--ease-out-soft), background 140ms var(--ease-out-soft);
+}
+
+.container-entry-active {
+  border-color: rgb(190 168 115 / 34%);
+  background: linear-gradient(145deg, rgb(190 168 115 / 10%), rgb(50 58 82 / 38%));
 }
 
 .container-entry-header {
@@ -6512,6 +6582,28 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@container (max-width: 720px) {
+  .inventory-active-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .inventory-item-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .inventory-item-actions {
+    justify-content: flex-start;
+  }
+
+  .container-entry-header,
+  .container-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
 }
 
 /* ────────── Equipment Panel (Paper Doll) ────────── */
@@ -9897,6 +9989,11 @@ body {
 .popout-dialog-panel {
   width: min(90vw, 560px);
   max-height: min(80dvh, 640px);
+}
+
+.popout-dialog-panel-inventory {
+  width: min(92vw, 860px);
+  max-height: min(82dvh, 720px);
 }
 
 .popout-panel-content {

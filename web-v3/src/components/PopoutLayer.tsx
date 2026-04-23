@@ -41,7 +41,7 @@ export function PopoutLayer({
 
   const isPanelPopout = PANEL_POPOUTS.has(activePopout);
   const dialogClass = isPanelPopout
-    ? "popout-dialog popout-dialog-panel"
+    ? `popout-dialog popout-dialog-panel popout-dialog-panel-${activePopout}`
     : "popout-dialog";
 
   return (
