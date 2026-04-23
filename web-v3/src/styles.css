@@ -15295,10 +15295,10 @@ html:has(.game-shell),
 
 .game-canvas-layer {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: env(safe-area-inset-top, 0);
+  right: env(safe-area-inset-right, 0);
   bottom: var(--game-bottom-inset, 0px);
-  left: 0;
+  left: env(safe-area-inset-left, 0);
   z-index: 0;
 }
 
