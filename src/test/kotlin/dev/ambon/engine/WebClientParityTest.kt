@@ -91,6 +91,7 @@ class WebClientParityTest {
             "QuestLog" to "quest_log",
             "QuestInfo" to "quest_info",
             "QuestAbandon" to "quest_abandon",
+            "QuestTurnIn" to "quest_turnin",
             "QuestAuto" to "bounty",
             "QuestAutoInfo" to "bounty_info",
             "QuestAutoAbandon" to "bounty_abandon",

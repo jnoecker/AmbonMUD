@@ -1674,6 +1674,12 @@ data class CommandsConfig(
             "quest_log" to CommandMetadata("quest log/list", "View active quests", "quests"),
             "quest_info" to CommandMetadata("quest info <name>", "Quest details", "quests", requiresTarget = true),
             "quest_abandon" to CommandMetadata("quest abandon <name>", "Abandon a quest", "quests", requiresTarget = true),
+            "quest_turnin" to CommandMetadata(
+                "quest turnin <name>",
+                "Turn in a completed quest to its giver NPC",
+                "quests",
+                requiresTarget = true,
+            ),
             "accept" to CommandMetadata("accept <quest>", "Accept a quest from an NPC", "quests", requiresTarget = true),
             "bounty" to CommandMetadata("bounty / quest auto", "Request an auto-generated bounty quest", "quests"),
             "bounty_info" to CommandMetadata("bounty info / quest auto info", "View active bounty progress", "quests"),
