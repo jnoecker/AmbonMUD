@@ -70,6 +70,10 @@ class CombatSystem(
      *  Used to close dialogue overlays so the player isn't trapped in conversation. */
     var onPlayerEnteredCombat: suspend (SessionId) -> Unit = { _ -> }
 
+    /** Callback fired for each item transferred into a killer's inventory via auto-loot;
+     *  wired by GameEngine to emit GMCP inventory updates and advance collection quests. */
+    var onItemAutoLooted: suspend (SessionId, dev.ambon.domain.items.ItemInstance) -> Unit = { _, _ -> }
+
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
         val mobId: MobId,
@@ -1409,6 +1413,7 @@ class CombatSystem(
             // elsewhere can't accidentally grab an unrelated item.
             val taken = items.takeFromRoomByInstance(killerSessionId, roomId, candidate) ?: continue
             looted += taken
+            onItemAutoLooted(killerSessionId, taken)
         }
         if (looted.isEmpty()) return
 

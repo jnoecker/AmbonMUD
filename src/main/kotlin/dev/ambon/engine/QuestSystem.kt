@@ -37,6 +37,9 @@ class QuestSystem(
     var onQuestObjectiveUpdated: (suspend (SessionId, String, Int, Int, Int) -> Unit)? = null
     var onQuestCompletedGmcp: (suspend (SessionId, String, String) -> Unit)? = null
 
+    /** Invoked when a quest reward grants enough XP to level the player up. */
+    var onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null
+
     /**
      * Returns quests offered by this mob that the player can accept.
      *
@@ -376,7 +379,16 @@ class QuestSystem(
         // over-level penalty contradicts the zone's explicit opt-in to scaling.
         val sourceLevelForDiminishing =
             if (zoneScaling != null && zoneScaling.mode != ScalingMode.STATIC) null else quest.level
-        grantRewards(sessionId, effectiveRewards, ps, players, outbound, progression, sourceLevelForDiminishing)
+        grantRewards(
+            sessionId,
+            effectiveRewards,
+            ps,
+            players,
+            outbound,
+            progression,
+            sourceLevelForDiminishing,
+            onLevelUp = { result -> onLevelUp?.invoke(sessionId, result) },
+        )
         if (effectiveRewards.xp == 0L) players.persistPlayer(ps.sessionId)
     }
 

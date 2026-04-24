@@ -732,4 +732,30 @@ class QuestSystemTest {
             // Each quest name must appear on its own line (preceded by a newline + indent)
             assertTrue(log.contains("\n  Bonus Quest"), "Bonus Quest must start on its own line")
         }
+
+    @Test
+    fun `quest completion XP that levels up invokes onLevelUp callback`() =
+        runTest {
+            val progression = PlayerProgression()
+            // A huge XP reward guarantees a level-up from level 1.
+            val fatQuest = killQuest.copy(rewards = QuestRewards(xp = 10_000L, gold = 0L))
+            val (qs, players, _) = setup(fatQuest, progression)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            var captured: LevelUpResult? = null
+            qs.onLevelUp = { _, result -> captured = result }
+
+            qs.acceptQuest(sid, questId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            assertTrue(
+                players.get(sid)!!.completedQuestIds.contains(questId),
+                "Quest should complete",
+            )
+            val result = captured
+            assertNotNull(result, "onLevelUp should fire when quest XP causes a level-up")
+            assertTrue(result!!.levelsGained > 0)
+            assertTrue(result.newLevel > result.previousLevel)
+        }
 }
