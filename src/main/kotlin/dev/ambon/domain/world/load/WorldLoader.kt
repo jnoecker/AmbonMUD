@@ -788,7 +788,7 @@ object WorldLoader {
                         DungeonRoomTemplateDef(
                             title = requireNonBlank(rt.title) { "Dungeon '$dungeonId' room template title cannot be blank" },
                             description = rt.description,
-                            image = rt.image,
+                            image = rt.image?.let { "$imagesBase$it" },
                         )
                     }
                 }.toMap()
@@ -819,7 +819,7 @@ object WorldLoader {
                         id = dungeonId,
                         name = df.name,
                         description = df.description,
-                        image = df.image,
+                        image = df.image?.let { "$imagesBase$it" },
                         minLevel = df.minLevel,
                         roomCountMin = df.roomCountMin,
                         roomCountMax = df.roomCountMax,
