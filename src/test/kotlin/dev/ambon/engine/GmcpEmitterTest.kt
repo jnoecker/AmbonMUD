@@ -1534,6 +1534,33 @@ class GmcpEmitterTest {
             assertTrue(drainGmcp().isEmpty())
         }
 
+    // ── Server.Features ──
+
+    @Test
+    fun `sendServerFeatures emits flag payload reflecting provider`() =
+        runTest {
+            val e = GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                featureFlags = {
+                    ServerFeaturesPayload(
+                        dailyQuests = true,
+                        weeklyQuests = true,
+                        globalQuests = false,
+                        autoQuests = false,
+                    )
+                },
+            )
+            e.sendServerFeatures(sid)
+            val data = drainGmcp()
+            assertEquals(1, data.size)
+            assertEquals("Server.Features", data[0].gmcpPackage)
+            val json = data[0].jsonData
+            assertTrue(json.contains("\"dailyQuests\":true"), "dailyQuests=true expected; got=$json")
+            assertTrue(json.contains("\"globalQuests\":false"), "globalQuests=false expected; got=$json")
+            assertTrue(json.contains("\"autoQuests\":false"), "autoQuests=false expected; got=$json")
+        }
+
     // ── Server.Commands ──
 
     @Test

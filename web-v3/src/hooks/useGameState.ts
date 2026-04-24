@@ -3,6 +3,7 @@ import type { SetStateAction } from "react";
 import { applyGmcpPackage } from "../gmcp/applyGmcpPackage";
 import { canvasEvents } from "../canvas/CanvasEventBus";
 import {
+  DEFAULT_SERVER_FEATURES,
   DEFAULT_STATUS_VAR_LABELS,
   EMPTY_CHAR,
   EMPTY_ROOM,
@@ -72,6 +73,7 @@ import type {
   RoomPlayer,
   RoomState,
   PuzzleState,
+  ServerFeatures,
   ShopState,
   SkillSummary,
   SpriteList,
@@ -283,6 +285,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
+  const [serverFeatures, setServerFeatures] = useState<ServerFeatures>(DEFAULT_SERVER_FEATURES);
   const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
   const [staffMobTemplates, setStaffMobTemplates] = useState<StaffMobZone[]>([]);
   const [lookTarget, setLookTarget] = useState<LookTargetInfo | null>(null);
@@ -524,6 +527,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setServerAssets,
         setServerCommands,
         setEmotePresets,
+        setServerFeatures,
         pushUiFeedback,
         setStaffWorldInfo,
         setStaffMobTemplates,
@@ -651,6 +655,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setStaffMobTemplates([]);
     setServerCommands([]);
     setEmotePresets([]);
+    setServerFeatures(DEFAULT_SERVER_FEATURES);
     resetMap();
   }, [resetMap]);
 
@@ -691,7 +696,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // Login / connection
     loginPrompt, loginError, reconnecting, setReconnecting, savedCharacters, setSavedCharacters,
     // Staff / meta
-    serverAssets, serverCommands, emotePresets, staffWorldInfo, staffMobTemplates,
+    serverAssets, serverCommands, emotePresets, serverFeatures, staffWorldInfo, staffMobTemplates,
     lookTarget, setLookTarget, spriteList,
     // UI
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,

@@ -548,6 +548,14 @@ class GameEngine(
                 }
             },
             environmentConfig = engineConfig.environment,
+            featureFlags = {
+                ServerFeaturesPayload(
+                    dailyQuests = engineConfig.dailyQuests.enabled,
+                    weeklyQuests = engineConfig.dailyQuests.enabled,
+                    globalQuests = engineConfig.globalQuests.enabled,
+                    autoQuests = engineConfig.autoQuests.enabled,
+                )
+            },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {

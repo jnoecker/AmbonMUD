@@ -877,6 +877,7 @@ function App() {
             weeklyQuests={state.weeklyQuests}
             autoQuest={state.autoQuest}
             globalQuest={state.globalQuest}
+            features={state.serverFeatures}
             onDismissQuestNotification={(id) => state.setQuestNotifications((prev) => prev.filter((n) => n.id !== id))}
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
             onAcceptQuest={(name) => sendCommand(`accept ${name}`)}
