@@ -119,17 +119,20 @@ class ItemHandler(
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
                 }
+                is ItemRegistry.EquipResult.Swapped -> {
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            sessionId,
+                            "You remove ${result.previousItem.item.displayName} and wear " +
+                                "${result.item.item.displayName} on your ${result.slot.label()}.",
+                        ),
+                    )
+                    afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                }
                 is ItemRegistry.EquipResult.NotFound ->
                     outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
                 is ItemRegistry.EquipResult.NotWearable ->
                     outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be worn."))
-                is ItemRegistry.EquipResult.SlotOccupied ->
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "You are already wearing ${result.item.item.displayName} on your ${result.slot.label()}.",
-                        ),
-                    )
             }
         }
     }
