@@ -4885,6 +4885,7 @@ body {
   margin-top: var(--space-2);
   display: flex;
   justify-content: flex-end;
+  gap: 6px;
 }
 
 .quest-abandon-button {
@@ -4904,6 +4905,52 @@ body {
 .quest-abandon-button:hover {
   background: rgb(184 143 170 / 24%);
   border-color: rgb(184 143 170 / 56%);
+}
+
+.quest-turnin-button {
+  border: 1px solid rgb(214 184 110 / 70%);
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgb(214 184 110 / 22%), rgb(214 184 110 / 32%));
+  color: var(--color-primary-soft-gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgb(214 184 110 / 28%);
+  transition:
+    background 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft),
+    box-shadow 150ms var(--ease-out-soft);
+}
+
+.quest-turnin-button:hover {
+  background: linear-gradient(90deg, rgb(214 184 110 / 34%), rgb(214 184 110 / 44%));
+  border-color: rgb(214 184 110 / 90%);
+  box-shadow: 0 0 14px rgb(214 184 110 / 42%);
+}
+
+.quest-item-ready {
+  box-shadow: 0 0 12px rgb(214 184 110 / 30%);
+  border-color: rgb(214 184 110 / 50%);
+}
+
+.quest-item-ready .quest-item-icon {
+  color: var(--color-primary-soft-gold);
+}
+
+.quest-item-ready-badge {
+  margin-left: auto;
+  margin-right: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary-soft-gold);
+  background: rgb(214 184 110 / 14%);
+  border: 1px solid rgb(214 184 110 / 50%);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
 }
 
 @keyframes questNotifSlide {

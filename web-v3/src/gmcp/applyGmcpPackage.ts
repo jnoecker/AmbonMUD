@@ -998,6 +998,8 @@ export function applyGmcpPackage(
                   }),
                 }))
             : [],
+          readyToTurnIn: entry.readyToTurnIn === true,
+          giverMobId: typeof entry.giverMobId === "string" ? entry.giverMobId : "",
         }));
       ctx.setQuests(parsedQuests);
       // Remove newly-active quests from available offers so accept buttons disappear

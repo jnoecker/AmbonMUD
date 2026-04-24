@@ -632,7 +632,7 @@ object WorldLoader {
                 val giver = requireNonBlank(questFile.giver) {
                     "Quest '$questId' giver cannot be blank"
                 }
-                val completionType = questFile.completionType.trim().lowercase().ifEmpty { "auto" }
+                val completionType = questFile.completionType.trim().lowercase().ifEmpty { "npc_turn_in" }
                 requireNotEmpty(questFile.objectives, "Quest '$questId'", "objective")
                 val objectives =
                     questFile.objectives.mapIndexed { index, obj ->

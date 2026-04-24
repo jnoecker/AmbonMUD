@@ -172,6 +172,7 @@ export function QuestPanel({
                   (o) => o.current >= o.required,
                 ).length;
                 const allDone = completedObjectives === totalObjectives;
+                const readyToTurnIn = quest.readyToTurnIn === true;
                 const overallProgress = totalObjectives > 0
                   ? quest.objectives.reduce((sum, o) => sum + Math.min(o.current, o.required), 0) /
                     quest.objectives.reduce((sum, o) => sum + o.required, 0)
@@ -179,7 +180,7 @@ export function QuestPanel({
                 return (
                   <li
                     key={quest.id}
-                    className={`quest-item ${isExpanded ? "quest-item-expanded" : ""} ${allDone ? "quest-item-complete" : ""}`}
+                    className={`quest-item ${isExpanded ? "quest-item-expanded" : ""} ${allDone ? "quest-item-complete" : ""} ${readyToTurnIn ? "quest-item-ready" : ""}`}
                   >
                     <button
                       type="button"
@@ -189,6 +190,9 @@ export function QuestPanel({
                     >
                       <span className="quest-item-icon">{allDone ? "\u2713" : "\u2726"}</span>
                       <span className="quest-item-name">{quest.name}</span>
+                      {readyToTurnIn && (
+                        <span className="quest-item-ready-badge">Ready to turn in</span>
+                      )}
                       <span className="quest-item-progress-badge">
                         {completedObjectives}/{totalObjectives}
                       </span>
@@ -242,6 +246,15 @@ export function QuestPanel({
                           })}
                         </ul>
                         <div className="quest-item-actions">
+                          {readyToTurnIn && (
+                            <button
+                              type="button"
+                              className="quest-turnin-button"
+                              onClick={() => onCommand(`quest turnin ${quest.name}`)}
+                            >
+                              Turn In Quest
+                            </button>
+                          )}
                           <button
                             type="button"
                             className="quest-abandon-button"

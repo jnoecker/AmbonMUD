@@ -1031,6 +1031,10 @@ ambonmud:
           usage: quest abandon <name>
           category: quests
           staff: false
+        quest_turnin:
+          usage: quest turnin <name>
+          category: quests
+          staff: false
         accept:
           usage: accept <quest>
           category: quests

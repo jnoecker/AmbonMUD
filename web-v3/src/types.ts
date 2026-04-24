@@ -461,6 +461,8 @@ export interface QuestEntry {
   name: string;
   description: string;
   objectives: QuestObjective[];
+  readyToTurnIn?: boolean;
+  giverMobId?: string;
 }
 
 export interface GainEvent {

@@ -95,6 +95,16 @@ class QuestSystem(
         return rep.getStanding(ps, req.faction) > max
     }
 
+    /**
+     * Whether [quest] with [state] is ready to be turned in at its giver NPC:
+     * all objectives complete and the completion handler requires NPC turn-in.
+     */
+    fun isReadyToTurnIn(quest: QuestDef, state: QuestState): Boolean {
+        val handler = completionHandlers.get(quest.completionType) ?: return false
+        if (!handler.requiresNpcTurnIn) return false
+        return state.objectives.all { it.isComplete }
+    }
+
     /** Returns mob IDs that offer quests the player can accept. */
     fun questAvailableMobIds(sessionId: SessionId, mobIds: Collection<String>): Set<String> {
         val ps = players.get(sessionId) ?: return emptySet()
@@ -190,6 +200,37 @@ class QuestSystem(
             }
         if (currentCount <= 0) return null
         return handler.advance(objDef, initial, targetIdRaw, currentCount)
+    }
+
+    /**
+     * Turn in a quest to its quest-giver NPC. Returns an error string, or null on success.
+     *
+     * Validates that the quest exists, is active, all objectives are complete, the
+     * completion handler requires NPC turn-in, and the quest-giver mob is present
+     * in [mobIdsInRoom] (i.e. in the player's current room).
+     */
+    suspend fun turnInQuest(
+        sessionId: SessionId,
+        nameHint: String,
+        mobIdsInRoom: Collection<String>,
+    ): String? {
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        val questId = findActiveQuestId(ps.activeQuests, nameHint)
+            ?: return "No active quest matching '$nameHint'."
+        val quest = registry.get(questId) ?: return "Quest data not found."
+        val state = ps.activeQuests[questId] ?: return "Quest not active."
+        val handler = completionHandlers.get(quest.completionType)
+        if (handler == null || !handler.requiresNpcTurnIn) {
+            return "That quest does not require a turn-in."
+        }
+        if (!state.objectives.all { it.isComplete }) {
+            return "You haven't finished that quest yet."
+        }
+        if (quest.giverMobId !in mobIdsInRoom) {
+            return "The quest-giver isn't here. Return to them to turn this in."
+        }
+        completeQuest(sessionId, questId, quest.rewards)
+        return null
     }
 
     /**

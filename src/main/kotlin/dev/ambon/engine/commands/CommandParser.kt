@@ -387,6 +387,10 @@ sealed interface Command {
         val nameHint: String,
     ) : Command
 
+    data class QuestTurnIn(
+        val nameHint: String,
+    ) : Command
+
     data object DailyQuests : Command
 
     data object WeeklyQuests : Command
@@ -1397,6 +1401,10 @@ object CommandParser {
                 "abandon" -> {
                     val hint = parts.getOrNull(1)?.trim() ?: ""
                     if (hint.isEmpty()) Command.Invalid(line, "quest abandon <quest-name>") else Command.QuestAbandon(hint)
+                }
+                "turnin", "complete", "finish" -> {
+                    val hint = parts.getOrNull(1)?.trim() ?: ""
+                    if (hint.isEmpty()) Command.Invalid(line, "quest turnin <quest-name>") else Command.QuestTurnIn(hint)
                 }
                 "auto", "request" -> {
                     val sub = parts.getOrNull(1)?.trim()?.lowercase() ?: ""

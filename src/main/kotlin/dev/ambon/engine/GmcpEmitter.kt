@@ -1019,6 +1019,8 @@ class GmcpEmitter(
                         targetRoomIds = o.targetRoomIds,
                     )
                 },
+                readyToTurnIn = q.readyToTurnIn,
+                giverMobId = q.giverMobId,
             )
         }
         emit(sessionId, "Quest.List", payload)
@@ -2580,6 +2582,8 @@ class GmcpEmitter(
         val name: String,
         val description: String,
         val objectives: List<QuestObjectivePayload>,
+        val readyToTurnIn: Boolean,
+        val giverMobId: String,
     )
 
     private data class QuestObjectivePayload(
@@ -3353,6 +3357,8 @@ data class QuestListEntry(
     val name: String,
     val description: String,
     val objectives: List<QuestObjectiveEntry>,
+    val readyToTurnIn: Boolean = false,
+    val giverMobId: String = "",
 )
 
 data class QuestObjectiveEntry(

@@ -758,4 +758,73 @@ class QuestSystemTest {
             assertTrue(result!!.levelsGained > 0)
             assertTrue(result.newLevel > result.previousLevel)
         }
+
+    @Test
+    fun `turn-in quest does not auto-complete and requires NPC in room`() =
+        runTest {
+            val turnInQuest = killQuest.copy(completionType = "npc_turn_in")
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val ps = players.get(sid)!!
+            assertTrue(ps.activeQuests.containsKey(questId), "Quest should remain active pending turn-in")
+            assertFalse(ps.completedQuestIds.contains(questId), "Quest must not auto-complete")
+
+            val wrongRoomErr = qs.turnInQuest(sid, "Kill Quest", emptyList())
+            assertNotNull(wrongRoomErr, "Turn-in without giver in room should fail")
+
+            val ok = qs.turnInQuest(sid, "Kill Quest", listOf("zone:quest_giver"))
+            assertNull(ok, "Turn-in with giver in room should succeed")
+            assertTrue(players.get(sid)!!.completedQuestIds.contains(questId))
+        }
+
+    @Test
+    fun `turn-in rejects when objectives are incomplete`() =
+        runTest {
+            val turnInQuest = killQuest.copy(completionType = "npc_turn_in")
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            qs.onMobKilled(sid, mobTemplateKey) // only 1/3
+
+            val err = qs.turnInQuest(sid, "Kill Quest", listOf("zone:quest_giver"))
+            assertNotNull(err, "Turn-in with unfinished objectives should fail")
+            assertFalse(players.get(sid)!!.completedQuestIds.contains(questId))
+        }
+
+    @Test
+    fun `turn-in rejects quests whose completion type is auto`() =
+        runTest {
+            val (qs, players, _) = setup() // killQuest with completionType = "auto"
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            // Quest auto-completes — turnInQuest should report no matching active quest.
+            val err = qs.turnInQuest(sid, "Kill Quest", listOf("zone:quest_giver"))
+            assertNotNull(err)
+        }
+
+    @Test
+    fun `isReadyToTurnIn reflects completion handler and objectives`() =
+        runTest {
+            val turnInQuest = killQuest.copy(completionType = "npc_turn_in")
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            val stateInProgress = players.get(sid)!!.activeQuests[questId]!!
+            assertFalse(qs.isReadyToTurnIn(turnInQuest, stateInProgress))
+
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+            val stateReady = players.get(sid)!!.activeQuests[questId]!!
+            assertTrue(qs.isReadyToTurnIn(turnInQuest, stateReady))
+        }
 }

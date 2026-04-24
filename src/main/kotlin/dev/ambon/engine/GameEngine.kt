@@ -2107,6 +2107,8 @@ class GameEngine(
                         targetRoomIds = resolveObjectiveRoomIds(objDef.targetId),
                     )
                 },
+                readyToTurnIn = questSystem.isReadyToTurnIn(def, state),
+                giverMobId = def.giverMobId,
             )
         }
         gmcpEmitter.sendQuestList(sessionId, entries)

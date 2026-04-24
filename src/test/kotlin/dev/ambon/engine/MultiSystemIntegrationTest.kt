@@ -343,6 +343,7 @@ class MultiSystemIntegrationTest {
                 ),
             ),
             rewards = QuestRewards(xp = 100, gold = 50),
+            completionType = "auto",
         )
         val questRegistry = QuestRegistry()
         questRegistry.register(questDef)

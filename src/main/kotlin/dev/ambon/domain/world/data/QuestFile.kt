@@ -4,7 +4,7 @@ data class QuestFile(
     val name: String = "",
     val description: String = "",
     val giver: String = "",
-    val completionType: String = "AUTO",
+    val completionType: String = "NPC_TURN_IN",
     val objectives: List<QuestObjectiveFile> = emptyList(),
     val rewards: QuestRewardsFile = QuestRewardsFile(),
     /** Optional reputation gate. min → giver hints to grind; max → quest disappears when exceeded. */

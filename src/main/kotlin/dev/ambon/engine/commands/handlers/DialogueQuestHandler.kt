@@ -39,6 +39,7 @@ class DialogueQuestHandler(
         router.on<Command.QuestInfo> { sid, cmd -> handleQuestInfo(sid, cmd) }
         router.on<Command.QuestAbandon> { sid, cmd -> handleQuestAbandon(sid, cmd) }
         router.on<Command.QuestAccept> { sid, cmd -> handleQuestAccept(sid, cmd) }
+        router.on<Command.QuestTurnIn> { sid, cmd -> handleQuestTurnIn(sid, cmd) }
         router.on<Command.AchievementList> { sid, _ -> handleAchievementList(sid) }
         router.on<Command.TitleSet> { sid, cmd -> handleTitleSet(sid, cmd) }
         router.on<Command.TitleClear> { sid, _ -> handleTitleClear(sid) }
@@ -57,6 +58,17 @@ class DialogueQuestHandler(
         if (questSystem != null && me != null) {
             val mob = mobs.findInRoomByKeyword(me.roomId, cmd.target.trim()).firstOrNull()
             if (mob != null) {
+                val readyForTurnIn = me.activeQuests
+                    .mapNotNull { (qid, state) ->
+                        val def = questRegistry.get(qid) ?: return@mapNotNull null
+                        if (def.giverMobId != mob.id.value) return@mapNotNull null
+                        if (!questSystem.isReadyToTurnIn(def, state)) return@mapNotNull null
+                        def
+                    }
+                for (quest in readyForTurnIn) {
+                    outbound.send(OutboundEvent.SendText(sessionId, "[Quest] ${quest.name} — ready to turn in."))
+                    outbound.send(OutboundEvent.SendText(sessionId, "  Type 'quest turnin ${quest.name}' to complete."))
+                }
                 val available = questSystem.availableQuests(sessionId, mob.id.value)
                 for (quest in available) {
                     outbound.send(OutboundEvent.SendText(sessionId, "[Quest] ${quest.name} — ${quest.description}"))
@@ -200,6 +212,16 @@ class DialogueQuestHandler(
                 outbound.sendIfError(sessionId, qs.acceptQuest(sessionId, matchingQuest.id))
             }
         }
+    }
+
+    private suspend fun handleQuestTurnIn(
+        sessionId: SessionId,
+        cmd: Command.QuestTurnIn,
+    ) {
+        val qs = requireSystemOrNull(sessionId, questSystem, "Quests", outbound) ?: return
+        val me = players.get(sessionId) ?: return
+        val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }
+        outbound.sendIfError(sessionId, qs.turnInQuest(sessionId, cmd.nameHint, roomMobIds))
     }
 
     private suspend fun handleAchievementList(sessionId: SessionId) {

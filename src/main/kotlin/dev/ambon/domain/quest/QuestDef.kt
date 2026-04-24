@@ -11,7 +11,7 @@ data class QuestDef(
     val giverMobId: String,
     val objectives: List<QuestObjectiveDef>,
     val rewards: QuestRewards,
-    val completionType: String = "auto",
+    val completionType: String = "npc_turn_in",
     /** Optional reputation gate. */
     val requiredReputation: ReputationRequirement? = null,
     /**
