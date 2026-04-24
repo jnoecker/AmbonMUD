@@ -2,6 +2,7 @@ import type {
   ChatChannel,
   CharacterInfo,
   RoomState,
+  ServerFeatures,
   StatusVarLabels,
   TabCycle,
   Vitals,
@@ -95,5 +96,11 @@ export const DEFAULT_STATUS_VAR_LABELS: StatusVarLabels = {
 };
 
 export const EMPTY_CHAR: CharacterInfo = { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false, autolootEnabled: false };
+export const DEFAULT_SERVER_FEATURES: ServerFeatures = {
+  dailyQuests: false,
+  weeklyQuests: false,
+  globalQuests: false,
+  autoQuests: false,
+};
 export const EMPTY_ROOM: RoomState = { id: null, title: "-", description: "", exits: {}, mapX: 0, mapY: 0, graphical: false, terrain: "outside" };
 

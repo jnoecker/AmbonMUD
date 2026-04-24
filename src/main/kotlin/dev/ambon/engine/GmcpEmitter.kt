@@ -57,6 +57,18 @@ data class PrestigePerkPayload(
     val earned: Boolean,
 )
 
+/**
+ * Advertises which optional gameplay features are enabled server-side so web clients
+ * can hide UI tabs/panels for features that are disabled. Emitted on login as
+ * `Server.Features`.
+ */
+data class ServerFeaturesPayload(
+    val dailyQuests: Boolean = false,
+    val weeklyQuests: Boolean = false,
+    val globalQuests: Boolean = false,
+    val autoQuests: Boolean = false,
+)
+
 class GmcpEmitter(
     private val outbound: OutboundBus,
     private val supportsPackage: (SessionId, String) -> Boolean,
@@ -77,6 +89,7 @@ class GmcpEmitter(
     private val prestigeNextCost: (Int) -> Long? = { null },
     private val prestigePerkPayloads: (currentRank: Int, maxRank: Int) -> List<PrestigePerkPayload> = { _, _ -> emptyList() },
     private val environmentConfig: dev.ambon.config.EnvironmentConfig = dev.ambon.config.EnvironmentConfig(),
+    private val featureFlags: () -> ServerFeaturesPayload = { ServerFeaturesPayload() },
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -585,6 +598,11 @@ class GmcpEmitter(
         emit(sessionId, "Server.Commands", ServerCommandsPayload(commands = commands))
     }
 
+    /** Sends optional-feature availability flags as `Server.Features`. */
+    suspend fun sendServerFeatures(sessionId: SessionId) {
+        emit(sessionId, "Server.Features", featureFlags())
+    }
+
     /** Sends emote presets as `Server.EmotePresets`. */
     suspend fun sendServerEmotePresets(sessionId: SessionId) {
         if (emotePresets.isEmpty()) return
@@ -746,6 +764,7 @@ class GmcpEmitter(
     ) {
         sendServerAssets(sessionId)
         sendServerCommands(sessionId, player.isStaff)
+        sendServerFeatures(sessionId)
         sendServerEmotePresets(sessionId)
         sendCharStatusVars(sessionId)
         sendCharVitals(sessionId, player)

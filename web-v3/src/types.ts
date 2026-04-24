@@ -666,6 +666,17 @@ export interface EmotePreset {
   action: string;
 }
 
+/**
+ * Optional server-side feature flags sent via `Server.Features`. When a flag is
+ * false the client should hide the corresponding UI entry (tab, panel, button).
+ */
+export interface ServerFeatures {
+  dailyQuests: boolean;
+  weeklyQuests: boolean;
+  globalQuests: boolean;
+  autoQuests: boolean;
+}
+
 export interface StaffWorldRoom {
   id: string;
   title: string;

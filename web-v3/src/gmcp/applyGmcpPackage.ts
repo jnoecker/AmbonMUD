@@ -12,6 +12,7 @@ import type {
   CombatTarget,
   CommandEntry,
   EmotePreset,
+  ServerFeatures,
   CompletedAchievement,
   ContainerContents,
   CraftingNode,
@@ -150,6 +151,7 @@ interface GmcpContext {
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
   setEmotePresets: Dispatch<SetStateAction<EmotePreset[]>>;
+  setServerFeatures: Dispatch<SetStateAction<ServerFeatures>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
   setStaffMobTemplates: Dispatch<SetStateAction<StaffMobZone[]>>;
@@ -1357,6 +1359,17 @@ export function applyGmcpPackage(
       const sender = typeof packet.sender === "string" ? packet.sender : "System";
       const message = typeof packet.message === "string" ? packet.message : "";
       if (message.length > 0) ctx.pushBroadcast(sender, message);
+      break;
+    }
+
+    case "Server.Features": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setServerFeatures({
+        dailyQuests: packet.dailyQuests === true,
+        weeklyQuests: packet.weeklyQuests === true,
+        globalQuests: packet.globalQuests === true,
+        autoQuests: packet.autoQuests === true,
+      });
       break;
     }
 

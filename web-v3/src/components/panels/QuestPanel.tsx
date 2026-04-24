@@ -7,6 +7,7 @@ import type {
   DailyQuestEntry,
   AutoQuest,
   GlobalQuest,
+  ServerFeatures,
 } from "../../types";
 
 type QuestTab = "active" | "available" | "daily" | "weekly" | "bounty" | "global";
@@ -21,6 +22,7 @@ interface QuestPanelProps {
   weeklyQuests: DailyQuestEntry[];
   autoQuest: AutoQuest | null;
   globalQuest: GlobalQuest | null;
+  features: ServerFeatures;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onAcceptQuest: (questName: string) => void;
@@ -59,6 +61,7 @@ export function QuestPanel({
   weeklyQuests,
   autoQuest,
   globalQuest,
+  features,
   onDismissQuestNotification,
   onAbandonQuest,
   onAcceptQuest,
@@ -74,18 +77,23 @@ export function QuestPanel({
     return () => clearInterval(interval);
   }, [globalQuest?.active, globalQuest?.endsAtMs]);
 
-  if (!connected) {
-    return <p className="empty-note">Connect to view quests.</p>;
-  }
-
   const tabs: Array<{ id: QuestTab; label: string; badge?: number }> = [
     { id: "active", label: "Active", badge: quests.length > 0 ? quests.length : undefined },
     ...(questsAvailable.length > 0 ? [{ id: "available" as QuestTab, label: "Available", badge: questsAvailable.length }] : []),
-    { id: "daily", label: "Daily", badge: dailyQuests ? dailyQuests.quests.filter((q) => !q.completed).length : undefined },
-    { id: "weekly", label: "Weekly", badge: weeklyQuests.filter((q) => !q.completed).length > 0 ? weeklyQuests.filter((q) => !q.completed).length : undefined },
-    { id: "bounty", label: "Bounty" },
-    { id: "global", label: "Global" },
+    ...(features.dailyQuests ? [{ id: "daily" as QuestTab, label: "Daily", badge: dailyQuests ? dailyQuests.quests.filter((q) => !q.completed).length : undefined }] : []),
+    ...(features.weeklyQuests ? [{ id: "weekly" as QuestTab, label: "Weekly", badge: weeklyQuests.filter((q) => !q.completed).length > 0 ? weeklyQuests.filter((q) => !q.completed).length : undefined }] : []),
+    ...(features.autoQuests ? [{ id: "bounty" as QuestTab, label: "Bounty" }] : []),
+    ...(features.globalQuests ? [{ id: "global" as QuestTab, label: "Global" }] : []),
   ];
+
+  // If the active tab was disabled server-side, fall back to the first visible tab.
+  const effectiveTab: QuestTab = tabs.some((t) => t.id === activeTab)
+    ? activeTab
+    : (tabs[0]?.id ?? "active");
+
+  if (!connected) {
+    return <p className="empty-note">Connect to view quests.</p>;
+  }
 
   return (
     <div className="quest-panel">
@@ -125,8 +133,8 @@ export function QuestPanel({
             key={tab.id}
             type="button"
             role="tab"
-            className={`quest-tab ${activeTab === tab.id ? "quest-tab-active" : ""}`}
-            aria-selected={activeTab === tab.id}
+            className={`quest-tab ${effectiveTab === tab.id ? "quest-tab-active" : ""}`}
+            aria-selected={effectiveTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
@@ -140,7 +148,7 @@ export function QuestPanel({
       </div>
 
       {/* Active quests tab */}
-      {activeTab === "active" && (
+      {effectiveTab === "active" && (
         <section
           className="quest-panel-section"
           role="tabpanel"
@@ -253,7 +261,7 @@ export function QuestPanel({
       )}
 
       {/* Available quests tab */}
-      {activeTab === "available" && questsAvailable.length > 0 && (
+      {effectiveTab === "available" && questsAvailable.length > 0 && (
         <section
           className="quest-panel-section"
           role="tabpanel"
@@ -301,7 +309,7 @@ export function QuestPanel({
       )}
 
       {/* Daily quests tab */}
-      {activeTab === "daily" && (
+      {effectiveTab === "daily" && features.dailyQuests && (
         <section
           className="quest-panel-section"
           role="tabpanel"
@@ -338,7 +346,7 @@ export function QuestPanel({
       )}
 
       {/* Weekly quests tab */}
-      {activeTab === "weekly" && (
+      {effectiveTab === "weekly" && features.weeklyQuests && (
         <section
           className="quest-panel-section"
           role="tabpanel"
@@ -367,7 +375,7 @@ export function QuestPanel({
       )}
 
       {/* Bounty (auto-quest) tab */}
-      {activeTab === "bounty" && (
+      {effectiveTab === "bounty" && features.autoQuests && (
         <section
           className="quest-panel-section"
           role="tabpanel"
@@ -434,7 +442,7 @@ export function QuestPanel({
       )}
 
       {/* Global quest tab */}
-      {activeTab === "global" && (
+      {effectiveTab === "global" && features.globalQuests && (
         <section
           className="quest-panel-section"
           role="tabpanel"
