@@ -223,6 +223,14 @@ export interface RoomState {
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */
 export type LayoutMode = "auto" | "text" | "canvas";
 
+/** Broad server-assigned item category, lowercased. */
+export type ItemType =
+  | "equipment"
+  | "consumable"
+  | "quest"
+  | "treasure"
+  | "misc";
+
 export interface ItemSummary {
   id: string;
   name: string;
@@ -239,6 +247,12 @@ export interface ItemSummary {
   enchantments?: string[];
   consumable?: boolean;
   useEffect?: string;
+  /** Server-resolved category. Falls back to "misc" if missing for older servers. */
+  itemType?: ItemType;
+  /** True when the item is soulbound — cannot be dropped, sold, traded, given. */
+  questItem?: boolean;
+  /** Grouping key used to visually collapse identical instances into a stack. */
+  stackKey?: string;
 }
 
 export interface EquipmentSlotDef {

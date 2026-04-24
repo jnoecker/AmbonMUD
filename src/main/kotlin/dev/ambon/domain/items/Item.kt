@@ -36,4 +36,22 @@ data class Item(
     val basePrice: Int = 0,
     val image: String? = null,
     val video: String? = null,
-)
+    val itemType: ItemType? = null,
+    val questItem: Boolean = false,
+) {
+    /**
+     * Effective item type for categorization. Uses [itemType] when set,
+     * otherwise infers from slot/consumable/basePrice. Quest items always
+     * resolve to [ItemType.QUEST] regardless of declared type.
+     */
+    fun resolvedType(): ItemType {
+        if (questItem) return ItemType.QUEST
+        itemType?.let { return it }
+        return when {
+            slot != null -> ItemType.EQUIPMENT
+            consumable -> ItemType.CONSUMABLE
+            basePrice > 0 -> ItemType.TREASURE
+            else -> ItemType.MISC
+        }
+    }
+}

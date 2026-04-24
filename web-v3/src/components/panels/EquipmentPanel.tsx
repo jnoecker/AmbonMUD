@@ -13,6 +13,44 @@ interface EquipmentPanelProps {
   onRemoveItem: (slot: string) => void;
 }
 
+function renderItemBonuses(item: ItemSummary) {
+  const badges: { key: string; label: string; tone: string }[] = [];
+  if ((item.damage ?? 0) > 0) {
+    badges.push({ key: "dmg", label: `+${item.damage} dmg`, tone: "damage" });
+  }
+  if ((item.armor ?? 0) > 0) {
+    badges.push({ key: "arm", label: `+${item.armor} arm`, tone: "armor" });
+  }
+  if (item.stats) {
+    for (const [stat, value] of Object.entries(item.stats)) {
+      if (value !== 0) {
+        badges.push({
+          key: `stat-${stat}`,
+          label: `${value > 0 ? "+" : ""}${value} ${stat}`,
+          tone: "stat",
+        });
+      }
+    }
+  }
+  if (item.enchantments && item.enchantments.length > 0) {
+    badges.push({
+      key: "enchant",
+      label: item.enchantments.join(", "),
+      tone: "enchant",
+    });
+  }
+  if (badges.length === 0) return null;
+  return (
+    <div className="paperdoll-list-badges">
+      {badges.map((b) => (
+        <span key={b.key} className={`paperdoll-list-badge paperdoll-list-badge-${b.tone}`}>
+          {b.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function EquipmentPanel({
   connected,
   hasCharacterProfile,
@@ -90,6 +128,7 @@ export function EquipmentPanel({
                       {item ? item.name : "\u2014"}
                     </span>
                   </div>
+                  {item && renderItemBonuses(item)}
                   {isSelected && item && (
                     <div className="paperdoll-list-actions">
                       <button

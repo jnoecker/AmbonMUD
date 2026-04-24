@@ -104,6 +104,12 @@ class AuctionHandler(
         }
 
         players.withPlayer(sessionId) { me ->
+            val carried = items.peekInventoryItem(sessionId, cmd.itemKeyword)
+            if (carried != null && carried.item.questItem) {
+                val message = "You can't auction ${carried.item.displayName} — it's a quest item."
+                sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "auction", code = "QUEST_ITEM", command = "sell")
+                return
+            }
             val listing = auction.postListing(sessionId, me.name, cmd.itemKeyword, cmd.price)
             if (listing == null) {
                 val message = "You aren't carrying '${cmd.itemKeyword}'."

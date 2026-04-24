@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ContainerContents, ItemSummary, RoomFeature, RoomPlayer } from "../../types";
+import type { ContainerContents, ItemSummary, ItemType, RoomFeature, RoomPlayer } from "../../types";
 import { DropItemIcon, GiveItemIcon, WearItemIcon } from "../Icons";
 import { resolveItemImage } from "../../imageDefaults";
 
@@ -19,17 +19,87 @@ interface InventoryPanelProps {
   equipHint?: boolean;
 }
 
-function categorize(items: ItemSummary[]): { wearable: ItemSummary[]; other: ItemSummary[] } {
-  const wearable: ItemSummary[] = [];
-  const other: ItemSummary[] = [];
+interface ItemStack {
+  /** Server stackKey, or a synthetic per-instance key for older servers. */
+  key: string;
+  /** First instance in the group — used for display name, keyword, and image. */
+  lead: ItemSummary;
+  /** All instances sharing the stackKey (count = instances.length). */
+  instances: ItemSummary[];
+}
+
+type SectionKey = "equipment" | "consumable" | "quest" | "treasure" | "misc";
+
+interface Section {
+  key: SectionKey;
+  title: string;
+  hint: string | null;
+  stacks: ItemStack[];
+}
+
+function resolveItemType(item: ItemSummary): ItemType {
+  if (item.itemType) return item.itemType;
+  if (item.questItem) return "quest";
+  if (item.slot) return "equipment";
+  if (item.consumable) return "consumable";
+  if ((item.basePrice ?? 0) > 0) return "treasure";
+  return "misc";
+}
+
+function groupAndCategorize(items: ItemSummary[]): Section[] {
+  const buckets: Record<SectionKey, Map<string, ItemStack>> = {
+    equipment: new Map(),
+    consumable: new Map(),
+    quest: new Map(),
+    treasure: new Map(),
+    misc: new Map(),
+  };
+
   for (const item of items) {
-    if (item.slot) {
-      wearable.push(item);
+    const type = resolveItemType(item);
+    // Fall back to a unique per-instance key when the server did not provide one:
+    // that means every instance renders as its own stack of 1 (safe degrade).
+    const key = item.stackKey ?? `__instance__:${item.id}`;
+    const bucket = buckets[type];
+    const existing = bucket.get(key);
+    if (existing) {
+      existing.instances.push(item);
     } else {
-      other.push(item);
+      bucket.set(key, { key, lead: item, instances: [item] });
     }
   }
-  return { wearable, other };
+
+  const order: { key: SectionKey; title: string; hint: string | null }[] = [
+    { key: "equipment", title: "Equipment", hint: null },
+    { key: "consumable", title: "Consumables", hint: null },
+    { key: "quest", title: "Quest Items", hint: "Soulbound — cannot be dropped or sold." },
+    { key: "treasure", title: "Valuables", hint: "Sell to a shopkeeper for gold." },
+    { key: "misc", title: "Other", hint: null },
+  ];
+
+  return order
+    .map(({ key, title, hint }) => ({
+      key,
+      title,
+      hint,
+      stacks: Array.from(buckets[key].values()),
+    }))
+    .filter((section) => section.stacks.length > 0);
+}
+
+function categoryChipLabel(type: ItemType): string {
+  switch (type) {
+    case "equipment":
+      return "Gear";
+    case "consumable":
+      return "Use";
+    case "quest":
+      return "Quest";
+    case "treasure":
+      return "Sell";
+    case "misc":
+      return "Misc";
+  }
 }
 
 export function InventoryPanel({
@@ -46,12 +116,13 @@ export function InventoryPanel({
   onCommand,
   equipHint = false,
 }: InventoryPanelProps) {
-  const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
+  const [givePickerStackKey, setGivePickerStackKey] = useState<string | null>(null);
   const containers = useMemo(
     () => roomFeatures.filter((f) => f.type === "container"),
     [roomFeatures],
   );
   const activeContainerKeyword = containerContents?.keyword ?? null;
+  const sections = useMemo(() => groupAndCategorize(inventory), [inventory]);
 
   if (!connected || !hasCharacterProfile) {
     return <p className="empty-note">Log in to view inventory.</p>;
@@ -65,116 +136,159 @@ export function InventoryPanel({
     );
   }
 
-  const { wearable, other } = categorize(inventory);
+  const renderStack = (stack: ItemStack, type: ItemType) => {
+    const item = stack.lead;
+    const count = stack.instances.length;
+    const isQuest = type === "quest" || !!item.questItem;
+    const isVendorFodder = type === "treasure" && !item.slot && !item.consumable;
+    const image = resolveItemImage(item);
 
-  const renderItem = (item: ItemSummary) => (
-    <li key={item.id} className="inventory-item">
-      <div className="inventory-item-row">
-        <div className="inventory-item-info">
-          {resolveItemImage(item) && <img src={resolveItemImage(item)!} alt="" className="inventory-item-thumb" />}
-          <div className="inventory-item-copy">
-            <span className="inventory-item-name">{item.name}</span>
-            <div className="inventory-item-meta">
-              {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
-              {!item.slot && item.consumable && item.useEffect && (
-                <span className="inventory-item-effect" title={item.useEffect}>{item.useEffect}</span>
+    const rowClasses = [
+      "inventory-item-row",
+      `inventory-item-row-${type}`,
+      isQuest ? "inventory-item-row-quest" : "",
+      isVendorFodder ? "inventory-item-row-vendor" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return (
+      <li key={stack.key} className="inventory-item">
+        <div className={rowClasses}>
+          <div className="inventory-item-info">
+            <div className="inventory-item-thumb-wrap">
+              {image && <img src={image} alt="" className="inventory-item-thumb" />}
+              {count > 1 && (
+                <span className="inventory-stack-count" aria-label={`${count} in stack`}>
+                  ×{count}
+                </span>
               )}
             </div>
+            <div className="inventory-item-copy">
+              <span className="inventory-item-name">{item.name}</span>
+              <div className="inventory-item-meta">
+                <span className={`inventory-item-chip inventory-item-chip-${type}`}>
+                  {categoryChipLabel(type)}
+                </span>
+                {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
+                {!item.slot && item.consumable && item.useEffect && (
+                  <span className="inventory-item-effect" title={item.useEffect}>
+                    {item.useEffect}
+                  </span>
+                )}
+                {isVendorFodder && (item.basePrice ?? 0) > 0 && (
+                  <span className="inventory-item-price" title="Vendor price">
+                    {item.basePrice}g
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="inventory-item-actions">
+            <button
+              type="button"
+              className="inventory-action-btn inventory-action-btn-pill inventory-action-examine"
+              aria-label={`Examine ${item.name}`}
+              title={`Examine ${item.name}`}
+              onClick={() => onCommand(`look ${item.keyword}`)}
+            >
+              Examine
+            </button>
+            {!item.slot && item.consumable && (
+              <button
+                type="button"
+                className="inventory-action-btn inventory-action-btn-pill inventory-action-use"
+                aria-label={`Use ${item.name}`}
+                title={`Use ${item.name}${item.useEffect ? ` - ${item.useEffect}` : ""}`}
+                disabled={!canManageItems}
+                onClick={() => onCommand(`use ${item.keyword}`)}
+              >
+                Use
+              </button>
+            )}
+            {item.slot && (
+              <button
+                type="button"
+                className={`inventory-action-btn inventory-action-btn-pill inventory-action-equip${equipHint ? " inventory-action-equip-hint" : ""}`}
+                aria-label={`Equip ${item.name}`}
+                title={equipHint ? `Equip ${item.name}` : `Wear ${item.name}`}
+                disabled={!canManageItems}
+                onClick={() => onWearItem(item.name)}
+              >
+                <WearItemIcon className="inventory-action-icon" />
+                <span>Equip</span>
+              </button>
+            )}
+            {containerContents && !isQuest && (
+              <button
+                type="button"
+                className="inventory-action-btn inventory-action-btn-pill inventory-action-put"
+                aria-label={`Store ${item.name} in ${containerContents.name}`}
+                title={`Store ${item.name} in ${containerContents.name}`}
+                disabled={!canManageItems}
+                onClick={() => onCommand(`put ${item.keyword} in ${containerContents.keyword}`)}
+              >
+                Store
+              </button>
+            )}
+            {players.length > 0 && !isQuest && (
+              <button
+                type="button"
+                className={`inventory-action-btn inventory-action-btn-icon${givePickerStackKey === stack.key ? " inventory-action-btn-active" : ""}`}
+                title={`Give ${item.name}`}
+                aria-label={`Give ${item.name}`}
+                aria-expanded={givePickerStackKey === stack.key}
+                disabled={!canManageItems}
+                onClick={() => setGivePickerStackKey(givePickerStackKey === stack.key ? null : stack.key)}
+              >
+                <GiveItemIcon className="inventory-action-icon" />
+              </button>
+            )}
+            {!isQuest && (
+              <button
+                type="button"
+                className="inventory-action-btn inventory-action-btn-icon"
+                title={count > 1 ? `Drop one ${item.name}` : `Drop ${item.name}`}
+                aria-label={count > 1 ? `Drop one ${item.name}` : `Drop ${item.name}`}
+                disabled={!canManageItems}
+                onClick={() => onDropItem(item.name)}
+              >
+                <DropItemIcon className="inventory-action-icon" />
+              </button>
+            )}
+            {isQuest && (
+              <span
+                className="inventory-item-soulbound"
+                title="Quest items cannot be dropped, given, sold, or traded."
+                aria-label="Soulbound"
+              >
+                Soulbound
+              </span>
+            )}
           </div>
         </div>
-        <div className="inventory-item-actions">
-          <button
-            type="button"
-            className="inventory-action-btn inventory-action-btn-pill inventory-action-examine"
-            aria-label={`Examine ${item.name}`}
-            title={`Examine ${item.name}`}
-            onClick={() => onCommand(`look ${item.keyword}`)}
-          >
-            Examine
-          </button>
-          {!item.slot && item.consumable && (
-            <button
-              type="button"
-              className="inventory-action-btn inventory-action-btn-pill inventory-action-use"
-              aria-label={`Use ${item.name}`}
-              title={`Use ${item.name}${item.useEffect ? ` - ${item.useEffect}` : ""}`}
-              disabled={!canManageItems}
-              onClick={() => onCommand(`use ${item.keyword}`)}
-            >
-              Use
-            </button>
-          )}
-          {item.slot && (
-            <button
-              type="button"
-              className={`inventory-action-btn inventory-action-btn-pill inventory-action-equip${equipHint ? " inventory-action-equip-hint" : ""}`}
-              aria-label={`Equip ${item.name}`}
-              title={equipHint ? `Equip ${item.name}` : `Wear ${item.name}`}
-              disabled={!canManageItems}
-              onClick={() => onWearItem(item.name)}
-            >
-              <WearItemIcon className="inventory-action-icon" />
-              <span>Equip</span>
-            </button>
-          )}
-          {containerContents && (
-            <button
-              type="button"
-              className="inventory-action-btn inventory-action-btn-pill inventory-action-put"
-              aria-label={`Store ${item.name} in ${containerContents.name}`}
-              title={`Store ${item.name} in ${containerContents.name}`}
-              disabled={!canManageItems}
-              onClick={() => onCommand(`put ${item.keyword} in ${containerContents.keyword}`)}
-            >
-              Store
-            </button>
-          )}
-          {players.length > 0 && (
-            <button
-              type="button"
-              className={`inventory-action-btn inventory-action-btn-icon${givePickerItemId === item.id ? " inventory-action-btn-active" : ""}`}
-              title={`Give ${item.name}`}
-              aria-label={`Give ${item.name}`}
-              aria-expanded={givePickerItemId === item.id}
-              disabled={!canManageItems}
-              onClick={() => setGivePickerItemId(givePickerItemId === item.id ? null : item.id)}
-            >
-              <GiveItemIcon className="inventory-action-icon" />
-            </button>
-          )}
-          <button
-            type="button"
-            className="inventory-action-btn inventory-action-btn-icon"
-            title={`Drop ${item.name}`}
-            aria-label={`Drop ${item.name}`}
-            disabled={!canManageItems}
-            onClick={() => onDropItem(item.name)}
-          >
-            <DropItemIcon className="inventory-action-icon" />
-          </button>
-        </div>
-      </div>
-      {givePickerItemId === item.id && (
-        <div className="inventory-give-picker" role="listbox" aria-label={`Give ${item.name} to`}>
-          <span className="inventory-give-label">Give to:</span>
-          {players.map((player) => (
-            <button
-              key={player.name}
-              type="button"
-              role="option"
-              className="inventory-give-option"
-              onClick={() => {
-                onGiveItem(item.keyword, player.name);
-                setGivePickerItemId(null);
-              }}
-            >
-              {player.name}
-            </button>
-          ))}
-        </div>
-      )}
-    </li>
-  );
+        {givePickerStackKey === stack.key && (
+          <div className="inventory-give-picker" role="listbox" aria-label={`Give ${item.name} to`}>
+            <span className="inventory-give-label">Give to:</span>
+            {players.map((player) => (
+              <button
+                key={player.name}
+                type="button"
+                role="option"
+                className="inventory-give-option"
+                onClick={() => {
+                  onGiveItem(item.keyword, player.name);
+                  setGivePickerStackKey(null);
+                }}
+              >
+                {player.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </li>
+    );
+  };
 
   return (
     <div className="inventory-panel">
@@ -184,21 +298,25 @@ export function InventoryPanel({
           <span className="inventory-active-container-name" title={containerContents.name}>{containerContents.name}</span>
         </div>
       )}
-      {wearable.length > 0 && (
-        <section className="inventory-section">
-          <h3 className="inventory-section-title">Equipment</h3>
-          <ul className="inventory-list">{wearable.map(renderItem)}</ul>
+      {sections.map((section) => (
+        <section key={section.key} className={`inventory-section inventory-section-${section.key}`}>
+          <div className="inventory-section-header">
+            <h3 className="inventory-section-title">{section.title}</h3>
+            <span className="inventory-section-count" aria-label={`${section.stacks.length} stacks`}>
+              {section.stacks.length}
+            </span>
+          </div>
+          {section.hint && <p className="inventory-section-hint">{section.hint}</p>}
+          <ul className="inventory-list">
+            {section.stacks.map((stack) => renderStack(stack, section.key))}
+          </ul>
         </section>
-      )}
-      {other.length > 0 && (
-        <section className="inventory-section">
-          <h3 className="inventory-section-title">Items</h3>
-          <ul className="inventory-list">{other.map(renderItem)}</ul>
-        </section>
-      )}
+      ))}
       {containers.length > 0 && (
-        <section className="inventory-section">
-          <h3 className="inventory-section-title">Containers</h3>
+        <section className="inventory-section inventory-section-containers">
+          <div className="inventory-section-header">
+            <h3 className="inventory-section-title">Containers</h3>
+          </div>
           <div className="container-list">
             {containers.map((container) => (
               <div

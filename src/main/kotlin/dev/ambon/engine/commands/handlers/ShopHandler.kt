@@ -172,6 +172,15 @@ class ShopHandler(
                 outbound.send(OutboundEvent.SendError(sessionId, "You don't have '$keyword'."))
                 return
             }
+            if (invItem.item.questItem) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "You can't sell ${invItem.item.displayName} — it's a quest item.",
+                    ),
+                )
+                return
+            }
             val sellPrice = (invItem.item.basePrice * economyConfig.sellMultiplier).roundToInt().toLong()
             if (sellPrice <= 0L) {
                 outbound.send(OutboundEvent.SendError(sessionId, "${invItem.item.displayName} is worthless."))

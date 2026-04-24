@@ -1,0 +1,31 @@
+zone: ok_item_types
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  relic:
+    displayName: "the Lost Relic"
+    description: "A holy artifact."
+    itemType: quest
+    questItem: true
+    basePrice: 500
+  trinket:
+    displayName: "a shiny trinket"
+    basePrice: 10
+  plain:
+    displayName: "a plain rock"
+  blade:
+    displayName: "a short blade"
+    slot: weapon
+    damage: 3
+  elixir:
+    displayName: "an elixir"
+    consumable: true
+    onUse:
+      healHp: 10
+  marked_gear:
+    displayName: "a signet ring"
+    slot: neck
+    questItem: true

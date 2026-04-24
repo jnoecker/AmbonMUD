@@ -82,6 +82,16 @@ class TradeHandler(
             return
         }
 
+        val carried = items.peekInventoryItem(sessionId, cmd.itemKeyword)
+        if (carried != null && carried.item.questItem) {
+            outbound.send(
+                OutboundEvent.SendError(
+                    sessionId,
+                    "You can't trade ${carried.item.displayName} — it's a quest item.",
+                ),
+            )
+            return
+        }
         val result = ts.offerItem(sessionId, cmd.itemKeyword)
         if (result == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.itemKeyword}'."))

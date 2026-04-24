@@ -2109,7 +2109,25 @@ class GmcpEmitter(
             enchantments = item.enchantments.ifEmpty { null },
             consumable = if (item.item.consumable) true else null,
             useEffect = item.item.onUse?.describe(),
+            itemType = item.item.resolvedType().label(),
+            questItem = if (item.item.questItem) true else null,
+            stackKey = computeStackKey(item),
         )
+
+    /**
+     * Grouping key used by the web client to visually collapse identical instances
+     * into a single row with a count. Two instances share a stackKey only when their
+     * item definition, enchantments, and remaining charges all match.
+     */
+    private fun computeStackKey(item: ItemInstance): String {
+        val enchants = if (item.enchantments.isEmpty()) {
+            ""
+        } else {
+            item.enchantments.sorted().joinToString(",")
+        }
+        val charges = item.item.charges?.toString() ?: ""
+        return "${item.item.keyword}|$enchants|$charges"
+    }
 
     private fun toRoomMobPayload(mob: MobState): RoomMobPayload {
         val effects = getMobEffects(mob.id)
@@ -2215,6 +2233,9 @@ class GmcpEmitter(
         val enchantments: List<String>? = null,
         val consumable: Boolean? = null,
         val useEffect: String? = null,
+        val itemType: String,
+        val questItem: Boolean? = null,
+        val stackKey: String,
     )
 
     private data class EquipmentSlotPayload(

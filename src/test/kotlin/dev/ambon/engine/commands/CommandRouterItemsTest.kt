@@ -126,6 +126,43 @@ class CommandRouterItemsTest {
         }
 
     @Test
+    fun `drop is blocked for quest items`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+
+            val sid = SessionId(41L)
+            h.loginPlayer(sid, "QuestHolder")
+
+            h.items.setRoomItems(
+                h.world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:relic"),
+                        Item(
+                            keyword = "relic",
+                            displayName = "the Lost Relic",
+                            questItem = true,
+                        ),
+                    ),
+                ),
+            )
+            h.items.takeFromRoom(sid, h.world.startRoom, "relic")
+            assertEquals(1, h.items.inventory(sid).size)
+
+            h.router.handle(sid, Command.Drop("relic"))
+
+            // Quest item stays in inventory; room still empty
+            assertEquals(1, h.items.inventory(sid).size)
+            assertEquals(0, h.items.itemsInRoom(h.world.startRoom).size)
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("quest item") },
+                "Expected quest-item error. got=$outs",
+            )
+        }
+
+    @Test
     fun `wear moves item from inventory to equipment slot`() =
         runTest {
             val h = CommandRouterHarness.create()

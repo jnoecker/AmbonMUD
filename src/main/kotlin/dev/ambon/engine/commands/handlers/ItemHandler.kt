@@ -205,6 +205,16 @@ class ItemHandler(
                     return
                 }
             }
+            val carried = items.peekInventoryItem(me.sessionId, cmd.keyword)
+            if (carried != null && carried.item.questItem) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "You can't drop ${carried.item.displayName} — it's a quest item.",
+                    ),
+                )
+                return
+            }
             val moved = items.dropToRoom(me.sessionId, roomId, cmd.keyword)
             if (moved == null) {
                 outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
@@ -288,6 +298,16 @@ class ItemHandler(
             }
             players.withPlayer(targetSid) { target ->
                 if (!requireSameRoom(sessionId, me, target, outbound)) return
+                val owned = items.peekOwnedItem(me.sessionId, cmd.keyword)
+                if (owned != null && owned.item.questItem) {
+                    outbound.send(
+                        OutboundEvent.SendError(
+                            sessionId,
+                            "You can't give away ${owned.item.displayName} — it's a quest item.",
+                        ),
+                    )
+                    return
+                }
                 when (val result = items.giveToPlayer(me.sessionId, targetSid, cmd.keyword)) {
                     is ItemRegistry.GiveResult.Given -> {
                         if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {

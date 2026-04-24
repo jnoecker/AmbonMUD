@@ -6322,14 +6322,67 @@ body {
   gap: var(--space-2);
 }
 
+.inventory-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-1);
+}
+
 .inventory-section-title {
   font-family: var(--font-display);
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--text-heading);
   margin: 0;
-  padding: 0 var(--space-1);
   letter-spacing: 0.02em;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.inventory-section-count {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-disabled);
+  background: rgb(255 255 255 / 6%);
+  border-radius: 999px;
+  padding: 1px 8px;
+  flex-shrink: 0;
+}
+
+.inventory-section-hint {
+  margin: 0 var(--space-1);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.3;
+}
+
+/* Per-section accent stripe on the left edge of the section header. */
+.inventory-section-equipment .inventory-section-title {
+  border-left: 3px solid var(--color-primary-moss-green);
+  padding-left: 8px;
+}
+
+.inventory-section-consumable .inventory-section-title {
+  border-left: 3px solid var(--color-primary-pale-blue);
+  padding-left: 8px;
+}
+
+.inventory-section-quest .inventory-section-title {
+  border-left: 3px solid var(--color-primary-soft-gold);
+  padding-left: 8px;
+}
+
+.inventory-section-treasure .inventory-section-title {
+  border-left: 3px solid var(--color-primary-dusty-rose, #c08a9a);
+  padding-left: 8px;
+}
+
+.inventory-section-misc .inventory-section-title {
+  border-left: 3px solid var(--color-accent-lavender, #a897d2);
+  padding-left: 8px;
 }
 
 .inventory-list {
@@ -6382,6 +6435,13 @@ body {
   min-height: 18px;
 }
 
+.inventory-item-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+}
+
 .inventory-item-thumb {
   width: 28px;
   height: 28px;
@@ -6389,6 +6449,26 @@ body {
   object-fit: cover;
   flex-shrink: 0;
   border: 1px solid var(--line-faint);
+  display: block;
+}
+
+.inventory-stack-count {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--color-primary-soft-gold, #bea873);
+  color: #1a1411;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+  border: 1px solid rgb(0 0 0 / 25%);
+  pointer-events: none;
 }
 
 .inventory-item-name {
@@ -6420,6 +6500,87 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 14ch;
+}
+
+.inventory-item-price {
+  font-size: 0.66rem;
+  color: var(--color-primary-soft-gold);
+  background: rgb(190 168 115 / 12%);
+  padding: 1px 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Category chip: the leftmost badge in the meta row, color-matched to the
+   section accent. Keeps items visually tagged even when sections scroll. */
+.inventory-item-chip {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+}
+
+.inventory-item-chip-equipment {
+  background: rgb(132 168 122 / 16%);
+  color: var(--color-primary-moss-green);
+  border-color: rgb(132 168 122 / 32%);
+}
+
+.inventory-item-chip-consumable {
+  background: rgb(130 164 199 / 16%);
+  color: var(--color-primary-pale-blue);
+  border-color: rgb(130 164 199 / 32%);
+}
+
+.inventory-item-chip-quest {
+  background: rgb(190 168 115 / 20%);
+  color: var(--color-primary-soft-gold);
+  border-color: rgb(190 168 115 / 40%);
+}
+
+.inventory-item-chip-treasure {
+  background: rgb(192 138 154 / 16%);
+  color: var(--color-primary-dusty-rose, #c08a9a);
+  border-color: rgb(192 138 154 / 32%);
+}
+
+.inventory-item-chip-misc {
+  background: rgb(168 151 210 / 14%);
+  color: var(--color-accent-lavender, #a897d2);
+  border-color: rgb(168 151 210 / 28%);
+}
+
+/* Quest items get a warm left edge to reinforce "soulbound." */
+.inventory-item-row-quest {
+  border-left: 3px solid var(--color-primary-soft-gold);
+  padding-left: 7px;
+}
+
+/* Vendor fodder: dim the row slightly so useful items pop. */
+.inventory-item-row-vendor {
+  opacity: 0.78;
+}
+
+.inventory-item-row-vendor:hover {
+  opacity: 1;
+}
+
+.inventory-item-soulbound {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: var(--color-primary-soft-gold);
+  background: rgb(190 168 115 / 14%);
+  border: 1px solid rgb(190 168 115 / 32%);
+  cursor: help;
 }
 
 .inventory-item-actions {
@@ -6812,6 +6973,54 @@ body {
 .paperdoll-list-name-empty {
   color: var(--text-disabled);
   font-style: italic;
+}
+
+/* Equipped-item bonus badges — mirror the inventory meta row style so both
+   panels share the same visual vocabulary. */
+.paperdoll-list-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.paperdoll-list-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+}
+
+.paperdoll-list-badge-damage {
+  color: var(--color-primary-dusty-rose, #c08a9a);
+  background: rgb(192 138 154 / 12%);
+  border-color: rgb(192 138 154 / 28%);
+}
+
+.paperdoll-list-badge-armor {
+  color: var(--color-primary-moss-green);
+  background: rgb(132 168 122 / 12%);
+  border-color: rgb(132 168 122 / 28%);
+}
+
+.paperdoll-list-badge-stat {
+  color: var(--color-primary-pale-blue);
+  background: rgb(130 164 199 / 12%);
+  border-color: rgb(130 164 199 / 28%);
+  font-variant-numeric: tabular-nums;
+}
+
+.paperdoll-list-badge-enchant {
+  color: var(--color-primary-soft-gold);
+  background: rgb(190 168 115 / 14%);
+  border-color: rgb(190 168 115 / 32%);
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .paperdoll-list-actions {
