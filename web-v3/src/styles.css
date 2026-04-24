@@ -12926,6 +12926,19 @@ body {
   gap: 0.35rem;
 }
 
+.systems-perk-summary {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  background: rgb(105 199 150 / 8%);
+  border: 1px solid rgb(105 199 150 / 22%);
+}
+
+.systems-perk-summary strong {
+  color: var(--text-primary);
+}
+
 .systems-meter {
   display: flex;
   align-items: center;

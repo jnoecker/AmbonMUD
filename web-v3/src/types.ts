@@ -982,6 +982,7 @@ export interface PrestigePerk {
 
 export interface PrestigeInfo {
   enabled: boolean;
+  requiredLevel: number;
   currentRank: number;
   maxRank: number;
   availableXp: number;

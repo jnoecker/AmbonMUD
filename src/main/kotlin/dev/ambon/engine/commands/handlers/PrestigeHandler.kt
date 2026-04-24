@@ -185,6 +185,7 @@ class PrestigeHandler(
                 maxRank = maxRank,
                 availableXp = available,
                 nextRankCost = nextCost,
+                requiredLevel = maxLevel,
                 perks = gmcpEmitter.buildPrestigePerkPayloads(currentRank, maxRank) { prestigeSystem.perkForRank(it) },
             )
             sendScopedFeedback(

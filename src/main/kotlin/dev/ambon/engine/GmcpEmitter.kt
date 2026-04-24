@@ -3278,6 +3278,7 @@ class GmcpEmitter(
         val maxRank: Int,
         val availableXp: Long,
         val nextRankCost: Long?,
+        val requiredLevel: Int,
         val perks: List<PrestigePerkPayload>,
     )
 
@@ -3288,6 +3289,7 @@ class GmcpEmitter(
         maxRank: Int,
         availableXp: Long,
         nextRankCost: Long?,
+        requiredLevel: Int,
         perks: List<PrestigePerkPayload>,
     ) {
         emit(
@@ -3299,6 +3301,7 @@ class GmcpEmitter(
                 maxRank = maxRank,
                 availableXp = availableXp,
                 nextRankCost = nextRankCost,
+                requiredLevel = requiredLevel,
                 perks = perks,
             ),
             supportCheck = "Prestige",
@@ -3312,6 +3315,7 @@ class GmcpEmitter(
         val enabled = prestigeEnabled()
         val currentRank = player.prestigeLevel
         val maxRank = if (enabled) prestigeMaxRank() else 0
+        val requiredLevel = progression?.maxLevel ?: 0
         val availableXp =
             if (enabled && (progression == null || player.level >= progression.maxLevel)) {
                 prestigeAvailableXp(player) ?: 0L
@@ -3337,6 +3341,7 @@ class GmcpEmitter(
             maxRank = maxRank,
             availableXp = availableXp,
             nextRankCost = nextRankCost,
+            requiredLevel = requiredLevel,
             perks = perks,
         )
     }
