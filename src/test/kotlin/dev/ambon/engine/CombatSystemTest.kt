@@ -1204,6 +1204,46 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `player death fires onPlayerRespawned so the web client re-renders the new room`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    fixture.roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    damage = DamageRange(50, 50),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
+            val sanctum = dev.ambon.domain.ids.RoomId("limbo:sanctum")
+            combat.sanctumRoomLookup = { sanctum }
+            combat.deathConfig = DeathConfig(sanctumRoom = sanctum.value)
+
+            val respawned = mutableListOf<Pair<SessionId, dev.ambon.domain.ids.RoomId>>()
+            combat.onPlayerRespawned = { sid ->
+                val p = fixture.players.get(sid)!!
+                respawned += sid to p.roomId
+            }
+
+            val sid = SessionId(44L)
+            fixture.players.loginOrFail(sid, "Reborn")
+
+            combat.startCombat(sid, "ogre")
+            fixture.outbound.drainAll()
+            fixture.tickCombat(combat)
+
+            assertEquals(
+                listOf(sid to sanctum),
+                respawned,
+                "Expected onPlayerRespawned to fire exactly once with the sanctum room set",
+            )
+        }
+
+    @Test
     fun `player death falls back to zone start when no sanctum configured`() =
         runTest {
             val fixture = CombatTestFixture()

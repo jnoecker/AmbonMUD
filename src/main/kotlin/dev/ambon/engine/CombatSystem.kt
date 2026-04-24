@@ -63,6 +63,11 @@ class CombatSystem(
     /** Callback for player death cleanup; wired by GameEngine after construction. */
     var onPlayerDeath: suspend (SessionId) -> Unit = { _ -> }
 
+    /** Callback fired after a dead player has been moved to their respawn room; wired by GameEngine.
+     *  Used to push a fresh room look (Room.Info, map, players, mobs, items) so the web client
+     *  doesn't keep rendering the location where the player died. */
+    var onPlayerRespawned: suspend (SessionId) -> Unit = { _ -> }
+
     /** Callback when a player kills another player in PvP; wired by GameEngine. */
     var onPvpKill: suspend (killerSid: SessionId) -> Unit = { _ -> }
 
@@ -1145,6 +1150,7 @@ class CombatSystem(
 
             dirtyNotifier.playerVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, deathConfig.messages.arriveSanctum))
+            onPlayerRespawned(sessionId)
         }
 
         outbound.send(OutboundEvent.SendPrompt(sessionId))
