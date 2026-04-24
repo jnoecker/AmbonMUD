@@ -270,21 +270,26 @@ export function CharacterPanel({
                 </label>
               </div>
               <div className="character-utility-strip" role="group" aria-label="Auto-loot setting">
-                <div className="character-utility-copy">
-                  <p className="character-utility-kicker">Field Utility</p>
-                  <p className="character-utility-title">Auto-Loot</p>
-                  <p className="character-utility-description">
-                    {autolootEnabled
+                <span
+                  className="character-utility-label"
+                  title={
+                    autolootEnabled
                       ? "Mob drops go straight into your pack after a kill."
-                      : "Drops stay in the room until you pick them up."}
-                  </p>
-                </div>
+                      : "Drops stay in the room until you pick them up."
+                  }
+                >
+                  Auto-Loot
+                </span>
                 <button
                   type="button"
                   className={`character-utility-toggle ${autolootEnabled ? "character-utility-toggle-active" : ""}`}
                   aria-pressed={autolootEnabled}
                   aria-label={autolootEnabled ? "Disable auto-loot" : "Enable auto-loot"}
-                  title={autolootEnabled ? "Disable auto-loot" : "Enable auto-loot"}
+                  title={
+                    autolootEnabled
+                      ? "Mob drops go straight into your pack after a kill. Click to disable."
+                      : "Drops stay in the room until you pick them up. Click to enable."
+                  }
                   disabled={!connected}
                   onClick={() => onCommand(autolootEnabled ? "autoloot off" : "autoloot on")}
                 >
