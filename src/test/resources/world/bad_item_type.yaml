@@ -1,0 +1,10 @@
+zone: bad_item_type
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  broken:
+    displayName: "a broken item"
+    itemType: "nonsense"

@@ -19,4 +19,6 @@ data class ItemFile(
     val basePrice: Int = 0,
     val image: String? = null,
     val video: String? = null,
+    val itemType: String? = null,
+    val questItem: Boolean = false,
 )

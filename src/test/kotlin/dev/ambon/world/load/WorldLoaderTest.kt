@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemType
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -142,6 +143,52 @@ class WorldLoaderTest {
         assertEquals(3, sword.instance.item.damage)
         assertEquals(0, sword.instance.item.armor)
         assertEquals(1, sword.instance.item.stats["CON"])
+    }
+
+    @Test
+    fun `loads declared item types and quest-item flag`() {
+        val world = WorldLoader.loadFromResource("world/ok_item_types.yaml")
+        val items = world.itemSpawns.associateBy { it.instance.id.value }
+
+        val relic = items.getValue("ok_item_types:relic").instance.item
+        assertEquals(ItemType.QUEST, relic.itemType)
+        assertTrue(relic.questItem)
+        assertEquals(ItemType.QUEST, relic.resolvedType())
+
+        // Inferred: has basePrice, no slot/consumable -> TREASURE
+        val trinket = items.getValue("ok_item_types:trinket").instance.item
+        assertNull(trinket.itemType)
+        assertFalse(trinket.questItem)
+        assertEquals(ItemType.TREASURE, trinket.resolvedType())
+
+        // Inferred: nothing special -> MISC
+        val plain = items.getValue("ok_item_types:plain").instance.item
+        assertEquals(ItemType.MISC, plain.resolvedType())
+
+        // Inferred from slot -> EQUIPMENT
+        val blade = items.getValue("ok_item_types:blade").instance.item
+        assertEquals(ItemType.EQUIPMENT, blade.resolvedType())
+
+        // Inferred from consumable flag -> CONSUMABLE
+        val elixir = items.getValue("ok_item_types:elixir").instance.item
+        assertEquals(ItemType.CONSUMABLE, elixir.resolvedType())
+
+        // questItem=true always resolves to QUEST regardless of slot
+        val signet = items.getValue("ok_item_types:marked_gear").instance.item
+        assertTrue(signet.questItem)
+        assertEquals(ItemType.QUEST, signet.resolvedType())
+    }
+
+    @Test
+    fun `rejects unknown itemType value`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_item_type.yaml")
+            }
+        assertTrue(
+            ex.message!!.contains("itemType", ignoreCase = true),
+            "Got: ${ex.message}",
+        )
     }
 
     @Test

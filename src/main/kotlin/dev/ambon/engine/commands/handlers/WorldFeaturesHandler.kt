@@ -167,6 +167,16 @@ class WorldFeaturesHandler(
         containerKeyword: String,
     ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = requireOpenContainer(sessionId, room, containerKeyword, worldState, outbound) ?: return
+        val carried = items.peekInventoryItem(sessionId, itemKeyword)
+        if (carried != null && carried.item.questItem) {
+            outbound.send(
+                OutboundEvent.SendError(
+                    sessionId,
+                    "You can't stash ${carried.item.displayName} — it's a quest item.",
+                ),
+            )
+            return
+        }
         val item = items.removeFromInventory(sessionId, itemKeyword)
         if (item == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't have any '$itemKeyword'."))

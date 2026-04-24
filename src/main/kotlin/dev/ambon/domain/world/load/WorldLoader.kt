@@ -27,6 +27,7 @@ import dev.ambon.domain.ids.qualifyId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemType
 import dev.ambon.domain.mob.MobSpell
 import dev.ambon.domain.puzzle.PuzzleDef
 import dev.ambon.domain.puzzle.PuzzleReward
@@ -502,6 +503,18 @@ object WorldLoader {
                 val basePrice = itemFile.basePrice
                 requireAtLeast(basePrice, 0, itemCtx, "basePrice")
 
+                val itemTypeRaw = itemFile.itemType?.trim()
+                if (itemTypeRaw != null && itemTypeRaw.isEmpty()) {
+                    throw WorldLoadException("Item '${itemId.value}' itemType cannot be blank")
+                }
+                val itemType = itemTypeRaw?.let { raw ->
+                    ItemType.parse(raw)
+                        ?: throw WorldLoadException(
+                            "Item '${itemId.value}' itemType '$raw' is not a known type. " +
+                                "Valid values: ${ItemType.entries.joinToString(", ") { it.label() }}",
+                        )
+                }
+
                 val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
                 val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
                 if (roomRaw != null && mobRaw != null) {
@@ -540,6 +553,8 @@ object WorldLoader {
                                         basePrice = basePrice,
                                         image = (itemFile.image ?: imageDefaults?.item)?.let { "$imagesBase$it" },
                                         video = itemFile.video?.let { "$videosBase$it" },
+                                        itemType = itemType,
+                                        questItem = itemFile.questItem,
                                     ),
                             ),
                         roomId = roomId,

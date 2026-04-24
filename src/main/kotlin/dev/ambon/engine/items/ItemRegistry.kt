@@ -501,6 +501,28 @@ class ItemRegistry {
         return instance
     }
 
+    /**
+     * Look up (without removing) an item owned by [sessionId] (inventory or equipped)
+     * matching [keyword]. Used by handlers to pre-validate actions (e.g. quest-item guards).
+     */
+    fun peekOwnedItem(
+        sessionId: SessionId,
+        keyword: String,
+    ): ItemInstance? = findOwnedItemMatch(sessionId, keyword)?.item
+
+    /**
+     * Look up (without removing) an item in [sessionId]'s inventory only (not equipped)
+     * matching [keyword]. Used by handlers that apply only to carried items.
+     */
+    fun peekInventoryItem(
+        sessionId: SessionId,
+        keyword: String,
+    ): ItemInstance? {
+        val inv = inventoryItems[sessionId] ?: return null
+        val idx = findMatchingItemIndex(inv, keyword)
+        return if (idx >= 0) inv[idx] else null
+    }
+
     private fun findOwnedItemMatch(
         sessionId: SessionId,
         keyword: String,
