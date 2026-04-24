@@ -91,7 +91,9 @@ export class EntityPopout {
       const turnInCommand = readyQuest ? `quest turnin ${readyQuest.name}` : `talk ${name}`;
       actions.push({ label: "\u2605 Turn In Quest", command: turnInCommand, color: 0xf0c674 });
     } else if (info?.questAvailable) {
-      actions.push({ label: "\u2605 Accept Quest", command: `talk ${name}`, color: 0x5a8a6a });
+      // Server resolves `accept <mob>` to the first available quest from that mob,
+      // so we skip opening the dialogue panel just to click an Accept button inside.
+      actions.push({ label: "\u2605 Accept Quest", command: `accept ${name}`, color: 0x5a8a6a });
     } else if (info?.questGiver) {
       // Quest giver with no active quest — still show talk with quest styling
       actions.push({ label: "\u2605 Quests", command: `talk ${name}`, color: 0x8a9a6a });

@@ -354,7 +354,13 @@ function App() {
     canvasCallbacks.openMap = () => openPanel("map");
     canvasCallbacks.openRoom = () => openPanel("room");
     canvasCallbacks.openQuests = () => openPanel("quests");
-    canvasCallbacks.dismissDialogue = () => { state.setDialogue(null); state.setQuestsAvailable([]); };
+    canvasCallbacks.dismissDialogue = () => {
+      // Tell the server to drop dialogue state too — otherwise the next "1"-style
+      // input would still resolve to a DialogueChoice on the server.
+      if (gameStateRef.current.dialogue) sendCommand("bye");
+      state.setDialogue(null);
+      state.setQuestsAvailable([]);
+    };
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
     canvasCallbacks.prefillCommand = (text: string) => prefillInput(text);
     return () => {
