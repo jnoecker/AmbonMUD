@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import type { SkillSummary } from "../types";
 
-type TargetTab = "ALL" | "ENEMY" | "SELF" | "ALLY" | "ALL_ENEMIES" | "ALL_ALLIES";
-const TARGET_TABS: { key: TargetTab; label: string }[] = [
+type Category = "ALL" | "DAMAGE" | "HEAL" | "BUFF" | "DEBUFF" | "UTILITY";
+
+const CATEGORIES: { key: Category; label: string }[] = [
   { key: "ALL", label: "All" },
-  { key: "ENEMY", label: "Enemy" },
-  { key: "ALL_ENEMIES", label: "AoE" },
-  { key: "SELF", label: "Self" },
-  { key: "ALLY", label: "Ally" },
-  { key: "ALL_ALLIES", label: "Group" },
+  { key: "DAMAGE", label: "Damage" },
+  { key: "HEAL", label: "Heal" },
+  { key: "BUFF", label: "Buff" },
+  { key: "DEBUFF", label: "Debuff" },
+  { key: "UTILITY", label: "Utility" },
 ];
 
 const SLOT_COUNT = 9;
@@ -36,6 +37,23 @@ function targetLabel(t: string): string {
     case "ALLY": return "Ally";
     default: return t;
   }
+}
+
+function skillCategory(skill: SkillSummary): Category {
+  const t = skill.targetType.toUpperCase();
+  const e = skill.effectType.toUpperCase();
+  if (e === "DIRECT_DAMAGE" || e === "AREA_DAMAGE") return "DAMAGE";
+  if (e === "DIRECT_HEAL") return "HEAL";
+  if (e === "APPLY_STATUS") {
+    if (t === "ENEMY" || t === "ALL_ENEMIES") return "DEBUFF";
+    return "BUFF";
+  }
+  return "UTILITY";
+}
+
+function prettyClass(className: string): string {
+  if (className.length === 0) return "";
+  return className.charAt(0).toUpperCase() + className.slice(1).toLowerCase();
 }
 
 function SkillCard({
@@ -74,6 +92,9 @@ function SkillCard({
             <span className="spellbook-stat spellbook-stat-cd">CD: {cooldownLabel(skill.cooldownMs)}</span>
             <span className="spellbook-stat spellbook-stat-target">{targetLabel(skill.targetType)}</span>
             <span className="spellbook-stat spellbook-stat-level">Lv {skill.levelRequired}</span>
+            {skill.classRestriction && (
+              <span className="spellbook-stat spellbook-stat-class">{prettyClass(skill.classRestriction)}</span>
+            )}
           </div>
         </div>
       </button>
@@ -122,7 +143,9 @@ export function SpellbookPanel({
   playerLevel,
   availableSkillPoints,
 }: SpellbookPanelProps) {
-  const [activeTab, setActiveTab] = useState<TargetTab>("ALL");
+  const [activeCategory, setActiveCategory] = useState<Category>("ALL");
+  const [activeClass, setActiveClass] = useState<string>("ALL");
+  const [query, setQuery] = useState("");
 
   // Map skill ID → slot number (1-based) for badge display
   const skillSlotMap = useMemo(() => {
@@ -134,15 +157,28 @@ export function SpellbookPanel({
     return m;
   }, [quickbarSlotIds]);
 
-  const availableTabs = useMemo(() => {
-    const types = new Set(skills.map((s) => s.targetType));
-    return TARGET_TABS.filter((t) => t.key === "ALL" || types.has(t.key));
+  const availableCategories = useMemo(() => {
+    const present = new Set(skills.map((s) => skillCategory(s)));
+    return CATEGORIES.filter((c) => c.key === "ALL" || present.has(c.key));
   }, [skills]);
 
-  const filtered = useMemo(
-    () => activeTab === "ALL" ? skills : skills.filter((s) => s.targetType === activeTab),
-    [skills, activeTab],
-  );
+  const availableClasses = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of skills) {
+      if (s.classRestriction) set.add(s.classRestriction);
+    }
+    return Array.from(set).sort();
+  }, [skills]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return skills.filter((s) => {
+      if (activeCategory !== "ALL" && skillCategory(s) !== activeCategory) return false;
+      if (activeClass !== "ALL" && s.classRestriction !== activeClass) return false;
+      if (q.length > 0 && !s.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [skills, activeCategory, activeClass, query]);
 
   if (skills.length === 0) {
     return (
@@ -173,33 +209,78 @@ export function SpellbookPanel({
         )}
       </div>
       <p className="spellbook-hint">Click a spell for info. Press + to assign to quickbar (keys 1-9).</p>
-      {availableTabs.length > 2 && (
-        <div className="spellbook-tabs" role="tablist">
-          {availableTabs.map((tab) => (
+      <div className="spellbook-search">
+        <input
+          type="search"
+          className="spellbook-search-input"
+          placeholder="Search abilities…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          aria-label="Search abilities by name"
+        />
+        <span className="spellbook-result-count" aria-live="polite">
+          {filtered.length} / {skills.length}
+        </span>
+      </div>
+      {availableCategories.length > 2 && (
+        <div className="spellbook-tabs" role="tablist" aria-label="Filter by ability type">
+          {availableCategories.map((cat) => (
             <button
-              key={tab.key}
+              key={cat.key}
               type="button"
               role="tab"
-              className={`spellbook-tab${activeTab === tab.key ? " spellbook-tab-active" : ""}`}
-              aria-selected={activeTab === tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              className={`spellbook-tab${activeCategory === cat.key ? " spellbook-tab-active" : ""}`}
+              aria-selected={activeCategory === cat.key}
+              onClick={() => setActiveCategory(cat.key)}
             >
-              {tab.label}
+              {cat.label}
             </button>
           ))}
         </div>
       )}
-      <div className="spellbook-grid">
-        {filtered.map((skill) => (
-          <SkillCard
-            key={skill.id}
-            skill={skill}
-            slotNumber={skillSlotMap.get(skill.id) ?? null}
-            onShowInfo={onShowSkillInfo}
-            onAssignSlot={onAssignSlot}
-          />
-        ))}
-      </div>
+      {availableClasses.length > 1 && (
+        <div className="spellbook-class-pills" role="tablist" aria-label="Filter by source class">
+          <button
+            type="button"
+            role="tab"
+            className={`spellbook-class-pill${activeClass === "ALL" ? " spellbook-class-pill-active" : ""}`}
+            aria-selected={activeClass === "ALL"}
+            onClick={() => setActiveClass("ALL")}
+          >
+            All classes
+          </button>
+          {availableClasses.map((cls) => (
+            <button
+              key={cls}
+              type="button"
+              role="tab"
+              className={`spellbook-class-pill${activeClass === cls ? " spellbook-class-pill-active" : ""}`}
+              aria-selected={activeClass === cls}
+              onClick={() => setActiveClass(cls)}
+            >
+              {prettyClass(cls)}
+            </button>
+          ))}
+        </div>
+      )}
+      {filtered.length === 0 ? (
+        <div className="spellbook-empty">
+          <p>No abilities match the current filters.</p>
+          <p className="spellbook-empty-hint">Try clearing the search or switching tabs.</p>
+        </div>
+      ) : (
+        <div className="spellbook-grid">
+          {filtered.map((skill) => (
+            <SkillCard
+              key={skill.id}
+              skill={skill}
+              slotNumber={skillSlotMap.get(skill.id) ?? null}
+              onShowInfo={onShowSkillInfo}
+              onAssignSlot={onAssignSlot}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
