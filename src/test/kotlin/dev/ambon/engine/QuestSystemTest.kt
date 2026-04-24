@@ -112,6 +112,37 @@ class QuestSystemTest {
         }
 
     @Test
+    fun `objective update flips readyToTurnIn true on the final kill of an npc_turn_in quest`() =
+        runTest {
+            val turnInQuestId = "zone:turnin_quest"
+            val turnInQuest = killQuest.copy(id = turnInQuestId, completionType = "npc_turn_in")
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            data class Update(
+                val current: Int,
+                val ready: Boolean,
+            )
+            val updates = mutableListOf<Update>()
+            qs.onQuestObjectiveUpdated = { _, _, _, current, _, ready ->
+                updates.add(Update(current, ready))
+            }
+
+            qs.acceptQuest(sid, turnInQuestId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            assertEquals(listOf(1, 2, 3), updates.map { it.current })
+            assertEquals(
+                listOf(false, false, true),
+                updates.map { it.ready },
+                "readyToTurnIn must flip on the kill that completes the final objective",
+            )
+            val ps = players.get(sid)!!
+            assertTrue(ps.activeQuests.containsKey(turnInQuestId), "npc_turn_in quest stays active until turned in")
+        }
+
+    @Test
     fun `quest auto-completes and grants rewards when all objectives done`() =
         runTest {
             val (qs, players, outbound) = setup()
