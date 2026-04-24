@@ -94,6 +94,8 @@ data class PlayerRecord(
     val description: String = "",
     /** When true, items dropped by mobs the player kills are auto-looted into inventory. */
     val autolootEnabled: Boolean = false,
+    /** Epoch-ms of the last stat/ability respec. 0 means never respec'd. */
+    val lastRespecAtMs: Long = 0L,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

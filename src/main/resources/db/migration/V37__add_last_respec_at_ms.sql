@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN last_respec_at_ms BIGINT NOT NULL DEFAULT 0;
