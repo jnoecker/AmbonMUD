@@ -35,6 +35,7 @@ class DialogueQuestHandler(
     override fun register(router: CommandRouter) {
         router.on<Command.Talk> { sid, cmd -> handleTalk(sid, cmd) }
         router.on<Command.DialogueChoice> { sid, cmd -> handleDialogueChoice(sid, cmd) }
+        router.on<Command.DialogueEnd> { sid, _ -> handleDialogueEnd(sid) }
         router.on<Command.QuestLog> { sid, _ -> handleQuestLog(sid) }
         router.on<Command.QuestInfo> { sid, cmd -> handleQuestInfo(sid, cmd) }
         router.on<Command.QuestAbandon> { sid, cmd -> handleQuestAbandon(sid, cmd) }
@@ -119,6 +120,10 @@ class DialogueQuestHandler(
         }
     }
 
+    private suspend fun handleDialogueEnd(sessionId: SessionId) {
+        dialogueSystem?.endConversation(sessionId)
+    }
+
     private suspend fun handleDialogueAction(
         sessionId: SessionId,
         action: String,
@@ -194,13 +199,23 @@ class DialogueQuestHandler(
         players.withPlayer(sessionId) { me ->
             val nameHintLower = cmd.nameHint.trim().lowercase()
             val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }.toSet()
-            val matchingQuest =
+            // First try matching the hint against quest names/ids.
+            var matchingQuest =
                 questRegistry
                     .all()
                     .filter { quest ->
                         quest.name.lowercase().contains(nameHintLower) ||
                             quest.id.substringAfterLast(':').lowercase().contains(nameHintLower)
                     }.firstOrNull { quest -> quest.giverMobId in roomMobIds }
+            // Fall back to matching the hint against a room mob — pick the first
+            // quest that mob currently offers the player. This lets clients invoke
+            // `accept <mob>` straight from a popout without first opening dialogue.
+            if (matchingQuest == null) {
+                val mobMatch = mobs.findInRoomByKeyword(me.roomId, cmd.nameHint.trim()).firstOrNull()
+                if (mobMatch != null) {
+                    matchingQuest = qs.availableQuests(sessionId, mobMatch.id.value).firstOrNull()
+                }
+            }
             if (matchingQuest == null) {
                 outbound.send(
                     OutboundEvent.SendError(

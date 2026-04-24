@@ -180,7 +180,10 @@ export class DialogueOverlay {
         const idx = choice.index;
         choiceText.on("pointerover", () => { choiceText.style.fill = CHOICE_HOVER_COLOR; });
         choiceText.on("pointerout", () => { choiceText.style.fill = CHOICE_COLOR; });
-        choiceText.on("pointerdown", () => {
+        choiceText.on("pointerdown", (event) => {
+          // Stop propagation so the always-on dismiss backdrop doesn't fire and
+          // close the dialogue when the user is actually picking a choice.
+          event.stopPropagation();
           canvasCallbacks.sendCommand?.(`${idx}`);
         });
 
@@ -214,32 +217,24 @@ export class DialogueOverlay {
       contentHeight -= QUEST_CARD_GAP;
     }
 
-    // Dismissable when no active dialogue choices remain
-    const hasActiveChoices = dialogue !== null && dialogue.choices.length > 0;
-    this.isDismissable = !hasActiveChoices;
-    this.bg.cursor = this.isDismissable ? "pointer" : "default";
+    // The overlay is always dismissable: clicking outside the choices ends the
+    // conversation rather than forcing the user to click through every node.
+    // Choice texts call stopPropagation, so picking a choice doesn't double as
+    // a dismiss.
+    this.isDismissable = true;
+    this.bg.cursor = "pointer";
+    this.redrawFullBg();
+    this.fullBg.visible = true;
+    this.fullBg.eventMode = "static";
+    this.fullBg.cursor = "pointer";
 
-    // Full-canvas dismiss backdrop is only interactive when dismissable, so
-    // mid-conversation canvas clicks (e.g. picking choices) aren't swallowed.
-    if (this.isDismissable) {
-      this.redrawFullBg();
-      this.fullBg.visible = true;
-      this.fullBg.eventMode = "static";
-      this.fullBg.cursor = "pointer";
-    } else {
-      this.fullBg.visible = false;
-      this.fullBg.eventMode = "none";
-    }
-
-    if (this.isDismissable) {
-      this.dismissHint = new Text({
-        text: "Click anywhere to close",
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 10, fill: ENDING_COLOR },
-      });
-      this.dismissHint.anchor.set(0.5, 0);
-      this.container.addChild(this.dismissHint);
-      contentHeight += 16;
-    }
+    this.dismissHint = new Text({
+      text: "Click anywhere to close",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 10, fill: ENDING_COLOR },
+    });
+    this.dismissHint.anchor.set(0.5, 0);
+    this.container.addChild(this.dismissHint);
+    contentHeight += 16;
 
     contentHeight += BOX_PADDING;
 

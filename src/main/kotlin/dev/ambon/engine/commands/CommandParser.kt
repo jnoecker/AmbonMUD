@@ -373,6 +373,8 @@ sealed interface Command {
         val optionNumber: Int,
     ) : Command
 
+    data object DialogueEnd : Command
+
     data object QuestLog : Command
 
     data class QuestInfo(
@@ -1195,6 +1197,9 @@ object CommandParser {
 
         // talk
         requiredArg(line, listOf("talk"), "talk <npc>", { Command.Talk(it) })?.let { return it }
+
+        // bye / goodbye — end the active dialogue conversation
+        matchPrefix(line, listOf("bye", "goodbye")) { Command.DialogueEnd }?.let { return it }
 
         // cast / c
         matchPrefix(line, listOf("cast", "c")) { rest ->

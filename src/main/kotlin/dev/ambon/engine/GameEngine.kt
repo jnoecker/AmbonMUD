@@ -1020,13 +1020,17 @@ class GameEngine(
                 }
             }
         }
-        questSystem.onQuestListChanged = { sid -> sendQuestListGmcp(sid) }
+        questSystem.onQuestListChanged = { sid ->
+            sendQuestListGmcp(sid)
+            refreshRoomMobInfoForPlayer(sid)
+        }
         questSystem.onQuestObjectiveUpdated = { sid, questId, objIndex, current, required, readyToTurnIn ->
             gmcpEmitter.sendQuestUpdate(sid, questId, objIndex, current, required, readyToTurnIn)
         }
         questSystem.onQuestCompletedGmcp = { sid, questId, questName ->
             gmcpEmitter.sendQuestComplete(sid, questId, questName)
             sendQuestListGmcp(sid)
+            refreshRoomMobInfoForPlayer(sid)
         }
         questSystem.onLevelUp = ::onCombatLevelUp
         achievementSystem.onLevelUp = ::onCombatLevelUp
@@ -2138,6 +2142,28 @@ class GameEngine(
             )
         }
         gmcpEmitter.sendQuestList(sessionId, entries)
+    }
+
+    /**
+     * Re-emits `Room.MobInfo` for the player's current room. Called when a quest event
+     * may have flipped a mob's `questAvailable` / `questComplete` flag — the canvas
+     * indicators and popout actions key off these flags and otherwise stay stale until
+     * the player leaves and re-enters the room.
+     */
+    private suspend fun refreshRoomMobInfoForPlayer(sessionId: SessionId) {
+        val ps = players.get(sessionId) ?: return
+        val mobsInRoom = mobs.mobsInRoom(ps.roomId)
+        val mobIds = mobsInRoom.map { it.id.value }
+        val questAvailable = questSystem.questAvailableMobIds(sessionId, mobIds)
+        val questComplete = questSystem.questCompleteMobIds(sessionId, mobIds)
+        gmcpEmitter.sendRoomMobInfo(
+            sessionId,
+            gmcpEmitter.buildMobInfoEntries(
+                mobsInRoom,
+                questAvailableMobIds = questAvailable,
+                questCompleteMobIds = questComplete,
+            ),
+        )
     }
 
     /**
