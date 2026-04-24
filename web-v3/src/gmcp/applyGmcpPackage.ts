@@ -1016,6 +1016,7 @@ export function applyGmcpPackage(
       const questId = typeof packet.questId === "string" ? packet.questId : null;
       const objIndex = typeof packet.objectiveIndex === "number" ? packet.objectiveIndex : -1;
       if (!questId || objIndex < 0) break;
+      const hasReadyFlag = typeof packet.readyToTurnIn === "boolean";
       ctx.setQuests((prev) =>
         prev.map((q) => {
           if (q.id !== questId) return q;
@@ -1024,7 +1025,9 @@ export function applyGmcpPackage(
               ? { ...o, current: safeNumber(packet.current, o.current), required: safeNumber(packet.required, o.required) }
               : o,
           );
-          return { ...q, objectives };
+          return hasReadyFlag
+            ? { ...q, objectives, readyToTurnIn: packet.readyToTurnIn === true }
+            : { ...q, objectives };
         }),
       );
       break;

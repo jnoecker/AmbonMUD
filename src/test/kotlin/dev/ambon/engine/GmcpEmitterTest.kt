@@ -1130,7 +1130,7 @@ class GmcpEmitterTest {
     fun `sendQuestUpdate emits correct JSON`() =
         runTest {
             val e = emitter("Quest")
-            e.sendQuestUpdate(sid, "slay_goblins", 0, 4, 5)
+            e.sendQuestUpdate(sid, "slay_goblins", 0, 4, 5, readyToTurnIn = false)
             val events = drainGmcp()
             assertEquals(1, events.size)
             assertEquals("Quest.Update", events[0].gmcpPackage)
@@ -1156,7 +1156,7 @@ class GmcpEmitterTest {
         runTest {
             val e = emitter()
             e.sendQuestList(sid, emptyList())
-            e.sendQuestUpdate(sid, "q", 0, 1, 5)
+            e.sendQuestUpdate(sid, "q", 0, 1, 5, readyToTurnIn = false)
             e.sendQuestComplete(sid, "q", "Q")
             assertTrue(drainGmcp().isEmpty())
         }

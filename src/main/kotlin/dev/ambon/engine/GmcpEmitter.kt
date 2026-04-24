@@ -1032,11 +1032,18 @@ class GmcpEmitter(
         objectiveIndex: Int,
         current: Int,
         required: Int,
+        readyToTurnIn: Boolean,
     ) {
         emit(
             sessionId,
             "Quest.Update",
-            QuestUpdatePayload(questId = questId, objectiveIndex = objectiveIndex, current = current, required = required),
+            QuestUpdatePayload(
+                questId = questId,
+                objectiveIndex = objectiveIndex,
+                current = current,
+                required = required,
+                readyToTurnIn = readyToTurnIn,
+            ),
             supportCheck = "Quest",
         )
     }
@@ -2598,6 +2605,7 @@ class GmcpEmitter(
         val objectiveIndex: Int,
         val current: Int,
         val required: Int,
+        val readyToTurnIn: Boolean,
     )
 
     private data class QuestCompletePayload(

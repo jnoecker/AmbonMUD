@@ -9,6 +9,7 @@ import type {
   MobInfo,
   PuzzleState,
   QuestAvailable,
+  QuestEntry,
   RoomFeature,
   RoomMob,
   RoomPlayer,
@@ -36,6 +37,7 @@ export interface GameStateSnapshot {
   mobInfo: MobInfo[];
   groupInfo: GroupInfo;
   dialogue: DialogueState | null;
+  quests: QuestEntry[];
   questsAvailable: QuestAvailable[];
   shop: ShopState | null;
   stylistState: StylistState | null;
@@ -121,6 +123,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     mobInfo: [],
     groupInfo: { leader: null, members: [] },
     dialogue: null,
+    quests: [],
     questsAvailable: [],
     shop: null,
     stylistState: null,

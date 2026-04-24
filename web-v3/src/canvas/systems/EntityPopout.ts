@@ -1,5 +1,5 @@
 import { Container, Graphics, Text, Sprite, Texture, Assets, Rectangle } from "pixi.js";
-import { canvasCallbacks } from "../GameStateBridge";
+import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 
 const POPOUT_WIDTH = 240;
 const POPOUT_PADDING = 12;
@@ -76,14 +76,20 @@ export class EntityPopout {
     this.height = height;
   }
 
-  showMob(name: string, description: string | null | undefined, image: string | null | undefined, video: string | null | undefined, hp: number, maxHp: number, info: { questGiver?: boolean; questAvailable?: boolean; questComplete?: boolean; shopKeeper?: boolean; dialogue?: boolean; aggressive?: boolean } | null, isStaff: boolean = false) {
+  showMob(name: string, description: string | null | undefined, image: string | null | undefined, video: string | null | undefined, hp: number, maxHp: number, info: { id?: string; questGiver?: boolean; questAvailable?: boolean; questComplete?: boolean; shopKeeper?: boolean; dialogue?: boolean; aggressive?: boolean } | null, isStaff: boolean = false) {
     const actions: PopoutAction[] = [];
     const isNpc = info?.shopKeeper || info?.questGiver || info?.dialogue;
     const isAggressive = info?.aggressive === true;
 
     // Primary interaction first based on mob role
     if (info?.questComplete) {
-      actions.push({ label: "\u2605 Turn In Quest", command: `talk ${name}`, color: 0xf0c674 });
+      const readyQuest = info?.id
+        ? gameStateRef.current.quests.find(
+            (q) => q.giverMobId === info.id && q.readyToTurnIn === true,
+          )
+        : undefined;
+      const turnInCommand = readyQuest ? `quest turnin ${readyQuest.name}` : `talk ${name}`;
+      actions.push({ label: "\u2605 Turn In Quest", command: turnInCommand, color: 0xf0c674 });
     } else if (info?.questAvailable) {
       actions.push({ label: "\u2605 Accept Quest", command: `talk ${name}`, color: 0x5a8a6a });
     } else if (info?.questGiver) {
