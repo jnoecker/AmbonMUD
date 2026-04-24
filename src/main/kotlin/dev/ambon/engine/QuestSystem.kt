@@ -34,7 +34,7 @@ class QuestSystem(
 
     /** Invoked to emit quest GMCP; set by GameEngine during wiring. */
     var onQuestListChanged: (suspend (SessionId) -> Unit)? = null
-    var onQuestObjectiveUpdated: (suspend (SessionId, String, Int, Int, Int) -> Unit)? = null
+    var onQuestObjectiveUpdated: (suspend (SessionId, String, Int, Int, Int, Boolean) -> Unit)? = null
     var onQuestCompletedGmcp: (suspend (SessionId, String, String) -> Unit)? = null
 
     /** Invoked when a quest reward grants enough XP to level the player up. */
@@ -160,12 +160,22 @@ class QuestSystem(
         players.persistPlayer(ps.sessionId)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest accepted: ${quest.name}"))
+        val acceptHandler = completionHandlers.get(quest.completionType)
+        val acceptReadyToTurnIn =
+            acceptHandler?.requiresNpcTurnIn == true && seededObjectives.all { it.isComplete }
         for ((index, obj) in quest.objectives.withIndex()) {
             outbound.send(OutboundEvent.SendText(sessionId, "  - ${obj.description}"))
             val prog = seededObjectives[index]
             if (prog.current > 0) {
                 sendObjectiveProgress(sessionId, obj.description, prog)
-                onQuestObjectiveUpdated?.invoke(sessionId, questId, index, prog.current, prog.required)
+                onQuestObjectiveUpdated?.invoke(
+                    sessionId,
+                    questId,
+                    index,
+                    prog.current,
+                    prog.required,
+                    acceptReadyToTurnIn,
+                )
             }
         }
         onQuestListChanged?.invoke(sessionId)
@@ -295,6 +305,7 @@ class QuestSystem(
             val quest = registry.get(questId) ?: continue
             val newObjectives = state.objectives.toMutableList()
             var questChanged = false
+            val handler = completionHandlers.get(quest.completionType)
 
             for ((index, objDef) in quest.objectives.withIndex()) {
                 val prog = newObjectives[index]
@@ -303,7 +314,16 @@ class QuestSystem(
                 newObjectives[index] = updated
                 questChanged = true
                 sendObjectiveProgress(sessionId, objDef.description, updated)
-                onQuestObjectiveUpdated?.invoke(sessionId, questId, index, updated.current, updated.required)
+                val readyToTurnIn =
+                    handler?.requiresNpcTurnIn == true && newObjectives.all { it.isComplete }
+                onQuestObjectiveUpdated?.invoke(
+                    sessionId,
+                    questId,
+                    index,
+                    updated.current,
+                    updated.required,
+                    readyToTurnIn,
+                )
             }
 
             if (questChanged) {

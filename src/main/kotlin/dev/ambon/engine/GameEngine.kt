@@ -995,14 +995,7 @@ class GameEngine(
             }
         }
         questSystem.onQuestListChanged = { sid -> sendQuestListGmcp(sid) }
-        questSystem.onQuestObjectiveUpdated = { sid, questId, objIndex, current, required ->
-            val def = questRegistry.get(questId)
-            val state = players.get(sid)?.activeQuests?.get(questId)
-            val readyToTurnIn = if (def != null && state != null) {
-                questSystem.isReadyToTurnIn(def, state)
-            } else {
-                false
-            }
+        questSystem.onQuestObjectiveUpdated = { sid, questId, objIndex, current, required, readyToTurnIn ->
             gmcpEmitter.sendQuestUpdate(sid, questId, objIndex, current, required, readyToTurnIn)
         }
         questSystem.onQuestCompletedGmcp = { sid, questId, questName ->
