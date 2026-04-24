@@ -57,6 +57,7 @@ import dev.ambon.engine.commands.handlers.TrainerHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.commands.handlers.WorldInfoHandler
+import dev.ambon.engine.commands.handlers.sendLook
 import dev.ambon.engine.crafting.CraftingRegistry
 import dev.ambon.engine.crafting.CraftingSystem
 import dev.ambon.engine.crafting.EnchantSystem
@@ -1114,6 +1115,10 @@ class GameEngine(
             bankConfig = engineConfig.bank,
             stylistConfig = engineConfig.stylist,
         )
+
+        // Push a fresh room look when a dead player respawns, so the web client
+        // stops showing the room they died in.
+        combatSystem.onPlayerRespawned = { sid -> ctx.sendLook(sid) }
 
         communicationHandler = CommunicationHandler(
             ctx = ctx,
