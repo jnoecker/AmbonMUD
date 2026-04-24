@@ -24,14 +24,21 @@ class ItemRegistry {
             val slot: ItemSlot,
         ) : EquipResult
 
+        /**
+         * Returned when the target slot was already filled and the registry
+         * automatically unequipped [previousItem] to make room for [item].
+         * The previous item is moved back into the inventory as part of the
+         * same atomic operation.
+         */
+        data class Swapped(
+            val item: ItemInstance,
+            val previousItem: ItemInstance,
+            val slot: ItemSlot,
+        ) : EquipResult
+
         data object NotFound : EquipResult
 
         data class NotWearable(
-            val item: ItemInstance,
-        ) : EquipResult
-
-        data class SlotOccupied(
-            val slot: ItemSlot,
             val item: ItemInstance,
         ) : EquipResult
     }
@@ -331,8 +338,10 @@ class ItemRegistry {
     ): EquipResult {
         val inv = inventoryItems[sessionId] ?: return EquipResult.NotFound
         var firstNonWearable: ItemInstance? = null
-        var firstOccupied: EquipResult.SlotOccupied? = null
+        var firstOccupiedIdx: Int = -1
 
+        // Pass 1: prefer a matching item whose target slot is empty. Only if no
+        // such item exists do we fall through to auto-swap.
         for ((idx, instance) in inv.withIndex()) {
             if (!mode.matches(instance.item, keyword)) continue
 
@@ -345,9 +354,7 @@ class ItemRegistry {
             val equipped = equippedItems.getOrPut(sessionId) { mutableMapOf() }
             val existing = equipped[slot]
             if (existing != null) {
-                if (firstOccupied == null) {
-                    firstOccupied = EquipResult.SlotOccupied(slot, existing)
-                }
+                if (firstOccupiedIdx < 0) firstOccupiedIdx = idx
                 continue
             }
 
@@ -358,7 +365,20 @@ class ItemRegistry {
             return EquipResult.Equipped(instance, slot)
         }
 
-        firstOccupied?.let { return it }
+        // Pass 2: no free slot among matches — auto-swap with the first occupied.
+        if (firstOccupiedIdx >= 0) {
+            val instance = inv[firstOccupiedIdx]
+            val slot = instance.item.slot!!
+            val equipped = equippedItems.getOrPut(sessionId) { mutableMapOf() }
+            val previous = equipped.getValue(slot)
+
+            inv.removeAt(firstOccupiedIdx)
+            equipped[slot] = instance
+            inventoryItems.getOrPut(sessionId) { mutableListOf() }.add(previous)
+
+            return EquipResult.Swapped(item = instance, previousItem = previous, slot = slot)
+        }
+
         firstNonWearable?.let { return EquipResult.NotWearable(it) }
         return EquipResult.NotFound
     }

@@ -198,6 +198,54 @@ class CommandRouterItemsTest {
         }
 
     @Test
+    fun `wear into a filled slot auto-swaps with the currently equipped item`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+
+            val sid = SessionId(55L)
+            h.loginPlayer(sid, "Swapper")
+
+            h.items.setRoomItems(
+                h.world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:cap-old"),
+                        Item(keyword = "cap", displayName = "a threadbare cap", slot = ItemSlot.HEAD, armor = 1),
+                    ),
+                    ItemInstance(
+                        ItemId("test:helm"),
+                        Item(keyword = "helm", displayName = "a steel helm", slot = ItemSlot.HEAD, armor = 4),
+                    ),
+                ),
+            )
+            h.items.takeFromRoom(sid, h.world.startRoom, "cap")
+            h.items.takeFromRoom(sid, h.world.startRoom, "helm")
+            h.router.handle(sid, Command.Wear("cap"))
+            assertEquals("test:cap-old", h.items.equipment(sid).getValue(ItemSlot.HEAD).id.value)
+            assertEquals(1, h.items.inventory(sid).size)
+            h.drain()
+
+            h.router.handle(sid, Command.Wear("helm"))
+
+            val equipped = h.items.equipment(sid)
+            assertEquals("test:helm", equipped.getValue(ItemSlot.HEAD).id.value)
+
+            val inv = h.items.inventory(sid)
+            assertEquals(1, inv.size, "previous helm should be back in inventory")
+            assertEquals("test:cap-old", inv[0].id.value)
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.text.contains("You remove a threadbare cap") &&
+                        it.text.contains("wear a steel helm")
+                },
+                "Expected swap message naming both items. got=$outs",
+            )
+        }
+
+    @Test
     fun `remove moves item from equipment slot back to inventory`() =
         runTest {
             val h = CommandRouterHarness.create()
