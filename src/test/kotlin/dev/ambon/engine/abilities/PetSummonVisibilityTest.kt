@@ -41,6 +41,14 @@ class PetSummonVisibilityTest {
                 maxDamage = 5,
                 armor = 1,
             ),
+            "stone_golem" to PetTemplateConfig(
+                name = "a stone golem",
+                description = "A lumbering construct of packed earth.",
+                hp = 30,
+                minDamage = 3,
+                maxDamage = 6,
+                armor = 2,
+            ),
         ),
     )
 
@@ -121,5 +129,108 @@ class PetSummonVisibilityTest {
         val bystanderMobInfo = gmcp.filter { it.sessionId == bystanderSid && it.gmcpPackage == "Room.MobInfo" }
         assertTrue(summonerMobInfo.isNotEmpty(), "summoner must receive companion Room.MobInfo")
         assertTrue(bystanderMobInfo.isNotEmpty(), "bystander must receive companion Room.MobInfo")
+    }
+
+    /**
+     * Regression test for issue #1093 — re-summoning while a pet already exists must
+     * emit `Room.RemoveMob` for the replaced pet so clients don't leave a ghost sprite
+     * stacked in the room. The server already dismisses the old pet internally
+     * (PetSystem.summon -> dismissAll), but without the broadcast the web client keeps
+     * rendering the old pet until the owner changes rooms.
+     */
+    @Test
+    fun `re-summoning a pet emits Room_RemoveMob for the replaced pet`() = runTest {
+        val clock = MutableClock(0L)
+        val fixture = AbilityTestFixture(roomId = roomId, clock = clock)
+        val petSystem = PetSystem(config = petConfig, mobs = fixture.mobs, clock = clock)
+
+        val gmcpEmitter = GmcpEmitter(
+            outbound = fixture.outbound,
+            supportsPackage = { _, _ -> true },
+        )
+
+        val registry = AbilityRegistry()
+        registry.register(
+            AbilityDefinition(
+                id = AbilityId("summon_familiar"),
+                displayName = "Summon Familiar",
+                description = "Summons a small elemental.",
+                manaCost = 5,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = "self",
+                effect = AbilityEffect.SummonPet(petTemplateKey = "fire_familiar"),
+            ),
+        )
+        registry.register(
+            AbilityDefinition(
+                id = AbilityId("summon_golem"),
+                displayName = "Summon Golem",
+                description = "Summons a stone golem.",
+                manaCost = 5,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = "self",
+                effect = AbilityEffect.SummonPet(petTemplateKey = "stone_golem"),
+            ),
+        )
+
+        // Mirror the production GameEngine.onSummonPet callback — issue #1093 fix lives there.
+        val abilitySystem = AbilitySystem(
+            players = fixture.players,
+            registry = registry,
+            outbound = fixture.outbound,
+            combat = fixture.combat,
+            clock = clock,
+            mobs = fixture.mobs,
+            onSummonPet = { sid, templateKey, durationMs ->
+                val player = fixture.players.get(sid)
+                if (player != null) {
+                    val replacedPets = petSystem.getPets(sid).map { Triple(it.id, it.roomId, it.name) }
+                    val pet = petSystem.summon(sid, templateKey, player.roomId, player.level, durationMs, player.name)
+                    if (pet != null) {
+                        for ((oldId, oldRoomId, _) in replacedPets) {
+                            if (oldId == pet.id) continue
+                            gmcpEmitter.broadcastRoomRemoveMob(oldRoomId, oldId.value, fixture.players)
+                            val oldRoomMobs = fixture.mobs.mobsInRoom(oldRoomId)
+                            val oldMobInfo = gmcpEmitter.buildMobInfoEntries(oldRoomMobs)
+                            gmcpEmitter.broadcastRoomMobInfo(oldRoomId, oldMobInfo, fixture.players)
+                        }
+                        gmcpEmitter.broadcastRoomAddMob(player.roomId, pet, fixture.players)
+                        val mobsInRoom = fixture.mobs.mobsInRoom(player.roomId)
+                        val mobInfoEntries = gmcpEmitter.buildMobInfoEntries(mobsInRoom)
+                        gmcpEmitter.broadcastRoomMobInfo(player.roomId, mobInfoEntries, fixture.players)
+                    }
+                }
+            },
+        )
+
+        fixture.players.loginOrFail(summonerSid, "Summoner")
+        fixture.players.loginOrFail(bystanderSid, "Bystander")
+        abilitySystem.syncAbilities(summonerSid, 1)
+        val summoner = fixture.players.get(summonerSid)!!
+        summoner.mana = 100
+
+        // First summon — capture the pet id so we can assert its removal on re-summon.
+        assertNull(abilitySystem.cast(summonerSid, "summon_familiar", null))
+        val firstPet = petSystem.getActivePet(summonerSid)!!
+        val firstPetId = firstPet.id.value
+        fixture.outbound.drainAll()
+
+        // Second summon should replace the first pet and broadcast its removal.
+        assertNull(abilitySystem.cast(summonerSid, "summon_golem", null))
+
+        val gmcp = fixture.outbound.drainAll().filterIsInstance<OutboundEvent.GmcpData>()
+        val summonerRemoves = gmcp.filter { it.sessionId == summonerSid && it.gmcpPackage == "Room.RemoveMob" }
+        val bystanderRemoves = gmcp.filter { it.sessionId == bystanderSid && it.gmcpPackage == "Room.RemoveMob" }
+
+        assertTrue(
+            summonerRemoves.any { it.jsonData.contains(firstPetId) },
+            "summoner must receive Room.RemoveMob for replaced pet id=$firstPetId — got=${summonerRemoves.map { it.jsonData }}",
+        )
+        assertTrue(
+            bystanderRemoves.any { it.jsonData.contains(firstPetId) },
+            "bystander must receive Room.RemoveMob for replaced pet id=$firstPetId — got=${bystanderRemoves.map { it.jsonData }}",
+        )
     }
 }

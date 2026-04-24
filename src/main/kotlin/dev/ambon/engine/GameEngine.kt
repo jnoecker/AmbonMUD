@@ -812,10 +812,21 @@ class GameEngine(
             onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
             onSummonPet = { sid, templateKey, durationMs ->
                 val player = players.get(sid) ?: return@AbilitySystem
+                // Snapshot existing pets before summon so we can broadcast their removal —
+                // summon() replaces the old pet internally but clients don't hear about it,
+                // leaving a ghost sprite until the owner moves rooms. See issue #1093.
+                val replacedPets = petSystem.getPets(sid).map { Triple(it.id, it.roomId, it.name) }
                 val pet = petSystem.summon(sid, templateKey, player.roomId, player.level, durationMs, player.name)
                 if (pet != null) {
                     outbound.send(OutboundEvent.SendText(sid, "You summon ${pet.name}!"))
                     emitPetState(sid, pet)
+                    for ((oldId, oldRoomId, _) in replacedPets) {
+                        if (oldId == pet.id) continue
+                        gmcpEmitter.broadcastRoomRemoveMob(oldRoomId, oldId.value, players)
+                        val oldRoomMobs = mobs.mobsInRoom(oldRoomId)
+                        val oldMobInfo = gmcpEmitter.buildMobInfoEntries(oldRoomMobs)
+                        gmcpEmitter.broadcastRoomMobInfo(oldRoomId, oldMobInfo, players)
+                    }
                     // Refresh the room mob list for the summoner and anyone else in the room so
                     // the pet becomes visible immediately (without waiting for a movement tick).
                     // See issue #1066.
