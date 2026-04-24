@@ -2130,6 +2130,7 @@ export function applyGmcpPackage(
         : [];
       ctx.setPrestigeInfo({
         enabled: packet.enabled === true,
+        requiredLevel: safeNumber(packet.requiredLevel, 0),
         currentRank: safeNumber(packet.currentRank, 0),
         maxRank: safeNumber(packet.maxRank, 0),
         availableXp: safeNumber(packet.availableXp, 0),

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CURRENCY_METADATA, FACTION_METADATA, FACTION_TIERS, LOTTERY_SETTINGS, PRESTIGE_MAX_LEVEL } from "../../featureMetadata";
+import { CURRENCY_METADATA, FACTION_METADATA, FACTION_TIERS, LOTTERY_SETTINGS } from "../../featureMetadata";
 import type { CurrencyActivity, CurrencyBalance, DuelChallenge, DuelState, DungeonCatalogEntry, DungeonInfo, FactionActivity, FactionStanding, LotteryInfo, PetState, PrestigeInfo, RoomPlayer, SystemPanelView, UiFeedbackEntry, Vitals } from "../../types";
 
 interface SystemsPanelProps {
@@ -49,6 +49,17 @@ function feedbackScopeForView(view: SystemPanelView): string {
     case "prestige": return "prestige";
     case "currencies": return "currencies";
     case "factions": return "factions";
+    default: return "";
+  }
+}
+
+function formatPrestigePerkType(type: string): string {
+  switch (type) {
+    case "STAT_BONUS": return "Stat Bonus";
+    case "SKILL_POINT": return "Skill Point";
+    case "MAX_HP": return "Max HP";
+    case "MAX_MANA": return "Max Mana";
+    case "TITLE": return "Title";
     default: return "";
   }
 }
@@ -111,9 +122,14 @@ export function SystemsPanel({
     [nearbyPlayers],
   );
 
+  const prestigeRequiredLevel = prestigeInfo?.requiredLevel ?? 0;
+  const prestigePerksConfigured = (prestigeInfo?.perks.length ?? 0) > 0;
   const canPrestige = Boolean(
     prestigeInfo?.enabled &&
-      vitals.level === PRESTIGE_MAX_LEVEL &&
+      prestigePerksConfigured &&
+      prestigeRequiredLevel > 0 &&
+      (vitals.level ?? 0) >= prestigeRequiredLevel &&
+      prestigeInfo.currentRank < prestigeInfo.maxRank &&
       prestigeInfo.nextRankCost != null &&
       prestigeInfo.availableXp >= prestigeInfo.nextRankCost,
   );
@@ -519,12 +535,52 @@ export function SystemsPanel({
           </section>
         )}
 
-        {activeView === "prestige" && (
-          <section className="systems-section">
-            <h3 className="systems-title">Prestige</h3>
+        {activeView === "prestige" && (() => {
+          const requirementLabel = prestigeRequiredLevel > 0 ? `Level ${prestigeRequiredLevel}` : "Max level";
+          const earnedPerks = prestigeInfo?.perks.filter((perk) => perk.earned) ?? [];
+          return (
+            <section className="systems-section">
+              <h3 className="systems-title">Prestige</h3>
 
-            {prestigeInfo ? (
-              prestigeInfo.enabled ? (
+              {!prestigeInfo ? (
+                <p className="empty-note">Prestige data is not available right now.</p>
+              ) : !prestigeInfo.enabled ? (
+                <article className="systems-card">
+                  <div className="systems-card-header">
+                    <div>
+                      <p className="systems-card-label">Unavailable</p>
+                      <h4>Prestige is disabled</h4>
+                    </div>
+                  </div>
+                  <p className="systems-card-copy">Prestige is currently disabled on this server.</p>
+                </article>
+              ) : !prestigePerksConfigured ? (
+                <article className="systems-card">
+                  <div className="systems-card-header">
+                    <div>
+                      <p className="systems-card-label">Coming Soon</p>
+                      <h4>Prestige perks are still being designed</h4>
+                    </div>
+                    <span className="systems-pill">Preview</span>
+                  </div>
+                  <p className="systems-card-copy">
+                    Prestige is the endgame system that lets max-level characters trade surplus
+                    experience for permanent perks &mdash; stat boosts, extra skill points, increased
+                    HP and mana, and unique titles. The framework is live, but the per-rank perks
+                    for this realm haven&rsquo;t been published yet.
+                  </p>
+                  <dl className="systems-stat-grid">
+                    <div><dt>Requirement</dt><dd>{requirementLabel}</dd></div>
+                    <div><dt>Current Level</dt><dd>{vitals.level ?? "-"}</dd></div>
+                    <div><dt>Planned Max Rank</dt><dd>{prestigeInfo.maxRank > 0 ? prestigeInfo.maxRank : "—"}</dd></div>
+                    <div><dt>Status</dt><dd>Awaiting perk data</dd></div>
+                  </dl>
+                  <p className="systems-card-copy">
+                    Surplus XP earned past the level cap is preserved on your character and will
+                    convert into prestige once perks go live.
+                  </p>
+                </article>
+              ) : (
                 <article className="systems-card">
                   <div className="systems-card-header">
                     <div>
@@ -535,19 +591,23 @@ export function SystemsPanel({
                       {prestigeInfo.currentRank >= prestigeInfo.maxRank ? "Max rank" : `Cap ${prestigeInfo.maxRank}`}
                     </span>
                   </div>
+                  <p className="systems-card-copy">
+                    Spend surplus experience earned past the level cap to take a prestige rank.
+                    Each rank grants a permanent perk and is preserved across deaths and respecs.
+                  </p>
                   <dl className="systems-stat-grid">
                     <div><dt>Available XP</dt><dd>{prestigeInfo.availableXp.toLocaleString()}</dd></div>
                     <div><dt>Next Rank Cost</dt><dd>{prestigeInfo.nextRankCost?.toLocaleString() ?? "Maxed"}</dd></div>
                     <div><dt>Current Level</dt><dd>{vitals.level ?? "-"}</dd></div>
-                    <div><dt>Requirement</dt><dd>Level {PRESTIGE_MAX_LEVEL}</dd></div>
+                    <div><dt>Requirement</dt><dd>{requirementLabel}</dd></div>
                   </dl>
                   <div className="systems-callout">
                     {prestigeInfo.currentRank >= prestigeInfo.maxRank
                       ? "You have reached the maximum prestige rank."
-                      : vitals.level !== PRESTIGE_MAX_LEVEL
-                        ? `Reach level ${PRESTIGE_MAX_LEVEL} to prestige again.`
+                      : prestigeRequiredLevel > 0 && (vitals.level ?? 0) < prestigeRequiredLevel
+                        ? `Reach level ${prestigeRequiredLevel} to prestige.`
                         : prestigeInfo.nextRankCost != null && prestigeInfo.availableXp < prestigeInfo.nextRankCost
-                          ? "You need more prestige XP before you can advance."
+                          ? "You need more surplus XP before you can advance."
                           : "You are eligible to take the next prestige rank."}
                   </div>
                   <div className="systems-action-row">
@@ -563,31 +623,39 @@ export function SystemsPanel({
                       Prestige Up
                     </button>
                   </div>
-                  <div className="systems-perk-list">
-                    {prestigeInfo.perks.map((perk) => (
-                      <div key={perk.rank} className={`systems-perk-card ${perk.earned ? "systems-perk-card-earned" : ""}`}>
-                        <span className="systems-perk-rank">{perk.earned ? "Done" : `Rank ${perk.rank}`}</span>
-                        <span className="systems-perk-desc">{perk.description}</span>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              ) : (
-                <article className="systems-card">
-                  <div className="systems-card-header">
-                    <div>
-                      <p className="systems-card-label">Unavailable</p>
-                      <h4>Prestige is disabled</h4>
+                  {earnedPerks.length > 0 && (
+                    <div className="systems-perk-summary">
+                      <p className="systems-card-label">Bonuses Earned</p>
+                      <ul className="systems-bullet-list">
+                        {earnedPerks.map((perk) => (
+                          <li key={`earned-${perk.rank}`}>
+                            <strong>Rank {perk.rank}:</strong> {perk.description}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
+                  )}
+                  <div className="systems-perk-list">
+                    {prestigeInfo.perks.map((perk) => {
+                      const typeLabel = formatPrestigePerkType(perk.type);
+                      const rankLabel = perk.earned
+                        ? `Rank ${perk.rank} · Earned`
+                        : typeLabel
+                          ? `Rank ${perk.rank} · ${typeLabel}`
+                          : `Rank ${perk.rank}`;
+                      return (
+                        <div key={perk.rank} className={`systems-perk-card ${perk.earned ? "systems-perk-card-earned" : ""}`}>
+                          <span className="systems-perk-rank">{rankLabel}</span>
+                          <span className="systems-perk-desc">{perk.description}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <p className="systems-card-copy">Prestige is currently disabled on this server.</p>
                 </article>
-              )
-            ) : (
-              <p className="empty-note">Prestige data is not available right now.</p>
-            )}
-          </section>
-        )}
+              )}
+            </section>
+          );
+        })()}
 
         {activeView === "currencies" && (
           <section className="systems-section">

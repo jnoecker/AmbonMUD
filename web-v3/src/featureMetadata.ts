@@ -1,5 +1,3 @@
-export const PRESTIGE_MAX_LEVEL = 50;
-
 export const LOTTERY_SETTINGS = {
   ticketCost: 100,
   maxTicketsPerPlayer: 10,
