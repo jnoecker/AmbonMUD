@@ -248,6 +248,21 @@ class GameEngine(
                 // until the first relog. See issue #1045.
                 emitDungeonCatalog(sid)
                 players.get(sid)?.let { p -> emitLotteryInfo(sid, p.name) }
+                // Push daily/weekly/global quest state so the client doesn't
+                // need a manual refresh button. See issue #1091.
+                dailyQuestSystem?.let { dqs ->
+                    dqs.checkReset(sid)
+                    gmcpEmitter.sendDailyQuests(sid, dqs)
+                    gmcpEmitter.sendWeeklyQuests(sid, dqs)
+                }
+                globalQuestSystem?.let { sys ->
+                    val status = sys.getStatus()
+                    if (status != null) {
+                        gmcpEmitter.sendGlobalQuest(sid, status, sys.getPlayerProgress(sid) ?: 0)
+                    } else {
+                        gmcpEmitter.sendGlobalQuestInactive(sid)
+                    }
+                }
             },
             // Only password/create logins need a fresh auth token — the client
             // doesn't have one yet. Auto-relog via Session.Authenticate and

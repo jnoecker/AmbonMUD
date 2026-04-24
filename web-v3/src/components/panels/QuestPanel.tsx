@@ -345,14 +345,7 @@ export function QuestPanel({
           ) : (
             <div className="quest-empty-state">
               <span className="quest-empty-icon">{"\u2726"}</span>
-              <p className="empty-note">No daily quests loaded.</p>
-              <button
-                type="button"
-                className="quest-load-button"
-                onClick={() => onCommand("daily")}
-              >
-                Load Daily Quests
-              </button>
+              <p className="empty-note">No daily quests are available right now.</p>
             </div>
           )}
         </section>
@@ -374,14 +367,7 @@ export function QuestPanel({
           ) : (
             <div className="quest-empty-state">
               <span className="quest-empty-icon">{"\u2726"}</span>
-              <p className="empty-note">No weekly quests loaded.</p>
-              <button
-                type="button"
-                className="quest-load-button"
-                onClick={() => onCommand("weekly")}
-              >
-                Load Weekly Quests
-              </button>
+              <p className="empty-note">No weekly quests are available right now.</p>
             </div>
           )}
         </section>
@@ -511,14 +497,7 @@ export function QuestPanel({
           ) : (
             <div className="quest-empty-state">
               <span className="quest-empty-icon">{"\u2604"}</span>
-              <p className="empty-note">No global quest active.</p>
-              <button
-                type="button"
-                className="quest-load-button"
-                onClick={() => onCommand("globalquest")}
-              >
-                Check Status
-              </button>
+              <p className="empty-note">No global quest is active right now.</p>
             </div>
           )}
         </section>
