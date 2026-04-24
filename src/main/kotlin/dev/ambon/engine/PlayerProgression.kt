@@ -17,7 +17,7 @@ data class LevelUpResult(
 class PlayerProgression(
     private val config: ProgressionConfig = ProgressionConfig(),
     private val classRegistry: PlayerClassRegistry? = null,
-    private val bindings: StatBindingsConfig = StatBindingsConfig(),
+    val bindings: StatBindingsConfig = StatBindingsConfig(),
 ) {
     val maxLevel: Int
         get() = config.maxLevel

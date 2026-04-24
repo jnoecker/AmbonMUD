@@ -6,6 +6,8 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.puzzle.PuzzleReward
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.RoomFeature
+import dev.ambon.engine.LevelUpResult
+import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PuzzleResult
 import dev.ambon.engine.PuzzleSystem
 import dev.ambon.engine.commands.Command
@@ -22,6 +24,8 @@ import dev.ambon.engine.events.OutboundEvent
 class PuzzleHandler(
     private val ctx: EngineContext,
     private val puzzleSystem: PuzzleSystem?,
+    private val progression: PlayerProgression? = null,
+    private val onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null,
 ) : CommandHandler {
     private val world = ctx.world
     private val players = ctx.players
@@ -169,8 +173,24 @@ class PuzzleHandler(
                 outbound.send(OutboundEvent.SendText(sessionId, "You receive ${reward.amount} gold."))
             }
             is PuzzleReward.GiveXp -> {
-                players.grantXp(sessionId, reward.amount)
+                val result = players.grantXp(sessionId, reward.amount, progression)
                 outbound.send(OutboundEvent.SendText(sessionId, "You gain ${reward.amount} XP."))
+                if (result != null && result.levelsGained > 0) {
+                    if (progression != null) {
+                        val message = progression.buildLevelUpMessage(
+                            result,
+                            me.stats[progression.bindings.hpScalingStat],
+                            me.stats[progression.bindings.manaScalingStat],
+                            me.playerClass,
+                        )
+                        outbound.send(OutboundEvent.SendText(sessionId, message))
+                    } else {
+                        outbound.send(
+                            OutboundEvent.SendText(sessionId, "You reached level ${result.newLevel}!"),
+                        )
+                    }
+                    onLevelUp?.invoke(sessionId, result)
+                }
             }
         }
     }

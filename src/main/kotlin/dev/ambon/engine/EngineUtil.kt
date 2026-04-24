@@ -130,6 +130,7 @@ internal suspend fun grantRewards(
     outbound: OutboundBus,
     progression: PlayerProgression? = null,
     sourceLevel: Int? = null,
+    onLevelUp: suspend (LevelUpResult) -> Unit = {},
 ) {
     if (rewards.gold > 0) {
         ps.gold += rewards.gold
@@ -148,8 +149,24 @@ internal suspend fun grantRewards(
                 rewards.xp
             }
         if (effectiveXp > 0) {
-            players.grantXp(sessionId, effectiveXp)
+            val result = players.grantXp(sessionId, effectiveXp, progression)
             outbound.send(OutboundEvent.SendText(sessionId, "You gain $effectiveXp XP."))
+            if (result != null && result.levelsGained > 0) {
+                if (progression != null) {
+                    val message = progression.buildLevelUpMessage(
+                        result,
+                        ps.stats[progression.bindings.hpScalingStat],
+                        ps.stats[progression.bindings.manaScalingStat],
+                        ps.playerClass,
+                    )
+                    outbound.send(OutboundEvent.SendText(sessionId, message))
+                } else {
+                    outbound.send(
+                        OutboundEvent.SendText(sessionId, "You reached level ${result.newLevel}!"),
+                    )
+                }
+                onLevelUp(result)
+            }
         }
     }
 }

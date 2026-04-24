@@ -1089,6 +1089,36 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `autoloot fires onItemAutoLooted callback for each picked-up item`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 1, maxHp = 1)
+            fixture.mobs.upsert(mob)
+            fixture.items.addMobItem(
+                mob.id,
+                ItemInstance(ItemId("demo:tail"), Item(keyword = "tail", displayName = "a rat tail")),
+            )
+            fixture.items.addMobItem(
+                mob.id,
+                ItemInstance(ItemId("demo:ear"), Item(keyword = "ear", displayName = "a rat ear")),
+            )
+
+            val combat = fixture.buildCombat(rng = Random(2))
+            val looted = mutableListOf<ItemInstance>()
+            combat.onItemAutoLooted = { _, item -> looted += item }
+
+            val sid = SessionId(201L)
+            fixture.players.loginOrFail(sid, "Collector")
+            fixture.players.setAutolootEnabled(sid, true)
+
+            assertNull(combat.startCombat(sid, "rat"))
+            fixture.tickCombat(combat)
+
+            val ids = looted.map { it.id.value }.toSet()
+            assertEquals(setOf("demo:tail", "demo:ear"), ids, "Expected both items to fire the callback")
+        }
+
+    @Test
     fun `autoloot also picks up rolled loot-table drops`() =
         runTest {
             val fixture = CombatTestFixture()

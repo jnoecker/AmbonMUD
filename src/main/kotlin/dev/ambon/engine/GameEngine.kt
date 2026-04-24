@@ -919,6 +919,7 @@ class GameEngine(
             gmcpEmitter = gmcpEmitter,
             categoryRegistry = achievementCategoryRegistry,
             spriteRegistry = spriteRegistry,
+            progression = progression,
         )
 
     init {
@@ -991,6 +992,12 @@ class GameEngine(
         questSystem.onQuestCompletedGmcp = { sid, questId, questName ->
             gmcpEmitter.sendQuestComplete(sid, questId, questName)
             sendQuestListGmcp(sid)
+        }
+        questSystem.onLevelUp = ::onCombatLevelUp
+        achievementSystem.onLevelUp = ::onCombatLevelUp
+        combatSystem.onItemAutoLooted = { sid, item ->
+            gmcpEmitter.sendCharItemsAdd(sid, item)
+            questSystem.onItemCollected(sid, item)
         }
         guildSystem?.onGuildCreated = { sid -> achievementSystem.onGuildCreated(sid) }
     }
@@ -1132,7 +1139,12 @@ class GameEngine(
             },
         )
 
-        val puzzleHandlerInstance = PuzzleHandler(ctx = ctx, puzzleSystem = puzzleSystem)
+        val puzzleHandlerInstance = PuzzleHandler(
+            ctx = ctx,
+            puzzleSystem = puzzleSystem,
+            progression = progression,
+            onLevelUp = ::onCombatLevelUp,
+        )
 
         listOf(
             NavigationHandler(

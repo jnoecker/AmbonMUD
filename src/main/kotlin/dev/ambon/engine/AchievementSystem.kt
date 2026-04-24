@@ -20,7 +20,11 @@ class AchievementSystem(
     private val gmcpEmitter: GmcpEmitter? = null,
     private val categoryRegistry: AchievementCategoryRegistry? = null,
     private val spriteRegistry: SpriteRegistry? = null,
+    private val progression: PlayerProgression? = null,
 ) {
+    /** Invoked when an achievement reward grants enough XP to level the player up. */
+    var onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null
+
     /**
      * Called when a player kills a mob. Increments KILL criteria matching [templateKey]
      * (or any mob when targetId is blank).
@@ -295,7 +299,15 @@ class AchievementSystem(
         )
 
         // Grant rewards
-        grantRewards(sessionId, def.rewards, ps, players, outbound)
+        grantRewards(
+            sessionId,
+            def.rewards,
+            ps,
+            players,
+            outbound,
+            progression,
+            onLevelUp = { result -> onLevelUp?.invoke(sessionId, result) },
+        )
         if (def.rewards.title != null) {
             outbound.send(
                 OutboundEvent.SendText(
