@@ -5007,6 +5007,7 @@ body {
   font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition:
     color 170ms var(--ease-out-soft),
@@ -5014,7 +5015,12 @@ body {
 }
 
 .crafting-tab:hover { color: var(--text-primary); }
-.crafting-tab-active { color: var(--text-bright); border-bottom-color: var(--color-primary-lavender); }
+
+.crafting-tab-active {
+  color: var(--text-bright);
+  border-bottom-color: var(--color-primary-lavender);
+  text-shadow: 0 0 10px rgb(168 151 210 / 28%);
+}
 
 .crafting-tab-badge {
   display: inline-flex;
@@ -5030,6 +5036,7 @@ body {
   line-height: 1;
   color: var(--text-white);
   background: linear-gradient(140deg, rgb(141 169 123 / 90%), rgb(110 148 90 / 85%));
+  box-shadow: 0 0 6px rgb(141 169 123 / 32%);
 }
 
 .crafting-section {
@@ -5053,14 +5060,16 @@ body {
 }
 
 .crafting-empty-icon {
-  font-size: 1.6rem;
-  opacity: 0.5;
-  animation: craftingEmptyPulse 3s var(--ease-in-out-smooth) infinite;
+  font-size: 1.8rem;
+  color: var(--color-primary-lavender);
+  opacity: 0.55;
+  text-shadow: 0 0 14px rgb(168 151 210 / 35%);
+  animation: craftingEmptyPulse 3.6s var(--ease-in-out-smooth) infinite;
 }
 
 @keyframes craftingEmptyPulse {
   0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.06); }
+  50% { opacity: 0.75; transform: scale(1.08); }
 }
 
 .crafting-load-btn {
@@ -5091,94 +5100,243 @@ body {
   gap: var(--space-2);
 }
 
-.crafting-skill-item {
+/* ── Card base: shared shell for skill/recipe/node cards ── */
+.crafting-skill-item,
+.crafting-recipe-item,
+.crafting-node-item {
+  position: relative;
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
-  border: 1px solid var(--line-faint);
-  transition: border-color 150ms var(--ease-out-soft);
+  padding-left: calc(var(--space-3) + 3px);
+  border-radius: var(--radius-md);
+  background: linear-gradient(140deg, rgb(70 83 117 / 92%), rgb(60 76 111 / 88%));
+  border: 1px solid rgb(106 96 136 / 16%);
+  box-shadow: inset 0 1px 0 rgb(232 239 255 / 12%);
+  transition:
+    border-color 170ms var(--ease-out-soft),
+    box-shadow 170ms var(--ease-out-soft),
+    transform 170ms var(--ease-out-soft);
 }
 
-.crafting-skill-item:hover {
-  border-color: rgb(168 151 210 / 30%);
+.crafting-skill-item::before,
+.crafting-recipe-item::before,
+.crafting-node-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--color-primary-lavender);
+  opacity: 0.72;
+}
+
+.crafting-skill-item:hover,
+.crafting-recipe-item:hover,
+.crafting-node-item:hover {
+  border-color: rgb(168 151 210 / 34%);
+  transform: translateY(-1px);
+}
+
+/* ── Per-type accents (gathering = moss, crafting = gold) ── */
+.crafting-skill-item-gathering::before,
+.crafting-recipe-item-gathering::before,
+.crafting-node-item::before {
+  background: var(--color-primary-moss-green);
+}
+
+.crafting-skill-item-gathering:hover,
+.crafting-recipe-item-gathering:hover,
+.crafting-node-item:hover {
+  box-shadow: inset 0 1px 0 rgb(232 239 255 / 14%), 0 0 14px rgb(141 169 123 / 18%);
+}
+
+.crafting-skill-item-crafting::before,
+.crafting-recipe-item-crafting::before {
+  background: var(--color-primary-soft-gold);
+}
+
+.crafting-skill-item-crafting:hover,
+.crafting-recipe-item-crafting:hover {
+  box-shadow: inset 0 1px 0 rgb(232 239 255 / 14%), 0 0 14px rgb(190 168 115 / 20%);
+}
+
+/* ── Skill cards ── */
+.crafting-skill-item-max {
+  border-color: rgb(190 168 115 / 36%);
+  box-shadow:
+    inset 0 1px 0 rgb(232 239 255 / 14%),
+    0 0 16px rgb(190 168 115 / 18%);
 }
 
 .crafting-skill-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--space-2);
 }
 
 .crafting-skill-name {
+  font-family: var(--font-display);
   font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.85rem;
+  color: var(--text-heading);
+  font-size: 0.94rem;
+  letter-spacing: 0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
 }
 
-.crafting-skill-type {
+.crafting-skill-chip {
   flex-shrink: 0;
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  opacity: 0.7;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.crafting-skill-chip-gathering {
+  color: var(--color-primary-moss-green);
+  background: rgb(141 169 123 / 14%);
+  border-color: rgb(141 169 123 / 32%);
+}
+
+.crafting-skill-chip-crafting {
+  color: var(--color-primary-soft-gold);
+  background: rgb(190 168 115 / 14%);
+  border-color: rgb(190 168 115 / 32%);
 }
 
 .crafting-skill-level {
-  font-size: 0.78rem;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 0 4px;
+  font-size: 0.76rem;
   color: var(--text-secondary);
-  margin: 4px 0;
+}
+
+.crafting-skill-level-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-disabled);
+}
+
+.crafting-skill-level-value {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.crafting-skill-level-max {
+  color: var(--text-disabled);
+  font-weight: 500;
+}
+
+.crafting-skill-max-badge {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary-soft-gold);
+  background: rgb(190 168 115 / 14%);
+  border: 1px solid rgb(190 168 115 / 40%);
+  box-shadow: 0 0 8px rgb(190 168 115 / 22%);
 }
 
 .crafting-xp-bar-track {
   height: 6px;
   border-radius: 3px;
-  background: var(--bg-secondary);
+  background: rgb(18 22 34 / 48%);
   overflow: hidden;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 24%);
 }
 
 .crafting-xp-bar-fill {
   height: 100%;
   border-radius: 3px;
   background: linear-gradient(90deg, var(--color-primary-lavender), var(--color-primary-pale-blue));
-  transition: width 300ms var(--ease-out-soft);
+  box-shadow: 0 0 6px rgb(168 151 210 / 36%);
+  transition: width 360ms var(--ease-out-soft);
+}
+
+.crafting-xp-bar-fill-gathering {
+  background: linear-gradient(90deg, var(--color-primary-moss-green), var(--color-primary-pale-blue));
+  box-shadow: 0 0 6px rgb(141 169 123 / 36%);
+}
+
+.crafting-xp-bar-fill-crafting {
+  background: linear-gradient(90deg, var(--color-primary-soft-gold), var(--color-primary-dusty-rose));
+  box-shadow: 0 0 6px rgb(190 168 115 / 36%);
 }
 
 .crafting-xp-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
-  margin-top: 2px;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
-.crafting-recipe-item {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
-  border: 1px solid var(--line-faint);
-  transition: border-color 150ms var(--ease-out-soft);
+/* ── Recipe cards ── */
+.crafting-recipe-item-locked {
+  opacity: 0.62;
 }
 
-.crafting-recipe-item:hover {
-  border-color: rgb(168 151 210 / 30%);
+.crafting-recipe-item-locked:hover {
+  opacity: 0.8;
 }
 
 .crafting-recipe-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--space-2);
   margin-bottom: 4px;
 }
 
 .crafting-recipe-name {
+  font-family: var(--font-display);
   font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.85rem;
+  color: var(--text-heading);
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+}
+
+.crafting-recipe-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.crafting-recipe-req {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: rgb(255 255 255 / 5%);
+  border: 1px solid rgb(255 255 255 / 6%);
+}
+
+.crafting-req-unmet {
+  color: var(--color-primary-dusty-rose);
+  background: rgb(184 143 170 / 14%);
+  border-color: rgb(184 143 170 / 34%);
 }
 
 .crafting-craft-button,
@@ -5192,7 +5350,8 @@ body {
   color: var(--color-hp-light);
   font-family: var(--font-body);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition:
     background 180ms var(--ease-out-soft),
@@ -5204,9 +5363,9 @@ body {
 
 .crafting-craft-button:hover,
 .crafting-gather-button:hover {
-  background: linear-gradient(140deg, rgb(110 145 95 / 50%), rgb(95 130 78 / 40%));
-  border-color: rgb(141 169 123 / 64%);
-  box-shadow: 0 0 10px rgb(141 169 123 / 20%);
+  background: linear-gradient(140deg, rgb(110 145 95 / 55%), rgb(95 130 78 / 45%));
+  border-color: rgb(141 169 123 / 72%);
+  box-shadow: 0 0 12px rgb(141 169 123 / 28%);
   color: var(--text-bright);
   transform: translateY(-1px);
 }
@@ -5224,7 +5383,7 @@ body {
 }
 
 .crafting-gather-button-cooldown:disabled {
-  opacity: 0.78;
+  opacity: 0.82;
   background: color-mix(in srgb, var(--color-accent-lavender) 28%, var(--surface-2));
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
@@ -5270,18 +5429,6 @@ body {
   }
 }
 
-.crafting-recipe-meta {
-  display: flex;
-  gap: var(--space-2);
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-
-.crafting-req-unmet {
-  color: var(--color-primary-dusty-rose);
-}
-
 .crafting-recipe-materials {
   display: flex;
   flex-wrap: wrap;
@@ -5292,56 +5439,102 @@ body {
 }
 
 .crafting-material {
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-chip);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgb(130 164 199 / 12%);
+  border: 1px solid rgb(130 164 199 / 24%);
+  color: var(--text-primary);
   font-size: 0.72rem;
 }
 
-.crafting-recipe-arrow {
+.crafting-material-name {
+  font-weight: 500;
+}
+
+.crafting-material-qty {
   color: var(--text-secondary);
-  opacity: 0.5;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+}
+
+.crafting-recipe-arrow {
+  color: var(--color-primary-lavender);
+  opacity: 0.7;
+  font-size: 0.82rem;
+  letter-spacing: -0.02em;
+  padding: 0 2px;
+  text-shadow: 0 0 6px rgb(168 151 210 / 32%);
 }
 
 .crafting-recipe-output {
-  color: var(--color-primary-lavender);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(190 168 115 / 16%);
+  border: 1px solid rgb(190 168 115 / 40%);
+  color: var(--color-primary-soft-gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 0 8px rgb(190 168 115 / 22%);
+}
+
+.crafting-recipe-output-qty {
+  color: var(--color-primary-soft-gold);
+  opacity: 0.78;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
   font-weight: 600;
 }
 
+/* ── Node cards ── */
 .crafting-node-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
-  border: 1px solid var(--line-faint);
-  transition: border-color 150ms var(--ease-out-soft);
 }
 
-.crafting-node-item:hover {
-  border-color: rgb(168 151 210 / 30%);
+.crafting-node-item-locked {
+  opacity: 0.62;
+}
+
+.crafting-node-item-locked:hover {
+  opacity: 0.8;
 }
 
 .crafting-node-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
 .crafting-node-name {
+  font-family: var(--font-display);
   font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.85rem;
+  color: var(--text-heading);
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .crafting-node-skill {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--color-primary-moss-green);
+  background: rgb(141 169 123 / 14%);
+  border: 1px solid rgb(141 169 123 / 30%);
+  align-self: flex-start;
 }
 
 @media (prefers-reduced-motion: reduce) {
