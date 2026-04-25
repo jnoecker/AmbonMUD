@@ -1205,12 +1205,24 @@ class GmcpEmitterTest {
     fun `sendQuestComplete emits correct JSON`() =
         runTest {
             val e = emitter("Quest")
-            e.sendQuestComplete(sid, "slay_goblins", "Goblin Menace")
+            e.sendQuestComplete(
+                sid,
+                "slay_goblins",
+                "Goblin Menace",
+                "Slay 5 goblins for the captain.",
+                rewardXp = 250L,
+                rewardGold = 30L,
+                rewardCurrencies = mapOf("honor" to 5L),
+            )
             val events = drainGmcp()
             assertEquals(1, events.size)
             assertEquals("Quest.Complete", events[0].gmcpPackage)
             assertTrue(events[0].jsonData.contains("\"questId\":\"slay_goblins\""))
             assertTrue(events[0].jsonData.contains("\"questName\":\"Goblin Menace\""))
+            assertTrue(events[0].jsonData.contains("\"questDescription\":\"Slay 5 goblins for the captain.\""))
+            assertTrue(events[0].jsonData.contains("\"xp\":250"))
+            assertTrue(events[0].jsonData.contains("\"gold\":30"))
+            assertTrue(events[0].jsonData.contains("\"honor\":5"))
         }
 
     @Test
@@ -1219,7 +1231,7 @@ class GmcpEmitterTest {
             val e = emitter()
             e.sendQuestList(sid, emptyList())
             e.sendQuestUpdate(sid, "q", 0, 1, 5, readyToTurnIn = false)
-            e.sendQuestComplete(sid, "q", "Q")
+            e.sendQuestComplete(sid, "q", "Q", "", 0L, 0L, emptyMap())
             assertTrue(drainGmcp().isEmpty())
         }
 

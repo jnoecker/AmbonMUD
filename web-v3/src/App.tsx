@@ -28,6 +28,7 @@ import { CombatLogPanel } from "./components/panels/CombatLogPanel";
 import { WorldAtmosphereHud } from "./components/WorldAtmosphereHud";
 import { HelpContent } from "./components/HelpContent";
 import { LevelUpBanner } from "./components/LevelUpBanner";
+import { QuestCompleteToast } from "./components/QuestCompleteToast";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
 import { CommandPalette } from "./components/CommandPalette";
@@ -1358,6 +1359,14 @@ function App() {
       <LevelUpBanner
         notification={state.levelUpNotification}
         onDismiss={() => state.setLevelUpNotification(null)}
+      />
+
+      {/* Quest turn-in summary toast — shows quest name + rewards. */}
+      <QuestCompleteToast
+        notifications={state.questNotifications}
+        onDismiss={(id) =>
+          state.setQuestNotifications((prev) => prev.filter((n) => n.id !== id))
+        }
       />
 
       {/* Server broadcast */}

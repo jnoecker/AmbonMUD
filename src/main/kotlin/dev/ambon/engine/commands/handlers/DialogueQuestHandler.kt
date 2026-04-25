@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.quest.QuestDef
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.AchievementSystem
 import dev.ambon.engine.HouseEntryResult
@@ -240,7 +241,20 @@ class DialogueQuestHandler(
         val qs = requireSystemOrNull(sessionId, questSystem, "Quests", outbound) ?: return
         val me = players.get(sessionId) ?: return
         val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }
-        outbound.sendIfError(sessionId, qs.turnInQuest(sessionId, cmd.nameHint, roomMobIds))
+        // Resolve the quest from the hint up front so we can refresh offers
+        // for the right NPC after a successful turn-in.
+        val matched = me.activeQuests.keys
+            .mapNotNull(questRegistry::get)
+            .firstOrNull { quest ->
+                val lower = cmd.nameHint.trim().lowercase()
+                quest.name.lowercase().contains(lower) || quest.id.lowercase().contains(lower)
+            }
+        val err = qs.turnInQuest(sessionId, cmd.nameHint, roomMobIds)
+        if (err != null) {
+            outbound.send(OutboundEvent.SendError(sessionId, err))
+            return
+        }
+        refreshOffersAfterTurnIn(sessionId, qs, matched, roomMobIds)
     }
 
     private suspend fun handleQuestTurnInById(
@@ -250,7 +264,30 @@ class DialogueQuestHandler(
         val qs = requireSystemOrNull(sessionId, questSystem, "Quests", outbound) ?: return
         val me = players.get(sessionId) ?: return
         val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }
-        outbound.sendIfError(sessionId, qs.turnInQuestById(sessionId, cmd.questId, roomMobIds))
+        val quest = questRegistry.get(cmd.questId)
+        val err = qs.turnInQuestById(sessionId, cmd.questId, roomMobIds)
+        if (err != null) {
+            outbound.send(OutboundEvent.SendError(sessionId, err))
+            return
+        }
+        refreshOffersAfterTurnIn(sessionId, qs, quest, roomMobIds)
+    }
+
+    /**
+     * Re-emit `Quest.Available` for the resolved turn-in NPC after a successful
+     * turn-in so an open QuestOfferPanel reflects the post-turn-in state
+     * (otherwise it keeps showing the now-completed quest with its Turn In
+     * button).
+     */
+    private suspend fun refreshOffersAfterTurnIn(
+        sessionId: SessionId,
+        qs: QuestSystem,
+        quest: QuestDef?,
+        roomMobIds: Collection<String>,
+    ) {
+        val turnInMobId = (quest?.turnInMobId ?: quest?.giverMobId) ?: return
+        if (turnInMobId !in roomMobIds) return
+        gmcpEmitter?.sendQuestAvailable(sessionId, qs.questOffersFor(sessionId, turnInMobId))
     }
 
     private suspend fun handleAchievementList(sessionId: SessionId) {

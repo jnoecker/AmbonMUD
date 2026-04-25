@@ -576,6 +576,13 @@ export interface QuestNotification {
   questName: string;
   event: "complete" | "update";
   receivedAt: number;
+  // Populated for "complete" events; null/empty for "update".
+  questDescription?: string;
+  rewards?: {
+    xp: number;
+    gold: number;
+    currencies: Record<string, number>;
+  };
 }
 
 export interface QuestAvailableObjective {

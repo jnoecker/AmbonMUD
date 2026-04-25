@@ -35,7 +35,7 @@ class QuestSystem(
     /** Invoked to emit quest GMCP; set by GameEngine during wiring. */
     var onQuestListChanged: (suspend (SessionId) -> Unit)? = null
     var onQuestObjectiveUpdated: (suspend (SessionId, String, Int, Int, Int, Boolean) -> Unit)? = null
-    var onQuestCompletedGmcp: (suspend (SessionId, String, String) -> Unit)? = null
+    var onQuestCompletedGmcp: (suspend (SessionId, QuestCompletionSummary) -> Unit)? = null
 
     /** Invoked when a quest reward grants enough XP to level the player up. */
     var onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null
@@ -551,13 +551,9 @@ class QuestSystem(
         ps.activeQuests = ps.activeQuests - questId
         ps.completedQuestIds = ps.completedQuestIds + questId
 
-        outbound.send(OutboundEvent.SendInfo(sessionId, "Quest complete: ${quest.name}!"))
-        onQuestCompletedGmcp?.invoke(sessionId, questId, quest.name)
-        onQuestCompleted?.invoke(sessionId, questId)
-
-        // Zone scaling (phase 4): if the quest's zone declares non-STATIC scaling,
-        // the "effective level" for XP computation and diminishing tracks the
-        // player's current level instead of the authored quest level.
+        // Compute effective rewards up front so the GMCP completion payload
+        // (and the client's reward popup) can show the values the player
+        // actually receives — including any zone-scaled XP override.
         val zoneScaling = world?.zoneScaling(idZone(quest.id))
         val effectiveLevel = when {
             zoneScaling == null -> quest.level ?: ps.level
@@ -572,6 +568,20 @@ class QuestSystem(
             } else {
                 rewards
             }
+
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Quest complete: ${quest.name}!"))
+        onQuestCompletedGmcp?.invoke(
+            sessionId,
+            QuestCompletionSummary(
+                questId = questId,
+                questName = quest.name,
+                questDescription = quest.description,
+                rewardXp = effectiveRewards.xp,
+                rewardGold = effectiveRewards.gold,
+                rewardCurrencies = effectiveRewards.currencies,
+            ),
+        )
+        onQuestCompleted?.invoke(sessionId, questId)
 
         // Diminishing applies in STATIC zones only. In BOUNDED / PLAYER zones
         // the content is already scaled to the player, so charging an additional
