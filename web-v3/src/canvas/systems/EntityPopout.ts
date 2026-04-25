@@ -1,5 +1,5 @@
 import { Container, Graphics, Text, Sprite, Texture, Assets, Rectangle } from "pixi.js";
-import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
+import { canvasCallbacks } from "../GameStateBridge";
 
 const POPOUT_WIDTH = 240;
 const POPOUT_PADDING = 12;
@@ -81,27 +81,19 @@ export class EntityPopout {
     const isNpc = info?.shopKeeper || info?.questGiver || info?.dialogue;
     const isAggressive = info?.aggressive === true;
 
-    // Primary interaction first based on mob role
+    // Quest button: opens the per-NPC offer panel via the `__quest_offers__:`
+    // marker (handled below). The panel surfaces both available and
+    // ready-to-turn-in quests; the label/color reflect whichever state is
+    // more urgent (turn-ins outrank fresh offers).
     if (info?.questComplete) {
-      const readyQuest = info?.id
-        ? gameStateRef.current.quests.find(
-            (q) => q.giverMobId === info.id && q.readyToTurnIn === true,
-          )
-        : undefined;
-      const turnInCommand = readyQuest ? `quest turnin ${readyQuest.name}` : `talk ${name}`;
-      actions.push({ label: "\u2605 Turn In Quest", command: turnInCommand, color: 0xf0c674 });
+      actions.push({ label: "\u2605 Turn In Quest", command: `__quest_offers__:${name}`, color: 0xf0c674 });
     } else if (info?.questAvailable) {
-      // Server resolves `accept <mob>` to the first available quest from that mob,
-      // so we skip opening the dialogue panel just to click an Accept button inside.
-      actions.push({ label: "\u2605 Accept Quest", command: `accept ${name}`, color: 0x5a8a6a });
-    } else if (info?.questGiver) {
-      // Quest giver with no active quest — still show talk with quest styling
-      actions.push({ label: "\u2605 Quests", command: `talk ${name}`, color: 0x8a9a6a });
+      actions.push({ label: "\u2605 Quest", command: `__quest_offers__:${name}`, color: 0x5a8a6a });
     }
-    if (info?.shopKeeper) actions.push({ label: "Browse Shop", command: `__shop__:list`, color: 0x81a2be });
-    if (info?.dialogue && !info?.questComplete && !info?.questAvailable && !info?.questGiver) {
+    if (info?.dialogue) {
       actions.push({ label: "Talk", command: `talk ${name}`, color: 0xb9aed8 });
     }
+    if (info?.shopKeeper) actions.push({ label: "Browse Shop", command: `__shop__:list`, color: 0x81a2be });
 
     // Attack — prominent for aggressive/combat mobs, available for all
     if (isAggressive || !isNpc) {
@@ -285,6 +277,8 @@ export class EntityPopout {
         } else if (cmd.startsWith("__shop__:")) {
           canvasCallbacks.sendCommand?.(cmd.slice("__shop__:".length));
           canvasCallbacks.openShop?.();
+        } else if (cmd.startsWith("__quest_offers__:")) {
+          canvasCallbacks.openQuestOffers?.(cmd.slice("__quest_offers__:".length));
         } else {
           canvasCallbacks.sendCommand?.(cmd);
         }

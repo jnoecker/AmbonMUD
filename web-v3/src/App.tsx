@@ -11,6 +11,7 @@ import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
 import { QuestPanel } from "./components/panels/QuestPanel";
+import { QuestOfferPanel } from "./components/panels/QuestOfferPanel";
 import { InventoryPanel } from "./components/panels/InventoryPanel";
 import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { MailPanel } from "./components/panels/MailPanel";
@@ -359,7 +360,10 @@ function App() {
       // input would still resolve to a DialogueChoice on the server.
       if (gameStateRef.current.dialogue) sendCommand("bye");
       state.setDialogue(null);
-      state.setQuestsAvailable([]);
+    };
+    canvasCallbacks.openQuestOffers = (mobKeyword: string) => {
+      sendCommand(`qoffers ${mobKeyword}`);
+      openPanel("questOffers");
     };
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
     canvasCallbacks.prefillCommand = (text: string) => prefillInput(text);
@@ -380,6 +384,7 @@ function App() {
       canvasCallbacks.openRoom = null;
       canvasCallbacks.openQuests = null;
       canvasCallbacks.dismissDialogue = null;
+      canvasCallbacks.openQuestOffers = null;
       canvasCallbacks.openVideo = null;
       canvasCallbacks.prefillCommand = null;
     };
@@ -625,6 +630,7 @@ function App() {
       case "equipment": return "Equipment";
       case "spellbook": return "Spellbook";
       case "quests": return "Quests";
+      case "questOffers": return "Quest Offers";
       case "chat": return "Social";
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
@@ -889,6 +895,15 @@ function App() {
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
             onAcceptQuest={(name) => sendCommand(`accept ${name}`)}
             onCommand={sendCommand}
+          />
+        )}
+
+        {drawerPanel === "questOffers" && (
+          <QuestOfferPanel
+            connected={connected}
+            questsAvailable={state.questsAvailable}
+            onAcceptQuest={(questId) => sendCommand(`accept #${questId}`)}
+            onTurnInQuest={(questId) => sendCommand(`quest turnin #${questId}`)}
           />
         )}
 
