@@ -1029,9 +1029,21 @@ class GameEngine(
         }
         questSystem.onQuestObjectiveUpdated = { sid, questId, objIndex, current, required, readyToTurnIn ->
             gmcpEmitter.sendQuestUpdate(sid, questId, objIndex, current, required, readyToTurnIn)
+            // When the final objective ticks over to complete, the resolved
+            // turn-in NPC's `questComplete` flag flips — refresh so the popout
+            // and canvas indicator pick it up without a room exit/enter.
+            if (readyToTurnIn) refreshRoomMobInfoForPlayer(sid)
         }
-        questSystem.onQuestCompletedGmcp = { sid, questId, questName ->
-            gmcpEmitter.sendQuestComplete(sid, questId, questName)
+        questSystem.onQuestCompletedGmcp = { sid, summary ->
+            gmcpEmitter.sendQuestComplete(
+                sid,
+                summary.questId,
+                summary.questName,
+                summary.questDescription,
+                summary.rewardXp,
+                summary.rewardGold,
+                summary.rewardCurrencies,
+            )
             sendQuestListGmcp(sid)
             refreshRoomMobInfoForPlayer(sid)
         }

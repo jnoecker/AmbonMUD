@@ -1056,11 +1056,24 @@ class GmcpEmitter(
         sessionId: SessionId,
         questId: String,
         questName: String,
+        questDescription: String,
+        rewardXp: Long,
+        rewardGold: Long,
+        rewardCurrencies: Map<String, Long>,
     ) {
         emit(
             sessionId,
             "Quest.Complete",
-            QuestCompletePayload(questId = questId, questName = questName),
+            QuestCompletePayload(
+                questId = questId,
+                questName = questName,
+                questDescription = questDescription,
+                rewards = QuestAvailableRewardsPayload(
+                    xp = rewardXp,
+                    gold = rewardGold,
+                    currencies = rewardCurrencies,
+                ),
+            ),
             supportCheck = "Quest",
         )
     }
@@ -2635,6 +2648,8 @@ class GmcpEmitter(
     private data class QuestCompletePayload(
         val questId: String,
         val questName: String,
+        val questDescription: String,
+        val rewards: QuestAvailableRewardsPayload,
     )
 
     private data class QuestAvailablePayload(
@@ -3444,6 +3459,15 @@ data class ReputationRequirementSummary(
     val factionName: String,
     val min: Int? = null,
     val max: Int? = null,
+)
+
+data class QuestCompletionSummary(
+    val questId: String,
+    val questName: String,
+    val questDescription: String,
+    val rewardXp: Long,
+    val rewardGold: Long,
+    val rewardCurrencies: Map<String, Long>,
 )
 
 data class MobInfoEntry(

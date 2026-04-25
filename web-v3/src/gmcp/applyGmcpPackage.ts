@@ -1039,13 +1039,34 @@ export function applyGmcpPackage(
       const questId = typeof packet.questId === "string" ? packet.questId : null;
       if (!questId) break;
       const questName = typeof packet.questName === "string" ? packet.questName : "Quest";
+      const questDescription = typeof packet.questDescription === "string" ? packet.questDescription : "";
+      const rewardsRaw = typeof packet.rewards === "object" && packet.rewards !== null
+        ? packet.rewards as Record<string, unknown>
+        : {};
+      const currenciesRaw = typeof rewardsRaw.currencies === "object" && rewardsRaw.currencies !== null
+        ? rewardsRaw.currencies as Record<string, unknown>
+        : {};
+      const currencies: Record<string, number> = {};
+      for (const [k, v] of Object.entries(currenciesRaw)) {
+        currencies[k] = safeNumber(v);
+      }
       ctx.setQuests((prev) => prev.filter((q) => q.id !== questId));
+      // Drop the completed quest from any open offer panel so its Turn In
+      // card disappears the moment Quest.Complete arrives, even before the
+      // server's follow-up Quest.Available re-emit lands.
+      ctx.setQuestsAvailable((prev) => prev.filter((q) => q.id !== questId));
       ctx.pushQuestNotification({
         id: `${Date.now()}-${Math.random()}`,
         questId,
         questName,
         event: "complete",
         receivedAt: Date.now(),
+        questDescription,
+        rewards: {
+          xp: safeNumber(rewardsRaw.xp),
+          gold: safeNumber(rewardsRaw.gold),
+          currencies,
+        },
       });
       break;
     }
