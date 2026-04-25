@@ -351,6 +351,7 @@ internal suspend fun sendLook(
         housingOwner = housingOwner,
         pvpEnabled = isPvpZone,
         trainerName = trainerHere?.name,
+        lastDeathZone = me.lastDeathZone,
     )
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)

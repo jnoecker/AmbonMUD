@@ -267,6 +267,68 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendRoomInfo emits canDepart=true when at sanctum with lastDeathZone`() =
+        runTest {
+            val sanctum = RoomId("hub:sanctum")
+            val packages = setOf("Room.Info")
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg ->
+                        packages.any { s -> pkg == s || pkg.startsWith("$s.") }
+                    },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    sanctumRoomId = { sanctum },
+                )
+            val sanctumRoom = Room(id = sanctum, title = "Sanctum", description = "Quiet.", exits = emptyMap())
+            e.sendRoomInfo(sid, sanctumRoom, lastDeathZone = "forest")
+            val data = drainGmcp().single()
+            assertTrue(data.jsonData.contains("\"canDepart\":true"))
+        }
+
+    @Test
+    fun `sendRoomInfo emits canDepart=false when at sanctum but no death recorded`() =
+        runTest {
+            val sanctum = RoomId("hub:sanctum")
+            val packages = setOf("Room.Info")
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg ->
+                        packages.any { s -> pkg == s || pkg.startsWith("$s.") }
+                    },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    sanctumRoomId = { sanctum },
+                )
+            val sanctumRoom = Room(id = sanctum, title = "Sanctum", description = "Quiet.", exits = emptyMap())
+            e.sendRoomInfo(sid, sanctumRoom, lastDeathZone = null)
+            val data = drainGmcp().single()
+            assertTrue(data.jsonData.contains("\"canDepart\":false"))
+        }
+
+    @Test
+    fun `sendRoomInfo emits canDepart=false when not at sanctum even with lastDeathZone`() =
+        runTest {
+            val sanctum = RoomId("hub:sanctum")
+            val packages = setOf("Room.Info")
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg ->
+                        packages.any { s -> pkg == s || pkg.startsWith("$s.") }
+                    },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    sanctumRoomId = { sanctum },
+                )
+            e.sendRoomInfo(sid, room(), lastDeathZone = "forest")
+            val data = drainGmcp().single()
+            assertTrue(data.jsonData.contains("\"canDepart\":false"))
+        }
+
+    @Test
     fun `sendRoomInfo JSON-escapes special characters`() =
         runTest {
             val e = emitter("Room.Info")

@@ -69,6 +69,7 @@ class GmcpEventHandler(
                     room,
                     pvpEnabled = world.isZonePvpEnabled(room.id.zone),
                     trainerName = trainerRegistry?.trainerInRoom(room.id)?.name,
+                    lastDeathZone = player.lastDeathZone,
                 )
                 gmcpEmitter.sendZoneEnvironment(
                     sid,

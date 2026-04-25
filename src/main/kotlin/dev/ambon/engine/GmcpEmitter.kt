@@ -90,6 +90,7 @@ class GmcpEmitter(
     private val prestigePerkPayloads: (currentRank: Int, maxRank: Int) -> List<PrestigePerkPayload> = { _, _ -> emptyList() },
     private val environmentConfig: dev.ambon.config.EnvironmentConfig = dev.ambon.config.EnvironmentConfig(),
     private val featureFlags: () -> ServerFeaturesPayload = { ServerFeaturesPayload() },
+    private val sanctumRoomId: () -> RoomId? = { null },
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -191,7 +192,9 @@ class GmcpEmitter(
         housingOwner: String? = null,
         pvpEnabled: Boolean = false,
         trainerName: String? = null,
+        lastDeathZone: String? = null,
     ) {
+        val canDepart = lastDeathZone != null && sanctumRoomId() == room.id
         emit(
             sessionId,
             "Room.Info",
@@ -220,6 +223,7 @@ class GmcpEmitter(
                 dungeon = room.dungeon,
                 auction = room.auction,
                 housingBroker = room.housingBroker,
+                canDepart = canDepart,
             ),
         )
     }
@@ -2245,6 +2249,7 @@ class GmcpEmitter(
         val dungeon: Boolean = false,
         val auction: Boolean = false,
         val housingBroker: Boolean = false,
+        val canDepart: Boolean = false,
     )
 
     private data class ItemPayload(

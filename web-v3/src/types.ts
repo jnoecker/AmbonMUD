@@ -218,6 +218,8 @@ export interface RoomState {
   dungeon?: boolean;
   auction?: boolean;
   housingBroker?: boolean;
+  /** True when this is the death sanctum and the player has somewhere to depart back to. */
+  canDepart?: boolean;
 }
 
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */

@@ -1008,6 +1008,19 @@ function App() {
                 </>
               )}
             </div>
+            {state.room.canDepart && (
+              <div className="room-popout-depart">
+                <button
+                  type="button"
+                  className="room-depart-btn"
+                  title="Return to where you fell"
+                  aria-label="Depart from the sanctum"
+                  onClick={() => sendCommand("depart")}
+                >
+                  Depart through the spirit gate
+                </button>
+              </div>
+            )}
             {(state.room.station || state.craftingNodes.length > 0) && (
               <div className="room-resources-section">
                 {state.room.station && (
