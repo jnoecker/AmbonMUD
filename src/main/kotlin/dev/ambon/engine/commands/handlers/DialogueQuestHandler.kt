@@ -5,8 +5,6 @@ import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.AchievementSystem
 import dev.ambon.engine.HouseEntryResult
 import dev.ambon.engine.HousingSystem
-import dev.ambon.engine.QuestAvailableEntry
-import dev.ambon.engine.QuestAvailableObjectiveSummary
 import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.commands.Command
@@ -28,7 +26,6 @@ class DialogueQuestHandler(
 ) : CommandHandler {
     private val players = ctx.players
     private val mobs = ctx.mobs
-    private val world = ctx.world
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
 
@@ -40,7 +37,10 @@ class DialogueQuestHandler(
         router.on<Command.QuestInfo> { sid, cmd -> handleQuestInfo(sid, cmd) }
         router.on<Command.QuestAbandon> { sid, cmd -> handleQuestAbandon(sid, cmd) }
         router.on<Command.QuestAccept> { sid, cmd -> handleQuestAccept(sid, cmd) }
+        router.on<Command.QuestAcceptById> { sid, cmd -> handleQuestAcceptById(sid, cmd) }
         router.on<Command.QuestTurnIn> { sid, cmd -> handleQuestTurnIn(sid, cmd) }
+        router.on<Command.QuestTurnInById> { sid, cmd -> handleQuestTurnInById(sid, cmd) }
+        router.on<Command.QuestOffers> { sid, cmd -> handleQuestOffers(sid, cmd) }
         router.on<Command.AchievementList> { sid, _ -> handleAchievementList(sid) }
         router.on<Command.TitleSet> { sid, cmd -> handleTitleSet(sid, cmd) }
         router.on<Command.TitleClear> { sid, _ -> handleTitleClear(sid) }
@@ -50,60 +50,40 @@ class DialogueQuestHandler(
         sessionId: SessionId,
         cmd: Command.Talk,
     ) {
-        val me = players.get(sessionId)
         if (dialogueSystem == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Nobody here wants to talk."))
             return
         }
         outbound.sendIfError(sessionId, dialogueSystem.startConversation(sessionId, cmd.target))
-        if (questSystem != null && me != null) {
-            val mob = mobs.findInRoomByKeyword(me.roomId, cmd.target.trim()).firstOrNull()
-            if (mob != null) {
-                val readyForTurnIn = me.activeQuests
-                    .mapNotNull { (qid, state) ->
-                        val def = questRegistry.get(qid) ?: return@mapNotNull null
-                        if (def.giverMobId != mob.id.value) return@mapNotNull null
-                        if (!questSystem.isReadyToTurnIn(def, state)) return@mapNotNull null
-                        def
-                    }
-                for (quest in readyForTurnIn) {
-                    outbound.send(OutboundEvent.SendText(sessionId, "[Quest] ${quest.name} — ready to turn in."))
-                    outbound.send(OutboundEvent.SendText(sessionId, "  Type 'quest turnin ${quest.name}' to complete."))
-                }
-                val available = questSystem.availableQuests(sessionId, mob.id.value)
-                for (quest in available) {
-                    outbound.send(OutboundEvent.SendText(sessionId, "[Quest] ${quest.name} — ${quest.description}"))
-                    outbound.send(OutboundEvent.SendText(sessionId, "  Type 'accept ${quest.name}' to accept."))
-                }
-                for (quest in questSystem.hintedQuests(sessionId, mob.id.value)) {
-                    outbound.send(
-                        OutboundEvent.SendText(
-                            sessionId,
-                            "[Quest] ${quest.name} — your standing is too low to take this on yet.",
-                        ),
-                    )
-                }
-                gmcpEmitter?.sendQuestAvailable(
-                    sessionId,
-                    available.map { quest ->
-                        QuestAvailableEntry(
-                            id = quest.id,
-                            name = quest.name,
-                            description = quest.description,
-                            giverMobId = quest.giverMobId,
-                            objectives = quest.objectives.map { obj ->
-                                QuestAvailableObjectiveSummary(
-                                    description = obj.description,
-                                    count = obj.count,
-                                )
-                            },
-                            rewardXp = quest.rewards.xp,
-                            rewardGold = quest.rewards.gold,
-                        )
-                    },
-                )
-            }
+    }
+
+    private suspend fun handleQuestOffers(
+        sessionId: SessionId,
+        cmd: Command.QuestOffers,
+    ) {
+        val qs = requireSystemOrNull(sessionId, questSystem, "Quests", outbound) ?: return
+        val me = players.get(sessionId) ?: return
+        val mob = mobs.findInRoomByKeyword(me.roomId, cmd.mobKeyword.trim()).firstOrNull()
+        if (mob == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see anyone like that here."))
+            return
         }
+        val offers = qs.questOffersFor(sessionId, mob.id.value)
+        if (offers.isEmpty()) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "${mob.name} has no quests for you."))
+            // Still emit so the client can dismiss any open panel.
+            gmcpEmitter?.sendQuestAvailable(sessionId, emptyList())
+            return
+        }
+        for (entry in offers) {
+            val tag = when {
+                entry.readyToTurnIn -> "ready to turn in"
+                entry.lockedReason != null -> entry.lockedReason
+                else -> entry.description
+            }
+            outbound.send(OutboundEvent.SendText(sessionId, "[Quest] ${entry.name} — $tag"))
+        }
+        gmcpEmitter?.sendQuestAvailable(sessionId, offers)
     }
 
     private suspend fun handleDialogueChoice(
@@ -199,23 +179,13 @@ class DialogueQuestHandler(
         players.withPlayer(sessionId) { me ->
             val nameHintLower = cmd.nameHint.trim().lowercase()
             val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }.toSet()
-            // First try matching the hint against quest names/ids.
-            var matchingQuest =
+            val matchingQuest =
                 questRegistry
                     .all()
                     .filter { quest ->
                         quest.name.lowercase().contains(nameHintLower) ||
                             quest.id.substringAfterLast(':').lowercase().contains(nameHintLower)
                     }.firstOrNull { quest -> quest.giverMobId in roomMobIds }
-            // Fall back to matching the hint against a room mob — pick the first
-            // quest that mob currently offers the player. This lets clients invoke
-            // `accept <mob>` straight from a popout without first opening dialogue.
-            if (matchingQuest == null) {
-                val mobMatch = mobs.findInRoomByKeyword(me.roomId, cmd.nameHint.trim()).firstOrNull()
-                if (mobMatch != null) {
-                    matchingQuest = qs.availableQuests(sessionId, mobMatch.id.value).firstOrNull()
-                }
-            }
             if (matchingQuest == null) {
                 outbound.send(
                     OutboundEvent.SendError(
@@ -229,6 +199,25 @@ class DialogueQuestHandler(
         }
     }
 
+    private suspend fun handleQuestAcceptById(
+        sessionId: SessionId,
+        cmd: Command.QuestAcceptById,
+    ) {
+        val qs = requireSystemOrNull(sessionId, questSystem, "Quests", outbound) ?: return
+        val me = players.get(sessionId) ?: return
+        val quest = questRegistry.get(cmd.questId)
+        if (quest == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Unknown quest '${cmd.questId}'."))
+            return
+        }
+        val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }.toSet()
+        if (quest.giverMobId !in roomMobIds) {
+            outbound.send(OutboundEvent.SendError(sessionId, "The quest-giver isn't here."))
+            return
+        }
+        outbound.sendIfError(sessionId, qs.acceptQuest(sessionId, cmd.questId))
+    }
+
     private suspend fun handleQuestTurnIn(
         sessionId: SessionId,
         cmd: Command.QuestTurnIn,
@@ -237,6 +226,16 @@ class DialogueQuestHandler(
         val me = players.get(sessionId) ?: return
         val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }
         outbound.sendIfError(sessionId, qs.turnInQuest(sessionId, cmd.nameHint, roomMobIds))
+    }
+
+    private suspend fun handleQuestTurnInById(
+        sessionId: SessionId,
+        cmd: Command.QuestTurnInById,
+    ) {
+        val qs = requireSystemOrNull(sessionId, questSystem, "Quests", outbound) ?: return
+        val me = players.get(sessionId) ?: return
+        val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }
+        outbound.sendIfError(sessionId, qs.turnInQuestById(sessionId, cmd.questId, roomMobIds))
     }
 
     private suspend fun handleAchievementList(sessionId: SessionId) {

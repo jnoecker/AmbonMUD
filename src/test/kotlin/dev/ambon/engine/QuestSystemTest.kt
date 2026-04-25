@@ -843,6 +843,88 @@ class QuestSystemTest {
         }
 
     @Test
+    fun `turnInQuestById turns in by id with giver in room`() =
+        runTest {
+            val turnInQuest = killQuest.copy(completionType = "npc_turn_in")
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val notHere = qs.turnInQuestById(sid, questId, emptyList())
+            assertNotNull(notHere)
+
+            val ok = qs.turnInQuestById(sid, questId, listOf("zone:quest_giver"))
+            assertNull(ok)
+            assertTrue(players.get(sid)!!.completedQuestIds.contains(questId))
+        }
+
+    @Test
+    fun `turnInQuestById rejects unknown quest id`() =
+        runTest {
+            val (qs, players, _) = setup()
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+            val err = qs.turnInQuestById(sid, "zone:does_not_exist", listOf("zone:quest_giver"))
+            assertNotNull(err)
+        }
+
+    @Test
+    fun `questOffersFor returns acceptable quests with full reward and gate metadata`() =
+        runTest {
+            val turnInQuest = killQuest.copy(completionType = "npc_turn_in", level = 5)
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            val offers = qs.questOffersFor(sid, "zone:quest_giver")
+            assertEquals(1, offers.size)
+            val entry = offers.single()
+            assertEquals(questId, entry.id)
+            assertEquals(100L, entry.rewardXp)
+            assertEquals(20L, entry.rewardGold)
+            assertEquals(5, entry.levelRequired)
+            assertNull(entry.lockedReason)
+            assertFalse(entry.readyToTurnIn)
+        }
+
+    @Test
+    fun `questOffersFor surfaces ready-to-turn-in active quests`() =
+        runTest {
+            val turnInQuest = killQuest.copy(completionType = "npc_turn_in")
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val offers = qs.questOffersFor(sid, "zone:quest_giver")
+            assertEquals(1, offers.size)
+            val entry = offers.single()
+            assertTrue(entry.readyToTurnIn, "expected readyToTurnIn=true once objectives complete")
+            assertEquals(3, entry.objectives.single().current)
+        }
+
+    @Test
+    fun `questOffersFor hides completed quests`() =
+        runTest {
+            val turnInQuest = killQuest.copy(completionType = "npc_turn_in")
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+            qs.turnInQuestById(sid, questId, listOf("zone:quest_giver"))
+
+            val offers = qs.questOffersFor(sid, "zone:quest_giver")
+            assertTrue(offers.isEmpty(), "expected no offers after completion")
+        }
+
+    @Test
     fun `isReadyToTurnIn reflects completion handler and objectives`() =
         runTest {
             val turnInQuest = killQuest.copy(completionType = "npc_turn_in")
