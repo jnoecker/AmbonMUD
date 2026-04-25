@@ -108,6 +108,10 @@ class DialogueQuestHandler(
         sessionId: SessionId,
         action: String,
     ) {
+        if (action.startsWith("unlock_flag:")) {
+            handleUnlockFlag(sessionId, action.removePrefix("unlock_flag:").trim())
+            return
+        }
         when (action) {
             "set_recall" -> {
                 val me = players.get(sessionId) ?: return
@@ -147,6 +151,17 @@ class DialogueQuestHandler(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun handleUnlockFlag(sessionId: SessionId, flag: String) {
+        if (flag.isEmpty()) return
+        val me = players.get(sessionId) ?: return
+        if (me.dialogueFlags.add(flag)) {
+            players.persistPlayer(sessionId)
+            // A gated quest may now be acceptable — reuse the existing quest-list
+            // change hook so the canvas refreshes its quest indicators on this NPC.
+            questSystem?.onQuestListChanged?.invoke(sessionId)
         }
     }
 

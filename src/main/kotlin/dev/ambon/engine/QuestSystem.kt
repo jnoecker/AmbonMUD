@@ -78,8 +78,17 @@ class QuestSystem(
         if (ps.activeQuests.containsKey(quest.id) || ps.completedQuestIds.contains(quest.id)) return false
         if (exceedsRepMax(ps, quest)) return false
         if (belowRepMin(ps, quest)) return false
+        if (missingDialogueFlag(ps, quest)) return false
         return true
     }
+
+    private fun missingDialogueFlag(ps: PlayerState, quest: QuestDef): Boolean {
+        val flag = quest.requiresDialogueFlag ?: return false
+        return flag !in ps.dialogueFlags
+    }
+
+    private fun resolvedTurnInMobId(quest: QuestDef): String =
+        quest.turnInMobId ?: quest.giverMobId
 
     private fun belowRepMin(ps: PlayerState, quest: QuestDef): Boolean {
         val req = quest.requiredReputation ?: return false
@@ -120,18 +129,35 @@ class QuestSystem(
     ): List<QuestAvailableEntry> {
         val ps = players.get(sessionId) ?: return emptyList()
         val entries = mutableListOf<QuestAvailableEntry>()
+        val seen = mutableSetOf<String>()
         for (quest in registry.questsForMob(mobId)) {
             if (ps.completedQuestIds.contains(quest.id)) continue
             if (exceedsRepMax(ps, quest)) continue // disappears entirely
             val activeState = ps.activeQuests[quest.id]
             if (activeState != null) {
-                if (isReadyToTurnIn(quest, activeState)) {
+                // Only show ready-to-turn-in here when this mob is the resolved
+                // turn-in NPC (which is the giver by default).
+                if (isReadyToTurnIn(quest, activeState) && resolvedTurnInMobId(quest) == mobId) {
                     entries.add(buildEntry(quest, ps, activeState, lockedReason = null))
+                    seen.add(quest.id)
                 }
                 continue
             }
+            // Hide quests gated by an unmet dialogue flag — they shouldn't
+            // tease themselves at all (the dialogue is the gateway).
+            if (missingDialogueFlag(ps, quest)) continue
             val locked = lockedReasonFor(ps, quest)
             entries.add(buildEntry(quest, ps, state = null, lockedReason = locked))
+            seen.add(quest.id)
+        }
+        // Active quests whose turn-in NPC is THIS mob but whose giver is
+        // someone else — still surface them here so the player can hand in.
+        for ((questId, activeState) in ps.activeQuests) {
+            if (questId in seen) continue
+            val quest = registry.get(questId) ?: continue
+            if (resolvedTurnInMobId(quest) != mobId) continue
+            if (!isReadyToTurnIn(quest, activeState)) continue
+            entries.add(buildEntry(quest, ps, activeState, lockedReason = null))
         }
         return entries
     }
@@ -189,16 +215,24 @@ class QuestSystem(
         }
     }
 
-    /** Returns mob IDs that have a turn-in quest whose objectives the player has completed. */
+    /**
+     * Returns mob IDs that are the resolved turn-in NPC for a quest the player
+     * has completed objectives for. Honors [QuestDef.turnInMobId] when set, so
+     * the indicator follows the override NPC rather than the giver.
+     */
     fun questCompleteMobIds(sessionId: SessionId, mobIds: Collection<String>): Set<String> {
         val ps = players.get(sessionId) ?: return emptySet()
-        return mobIds.filterTo(mutableSetOf()) { mobId ->
-            registry.questsForMob(mobId).any { quest ->
-                val handler = completionHandlers.get(quest.completionType)
-                handler?.requiresNpcTurnIn == true &&
-                    ps.activeQuests[quest.id]?.objectives?.all { it.isComplete } == true
-            }
+        val mobIdSet = mobIds.toSet()
+        val result = mutableSetOf<String>()
+        for ((questId, state) in ps.activeQuests) {
+            val quest = registry.get(questId) ?: continue
+            val handler = completionHandlers.get(quest.completionType) ?: continue
+            if (!handler.requiresNpcTurnIn) continue
+            if (!state.objectives.all { it.isComplete }) continue
+            val turnIn = resolvedTurnInMobId(quest)
+            if (turnIn in mobIdSet) result.add(turnIn)
         }
+        return result
     }
 
     /**
@@ -219,6 +253,9 @@ class QuestSystem(
             val req = quest.requiredReputation!!
             val factionName = reputationSystem?.getFaction(req.faction)?.name ?: req.faction
             return "You lack the standing with $factionName to take this quest."
+        }
+        if (missingDialogueFlag(ps, quest)) {
+            return "That quest isn't available to you yet."
         }
 
         val seededObjectives =
@@ -312,7 +349,7 @@ class QuestSystem(
         if (!state.objectives.all { it.isComplete }) {
             return "You haven't finished that quest yet."
         }
-        if (quest.giverMobId !in mobIdsInRoom) {
+        if (resolvedTurnInMobId(quest) !in mobIdsInRoom) {
             return "The quest-giver isn't here. Return to them to turn this in."
         }
         completeQuest(sessionId, questId, quest.rewards)
@@ -337,7 +374,7 @@ class QuestSystem(
         if (!state.objectives.all { it.isComplete }) {
             return "You haven't finished that quest yet."
         }
-        if (quest.giverMobId !in mobIdsInRoom) {
+        if (resolvedTurnInMobId(quest) !in mobIdsInRoom) {
             return "The quest-giver isn't here. Return to them to turn this in."
         }
         completeQuest(sessionId, questId, quest.rewards)

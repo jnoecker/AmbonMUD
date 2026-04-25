@@ -940,4 +940,114 @@ class QuestSystemTest {
             val stateReady = players.get(sid)!!.activeQuests[questId]!!
             assertTrue(qs.isReadyToTurnIn(turnInQuest, stateReady))
         }
+
+    // ── Dialogue-flag gating ───────────────────────────────────────────────
+
+    @Test
+    fun `gated quest is hidden from offers and rejects accept until flag set`() =
+        runTest {
+            val gated = killQuest.copy(requiresDialogueFlag = "elara_secret")
+            val (qs, players, _) = setup(gated)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            assertTrue(
+                qs.questOffersFor(sid, "zone:quest_giver").isEmpty(),
+                "Gated quest should be hidden from offers before flag is set",
+            )
+            val rejected = qs.acceptQuest(sid, questId)
+            assertNotNull(rejected, "Accept should fail when dialogue flag is missing")
+
+            players.get(sid)!!.dialogueFlags.add("elara_secret")
+
+            val offers = qs.questOffersFor(sid, "zone:quest_giver")
+            assertEquals(1, offers.size, "Quest should appear once flag is unlocked")
+            val ok = qs.acceptQuest(sid, questId)
+            assertNull(ok, "Accept should succeed once dialogue flag is set")
+        }
+
+    @Test
+    fun `gated quest does not surface canvas indicator until flag set`() =
+        runTest {
+            val gated = killQuest.copy(requiresDialogueFlag = "elara_secret")
+            val (qs, players, _) = setup(gated)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            assertTrue(qs.questAvailableMobIds(sid, listOf("zone:quest_giver")).isEmpty())
+
+            players.get(sid)!!.dialogueFlags.add("elara_secret")
+            assertEquals(
+                setOf("zone:quest_giver"),
+                qs.questAvailableMobIds(sid, listOf("zone:quest_giver")),
+                "Canvas indicator should appear once dialogue flag is set",
+            )
+        }
+
+    // ── Turn-in mob override ───────────────────────────────────────────────
+
+    @Test
+    fun `turnInQuest routes to turnInMobId override when set`() =
+        runTest {
+            val routed = killQuest.copy(
+                completionType = "npc_turn_in",
+                turnInMobId = "zone:other_npc",
+            )
+            val (qs, players, _) = setup(routed)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            // Giver alone is no longer enough — the override mob must be present.
+            val giverOnly = qs.turnInQuest(sid, "Kill Quest", listOf("zone:quest_giver"))
+            assertNotNull(giverOnly, "Turn-in at the giver should be rejected when override is set")
+
+            val ok = qs.turnInQuest(sid, "Kill Quest", listOf("zone:other_npc"))
+            assertNull(ok, "Turn-in at the override mob should succeed")
+            assertTrue(players.get(sid)!!.completedQuestIds.contains(questId))
+        }
+
+    @Test
+    fun `questCompleteMobIds points at the override mob`() =
+        runTest {
+            val routed = killQuest.copy(
+                completionType = "npc_turn_in",
+                turnInMobId = "zone:other_npc",
+            )
+            val (qs, players, _) = setup(routed)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            val complete = qs.questCompleteMobIds(sid, listOf("zone:quest_giver", "zone:other_npc"))
+            assertEquals(setOf("zone:other_npc"), complete)
+        }
+
+    @Test
+    fun `questOffersFor surfaces ready turn-in at override NPC`() =
+        runTest {
+            val routed = killQuest.copy(
+                completionType = "npc_turn_in",
+                turnInMobId = "zone:other_npc",
+            )
+            val (qs, players, _) = setup(routed)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            qs.acceptQuest(sid, questId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            // Giver no longer offers it (active quest, turn-in is elsewhere).
+            val giverOffers = qs.questOffersFor(sid, "zone:quest_giver")
+            assertTrue(giverOffers.isEmpty(), "Giver should not show ready turn-in for override quests")
+
+            // Override NPC surfaces it.
+            val overrideOffers = qs.questOffersFor(sid, "zone:other_npc")
+            assertEquals(1, overrideOffers.size)
+            assertTrue(overrideOffers.single().readyToTurnIn)
+        }
 }

@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 private val statsType = object : TypeReference<Map<String, Int>>() {}
 private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
 private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
+private val dialogueFlagsType = object : TypeReference<Set<String>>() {}
 private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
 private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
@@ -82,6 +83,7 @@ object PlayersTable : Table("players") {
     val description = text("description").default("")
     val autolootEnabled = bool("autoloot_enabled").default(false)
     val lastRespecAtMs = long("last_respec_at_ms").default(0L)
+    val dialogueFlags = text("dialogue_flags").default("[]")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -141,6 +143,7 @@ object PlayersTable : Table("players") {
             description = row[description],
             autolootEnabled = row[autolootEnabled],
             lastRespecAtMs = row[lastRespecAtMs],
+            dialogueFlags = safeReadJson(row[dialogueFlags], dialogueFlagsType, emptySet()),
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -199,5 +202,6 @@ object PlayersTable : Table("players") {
         statement[description] = record.description
         statement[autolootEnabled] = record.autolootEnabled
         statement[lastRespecAtMs] = record.lastRespecAtMs
+        statement[dialogueFlags] = jsonMapper.writeValueAsString(record.dialogueFlags)
     }
 }

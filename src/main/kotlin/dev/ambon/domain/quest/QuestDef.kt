@@ -28,6 +28,19 @@ data class QuestDef(
      * override.
      */
     val difficulty: QuestDifficulty? = null,
+    /**
+     * Optional dialogue-flag gate. When set, the quest is hidden from
+     * `quest offers` and the canvas Quest indicator until the player has the
+     * named flag in [PlayerState.dialogueFlags]. Flags are added by dialogue
+     * choice actions of the form `unlock_flag:<name>`.
+     */
+    val requiresDialogueFlag: String? = null,
+    /**
+     * Optional override for the NPC that accepts turn-ins. Defaults to
+     * [giverMobId] when null, so most quests remain "give and turn in to the
+     * same NPC".
+     */
+    val turnInMobId: String? = null,
 )
 
 data class QuestObjectiveDef(

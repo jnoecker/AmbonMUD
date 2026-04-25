@@ -96,6 +96,8 @@ data class PlayerRecord(
     val autolootEnabled: Boolean = false,
     /** Epoch-ms of the last stat/ability respec. 0 means never respec'd. */
     val lastRespecAtMs: Long = 0L,
+    /** Persisted dialogue-flag set used to gate quests behind prior conversations. */
+    val dialogueFlags: Set<String> = emptySet(),
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

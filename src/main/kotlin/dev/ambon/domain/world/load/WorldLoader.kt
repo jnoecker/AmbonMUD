@@ -679,6 +679,8 @@ object WorldLoader {
                         } catch (e: IllegalArgumentException) {
                             throw WorldLoadException("Quest '$questId': ${e.message}")
                         },
+                        requiresDialogueFlag = questFile.requiresDialogueFlag?.trim()?.takeIf { it.isNotEmpty() },
+                        turnInMobId = questFile.turnInMob?.trim()?.takeIf { it.isNotEmpty() }?.let { qualifyId(zone, it) },
                     ),
                 )
             }

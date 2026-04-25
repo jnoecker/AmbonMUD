@@ -17,6 +17,19 @@ data class QuestFile(
      * engine compute XP from quest level × tier multiplier.
      */
     val difficulty: String? = null,
+    /**
+     * Optional dialogue-flag gate. When set, the quest is hidden from the
+     * Quest button and `qoffers` until the player has the named flag in
+     * their dialogueFlags set. Flags are added by dialogue choice actions
+     * of the form `unlock_flag:<name>`.
+     */
+    val requiresDialogueFlag: String? = null,
+    /**
+     * Optional override for the NPC that accepts turn-ins. Bare mob keyword
+     * (e.g. `headmaster_aldric`); the loader qualifies it with the zone id.
+     * Defaults to [giver] when null.
+     */
+    val turnInMob: String? = null,
 )
 
 data class QuestObjectiveFile(

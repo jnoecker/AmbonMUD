@@ -141,6 +141,7 @@ class PersistenceFieldCoverageTest {
                 authTokenHash = "sha256:deadbeef",
                 authTokenIssuedAt = 1_700_000_000_000L,
                 autolootEnabled = true,
+                dialogueFlags = setOf("scholar_research", "innkeeper_intro"),
             )
 
         @BeforeAll
