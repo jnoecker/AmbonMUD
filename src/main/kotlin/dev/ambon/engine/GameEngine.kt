@@ -2235,8 +2235,11 @@ class GameEngine(
         // Leave group (dead players should not receive XP sharing)
         groupSystem.leave(sessionId)
 
-        // Remove from dungeon instance
-        dungeonManager.removePlayer(sessionId)
+        // Remove from dungeon instance and clear the panel so the client doesn't
+        // keep showing Resume/Leave buttons that all error with "not in a dungeon".
+        if (dungeonManager.removePlayer(sessionId) != null) {
+            gmcpEmitter.sendDungeonInfo(sessionId, active = false)
+        }
     }
 
     private suspend fun onCombatMobRemoved(
