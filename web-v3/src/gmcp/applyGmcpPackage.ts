@@ -1065,11 +1065,22 @@ export function applyGmcpPackage(
                   .map((o) => ({
                     description: typeof o.description === "string" ? o.description : "",
                     count: safeNumber(o.count),
+                    current: safeNumber(o.current),
                   }))
               : [];
             const rewards = typeof e.rewards === "object" && e.rewards !== null
               ? e.rewards as Record<string, unknown>
               : {};
+            const currenciesRaw = typeof rewards.currencies === "object" && rewards.currencies !== null
+              ? rewards.currencies as Record<string, unknown>
+              : {};
+            const currencies: Record<string, number> = {};
+            for (const [k, v] of Object.entries(currenciesRaw)) {
+              currencies[k] = safeNumber(v);
+            }
+            const rep = typeof e.reputationRequired === "object" && e.reputationRequired !== null
+              ? e.reputationRequired as Record<string, unknown>
+              : null;
             return {
               id: typeof e.id === "string" ? e.id : "",
               name: typeof e.name === "string" ? e.name : "",
@@ -1079,7 +1090,19 @@ export function applyGmcpPackage(
               rewards: {
                 xp: safeNumber(rewards.xp),
                 gold: safeNumber(rewards.gold),
+                currencies,
               },
+              levelRequired: typeof e.levelRequired === "number" ? e.levelRequired : null,
+              reputationRequired: rep
+                ? {
+                    faction: typeof rep.faction === "string" ? rep.faction : "",
+                    factionName: typeof rep.factionName === "string" ? rep.factionName : "",
+                    min: typeof rep.min === "number" ? rep.min : null,
+                    max: typeof rep.max === "number" ? rep.max : null,
+                  }
+                : null,
+              readyToTurnIn: e.readyToTurnIn === true,
+              lockedReason: typeof e.lockedReason === "string" ? e.lockedReason : null,
             };
           }),
       );

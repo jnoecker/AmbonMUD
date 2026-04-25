@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | "combatlog" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | "combatlog" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -581,11 +581,20 @@ export interface QuestNotification {
 export interface QuestAvailableObjective {
   description: string;
   count: number;
+  current: number;
 }
 
 export interface QuestAvailableRewards {
   xp: number;
   gold: number;
+  currencies: Record<string, number>;
+}
+
+export interface QuestAvailableReputation {
+  faction: string;
+  factionName: string;
+  min: number | null;
+  max: number | null;
 }
 
 export interface QuestAvailable {
@@ -595,6 +604,10 @@ export interface QuestAvailable {
   giverMobId: string;
   objectives: QuestAvailableObjective[];
   rewards: QuestAvailableRewards;
+  levelRequired: number | null;
+  reputationRequired: QuestAvailableReputation | null;
+  readyToTurnIn: boolean;
+  lockedReason: string | null;
 }
 
 export interface ZoneInstanceItem {

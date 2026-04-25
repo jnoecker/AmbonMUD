@@ -79,6 +79,7 @@ export const canvasCallbacks: {
   onTargetSelected: ((targetName: string) => void) | null;
   openVideo: ((videoUrl: string) => void) | null;
   dismissDialogue: (() => void) | null;
+  openQuestOffers: ((mobKeyword: string) => void) | null;
   loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
 } = {
   sendCommand: null,
@@ -100,6 +101,7 @@ export const canvasCallbacks: {
   onTargetSelected: null,
   openVideo: null,
   dismissDialogue: null,
+  openQuestOffers: null,
   loadZoneMap: null,
 };
 
