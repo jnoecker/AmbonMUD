@@ -9514,6 +9514,45 @@ body {
     0 0 0 4px rgb(216 197 232 / 30%);
 }
 
+.room-popout-depart {
+  margin-top: var(--space-3);
+  display: flex;
+  justify-content: center;
+}
+
+.room-depart-btn {
+  padding: 10px 20px;
+  border: 1px solid color-mix(in srgb, var(--color-accent-lavender, #a897d2) 60%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-accent-lavender, #a897d2) 22%, var(--bg-surface));
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-accent-lavender, #a897d2) 35%, transparent);
+  transition:
+    background 200ms var(--ease-out-soft),
+    border-color 200ms var(--ease-out-soft),
+    box-shadow 200ms var(--ease-out-soft),
+    transform 200ms var(--ease-out-soft);
+}
+
+.room-depart-btn:hover {
+  background: color-mix(in srgb, var(--color-accent-lavender, #a897d2) 38%, var(--bg-surface));
+  border-color: var(--color-accent-lavender, #a897d2);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--color-accent-lavender, #a897d2) 55%, transparent);
+  transform: translateY(-1px);
+}
+
+.room-depart-btn:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--color-accent-lavender, #a897d2) 75%, transparent),
+    0 0 24px color-mix(in srgb, var(--color-accent-lavender, #a897d2) 55%, transparent);
+}
+
 /* Room resources section (gathering nodes + crafting stations) */
 
 .room-resources-section {

@@ -571,6 +571,9 @@ class GameEngine(
                     autoQuests = engineConfig.autoQuests.enabled,
                 )
             },
+            sanctumRoomId = {
+                engineConfig.death.sanctumRoom?.let { RoomId(it) }?.takeIf { world.rooms.containsKey(it) }
+            },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {

@@ -331,6 +331,7 @@ export function applyGmcpPackage(
       const dungeon = packet.dungeon === true;
       const auction = packet.auction === true;
       const housingBroker = packet.housingBroker === true;
+      const canDepart = packet.canDepart === true;
 
       // Detect actual room change (not just a look/refresh of the same room)
       ctx.setRoom((prev) => {
@@ -343,7 +344,7 @@ export function applyGmcpPackage(
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, canDepart };
       });
 
       if (id) {

@@ -196,6 +196,7 @@ class HotReloadManager(
                 room,
                 pvpEnabled = world.isZonePvpEnabled(room.id.zone),
                 trainerName = trainerRegistry.trainerInRoom(room.id)?.name,
+                lastDeathZone = player.lastDeathZone,
             )
             gmcpEmitter.sendRoomMobs(player.sessionId, mobs.mobsInRoom(player.roomId))
             gmcpEmitter.sendRoomItems(player.sessionId, items.itemsInRoom(player.roomId))
