@@ -441,6 +441,8 @@ mobs:
     xpReward: 0
     goldMin: 0
     goldMax: 0
+    quests:
+      - scholars_research
     dialogue:
       root:
         text: A slender woman in spectacles and ink-stained robes looks up from a heavy tome, brushing a strand of auburn hair
@@ -454,7 +456,20 @@ mobs:
             next: learn_here
           - text: What's south of here?
             next: directions
+          - text: I overheard you mention research. What are you working on?
+            next: research_inquiry
           - text: Goodbye, Scholar.
+            next: farewell
+      research_inquiry:
+        text: 'Elara hesitates, then leans forward, lowering her voice. "Perceptive of you. I am studying the resonance patterns
+          in Arcane Fragments — they may be more than mere magical residue. I need a sample to compare against my notes,
+          but the Headmaster keeps the archive key. Would you fetch one for me, then bring your findings to him? He
+          should hear of this directly."'
+        action: unlock_flag:scholar_research
+        choices:
+          - text: Of course, I'd be happy to help.
+            next: farewell
+          - text: I'll think about it.
             next: farewell
       about_self:
         text: I was once a wandering sage, traveling from library to library in search of lost knowledge. I spent years
@@ -1162,6 +1177,22 @@ quests:
     rewards:
       xp: 150
       gold: 75
+  scholars_research:
+    name: Scholar's Research
+    description: Scholar Elara has asked you to bring an Arcane Fragment to Headmaster Aldric so he can compare it against her
+      research notes. Collect a fragment from any of the Academy's creatures, then deliver your findings to the Headmaster
+      at the gates.
+    giver: scholar_elara
+    turnInMob: headmaster_aldric
+    requiresDialogueFlag: scholar_research
+    objectives:
+      - type: collect
+        targetKey: arcane_fragment
+        count: 1
+        description: Collect an Arcane Fragment for Elara's research
+    rewards:
+      xp: 75
+      gold: 30
   creature_roundup:
     name: Creature Roundup
     description: Groundskeeper Thorne needs help managing the rowdier creatures in the Proving Grounds. Defeat them in

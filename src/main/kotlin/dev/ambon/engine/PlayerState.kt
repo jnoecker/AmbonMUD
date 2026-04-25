@@ -46,6 +46,12 @@ data class PlayerState(
     val passwordHash: String = "",
     var activeQuests: Map<String, QuestState> = emptyMap(),
     var completedQuestIds: Set<String> = emptySet(),
+    /**
+     * Persisted dialogue-flag set. Set entries are added by dialogue choice
+     * actions (see `unlock_flag:<name>` in DialogueQuestHandler) and consumed
+     * by [QuestSystem] to gate quests behind prior conversations.
+     */
+    var dialogueFlags: MutableSet<String> = mutableSetOf(),
     var unlockedAchievementIds: Set<String> = emptySet(),
     var achievementProgress: Map<String, AchievementState> = emptyMap(),
     var activeTitle: String? = null,
@@ -224,6 +230,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         passwordHash = passwordHash,
         activeQuests = activeQuests,
         completedQuestIds = completedQuestIds,
+        dialogueFlags = dialogueFlags.toMutableSet(),
         unlockedAchievementIds = unlockedAchievementIds,
         achievementProgress = achievementProgress,
         activeTitle = activeTitle,
@@ -286,6 +293,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         gold = gold,
         activeQuests = activeQuests,
         completedQuestIds = completedQuestIds,
+        dialogueFlags = dialogueFlags.toSet(),
         unlockedAchievementIds = unlockedAchievementIds,
         achievementProgress = achievementProgress,
         activeTitle = activeTitle,
