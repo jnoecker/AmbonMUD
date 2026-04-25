@@ -158,6 +158,10 @@ export class WorldScene {
   private recallBtn: Container;
   private lastLoggedIn = false;
 
+  // Depart button (visible at the death sanctum when there's a place to return to)
+  private departBtn: Container;
+  private lastCanDepart = false;
+
   private videoBtn: Sprite | null = null;
   private videoAnimTime = 0;
   private lastRoomVideo: string | null | undefined = undefined;
@@ -723,6 +727,12 @@ export class WorldScene {
     });
     this.recallBtn.visible = false;
 
+    // Depart button — only shown at the death sanctum when there is somewhere to return to
+    this.departBtn = this.buildActionButton("Depart", 0xd8b9ae, 0x452a2a, () => {
+      canvasCallbacks.sendCommand?.("depart");
+    });
+    this.departBtn.visible = false;
+
     this.container.addChildAt(this.skyRenderer.graphics, 0);
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
@@ -749,6 +759,7 @@ export class WorldScene {
     this.container.addChild(this.containerBadge!);
     this.container.addChild(this.leverBadge!);
     this.container.addChild(this.recallBtn);
+    this.container.addChild(this.departBtn);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
     // Weather lives in the overlay so it stays visible during room-transition
@@ -1045,6 +1056,13 @@ export class WorldScene {
       this.recallBtn.visible = showRecall;
     }
 
+    // Depart button visibility — only at sanctum with a recorded death zone
+    const canDepart = !!state.room.canDepart;
+    if (canDepart !== this.lastCanDepart) {
+      this.lastCanDepart = canDepart;
+      this.departBtn.visible = canDepart;
+    }
+
     this.layoutAll();
     this.updateTargetingOverlay(deltaMs);
   }
@@ -1136,6 +1154,7 @@ export class WorldScene {
     if (this.containerBadge) this.containerBadge.visible = this.containerVisible && !stripMode;
     if (this.leverBadge) this.leverBadge.visible = this.leverVisible && !stripMode;
     this.recallBtn.visible = this.recallBtn.visible && !stripMode;
+    this.departBtn.visible = this.departBtn.visible && !stripMode;
 
     // Dynamic entity sizing
     const scale = Math.min(w / REF_WIDTH, h / REF_HEIGHT);
@@ -1447,6 +1466,13 @@ export class WorldScene {
     if (this.recallBtn.visible) {
       this.recallBtn.x = 16 + 40;
       this.recallBtn.y = h - 24;
+    }
+
+    // Depart button — sits beside Recall at the bottom-left
+    if (this.departBtn.visible) {
+      // Offset to the right of Recall (button width 80 + 8px gap), or take Recall's slot if hidden
+      this.departBtn.x = this.recallBtn.visible ? 16 + 40 + 88 : 16 + 40;
+      this.departBtn.y = h - 24;
     }
 
     // Video button: bottom-center
