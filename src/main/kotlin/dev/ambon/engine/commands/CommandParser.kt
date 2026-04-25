@@ -389,8 +389,20 @@ sealed interface Command {
         val nameHint: String,
     ) : Command
 
+    data class QuestAcceptById(
+        val questId: String,
+    ) : Command
+
     data class QuestTurnIn(
         val nameHint: String,
+    ) : Command
+
+    data class QuestTurnInById(
+        val questId: String,
+    ) : Command
+
+    data class QuestOffers(
+        val mobKeyword: String,
     ) : Command
 
     data object DailyQuests : Command
@@ -1373,8 +1385,17 @@ object CommandParser {
             Command.Phase(rest.trim().ifEmpty { null })
         }?.let { return it }
 
-        // accept: "accept <quest-name>" (for accepting quests offered by NPCs)
-        requiredArg(line, listOf("accept"), "accept <quest>", { Command.QuestAccept(it) })?.let { return it }
+        // accept: "accept <quest-name>" (for accepting quests offered by NPCs).
+        // "accept #<quest-id>" routes to the by-id variant — used by the web client
+        // to disambiguate against quests with the same name.
+        requiredArg(line, listOf("accept"), "accept <quest>") { rest ->
+            if (rest.startsWith("#")) {
+                val id = rest.removePrefix("#").trim()
+                if (id.isEmpty()) Command.Invalid(line, "accept #<quest-id>") else Command.QuestAcceptById(id)
+            } else {
+                Command.QuestAccept(rest)
+            }
+        }?.let { return it }
 
         // daily/weekly quest board
         matchPrefix(line, listOf("daily", "dailies")) { Command.DailyQuests }?.let { return it }
@@ -1390,7 +1411,12 @@ object CommandParser {
             }
         }?.let { return it }
 
+        // qoffers: "qoffers <mob>" — request the quest offer panel for an NPC
+        // (web client uses this when the player taps the Quest button on a mob).
+        requiredArg(line, listOf("qoffers"), "qoffers <mob>") { Command.QuestOffers(it) }?.let { return it }
+
         // quest subcommands: "quest log", "quest info <name>", "quest abandon <name>",
+        // "quest offers <mob>", "quest turnin <name|#id>",
         // "quest auto" / "quest auto info" / "quest auto abandon",
         // "quest request" as alias for "quest auto"
         // also "quests" as alias for "quest log"
@@ -1409,7 +1435,22 @@ object CommandParser {
                 }
                 "turnin", "complete", "finish" -> {
                     val hint = parts.getOrNull(1)?.trim() ?: ""
-                    if (hint.isEmpty()) Command.Invalid(line, "quest turnin <quest-name>") else Command.QuestTurnIn(hint)
+                    when {
+                        hint.isEmpty() -> Command.Invalid(line, "quest turnin <quest-name>")
+                        hint.startsWith("#") -> {
+                            val id = hint.removePrefix("#").trim()
+                            if (id.isEmpty()) {
+                                Command.Invalid(line, "quest turnin #<quest-id>")
+                            } else {
+                                Command.QuestTurnInById(id)
+                            }
+                        }
+                        else -> Command.QuestTurnIn(hint)
+                    }
+                }
+                "offers", "offering", "offer" -> {
+                    val hint = parts.getOrNull(1)?.trim() ?: ""
+                    if (hint.isEmpty()) Command.Invalid(line, "quest offers <mob>") else Command.QuestOffers(hint)
                 }
                 "auto", "request" -> {
                     val sub = parts.getOrNull(1)?.trim()?.lowercase() ?: ""

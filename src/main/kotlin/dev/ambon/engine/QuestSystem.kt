@@ -105,6 +105,82 @@ class QuestSystem(
         return state.objectives.all { it.isComplete }
     }
 
+    /**
+     * Builds the full Quest.Available payload for a single NPC: quests this mob
+     * offers that are acceptable now, quests it offers that are blocked by a
+     * reputation gate (with a [QuestAvailableEntry.lockedReason] explaining
+     * why), and active quests already accepted from this mob whose objectives
+     * are complete and ready to turn in here.
+     *
+     * Pass an empty result to the client to dismiss any open quest panel.
+     */
+    fun questOffersFor(
+        sessionId: SessionId,
+        mobId: String,
+    ): List<QuestAvailableEntry> {
+        val ps = players.get(sessionId) ?: return emptyList()
+        val entries = mutableListOf<QuestAvailableEntry>()
+        for (quest in registry.questsForMob(mobId)) {
+            if (ps.completedQuestIds.contains(quest.id)) continue
+            if (exceedsRepMax(ps, quest)) continue // disappears entirely
+            val activeState = ps.activeQuests[quest.id]
+            if (activeState != null) {
+                if (isReadyToTurnIn(quest, activeState)) {
+                    entries.add(buildEntry(quest, ps, activeState, lockedReason = null))
+                }
+                continue
+            }
+            val locked = lockedReasonFor(ps, quest)
+            entries.add(buildEntry(quest, ps, state = null, lockedReason = locked))
+        }
+        return entries
+    }
+
+    private fun lockedReasonFor(ps: PlayerState, quest: QuestDef): String? {
+        if (belowRepMin(ps, quest)) {
+            val req = quest.requiredReputation!!
+            val name = reputationSystem?.getFaction(req.faction)?.name ?: req.faction
+            return "Requires standing with $name."
+        }
+        return null
+    }
+
+    private fun buildEntry(
+        quest: QuestDef,
+        ps: PlayerState,
+        state: QuestState?,
+        lockedReason: String?,
+    ): QuestAvailableEntry {
+        val rep = quest.requiredReputation?.let { req ->
+            ReputationRequirementSummary(
+                faction = req.faction,
+                factionName = reputationSystem?.getFaction(req.faction)?.name ?: req.faction,
+                min = req.min,
+                max = req.max,
+            )
+        }
+        return QuestAvailableEntry(
+            id = quest.id,
+            name = quest.name,
+            description = quest.description,
+            giverMobId = quest.giverMobId,
+            objectives = quest.objectives.mapIndexed { index, obj ->
+                QuestAvailableObjectiveSummary(
+                    description = obj.description,
+                    count = obj.count,
+                    current = state?.objectives?.getOrNull(index)?.current ?: 0,
+                )
+            },
+            rewardXp = quest.rewards.xp,
+            rewardGold = quest.rewards.gold,
+            rewardCurrencies = quest.rewards.currencies,
+            levelRequired = quest.level,
+            reputationRequired = rep,
+            readyToTurnIn = state != null && isReadyToTurnIn(quest, state),
+            lockedReason = lockedReason,
+        )
+    }
+
     /** Returns mob IDs that offer quests the player can accept. */
     fun questAvailableMobIds(sessionId: SessionId, mobIds: Collection<String>): Set<String> {
         val ps = players.get(sessionId) ?: return emptySet()
@@ -229,6 +305,31 @@ class QuestSystem(
             ?: return "No active quest matching '$nameHint'."
         val quest = registry.get(questId) ?: return "Quest data not found."
         val state = ps.activeQuests[questId] ?: return "Quest not active."
+        val handler = completionHandlers.get(quest.completionType)
+        if (handler == null || !handler.requiresNpcTurnIn) {
+            return "That quest does not require a turn-in."
+        }
+        if (!state.objectives.all { it.isComplete }) {
+            return "You haven't finished that quest yet."
+        }
+        if (quest.giverMobId !in mobIdsInRoom) {
+            return "The quest-giver isn't here. Return to them to turn this in."
+        }
+        completeQuest(sessionId, questId, quest.rewards)
+        return null
+    }
+
+    /**
+     * Turn in a quest by id. Returns an error string, or null on success.
+     */
+    suspend fun turnInQuestById(
+        sessionId: SessionId,
+        questId: String,
+        mobIdsInRoom: Collection<String>,
+    ): String? {
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        val quest = registry.get(questId) ?: return "Unknown quest '$questId'."
+        val state = ps.activeQuests[questId] ?: return "You haven't accepted that quest."
         val handler = completionHandlers.get(quest.completionType)
         if (handler == null || !handler.requiresNpcTurnIn) {
             return "That quest does not require a turn-in."

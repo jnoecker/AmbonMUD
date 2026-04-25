@@ -935,6 +935,50 @@ class CommandParserTest {
         assertEquals(Command.WeeklyQuests, CommandParser.parse("weekly"))
     }
 
+    // ── Quest accept / turn-in / offers ──────────────────────────────────
+
+    @Test
+    fun `accept by name hint parses to QuestAccept`() {
+        assertEquals(Command.QuestAccept("grand tour"), CommandParser.parse("accept grand tour"))
+    }
+
+    @Test
+    fun `accept hash id parses to QuestAcceptById`() {
+        assertEquals(
+            Command.QuestAcceptById("academy:grand_tour"),
+            CommandParser.parse("accept #academy:grand_tour"),
+        )
+    }
+
+    @Test
+    fun `accept blank hash is invalid`() {
+        val cmd = CommandParser.parse("accept #")
+        assertTrue(cmd is Command.Invalid, "expected Invalid, got $cmd")
+    }
+
+    @Test
+    fun `quest turnin by name hint parses to QuestTurnIn`() {
+        assertEquals(Command.QuestTurnIn("grand tour"), CommandParser.parse("quest turnin grand tour"))
+    }
+
+    @Test
+    fun `quest turnin hash id parses to QuestTurnInById`() {
+        assertEquals(
+            Command.QuestTurnInById("academy:grand_tour"),
+            CommandParser.parse("quest turnin #academy:grand_tour"),
+        )
+    }
+
+    @Test
+    fun `quest offers parses to QuestOffers`() {
+        assertEquals(Command.QuestOffers("aldric"), CommandParser.parse("quest offers aldric"))
+    }
+
+    @Test
+    fun `qoffers alias parses to QuestOffers`() {
+        assertEquals(Command.QuestOffers("aldric"), CommandParser.parse("qoffers aldric"))
+    }
+
     // ── Auto-quest / bounty commands ─────────────────────────────────────
 
     @Test

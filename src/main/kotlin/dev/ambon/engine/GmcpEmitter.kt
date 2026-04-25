@@ -1080,9 +1080,28 @@ class GmcpEmitter(
                 description = q.description,
                 giverMobId = q.giverMobId,
                 objectives = q.objectives.map { o ->
-                    QuestAvailableObjectivePayload(description = o.description, count = o.count)
+                    QuestAvailableObjectivePayload(
+                        description = o.description,
+                        count = o.count,
+                        current = o.current,
+                    )
                 },
-                rewards = QuestAvailableRewardsPayload(xp = q.rewardXp, gold = q.rewardGold),
+                rewards = QuestAvailableRewardsPayload(
+                    xp = q.rewardXp,
+                    gold = q.rewardGold,
+                    currencies = q.rewardCurrencies,
+                ),
+                levelRequired = q.levelRequired,
+                reputationRequired = q.reputationRequired?.let { rep ->
+                    QuestReputationPayload(
+                        faction = rep.faction,
+                        factionName = rep.factionName,
+                        min = rep.min,
+                        max = rep.max,
+                    )
+                },
+                readyToTurnIn = q.readyToTurnIn,
+                lockedReason = q.lockedReason,
             )
         }
         emit(sessionId, "Quest.Available", payload, supportCheck = "Quest")
@@ -2625,16 +2644,29 @@ class GmcpEmitter(
         val giverMobId: String,
         val objectives: List<QuestAvailableObjectivePayload>,
         val rewards: QuestAvailableRewardsPayload,
+        val levelRequired: Int?,
+        val reputationRequired: QuestReputationPayload?,
+        val readyToTurnIn: Boolean,
+        val lockedReason: String?,
     )
 
     private data class QuestAvailableObjectivePayload(
         val description: String,
         val count: Int,
+        val current: Int,
     )
 
     private data class QuestAvailableRewardsPayload(
         val xp: Long,
         val gold: Long,
+        val currencies: Map<String, Long>,
+    )
+
+    private data class QuestReputationPayload(
+        val faction: String,
+        val factionName: String,
+        val min: Int?,
+        val max: Int?,
     )
 
     // ---------- daily / weekly quest payloads ----------
@@ -3394,11 +3426,24 @@ data class QuestAvailableEntry(
     val objectives: List<QuestAvailableObjectiveSummary>,
     val rewardXp: Long,
     val rewardGold: Long,
+    val rewardCurrencies: Map<String, Long> = emptyMap(),
+    val levelRequired: Int? = null,
+    val reputationRequired: ReputationRequirementSummary? = null,
+    val readyToTurnIn: Boolean = false,
+    val lockedReason: String? = null,
 )
 
 data class QuestAvailableObjectiveSummary(
     val description: String,
     val count: Int,
+    val current: Int = 0,
+)
+
+data class ReputationRequirementSummary(
+    val faction: String,
+    val factionName: String,
+    val min: Int? = null,
+    val max: Int? = null,
 )
 
 data class MobInfoEntry(
