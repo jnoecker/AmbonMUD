@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransf
 import java.time.Duration
 
 plugins {
-    kotlin("jvm") version "2.3.10"
+    kotlin("jvm") version "2.3.21"
     application
     jacoco
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
