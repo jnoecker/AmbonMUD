@@ -260,7 +260,7 @@ class MobSpellCombatTest {
     @Test
     fun `WorldLoader loads mob spells from YAML`() {
         val world = WorldLoader.loadFromResource("world/ok_mob_spells.yaml")
-        val shadowMage = world.mobSpawns.first { it.name == "a shadow mage" }
+        val shadowMage = world.mobTemplates.values.first { it.name == "a shadow mage" }
 
         assertEquals(2, shadowMage.spells.size)
         assertEquals("shadow_bolt", shadowMage.defaultAttack)
@@ -290,7 +290,7 @@ class MobSpellCombatTest {
     @Test
     fun `mob with no spells loads cleanly`() {
         val world = WorldLoader.loadFromResource("world/ok_mob_spells.yaml")
-        val dummy = world.mobSpawns.first { it.name == "a training dummy" }
+        val dummy = world.mobTemplates.values.first { it.name == "a training dummy" }
         assertTrue(dummy.spells.isEmpty())
         assertNull(dummy.defaultAttack)
     }

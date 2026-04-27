@@ -66,11 +66,14 @@ class AutoQuestSystem(
             ?: return Result.failure(AutoQuestError("Player not found."))
 
         val playerZone = player.roomId.zone
-        val candidates = world.mobSpawns.filter { spawn ->
-            idZone(spawn.id.value) == playerZone &&
-                spawn.dialogue == null &&
-                spawn.xpReward > 0
-        }
+        val candidates = world.mobSpawns
+            .asSequence()
+            .filter { idZone(it.id.value) == playerZone }
+            .map { it.templateId }
+            .distinct()
+            .mapNotNull { world.mobTemplate(it) }
+            .filter { it.dialogue == null && it.xpReward > 0 }
+            .toList()
         if (candidates.isEmpty()) {
             return Result.failure(AutoQuestError("No suitable targets found in this area."))
         }

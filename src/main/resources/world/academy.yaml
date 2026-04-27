@@ -372,7 +372,8 @@ image:
 mobs:
   headmaster_aldric:
     name: Headmaster Aldric
-    room: academy_gates
+    spawns:
+      - room: academy_gates
     tier: standard
     level: 10
     hp: 999
@@ -432,7 +433,8 @@ mobs:
     image: d7d20725e259a579a098ea0856dae504e860588448e9d570dc079405ad7dc20b.png
   scholar_elara:
     name: Scholar Elara
-    room: scholars_study
+    spawns:
+      - room: scholars_study
     tier: standard
     level: 8
     hp: 999
@@ -514,7 +516,8 @@ mobs:
     image: 306a50931d50ea68df08991427009fe9ce847aea2f311164f4a9cab0902aa073.png
   quartermaster_bren:
     name: Quartermaster Bren
-    room: armory
+    spawns:
+      - room: armory
     tier: standard
     level: 5
     hp: 999
@@ -549,7 +552,8 @@ mobs:
     image: a6bffb59957c7b9cb75c0a0b9a007938e9eb8b0403f87d32a2db7fa28d6e2a0b.png
   instructor_valence:
     name: Instructor Valence
-    room: training_yard
+    spawns:
+      - room: training_yard
     tier: elite
     level: 10
     hp: 999
@@ -604,7 +608,8 @@ mobs:
     image: be956281462401c1276572bedc906f3f6123987a2d9e77038516e2ae8e507eff.png
   groundskeeper_thorne:
     name: Groundskeeper Thorne
-    room: proving_grounds
+    spawns:
+      - room: proving_grounds
     tier: standard
     level: 5
     hp: 999
@@ -652,7 +657,8 @@ mobs:
     image: 955cf818c472c71960e9a18f0f6e5d630f2be0013d72e01dd4df69ec53005753.png
   puzzlewright:
     name: the Puzzlewright
-    room: riddle_tower
+    spawns:
+      - room: riddle_tower
     tier: standard
     level: 5
     hp: 999
@@ -693,7 +699,8 @@ mobs:
     image: 3ca017584a1614014ea4a44816817e01c6149df064c69735810d02fa743b88e6.png
   artificer_wren:
     name: Artificer Wren
-    room: workshop
+    spawns:
+      - room: workshop
     tier: weak
     level: 3
     hp: 999
@@ -739,7 +746,8 @@ mobs:
     image: d8c66057ee7f9319bbea2805098819ce55a0a5e92cac9746fd08716586314915.png
   stylist_maren:
     name: Stylist Maren
-    room: stylist_parlor
+    spawns:
+      - room: stylist_parlor
     tier: standard
     level: 5
     hp: 999
@@ -776,7 +784,8 @@ mobs:
     image: ea957fdba05f4f57ac0b18eacc94e38ccb7b7f90379ebc2658e97fdd21587820.png
   wandering_wisp:
     name: a wandering wisp
-    room: grand_hall
+    spawns:
+      - room: grand_hall
     tier: weak
     level: 1
     category: elemental
@@ -791,7 +800,8 @@ mobs:
     image: f4c862a089a6bd9cd51e5b8cfd270bf80d8f7b87aac173eb08052a97900004fe.png
   flickering_sprite:
     name: a flickering sprite
-    room: proving_grounds
+    spawns:
+      - room: proving_grounds
     tier: weak
     level: 1
     category: elemental
@@ -806,7 +816,8 @@ mobs:
     image: a407dc506680b2d9adc8ed94f6f7d2c8fe7baa05c4249f51f76ecd694b34b644.png
   shadow_slime:
     name: a shadow slime
-    room: proving_grounds
+    spawns:
+      - room: proving_grounds
     tier: standard
     category: aberration
     level: 2
@@ -825,7 +836,8 @@ mobs:
     image: 9d8a328931a9dbc5bfefb57be108843ad8bc6397f17cd35ac9b790186f5946ed.png
   cave_imp:
     name: a cave imp
-    room: proving_grounds
+    spawns:
+      - room: proving_grounds
     tier: standard
     level: 3
     category: aberration
@@ -853,7 +865,8 @@ mobs:
     image: 464c16c78618268629211ba659c6178806e107b48b130c0446b7fc314845fb04.png
   dread_warden:
     name: the Dread Warden
-    room: throne_room
+    spawns:
+      - room: throne_room
     tier: boss
     level: 7
     category: undead
@@ -901,7 +914,8 @@ mobs:
     image: 6c55e1b65347264558f0932d5d3a361f2f085f40d7941a2fa676a4a18c8998aa.png
   skeleton_warrior:
     name: a skeleton warrior
-    room: mob_templates
+    spawns:
+      - room: mob_templates
     tier: standard
     level: 3
     category: undead
@@ -913,7 +927,8 @@ mobs:
     image: 6f739c926beacfcfa7efab140c0e788f20e468b207d4f2c59d13a4e34d4c3522.png
   wraith:
     name: a wraith
-    room: mob_templates
+    spawns:
+      - room: mob_templates
     tier: elite
     level: 5
     category: undead
@@ -945,7 +960,8 @@ mobs:
     image: c5146681f495e8675a1d63e8ff92cd4a9e34a9964cdfdaf9472bbb7918cc0bfe.png
   fallen_champion:
     name: the Fallen Champion
-    room: mob_templates
+    spawns:
+      - room: mob_templates
     tier: boss
     level: 8
     category: undead

@@ -1,0 +1,34 @@
+zone: ok_multi
+startRoom: a
+mobs:
+  unique_npc:
+    name: "Headmaster"
+    spawns:
+      - room: a
+  trash_two_rooms:
+    name: "a goblin"
+    spawns:
+      - room: a
+      - room: b
+  trash_count:
+    name: "a rat"
+    spawns:
+      - room: b
+        count: 3
+  trash_mixed:
+    name: "a slime"
+    spawns:
+      - room: a
+        count: 2
+      - room: b
+rooms:
+  a:
+    title: "Room A"
+    description: "The first room."
+    exits:
+      north: b
+  b:
+    title: "Room B"
+    description: "The second room."
+    exits:
+      south: a

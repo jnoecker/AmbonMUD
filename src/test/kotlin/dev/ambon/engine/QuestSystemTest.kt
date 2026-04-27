@@ -98,6 +98,38 @@ class QuestSystemTest {
         }
 
     @Test
+    fun `kill objective counts any placement of the same template`() =
+        runTest {
+            // Load a world where one goblin template has 3 placements and the
+            // quest is `kill goblin x3`. Killing each placement must advance
+            // the same objective — the contract that lets multi-spawn trash
+            // mobs satisfy quests.
+            val world = dev.ambon.domain.world.load.WorldLoader.loadFromResource(
+                "world/ok_multi_spawn_kill.yaml",
+            )
+            val loadedQuest = world.questDefinitions.single { it.id == "ok_kill:goblin_hunt" }
+                .copy(completionType = "auto")
+            val (qs, players, _) = setup(loadedQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+            qs.acceptQuest(sid, "ok_kill:goblin_hunt")
+
+            // Each placement carries templateKey = "ok_kill:goblin"; the
+            // engine forwards that key into onMobKilled (see CombatSystem).
+            val placements = world.mobSpawns.filter { it.templateId.value == "ok_kill:goblin" }
+            assertEquals(3, placements.size)
+            for (placement in placements) {
+                qs.onMobKilled(sid, placement.templateId.value)
+            }
+
+            val ps = players.get(sid)!!
+            assertTrue(
+                ps.completedQuestIds.contains("ok_kill:goblin_hunt"),
+                "Quest should auto-complete after killing all 3 distinct goblin placements",
+            )
+        }
+
+    @Test
     fun `onMobKilled increments kill objective`() =
         runTest {
             val (qs, players, _) = setup()

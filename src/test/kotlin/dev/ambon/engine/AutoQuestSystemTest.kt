@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.MobSpawn
+import dev.ambon.domain.world.MobTemplateDef
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.dialogue.DialogueNode
@@ -30,13 +31,18 @@ class AutoQuestSystemTest {
     private val mobTemplateId = "$testZone:goblin"
     private val sid = SessionId(1L)
 
-    private val testMobSpawn = MobSpawn(
+    private val testMobTemplate = MobTemplateDef(
         id = MobId(mobTemplateId),
         name = "Goblin",
-        roomId = testRoomId,
         maxHp = 20,
         damage = DamageRange(1, 4),
         xpReward = 30L,
+    )
+
+    private val testMobSpawn = MobSpawn(
+        id = MobId(mobTemplateId),
+        templateId = MobId(mobTemplateId),
+        roomId = testRoomId,
     )
 
     private val defaultConfig = AutoQuestsConfig(
@@ -59,6 +65,7 @@ class AutoQuestSystemTest {
         val world = World(
             rooms = mapOf(testRoomId to Room(testRoomId, "Town Square", "A busy square.", emptyMap())),
             startRoom = testRoomId,
+            mobTemplates = mapOf(testMobTemplate.id to testMobTemplate),
             mobSpawns = listOf(testMobSpawn),
         )
         val system = AutoQuestSystem(
@@ -304,10 +311,10 @@ class AutoQuestSystemTest {
     @Test
     fun `mobs with dialogue are excluded from candidates`() = runTest {
         val c = SystemTestComponents(roomId = testRoomId, clockInitialMs = 1_000L)
-        val dialogueMob = MobSpawn(
-            id = MobId("$testZone:innkeeper"),
+        val innkeeperId = MobId("$testZone:innkeeper")
+        val dialogueTemplate = MobTemplateDef(
+            id = innkeeperId,
             name = "Innkeeper",
-            roomId = testRoomId,
             maxHp = 100,
             xpReward = 0L,
             dialogue = DialogueTree(
@@ -320,9 +327,11 @@ class AutoQuestSystemTest {
                 ),
             ),
         )
+        val dialogueMob = MobSpawn(innkeeperId, innkeeperId, testRoomId)
         val world = World(
             rooms = mapOf(testRoomId to Room(testRoomId, "Town Square", "A busy square.", emptyMap())),
             startRoom = testRoomId,
+            mobTemplates = mapOf(innkeeperId to dialogueTemplate),
             mobSpawns = listOf(dialogueMob),
         )
         val system = AutoQuestSystem(

@@ -3,6 +3,7 @@ package dev.ambon.domain.world
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.dungeon.DungeonTemplateDef
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.puzzle.PuzzleDef
@@ -11,6 +12,7 @@ import dev.ambon.domain.quest.QuestDef
 class World(
     rooms: Map<RoomId, Room>,
     startRoom: RoomId,
+    mobTemplates: Map<MobId, MobTemplateDef> = emptyMap(),
     mobSpawns: List<MobSpawn> = emptyList(),
     itemSpawns: List<ItemSpawn> = emptyList(),
     zoneLifespansMinutes: Map<String, Long> = emptyMap(),
@@ -30,6 +32,12 @@ class World(
 
     var startRoom: RoomId = startRoom
         private set
+
+    private val _mobTemplates = LinkedHashMap(mobTemplates)
+    val mobTemplates: Map<MobId, MobTemplateDef> get() = _mobTemplates
+
+    /** Returns the template for [id], or null if unknown. */
+    fun mobTemplate(id: MobId): MobTemplateDef? = _mobTemplates[id]
 
     private val _mobSpawns = mobSpawns.toMutableList()
     val mobSpawns: List<MobSpawn> get() = _mobSpawns
@@ -102,6 +110,12 @@ class World(
         val newRooms = source.rooms.filter { it.key.zone == zone }
         _rooms.putAll(newRooms)
 
+        val templateKeysToRemove = _mobTemplates.keys.filter { idZone(it.value) == zone }
+        for (key in templateKeysToRemove) _mobTemplates.remove(key)
+        for ((key, value) in source.mobTemplates) {
+            if (idZone(key.value) == zone) _mobTemplates[key] = value
+        }
+
         _mobSpawns.removeAll { idZone(it.id.value) == zone }
         _mobSpawns.addAll(source.mobSpawns.filter { idZone(it.id.value) == zone })
 
@@ -150,6 +164,9 @@ class World(
         _rooms.clear()
         _rooms.putAll(source.rooms)
         startRoom = source.startRoom
+
+        _mobTemplates.clear()
+        _mobTemplates.putAll(source.mobTemplates)
 
         _mobSpawns.clear()
         _mobSpawns.addAll(source.mobSpawns)

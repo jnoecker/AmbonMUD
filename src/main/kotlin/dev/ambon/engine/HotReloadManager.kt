@@ -176,7 +176,7 @@ class HotReloadManager(
 
                 // Notify players in the room.
                 for (p in players.playersInRoom(spawn.roomId)) {
-                    outbound.send(OutboundEvent.SendText(p.sessionId, "${spawn.name} appears."))
+                    outbound.send(OutboundEvent.SendText(p.sessionId, "${mobState.name} appears."))
                     gmcpEmitter.sendRoomAddMob(p.sessionId, mobState)
                 }
             }

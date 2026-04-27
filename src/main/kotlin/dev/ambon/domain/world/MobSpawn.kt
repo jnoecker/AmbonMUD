@@ -11,7 +11,7 @@ import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueTree
 
 /**
- * Authored stat overrides that won at load time. Preserved on [MobSpawn] so
+ * Authored stat overrides that won at load time. Preserved on [MobTemplateDef] so
  * that spawn-time rescaling (for zones with non-STATIC scaling) can replay
  * the tier × level math while still honouring the author's explicit values.
  */
@@ -25,10 +25,14 @@ data class MobStatOverrides(
     val goldMax: Long? = null,
 )
 
-data class MobSpawn(
+/**
+ * The static, room-independent definition of a mob: stats, drops, dialogue,
+ * behavior, quests, etc. One [MobTemplateDef] is built per `mobs:` entry in the
+ * world YAML and is referenced by zero or more [MobSpawn] placement records.
+ */
+data class MobTemplateDef(
     override val id: MobId,
     override val name: String,
-    override val roomId: RoomId,
     override val description: String = "",
     override val maxHp: Int = 10,
     override val damage: DamageRange = DamageRange(1, 4),
@@ -60,3 +64,23 @@ data class MobSpawn(
     /** Which stats the author explicitly set. Overrides stay fixed even when scaling shifts level. */
     val overrides: MobStatOverrides = MobStatOverrides(),
 ) : MobTemplate
+
+/**
+ * A placement record: one runtime instance of a [MobTemplateDef] in a specific room.
+ * The loader emits one [MobSpawn] per copy declared in the YAML (a `count: 3` entry
+ * produces three [MobSpawn]s sharing the same [templateId] but with distinct [id]s).
+ *
+ * - [id] is the runtime mob id (also the [dev.ambon.domain.mob.MobState.id] when alive).
+ *   For a template with a single global instance this equals [templateId]; otherwise
+ *   it has the form `<templateId>#<instanceIndex>`.
+ * - [templateId] always equals the parent [MobTemplateDef.id], regardless of
+ *   instance count.
+ * - [instanceIndex] is the 0-based ordinal within the template's spawn list, stable
+ *   across reloads as long as the YAML order is unchanged.
+ */
+data class MobSpawn(
+    val id: MobId,
+    val templateId: MobId,
+    val roomId: RoomId,
+    val instanceIndex: Int = 0,
+)
