@@ -1,0 +1,26 @@
+zone: ok_kill
+startRoom: square
+mobs:
+  giver:
+    name: "the quest giver"
+    spawns:
+      - room: square
+  goblin:
+    name: "a goblin"
+    spawns:
+      - room: square
+        count: 3
+quests:
+  goblin_hunt:
+    name: "Goblin Hunt"
+    giver: giver
+    objectives:
+      - type: kill
+        targetKey: goblin
+        count: 3
+        description: "Kill three goblins."
+rooms:
+  square:
+    title: "Square"
+    description: "A square teeming with goblins."
+    exits: {}

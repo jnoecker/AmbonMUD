@@ -1,0 +1,26 @@
+zone: bad_giver
+startRoom: square
+mobs:
+  giver:
+    name: "a quest giver"
+    spawns:
+      - room: square
+        count: 2
+  target:
+    name: "a target"
+    spawns:
+      - room: square
+quests:
+  bad_giver_quest:
+    name: "Bad Giver"
+    giver: giver
+    objectives:
+      - type: kill
+        targetKey: target
+        count: 1
+        description: "Kill the target."
+rooms:
+  square:
+    title: "Square"
+    description: "A square."
+    exits: {}

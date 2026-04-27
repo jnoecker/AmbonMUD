@@ -1,0 +1,37 @@
+zone: bad_turnin
+startRoom: a
+mobs:
+  giver:
+    name: "the giver"
+    spawns:
+      - room: a
+  receiver:
+    name: "the receiver"
+    spawns:
+      - room: a
+      - room: b
+  target:
+    name: "a target"
+    spawns:
+      - room: a
+quests:
+  ambiguous_turn_in:
+    name: "Ambiguous Turn-In"
+    giver: giver
+    turnInMob: receiver
+    objectives:
+      - type: kill
+        targetKey: target
+        count: 1
+        description: "Kill the target."
+rooms:
+  a:
+    title: "Room A"
+    description: "First room."
+    exits:
+      north: b
+  b:
+    title: "Room B"
+    description: "Second room."
+    exits:
+      south: a

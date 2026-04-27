@@ -173,6 +173,40 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `fails when quest giver has multiple spawn instances`() {
+        val ex = assertThrows(WorldLoadException::class.java) {
+            WorldLoader.loadFromResource("world/bad_quest_giver_multi_spawn.yaml")
+        }
+        assertTrue(ex.message!!.contains("giverMobId"), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("exactly one spawn"), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `multi-spawn placements share one templateKey for kill objectives`() {
+        val world = WorldLoader.loadFromResource("world/ok_multi_spawn_kill.yaml")
+        val goblinPlacements = world.mobSpawns.filter { it.templateId.value == "ok_kill:goblin" }
+        assertEquals(3, goblinPlacements.size)
+
+        // Every placement resolves to the same template id, which is what
+        // QuestSystem.onMobKilled and AchievementSystem.onMobKilled match on.
+        assertEquals(setOf("ok_kill:goblin"), goblinPlacements.map { it.templateId.value }.toSet())
+
+        val quest = world.questDefinitions.single { it.id == "ok_kill:goblin_hunt" }
+        val kill = quest.objectives.single { it.type == "kill" }
+        assertEquals("ok_kill:goblin", kill.targetId)
+        assertEquals(3, kill.count)
+    }
+
+    @Test
+    fun `fails when quest turn-in NPC has multiple placements`() {
+        val ex = assertThrows(WorldLoadException::class.java) {
+            WorldLoader.loadFromResource("world/bad_quest_turn_in_multi_room.yaml")
+        }
+        assertTrue(ex.message!!.contains("turnInMobId"), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("exactly one spawn"), "Got: ${ex.message}")
+    }
+
+    @Test
     fun `loads zone lifespan minutes`() {
         val world = dev.ambon.test.TestWorlds.okSmall
 

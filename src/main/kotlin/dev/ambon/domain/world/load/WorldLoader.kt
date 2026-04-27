@@ -991,6 +991,32 @@ object WorldLoader {
             }
         }
 
+        // Validate quest-giver and turn-in NPCs are unique (single placement, count == 1).
+        // Multi-spawn quest givers would force the engine to pick one arbitrarily for HUD pins
+        // and dialogue routing, so we reject them at load.
+        val placementCounts: Map<MobId, Int> =
+            mergedSpawns
+                .groupingBy { it.templateId }
+                .eachCount()
+        for (quest in mergedQuests) {
+            requireUniqueQuestNpc(
+                quest = quest,
+                role = "giverMobId",
+                rawId = quest.giverMobId,
+                templates = mergedTemplates,
+                placementCounts = placementCounts,
+            )
+            quest.turnInMobId?.let { turnIn ->
+                requireUniqueQuestNpc(
+                    quest = quest,
+                    role = "turnInMobId",
+                    rawId = turnIn,
+                    templates = mergedTemplates,
+                    placementCounts = placementCounts,
+                )
+            }
+        }
+
         // Validate shop references after merge
         for (shop in mergedShops) {
             if (!mergedRooms.containsKey(shop.roomId)) {
@@ -1183,6 +1209,36 @@ object WorldLoader {
     ): MobId {
         val s = requireNonBlank(raw) { "Mob id cannot be blank" }
         return MobId(qualifyId(zone, s))
+    }
+
+    /**
+     * Enforces the "quest-giver / turn-in NPCs are unique" invariant. Rejects:
+     * - missing template (typo or unloaded zone),
+     * - templates with anything other than exactly one placement.
+     *
+     * Called after spawns are expanded and quests are merged, so [placementCounts]
+     * reflects the final post-load picture.
+     */
+    private fun requireUniqueQuestNpc(
+        quest: QuestDef,
+        role: String,
+        rawId: String,
+        templates: Map<MobId, MobTemplateDef>,
+        placementCounts: Map<MobId, Int>,
+    ) {
+        val mobId = MobId(rawId)
+        if (mobId !in templates) {
+            throw WorldLoadException(
+                "Quest '${quest.id}' $role '$rawId' references unknown mob template.",
+            )
+        }
+        val count = placementCounts[mobId] ?: 0
+        if (count != 1) {
+            throw WorldLoadException(
+                "Quest '${quest.id}' $role '$rawId' must have exactly one spawn " +
+                    "(found $count). Quest-giver and turn-in NPCs must be unique.",
+            )
+        }
     }
 
     /**
