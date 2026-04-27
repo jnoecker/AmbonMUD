@@ -46,26 +46,30 @@ class WorldMutationTest {
 
     @Test
     fun `replaceAll updates mob spawns`() {
+        val ratId = MobId("zone1:rat")
+        val wolfId = MobId("zone1:wolf")
         val world = World(
             rooms = mapOf(roomA to Room(roomA, "A", "desc", emptyMap())),
             startRoom = roomA,
-            mobSpawns = listOf(
-                MobSpawn(MobId("zone1:rat"), "rat", roomA, damage = DamageRange(1, 2)),
+            mobTemplates = mapOf(
+                ratId to MobTemplateDef(ratId, "rat", damage = DamageRange(1, 2)),
             ),
+            mobSpawns = listOf(MobSpawn(ratId, ratId, roomA)),
         )
 
         val newWorld = World(
             rooms = mapOf(roomA to Room(roomA, "A", "desc", emptyMap())),
             startRoom = roomA,
-            mobSpawns = listOf(
-                MobSpawn(MobId("zone1:wolf"), "wolf", roomA, damage = DamageRange(3, 5)),
+            mobTemplates = mapOf(
+                wolfId to MobTemplateDef(wolfId, "wolf", damage = DamageRange(3, 5)),
             ),
+            mobSpawns = listOf(MobSpawn(wolfId, wolfId, roomA)),
         )
 
         world.replaceAll(newWorld)
 
         assertEquals(1, world.mobSpawns.size)
-        assertEquals("wolf", world.mobSpawns[0].name)
+        assertEquals("wolf", world.mobTemplate(world.mobSpawns[0].templateId)!!.name)
     }
 
     @Test
@@ -91,15 +95,21 @@ class WorldMutationTest {
 
     @Test
     fun `mergeZone replaces only target zone`() {
+        val ratId = MobId("zone1:rat")
+        val wolfId = MobId("zone2:wolf")
         val world = World(
             rooms = mapOf(
                 roomA to Room(roomA, "A", "desc", emptyMap()),
                 roomC to Room(roomC, "C", "desc", emptyMap()),
             ),
             startRoom = roomA,
+            mobTemplates = mapOf(
+                ratId to MobTemplateDef(ratId, "rat", damage = DamageRange(1, 2)),
+                wolfId to MobTemplateDef(wolfId, "wolf", damage = DamageRange(3, 5)),
+            ),
             mobSpawns = listOf(
-                MobSpawn(MobId("zone1:rat"), "rat", roomA, damage = DamageRange(1, 2)),
-                MobSpawn(MobId("zone2:wolf"), "wolf", roomC, damage = DamageRange(3, 5)),
+                MobSpawn(ratId, ratId, roomA),
+                MobSpawn(wolfId, wolfId, roomC),
             ),
         )
 
@@ -109,9 +119,10 @@ class WorldMutationTest {
                 roomB to Room(roomB, "B new", "new room", emptyMap()),
             ),
             startRoom = roomA,
-            mobSpawns = listOf(
-                MobSpawn(MobId("zone1:rat"), "big rat", roomA, maxHp = 20, damage = DamageRange(2, 4)),
+            mobTemplates = mapOf(
+                ratId to MobTemplateDef(ratId, "big rat", maxHp = 20, damage = DamageRange(2, 4)),
             ),
+            mobSpawns = listOf(MobSpawn(ratId, ratId, roomA)),
         )
 
         val removed = world.mergeZone("zone1", sourceWorld)
@@ -125,8 +136,9 @@ class WorldMutationTest {
         assertTrue(removed.isEmpty())
         // zone1 mobs updated, zone2 mobs untouched
         assertEquals(2, world.mobSpawns.size)
-        assertTrue(world.mobSpawns.any { it.name == "big rat" })
-        assertTrue(world.mobSpawns.any { it.name == "wolf" })
+        val names = world.mobSpawns.mapNotNull { world.mobTemplate(it.templateId)?.name }.toSet()
+        assertTrue("big rat" in names)
+        assertTrue("wolf" in names)
     }
 
     @Test

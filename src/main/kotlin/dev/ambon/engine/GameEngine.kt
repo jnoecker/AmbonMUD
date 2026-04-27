@@ -2187,7 +2187,7 @@ class GameEngine(
      */
     private fun resolveObjectiveRoomIds(targetId: String): List<String> {
         val mobRooms = world.mobSpawns
-            .filter { it.id.value == targetId }
+            .filter { it.templateId.value == targetId }
             .map { it.roomId.value }
         if (mobRooms.isNotEmpty()) return mobRooms
 
@@ -2266,8 +2266,9 @@ class GameEngine(
         mobRemovalCoordinator.onCombatKillCleanup(mobId)
         gmcpEmitter.broadcastRoomRemoveMob(roomId, mobId.value, players)
         val spawn = world.mobSpawns.find { it.id == mobId }
-        val respawnMs = spawn?.respawnSeconds?.let { it * 1_000L }
-        if (spawn != null && respawnMs != null) {
+        val template = spawn?.let { world.mobTemplate(it.templateId) }
+        val respawnMs = template?.respawnSeconds?.let { it * 1_000L }
+        if (spawn != null && template != null && respawnMs != null) {
             scheduler.scheduleIn(respawnMs) {
                 if (mobs.get(spawn.id) != null) return@scheduleIn
                 if (world.rooms[spawn.roomId] == null) return@scheduleIn
@@ -2277,7 +2278,7 @@ class GameEngine(
                 mobSystem.onMobSpawned(spawn.id)
                 behaviorTreeSystem.onMobSpawned(spawn.id)
                 for (p in players.playersInRoom(spawn.roomId)) {
-                    outbound.send(OutboundEvent.SendText(p.sessionId, "${spawn.name} appears."))
+                    outbound.send(OutboundEvent.SendText(p.sessionId, "${respawned.name} appears."))
                     gmcpEmitter.sendRoomAddMob(p.sessionId, respawned)
                 }
             }
@@ -2445,13 +2446,13 @@ class GameEngine(
         globalQuestSystem?.onEvent(sessionId, GlobalQuestObjectiveType.KILL)
 
         // Faction reputation changes on mob kill
-        val mobSpawn = world.mobSpawns.firstOrNull { it.id.value == templateKey }
-        if (mobSpawn?.faction != null) {
+        val mobTemplate = world.mobTemplate(dev.ambon.domain.ids.MobId(templateKey))
+        if (mobTemplate?.faction != null) {
             val player = players.get(sessionId)
             if (player != null) {
                 // Level proxy: maxHp/10, capped at 20 to prevent extreme swings from bosses
-                val levelProxy = (mobSpawn.maxHp / 10).coerceAtMost(20)
-                val changes = reputationSystem.onMobKilled(player, mobSpawn.faction, levelProxy)
+                val levelProxy = (mobTemplate.maxHp / 10).coerceAtMost(20)
+                val changes = reputationSystem.onMobKilled(player, mobTemplate.faction, levelProxy)
                 for (change in changes) {
                     val factionName = reputationSystem.getFaction(change.factionId)?.name ?: change.factionId
                     val sign = if (change.amount > 0) "+" else ""

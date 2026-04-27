@@ -2045,14 +2045,14 @@ class GmcpEmitter(
      * Sends mob template listing to staff players for the spawn browser.
      */
     suspend fun sendStaffMobTemplates(sessionId: SessionId, world: World) {
-        val grouped = world.mobSpawns.groupBy { it.id.value.substringBefore(':') }
-        val zones = grouped.entries.sortedBy { it.key }.map { (zone, mobs) ->
+        val grouped = world.mobTemplates.values.groupBy { it.id.value.substringBefore(':') }
+        val zones = grouped.entries.sortedBy { it.key }.map { (zone, templates) ->
             StaffMobZonePayload(
                 zone = zone,
-                mobs = mobs.sortedBy { it.id.value }.map { mob ->
+                mobs = templates.sortedBy { it.id.value }.map { tpl ->
                     StaffMobTemplatePayload(
-                        id = mob.id.value,
-                        name = mob.name,
+                        id = tpl.id.value,
+                        name = tpl.name,
                     )
                 },
             )

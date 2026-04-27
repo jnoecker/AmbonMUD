@@ -3,7 +3,17 @@ package dev.ambon.domain.world.data
 data class MobFile(
     val name: String,
     val description: String = "",
-    val room: String,
+    /**
+     * Legacy single-room shorthand. Equivalent to `spawns: [{ room: <value> }]`.
+     * Prefer [spawns] for new content; this field is preserved so old YAML keeps loading.
+     */
+    val room: String? = null,
+    /**
+     * Spawn placements for this mob template. Each entry creates [MobSpawnFile.count]
+     * runtime instances in the named room. When empty, [room] is used as a fallback
+     * (one instance in that room).
+     */
+    val spawns: List<MobSpawnFile> = emptyList(),
     /**
      * What this mob is for: combat, vendor, quest_giver, dialog, or prop.
      * Non-combat roles refuse attack commands and skip combat-stat computation.

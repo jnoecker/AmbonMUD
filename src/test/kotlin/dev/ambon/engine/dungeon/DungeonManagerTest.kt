@@ -12,6 +12,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.MobSpawn
+import dev.ambon.domain.world.MobTemplateDef
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.MobRegistry
@@ -54,23 +55,27 @@ class DungeonManagerTest {
         ),
     )
 
-    private val skeletonSpawn = MobSpawn(
-        id = MobId("test:crypt_skeleton"),
+    private val skeletonId = MobId("test:crypt_skeleton")
+    private val bossId = MobId("test:crypt_lord")
+
+    private val skeletonTemplate = MobTemplateDef(
+        id = skeletonId,
         name = "a skeleton",
-        roomId = portalRoomId,
         maxHp = 20,
         damage = DamageRange(2, 4),
         xpReward = 30L,
     )
 
-    private val bossSpawn = MobSpawn(
-        id = MobId("test:crypt_lord"),
+    private val bossTemplate = MobTemplateDef(
+        id = bossId,
         name = "the Crypt Lord",
-        roomId = portalRoomId,
         maxHp = 100,
         damage = DamageRange(8, 15),
         xpReward = 200L,
     )
+
+    private val skeletonSpawn = MobSpawn(skeletonId, skeletonId, portalRoomId)
+    private val bossSpawn = MobSpawn(bossId, bossId, portalRoomId)
 
     private lateinit var world: World
     private lateinit var mobs: MobRegistry
@@ -82,6 +87,7 @@ class DungeonManagerTest {
         world = World(
             rooms = mapOf(portalRoomId to Room(portalRoomId, "Portal", "A portal room.", emptyMap())),
             startRoom = portalRoomId,
+            mobTemplates = mapOf(skeletonId to skeletonTemplate, bossId to bossTemplate),
             mobSpawns = listOf(skeletonSpawn, bossSpawn),
         )
         mobs = MobRegistry()

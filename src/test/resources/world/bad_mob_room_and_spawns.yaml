@@ -1,0 +1,13 @@
+zone: bad_dual
+startRoom: a
+mobs:
+  conflicted:
+    name: "a confused mob"
+    room: a
+    spawns:
+      - room: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Only room."
+    exits: {}

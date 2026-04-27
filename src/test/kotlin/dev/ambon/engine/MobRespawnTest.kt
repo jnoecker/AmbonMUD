@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.MobSpawn
+import dev.ambon.domain.world.MobTemplateDef
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.events.OutboundEvent
@@ -41,27 +42,28 @@ class MobRespawnTest {
         { id, _ ->
             mobSystem.onMobRemoved(id)
             val spawn = world.mobSpawns.find { it.id == id }
-            val respawnMs = spawn?.respawnSeconds?.let { it * 1_000L }
-            if (spawn != null && respawnMs != null) {
+            val template = spawn?.let { world.mobTemplate(it.templateId) }
+            val respawnMs = template?.respawnSeconds?.let { it * 1_000L }
+            if (spawn != null && template != null && respawnMs != null) {
                 scheduler.scheduleIn(respawnMs) {
                     if (mobs.get(spawn.id) != null) return@scheduleIn
                     if (world.rooms[spawn.roomId] == null) return@scheduleIn
                     mobs.upsert(
                         MobState(
                             id = spawn.id,
-                            name = spawn.name,
+                            name = template.name,
                             roomId = spawn.roomId,
-                            hp = spawn.maxHp,
-                            maxHp = spawn.maxHp,
-                            damage = spawn.damage,
-                            armor = spawn.armor,
-                            xpReward = spawn.xpReward,
-                            drops = spawn.drops,
+                            hp = template.maxHp,
+                            maxHp = template.maxHp,
+                            damage = template.damage,
+                            armor = template.armor,
+                            xpReward = template.xpReward,
+                            drops = template.drops,
                         ),
                     )
                     mobSystem.onMobSpawned(spawn.id)
                     for (p in players.playersInRoom(spawn.roomId)) {
-                        outbound.send(OutboundEvent.SendText(p.sessionId, "${spawn.name} appears."))
+                        outbound.send(OutboundEvent.SendText(p.sessionId, "${template.name} appears."))
                     }
                 }
             }
@@ -71,8 +73,14 @@ class MobRespawnTest {
     fun `mob with respawnSeconds respawns in origin room after delay`() =
         runTest {
             val room = Room(roomId, "A Room", "A room.", emptyMap())
-            val spawn = MobSpawn(id = mobId, name = "a rat", roomId = roomId, respawnSeconds = 60L)
-            val world = World(mapOf(roomId to room), roomId, mobSpawns = listOf(spawn))
+            val template = MobTemplateDef(id = mobId, name = "a rat", respawnSeconds = 60L)
+            val spawn = MobSpawn(id = mobId, templateId = mobId, roomId = roomId)
+            val world = World(
+                mapOf(roomId to room),
+                roomId,
+                mobTemplates = mapOf(mobId to template),
+                mobSpawns = listOf(spawn),
+            )
 
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
@@ -101,15 +109,21 @@ class MobRespawnTest {
             val respawned = mobs.get(mobId)
             assertNotNull(respawned, "Mob should have respawned")
             assertEquals(roomId, respawned!!.roomId)
-            assertEquals(spawn.maxHp, respawned.hp)
+            assertEquals(template.maxHp, respawned.hp)
         }
 
     @Test
     fun `respawn is skipped when mob is already in registry at fire time`() =
         runTest {
             val room = Room(roomId, "A Room", "A room.", emptyMap())
-            val spawn = MobSpawn(id = mobId, name = "a rat", roomId = roomId, respawnSeconds = 60L)
-            val world = World(mapOf(roomId to room), roomId, mobSpawns = listOf(spawn))
+            val template = MobTemplateDef(id = mobId, name = "a rat", respawnSeconds = 60L)
+            val spawn = MobSpawn(id = mobId, templateId = mobId, roomId = roomId)
+            val world = World(
+                mapOf(roomId to room),
+                roomId,
+                mobTemplates = mapOf(mobId to template),
+                mobSpawns = listOf(spawn),
+            )
 
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
@@ -141,10 +155,16 @@ class MobRespawnTest {
     fun `respawn is skipped when origin room no longer exists`() =
         runTest {
             val missingRoomId = RoomId("zone:missing")
-            val spawn = MobSpawn(id = mobId, name = "a rat", roomId = missingRoomId, respawnSeconds = 30L)
+            val template = MobTemplateDef(id = mobId, name = "a rat", respawnSeconds = 30L)
+            val spawn = MobSpawn(id = mobId, templateId = mobId, roomId = missingRoomId)
             // World does NOT contain the mob's origin room
             val anchorRoom = Room(roomId, "A Room", "A room.", emptyMap())
-            val world = World(mapOf(roomId to anchorRoom), roomId, mobSpawns = listOf(spawn))
+            val world = World(
+                mapOf(roomId to anchorRoom),
+                roomId,
+                mobTemplates = mapOf(mobId to template),
+                mobSpawns = listOf(spawn),
+            )
 
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
@@ -167,8 +187,14 @@ class MobRespawnTest {
     fun `mob without respawnSeconds does not schedule a respawn`() =
         runTest {
             val room = Room(roomId, "A Room", "A room.", emptyMap())
-            val spawn = MobSpawn(id = mobId, name = "a rat", roomId = roomId) // respawnSeconds = null
-            val world = World(mapOf(roomId to room), roomId, mobSpawns = listOf(spawn))
+            val template = MobTemplateDef(id = mobId, name = "a rat") // respawnSeconds = null
+            val spawn = MobSpawn(id = mobId, templateId = mobId, roomId = roomId)
+            val world = World(
+                mapOf(roomId to room),
+                roomId,
+                mobTemplates = mapOf(mobId to template),
+                mobSpawns = listOf(spawn),
+            )
 
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
@@ -190,8 +216,14 @@ class MobRespawnTest {
     fun `arrival message is sent to players in origin room when mob respawns`() =
         runTest {
             val room = Room(roomId, "A Room", "A room.", emptyMap())
-            val spawn = MobSpawn(id = mobId, name = "a rat", roomId = roomId, respawnSeconds = 10L)
-            val world = World(mapOf(roomId to room), roomId, mobSpawns = listOf(spawn))
+            val template = MobTemplateDef(id = mobId, name = "a rat", respawnSeconds = 10L)
+            val spawn = MobSpawn(id = mobId, templateId = mobId, roomId = roomId)
+            val world = World(
+                mapOf(roomId to room),
+                roomId,
+                mobTemplates = mapOf(mobId to template),
+                mobSpawns = listOf(spawn),
+            )
 
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()

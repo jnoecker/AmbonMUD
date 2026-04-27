@@ -35,64 +35,71 @@ internal fun computeDistanceMap(start: RoomId, world: World): Map<RoomId, Int> {
 }
 
 /**
- * Converts a [MobSpawn] definition into a live [MobState] instance.
+ * Converts a [MobSpawn] placement into a live [MobState] instance, reading
+ * stats from the matching [dev.ambon.domain.world.MobTemplateDef].
  *
  * When [referencePlayerLevel] is supplied and the mob's zone uses a non-STATIC
- * scaling mode, the spawn level and tier-derived stats are recomputed for that
- * player level. Authored overrides still win. Pass null (or nothing) to use
- * the authored spawn level — the normal path for zones without scaling.
+ * scaling mode, the template level and tier-derived stats are recomputed for
+ * that player level. Authored overrides still win. Pass null (or nothing) to
+ * use the authored level — the normal path for zones without scaling.
+ *
+ * Throws [IllegalStateException] if [spawn]'s template id is unknown to [world];
+ * the loader's invariant is that every spawn has a corresponding template.
  */
 internal fun spawnToMobState(
     spawn: MobSpawn,
     world: World,
     referencePlayerLevel: Int? = null,
 ): MobState {
+    val template = world.mobTemplate(spawn.templateId)
+        ?: error("No template '${spawn.templateId.value}' for spawn '${spawn.id.value}'")
     val zone = idZone(spawn.id.value)
     val scaling = world.zoneScaling(zone)
 
-    val shouldRescale = scaling.mode != ScalingMode.STATIC && spawn.tier != null
-    val effectiveLevel = if (shouldRescale) scaling.resolveLevel(referencePlayerLevel, spawn.level) else spawn.level
+    val shouldRescale = scaling.mode != ScalingMode.STATIC && template.tier != null
+    val effectiveLevel =
+        if (shouldRescale) scaling.resolveLevel(referencePlayerLevel, template.level) else template.level
     val resolved =
-        if (shouldRescale && effectiveLevel != spawn.level && spawn.tier != null) {
-            resolveMobStats(spawn.tier, effectiveLevel, spawn.overrides)
+        if (shouldRescale && effectiveLevel != template.level && template.tier != null) {
+            resolveMobStats(template.tier, effectiveLevel, template.overrides)
         } else {
             null
         }
 
-    val maxHp = resolved?.hp ?: spawn.maxHp
-    val damage = resolved?.damage ?: spawn.damage
-    val armor = resolved?.armor ?: spawn.armor
-    val xpReward = resolved?.xpReward ?: spawn.xpReward
-    val goldMin = resolved?.goldMin ?: spawn.goldMin
-    val goldMax = resolved?.goldMax ?: spawn.goldMax
+    val maxHp = resolved?.hp ?: template.maxHp
+    val damage = resolved?.damage ?: template.damage
+    val armor = resolved?.armor ?: template.armor
+    val xpReward = resolved?.xpReward ?: template.xpReward
+    val goldMin = resolved?.goldMin ?: template.goldMin
+    val goldMax = resolved?.goldMax ?: template.goldMax
 
     return MobState(
         id = spawn.id,
-        name = spawn.name,
-        description = spawn.description,
+        name = template.name,
+        description = template.description,
         roomId = spawn.roomId,
         hp = maxHp,
         maxHp = maxHp,
         damage = damage,
         armor = armor,
         xpReward = xpReward,
-        drops = spawn.drops,
+        drops = template.drops,
         goldMin = goldMin,
         goldMax = goldMax,
-        dialogue = spawn.dialogue,
-        behaviorTree = spawn.behaviorTree,
-        aggressive = spawn.aggressive,
-        templateKey = spawn.id.value,
+        dialogue = template.dialogue,
+        behaviorTree = template.behaviorTree,
+        aggressive = template.aggressive,
+        templateKey = spawn.templateId.value,
         spawnRoomId = spawn.roomId,
         spawnDistanceMap = computeDistanceMap(spawn.roomId, world),
-        questIds = spawn.questIds,
-        image = spawn.image,
-        video = spawn.video,
-        category = spawn.category,
-        spells = spawn.spells,
-        defaultAttack = spawn.defaultAttack,
+        questIds = template.questIds,
+        image = template.image,
+        video = template.video,
+        category = template.category,
+        spells = template.spells,
+        defaultAttack = template.defaultAttack,
         level = effectiveLevel,
-        role = spawn.role,
+        role = template.role,
     )
 }
 

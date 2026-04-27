@@ -17,6 +17,7 @@ import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobSpawn
+import dev.ambon.domain.world.MobTemplateDef
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.domain.world.World
@@ -46,8 +47,16 @@ class HotReloadManagerTest {
             roomB to Room(roomB, "Room B", "desc", mapOf(Direction.SOUTH to roomA)),
         ),
         startRoom = roomA,
+        mobTemplates = mapOf(
+            MobId("zone1:rat") to MobTemplateDef(
+                id = MobId("zone1:rat"),
+                name = "a rat",
+                maxHp = 10,
+                damage = DamageRange(1, 2),
+            ),
+        ),
         mobSpawns = listOf(
-            MobSpawn(MobId("zone1:rat"), "a rat", roomA, maxHp = 10, damage = DamageRange(1, 2)),
+            MobSpawn(MobId("zone1:rat"), MobId("zone1:rat"), roomA),
         ),
         itemSpawns = listOf(
             ItemSpawn(ItemInstance(ItemId("zone1:sword"), Item("sword", "a sword")), roomA),
@@ -100,21 +109,23 @@ class HotReloadManagerTest {
             roomC to Room(roomC, "Room C", "zone2 room", emptyMap()),
         ),
         startRoom = roomA,
-        mobSpawns = listOf(
-            MobSpawn(
-                MobId("zone1:rat"),
-                "a big rat",
-                roomA,
+        mobTemplates = mapOf(
+            MobId("zone1:rat") to MobTemplateDef(
+                id = MobId("zone1:rat"),
+                name = "a big rat",
                 maxHp = 20,
                 damage = DamageRange(2, 4),
             ),
-            MobSpawn(
-                MobId("zone2:wolf"),
-                "a wolf",
-                roomC,
+            MobId("zone2:wolf") to MobTemplateDef(
+                id = MobId("zone2:wolf"),
+                name = "a wolf",
                 maxHp = 30,
                 damage = DamageRange(3, 5),
             ),
+        ),
+        mobSpawns = listOf(
+            MobSpawn(MobId("zone1:rat"), MobId("zone1:rat"), roomA),
+            MobSpawn(MobId("zone2:wolf"), MobId("zone2:wolf"), roomC),
         ),
         itemSpawns = listOf(
             ItemSpawn(ItemInstance(ItemId("zone1:sword"), Item("sword", "a sword", damage = 5)), roomA),

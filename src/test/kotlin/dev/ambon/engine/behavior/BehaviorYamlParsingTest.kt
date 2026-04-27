@@ -13,15 +13,15 @@ class BehaviorYamlParsingTest {
     fun `valid behavior YAML loads successfully`() {
         val world = WorldLoader.loadFromResource("world/ok_behavior.yaml")
 
-        val guard = world.mobSpawns.find { it.id.value == "behavior_test:guard" }
+        val guard = world.mobTemplates.values.find { it.id.value == "behavior_test:guard" }
         assertNotNull(guard, "guard mob should exist")
         assertNotNull(guard!!.behaviorTree, "guard should have a behavior tree")
 
-        val sentry = world.mobSpawns.find { it.id.value == "behavior_test:sentry" }
+        val sentry = world.mobTemplates.values.find { it.id.value == "behavior_test:sentry" }
         assertNotNull(sentry, "sentry mob should exist")
         assertNotNull(sentry!!.behaviorTree, "sentry should have a behavior tree")
 
-        val rat = world.mobSpawns.find { it.id.value == "behavior_test:rat" }
+        val rat = world.mobTemplates.values.find { it.id.value == "behavior_test:rat" }
         assertNotNull(rat, "rat mob should exist")
         assertNotNull(rat!!.behaviorTree, "rat should have a behavior tree")
     }
@@ -29,7 +29,7 @@ class BehaviorYamlParsingTest {
     @Test
     fun `mob without behavior has null behaviorTree`() {
         val world = WorldLoader.loadFromResource("world/ok_dialogue.yaml")
-        for (mob in world.mobSpawns) {
+        for (mob in world.mobTemplates.values) {
             assertNull(mob.behaviorTree, "mob ${mob.id.value} should not have a behavior tree")
         }
     }

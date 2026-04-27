@@ -1,0 +1,13 @@
+zone: bad_count
+startRoom: a
+mobs:
+  zero_count:
+    name: "a phantom"
+    spawns:
+      - room: a
+        count: 0
+rooms:
+  a:
+    title: "Room A"
+    description: "Only room."
+    exits: {}

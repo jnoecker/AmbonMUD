@@ -933,13 +933,13 @@ class AdminHandler(
         }
     }
 
-    private fun findMobTemplate(arg: String): dev.ambon.domain.world.MobSpawn? {
+    private fun findMobTemplate(arg: String): dev.ambon.domain.world.MobTemplateDef? {
         val trimmed = arg.trim()
         return if (':' in trimmed) {
-            world.mobSpawns.firstOrNull { it.id.value.equals(trimmed, ignoreCase = true) }
+            world.mobTemplates.values.firstOrNull { it.id.value.equals(trimmed, ignoreCase = true) }
         } else {
             val lowerLocal = trimmed.lowercase()
-            world.mobSpawns.firstOrNull {
+            world.mobTemplates.values.firstOrNull {
                 it.id.value.substringAfter(':', it.id.value).lowercase() == lowerLocal
             }
         }

@@ -44,6 +44,7 @@ import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.MobDrop
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.MobStatOverrides
+import dev.ambon.domain.world.MobTemplateDef
 import dev.ambon.domain.world.ReputationRequirement
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.RoomFeature
@@ -55,6 +56,8 @@ import dev.ambon.domain.world.ZoneScaling
 import dev.ambon.domain.world.data.ExitValue
 import dev.ambon.domain.world.data.ExitValueDeserializer
 import dev.ambon.domain.world.data.FeatureFile
+import dev.ambon.domain.world.data.MobFile
+import dev.ambon.domain.world.data.MobSpawnFile
 import dev.ambon.domain.world.data.ReputationRequirementFile
 import dev.ambon.domain.world.data.WorldFile
 import dev.ambon.domain.world.resolveMobStats
@@ -139,7 +142,8 @@ object WorldLoader {
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
         val allGates = LinkedHashMap<RoomId, Map<Direction, AchievementGate>>() // staged per-room achievement gates
         val allRoomFeatures = LinkedHashMap<RoomId, MutableList<RoomFeature>>() // staged features per room
-        val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
+        val mergedTemplates = LinkedHashMap<MobId, MobTemplateDef>()
+        val mergedSpawns = mutableListOf<MobSpawn>()
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
         val mergedShops = mutableListOf<ShopDefinition>()
         val mergedTrainers = mutableListOf<TrainerDefinition>()
@@ -320,10 +324,11 @@ object WorldLoader {
             // Stage mobs (normalized), validate uniqueness
             for ((rawId, mf) in file.mobs) {
                 val mobId = normalizeMobId(zone, rawId)
-                if (mergedMobs.containsKey(mobId)) {
+                if (mergedTemplates.containsKey(mobId)) {
                     throw WorldLoadException("Duplicate mob id '${mobId.value}' across zone files")
                 }
-                val roomId = normalizeTarget(zone, mf.room)
+
+                val placementSources = resolveMobPlacements(mobId, mf)
 
                 val tierName = mf.tier?.trim()?.lowercase()
                 val tier =
@@ -415,12 +420,11 @@ object WorldLoader {
                     )
                 }
 
-                mergedMobs[mobId] =
-                    MobSpawn(
+                mergedTemplates[mobId] =
+                    MobTemplateDef(
                         id = mobId,
                         name = mf.name,
                         description = mf.description,
-                        roomId = roomId,
                         maxHp = resolvedHp,
                         damage = DamageRange(resolvedMinDamage, resolvedMaxDamage),
                         armor = resolvedArmor,
@@ -450,6 +454,8 @@ object WorldLoader {
                         tier = tier,
                         overrides = overrides,
                     )
+
+                expandPlacements(mobId, placementSources, zone, mergedSpawns)
             }
 
             // Stage items (normalized), validate uniqueness
@@ -956,10 +962,10 @@ object WorldLoader {
         }
 
         // Validate mob starting rooms exist after merge
-        for ((mobId, mob) in mergedMobs) {
-            if (!mergedRooms.containsKey(mob.roomId)) {
+        for (spawn in mergedSpawns) {
+            if (!mergedRooms.containsKey(spawn.roomId)) {
                 throw WorldLoadException(
-                    "Mob '${mobId.value}' starts in missing room '${mob.roomId.value}'",
+                    "Mob '${spawn.id.value}' starts in missing room '${spawn.roomId.value}'",
                 )
             }
         }
@@ -975,8 +981,8 @@ object WorldLoader {
         }
 
         // Validate mob drop item references exist after merge
-        for ((mobId, mob) in mergedMobs) {
-            for ((index, drop) in mob.drops.withIndex()) {
+        for ((mobId, template) in mergedTemplates) {
+            for ((index, drop) in template.drops.withIndex()) {
                 if (!mergedItems.containsKey(drop.itemId)) {
                     throw WorldLoadException(
                         "Mob '${mobId.value}' drop #${index + 1} references missing item '${drop.itemId.value}'",
@@ -1082,7 +1088,11 @@ object WorldLoader {
         return World(
             rooms = coordRooms.toMutableMap(),
             startRoom = worldStart,
-            mobSpawns = mergedMobs.values.sortedBy { it.id.value },
+            mobTemplates =
+                mergedTemplates.entries
+                    .sortedBy { it.key.value }
+                    .associate { (id, def) -> id to def },
+            mobSpawns = mergedSpawns.sortedWith(compareBy({ it.templateId.value }, { it.instanceIndex })),
             itemSpawns = mergedItems.values.sortedBy { it.instance.id.value },
             zoneLifespansMinutes =
                 zoneLifespansMinutes.entries
@@ -1173,6 +1183,84 @@ object WorldLoader {
     ): MobId {
         val s = requireNonBlank(raw) { "Mob id cannot be blank" }
         return MobId(qualifyId(zone, s))
+    }
+
+    /**
+     * Resolves the spawn list for a mob entry. Prefers the explicit `spawns:`
+     * list; falls back to the legacy `room:` shorthand (one placement) and
+     * logs a one-time deprecation note. Throws if neither is present.
+     */
+    private fun resolveMobPlacements(
+        mobId: MobId,
+        mf: MobFile,
+    ): List<MobSpawnFile> {
+        if (mf.spawns.isNotEmpty()) {
+            if (mf.room != null) {
+                throw WorldLoadException(
+                    "Mob '${mobId.value}' declares both 'room' and 'spawns' — " +
+                        "use 'spawns' only.",
+                )
+            }
+            return mf.spawns
+        }
+        val shorthand = mf.room
+            ?: throw WorldLoadException(
+                "Mob '${mobId.value}' has no spawns and no 'room' shorthand.",
+            )
+        logger.debug(
+            "Mob '{}' uses legacy 'room:' shorthand; migrate to 'spawns: [{{ room: {} }}]'.",
+            mobId.value,
+            shorthand,
+        )
+        return listOf(MobSpawnFile(room = shorthand))
+    }
+
+    /**
+     * Expands [placements] into runtime [MobSpawn] records, appending them to
+     * [out]. Single-instance templates keep an id equal to [templateId];
+     * multi-instance templates get `<templateId>#<n>` ids. Validates `count`
+     * and that each room reference normalizes.
+     */
+    private fun expandPlacements(
+        templateId: MobId,
+        placements: List<MobSpawnFile>,
+        zone: String,
+        out: MutableList<MobSpawn>,
+    ) {
+        val totalInstances = placements.sumOf { it.count }
+        if (totalInstances < 1) {
+            throw WorldLoadException(
+                "Mob '${templateId.value}' must have at least one spawn instance " +
+                    "(found total count $totalInstances).",
+            )
+        }
+        var index = 0
+        for ((placementIndex, placement) in placements.withIndex()) {
+            if (placement.count < 1) {
+                throw WorldLoadException(
+                    "Mob '${templateId.value}' spawn entry #${placementIndex + 1} " +
+                        "must have count >= 1 (got ${placement.count}).",
+                )
+            }
+            val roomId = normalizeTarget(zone, placement.room)
+            repeat(placement.count) {
+                val instanceId =
+                    if (totalInstances == 1) {
+                        templateId
+                    } else {
+                        MobId("${templateId.value}#$index")
+                    }
+                out.add(
+                    MobSpawn(
+                        id = instanceId,
+                        templateId = templateId,
+                        roomId = roomId,
+                        instanceIndex = index,
+                    ),
+                )
+                index++
+            }
+        }
     }
 
     private fun normalizeItemId(

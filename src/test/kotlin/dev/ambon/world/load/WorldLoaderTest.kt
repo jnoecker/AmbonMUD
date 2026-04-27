@@ -79,10 +79,11 @@ class WorldLoaderTest {
     fun `loads mobs from a zone file`() {
         val world = dev.ambon.test.TestWorlds.okSmall
 
-        val mob = world.mobSpawns.single()
+        val spawn = world.mobSpawns.single()
+        val mob = world.mobTemplate(spawn.templateId)!!
         assertEquals("ok_small:rat", mob.id.value)
         assertEquals("a small rat", mob.name)
-        assertEquals(RoomId("ok_small:b"), mob.roomId)
+        assertEquals(RoomId("ok_small:b"), spawn.roomId)
         assertEquals(10, mob.maxHp)
         assertEquals(1, mob.damage.min)
         assertEquals(4, mob.damage.max)
@@ -96,6 +97,79 @@ class WorldLoaderTest {
                 .itemId.value,
         )
         assertEquals(1.0, mob.drops.single().chance)
+    }
+
+    @Test
+    fun `legacy room shorthand produces a single placement with template id`() {
+        val world = dev.ambon.test.TestWorlds.okSmall
+        val rat = world.mobTemplates.values.single { it.id.value == "ok_small:rat" }
+        val placements = world.mobSpawns.filter { it.templateId == rat.id }
+
+        assertEquals(1, placements.size)
+        // Single global instance — placement id matches the template id (no suffix).
+        assertEquals(rat.id, placements[0].id)
+        assertEquals(0, placements[0].instanceIndex)
+        assertEquals(RoomId("ok_small:b"), placements[0].roomId)
+    }
+
+    @Test
+    fun `spawns list with multiple entries produces one placement per copy`() {
+        val world = WorldLoader.loadFromResource("world/ok_mob_multi_spawn.yaml")
+        val placementsByTemplate =
+            world.mobSpawns.groupBy { it.templateId.value }
+
+        // Single-spawn unique NPC keeps a bare id.
+        val unique = placementsByTemplate.getValue("ok_multi:unique_npc")
+        assertEquals(1, unique.size)
+        assertEquals("ok_multi:unique_npc", unique[0].id.value)
+        assertEquals(0, unique[0].instanceIndex)
+
+        // Two rooms, one each → two placements with stable #0/#1 ids.
+        val twoRooms = placementsByTemplate.getValue("ok_multi:trash_two_rooms")
+        assertEquals(2, twoRooms.size)
+        assertEquals(listOf("ok_multi:trash_two_rooms#0", "ok_multi:trash_two_rooms#1"), twoRooms.map { it.id.value })
+        assertEquals(setOf(RoomId("ok_multi:a"), RoomId("ok_multi:b")), twoRooms.map { it.roomId }.toSet())
+
+        // count: 3 → three placements in the same room.
+        val ratCount = placementsByTemplate.getValue("ok_multi:trash_count")
+        assertEquals(3, ratCount.size)
+        assertEquals(listOf(0, 1, 2), ratCount.map { it.instanceIndex })
+        assertTrue(ratCount.all { it.roomId == RoomId("ok_multi:b") })
+
+        // Mixed: count 2 in room a, then 1 in room b → three placements indexed 0,1,2.
+        val slimes = placementsByTemplate.getValue("ok_multi:trash_mixed")
+        assertEquals(3, slimes.size)
+        assertEquals(listOf(0, 1, 2), slimes.map { it.instanceIndex })
+        assertEquals(
+            listOf(RoomId("ok_multi:a"), RoomId("ok_multi:a"), RoomId("ok_multi:b")),
+            slimes.map { it.roomId },
+        )
+    }
+
+    @Test
+    fun `template fields are reachable from every placement of the same template`() {
+        val world = WorldLoader.loadFromResource("world/ok_mob_multi_spawn.yaml")
+        val ratPlacements = world.mobSpawns.filter { it.templateId.value == "ok_multi:trash_count" }
+        val templates = ratPlacements.map { world.mobTemplate(it.templateId)!! }
+        // All three placements resolve to the same template instance — name/stats are shared.
+        assertTrue(templates.all { it.name == "a rat" })
+        assertEquals(1, templates.distinctBy { it.id }.size)
+    }
+
+    @Test
+    fun `fails when mob declares both room and spawns`() {
+        val ex = assertThrows(WorldLoadException::class.java) {
+            WorldLoader.loadFromResource("world/bad_mob_room_and_spawns.yaml")
+        }
+        assertTrue(ex.message!!.contains("both 'room' and 'spawns'"), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when spawn entry has count zero`() {
+        val ex = assertThrows(WorldLoadException::class.java) {
+            WorldLoader.loadFromResource("world/bad_mob_spawn_count_zero.yaml")
+        }
+        assertTrue(ex.message!!.contains("count"), "Got: ${ex.message}")
     }
 
     @Test
@@ -331,7 +405,7 @@ class WorldLoaderTest {
     @Test
     fun `loads mob without tier or level uses standard defaults`() {
         val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
-        val mobs = world.mobSpawns.associateBy { it.id.value }
+        val mobs = world.mobTemplates.mapKeys { it.key.value }
 
         val rat = mobs.getValue("ok_mob_stats:rat")
         assertEquals(10, rat.maxHp)
@@ -344,7 +418,7 @@ class WorldLoaderTest {
     @Test
     fun `loads mob with tier and level applies tier formula`() {
         val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
-        val mobs = world.mobSpawns.associateBy { it.id.value }
+        val mobs = world.mobTemplates.mapKeys { it.key.value }
 
         // standard tier, level=3: steps=2
         // hp = 10 + 2*3 = 16
@@ -363,7 +437,7 @@ class WorldLoaderTest {
     @Test
     fun `loads mob with explicit stat overrides`() {
         val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
-        val mobs = world.mobSpawns.associateBy { it.id.value }
+        val mobs = world.mobTemplates.mapKeys { it.key.value }
 
         val mob = mobs.getValue("ok_mob_stats:override_mob")
         assertEquals(99, mob.maxHp)
@@ -376,7 +450,7 @@ class WorldLoaderTest {
     @Test
     fun `loads mob with boss tier applies boss defaults`() {
         val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
-        val mobs = world.mobSpawns.associateBy { it.id.value }
+        val mobs = world.mobTemplates.mapKeys { it.key.value }
 
         val boss = mobs.getValue("ok_mob_stats:boss_mob")
         assertEquals(50, boss.maxHp)
@@ -434,7 +508,7 @@ class WorldLoaderTest {
     @Test
     fun `loads mob with respawnSeconds`() {
         val world = WorldLoader.loadFromResource("world/ok_mob_respawn.yaml")
-        val mobs = world.mobSpawns.associateBy { it.id.value }
+        val mobs = world.mobTemplates.mapKeys { it.key.value }
 
         val rat = mobs.getValue("ok_mob_respawn:rat")
         assertEquals(60L, rat.respawnSeconds)
@@ -692,7 +766,7 @@ class WorldLoaderTest {
         @Test
         fun `loads mob gold range from tier defaults`() {
             val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
-            val mobs = world.mobSpawns.associateBy { it.id.value }
+            val mobs = world.mobTemplates.mapKeys { it.key.value }
 
             // Standard tier level 1: goldMin=2, goldMax=8
             val rat = mobs.getValue("ok_mob_stats:rat")
@@ -732,7 +806,7 @@ class WorldLoaderTest {
     @Test
     fun `zone faction propagates to mobs that lack their own`() {
         val world = WorldLoader.loadFromResource("world/ok_faction_gates.yaml")
-        val mobs = world.mobSpawns.associateBy { it.id.value }
+        val mobs = world.mobTemplates.mapKeys { it.key.value }
         assertEquals("royal_court", mobs.getValue("ok_faction_gates:inheritor").faction)
         assertEquals("rebel_cell", mobs.getValue("ok_faction_gates:dissenter").faction)
     }
@@ -776,7 +850,7 @@ class WorldLoaderTest {
     @Test
     fun `loads mob with dialogue tree`() {
         val world = WorldLoader.loadFromResource("world/ok_dialogue.yaml")
-        val mob = world.mobSpawns.single()
+        val mob = world.mobTemplates.values.single()
         val dialogue = mob.dialogue
         assertTrue(dialogue != null, "Dialogue should be loaded")
         assertEquals("root", dialogue!!.rootNodeId)
@@ -844,7 +918,7 @@ class WorldLoaderTest {
         val cave = world.rooms.getValue(RoomId("ok_images:cave"))
         assertNull(cave.image)
 
-        val mob = world.mobSpawns.single()
+        val mob = world.mobTemplates.values.single()
         assertEquals("/images/mobs/wolf.png", mob.image)
 
         val items = world.itemSpawns.associateBy { it.instance.id.value }
@@ -867,7 +941,7 @@ class WorldLoaderTest {
         assertEquals("/images/alley/custom.png", alley.image)
 
         // Mob without explicit image gets zone default
-        val mobs = world.mobSpawns.associateBy { it.id.value }
+        val mobs = world.mobTemplates.mapKeys { it.key.value }
         assertEquals("/images/defaults/mob.png", mobs.getValue("ok_image_defaults:guard").image)
 
         // Mob with explicit image keeps its own

@@ -7,7 +7,6 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.MobRegistry
@@ -184,11 +183,11 @@ class DungeonManager(
         for (room in instance.layout.rooms) {
             val roomId = instance.roomIds[room.index] ?: continue
             for (mobTemplateId in room.mobIds) {
-                // Find the mob spawn from the world's mob spawns (same zone as the template)
+                // Find the mob template from the world (same zone as the dungeon template)
                 val templateZone = template.id.substringBefore(':')
                 val fullMobId = if (':' in mobTemplateId) mobTemplateId else "$templateZone:$mobTemplateId"
-                val mobSpawn = world.mobSpawns.firstOrNull { it.id.value == fullMobId }
-                if (mobSpawn == null) {
+                val mobTemplate = world.mobTemplate(MobId(fullMobId))
+                if (mobTemplate == null) {
                     log.warn { "Dungeon mob template not found: $fullMobId" }
                     continue
                 }
@@ -197,36 +196,36 @@ class DungeonManager(
                 val uniqueId = MobId("${instance.roomIds.values.first().zone}:${mobTemplateId}_${UUID.randomUUID().toString().take(6)}")
 
                 // Scale stats based on difficulty and party level
-                val scaledHp = (mobSpawn.maxHp * diff.hpMultiplier * levelScaleFactor(levelScale, mobSpawn)).roundToInt()
-                val scaledMinDmg = (mobSpawn.damage.min * diff.damageMultiplier * levelScaleFactor(levelScale, mobSpawn)).roundToInt()
-                val scaledMaxDmg = (mobSpawn.damage.max * diff.damageMultiplier * levelScaleFactor(levelScale, mobSpawn)).roundToInt()
-                val scaledXp = (mobSpawn.xpReward * diff.xpMultiplier).toLong()
+                val scaledHp = (mobTemplate.maxHp * diff.hpMultiplier * levelScaleFactor(levelScale)).roundToInt()
+                val scaledMinDmg = (mobTemplate.damage.min * diff.damageMultiplier * levelScaleFactor(levelScale)).roundToInt()
+                val scaledMaxDmg = (mobTemplate.damage.max * diff.damageMultiplier * levelScaleFactor(levelScale)).roundToInt()
+                val scaledXp = (mobTemplate.xpReward * diff.xpMultiplier).toLong()
 
                 val mob = MobState(
                     id = uniqueId,
-                    name = mobSpawn.name,
-                    description = mobSpawn.description,
+                    name = mobTemplate.name,
+                    description = mobTemplate.description,
                     roomId = roomId,
                     hp = scaledHp,
                     maxHp = scaledHp,
                     damage = DamageRange(scaledMinDmg.coerceAtLeast(1), scaledMaxDmg.coerceAtLeast(1)),
-                    armor = mobSpawn.armor,
+                    armor = mobTemplate.armor,
                     xpReward = scaledXp,
-                    drops = mobSpawn.drops.map { drop ->
+                    drops = mobTemplate.drops.map { drop ->
                         drop.copy(chance = (drop.chance * diff.dropRateMultiplier).coerceAtMost(1.0))
                     },
-                    goldMin = mobSpawn.goldMin,
-                    goldMax = mobSpawn.goldMax,
-                    dialogue = mobSpawn.dialogue,
-                    behaviorTree = mobSpawn.behaviorTree,
+                    goldMin = mobTemplate.goldMin,
+                    goldMax = mobTemplate.goldMax,
+                    dialogue = mobTemplate.dialogue,
+                    behaviorTree = mobTemplate.behaviorTree,
                     aggressive = true,
                     templateKey = fullMobId,
                     spawnRoomId = roomId,
-                    questIds = mobSpawn.questIds,
-                    image = mobSpawn.image,
-                    video = mobSpawn.video,
-                    category = mobSpawn.category,
-                    level = mobSpawn.level,
+                    questIds = mobTemplate.questIds,
+                    image = mobTemplate.image,
+                    video = mobTemplate.video,
+                    category = mobTemplate.category,
+                    level = mobTemplate.level,
                 )
 
                 mobs.upsert(mob)
@@ -236,7 +235,7 @@ class DungeonManager(
     }
 
     /** Level scale factor: scales mob stats relative to party level vs mob's base. */
-    private fun levelScaleFactor(partyLevel: Int, spawn: MobSpawn): Double {
+    private fun levelScaleFactor(partyLevel: Int): Double {
         // Simple linear scaling: each party level adds ~10% to base stats
         return (1.0 + (partyLevel - 1) * 0.1).coerceAtLeast(0.5)
     }
