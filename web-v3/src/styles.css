@@ -13751,14 +13751,11 @@ body {
 }
 
 .char-card-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 110px);
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
-}
-
-.char-card-grid--cols6 {
-  grid-template-columns: repeat(6, 110px);
+  width: 100%;
 }
 
 .char-card {
@@ -13772,6 +13769,29 @@ body {
   cursor: pointer;
   padding: 0;
   transition: border-color 0.15s, box-shadow 0.2s, transform 0.15s;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 600px) {
+  .char-card {
+    width: 86px;
+  }
+
+  .char-card-label {
+    font-size: 0.72rem;
+    padding: 14px 2px 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .char-card {
+    width: 72px;
+  }
+
+  .char-card-label {
+    font-size: 0.66rem;
+    padding: 12px 2px 3px;
+  }
 }
 
 .char-card:hover {
