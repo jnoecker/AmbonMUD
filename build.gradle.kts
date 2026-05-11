@@ -50,7 +50,7 @@ dependencies {
     // Connection pool
     implementation("com.zaxxer:HikariCP:7.0.2")
     // JDBC driver
-    implementation("org.postgresql:postgresql:42.7.10")
+    implementation("org.postgresql:postgresql:42.7.11")
     // Schema migration
     implementation("org.flywaydb:flyway-core:12.5.0")
     implementation("org.flywaydb:flyway-database-postgresql:12.5.0")
