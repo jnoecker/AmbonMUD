@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> Full engineering playbook: `AGENTS.md`. This file covers what you need to avoid mistakes.
+> Full engineering playbook: `docs/DEVELOPER_GUIDE.md` (project map, change playbooks, common tasks). Architectural rationale: `docs/ARCHITECTURE.md`. This file covers what you need to avoid mistakes.
 
 ## Agent Directives
 
@@ -64,14 +64,14 @@ Bus implementations: `Local*` (single-process), `Redis*` (multi-process), `Grpc*
 | Entry/wiring | `Main.kt`, `MudServer.kt` (composition root), `GatewayServer.kt` |
 | Config | `AppConfig.kt` (schema + `validated()`), `application.yaml` |
 | Engine | `GameEngine.kt` (tick loop), `PlayerState.kt`, `PlayerRegistry.kt` |
-| Commands | `CommandParser.kt` (141 variants, sealed hierarchy), `CommandRouter.kt` (dispatch), `handlers/` subpackage (37 handler files) |
+| Commands | `CommandParser.kt` (~200 variants, sealed hierarchy), `CommandRouter.kt` (~110-line dispatch), `handlers/` subpackage (36 handler files + `EngineContext.kt` + `HandlerHelpers.kt`) |
 | Events | `InboundEvent.kt`, `OutboundEvent.kt` |
 | Persistence | `PlayerRecord.kt` (DTO), `PlayerRepository.kt` (interface), `PlayersTable.kt`, `GuildRepository.kt` |
 | Transport | `KtorWebSocketTransport.kt`, `NetworkSession.kt`, `OutboundRouter.kt`, `TelnetLineDecoder.kt` |
 | GMCP | `GmcpEmitter.kt` (server→client), `web-v3/src/gmcp/applyGmcpPackage.ts` (client) |
 | World | `WorldLoader.kt`, zone YAMLs in `src/main/resources/world/` |
 | Web client | `web-v3/` (React + PixiJS), built to `src/main/resources/web-v3/` |
-| Migrations | `src/main/resources/db/migration/` (V1–V34) |
+| Migrations | `src/main/resources/db/migration/` (V1–V38) |
 | Proto | `src/main/proto/ambonmud/v1/` |
 
 ### Test Utilities
@@ -104,7 +104,7 @@ Bus implementations: `Local*` (single-process), `Redis*` (multi-process), `Grpc*
 4. Mapping in `ProtoMapper.kt`.
 
 ### GMCP
-Update `GmcpEmitter.kt` + `web-v3/src/gmcp/applyGmcpPackage.ts`. **New GMCP package family:** register in WebSocket auto-opt-in at `KtorWebSocketTransport.kt` (~line 208, `Core.Supports.Set`). Without this, GMCP is silently dropped. Prefix matching: `"Quest 1"` covers `Quest.List`, `Quest.Update`, etc.
+Update `GmcpEmitter.kt` + `web-v3/src/gmcp/applyGmcpPackage.ts`. **New GMCP package family:** register in WebSocket auto-opt-in at `KtorWebSocketTransport.kt` (~line 265, `Core.Supports.Set`). Without this, GMCP is silently dropped. Prefix matching: `"Quest 1"` covers `Quest.List`, `Quest.Update`, etc.
 
 ### General system pattern
 Most systems follow: `*System.kt` (logic) + `*Handler.kt` (commands) + config in `application.yaml` + test in `*SystemTest`. World features use zone YAML flags (e.g. `bank: true`, `tavern: true`, `pvpEnabled: true`).
@@ -152,7 +152,7 @@ ktlint 1.5.0, `kotlin.code.style=official`. Overrides in `.editorconfig`.
 
 ## Known Quirks
 
-- **Largest files:** `GmcpEmitter.kt` (~3168 lines), `GameEngine.kt` (~2610 lines), `AppConfig.kt` (~2445 lines), `AdminHttpServer.kt`, `WorldLoader.kt`. `CommandRouter.kt` is thin dispatch (~100 lines); all gameplay lives in the 37 files under `handlers/`.
+- **Largest files:** `GmcpEmitter.kt` (~3490 lines), `GameEngine.kt` (~2820 lines), `AppConfig.kt` (~2660 lines), `WorldLoader.kt` (~1875 lines), `AdminHttpServer.kt` (~1475 lines). `CommandRouter.kt` is thin dispatch (~110 lines); all gameplay lives in the 36 handler files under `handlers/` plus the `EngineContext`/`HandlerHelpers` support files.
 - **Generated sources:** Protobuf under `build/generated/`, ktlint-suppressed via child `.editorconfig`.
 - **Staff access:** Set `isStaff: true` in player YAML or `is_staff` in Postgres — no in-game command.
 - **Metrics:** Uses `io.micrometer.prometheusmetrics` (not deprecated `io.micrometer.prometheus`).
