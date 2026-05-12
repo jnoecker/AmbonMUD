@@ -2,7 +2,7 @@
 
 Welcome. This document takes you from a clean checkout to making meaningful changes. If you only read one file besides this one, read [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
-**What is AmbonMUD?** A Kotlin MUD server with a 100 ms tick engine, telnet + WebSocket transports, YAML world content, config-driven abilities and status effects, class-based progression with skill-point training, 37 command handler subsystems, and three deployment modes (`STANDALONE` / `ENGINE` / `GATEWAY`) that scale from a single process to a Redis-sharded Fargate split.
+**What is AmbonMUD?** A Kotlin MUD server with a 100 ms tick engine, telnet + WebSocket transports, YAML world content, config-driven abilities and status effects, class-based progression with skill-point training, 36 command handler subsystems, and three deployment modes (`STANDALONE` / `ENGINE` / `GATEWAY`) that scale from a single process to a Redis-sharded Fargate split.
 
 ---
 
@@ -56,7 +56,7 @@ cd AmbonMUD
 
 ```bash
 ./gradlew demo                              # run + auto-open the browser client
-./gradlew test                              # fast unit suite (~160 test files)
+./gradlew test                              # fast unit suite (~175 test files)
 ./gradlew integrationTest                   # integration-tagged suite
 ./gradlew ktlintCheck                       # Kotlin lint — run before committing
 ./gradlew ktlintCheck test integrationTest  # CI parity
@@ -97,9 +97,9 @@ src/main/kotlin/dev/ambon/
 ├── engine/                      # Game logic (tick loop + subsystems)
 │   ├── GameEngine.kt            # 100 ms tick loop, inbound handler
 │   ├── commands/
-│   │   ├── CommandParser.kt     # sealed Command hierarchy (141 variants)
+│   │   ├── CommandParser.kt     # sealed Command hierarchy (~200 variants)
 │   │   ├── CommandRouter.kt     # thin dispatch
-│   │   └── handlers/            # 37 handler files — one per subsystem
+│   │   └── handlers/            # 36 handler files + EngineContext + HandlerHelpers
 │   ├── abilities/               # AbilitySystem, ability registry loader
 │   ├── status/                  # StatusEffectSystem
 │   ├── crafting/                # CraftingSystem, recipes, gathering, quality
@@ -108,7 +108,7 @@ src/main/kotlin/dev/ambon/
 │   ├── housing/, dungeon/, auction/, trade/, duel/, faction/, pet/, prestige/, lottery/, puzzle/, weather/, worldtime/, worldevent/, leaderboard/, stylist/, bank/, currency/, quest/
 │   ├── scheduler/               # Scheduler.kt — delayed/recurring callbacks
 │   ├── PlayerRegistry.kt        # session ↔ player, login FSM
-│   ├── GmcpEmitter.kt           # GMCP package emissions (3100+ lines)
+│   ├── GmcpEmitter.kt           # GMCP package emissions (~3500 lines)
 │   └── ...
 ├── transport/                   # Network I/O
 │   ├── BlockingSocketTransport.kt     # Telnet server (virtual threads)
@@ -141,8 +141,8 @@ src/main/kotlin/dev/ambon/
 └── ui/login/                    # Login banner rendering
 
 src/main/resources/
-├── application.yaml             # Runtime config (~4860 lines)
-├── db/migration/                # Flyway migrations V1–V34
+├── application.yaml             # Runtime config (~2000 lines)
+├── db/migration/                # Flyway migrations V1–V38
 ├── world/                       # Academy tutorial zone + achievements.yaml + sprites.yaml
 │   ├── academy.yaml
 │   ├── achievements.yaml
@@ -155,7 +155,7 @@ src/main/proto/ambonmud/v1/
 ├── engine_service.proto
 └── events.proto
 
-src/test/kotlin/                 # ~160 test files
+src/test/kotlin/                 # ~175 test files
 └── dev/ambon/test/              # MutableClock, EngineTestHelpers, InMemoryPlayerRepository
 
 infra/                           # TypeScript CDK project
@@ -206,13 +206,13 @@ Inbound handling:
 
 ### CommandParser
 
-**File:** `engine/commands/CommandParser.kt` — pure function `parse(line): Command`. Sealed `Command` hierarchy with **141 variants**. No side effects.
+**File:** `engine/commands/CommandParser.kt` — pure function `parse(line): Command`. Sealed `Command` hierarchy with ~200 variants. No side effects.
 
 ### CommandRouter
 
-**File:** `engine/commands/CommandRouter.kt` — thin dispatch (~100 lines). Every variant routes to one of the handlers under `engine/commands/handlers/`. Each handler implements the `CommandHandler` interface and receives an `EngineContext` carrying the required subsystem references.
+**File:** `engine/commands/CommandRouter.kt` — thin dispatch (~110 lines). Every variant routes to one of the handlers under `engine/commands/handlers/`. Each handler implements the `CommandHandler` interface and receives an `EngineContext` carrying the required subsystem references.
 
-### Handler catalog (37 files)
+### Handler catalog (36 handlers + 2 support files)
 
 | Handler | Commands |
 |---------|----------|
@@ -343,7 +343,7 @@ This is a working index, not an exhaustive spec. Each subsystem follows the patt
 
 **YAML (default):** One file per player under `data/players/`, atomic writes. Zero dependencies — this is what `./gradlew run` uses and what the EC2 demo ships with.
 
-**PostgreSQL:** Schema managed by Flyway migrations (`src/main/resources/db/migration/`, **V1 through V34**). Connection defaults match `docker-compose.yml` (`localhost:5432/ambonmud`, user `ambon`). Switching backends is one flag: `-Pconfig.ambonmud.persistence.backend=POSTGRES`.
+**PostgreSQL:** Schema managed by Flyway migrations (`src/main/resources/db/migration/`, **V1 through V38**). Connection defaults match `docker-compose.yml` (`localhost:5432/ambonmud`, user `ambon`). Switching backends is one flag: `-Pconfig.ambonmud.persistence.backend=POSTGRES`.
 
 ### The stack
 
@@ -384,7 +384,7 @@ There is no in-game promotion command — by design.
 
 ## 10. Configuration
 
-**Source of truth:** `src/main/resources/application.yaml` (~4860 lines). Hoplite loads it plus any env var or system property overrides.
+**Source of truth:** `src/main/resources/application.yaml` (~2000 lines). Hoplite loads it plus any env var or system property overrides.
 
 **Priority order (highest wins):**
 1. `AMBONMUD_*` environment variables
@@ -507,7 +507,7 @@ CI runs `./gradlew ktlintCheck test integrationTest` on every push and PR, plus 
 
 ### Structure
 
-- **Engine tests:** `GameEngineIntegrationTest`, `GameEngineLoginFlowTest`, `CommandParserTest`, `CommandRouterTest`, `CommandRouterAdminTest`, per-subsystem tests (~90+ files).
+- **Engine tests:** `GameEngineIntegrationTest`, `GameEngineLoginFlowTest`, `CommandParserTest`, `CommandRouterTest`, `CommandRouterAdminTest`, per-subsystem tests (~100+ files).
 - **Persistence:** `YamlPlayerRepositoryTest`, `PostgresPlayerRepositoryTest`, `RedisCachingPlayerRepositoryTest`, `WriteCoalescingPlayerRepositoryTest`, `PersistenceFieldCoverageTest`, guild equivalents.
 - **Transport:** `OutboundRouterTest`, `AnsiRendererTest`, `TelnetLineDecoderTest`, `KtorWebSocketTransportTest`, `ScreenReaderFilterTest`.
 - **Bus:** 6 bus test files (Local / Redis / gRPC × inbound/outbound).

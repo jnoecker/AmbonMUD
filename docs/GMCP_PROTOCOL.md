@@ -1,10 +1,12 @@
 # AmbonMUD GMCP Protocol Reference
 
-**Date:** 2026-03-11
+**Date:** 2026-05-11
 
 GMCP (Generic MUD Communication Protocol) is a telnet subnegotiation extension (option 201 / `0xC9`) that lets the server send structured JSON data alongside the plain text MUD stream. AmbonMUD extends this to WebSocket clients via a thin JSON envelope.
 
-This document covers everything you need to implement a client that communicates with AmbonMUD — negotiation, subscription, all supported packages, payload shapes, send triggers, and the planned roadmap.
+This document covers what you need to implement a client that communicates with AmbonMUD: negotiation, subscription, payload shapes, and send triggers.
+
+> **Coverage notice (2026-05).** The transport, subscription, and prefix-matching sections are authoritative. `GmcpEmitter.kt` currently emits **~100 outbound packages**; the per-package payload reference below documents roughly the first ~50 (the stable Char / Room / Comm / Group / Quest / Dialogue / Guild / Friends / Shop / Trainer / Server.Assets / Char.Classes core). The remaining packages — `Auction.*`, `Bank` (`Char.Bank`), `Char.Currencies`, `Char.Equipment.Slots`, `Char.Factions`, `Char.LevelUp`, `Char.Pet`, `Char.Stylist*`, `Crafting.*`, `Duel.*`, `Dungeon.*`, `Group.Invite`, `Guild.Hall`, `Guild.Invite`, `Housing.Info`, `Leaderboard.Data`, `Lottery.Info`, `Mail.*`, `Prestige.Info`, `Puzzle.*`, `Quest.Auto` / `Quest.Available` / `Quest.Daily` / `Quest.Global` / `Quest.Weekly`, `Room.ContainerContents` / `Room.Features` / `Room.LookTarget`, `Server.Broadcast` / `Server.Commands` / `Server.EmotePresets` / `Server.Features` / `Server.Who`, `Session.AuthResult` / `Session.AuthToken` / `Session.ResumeResult` / `Session.ResumeToken`, `Staff.*`, `Trade.State`, `UI.Feedback`, `World.Events` / `World.Time` / `World.Weather`, `Zone.Environment` / `Zone.Instances` / `Zone.Map` — are exhaustively listed in [§ 8 Complete emitted-package inventory](#8-complete-emitted-package-inventory) but their payload shapes are not yet rewritten here. Use the package name to grep `GmcpEmitter.kt` for the canonical payload data class, and `web-v3/src/gmcp/applyGmcpPackage.ts` for the consumer side.
 
 ---
 
@@ -22,6 +24,7 @@ This document covers everything you need to implement a client that communicates
 5. [Send Triggers & Timing](#5-send-triggers--timing)
 6. [Wire Format Examples](#6-wire-format-examples)
 7. [Planned Future Packages](#7-planned-future-packages)
+8. [Complete emitted-package inventory](#8-complete-emitted-package-inventory)
 
 ---
 
@@ -1393,33 +1396,9 @@ After the WebSocket connection is established, the server automatically sends `C
 
 ## 7. Planned Future Packages
 
-The following packages are on the roadmap. None are currently sent by the server.
+> The previously-listed `World.Map` was implemented as `Zone.Map` and is now part of the live package set — see [§ 8](#8-complete-emitted-package-inventory). `Admin.Status` and `Char.Title` were never built; they are speculative and may or may not happen. Treat them as ideas rather than commitments.
 
----
-
-### `World.Map` *(planned)*
-
-Zone topology as a graph of rooms and connections. Enables clients to render a proper server-authoritative map rather than building one heuristically from observed movement.
-
-```json
-{
-  "zone": "thornhaven_city",
-  "rooms": [
-    {
-      "id":   "thornhaven_city:market_square",
-      "title": "Mossy Steps",
-      "x": 0, "y": 0,
-      "exits": { "north": "thornhaven_city:main_street" }
-    }
-  ]
-}
-```
-
-*Trigger: login or zone change (one packet per zone entered).*
-
----
-
-### `Admin.Status` *(planned)*
+### `Admin.Status` *(speculative)*
 
 Engine and session health telemetry, gated to staff-level sessions. Intended for the admin dashboard.
 
@@ -1432,73 +1411,173 @@ Engine and session health telemetry, gated to staff-level sessions. Intended for
 }
 ```
 
-*Trigger: periodic (configurable interval).*
+### `Char.Title` *(speculative)*
 
----
-
-### `Char.Title` *(planned)*
-
-Notifies the client when the character's active display title changes (set via the `title` command or earned via achievements).
+Notifies the client when the character's active display title changes.
 
 ```json
 { "title": "the Blooded" }
 ```
 
-*Trigger: title set, cleared, or unlocked via achievement.*
-
 ---
 
-## Appendix: Package Summary
+## 8. Complete emitted-package inventory
 
-| Package               | Direction | Notes |
-|-----------------------|-----------|-------|
-| `Core.Hello`          | ← C→S     | Optional greeting |
-| `Core.Supports.Set`   | ← C→S     | Declare subscriptions |
-| `Core.Supports.Remove`| ← C→S     | Remove subscriptions |
-| `Core.Ping`           | ↔ Both    | Keep-alive (server echoes) |
-| `Char.Name`           | → S→C     | Login only |
-| `Char.Vitals`         | → S→C     | Batched per tick |
-| `Char.StatusVars`     | → S→C     | Login only (static labels) |
-| `Char.Combat`         | → S→C     | Batched per tick |
-| `Char.Combat.Event`   | → S→C     | Immediate (per combat event) |
-| `Char.Items.List`     | → S→C     | Full snapshot |
-| `Char.Items.Add`      | → S→C     | Immediate |
-| `Char.Items.Remove`   | → S→C     | Immediate |
-| `Char.Skills`         | → S→C     | Full snapshot |
-| `Char.StatusEffects`  | → S→C     | Batched per tick |
-| `Char.Achievements`   | → S→C     | Full snapshot |
-| `Char.Sprites`        | → S→C     | Full snapshot |
-| `Char.Stats`          | → S→C     | Batched per tick |
-| `Char.Cooldown`       | → S→C     | Immediate |
-| `Char.Gain`           | → S→C     | Immediate |
-| `Room.Info`           | → S→C     | On login/move/look |
-| `Room.Players`        | → S→C     | Full snapshot |
-| `Room.AddPlayer`      | → S→C     | Immediate |
-| `Room.RemovePlayer`   | → S→C     | Immediate |
-| `Room.Mobs`           | → S→C     | Full snapshot |
-| `Room.AddMob`         | → S→C     | Immediate |
-| `Room.UpdateMob`      | → S→C     | Batched per tick |
-| `Room.RemoveMob`      | → S→C     | Immediate |
-| `Room.Items`          | → S→C     | Immediate |
-| `Room.MobInfo`        | → S→C     | Immediate |
-| `Comm.Channel`        | → S→C     | Immediate |
-| `Group.Info`          | → S→C     | Batched per tick + immediate on join/leave |
-| `Quest.List`          | → S→C     | Full snapshot |
-| `Quest.Update`        | → S→C     | Immediate |
-| `Quest.Complete`      | → S→C     | Immediate |
-| `Dialogue.Node`       | → S→C     | Immediate |
-| `Dialogue.End`        | → S→C     | Immediate |
-| `Guild.Info`          | → S→C     | On login / guild state change |
-| `Guild.Members`       | → S→C     | On request |
-| `Guild.Chat`          | → S→C     | Immediate |
-| `Friends.List`        | → S→C     | On login / request |
-| `Friends.Online`      | → S→C     | Immediate |
-| `Friends.Offline`     | → S→C     | Immediate |
-| `Shop.List`           | → S→C     | Immediate |
-| `Shop.Close`          | → S→C     | Immediate |
-| `Trainer.List`        | → S→C     | Immediate |
-| `Char.Classes`        | → S→C     | Login / class unlock |
-| `Server.Assets`       | → S→C     | Login only |
-| `World.Map`           | → S→C     | **Planned** |
-| `Admin.Status`        | → S→C     | **Planned** (staff only) |
-| `Char.Title`          | → S→C     | **Planned** |
+Every outbound package name currently emitted by `GmcpEmitter.kt`. Packages marked with **[detailed above]** have a payload spec earlier in this document; the rest are catalogued here with a short description — grep `GmcpEmitter.kt` for the package name to find the canonical Kotlin payload class.
+
+### Inbound (client → server)
+
+| Package | Notes |
+|---------|-------|
+| `Core.Hello` | Optional greeting — **[detailed above]** |
+| `Core.Supports.Set` | Declare subscriptions — **[detailed above]** |
+| `Core.Supports.Remove` | Remove subscriptions — **[detailed above]** |
+| `Core.Ping` | Keep-alive — **[detailed above]** |
+
+### Outbound (server → client)
+
+**Core / Session**
+| Package | Notes |
+|---------|-------|
+| `Core.Ping` | Echoed ping — **[detailed above]** |
+| `Session.AuthResult` | Login outcome (success/failure + reason) |
+| `Session.AuthToken` | Remember-me token issued on login |
+| `Session.ResumeResult` | Token-resume outcome |
+| `Session.ResumeToken` | Refreshed resume token |
+
+**Char (the player)**
+| Package | Notes |
+|---------|-------|
+| `Char.Name` | Login only — **[detailed above]** |
+| `Char.Vitals` | Batched per tick — **[detailed above]** |
+| `Char.StatusVars` | Login only — **[detailed above]** |
+| `Char.Stats` | Batched per tick — **[detailed above]** |
+| `Char.Skills` | Full snapshot — **[detailed above]** |
+| `Char.StatusEffects` | Batched per tick — **[detailed above]** |
+| `Char.Achievements` | Full snapshot — **[detailed above]** |
+| `Char.Sprites` | Full snapshot — **[detailed above]** |
+| `Char.Cooldown` | Immediate — **[detailed above]** |
+| `Char.Gain` | Immediate — **[detailed above]** |
+| `Char.Combat` | Batched per tick — **[detailed above]** |
+| `Char.Combat.Event` | Immediate per combat event — **[detailed above]** |
+| `Char.Classes` | Login / class unlock — **[detailed above]** |
+| `Char.LevelUp` | Immediate on level gain |
+| `Char.Items.List` | Full inventory — **[detailed above]** |
+| `Char.Items.Add` | Inventory add — **[detailed above]** |
+| `Char.Items.Remove` | Inventory remove — **[detailed above]** |
+| `Char.Equipment.Slots` | Equipped-slot snapshot |
+| `Char.Bank` | Bank vault contents |
+| `Char.Currencies` | Secondary currency balances |
+| `Char.Factions` | Reputation standings per faction |
+| `Char.Pet` | Active pet stats and status |
+| `Char.Stylist` | Stylist NPC session state |
+| `Char.Stylist.Close` | Stylist session end |
+
+**Room**
+| Package | Notes |
+|---------|-------|
+| `Room.Info` | On login/move/look — **[detailed above]** |
+| `Room.Players` | Full snapshot — **[detailed above]** |
+| `Room.AddPlayer` | Immediate — **[detailed above]** |
+| `Room.RemovePlayer` | Immediate — **[detailed above]** |
+| `Room.Mobs` | Full snapshot — **[detailed above]** |
+| `Room.AddMob` | Immediate — **[detailed above]** |
+| `Room.UpdateMob` | Batched per tick — **[detailed above]** |
+| `Room.RemoveMob` | Immediate — **[detailed above]** |
+| `Room.Items` | Immediate — **[detailed above]** |
+| `Room.MobInfo` | Immediate — **[detailed above]** |
+| `Room.ContainerContents` | Contents of an open container |
+| `Room.Features` | Doors / levers / signs / interactables |
+| `Room.LookTarget` | Result of `look <target>` |
+
+**Comm / Social**
+| Package | Notes |
+|---------|-------|
+| `Comm.Channel` | Immediate — **[detailed above]** |
+| `Group.Info` | Batched + on join/leave — **[detailed above]** |
+| `Group.Invite` | Incoming group invitation |
+| `Friends.List` | Full snapshot — **[detailed above]** |
+| `Friends.Online` | Immediate — **[detailed above]** |
+| `Friends.Offline` | Immediate — **[detailed above]** |
+| `Mail.List` | Inbox summary |
+| `Mail.Message` | Full message body |
+| `Mail.Notification` | New-mail notification |
+
+**Guild / Housing**
+| Package | Notes |
+|---------|-------|
+| `Guild.Info` | On login / state change — **[detailed above]** |
+| `Guild.Members` | On request — **[detailed above]** |
+| `Guild.Chat` | Immediate — **[detailed above]** |
+| `Guild.Invite` | Incoming guild invitation |
+| `Guild.Hall` | Guild hall info (rooms, upgrades) |
+| `Housing.Info` | Personal-housing state |
+
+**Quests**
+| Package | Notes |
+|---------|-------|
+| `Quest.List` | Full snapshot — **[detailed above]** |
+| `Quest.Update` | Immediate — **[detailed above]** |
+| `Quest.Complete` | Immediate — **[detailed above]** |
+| `Quest.Available` | NPC-offered quests |
+| `Quest.Auto` | Session-only auto-bounty quests |
+| `Quest.Daily` | Daily-quest rotation |
+| `Quest.Weekly` | Weekly-quest rotation |
+| `Quest.Global` | Server-wide cooperative quest |
+
+**Dialogue / Trainers / Shops**
+| Package | Notes |
+|---------|-------|
+| `Dialogue.Node` | Current dialogue node — **[detailed above]** |
+| `Dialogue.End` | Dialogue closed — **[detailed above]** |
+| `Trainer.List` | Trainable abilities — **[detailed above]** |
+| `Shop.List` | Shop inventory — **[detailed above]** |
+| `Shop.Close` | Shop session end — **[detailed above]** |
+
+**Crafting / Enchant**
+| Package | Notes |
+|---------|-------|
+| `Crafting.Recipes` | Known recipes |
+| `Crafting.Skills` | Skill levels per profession |
+| `Crafting.Nodes` | Visible gathering nodes |
+| `Crafting.Cooldown` | Active gather/craft cooldowns |
+| `Crafting.Result` | Outcome of a craft action |
+
+**Economy / PvP / Misc gameplay**
+| Package | Notes |
+|---------|-------|
+| `Auction.List` | Active auction listings |
+| `Trade.State` | Bilateral-trade UI state |
+| `Duel.Challenge` | Incoming duel challenge |
+| `Duel.State` | Active duel state |
+| `Dungeon.Catalog` | Available dungeon templates |
+| `Dungeon.Info` | Active dungeon instance state |
+| `Prestige.Info` | Prestige rank / perks / cost |
+| `Lottery.Info` | Active lottery state |
+| `Leaderboard.Data` | Leaderboard rows |
+| `Puzzle.List` | Available puzzles |
+| `Puzzle.Close` | Puzzle session end |
+
+**World / Zone**
+| Package | Notes |
+|---------|-------|
+| `World.Time` | 24-hour world clock + period |
+| `World.Weather` | Per-zone weather state |
+| `World.Events` | Active seasonal events |
+| `Zone.Map` | Zone topology graph (replaces the formerly-planned `World.Map`) |
+| `Zone.Environment` | Lighting / ambience tuning |
+| `Zone.Instances` | Available instances of an instanced zone |
+
+**Server / Staff / UI**
+| Package | Notes |
+|---------|-------|
+| `Server.Assets` | Login only — **[detailed above]** |
+| `Server.Features` | Server feature flags |
+| `Server.Commands` | Command metadata for client help/completion |
+| `Server.EmotePresets` | Built-in emote list |
+| `Server.Who` | `who` results |
+| `Server.Broadcast` | Server-wide announcement |
+| `Staff.MobTemplates` | Staff mob-spawn catalog |
+| `Staff.WorldInfo` | Staff world inspector data |
+| `Staff.Possession` | Active staff-possession state |
+| `UI.Feedback` | Client-side UI feedback signals |

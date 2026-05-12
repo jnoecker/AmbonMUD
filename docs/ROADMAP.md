@@ -2,7 +2,7 @@
 
 What's built. This is a living inventory of shipped systems, not a forward-looking roadmap.
 
-## Current State (April 2026)
+## Current State (May 2026)
 
 AmbonMUD has a **mature infrastructure** and **complete gameplay foundation**:
 
@@ -57,4 +57,4 @@ publishing, and format-preserving YAML round-trip editing
 
 ---
 
-**Last updated:** April 13, 2026
+**Last updated:** May 11, 2026

@@ -163,7 +163,7 @@ The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPla
 Each 100 ms tick runs, in order:
 
 1. **Drain inbound** — up to `maxInboundEventsPerTick` from `InboundBus`
-2. **Dispatch commands** — `CommandRouter` → handler modules (37 handler files)
+2. **Dispatch commands** — `CommandRouter` → handler modules (36 handler files)
 3. **MobSystem.tick()** — NPC wandering and behavior trees
 4. **CombatSystem.tick()** — active fight resolution
 5. **RegenSystem.tick()** — HP / mana regen
@@ -185,7 +185,7 @@ Inbound event handling:
 
 **YAML (default):** One file per player under `data/players/`, atomic writes. Zero external dependencies.
 
-**PostgreSQL:** Flyway migrations V1–V34. Connection defaults match `docker-compose.yml`.
+**PostgreSQL:** Flyway migrations V1–V38. Connection defaults match `docker-compose.yml`.
 
 ### The Write Stack
 
@@ -210,7 +210,7 @@ Every write layer is transparent to the caller. Guild persistence mirrors this p
 
 ### Commands: Sealed Hierarchy + Thin Router
 
-`CommandParser.parse()` is a pure function that returns one of 141 sealed `Command` variants. `CommandRouter` is thin dispatch (~100 lines) that routes each variant to one of 37 handler files. This separates parsing from execution and makes both independently testable.
+`CommandParser.parse()` is a pure function that returns one of ~200 sealed `Command` variants. `CommandRouter` is thin dispatch (~110 lines) that routes each variant to one of 36 handler files. This separates parsing from execution and makes both independently testable.
 
 ### Config-Driven Game Content
 

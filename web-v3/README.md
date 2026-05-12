@@ -19,5 +19,3 @@ bun run build
   - `/` serves `web-v3` assets
 - Compatibility redirect routes:
   - `/v3` and `/v3/` redirect to `/` (configured in `KtorWebSocketTransport.kt`)
-
-The legacy web client assets remain in `src/main/resources/web`, but current runtime static serving targets `web-v3`.

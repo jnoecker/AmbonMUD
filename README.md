@@ -39,7 +39,7 @@ See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full feature inventory and [`do
 | Build | Gradle wrapper, ktlint, JaCoCo, Shadow (fat JAR) |
 | Server | Ktor 3 (WebSocket), blocking socket transport (telnet), Netty |
 | Config | Hoplite (YAML + env var overrides) |
-| Persistence | YAML files (default), PostgreSQL via Exposed + Flyway (V1–V34), optional Redis L2 cache |
+| Persistence | YAML files (default), PostgreSQL via Exposed + Flyway (V1–V38), optional Redis L2 cache |
 | Bus / RPC | Lettuce (Redis), gRPC 1.80 + Protobuf for ENGINE↔GATEWAY |
 | Metrics | Micrometer → Prometheus |
 | Web client | React 19, Vite, TypeScript, PixiJS 8, xterm.js (popout) — built with Bun |
@@ -79,7 +79,7 @@ src/main/kotlin/dev/ambon/
   Main.kt, MudServer.kt, GatewayServer.kt   # bootstrap
   config/                                   # AppConfig.kt schema + validated()
   engine/                                   # tick loop, systems, commands
-    commands/handlers/                      # 37 handler files (one per subsystem)
+    commands/handlers/                      # 36 handler files + EngineContext/HandlerHelpers support
     abilities/ status/ crafting/ dialogue/ ...
   transport/                                # telnet + Ktor WebSocket
   bus/                                      # Local/Redis/gRPC bus implementations
@@ -88,12 +88,12 @@ src/main/kotlin/dev/ambon/
   grpc/, redis/, session/, metrics/, admin/ # cross-cutting
   domain/                                   # RoomId, PlayerClass, Race, world model
 src/main/resources/
-  application.yaml                          # runtime config (~4860 lines)
-  db/migration/                             # Flyway V1–V34
+  application.yaml                          # runtime config (~2000 lines)
+  db/migration/                             # Flyway V1–V38
   world/                                    # Academy zone + achievements + sprites
   web-v3/                                   # built web client assets
 src/main/proto/ambonmud/v1/                 # gRPC engine + event protos
-src/test/kotlin/                            # 160 test files
+src/test/kotlin/                            # ~175 test files
 web-v3/                                     # React + PixiJS client source
 infra/                                      # AWS CDK (EC2 + ECS Fargate topologies)
 docs/                                       # architecture, guides, references
@@ -112,7 +112,7 @@ Full deployment runbook — IAM bootstrap, OIDC roles, CDK topologies, env var r
 ## Testing
 
 ```bash
-./gradlew test                              # ~160 test files, unit suite
+./gradlew test                              # ~175 test files, unit suite
 ./gradlew integrationTest                   # integration-tagged suite
 ./gradlew test --tests "CommandParserTest"  # single class
 ./gradlew test --tests "*CommandRouter*"    # pattern
