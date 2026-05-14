@@ -227,6 +227,7 @@ class AbilitySystem(
                             targetName = player.name,
                             amount = healed,
                             sourceIsPlayer = true,
+                            abilityId = ability.id.value,
                         ),
                     )
                 }
@@ -316,6 +317,7 @@ class AbilitySystem(
                             targetName = target.name,
                             amount = healed,
                             sourceIsPlayer = true,
+                            abilityId = ability.id.value,
                         ),
                     )
                 }
@@ -481,6 +483,7 @@ class AbilitySystem(
                                 targetName = target.name,
                                 amount = healed,
                                 sourceIsPlayer = true,
+                                abilityId = ability.id.value,
                             ),
                         )
                     }

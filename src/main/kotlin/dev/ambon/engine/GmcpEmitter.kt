@@ -915,6 +915,7 @@ class GmcpEmitter(
             )
             is CombatEvent.Heal -> CombatEventPayload(
                 type = "heal",
+                abilityId = event.abilityId,
                 abilityName = event.abilityName,
                 targetName = event.targetName,
                 healing = event.amount,

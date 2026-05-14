@@ -1150,6 +1150,25 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendCombatEvent emits abilityId for heal events`() =
+        runTest {
+            val e = emitter("Char.Combat")
+            e.sendCombatEvent(
+                sid,
+                CombatEvent.Heal(
+                    abilityName = "Heal",
+                    targetName = "Alice",
+                    amount = 12,
+                    sourceIsPlayer = true,
+                    abilityId = "heal",
+                ),
+            )
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"type\":\"heal\""))
+            assertTrue(data.jsonData.contains("\"abilityId\":\"heal\""))
+        }
+
+    @Test
     fun `sendCombatEvent matches prefix Char-Combat-Event`() =
         runTest {
             val e = emitter("Char.Combat")

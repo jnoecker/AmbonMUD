@@ -144,10 +144,14 @@ export class AbilityVisualSystem {
     const sy = event.sourceIsPlayer ? playerY : enemyY;
 
     // For buffs/heals on self, target is the player. For debuffs on enemy, target is enemy.
-    // We let event.targetIsPlayer drive this when present (abilityCast); otherwise infer.
+    // We let event.targetIsPlayer drive this when present (abilityCast); for heals the
+    // target follows the source (1v1 view: caster heals themselves or an ally shown at
+    // the player slot); otherwise infer (damage events: target is the opponent).
     const targetIsPlayer = event.type === "abilityCast"
       ? event.targetIsPlayer
-      : !event.sourceIsPlayer;
+      : event.type === "heal"
+        ? event.sourceIsPlayer
+        : !event.sourceIsPlayer;
     const tx = targetIsPlayer ? playerX : enemyX;
     const ty = targetIsPlayer ? playerY : enemyY;
 

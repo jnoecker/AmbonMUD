@@ -22,6 +22,7 @@ sealed interface CombatEvent {
         val targetName: String,
         val amount: Int,
         val sourceIsPlayer: Boolean,
+        val abilityId: String? = null,
     ) : CombatEvent
 
     data class Dodge(
