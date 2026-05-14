@@ -515,6 +515,16 @@ class GmcpEmitterTest {
             assertTrue(drainGmcp().isEmpty())
         }
 
+    @Test
+    fun `sendCharSkills includes visual archetype block`() =
+        runTest {
+            val e = emitter("Char.Skills")
+            e.sendCharSkills(sid, listOf(ability())) { 0L }
+            val data = drainGmcp()[0]
+            // DIRECT_DAMAGE with no class derives RANGED_PROJECTILE
+            assertTrue(data.jsonData.contains("\"visual\":{\"archetype\":\"RANGED_PROJECTILE\""))
+        }
+
     // ── Char.Name ──
 
     @Test
@@ -1115,6 +1125,47 @@ class GmcpEmitterTest {
             val e = emitter()
             e.sendCombatEvent(sid, CombatEvent.MeleeHit("Goblin", "mob-1", 10, sourceIsPlayer = true))
             assertTrue(drainGmcp().isEmpty())
+        }
+
+    @Test
+    fun `sendCombatEvent emits abilityCast JSON for buff or debuff`() =
+        runTest {
+            val e = emitter("Char.Combat")
+            e.sendCombatEvent(
+                sid,
+                CombatEvent.AbilityCast(
+                    abilityId = "blessing",
+                    abilityName = "Blessing",
+                    targetName = "Alice",
+                    targetId = null,
+                    targetIsPlayer = true,
+                    sourceIsPlayer = true,
+                ),
+            )
+            val data = drainGmcp()[0]
+            assertEquals("Char.Combat.Event", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"type\":\"abilityCast\""))
+            assertTrue(data.jsonData.contains("\"abilityId\":\"blessing\""))
+            assertTrue(data.jsonData.contains("\"targetIsPlayer\":true"))
+        }
+
+    @Test
+    fun `sendCombatEvent emits abilityId for heal events`() =
+        runTest {
+            val e = emitter("Char.Combat")
+            e.sendCombatEvent(
+                sid,
+                CombatEvent.Heal(
+                    abilityName = "Heal",
+                    targetName = "Alice",
+                    amount = 12,
+                    sourceIsPlayer = true,
+                    abilityId = "heal",
+                ),
+            )
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"type\":\"heal\""))
+            assertTrue(data.jsonData.contains("\"abilityId\":\"heal\""))
         }
 
     @Test

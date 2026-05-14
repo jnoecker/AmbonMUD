@@ -1,6 +1,7 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.config.AbilityEngineConfig
+import dev.ambon.config.AbilityVisualConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.engine.status.StatusEffectId
 
@@ -50,6 +51,8 @@ object AbilityRegistryLoader {
             val requiredClass = defConfig.requiredClass.ifBlank { null }
             val prerequisites = defConfig.prerequisites.map { AbilityId(it) }.toSet()
             val tree = defConfig.tree.ifBlank { "" }
+            val resolvedImage = defConfig.image.ifBlank { null }?.let { "$imagesBase$it" }
+            val visual = resolveVisual(defConfig.visual, effect, targetType, requiredClass, imagesBase)
             registry.register(
                 AbilityDefinition(
                     id = AbilityId(key),
@@ -62,14 +65,39 @@ object AbilityRegistryLoader {
                     targetType = targetType,
                     effect = effect,
                     requiredClass = requiredClass,
-                    image = defConfig.image.ifBlank { null }?.let { "$imagesBase$it" },
+                    image = resolvedImage,
                     prerequisites = prerequisites,
                     tree = tree,
                     tier = defConfig.tier,
+                    visual = visual,
                 ),
             )
         }
         validateNoPrerequisiteCycles(registry)
+    }
+
+    /**
+     * Resolves the [AbilityVisual] for an ability. An empty [AbilityVisualConfig.archetype]
+     * delegates to [deriveDefaultVisual]; any non-blank field overrides the derived value.
+     * The `projectileImage` is resolved against [imagesBase] just like the spellbook icon.
+     */
+    private fun resolveVisual(
+        config: AbilityVisualConfig,
+        effect: AbilityEffect,
+        targetType: String,
+        requiredClass: String?,
+        imagesBase: String,
+    ): AbilityVisual {
+        val archetype = config.archetype.trim()
+            .takeIf { it.isNotEmpty() }
+            ?.let { runCatching { AbilityVisualArchetype.valueOf(it.uppercase()) }.getOrNull() }
+            ?: deriveDefaultVisual(effect, targetType, requiredClass).archetype
+        return AbilityVisual(
+            archetype = archetype,
+            projectileImage = config.projectileImage.ifBlank { null }?.let { "$imagesBase$it" },
+            color = config.color.ifBlank { null },
+            accentColor = config.accentColor.ifBlank { null },
+        )
     }
 
     /**

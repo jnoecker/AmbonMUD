@@ -310,6 +310,9 @@ function App() {
       worldTime: state.worldTime,
       worldWeather: state.worldWeather,
       zoneEnvironment: state.zoneEnvironment,
+      skillsById: new Map(
+        [...state.skills, ...state.petSkills].map((s) => [s.id, s]),
+      ),
     };
   });
 

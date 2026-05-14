@@ -400,6 +400,27 @@ export interface CombatTarget {
   targetCategory: string | null;
 }
 
+/**
+ * Per-skill visual archetype that drives how the web client renders the
+ * cast moment. Sent in the Char.Skills GMCP payload as `visual.archetype`.
+ * Falls back to RANGED_PROJECTILE if unknown.
+ */
+export type AbilityVisualArchetype =
+  | "RANGED_PROJECTILE"
+  | "MELEE_STRIKE"
+  | "HEAL_AURA"
+  | "BUFF_AURA"
+  | "DEBUFF_AURA"
+  | "AREA_BURST"
+  | "SUMMON_POOF";
+
+export interface SkillVisual {
+  archetype: AbilityVisualArchetype;
+  projectileImage: string | null;
+  color: string | null;
+  accentColor: string | null;
+}
+
 export interface SkillSummary {
   id: string;
   name: string;
@@ -412,6 +433,7 @@ export interface SkillSummary {
   effectType: string;
   classRestriction: string | null;
   image: string | null;
+  visual: SkillVisual | null;
   receivedAt: number;
   /**
    * "self" for player abilities (cast via `cast <id>`), "pet" for pet signature skills
@@ -438,6 +460,8 @@ export interface CombatEventData {
   xpGained: number;
   goldGained: number;
   petName: string | null;
+  /** True when the visible target of a non-damaging cast is the local player. */
+  targetIsPlayer: boolean;
 }
 
 export interface StatEntry {
