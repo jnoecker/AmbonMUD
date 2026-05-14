@@ -551,8 +551,21 @@ function App() {
       }
       const target = event.target as HTMLElement;
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
-      // Shift+digit routes to the pet bar; plain digit routes to the player quickbar.
-      // event.key is "!" / "@" / "#" on shift+1/2/3 — fall back to event.code "Digit1" etc.
+      // Quickbar first: if the keypress resolved to a digit character, route there
+      // regardless of Shift state. This keeps AZERTY/similar layouts working — typing
+      // "1" requires Shift on those layouts, so a Shift-first branch would hijack it.
+      const keyDigit = parseInt(event.key, 10);
+      if (keyDigit >= 1 && keyDigit <= 9) {
+        const skill = quickbar.slots[keyDigit - 1];
+        if (!skill) return;
+        const elapsed = Date.now() - skill.receivedAt;
+        const remaining = Math.max(0, skill.cooldownRemainingMs - elapsed);
+        if (remaining > 0) return;
+        handleCastSkill(skill.id, skill.cooldownMs);
+        return;
+      }
+      // Otherwise, Shift+DigitN (QWERTY shift produces "!"/"@"/"#" — not a digit) routes
+      // to the pet bar. Using event.code makes this layout-independent for that case.
       if (event.shiftKey && event.code.startsWith("Digit")) {
         const petDigit = parseInt(event.code.slice(5), 10);
         if (petDigit >= 1 && petDigit <= 9) {
@@ -563,16 +576,6 @@ function App() {
           if (remaining > 0) return;
           handleCastSkill(skill.id, skill.cooldownMs);
         }
-        return;
-      }
-      const digit = parseInt(event.key, 10);
-      if (digit >= 1 && digit <= 9) {
-        const skill = quickbar.slots[digit - 1];
-        if (!skill) return;
-        const elapsed = Date.now() - skill.receivedAt;
-        const remaining = Math.max(0, skill.cooldownRemainingMs - elapsed);
-        if (remaining > 0) return;
-        handleCastSkill(skill.id, skill.cooldownMs);
       }
     };
     window.addEventListener("keydown", onKeyDown);
