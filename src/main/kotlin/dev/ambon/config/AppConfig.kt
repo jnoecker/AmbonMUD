@@ -879,6 +879,8 @@ data class PetSpellConfig(
     val weight: Int = 1,
     /** Flat threat added to the pet's threat entry on the target (for tank-pet taunt skills). */
     val threatBonus: Double = 0.0,
+    /** Optional asset filename used as the quickbar / spellbook icon for this skill. */
+    val image: String? = null,
 )
 
 data class PetConfig(

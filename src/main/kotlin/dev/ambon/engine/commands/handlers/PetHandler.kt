@@ -172,7 +172,7 @@ class PetHandler(
                     spell.statusEffectId != null -> "APPLY_STATUS"
                     else -> "DIRECT_DAMAGE"
                 },
-                image = null,
+                image = spell.image,
                 petName = pet.name,
             )
         }

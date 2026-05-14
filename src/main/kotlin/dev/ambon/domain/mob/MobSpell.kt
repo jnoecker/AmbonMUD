@@ -27,4 +27,9 @@ data class MobSpell(
      * a bear's roar that need to grab aggro without dealing damage. Ignored for non-pet mobs.
      */
     val threatBonus: Double = 0.0,
+    /**
+     * Optional asset filename used as the quickbar / spellbook icon. Only surfaced for pet
+     * skills today (via Char.Pet.Skills GMCP); mob spells ignore it.
+     */
+    val image: String? = null,
 )

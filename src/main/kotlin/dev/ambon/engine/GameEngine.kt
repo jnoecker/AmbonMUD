@@ -2584,7 +2584,7 @@ class GameEngine(
                 cooldownMs = spell.cooldownMs,
                 cooldownRemainingMs = combatSystem.petSkillCooldownRemainingMs(pet.id, spell.id, now),
                 effectType = mapPetSkillEffectType(spell),
-                image = null,
+                image = spell.image,
                 petName = pet.name,
             )
         }
