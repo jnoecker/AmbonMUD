@@ -122,6 +122,10 @@ name:           <string, required>
 room:           <room-id string, required>
 tier:           <string, optional - one of weak|standard|elite|boss (case-insensitive); default standard>
 level:          <integer >= 1, optional; default 1>
+hpMult:         <double in (0.0, 10.0], optional - multiplies tier-computed hp before override is applied>
+dmgMult:        <double in (0.0, 10.0], optional - multiplies tier-computed min/max damage>
+xpMult:         <double in (0.0, 10.0], optional - multiplies tier-computed xpReward>
+goldMult:       <double in (0.0, 10.0], optional - multiplies tier-computed gold range>
 hp:             <integer >= 1, optional - overrides tier-computed hp>
 minDamage:      <integer >= 1, optional - overrides tier-computed minDamage>
 maxDamage:      <integer >= minDamage, optional - overrides tier-computed maxDamage>
@@ -183,29 +187,38 @@ Behavior validation rules:
 - Unknown template names cause a load error.
 - Templates requiring `patrolRoute` (`patrol`, `patrol_aggro`) should have a non-empty route.
 
-Tier formula (for tier `T` and level `L`, where `L` defaults to 1):
+Tier formula (for tier `T`, level `L` (default 1), and optional multipliers, default 1.0):
 
 ```text
-hp         = T.baseHp + (L-1) * T.hpPerLevel
-minDamage  = T.baseMinDamage + (L-1) * T.damagePerLevel
-maxDamage  = T.baseMaxDamage + (L-1) * T.damagePerLevel
+hp         = round((T.baseHp + (L-1) * T.hpPerLevel) * hpMult)
+minDamage  = round((T.baseMinDamage + (L-1) * T.damagePerLevel) * dmgMult)
+maxDamage  = round((T.baseMaxDamage + (L-1) * T.damagePerLevel) * dmgMult)
 armor      = T.baseArmor
-xpReward   = T.baseXpReward + (L-1) * T.xpRewardPerLevel
-goldMin    = T.baseGoldMin + (L-1) * T.goldPerLevel
-goldMax    = T.baseGoldMax + (L-1) * T.goldPerLevel
+xpReward   = round((T.baseXpReward + (L-1) * T.xpRewardPerLevel) * xpMult)
+goldMin    = round((T.baseGoldMin + (L-1) * T.goldPerLevel) * goldMult)
+goldMax    = round((T.baseGoldMax + (L-1) * T.goldPerLevel) * goldMult)
 ```
 
-Any explicit per-mob field overrides the computed value from the tier formula.
+Resolution per field: tier × level baseline → multiplier (if set) → absolute override (if set).
+Absolute overrides always win; multipliers express relative tuning ("hits a bit harder than baseline")
+without forcing builders to type raw numbers.
+
+**When to use which:**
+- **Tier + level alone** — most mobs. The numbers are computed from the table below.
+- **Tier + level + a multiplier** — "this elf archer hits ~20% harder than a standard level-7 mob"
+  (`tier: standard, level: 7, dmgMult: 1.2`). Stays consistent across rebalances of the tier table.
+- **Absolute override** — bespoke bosses or scripted encounters where the math model breaks down.
+  Avoid for general content; consistency wins.
 
 Tier default values are operator-configurable via `application.yaml` under `ambonmud.engine.mob.tiers`.
-The built-in defaults are:
+The built-in defaults (cross-validated against the AmbonArcanum Balanced tuning preset) are:
 
 | Tier     | baseHp | hpPerLevel | baseMinDmg | baseMaxDmg | dmgPerLevel | baseArmor | baseXp | xpPerLevel | baseGoldMin | baseGoldMax | goldPerLevel |
 |----------|--------|------------|------------|------------|-------------|-----------|--------|------------|-------------|-------------|--------------|
 | weak     | 5      | 2          | 1          | 2          | 0           | 0         | 15     | 5          | 1           | 3           | 1            |
-| standard | 10     | 3          | 1          | 4          | 1           | 0         | 30     | 10         | 2           | 8           | 2            |
-| elite    | 20     | 5          | 2          | 6          | 1           | 1         | 75     | 20         | 10          | 25          | 5            |
-| boss     | 50     | 10         | 3          | 8          | 2           | 3         | 200    | 50         | 50          | 100         | 15           |
+| standard | 12     | 4          | 2          | 4          | 1           | 1         | 30     | 10         | 3           | 8           | 2            |
+| elite    | 28     | 7          | 3          | 6          | 1           | 2         | 75     | 25         | 10          | 25          | 5            |
+| boss     | 55     | 12         | 4          | 9          | 2           | 3         | 200    | 50         | 50          | 100         | 15           |
 
 Mob armor applies as flat damage reduction: `effectiveDamage = max(1, playerRoll - mob.armor)`.
 
@@ -230,7 +243,56 @@ matchByKey: <boolean, optional, default false>
 basePrice: <integer, optional, default 0, must be >= 0>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown in context menu>
+level: <integer >= 1, optional - intended item level, enables power-budget validation>
+rarity: <string, optional - one of common|uncommon|rare|epic|legendary (case-insensitive); default common when level is set>
 ```
+
+#### Item power budget
+
+When an item declares `level:` (or `rarity:`), the loader compares its stat/damage/armor cost
+to a power budget for that slot+level+rarity. Items without either field are treated as
+legacy and skipped — adoption is gradual and opt-in per item.
+
+**Budget formula:**
+
+```text
+budget = (slotBaseBudget[slot] + level * pointsPerLevel) * rarityMultiplier[rarity]
+spent  = damage * damagePointCost + armor * armorPointCost + sum(stats.values) * statPointCost
+```
+
+An item is flagged when `spent > budget * (1 + tolerance)`. By default the validator emits a
+warning (`itemsBudget.warnOnly: true`); flip to `false` in `application.yaml` to fail the load.
+
+**Default values** (operator-configurable under `ambonmud.engine.items.budget`):
+
+| Setting | Default | Notes |
+|---|---|---|
+| `pointsPerLevel` | 2.0 | Budget points granted per level |
+| `damagePointCost` | 5.0 | Each `damage: 1` costs 5 points |
+| `armorPointCost` | 2.0 | Each `armor: 1` costs 2 points |
+| `statPointCost` | 1.0 | Each `stats.X: 1` costs 1 point |
+| `tolerance` | 0.05 | 5% slack above budget before flagging |
+
+| Slot     | base budget | Slot     | base budget |
+|----------|-------------|----------|-------------|
+| weapon   | 6           | neck     | 3           |
+| ranged   | 5           | wrist    | 2           |
+| shield   | 4           | finger   | 2           |
+| head     | 3           | body     | 5           |
+| hand     | 3           | feet     | 3           |
+
+| Rarity     | multiplier |
+|------------|------------|
+| common     | 1.0        |
+| uncommon   | 1.25       |
+| rare       | 1.5        |
+| epic       | 2.0        |
+| legendary  | 2.5        |
+
+**Worked example:** a level-5 rare weapon (`slot: weapon, damage: 4, level: 5, rarity: rare`)
+gets a budget of `(6 + 5*2) * 1.5 = 24` points and spends `4*5 = 20` points → fits with
+room for a stat or two. Same weapon at level 1 common: budget is `(6 + 2) * 1.0 = 8`,
+spent is still 20 → 2.5× over budget, gets flagged.
 
 `basePrice` notes:
 - Determines the item's value in the shop economy.

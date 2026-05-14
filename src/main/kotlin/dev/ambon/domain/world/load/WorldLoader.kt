@@ -93,6 +93,7 @@ object WorldLoader {
         videosBaseUrl: String = "/videos/",
         audioBaseUrl: String = "/audio/",
         factionIds: Set<String> = emptySet(),
+        itemBudget: dev.ambon.config.ItemBudgetConfig = dev.ambon.config.ItemBudgetConfig(),
     ): World =
         loadFromResources(
             listOf(path),
@@ -101,6 +102,7 @@ object WorldLoader {
             videosBaseUrl = videosBaseUrl,
             audioBaseUrl = audioBaseUrl,
             factionIds = factionIds,
+            itemBudget = itemBudget,
         )
 
     fun loadFromResources(
@@ -117,6 +119,11 @@ object WorldLoader {
          * validation is skipped (tests and legacy worlds).
          */
         factionIds: Set<String> = emptySet(),
+        /**
+         * Power-budget rules for equippable items. Opt-in per item: only items that declare
+         * `level:` or `rarity:` are checked. See [dev.ambon.config.ItemBudgetConfig].
+         */
+        itemBudget: dev.ambon.config.ItemBudgetConfig = dev.ambon.config.ItemBudgetConfig(),
     ): World {
         val imagesBase = normalizeBaseUrl(imagesBaseUrl)
         val videosBase = normalizeBaseUrl(videosBaseUrl)
@@ -345,6 +352,11 @@ object WorldLoader {
                 val level = mf.level ?: 1
                 requireAtLeast(level, 1, "Mob '${mobId.value}'", "level")
 
+                validateMobMultiplier(mobId, "hpMult", mf.hpMult)
+                validateMobMultiplier(mobId, "dmgMult", mf.dmgMult)
+                validateMobMultiplier(mobId, "xpMult", mf.xpMult)
+                validateMobMultiplier(mobId, "goldMult", mf.goldMult)
+
                 val overrides = MobStatOverrides(
                     hp = mf.hp,
                     minDamage = mf.minDamage,
@@ -353,6 +365,10 @@ object WorldLoader {
                     xpReward = mf.xpReward,
                     goldMin = mf.goldMin,
                     goldMax = mf.goldMax,
+                    hpMult = mf.hpMult,
+                    dmgMult = mf.dmgMult,
+                    xpMult = mf.xpMult,
+                    goldMult = mf.goldMult,
                 )
                 val resolved = resolveMobStats(tier, level, overrides)
                 val resolvedHp = resolved.hp
@@ -487,6 +503,21 @@ object WorldLoader {
                 for ((statKey, statVal) in itemFile.stats) {
                     if (statVal < 0) {
                         throw WorldLoadException("Item '${itemId.value}' stat '$statKey' cannot be negative")
+                    }
+                }
+
+                val budgetEval = dev.ambon.domain.world.evaluateItemBudget(
+                    itemId = itemId.value,
+                    file = itemFile,
+                    config = itemBudget,
+                )
+                if (budgetEval != null && budgetEval.overBudget) {
+                    val msg = budgetEval.summary() +
+                        " exceeds %.0f%% tolerance".format(budgetEval.tolerance * 100)
+                    if (itemBudget.warnOnly) {
+                        logger.warn(msg)
+                    } else {
+                        throw WorldLoadException(msg)
                     }
                 }
 
@@ -1692,6 +1723,15 @@ object WorldLoader {
     private fun requireAtLeast(value: Long, min: Long, context: String, field: String): Long {
         if (value < min) throw WorldLoadException("$context $field must be >= $min (got $value)")
         return value
+    }
+
+    private fun validateMobMultiplier(mobId: dev.ambon.domain.ids.MobId, field: String, value: Double?) {
+        if (value == null) return
+        if (value.isNaN() || value.isInfinite() || value <= 0.0 || value > 10.0) {
+            throw WorldLoadException(
+                "Mob '${mobId.value}' $field must be in (0.0, 10.0] (got $value)",
+            )
+        }
     }
 
     private fun parsePuzzleReward(

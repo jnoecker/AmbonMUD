@@ -118,6 +118,7 @@ class EngineServer(
             videosBaseUrl = config.videos.baseUrl,
             audioBaseUrl = config.audio.baseUrl,
             factionIds = config.engine.factions.definitions.keys,
+            itemBudget = config.engine.items.budget,
         )
     private val scheduler: Scheduler = Scheduler(clock)
     private val localZones = ServerInfrastructure.resolveLocalZones(config, configuredShardedZones, world)

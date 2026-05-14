@@ -607,6 +607,9 @@ Reference it from an ability via `effect.type: APPLY_STATUS` + `effect.statusEff
 2. Add the file name under `ambonmud.world.resources` in `application.yaml` (or drop it into `$AMBONMUD_DATA_DIR/world/` for an overlay-based deployment).
 3. `WorldLoader` validates on boot — fix whatever it complains about.
 
+For content tuning (mob stat baselines, item power budgets, sync with the AmbonArcanum
+tuning wizard), see [`ARCANUM_TUNING_SYNC.md`](./ARCANUM_TUNING_SYNC.md).
+
 ### Add a new GMCP package
 
 1. Emit the package from `engine/GmcpEmitter.kt`.

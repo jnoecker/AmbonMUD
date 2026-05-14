@@ -1,5 +1,6 @@
 package dev.ambon.domain.world
 
+import dev.ambon.config.ItemBudgetConfig
 import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.load.WorldLoadException
@@ -20,6 +21,7 @@ object WorldFactory {
         videosBaseUrl: String = "/videos/",
         audioBaseUrl: String = "/audio/",
         factionIds: Set<String> = emptySet(),
+        itemBudget: ItemBudgetConfig = ItemBudgetConfig(),
     ): World {
         val paths = resources.ifEmpty { discoverClasspathZones() }
         if (paths.isEmpty()) throw WorldLoadException("No zone files found — classpath 'world/' directory is empty")
@@ -32,6 +34,7 @@ object WorldFactory {
             videosBaseUrl = videosBaseUrl,
             audioBaseUrl = audioBaseUrl,
             factionIds = factionIds,
+            itemBudget = itemBudget,
         )
     }
 

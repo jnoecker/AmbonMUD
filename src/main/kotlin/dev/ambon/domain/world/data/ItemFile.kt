@@ -21,4 +21,16 @@ data class ItemFile(
     val video: String? = null,
     val itemType: String? = null,
     val questItem: Boolean = false,
+    /**
+     * Intended item level. When set together with [rarity] (or by itself), the loader runs
+     * the power-budget check defined by `engine.items.budget`. Items without a level are
+     * treated as legacy/untunable and skipped by the validator.
+     */
+    val level: Int? = null,
+    /**
+     * Rarity tier (common, uncommon, rare, epic, legendary). Multiplies the budget allowed
+     * for the slot+level combination. See [dev.ambon.config.ItemBudgetConfig] for the
+     * default scale.
+     */
+    val rarity: String? = null,
 )

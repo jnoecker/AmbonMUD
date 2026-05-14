@@ -22,6 +22,16 @@ data class MobFile(
     val role: String? = null,
     val tier: String? = null,
     val level: Int? = null,
+    /**
+     * Multiplicative tuning knobs applied to tier×level baselines. Builders use these to express
+     * "noticeably tougher than baseline" (e.g. `hpMult: 1.25`) without having to type absolute
+     * numbers. Multipliers are applied to tier-derived values only; explicit overrides
+     * ([hp], [minDamage], etc.) still win. Default 1.0 (no change).
+     */
+    val hpMult: Double? = null,
+    val dmgMult: Double? = null,
+    val xpMult: Double? = null,
+    val goldMult: Double? = null,
     val hp: Int? = null,
     val minDamage: Int? = null,
     val maxDamage: Int? = null,

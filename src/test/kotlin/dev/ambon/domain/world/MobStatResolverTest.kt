@@ -56,4 +56,45 @@ class MobStatResolverTest {
         val stats = resolveMobStats(standardTier, level = 0)
         assertEquals(20, stats.hp)
     }
+
+    @Test
+    fun `hpMult scales tier-derived hp`() {
+        val overrides = MobStatOverrides(hpMult = 1.5)
+        val stats = resolveMobStats(standardTier, level = 5, overrides)
+        // Baseline hp at level 5: 20 + 4*5 = 40. With 1.5x: 60.
+        assertEquals(60, stats.hp)
+    }
+
+    @Test
+    fun `dmgMult scales both min and max damage`() {
+        val overrides = MobStatOverrides(dmgMult = 2.0)
+        val stats = resolveMobStats(standardTier, level = 1, overrides)
+        assertEquals(4, stats.damage.min) // 2 * 2
+        assertEquals(8, stats.damage.max) // 4 * 2
+    }
+
+    @Test
+    fun `xpMult and goldMult scale rewards`() {
+        val overrides = MobStatOverrides(xpMult = 0.5, goldMult = 2.0)
+        val stats = resolveMobStats(standardTier, level = 1, overrides)
+        assertEquals(15L, stats.xpReward) // 30 * 0.5
+        assertEquals(6L, stats.goldMin) // 3 * 2
+        assertEquals(16L, stats.goldMax) // 8 * 2
+    }
+
+    @Test
+    fun `absolute override beats multiplier`() {
+        val overrides = MobStatOverrides(hp = 100, hpMult = 5.0)
+        val stats = resolveMobStats(standardTier, level = 1, overrides)
+        // hp override wins, hpMult is ignored for the hp field
+        assertEquals(100, stats.hp)
+    }
+
+    @Test
+    fun `hpMult clamps to at least 1`() {
+        val overrides = MobStatOverrides(hpMult = 0.01)
+        val stats = resolveMobStats(standardTier, level = 1, overrides)
+        // 20 * 0.01 = 0.2 → clamped to 1
+        assertEquals(1, stats.hp)
+    }
 }

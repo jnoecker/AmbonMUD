@@ -1512,6 +1512,7 @@ data class EngineConfig(
     val races: RaceEngineConfig = RaceEngineConfig(),
     val stats: StatsEngineConfig = StatsEngineConfig(),
     val equipment: EquipmentConfig = EquipmentConfig(),
+    val items: ItemsEngineConfig = ItemsEngineConfig(),
     val genders: GendersConfig = GendersConfig(),
     val achievementCategories: AchievementCategoriesConfig = AchievementCategoriesConfig(),
     val craftingSkills: CraftingSkillsConfig = CraftingSkillsConfig(),
@@ -2079,38 +2080,38 @@ data class MobTiersConfig(
         ),
     val standard: MobTierConfig =
         MobTierConfig(
-            baseHp = 10,
-            hpPerLevel = 3,
-            baseMinDamage = 1,
+            baseHp = 12,
+            hpPerLevel = 4,
+            baseMinDamage = 2,
             baseMaxDamage = 4,
             damagePerLevel = 1,
-            baseArmor = 0,
+            baseArmor = 1,
             baseXpReward = 30L,
             xpRewardPerLevel = 10L,
-            baseGoldMin = 2L,
+            baseGoldMin = 3L,
             baseGoldMax = 8L,
             goldPerLevel = 2L,
         ),
     val elite: MobTierConfig =
         MobTierConfig(
-            baseHp = 20,
-            hpPerLevel = 5,
-            baseMinDamage = 2,
+            baseHp = 28,
+            hpPerLevel = 7,
+            baseMinDamage = 3,
             baseMaxDamage = 6,
             damagePerLevel = 1,
-            baseArmor = 1,
+            baseArmor = 2,
             baseXpReward = 75L,
-            xpRewardPerLevel = 20L,
+            xpRewardPerLevel = 25L,
             baseGoldMin = 10L,
             baseGoldMax = 25L,
             goldPerLevel = 5L,
         ),
     val boss: MobTierConfig =
         MobTierConfig(
-            baseHp = 50,
-            hpPerLevel = 10,
-            baseMinDamage = 3,
-            baseMaxDamage = 8,
+            baseHp = 55,
+            hpPerLevel = 12,
+            baseMinDamage = 4,
+            baseMaxDamage = 9,
             damagePerLevel = 2,
             baseArmor = 3,
             baseXpReward = 200L,
@@ -2134,6 +2135,52 @@ data class MobEngineConfig(
     val minActionDelayMillis: Long = 8_000L,
     val maxActionDelayMillis: Long = 20_000L,
     val tiers: MobTiersConfig = MobTiersConfig(),
+)
+
+/**
+ * Power budget for equippable items. Used by the world loader to warn (or fail) when an
+ * authored item carries more stat/damage/armor than its slot+level+rarity should allow.
+ * Validation is opt-in *per item*: items without a `level:` or `rarity:` field in YAML
+ * are treated as legacy and skipped.
+ *
+ * Budget formula: `budget = (slotBaseBudget[slot] + level * pointsPerLevel) * rarityMultiplier[rarity]`.
+ * An item's spent points are `sum(stats.values * statPointCost) + damage * damagePointCost + armor * armorPointCost`.
+ */
+data class ItemBudgetConfig(
+    val enabled: Boolean = true,
+    /** When true, over-budget items log a warning. When false, they fail the world load. */
+    val warnOnly: Boolean = true,
+    /** Tolerance above budget before a violation is reported (0.05 = 5% slack). */
+    val tolerance: Double = 0.05,
+    val pointsPerLevel: Double = 2.0,
+    val damagePointCost: Double = 5.0,
+    val armorPointCost: Double = 2.0,
+    val statPointCost: Double = 1.0,
+    val slotBaseBudget: Map<String, Int> = mapOf(
+        "weapon" to 6,
+        "head" to 3,
+        "body" to 5,
+        "hand" to 3,
+        "feet" to 3,
+        "neck" to 3,
+        "wrist" to 2,
+        "finger" to 2,
+        "ranged" to 5,
+        "shield" to 4,
+    ),
+    val rarityMultiplier: Map<String, Double> = mapOf(
+        "common" to 1.0,
+        "uncommon" to 1.25,
+        "rare" to 1.5,
+        "epic" to 2.0,
+        "legendary" to 2.5,
+    ),
+    /** Default rarity assumed when an item declares a level but no rarity. */
+    val defaultRarity: String = "common",
+)
+
+data class ItemsEngineConfig(
+    val budget: ItemBudgetConfig = ItemBudgetConfig(),
 )
 
 data class CombatEngineConfig(

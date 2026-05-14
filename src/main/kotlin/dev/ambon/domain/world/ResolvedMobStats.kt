@@ -19,7 +19,13 @@ data class ResolvedMobStats(
  * rescaling for [ZoneScaling] can replay the same math at a different
  * level without re-reading world YAML.
  *
- * Authored overrides always win; only tier-derived fields change with level.
+ * Resolution order per stat:
+ *   1. Start with tier × level baseline (e.g. `baseHp + steps * hpPerLevel`).
+ *   2. Apply the relevant multiplier ([MobStatOverrides.hpMult], etc.) if set.
+ *   3. Replace with the absolute override (e.g. [MobStatOverrides.hp]) if set.
+ *
+ * Multipliers express "noticeably tougher than baseline" without typing raw
+ * numbers; absolute overrides are the escape hatch for bespoke mobs.
  */
 fun resolveMobStats(
     tier: MobTierConfig,
@@ -28,14 +34,26 @@ fun resolveMobStats(
 ): ResolvedMobStats {
     val normalized = level.coerceAtLeast(1)
     val steps = normalized - 1
-    val minDamage = overrides.minDamage ?: (tier.baseMinDamage + steps * tier.damagePerLevel)
-    val maxDamage = overrides.maxDamage ?: (tier.baseMaxDamage + steps * tier.damagePerLevel)
+    val hpMult = overrides.hpMult ?: 1.0
+    val dmgMult = overrides.dmgMult ?: 1.0
+    val xpMult = overrides.xpMult ?: 1.0
+    val goldMult = overrides.goldMult ?: 1.0
+
+    val baseHp = ((tier.baseHp + steps * tier.hpPerLevel) * hpMult).toInt().coerceAtLeast(1)
+    val baseMin = ((tier.baseMinDamage + steps * tier.damagePerLevel) * dmgMult).toInt().coerceAtLeast(1)
+    val baseMax = ((tier.baseMaxDamage + steps * tier.damagePerLevel) * dmgMult).toInt().coerceAtLeast(baseMin)
+    val baseXp = ((tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel).toDouble() * xpMult).toLong().coerceAtLeast(0L)
+    val baseGoldMin = ((tier.baseGoldMin + steps.toLong() * tier.goldPerLevel).toDouble() * goldMult).toLong().coerceAtLeast(0L)
+    val baseGoldMax = ((tier.baseGoldMax + steps.toLong() * tier.goldPerLevel).toDouble() * goldMult).toLong().coerceAtLeast(baseGoldMin)
+
+    val minDamage = overrides.minDamage ?: baseMin
+    val maxDamage = overrides.maxDamage ?: baseMax
     return ResolvedMobStats(
-        hp = overrides.hp ?: (tier.baseHp + steps * tier.hpPerLevel),
+        hp = overrides.hp ?: baseHp,
         damage = DamageRange(minDamage, maxDamage),
         armor = overrides.armor ?: tier.baseArmor,
-        xpReward = overrides.xpReward ?: (tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel),
-        goldMin = overrides.goldMin ?: (tier.baseGoldMin + steps.toLong() * tier.goldPerLevel),
-        goldMax = overrides.goldMax ?: (tier.baseGoldMax + steps.toLong() * tier.goldPerLevel),
+        xpReward = overrides.xpReward ?: baseXp,
+        goldMin = overrides.goldMin ?: baseGoldMin,
+        goldMax = overrides.goldMax ?: baseGoldMax,
     )
 }

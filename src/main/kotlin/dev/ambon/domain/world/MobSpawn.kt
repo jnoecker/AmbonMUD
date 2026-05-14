@@ -14,6 +14,11 @@ import dev.ambon.engine.dialogue.DialogueTree
  * Authored stat overrides that won at load time. Preserved on [MobTemplateDef] so
  * that spawn-time rescaling (for zones with non-STATIC scaling) can replay
  * the tier × level math while still honouring the author's explicit values.
+ *
+ * Multipliers ([hpMult], [dmgMult], [xpMult], [goldMult]) scale the tier-derived
+ * baseline before absolute overrides are applied. Use multipliers to express
+ * relative tuning ("this mob hits ~20% harder than its tier baseline") without
+ * typing raw numbers; use absolute overrides for one-off bespoke mobs.
  */
 data class MobStatOverrides(
     val hp: Int? = null,
@@ -23,6 +28,10 @@ data class MobStatOverrides(
     val xpReward: Long? = null,
     val goldMin: Long? = null,
     val goldMax: Long? = null,
+    val hpMult: Double? = null,
+    val dmgMult: Double? = null,
+    val xpMult: Double? = null,
+    val goldMult: Double? = null,
 )
 
 /**
