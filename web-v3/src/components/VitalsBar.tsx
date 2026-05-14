@@ -94,7 +94,7 @@ interface SkillSlotProps {
   onClear: (index: number) => void;
 }
 
-function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave, onDrop, onClear }: SkillSlotProps) {
+function useSkillCooldown(skill: SkillSummary): { onCooldown: boolean; fraction: number } {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -107,6 +107,11 @@ function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave,
   const remaining = skill.cooldownRemainingMs > 0 ? Math.max(0, skill.cooldownRemainingMs - elapsed) : 0;
   const onCooldown = remaining > 0;
   const fraction = onCooldown && skill.cooldownMs > 0 ? remaining / skill.cooldownMs : 0;
+  return { onCooldown, fraction };
+}
+
+function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave, onDrop, onClear }: SkillSlotProps) {
+  const { onCooldown, fraction } = useSkillCooldown(skill);
 
   return (
     <button
@@ -146,18 +151,7 @@ function PetSkillSlot({
   index: number;
   onCast: (id: string, cd: number) => void;
 }) {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (skill.cooldownRemainingMs <= 0) return;
-    const interval = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(interval);
-  }, [skill.cooldownRemainingMs, skill.receivedAt]);
-
-  const elapsed = now - skill.receivedAt;
-  const remaining = skill.cooldownRemainingMs > 0 ? Math.max(0, skill.cooldownRemainingMs - elapsed) : 0;
-  const onCooldown = remaining > 0;
-  const fraction = onCooldown && skill.cooldownMs > 0 ? remaining / skill.cooldownMs : 0;
+  const { onCooldown, fraction } = useSkillCooldown(skill);
 
   return (
     <button
