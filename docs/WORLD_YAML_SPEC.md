@@ -190,13 +190,13 @@ Behavior validation rules:
 Tier formula (for tier `T`, level `L` (default 1), and optional multipliers, default 1.0):
 
 ```text
-hp         = round((T.baseHp + (L-1) * T.hpPerLevel) * hpMult)
-minDamage  = round((T.baseMinDamage + (L-1) * T.damagePerLevel) * dmgMult)
-maxDamage  = round((T.baseMaxDamage + (L-1) * T.damagePerLevel) * dmgMult)
-armor      = T.baseArmor
-xpReward   = round((T.baseXpReward + (L-1) * T.xpRewardPerLevel) * xpMult)
-goldMin    = round((T.baseGoldMin + (L-1) * T.goldPerLevel) * goldMult)
-goldMax    = round((T.baseGoldMax + (L-1) * T.goldPerLevel) * goldMult)
+hp         = floor((T.baseHp + (L-1) * T.hpPerLevel) * hpMult)        # clamped to >= 1
+minDamage  = floor((T.baseMinDamage + (L-1) * T.damagePerLevel) * dmgMult)   # clamped to >= 1
+maxDamage  = floor((T.baseMaxDamage + (L-1) * T.damagePerLevel) * dmgMult)   # clamped to >= minDamage
+armor      = T.baseArmor                                              # multipliers do not apply
+xpReward   = floor((T.baseXpReward + (L-1) * T.xpRewardPerLevel) * xpMult)   # clamped to >= 0
+goldMin    = floor((T.baseGoldMin + (L-1) * T.goldPerLevel) * goldMult)      # clamped to >= 0
+goldMax    = floor((T.baseGoldMax + (L-1) * T.goldPerLevel) * goldMult)      # clamped to >= goldMin
 ```
 
 Resolution per field: tier × level baseline → multiplier (if set) → absolute override (if set).

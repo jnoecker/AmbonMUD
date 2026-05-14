@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.config.ItemBudgetConfig
 import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatMap
@@ -60,6 +61,7 @@ import dev.ambon.domain.world.data.MobFile
 import dev.ambon.domain.world.data.MobSpawnFile
 import dev.ambon.domain.world.data.ReputationRequirementFile
 import dev.ambon.domain.world.data.WorldFile
+import dev.ambon.domain.world.evaluateItemBudget
 import dev.ambon.domain.world.resolveMobStats
 import dev.ambon.engine.behavior.BehaviorTemplates
 import dev.ambon.engine.behavior.BehaviorTreeLoader
@@ -93,7 +95,7 @@ object WorldLoader {
         videosBaseUrl: String = "/videos/",
         audioBaseUrl: String = "/audio/",
         factionIds: Set<String> = emptySet(),
-        itemBudget: dev.ambon.config.ItemBudgetConfig = dev.ambon.config.ItemBudgetConfig(),
+        itemBudget: ItemBudgetConfig = ItemBudgetConfig(),
     ): World =
         loadFromResources(
             listOf(path),
@@ -121,9 +123,9 @@ object WorldLoader {
         factionIds: Set<String> = emptySet(),
         /**
          * Power-budget rules for equippable items. Opt-in per item: only items that declare
-         * `level:` or `rarity:` are checked. See [dev.ambon.config.ItemBudgetConfig].
+         * `level:` or `rarity:` are checked. See [ItemBudgetConfig].
          */
-        itemBudget: dev.ambon.config.ItemBudgetConfig = dev.ambon.config.ItemBudgetConfig(),
+        itemBudget: ItemBudgetConfig = ItemBudgetConfig(),
     ): World {
         val imagesBase = normalizeBaseUrl(imagesBaseUrl)
         val videosBase = normalizeBaseUrl(videosBaseUrl)
@@ -506,11 +508,15 @@ object WorldLoader {
                     }
                 }
 
-                val budgetEval = dev.ambon.domain.world.evaluateItemBudget(
-                    itemId = itemId.value,
-                    file = itemFile,
-                    config = itemBudget,
-                )
+                val budgetEval = try {
+                    evaluateItemBudget(
+                        itemId = itemId.value,
+                        file = itemFile,
+                        config = itemBudget,
+                    )
+                } catch (e: IllegalStateException) {
+                    throw WorldLoadException(e.message ?: "Item '${itemId.value}' failed budget evaluation")
+                }
                 if (budgetEval != null && budgetEval.overBudget) {
                     val msg = budgetEval.summary() +
                         " exceeds %.0f%% tolerance".format(budgetEval.tolerance * 100)
@@ -1725,7 +1731,7 @@ object WorldLoader {
         return value
     }
 
-    private fun validateMobMultiplier(mobId: dev.ambon.domain.ids.MobId, field: String, value: Double?) {
+    private fun validateMobMultiplier(mobId: MobId, field: String, value: Double?) {
         if (value == null) return
         if (value.isNaN() || value.isInfinite() || value <= 0.0 || value > 10.0) {
             throw WorldLoadException(

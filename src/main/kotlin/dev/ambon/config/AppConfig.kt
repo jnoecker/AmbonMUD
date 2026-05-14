@@ -139,6 +139,39 @@ data class AppConfig(
         validateEngineGlobalQuests()
         validateEngineLottery()
         validateEngineGambling()
+        validateEngineItems()
+    }
+
+    private fun validateEngineItems() {
+        val b = engine.items.budget
+        if (!b.enabled) return
+        require(b.tolerance >= 0.0) { "ambonMUD.engine.items.budget.tolerance must be >= 0 (got ${b.tolerance})" }
+        require(b.pointsPerLevel >= 0.0) { "ambonMUD.engine.items.budget.pointsPerLevel must be >= 0" }
+        require(b.damagePointCost >= 0.0) { "ambonMUD.engine.items.budget.damagePointCost must be >= 0" }
+        require(b.armorPointCost >= 0.0) { "ambonMUD.engine.items.budget.armorPointCost must be >= 0" }
+        require(b.statPointCost >= 0.0) { "ambonMUD.engine.items.budget.statPointCost must be >= 0" }
+        require(b.slotBaseBudget.isNotEmpty()) { "ambonMUD.engine.items.budget.slotBaseBudget must not be empty when enabled" }
+        require(b.rarityMultiplier.isNotEmpty()) { "ambonMUD.engine.items.budget.rarityMultiplier must not be empty when enabled" }
+        for ((slot, base) in b.slotBaseBudget) {
+            require(slot == slot.lowercase()) {
+                "ambonMUD.engine.items.budget.slotBaseBudget key '$slot' must be lowercase"
+            }
+            require(base >= 0) {
+                "ambonMUD.engine.items.budget.slotBaseBudget['$slot'] must be >= 0 (got $base)"
+            }
+        }
+        for ((rarity, mult) in b.rarityMultiplier) {
+            require(rarity == rarity.lowercase()) {
+                "ambonMUD.engine.items.budget.rarityMultiplier key '$rarity' must be lowercase"
+            }
+            require(mult > 0.0) {
+                "ambonMUD.engine.items.budget.rarityMultiplier['$rarity'] must be > 0 (got $mult)"
+            }
+        }
+        require(b.rarityMultiplier.containsKey(b.defaultRarity.lowercase())) {
+            "ambonMUD.engine.items.budget.defaultRarity '${b.defaultRarity}' must be a key in rarityMultiplier " +
+                "(known: ${b.rarityMultiplier.keys.sorted().joinToString(", ")})"
+        }
     }
 
     private fun validateEngineDailyQuests() {
