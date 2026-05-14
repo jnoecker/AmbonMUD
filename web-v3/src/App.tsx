@@ -163,13 +163,10 @@ function App() {
     { updateMap, loadZoneMap, resetMap },
   );
   const audio = useAudioEngine();
-  // Merge player abilities with pet skills so the quickbar and spellbook can show both.
-  // Pet skills get `source: "pet"` which makes `handleCastSkill` route them through `pet <id>`.
-  const allSkills = useMemo(
-    () => [...state.skills, ...state.petSkills],
-    [state.skills, state.petSkills],
-  );
-  const quickbar = useQuickbar(allSkills, state.character.name);
+  // Player abilities feed the quickbar and spellbook. Pet skills get their own auto-populated
+  // PetBar (Shift+1/2/3) so they don't compete for quickbar slots; `handleCastSkill` still
+  // routes pet skills through `pet <id>` when invoked.
+  const quickbar = useQuickbar(state.skills, state.character.name);
 
   const {
     pushHistory,
@@ -554,6 +551,20 @@ function App() {
       }
       const target = event.target as HTMLElement;
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+      // Shift+digit routes to the pet bar; plain digit routes to the player quickbar.
+      // event.key is "!" / "@" / "#" on shift+1/2/3 — fall back to event.code "Digit1" etc.
+      if (event.shiftKey && event.code.startsWith("Digit")) {
+        const petDigit = parseInt(event.code.slice(5), 10);
+        if (petDigit >= 1 && petDigit <= 9) {
+          const skill = state.petSkills[petDigit - 1];
+          if (!skill) return;
+          const elapsed = Date.now() - skill.receivedAt;
+          const remaining = Math.max(0, skill.cooldownRemainingMs - elapsed);
+          if (remaining > 0) return;
+          handleCastSkill(skill.id, skill.cooldownMs);
+        }
+        return;
+      }
       const digit = parseInt(event.key, 10);
       if (digit >= 1 && digit <= 9) {
         const skill = quickbar.slots[digit - 1];
@@ -566,7 +577,7 @@ function App() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [quickbar.slots, handleCastSkill]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [quickbar.slots, state.petSkills, handleCastSkill]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendChatMessage = (channel: ChatChannel, message: string, target: string | null): boolean => {
     const body = message.trim();
@@ -706,6 +717,7 @@ function App() {
         onQuickbarSwap={quickbar.swap}
         onQuickbarAssign={quickbar.assign}
         onQuickbarClear={quickbar.clear}
+        petSkills={state.petSkills}
         activePopout={state.activePopout}
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
@@ -861,7 +873,7 @@ function App() {
 
         {drawerPanel === "spellbook" && (
           <SpellbookPanel
-            skills={allSkills}
+            skills={state.skills}
             quickbarSlotIds={quickbar.slotIds}
             playerClass={displayClassName}
             playerLevel={state.vitals.level ?? 1}

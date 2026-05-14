@@ -16,6 +16,7 @@ interface GameShellProps {
   onQuickbarSwap: (fromIndex: number, toIndex: number) => void;
   onQuickbarAssign: (slotIndex: number, skillId: string) => void;
   onQuickbarClear: (slotIndex: number) => void;
+  petSkills: SkillSummary[];
   activePopout: PopoutPanel;
   onCommand: (cmd: string) => void;
   onOpenPanel: (panel: PopoutPanel) => void;
@@ -40,6 +41,7 @@ export function GameShell({
   onQuickbarSwap,
   onQuickbarAssign,
   onQuickbarClear,
+  petSkills,
   activePopout,
   onCommand,
   onOpenPanel,
@@ -97,6 +99,7 @@ export function GameShell({
         onQuickbarSwap={onQuickbarSwap}
         onQuickbarAssign={onQuickbarAssign}
         onQuickbarClear={onQuickbarClear}
+        petSkills={petSkills}
         activePopout={activePopout}
         onOpenPanel={onOpenPanel}
         onCastSkill={onCastSkill}

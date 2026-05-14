@@ -66,6 +66,8 @@ interface VitalsBarProps {
   onQuickbarSwap: (fromIndex: number, toIndex: number) => void;
   onQuickbarAssign: (slotIndex: number, skillId: string) => void;
   onQuickbarClear: (slotIndex: number) => void;
+  /** Active pet's signature skills — auto-populates the pet bar (Shift+1/2/3). Empty when no pet. */
+  petSkills: SkillSummary[];
   activePopout: PopoutPanel;
   onOpenPanel: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
@@ -131,6 +133,51 @@ function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave,
   );
 }
 
+/**
+ * Pet skill slot — auto-populated, no drag/drop, no per-character persistence.
+ * Hotkey label shows "⇧N" (Shift+digit).
+ */
+function PetSkillSlot({
+  skill,
+  index,
+  onCast,
+}: {
+  skill: SkillSummary;
+  index: number;
+  onCast: (id: string, cd: number) => void;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (skill.cooldownRemainingMs <= 0) return;
+    const interval = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(interval);
+  }, [skill.cooldownRemainingMs, skill.receivedAt]);
+
+  const elapsed = now - skill.receivedAt;
+  const remaining = skill.cooldownRemainingMs > 0 ? Math.max(0, skill.cooldownRemainingMs - elapsed) : 0;
+  const onCooldown = remaining > 0;
+  const fraction = onCooldown && skill.cooldownMs > 0 ? remaining / skill.cooldownMs : 0;
+
+  return (
+    <button
+      type="button"
+      className={`vbar-skill vbar-pet-skill${onCooldown ? " vbar-skill-cd" : ""}`}
+      disabled={onCooldown}
+      title={`${skill.name} (pet) — Shift+${index + 1}`}
+      onClick={() => onCast(skill.id, skill.cooldownMs)}
+      aria-label={`${skill.name} pet skill — Shift+${index + 1}`}
+    >
+      {skill.image
+        ? <img src={skill.image} alt="" className="vbar-skill-img" draggable={false} />
+        : <SkillCastIcon className="vbar-skill-icon" classRestriction={null} targetType={skill.targetType} />
+      }
+      {onCooldown && <span className="vbar-skill-sweep" style={{ height: `${fraction * 100}%` }} />}
+      <span className="vbar-skill-key">{`⇧${index + 1}`}</span>
+    </button>
+  );
+}
+
 function EmptySkillSlot({
   index,
   onDragOver,
@@ -163,6 +210,7 @@ export function VitalsBar({
   onQuickbarSwap,
   onQuickbarAssign,
   onQuickbarClear,
+  petSkills,
   activePopout,
   onOpenPanel,
   onCastSkill,
@@ -181,6 +229,7 @@ export function VitalsBar({
   const navRef = useRef<HTMLElement | null>(null);
 
   const hasAnySkill = quickbarSlots.some((s) => s !== null);
+  const hasPet = petSkills.length > 0;
 
   useEffect(() => {
     const node = navRef.current;
@@ -200,7 +249,7 @@ export function VitalsBar({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [onHeightChange, loggedIn, hasAnySkill, showPanels, connected]);
+  }, [onHeightChange, loggedIn, hasAnySkill, hasPet, showPanels, connected]);
 
   const submitInput = (e: FormEvent) => {
     e.preventDefault();
@@ -268,10 +317,12 @@ export function VitalsBar({
         </div>
       )}
 
-      {/* Quickbar skills (horizontal scroll) */}
-      {loggedIn && hasAnySkill && (
+      {/* Quickbar skills + pet bar (horizontal scroll). Pet bar appears to the right
+          of the quickbar with a small divider, auto-populated from the active pet's
+          signature skills. */}
+      {loggedIn && (hasAnySkill || hasPet) && (
         <div className="vbar-skills">
-          {quickbarSlots.map((skill, i) =>
+          {hasAnySkill && quickbarSlots.map((skill, i) =>
             skill ? (
               <SkillSlot
                 key={skill.id}
@@ -293,6 +344,21 @@ export function VitalsBar({
                 onDrop={handleSkillDrop}
               />
             ),
+          )}
+          {hasPet && (
+            <>
+              {hasAnySkill && <span className="vbar-petbar-divider" aria-hidden="true" />}
+              <div className="vbar-petbar" role="group" aria-label="Pet skills">
+                {petSkills.map((skill, i) => (
+                  <PetSkillSlot
+                    key={skill.id}
+                    skill={skill}
+                    index={i}
+                    onCast={onCastSkill}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}

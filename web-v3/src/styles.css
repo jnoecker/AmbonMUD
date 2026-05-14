@@ -16331,6 +16331,43 @@ html:has(.game-shell),
   font-family: var(--font-mono);
 }
 
+/* Pet control bar — auto-populated, shown to the right of the quickbar with a divider. */
+.vbar-petbar {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.vbar-petbar-divider {
+  flex-shrink: 0;
+  width: 2px;
+  align-self: stretch;
+  margin: 2px 4px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgb(168 151 210 / 35%) 30%,
+    rgb(168 151 210 / 35%) 70%,
+    transparent
+  );
+  border-radius: 1px;
+}
+
+.vbar-pet-skill {
+  border-color: rgb(168 151 210 / 55%);
+  background: linear-gradient(135deg, rgb(70 60 100 / 92%), rgb(54 48 82 / 88%));
+}
+
+.vbar-pet-skill:not(:disabled):hover {
+  border-color: rgb(216 197 232 / 80%);
+  box-shadow: 0 0 0 1px rgb(216 197 232 / 30%);
+}
+
+.vbar-pet-skill .vbar-skill-key {
+  color: rgb(216 197 232 / 90%);
+  font-size: 0.55rem;
+}
+
 /* Bottom action row: panel toggle, status, input toggle */
 .vbar-actions {
   display: flex;
