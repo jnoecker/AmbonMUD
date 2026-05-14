@@ -614,6 +614,7 @@ ambonmud:
           durationMs: 10000
           stackBehavior: REFRESH
           strMod: -2
+          dexMod: -2
         bleed:
           displayName: Bleeding
           effectType: dot
@@ -623,7 +624,6 @@ ambonmud:
           tickMaxValue: 4
           stackBehavior: STACK
           maxStacks: 3
-          dexMod: -2
         natures_grasp:
           displayName: Nature's Grasp
           effectType: root
