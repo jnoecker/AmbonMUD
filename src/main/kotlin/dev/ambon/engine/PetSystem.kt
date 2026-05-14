@@ -224,7 +224,7 @@ class PetSystem(
             cooldownMs = sc.cooldownMs,
             weight = sc.weight,
             threatBonus = sc.threatBonus,
-            image = sc.image,
+            image = resolveImage(sc.image),
         )
 
     /** Per-owner timestamp of the most recent manual `pet <skill>` trigger. */
