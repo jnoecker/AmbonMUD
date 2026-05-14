@@ -163,7 +163,13 @@ function App() {
     { updateMap, loadZoneMap, resetMap },
   );
   const audio = useAudioEngine();
-  const quickbar = useQuickbar(state.skills, state.character.name);
+  // Merge player abilities with pet skills so the quickbar and spellbook can show both.
+  // Pet skills get `source: "pet"` which makes `handleCastSkill` route them through `pet <id>`.
+  const allSkills = useMemo(
+    () => [...state.skills, ...state.petSkills],
+    [state.skills, state.petSkills],
+  );
+  const quickbar = useQuickbar(allSkills, state.character.name);
 
   const {
     pushHistory,
@@ -406,7 +412,26 @@ function App() {
     pendingCastRef.current = null;
   };
 
+  // Pet skills always target the owner's current combat target server-side, so we just
+  // fire `pet <id>` and let the server pick a target / return an error if not in combat.
+  const completePetCast = (skillId: string, cooldownMs: number) => {
+    const now = Date.now();
+    state.setPetSkills((prev) =>
+      prev.map((skill) =>
+        skill.id === skillId
+          ? { ...skill, cooldownRemainingMs: Math.max(skill.cooldownRemainingMs, cooldownMs), receivedAt: now }
+          : skill,
+      ),
+    );
+    sendCommand(`pet ${skillId}`);
+  };
+
   const handleCastSkill = (skillId: string, cooldownMs: number) => {
+    const petSkill = state.petSkills.find((s) => s.id === skillId);
+    if (petSkill) {
+      completePetCast(skillId, cooldownMs);
+      return;
+    }
     const skill = state.skills.find((s) => s.id === skillId);
     if (!skill) return;
     const t = skill.targetType.toUpperCase();
@@ -833,7 +858,7 @@ function App() {
 
         {drawerPanel === "spellbook" && (
           <SpellbookPanel
-            skills={state.skills}
+            skills={allSkills}
             quickbarSlotIds={quickbar.slotIds}
             playerClass={displayClassName}
             playerLevel={state.vitals.level ?? 1}

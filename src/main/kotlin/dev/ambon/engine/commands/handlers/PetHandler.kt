@@ -153,6 +153,30 @@ class PetHandler(
                 image = pet.image,
             ),
         )
+        emitPetSkillsForActive(sessionId, pet)
+    }
+
+    private suspend fun emitPetSkillsForActive(sessionId: SessionId, pet: dev.ambon.domain.mob.MobState) {
+        val emitter = gmcpEmitter ?: return
+        val now = clock.millis()
+        val payloads = pet.spells.map { spell ->
+            GmcpEmitter.PetSkillPayload(
+                id = spell.id,
+                name = spell.displayName,
+                description = "",
+                cooldownMs = spell.cooldownMs,
+                cooldownRemainingMs = combat.petSkillCooldownRemainingMs(pet.id, spell.id, now),
+                effectType = when {
+                    spell.threatBonus > 0.0 && spell.damage == null -> "TAUNT"
+                    spell.damage != null -> "DIRECT_DAMAGE"
+                    spell.statusEffectId != null -> "APPLY_STATUS"
+                    else -> "DIRECT_DAMAGE"
+                },
+                image = null,
+                petName = pet.name,
+            )
+        }
+        emitter.sendPetSkills(sessionId, payloads)
     }
 
     private suspend fun handlePetSkills(sessionId: SessionId) {
@@ -221,6 +245,7 @@ class PetHandler(
     }
 
     private suspend fun emitInactivePet(sessionId: SessionId) {
+        gmcpEmitter?.sendPetSkills(sessionId, emptyList())
         gmcpEmitter?.sendPetState(
             sessionId,
             GmcpEmitter.PetStatePayload(

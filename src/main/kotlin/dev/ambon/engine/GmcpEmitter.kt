@@ -1348,6 +1348,26 @@ class GmcpEmitter(
         emit(sessionId, "Char.Pet", payload)
     }
 
+    data class PetSkillPayload(
+        val id: String,
+        val name: String,
+        val description: String,
+        val cooldownMs: Long,
+        val cooldownRemainingMs: Long,
+        val effectType: String,
+        val image: String?,
+        val petName: String,
+    )
+
+    /**
+     * Emits the active pet's signature skills with live cooldowns. The web client uses this to
+     * populate the spellbook and quickbar with pet-driven abilities. Send an empty array on
+     * dismiss/expire so the client clears its pet-skill panel.
+     */
+    suspend fun sendPetSkills(sessionId: SessionId, payload: List<PetSkillPayload>) {
+        emit(sessionId, "Char.Pet.Skills", payload)
+    }
+
     // ---------- bank ----------
 
     data class BankStatePayload(

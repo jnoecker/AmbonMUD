@@ -697,6 +697,7 @@ class CombatSystem(
 
                 if (autoSkill != null) {
                     executePetSkill(pet, autoSkill, mob, sessionId, now)
+                    onPetSkillCast(sessionId)
                     continue
                 }
 
@@ -1149,6 +1150,12 @@ class CombatSystem(
         return (expiresAt - now).coerceAtLeast(0L)
     }
 
+    /**
+     * Invoked after a pet skill is cast (manually or auto-cast) so the engine can refresh the
+     * web client's pet-skill cooldowns. Wired by GameEngine after construction.
+     */
+    var onPetSkillCast: suspend (SessionId) -> Unit = { _ -> }
+
     /** Outcome of a manual `pet <skill>` trigger — surfaced back to the player via PetHandler. */
     sealed interface PetSkillResult {
         data object Ok : PetSkillResult
@@ -1200,6 +1207,7 @@ class CombatSystem(
 
         executePetSkill(pet, skill, target, ownerSid, now)
         pets.recordManualSkillCast(ownerSid, now)
+        onPetSkillCast(ownerSid)
         return PetSkillResult.Ok
     }
 
