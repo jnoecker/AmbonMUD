@@ -91,6 +91,16 @@ class MobStatResolverTest {
     }
 
     @Test
+    fun `fractional multipliers round half-away-from-zero rather than truncating`() {
+        // baseMaxDamage=4 * 1.15 = 4.6 → should round to 5, not truncate to 4
+        val overrides = MobStatOverrides(dmgMult = 1.15)
+        val stats = resolveMobStats(standardTier, level = 1, overrides)
+        // baseMinDamage=2 * 1.15 = 2.3 → 2
+        assertEquals(2, stats.damage.min)
+        assertEquals(5, stats.damage.max)
+    }
+
+    @Test
     fun `hpMult clamps to at least 1`() {
         val overrides = MobStatOverrides(hpMult = 0.01)
         val stats = resolveMobStats(standardTier, level = 1, overrides)

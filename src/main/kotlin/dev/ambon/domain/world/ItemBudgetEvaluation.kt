@@ -42,7 +42,8 @@ fun evaluateItemBudget(
     if (file.level == null && file.rarity == null) return null
     val slot = file.slot?.lowercase()?.takeUnless { it.isEmpty() } ?: return null
 
-    val level = (file.level ?: 1).coerceAtLeast(1)
+    val level = file.level ?: 1
+    if (level < 1) error("Item '$itemId' level must be >= 1 (got $level)")
     val rarity = (file.rarity ?: config.defaultRarity).lowercase()
 
     val slotBase = config.slotBaseBudget[slot]

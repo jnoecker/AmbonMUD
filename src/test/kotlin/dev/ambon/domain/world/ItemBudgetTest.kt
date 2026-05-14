@@ -101,6 +101,23 @@ class ItemBudgetTest {
     }
 
     @Test
+    fun `non-positive level raises an error instead of being silently clamped`() {
+        val item = ItemFile(
+            displayName = "underleveled",
+            slot = "weapon",
+            damage = 1,
+            level = 0,
+            rarity = "common",
+        )
+        try {
+            evaluateItemBudget("underleveled", item, config)
+            error("Expected IllegalStateException for level <= 0")
+        } catch (e: IllegalStateException) {
+            assertTrue(e.message!!.contains("level"))
+        }
+    }
+
+    @Test
     fun `tolerance prevents borderline overage from being flagged`() {
         val item = ItemFile(
             displayName = "borderline weapon",

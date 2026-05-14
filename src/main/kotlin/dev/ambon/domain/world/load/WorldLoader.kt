@@ -508,6 +508,8 @@ object WorldLoader {
                     }
                 }
 
+                itemFile.level?.let { requireAtLeast(it, 1, itemCtx, "level") }
+
                 val budgetEval = try {
                     evaluateItemBudget(
                         itemId = itemId.value,

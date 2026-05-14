@@ -2,6 +2,8 @@ package dev.ambon.domain.world
 
 import dev.ambon.config.MobTierConfig
 import dev.ambon.domain.DamageRange
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 /** Fully-resolved combat stats for a mob at a specific level. */
 data class ResolvedMobStats(
@@ -39,12 +41,19 @@ fun resolveMobStats(
     val xpMult = overrides.xpMult ?: 1.0
     val goldMult = overrides.goldMult ?: 1.0
 
-    val baseHp = ((tier.baseHp + steps * tier.hpPerLevel) * hpMult).toInt().coerceAtLeast(1)
-    val baseMin = ((tier.baseMinDamage + steps * tier.damagePerLevel) * dmgMult).toInt().coerceAtLeast(1)
-    val baseMax = ((tier.baseMaxDamage + steps * tier.damagePerLevel) * dmgMult).toInt().coerceAtLeast(baseMin)
-    val baseXp = ((tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel).toDouble() * xpMult).toLong().coerceAtLeast(0L)
-    val baseGoldMin = ((tier.baseGoldMin + steps.toLong() * tier.goldPerLevel).toDouble() * goldMult).toLong().coerceAtLeast(0L)
-    val baseGoldMax = ((tier.baseGoldMax + steps.toLong() * tier.goldPerLevel).toDouble() * goldMult).toLong().coerceAtLeast(baseGoldMin)
+    val hpRaw = (tier.baseHp + steps * tier.hpPerLevel) * hpMult
+    val minRaw = (tier.baseMinDamage + steps * tier.damagePerLevel) * dmgMult
+    val maxRaw = (tier.baseMaxDamage + steps * tier.damagePerLevel) * dmgMult
+    val xpRaw = (tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel).toDouble() * xpMult
+    val goldMinRaw = (tier.baseGoldMin + steps.toLong() * tier.goldPerLevel).toDouble() * goldMult
+    val goldMaxRaw = (tier.baseGoldMax + steps.toLong() * tier.goldPerLevel).toDouble() * goldMult
+
+    val baseHp = hpRaw.roundToInt().coerceAtLeast(1)
+    val baseMin = minRaw.roundToInt().coerceAtLeast(1)
+    val baseMax = maxRaw.roundToInt().coerceAtLeast(baseMin)
+    val baseXp = xpRaw.roundToLong().coerceAtLeast(0L)
+    val baseGoldMin = goldMinRaw.roundToLong().coerceAtLeast(0L)
+    val baseGoldMax = goldMaxRaw.roundToLong().coerceAtLeast(baseGoldMin)
 
     val minDamage = overrides.minDamage ?: baseMin
     val maxDamage = overrides.maxDamage ?: baseMax
