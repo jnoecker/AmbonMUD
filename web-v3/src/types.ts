@@ -413,6 +413,11 @@ export interface SkillSummary {
   classRestriction: string | null;
   image: string | null;
   receivedAt: number;
+  /**
+   * "self" for player abilities (cast via `cast <id>`), "pet" for pet signature skills
+   * (cast via `pet <id>`). Defaults to "self" when absent for back-compat.
+   */
+  source?: "self" | "pet";
 }
 
 export interface CombatEventData {

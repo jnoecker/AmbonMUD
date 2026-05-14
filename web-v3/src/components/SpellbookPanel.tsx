@@ -48,6 +48,7 @@ function skillCategory(skill: SkillSummary): Category {
     if (t === "ENEMY" || t === "ALL_ENEMIES") return "DEBUFF";
     return "BUFF";
   }
+  // Taunt and threat-shaping abilities live under UTILITY.
   return "UTILITY";
 }
 
@@ -69,11 +70,12 @@ function SkillCard({
 }) {
   const [showSlotPicker, setShowSlotPicker] = useState(false);
 
+  const isPet = skill.source === "pet";
   return (
     <div className="spellbook-card-wrapper">
       <button
         type="button"
-        className="spellbook-card"
+        className={`spellbook-card${isPet ? " spellbook-card-pet" : ""}`}
         onClick={() => onShowInfo(skill)}
         title={`${skill.name} — click for info`}
       >
@@ -88,10 +90,18 @@ function SkillCard({
           <span className="spellbook-card-name">{skill.name}</span>
           <span className="spellbook-card-desc">{skill.description}</span>
           <div className="spellbook-card-stats">
-            <span className="spellbook-stat spellbook-stat-mana">{skill.manaCost} MP</span>
+            {isPet ? (
+              <span className="spellbook-stat spellbook-stat-pet" title="Pet skill — triggered via `pet &lt;skill&gt;`">
+                Pet
+              </span>
+            ) : (
+              <span className="spellbook-stat spellbook-stat-mana">{skill.manaCost} MP</span>
+            )}
             <span className="spellbook-stat spellbook-stat-cd">CD: {cooldownLabel(skill.cooldownMs)}</span>
             <span className="spellbook-stat spellbook-stat-target">{targetLabel(skill.targetType)}</span>
-            <span className="spellbook-stat spellbook-stat-level">Lv {skill.levelRequired}</span>
+            {!isPet && (
+              <span className="spellbook-stat spellbook-stat-level">Lv {skill.levelRequired}</span>
+            )}
             {skill.classRestriction && (
               <span className="spellbook-stat spellbook-stat-class">{prettyClass(skill.classRestriction)}</span>
             )}

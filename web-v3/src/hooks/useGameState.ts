@@ -197,6 +197,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
 
   // ── Skills & quickbar ─────────────────────────────
   const [skills, setSkills] = useState<SkillSummary[]>([]);
+  const [petSkills, setPetSkills] = useState<SkillSummary[]>([]);
 
   // ── Inventory & equipment ─────────────────────────
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
@@ -483,6 +484,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setMobs,
         setEffects,
         setSkills,
+        setPetSkills,
         setAchievements,
         setGroupInfo,
         setPendingGroupInvite,
@@ -585,6 +587,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setRoomItems([]);
     setEffects([]);
     setSkills([]);
+    setPetSkills([]);
     setInventory([]);
     setEquipment({});
     setEquipmentSlotDefs([]);
@@ -668,6 +671,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     effects, combatTarget, combatLogMessages, duelState, duelChallenge,
     // Skills
     skills, setSkills,
+    petSkills, setPetSkills,
     // Inventory
     inventory, equipment, equipmentSlotDefs,
     // Progression

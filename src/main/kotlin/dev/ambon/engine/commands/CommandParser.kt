@@ -151,6 +151,14 @@ sealed interface Command {
         val newName: String,
     ) : Command
 
+    /** `pet skills` — list the active pet's signature skills with cooldown remaining. */
+    data object PetSkills : Command
+
+    /** `pet <skillName>` — triggers the named skill on the owner's current combat target. */
+    data class PetSkill(
+        val skillQuery: String,
+    ) : Command
+
     // ---- Enchanting commands ----
 
     data class Enchant(
@@ -932,10 +940,12 @@ object CommandParser {
         }?.let { return it }
 
         matchPrefix(line, listOf("pet")) { rest ->
-            when (rest.trim().lowercase()) {
+            val trimmed = rest.trim()
+            when (trimmed.lowercase()) {
                 "", "status" -> Command.PetStatus
                 "dismiss", "unsummon", "release" -> Command.PetDismiss
-                else -> Command.PetStatus
+                "skills", "abilities" -> Command.PetSkills
+                else -> Command.PetSkill(trimmed)
             }
         }?.let { return it }
 

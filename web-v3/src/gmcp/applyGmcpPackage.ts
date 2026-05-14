@@ -112,6 +112,7 @@ interface GmcpContext {
   setMobs: Dispatch<SetStateAction<RoomMob[]>>;
   setEffects: Dispatch<SetStateAction<StatusEffect[]>>;
   setSkills: Dispatch<SetStateAction<SkillSummary[]>>;
+  setPetSkills: Dispatch<SetStateAction<SkillSummary[]>>;
   setAchievements: Dispatch<SetStateAction<AchievementData>>;
   setGroupInfo: Dispatch<SetStateAction<GroupInfo>>;
   setPendingGroupInvite: Dispatch<SetStateAction<PendingGroupInvite | null>>;
@@ -1667,6 +1668,39 @@ export function applyGmcpPackage(
         armor: typeof packet.armor === "number" ? packet.armor : undefined,
         image: typeof packet.image === "string" ? packet.image : undefined,
       });
+      break;
+    }
+
+    case "Char.Pet.Skills": {
+      const now = Date.now();
+      if (!Array.isArray(data)) {
+        ctx.setPetSkills([]);
+        break;
+      }
+      ctx.setPetSkills(
+        data
+          .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
+          .map((entry, index) => ({
+            id: typeof entry.id === "string" ? entry.id : `pet-skill-${index}`,
+            name: typeof entry.name === "string" ? entry.name : "Unknown",
+            description: typeof entry.description === "string" ? entry.description : "",
+            manaCost: 0,
+            cooldownMs: Math.max(0, safeNumber(entry.cooldownMs)),
+            cooldownRemainingMs: Math.max(0, safeNumber(entry.cooldownRemainingMs)),
+            levelRequired: 1,
+            // Pet skills always implicitly target the owner's current combat target.
+            // We mark them ENEMY so the spellbook categorizes them under attack/debuff.
+            targetType: "ENEMY",
+            effectType: typeof entry.effectType === "string" ? entry.effectType : "DIRECT_DAMAGE",
+            // Leave classRestriction null so pet skills don't pollute the spellbook's class
+            // filter pills with names like "a wolf companion". The owning pet is shown via
+            // a separate "Pet" badge on the card.
+            classRestriction: null,
+            image: typeof entry.image === "string" ? entry.image : null,
+            receivedAt: now,
+            source: "pet" as const,
+          })),
+      );
       break;
     }
 

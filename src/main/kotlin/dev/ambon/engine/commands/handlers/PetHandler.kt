@@ -1,27 +1,34 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.PetSystem
+import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import java.time.Clock
 
 class PetHandler(
     ctx: EngineContext,
     private val petSystem: PetSystem,
+    private val clock: Clock = Clock.systemUTC(),
 ) : CommandHandler {
     private val players = ctx.players
     private val mobs = ctx.mobs
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val combat: CombatSystem = ctx.combat
 
     override fun register(router: CommandRouter) {
         router.on<Command.PetStatus> { sid, _ -> handlePetStatus(sid) }
         router.on<Command.PetDismiss> { sid, _ -> handlePetDismiss(sid) }
         router.on<Command.PetName> { sid, cmd -> handlePetName(sid, cmd) }
+        router.on<Command.PetSkills> { sid, _ -> handlePetSkills(sid) }
+        router.on<Command.PetSkill> { sid, cmd -> handlePetSkill(sid, cmd) }
     }
 
     private suspend fun handlePetStatus(sessionId: SessionId) {
@@ -146,9 +153,99 @@ class PetHandler(
                 image = pet.image,
             ),
         )
+        emitPetSkillsForActive(sessionId, pet)
+    }
+
+    private suspend fun emitPetSkillsForActive(sessionId: SessionId, pet: dev.ambon.domain.mob.MobState) {
+        val emitter = gmcpEmitter ?: return
+        val now = clock.millis()
+        val payloads = pet.spells.map { spell ->
+            GmcpEmitter.PetSkillPayload(
+                id = spell.id,
+                name = spell.displayName,
+                description = "",
+                cooldownMs = spell.cooldownMs,
+                cooldownRemainingMs = combat.petSkillCooldownRemainingMs(pet.id, spell.id, now),
+                effectType = when {
+                    spell.threatBonus > 0.0 && spell.damage == null -> "TAUNT"
+                    spell.damage != null -> "DIRECT_DAMAGE"
+                    spell.statusEffectId != null -> "APPLY_STATUS"
+                    else -> "DIRECT_DAMAGE"
+                },
+                image = null,
+                petName = pet.name,
+            )
+        }
+        emitter.sendPetSkills(sessionId, payloads)
+    }
+
+    private suspend fun handlePetSkills(sessionId: SessionId) {
+        val pet = petSystem.getActivePet(sessionId)
+        if (pet == null) {
+            val message = "You have no active pet."
+            sendErrorWithFeedback(
+                sessionId,
+                outbound,
+                gmcpEmitter,
+                message,
+                "pet",
+                code = "NO_ACTIVE_PET",
+                command = "skills",
+            )
+            return
+        }
+        if (pet.spells.isEmpty()) {
+            val message = "${pet.name} has no signature skills."
+            outbound.send(OutboundEvent.SendInfo(sessionId, message))
+            sendScopedFeedback(
+                sessionId,
+                gmcpEmitter,
+                "info",
+                message,
+                "pet",
+                code = "PET_NO_SKILLS",
+                command = "skills",
+            )
+            return
+        }
+        val now = clock.millis()
+        outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${pet.name}'s skills ]"))
+        for (skill in pet.spells) {
+            val remaining = combat.petSkillCooldownRemainingMs(pet.id, skill.id, now)
+            val cooldownText =
+                if (remaining > 0L) " (${remaining.ceilSeconds()}s cooldown)" else " (ready)"
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "  ${skill.id}: ${skill.displayName}$cooldownText",
+                ),
+            )
+        }
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Use 'pet <skill>' to trigger one."))
+    }
+
+    private suspend fun handlePetSkill(sessionId: SessionId, cmd: Command.PetSkill) {
+        when (val result = combat.triggerPetSkill(sessionId, cmd.skillQuery)) {
+            CombatSystem.PetSkillResult.Ok -> {
+                // CombatSystem already wrote the success messages and combat events.
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+            is CombatSystem.PetSkillResult.Error -> {
+                sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    result.message,
+                    "pet",
+                    code = result.code,
+                    command = "skill",
+                )
+            }
+        }
     }
 
     private suspend fun emitInactivePet(sessionId: SessionId) {
+        gmcpEmitter?.sendPetSkills(sessionId, emptyList())
         gmcpEmitter?.sendPetState(
             sessionId,
             GmcpEmitter.PetStatePayload(

@@ -964,6 +964,7 @@ class GameEngine(
         // Late-wire combat event / gain callbacks (avoids circular type inference with gmcpEmitter)
         combatSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
         combatSystem.onPlayerEnteredCombat = { sid -> dialogueSystem.endConversation(sid) }
+        combatSystem.onPetSkillCast = { sid -> emitPetSkills(sid, petSystem.getActivePet(sid)) }
         combatSystem.onXpGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "xp", amount, source) }
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
@@ -2561,7 +2562,42 @@ class GameEngine(
                 )
             },
         )
+        emitPetSkills(sessionId, pet)
     }
+
+    /**
+     * Emits the active pet's signature skills (or an empty list if [pet] is null) with current
+     * cooldown remaining. Mapped effect types align with the player ability vocabulary so the
+     * web spellbook can categorize pet skills the same way as player abilities.
+     */
+    private suspend fun emitPetSkills(sessionId: SessionId, pet: dev.ambon.domain.mob.MobState?) {
+        if (pet == null) {
+            gmcpEmitter.sendPetSkills(sessionId, emptyList())
+            return
+        }
+        val now = clock.millis()
+        val payloads = pet.spells.map { spell ->
+            GmcpEmitter.PetSkillPayload(
+                id = spell.id,
+                name = spell.displayName,
+                description = "",
+                cooldownMs = spell.cooldownMs,
+                cooldownRemainingMs = combatSystem.petSkillCooldownRemainingMs(pet.id, spell.id, now),
+                effectType = mapPetSkillEffectType(spell),
+                image = null,
+                petName = pet.name,
+            )
+        }
+        gmcpEmitter.sendPetSkills(sessionId, payloads)
+    }
+
+    private fun mapPetSkillEffectType(spell: dev.ambon.domain.mob.MobSpell): String =
+        when {
+            spell.threatBonus > 0.0 && spell.damage == null -> "TAUNT"
+            spell.damage != null -> "DIRECT_DAMAGE"
+            spell.statusEffectId != null -> "APPLY_STATUS"
+            else -> "DIRECT_DAMAGE"
+        }
 
     private suspend fun emitFactions(sessionId: SessionId, player: PlayerState) {
         val definitions = reputationSystem.factionDefinitions()

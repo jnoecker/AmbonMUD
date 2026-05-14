@@ -21,6 +21,7 @@ import {
 } from "./Icons";
 
 function skillCategory(skill: SkillSummary): string {
+  if (skill.source === "pet") return "skill-pet";
   const t = skill.targetType.toUpperCase();
   const e = skill.effectType.toUpperCase();
   if (t === "SELF") return "skill-self";
@@ -110,11 +111,13 @@ function SkillSlot({
     ? remaining / skill.cooldownMs
     : 0;
 
+  const isPet = skill.source === "pet";
+  const costLabel = isPet ? `${skill.classRestriction ?? "Pet"} skill` : `${skill.manaCost} mana`;
   return (
     <button
       type="button"
-      className={`action-bar-skill ${skillCategory(skill)}${onCooldown ? " action-bar-skill-cooldown" : ""}`}
-      title={`${skill.name} (${skill.manaCost} mana) — key ${index + 1}\nRight-click to remove`}
+      className={`action-bar-skill ${skillCategory(skill)}${onCooldown ? " action-bar-skill-cooldown" : ""}${isPet ? " action-bar-skill-pet" : ""}`}
+      title={`${skill.name} (${costLabel}) — key ${index + 1}\nRight-click to remove`}
       disabled={onCooldown}
       draggable
       onClick={() => onCast(skill.id, skill.cooldownMs)}
