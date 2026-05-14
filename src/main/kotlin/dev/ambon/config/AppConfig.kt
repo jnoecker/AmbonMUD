@@ -877,10 +877,18 @@ data class PetSpellConfig(
     val statusEffectId: String? = null,
     val cooldownMs: Long = 0L,
     val weight: Int = 1,
+    /** Flat threat added to the pet's threat entry on the target (for tank-pet taunt skills). */
+    val threatBonus: Double = 0.0,
 )
 
 data class PetConfig(
     val definitions: Map<String, PetTemplateConfig> = emptyMap(),
+    /**
+     * Grace window after a manual `pet <skill>` trigger during which the pet will NOT auto-cast
+     * a skill — instead it falls back to its melee/default attack. Keeps manual rotations from
+     * being clobbered by auto-cast.
+     */
+    val manualSkillGraceMs: Long = 8_000L,
 )
 
 data class BankConfig(

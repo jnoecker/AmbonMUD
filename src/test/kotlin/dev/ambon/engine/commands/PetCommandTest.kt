@@ -60,8 +60,27 @@ class PetCommandTest {
         }
 
         @Test
-        fun `pet unknown subcommand defaults to PetStatus`() {
-            assertEquals(Command.PetStatus, CommandParser.parse("pet info"))
+        fun `pet skills parses to PetSkills`() {
+            assertEquals(Command.PetSkills, CommandParser.parse("pet skills"))
+        }
+
+        @Test
+        fun `pet abilities parses to PetSkills`() {
+            assertEquals(Command.PetSkills, CommandParser.parse("pet abilities"))
+        }
+
+        @Test
+        fun `pet with skill name parses to PetSkill`() {
+            val result = CommandParser.parse("pet bite")
+            assertTrue(result is Command.PetSkill)
+            assertEquals("bite", (result as Command.PetSkill).skillQuery)
+        }
+
+        @Test
+        fun `pet multi-word skill query preserves spaces`() {
+            val result = CommandParser.parse("pet Death Coil")
+            assertTrue(result is Command.PetSkill)
+            assertEquals("Death Coil", (result as Command.PetSkill).skillQuery)
         }
     }
 

@@ -676,6 +676,9 @@ class CombatSystem(
 
         // --- Pet attack phase ---
         // Pets deal damage to their owner's combat target on the same tick cadence.
+        // If the pet has signature skills off cooldown AND the owner hasn't manually triggered
+        // a skill in the recent grace window, fall through to one of those skills instead of
+        // a plain melee — that's how rangers see "Wolf bites!" rotations without doing anything.
         if (petSystem != null) {
             for ((sessionId, mobId) in playerEntries) {
                 val mobCombatState = activeMobs[mobId] ?: continue
@@ -684,6 +687,19 @@ class CombatSystem(
                 if (mob.hp <= 0) continue
                 val pet = petSystem.getActivePet(sessionId) ?: continue
                 if (pet.roomId != mob.roomId) continue
+
+                val autoSkill =
+                    if (petSystem.isManualGraceActive(sessionId, now)) {
+                        null
+                    } else {
+                        selectPetSkill(pet, now)
+                    }
+
+                if (autoSkill != null) {
+                    executePetSkill(pet, autoSkill, mob, sessionId, now)
+                    continue
+                }
+
                 val petRoll = rollRange(rng, pet.damage.min, pet.damage.max)
                 val petDamage = (petRoll - mob.armor).coerceAtLeast(1)
                 mob.takeDamage(petDamage)
@@ -800,6 +816,27 @@ class CombatSystem(
             ran++
         }
         return ran
+    }
+
+    /**
+     * Selects an off-cooldown skill from a pet's pool using weighted random.
+     * Unlike [selectMobSpell] this does not exclude a defaultAttack — pets don't model a
+     * default-attack spell separate from their melee, and every entry in `pet.spells` is a
+     * triggerable signature skill.
+     */
+    private fun selectPetSkill(pet: MobState, now: Long): MobSpell? {
+        if (pet.spells.isEmpty()) return null
+        val cooldowns = mobSpellCooldowns[pet.id] ?: emptyMap()
+        val eligible = pet.spells.filter { (cooldowns[it.id] ?: 0L) <= now }
+        if (eligible.isEmpty()) return null
+        val totalWeight = eligible.sumOf { it.weight }
+        if (totalWeight <= 0) return eligible.first()
+        var roll = rng.nextInt(totalWeight)
+        for (skill in eligible) {
+            roll -= skill.weight
+            if (roll < 0) return skill
+        }
+        return eligible.last()
     }
 
     /**
@@ -1104,6 +1141,149 @@ class CombatSystem(
         mob: MobState,
     ) {
         handleMobDeath(killerSessionId, mob)
+    }
+
+    /** Returns ms remaining on [skillId]'s cooldown for [petId], or 0 if ready. */
+    fun petSkillCooldownRemainingMs(petId: MobId, skillId: String, now: Long = clock.millis()): Long {
+        val expiresAt = mobSpellCooldowns[petId]?.get(skillId) ?: return 0L
+        return (expiresAt - now).coerceAtLeast(0L)
+    }
+
+    /** Outcome of a manual `pet <skill>` trigger — surfaced back to the player via PetHandler. */
+    sealed interface PetSkillResult {
+        data object Ok : PetSkillResult
+
+        data class Error(
+            val message: String,
+            val code: String,
+        ) : PetSkillResult
+    }
+
+    /**
+     * Executes a pet skill triggered by the owner via `pet <skill>`.
+     * Validates: active pet exists, owner is in combat, skill exists on pet, skill is off cooldown.
+     * On success: applies damage / status / threat bonus to the owner's current combat target,
+     * stamps the skill cooldown, and records the manual-cast timestamp so auto-cast won't preempt
+     * the player's rotation for [PetConfig.manualSkillGraceMs].
+     */
+    suspend fun triggerPetSkill(
+        ownerSid: SessionId,
+        skillQuery: String,
+    ): PetSkillResult {
+        val pets = petSystem ?: return PetSkillResult.Error("Pets are not available.", "NO_PET_SYSTEM")
+        val pet = pets.getActivePet(ownerSid)
+            ?: return PetSkillResult.Error("You have no active pet.", "NO_ACTIVE_PET")
+        if (pet.hp <= 0) {
+            return PetSkillResult.Error("${pet.name} is incapacitated.", "PET_DEAD")
+        }
+        if (pet.spells.isEmpty()) {
+            return PetSkillResult.Error("${pet.name} has no skills to use.", "PET_NO_SKILLS")
+        }
+        val skill = pets.findSkill(pet, skillQuery)
+            ?: return PetSkillResult.Error("${pet.name} doesn't know '$skillQuery'.", "UNKNOWN_SKILL")
+
+        val target = getCombatTarget(ownerSid)
+            ?: return PetSkillResult.Error("You're not in combat.", "NOT_IN_COMBAT")
+        if (target.roomId != pet.roomId) {
+            return PetSkillResult.Error("${pet.name} can't reach your target.", "PET_OUT_OF_RANGE")
+        }
+
+        val now = clock.millis()
+        val cd = mobSpellCooldowns[pet.id]?.get(skill.id) ?: 0L
+        if (now < cd) {
+            val remainingSec = (cd - now).ceilSeconds()
+            return PetSkillResult.Error(
+                "${skill.displayName} is on cooldown (${remainingSec}s remaining).",
+                "ON_COOLDOWN",
+            )
+        }
+
+        executePetSkill(pet, skill, target, ownerSid, now)
+        pets.recordManualSkillCast(ownerSid, now)
+        return PetSkillResult.Ok
+    }
+
+    /**
+     * Applies a pet skill against a target mob. Damage portion adds threat to the pet's synthetic
+     * SID (if it has one — tank pets) or the owner (DPS pets, mirroring the auto-attack path).
+     * Status effects route through StatusEffectSystem; threatBonus is a flat add for taunt skills.
+     */
+    private suspend fun executePetSkill(
+        pet: MobState,
+        skill: MobSpell,
+        target: MobState,
+        ownerSid: SessionId,
+        now: Long,
+    ) {
+        if (skill.cooldownMs > 0L) {
+            mobSpellCooldowns.getOrPut(pet.id) { mutableMapOf() }[skill.id] = now + skill.cooldownMs
+        }
+
+        val petSid = petSystem?.getPetSessionId(pet.id)
+        val threatSid = petSid ?: ownerSid
+
+        var dealtDamage = 0
+        if (skill.damage != null) {
+            val roll = rollRange(rng, skill.damage.min, skill.damage.max)
+            val reduced = (roll - target.armor).coerceAtLeast(1)
+            target.takeDamage(reduced)
+            dealtDamage = reduced
+            dirtyNotifier.mobHpDirty(target.id)
+
+            val selfMsg = skill.message
+                .replace("{pet}", pet.name)
+                .replace("{target}", target.name)
+                .replace("{damage}", reduced.toString())
+                .ifEmpty { "${pet.name} hits ${target.name} with ${skill.displayName} for $reduced damage." }
+            outbound.send(OutboundEvent.SendText(ownerSid, selfMsg))
+            onCombatEvent(
+                ownerSid,
+                CombatEvent.PetHit(
+                    petName = pet.name,
+                    targetName = target.name,
+                    targetId = target.id.value,
+                    damage = reduced,
+                ),
+            )
+            val roomMsg = skill.roomMessage
+                .replace("{pet}", pet.name)
+                .replace("{target}", target.name)
+                .replace("{damage}", reduced.toString())
+                .ifEmpty { selfMsg }
+            broadcastToRoom(players, outbound, target.roomId, roomMsg, exclude = ownerSid)
+        } else if (skill.message.isNotEmpty() || skill.roomMessage.isNotEmpty()) {
+            val selfMsg = skill.message
+                .replace("{pet}", pet.name)
+                .replace("{target}", target.name)
+                .ifEmpty { "${pet.name} uses ${skill.displayName} on ${target.name}." }
+            outbound.send(OutboundEvent.SendText(ownerSid, selfMsg))
+            val roomMsg = skill.roomMessage
+                .replace("{pet}", pet.name)
+                .replace("{target}", target.name)
+                .ifEmpty { selfMsg }
+            broadcastToRoom(players, outbound, target.roomId, roomMsg, exclude = ownerSid)
+        }
+
+        if (skill.statusEffectId != null && statusEffects != null) {
+            statusEffects.applyToMob(target.id, skill.statusEffectId, threatSid)
+        }
+
+        // Threat: damage portion uses pet's threat multiplier (tank pets hold aggro);
+        // explicit threatBonus is a flat add for taunt-style skills like a bear's roar.
+        if (activeMobs.containsKey(target.id)) {
+            if (dealtDamage > 0) {
+                val multiplier = if (pet.threatMultiplier > 0.0) pet.threatMultiplier else 1.0
+                threatTable.addThreat(target.id, threatSid, dealtDamage.toDouble() * multiplier)
+            }
+            if (skill.threatBonus > 0.0) {
+                threatTable.addThreat(target.id, threatSid, skill.threatBonus)
+            }
+        }
+
+        if (target.hp <= 0) {
+            handleMobDeath(ownerSid, target)
+            outbound.send(OutboundEvent.SendPrompt(ownerSid))
+        }
     }
 
     // --- Private helpers ---

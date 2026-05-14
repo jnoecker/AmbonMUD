@@ -22,4 +22,9 @@ data class MobSpell(
     val cooldownMs: Long = 0L,
     /** Relative weight for random selection. Higher = more likely. */
     val weight: Int = 1,
+    /**
+     * Flat threat added to the caster's threat entry on the target. Used by pet skills like
+     * a bear's roar that need to grab aggro without dealing damage. Ignored for non-pet mobs.
+     */
+    val threatBonus: Double = 0.0,
 )

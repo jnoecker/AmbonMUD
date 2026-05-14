@@ -152,6 +152,7 @@ class PetSystem(
             mobs.remove(pet.id)
             log.debug { "Pet dismissed: ${pet.name} (${pet.id})" }
         }
+        if (pets.isNotEmpty()) lastManualSkillCastMs.remove(ownerSid)
         return dismissed
     }
 
@@ -172,6 +173,7 @@ class PetSystem(
         expiryTimes.clear()
         petToSession.clear()
         sessionToPet.clear()
+        lastManualSkillCastMs.clear()
         for (mob in mobs.all().filter { it.isPet }) {
             mobs.remove(mob.id)
         }
@@ -221,7 +223,37 @@ class PetSystem(
             statusEffectId = sc.statusEffectId?.let { StatusEffectId(it) },
             cooldownMs = sc.cooldownMs,
             weight = sc.weight,
+            threatBonus = sc.threatBonus,
         )
+
+    /** Per-owner timestamp of the most recent manual `pet <skill>` trigger. */
+    private val lastManualSkillCastMs = mutableMapOf<SessionId, Long>()
+
+    /** Records that the owner just manually triggered a pet skill. */
+    fun recordManualSkillCast(ownerSid: SessionId, now: Long) {
+        lastManualSkillCastMs[ownerSid] = now
+    }
+
+    /**
+     * Returns true if the owner triggered a pet skill within [PetConfig.manualSkillGraceMs] ms.
+     * While true, the pet attack phase should NOT auto-cast skills — the player is driving the rotation.
+     */
+    fun isManualGraceActive(ownerSid: SessionId, now: Long): Boolean {
+        val last = lastManualSkillCastMs[ownerSid] ?: return false
+        return now - last < config.manualSkillGraceMs
+    }
+
+    /**
+     * Looks up a skill on [pet] by case-insensitive id match, or by displayName prefix.
+     * Returns null if no skill matches.
+     */
+    fun findSkill(pet: MobState, query: String): MobSpell? {
+        val q = query.trim().lowercase()
+        if (q.isEmpty()) return null
+        return pet.spells.firstOrNull { it.id.equals(q, ignoreCase = true) }
+            ?: pet.spells.firstOrNull { it.displayName.lowercase().startsWith(q) }
+            ?: pet.spells.firstOrNull { it.displayName.lowercase().contains(q) }
+    }
 
     data class ExpiredPet(
         val ownerSessionId: SessionId,
