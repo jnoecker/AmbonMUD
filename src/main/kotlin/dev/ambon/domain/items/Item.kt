@@ -4,9 +4,10 @@ import dev.ambon.domain.StatMap
 
 data class ItemUseEffect(
     val healHp: Int = 0,
+    val healMana: Int = 0,
     val grantXp: Long = 0L,
 ) {
-    fun hasEffect(): Boolean = healHp > 0 || grantXp > 0L
+    fun hasEffect(): Boolean = healHp > 0 || healMana > 0 || grantXp > 0L
 
     /**
      * Short human-readable summary of what using the item does, suitable for
@@ -16,6 +17,7 @@ data class ItemUseEffect(
     fun describe(): String? {
         val parts = mutableListOf<String>()
         if (healHp > 0) parts.add("Restores $healHp HP")
+        if (healMana > 0) parts.add("Restores $healMana mana")
         if (grantXp > 0L) parts.add("Grants $grantXp XP")
         return if (parts.isEmpty()) null else parts.joinToString(", ")
     }

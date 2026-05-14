@@ -245,10 +245,11 @@ video: <string, optional - relative path under /videos/, shown in context menu>
 
 ```yaml
 healHp: <integer, optional, default 0, must be >= 0>
+healMana: <integer, optional, default 0, must be >= 0>
 grantXp: <long, optional, default 0, must be >= 0>
 ```
 
-If `onUse` is present, at least one effect must be positive (`healHp > 0` or `grantXp > 0`).
+If `onUse` is present, at least one effect must be positive (`healHp > 0`, `healMana > 0`, or `grantXp > 0`).
 
 Charge/consumption notes:
 - If `charges` is set, one charge is spent per use.
@@ -556,7 +557,7 @@ For each file your tool emits:
 4. Restrict exit direction keys to the allowed set.
 5. Use only non-negative integers for `lifespan`, `damage`, `armor`, `constitution`.
 6. For every item, use `room` or omit placement entirely (unplaced). Do not use `mob`.
-7. If `onUse` is present, include at least one positive effect (`healHp` or `grantXp`).
+7. If `onUse` is present, include at least one positive effect (`healHp`, `healMana`, or `grantXp`).
 8. If `charges` is present, it must be > 0.
 9. Ensure all local/qualified references resolve in the merged set of files.
 10. Ensure normalized room/mob/item IDs are globally unique across files.

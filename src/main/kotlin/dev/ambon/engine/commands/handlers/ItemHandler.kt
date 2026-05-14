@@ -17,6 +17,7 @@ import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.healHp
+import dev.ambon.engine.healMana
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
 
@@ -256,6 +257,17 @@ class ItemHandler(
                             markVitalsDirty(sessionId)
                         } else {
                             outbound.send(OutboundEvent.SendInfo(sessionId, "You are already at full health."))
+                        }
+                    }
+                    if (effect.healMana > 0) {
+                        val previousMana = me.mana
+                        me.healMana(effect.healMana)
+                        val restored = (me.mana - previousMana).coerceAtLeast(0)
+                        if (restored > 0) {
+                            outbound.send(OutboundEvent.SendInfo(sessionId, "You recover $restored mana."))
+                            markVitalsDirty(sessionId)
+                        } else {
+                            outbound.send(OutboundEvent.SendInfo(sessionId, "Your mana is already full."))
                         }
                     }
                     if (effect.grantXp > 0L) {

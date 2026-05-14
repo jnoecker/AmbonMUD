@@ -498,6 +498,7 @@ object WorldLoader {
                 val onUse =
                     itemFile.onUse?.also { effect ->
                         requireAtLeast(effect.healHp, 0, itemCtx, "onUse.healHp")
+                        requireAtLeast(effect.healMana, 0, itemCtx, "onUse.healMana")
                         requireAtLeast(effect.grantXp, 0L, itemCtx, "onUse.grantXp")
                         if (!effect.hasEffect()) {
                             throw WorldLoadException(
