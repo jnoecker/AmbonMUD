@@ -161,7 +161,14 @@ export class CombatAnimator {
     this.container.addChild(this.particleGraphics);
   }
 
-  processEvent(event: CombatEventData, playerX: number, playerY: number, enemyX: number, enemyY: number) {
+  processEvent(
+    event: CombatEventData,
+    playerX: number,
+    playerY: number,
+    enemyX: number,
+    enemyY: number,
+    options: { suppressSlash?: boolean } = {},
+  ) {
     const type = event.type;
 
     if (type === "dodge") {
@@ -210,8 +217,11 @@ export class CombatAnimator {
       const dy = targetY - (event.sourceIsPlayer ? playerY : enemyY);
       this.addLunge(attacker, dx * LUNGE_DISTANCE, dy * LUNGE_DISTANCE);
 
-      // Slash at the impact point
-      this.addSlash(targetX, targetY);
+      // Slash at the impact point — suppressed when an archetype-aware
+      // visual (e.g. MELEE_STRIKE icon pulse) is taking over.
+      if (!options.suppressSlash) {
+        this.addSlash(targetX, targetY);
+      }
 
       // Defender shakes on hit
       this.addShake(defender);

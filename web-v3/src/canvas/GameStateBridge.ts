@@ -16,6 +16,7 @@ import type {
   RoomItem,
   RoomState,
   ShopState,
+  SkillSummary,
   StatusEffect,
   StylistState,
   Vitals,
@@ -50,6 +51,8 @@ export interface GameStateSnapshot {
   worldTime: WorldTime | null;
   worldWeather: WorldWeather | null;
   zoneEnvironment: ZoneEnvironment | null;
+  /** Player + pet skills indexed by id for fast per-ability visual lookup. */
+  skillsById: Map<string, SkillSummary>;
 }
 
 export interface PendingCast {
@@ -138,5 +141,6 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     worldTime: null,
     worldWeather: null,
     zoneEnvironment: null,
+    skillsById: new Map(),
   },
 };

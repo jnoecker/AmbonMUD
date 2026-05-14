@@ -2245,11 +2245,19 @@ data class AbilityDefinitionConfig(
     val prerequisites: List<String> = emptyList(),
     val tree: String = "",
     val tier: Int = 0,
+    val visual: AbilityVisualConfig = AbilityVisualConfig(),
 ) {
     init {
         require(skillPointCost >= 0) { "skillPointCost must be >= 0, got $skillPointCost" }
     }
 }
+
+data class AbilityVisualConfig(
+    val archetype: String = "",
+    val projectileImage: String = "",
+    val color: String = "",
+    val accentColor: String = "",
+)
 
 data class AbilityEffectConfig(
     val type: String = "DIRECT_DAMAGE",

@@ -1,6 +1,7 @@
 import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
 import { gameStateRef, canvasCallbacks } from "../GameStateBridge";
 import { canvasEvents } from "../CanvasEventBus";
+import { AbilityVisualSystem } from "../systems/AbilityVisualSystem";
 import { CombatAnimator } from "../systems/CombatAnimator";
 import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
@@ -52,6 +53,7 @@ export class BattleScene {
   private combatAnimator: CombatAnimator;
   private gainPopups: GainPopupSystem;
   private spellProjectiles = new SpellProjectileSystem();
+  private abilityVisuals = new AbilityVisualSystem();
   private statusEffects = new StatusEffectDisplay();
   private enemyStatusEffects = new StatusEffectDisplay();
   private uiGraphics = new Graphics();
@@ -123,6 +125,7 @@ export class BattleScene {
     this.container.addChild(this.enemyStatusEffects.container);
     this.container.addChild(this.combatAnimator.container);
     this.container.addChild(this.spellProjectiles.graphics);
+    this.container.addChild(this.abilityVisuals.container);
     this.container.addChild(this.gainPopups.container);
 
     this.fleeBtn = this.buildActionButton("Flee", 0xd4888a, 0x4a1a1a, () => {
@@ -162,6 +165,7 @@ export class BattleScene {
     this.container.alpha = 0;
     this.combatAnimator.clear();
     this.spellProjectiles.clear();
+    this.abilityVisuals.clear();
     this.gainPopups.clear();
     this.removeVictoryText();
     // Reset tracking so update() re-creates everything
@@ -252,9 +256,35 @@ export class BattleScene {
     const enemyPos = this.getEnemyPosition();
 
     for (const event of combat) {
-      // Try to spawn a spell projectile — abilities get a visible arcing projectile
-      this.spellProjectiles.trySpawn(event, playerPos.x, playerPos.y, enemyPos.x, enemyPos.y);
-      this.combatAnimator.processEvent(event, playerPos.x, playerPos.y, enemyPos.x, enemyPos.y);
+      // Per-ability archetype dispatch — looks up the skill's visual from the
+      // bridge state and routes to the AbilityVisualSystem. When an archetype
+      // consumes the event we skip the generic SpellProjectile/red slash so
+      // the per-archetype animation is the only visible effect.
+      const skill = event.abilityId ? gameStateRef.current.skillsById.get(event.abilityId) : null;
+      const route = this.abilityVisuals.processEvent(
+        event,
+        skill?.visual?.archetype ?? null,
+        skill?.visual ?? null,
+        skill?.image ?? null,
+        playerPos.x, playerPos.y,
+        enemyPos.x, enemyPos.y,
+      );
+
+      // Generic projectile for events without an archetype (e.g. dotTick).
+      if (!route.consumesProjectile) {
+        this.spellProjectiles.trySpawn(event, playerPos.x, playerPos.y, enemyPos.x, enemyPos.y);
+      }
+
+      // abilityCast events carry no damage/heal — skip the CombatAnimator entirely
+      // (it would otherwise emit dodge/death/etc. branches that don't apply).
+      if (event.type !== "abilityCast") {
+        this.combatAnimator.processEvent(
+          event,
+          playerPos.x, playerPos.y,
+          enemyPos.x, enemyPos.y,
+          { suppressSlash: route.suppressSlash },
+        );
+      }
     }
 
     for (const event of gains) {
@@ -264,6 +294,7 @@ export class BattleScene {
     // Update animations
     this.combatAnimator.update(deltaMs);
     this.spellProjectiles.update(deltaMs);
+    this.abilityVisuals.update(deltaMs);
     this.gainPopups.update(deltaMs);
 
     // Apply death animation effects to enemy sprite
@@ -778,6 +809,7 @@ export class BattleScene {
   destroy() {
     this.combatAnimator.clear();
     this.spellProjectiles.clear();
+    this.abilityVisuals.clear();
     this.gainPopups.clear();
     this.container.destroy({ children: true });
   }

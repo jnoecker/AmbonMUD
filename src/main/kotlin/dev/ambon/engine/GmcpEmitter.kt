@@ -440,6 +440,12 @@ class GmcpEmitter(
                     prerequisites = a.prerequisites.map { it.value },
                     tree = a.tree,
                     tier = a.tier,
+                    visual = SkillVisualPayload(
+                        archetype = a.visual.archetype.name,
+                        projectileImage = a.visual.projectileImage,
+                        color = a.visual.color,
+                        accentColor = a.visual.accentColor,
+                    ),
                 )
             },
         )
@@ -963,6 +969,15 @@ class GmcpEmitter(
                 petName = event.petName,
                 attackerName = event.attackerName,
                 damage = event.damage,
+            )
+            is CombatEvent.AbilityCast -> CombatEventPayload(
+                type = "abilityCast",
+                abilityId = event.abilityId,
+                abilityName = event.abilityName,
+                targetName = event.targetName,
+                targetId = event.targetId,
+                targetIsPlayer = event.targetIsPlayer,
+                sourceIsPlayer = event.sourceIsPlayer,
             )
         }
         emit(sessionId, "Char.Combat.Event", payload, supportCheck = "Char.Combat.Event")
@@ -2399,6 +2414,14 @@ class GmcpEmitter(
         val prerequisites: List<String> = emptyList(),
         val tree: String = "",
         val tier: Int = 0,
+        val visual: SkillVisualPayload? = null,
+    )
+
+    private data class SkillVisualPayload(
+        val archetype: String,
+        val projectileImage: String? = null,
+        val color: String? = null,
+        val accentColor: String? = null,
     )
 
     private data class TrainerAbilityPayload(
@@ -2619,6 +2642,7 @@ class GmcpEmitter(
         val absorbed: Int? = null,
         val shieldRemaining: Int? = null,
         val petName: String? = null,
+        val targetIsPlayer: Boolean? = null,
     )
 
     // ---------- stats payload ----------

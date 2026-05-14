@@ -178,6 +178,7 @@ class AbilitySystem(
                         "You taunt ${mob.name}! It turns to face you.",
                     ),
                 )
+                emitAbilityCast(sessionId, ability, mob.name, mob.id.value, targetIsPlayer = false)
             }
             is AbilityEffect.ApplyStatus -> {
                 val sys =
@@ -191,6 +192,7 @@ class AbilitySystem(
                         "Your ${ability.displayName} afflicts ${mob.name}!",
                     ),
                 )
+                emitAbilityCast(sessionId, ability, mob.name, mob.id.value, targetIsPlayer = false)
             }
             else -> return "Spell misconfigured (unexpected effect for enemy target)."
         }
@@ -248,10 +250,12 @@ class AbilitySystem(
                         "You are empowered by ${ability.displayName}!",
                     ),
                 )
+                emitAbilityCast(sessionId, ability, player.name, null, targetIsPlayer = true)
             }
             is AbilityEffect.SummonPet -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
                 onSummonPet(sessionId, effect.petTemplateKey, effect.durationMs)
+                emitAbilityCast(sessionId, ability, player.name, null, targetIsPlayer = true)
             }
             else -> return "Spell misconfigured (unexpected effect for self target)."
         }
@@ -365,6 +369,7 @@ class AbilitySystem(
                         ),
                     )
                 }
+                emitAbilityCast(sessionId, ability, target.name, null, targetIsPlayer = (targetSid == sessionId))
             }
             else -> return "Spell misconfigured (unexpected effect for ally target)."
         }
@@ -427,6 +432,7 @@ class AbilitySystem(
                 deductManaAndCooldown(sessionId, player, ability, now)
                 for (m in targetMobs) {
                     sys.applyToMob(m.id, effect.statusEffectId, sessionId)
+                    emitAbilityCast(sessionId, ability, m.name, m.id.value, targetIsPlayer = false)
                 }
                 outbound.send(
                     OutboundEvent.SendText(
@@ -509,6 +515,7 @@ class AbilitySystem(
                 for (targetSid in groupMembers) {
                     sys.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
                     dirtyNotifier.playerStatusDirty(targetSid)
+                    val targetPlayer = players.get(targetSid)
                     if (targetSid == sessionId) {
                         outbound.send(
                             OutboundEvent.SendText(
@@ -516,12 +523,11 @@ class AbilitySystem(
                                 "You are empowered by ${ability.displayName}!",
                             ),
                         )
-                    } else {
-                        val target = players.get(targetSid) ?: continue
+                    } else if (targetPlayer != null) {
                         outbound.send(
                             OutboundEvent.SendText(
                                 sessionId,
-                                "Your ${ability.displayName} empowers ${target.name}!",
+                                "Your ${ability.displayName} empowers ${targetPlayer.name}!",
                             ),
                         )
                         outbound.send(
@@ -531,6 +537,13 @@ class AbilitySystem(
                             ),
                         )
                     }
+                    emitAbilityCast(
+                        sessionId,
+                        ability,
+                        targetPlayer?.name ?: player.name,
+                        null,
+                        targetIsPlayer = (targetSid == sessionId),
+                    )
                 }
             }
             else -> return "Spell misconfigured (unexpected effect for all_allies target)."
@@ -584,6 +597,26 @@ class AbilitySystem(
         if (mob.hp <= 0) {
             combat.handleSpellKill(sessionId, mob)
         }
+    }
+
+    private suspend fun emitAbilityCast(
+        sessionId: SessionId,
+        ability: AbilityDefinition,
+        targetName: String?,
+        targetId: String?,
+        targetIsPlayer: Boolean,
+    ) {
+        onCombatEvent(
+            sessionId,
+            CombatEvent.AbilityCast(
+                abilityId = ability.id.value,
+                abilityName = ability.displayName,
+                targetName = targetName,
+                targetId = targetId,
+                targetIsPlayer = targetIsPlayer,
+                sourceIsPlayer = true,
+            ),
+        )
     }
 
     private suspend fun deductManaAndCooldown(

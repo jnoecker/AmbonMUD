@@ -98,6 +98,30 @@ import type {
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
+import type { AbilityVisualArchetype, SkillVisual } from "../types";
+
+const KNOWN_ARCHETYPES: ReadonlySet<AbilityVisualArchetype> = new Set([
+  "RANGED_PROJECTILE",
+  "MELEE_STRIKE",
+  "HEAL_AURA",
+  "BUFF_AURA",
+  "DEBUFF_AURA",
+  "AREA_BURST",
+  "SUMMON_POOF",
+]);
+
+function parseSkillVisual(raw: unknown): SkillVisual | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  const archetypeStr = typeof obj.archetype === "string" ? obj.archetype : "";
+  if (!KNOWN_ARCHETYPES.has(archetypeStr as AbilityVisualArchetype)) return null;
+  return {
+    archetype: archetypeStr as AbilityVisualArchetype,
+    projectileImage: typeof obj.projectileImage === "string" ? obj.projectileImage : null,
+    color: typeof obj.color === "string" ? obj.color : null,
+    accentColor: typeof obj.accentColor === "string" ? obj.accentColor : null,
+  };
+}
 
 interface GmcpContext {
   setVitals: Dispatch<SetStateAction<Vitals>>;
@@ -692,6 +716,7 @@ export function applyGmcpPackage(
             effectType: typeof entry.effectType === "string" ? entry.effectType : "DIRECT_DAMAGE",
             classRestriction: typeof entry.classRestriction === "string" ? entry.classRestriction : null,
             image: typeof entry.image === "string" ? entry.image : null,
+            visual: parseSkillVisual(entry.visual),
             receivedAt: now,
           })),
       );
@@ -951,6 +976,7 @@ export function applyGmcpPackage(
         xpGained: safeNumber(packet.xpGained),
         goldGained: safeNumber(packet.goldGained),
         petName: typeof packet.petName === "string" ? packet.petName : null,
+        targetIsPlayer: packet.targetIsPlayer === true,
       });
       break;
     }
@@ -1697,6 +1723,7 @@ export function applyGmcpPackage(
             // a separate "Pet" badge on the card.
             classRestriction: null,
             image: typeof entry.image === "string" ? entry.image : null,
+            visual: parseSkillVisual(entry.visual),
             receivedAt: now,
             source: "pet" as const,
           })),
