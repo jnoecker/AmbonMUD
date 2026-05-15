@@ -1784,10 +1784,10 @@ object CommandParser {
             if (i >= raw.length) return Command.Invalid(line, "run <directions> — trailing count with no direction")
             val dir = parseDirectionOrNull(raw[i].toString())
                 ?: return Command.Invalid(line, "run <directions> — unknown direction '${raw[i]}'")
-            repeat(count) { steps.add(dir) }
-            if (steps.size > MAX_RUN_STEPS) {
+            if (count > MAX_RUN_STEPS - steps.size) {
                 return Command.Invalid(line, "run <directions> — too many steps (max $MAX_RUN_STEPS)")
             }
+            repeat(count) { steps.add(dir) }
             i++
         }
         return Command.Run(steps)
