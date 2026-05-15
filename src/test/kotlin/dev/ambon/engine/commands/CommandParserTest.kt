@@ -1065,4 +1065,96 @@ class CommandParserTest {
     fun `describe check without player name is Invalid`() {
         assertTrue(CommandParser.parse("describe check") is Command.Invalid)
     }
+
+    // ---- Areas ----
+
+    @Test
+    fun `areas with no args returns Areas with nulls`() {
+        assertEquals(Command.Areas(null, null), CommandParser.parse("areas"))
+        assertEquals(Command.Areas(null, null), CommandParser.parse("area"))
+    }
+
+    @Test
+    fun `areas with single level returns Areas with same min and max`() {
+        assertEquals(Command.Areas(5, 5), CommandParser.parse("areas 5"))
+    }
+
+    @Test
+    fun `areas with two levels returns Areas with range`() {
+        assertEquals(Command.Areas(3, 10), CommandParser.parse("areas 3 10"))
+    }
+
+    @Test
+    fun `areas with bad range returns Invalid`() {
+        assertTrue(CommandParser.parse("areas 10 3") is Command.Invalid)
+        assertTrue(CommandParser.parse("areas foo") is Command.Invalid)
+        assertTrue(CommandParser.parse("areas 1 2 3") is Command.Invalid)
+        assertTrue(CommandParser.parse("areas -1") is Command.Invalid)
+    }
+
+    // ---- Run ----
+
+    @Test
+    fun `run parses single direction`() {
+        assertEquals(Command.Run(listOf(Direction.NORTH)), CommandParser.parse("run n"))
+    }
+
+    @Test
+    fun `run parses consecutive single chars`() {
+        assertEquals(
+            Command.Run(listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)),
+            CommandParser.parse("run nsew"),
+        )
+    }
+
+    @Test
+    fun `run parses count prefixes`() {
+        val expected = Command.Run(
+            listOf(
+                Direction.NORTH,
+                Direction.NORTH,
+                Direction.NORTH,
+                Direction.NORTH,
+                Direction.NORTH,
+                Direction.EAST,
+                Direction.EAST,
+                Direction.EAST,
+            ),
+        )
+        assertEquals(expected, CommandParser.parse("run 5n3e"))
+    }
+
+    @Test
+    fun `run accepts up and down`() {
+        assertEquals(
+            Command.Run(listOf(Direction.UP, Direction.UP, Direction.DOWN)),
+            CommandParser.parse("run 2u1d"),
+        )
+    }
+
+    @Test
+    fun `run ignores internal whitespace`() {
+        assertEquals(
+            Command.Run(listOf(Direction.NORTH, Direction.NORTH, Direction.EAST)),
+            CommandParser.parse("run 2n 1e"),
+        )
+    }
+
+    @Test
+    fun `run with no arg is Invalid`() {
+        assertTrue(CommandParser.parse("run") is Command.Invalid)
+        assertTrue(CommandParser.parse("run   ") is Command.Invalid)
+    }
+
+    @Test
+    fun `run with bad direction is Invalid`() {
+        assertTrue(CommandParser.parse("run nxn") is Command.Invalid)
+        assertTrue(CommandParser.parse("run 5") is Command.Invalid)
+        assertTrue(CommandParser.parse("run 0n") is Command.Invalid)
+    }
+
+    @Test
+    fun `run with too many steps is Invalid`() {
+        assertTrue(CommandParser.parse("run 200n") is Command.Invalid)
+    }
 }

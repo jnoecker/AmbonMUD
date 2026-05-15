@@ -60,12 +60,33 @@ class NavigationHandler(
         this.router = router
         router.on<Command.Look> { sid, _ -> handleLook(sid) }
         router.on<Command.Move> { sid, cmd -> handleMove(sid, cmd) }
+        router.on<Command.Run> { sid, cmd -> handleRun(sid, cmd) }
         router.on<Command.Exits> { sid, _ -> handleExits(sid) }
         router.on<Command.LookDir> { sid, cmd -> handleLookDir(sid, cmd) }
         router.on<Command.LookAt> { sid, cmd -> handleLookAt(sid, cmd) }
         router.on<Command.Recall> { sid, _ -> handleRecall(sid) }
         router.on<Command.Depart> { sid, _ -> handleDepart(sid) }
         router.on<Command.Petition> { sid, cmd -> handlePetition(sid, cmd) }
+    }
+
+    private suspend fun handleRun(sessionId: SessionId, cmd: Command.Run) {
+        if (cmd.steps.isEmpty()) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Usage: run <directions> (e.g. 5n3e)"))
+            return
+        }
+        for (dir in cmd.steps) {
+            val me = players.get(sessionId) ?: return
+            val room = world.rooms[me.roomId]
+            // If the next step crosses zones, run it and stop — the handoff is async
+            // and subsequent steps would race against it.
+            val crossesZone = room != null &&
+                (
+                    room.remoteExits.contains(dir) ||
+                        room.exits[dir]?.let { !world.rooms.containsKey(it) } == true
+                )
+            handleMove(sessionId, Command.Move(dir))
+            if (crossesZone) return
+        }
     }
 
     private suspend fun handleLook(sessionId: SessionId) {
