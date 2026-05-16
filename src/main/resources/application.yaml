@@ -1002,6 +1002,10 @@ ambonmud:
           usage: consider/con <mob>
           category: combat
           staff: false
+        wimpy:
+          usage: wimpy [off | 0-95]
+          category: combat
+          staff: false
         flee:
           usage: flee
           category: combat

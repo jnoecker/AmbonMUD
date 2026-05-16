@@ -332,6 +332,43 @@ class CombatSystem(
         return null
     }
 
+    /**
+     * If the player has wimpy enabled and their current HP% is at or below the threshold,
+     * break PvE combat with the "forced to flee" path. Returns true if combat was broken.
+     * Called after a mob lands a hit on a still-alive player so the next mob tick can't
+     * resolve before the player has a chance to escape.
+     */
+    private suspend fun checkWimpyAutoFlee(
+        targetSid: SessionId,
+        target: PlayerState,
+    ): Boolean {
+        val threshold = target.wimpyThresholdPct
+        if (threshold <= 0 || target.maxHp <= 0) return false
+        val hpPct = (target.hp.toDouble() / target.maxHp * 100.0).toInt()
+        if (hpPct > threshold) return false
+        if (playerTarget[targetSid] == null) return false
+        outbound.send(OutboundEvent.SendText(targetSid, "Your wounds force you to disengage!"))
+        flee(targetSid, forced = true)
+        return true
+    }
+
+    /** PvP variant — disengages the PvP fight when the player's HP drops below the wimpy threshold. */
+    private suspend fun checkWimpyAutoFleePvp(
+        targetSid: SessionId,
+        target: PlayerState,
+    ): Boolean {
+        val threshold = target.wimpyThresholdPct
+        if (threshold <= 0 || target.maxHp <= 0) return false
+        val hpPct = (target.hp.toDouble() / target.maxHp * 100.0).toInt()
+        if (hpPct > threshold) return false
+        if (pvpTarget[targetSid] == null) return false
+        val opponent = pvpTarget[targetSid]?.let { players.get(it) }?.name ?: "your opponent"
+        endPvpCombat(targetSid)
+        outbound.send(OutboundEvent.SendText(targetSid, "You are forced to flee from $opponent!"))
+        outbound.send(OutboundEvent.SendPrompt(targetSid))
+        return true
+    }
+
     override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
@@ -523,6 +560,10 @@ class CombatSystem(
                         loserName = target.name,
                         loser = target,
                     )
+                    ran++
+                    continue
+                }
+                if (checkWimpyAutoFleePvp(state.targetSid, target)) {
                     ran++
                     continue
                 }
@@ -929,6 +970,8 @@ class CombatSystem(
                         roomMessage = "${target.name} has been slain by ${mob.name}.",
                         killerName = mob.name,
                     )
+                } else {
+                    checkWimpyAutoFlee(targetSid, target)
                 }
             }
 

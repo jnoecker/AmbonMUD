@@ -130,6 +130,14 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses wimpy with and without arg`() {
+        assertEquals(Command.Wimpy(null), CommandParser.parse("wimpy"))
+        assertEquals(Command.Wimpy("off"), CommandParser.parse("wimpy off"))
+        assertEquals(Command.Wimpy("25"), CommandParser.parse("wimpy 25"))
+        assertEquals(Command.Wimpy("on"), CommandParser.parse("wimpy on"))
+    }
+
+    @Test
     fun `parses look direction`() {
         val c1 = CommandParser.parse("look north")
         assertEquals(Command.LookDir(Direction.NORTH), c1)

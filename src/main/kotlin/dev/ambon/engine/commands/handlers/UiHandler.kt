@@ -54,6 +54,7 @@ class UiHandler(
         router.on<Command.AutolootOn> { sid, _ -> handleAutoloot(sid, AutolootAction.ON) }
         router.on<Command.AutolootOff> { sid, _ -> handleAutoloot(sid, AutolootAction.OFF) }
         router.on<Command.AutolootStatus> { sid, _ -> handleAutoloot(sid, AutolootAction.STATUS) }
+        router.on<Command.Wimpy> { sid, cmd -> handleWimpy(sid, cmd) }
         router.on<Command.Clear> { sid, _ ->
             outbound.send(OutboundEvent.ClearScreen(sid))
         }
@@ -82,6 +83,11 @@ class UiHandler(
         outbound.send(OutboundEvent.SendInfo(sessionId, "ANSI disabled"))
     }
 
+    private companion object {
+        const val DEFAULT_WIMPY_PCT = 10
+        const val MAX_WIMPY_PCT = 95
+    }
+
     private enum class AutolootAction { ON, OFF, STATUS }
 
     private suspend fun handleAutoloot(
@@ -105,6 +111,43 @@ class UiHandler(
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot is $status."))
             }
         }
+    }
+
+    private suspend fun handleWimpy(
+        sessionId: SessionId,
+        cmd: Command.Wimpy,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val rawArg = cmd.arg
+        if (rawArg.isNullOrBlank()) {
+            val status = if (me.wimpyThresholdPct <= 0) "OFF" else "${me.wimpyThresholdPct}%"
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Wimpy: $status (auto-flee threshold)."))
+            return
+        }
+        val arg = rawArg.trim().lowercase()
+        val newPct = when (arg) {
+            "off", "0", "no", "disable" -> 0
+            "on", "default" -> DEFAULT_WIMPY_PCT
+            else -> arg.toIntOrNull()
+        }
+        if (newPct == null || newPct !in 0..MAX_WIMPY_PCT) {
+            outbound.send(
+                OutboundEvent.SendError(
+                    sessionId,
+                    "Usage: wimpy [off | 0-$MAX_WIMPY_PCT]",
+                ),
+            )
+            return
+        }
+        players.setWimpyThresholdPct(sessionId, newPct)
+        gmcpEmitter?.sendCharName(sessionId, me)
+        val msg =
+            if (newPct == 0) {
+                "Wimpy disabled — you will not auto-flee."
+            } else {
+                "Wimpy set to $newPct% — combat will break when your HP drops below that."
+            }
+        outbound.send(OutboundEvent.SendInfo(sessionId, msg))
     }
 
     private suspend fun handleScreenReaderToggle(sessionId: SessionId, requestedOn: Boolean) {

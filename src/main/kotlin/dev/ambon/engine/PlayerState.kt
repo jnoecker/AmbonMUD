@@ -116,6 +116,13 @@ data class PlayerState(
     /** When true, items dropped by mobs the player kills are auto-looted into inventory. */
     var autolootEnabled: Boolean = false,
     /**
+     * Auto-flee HP-percent threshold (1..95). When the player's HP drops below this percentage
+     * of max after a mob hit, combat is broken automatically. `0` disables wimpy. Default `10`
+     * is intentionally cautious — it kicks in once the player is in real danger but late enough
+     * not to interrupt routine fights.
+     */
+    var wimpyThresholdPct: Int = 10,
+    /**
      * SHA-256 hash of the remember-me auth token.
      * Tracked on [PlayerState] so [persistIfClaimed] doesn't wipe it on every
      * save — otherwise disconnect would erase the token the client still
@@ -266,6 +273,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         authTokenHash = authTokenHash,
         authTokenIssuedAt = authTokenIssuedAt,
         autolootEnabled = autolootEnabled,
+        wimpyThresholdPct = wimpyThresholdPct,
         lastRespecAtMs = lastRespecAtMs,
     )
 
@@ -324,6 +332,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         authTokenHash = authTokenHash,
         authTokenIssuedAt = authTokenIssuedAt,
         autolootEnabled = autolootEnabled,
+        wimpyThresholdPct = wimpyThresholdPct,
         lastRespecAtMs = lastRespecAtMs,
     )
 }

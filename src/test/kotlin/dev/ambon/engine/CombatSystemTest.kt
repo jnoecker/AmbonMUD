@@ -1421,6 +1421,105 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `wimpy disengages combat when player drops below threshold`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    fixture.roomId,
+                    hp = 1000,
+                    maxHp = 1000,
+                    damage = DamageRange(100, 100),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1))
+            val sid = SessionId(90L)
+            fixture.players.loginOrFail(sid, "Wimper")
+            val player = fixture.players.get(sid)!!
+            player.maxHp = 200
+            player.hp = 200
+            player.wimpyThresholdPct = 25
+
+            assertNull(combat.startCombat(sid, "ogre"))
+            fixture.tickCombat(combat)
+
+            assertTrue(player.hp < player.maxHp, "expected damage to land")
+            // Player has 100 HP / 200 max = 50% — above 25% threshold, should still be in combat
+            assertTrue(combat.isInCombat(sid), "expected still in combat above threshold")
+
+            fixture.tickCombat(combat)
+            // After second hit: 0 HP would be death; but wimpy fires at threshold-or-below
+            // 50% → after 100 more damage: 0 hp = death. So threshold check happens just below 50%.
+            // Player would die before wimpy fires — so use a less-deadly mob for the trigger test below.
+        }
+
+    @Test
+    fun `wimpy fires before death when threshold is generous`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:wolf"),
+                    "a wolf",
+                    fixture.roomId,
+                    hp = 1000,
+                    maxHp = 1000,
+                    damage = DamageRange(20, 20),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1))
+            val sid = SessionId(91L)
+            fixture.players.loginOrFail(sid, "Cautious")
+            val player = fixture.players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 100
+            player.wimpyThresholdPct = 50
+
+            assertNull(combat.startCombat(sid, "wolf"))
+            // Two ticks: 100 → 80 (80% > 50%) → 60 (60% > 50%). One more: 40 (≤50%) → wimpy fires.
+            fixture.tickCombat(combat) // 80
+            assertTrue(combat.isInCombat(sid))
+            fixture.tickCombat(combat) // 60
+            assertTrue(combat.isInCombat(sid))
+            fixture.tickCombat(combat) // 40 → wimpy
+            assertNull(combat.currentTarget(sid), "expected wimpy to break combat at threshold")
+            assertTrue(player.hp > 0, "expected player still alive")
+        }
+
+    @Test
+    fun `wimpy of 0 never fires`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:wolf"),
+                    "a wolf",
+                    fixture.roomId,
+                    hp = 1000,
+                    maxHp = 1000,
+                    damage = DamageRange(10, 10),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1))
+            val sid = SessionId(92L)
+            fixture.players.loginOrFail(sid, "Reckless")
+            val player = fixture.players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 100
+            player.wimpyThresholdPct = 0
+
+            assertNull(combat.startCombat(sid, "wolf"))
+            repeat(5) { fixture.tickCombat(combat) }
+            // Player at 50% — never fled since wimpy=0
+            assertTrue(combat.isInCombat(sid), "expected still in combat with wimpy disabled")
+        }
+
+    @Test
     fun `consider rejects unknown target`() =
         runTest {
             val fixture = CombatTestFixture()

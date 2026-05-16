@@ -191,6 +191,8 @@ export interface CharacterInfo {
   sprite: string | null;
   isStaff: boolean;
   autolootEnabled: boolean;
+  /** Wimpy auto-flee threshold (HP%). 0 = disabled. */
+  wimpyThresholdPct: number;
 }
 
 export interface RoomState {

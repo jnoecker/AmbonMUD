@@ -598,6 +598,17 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
+    /** Sets the wimpy auto-flee HP-percent threshold. Caller is responsible for clamping to 0..95. */
+    suspend fun setWimpyThresholdPct(
+        sessionId: SessionId,
+        pct: Int,
+    ) {
+        val ps = players[sessionId] ?: return
+        if (ps.wimpyThresholdPct == pct) return
+        ps.wimpyThresholdPct = pct
+        persistIfClaimed(ps)
+    }
+
     fun findSessionByName(name: String): SessionId? = sessionByLowerName[normalizeName(name).lowercase()]
 
     fun isNameOnline(
