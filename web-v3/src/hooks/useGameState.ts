@@ -609,6 +609,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setWhoPlayers([]);
     setZoneInstances({ zone: null, currentEngineId: null, instances: [] });
     setCombatTarget(null);
+    setConsiderResult(null);
     setCharStats(null);
     setQuests([]);
     setQuestsAvailable([]);
