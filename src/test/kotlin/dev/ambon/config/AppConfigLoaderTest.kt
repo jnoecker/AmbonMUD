@@ -531,4 +531,20 @@ class AppConfigLoaderTest {
         val valid = AppConfig(server = ServerConfig(sessionOutboundQueueCapacity = 100_000), world = validWorld)
         valid.validated() // should not throw
     }
+
+    @Test
+    fun `multiclass maxClasses decodes JavaScript MAX_SAFE_INTEGER sentinel`() {
+        // Regression: prod overlay YAML carried `maxClasses: 9007199254740991` (Number.MAX_SAFE_INTEGER,
+        // the JS-side "unlimited" sentinel). Hoplite refused to decode that into the original `Int`
+        // field and crash-looped the server. Widening the field to `Long` makes the sentinel round-trip.
+        val jsMaxSafeInteger = 9_007_199_254_740_991L
+        val source = PropertySource.map(
+            mapOf("ambonmud.engine.multiclass.maxClasses" to jsMaxSafeInteger.toString()),
+        )
+        val config = AppConfigLoader.load(
+            resourcePath = testResourcePath,
+            extraSources = listOf(source),
+        )
+        assertEquals(jsMaxSafeInteger, config.engine.multiclass.maxClasses)
+    }
 }

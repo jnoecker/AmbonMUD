@@ -2350,8 +2350,11 @@ data class MulticlassConfig(
      * Maximum number of classes a player may have unlocked (including their starter class).
      * Defaults to effectively unlimited so existing deployments keep working unchanged;
      * curated `application.yaml` ships a tighter cap.
+     *
+     * Typed as [Long] so config overlays written by JavaScript tooling (which often uses
+     * `Number.MAX_SAFE_INTEGER` = 2^53−1 as an "unlimited" sentinel) decode without overflow.
      */
-    val maxClasses: Int = Int.MAX_VALUE,
+    val maxClasses: Long = Long.MAX_VALUE,
     /**
      * Exponential multiplier applied per additional class beyond the first trainer unlock.
      * Cost for the Nth trainer unlock is `goldCost * goldCostMultiplier^(N-1)`, so the first

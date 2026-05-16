@@ -85,7 +85,7 @@ class TrainerHandler(
 
                 if (!classUnlocked) {
                     val unlockArg = if (trainer.isMultiClass) " ${className.lowercase()}" else ""
-                    val atLimit = me.unlockedClasses.size >= multiclassConfig.maxClasses
+                    val atLimit = me.unlockedClasses.size.toLong() >= multiclassConfig.maxClasses
                     val lockMsg = if (atLimit) {
                         "  ** $className class locked. You have reached the limit of " +
                             "${multiclassConfig.maxClasses} unlocked classes. **"
@@ -351,7 +351,7 @@ class TrainerHandler(
                 )
                 return
             }
-            if (me.unlockedClasses.size >= multiclassConfig.maxClasses) {
+            if (me.unlockedClasses.size.toLong() >= multiclassConfig.maxClasses) {
                 outbound.send(
                     OutboundEvent.SendError(
                         sessionId,
