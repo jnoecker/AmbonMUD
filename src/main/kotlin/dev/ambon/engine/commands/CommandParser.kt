@@ -239,6 +239,11 @@ sealed interface Command {
         val target: String,
     ) : Command
 
+    /** Assess a mob's threat level without engaging. */
+    data class Consider(
+        val target: String,
+    ) : Command
+
     data object Flee : Command
 
     data object Recall : Command
@@ -1293,6 +1298,14 @@ object CommandParser {
 
         // kill
         requiredArg(line, listOf("kill"), "kill <mob>", { Command.Kill(it) })?.let { return it }
+
+        // consider — assess a mob's threat without attacking
+        requiredArg(
+            line,
+            listOf("consider", "con"),
+            "consider <mob>",
+            { Command.Consider(it) },
+        )?.let { return it }
 
         // goto
         requiredArg(line, listOf("goto"), "goto <zone:room | room | zone:>", { Command.Goto(it) })?.let { return it }

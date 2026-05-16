@@ -15,6 +15,7 @@ import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import java.time.Clock
 import java.util.Random
+import kotlin.math.ceil
 
 data class CombatSystemConfig(
     val tickMillis: Long = 1_000L,
@@ -26,6 +27,49 @@ data class CombatSystemConfig(
     val detailedFeedbackRoomBroadcastEnabled: Boolean = false,
     val bindings: StatBindingsConfig = StatBindingsConfig(),
 )
+
+/** Seven-tier verbal threat rating, ordered from safest to deadliest. */
+enum class ConsiderRating(
+    val label: String,
+    val flavor: String,
+) {
+    TRIVIAL("trivial", "barely a warm-up — they would fall in moments."),
+    EASY("easy", "you should win without breaking a sweat."),
+    FAVORED("favored", "the odds favor you, but you'll take some hits."),
+    EVEN("even", "an even match — it could go either way."),
+    RISKY("risky", "you would be hard pressed to come out on top."),
+    DANGEROUS("dangerous", "this fight would likely be the end of you."),
+    SUICIDAL("suicidal", "you'd be cut down in seconds. Run."),
+}
+
+/** Result of a successful `consider` calculation — fed to both narrative output and GMCP. */
+data class ConsiderResult(
+    val mobId: String,
+    val mobName: String,
+    val mobLevel: Int,
+    val mobMaxHp: Int,
+    val mobCategory: String,
+    val mobImage: String?,
+    val playerLevel: Int,
+    val playerMaxHp: Int,
+    val playerAvgDamage: Int,
+    val mobAvgDamage: Int,
+    val hitsToKillMob: Int,
+    val hitsToKillPlayer: Int,
+    val dodgeChancePct: Int,
+    val winChancePct: Int,
+    val rating: ConsiderRating,
+)
+
+sealed interface ConsiderOutcome {
+    data class Ok(
+        val result: ConsiderResult,
+    ) : ConsiderOutcome
+
+    data class Error(
+        val message: String,
+    ) : ConsiderOutcome
+}
 
 data class CombatSystemCallbacks(
     val onMobRemoved: suspend (MobId, RoomId) -> Unit = { _, _ -> },
@@ -185,6 +229,87 @@ class CombatSystem(
         broadcastToRoom(players, outbound, roomId, "${player.name} attacks ${mob.name}.", exclude = sessionId)
 
         return null
+    }
+
+    /**
+     * Estimate the player's odds against a mob in the same room without engaging.
+     *
+     * Uses expected-value damage (mean of the damage range) on both sides, applies
+     * the player's equipment attack/armor bonuses, the player's STR-derived melee
+     * bonus, and the player's dodge chance. The hits-to-kill ratio is converted into
+     * a win-chance percentage and bucketed into a [ConsiderRating]. Pet contributions
+     * and status-effect modifiers other than current stat mods are deliberately
+     * ignored so the player gets a baseline read on their own capabilities.
+     */
+    fun consider(
+        sessionId: SessionId,
+        keywordRaw: String,
+    ): ConsiderOutcome {
+        val player = players.get(sessionId) ?: return ConsiderOutcome.Error(ERR_NOT_CONNECTED)
+        val keyword = keywordRaw.trim()
+        if (keyword.isEmpty()) return ConsiderOutcome.Error("Consider what?")
+
+        val matches = findMobsInRoom(player.roomId, keyword)
+        if (matches.isEmpty()) return ConsiderOutcome.Error("You don't see '$keyword' here.")
+
+        val mob = matches.first()
+        if (!mob.role.isCombatant) {
+            return ConsiderOutcome.Error("${mob.name} isn't a threat — no need to size them up.")
+        }
+
+        val stats = resolvePlayerStats(player, items, statusEffects)
+        val equip = items.equipmentBonuses(sessionId)
+        val strBonus =
+            PlayerState.statBonus(
+                stats[config.bindings.meleeDamageStat],
+                config.bindings.meleeDamageDivisor,
+            )
+        val playerAvgRoll = (config.minDamage + config.maxDamage) / 2.0
+        val playerAvgDamage = (playerAvgRoll + equip.attack + strBonus - mob.armor).coerceAtLeast(1.0)
+
+        val mobAvgRoll = (mob.damage.min + mob.damage.max) / 2.0
+        val dodgePct =
+            ((stats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
+                .coerceIn(0, config.bindings.maxDodgePercent)
+        val effectiveMobDamage = (mobAvgRoll * (1.0 - dodgePct / 100.0)).coerceAtLeast(0.1)
+
+        val hitsToKillMob = ceil(mob.maxHp.toDouble() / playerAvgDamage).toInt().coerceAtLeast(1)
+        val hitsToKillPlayer = ceil(player.maxHp.toDouble() / effectiveMobDamage).toInt().coerceAtLeast(1)
+
+        val winChancePct =
+            (hitsToKillPlayer.toDouble() / (hitsToKillPlayer + hitsToKillMob) * 100.0)
+                .toInt()
+                .coerceIn(0, 100)
+
+        val rating = when {
+            winChancePct >= 95 -> ConsiderRating.TRIVIAL
+            winChancePct >= 75 -> ConsiderRating.EASY
+            winChancePct >= 60 -> ConsiderRating.FAVORED
+            winChancePct >= 40 -> ConsiderRating.EVEN
+            winChancePct >= 25 -> ConsiderRating.RISKY
+            winChancePct >= 10 -> ConsiderRating.DANGEROUS
+            else -> ConsiderRating.SUICIDAL
+        }
+
+        return ConsiderOutcome.Ok(
+            ConsiderResult(
+                mobId = mob.id.value,
+                mobName = mob.name,
+                mobLevel = mob.level,
+                mobMaxHp = mob.maxHp,
+                mobCategory = mob.category,
+                mobImage = mob.image,
+                playerLevel = player.level,
+                playerMaxHp = player.maxHp,
+                playerAvgDamage = playerAvgDamage.toInt(),
+                mobAvgDamage = mobAvgRoll.toInt().coerceAtLeast(1),
+                hitsToKillMob = hitsToKillMob,
+                hitsToKillPlayer = hitsToKillPlayer,
+                dodgeChancePct = dodgePct,
+                winChancePct = winChancePct,
+                rating = rating,
+            ),
+        )
     }
 
     suspend fun flee(

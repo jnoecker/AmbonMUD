@@ -998,6 +998,10 @@ ambonmud:
           usage: kill <mob>
           category: combat
           staff: false
+        consider:
+          usage: consider/con <mob>
+          category: combat
+          staff: false
         flee:
           usage: flee
           category: combat

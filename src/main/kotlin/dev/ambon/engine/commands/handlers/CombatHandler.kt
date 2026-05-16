@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
+import dev.ambon.engine.ConsiderOutcome
 import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.abilities.AbilitySystem
@@ -30,8 +31,37 @@ class CombatHandler(
 
     override fun register(router: CommandRouter) {
         router.on<Command.Kill> { sid, cmd -> handleKill(sid, cmd) }
+        router.on<Command.Consider> { sid, cmd -> handleConsider(sid, cmd) }
         router.on<Command.Flee> { sid, _ -> handleFlee(sid) }
         router.on<Command.Cast> { sid, cmd -> handleCast(sid, cmd) }
+    }
+
+    private suspend fun handleConsider(
+        sessionId: SessionId,
+        cmd: Command.Consider,
+    ) {
+        when (val outcome = combat.consider(sessionId, cmd.target)) {
+            is ConsiderOutcome.Error -> {
+                outbound.send(OutboundEvent.SendError(sessionId, outcome.message))
+            }
+            is ConsiderOutcome.Ok -> {
+                val r = outcome.result
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "You size up ${r.mobName} (lvl ${r.mobLevel}): ${r.rating.flavor}",
+                    ),
+                )
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "  Estimated win chance: ${r.winChancePct}%  " +
+                            "(your ~${r.playerAvgDamage} dmg vs their ~${r.mobAvgDamage} dmg).",
+                    ),
+                )
+                gmcpEmitter?.sendCombatConsider(sessionId, r)
+            }
+        }
     }
 
     private suspend fun handleKill(

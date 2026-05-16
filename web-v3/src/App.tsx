@@ -40,9 +40,26 @@ import { useMiniMap } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
-import type { ChatChannel, FeaturePopoutFocus, LookTargetInfo, PopoutPanel } from "./types";
+import type {
+  ChatChannel,
+  ConsiderRating,
+  FeaturePopoutFocus,
+  LookTargetInfo,
+  PopoutPanel,
+} from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
+
+// ── Consider (threat assessment) helpers ────────────────────────────────────
+const CONSIDER_TIER_CLASS: Record<ConsiderRating, string> = {
+  TRIVIAL: "consider-tier-trivial",
+  EASY: "consider-tier-easy",
+  FAVORED: "consider-tier-favored",
+  EVEN: "consider-tier-even",
+  RISKY: "consider-tier-risky",
+  DANGEROUS: "consider-tier-dangerous",
+  SUICIDAL: "consider-tier-suicidal",
+};
 
 // ── Look-target (Examine) helpers ───────────────────────────────────────────
 function formatItemSlot(slot: string): string {
@@ -495,6 +512,16 @@ function App() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [state.lookTarget]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close consider card on Escape
+  useEffect(() => {
+    if (!state.considerResult) return;
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") state.setConsiderResult(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [state.considerResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close NPC dialogue / quest offers on Escape — but only when the
   // conversation has reached a state with no further choices (mirrors the
@@ -1394,6 +1421,85 @@ function App() {
               <p className="look-target-desc">{state.lookTarget.description}</p>
             )}
             {state.lookTarget.type === "item" && renderItemStats(state.lookTarget)}
+          </div>
+        </div>
+      )}
+
+      {/* Consider — verbal threat assessment for a mob in the current room */}
+      {state.considerResult && (
+        <div
+          className="consider-backdrop"
+          role="presentation"
+          onClick={() => state.setConsiderResult(null)}
+        >
+          <div
+            className={`consider-card ${CONSIDER_TIER_CLASS[state.considerResult.rating]}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Threat assessment for ${state.considerResult.mobName}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="consider-close"
+              aria-label="Close"
+              onClick={() => state.setConsiderResult(null)}
+            >
+              &#x2715;
+            </button>
+            <div className="consider-header">
+              <span className="consider-tier-badge">{state.considerResult.ratingLabel}</span>
+              <span className="consider-name">{state.considerResult.mobName}</span>
+              <span className="consider-meta">
+                Lv {state.considerResult.mobLevel} {state.considerResult.mobCategory}
+              </span>
+            </div>
+            <p className="consider-flavor">{state.considerResult.ratingFlavor}</p>
+            <div className="consider-winrate" aria-label="Estimated win chance">
+              <div className="consider-winrate-label">
+                <span>Estimated win chance</span>
+                <span className="consider-winrate-pct">{state.considerResult.winChancePct}%</span>
+              </div>
+              <div className="consider-winrate-bar" role="progressbar"
+                aria-valuenow={state.considerResult.winChancePct}
+                aria-valuemin={0} aria-valuemax={100}>
+                <div
+                  className="consider-winrate-fill"
+                  style={{ width: `${state.considerResult.winChancePct}%` }}
+                />
+              </div>
+            </div>
+            <dl className="consider-stats">
+              <div className="consider-stat">
+                <dt>Your hit</dt>
+                <dd>~{state.considerResult.playerAvgDamage} dmg</dd>
+              </div>
+              <div className="consider-stat">
+                <dt>Their hit</dt>
+                <dd>~{state.considerResult.mobAvgDamage} dmg</dd>
+              </div>
+              <div className="consider-stat">
+                <dt>Hits to kill {state.considerResult.mobName.split(" ").slice(-1)[0]}</dt>
+                <dd>{state.considerResult.hitsToKillMob}</dd>
+              </div>
+              <div className="consider-stat">
+                <dt>Hits to kill you</dt>
+                <dd>{state.considerResult.hitsToKillPlayer}</dd>
+              </div>
+              {state.considerResult.dodgeChancePct > 0 && (
+                <div className="consider-stat">
+                  <dt>Your dodge</dt>
+                  <dd>{state.considerResult.dodgeChancePct}%</dd>
+                </div>
+              )}
+              <div className="consider-stat">
+                <dt>Level diff</dt>
+                <dd>
+                  {state.considerResult.mobLevel - state.considerResult.playerLevel > 0 ? "+" : ""}
+                  {state.considerResult.mobLevel - state.considerResult.playerLevel}
+                </dd>
+              </div>
+            </dl>
           </div>
         </div>
       )}
