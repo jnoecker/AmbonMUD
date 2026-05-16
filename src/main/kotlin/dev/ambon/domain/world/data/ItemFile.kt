@@ -21,4 +21,16 @@ data class ItemFile(
     val video: String? = null,
     val itemType: String? = null,
     val questItem: Boolean = false,
+    /**
+     * Optional design-time metadata authored by the Arcanum creator. Accepted
+     * for round-trip preservation; the server treats `damage`, `armor`, and
+     * `stats` above as authoritative and does not recompute them from
+     * `level`/`tier`/`archetype`.
+     */
+    val level: Int? = null,
+    val tier: String? = null,
+    val archetype: String? = null,
+    val primaryStat: String? = null,
+    val secondaryStat: String? = null,
+    val tertiaryStat: String? = null,
 )

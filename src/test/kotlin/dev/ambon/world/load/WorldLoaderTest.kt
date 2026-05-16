@@ -254,6 +254,21 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `accepts Arcanum design-time metadata fields without affecting authored stats`() {
+        val world = WorldLoader.loadFromResource("world/ok_item_metadata.yaml")
+        val items = world.itemSpawns.associateBy { it.instance.id.value }
+
+        val sword = items.getValue("ok_item_metadata:sword")
+        assertEquals(ItemSlot.WEAPON, sword.instance.item.slot)
+        assertEquals(5, sword.instance.item.damage)
+        assertEquals(2, sword.instance.item.stats["STR"])
+
+        val helm = items.getValue("ok_item_metadata:helm")
+        assertEquals(ItemSlot.HEAD, helm.instance.item.slot)
+        assertEquals(2, helm.instance.item.armor)
+    }
+
+    @Test
     fun `loads declared item types and quest-item flag`() {
         val world = WorldLoader.loadFromResource("world/ok_item_types.yaml")
         val items = world.itemSpawns.associateBy { it.instance.id.value }
