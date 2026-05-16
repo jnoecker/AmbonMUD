@@ -2302,9 +2302,43 @@ data class RespecConfig(
 data class MulticlassConfig(
     /** Minimum player level required to unlock an additional class. */
     val minLevel: Int = 10,
-    /** Gold cost to unlock a new class at a trainer. */
+    /** Base gold cost to unlock a new class at a trainer (charged for the first trainer unlock). */
     val goldCost: Long = 500L,
-)
+    /**
+     * Maximum number of classes a player may have unlocked (including their starter class).
+     * Defaults to effectively unlimited so existing deployments keep working unchanged;
+     * curated `application.yaml` ships a tighter cap.
+     */
+    val maxClasses: Int = Int.MAX_VALUE,
+    /**
+     * Exponential multiplier applied per additional class beyond the first trainer unlock.
+     * Cost for the Nth trainer unlock is `goldCost * goldCostMultiplier^(N-1)`, so the first
+     * trainer unlock costs `goldCost`, the second `goldCost * multiplier`, and so on. Default
+     * 1.0 keeps the cost flat (no-op).
+     */
+    val goldCostMultiplier: Double = 1.0,
+) {
+    init {
+        require(minLevel >= 1) { "multiclass.minLevel must be >= 1, got $minLevel" }
+        require(goldCost >= 0L) { "multiclass.goldCost must be >= 0, got $goldCost" }
+        require(maxClasses >= 1) { "multiclass.maxClasses must be >= 1, got $maxClasses" }
+        require(goldCostMultiplier >= 1.0) {
+            "multiclass.goldCostMultiplier must be >= 1.0, got $goldCostMultiplier"
+        }
+    }
+
+    /**
+     * Gold required for the next trainer unlock given the player's current unlocked-class
+     * count (which always includes the starter class, so the first trainer unlock passes
+     * `currentlyUnlocked = 1`). Saturates at [Long.MAX_VALUE] for absurd configurations.
+     */
+    fun costFor(currentlyUnlocked: Int): Long {
+        val priorTrainerUnlocks = (currentlyUnlocked - 1).coerceAtLeast(0)
+        if (priorTrainerUnlocks == 0 || goldCostMultiplier == 1.0) return goldCost
+        val scaled = goldCost.toDouble() * Math.pow(goldCostMultiplier, priorTrainerUnlocks.toDouble())
+        return if (scaled >= Long.MAX_VALUE.toDouble()) Long.MAX_VALUE else scaled.toLong()
+    }
+}
 
 data class GlobalQuestObjectiveConfig(
     /** Objective type: "kill", "gather", or "craft". */

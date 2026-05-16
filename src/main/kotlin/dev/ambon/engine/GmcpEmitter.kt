@@ -713,7 +713,9 @@ class GmcpEmitter(
                 image = trainer.image,
                 availableSkillPoints = availableSkillPoints,
                 multiclassMinLevel = multiclassConfig.minLevel,
-                multiclassGoldCost = multiclassConfig.goldCost,
+                multiclassGoldCost = multiclassConfig.costFor(player.unlockedClasses.size),
+                multiclassMaxClasses = multiclassConfig.maxClasses,
+                multiclassUnlockedCount = player.unlockedClasses.size,
                 classes = classPayloads,
             ),
             supportCheck = "Trainer",
@@ -2455,7 +2457,12 @@ class GmcpEmitter(
         val image: String?,
         val availableSkillPoints: Int,
         val multiclassMinLevel: Int,
+        /** Gold cost for *this player's next* unlock; already includes the exponential scaling. */
         val multiclassGoldCost: Long,
+        /** Hard cap on the player's total unlocked classes (including starter). */
+        val multiclassMaxClasses: Int,
+        /** Player's current unlocked-class count (including starter). */
+        val multiclassUnlockedCount: Int,
         /**
          * One entry per class this trainer teaches. Always non-empty. Single-class
          * trainers emit a one-element list — clients can still render the old

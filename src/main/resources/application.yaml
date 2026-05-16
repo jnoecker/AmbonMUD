@@ -1861,6 +1861,11 @@ ambonmud:
     multiclass:
       minLevel: 15
       goldCost: 500
+      # Hard cap on total unlocked classes per player (includes the starter class).
+      maxClasses: 3
+      # Exponential scaling on gold cost: the Nth trainer unlock costs
+      # goldCost * goldCostMultiplier^(N-1). With these values: 500g, then 1000g, then 2000g.
+      goldCostMultiplier: 2.0
     housing:
       enabled: true
       entryExitDirection: SOUTH

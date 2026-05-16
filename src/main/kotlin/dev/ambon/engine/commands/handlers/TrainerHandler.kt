@@ -85,13 +85,16 @@ class TrainerHandler(
 
                 if (!classUnlocked) {
                     val unlockArg = if (trainer.isMultiClass) " ${className.lowercase()}" else ""
-                    outbound.send(
-                        OutboundEvent.SendInfo(
-                            sessionId,
-                            "  ** $className class locked. Use 'train unlock$unlockArg' to pay " +
-                                "${multiclassConfig.goldCost} gold (requires level ${multiclassConfig.minLevel}). **",
-                        ),
-                    )
+                    val atLimit = me.unlockedClasses.size >= multiclassConfig.maxClasses
+                    val lockMsg = if (atLimit) {
+                        "  ** $className class locked. You have reached the limit of " +
+                            "${multiclassConfig.maxClasses} unlocked classes. **"
+                    } else {
+                        val cost = multiclassConfig.costFor(me.unlockedClasses.size)
+                        "  ** $className class locked. Use 'train unlock$unlockArg' to pay " +
+                            "$cost gold (requires level ${multiclassConfig.minLevel}). **"
+                    }
+                    outbound.send(OutboundEvent.SendInfo(sessionId, lockMsg))
                     continue
                 }
 
@@ -348,7 +351,16 @@ class TrainerHandler(
                 )
                 return
             }
-            val cost = multiclassConfig.goldCost
+            if (me.unlockedClasses.size >= multiclassConfig.maxClasses) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "You have already unlocked the maximum of ${multiclassConfig.maxClasses} classes.",
+                    ),
+                )
+                return
+            }
+            val cost = multiclassConfig.costFor(me.unlockedClasses.size)
             if (!me.isStaff && me.gold < cost) {
                 outbound.send(
                     OutboundEvent.SendError(
