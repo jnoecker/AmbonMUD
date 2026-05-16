@@ -8,6 +8,14 @@ private val logger = KotlinLogging.logger {}
 /** Maximum allowed value for per-session outbound queue capacity to prevent OOM from misconfiguration. */
 private const val MAX_SESSION_OUTBOUND_QUEUE_CAPACITY = 100_000
 
+/**
+ * Soft upper bound on multiplicative scaling rates. Mirrors Arcanum's
+ * `validateConfig` `[1.0, 2.0]` range — values above this are valid math but
+ * indicate a likely typo (a rate of 2.0 already produces ~500M× growth over
+ * 30 levels). Rates above this trigger a warning, not an error.
+ */
+private const val MAX_SCALING_RATE = 2.0
+
 /** Selects the player persistence backend. */
 enum class PersistenceBackend { YAML, POSTGRES }
 
@@ -283,6 +291,24 @@ data class AppConfig(
             if (def.threatMultiplier < 0.0) {
                 warnConfig("engine.classes.definitions.$key.threatMultiplier is ${def.threatMultiplier}, expected >= 0")
             }
+            require(def.hpScalingRate >= 1.0) {
+                "ambonMUD.engine.classes.definitions.$key.hpScalingRate must be >= 1.0"
+            }
+            require(def.manaScalingRate >= 1.0) {
+                "ambonMUD.engine.classes.definitions.$key.manaScalingRate must be >= 1.0"
+            }
+            if (def.hpScalingRate > MAX_SCALING_RATE) {
+                warnConfig(
+                    "engine.classes.definitions.$key.hpScalingRate is ${def.hpScalingRate}, " +
+                        "expected <= $MAX_SCALING_RATE (rates above ~2x/level produce runaway growth)",
+                )
+            }
+            if (def.manaScalingRate > MAX_SCALING_RATE) {
+                warnConfig(
+                    "engine.classes.definitions.$key.manaScalingRate is ${def.manaScalingRate}, " +
+                        "expected <= $MAX_SCALING_RATE (rates above ~2x/level produce runaway growth)",
+                )
+            }
         }
     }
 
@@ -516,8 +542,24 @@ data class AppConfig(
                 "ambonMUD.progression.xp.diminishing.thresholds[$index].multiplier must be in [0.0, 1.0]"
             }
         }
-        require(progression.rewards.hpPerLevel >= 0) { "ambonMUD.progression.rewards.hpPerLevel must be >= 0" }
-        require(progression.rewards.manaPerLevel >= 0) { "ambonMUD.progression.rewards.manaPerLevel must be >= 0" }
+        require(progression.rewards.hpScalingRate >= 1.0) {
+            "ambonMUD.progression.rewards.hpScalingRate must be >= 1.0"
+        }
+        require(progression.rewards.manaScalingRate >= 1.0) {
+            "ambonMUD.progression.rewards.manaScalingRate must be >= 1.0"
+        }
+        if (progression.rewards.hpScalingRate > MAX_SCALING_RATE) {
+            warnConfig(
+                "progression.rewards.hpScalingRate is ${progression.rewards.hpScalingRate}, " +
+                    "expected <= $MAX_SCALING_RATE",
+            )
+        }
+        if (progression.rewards.manaScalingRate > MAX_SCALING_RATE) {
+            warnConfig(
+                "progression.rewards.manaScalingRate is ${progression.rewards.manaScalingRate}, " +
+                    "expected <= $MAX_SCALING_RATE",
+            )
+        }
         require(progression.rewards.baseHp >= 1) { "ambonMUD.progression.rewards.baseHp must be >= 1" }
         require(progression.rewards.baseMana >= 0) { "ambonMUD.progression.rewards.baseMana must be >= 0" }
         require(progression.quests.baseline.baseXp >= 0L) { "ambonMUD.progression.quests.baseline.baseXp must be >= 0" }
@@ -1853,8 +1895,8 @@ data class EngineDebugConfig(
 
 data class ClassDefinitionConfig(
     val displayName: String = "",
-    val hpPerLevel: Int = 4,
-    val manaPerLevel: Int = 8,
+    val hpScalingRate: Double = 1.0,
+    val manaScalingRate: Double = 1.0,
     val description: String = "",
     val backstory: String = "",
     val image: String = "",
@@ -2040,8 +2082,8 @@ data class DiminishingXpThreshold(
 )
 
 data class LevelRewardsConfig(
-    val hpPerLevel: Int = 2,
-    val manaPerLevel: Int = 5,
+    val hpScalingRate: Double = 1.0,
+    val manaScalingRate: Double = 1.0,
     val fullHealOnLevelUp: Boolean = true,
     val fullManaOnLevelUp: Boolean = true,
     val baseHp: Int = 10,
@@ -2050,74 +2092,74 @@ data class LevelRewardsConfig(
 
 data class MobTierConfig(
     val baseHp: Int = 10,
-    val hpPerLevel: Int = 3,
+    val hpScalingRate: Double = 1.0,
     val baseMinDamage: Int = 1,
     val baseMaxDamage: Int = 4,
-    val damagePerLevel: Int = 1,
+    val damageScalingRate: Double = 1.0,
     val baseArmor: Int = 0,
     val baseXpReward: Long = 30L,
-    val xpRewardPerLevel: Long = 10L,
+    val xpScalingRate: Double = 1.0,
     val baseGoldMin: Long = 0L,
     val baseGoldMax: Long = 0L,
-    val goldPerLevel: Long = 0L,
+    val goldScalingRate: Double = 1.0,
 )
 
 data class MobTiersConfig(
     val weak: MobTierConfig =
         MobTierConfig(
             baseHp = 5,
-            hpPerLevel = 2,
+            hpScalingRate = 1.10,
             baseMinDamage = 1,
             baseMaxDamage = 2,
-            damagePerLevel = 0,
+            damageScalingRate = 1.06,
             baseArmor = 0,
             baseXpReward = 15L,
-            xpRewardPerLevel = 5L,
+            xpScalingRate = 1.09,
             baseGoldMin = 1L,
             baseGoldMax = 3L,
-            goldPerLevel = 1L,
+            goldScalingRate = 1.19,
         ),
     val standard: MobTierConfig =
         MobTierConfig(
             baseHp = 10,
-            hpPerLevel = 3,
+            hpScalingRate = 1.10,
             baseMinDamage = 1,
             baseMaxDamage = 4,
-            damagePerLevel = 1,
+            damageScalingRate = 1.07,
             baseArmor = 0,
             baseXpReward = 30L,
-            xpRewardPerLevel = 10L,
+            xpScalingRate = 1.08,
             baseGoldMin = 2L,
             baseGoldMax = 8L,
-            goldPerLevel = 2L,
+            goldScalingRate = 1.19,
         ),
     val elite: MobTierConfig =
         MobTierConfig(
             baseHp = 20,
-            hpPerLevel = 5,
+            hpScalingRate = 1.09,
             baseMinDamage = 2,
             baseMaxDamage = 6,
-            damagePerLevel = 1,
+            damageScalingRate = 1.07,
             baseArmor = 1,
             baseXpReward = 75L,
-            xpRewardPerLevel = 20L,
+            xpScalingRate = 1.08,
             baseGoldMin = 10L,
             baseGoldMax = 25L,
-            goldPerLevel = 5L,
+            goldScalingRate = 1.19,
         ),
     val boss: MobTierConfig =
         MobTierConfig(
             baseHp = 50,
-            hpPerLevel = 10,
+            hpScalingRate = 1.09,
             baseMinDamage = 3,
             baseMaxDamage = 8,
-            damagePerLevel = 2,
+            damageScalingRate = 1.07,
             baseArmor = 3,
             baseXpReward = 200L,
-            xpRewardPerLevel = 50L,
+            xpScalingRate = 1.07,
             baseGoldMin = 50L,
             baseGoldMax = 100L,
-            goldPerLevel = 15L,
+            goldScalingRate = 1.19,
         ),
 ) {
     fun forName(name: String): MobTierConfig? =
@@ -2696,18 +2738,33 @@ private fun validateMobTier(
     tier: MobTierConfig,
 ) {
     require(tier.baseHp > 0) { "ambonMUD.engine.mob.tiers.$name.baseHp must be > 0" }
-    require(tier.hpPerLevel >= 0) { "ambonMUD.engine.mob.tiers.$name.hpPerLevel must be >= 0" }
+    require(tier.hpScalingRate >= 1.0) { "ambonMUD.engine.mob.tiers.$name.hpScalingRate must be >= 1.0" }
     require(tier.baseMinDamage > 0) { "ambonMUD.engine.mob.tiers.$name.baseMinDamage must be > 0" }
     require(tier.baseMaxDamage >= tier.baseMinDamage) {
         "ambonMUD.engine.mob.tiers.$name.baseMaxDamage must be >= baseMinDamage"
     }
-    require(tier.damagePerLevel >= 0) { "ambonMUD.engine.mob.tiers.$name.damagePerLevel must be >= 0" }
+    require(tier.damageScalingRate >= 1.0) {
+        "ambonMUD.engine.mob.tiers.$name.damageScalingRate must be >= 1.0"
+    }
     require(tier.baseArmor >= 0) { "ambonMUD.engine.mob.tiers.$name.baseArmor must be >= 0" }
     require(tier.baseXpReward >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseXpReward must be >= 0" }
-    require(tier.xpRewardPerLevel >= 0L) { "ambonMUD.engine.mob.tiers.$name.xpRewardPerLevel must be >= 0" }
+    require(tier.xpScalingRate >= 1.0) { "ambonMUD.engine.mob.tiers.$name.xpScalingRate must be >= 1.0" }
     require(tier.baseGoldMin >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseGoldMin must be >= 0" }
     require(tier.baseGoldMax >= tier.baseGoldMin) {
         "ambonMUD.engine.mob.tiers.$name.baseGoldMax must be >= baseGoldMin"
     }
-    require(tier.goldPerLevel >= 0L) { "ambonMUD.engine.mob.tiers.$name.goldPerLevel must be >= 0" }
+    require(tier.goldScalingRate >= 1.0) { "ambonMUD.engine.mob.tiers.$name.goldScalingRate must be >= 1.0" }
+    listOf(
+        "hpScalingRate" to tier.hpScalingRate,
+        "damageScalingRate" to tier.damageScalingRate,
+        "xpScalingRate" to tier.xpScalingRate,
+        "goldScalingRate" to tier.goldScalingRate,
+    ).forEach { (label, value) ->
+        if (value > MAX_SCALING_RATE) {
+            logger.warn {
+                "CONFIG WARNING: engine.mob.tiers.$name.$label is $value, expected <= " +
+                    "$MAX_SCALING_RATE (rates above ~2x/level produce runaway growth)"
+            }
+        }
+    }
 }

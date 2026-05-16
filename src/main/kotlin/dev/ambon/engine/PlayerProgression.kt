@@ -4,6 +4,7 @@ import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.QuestDifficulty
 import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.mob.MobState
+import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.roundToLong
 
@@ -22,11 +23,11 @@ class PlayerProgression(
     val maxLevel: Int
         get() = config.maxLevel
 
-    val hpPerLevel: Int
-        get() = config.rewards.hpPerLevel
+    val hpScalingRate: Double
+        get() = config.rewards.hpScalingRate
 
-    val manaPerLevel: Int
-        get() = config.rewards.manaPerLevel
+    val manaScalingRate: Double
+        get() = config.rewards.manaScalingRate
 
     fun totalXpForLevel(level: Int): Long {
         if (level <= 1) return 0L
@@ -74,28 +75,30 @@ class PlayerProgression(
     }
 
     /**
-     * Resolves the class-specific HP-per-level and mana-per-level scaling factors.
-     * Falls back to the configured defaults if [playerClass] is null or unrecognised.
+     * Resolves the effective HP and mana scaling rates for [playerClass]. When
+     * the class supplies a rate, the class rate overrides the global progression
+     * rate (matches Arcanum's simulateEncounter behavior). Falls back to the
+     * configured defaults if [playerClass] is null or unrecognised.
      */
-    fun resolveClassScaling(playerClass: String?): Pair<Int, Int> {
+    fun resolveClassScaling(playerClass: String?): Pair<Double, Double> {
         val def = playerClass?.let { classRegistry?.get(it) }
         return Pair(
-            def?.hpPerLevel ?: config.rewards.hpPerLevel,
-            def?.manaPerLevel ?: config.rewards.manaPerLevel,
+            def?.hpScalingRate ?: config.rewards.hpScalingRate,
+            def?.manaScalingRate ?: config.rewards.manaScalingRate,
         )
     }
 
     fun maxHpForLevel(
         level: Int,
         statValue: Int = PlayerState.BASE_STAT,
-        hpPerLevel: Int = config.rewards.hpPerLevel,
-    ): Int = maxResourceForLevel(level, statValue, hpPerLevel, config.rewards.baseHp, bindings.hpScalingDivisor)
+        hpScalingRate: Double = config.rewards.hpScalingRate,
+    ): Int = maxResourceForLevel(level, statValue, hpScalingRate, config.rewards.baseHp, bindings.hpScalingDivisor)
 
     fun maxManaForLevel(
         level: Int,
         statValue: Int = PlayerState.BASE_STAT,
-        manaPerLevel: Int = config.rewards.manaPerLevel,
-    ): Int = maxResourceForLevel(level, statValue, manaPerLevel, config.rewards.baseMana, bindings.manaScalingDivisor)
+        manaScalingRate: Double = config.rewards.manaScalingRate,
+    ): Int = maxResourceForLevel(level, statValue, manaScalingRate, config.rewards.baseMana, bindings.manaScalingDivisor)
 
     /**
      * Applies the level-derived base HP/mana stats to [ps], clamping current
@@ -103,9 +106,9 @@ class PlayerProgression(
      * [PlayerState.level] and [PlayerState.xpTotal] before or after this call.
      */
     fun applyLevelStats(ps: PlayerState, level: Int) {
-        val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(ps.playerClass)
-        val newMaxHp = maxHpForLevel(level, ps.stats[bindings.hpScalingStat], classHpPerLevel)
-        val newMaxMana = maxManaForLevel(level, ps.stats[bindings.manaScalingStat], classManaPerLevel)
+        val (classHpRate, classManaRate) = resolveClassScaling(ps.playerClass)
+        val newMaxHp = maxHpForLevel(level, ps.stats[bindings.hpScalingStat], classHpRate)
+        val newMaxMana = maxManaForLevel(level, ps.stats[bindings.manaScalingStat], classManaRate)
         ps.baseMaxHp = newMaxHp
         ps.maxHp = newMaxHp
         ps.hp = ps.hp.coerceIn(1, newMaxHp)
@@ -122,11 +125,11 @@ class PlayerProgression(
      * example, when a player swaps race at a stylist.
      */
     fun recomputeVitalCaps(ps: PlayerState) {
-        val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(ps.playerClass)
+        val (classHpRate, classManaRate) = resolveClassScaling(ps.playerClass)
         val hpBonus = (ps.maxHp - ps.baseMaxHp).coerceAtLeast(0)
         val manaBonus = (ps.maxMana - ps.baseMana).coerceAtLeast(0)
-        val newBaseMaxHp = maxHpForLevel(ps.level, ps.stats[bindings.hpScalingStat], classHpPerLevel)
-        val newBaseMana = maxManaForLevel(ps.level, ps.stats[bindings.manaScalingStat], classManaPerLevel)
+        val newBaseMaxHp = maxHpForLevel(ps.level, ps.stats[bindings.hpScalingStat], classHpRate)
+        val newBaseMana = maxManaForLevel(ps.level, ps.stats[bindings.manaScalingStat], classManaRate)
         ps.baseMaxHp = newBaseMaxHp
         ps.maxHp = safeAddInt(newBaseMaxHp, hpBonus)
         ps.hp = ps.hp.coerceIn(1, ps.maxHp)
@@ -135,12 +138,18 @@ class PlayerProgression(
         ps.mana = ps.mana.coerceIn(0, ps.maxMana)
     }
 
-    private fun maxResourceForLevel(level: Int, stat: Int, perLevel: Int, baseValue: Int, divisor: Int = 5): Int {
+    private fun maxResourceForLevel(level: Int, stat: Int, scalingRate: Double, baseValue: Int, divisor: Int = 5): Int {
         val normalizedLevel = level.coerceIn(1, config.maxLevel)
-        val levels = (normalizedLevel - 1).toLong()
-        val baseBonus = levels * perLevel.toLong()
-        val statBonus = if (divisor > 0) ((stat - PlayerState.BASE_STAT) / divisor).toLong() * levels else 0L
-        return (baseValue.toLong() + baseBonus + statBonus)
+        val steps = (normalizedLevel - 1).coerceAtLeast(0)
+        val scaledBase = if (steps == 0) {
+            baseValue.toDouble()
+        } else {
+            floor(baseValue.toDouble() * scalingRate.pow(steps))
+        }
+        if (!scaledBase.isFinite() || scaledBase >= Int.MAX_VALUE.toDouble()) return Int.MAX_VALUE
+        val scaledBaseLong = scaledBase.toLong().coerceAtLeast(baseValue.toLong())
+        val statBonus = if (divisor > 0) ((stat - PlayerState.BASE_STAT) / divisor).toLong() * steps.toLong() else 0L
+        return (scaledBaseLong + statBonus)
             .coerceAtLeast(baseValue.toLong())
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
@@ -221,12 +230,12 @@ class PlayerProgression(
         manaStatValue: Int,
         playerClass: String?,
     ): String {
-        val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(playerClass)
-        val newMaxHp = maxHpForLevel(result.newLevel, hpStatValue, classHpPerLevel)
-        val oldMaxHp = maxHpForLevel(result.previousLevel, hpStatValue, classHpPerLevel)
+        val (classHpRate, classManaRate) = resolveClassScaling(playerClass)
+        val newMaxHp = maxHpForLevel(result.newLevel, hpStatValue, classHpRate)
+        val oldMaxHp = maxHpForLevel(result.previousLevel, hpStatValue, classHpRate)
         val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-        val newMaxMana = maxManaForLevel(result.newLevel, manaStatValue, classManaPerLevel)
-        val oldMaxMana = maxManaForLevel(result.previousLevel, manaStatValue, classManaPerLevel)
+        val newMaxMana = maxManaForLevel(result.newLevel, manaStatValue, classManaRate)
+        val oldMaxMana = maxManaForLevel(result.previousLevel, manaStatValue, classManaRate)
         val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
         val bonusParts = mutableListOf<String>()
         if (hpGain > 0) bonusParts += "+$hpGain max HP"
@@ -244,10 +253,10 @@ class PlayerProgression(
     ): LevelUpResult {
         val hpStat = player.stats[bindings.hpScalingStat]
         val manaStat = player.stats[bindings.manaScalingStat]
-        val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(player.playerClass)
+        val (classHpRate, classManaRate) = resolveClassScaling(player.playerClass)
         val currentXpTotal = player.xpTotal.coerceAtLeast(0L)
         val currentLevel = computeLevel(currentXpTotal)
-        val currentBaseMaxHp = maxHpForLevel(currentLevel, hpStat, classHpPerLevel)
+        val currentBaseMaxHp = maxHpForLevel(currentLevel, hpStat, classHpRate)
         val existingBonus = (player.maxHp - player.baseMaxHp).coerceAtLeast(0)
         player.xpTotal = currentXpTotal
         player.level = currentLevel
@@ -273,14 +282,14 @@ class PlayerProgression(
         player.xpTotal = newXpTotal
         player.level = newLevel
 
-        val previousBaseMaxHp = maxHpForLevel(previousLevel, hpStat, classHpPerLevel)
-        val newBaseMaxHp = maxHpForLevel(newLevel, hpStat, classHpPerLevel)
+        val previousBaseMaxHp = maxHpForLevel(previousLevel, hpStat, classHpRate)
+        val newBaseMaxHp = maxHpForLevel(newLevel, hpStat, classHpRate)
         val nonProgressionBonus = (player.maxHp - previousBaseMaxHp).coerceAtLeast(0)
         val newEffectiveMaxHp = safeAddInt(newBaseMaxHp, nonProgressionBonus)
         player.baseMaxHp = newBaseMaxHp
         player.maxHp = newEffectiveMaxHp
 
-        val newMaxMana = maxManaForLevel(newLevel, manaStat, classManaPerLevel)
+        val newMaxMana = maxManaForLevel(newLevel, manaStat, classManaRate)
         player.baseMana = newMaxMana
         player.maxMana = newMaxMana
 

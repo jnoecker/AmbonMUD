@@ -665,10 +665,12 @@ internal class LoginFlowHandler(
         val state = pendingLogins[sessionId] as? LoginState.AwaitingClassSelection
         outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your class:"))
         for ((index, pc) in availableClasses.withIndex()) {
+            val hp = formatScalingRate(pc.hpScalingRate)
+            val mana = formatScalingRate(pc.manaScalingRate)
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
-                    "  ${index + 1}. ${pc.displayName} (+${pc.hpPerLevel} HP/lvl, +${pc.manaPerLevel} Mana/lvl)",
+                    "  ${index + 1}. ${pc.displayName} ($hp HP/lvl, $mana Mana/lvl)",
                 ),
             )
         }
@@ -731,12 +733,20 @@ internal class LoginFlowHandler(
             }
         }
 
+    private fun formatScalingRate(rate: Double): String {
+        val percent = (rate - 1.0) * 100.0
+        val sign = if (percent >= 0.0) "+" else ""
+        return "$sign${"%.1f".format(percent)}%"
+    }
+
     private fun classPayloads(): List<Map<String, Any>> =
         availableClasses.map { pc ->
             buildMap {
                 put("id", pc.id)
                 put("name", pc.displayName)
-                put("stats", "+${pc.hpPerLevel} HP/lvl, +${pc.manaPerLevel} Mana/lvl")
+                val hp = formatScalingRate(pc.hpScalingRate)
+                val mana = formatScalingRate(pc.manaScalingRate)
+                put("stats", "$hp HP/lvl, $mana Mana/lvl")
                 if (pc.description.isNotEmpty()) put("description", pc.description)
                 if (pc.backstory.isNotEmpty()) put("backstory", pc.backstory)
                 if (pc.image.isNotEmpty()) put("image", "$imagesBase${pc.image}")

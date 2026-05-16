@@ -506,17 +506,17 @@ class WorldLoaderTest {
         val mobs = world.mobTemplates.mapKeys { it.key.value }
 
         // standard tier, level=3: steps=2
-        // hp = 10 + 2*3 = 16
-        // minDamage = 1 + 2*1 = 3
-        // maxDamage = 4 + 2*1 = 6
-        // armor = 0
-        // xpReward = 30 + 2*10 = 50
+        // hp = floor(10 * 1.10^2) = 12
+        // minDamage = floor(1 * 1.07^2) = 1
+        // maxDamage = floor(4 * 1.07^2) = 4
+        // armor = 0 (baseArmor=0 in test fixture override)
+        // xpReward = floor(30 * 1.08^2) = 34
         val bandit = mobs.getValue("ok_mob_stats:bandit")
-        assertEquals(16, bandit.maxHp)
-        assertEquals(3, bandit.damage.min)
-        assertEquals(6, bandit.damage.max)
+        assertEquals(12, bandit.maxHp)
+        assertEquals(1, bandit.damage.min)
+        assertEquals(4, bandit.damage.max)
         assertEquals(0, bandit.armor)
-        assertEquals(50L, bandit.xpReward)
+        assertEquals(34L, bandit.xpReward)
     }
 
     @Test
@@ -858,10 +858,10 @@ class WorldLoaderTest {
             assertEquals(2L, rat.goldMin)
             assertEquals(8L, rat.goldMax)
 
-            // Standard tier level 3 (steps=2): goldMin=2+2*2=6, goldMax=8+2*2=12
+            // Standard tier level 3 (steps=2): goldMin=floor(2*1.19^2)=2, goldMax=floor(8*1.19^2)=11
             val bandit = mobs.getValue("ok_mob_stats:bandit")
-            assertEquals(6L, bandit.goldMin)
-            assertEquals(12L, bandit.goldMax)
+            assertEquals(2L, bandit.goldMin)
+            assertEquals(11L, bandit.goldMax)
 
             // Boss tier level 1: goldMin=50, goldMax=100
             val boss = mobs.getValue("ok_mob_stats:boss_mob")

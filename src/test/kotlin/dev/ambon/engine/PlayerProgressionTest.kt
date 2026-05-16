@@ -24,15 +24,15 @@ class PlayerProgressionTest {
                     definitions = mapOf(
                         "WARRIOR" to ClassDefinitionConfig(
                             displayName = "Warrior",
-                            hpPerLevel = 8,
-                            manaPerLevel = 4,
+                            hpScalingRate = 1.80,
+                            manaScalingRate = 1.20,
                             primaryStat = "STR",
                             threatMultiplier = 1.5,
                         ),
                         "MAGE" to ClassDefinitionConfig(
                             displayName = "Mage",
-                            hpPerLevel = 4,
-                            manaPerLevel = 16,
+                            hpScalingRate = 1.40,
+                            manaScalingRate = 1.80,
                             primaryStat = "INT",
                         ),
                     ),
@@ -86,7 +86,7 @@ class PlayerProgressionTest {
                 ProgressionConfig(
                     maxLevel = 50,
                     xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
-                    rewards = LevelRewardsConfig(hpPerLevel = 2, fullHealOnLevelUp = true),
+                    rewards = LevelRewardsConfig(hpScalingRate = 1.20, fullHealOnLevelUp = true),
                 ),
             )
 
@@ -118,7 +118,7 @@ class PlayerProgressionTest {
                 ProgressionConfig(
                     maxLevel = 50,
                     xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
-                    rewards = LevelRewardsConfig(hpPerLevel = 2, fullHealOnLevelUp = false),
+                    rewards = LevelRewardsConfig(hpScalingRate = 1.20, fullHealOnLevelUp = false),
                 ),
             )
 
@@ -147,7 +147,7 @@ class PlayerProgressionTest {
                 ProgressionConfig(
                     maxLevel = 50,
                     xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
-                    rewards = LevelRewardsConfig(hpPerLevel = 3, manaPerLevel = 5, fullHealOnLevelUp = true),
+                    rewards = LevelRewardsConfig(hpScalingRate = 1.30, manaScalingRate = 1.25, fullHealOnLevelUp = true),
                 ),
                 classRegistry = defaultClassRegistry(),
             )
@@ -175,10 +175,10 @@ class PlayerProgressionTest {
         progression.grantXp(warrior, 100L) // level 1 → 2
         progression.grantXp(mage, 100L) // level 1 → 2
 
-        // Warrior: hpPerLevel=8 → 10 + 8 = 18
-        assertEquals(18, warrior.maxHp, "Warrior HP should use class hpPerLevel=8")
-        // Mage: hpPerLevel=4 → 10 + 4 = 14
-        assertEquals(14, mage.maxHp, "Mage HP should use class hpPerLevel=4")
+        // Warrior: hpScalingRate=1.80, baseHp=10 → floor(10 * 1.80) = 18
+        assertEquals(18, warrior.maxHp, "Warrior HP should use class hpScalingRate=1.80")
+        // Mage: hpScalingRate=1.40, baseHp=10 → floor(10 * 1.40) = 14
+        assertEquals(14, mage.maxHp, "Mage HP should use class hpScalingRate=1.40")
     }
 
     @Test
@@ -190,8 +190,8 @@ class PlayerProgressionTest {
                     xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
                     rewards =
                         LevelRewardsConfig(
-                            hpPerLevel = 3,
-                            manaPerLevel = 5,
+                            hpScalingRate = 1.30,
+                            manaScalingRate = 1.25,
                             fullHealOnLevelUp = true,
                             fullManaOnLevelUp = true,
                         ),
@@ -222,10 +222,28 @@ class PlayerProgressionTest {
         progression.grantXp(warrior, 100L) // level 1 → 2
         progression.grantXp(mage, 100L) // level 1 → 2
 
-        // Warrior: manaPerLevel=4 → 20 + 4 = 24
-        assertEquals(24, warrior.maxMana, "Warrior mana should use class manaPerLevel=4")
-        // Mage: manaPerLevel=16 → 20 + 16 = 36
-        assertEquals(36, mage.maxMana, "Mage mana should use class manaPerLevel=16")
+        // Warrior: manaScalingRate=1.20, baseMana=20 → floor(20 * 1.20) = 24
+        assertEquals(24, warrior.maxMana, "Warrior mana should use class manaScalingRate=1.20")
+        // Mage: manaScalingRate=1.80, baseMana=20 → floor(20 * 1.80) = 36
+        assertEquals(36, mage.maxMana, "Mage mana should use class manaScalingRate=1.80")
+    }
+
+    @Test
+    fun `maxHpForLevel saturates to Int_MAX_VALUE under runaway scaling instead of collapsing`() {
+        // A pathological-but-accepted rate: 10.0 at maxLevel 50 yields base * 10^49,
+        // far past Long range. Without saturation, scaledBase.toLong() = Long.MAX_VALUE
+        // then + statBonus overflows negative and coerceAtLeast(baseValue) clamps back
+        // to baseValue. With saturation, the result is Int.MAX_VALUE.
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 50,
+                    rewards = LevelRewardsConfig(hpScalingRate = 10.0, baseHp = 100),
+                ),
+            )
+        // Above BASE_STAT so statBonus is positive and would have triggered the overflow path.
+        val result = progression.maxHpForLevel(level = 50, statValue = PlayerState.BASE_STAT + 10)
+        assertEquals(Int.MAX_VALUE, result)
     }
 
     @Test
@@ -235,7 +253,7 @@ class PlayerProgressionTest {
                 ProgressionConfig(
                     maxLevel = 50,
                     xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
-                    rewards = LevelRewardsConfig(hpPerLevel = 2, fullHealOnLevelUp = true),
+                    rewards = LevelRewardsConfig(hpScalingRate = 1.20, fullHealOnLevelUp = true),
                 ),
             )
 

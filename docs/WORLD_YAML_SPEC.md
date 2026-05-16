@@ -186,26 +186,26 @@ Behavior validation rules:
 Tier formula (for tier `T` and level `L`, where `L` defaults to 1):
 
 ```text
-hp         = T.baseHp + (L-1) * T.hpPerLevel
-minDamage  = T.baseMinDamage + (L-1) * T.damagePerLevel
-maxDamage  = T.baseMaxDamage + (L-1) * T.damagePerLevel
+hp         = floor(T.baseHp        * T.hpScalingRate    ^ (L-1))
+minDamage  = floor(T.baseMinDamage * T.damageScalingRate ^ (L-1))
+maxDamage  = floor(T.baseMaxDamage * T.damageScalingRate ^ (L-1))
 armor      = T.baseArmor
-xpReward   = T.baseXpReward + (L-1) * T.xpRewardPerLevel
-goldMin    = T.baseGoldMin + (L-1) * T.goldPerLevel
-goldMax    = T.baseGoldMax + (L-1) * T.goldPerLevel
+xpReward   = floor(T.baseXpReward  * T.xpScalingRate    ^ (L-1))
+goldMin    = floor(T.baseGoldMin   * T.goldScalingRate  ^ (L-1))
+goldMax    = floor(T.baseGoldMax   * T.goldScalingRate  ^ (L-1))
 ```
 
-Any explicit per-mob field overrides the computed value from the tier formula.
+Each scaling rate is a `Double` `>= 1.0`; `1.0` means no growth. Any explicit per-mob field overrides the computed value from the tier formula.
 
 Tier default values are operator-configurable via `application.yaml` under `ambonmud.engine.mob.tiers`.
 The built-in defaults are:
 
-| Tier     | baseHp | hpPerLevel | baseMinDmg | baseMaxDmg | dmgPerLevel | baseArmor | baseXp | xpPerLevel | baseGoldMin | baseGoldMax | goldPerLevel |
-|----------|--------|------------|------------|------------|-------------|-----------|--------|------------|-------------|-------------|--------------|
-| weak     | 5      | 2          | 1          | 2          | 0           | 0         | 15     | 5          | 1           | 3           | 1            |
-| standard | 10     | 3          | 1          | 4          | 1           | 0         | 30     | 10         | 2           | 8           | 2            |
-| elite    | 20     | 5          | 2          | 6          | 1           | 1         | 75     | 20         | 10          | 25          | 5            |
-| boss     | 50     | 10         | 3          | 8          | 2           | 3         | 200    | 50         | 50          | 100         | 15           |
+| Tier     | baseHp | hpScalingRate | baseMinDmg | baseMaxDmg | damageScalingRate | baseArmor | baseXp | xpScalingRate | baseGoldMin | baseGoldMax | goldScalingRate |
+|----------|--------|---------------|------------|------------|-------------------|-----------|--------|---------------|-------------|-------------|-----------------|
+| weak     | 5      | 1.10          | 1          | 2          | 1.06              | 0         | 15     | 1.09          | 1           | 3           | 1.19            |
+| standard | 12     | 1.10          | 2          | 4          | 1.07              | 1         | 30     | 1.08          | 3           | 8           | 1.19            |
+| elite    | 28     | 1.09          | 3          | 6          | 1.07              | 2         | 75     | 1.08          | 10          | 25          | 1.19            |
+| boss     | 55     | 1.09          | 4          | 9          | 1.07              | 3         | 200    | 1.07          | 50          | 100         | 1.19            |
 
 Mob armor applies as flat damage reduction: `effectiveDamage = max(1, playerRoll - mob.armor)`.
 
