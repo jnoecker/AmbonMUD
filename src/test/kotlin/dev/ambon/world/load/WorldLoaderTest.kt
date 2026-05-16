@@ -1,12 +1,16 @@
 package dev.ambon.domain.world.load
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.items.ItemType
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.data.ItemFile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -266,6 +270,38 @@ class WorldLoaderTest {
         val helm = items.getValue("ok_item_metadata:helm")
         assertEquals(ItemSlot.HEAD, helm.instance.item.slot)
         assertEquals(2, helm.instance.item.armor)
+    }
+
+    @Test
+    fun `ItemFile deserializes Arcanum metadata fields with strict mapping`() {
+        // Round-trip via a strict mapper (FAIL_ON_UNKNOWN_PROPERTIES enabled)
+        // proves the new fields are actually declared on ItemFile, not just
+        // silently dropped by WorldLoader's lenient mapper.
+        val strictMapper =
+            ObjectMapper(YAMLFactory())
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
+                .registerModule(KotlinModule.Builder().build())
+        val yaml =
+            """
+            displayName: "test blade"
+            slot: weapon
+            damage: 5
+            level: 10
+            tier: rare
+            archetype: damage
+            primaryStat: STR
+            secondaryStat: DEX
+            tertiaryStat: CON
+            """.trimIndent()
+        val item: ItemFile = strictMapper.readValue(yaml)
+        assertEquals(10, item.level)
+        assertEquals("rare", item.tier)
+        assertEquals("damage", item.archetype)
+        assertEquals("STR", item.primaryStat)
+        assertEquals("DEX", item.secondaryStat)
+        assertEquals("CON", item.tertiaryStat)
+        // Existing fields still authoritative.
+        assertEquals(5, item.damage)
     }
 
     @Test
