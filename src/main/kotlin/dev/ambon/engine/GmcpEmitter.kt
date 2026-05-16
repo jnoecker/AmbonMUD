@@ -2460,7 +2460,7 @@ class GmcpEmitter(
         /** Gold cost for *this player's next* unlock; already includes the exponential scaling. */
         val multiclassGoldCost: Long,
         /** Hard cap on the player's total unlocked classes (including starter). */
-        val multiclassMaxClasses: Int,
+        val multiclassMaxClasses: Long,
         /** Player's current unlocked-class count (including starter). */
         val multiclassUnlockedCount: Int,
         /**

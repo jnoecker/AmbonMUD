@@ -1236,7 +1236,7 @@ Subscribe with `"Trainer 1"`.
 | `availableSkillPoints` | int                | Points the player can spend right now |
 | `multiclassMinLevel`   | int                | Minimum level to unlock a new class |
 | `multiclassGoldCost`   | long               | Gold cost for **this player's next** unlock — already includes the exponential `goldCostMultiplier` scaling |
-| `multiclassMaxClasses` | int                | Hard cap on the player's total unlocked classes (including starter) |
+| `multiclassMaxClasses` | long               | Hard cap on the player's total unlocked classes (including starter). Long-typed so "unlimited" sentinels written by JS tooling (e.g. `Number.MAX_SAFE_INTEGER`) round-trip cleanly |
 | `multiclassUnlockedCount` | int             | Player's current unlocked-class count (compare to `multiclassMaxClasses` to detect "at limit") |
 | `abilities[]`          | array              | Abilities available to learn at this trainer |
 | `abilities[].id`       | string             | Ability ID (for `train learn <id>`) |
