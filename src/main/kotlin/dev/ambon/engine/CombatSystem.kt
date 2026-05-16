@@ -342,10 +342,7 @@ class CombatSystem(
         targetSid: SessionId,
         target: PlayerState,
     ): Boolean {
-        val threshold = target.wimpyThresholdPct
-        if (threshold <= 0 || target.maxHp <= 0) return false
-        val hpPct = (target.hp.toDouble() / target.maxHp * 100.0).toInt()
-        if (hpPct > threshold) return false
+        if (!isAtOrBelowWimpyThreshold(target)) return false
         if (playerTarget[targetSid] == null) return false
         outbound.send(OutboundEvent.SendText(targetSid, "Your wounds force you to disengage!"))
         flee(targetSid, forced = true)
@@ -357,16 +354,25 @@ class CombatSystem(
         targetSid: SessionId,
         target: PlayerState,
     ): Boolean {
-        val threshold = target.wimpyThresholdPct
-        if (threshold <= 0 || target.maxHp <= 0) return false
-        val hpPct = (target.hp.toDouble() / target.maxHp * 100.0).toInt()
-        if (hpPct > threshold) return false
+        if (!isAtOrBelowWimpyThreshold(target)) return false
         if (pvpTarget[targetSid] == null) return false
         val opponent = pvpTarget[targetSid]?.let { players.get(it) }?.name ?: "your opponent"
         endPvpCombat(targetSid)
         outbound.send(OutboundEvent.SendText(targetSid, "You are forced to flee from $opponent!"))
         outbound.send(OutboundEvent.SendPrompt(targetSid))
         return true
+    }
+
+    /**
+     * Returns true iff the player has wimpy enabled and their current HP is at or below the
+     * configured percentage of max. Uses integer cross-multiplication rather than a truncated
+     * percent because `(hp.toDouble() / maxHp * 100).toInt()` floors values like 25.5% to 25
+     * and would fire one HP early — e.g. at 51/200 HP for a 25% threshold.
+     */
+    private fun isAtOrBelowWimpyThreshold(target: PlayerState): Boolean {
+        val threshold = target.wimpyThresholdPct
+        if (threshold <= 0 || target.maxHp <= 0) return false
+        return target.hp * 100 <= threshold * target.maxHp
     }
 
     override fun remapSession(
@@ -501,6 +507,11 @@ class CombatSystem(
         for (state in entries) {
             if (ran >= maxPerTick) break
             if (now < state.nextTickAtMs) continue
+            // The snapshot can go stale mid-tick: an earlier iteration (or wimpy auto-flee
+            // on this state's target) may have called endPvpCombat, which removes the
+            // reciprocal entry too. Skip stale states so we don't apply a phantom hit
+            // after the fight has already ended.
+            if (pvpCombatStates[state.attackerSid] !== state) continue
 
             val attacker = players.get(state.attackerSid)
             val target = players.get(state.targetSid)

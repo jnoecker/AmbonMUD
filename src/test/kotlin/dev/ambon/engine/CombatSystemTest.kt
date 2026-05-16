@@ -1491,6 +1491,42 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `wimpy threshold compares via exact ratio not truncated percent`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            // Damage exactly 1 per tick at max=200, threshold=25.
+            // 51/200 = 25.5% — must NOT trigger a 25% threshold (truncation bug would fire here).
+            // 50/200 = 25.0% — must trigger.
+            val mob =
+                MobState(
+                    MobId("demo:slow"),
+                    "a slow slime",
+                    fixture.roomId,
+                    hp = 10_000,
+                    maxHp = 10_000,
+                    damage = DamageRange(1, 1),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1))
+            val sid = SessionId(93L)
+            fixture.players.loginOrFail(sid, "Picky")
+            val player = fixture.players.get(sid)!!
+            player.maxHp = 200
+            player.hp = 52 // first tick → 51 = 25.5% (must not fire)
+            player.wimpyThresholdPct = 25
+
+            assertNull(combat.startCombat(sid, "slime"))
+            fixture.tickCombat(combat)
+            assertEquals(51, player.hp)
+            assertTrue(combat.isInCombat(sid), "wimpy must not fire at 25.5% for a 25% threshold")
+
+            fixture.tickCombat(combat) // 50 → 25.0% exactly
+            assertEquals(50, player.hp)
+            assertNull(combat.currentTarget(sid), "wimpy must fire at exactly the threshold")
+        }
+
+    @Test
     fun `wimpy of 0 never fires`() =
         runTest {
             val fixture = CombatTestFixture()
