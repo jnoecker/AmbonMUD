@@ -174,21 +174,42 @@ export function TrainerPanel({ trainer, playerLevel, playerGold, onCommand }: Tr
           <p className="trainer-locked-msg">
             The <strong>{classLabel}</strong> class is locked.
           </p>
-          <p className="trainer-locked-req">
-            Requires level {trainer.multiclassMinLevel} and {trainer.multiclassGoldCost.toLocaleString()} gold.
-          </p>
           {(() => {
-            const canUnlock = playerLevel >= trainer.multiclassMinLevel && playerGold >= trainer.multiclassGoldCost;
+            const atLimit = trainer.multiclassUnlockedCount >= trainer.multiclassMaxClasses;
+            if (atLimit) {
+              return (
+                <>
+                  <p className="trainer-locked-req">
+                    You have reached the limit of {trainer.multiclassMaxClasses} unlocked classes.
+                  </p>
+                  <button
+                    type="button"
+                    className="trainer-unlock-btn trainer-unlock-btn-disabled"
+                    disabled
+                    title="Class limit reached"
+                  >
+                    Class limit reached
+                  </button>
+                </>
+              );
+            }
+            const canUnlock =
+              playerLevel >= trainer.multiclassMinLevel && playerGold >= trainer.multiclassGoldCost;
             return (
-              <button
-                type="button"
-                className={`trainer-unlock-btn${canUnlock ? "" : " trainer-unlock-btn-disabled"}`}
-                disabled={!canUnlock}
-                title={canUnlock ? `Unlock the ${classLabel} class` : "Requirements not met"}
-                onClick={() => onCommand(unlockCmd)}
-              >
-                Unlock {classLabel} ({trainer.multiclassGoldCost.toLocaleString()} gold)
-              </button>
+              <>
+                <p className="trainer-locked-req">
+                  Requires level {trainer.multiclassMinLevel} and {trainer.multiclassGoldCost.toLocaleString()} gold.
+                </p>
+                <button
+                  type="button"
+                  className={`trainer-unlock-btn${canUnlock ? "" : " trainer-unlock-btn-disabled"}`}
+                  disabled={!canUnlock}
+                  title={canUnlock ? `Unlock the ${classLabel} class` : "Requirements not met"}
+                  onClick={() => onCommand(unlockCmd)}
+                >
+                  Unlock {classLabel} ({trainer.multiclassGoldCost.toLocaleString()} gold)
+                </button>
+              </>
             );
           })()}
         </div>

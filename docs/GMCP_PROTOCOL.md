@@ -1208,6 +1208,8 @@ Subscribe with `"Trainer 1"`.
   "availableSkillPoints": 3,
   "multiclassMinLevel": 10,
   "multiclassGoldCost": 500,
+  "multiclassMaxClasses": 3,
+  "multiclassUnlockedCount": 1,
   "abilities": [
     {
       "id": "power_strike",
@@ -1233,7 +1235,9 @@ Subscribe with `"Trainer 1"`.
 | `classUnlocked`        | boolean            | Whether this class is unlocked for the player |
 | `availableSkillPoints` | int                | Points the player can spend right now |
 | `multiclassMinLevel`   | int                | Minimum level to unlock a new class |
-| `multiclassGoldCost`   | long               | Gold cost to unlock a new class |
+| `multiclassGoldCost`   | long               | Gold cost for **this player's next** unlock — already includes the exponential `goldCostMultiplier` scaling |
+| `multiclassMaxClasses` | int                | Hard cap on the player's total unlocked classes (including starter) |
+| `multiclassUnlockedCount` | int             | Player's current unlocked-class count (compare to `multiclassMaxClasses` to detect "at limit") |
 | `abilities[]`          | array              | Abilities available to learn at this trainer |
 | `abilities[].id`       | string             | Ability ID (for `train learn <id>`) |
 | `abilities[].levelRequired` | int           | Minimum player level to learn |

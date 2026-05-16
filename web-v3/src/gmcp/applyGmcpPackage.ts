@@ -2109,6 +2109,8 @@ export function applyGmcpPackage(
         availableSkillPoints: safeNumber(packet.availableSkillPoints),
         multiclassMinLevel: safeNumber(packet.multiclassMinLevel, 10),
         multiclassGoldCost: safeNumber(packet.multiclassGoldCost, 500),
+        multiclassMaxClasses: safeNumber(packet.multiclassMaxClasses, Number.MAX_SAFE_INTEGER),
+        multiclassUnlockedCount: safeNumber(packet.multiclassUnlockedCount, 1),
         classes,
       };
       ctx.setTrainer(trainer);

@@ -880,7 +880,12 @@ export interface TrainerData {
   image: string | null;
   availableSkillPoints: number;
   multiclassMinLevel: number;
+  /** Gold cost for *this player's next* unlock; already scaled by the multiplier. */
   multiclassGoldCost: number;
+  /** Hard cap on the player's total unlocked classes (including starter). */
+  multiclassMaxClasses: number;
+  /** Player's current unlocked-class count (including starter). */
+  multiclassUnlockedCount: number;
   /** One entry per class this trainer teaches. Always non-empty. */
   classes: TrainerClass[];
 }
