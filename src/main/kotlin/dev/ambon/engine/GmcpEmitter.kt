@@ -502,6 +502,7 @@ class GmcpEmitter(
                 sprite = resolveSprite(player),
                 isStaff = player.isStaff,
                 autolootEnabled = player.autolootEnabled,
+                wimpyThresholdPct = player.wimpyThresholdPct,
             ),
         )
     }
@@ -2541,6 +2542,7 @@ class GmcpEmitter(
         val sprite: String,
         val isStaff: Boolean,
         val autolootEnabled: Boolean,
+        val wimpyThresholdPct: Int,
     )
 
     private data class SessionAuthTokenPayload(

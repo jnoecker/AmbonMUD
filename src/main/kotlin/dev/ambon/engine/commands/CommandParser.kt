@@ -27,6 +27,14 @@ sealed interface Command {
 
     data object AutolootStatus : Command
 
+    /**
+     * Set or query the wimpy auto-flee threshold.
+     * `null` arg → status. `"off"` / `0` → disable. `1..95` → enable at that HP%.
+     */
+    data class Wimpy(
+        val arg: String?,
+    ) : Command
+
     data class Move(
         val dir: Direction,
     ) : Command
@@ -1307,6 +1315,11 @@ object CommandParser {
             { Command.Consider(it) },
         )?.let { return it }
 
+        // wimpy <n|on|off> — set auto-flee HP% threshold
+        matchPrefix(line, listOf("wimpy")) { rest ->
+            Command.Wimpy(rest.trim().takeIf { it.isNotBlank() })
+        }?.let { return it }
+
         // goto
         requiredArg(line, listOf("goto"), "goto <zone:room | room | zone:>", { Command.Goto(it) })?.let { return it }
 
@@ -1678,6 +1691,7 @@ object CommandParser {
             "autoloot on" -> Command.AutolootOn
             "autoloot off" -> Command.AutolootOff
             "autoloot status", "autoloot" -> Command.AutolootStatus
+            "wimpy" -> Command.Wimpy(null)
             "clear" -> Command.Clear
             "colors" -> Command.Colors
             "who" -> Command.Who

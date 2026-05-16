@@ -102,6 +102,11 @@ export function CharacterPanel({
     [achievements.completed],
   );
   const autolootEnabled = character.autolootEnabled;
+  const wimpyPct = character.wimpyThresholdPct ?? 0;
+  const WIMPY_PRESETS = [0, 10, 25, 50, 75] as const;
+  const wimpyOptions = WIMPY_PRESETS.includes(wimpyPct as (typeof WIMPY_PRESETS)[number])
+    ? [...WIMPY_PRESETS]
+    : [...WIMPY_PRESETS, wimpyPct].sort((a, b) => a - b);
 
   const CATEGORY_LABELS: Record<string, string> = { general: "Sprites", tier: "Tier Sprites", achievement: "Achievement Sprites", staff: "Staff Sprites" };
   const CATEGORY_ORDER = ["general", "tier", "achievement", "staff"];
@@ -298,6 +303,32 @@ export function CharacterPanel({
                   </span>
                   <span className="character-utility-toggle-label">{autolootEnabled ? "On" : "Off"}</span>
                 </button>
+              </div>
+              <div className="character-utility-strip" role="group" aria-label="Wimpy auto-flee setting">
+                <span
+                  className="character-utility-label"
+                  title={
+                    wimpyPct > 0
+                      ? `Auto-flee combat when HP drops to ${wimpyPct}%.`
+                      : "Wimpy disabled — combat will continue until you flee manually."
+                  }
+                >
+                  Wimpy
+                </span>
+                <select
+                  className="character-utility-select"
+                  aria-label="Wimpy HP threshold"
+                  title="Auto-flee combat when HP drops below this threshold."
+                  disabled={!connected}
+                  value={String(wimpyPct)}
+                  onChange={(e) => onCommand(`wimpy ${e.target.value}`)}
+                >
+                  {wimpyOptions.map((pct) => (
+                    <option key={pct} value={pct}>
+                      {pct === 0 ? "Off" : `${pct}%`}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="description-editor-section">
                 <button

@@ -335,6 +335,7 @@ export function applyGmcpPackage(
         sprite: typeof packet.sprite === "string" ? packet.sprite : null,
         isStaff: packet.isStaff === true,
         autolootEnabled: packet.autolootEnabled === true,
+        wimpyThresholdPct: typeof packet.wimpyThresholdPct === "number" ? packet.wimpyThresholdPct : 10,
       });
       // Login complete — dismiss modal
       ctx.setLoginPrompt(null);

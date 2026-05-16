@@ -7920,6 +7920,56 @@ body {
   letter-spacing: 0.06em;
 }
 
+/* Compact select shares the chip-styling of the toggle — keeps the strip uniform. */
+.character-utility-select {
+  flex-shrink: 0;
+  padding: 4px 22px 4px 10px;
+  border: 1px solid rgb(128 145 219 / 24%);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgb(39 47 73 / 95%), rgb(55 65 97 / 92%))
+      no-repeat;
+  background-image:
+    linear-gradient(135deg, rgb(39 47 73 / 95%), rgb(55 65 97 / 92%)),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%23b9c1d8' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, right 8px center;
+  background-size: cover, 9px 6px;
+  color: rgb(225 232 247 / 96%);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    transform 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft),
+    box-shadow 150ms var(--ease-out-soft);
+}
+
+.character-utility-select:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgb(176 193 255 / 42%);
+  box-shadow: var(--shadow-sm), 0 0 14px rgb(118 133 190 / 20%);
+}
+
+.character-utility-select:focus-visible {
+  outline: 2px solid var(--color-primary-lavender);
+  outline-offset: 2px;
+}
+
+.character-utility-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.character-utility-select option {
+  background: rgb(38 45 67);
+  color: rgb(225 232 247 / 96%);
+}
+
 /* -- Description editor ------------------------------------------------- */
 
 .description-editor-section {

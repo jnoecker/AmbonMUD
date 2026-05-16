@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN wimpy_threshold_pct INTEGER NOT NULL DEFAULT 10;

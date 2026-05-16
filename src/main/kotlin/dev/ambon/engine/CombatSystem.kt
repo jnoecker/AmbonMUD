@@ -332,6 +332,49 @@ class CombatSystem(
         return null
     }
 
+    /**
+     * If the player has wimpy enabled and their current HP% is at or below the threshold,
+     * break PvE combat with the "forced to flee" path. Returns true if combat was broken.
+     * Called after a mob lands a hit on a still-alive player so the next mob tick can't
+     * resolve before the player has a chance to escape.
+     */
+    private suspend fun checkWimpyAutoFlee(
+        targetSid: SessionId,
+        target: PlayerState,
+    ): Boolean {
+        if (!isAtOrBelowWimpyThreshold(target)) return false
+        if (playerTarget[targetSid] == null) return false
+        outbound.send(OutboundEvent.SendText(targetSid, "Your wounds force you to disengage!"))
+        flee(targetSid, forced = true)
+        return true
+    }
+
+    /** PvP variant — disengages the PvP fight when the player's HP drops below the wimpy threshold. */
+    private suspend fun checkWimpyAutoFleePvp(
+        targetSid: SessionId,
+        target: PlayerState,
+    ): Boolean {
+        if (!isAtOrBelowWimpyThreshold(target)) return false
+        if (pvpTarget[targetSid] == null) return false
+        val opponent = pvpTarget[targetSid]?.let { players.get(it) }?.name ?: "your opponent"
+        endPvpCombat(targetSid)
+        outbound.send(OutboundEvent.SendText(targetSid, "You are forced to flee from $opponent!"))
+        outbound.send(OutboundEvent.SendPrompt(targetSid))
+        return true
+    }
+
+    /**
+     * Returns true iff the player has wimpy enabled and their current HP is at or below the
+     * configured percentage of max. Uses integer cross-multiplication rather than a truncated
+     * percent because `(hp.toDouble() / maxHp * 100).toInt()` floors values like 25.5% to 25
+     * and would fire one HP early — e.g. at 51/200 HP for a 25% threshold.
+     */
+    private fun isAtOrBelowWimpyThreshold(target: PlayerState): Boolean {
+        val threshold = target.wimpyThresholdPct
+        if (threshold <= 0 || target.maxHp <= 0) return false
+        return target.hp * 100 <= threshold * target.maxHp
+    }
+
     override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
@@ -464,6 +507,11 @@ class CombatSystem(
         for (state in entries) {
             if (ran >= maxPerTick) break
             if (now < state.nextTickAtMs) continue
+            // The snapshot can go stale mid-tick: an earlier iteration (or wimpy auto-flee
+            // on this state's target) may have called endPvpCombat, which removes the
+            // reciprocal entry too. Skip stale states so we don't apply a phantom hit
+            // after the fight has already ended.
+            if (pvpCombatStates[state.attackerSid] !== state) continue
 
             val attacker = players.get(state.attackerSid)
             val target = players.get(state.targetSid)
@@ -523,6 +571,10 @@ class CombatSystem(
                         loserName = target.name,
                         loser = target,
                     )
+                    ran++
+                    continue
+                }
+                if (checkWimpyAutoFleePvp(state.targetSid, target)) {
                     ran++
                     continue
                 }
@@ -929,6 +981,8 @@ class CombatSystem(
                         roomMessage = "${target.name} has been slain by ${mob.name}.",
                         killerName = mob.name,
                     )
+                } else {
+                    checkWimpyAutoFlee(targetSid, target)
                 }
             }
 
