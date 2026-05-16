@@ -72,6 +72,7 @@ import type {
   Vitals,
   WhoPlayer,
   WorldEvent,
+  WorldArea,
   WorldTime,
   WorldWeather,
   ZoneEnvironment,
@@ -177,6 +178,7 @@ interface GmcpContext {
   sendGmcp: (pkg: string, payload: unknown) => boolean;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
+  setWorldAreas: Dispatch<SetStateAction<WorldArea[]>>;
   setEmotePresets: Dispatch<SetStateAction<EmotePreset[]>>;
   setServerFeatures: Dispatch<SetStateAction<ServerFeatures>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
@@ -1458,6 +1460,20 @@ export function applyGmcpPackage(
           requiresTarget: c.requiresTarget === true,
         }));
       ctx.setServerCommands(commands);
+      break;
+    }
+
+    case "World.Areas": {
+      const packet = data as { areas?: unknown[] };
+      const areas: WorldArea[] = (packet.areas ?? [])
+        .filter((a): a is Record<string, unknown> => typeof a === "object" && a !== null)
+        .map((a) => ({
+          zone: String(a.zone ?? ""),
+          minLevel: typeof a.minLevel === "number" ? a.minLevel : null,
+          maxLevel: typeof a.maxLevel === "number" ? a.maxLevel : null,
+        }))
+        .filter((a) => a.zone.length > 0);
+      ctx.setWorldAreas(areas);
       break;
     }
 

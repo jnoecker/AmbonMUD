@@ -27,6 +27,7 @@ import { AdminPanel } from "./components/panels/AdminPanel";
 import { CombatLogPanel } from "./components/panels/CombatLogPanel";
 import { WorldAtmosphereHud } from "./components/WorldAtmosphereHud";
 import { HelpContent } from "./components/HelpContent";
+import { Atlas } from "./components/Atlas";
 import { LevelUpBanner } from "./components/LevelUpBanner";
 import { QuestCompleteToast } from "./components/QuestCompleteToast";
 import { LoginModal } from "./canvas/LoginModal";
@@ -164,6 +165,7 @@ function App() {
   // Staff admin panel + invisibility toggle
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [staffInvisible, setStaffInvisible] = useState(false);
+  const [mapTab, setMapTab] = useState<"map" | "atlas">("map");
 
   // Lifted command-input state — VitalsBar renders it controlled, palette/canvas can prefill
   const [inputValue, setInputValue] = useState("");
@@ -494,14 +496,14 @@ function App() {
 
   // Redraw minimap canvas when the map drawer opens
   useEffect(() => {
-    if (state.activePopout !== "map") return;
+    if (state.activePopout !== "map" || mapTab !== "map") return;
     const handle = window.requestAnimationFrame(() => drawMap());
     startPulse();
     return () => {
       window.cancelAnimationFrame(handle);
       stopPulse();
     };
-  }, [state.activePopout, drawMap, startPulse, stopPulse]);
+  }, [state.activePopout, mapTab, drawMap, startPulse, stopPulse]);
 
   // Close look-target modal on Escape
   useEffect(() => {
@@ -679,6 +681,12 @@ function App() {
   // activePopout flips to null, leaving an empty animating frame.
   const [drawerPanel, setDrawerPanel] = useState(state.activePopout);
   const [prevActivePopout, setPrevActivePopout] = useState(state.activePopout);
+  const currentZone = useMemo(() => {
+    const id = state.room.id;
+    if (!id) return null;
+    const colon = id.indexOf(":");
+    return colon > 0 ? id.slice(0, colon) : null;
+  }, [state.room.id]);
   if (state.activePopout !== prevActivePopout) {
     setPrevActivePopout(state.activePopout);
     if (state.activePopout !== null) {
@@ -1044,16 +1052,43 @@ function App() {
 
         {drawerPanel === "map" && (
           <div className="drawer-map-body">
-            <canvas
-              ref={mapCanvasRef}
-              className="mini-map mini-map-popout"
-              width={900}
-              height={560}
-              role="img"
-              aria-label={questMarkerCount > 0
-                ? `Visited room map — ${questMarkerCount} quest objective${questMarkerCount !== 1 ? "s" : ""} marked`
-                : "Visited room map"}
-            />
+            <div className="drawer-map-tabs" role="tablist" aria-label="Map views">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mapTab === "map"}
+                className={`drawer-map-tab ${mapTab === "map" ? "drawer-map-tab-active" : ""}`}
+                onClick={() => setMapTab("map")}
+              >
+                Local Map
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mapTab === "atlas"}
+                className={`drawer-map-tab ${mapTab === "atlas" ? "drawer-map-tab-active" : ""}`}
+                onClick={() => setMapTab("atlas")}
+              >
+                Atlas
+              </button>
+            </div>
+            {/* Keep the canvas mounted so the minimap renderer can keep drawing into it
+                even while the Atlas tab is in front — switching back must not lose state. */}
+            <div className="drawer-map-canvas-wrap" hidden={mapTab !== "map"}>
+              <canvas
+                ref={mapCanvasRef}
+                className="mini-map mini-map-popout"
+                width={900}
+                height={560}
+                role="img"
+                aria-label={questMarkerCount > 0
+                  ? `Visited room map — ${questMarkerCount} quest objective${questMarkerCount !== 1 ? "s" : ""} marked`
+                  : "Visited room map"}
+              />
+            </div>
+            {mapTab === "atlas" && (
+              <Atlas areas={state.worldAreas} currentZone={currentZone} />
+            )}
           </div>
         )}
 

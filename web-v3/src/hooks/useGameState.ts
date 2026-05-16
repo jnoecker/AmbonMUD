@@ -89,6 +89,7 @@ import type {
   UiFeedback,
   Vitals,
   WhoPlayer,
+  WorldArea,
   WorldEvent,
   WorldTime,
   WorldWeather,
@@ -286,6 +287,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   // ── Staff / meta ──────────────────────────────────
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
+  const [worldAreas, setWorldAreas] = useState<WorldArea[]>([]);
   const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
   const [serverFeatures, setServerFeatures] = useState<ServerFeatures>(DEFAULT_SERVER_FEATURES);
   const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
@@ -530,6 +532,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         pendingAuthCharRef,
         setServerAssets,
         setServerCommands,
+        setWorldAreas,
         setEmotePresets,
         setServerFeatures,
         pushUiFeedback,
@@ -661,6 +664,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setStaffWorldInfo([]);
     setStaffMobTemplates([]);
     setServerCommands([]);
+    setWorldAreas([]);
     setEmotePresets([]);
     setServerFeatures(DEFAULT_SERVER_FEATURES);
     resetMap();
@@ -704,7 +708,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // Login / connection
     loginPrompt, loginError, reconnecting, setReconnecting, savedCharacters, setSavedCharacters,
     // Staff / meta
-    serverAssets, serverCommands, emotePresets, serverFeatures, staffWorldInfo, staffMobTemplates,
+    serverAssets, serverCommands, worldAreas, emotePresets, serverFeatures, staffWorldInfo, staffMobTemplates,
     lookTarget, setLookTarget, considerResult, setConsiderResult, spriteList,
     // UI
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,

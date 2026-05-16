@@ -56,7 +56,7 @@ class WorldInfoHandler(
     }
 
     private suspend fun handleAreas(sessionId: SessionId, cmd: Command.Areas) {
-        val ranges = computeZoneLevelRanges(world)
+        val ranges = computeWorldZoneLevelRanges(world)
         val filtered = ranges.filter { (_, range) ->
             val lo = cmd.minLevel
             val hi = cmd.maxLevel
@@ -94,25 +94,28 @@ class WorldInfoHandler(
             outbound.send(OutboundEvent.SendInfo(sessionId, "  $zone  ($levelStr)"))
         }
     }
+}
 
-    /**
-     * Returns each zone's effective level range. Prefers the authored BOUNDED
-     * scaling range; otherwise infers from the min/max level across the zone's
-     * mob templates. Zones with no level signal map to null.
-     */
-    private fun computeZoneLevelRanges(world: World): Map<String, IntRange?> {
-        val zones = world.zones()
-        val mobLevelsByZone = HashMap<String, MutableList<Int>>()
-        for ((id, template) in world.mobTemplates) {
-            val zone = idZone(id.value)
-            if (template.level > 0) {
-                mobLevelsByZone.getOrPut(zone) { mutableListOf() }.add(template.level)
-            }
+/**
+ * Returns each zone's effective level range. Prefers the authored BOUNDED
+ * scaling range; otherwise infers from the min/max level across the zone's
+ * mob templates. Zones with no level signal map to null.
+ *
+ * Shared by the `areas` command handler and the `World.Areas` GMCP emitter so
+ * both views agree on the displayed level ranges.
+ */
+internal fun computeWorldZoneLevelRanges(world: World): Map<String, IntRange?> {
+    val zones = world.zones()
+    val mobLevelsByZone = HashMap<String, MutableList<Int>>()
+    for ((id, template) in world.mobTemplates) {
+        val zone = idZone(id.value)
+        if (template.level > 0) {
+            mobLevelsByZone.getOrPut(zone) { mutableListOf() }.add(template.level)
         }
-        return zones.associateWith { zone ->
-            val scaling = world.zoneScaling(zone)
-            val authored = if (scaling.mode == ScalingMode.BOUNDED) scaling.levelRange else null
-            authored ?: mobLevelsByZone[zone]?.let { IntRange(it.min(), it.max()) }
-        }
+    }
+    return zones.associateWith { zone ->
+        val scaling = world.zoneScaling(zone)
+        val authored = if (scaling.mode == ScalingMode.BOUNDED) scaling.levelRange else null
+        authored ?: mobLevelsByZone[zone]?.let { IntRange(it.min(), it.max()) }
     }
 }

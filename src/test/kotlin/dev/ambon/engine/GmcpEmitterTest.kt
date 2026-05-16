@@ -1744,6 +1744,40 @@ class GmcpEmitterTest {
             assertTrue(drainGmcp().isEmpty())
         }
 
+    @Test
+    fun `sendWorldAreas emits the configured area catalog`() =
+        runTest {
+            val e = GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                worldAreas = listOf(
+                    WorldAreaPayload(zone = "academy", minLevel = 1, maxLevel = 5),
+                    WorldAreaPayload(zone = "social_hub", minLevel = null, maxLevel = null),
+                ),
+            )
+            e.sendWorldAreas(sid)
+            val data = drainGmcp()
+            assertEquals(1, data.size)
+            assertEquals("World.Areas", data[0].gmcpPackage)
+            val json = data[0].jsonData
+            assertTrue(json.contains("\"academy\""), "should contain academy zone")
+            assertTrue(json.contains("\"social_hub\""), "should contain social_hub zone")
+            assertTrue(json.contains("\"minLevel\":1"), "should include numeric bounds")
+            assertTrue(json.contains("\"minLevel\":null"), "should serialize unknown bounds as null")
+        }
+
+    @Test
+    fun `sendWorldAreas skips when catalog is empty`() =
+        runTest {
+            val e = GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                worldAreas = emptyList(),
+            )
+            e.sendWorldAreas(sid)
+            assertTrue(drainGmcp().isEmpty())
+        }
+
     // ── Zone.Map ──
 
     private fun zoneRoom(

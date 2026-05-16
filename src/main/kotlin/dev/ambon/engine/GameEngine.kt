@@ -574,6 +574,7 @@ class GameEngine(
             sanctumRoomId = {
                 engineConfig.death.sanctumRoom?.let { RoomId(it) }?.takeIf { world.rooms.containsKey(it) }
             },
+            worldAreas = buildWorldAreaPayloads(world),
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -2853,4 +2854,16 @@ class GameEngine(
         gmcpEmitter?.sendDuelState(winner, active = false)
         gmcpEmitter?.sendDuelState(loser, active = false)
     }
+}
+
+/**
+ * Snapshot the static area catalog used by the `World.Areas` GMCP package.
+ * Computed once at engine init from the loaded [World]; zones with no level
+ * signal pass through with null bounds so the client can show them as "—".
+ */
+private fun buildWorldAreaPayloads(world: dev.ambon.domain.world.World): List<WorldAreaPayload> {
+    val ranges = dev.ambon.engine.commands.handlers.computeWorldZoneLevelRanges(world)
+    return ranges
+        .map { (zone, range) -> WorldAreaPayload(zone = zone, minLevel = range?.first, maxLevel = range?.last) }
+        .sortedWith(compareBy({ it.minLevel ?: Int.MAX_VALUE }, { it.zone }))
 }

@@ -58,6 +58,18 @@ data class PrestigePerkPayload(
 )
 
 /**
+ * One entry in the `World.Areas` GMCP package — a single zone with its known
+ * level range. `minLevel`/`maxLevel` are null when the zone has no authored
+ * BOUNDED scaling and no leveled mob templates (social/staff zones,
+ * scaling-only dungeons), in which case the client renders an em-dash.
+ */
+data class WorldAreaPayload(
+    val zone: String,
+    val minLevel: Int? = null,
+    val maxLevel: Int? = null,
+)
+
+/**
  * Advertises which optional gameplay features are enabled server-side so web clients
  * can hide UI tabs/panels for features that are disabled. Emitted on login as
  * `Server.Features`.
@@ -91,6 +103,7 @@ class GmcpEmitter(
     private val environmentConfig: dev.ambon.config.EnvironmentConfig = dev.ambon.config.EnvironmentConfig(),
     private val featureFlags: () -> ServerFeaturesPayload = { ServerFeaturesPayload() },
     private val sanctumRoomId: () -> RoomId? = { null },
+    private val worldAreas: List<WorldAreaPayload> = emptyList(),
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -649,6 +662,17 @@ class GmcpEmitter(
         emit(sessionId, "Server.Features", featureFlags())
     }
 
+    /**
+     * Sends the static area catalog as `World.Areas`. The list is computed once
+     * at engine init from world zones + bounded scaling / inferred mob levels —
+     * the web client filters and highlights the player's current zone locally,
+     * so this never needs to be re-emitted.
+     */
+    suspend fun sendWorldAreas(sessionId: SessionId) {
+        if (worldAreas.isEmpty()) return
+        emit(sessionId, "World.Areas", WorldAreasPayload(areas = worldAreas))
+    }
+
     /** Sends emote presets as `Server.EmotePresets`. */
     suspend fun sendServerEmotePresets(sessionId: SessionId) {
         if (emotePresets.isEmpty()) return
@@ -814,6 +838,7 @@ class GmcpEmitter(
         sendServerCommands(sessionId, player.isStaff)
         sendServerFeatures(sessionId)
         sendServerEmotePresets(sessionId)
+        sendWorldAreas(sessionId)
         sendCharStatusVars(sessionId)
         sendCharVitals(sessionId, player)
         sendCharName(sessionId, player)
@@ -2975,6 +3000,10 @@ class GmcpEmitter(
 
     private data class ServerCommandsPayload(
         val commands: List<ServerCommandPayload>,
+    )
+
+    private data class WorldAreasPayload(
+        val areas: List<WorldAreaPayload>,
     )
 
     private data class ServerCommandPayload(

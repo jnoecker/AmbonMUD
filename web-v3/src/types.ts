@@ -752,6 +752,16 @@ export interface EmotePreset {
 }
 
 /**
+ * One entry in the `World.Areas` GMCP package — a zone with its known level
+ * range. `minLevel`/`maxLevel` are null for zones with no level signal.
+ */
+export interface WorldArea {
+  zone: string;
+  minLevel: number | null;
+  maxLevel: number | null;
+}
+
+/**
  * Optional server-side feature flags sent via `Server.Features`. When a flag is
  * false the client should hide the corresponding UI entry (tab, panel, button).
  */
