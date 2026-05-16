@@ -7,6 +7,8 @@ data class ItemFile(
     val description: String = "",
     val keyword: String? = null,
     val slot: String? = null,
+    /** Class-restriction list. Null = unrestricted (current behaviour). Currently ignored by the engine. */
+    val classes: List<String>? = null,
     val damage: Int = 0,
     val armor: Int = 0,
     val stats: Map<String, Int> = emptyMap(),
