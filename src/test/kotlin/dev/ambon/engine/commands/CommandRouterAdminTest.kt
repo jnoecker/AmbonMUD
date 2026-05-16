@@ -877,8 +877,8 @@ class CommandRouterAdminTest {
     fun `setclass updates target player class`() =
         runTest {
             val classReg = PlayerClassRegistry().also {
-                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpPerLevel = 4, manaPerLevel = 1))
-                it.register(PlayerClassDef(id = "MAGE", displayName = "Wizard", hpPerLevel = 1, manaPerLevel = 5))
+                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpScalingRate = 1.10, manaScalingRate = 1.04))
+                it.register(PlayerClassDef(id = "MAGE", displayName = "Wizard", hpScalingRate = 1.05, manaScalingRate = 1.12))
             }
             val h = CommandRouterHarness.create(classRegistry = classReg)
             val staffSid = SessionId(1)
@@ -899,7 +899,7 @@ class CommandRouterAdminTest {
     fun `setclass rejects unknown class`() =
         runTest {
             val classReg = PlayerClassRegistry().also {
-                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpPerLevel = 4, manaPerLevel = 1))
+                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpScalingRate = 1.10, manaScalingRate = 1.04))
             }
             val h = CommandRouterHarness.create(classRegistry = classReg)
             val staffSid = SessionId(1)
@@ -922,8 +922,8 @@ class CommandRouterAdminTest {
     fun `setclass requires staff`() =
         runTest {
             val classReg = PlayerClassRegistry().also {
-                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpPerLevel = 4, manaPerLevel = 1))
-                it.register(PlayerClassDef(id = "MAGE", displayName = "Wizard", hpPerLevel = 1, manaPerLevel = 5))
+                it.register(PlayerClassDef(id = "WARRIOR", displayName = "Knight", hpScalingRate = 1.10, manaScalingRate = 1.04))
+                it.register(PlayerClassDef(id = "MAGE", displayName = "Wizard", hpScalingRate = 1.05, manaScalingRate = 1.12))
             }
             val h = CommandRouterHarness.create(classRegistry = classReg)
             val bobSid = SessionId(1)

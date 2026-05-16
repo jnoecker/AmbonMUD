@@ -813,52 +813,52 @@ ambonmud:
       tiers:
         weak:
           baseHp: 5
-          hpPerLevel: 2
+          hpScalingRate: 1.10
           baseMinDamage: 1
           baseMaxDamage: 2
-          damagePerLevel: 0
+          damageScalingRate: 1.06
           baseArmor: 0
           baseXpReward: 15
-          xpRewardPerLevel: 5
+          xpScalingRate: 1.09
           baseGoldMin: 1
           baseGoldMax: 3
-          goldPerLevel: 1
+          goldScalingRate: 1.19
         standard:
           baseHp: 12
-          hpPerLevel: 4
+          hpScalingRate: 1.10
           baseMinDamage: 2
           baseMaxDamage: 4
-          damagePerLevel: 1
+          damageScalingRate: 1.07
           baseArmor: 1
           baseXpReward: 30
-          xpRewardPerLevel: 10
+          xpScalingRate: 1.08
           baseGoldMin: 3
           baseGoldMax: 8
-          goldPerLevel: 2
+          goldScalingRate: 1.19
         elite:
           baseHp: 28
-          hpPerLevel: 7
+          hpScalingRate: 1.09
           baseMinDamage: 3
           baseMaxDamage: 6
-          damagePerLevel: 1
+          damageScalingRate: 1.07
           baseArmor: 2
           baseXpReward: 75
-          xpRewardPerLevel: 25
+          xpScalingRate: 1.08
           baseGoldMin: 10
           baseGoldMax: 25
-          goldPerLevel: 5
+          goldScalingRate: 1.19
         boss:
           baseHp: 55
-          hpPerLevel: 12
+          hpScalingRate: 1.09
           baseMinDamage: 4
           baseMaxDamage: 9
-          damagePerLevel: 2
+          damageScalingRate: 1.07
           baseArmor: 3
           baseXpReward: 200
-          xpRewardPerLevel: 50
+          xpScalingRate: 1.07
           baseGoldMin: 50
           baseGoldMax: 100
-          goldPerLevel: 15
+          goldScalingRate: 1.19
     economy:
       buyMultiplier: 1
       sellMultiplier: 0.5
@@ -1364,8 +1364,8 @@ ambonmud:
       definitions:
         WARRIOR:
           displayName: Warrior
-          hpPerLevel: 4
-          manaPerLevel: 1
+          hpScalingRate: 1.105
+          manaScalingRate: 1.05
           description: A battle-hardened combatant trained in heavy armor and martial weapons, equally capable of absorbing
             punishment and dealing devastating blows.
           backstory: >-
@@ -1393,8 +1393,8 @@ ambonmud:
             strapped to one arm. A crimson half-cape drapes from the left shoulder.
         MAGE:
           displayName: Mage
-          hpPerLevel: 1
-          manaPerLevel: 5
+          hpScalingRate: 1.090
+          manaScalingRate: 1.110
           description: A scholar of the arcane arts who channels raw magical energy into destructive spells, protective wards, and
             debilitating hexes.
           backstory: >-
@@ -1421,8 +1421,8 @@ ambonmud:
             chain at the belt. The robe's hood is pulled back, revealing sharp, studious features.
         CLERIC:
           displayName: Cleric
-          hpPerLevel: 2
-          manaPerLevel: 4
+          hpScalingRate: 1.101
+          manaScalingRate: 1.099
           description: A devoted servant of the divine who channels sacred power to mend wounds, bolster allies, and smite the
             unholy.
           backstory: >-
@@ -1450,8 +1450,8 @@ ambonmud:
             mantle of deep gold cloth rests across the shoulders.
         ROGUE:
           displayName: Rogue
-          hpPerLevel: 2
-          manaPerLevel: 2
+          hpScalingRate: 1.094
+          manaScalingRate: 1.094
           description: A cunning operative who relies on stealth, precision, and dirty tricks to eliminate targets before they can
             retaliate.
           backstory: >-
@@ -1479,8 +1479,8 @@ ambonmud:
             face, and a bandolier of small pouches and vials crosses the chest.
         RANGER:
           displayName: Ranger
-          hpPerLevel: 3
-          manaPerLevel: 3
+          hpScalingRate: 1.098
+          manaScalingRate: 1.097
           description: A wilderness expert who fights alongside bonded animal companions, blending archery with nature magic to
             control the battlefield.
           backstory: >-
@@ -2016,8 +2016,8 @@ ambonmud:
           - levelsBelow: 8
             multiplier: 0.0
     rewards:
-      hpPerLevel: 2
-      manaPerLevel: 1
+      hpScalingRate: 1.10
+      manaScalingRate: 1.10
       fullHealOnLevelUp: true
       fullManaOnLevelUp: true
       baseHp: 10

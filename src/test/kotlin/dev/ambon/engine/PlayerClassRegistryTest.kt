@@ -14,8 +14,8 @@ class PlayerClassRegistryTest {
         val def = PlayerClassDef(
             id = "WARRIOR",
             displayName = "Warrior",
-            hpPerLevel = 8,
-            manaPerLevel = 4,
+            hpScalingRate = 1.10,
+            manaScalingRate = 1.04,
         )
         registry.register(def)
         assertEquals(def, registry.get("WARRIOR"))
@@ -31,8 +31,8 @@ class PlayerClassRegistryTest {
     @Test
     fun `selectable filters out non-selectable classes`() {
         val registry = PlayerClassRegistry()
-        registry.register(PlayerClassDef("WARRIOR", "Warrior", 8, 4, selectable = true))
-        registry.register(PlayerClassDef("SWARM", "Swarm", 2, 3, selectable = false))
+        registry.register(PlayerClassDef("WARRIOR", "Warrior", 1.10, 1.04, selectable = true))
+        registry.register(PlayerClassDef("SWARM", "Swarm", 1.02, 1.03, selectable = false))
         val selectable = registry.selectable()
         assertEquals(1, selectable.size)
         assertEquals("WARRIOR", selectable[0].id)
@@ -41,8 +41,8 @@ class PlayerClassRegistryTest {
     @Test
     fun `all returns every registered class`() {
         val registry = PlayerClassRegistry()
-        registry.register(PlayerClassDef("WARRIOR", "Warrior", 8, 4))
-        registry.register(PlayerClassDef("MAGE", "Mage", 4, 16))
+        registry.register(PlayerClassDef("WARRIOR", "Warrior", 1.10, 1.04))
+        registry.register(PlayerClassDef("MAGE", "Mage", 1.05, 1.12))
         assertEquals(2, registry.all().size)
     }
 
@@ -52,15 +52,15 @@ class PlayerClassRegistryTest {
             definitions = mapOf(
                 "WARRIOR" to ClassDefinitionConfig(
                     displayName = "Warrior",
-                    hpPerLevel = 8,
-                    manaPerLevel = 4,
+                    hpScalingRate = 1.10,
+                    manaScalingRate = 1.04,
                     description = "Melee fighter.",
                     primaryStat = "STR",
                 ),
                 "SWARM" to ClassDefinitionConfig(
                     displayName = "Swarm",
-                    hpPerLevel = 2,
-                    manaPerLevel = 3,
+                    hpScalingRate = 1.02,
+                    manaScalingRate = 1.03,
                     selectable = false,
                 ),
             ),
@@ -68,7 +68,7 @@ class PlayerClassRegistryTest {
         val registry = PlayerClassRegistry()
         PlayerClassRegistryLoader.load(config, registry)
         assertEquals("Warrior", registry.get("WARRIOR")?.displayName)
-        assertEquals(8, registry.get("WARRIOR")?.hpPerLevel)
+        assertEquals(1.10, registry.get("WARRIOR")?.hpScalingRate)
         assertEquals("STR", registry.get("WARRIOR")?.primaryStat)
         assertEquals(false, registry.get("SWARM")?.selectable)
         assertNull(registry.get("SWARM")?.primaryStat)

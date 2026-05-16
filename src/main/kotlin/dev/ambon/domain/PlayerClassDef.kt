@@ -3,8 +3,8 @@ package dev.ambon.domain
 data class PlayerClassDef(
     val id: String,
     val displayName: String,
-    val hpPerLevel: Int,
-    val manaPerLevel: Int,
+    val hpScalingRate: Double,
+    val manaScalingRate: Double,
     val description: String = "",
     val backstory: String = "",
     val image: String = "",

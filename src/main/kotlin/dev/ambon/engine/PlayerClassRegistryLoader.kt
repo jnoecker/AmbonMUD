@@ -13,8 +13,8 @@ object PlayerClassRegistryLoader {
                 PlayerClassDef(
                     id = key.uppercase(),
                     displayName = defConfig.displayName.ifEmpty { key },
-                    hpPerLevel = defConfig.hpPerLevel,
-                    manaPerLevel = defConfig.manaPerLevel,
+                    hpScalingRate = defConfig.hpScalingRate,
+                    manaScalingRate = defConfig.manaScalingRate,
                     description = defConfig.description,
                     backstory = defConfig.backstory,
                     image = defConfig.image,

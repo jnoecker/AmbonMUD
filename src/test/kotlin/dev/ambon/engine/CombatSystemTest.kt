@@ -369,9 +369,9 @@ class CombatSystemTest {
                             ),
                         rewards =
                             LevelRewardsConfig(
-                                hpPerLevel = 3,
+                                hpScalingRate = 1.30,
                                 fullHealOnLevelUp = true,
-                                manaPerLevel = 5,
+                                manaScalingRate = 1.25,
                                 fullManaOnLevelUp = true,
                             ),
                     ),
