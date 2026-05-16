@@ -8609,6 +8609,182 @@ body {
   }
 }
 
+/* ── Consider (threat assessment) modal ───────────────────── */
+.consider-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-inspect);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(14 16 28 / 65%);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: lookTargetBackdropIn 180ms var(--ease-out-soft);
+}
+
+.consider-card {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(165deg, rgb(48 55 82 / 97%), rgb(38 47 71 / 95%));
+  border: 1px solid rgb(146 136 180 / 30%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  color: var(--text-primary);
+  animation: lookTargetCardIn 220ms var(--ease-out-soft);
+  display: grid;
+  gap: var(--space-3);
+  --consider-accent: var(--color-accent-lavender, #b9a5e0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consider-backdrop,
+  .consider-card {
+    animation: none;
+  }
+}
+
+.consider-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: rgb(40 46 68 / 70%);
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 160ms var(--ease-out-soft), transform 160ms var(--ease-out-soft);
+}
+
+.consider-close:hover { background: rgb(62 70 104 / 90%); }
+.consider-close:active { transform: scale(0.96); }
+.consider-close:focus-visible {
+  outline: 2px solid var(--color-primary-lavender);
+  outline-offset: 2px;
+}
+
+.consider-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-right: var(--space-6);
+}
+
+.consider-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.consider-meta {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.consider-tier-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--consider-accent);
+  color: #15182a;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px var(--consider-accent);
+}
+
+.consider-flavor {
+  margin: 0;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.consider-winrate {
+  display: grid;
+  gap: 6px;
+}
+
+.consider-winrate-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.consider-winrate-pct {
+  color: var(--consider-accent);
+  font-weight: 700;
+}
+
+.consider-winrate-bar {
+  height: 10px;
+  background: rgb(20 23 38 / 80%);
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.consider-winrate-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--consider-accent), color-mix(in srgb, var(--consider-accent) 60%, white));
+  box-shadow: 0 0 10px var(--consider-accent);
+  transition: width 300ms var(--ease-out-soft);
+}
+
+.consider-stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-3);
+}
+
+.consider-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: rgb(20 23 38 / 50%);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm, 6px);
+}
+
+.consider-stat dt {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.consider-stat dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Seven tiers — colors track danger from safe (green) to deadly (red). */
+.consider-tier-trivial   { --consider-accent: #8fd9b6; }
+.consider-tier-easy      { --consider-accent: #b8e07a; }
+.consider-tier-favored   { --consider-accent: #e6d27a; }
+.consider-tier-even      { --consider-accent: #d9c89a; }
+.consider-tier-risky     { --consider-accent: #e8a467; }
+.consider-tier-dangerous { --consider-accent: #d97b6e; }
+.consider-tier-suicidal  { --consider-accent: #b94a52; }
+
+@media (max-width: 599px) {
+  .consider-card { padding: var(--space-3) var(--space-4); }
+  .consider-name { font-size: 1.1rem; }
+}
+
 /* ── Possession vignette overlay ── */
 
 .possession-vignette {

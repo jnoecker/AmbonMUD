@@ -36,6 +36,8 @@ import type {
   PendingGuildInvite,
   InProgressAchievement,
   ItemSummary,
+  ConsiderRating,
+  ConsiderResult,
   LookTargetInfo,
   LoginErrorState,
   LoginPromptState,
@@ -181,6 +183,7 @@ interface GmcpContext {
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
   setStaffMobTemplates: Dispatch<SetStateAction<StaffMobZone[]>>;
   setLookTarget: Dispatch<SetStateAction<LookTargetInfo | null>>;
+  setConsiderResult: Dispatch<SetStateAction<ConsiderResult | null>>;
   pushBroadcast: (sender: string, message: string) => void;
   setPossessing: Dispatch<SetStateAction<string | null>>;
   setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
@@ -292,6 +295,32 @@ export function applyGmcpPackage(
           targetCategory: typeof packet.targetCategory === "string" ? packet.targetCategory : null,
         });
       }
+      break;
+    }
+
+    case "Char.Combat.Consider": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const rating = typeof packet.rating === "string" ? (packet.rating as ConsiderRating) : "EVEN";
+      ctx.setConsiderResult({
+        mobId: typeof packet.mobId === "string" ? packet.mobId : "",
+        mobName: typeof packet.mobName === "string" ? packet.mobName : "Unknown",
+        mobLevel: safeNumber(packet.mobLevel, 0),
+        mobMaxHp: safeNumber(packet.mobMaxHp, 0),
+        mobCategory: typeof packet.mobCategory === "string" ? packet.mobCategory : "",
+        mobImage: typeof packet.mobImage === "string" ? packet.mobImage : null,
+        playerLevel: safeNumber(packet.playerLevel, 0),
+        playerMaxHp: safeNumber(packet.playerMaxHp, 0),
+        playerAvgDamage: safeNumber(packet.playerAvgDamage, 0),
+        mobAvgDamage: safeNumber(packet.mobAvgDamage, 0),
+        hitsToKillMob: safeNumber(packet.hitsToKillMob, 0),
+        hitsToKillPlayer: safeNumber(packet.hitsToKillPlayer, 0),
+        dodgeChancePct: safeNumber(packet.dodgeChancePct, 0),
+        winChancePct: safeNumber(packet.winChancePct, 0),
+        rating,
+        ratingLabel: typeof packet.ratingLabel === "string" ? packet.ratingLabel : rating.toLowerCase(),
+        ratingFlavor: typeof packet.ratingFlavor === "string" ? packet.ratingFlavor : "",
+        receivedAt: Date.now(),
+      });
       break;
     }
 

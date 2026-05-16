@@ -123,6 +123,13 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses consider with full and short aliases`() {
+        assertEquals(Command.Consider("orc"), CommandParser.parse("consider orc"))
+        assertEquals(Command.Consider("orc"), CommandParser.parse("con orc"))
+        assertTrue(CommandParser.parse("consider") is Command.Invalid)
+    }
+
+    @Test
     fun `parses look direction`() {
         val c1 = CommandParser.parse("look north")
         assertEquals(Command.LookDir(Direction.NORTH), c1)

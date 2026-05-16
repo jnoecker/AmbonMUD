@@ -169,6 +169,41 @@ class GmcpEmitter(
         emit(sessionId, "Char.Vitals", payload)
     }
 
+    /**
+     * Push a one-shot threat assessment to the player's web client so it can render a
+     * `consider` panel — verbal rating, win percentage, hits-to-kill comparison, and
+     * the underlying numbers driving the call. Routed under the Char.Combat package
+     * family so it ships under the same auto-opt-in subscription as Char.Combat.
+     */
+    suspend fun sendCombatConsider(
+        sessionId: SessionId,
+        result: ConsiderResult,
+    ) {
+        emit(
+            sessionId,
+            "Char.Combat.Consider",
+            CombatConsiderPayload(
+                mobId = result.mobId,
+                mobName = result.mobName,
+                mobLevel = result.mobLevel,
+                mobMaxHp = result.mobMaxHp,
+                mobCategory = result.mobCategory,
+                mobImage = result.mobImage,
+                playerLevel = result.playerLevel,
+                playerMaxHp = result.playerMaxHp,
+                playerAvgDamage = result.playerAvgDamage,
+                mobAvgDamage = result.mobAvgDamage,
+                hitsToKillMob = result.hitsToKillMob,
+                hitsToKillPlayer = result.hitsToKillPlayer,
+                dodgeChancePct = result.dodgeChancePct,
+                winChancePct = result.winChancePct,
+                rating = result.rating.name,
+                ratingLabel = result.rating.label,
+                ratingFlavor = result.rating.flavor,
+            ),
+        )
+    }
+
     suspend fun sendCharCombat(sessionId: SessionId) {
         val target = getCombatTarget(sessionId)
         emit(
@@ -2280,6 +2315,27 @@ class GmcpEmitter(
         val targetMaxHp: Int?,
         val targetImage: String?,
         val targetCategory: String?,
+    )
+
+    @Suppress("unused") // Jackson serializes all fields
+    private data class CombatConsiderPayload(
+        val mobId: String,
+        val mobName: String,
+        val mobLevel: Int,
+        val mobMaxHp: Int,
+        val mobCategory: String,
+        val mobImage: String?,
+        val playerLevel: Int,
+        val playerMaxHp: Int,
+        val playerAvgDamage: Int,
+        val mobAvgDamage: Int,
+        val hitsToKillMob: Int,
+        val hitsToKillPlayer: Int,
+        val dodgeChancePct: Int,
+        val winChancePct: Int,
+        val rating: String,
+        val ratingLabel: String,
+        val ratingFlavor: String,
     )
 
     private data class ZoneMapPayload(

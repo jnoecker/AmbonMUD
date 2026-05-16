@@ -53,6 +53,7 @@ import type {
   LevelUpNotification,
   LoginErrorState,
   LoginPromptState,
+  ConsiderResult,
   LookTargetInfo,
   LotteryInfo,
   MailEntry,
@@ -290,6 +291,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
   const [staffMobTemplates, setStaffMobTemplates] = useState<StaffMobZone[]>([]);
   const [lookTarget, setLookTarget] = useState<LookTargetInfo | null>(null);
+  const [considerResult, setConsiderResult] = useState<ConsiderResult | null>(null);
   const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
 
   // ── UI chrome ─────────────────────────────────────
@@ -536,6 +538,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         pushBroadcast: (sender: string, message: string) => setBroadcast({ sender, message }),
         setPossessing,
         setLookTarget,
+        setConsiderResult,
         setCraftingSkills,
         setCraftingRecipes,
         setCraftingNodes,
@@ -606,6 +609,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setWhoPlayers([]);
     setZoneInstances({ zone: null, currentEngineId: null, instances: [] });
     setCombatTarget(null);
+    setConsiderResult(null);
     setCharStats(null);
     setQuests([]);
     setQuestsAvailable([]);
@@ -701,7 +705,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     loginPrompt, loginError, reconnecting, setReconnecting, savedCharacters, setSavedCharacters,
     // Staff / meta
     serverAssets, serverCommands, emotePresets, serverFeatures, staffWorldInfo, staffMobTemplates,
-    lookTarget, setLookTarget, spriteList,
+    lookTarget, setLookTarget, considerResult, setConsiderResult, spriteList,
     // UI
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,
     levelUpNotification, setLevelUpNotification,

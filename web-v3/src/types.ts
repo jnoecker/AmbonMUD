@@ -400,6 +400,36 @@ export interface CombatTarget {
   targetCategory: string | null;
 }
 
+export type ConsiderRating =
+  | "TRIVIAL"
+  | "EASY"
+  | "FAVORED"
+  | "EVEN"
+  | "RISKY"
+  | "DANGEROUS"
+  | "SUICIDAL";
+
+export interface ConsiderResult {
+  mobId: string;
+  mobName: string;
+  mobLevel: number;
+  mobMaxHp: number;
+  mobCategory: string;
+  mobImage: string | null;
+  playerLevel: number;
+  playerMaxHp: number;
+  playerAvgDamage: number;
+  mobAvgDamage: number;
+  hitsToKillMob: number;
+  hitsToKillPlayer: number;
+  dodgeChancePct: number;
+  winChancePct: number;
+  rating: ConsiderRating;
+  ratingLabel: string;
+  ratingFlavor: string;
+  receivedAt: number;
+}
+
 /**
  * Per-skill visual archetype that drives how the web client renders the
  * cast moment. Sent in the Char.Skills GMCP payload as `visual.archetype`.

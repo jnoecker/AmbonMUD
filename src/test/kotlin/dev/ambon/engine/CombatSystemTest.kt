@@ -1361,4 +1361,75 @@ class CombatSystemTest {
             assertNull(combat.startCombat(sid, "rat"))
             assertEquals(listOf(sid), entered)
         }
+
+    @Test
+    fun `consider returns easy rating against a weak mob`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:rat"),
+                    "a rat",
+                    fixture.roomId,
+                    hp = 4,
+                    maxHp = 4,
+                    damage = DamageRange(1, 1),
+                    level = 1,
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(minDamage = 4, maxDamage = 4)
+            val sid = SessionId(70L)
+            fixture.players.loginOrFail(sid, "Hero")
+
+            val outcome = combat.consider(sid, "rat")
+            assertTrue(outcome is ConsiderOutcome.Ok, "expected Ok, got $outcome")
+            val result = (outcome as ConsiderOutcome.Ok).result
+            assertEquals("a rat", result.mobName)
+            assertTrue(
+                result.rating in setOf(ConsiderRating.TRIVIAL, ConsiderRating.EASY),
+                "expected easy/trivial rating, got ${result.rating} (win%=${result.winChancePct})",
+            )
+            assertTrue(result.winChancePct >= 75, "expected high win chance, got ${result.winChancePct}")
+            assertEquals(1, result.hitsToKillMob)
+        }
+
+    @Test
+    fun `consider returns suicidal rating against an overwhelming mob`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:dragon"),
+                    "an ancient dragon",
+                    fixture.roomId,
+                    hp = 10_000,
+                    maxHp = 10_000,
+                    damage = DamageRange(500, 500),
+                    level = 60,
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(minDamage = 1, maxDamage = 1)
+            val sid = SessionId(71L)
+            fixture.players.loginOrFail(sid, "Squire")
+
+            val outcome = combat.consider(sid, "dragon")
+            val result = (outcome as ConsiderOutcome.Ok).result
+            assertEquals(ConsiderRating.SUICIDAL, result.rating)
+            assertTrue(result.winChancePct < 10, "expected very low win chance, got ${result.winChancePct}")
+        }
+
+    @Test
+    fun `consider rejects unknown target`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val combat = fixture.buildCombat()
+            val sid = SessionId(72L)
+            fixture.players.loginOrFail(sid, "Wanderer")
+
+            val outcome = combat.consider(sid, "ghost")
+            assertTrue(outcome is ConsiderOutcome.Error)
+            assertTrue((outcome as ConsiderOutcome.Error).message.contains("don't see"))
+        }
 }
