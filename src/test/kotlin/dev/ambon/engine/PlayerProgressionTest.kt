@@ -229,6 +229,24 @@ class PlayerProgressionTest {
     }
 
     @Test
+    fun `maxHpForLevel saturates to Int_MAX_VALUE under runaway scaling instead of collapsing`() {
+        // A pathological-but-accepted rate: 10.0 at maxLevel 50 yields base * 10^49,
+        // far past Long range. Without saturation, scaledBase.toLong() = Long.MAX_VALUE
+        // then + statBonus overflows negative and coerceAtLeast(baseValue) clamps back
+        // to baseValue. With saturation, the result is Int.MAX_VALUE.
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 50,
+                    rewards = LevelRewardsConfig(hpScalingRate = 10.0, baseHp = 100),
+                ),
+            )
+        // Above BASE_STAT so statBonus is positive and would have triggered the overflow path.
+        val result = progression.maxHpForLevel(level = 50, statValue = PlayerState.BASE_STAT + 10)
+        assertEquals(Int.MAX_VALUE, result)
+    }
+
+    @Test
     fun `grantXp uses level formula as max hp source of truth`() {
         val progression =
             PlayerProgression(

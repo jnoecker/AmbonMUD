@@ -146,7 +146,7 @@ class PlayerProgression(
         } else {
             floor(baseValue.toDouble() * scalingRate.pow(steps))
         }
-        if (!scaledBase.isFinite()) return Int.MAX_VALUE
+        if (!scaledBase.isFinite() || scaledBase >= Int.MAX_VALUE.toDouble()) return Int.MAX_VALUE
         val scaledBaseLong = scaledBase.toLong().coerceAtLeast(baseValue.toLong())
         val statBonus = if (divisor > 0) ((stat - PlayerState.BASE_STAT) / divisor).toLong() * steps.toLong() else 0L
         return (scaledBaseLong + statBonus)
