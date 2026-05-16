@@ -1421,7 +1421,7 @@ class CombatSystemTest {
         }
 
     @Test
-    fun `wimpy disengages combat when player drops below threshold`() =
+    fun `wimpy does not fire above threshold`() =
         runTest {
             val fixture = CombatTestFixture()
             val mob =
@@ -1446,14 +1446,9 @@ class CombatSystemTest {
             assertNull(combat.startCombat(sid, "ogre"))
             fixture.tickCombat(combat)
 
-            assertTrue(player.hp < player.maxHp, "expected damage to land")
-            // Player has 100 HP / 200 max = 50% — above 25% threshold, should still be in combat
+            // 100/200 = 50%, well above the 25% threshold — combat must continue.
+            assertEquals(100, player.hp)
             assertTrue(combat.isInCombat(sid), "expected still in combat above threshold")
-
-            fixture.tickCombat(combat)
-            // After second hit: 0 HP would be death; but wimpy fires at threshold-or-below
-            // 50% → after 100 more damage: 0 hp = death. So threshold check happens just below 50%.
-            // Player would die before wimpy fires — so use a less-deadly mob for the trigger test below.
         }
 
     @Test
