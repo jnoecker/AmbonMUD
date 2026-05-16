@@ -8,6 +8,14 @@ private val logger = KotlinLogging.logger {}
 /** Maximum allowed value for per-session outbound queue capacity to prevent OOM from misconfiguration. */
 private const val MAX_SESSION_OUTBOUND_QUEUE_CAPACITY = 100_000
 
+/**
+ * Soft upper bound on multiplicative scaling rates. Mirrors Arcanum's
+ * `validateConfig` `[1.0, 2.0]` range — values above this are valid math but
+ * indicate a likely typo (a rate of 2.0 already produces ~500M× growth over
+ * 30 levels). Rates above this trigger a warning, not an error.
+ */
+private const val MAX_SCALING_RATE = 2.0
+
 /** Selects the player persistence backend. */
 enum class PersistenceBackend { YAML, POSTGRES }
 
@@ -283,6 +291,24 @@ data class AppConfig(
             if (def.threatMultiplier < 0.0) {
                 warnConfig("engine.classes.definitions.$key.threatMultiplier is ${def.threatMultiplier}, expected >= 0")
             }
+            require(def.hpScalingRate >= 1.0) {
+                "ambonMUD.engine.classes.definitions.$key.hpScalingRate must be >= 1.0"
+            }
+            require(def.manaScalingRate >= 1.0) {
+                "ambonMUD.engine.classes.definitions.$key.manaScalingRate must be >= 1.0"
+            }
+            if (def.hpScalingRate > MAX_SCALING_RATE) {
+                warnConfig(
+                    "engine.classes.definitions.$key.hpScalingRate is ${def.hpScalingRate}, " +
+                        "expected <= $MAX_SCALING_RATE (rates above ~2x/level produce runaway growth)",
+                )
+            }
+            if (def.manaScalingRate > MAX_SCALING_RATE) {
+                warnConfig(
+                    "engine.classes.definitions.$key.manaScalingRate is ${def.manaScalingRate}, " +
+                        "expected <= $MAX_SCALING_RATE (rates above ~2x/level produce runaway growth)",
+                )
+            }
         }
     }
 
@@ -521,6 +547,18 @@ data class AppConfig(
         }
         require(progression.rewards.manaScalingRate >= 1.0) {
             "ambonMUD.progression.rewards.manaScalingRate must be >= 1.0"
+        }
+        if (progression.rewards.hpScalingRate > MAX_SCALING_RATE) {
+            warnConfig(
+                "progression.rewards.hpScalingRate is ${progression.rewards.hpScalingRate}, " +
+                    "expected <= $MAX_SCALING_RATE",
+            )
+        }
+        if (progression.rewards.manaScalingRate > MAX_SCALING_RATE) {
+            warnConfig(
+                "progression.rewards.manaScalingRate is ${progression.rewards.manaScalingRate}, " +
+                    "expected <= $MAX_SCALING_RATE",
+            )
         }
         require(progression.rewards.baseHp >= 1) { "ambonMUD.progression.rewards.baseHp must be >= 1" }
         require(progression.rewards.baseMana >= 0) { "ambonMUD.progression.rewards.baseMana must be >= 0" }
@@ -2682,4 +2720,17 @@ private fun validateMobTier(
         "ambonMUD.engine.mob.tiers.$name.baseGoldMax must be >= baseGoldMin"
     }
     require(tier.goldScalingRate >= 1.0) { "ambonMUD.engine.mob.tiers.$name.goldScalingRate must be >= 1.0" }
+    listOf(
+        "hpScalingRate" to tier.hpScalingRate,
+        "damageScalingRate" to tier.damageScalingRate,
+        "xpScalingRate" to tier.xpScalingRate,
+        "goldScalingRate" to tier.goldScalingRate,
+    ).forEach { (label, value) ->
+        if (value > MAX_SCALING_RATE) {
+            logger.warn {
+                "CONFIG WARNING: engine.mob.tiers.$name.$label is $value, expected <= " +
+                    "$MAX_SCALING_RATE (rates above ~2x/level produce runaway growth)"
+            }
+        }
+    }
 }
