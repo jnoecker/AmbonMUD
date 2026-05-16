@@ -17,3 +17,9 @@ items:
     damage: 3
     stats:
       CON: 1
+  cursed_amulet:
+    displayName: "a cursed iron amulet"
+    slot: neck
+    stats:
+      STR: 3
+      DEX: -2

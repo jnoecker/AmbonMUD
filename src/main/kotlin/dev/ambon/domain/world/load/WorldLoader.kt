@@ -484,11 +484,9 @@ object WorldLoader {
                 val armor = itemFile.armor
                 requireAtLeast(armor, 0, itemCtx, "armor")
 
-                for ((statKey, statVal) in itemFile.stats) {
-                    if (statVal < 0) {
-                        throw WorldLoadException("Item '${itemId.value}' stat '$statKey' cannot be negative")
-                    }
-                }
+                // Negative stat modifiers are allowed: builders use them for cursed / trade-off
+                // items (e.g. +STR / -DEX rings). Stats sum into total bonuses, so negatives
+                // simply lower the effective stat.
 
                 val charges = itemFile.charges
                 if (charges != null && charges <= 0) {

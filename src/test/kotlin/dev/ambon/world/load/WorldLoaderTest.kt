@@ -255,6 +255,12 @@ class WorldLoaderTest {
         assertEquals(3, sword.instance.item.damage)
         assertEquals(0, sword.instance.item.armor)
         assertEquals(1, sword.instance.item.stats["CON"])
+
+        // Cursed / trade-off items use negative stat modifiers — must load, not be rejected.
+        val amulet = items.getValue("ok_item_stats:cursed_amulet")
+        assertEquals(ItemSlot.NECK, amulet.instance.item.slot)
+        assertEquals(3, amulet.instance.item.stats["STR"])
+        assertEquals(-2, amulet.instance.item.stats["DEX"])
     }
 
     @Test
