@@ -31,6 +31,17 @@ sealed interface Command {
         val dir: Direction,
     ) : Command
 
+    /** Executes a sequence of moves as if the player typed each individually. */
+    data class Run(
+        val steps: List<Direction>,
+    ) : Command
+
+    /** Lists known zones, optionally filtered to those overlapping a level range. */
+    data class Areas(
+        val minLevel: Int?,
+        val maxLevel: Int?,
+    ) : Command
+
     data class LookDir(
         val dir: Direction,
     ) : Command
@@ -1035,6 +1046,14 @@ object CommandParser {
             Command.Time
         }?.let { return it }
 
+        matchPrefix(line, listOf("areas", "area")) { rest ->
+            parseAreasArgs(rest, line)
+        }?.let { return it }
+
+        matchPrefix(line, listOf("run")) { rest ->
+            parseRunArg(rest, line)
+        }?.let { return it }
+
         matchPrefix(line, listOf("whisper", "wh")) { rest ->
             parseTargetMessage(rest, line, "whisper <target> <msg>") { target, msg -> Command.Whisper(target, msg) }
         }?.let { return it }
@@ -1721,6 +1740,57 @@ object CommandParser {
             }
         }
         return null
+    }
+
+    /** Maximum steps a single `run` command can expand to. */
+    const val MAX_RUN_STEPS = 100
+
+    private fun parseAreasArgs(rest: String, line: String): Command {
+        val trimmed = rest.trim()
+        if (trimmed.isEmpty()) return Command.Areas(null, null)
+        val parts = trimmed.split(Regex("\\s+"))
+        return when (parts.size) {
+            1 -> {
+                val n = parts[0].toIntOrNull()
+                if (n == null || n < 0) {
+                    Command.Invalid(line, "areas [<minLevel> [<maxLevel>]]")
+                } else {
+                    Command.Areas(n, n)
+                }
+            }
+            2 -> {
+                val min = parts[0].toIntOrNull()
+                val max = parts[1].toIntOrNull()
+                if (min == null || max == null || min < 0 || max < min) {
+                    Command.Invalid(line, "areas <minLevel> <maxLevel> (max >= min, both >= 0)")
+                } else {
+                    Command.Areas(min, max)
+                }
+            }
+            else -> Command.Invalid(line, "areas [<minLevel> [<maxLevel>]]")
+        }
+    }
+
+    private fun parseRunArg(rest: String, line: String): Command {
+        val raw = rest.replace("\\s+".toRegex(), "").lowercase()
+        if (raw.isEmpty()) return Command.Invalid(line, "run <directions> (e.g. 5n3e or nnsw)")
+        val steps = mutableListOf<Direction>()
+        var i = 0
+        while (i < raw.length) {
+            val countStart = i
+            while (i < raw.length && raw[i].isDigit()) i++
+            val count = if (i == countStart) 1 else raw.substring(countStart, i).toIntOrNull() ?: 0
+            if (count < 1) return Command.Invalid(line, "run <directions> — step count must be >= 1")
+            if (i >= raw.length) return Command.Invalid(line, "run <directions> — trailing count with no direction")
+            val dir = parseDirectionOrNull(raw[i].toString())
+                ?: return Command.Invalid(line, "run <directions> — unknown direction '${raw[i]}'")
+            if (count > MAX_RUN_STEPS - steps.size) {
+                return Command.Invalid(line, "run <directions> — too many steps (max $MAX_RUN_STEPS)")
+            }
+            repeat(count) { steps.add(dir) }
+            i++
+        }
+        return Command.Run(steps)
     }
 
     private fun parseDirectionOrNull(s: String): Direction? =

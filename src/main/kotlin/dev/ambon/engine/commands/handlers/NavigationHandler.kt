@@ -5,7 +5,9 @@ import dev.ambon.config.RecallConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.LockableState
+import dev.ambon.domain.world.Room
 import dev.ambon.engine.GuildHallSystem
 import dev.ambon.engine.HouseEntryResult
 import dev.ambon.engine.HousingSystem
@@ -60,12 +62,50 @@ class NavigationHandler(
         this.router = router
         router.on<Command.Look> { sid, _ -> handleLook(sid) }
         router.on<Command.Move> { sid, cmd -> handleMove(sid, cmd) }
+        router.on<Command.Run> { sid, cmd -> handleRun(sid, cmd) }
         router.on<Command.Exits> { sid, _ -> handleExits(sid) }
         router.on<Command.LookDir> { sid, cmd -> handleLookDir(sid, cmd) }
         router.on<Command.LookAt> { sid, cmd -> handleLookAt(sid, cmd) }
         router.on<Command.Recall> { sid, _ -> handleRecall(sid) }
         router.on<Command.Depart> { sid, _ -> handleDepart(sid) }
         router.on<Command.Petition> { sid, cmd -> handlePetition(sid, cmd) }
+    }
+
+    private suspend fun handleRun(sessionId: SessionId, cmd: Command.Run) {
+        if (cmd.steps.isEmpty()) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Usage: run <directions> (e.g. 5n3e)"))
+            return
+        }
+        for (dir in cmd.steps) {
+            val me = players.get(sessionId) ?: return
+            val room = world.rooms[me.roomId]
+            // If the next step initiates an async cross-zone handoff, run it and stop
+            // — subsequent steps would race against the async transfer.
+            val crossesZone = room != null && willCrossZone(sessionId, room, dir)
+            handleMove(sessionId, Command.Move(dir))
+            if (crossesZone) return
+        }
+    }
+
+    /**
+     * Mirrors the cross-zone decision points in [handleMove]: standard remote
+     * exits, puzzle-unlocked exits whose target is off-engine, and house / guild
+     * hall exits whose resolved origin is off-engine. Any of these dispatch the
+     * move through the async [attemptCrossZoneMove] path, so a `run` must stop
+     * after issuing them.
+     */
+    private fun willCrossZone(sessionId: SessionId, room: Room, dir: Direction): Boolean {
+        if (room.remoteExits.contains(dir)) return true
+        val to = room.exits[dir] ?: puzzleSystem?.getUnlockedExitTarget(room.id, dir) ?: return false
+        if (housingSystem?.isHouseExit(to) == true) {
+            val origin = housingSystem.resolveHouseExit(sessionId) ?: return false
+            return !world.rooms.containsKey(origin)
+        }
+        if (guildHallSystem?.isGuildHallExit(to) == true) {
+            val origin = guildHallSystem.resolveHallExit(sessionId) ?: return false
+            return !world.rooms.containsKey(origin)
+        }
+        return !world.rooms.containsKey(to)
     }
 
     private suspend fun handleLook(sessionId: SessionId) {

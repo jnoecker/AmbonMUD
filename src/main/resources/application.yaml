@@ -912,6 +912,16 @@ ambonmud:
           usage: recall
           category: navigation
           staff: false
+        run:
+          usage: run <directions> (e.g. 5n3e)
+          description: Move along a sequence of directions. Numeric prefixes repeat — '5n3e' walks five north then three east.
+          category: navigation
+          staff: false
+        areas:
+          usage: areas [<minLevel> [<maxLevel>]]
+          description: List known areas. With one level, shows areas covering that level; with two, shows areas overlapping the range.
+          category: navigation
+          staff: false
         say:
           usage: say <msg> or '<msg>
           category: communication
