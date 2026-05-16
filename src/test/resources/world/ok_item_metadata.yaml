@@ -1,0 +1,26 @@
+zone: ok_item_metadata
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  sword:
+    displayName: "a short sword"
+    slot: weapon
+    damage: 5
+    stats:
+      STR: 2
+    level: 10
+    tier: rare
+    archetype: damage
+    primaryStat: STR
+    secondaryStat: DEX
+  helm:
+    displayName: "a leather cap"
+    slot: head
+    armor: 2
+    level: 5
+    tier: common
+    archetype: armor
+    primaryStat: CON
