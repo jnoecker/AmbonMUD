@@ -27,6 +27,21 @@ import dev.ambon.persistence.InMemoryPlayerRepository
 import java.time.Clock
 import java.util.Random
 
+/**
+ * Stat bindings that disable level scaling, stat scaling, and variance so a
+ * single basic-attack swing produces exactly [unarmedAttackPower] damage
+ * against a 0-armor target. Used by tests that pin specific damage numbers
+ * without caring about the new scaling formula.
+ */
+fun deterministicMeleeBindings(unarmedAttackPower: Int = 1): StatBindingsConfig =
+    StatBindingsConfig(
+        meleeStatMultiplier = 0.0,
+        meleeLevelScalingRate = 1.0,
+        meleeVarianceMin = 1.0,
+        meleeVarianceMax = 1.0,
+        meleeBaseAttackPower = unarmedAttackPower,
+    )
+
 class CombatTestFixture(
     override val roomId: RoomId = TEST_ROOM_ID,
     val clock: MutableClock = MutableClock(0L),
@@ -44,15 +59,19 @@ class CombatTestFixture(
         clock: Clock = this.clock,
         rng: Random = Random(),
         tickMillis: Long = 1_000L,
+        // Legacy knobs preserved for tests authored before the formula rework.
+        // `minDamage`/`maxDamage` get translated into the new bindings as
+        // unarmedAttackPower with deterministic-no-variance scaling so each
+        // swing produces a predictable damage value matching the old behavior.
         minDamage: Int = 1,
-        maxDamage: Int = 4,
+        maxDamage: Int = 1,
         detailedFeedbackEnabled: Boolean = false,
         detailedFeedbackRoomBroadcastEnabled: Boolean = false,
         onMobRemoved: suspend (MobId, RoomId) -> Unit = { _, _ -> },
         progression: PlayerProgression = PlayerProgression(),
         metrics: GameMetrics = GameMetrics.noop(),
         onLevelUp: suspend (SessionId, LevelUpResult) -> Unit = { _, _ -> },
-        bindings: StatBindingsConfig = StatBindingsConfig(),
+        bindings: StatBindingsConfig = deterministicMeleeBindings(unarmedAttackPower = minDamage),
         dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
         statusEffects: StatusEffectSystem? = null,
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
@@ -62,8 +81,12 @@ class CombatTestFixture(
         classRegistry: PlayerClassRegistry? = null,
         onRoomItemsChanged: suspend (RoomId) -> Unit = { _ -> },
         petSystem: PetSystem? = null,
-    ): CombatSystem =
-        CombatSystem(
+    ): CombatSystem {
+        require(minDamage == maxDamage) {
+            "Test fixture damage range collapsed to a single value (was $minDamage..$maxDamage). " +
+                "If you need variance, pass an explicit `bindings = StatBindingsConfig(...)`."
+        }
+        return CombatSystem(
             players = players,
             mobs = mobs,
             items = items,
@@ -77,8 +100,6 @@ class CombatTestFixture(
             groupSystem = groupSystem,
             config = CombatSystemConfig(
                 tickMillis = tickMillis,
-                minDamage = minDamage,
-                maxDamage = maxDamage,
                 healingThreatMultiplier = healingThreatMultiplier,
                 groupXpBonusPerMember = groupXpBonusPerMember,
                 detailedFeedbackEnabled = detailedFeedbackEnabled,
@@ -94,6 +115,7 @@ class CombatTestFixture(
             classRegistry = classRegistry,
             petSystem = petSystem,
         )
+    }
 
     /**
      * Advance the clock by one combat tick interval and run combat.tick().

@@ -186,9 +186,11 @@ class CommandRouterItemsTest {
             assertEquals(0, h.items.inventory(sid).size)
             val equipped = h.items.equipment(sid)
             assertEquals("cap", equipped.getValue(ItemSlot.HEAD).item.keyword)
+            // Armor no longer doubles as a max-HP bonus — it mitigates incoming damage now,
+            // so equipping a cap should leave both maxHp and current hp at their level-1 baseline.
             val player = h.players.get(sid)
-            assertEquals(11, player!!.maxHp)
-            assertEquals(11, player.hp)
+            assertEquals(10, player!!.maxHp)
+            assertEquals(10, player.hp)
 
             val outs = h.drain()
             assertTrue(
@@ -393,7 +395,8 @@ class CommandRouterItemsTest {
             h.router.handle(sid, Command.Wear("cap"))
             h.drain()
 
-            assertEquals(11, h.players.get(sid)!!.maxHp)
+            // Armor no longer inflates maxHp — equipping the cap leaves the player at 10/10.
+            assertEquals(10, h.players.get(sid)!!.maxHp)
             h.router.handle(sid, Command.Use("cap"))
 
             assertTrue(h.items.equipment(sid).isEmpty())
@@ -453,7 +456,8 @@ class CommandRouterItemsTest {
             h.router.handle(aliceSid, Command.Wear("cap"))
             h.drain()
 
-            assertEquals(11, h.players.get(aliceSid)!!.maxHp)
+            // Armor → maxHp coupling is gone; armor now only mitigates damage.
+            assertEquals(10, h.players.get(aliceSid)!!.maxHp)
             h.router.handle(aliceSid, Command.Give("cap", "Bob2"))
 
             assertTrue(h.items.equipment(aliceSid).isEmpty())

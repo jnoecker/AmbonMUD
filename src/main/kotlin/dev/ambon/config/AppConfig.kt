@@ -187,10 +187,6 @@ data class AppConfig(
     private fun validateEngineCombat() {
         engine.combat.maxCombatsPerTick.requirePositive("ambonMUD.engine.combat.maxCombatsPerTick")
         engine.combat.tickMillis.requirePositive("ambonMUD.engine.combat.tickMillis")
-        engine.combat.minDamage.requirePositive("ambonMUD.engine.combat.minDamage")
-        require(engine.combat.maxDamage >= engine.combat.minDamage) {
-            "ambonMUD.engine.combat.maxDamage must be >= minDamage"
-        }
         require(!engine.combat.feedback.roomBroadcastEnabled || engine.combat.feedback.enabled) {
             "ambonMUD.engine.combat.feedback.roomBroadcastEnabled requires feedback.enabled=true"
         }
@@ -333,7 +329,19 @@ data class AppConfig(
                 warnConfig("engine.stats.bindings.$bindingName references unknown stat '${statId.uppercase()}'")
             }
         }
-        b.meleeDamageDivisor.requirePositive("ambonMUD.engine.stats.bindings.meleeDamageDivisor")
+        require(b.meleeStatMultiplier >= 0.0) { "ambonMUD.engine.stats.bindings.meleeStatMultiplier must be >= 0" }
+        require(b.meleeLevelScalingRate >= 1.0) {
+            "ambonMUD.engine.stats.bindings.meleeLevelScalingRate must be >= 1.0 (use 1.0 to disable)"
+        }
+        require(b.meleeVarianceMin > 0.0 && b.meleeVarianceMax >= b.meleeVarianceMin) {
+            "ambonMUD.engine.stats.bindings.meleeVarianceMin/Max must satisfy 0 < min <= max"
+        }
+        require(b.meleeBaseAttackPower >= 0) {
+            "ambonMUD.engine.stats.bindings.meleeBaseAttackPower must be >= 0"
+        }
+        require(b.meleeArmorMitigationK > 0.0) {
+            "ambonMUD.engine.stats.bindings.meleeArmorMitigationK must be > 0"
+        }
         require(b.dodgePerPoint >= 0) { "ambonMUD.engine.stats.bindings.dodgePerPoint must be >= 0" }
         require(b.maxDodgePercent in 0..100) { "ambonMUD.engine.stats.bindings.maxDodgePercent must be in 0..100" }
         b.spellDamageDivisor.requirePositive("ambonMUD.engine.stats.bindings.spellDamageDivisor")
@@ -1933,7 +1941,41 @@ data class StatDefinitionConfig(
 
 data class StatBindingsConfig(
     val meleeDamageStat: String = "STR",
-    val meleeDamageDivisor: Int = 3,
+    /**
+     * Multiplicative bonus per stat point above [StatDefinitionConfig.baseStat]
+     * for basic melee attacks. The bonus is added to attackPower *before* level
+     * scaling, so it compounds with level — keep the multiplier modest so stat
+     * allocation doesn't dominate gear at high levels. At 0.25 a player with
+     * STR 14 gains +1 to the core, which then scales by levelScalingRate.
+     */
+    val meleeStatMultiplier: Double = 0.25,
+    /**
+     * Per-level multiplicative growth applied to the (attackPower + statBonus)
+     * core of a basic melee swing. Mirrors `progression.rewards.hpScalingRate`
+     * so player damage tracks player HP across the level curve.
+     */
+    val meleeLevelScalingRate: Double = 1.30,
+    /** Lower bound of the multiplicative variance roll applied to the core. */
+    val meleeVarianceMin: Double = 0.85,
+    /** Upper bound of the multiplicative variance roll applied to the core. */
+    val meleeVarianceMax: Double = 1.15,
+    /**
+     * Baseline attack power every player always contributes (fist swing on top
+     * of any weapon). Final attackPower is `meleeBaseAttackPower + equipmentAttack`,
+     * so a low-damage weapon is still strictly better than fists.
+     */
+    val meleeBaseAttackPower: Int = 1,
+    /**
+     * Half-mitigation constant for the multiplicative armor formula:
+     *   mitigation = armor / (armor + meleeArmorMitigationK)
+     *   final     = round(raw * (1 - mitigation))
+     *
+     * At K=20, armor 5 ≈ 20% reduction, armor 20 ≈ 50%. Self-scaling: armor
+     * matters the same proportion whether raw damage is 5 or 50,000, which
+     * fixes the "flat armor evaporates at high level" problem of subtractive
+     * mitigation. Applied symmetrically to both player→mob and mob→player.
+     */
+    val meleeArmorMitigationK: Double = 20.0,
     val dodgeStat: String = "DEX",
     val dodgePerPoint: Int = 2,
     val maxDodgePercent: Int = 30,
@@ -2181,8 +2223,6 @@ data class MobEngineConfig(
 data class CombatEngineConfig(
     val maxCombatsPerTick: Int = 20,
     val tickMillis: Long = 2_000L,
-    val minDamage: Int = 1,
-    val maxDamage: Int = 4,
     val feedback: CombatFeedbackConfig = CombatFeedbackConfig(),
 )
 

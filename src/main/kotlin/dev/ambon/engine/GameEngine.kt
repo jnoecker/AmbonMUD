@@ -717,8 +717,6 @@ class GameEngine(
             groupSystem = groupSystem,
             config = CombatSystemConfig(
                 tickMillis = engineConfig.combat.tickMillis,
-                minDamage = engineConfig.combat.minDamage,
-                maxDamage = engineConfig.combat.maxDamage,
                 groupXpBonusPerMember = engineConfig.group.xpBonusPerMember,
                 detailedFeedbackEnabled = engineConfig.combat.feedback.enabled,
                 detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
@@ -2797,13 +2795,18 @@ class GameEngine(
             return
         }
 
-        // Damage calculation (same formula as mob combat)
-        val baseDmg = rollRange(duelRng, engineConfig.combat.minDamage, engineConfig.combat.maxDamage)
-        val strBonus = (attackerStats["STR"] - 10) / 3
-        val eqBonus = items.equipmentBonuses(attackerSid).attack
+        // Same melee formula as PvE/PvP basic attacks — see computePlayerMeleeSwing.
+        val eqAttack = items.equipmentBonuses(attackerSid).attack
         val defArmor = items.equipmentBonuses(defenderSid).armor
-        val rawDamage = baseDmg + strBonus + eqBonus
-        val damage = (rawDamage - defArmor).coerceAtLeast(1)
+        val swing = computePlayerMeleeSwing(
+            bindings = engineConfig.stats.bindings,
+            level = attacker.level,
+            stats = attackerStats,
+            equipAttack = eqAttack,
+            enemyArmor = defArmor,
+            rng = duelRng,
+        )
+        val damage = swing.final
 
         // Apply damage (clamp to 1 HP minimum — duels don't kill)
         defender.hp = (defender.hp - damage).coerceAtLeast(1)

@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.DeathConfig
 import dev.ambon.config.StatBindingsConfig
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -16,11 +17,12 @@ import dev.ambon.metrics.GameMetrics
 import java.time.Clock
 import java.util.Random
 import kotlin.math.ceil
+import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 data class CombatSystemConfig(
     val tickMillis: Long = 1_000L,
-    val minDamage: Int = 1,
-    val maxDamage: Int = 4,
     val healingThreatMultiplier: Double = 0.5,
     val groupXpBonusPerMember: Double = 0.10,
     val detailedFeedbackEnabled: Boolean = false,
@@ -129,9 +131,24 @@ class CombatSystem(
         var nextTickAtMs: Long,
     )
 
-    // Expose base damage range for display (e.g. score screen) without leaking full config.
-    internal val minDamage: Int get() = config.minDamage
-    internal val maxDamage: Int get() = config.maxDamage
+    /**
+     * Min/max damage [player] would deal against a 0-armor target with [equipAttack]
+     * gear contribution. Drives the `score` screen's "Dmg: a–b" display — uses the
+     * same formula as actual swings, with variance bounds replacing the random roll.
+     */
+    fun damageRangeForDisplay(player: PlayerState, stats: StatMap, equipAttack: Int): IntRange {
+        // 0 armor — score display is "what you'd do to an unarmored target"; mob-specific
+        // mitigation shows up in `consider`, not here.
+        val b = config.bindings
+        val attackPower = b.meleeBaseAttackPower + equipAttack
+        val statTotal = stats[b.meleeDamageStat]
+        val statBonus = (statTotal - PlayerState.BASE_STAT) * b.meleeStatMultiplier
+        val levelScale = b.meleeLevelScalingRate.pow((player.level - 1).coerceAtLeast(0))
+        val core = (attackPower + statBonus) * levelScale
+        val lo = (core * b.meleeVarianceMin).roundToInt().coerceAtLeast(1)
+        val hi = (core * b.meleeVarianceMax).roundToInt().coerceAtLeast(lo)
+        return lo..hi
+    }
 
     // Which mob each player is attacking
     private val playerTarget = mutableMapOf<SessionId, MobId>()
@@ -141,8 +158,6 @@ class CombatSystem(
 
     // Threat table: per-mob, tracks cumulative threat from each player
     internal val threatTable = ThreatTable()
-
-    private val defenseByPlayer = mutableMapOf<SessionId, Int>()
 
     // Per-mob spell cooldown tracking: mobId -> (spellId -> nextCastAtMs)
     private val mobSpellCooldowns = mutableMapOf<MobId, MutableMap<String, Long>>()
@@ -187,9 +202,14 @@ class CombatSystem(
         keyword: String,
     ): MobState? = findMobsInRoom(roomId, keyword).firstOrNull()
 
+    /**
+     * No-op kept for callers (item equip/unequip hooks) that used to trigger a
+     * maxHP recompute when equipment armor changed. Armor now mitigates damage
+     * multiplicatively instead — there's nothing for the engine to sync, but
+     * removing the function would touch every call site for no gain.
+     */
     fun syncPlayerDefense(sessionId: SessionId) {
-        val player = players.get(sessionId) ?: return
-        syncPlayerDefense(player, items.equipmentBonuses(sessionId).armor)
+        // intentionally empty
     }
 
     suspend fun startCombat(
@@ -259,13 +279,7 @@ class CombatSystem(
 
         val stats = resolvePlayerStats(player, items, statusEffects)
         val equip = items.equipmentBonuses(sessionId)
-        val strBonus =
-            PlayerState.statBonus(
-                stats[config.bindings.meleeDamageStat],
-                config.bindings.meleeDamageDivisor,
-            )
-        val playerAvgRoll = (config.minDamage + config.maxDamage) / 2.0
-        val playerAvgDamage = (playerAvgRoll + equip.attack + strBonus - mob.armor).coerceAtLeast(1.0)
+        val playerAvgDamage = avgPlayerMeleeDamage(player, stats, equip, mob.armor)
 
         val mobAvgRoll = (mob.damage.min + mob.damage.max) / 2.0
         val dodgePct =
@@ -384,7 +398,6 @@ class CombatSystem(
             playerTarget[newSid] = mobId
         }
         threatTable.remapSession(oldSid, newSid)
-        defenseByPlayer.remapKey(oldSid, newSid)
 
         // Remap PvP combat state
         val pvpOpponent = pvpTarget.remove(oldSid)
@@ -408,7 +421,6 @@ class CombatSystem(
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         removePlayerFromCombat(sessionId)
         endPvpCombat(sessionId)
-        defenseByPlayer.remove(sessionId)
     }
 
     fun endCombatFor(sessionId: SessionId) {
@@ -530,15 +542,9 @@ class CombatSystem(
             if (!stunned) {
                 val attackerStats = resolvePlayerStats(attacker, items, statusEffects)
                 val attackerEquip = items.equipmentBonuses(state.attackerSid)
-                val strBonus = PlayerState.statBonus(
-                    attackerStats[config.bindings.meleeDamageStat],
-                    config.bindings.meleeDamageDivisor,
-                )
-                val roll = rollRange(rng, config.minDamage, config.maxDamage)
-                val rawDamage = roll + attackerEquip.attack + strBonus
                 val targetEquip = items.equipmentBonuses(state.targetSid)
-                val preClampDamage = rawDamage - targetEquip.armor
-                var effectiveDamage = preClampDamage.coerceAtLeast(1)
+                val swing = rollPlayerMeleeSwing(attacker, attackerStats, attackerEquip, targetEquip.armor)
+                var effectiveDamage = swing.final
 
                 if (statusEffects != null) {
                     effectiveDamage = statusEffects.absorbPlayerDamage(state.targetSid, effectiveDamage)
@@ -775,7 +781,6 @@ class CombatSystem(
             }
 
             val playerBonuses = items.equipmentBonuses(sessionId)
-            syncPlayerDefense(player, playerBonuses.armor)
 
             if (player.hp <= 0) {
                 metrics.onPlayerDeath()
@@ -796,20 +801,16 @@ class CombatSystem(
             val stunned = statusEffects?.hasPlayerEffect(sessionId, "stun") == true
             if (!stunned) {
                 val playerStats = resolvePlayerStats(player, items, statusEffects)
-                val playerAttack = playerBonuses.attack
-                val playerStrBonus = PlayerState.statBonus(playerStats[config.bindings.meleeDamageStat], config.bindings.meleeDamageDivisor)
-                val playerRoll = rollRange(rng, config.minDamage, config.maxDamage)
-                val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
-                val preClampPlayerDamage = rawPlayerDamage - mob.armor
-                val effectivePlayerDamage = preClampPlayerDamage.coerceAtLeast(1)
-                val playerArmorAbsorbed = (rawPlayerDamage - effectivePlayerDamage).coerceAtLeast(0)
-                val playerMinDamageClamped = preClampPlayerDamage < 1
+                val swing = rollPlayerMeleeSwing(player, playerStats, playerBonuses, mob.armor)
+                val effectivePlayerDamage = swing.final
                 val playerFeedbackSuffix =
                     combatFeedbackSuffix(
-                        roll = playerRoll,
-                        attackBonus = playerAttack,
-                        armorAbsorbed = playerArmorAbsorbed,
-                        clampedToMinimum = playerMinDamageClamped,
+                        roll = swing.raw,
+                        // `roll` is the post-formula pre-armor damage; the attackPower term
+                        // is already baked into it, so there's no separate +atk to surface.
+                        attackBonus = 0,
+                        armorAbsorbed = swing.armorAbsorbed,
+                        clampedToMinimum = swing.clampedToMinimum,
                     )
                 mob.takeDamage(effectivePlayerDamage)
                 dirtyNotifier.mobHpDirty(mob.id)
@@ -1209,15 +1210,20 @@ class CombatSystem(
             return
         }
         val mobRoll = rollRange(rng, mob.damage.min, mob.damage.max)
-        var mobDamage = mobRoll
+        // Equipment armor mitigates incoming mob damage with the same multiplicative
+        // curve the player uses against mobs — see applyArmorMitigation.
+        val targetArmor = items.equipmentBonuses(targetSid).armor
+        val postArmor = applyArmorMitigation(mobRoll, targetArmor, config.bindings.meleeArmorMitigationK)
+        val armorAbsorbed = mobRoll - postArmor
+        var mobDamage = postArmor
         if (statusEffects != null) {
             mobDamage = statusEffects.absorbPlayerDamage(targetSid, mobDamage)
         }
-        val shieldAbsorbed = mobRoll - mobDamage
+        val shieldAbsorbed = postArmor - mobDamage
         val mobFeedbackSuffix =
             combatFeedbackSuffix(
                 roll = mobRoll,
-                armorAbsorbed = 0,
+                armorAbsorbed = armorAbsorbed,
                 shieldAbsorbed = shieldAbsorbed,
             )
         target.takeDamage(mobDamage)
@@ -1577,6 +1583,20 @@ class CombatSystem(
     private fun threatMultiplier(player: PlayerState): Double =
         classRegistry?.get(player.playerClass)?.threatMultiplier ?: 1.0
 
+    private fun rollPlayerMeleeSwing(
+        player: PlayerState,
+        stats: StatMap,
+        equip: ItemRegistry.EquipmentBonuses,
+        enemyArmor: Int,
+    ): MeleeSwingResult = computePlayerMeleeSwing(config.bindings, player.level, stats, equip.attack, enemyArmor, rng)
+
+    private fun avgPlayerMeleeDamage(
+        player: PlayerState,
+        stats: StatMap,
+        equip: ItemRegistry.EquipmentBonuses,
+        enemyArmor: Int,
+    ): Double = expectedPlayerMeleeDamage(config.bindings, player.level, stats, equip.attack, enemyArmor)
+
     private fun combatFeedbackSuffix(
         roll: Int,
         attackBonus: Int = 0,
@@ -1599,25 +1619,6 @@ class CombatSystem(
             parts += "min 1 applied"
         }
         return " (${parts.joinToString(", ")})"
-    }
-
-    private fun syncPlayerDefense(player: PlayerState, currentDefense: Int) {
-        val sessionId = player.sessionId
-        val previousDefense = defenseByPlayer[sessionId] ?: 0
-        if (currentDefense == previousDefense) return
-
-        val delta = currentDefense - previousDefense
-        val newMaxHp = (player.maxHp + delta).coerceAtLeast(0)
-        player.maxHp = newMaxHp
-        player.hp =
-            if (delta > 0) {
-                (player.hp + delta).coerceAtMost(newMaxHp)
-            } else {
-                player.hp.coerceAtMost(newMaxHp)
-            }
-        if (player.hp < 0) player.hp = 0
-
-        defenseByPlayer[sessionId] = currentDefense
     }
 
     private fun findMobsInRoom(
@@ -1794,4 +1795,103 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendInfo(killerSessionId, "You loot $names."))
         callbacks.onRoomItemsChanged(roomId)
     }
+}
+
+/**
+ * Resolved single-swing for a basic melee attack. `raw` is pre-armor damage
+ * (what the feedback suffix calls "roll"); `final` is post-armor, clamped ≥ 1.
+ */
+internal data class MeleeSwingResult(
+    val raw: Int,
+    val final: Int,
+    val attackPower: Int,
+    val armorAbsorbed: Int,
+    val clampedToMinimum: Boolean,
+)
+
+/**
+ * Rolls a basic-melee swing using the config-driven formula:
+ *
+ * ```
+ * attackPower = meleeBaseAttackPower + equipAttack
+ * statBonus   = (stats[meleeDamageStat] - basePoint) × meleeStatMultiplier
+ * levelScale  = meleeLevelScalingRate ^ (level - 1)
+ * core        = (attackPower + statBonus) × levelScale
+ * raw         = round(core × uniform(varianceMin, varianceMax))
+ * mitigation  = enemyArmor / (enemyArmor + meleeArmorMitigationK)
+ * final       = round(raw × (1 - mitigation)).coerceAtLeast(1)
+ * ```
+ *
+ * Multiplicative armor mitigation is self-scaling: armor stays meaningful at
+ * every level because it reduces a *percentage* of damage rather than a flat
+ * amount. Applied symmetrically to mob → player attacks too.
+ *
+ * File-level so non-CombatSystem callers (duels, future PvP variants) can
+ * share the same formula instead of drifting their own copy.
+ */
+internal fun computePlayerMeleeSwing(
+    bindings: StatBindingsConfig,
+    level: Int,
+    stats: StatMap,
+    equipAttack: Int,
+    enemyArmor: Int,
+    rng: Random,
+): MeleeSwingResult {
+    val attackPower = bindings.meleeBaseAttackPower + equipAttack
+    val statTotal = stats[bindings.meleeDamageStat]
+    val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.meleeStatMultiplier
+    val levelScale = bindings.meleeLevelScalingRate.pow((level - 1).coerceAtLeast(0))
+    val core = (attackPower + statBonus) * levelScale
+    val varianceSpan = bindings.meleeVarianceMax - bindings.meleeVarianceMin
+    val variance =
+        if (varianceSpan <= 0.0) bindings.meleeVarianceMin else bindings.meleeVarianceMin + rng.nextDouble() * varianceSpan
+    val raw = (core * variance).roundToInt().coerceAtLeast(1)
+    // Inline so we can detect the "rounded to zero, floor applied" case for feedback —
+    // applyArmorMitigation auto-clamps so it would hide that signal.
+    val mitigation =
+        if (enemyArmor <= 0) 0.0 else enemyArmor.toDouble() / (enemyArmor.toDouble() + bindings.meleeArmorMitigationK)
+    val preClamp = (raw * (1.0 - mitigation)).roundToInt()
+    val final = preClamp.coerceAtLeast(1)
+    return MeleeSwingResult(
+        raw = raw,
+        final = final,
+        attackPower = attackPower,
+        armorAbsorbed = (raw - final).coerceAtLeast(0),
+        clampedToMinimum = preClamp < 1,
+    )
+}
+
+/**
+ * Expected damage per swing for the same inputs as [computePlayerMeleeSwing]
+ * but with the variance roll replaced by its midpoint. Drives the `consider`
+ * win-chance estimate.
+ */
+internal fun expectedPlayerMeleeDamage(
+    bindings: StatBindingsConfig,
+    level: Int,
+    stats: StatMap,
+    equipAttack: Int,
+    enemyArmor: Int,
+): Double {
+    val attackPower = bindings.meleeBaseAttackPower + equipAttack
+    val statTotal = stats[bindings.meleeDamageStat]
+    val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.meleeStatMultiplier
+    val levelScale = bindings.meleeLevelScalingRate.pow((level - 1).coerceAtLeast(0))
+    val core = (attackPower + statBonus) * levelScale
+    val avgVariance = (bindings.meleeVarianceMin + bindings.meleeVarianceMax) / 2.0
+    val rawAvg = core * avgVariance
+    val mitigation = enemyArmor / (enemyArmor + bindings.meleeArmorMitigationK)
+    return (rawAvg * (1.0 - mitigation)).coerceAtLeast(1.0)
+}
+
+/**
+ * Multiplicative armor mitigation: `final = round(raw × (1 - armor/(armor+K)))`.
+ * Shared by player swings and mob → player attacks so both sides use the same
+ * curve. Returns at least 1 (a clean hit always lands) when [raw] > 0.
+ */
+internal fun applyArmorMitigation(raw: Int, armor: Int, mitigationK: Double): Int {
+    if (raw <= 0) return 0
+    if (armor <= 0 || mitigationK <= 0.0) return raw
+    val mitigation = armor.toDouble() / (armor.toDouble() + mitigationK)
+    return (raw * (1.0 - mitigation)).roundToInt().coerceAtLeast(1)
 }

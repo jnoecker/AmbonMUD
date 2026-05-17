@@ -117,7 +117,22 @@ ambonmud:
           baseStat: 10
       bindings:
         meleeDamageStat: STR
-        meleeDamageDivisor: 3
+        # New damage formula:
+        #   attackPower = meleeBaseAttackPower + equipmentAttack
+        #   statBonus   = (stat - baseStat) * meleeStatMultiplier
+        #   levelScale  = meleeLevelScalingRate ^ (level - 1)
+        #   core        = (attackPower + statBonus) * levelScale
+        #   raw         = round(core * uniform(varianceMin, varianceMax))
+        #   mitigation  = enemyArmor / (enemyArmor + meleeArmorMitigationK)
+        #   final       = round(raw * (1 - mitigation)), clamped >= 1
+        # Armor mitigation is multiplicative and applied symmetrically to both
+        # sides — see CombatSystem.applyArmorMitigation.
+        meleeStatMultiplier: 0.25
+        meleeLevelScalingRate: 1.30
+        meleeVarianceMin: 0.85
+        meleeVarianceMax: 1.15
+        meleeBaseAttackPower: 1
+        meleeArmorMitigationK: 20.0
         dodgeStat: DEX
         dodgePerPoint: 2
         maxDodgePercent: 30
@@ -797,8 +812,6 @@ ambonmud:
     combat:
       maxCombatsPerTick: 20
       tickMillis: 2000
-      minDamage: 1
-      maxDamage: 4
       feedback:
         enabled: false
         roomBroadcastEnabled: false

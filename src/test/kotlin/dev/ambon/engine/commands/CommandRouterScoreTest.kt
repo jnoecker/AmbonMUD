@@ -17,6 +17,7 @@ import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.CommandRouterHarness
 import dev.ambon.test.TestWorlds
 import dev.ambon.test.buildTestPlayerRegistry
+import dev.ambon.test.deterministicMeleeBindings
 import dev.ambon.test.drainAll
 import dev.ambon.test.equipItemForTest
 import dev.ambon.test.loginOrFail
@@ -34,7 +35,14 @@ class CommandRouterScoreTest {
             val players = buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val combat = CombatSystem(players, mobs, items, outbound, config = CombatSystemConfig(minDamage = 1, maxDamage = 4))
+            // Pin the displayed damage range with deterministic bindings: unarmed=1, no variance/scaling → "1–1"
+            val combat = CombatSystem(
+                players,
+                mobs,
+                items,
+                outbound,
+                config = CombatSystemConfig(bindings = deterministicMeleeBindings(unarmedAttackPower = 1)),
+            )
             val router = buildTestRouter(world, players, mobs, items, combat, outbound)
 
             val sid = SessionId(1)
@@ -49,7 +57,7 @@ class CommandRouterScoreTest {
             assertTrue(text.contains("Level 1"), "Missing level. text=$text")
             assertTrue(text.contains("HP"), "Missing HP. text=$text")
             assertTrue(text.contains("XP"), "Missing XP. text=$text")
-            assertTrue(Regex("""\b1\D+4\b""").containsMatchIn(text), "Missing damage range. text=$text")
+            assertTrue(Regex("""\b1\D+1\b""").containsMatchIn(text), "Missing damage range. text=$text")
             assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
         }
 

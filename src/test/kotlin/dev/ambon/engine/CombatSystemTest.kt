@@ -3,7 +3,6 @@ package dev.ambon.engine
 import dev.ambon.config.DeathConfig
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
-import dev.ambon.config.StatBindingsConfig
 import dev.ambon.config.XpCurveConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatMap
@@ -21,6 +20,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.test.CombatTestFixture
+import dev.ambon.test.deterministicMeleeBindings
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -118,63 +118,83 @@ class CombatSystemTest {
         }
 
     @Test
-    fun `defense bonus increases max hp pool`() =
+    fun `equipment armor mitigates incoming mob damage`() =
         runTest {
             val fixture = CombatTestFixture()
-            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10)
+            // Mob hits for a flat 20 damage so the mitigation math is easy to read.
+            val mob =
+                MobState(
+                    MobId("demo:rat"),
+                    "a rat",
+                    fixture.roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    damage = DamageRange(20, 20),
+                )
             fixture.mobs.upsert(mob)
 
+            // Default meleeArmorMitigationK = 20 → armor 20 = 50% reduction
             val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(4L)
             fixture.players.loginOrFail(sid, "Player4")
+            val player = fixture.players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 100
 
             fixture.equipItem(
                 sid,
                 ItemInstance(
-                    ItemId("demo:cap"),
-                    Item(keyword = "cap", displayName = "a cap", slot = ItemSlot.HEAD, armor = 2),
+                    ItemId("demo:plate"),
+                    Item(keyword = "plate", displayName = "plate mail", slot = ItemSlot.BODY, armor = 20),
                 ),
             )
 
-            val err = combat.startCombat(sid, "rat")
-            assertNull(err)
-
+            assertNull(combat.startCombat(sid, "rat"))
             fixture.tickCombat(combat)
 
-            val player = fixture.players.get(sid)
-            assertNotNull(player)
-            assertEquals(12, player!!.maxHp)
-            assertEquals(9, player.hp)
+            // Mob rolled 20, armor 20 with K=20 → mitigation 20/(20+20) = 50%, post-armor 10.
+            assertEquals(90, player.hp, "Expected 50% armor mitigation: 100 - (20 * 0.5) = 90")
         }
 
     @Test
-    fun `unequipping armor clamps hp to new max without reducing current hp`() =
+    fun `armor mitigation is multiplicative so high armor stays meaningful versus big hits`() =
         runTest {
             val fixture = CombatTestFixture()
+            // Massive mob damage simulates an end-game over-level encounter.
+            val mob =
+                MobState(
+                    MobId("demo:dragon"),
+                    "a dragon",
+                    fixture.roomId,
+                    hp = 1000,
+                    maxHp = 1000,
+                    damage = DamageRange(1000, 1000),
+                )
+            fixture.mobs.upsert(mob)
 
             val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
-
-            val sid = SessionId(6L)
-            fixture.players.loginOrFail(sid, "Player6")
+            val sid = SessionId(5L)
+            fixture.players.loginOrFail(sid, "Tank")
+            val player = fixture.players.get(sid)!!
+            player.maxHp = 10_000
+            player.hp = 10_000
 
             fixture.equipItem(
                 sid,
                 ItemInstance(
-                    ItemId("demo:helm"),
-                    Item(keyword = "helm", displayName = "a helm", slot = ItemSlot.HEAD, armor = 2),
+                    ItemId("demo:fortress"),
+                    Item(keyword = "fortress", displayName = "fortress armor", slot = ItemSlot.BODY, armor = 60),
                 ),
             )
-            combat.syncPlayerDefense(sid)
 
-            val player = fixture.players.get(sid)!!
-            player.hp = 8
+            assertNull(combat.startCombat(sid, "dragon"))
+            fixture.tickCombat(combat)
 
-            fixture.items.unequip(sid, ItemSlot.HEAD)
-            combat.syncPlayerDefense(sid)
-
-            assertEquals(10, player.maxHp)
-            assertEquals(8, player.hp)
+            // armor 60 with K=20 → mitigation 60/80 = 75%, post-armor 250 from a 1000 hit.
+            // Critically, the percentage doesn't shrink as raw damage grows — that's the
+            // whole point vs the old `raw - armor` shape, which would have been 1000 - 60 = 940.
+            assertEquals(9750, player.hp, "Expected 75% mitigation of a 1000 hit: 10000 - 250")
         }
 
     @Test
@@ -434,23 +454,24 @@ class CombatSystemTest {
         }
 
     @Test
-    fun `mob armor reduces player damage by flat amount`() =
+    fun `mob armor reduces player damage multiplicatively`() =
         runTest {
             val fixture = CombatTestFixture()
-            // armor=2, player rolls fixed 5 -> effective = 5-2 = 3
-            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10, armor = 2)
+            // Player swings for raw 20 against mob armor 20. With K=20, mitigation = 20/40 = 50%,
+            // so the mob takes 10 damage instead of 20.
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 100, maxHp = 100, armor = 20)
             fixture.mobs.upsert(mob)
 
-            val combat = fixture.buildCombat(rng = Random(1), minDamage = 5, maxDamage = 5)
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 20, maxDamage = 20)
 
             val sid = SessionId(2L)
             fixture.players.loginOrFail(sid, "Tester2")
             combat.startCombat(sid, "rat")
             fixture.tickCombat(combat)
 
-            assertEquals(7, mob.hp, "Expected mob hp=7 (10 - (5-2)=3)")
+            assertEquals(90, mob.hp, "Expected 50% armor mitigation: 100 - 10 = 90")
             val messages = fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(messages.any { it.contains("for 3 damage") }, "Expected 'for 3 damage' in: $messages")
+            assertTrue(messages.any { it.contains("for 10 damage") }, "Expected 'for 10 damage' in: $messages")
         }
 
     @Test
@@ -487,23 +508,24 @@ class CombatSystemTest {
     fun `detailed combat feedback includes compact roll and armor summaries for both sides`() =
         runTest {
             val fixture = CombatTestFixture()
+            // mob armor 20 with K=20 → 50% mitigation. Player rolls 10 → final 5.
             val mob =
                 MobState(
                     MobId("demo:rat"),
                     "a rat",
                     fixture.roomId,
-                    hp = 20,
-                    maxHp = 20,
+                    hp = 100,
+                    maxHp = 100,
                     damage = DamageRange(7, 7),
-                    armor = 2,
+                    armor = 20,
                 )
             fixture.mobs.upsert(mob)
 
             val combat =
                 fixture.buildCombat(
                     rng = Random(1),
-                    minDamage = 5,
-                    maxDamage = 5,
+                    minDamage = 10,
+                    maxDamage = 10,
                     detailedFeedbackEnabled = true,
                 )
 
@@ -520,7 +542,7 @@ class CombatSystemTest {
                     .map { it.text }
 
             assertTrue(
-                messages.any { it.contains("You hit a rat for 3 damage (roll 5, armor absorbed 2).") },
+                messages.any { it.contains("You hit a rat for 5 damage (roll 10, armor absorbed 5).") },
                 "Expected detailed player hit feedback, messages: $messages",
             )
             assertTrue(
@@ -533,7 +555,9 @@ class CombatSystemTest {
     fun `detailed combat feedback shows min clamp when armor fully absorbs roll`() =
         runTest {
             val fixture = CombatTestFixture()
-            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10, armor = 100)
+            // Massive armor + tiny roll → rounded-mitigated value is 0, clamp applies.
+            // raw=1, armor=10000, K=20 → mitigation 10000/10020 ≈ 99.8% → 0.002 → clamps to 1.
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10, armor = 10000)
             fixture.mobs.upsert(mob)
 
             val combat =
@@ -557,7 +581,7 @@ class CombatSystemTest {
                     .map { it.text }
 
             assertTrue(
-                messages.any { it.contains("You hit a rat for 1 damage (roll 1, armor absorbed 0, min 1 applied).") },
+                messages.any { it.contains("min 1 applied") && it.contains("You hit a rat for 1 damage") },
                 "Expected min-clamp feedback in player hit message, messages: $messages",
             )
         }
@@ -571,18 +595,18 @@ class CombatSystemTest {
                     MobId("demo:rat"),
                     "a rat",
                     fixture.roomId,
-                    hp = 20,
-                    maxHp = 20,
+                    hp = 100,
+                    maxHp = 100,
                     damage = DamageRange(7, 7),
-                    armor = 2,
+                    armor = 20,
                 )
             fixture.mobs.upsert(mob)
 
             val combat =
                 fixture.buildCombat(
                     rng = Random(1),
-                    minDamage = 5,
-                    maxDamage = 5,
+                    minDamage = 10,
+                    maxDamage = 10,
                     detailedFeedbackEnabled = true,
                     detailedFeedbackRoomBroadcastEnabled = true,
                 )
@@ -602,7 +626,7 @@ class CombatSystemTest {
                     .map { it.text }
 
             assertTrue(
-                observerMessages.any { it.contains("[Combat] Fighter hits a rat for 3 damage (roll 5, armor absorbed 2).") },
+                observerMessages.any { it.contains("[Combat] Fighter hits a rat for 5 damage (roll 10, armor absorbed 5).") },
                 "Expected room observer player-hit feedback, messages: $observerMessages",
             )
             assertTrue(
@@ -832,16 +856,18 @@ class CombatSystemTest {
             val combat =
                 fixture.buildCombat(
                     rng = Random(1),
-                    minDamage = 3,
-                    maxDamage = 3,
                     statusEffects = statusEffects,
-                    bindings = StatBindingsConfig(meleeDamageStat = "STR", meleeDamageDivisor = 3),
+                    // unarmed=3, +1 dmg per STR point above base, no level/variance scaling
+                    bindings = deterministicMeleeBindings(unarmedAttackPower = 3).copy(
+                        meleeDamageStat = "STR",
+                        meleeStatMultiplier = 1.0,
+                    ),
                 )
 
             val sid = SessionId(32L)
             fixture.players.loginOrFail(sid, "BuffTest")
 
-            // Apply +6 STR buff -> +2 bonus damage (6/3)
+            // +6 STR buff with meleeStatMultiplier 1.0 → +6 bonus damage on top of unarmed 3
             statusEffects.applyToPlayer(sid, StatusEffectId("buff"))
 
             combat.startCombat(sid, "rat")
@@ -849,8 +875,8 @@ class CombatSystemTest {
 
             fixture.tickCombat(combat)
 
-            // Damage should be 3 (base) + 2 (str bonus) = 5
-            assertEquals(45, mob.hp, "STR buff should add bonus damage")
+            // Damage = 3 (unarmed) + 6 (STR bonus) = 9. Mob HP 50 → 41.
+            assertEquals(41, mob.hp, "STR buff should add bonus damage")
         }
 
     @Test

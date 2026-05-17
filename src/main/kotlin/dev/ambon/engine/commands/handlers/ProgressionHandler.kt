@@ -49,8 +49,9 @@ class ProgressionHandler(
             val equipped = items.equipment(sessionId)
 
             val attackBonus = equipped.values.sumOf { it.item.damage }
-            val dmgMin = combat.minDamage + attackBonus
-            val dmgMax = combat.maxDamage + attackBonus
+            val dmgRange = combat.damageRangeForDisplay(me, me.stats, attackBonus)
+            val dmgMin = dmgRange.first
+            val dmgMax = dmgRange.last
 
             val xpLine =
                 run {

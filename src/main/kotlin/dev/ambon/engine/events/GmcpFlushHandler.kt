@@ -93,12 +93,13 @@ class GmcpFlushHandler(
             val dodgeStat = effectiveStats[bindings.dodgeStat]
             val dodgePct =
                 ((dodgeStat - PlayerState.BASE_STAT) * bindings.dodgePerPoint).coerceIn(0, bindings.maxDodgePercent)
+            val dmgRange = combatSystem.damageRangeForDisplay(player, effectiveStats, equipBonuses.attack)
             gmcpEmitter.sendCharStats(
                 sessionId = sid,
                 player = player,
                 effectiveStats = effectiveStats,
-                baseDamageMin = combatSystem.minDamage,
-                baseDamageMax = combatSystem.maxDamage,
+                baseDamageMin = dmgRange.first,
+                baseDamageMax = dmgRange.last,
                 armor = equipBonuses.armor,
                 dodgePercent = dodgePct,
             )

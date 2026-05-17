@@ -203,14 +203,30 @@ class AppConfigLoaderTest {
     }
 
     @Test
-    fun `validated rejects stat binding with zero divisor`() {
+    fun `validated rejects negative melee stat multiplier`() {
         val invalid =
             AppConfig(
                 engine =
                     EngineConfig(
                         stats =
                             StatsEngineConfig(
-                                bindings = StatBindingsConfig(meleeDamageDivisor = 0),
+                                bindings = StatBindingsConfig(meleeStatMultiplier = -0.1),
+                            ),
+                    ),
+                world = validWorld,
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validated rejects melee level scaling rate below 1`() {
+        val invalid =
+            AppConfig(
+                engine =
+                    EngineConfig(
+                        stats =
+                            StatsEngineConfig(
+                                bindings = StatBindingsConfig(meleeLevelScalingRate = 0.95),
                             ),
                     ),
                 world = validWorld,
