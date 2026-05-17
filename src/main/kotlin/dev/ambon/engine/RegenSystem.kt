@@ -87,8 +87,13 @@ class RegenSystem(
         }
     }
 
-    private fun regenAmount(max: Int, percent: Double, multiplier: Double): Int =
-        (max * percent * multiplier).toInt().coerceAtLeast(0)
+    private fun regenAmount(max: Int, percent: Double, multiplier: Double): Int {
+        val raw = max * percent * multiplier
+        // Guarantee a minimum of 1 whenever the math yields any positive amount,
+        // so low-pool resources (e.g. starting mana of 10 at 5%) still tick.
+        // A multiplier or percent of exactly 0 still yields 0 (no regen).
+        return if (raw <= 0.0) 0 else raw.toInt().coerceAtLeast(1)
+    }
 
     private inline fun applyRegen(
         now: Long,

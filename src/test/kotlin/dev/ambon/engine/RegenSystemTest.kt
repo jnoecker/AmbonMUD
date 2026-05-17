@@ -335,6 +335,29 @@ class RegenSystemTest {
         }
 
     @Test
+    fun `small pools still regen at least 1 per tick`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val regen = makeRegen(players, clock, manaRegenPercent = 0.05)
+
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Tiny")
+
+            val player = players.get(sid)!!
+            // Starting mana pool is small; 5% of 10 floors to 0, which would
+            // strand new characters with no mana regen.
+            player.maxMana = 10
+            player.mana = 1
+
+            regen.tick() // seed
+            clock.advance(3_000L)
+            regen.tick()
+
+            assertEquals(2, player.mana, "Small pools must still regen at least 1 per tick")
+        }
+
+    @Test
     fun `in-combat players regen at reduced rate`() =
         runTest {
             val players = makeRegistry()
