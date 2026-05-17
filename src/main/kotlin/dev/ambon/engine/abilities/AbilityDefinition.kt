@@ -97,7 +97,7 @@ data class AbilityDefinition(
      * stat investment in the casting stat increases the player's total casts
      * rather than discounting individual spells.
      */
-    val manaCostPct: Int,
+    val manaCostPct: Double,
     val cooldownMs: Long,
     val levelRequired: Int,
     val targetType: String,

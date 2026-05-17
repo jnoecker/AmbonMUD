@@ -376,7 +376,7 @@ data class AppConfig(
     private fun validateEngineAbilities() {
         engine.abilities.definitions.forEach { (key, def) ->
             if (def.displayName.isBlank()) warnConfig("ability '$key' displayName is blank")
-            if (def.manaCostPct < 0) warnConfig("ability '$key' manaCostPct is ${def.manaCostPct}, expected >= 0")
+            if (def.manaCostPct < 0.0) warnConfig("ability '$key' manaCostPct is ${def.manaCostPct}, expected >= 0")
             if (def.cooldownMs < 0L) warnConfig("ability '$key' cooldownMs is ${def.cooldownMs}, expected >= 0")
             if (def.levelRequired < 1) warnConfig("ability '$key' levelRequired is ${def.levelRequired}, expected >= 1")
             require(def.skillPointCost >= 0) {
@@ -2383,7 +2383,7 @@ data class AbilityDefinitionConfig(
      * see [dev.ambon.engine.abilities.AbilityDefinition.manaCostPct] for the
      * design rationale.
      */
-    val manaCostPct: Int = 10,
+    val manaCostPct: Double = 10.0,
     val cooldownMs: Long = 0L,
     val levelRequired: Int = 1,
     val skillPointCost: Int = 1,

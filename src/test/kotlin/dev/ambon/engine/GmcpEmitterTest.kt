@@ -114,7 +114,7 @@ class GmcpEmitterTest {
     private fun ability(
         id: String = "firebolt",
         name: String = "Firebolt",
-        manaCostPct: Int = 8,
+        manaCostPct: Double = 8.0,
         cooldownMs: Long = 5000L,
         skillPointCost: Int = 1,
     ) = AbilityDefinition(
@@ -487,7 +487,7 @@ class GmcpEmitterTest {
                 sid,
                 listOf(ability()),
                 cooldownRemainingMs = { 2300L },
-                manaCostFor = { it.manaCostPct },
+                manaCostFor = { it.manaCostPct.toInt() },
             )
             val data = drainGmcp()[0]
             assertEquals("Char.Skills", data.gmcpPackage)
@@ -520,7 +520,7 @@ class GmcpEmitterTest {
                 sid,
                 listOf(ability()),
                 cooldownRemainingMs = { 2300L },
-                manaCostFor = { it.manaCostPct },
+                manaCostFor = { it.manaCostPct.toInt() },
             )
             assertTrue(drainGmcp().isEmpty())
         }
@@ -533,7 +533,7 @@ class GmcpEmitterTest {
                 sid,
                 listOf(ability()),
                 cooldownRemainingMs = { 0L },
-                manaCostFor = { it.manaCostPct },
+                manaCostFor = { it.manaCostPct.toInt() },
             )
             val data = drainGmcp()[0]
             // DIRECT_DAMAGE with no class derives RANGED_PROJECTILE

@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Regression test for issue #1066 — when a player summons a pet, the pet must become
+ * Regression test for issue #1066 â€” when a player summons a pet, the pet must become
  * visible in the room (canvas + mob list) without waiting for the next room change.
  *
  * The summon happens via [AbilitySystem] invoking the `onSummonPet` callback; in
@@ -71,7 +71,7 @@ class PetSummonVisibilityTest {
                 id = AbilityId("summon_familiar"),
                 displayName = "Summon Familiar",
                 description = "Summons a small elemental.",
-                manaCostPct = 25,
+                manaCostPct = 25.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "self",
@@ -79,7 +79,7 @@ class PetSummonVisibilityTest {
             ),
         )
 
-        // Callback must mirror GameEngine.onSummonPet — issue #1066 fix lives there.
+        // Callback must mirror GameEngine.onSummonPet â€” issue #1066 fix lives there.
         val abilitySystem = AbilitySystem(
             players = fixture.players,
             registry = registry,
@@ -122,7 +122,7 @@ class PetSummonVisibilityTest {
         assertTrue(bystanderAddMob.isNotEmpty(), "bystander in same room must receive Room.AddMob")
         assertTrue(
             summonerAddMob.all { it.jsonData.contains("a fire familiar") },
-            "Room.AddMob payload must mention the pet's name — got=${summonerAddMob.map { it.jsonData }}",
+            "Room.AddMob payload must mention the pet's name â€” got=${summonerAddMob.map { it.jsonData }}",
         )
 
         val summonerMobInfo = gmcp.filter { it.sessionId == summonerSid && it.gmcpPackage == "Room.MobInfo" }
@@ -132,7 +132,7 @@ class PetSummonVisibilityTest {
     }
 
     /**
-     * Regression test for issue #1093 — re-summoning while a pet already exists must
+     * Regression test for issue #1093 â€” re-summoning while a pet already exists must
      * emit `Room.RemoveMob` for the replaced pet so clients don't leave a ghost sprite
      * stacked in the room. The server already dismisses the old pet internally
      * (PetSystem.summon -> dismissAll), but without the broadcast the web client keeps
@@ -155,7 +155,7 @@ class PetSummonVisibilityTest {
                 id = AbilityId("summon_familiar"),
                 displayName = "Summon Familiar",
                 description = "Summons a small elemental.",
-                manaCostPct = 25,
+                manaCostPct = 25.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "self",
@@ -167,7 +167,7 @@ class PetSummonVisibilityTest {
                 id = AbilityId("summon_golem"),
                 displayName = "Summon Golem",
                 description = "Summons a stone golem.",
-                manaCostPct = 25,
+                manaCostPct = 25.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "self",
@@ -175,7 +175,7 @@ class PetSummonVisibilityTest {
             ),
         )
 
-        // Mirror the production GameEngine.onSummonPet callback — issue #1093 fix lives there.
+        // Mirror the production GameEngine.onSummonPet callback â€” issue #1093 fix lives there.
         val abilitySystem = AbilitySystem(
             players = fixture.players,
             registry = registry,
@@ -211,7 +211,7 @@ class PetSummonVisibilityTest {
         val summoner = fixture.players.get(summonerSid)!!
         summoner.mana = 100
 
-        // First summon — capture the pet id so we can assert its removal on re-summon.
+        // First summon â€” capture the pet id so we can assert its removal on re-summon.
         assertNull(abilitySystem.cast(summonerSid, "summon_familiar", null))
         val firstPet = petSystem.getActivePet(summonerSid)!!
         val firstPetId = firstPet.id.value
@@ -226,11 +226,11 @@ class PetSummonVisibilityTest {
 
         assertTrue(
             summonerRemoves.any { it.jsonData.contains(firstPetId) },
-            "summoner must receive Room.RemoveMob for replaced pet id=$firstPetId — got=${summonerRemoves.map { it.jsonData }}",
+            "summoner must receive Room.RemoveMob for replaced pet id=$firstPetId â€” got=${summonerRemoves.map { it.jsonData }}",
         )
         assertTrue(
             bystanderRemoves.any { it.jsonData.contains(firstPetId) },
-            "bystander must receive Room.RemoveMob for replaced pet id=$firstPetId — got=${bystanderRemoves.map { it.jsonData }}",
+            "bystander must receive Room.RemoveMob for replaced pet id=$firstPetId â€” got=${bystanderRemoves.map { it.jsonData }}",
         )
     }
 }

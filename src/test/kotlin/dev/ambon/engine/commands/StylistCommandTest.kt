@@ -178,7 +178,7 @@ class StylistCommandTest {
                 id = AbilityId("human_boon"),
                 displayName = "Human Boon",
                 description = "A human gift.",
-                manaCostPct = 0,
+                manaCostPct = 0.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "self",
@@ -190,7 +190,7 @@ class StylistCommandTest {
                 id = AbilityId("elf_grace"),
                 displayName = "Elf Grace",
                 description = "An elven gift.",
-                manaCostPct = 0,
+                manaCostPct = 0.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "self",
@@ -202,7 +202,7 @@ class StylistCommandTest {
                 id = AbilityId("shared_trick"),
                 displayName = "Shared Trick",
                 description = "Something a human can also learn from a trainer.",
-                manaCostPct = 0,
+                manaCostPct = 0.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "enemy",
@@ -302,15 +302,15 @@ class StylistCommandTest {
             val after = h.players.get(sid)!!
             assertEquals("ELF", after.race)
             assertEquals(500L, after.gold)
-            // STR: 11 (base 10 + HUMAN +1) → remove +1 → 10; ELF has no STR mod → stays 10
+            // STR: 11 (base 10 + HUMAN +1) â†’ remove +1 â†’ 10; ELF has no STR mod â†’ stays 10
             assertEquals(10, after.stats["STR"])
-            // CHA: 11 → remove HUMAN +1 → 10; ELF has no CHA mod → stays 10
+            // CHA: 11 â†’ remove HUMAN +1 â†’ 10; ELF has no CHA mod â†’ stays 10
             assertEquals(10, after.stats["CHA"])
-            // DEX: 10 → ELF +2 → 12
+            // DEX: 10 â†’ ELF +2 â†’ 12
             assertEquals(12, after.stats["DEX"])
-            // CON: 10 → ELF -1 → 9
+            // CON: 10 â†’ ELF -1 â†’ 9
             assertEquals(9, after.stats["CON"])
-            // INT: 10 → ELF +1 → 11
+            // INT: 10 â†’ ELF +1 â†’ 11
             assertEquals(11, after.stats["INT"])
         }
 
@@ -380,7 +380,7 @@ class StylistCommandTest {
             val hpBefore = me.maxHp
             h.drain()
 
-            // Switch HUMAN → ELF: CON -1 will drop the scaling stat
+            // Switch HUMAN â†’ ELF: CON -1 will drop the scaling stat
             h.router.handle(sid, Command.Stylist.ChangeRace("ELF"))
             h.drain()
 

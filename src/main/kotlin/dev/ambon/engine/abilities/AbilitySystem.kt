@@ -635,7 +635,7 @@ class AbilitySystem(
      * discounting individual spells. See [AbilityDefinition.manaCostPct].
      */
     fun computeManaCost(player: PlayerState, ability: AbilityDefinition): Int {
-        if (ability.manaCostPct <= 0) return 0
+        if (ability.manaCostPct <= 0.0) return 0
         val (_, classManaRate) = progression.resolveClassScaling(player.playerClass)
         val basePool = progression.maxManaForLevel(player.level, manaScalingRate = classManaRate)
         return ((basePool.toDouble() * ability.manaCostPct) / 100.0).roundToInt().coerceAtLeast(0)

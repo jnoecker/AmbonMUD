@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TrainerRespecTest {
-    // ── Parser tests ─────────────────────────────────────────────────────
+    // â”€â”€ Parser tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @Nested
     inner class Parser {
@@ -57,7 +57,7 @@ class TrainerRespecTest {
         }
     }
 
-    // ── Router tests ─────────────────────────────────────────────────────
+    // â”€â”€ Router tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     companion object {
         private val TRAINER_ROOM = RoomId("test:trainer")
@@ -118,7 +118,7 @@ class TrainerRespecTest {
                 id = AbilityId("fireball"),
                 displayName = "Fireball",
                 description = "A ball of fire.",
-                manaCostPct = 10,
+                manaCostPct = 10.0,
                 cooldownMs = 5000,
                 levelRequired = 2,
                 targetType = "ENEMY",
@@ -131,7 +131,7 @@ class TrainerRespecTest {
                 id = AbilityId("frostbolt"),
                 displayName = "Frostbolt",
                 description = "A bolt of frost.",
-                manaCostPct = 8,
+                manaCostPct = 8.0,
                 cooldownMs = 3000,
                 levelRequired = 4,
                 targetType = "ENEMY",
@@ -144,7 +144,7 @@ class TrainerRespecTest {
                 id = AbilityId("archmage_instinct"),
                 displayName = "Archmage Instinct",
                 description = "A foundational instinct granted automatically.",
-                manaCostPct = 0,
+                manaCostPct = 0.0,
                 cooldownMs = 0,
                 levelRequired = 50,
                 targetType = "SELF",
@@ -515,7 +515,7 @@ class TrainerRespecTest {
 
     /**
      * Level-gated abilities should no longer silently produce a confusing "no matching
-     * ability" error — they should surface the specific level requirement. See #1036.
+     * ability" error â€” they should surface the specific level requirement. See #1036.
      */
     @Nested
     inner class LearnLockGating {
@@ -525,7 +525,7 @@ class TrainerRespecTest {
             abilitySystem.loadAbilities(SID, emptySet())
             outbound.drainAll()
 
-            // fireball requires level 2 in the fixture — player is level 1
+            // fireball requires level 2 in the fixture â€” player is level 1
             router.handle(SID, Command.Train.Learn("fireball"))
 
             val events = outbound.drainAll()

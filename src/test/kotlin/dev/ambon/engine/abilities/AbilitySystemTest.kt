@@ -50,8 +50,8 @@ class AbilitySystemTest {
                 id = AbilityId("magic_missile"),
                 displayName = "Magic Missile",
                 description = "A bolt of arcane energy.",
-                // 40% of 20 baseMana at L1 → 8 mana — matches old flat cost.
-                manaCostPct = 40,
+                // 40% of 20 baseMana at L1 â†’ 8 mana â€” matches old flat cost.
+                manaCostPct = 40.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "enemy",
@@ -63,7 +63,7 @@ class AbilitySystemTest {
                 id = AbilityId("heal"),
                 displayName = "Heal",
                 description = "Restore HP.",
-                manaCostPct = 50,
+                manaCostPct = 50.0,
                 cooldownMs = 5000,
                 levelRequired = 1,
                 targetType = "self",
@@ -75,7 +75,7 @@ class AbilitySystemTest {
                 id = AbilityId("fireball"),
                 displayName = "Fireball",
                 description = "Fire!",
-                manaCostPct = 75,
+                manaCostPct = 75.0,
                 cooldownMs = 3000,
                 levelRequired = 5,
                 targetType = "enemy",
@@ -162,7 +162,7 @@ class AbilitySystemTest {
     fun `computeManaCost scales with player level off the base mana pool`() =
         runTest {
             // Custom progression with a non-trivial manaScalingRate so the base pool
-            // grows with level — the test bakery default uses rate=1.0 (flat pool).
+            // grows with level â€” the test bakery default uses rate=1.0 (flat pool).
             val fixture = AbilityTestFixture(roomId = roomId, clock = MutableClock(0L), rng = Random(42))
             val progression = PlayerProgression(
                 config = ProgressionConfig(
@@ -176,7 +176,7 @@ class AbilitySystemTest {
                     id = AbilityId("zap"),
                     displayName = "Zap",
                     description = "",
-                    manaCostPct = 40,
+                    manaCostPct = 40.0,
                     cooldownMs = 0,
                     levelRequired = 1,
                     targetType = "enemy",
@@ -188,13 +188,13 @@ class AbilitySystemTest {
             val player = fixture.players.get(sid)!!
             val ability = registry.findByKeyword("zap")!!
 
-            // 40% of the level-1 base pool (20) → 8 mana, matching the old flat cost.
+            // 40% of the level-1 base pool (20) â†’ 8 mana, matching the old flat cost.
             player.level = 1
             val costL1 = abilitySystem.computeManaCost(player, ability)
             assertEquals(8, costL1)
 
             // Bumping level grows the base pool via manaScalingRate, so the same
-            // percentage costs strictly more mana — the core scaling contract.
+            // percentage costs strictly more mana â€” the core scaling contract.
             player.level = 20
             val costL20 = abilitySystem.computeManaCost(player, ability)
             assertTrue(
@@ -410,7 +410,7 @@ class AbilitySystemTest {
                 raceAbilityIds = setOf("magic_missile"),
             )
 
-            // Swap to a race that grants nothing — trainer-learned ability must survive.
+            // Swap to a race that grants nothing â€” trainer-learned ability must survive.
             h.abilitySystem.setRaceAbilities(sid, emptySet())
 
             assertTrue(
@@ -556,7 +556,7 @@ class AbilitySystemTest {
                 id = AbilityId("area_blast"),
                 displayName = "Area Blast",
                 description = "Hits all enemies in combat.",
-                manaCostPct = 25,
+                manaCostPct = 25.0,
                 cooldownMs = 0,
                 levelRequired = 5,
                 targetType = "enemy",
@@ -568,7 +568,7 @@ class AbilitySystemTest {
                 id = AbilityId("taunt_ability"),
                 displayName = "Taunt",
                 description = "Force mob to attack you.",
-                manaCostPct = 25,
+                manaCostPct = 25.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "enemy",
@@ -631,7 +631,7 @@ class AbilitySystemTest {
                 id = AbilityId("ignite"),
                 displayName = "Ignite",
                 description = "Burns the target.",
-                manaCostPct = 50,
+                manaCostPct = 50.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "enemy",
@@ -643,7 +643,7 @@ class AbilitySystemTest {
                 id = AbilityId("shield"),
                 displayName = "Shield",
                 description = "Grants a shield.",
-                manaCostPct = 50,
+                manaCostPct = 50.0,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "self",
