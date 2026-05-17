@@ -14,10 +14,12 @@ class RegenSystem(
     private val rng: Random = Random(),
     private val baseIntervalMs: Long = 5_000L,
     private val minIntervalMs: Long = 1_000L,
-    private val regenAmount: Int = 1,
+    private val hpRegenPercent: Double = 0.05,
     private val manaBaseIntervalMs: Long = 3_000L,
     private val manaMinIntervalMs: Long = 1_000L,
-    private val manaRegenAmount: Int = 1,
+    private val manaRegenPercent: Double = 0.05,
+    private val inCombatMultiplier: Double = 0.5,
+    private val inCombat: (SessionId) -> Boolean = { false },
     private val tickIntervalMs: Long = 100L,
     private val cycleTargetMs: Long = 2_000L,
     private val minPlayersPerTick: Int = 5,
@@ -61,6 +63,7 @@ class RegenSystem(
 
             val sessionId = player.sessionId
             val equipStats = items.equipmentBonuses(sessionId).stats
+            val multiplier = if (inCombat(sessionId)) inCombatMultiplier else 1.0
 
             applyRegen(
                 now = now,
@@ -69,7 +72,7 @@ class RegenSystem(
                 current = player.hp,
                 max = player.maxHp,
                 intervalMs = regenIntervalMs(player, equipStats[bindings.hpRegenStat]),
-                heal = { player.healHp(regenAmount) },
+                heal = { player.healHp(regenAmount(player.maxHp, hpRegenPercent, multiplier)) },
             )
 
             applyRegen(
@@ -79,9 +82,17 @@ class RegenSystem(
                 current = player.mana,
                 max = player.maxMana,
                 intervalMs = manaRegenIntervalMs(player, equipStats[bindings.manaRegenStat]),
-                heal = { player.healMana(manaRegenAmount) },
+                heal = { player.healMana(regenAmount(player.maxMana, manaRegenPercent, multiplier)) },
             )
         }
+    }
+
+    private fun regenAmount(max: Int, percent: Double, multiplier: Double): Int {
+        val raw = max * percent * multiplier
+        // Guarantee a minimum of 1 whenever the math yields any positive amount,
+        // so low-pool resources (e.g. starting mana of 10 at 5%) still tick.
+        // A multiplier or percent of exactly 0 still yields 0 (no regen).
+        return if (raw <= 0.0) 0 else raw.toInt().coerceAtLeast(1)
     }
 
     private inline fun applyRegen(

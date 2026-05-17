@@ -220,10 +220,17 @@ data class AppConfig(
         }
         engine.regen.baseIntervalMillis.requirePositive("ambonMUD.engine.regen.baseIntervalMillis")
         engine.regen.minIntervalMillis.requirePositive("ambonMUD.engine.regen.minIntervalMillis")
-        engine.regen.regenAmount.requirePositive("ambonMUD.engine.regen.regenAmount")
+        require(engine.regen.regenPercent > 0.0 && engine.regen.regenPercent <= 1.0) {
+            "ambonMUD.engine.regen.regenPercent must be in (0.0, 1.0]"
+        }
+        require(engine.regen.inCombatMultiplier in 0.0..1.0) {
+            "ambonMUD.engine.regen.inCombatMultiplier must be in [0.0, 1.0]"
+        }
         engine.regen.mana.baseIntervalMillis.requirePositive("ambonMUD.engine.regen.mana.baseIntervalMillis")
         engine.regen.mana.minIntervalMillis.requirePositive("ambonMUD.engine.regen.mana.minIntervalMillis")
-        engine.regen.mana.regenAmount.requirePositive("ambonMUD.engine.regen.mana.regenAmount")
+        require(engine.regen.mana.regenPercent > 0.0 && engine.regen.mana.regenPercent <= 1.0) {
+            "ambonMUD.engine.regen.mana.regenPercent must be in (0.0, 1.0]"
+        }
     }
 
     private fun validateEngineEquipment() {
@@ -2298,14 +2305,15 @@ data class RegenEngineConfig(
     val maxPlayersPerTick: Int = 200,
     val baseIntervalMillis: Long = 5_000L,
     val minIntervalMillis: Long = 1_000L,
-    val regenAmount: Int = 1,
+    val regenPercent: Double = 0.05,
+    val inCombatMultiplier: Double = 0.5,
     val mana: ManaRegenConfig = ManaRegenConfig(),
 )
 
 data class ManaRegenConfig(
     val baseIntervalMillis: Long = 3_000L,
     val minIntervalMillis: Long = 1_000L,
-    val regenAmount: Int = 1,
+    val regenPercent: Double = 0.05,
 )
 
 data class SchedulerEngineConfig(
