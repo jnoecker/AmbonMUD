@@ -816,7 +816,7 @@ ambonmud:
           hpScalingRate: 1.10
           baseMinDamage: 1
           baseMaxDamage: 2
-          damageScalingRate: 1.06
+          damageScalingRate: 1.30
           baseArmor: 0
           baseXpReward: 15
           xpScalingRate: 1.09
@@ -828,7 +828,7 @@ ambonmud:
           hpScalingRate: 1.10
           baseMinDamage: 2
           baseMaxDamage: 4
-          damageScalingRate: 1.07
+          damageScalingRate: 1.30
           baseArmor: 1
           baseXpReward: 30
           xpScalingRate: 1.08
@@ -840,7 +840,7 @@ ambonmud:
           hpScalingRate: 1.09
           baseMinDamage: 3
           baseMaxDamage: 6
-          damageScalingRate: 1.07
+          damageScalingRate: 1.30
           baseArmor: 2
           baseXpReward: 75
           xpScalingRate: 1.08
@@ -852,7 +852,7 @@ ambonmud:
           hpScalingRate: 1.09
           baseMinDamage: 4
           baseMaxDamage: 9
-          damageScalingRate: 1.07
+          damageScalingRate: 1.30
           baseArmor: 3
           baseXpReward: 200
           xpScalingRate: 1.07
@@ -1372,7 +1372,7 @@ ambonmud:
       definitions:
         WARRIOR:
           displayName: Warrior
-          hpScalingRate: 1.105
+          hpScalingRate: 1.305
           manaScalingRate: 1.05
           description: A battle-hardened combatant trained in heavy armor and martial weapons, equally capable of absorbing
             punishment and dealing devastating blows.
@@ -1401,7 +1401,7 @@ ambonmud:
             strapped to one arm. A crimson half-cape drapes from the left shoulder.
         MAGE:
           displayName: Mage
-          hpScalingRate: 1.090
+          hpScalingRate: 1.290
           manaScalingRate: 1.110
           description: A scholar of the arcane arts who channels raw magical energy into destructive spells, protective wards, and
             debilitating hexes.
@@ -1429,7 +1429,7 @@ ambonmud:
             chain at the belt. The robe's hood is pulled back, revealing sharp, studious features.
         CLERIC:
           displayName: Cleric
-          hpScalingRate: 1.101
+          hpScalingRate: 1.301
           manaScalingRate: 1.099
           description: A devoted servant of the divine who channels sacred power to mend wounds, bolster allies, and smite the
             unholy.
@@ -1458,7 +1458,7 @@ ambonmud:
             mantle of deep gold cloth rests across the shoulders.
         ROGUE:
           displayName: Rogue
-          hpScalingRate: 1.094
+          hpScalingRate: 1.294
           manaScalingRate: 1.094
           description: A cunning operative who relies on stealth, precision, and dirty tricks to eliminate targets before they can
             retaliate.
@@ -1487,7 +1487,7 @@ ambonmud:
             face, and a bandolier of small pouches and vials crosses the chest.
         RANGER:
           displayName: Ranger
-          hpScalingRate: 1.098
+          hpScalingRate: 1.298
           manaScalingRate: 1.097
           description: A wilderness expert who fights alongside bonded animal companions, blending archery with nature magic to
             control the battlefield.
@@ -2029,11 +2029,11 @@ ambonmud:
           - levelsBelow: 8
             multiplier: 0.0
     rewards:
-      hpScalingRate: 1.10
+      hpScalingRate: 1.30
       manaScalingRate: 1.10
       fullHealOnLevelUp: true
       fullManaOnLevelUp: true
-      baseHp: 10
+      baseHp: 130
       baseMana: 10
     # Engine-computed XP for quests. Authors pick a difficulty tier (or leave
     # `rewards.xp` authored for an explicit override) and the engine produces
