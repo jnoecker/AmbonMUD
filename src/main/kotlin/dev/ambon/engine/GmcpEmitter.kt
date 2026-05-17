@@ -463,10 +463,20 @@ class GmcpEmitter(
         broadcastSerialized(players.playersInRoom(roomId), "Room.Items", payload)
     }
 
+    /**
+     * Emits `Char.Skills` for [sessionId]. [manaCostFor] is intentionally required
+     * (no default): the GMCP `manaCost` field is the *absolute* per-cast mana
+     * cost for this player, resolved by [AbilitySystem.computeManaCost] from the
+     * ability's `manaCostPct` against the player's level/class base pool. Passing
+     * `it.manaCostPct` directly would silently ship a raw percentage to the
+     * client mislabeled as mana — so every caller must supply the resolver
+     * explicitly.
+     */
     suspend fun sendCharSkills(
         sessionId: SessionId,
         abilities: List<AbilityDefinition>,
         cooldownRemainingMs: (AbilityId) -> Long = { 0L },
+        manaCostFor: (AbilityDefinition) -> Int,
     ) {
         emit(
             sessionId,
@@ -477,7 +487,7 @@ class GmcpEmitter(
                     name = a.displayName,
                     description = a.description,
                     skillPointCost = a.skillPointCost,
-                    manaCost = a.manaCost,
+                    manaCost = manaCostFor(a).coerceAtLeast(0),
                     cooldownMs = a.cooldownMs,
                     cooldownRemainingMs = cooldownRemainingMs(a.id).coerceAtLeast(0L),
                     levelRequired = a.levelRequired,
@@ -761,7 +771,7 @@ class GmcpEmitter(
             TrainerClassPayload(
                 className = className,
                 classUnlocked = unlocked,
-                abilities = entries.map { it.toTrainerAbilityPayload() },
+                abilities = entries.map { it.toTrainerAbilityPayload(abilitySystem.computeManaCost(player, it.ability)) },
             )
         }
         emit(
@@ -782,14 +792,14 @@ class GmcpEmitter(
         )
     }
 
-    private fun AbilitySystem.TrainerPanelEntry.toTrainerAbilityPayload(): TrainerAbilityPayload =
+    private fun AbilitySystem.TrainerPanelEntry.toTrainerAbilityPayload(manaCost: Int): TrainerAbilityPayload =
         TrainerAbilityPayload(
             id = ability.id.value,
             name = ability.displayName,
             description = ability.description,
             skillPointCost = ability.skillPointCost,
             levelRequired = ability.levelRequired,
-            manaCost = ability.manaCost,
+            manaCost = manaCost.coerceAtLeast(0),
             cooldownMs = ability.cooldownMs,
             targetType = ability.targetType,
             effectType = ability.effect.toEffectType(),
@@ -844,9 +854,12 @@ class GmcpEmitter(
         sendCharName(sessionId, player)
         sendEquipmentSlots(sessionId)
         sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
-        sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
-            abilitySystem.cooldownRemainingMs(sessionId, abilityId)
-        }
+        sendCharSkills(
+            sessionId,
+            abilitySystem.knownAbilities(sessionId),
+            cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+            manaCostFor = { ability -> abilitySystem.computeManaCost(player, ability) },
+        )
         sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         sendCharAchievements(sessionId, player, achievementRegistry)
         sendCharSprites(sessionId, player)

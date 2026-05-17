@@ -12,6 +12,7 @@ import dev.ambon.engine.ERR_NOT_CONNECTED
 import dev.ambon.engine.GameSystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.applyHeal
@@ -43,6 +44,7 @@ class AbilitySystem(
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
     private val mobs: MobRegistry? = null,
+    private val progression: PlayerProgression = PlayerProgression(),
     private val onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> },
     val onSummonPet: suspend (SessionId, String, Long) -> Unit = { _, _, _ -> },
 ) : GameSystem {
@@ -85,8 +87,9 @@ class AbilitySystem(
         }
 
         // 2. Check mana (staff have infinite mana)
-        if (!player.isStaff && player.mana < ability.manaCost) {
-            return "Not enough mana. (${player.mana}/${ability.manaCost})"
+        val manaCost = computeManaCost(player, ability)
+        if (!player.isStaff && player.mana < manaCost) {
+            return "Not enough mana. (${player.mana}/$manaCost)"
         }
 
         // 3. Check cooldown
@@ -617,12 +620,25 @@ class AbilitySystem(
         ability: AbilityDefinition,
         now: Long,
     ) {
-        player.spendMana(ability.manaCost)
+        player.spendMana(computeManaCost(player, ability))
         dirtyNotifier.playerVitalsDirty(sessionId)
         if (ability.cooldownMs > 0) {
             cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
             onCooldownStarted(sessionId, ability.id.value, ability.cooldownMs)
         }
+    }
+
+    /**
+     * Resolves the absolute mana cost of [ability] for [player]. Cost is computed
+     * as a percentage of the player's level/class base mana pool, evaluated with
+     * default INT — so stat investment grows the *pool* (more casts) rather than
+     * discounting individual spells. See [AbilityDefinition.manaCostPct].
+     */
+    fun computeManaCost(player: PlayerState, ability: AbilityDefinition): Int {
+        if (ability.manaCostPct <= 0) return 0
+        val (_, classManaRate) = progression.resolveClassScaling(player.playerClass)
+        val basePool = progression.maxManaForLevel(player.level, manaScalingRate = classManaRate)
+        return ((basePool.toDouble() * ability.manaCostPct) / 100.0).roundToInt().coerceAtLeast(0)
     }
 
     /** Invoked after a cooldown starts; used by GameEngine to emit Char.Cooldown GMCP. */

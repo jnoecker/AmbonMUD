@@ -1,12 +1,16 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.LevelRewardsConfig
+import dev.ambon.config.ProgressionConfig
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -46,7 +50,8 @@ class AbilitySystemTest {
                 id = AbilityId("magic_missile"),
                 displayName = "Magic Missile",
                 description = "A bolt of arcane energy.",
-                manaCost = 8,
+                // 40% of 20 baseMana at L1 → 8 mana — matches old flat cost.
+                manaCostPct = 40,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "enemy",
@@ -58,7 +63,7 @@ class AbilitySystemTest {
                 id = AbilityId("heal"),
                 displayName = "Heal",
                 description = "Restore HP.",
-                manaCost = 10,
+                manaCostPct = 50,
                 cooldownMs = 5000,
                 levelRequired = 1,
                 targetType = "self",
@@ -70,7 +75,7 @@ class AbilitySystemTest {
                 id = AbilityId("fireball"),
                 displayName = "Fireball",
                 description = "Fire!",
-                manaCost = 15,
+                manaCostPct = 75,
                 cooldownMs = 3000,
                 levelRequired = 5,
                 targetType = "enemy",
@@ -151,6 +156,51 @@ class AbilitySystemTest {
                     .filterIsInstance<OutboundEvent.SendText>()
                     .map { it.text }
             assertTrue(messages.any { it.contains("Heal heals you for 5 HP") })
+        }
+
+    @Test
+    fun `computeManaCost scales with player level off the base mana pool`() =
+        runTest {
+            // Custom progression with a non-trivial manaScalingRate so the base pool
+            // grows with level — the test bakery default uses rate=1.0 (flat pool).
+            val fixture = AbilityTestFixture(roomId = roomId, clock = MutableClock(0L), rng = Random(42))
+            val progression = PlayerProgression(
+                config = ProgressionConfig(
+                    rewards = LevelRewardsConfig(baseMana = 20, manaScalingRate = 1.10),
+                ),
+                bindings = StatBindingsConfig(),
+            )
+            val registry = AbilityRegistry()
+            registry.register(
+                AbilityDefinition(
+                    id = AbilityId("zap"),
+                    displayName = "Zap",
+                    description = "",
+                    manaCostPct = 40,
+                    cooldownMs = 0,
+                    levelRequired = 1,
+                    targetType = "enemy",
+                    effect = AbilityEffect.DirectDamage(damage = DamageRange(1, 1)),
+                ),
+            )
+            val abilitySystem = fixture.buildAbilitySystem(registry = registry, progression = progression)
+            fixture.players.loginOrFail(sid, "Scaler")
+            val player = fixture.players.get(sid)!!
+            val ability = registry.findByKeyword("zap")!!
+
+            // 40% of the level-1 base pool (20) → 8 mana, matching the old flat cost.
+            player.level = 1
+            val costL1 = abilitySystem.computeManaCost(player, ability)
+            assertEquals(8, costL1)
+
+            // Bumping level grows the base pool via manaScalingRate, so the same
+            // percentage costs strictly more mana — the core scaling contract.
+            player.level = 20
+            val costL20 = abilitySystem.computeManaCost(player, ability)
+            assertTrue(
+                costL20 > costL1,
+                "Expected mana cost to grow with level (L1=$costL1, L20=$costL20)",
+            )
         }
 
     @Test
@@ -506,7 +556,7 @@ class AbilitySystemTest {
                 id = AbilityId("area_blast"),
                 displayName = "Area Blast",
                 description = "Hits all enemies in combat.",
-                manaCost = 25,
+                manaCostPct = 25,
                 cooldownMs = 0,
                 levelRequired = 5,
                 targetType = "enemy",
@@ -518,7 +568,7 @@ class AbilitySystemTest {
                 id = AbilityId("taunt_ability"),
                 displayName = "Taunt",
                 description = "Force mob to attack you.",
-                manaCost = 5,
+                manaCostPct = 25,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "enemy",
@@ -581,7 +631,7 @@ class AbilitySystemTest {
                 id = AbilityId("ignite"),
                 displayName = "Ignite",
                 description = "Burns the target.",
-                manaCost = 12,
+                manaCostPct = 50,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "enemy",
@@ -593,7 +643,7 @@ class AbilitySystemTest {
                 id = AbilityId("shield"),
                 displayName = "Shield",
                 description = "Grants a shield.",
-                manaCost = 15,
+                manaCostPct = 50,
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = "self",

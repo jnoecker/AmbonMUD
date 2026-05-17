@@ -469,7 +469,7 @@ Full ability list. Sent on login, when a new ability is learned (via trainer), a
 | `id`                   | string       | Ability identifier (matches `application.yaml` key) |
 | `name`                 | string       | Display name |
 | `description`          | string       | Flavour/effect text |
-| `manaCost`             | int          | Mana consumed on cast |
+| `manaCost`             | int          | Absolute mana consumed on cast for *this* player at their current level and class. Server-computed from the ability's authored `manaCostPct` against the player's level-derived base mana pool — see `docs/DEVELOPER_GUIDE.md` § Abilities. |
 | `cooldownMs`           | long         | Full cooldown duration in milliseconds |
 | `cooldownRemainingMs`  | long         | Milliseconds until the ability is ready (0 = ready) |
 | `levelRequired`        | int          | Minimum character level to use |
@@ -1241,7 +1241,7 @@ Subscribe with `"Trainer 1"`.
 | `abilities[]`          | array              | Abilities available to learn at this trainer |
 | `abilities[].id`       | string             | Ability ID (for `train learn <id>`) |
 | `abilities[].levelRequired` | int           | Minimum player level to learn |
-| `abilities[].manaCost` | int                | Mana consumed when cast |
+| `abilities[].manaCost` | int                | Absolute mana cost for *this player* at their current level/class. Server-computed from the authored `manaCostPct` — see `docs/DEVELOPER_GUIDE.md` § Abilities. |
 | `abilities[].cooldownMs` | long             | Full cooldown duration in milliseconds |
 | `abilities[].targetType` | string           | `SELF`, `ENEMY`, `ALLY`, `ALL_ENEMIES`, `ALL_ALLIES` |
 | `abilities[].effectType` | string           | `DIRECT_DAMAGE`, `AREA_DAMAGE`, `DIRECT_HEAL`, `BUFF`, `DEBUFF` |

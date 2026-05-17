@@ -376,7 +376,7 @@ data class AppConfig(
     private fun validateEngineAbilities() {
         engine.abilities.definitions.forEach { (key, def) ->
             if (def.displayName.isBlank()) warnConfig("ability '$key' displayName is blank")
-            if (def.manaCost < 0) warnConfig("ability '$key' manaCost is ${def.manaCost}, expected >= 0")
+            if (def.manaCostPct < 0) warnConfig("ability '$key' manaCostPct is ${def.manaCostPct}, expected >= 0")
             if (def.cooldownMs < 0L) warnConfig("ability '$key' cooldownMs is ${def.cooldownMs}, expected >= 0")
             if (def.levelRequired < 1) warnConfig("ability '$key' levelRequired is ${def.levelRequired}, expected >= 1")
             require(def.skillPointCost >= 0) {
@@ -2377,7 +2377,13 @@ data class AbilityEngineConfig(
 data class AbilityDefinitionConfig(
     val displayName: String = "",
     val description: String = "",
-    val manaCost: Int = 10,
+    /**
+     * Mana cost as a percentage (0-100+) of the player's level/class base mana
+     * pool (computed with default INT). Absolute cost is resolved per-cast —
+     * see [dev.ambon.engine.abilities.AbilityDefinition.manaCostPct] for the
+     * design rationale.
+     */
+    val manaCostPct: Int = 10,
     val cooldownMs: Long = 0L,
     val levelRequired: Int = 1,
     val skillPointCost: Int = 1,

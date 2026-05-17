@@ -570,7 +570,7 @@ ambonmud:
         my_spell:
           displayName: "My Spell"
           description: "A powerful spell."
-          manaCost: 20
+          manaCostPct: 20        # 20% of the player's level/class base mana pool
           cooldownMs: 5000
           levelRequired: 10
           targetType: ENEMY
@@ -581,6 +581,14 @@ ambonmud:
             maxDamage: 25
             damagePerLevel: 1.5     # scales with player level
 ```
+
+**Mana cost scales with level.** Costs are authored as a *percentage* of the
+player's level/class base mana pool (the pool computed with default INT, so the
+stat investment that grows the pool gives players more casts rather than
+discounting individual spells). The absolute per-cast mana spend is resolved by
+`AbilitySystem.computeManaCost(player, ability)` and emitted to the client as
+the `manaCost` field of `Char.Skills` GMCP. Suggested ranges: 0% (free
+spammable), 8–12% (basic), 15–20% (standard), 25–30% (signature/ultimate).
 
 Add a test in `AbilitySystemTest` exercising the new ability.
 

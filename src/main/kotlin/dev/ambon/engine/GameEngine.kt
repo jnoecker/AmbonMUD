@@ -811,6 +811,7 @@ class GameEngine(
             statusEffects = statusEffectSystem,
             groupSystem = groupSystem,
             mobs = mobs,
+            progression = progression,
             onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
             onSummonPet = { sid, templateKey, durationMs ->
                 val player = players.get(sid) ?: return@AbilitySystem
@@ -2322,9 +2323,12 @@ class GameEngine(
             val hpGained = (newMaxHp - oldMaxHp).coerceAtLeast(0)
             val manaGained = (newMaxMana - oldMaxMana).coerceAtLeast(0)
             gmcpEmitter.sendCharName(sessionId, p)
-            gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
-                abilitySystem.cooldownRemainingMs(sessionId, abilityId)
-            }
+            gmcpEmitter.sendCharSkills(
+                sessionId,
+                abilitySystem.knownAbilities(sessionId),
+                cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+                manaCostFor = { ability -> abilitySystem.computeManaCost(p, ability) },
+            )
             gmcpEmitter.sendCharGain(
                 sessionId,
                 "levelUp",

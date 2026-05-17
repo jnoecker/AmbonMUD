@@ -148,9 +148,12 @@ class StylistHandler(
 
         gmcpEmitter?.sendCharName(sessionId, me)
         if (abilitySystem != null) {
-            gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
-                abilitySystem.cooldownRemainingMs(sessionId, abilityId)
-            }
+            gmcpEmitter?.sendCharSkills(
+                sessionId,
+                abilitySystem.knownAbilities(sessionId),
+                cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+                manaCostFor = { ability -> abilitySystem.computeManaCost(me, ability) },
+            )
         }
         // Re-emit the sprite catalogue so the stylist / sprite panel shows choices
         // appropriate to the new race (sprites are race-filtered).
