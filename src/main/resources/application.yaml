@@ -893,11 +893,16 @@ ambonmud:
       maxPlayersPerTick: 200
       baseIntervalMillis: 4500
       minIntervalMillis: 1000
-      regenAmount: 1
+      # Fraction of max HP restored per regen tick (0.05 = 5%).
+      regenPercent: 0.05
+      # Multiplier applied to regen amount while the player is in combat
+      # (0.5 = half regen, 0.0 = no regen while fighting).
+      inCombatMultiplier: 0.5
       mana:
         baseIntervalMillis: 4500
         minIntervalMillis: 1000
-        regenAmount: 1
+        # Fraction of max mana restored per regen tick.
+        regenPercent: 0.05
     crafting:
       maxSkillLevel: 75
       baseXpPerLevel: 100

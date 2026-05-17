@@ -22,6 +22,10 @@ class RegenSystemTest {
         clock: MutableClock,
         baseIntervalMs: Long = 5_000L,
         manaBaseIntervalMs: Long = 3_000L,
+        hpRegenPercent: Double = 0.10,
+        manaRegenPercent: Double = 0.05,
+        inCombatMultiplier: Double = 0.5,
+        inCombat: (dev.ambon.domain.ids.SessionId) -> Boolean = { false },
     ): RegenSystem =
         RegenSystem(
             players = players,
@@ -30,6 +34,10 @@ class RegenSystemTest {
             rng = Random(42),
             baseIntervalMs = baseIntervalMs,
             manaBaseIntervalMs = manaBaseIntervalMs,
+            hpRegenPercent = hpRegenPercent,
+            manaRegenPercent = manaRegenPercent,
+            inCombatMultiplier = inCombatMultiplier,
+            inCombat = inCombat,
         )
 
     private fun makeRegistry(): PlayerRegistry =
@@ -283,6 +291,9 @@ class RegenSystemTest {
                     minIntervalMs = 0L,
                     manaBaseIntervalMs = 0L,
                     manaMinIntervalMs = 0L,
+                    // 10% of maxHp (10) = 1 HP per regen.
+                    hpRegenPercent = 0.10,
+                    manaRegenPercent = 0.10,
                     // 5 players * 100ms / 1000ms = 0.5 → ceil 1 → floor lifts to 1
                     tickIntervalMs = 100L,
                     cycleTargetMs = 1_000L,
@@ -298,6 +309,115 @@ class RegenSystemTest {
 
             val healed = sids.count { players.get(it)!!.hp > 1 }
             assertEquals(1, healed, "Expected adaptive cap of 1 to heal exactly one player")
+        }
+
+    @Test
+    fun `regen scales with max pool size`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val regen = makeRegen(players, clock, hpRegenPercent = 0.25)
+
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Sized")
+
+            val player = players.get(sid)!!
+            // Boost the pool so percent-based regen is non-trivial.
+            player.maxHp = 100
+            player.hp = 1
+
+            regen.tick() // seed
+            clock.advance(5_000L)
+            regen.tick()
+
+            // 25% of 100 = 25 HP per tick out of combat.
+            assertEquals(26, player.hp, "Expected +25 HP regen at 25% of 100 maxHp")
+        }
+
+    @Test
+    fun `in-combat players regen at reduced rate`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val sid = SessionId(1L)
+            val regen =
+                makeRegen(
+                    players,
+                    clock,
+                    hpRegenPercent = 0.50,
+                    inCombatMultiplier = 0.5,
+                    inCombat = { it == sid },
+                )
+
+            players.loginOrFail(sid, "Brawler")
+
+            val player = players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 1
+
+            regen.tick() // seed
+            clock.advance(5_000L)
+            regen.tick()
+
+            // 50% of 100 = 50, halved by in-combat multiplier = 25 HP.
+            assertEquals(26, player.hp, "Expected +25 HP (50% of maxHp × 0.5 in-combat multiplier)")
+        }
+
+    @Test
+    fun `in-combat multiplier of zero disables regen during fights`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val sid = SessionId(1L)
+            val regen =
+                makeRegen(
+                    players,
+                    clock,
+                    hpRegenPercent = 0.50,
+                    inCombatMultiplier = 0.0,
+                    inCombat = { it == sid },
+                )
+
+            players.loginOrFail(sid, "Locked")
+
+            val player = players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 1
+
+            regen.tick() // seed
+            clock.advance(5_000L)
+            regen.tick()
+
+            assertEquals(1, player.hp, "Player in combat with multiplier=0 should not regen")
+        }
+
+    @Test
+    fun `out-of-combat players ignore in-combat multiplier`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val sid = SessionId(1L)
+            val regen =
+                makeRegen(
+                    players,
+                    clock,
+                    hpRegenPercent = 0.50,
+                    inCombatMultiplier = 0.0,
+                    inCombat = { false },
+                )
+
+            players.loginOrFail(sid, "Safe")
+
+            val player = players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 1
+
+            regen.tick() // seed
+            clock.advance(5_000L)
+            regen.tick()
+
+            // Out of combat → full 50% of 100 = 50 HP regen.
+            assertEquals(51, player.hp, "Out-of-combat player should regen at full percent")
         }
 
     @Test
