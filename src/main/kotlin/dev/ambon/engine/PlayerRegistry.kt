@@ -311,8 +311,8 @@ class PlayerRegistry(
         val level = progression.computeLevel(xpTotal)
         val ps = boundRecord.copy(xpTotal = xpTotal, level = level).toPlayerState(sessionId)
         progression.applyLevelStats(ps, level)
-        ps.hp = if (boundRecord.hp <= 0) ps.maxHp else boundRecord.hp.coerceIn(1, ps.maxHp)
-        ps.mana = boundRecord.mana.coerceIn(0, ps.maxMana)
+        ps.hp = ps.maxHp
+        ps.mana = ps.maxMana
         players[sessionId] = ps
         rebuildAllPlayersSnapshot()
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
