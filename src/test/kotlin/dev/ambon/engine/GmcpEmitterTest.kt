@@ -483,7 +483,12 @@ class GmcpEmitterTest {
     fun `sendCharSkills emits ability list JSON`() =
         runTest {
             val e = emitter("Char.Skills")
-            e.sendCharSkills(sid, listOf(ability()), cooldownRemainingMs = { 2300L })
+            e.sendCharSkills(
+                sid,
+                listOf(ability()),
+                cooldownRemainingMs = { 2300L },
+                manaCostFor = { it.manaCostPct },
+            )
             val data = drainGmcp()[0]
             assertEquals("Char.Skills", data.gmcpPackage)
             assertTrue(data.jsonData.contains("\"id\":\"firebolt\""))
@@ -502,7 +507,7 @@ class GmcpEmitterTest {
     fun `sendCharSkills with no abilities emits empty array`() =
         runTest {
             val e = emitter("Char.Skills")
-            e.sendCharSkills(sid, emptyList())
+            e.sendCharSkills(sid, emptyList(), manaCostFor = { 0 })
             val data = drainGmcp()[0]
             assertEquals("[]", data.jsonData)
         }
@@ -511,7 +516,12 @@ class GmcpEmitterTest {
     fun `sendCharSkills skipped when not supported`() =
         runTest {
             val e = emitter()
-            e.sendCharSkills(sid, listOf(ability()), cooldownRemainingMs = { 2300L })
+            e.sendCharSkills(
+                sid,
+                listOf(ability()),
+                cooldownRemainingMs = { 2300L },
+                manaCostFor = { it.manaCostPct },
+            )
             assertTrue(drainGmcp().isEmpty())
         }
 
@@ -519,7 +529,12 @@ class GmcpEmitterTest {
     fun `sendCharSkills includes visual archetype block`() =
         runTest {
             val e = emitter("Char.Skills")
-            e.sendCharSkills(sid, listOf(ability()), cooldownRemainingMs = { 0L })
+            e.sendCharSkills(
+                sid,
+                listOf(ability()),
+                cooldownRemainingMs = { 0L },
+                manaCostFor = { it.manaCostPct },
+            )
             val data = drainGmcp()[0]
             // DIRECT_DAMAGE with no class derives RANGED_PROJECTILE
             assertTrue(data.jsonData.contains("\"visual\":{\"archetype\":\"RANGED_PROJECTILE\""))

@@ -463,11 +463,20 @@ class GmcpEmitter(
         broadcastSerialized(players.playersInRoom(roomId), "Room.Items", payload)
     }
 
+    /**
+     * Emits `Char.Skills` for [sessionId]. [manaCostFor] is intentionally required
+     * (no default): the GMCP `manaCost` field is the *absolute* per-cast mana
+     * cost for this player, resolved by [AbilitySystem.computeManaCost] from the
+     * ability's `manaCostPct` against the player's level/class base pool. Passing
+     * `it.manaCostPct` directly would silently ship a raw percentage to the
+     * client mislabeled as mana — so every caller must supply the resolver
+     * explicitly.
+     */
     suspend fun sendCharSkills(
         sessionId: SessionId,
         abilities: List<AbilityDefinition>,
         cooldownRemainingMs: (AbilityId) -> Long = { 0L },
-        manaCostFor: (AbilityDefinition) -> Int = { it.manaCostPct },
+        manaCostFor: (AbilityDefinition) -> Int,
     ) {
         emit(
             sessionId,
