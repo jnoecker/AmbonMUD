@@ -1407,7 +1407,7 @@ private fun AbilityDefinition.toAbilityDto(): Map<String, Any?> =
         "id" to id.value,
         "displayName" to displayName,
         "description" to description,
-        "manaCost" to manaCost,
+        "manaCostPct" to manaCostPct,
         "cooldownMs" to cooldownMs,
         "levelRequired" to levelRequired,
         "targetType" to targetType,

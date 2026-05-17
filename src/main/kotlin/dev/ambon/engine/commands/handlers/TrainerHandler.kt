@@ -297,9 +297,12 @@ class TrainerHandler(
             )
             sendAutoLearnedMessage(sessionId, autoLearned.filter { it.id != ability.id })
 
-            gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { id ->
-                abilitySystem.cooldownRemainingMs(sessionId, id)
-            }
+            gmcpEmitter?.sendCharSkills(
+                sessionId,
+                abilitySystem.knownAbilities(sessionId),
+                cooldownRemainingMs = { id -> abilitySystem.cooldownRemainingMs(sessionId, id) },
+                manaCostFor = { a -> abilitySystem.computeManaCost(me, a) },
+            )
             gmcpEmitter?.sendTrainerList(sessionId, trainer, me, remaining, abilitySystem, multiclassConfig)
         }
     }
@@ -460,9 +463,12 @@ class TrainerHandler(
             )
 
             // Emit GMCP updates
-            gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { id ->
-                abilitySystem.cooldownRemainingMs(sessionId, id)
-            }
+            gmcpEmitter?.sendCharSkills(
+                sessionId,
+                abilitySystem.knownAbilities(sessionId),
+                cooldownRemainingMs = { id -> abilitySystem.cooldownRemainingMs(sessionId, id) },
+                manaCostFor = { a -> abilitySystem.computeManaCost(me, a) },
+            )
             gmcpEmitter?.sendCharVitals(sessionId, me)
             gmcpEmitter?.sendTrainerList(sessionId, trainer, me, available, abilitySystem, multiclassConfig)
         }

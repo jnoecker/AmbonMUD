@@ -173,7 +173,7 @@ ambonmud:
       definitions:
         power_strike:
           displayName: Power Strike
-          manaCost: 0
+          manaCostPct: 0
           cooldownMs: 0
           levelRequired: 1
           targetType: ENEMY
@@ -186,7 +186,7 @@ ambonmud:
           requiredClass: WARRIOR
         shield_bash:
           displayName: Shield Bash
-          manaCost: 10
+          manaCostPct: 12
           cooldownMs: 8000
           levelRequired: 3
           targetType: ENEMY
@@ -198,7 +198,7 @@ ambonmud:
           requiredClass: WARRIOR
         war_cry:
           displayName: War Cry
-          manaCost: 12
+          manaCostPct: 14
           cooldownMs: 10000
           levelRequired: 5
           targetType: SELF
@@ -211,7 +211,7 @@ ambonmud:
           requiredClass: WARRIOR
         fortify:
           displayName: Fortify
-          manaCost: 15
+          manaCostPct: 18
           cooldownMs: 15000
           levelRequired: 7
           targetType: SELF
@@ -223,7 +223,7 @@ ambonmud:
           requiredClass: WARRIOR
         cleave:
           displayName: Cleave
-          manaCost: 25
+          manaCostPct: 25
           cooldownMs: 12000
           levelRequired: 9
           targetType: ENEMY
@@ -236,7 +236,7 @@ ambonmud:
           requiredClass: WARRIOR
         arcane_bolt:
           displayName: Arcane Bolt
-          manaCost: 8
+          manaCostPct: 10
           cooldownMs: 0
           levelRequired: 1
           targetType: ENEMY
@@ -249,7 +249,7 @@ ambonmud:
           requiredClass: MAGE
         flame_brand:
           displayName: Flame Brand
-          manaCost: 15
+          manaCostPct: 15
           cooldownMs: 6000
           levelRequired: 3
           targetType: ENEMY
@@ -261,7 +261,7 @@ ambonmud:
           requiredClass: MAGE
         arcane_shield:
           displayName: Arcane Shield
-          manaCost: 12
+          manaCostPct: 15
           cooldownMs: 15000
           levelRequired: 5
           targetType: SELF
@@ -273,7 +273,7 @@ ambonmud:
           requiredClass: MAGE
         chain_lightning:
           displayName: Chain Lightning
-          manaCost: 22
+          manaCostPct: 25
           cooldownMs: 8000
           levelRequired: 7
           targetType: ENEMY
@@ -286,7 +286,7 @@ ambonmud:
           requiredClass: MAGE
         hex:
           displayName: Hex
-          manaCost: 14
+          manaCostPct: 18
           cooldownMs: 10000
           levelRequired: 9
           targetType: ENEMY
@@ -298,7 +298,7 @@ ambonmud:
           requiredClass: MAGE
         heal:
           displayName: Heal
-          manaCost: 10
+          manaCostPct: 12
           cooldownMs: 0
           levelRequired: 1
           targetType: SELF
@@ -311,7 +311,7 @@ ambonmud:
           requiredClass: CLERIC
         restore:
           displayName: Restore
-          manaCost: 12
+          manaCostPct: 15
           cooldownMs: 3000
           levelRequired: 3
           targetType: ALLY
@@ -324,7 +324,7 @@ ambonmud:
           requiredClass: CLERIC
         blessing:
           displayName: Blessing
-          manaCost: 14
+          manaCostPct: 18
           cooldownMs: 20000
           levelRequired: 5
           targetType: SELF
@@ -336,7 +336,7 @@ ambonmud:
           requiredClass: CLERIC
         purge:
           displayName: Purge
-          manaCost: 12
+          manaCostPct: 15
           cooldownMs: 8000
           levelRequired: 7
           targetType: ENEMY
@@ -348,7 +348,7 @@ ambonmud:
           requiredClass: CLERIC
         sanctuary:
           displayName: Sanctuary
-          manaCost: 18
+          manaCostPct: 22
           cooldownMs: 12000
           levelRequired: 9
           targetType: SELF
@@ -360,7 +360,7 @@ ambonmud:
           requiredClass: CLERIC
         backstab:
           displayName: Backstab
-          manaCost: 6
+          manaCostPct: 8
           cooldownMs: 0
           levelRequired: 1
           targetType: ENEMY
@@ -373,7 +373,7 @@ ambonmud:
           requiredClass: ROGUE
         blind:
           displayName: Blind
-          manaCost: 8
+          manaCostPct: 10
           cooldownMs: 10000
           levelRequired: 3
           targetType: ENEMY
@@ -385,7 +385,7 @@ ambonmud:
           requiredClass: ROGUE
         envenom:
           displayName: Envenom
-          manaCost: 12
+          manaCostPct: 15
           cooldownMs: 8000
           levelRequired: 5
           targetType: ENEMY
@@ -397,7 +397,7 @@ ambonmud:
           requiredClass: ROGUE
         shadow_step:
           displayName: Shadow Step
-          manaCost: 14
+          manaCostPct: 18
           cooldownMs: 25000
           levelRequired: 7
           targetType: SELF
@@ -409,7 +409,7 @@ ambonmud:
           requiredClass: ROGUE
         ambush:
           displayName: Ambush
-          manaCost: 22
+          manaCostPct: 25
           cooldownMs: 8000
           levelRequired: 9
           targetType: ENEMY
@@ -422,7 +422,7 @@ ambonmud:
           requiredClass: ROGUE
         summon_wolf:
           displayName: Summon Wolf
-          manaCost: 15
+          manaCostPct: 18
           cooldownMs: 5000
           levelRequired: 1
           targetType: SELF
@@ -434,7 +434,7 @@ ambonmud:
           requiredClass: RANGER
         aimed_shot:
           displayName: Aimed Shot
-          manaCost: 10
+          manaCostPct: 12
           cooldownMs: 5000
           levelRequired: 3
           targetType: ENEMY
@@ -447,7 +447,7 @@ ambonmud:
           requiredClass: RANGER
         summon_hawk:
           displayName: Summon Hawk
-          manaCost: 18
+          manaCostPct: 20
           cooldownMs: 5000
           levelRequired: 5
           targetType: SELF
@@ -459,7 +459,7 @@ ambonmud:
           requiredClass: RANGER
         natures_gift:
           displayName: Nature's Gift
-          manaCost: 14
+          manaCostPct: 18
           cooldownMs: 15000
           levelRequired: 7
           targetType: SELF
@@ -471,7 +471,7 @@ ambonmud:
           requiredClass: RANGER
         summon_bear:
           displayName: Summon Bear
-          manaCost: 25
+          manaCostPct: 28
           cooldownMs: 5000
           levelRequired: 9
           targetType: SELF

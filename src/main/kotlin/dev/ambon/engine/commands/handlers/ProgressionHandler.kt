@@ -147,14 +147,19 @@ class ProgressionHandler(
                     outbound.send(
                         OutboundEvent.SendInfo(
                             sessionId,
-                            "  ${a.displayName}  — ${a.manaCost} mana, $cdText — ${a.description}",
+                            "  ${a.displayName}  — ${abilities.computeManaCost(me, a)} mana, $cdText — ${a.description}",
                         ),
                     )
                 }
             }
         }
-        gmcpEmitter?.sendCharSkills(sessionId, known) { abilityId ->
-            abilities.cooldownRemainingMs(sessionId, abilityId)
+        players.withPlayer(sessionId) { me ->
+            gmcpEmitter?.sendCharSkills(
+                sessionId,
+                known,
+                cooldownRemainingMs = { abilityId -> abilities.cooldownRemainingMs(sessionId, abilityId) },
+                manaCostFor = { ability -> abilities.computeManaCost(me, ability) },
+            )
         }
     }
 

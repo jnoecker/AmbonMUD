@@ -55,7 +55,7 @@ object AbilityRegistryLoader {
                     id = AbilityId(key),
                     displayName = defConfig.displayName.ifEmpty { key },
                     description = defConfig.description,
-                    manaCost = defConfig.manaCost,
+                    manaCostPct = defConfig.manaCostPct,
                     cooldownMs = defConfig.cooldownMs,
                     levelRequired = defConfig.levelRequired,
                     skillPointCost = defConfig.skillPointCost,

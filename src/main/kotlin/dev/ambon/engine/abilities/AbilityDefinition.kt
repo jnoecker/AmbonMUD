@@ -89,7 +89,15 @@ data class AbilityDefinition(
     val id: AbilityId,
     val displayName: String,
     val description: String,
-    val manaCost: Int,
+    /**
+     * Mana cost expressed as a percentage of the player's level/class base mana
+     * pool (computed with default stat — i.e. INT-independent). The absolute
+     * cost is resolved per-cast by [dev.ambon.engine.abilities.AbilitySystem.computeManaCost]
+     * so the effective spend scales with leveling alongside spell damage, while
+     * stat investment in the casting stat increases the player's total casts
+     * rather than discounting individual spells.
+     */
+    val manaCostPct: Int,
     val cooldownMs: Long,
     val levelRequired: Int,
     val targetType: String,

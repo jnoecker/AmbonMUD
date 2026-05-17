@@ -114,14 +114,14 @@ class GmcpEmitterTest {
     private fun ability(
         id: String = "firebolt",
         name: String = "Firebolt",
-        manaCost: Int = 8,
+        manaCostPct: Int = 8,
         cooldownMs: Long = 5000L,
         skillPointCost: Int = 1,
     ) = AbilityDefinition(
         id = AbilityId(id),
         displayName = name,
         description = "A bolt of fire.",
-        manaCost = manaCost,
+        manaCostPct = manaCostPct,
         cooldownMs = cooldownMs,
         levelRequired = 1,
         targetType = "enemy",
@@ -483,7 +483,7 @@ class GmcpEmitterTest {
     fun `sendCharSkills emits ability list JSON`() =
         runTest {
             val e = emitter("Char.Skills")
-            e.sendCharSkills(sid, listOf(ability())) { 2300L }
+            e.sendCharSkills(sid, listOf(ability()), cooldownRemainingMs = { 2300L })
             val data = drainGmcp()[0]
             assertEquals("Char.Skills", data.gmcpPackage)
             assertTrue(data.jsonData.contains("\"id\":\"firebolt\""))
@@ -511,7 +511,7 @@ class GmcpEmitterTest {
     fun `sendCharSkills skipped when not supported`() =
         runTest {
             val e = emitter()
-            e.sendCharSkills(sid, listOf(ability())) { 2300L }
+            e.sendCharSkills(sid, listOf(ability()), cooldownRemainingMs = { 2300L })
             assertTrue(drainGmcp().isEmpty())
         }
 
@@ -519,7 +519,7 @@ class GmcpEmitterTest {
     fun `sendCharSkills includes visual archetype block`() =
         runTest {
             val e = emitter("Char.Skills")
-            e.sendCharSkills(sid, listOf(ability())) { 0L }
+            e.sendCharSkills(sid, listOf(ability()), cooldownRemainingMs = { 0L })
             val data = drainGmcp()[0]
             // DIRECT_DAMAGE with no class derives RANGED_PROJECTILE
             assertTrue(data.jsonData.contains("\"visual\":{\"archetype\":\"RANGED_PROJECTILE\""))

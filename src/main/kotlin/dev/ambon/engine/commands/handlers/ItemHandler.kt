@@ -395,9 +395,12 @@ class ItemHandler(
                         ),
                     )
                 }
-                gmcpEmitter?.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
-                    abilitySystem.cooldownRemainingMs(sessionId, abilityId)
-                }
+                gmcpEmitter?.sendCharSkills(
+                    sessionId,
+                    abilitySystem.knownAbilities(sessionId),
+                    cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+                    manaCostFor = { ability -> abilitySystem.computeManaCost(player, ability) },
+                )
             }
 
             gmcpEmitter?.sendCharGain(

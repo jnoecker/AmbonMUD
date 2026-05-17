@@ -7,6 +7,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.abilities.AbilitySystem
@@ -44,6 +45,7 @@ class AbilityTestFixture(
         // Default to no-variance, no-level-scaling bindings so spell-damage tests pin
         // exact damage values without modeling the production scaling curve.
         bindings: StatBindingsConfig = deterministicMeleeBindings(),
+        progression: PlayerProgression = PlayerProgression(bindings = bindings),
     ): AbilitySystem =
         AbilitySystem(
             players = players,
@@ -56,5 +58,6 @@ class AbilityTestFixture(
             dirtyNotifier = dirtyNotifier,
             mobs = mobsForAbility ?: mobs,
             bindings = bindings,
+            progression = progression,
         )
 }
