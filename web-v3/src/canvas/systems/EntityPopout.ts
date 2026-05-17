@@ -103,6 +103,11 @@ export class EntityPopout {
     // Look is always available
     actions.push({ label: "Look", command: `look ${name}`, color: 0x64b5f6 });
 
+    // Consider — threat assessment, shown for anything that can be attacked
+    if (isAggressive || !isNpc) {
+      actions.push({ label: "Consider", command: `consider ${name}`, color: 0xb294bb });
+    }
+
     // Attack as secondary option for friendly NPCs (still reachable but deprioritized)
     if (isNpc && !isAggressive) {
       actions.push({ label: "Attack", command: `kill ${name}`, color: 0x6a5050 });

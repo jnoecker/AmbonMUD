@@ -1456,22 +1456,6 @@ function App() {
               <p className="look-target-desc">{state.lookTarget.description}</p>
             )}
             {state.lookTarget.type === "item" && renderItemStats(state.lookTarget)}
-            {state.lookTarget.type === "mob" && (
-              <div className="look-target-actions">
-                <button
-                  type="button"
-                  className="look-target-action"
-                  onClick={() => {
-                    const target = state.lookTarget?.name;
-                    if (!target) return;
-                    sendCommand(`consider ${target}`);
-                    state.setLookTarget(null);
-                  }}
-                >
-                  Consider
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
