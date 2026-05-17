@@ -40,6 +40,14 @@ fun deterministicMeleeBindings(unarmedAttackPower: Int = 1): StatBindingsConfig 
         meleeVarianceMin = 1.0,
         meleeVarianceMax = 1.0,
         meleeBaseAttackPower = unarmedAttackPower,
+        spellStatMultiplier = 0.0,
+        spellLevelScalingRate = 1.0,
+        spellVarianceMin = 1.0,
+        spellVarianceMax = 1.0,
+        healStatMultiplier = 0.0,
+        healLevelScalingRate = 1.0,
+        healVarianceMin = 1.0,
+        healVarianceMax = 1.0,
     )
 
 class CombatTestFixture(

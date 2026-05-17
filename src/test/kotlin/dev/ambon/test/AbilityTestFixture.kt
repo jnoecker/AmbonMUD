@@ -1,6 +1,7 @@
 package dev.ambon.test
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.CombatSystemConfig
@@ -40,6 +41,9 @@ class AbilityTestFixture(
         statusEffects: StatusEffectSystem? = null,
         dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
         mobsForAbility: MobRegistry? = null,
+        // Default to no-variance, no-level-scaling bindings so spell-damage tests pin
+        // exact damage values without modeling the production scaling curve.
+        bindings: StatBindingsConfig = deterministicMeleeBindings(),
     ): AbilitySystem =
         AbilitySystem(
             players = players,
@@ -51,5 +55,6 @@ class AbilityTestFixture(
             statusEffects = statusEffects,
             dirtyNotifier = dirtyNotifier,
             mobs = mobsForAbility ?: mobs,
+            bindings = bindings,
         )
 }

@@ -319,6 +319,8 @@ data class AppConfig(
             b.meleeDamageStat to "meleeDamageStat",
             b.dodgeStat to "dodgeStat",
             b.spellDamageStat to "spellDamageStat",
+            b.healStat to "healStat",
+            b.buffStat to "buffStat",
             b.hpScalingStat to "hpScalingStat",
             b.manaScalingStat to "manaScalingStat",
             b.hpRegenStat to "hpRegenStat",
@@ -344,7 +346,26 @@ data class AppConfig(
         }
         require(b.dodgePerPoint >= 0) { "ambonMUD.engine.stats.bindings.dodgePerPoint must be >= 0" }
         require(b.maxDodgePercent in 0..100) { "ambonMUD.engine.stats.bindings.maxDodgePercent must be in 0..100" }
-        b.spellDamageDivisor.requirePositive("ambonMUD.engine.stats.bindings.spellDamageDivisor")
+        require(b.spellStatMultiplier >= 0.0) { "ambonMUD.engine.stats.bindings.spellStatMultiplier must be >= 0" }
+        require(b.spellLevelScalingRate >= 1.0) {
+            "ambonMUD.engine.stats.bindings.spellLevelScalingRate must be >= 1.0 (use 1.0 to disable)"
+        }
+        require(b.spellVarianceMin > 0.0 && b.spellVarianceMax >= b.spellVarianceMin) {
+            "ambonMUD.engine.stats.bindings.spellVarianceMin/Max must satisfy 0 < min <= max"
+        }
+        require(b.healStatMultiplier >= 0.0) { "ambonMUD.engine.stats.bindings.healStatMultiplier must be >= 0" }
+        require(b.healLevelScalingRate >= 1.0) {
+            "ambonMUD.engine.stats.bindings.healLevelScalingRate must be >= 1.0 (use 1.0 to disable)"
+        }
+        require(b.healVarianceMin > 0.0 && b.healVarianceMax >= b.healVarianceMin) {
+            "ambonMUD.engine.stats.bindings.healVarianceMin/Max must satisfy 0 < min <= max"
+        }
+        require(b.buffDurationPerStat >= 0.0) {
+            "ambonMUD.engine.stats.bindings.buffDurationPerStat must be >= 0"
+        }
+        require(b.buffMagnitudePerStat >= 0.0) {
+            "ambonMUD.engine.stats.bindings.buffMagnitudePerStat must be >= 0"
+        }
         b.hpScalingDivisor.requirePositive("ambonMUD.engine.stats.bindings.hpScalingDivisor")
         b.manaScalingDivisor.requirePositive("ambonMUD.engine.stats.bindings.manaScalingDivisor")
         require(b.hpRegenMsPerPoint >= 0L) { "ambonMUD.engine.stats.bindings.hpRegenMsPerPoint must be >= 0" }
@@ -1980,7 +2001,47 @@ data class StatBindingsConfig(
     val dodgePerPoint: Int = 2,
     val maxDodgePercent: Int = 30,
     val spellDamageStat: String = "INT",
-    val spellDamageDivisor: Int = 3,
+    /**
+     * Spell damage uses the same shape as basic melee — ability-authored damage
+     * range provides the anchor, then statBonus + levelScale + variance apply:
+     *
+     *   anchor      = (effect.damage.min + effect.damage.max) / 2
+     *   statBonus   = (stat - basePoint) × spellStatMultiplier
+     *   levelScale  = spellLevelScalingRate ^ (level - 1)
+     *   core        = (anchor + statBonus) × levelScale
+     *   final       = round(core × uniform(spellVarianceMin, spellVarianceMax))
+     *
+     * Spells bypass armor — physical mitigation doesn't apply to magical hits.
+     */
+    val spellStatMultiplier: Double = 0.25,
+    val spellLevelScalingRate: Double = 1.30,
+    val spellVarianceMin: Double = 0.85,
+    val spellVarianceMax: Double = 1.15,
+    /**
+     * Bindings for direct/area heals — same shape as spell damage, scaled by
+     * [healStat] (WIS by default). Replaces the per-ability `healPerLevel`
+     * additive scaling with a global compounding rate.
+     */
+    val healStat: String = "WIS",
+    val healStatMultiplier: Double = 0.25,
+    val healLevelScalingRate: Double = 1.30,
+    val healVarianceMin: Double = 0.85,
+    val healVarianceMax: Double = 1.15,
+    /**
+     * Bindings for buff-style abilities (`AbilityEffect.ApplyStatus` targeting
+     * self/ally/group). [buffStat] (CHA by default) drives duration and magnitude
+     * scaling for utility/support classes (bard, warlord, herald):
+     *
+     *   durationMultiplier  = 1.0 + (stat - basePoint) × buffDurationPerStat
+     *   magnitudeMultiplier = 1.0 + (stat - basePoint) × buffMagnitudePerStat
+     *
+     * Wiring into the actual status-effect engine is a follow-up — these knobs
+     * are reserved so support-class abilities have a defined scaling lane the
+     * same way damage scales off INT and heals scale off WIS.
+     */
+    val buffStat: String = "CHA",
+    val buffDurationPerStat: Double = 0.02,
+    val buffMagnitudePerStat: Double = 0.02,
     val hpScalingStat: String = "CON",
     val hpScalingDivisor: Int = 5,
     val manaScalingStat: String = "INT",
@@ -2352,10 +2413,6 @@ data class AbilityEffectConfig(
     val margin: Double = 10.0,
     val petTemplateKey: String = "",
     val durationMs: Long = 0L,
-    /** Added damage per player level for DIRECT_DAMAGE and AREA_DAMAGE effects. */
-    val damagePerLevel: Double = 0.0,
-    /** Added healing per player level for DIRECT_HEAL effects. */
-    val healPerLevel: Double = 0.0,
 )
 
 data class SkillPointsConfig(

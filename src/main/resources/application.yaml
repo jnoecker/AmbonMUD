@@ -137,7 +137,28 @@ ambonmud:
         dodgePerPoint: 2
         maxDodgePercent: 30
         spellDamageStat: INT
-        spellDamageDivisor: 3
+        # Spell damage uses the same shape as melee minus armor:
+        #   anchor      = (effect.damage.min + effect.damage.max) / 2
+        #   statBonus   = (stat - baseStat) * spellStatMultiplier
+        #   levelScale  = spellLevelScalingRate ^ (level - 1)
+        #   final       = round((anchor + statBonus) * levelScale *
+        #                       uniform(spellVarianceMin, spellVarianceMax))
+        spellStatMultiplier: 0.25
+        spellLevelScalingRate: 1.30
+        spellVarianceMin: 0.85
+        spellVarianceMax: 1.15
+        # Heals follow the same formula scaled by `healStat` (WIS by default).
+        healStat: WIS
+        healStatMultiplier: 0.25
+        healLevelScalingRate: 1.30
+        healVarianceMin: 0.85
+        healVarianceMax: 1.15
+        # Buff bindings — reserved for utility/support classes (bard, herald).
+        # Wiring into status-effect duration/magnitude is a follow-up; the knobs
+        # exist now so support abilities have a defined scaling lane.
+        buffStat: CHA
+        buffDurationPerStat: 0.02
+        buffMagnitudePerStat: 0.02
         hpScalingStat: CON
         hpScalingDivisor: 5
         manaScalingStat: INT
@@ -160,7 +181,6 @@ ambonmud:
             type: DIRECT_DAMAGE
             minDamage: 8
             maxDamage: 14
-            damagePerLevel: 0.5
           description: A forceful melee attack that channels raw strength into a single devastating blow.
           image: dd61f883dfea38e9c5702f35d5a337652140b246ee44822ea3db137a58013c2e.png
           requiredClass: WARRIOR
@@ -211,7 +231,6 @@ ambonmud:
             type: AREA_DAMAGE
             minDamage: 14
             maxDamage: 22
-            damagePerLevel: 0.6
           description: A wide sweeping strike that carves through all enemies within reach.
           image: 89934f29d6735864e190a2108e57bd4f569ccc5e6605ddebec6e4422eee0f557.png
           requiredClass: WARRIOR
@@ -225,7 +244,6 @@ ambonmud:
             type: DIRECT_DAMAGE
             minDamage: 10
             maxDamage: 16
-            damagePerLevel: 0.6
           description: Launches a concentrated bolt of raw arcane energy at a single target.
           image: 92ffba697c3c76a12f57f67952794cba6f20ce38a604f6c15c8748d03c48aa07.png
           requiredClass: MAGE
@@ -263,7 +281,6 @@ ambonmud:
             type: AREA_DAMAGE
             minDamage: 12
             maxDamage: 20
-            damagePerLevel: 0.5
           description: Unleashes a crackling arc of lightning that leaps between nearby enemies.
           image: 712a92a6e22da2b40b374f30bb1a6b0527dc65f73715b0e6575d74b6a55c3633.png
           requiredClass: MAGE
@@ -289,7 +306,6 @@ ambonmud:
             type: DIRECT_HEAL
             minHeal: 12
             maxHeal: 20
-            healPerLevel: 0.6
           description: Channels divine energy to mend the cleric's own wounds.
           image: 78037433fb3cfb381a24f85e8f355b25cbe710cb26381e457e78d52593624bd1.png
           requiredClass: CLERIC
@@ -303,7 +319,6 @@ ambonmud:
             type: DIRECT_HEAL
             minHeal: 15
             maxHeal: 25
-            healPerLevel: 0.7
           description: Extends a hand of sacred light to heal an injured ally.
           image: a7ddd58504f3b070e3a33d5b1c4e9d89cfa4a8428501bb8762dfdb3409f206df.png
           requiredClass: CLERIC
@@ -353,7 +368,6 @@ ambonmud:
             type: DIRECT_DAMAGE
             minDamage: 9
             maxDamage: 15
-            damagePerLevel: 0.6
           description: Drives a blade into a vulnerable spot, dealing heavy damage from close range.
           image: 699e270d07c1ecfeabbcd3a9f52f47a4d01a2d55cdaded80aafd6fec4d66ca2f.png
           requiredClass: ROGUE
@@ -403,7 +417,6 @@ ambonmud:
             type: DIRECT_DAMAGE
             minDamage: 25
             maxDamage: 40
-            damagePerLevel: 1
           description: Strikes from concealment with lethal precision, dealing massive damage to an unsuspecting target.
           image: ba481e6edf71d234d729d9fd69c3a6887558dadc491b9e712de8a75d7884cb6a.png
           requiredClass: ROGUE
@@ -429,7 +442,6 @@ ambonmud:
             type: DIRECT_DAMAGE
             minDamage: 10
             maxDamage: 18
-            damagePerLevel: 0.7
           description: Takes careful aim and releases a precise arrow that strikes a vital area.
           image: f8268b41165fb08d519880b752ff25a3c6cb6e11fa232fc23dd4d9312a0323e0.png
           requiredClass: RANGER

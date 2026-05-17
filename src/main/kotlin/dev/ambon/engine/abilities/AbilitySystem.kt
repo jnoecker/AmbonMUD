@@ -2,6 +2,8 @@ package dev.ambon.engine.abilities
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.StatBindingsConfig
+import dev.ambon.domain.DamageRange
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
@@ -20,12 +22,13 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.remapKey
 import dev.ambon.engine.resolvePlayerStats
-import dev.ambon.engine.rollRange
 import dev.ambon.engine.spendMana
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.engine.takeDamage
 import java.time.Clock
 import java.util.Random
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 class AbilitySystem(
     private val players: PlayerRegistry,
@@ -132,14 +135,11 @@ class AbilitySystem(
 
         val playerStats = resolvePlayerStats(player, items, statusEffects)
 
-        val intBonus = PlayerState.statBonus(playerStats[bindings.spellDamageStat], bindings.spellDamageDivisor)
-
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val levelBonus = levelScaledDamageBonus(effect.damagePerLevel, player.level)
-                val baseDamage = rollRange(rng, effect.damage.min + levelBonus, effect.damage.max + levelBonus)
-                applySpellDamage(sessionId, mob, ability, baseDamage, intBonus)
+                val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                applySpellDamage(sessionId, mob, ability, damage)
             }
             is AbilityEffect.AreaDamage -> {
                 val mobRegistry = mobs ?: return "Area damage is not available."
@@ -159,10 +159,9 @@ class AbilitySystem(
                 }
 
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val levelBonus = levelScaledDamageBonus(effect.damagePerLevel, player.level)
                 for (m in targetMobs) {
-                    val baseDamage = rollRange(rng, effect.damage.min + levelBonus, effect.damage.max + levelBonus)
-                    applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    applySpellDamage(sessionId, m, ability, damage)
                 }
             }
             is AbilityEffect.Taunt -> {
@@ -215,8 +214,9 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val levelBonus = levelScaledHealBonus(effect.healPerLevel, player.level)
-                val healAmount = rollRange(rng, effect.minHeal + levelBonus, effect.maxHeal + levelBonus)
+                val playerStats = resolvePlayerStats(player, items, statusEffects)
+                val healAmount =
+                    computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val healed = applyHeal(sessionId, player, healAmount, dirtyNotifier)
                 if (healed > 0) {
                     combat.addHealingThreat(sessionId, healed)
@@ -305,8 +305,9 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val levelBonus = levelScaledHealBonus(effect.healPerLevel, player.level)
-                val healAmount = rollRange(rng, effect.minHeal + levelBonus, effect.maxHeal + levelBonus)
+                val playerStats = resolvePlayerStats(player, items, statusEffects)
+                val healAmount =
+                    computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
                 if (healed > 0) {
                     combat.addHealingThreat(sessionId, healed)
@@ -408,23 +409,20 @@ class AbilitySystem(
         }
 
         val playerStats = resolvePlayerStats(player, items, statusEffects)
-        val intBonus = PlayerState.statBonus(playerStats[bindings.spellDamageStat], bindings.spellDamageDivisor)
 
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val levelBonus = levelScaledDamageBonus(effect.damagePerLevel, player.level)
                 for (m in targetMobs) {
-                    val baseDamage = rollRange(rng, effect.damage.min + levelBonus, effect.damage.max + levelBonus)
-                    applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    applySpellDamage(sessionId, m, ability, damage)
                 }
             }
             is AbilityEffect.AreaDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val levelBonus = levelScaledDamageBonus(effect.damagePerLevel, player.level)
                 for (m in targetMobs) {
-                    val baseDamage = rollRange(rng, effect.damage.min + levelBonus, effect.damage.max + levelBonus)
-                    applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    applySpellDamage(sessionId, m, ability, damage)
                 }
             }
             is AbilityEffect.ApplyStatus -> {
@@ -469,10 +467,11 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val levelBonus = levelScaledHealBonus(effect.healPerLevel, player.level)
+                val playerStats = resolvePlayerStats(player, items, statusEffects)
                 for (targetSid in groupMembers) {
                     val target = players.get(targetSid) ?: continue
-                    val healAmount = rollRange(rng, effect.minHeal + levelBonus, effect.maxHeal + levelBonus)
+                    val healAmount =
+                        computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                     val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
                     if (healed > 0) {
                         combat.addHealingThreat(sessionId, healed)
@@ -561,22 +560,12 @@ class AbilitySystem(
         return null
     }
 
-    /** Returns extra damage added per level of scaling. */
-    private fun levelScaledDamageBonus(damagePerLevel: Double, level: Int): Int =
-        (damagePerLevel * level).toInt()
-
-    /** Returns extra healing added per level of scaling. */
-    private fun levelScaledHealBonus(healPerLevel: Double, level: Int): Int =
-        (healPerLevel * level).toInt()
-
     private suspend fun applySpellDamage(
         sessionId: SessionId,
         mob: MobState,
         ability: AbilityDefinition,
-        baseDamage: Int,
-        intBonus: Int,
+        damage: Int,
     ) {
-        val damage = (baseDamage + intBonus).coerceAtLeast(1)
         mob.takeDamage(damage)
         dirtyNotifier.mobHpDirty(mob.id)
         combat.addThreat(mob.id, sessionId, damage.toDouble())
@@ -935,4 +924,65 @@ class AbilitySystem(
             cooldowns.remove(sessionId)
         }
     }
+}
+
+/**
+ * Resolves a single spell-damage hit using the same shape as basic melee:
+ *
+ * ```
+ * anchor      = (effect.damage.min + effect.damage.max) / 2
+ * statBonus   = (stats[spellDamageStat] - basePoint) × spellStatMultiplier
+ * levelScale  = spellLevelScalingRate ^ (level - 1)
+ * core        = (anchor + statBonus) × levelScale
+ * final       = round(core × uniform(spellVarianceMin, spellVarianceMax)).coerceAtLeast(1)
+ * ```
+ *
+ * Spells bypass armor — only physical damage uses [computePlayerMeleeSwing]'s
+ * armor mitigation. The authored `damage.min`/`max` range is averaged to a
+ * single anchor; the variance bindings provide the roll-to-roll spread that
+ * the authored range used to provide additively.
+ *
+ * File-level for parity with `computePlayerMeleeSwing` — keeps the spell
+ * formula in one place that tests can drive directly.
+ */
+internal fun computeSpellDamage(
+    bindings: StatBindingsConfig,
+    level: Int,
+    stats: StatMap,
+    damage: DamageRange,
+    rng: Random,
+): Int {
+    val anchor = (damage.min + damage.max) / 2.0
+    val statTotal = stats[bindings.spellDamageStat]
+    val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.spellStatMultiplier
+    val levelScale = bindings.spellLevelScalingRate.pow((level - 1).coerceAtLeast(0))
+    val core = (anchor + statBonus) * levelScale
+    val variance = rollVariance(bindings.spellVarianceMin, bindings.spellVarianceMax, rng)
+    return (core * variance).roundToInt().coerceAtLeast(1)
+}
+
+/**
+ * Resolves a single heal using the same shape as [computeSpellDamage] but
+ * scaled by [StatBindingsConfig.healStat] (WIS by default) instead of INT.
+ */
+internal fun computeSpellHeal(
+    bindings: StatBindingsConfig,
+    level: Int,
+    stats: StatMap,
+    minHeal: Int,
+    maxHeal: Int,
+    rng: Random,
+): Int {
+    val anchor = (minHeal + maxHeal) / 2.0
+    val statTotal = stats[bindings.healStat]
+    val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.healStatMultiplier
+    val levelScale = bindings.healLevelScalingRate.pow((level - 1).coerceAtLeast(0))
+    val core = (anchor + statBonus) * levelScale
+    val variance = rollVariance(bindings.healVarianceMin, bindings.healVarianceMax, rng)
+    return (core * variance).roundToInt().coerceAtLeast(1)
+}
+
+private fun rollVariance(min: Double, max: Double, rng: Random): Double {
+    val span = max - min
+    return if (span <= 0.0) min else min + rng.nextDouble() * span
 }

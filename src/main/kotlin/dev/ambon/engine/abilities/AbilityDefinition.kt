@@ -9,15 +9,24 @@ value class AbilityId(
 )
 
 sealed interface AbilityEffect {
+    /**
+     * Authored damage anchor for a spell. The min/max range is averaged to
+     * produce the formula's anchor; multiplicative variance from
+     * [dev.ambon.config.StatBindingsConfig.spellVarianceMin]/Max provides the
+     * roll-to-roll spread. Per-ability level scaling is no longer authored —
+     * `spellLevelScalingRate` drives the curve globally.
+     */
     data class DirectDamage(
         val damage: DamageRange,
-        val damagePerLevel: Double = 0.0,
     ) : AbilityEffect
 
+    /**
+     * Authored heal anchor. min/max averaged; variance and level scaling are
+     * driven by `healVarianceMin/Max` and `healLevelScalingRate` bindings.
+     */
     data class DirectHeal(
         val minHeal: Int,
         val maxHeal: Int,
-        val healPerLevel: Double = 0.0,
     ) : AbilityEffect
 
     data class ApplyStatus(
@@ -26,7 +35,6 @@ sealed interface AbilityEffect {
 
     data class AreaDamage(
         val damage: DamageRange,
-        val damagePerLevel: Double = 0.0,
     ) : AbilityEffect
 
     data class Taunt(
