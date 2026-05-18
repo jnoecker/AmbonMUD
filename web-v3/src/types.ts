@@ -251,6 +251,8 @@ export interface ItemSummary {
   enchantments?: string[];
   consumable?: boolean;
   useEffect?: string;
+  /** Numeric on-use restoration. Sent alongside [useEffect] for consumables that heal HP or mana. */
+  onUse?: { healHp: number; healMana: number };
   /** Server-resolved category. Falls back to "misc" if missing for older servers. */
   itemType?: ItemType;
   /** True when the item is soulbound — cannot be dropped, sold, traded, given. */

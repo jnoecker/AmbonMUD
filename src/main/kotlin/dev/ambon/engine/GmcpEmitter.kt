@@ -2286,6 +2286,13 @@ class GmcpEmitter(
             enchantments = item.enchantments.ifEmpty { null },
             consumable = if (item.item.consumable) true else null,
             useEffect = item.item.onUse?.describe(),
+            onUse = item.item.onUse?.let { effect ->
+                if (effect.healHp > 0 || effect.healMana > 0) {
+                    ItemUseEffectPayload(healHp = effect.healHp, healMana = effect.healMana)
+                } else {
+                    null
+                }
+            },
             itemType = item.item.resolvedType().label(),
             questItem = if (item.item.questItem) true else null,
             stackKey = computeStackKey(item),
@@ -2432,9 +2439,15 @@ class GmcpEmitter(
         val enchantments: List<String>? = null,
         val consumable: Boolean? = null,
         val useEffect: String? = null,
+        val onUse: ItemUseEffectPayload? = null,
         val itemType: String,
         val questItem: Boolean? = null,
         val stackKey: String,
+    )
+
+    private data class ItemUseEffectPayload(
+        val healHp: Int,
+        val healMana: Int,
     )
 
     private data class EquipmentSlotPayload(

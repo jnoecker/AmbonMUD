@@ -159,6 +159,12 @@ function App() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoClosing, setVideoClosing] = useState(false);
 
+  // Expanded mob detail card — opened from canvas Look button
+  const [mobDetail, setMobDetail] = useState<{ name: string; description: string; image: string | null } | null>(null);
+
+  // Full-size image preview — opened by clicking the entity preview sprite
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
   // Ctrl+K command palette
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [featureFocus, setFeatureFocus] = useState<FeaturePopoutFocus>(null);
@@ -393,6 +399,8 @@ function App() {
       openPanel("questOffers");
     };
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
+    canvasCallbacks.openMobDetail = (detail) => setMobDetail(detail);
+    canvasCallbacks.openImagePreview = (url: string) => setImagePreviewUrl(url);
     canvasCallbacks.prefillCommand = (text: string) => prefillInput(text);
     return () => {
       canvasCallbacks.sendCommand = null;
@@ -413,6 +421,8 @@ function App() {
       canvasCallbacks.dismissDialogue = null;
       canvasCallbacks.openQuestOffers = null;
       canvasCallbacks.openVideo = null;
+      canvasCallbacks.openMobDetail = null;
+      canvasCallbacks.openImagePreview = null;
       canvasCallbacks.prefillCommand = null;
     };
   }, [sendCommand]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -752,6 +762,7 @@ function App() {
         vitals={state.vitals}
         combatLogMessages={state.combatLogMessages}
         combatTarget={state.combatTarget}
+        inventory={state.inventory}
         quickbarSlots={quickbar.slots}
         onQuickbarSwap={quickbar.swap}
         onQuickbarAssign={quickbar.assign}
@@ -1355,6 +1366,76 @@ function App() {
               className="video-modal-player"
             />
           </div>
+        </div>
+      )}
+
+      {/* Expanded mob detail card — full description + larger portrait */}
+      {mobDetail && (
+        <div
+          className="entity-detail-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${mobDetail.name} details`}
+          onClick={() => setMobDetail(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setMobDetail(null);
+          }}
+        >
+          <div className="entity-detail-card" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="entity-detail-close"
+              aria-label="Close"
+              autoFocus
+              onClick={() => setMobDetail(null)}
+            >
+              {"✕"}
+            </button>
+            {mobDetail.image && (
+              <button
+                type="button"
+                className="entity-detail-portrait-btn"
+                aria-label="Zoom portrait"
+                onClick={() => setImagePreviewUrl(mobDetail.image)}
+              >
+                <img
+                  className="entity-detail-portrait"
+                  src={mobDetail.image}
+                  alt={mobDetail.name}
+                />
+              </button>
+            )}
+            <h2 className="entity-detail-name">{mobDetail.name}</h2>
+            <p className="entity-detail-description">{mobDetail.description}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Full-size image preview — opened by clicking an entity portrait */}
+      {imagePreviewUrl && (
+        <div
+          className="image-preview-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image preview"
+          onClick={() => setImagePreviewUrl(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setImagePreviewUrl(null);
+          }}
+        >
+          <button
+            className="image-preview-close"
+            aria-label="Close image"
+            autoFocus
+            onClick={() => setImagePreviewUrl(null)}
+          >
+            {"✕"}
+          </button>
+          <img
+            className="image-preview-img"
+            src={imagePreviewUrl}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 

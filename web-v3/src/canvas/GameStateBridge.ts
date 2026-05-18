@@ -84,6 +84,8 @@ export const canvasCallbacks: {
   dismissDialogue: (() => void) | null;
   openQuestOffers: ((mobKeyword: string) => void) | null;
   loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
+  openMobDetail: ((detail: { name: string; description: string; image: string | null }) => void) | null;
+  openImagePreview: ((url: string) => void) | null;
 } = {
   sendCommand: null,
   prefillCommand: null,
@@ -106,6 +108,8 @@ export const canvasCallbacks: {
   dismissDialogue: null,
   openQuestOffers: null,
   loadZoneMap: null,
+  openMobDetail: null,
+  openImagePreview: null,
 };
 
 export const pendingCastRef: { current: PendingCast | null } = { current: null };

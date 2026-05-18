@@ -3,7 +3,9 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.config.SkillPointsConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.engine.EquipmentSlotRegistry
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.PlayerProgression
@@ -49,8 +51,65 @@ class ItemHandler(
         router.on<Command.Get> { sid, cmd -> handleGet(sid, cmd) }
         router.on<Command.Drop> { sid, cmd -> handleDrop(sid, cmd) }
         router.on<Command.Use> { sid, cmd -> handleUse(sid, cmd) }
+        router.on<Command.QuickHeal> { sid, _ -> handleQuickPotion(sid, PotionKind.HP) }
+        router.on<Command.QuickMana> { sid, _ -> handleQuickPotion(sid, PotionKind.MANA) }
         router.on<Command.Give> { sid, cmd -> handleGive(sid, cmd) }
     }
+
+    internal enum class PotionKind { HP, MANA }
+
+    private suspend fun handleQuickPotion(
+        sessionId: SessionId,
+        kind: PotionKind,
+    ) {
+        if (isBlocked(sessionId, allowInCombat = true)) return
+        players.withPlayer(sessionId) { me ->
+            val (current, max, label) = when (kind) {
+                PotionKind.HP -> Triple(me.hp, me.maxHp, "HP")
+                PotionKind.MANA -> Triple(me.mana, me.maxMana, "mana")
+            }
+            val missing = max - current
+            if (missing <= 0) {
+                outbound.send(OutboundEvent.SendError(sessionId, "Your $label is already full."))
+                return
+            }
+            val inventory = items.inventory(me.sessionId)
+            val candidates = inventory.filter { instance ->
+                val effect = instance.item.onUse ?: return@filter false
+                instance.item.consumable && healAmountFor(effect, kind) > 0
+            }
+            if (candidates.isEmpty()) {
+                val potionWord = if (kind == PotionKind.HP) "healing potion" else "mana potion"
+                outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying any $potionWord."))
+                return
+            }
+            val chosen = selectBestPotion(candidates, missing, kind)
+            val result = items.useItemById(me.sessionId, chosen.id)
+            applyUseResult(sessionId, result)
+        }
+    }
+
+    /**
+     * Picks the least powerful potion that fully restores [missing]; if none qualify, picks the most powerful.
+     * Ties broken by inventory order (stable).
+     */
+    internal fun selectBestPotion(
+        candidates: List<ItemInstance>,
+        missing: Int,
+        kind: PotionKind,
+    ): ItemInstance {
+        val sufficient = candidates.filter { healAmountFor(it.item.onUse!!, kind) >= missing }
+        return if (sufficient.isNotEmpty()) {
+            sufficient.minBy { healAmountFor(it.item.onUse!!, kind) }
+        } else {
+            candidates.maxBy { healAmountFor(it.item.onUse!!, kind) }
+        }
+    }
+
+    private fun healAmountFor(
+        effect: ItemUseEffect,
+        kind: PotionKind,
+    ): Int = if (kind == PotionKind.HP) effect.healHp else effect.healMana
 
     /**
      * Returns true (and sends an error) if the player is in a state that blocks the item command.
@@ -240,14 +299,28 @@ class ItemHandler(
     ) {
         if (isBlocked(sessionId, allowInCombat = true)) return
         players.withPlayer(sessionId) { me ->
-            when (val result = items.useItem(me.sessionId, cmd.keyword)) {
-                is ItemRegistry.UseResult.Used -> {
-                    val effect = result.item.item.onUse
-                    if (effect == null) {
-                        outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be used."))
-                        return
-                    }
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "You use ${result.item.item.displayName}."))
+            val result = items.useItem(me.sessionId, cmd.keyword)
+            if (result is ItemRegistry.UseResult.NotFound) {
+                outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying or wearing '${cmd.keyword}'."))
+                return
+            }
+            applyUseResult(sessionId, result)
+        }
+    }
+
+    private suspend fun applyUseResult(
+        sessionId: SessionId,
+        result: ItemRegistry.UseResult,
+    ) {
+        when (result) {
+            is ItemRegistry.UseResult.Used -> {
+                val effect = result.item.item.onUse
+                if (effect == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be used."))
+                    return
+                }
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You use ${result.item.item.displayName}."))
+                players.withPlayer(sessionId) { me ->
                     if (effect.healHp > 0) {
                         val previousHp = me.hp
                         me.healHp(effect.healHp)
@@ -270,33 +343,33 @@ class ItemHandler(
                             outbound.send(OutboundEvent.SendInfo(sessionId, "Your mana is already full."))
                         }
                     }
-                    if (effect.grantXp > 0L) {
-                        grantScaledItemXp(sessionId, effect.grantXp)
-                    }
-                    if (result.consumed) {
-                        outbound.send(OutboundEvent.SendInfo(sessionId, "${result.item.item.displayName} is consumed."))
-                        afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
-                    } else if (result.remainingCharges != null) {
-                        outbound.send(
-                            OutboundEvent.SendInfo(
-                                sessionId,
-                                "${result.item.item.displayName} has ${result.remainingCharges} charge(s) remaining.",
-                            ),
-                        )
-                    }
                 }
-                is ItemRegistry.UseResult.NotFound ->
-                    outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying or wearing '${cmd.keyword}'."))
-                is ItemRegistry.UseResult.NotUsable ->
-                    outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be used."))
-                is ItemRegistry.UseResult.NoCharges ->
+                if (effect.grantXp > 0L) {
+                    grantScaledItemXp(sessionId, effect.grantXp)
+                }
+                if (result.consumed) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "${result.item.item.displayName} is consumed."))
+                    afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                } else if (result.remainingCharges != null) {
                     outbound.send(
-                        OutboundEvent.SendError(
+                        OutboundEvent.SendInfo(
                             sessionId,
-                            "${result.item.item.displayName} has no charges remaining.",
+                            "${result.item.item.displayName} has ${result.remainingCharges} charge(s) remaining.",
                         ),
                     )
+                }
             }
+            is ItemRegistry.UseResult.NotFound ->
+                outbound.send(OutboundEvent.SendError(sessionId, "That item is no longer available."))
+            is ItemRegistry.UseResult.NotUsable ->
+                outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be used."))
+            is ItemRegistry.UseResult.NoCharges ->
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "${result.item.item.displayName} has no charges remaining.",
+                    ),
+                )
         }
     }
 

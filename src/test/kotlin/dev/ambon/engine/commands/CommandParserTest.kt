@@ -104,6 +104,16 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses quickheal and quickmana with aliases`() {
+        assertEquals(Command.QuickHeal, CommandParser.parse("quickheal"))
+        assertEquals(Command.QuickHeal, CommandParser.parse("qh"))
+        assertEquals(Command.QuickHeal, CommandParser.parse("QuickHeal"))
+        assertEquals(Command.QuickMana, CommandParser.parse("quickmana"))
+        assertEquals(Command.QuickMana, CommandParser.parse("qm"))
+        assertEquals(Command.QuickMana, CommandParser.parse("QUICKMANA"))
+    }
+
+    @Test
     fun `parses give command with multi-word item`() {
         assertEquals(Command.Give("shimmering potion", "Bob"), CommandParser.parse("give shimmering potion Bob"))
     }

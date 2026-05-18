@@ -716,6 +716,10 @@ function App() {
             sendCommand(`sell ${keyword}`, true);
             focusComposer();
           }}
+          onCommand={(command) => {
+            sendCommand(command, true);
+            focusComposer();
+          }}
         />
 
         <ChatPanel

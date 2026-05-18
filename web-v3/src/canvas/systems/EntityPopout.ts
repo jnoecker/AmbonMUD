@@ -19,6 +19,17 @@ interface PopoutAction {
   label: string;
   command: string;
   color: number;
+  onClick?: () => void;
+}
+
+const DESCRIPTION_PREVIEW_CHARS = 140;
+
+function truncateDescription(text: string): { preview: string; truncated: boolean } {
+  if (text.length <= DESCRIPTION_PREVIEW_CHARS) return { preview: text, truncated: false };
+  let cut = text.slice(0, DESCRIPTION_PREVIEW_CHARS);
+  const lastSpace = cut.lastIndexOf(" ");
+  if (lastSpace > DESCRIPTION_PREVIEW_CHARS * 0.6) cut = cut.slice(0, lastSpace);
+  return { preview: cut.trimEnd() + "…", truncated: true };
 }
 
 export class EntityPopout {
@@ -100,8 +111,18 @@ export class EntityPopout {
       actions.push({ label: "Attack", command: `kill ${name}`, color: 0xd4888a });
     }
 
-    // Look is always available
-    actions.push({ label: "Look", command: `look ${name}`, color: 0x64b5f6 });
+    // Look is always available — opens an expanded detail card with the
+    // full description (and large image) without going through the server.
+    const fullDescription = description ?? "";
+    const lookImage = image ?? null;
+    actions.push({
+      label: "Look",
+      command: `look ${name}`,
+      color: 0x64b5f6,
+      onClick: () => {
+        canvasCallbacks.openMobDetail?.({ name, description: fullDescription, image: lookImage });
+      },
+    });
 
     // Consider — threat assessment, shown for anything that can be attacked
     if (isAggressive || !isNpc) {
@@ -127,7 +148,8 @@ export class EntityPopout {
     if (info?.questGiver) roleParts.push("Quest Giver");
     if (info?.aggressive) roleParts.push("Hostile");
     const roleLabel = roleParts.join(" \u00B7 ");
-    const subtitle = description || roleLabel || (maxHp > 0 ? `HP: ${hp}/${maxHp}` : "");
+    const previewDescription = description ? truncateDescription(description).preview : "";
+    const subtitle = previewDescription || roleLabel || (maxHp > 0 ? `HP: ${hp}/${maxHp}` : "");
     const tint = isAggressive ? 0xd4888a : info?.shopKeeper ? 0x81a2be : info?.questGiver ? 0xf0c674 : 0xf0c674;
     this.show(name + roleTag, subtitle, image ?? null, tint, actions);
   }
@@ -191,6 +213,15 @@ export class EntityPopout {
         preview.texture = tex;
         preview.tint = 0xffffff;
       }).catch(() => { /* keep placeholder */ });
+      preview.eventMode = "static";
+      preview.cursor = "zoom-in";
+      preview.removeAllListeners();
+      preview.on("pointerdown", (e) => {
+        e.stopPropagation();
+        canvasCallbacks.openImagePreview?.(image);
+      });
+    } else {
+      preview.eventMode = "none";
     }
 
     this.titleText.text = title;
@@ -274,7 +305,13 @@ export class EntityPopout {
       btnContainer.addChild(btnLabel);
 
       const cmd = action.command;
+      const onClick = action.onClick;
       btnContainer.on("pointerdown", () => {
+        if (onClick) {
+          onClick();
+          this.hide();
+          return;
+        }
         if (cmd.startsWith("__video__:")) {
           canvasCallbacks.openVideo?.(cmd.slice("__video__:".length));
         } else if (cmd.startsWith("__prefill__:")) {
