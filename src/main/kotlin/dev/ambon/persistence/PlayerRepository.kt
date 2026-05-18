@@ -37,6 +37,7 @@ fun PlayerCreationRequest.toNewPlayerRecord(id: PlayerId): PlayerRecord =
         gender = gender,
         stats = stats,
         gold = gold,
+        autolootEnabled = true,
     )
 
 interface PlayerRepository {

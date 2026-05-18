@@ -212,6 +212,7 @@ class CombatSystemTest {
 
             val sid = SessionId(2L)
             fixture.players.loginOrFail(sid, "Player2")
+            fixture.players.setAutolootEnabled(sid, false)
 
             val err = combat.startCombat(sid, "owl")
             assertNull(err)
@@ -318,6 +319,7 @@ class CombatSystemTest {
 
             val sid = SessionId(7L)
             fixture.players.loginOrFail(sid, "Player7")
+            fixture.players.setAutolootEnabled(sid, false)
             val err = combat.startCombat(sid, "wolf")
             assertNull(err)
 
@@ -1061,8 +1063,7 @@ class CombatSystemTest {
 
             val sid = SessionId(101L)
             fixture.players.loginOrFail(sid, "Looter")
-            // autoloot is off by default — assert it.
-            assertEquals(false, fixture.players.get(sid)!!.autolootEnabled)
+            fixture.players.setAutolootEnabled(sid, false)
 
             assertNull(combat.startCombat(sid, "rat"))
             fixture.tickCombat(combat)

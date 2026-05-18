@@ -20,19 +20,19 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class AutolootCommandRouterTest {
     @Test
-    fun `default autoloot is off and status reports OFF`() =
+    fun `default autoloot is on and status reports ON`() =
         runTest {
             val h = CommandRouterHarness.create()
             val sid = SessionId(1)
             h.players.loginOrFail(sid, "Alice")
 
-            assertFalse(h.players.get(sid)!!.autolootEnabled)
+            assertTrue(h.players.get(sid)!!.autolootEnabled)
 
             h.router.handle(sid, Command.AutolootStatus)
             val outs = h.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendInfo && it.text.contains("OFF") },
-                "Expected status OFF message, got=$outs",
+                outs.any { it is OutboundEvent.SendInfo && it.text.contains("ON") },
+                "Expected status ON message, got=$outs",
             )
         }
 
