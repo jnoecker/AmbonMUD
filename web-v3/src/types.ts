@@ -494,6 +494,8 @@ export interface CombatEventData {
   petName: string | null;
   /** True when the visible target of a non-damaging cast is the local player. */
   targetIsPlayer: boolean;
+  /** Display names of items autolooted from the kill (only set on type=="kill"). */
+  lootedItems: string[];
 }
 
 export interface StatEntry {
@@ -629,6 +631,19 @@ export interface MailMessage {
 export interface MailNotification {
   from: string;
   unreadCount: number;
+}
+
+/**
+ * Top-right toast surfaced when the local player lands a killing blow. Built
+ * from `Char.Combat.Event` packets of `type: "kill"` and shown once per kill.
+ */
+export interface CombatVictoryNotification {
+  id: string;
+  targetName: string;
+  xpGained: number;
+  goldGained: number;
+  lootedItems: string[];
+  receivedAt: number;
 }
 
 export interface QuestNotification {

@@ -1022,6 +1022,7 @@ class GmcpEmitter(
                 targetId = event.targetId,
                 xpGained = event.xpGained,
                 goldGained = event.goldGained,
+                lootedItems = event.lootedItems,
             )
             is CombatEvent.Death -> CombatEventPayload(
                 type = "death",
@@ -2747,6 +2748,7 @@ class GmcpEmitter(
         val shieldRemaining: Int? = null,
         val petName: String? = null,
         val targetIsPlayer: Boolean? = null,
+        val lootedItems: List<String> = emptyList(),
     )
 
     // ---------- stats payload ----------

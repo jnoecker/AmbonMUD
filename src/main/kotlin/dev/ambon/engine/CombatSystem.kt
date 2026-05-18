@@ -1645,7 +1645,7 @@ class CombatSystem(
         val rolledDrops = rollDrops(mob)
         callbacks.onRoomItemsChanged(mob.roomId)
         broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
-        applyAutolootForKiller(killerSessionId, mob.roomId, mobCarried + rolledDrops)
+        val lootedItems = applyAutolootForKiller(killerSessionId, mob.roomId, mobCarried + rolledDrops)
         val goldGained = grantKillGold(killerSessionId, mob)
         grantGroupKillXp(killerSessionId, mob)
         onCombatEvent(
@@ -1655,6 +1655,7 @@ class CombatSystem(
                 targetId = mob.id.value,
                 xpGained = mob.xpReward,
                 goldGained = goldGained,
+                lootedItems = lootedItems,
             ),
         )
 
@@ -1774,12 +1775,12 @@ class CombatSystem(
         killerSessionId: SessionId,
         roomId: RoomId,
         candidates: List<dev.ambon.domain.items.ItemInstance>,
-    ) {
-        if (candidates.isEmpty()) return
-        if (petSystem?.isPetSession(killerSessionId) == true) return
-        val killer = players.get(killerSessionId) ?: return
-        if (!killer.autolootEnabled) return
-        if (killer.roomId != roomId) return
+    ): List<String> {
+        if (candidates.isEmpty()) return emptyList()
+        if (petSystem?.isPetSession(killerSessionId) == true) return emptyList()
+        val killer = players.get(killerSessionId) ?: return emptyList()
+        if (!killer.autolootEnabled) return emptyList()
+        if (killer.roomId != roomId) return emptyList()
 
         val looted = mutableListOf<dev.ambon.domain.items.ItemInstance>()
         for (candidate in candidates) {
@@ -1789,11 +1790,12 @@ class CombatSystem(
             looted += taken
             onItemAutoLooted(killerSessionId, taken)
         }
-        if (looted.isEmpty()) return
+        if (looted.isEmpty()) return emptyList()
 
-        val names = looted.joinToString(", ") { it.item.displayName }
-        outbound.send(OutboundEvent.SendInfo(killerSessionId, "You loot $names."))
+        val names = looted.map { it.item.displayName }
+        outbound.send(OutboundEvent.SendInfo(killerSessionId, "You loot ${names.joinToString(", ")}."))
         callbacks.onRoomItemsChanged(roomId)
+        return names
     }
 }
 

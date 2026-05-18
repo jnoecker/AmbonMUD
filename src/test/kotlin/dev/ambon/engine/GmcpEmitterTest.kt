@@ -1132,6 +1132,35 @@ class GmcpEmitterTest {
             assertTrue(events[0].jsonData.contains("\"type\":\"kill\""))
             assertTrue(events[0].jsonData.contains("\"xpGained\":100"))
             assertTrue(events[0].jsonData.contains("\"goldGained\":25"))
+            // Empty loot list serializes as [] so the web client always sees the
+            // field as an array (avoids null-vs-array branching on the client).
+            assertTrue(
+                events[0].jsonData.contains("\"lootedItems\":[]"),
+                "Expected empty lootedItems array in payload: ${events[0].jsonData}",
+            )
+        }
+
+    @Test
+    fun `sendCombatEvent emits kill JSON with lootedItems`() =
+        runTest {
+            val e = emitter("Char.Combat.Event")
+            e.sendCombatEvent(
+                sid,
+                CombatEvent.Kill(
+                    targetName = "Goblin",
+                    targetId = "mob-1",
+                    xpGained = 100L,
+                    goldGained = 25L,
+                    lootedItems = listOf("a rusty dagger", "a copper coin"),
+                ),
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"type\":\"kill\""))
+            assertTrue(
+                events[0].jsonData.contains("\"lootedItems\":[\"a rusty dagger\",\"a copper coin\"]"),
+                "Expected lootedItems array in payload: ${events[0].jsonData}",
+            )
         }
 
     @Test

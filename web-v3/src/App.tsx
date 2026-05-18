@@ -30,6 +30,7 @@ import { HelpContent } from "./components/HelpContent";
 import { Atlas } from "./components/Atlas";
 import { LevelUpBanner } from "./components/LevelUpBanner";
 import { QuestCompleteToast } from "./components/QuestCompleteToast";
+import { CombatVictoryToast } from "./components/CombatVictoryToast";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
 import { CommandPalette } from "./components/CommandPalette";
@@ -1550,6 +1551,14 @@ function App() {
         notifications={state.questNotifications}
         onDismiss={(id) =>
           state.setQuestNotifications((prev) => prev.filter((n) => n.id !== id))
+        }
+      />
+
+      {/* Combat victory toast — surfaces kills (target, XP, gold, autolooted items). */}
+      <CombatVictoryToast
+        notifications={state.combatVictoryNotifications}
+        onDismiss={(id) =>
+          state.setCombatVictoryNotifications((prev) => prev.filter((n) => n.id !== id))
         }
       />
 

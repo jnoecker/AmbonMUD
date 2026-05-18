@@ -21,6 +21,7 @@ import type {
   CombatEventData,
   CombatLogMessage,
   CombatTarget,
+  CombatVictoryNotification,
   CommandEntry,
   ContainerContents,
   CraftingNode,
@@ -194,6 +195,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const gainEventsRef = useRef<GainEvent[]>([]);
   const [levelUpNotification, setLevelUpNotification] = useState<LevelUpNotification | null>(null);
   const levelUpIdRef = useRef(0);
+  const [combatVictoryNotifications, setCombatVictoryNotifications] = useState<CombatVictoryNotification[]>([]);
+  const combatVictoryIdRef = useRef(0);
   const [duelState, setDuelState] = useState<DuelState | null>(null);
   const [duelChallenge, setDuelChallenge] = useState<DuelChallenge | null>(null);
 
@@ -322,6 +325,21 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     canvasEvents.push(event);
     const logMsg = combatEventToLogMessage(event);
     if (logMsg) pushCombatLogMessage(logMsg);
+    if (event.type === "kill" && event.targetName) {
+      combatVictoryIdRef.current += 1;
+      const notification: CombatVictoryNotification = {
+        id: `combat-victory-${combatVictoryIdRef.current}`,
+        targetName: event.targetName,
+        xpGained: event.xpGained,
+        goldGained: event.goldGained,
+        lootedItems: event.lootedItems,
+        receivedAt: Date.now(),
+      };
+      // Replace (rather than append) so back-to-back kills don't queue stale
+      // toasts behind the active one — otherwise the active toast's dismissal
+      // resurfaces a prior kill several seconds late.
+      setCombatVictoryNotifications([notification]);
+    }
   }, [pushCombatLogMessage]);
 
   const pushUiFeedback = useCallback((feedback: UiFeedback) => {
@@ -626,6 +644,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setShop(null);
     setPuzzle(null);
     setQuestNotifications([]);
+    setCombatVictoryNotifications([]);
     setCraftingSkills([]);
     setCraftingRecipes([]);
     setCraftingNodes([]);
@@ -713,6 +732,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // UI
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,
     levelUpNotification, setLevelUpNotification,
+    combatVictoryNotifications, setCombatVictoryNotifications,
     // Setters needed by App
     setQuestsAvailable,
     // GMCP

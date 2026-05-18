@@ -49,6 +49,7 @@ sealed interface CombatEvent {
         val targetId: String,
         val xpGained: Long,
         val goldGained: Long,
+        val lootedItems: List<String> = emptyList(),
     ) : CombatEvent
 
     data class Death(

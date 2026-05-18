@@ -1009,6 +1009,9 @@ export function applyGmcpPackage(
         goldGained: safeNumber(packet.goldGained),
         petName: typeof packet.petName === "string" ? packet.petName : null,
         targetIsPlayer: packet.targetIsPlayer === true,
+        lootedItems: Array.isArray(packet.lootedItems)
+          ? packet.lootedItems.filter((s): s is string => typeof s === "string")
+          : [],
       });
       break;
     }
