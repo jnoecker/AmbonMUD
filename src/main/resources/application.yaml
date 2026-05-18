@@ -1429,6 +1429,20 @@ ambonmud:
           outfitDescription: Full plate armor with a heavy steel breastplate, layered pauldrons, gauntlets, and greaves. A
             longsword hangs from a leather baldric at the hip, and a kite shield bearing a battle-worn heraldic crest is
             strapped to one arm. A crimson half-cape drapes from the left shoulder.
+          # Starter equipment is data-driven by item id. Items must already be loaded
+          # in the world (zone:item_id). Unknown ids are silently skipped so the
+          # bundled defaults below remain valid even when a deployment loads a
+          # different world. `equip: true` (default) auto-equips slotted items on
+          # login; set `equip: false` (or use unslotted items) to land in inventory.
+          starterEquipment:
+            - itemId: academy:iron_sword
+            - itemId: academy:chain_mail
+            - itemId: academy:leather_hood
+            - itemId: academy:leather_gloves
+            - itemId: academy:healing_potion
+              equip: false
+            - itemId: academy:hearty_ration
+              equip: false
         MAGE:
           displayName: Mage
           hpScalingRate: 1.290
@@ -1457,6 +1471,14 @@ ambonmud:
           outfitDescription: Deep indigo robes with silver arcane sigils embroidered along the hems and cuffs. A tall oak staff
             topped with a faintly glowing crystal is held in one hand. A thick leather-bound spellbook hangs from a
             chain at the belt. The robe's hood is pulled back, revealing sharp, studious features.
+          starterEquipment:
+            - itemId: academy:iron_sword
+            - itemId: academy:leather_hood
+            - itemId: academy:leather_gloves
+            - itemId: academy:elixir_of_clarity
+              equip: false
+            - itemId: academy:healing_potion
+              equip: false
         CLERIC:
           displayName: Cleric
           hpScalingRate: 1.301
@@ -1486,6 +1508,14 @@ ambonmud:
           outfitDescription: White and gold vestments layered over a chain hauberk. A polished steel mace hangs from the belt
             alongside a radiant holy symbol on a heavy chain. The vestments bear the emblem of a sunburst, and a hooded
             mantle of deep gold cloth rests across the shoulders.
+          starterEquipment:
+            - itemId: academy:iron_sword
+            - itemId: academy:chain_mail
+            - itemId: academy:leather_hood
+            - itemId: academy:healing_potion
+              equip: false
+            - itemId: academy:healing_potion
+              equip: false
         ROGUE:
           displayName: Rogue
           hpScalingRate: 1.294
@@ -1515,6 +1545,14 @@ ambonmud:
           outfitDescription: Supple dark leather armor with reinforced shoulder guards and bracers studded with dull metal rivets.
             Twin daggers are sheathed in crossed back-scabbards. A deep hooded cloak of charcoal-grey wool obscures the
             face, and a bandolier of small pouches and vials crosses the chest.
+          starterEquipment:
+            - itemId: academy:iron_sword
+            - itemId: academy:leather_gloves
+            - itemId: academy:leather_hood
+            - itemId: academy:healing_potion
+              equip: false
+            - itemId: academy:hearty_ration
+              equip: false
         RANGER:
           displayName: Ranger
           hpScalingRate: 1.298
@@ -1547,6 +1585,14 @@ ambonmud:
             of dark yew is slung across the back alongside a quiver of fletched arrows. A short hunting knife sits at
             the hip. The armor is accented with fur trim and wooden toggles, and a forest-green cloak is pinned at the
             shoulder with an antler brooch.
+          starterEquipment:
+            - itemId: academy:iron_sword
+            - itemId: academy:leather_hood
+            - itemId: academy:leather_gloves
+            - itemId: academy:healing_potion
+              equip: false
+            - itemId: academy:hearty_ration
+              equip: false
     races:
       definitions:
         HUMAN:

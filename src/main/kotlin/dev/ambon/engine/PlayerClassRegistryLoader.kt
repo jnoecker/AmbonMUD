@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.config.ClassEngineConfig
 import dev.ambon.domain.PlayerClassDef
+import dev.ambon.domain.StarterEquipmentEntry
 
 object PlayerClassRegistryLoader {
     fun load(
@@ -22,6 +23,9 @@ object PlayerClassRegistryLoader {
                     primaryStat = defConfig.primaryStat.ifBlank { null },
                     startRoom = defConfig.startRoom.ifBlank { null },
                     threatMultiplier = defConfig.threatMultiplier,
+                    starterEquipment = defConfig.starterEquipment
+                        .filter { it.itemId.isNotBlank() }
+                        .map { StarterEquipmentEntry(itemId = it.itemId.trim(), equip = it.equip) },
                 ),
             )
         }

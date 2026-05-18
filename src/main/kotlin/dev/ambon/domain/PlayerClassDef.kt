@@ -12,4 +12,10 @@ data class PlayerClassDef(
     val primaryStat: String? = null,
     val startRoom: String? = null,
     val threatMultiplier: Double = 1.0,
+    val starterEquipment: List<StarterEquipmentEntry> = emptyList(),
+)
+
+data class StarterEquipmentEntry(
+    val itemId: String,
+    val equip: Boolean = true,
 )
