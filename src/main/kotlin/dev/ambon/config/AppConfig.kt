@@ -1940,6 +1940,12 @@ data class ClassDefinitionConfig(
     val primaryStat: String = "",
     val startRoom: String = "",
     val threatMultiplier: Double = 1.0,
+    val starterEquipment: List<StarterEquipmentEntryConfig> = emptyList(),
+)
+
+data class StarterEquipmentEntryConfig(
+    val itemId: String = "",
+    val equip: Boolean = true,
 )
 
 data class ClassEngineConfig(

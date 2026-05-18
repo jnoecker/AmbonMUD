@@ -2,7 +2,11 @@ package dev.ambon.persistence
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -134,5 +138,44 @@ class PostgresPlayerRepositoryTest {
         runTest {
             val repo = PostgresPlayerRepository(database)
             assertNull(repo.findById(PlayerId(999)))
+        }
+
+    @Test
+    fun `create persists starter equipment, gold, and gender in the initial insert`() =
+        runTest {
+            val repo = PostgresPlayerRepository(database)
+            val sword = ItemInstance(
+                id = ItemId("test:sword"),
+                item = Item(keyword = "sword", displayName = "a sword", slot = ItemSlot.WEAPON, damage = 4),
+            )
+            val potion = ItemInstance(
+                id = ItemId("test:potion"),
+                item = Item(keyword = "potion", displayName = "a potion", consumable = true),
+            )
+
+            val created = repo.create(
+                PlayerCreationRequest(
+                    name = "Dana",
+                    startRoomId = RoomId("test:a"),
+                    nowEpochMs = 1L,
+                    passwordHash = "hash",
+                    ansiEnabled = false,
+                    gender = "fem",
+                    gold = 250L,
+                    inventoryItems = listOf(potion),
+                    equippedItems = mapOf("weapon" to sword),
+                ),
+            )
+
+            // Reload directly from the database — the in-memory return value
+            // could mask a missing column write, so we verify what actually
+            // landed on disk in the initial create transaction.
+            val loaded = repo.findById(created.id)!!
+            assertEquals("fem", loaded.gender)
+            assertEquals(250L, loaded.gold)
+            assertEquals(1, loaded.inventoryItems.size)
+            assertEquals("a potion", loaded.inventoryItems.first().item.displayName)
+            assertEquals("a sword", loaded.equippedItems["weapon"]?.item?.displayName)
+            assertTrue(loaded.autolootEnabled)
         }
 }

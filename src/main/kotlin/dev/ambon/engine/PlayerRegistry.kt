@@ -1,8 +1,11 @@
 package dev.ambon.engine
 
+import dev.ambon.domain.StarterEquipmentEntry
 import dev.ambon.domain.StatMap
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PersistenceException
@@ -215,8 +218,10 @@ class PlayerRegistry(
         val raceMods = raceRegistry?.get(raceId)?.statMods ?: StatMap.EMPTY
         val statKeys = statRegistry?.all()?.map { it.id } ?: listOf("STR", "DEX", "CON", "INT", "WIS", "CHA")
         val resolvedStats = statKeys.associateWith { id -> base(id) + raceMods[id] }
+        val classDef = classRegistry?.get(classId)
         val classStartRoom = classStartRooms[classId.uppercase()]
-            ?: classRegistry?.get(classId)?.startRoom?.let { RoomId(it) }
+            ?: classDef?.startRoom?.let { RoomId(it) }
+        val (starterInventory, starterEquipped) = resolveStarterEquipment(classDef?.starterEquipment.orEmpty())
         val record =
             try {
                 repo.create(
@@ -231,12 +236,40 @@ class PlayerRegistry(
                         gender = defaultGender,
                         stats = resolvedStats,
                         gold = startingGold,
+                        inventoryItems = starterInventory,
+                        equippedItems = starterEquipped,
                     ),
                 )
             } catch (_: PersistenceException) {
                 return CreateAccountPrep.Taken
             }
         return CreateAccountPrep.Ready(record)
+    }
+
+    /**
+     * Resolve a class's starter equipment list into concrete [ItemInstance]s by
+     * looking each entry up in the [ItemRegistry] templates. Entries marked
+     * `equip = true` whose item has a slot are routed to the equipped map;
+     * everything else (including unslotted items) goes into inventory. Unknown
+     * item IDs are skipped silently — operators may reference IDs from a world
+     * that isn't currently loaded, and we don't want creation to fail.
+     */
+    private fun resolveStarterEquipment(
+        entries: List<StarterEquipmentEntry>,
+    ): Pair<List<ItemInstance>, Map<String, ItemInstance>> {
+        if (entries.isEmpty()) return emptyList<ItemInstance>() to emptyMap()
+        val inventory = mutableListOf<ItemInstance>()
+        val equipped = mutableMapOf<String, ItemInstance>()
+        for (entry in entries) {
+            val instance = items.createFromTemplate(ItemId(entry.itemId)) ?: continue
+            val slot = instance.item.slot
+            if (entry.equip && slot != null && !equipped.containsKey(slot.name)) {
+                equipped[slot.name] = instance
+            } else {
+                inventory.add(instance)
+            }
+        }
+        return inventory to equipped
     }
 
     /**

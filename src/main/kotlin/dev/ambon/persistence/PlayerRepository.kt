@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.items.ItemInstance
 
 /**
  * Bundles all fields required to create a new [PlayerRecord].
@@ -17,6 +18,8 @@ data class PlayerCreationRequest(
     val gender: String = "enby",
     val stats: Map<String, Int> = DEFAULT_STATS,
     val gold: Long = 0L,
+    val inventoryItems: List<ItemInstance> = emptyList(),
+    val equippedItems: Map<String, ItemInstance> = emptyMap(),
 )
 
 /**
@@ -38,6 +41,8 @@ fun PlayerCreationRequest.toNewPlayerRecord(id: PlayerId): PlayerRecord =
         stats = stats,
         gold = gold,
         autolootEnabled = true,
+        inventoryItems = inventoryItems,
+        equippedItems = equippedItems,
     )
 
 interface PlayerRepository {
