@@ -17386,3 +17386,172 @@ html:has(.game-shell),
     animation-duration: 80ms;
   }
 }
+
+/* ── Combat victory toast — kill summary card ──────────────────── */
+.combat-victory-toast {
+  position: fixed;
+  /* Offset below the quest toast slot so the two never overlap when a
+     quest turn-in and a kill land in the same frame. */
+  top: calc(var(--space-4, 16px) + 56px + 180px);
+  right: var(--space-4, 16px);
+  z-index: 240;
+  width: min(320px, calc(100vw - 32px));
+  padding: 14px 16px;
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 22%, var(--c-surface-raised, #1e2340)) 0%,
+    var(--c-surface-raised, #1e2340) 60%,
+    color-mix(in srgb, var(--c-soft-gold, #f0c674) 14%, var(--c-surface-raised, #1e2340)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 45%, transparent);
+  border-radius: 14px;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 22%, transparent),
+    0 0 32px color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 28%, transparent);
+  color: var(--c-text-primary, #d8dcef);
+  cursor: pointer;
+  animation: combatVictoryToastIn 380ms var(--ease-out-soft, cubic-bezier(0.22, 1, 0.36, 1));
+  backdrop-filter: blur(8px);
+}
+
+.combat-victory-toast.combat-victory-toast-closing {
+  animation: combatVictoryToastOut 320ms var(--ease-out-soft, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+}
+
+@keyframes combatVictoryToastIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes combatVictoryToastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(16px) scale(0.97);
+  }
+}
+
+.combat-victory-toast-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.combat-victory-toast-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 60%, transparent));
+}
+
+.combat-victory-toast-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.combat-victory-toast-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 75%, var(--c-text-secondary, #8890b0));
+  font-weight: 600;
+}
+
+.combat-victory-toast-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text-primary, #d8dcef);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat-victory-toast-rewards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.combat-victory-toast-reward {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--c-surface-base, #131630) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-text-secondary, #8890b0) 25%, transparent);
+}
+
+.combat-victory-toast-reward-amount {
+  font-weight: 700;
+}
+
+.combat-victory-toast-reward-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-secondary, #8890b0);
+}
+
+.combat-victory-toast-reward-xp {
+  border-color: color-mix(in srgb, var(--c-accent-lavender, #b294bb) 45%, transparent);
+  color: color-mix(in srgb, var(--c-accent-lavender, #b294bb) 80%, var(--c-text-primary, #d8dcef));
+}
+
+.combat-victory-toast-reward-gold {
+  border-color: color-mix(in srgb, var(--c-soft-gold, #f0c674) 55%, transparent);
+  color: color-mix(in srgb, var(--c-soft-gold, #f0c674) 90%, var(--c-text-primary, #d8dcef));
+}
+
+.combat-victory-toast-loot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 0 0 0;
+  list-style: none;
+  border-top: 1px solid color-mix(in srgb, var(--c-text-secondary, #8890b0) 18%, transparent);
+}
+
+.combat-victory-toast-loot-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--c-text-primary, #d8dcef);
+  min-width: 0;
+}
+
+.combat-victory-toast-loot-bullet {
+  color: color-mix(in srgb, var(--c-moss-green, #b5bd68) 80%, var(--c-text-primary, #d8dcef));
+  font-size: 10px;
+  flex: 0 0 auto;
+}
+
+.combat-victory-toast-loot-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-victory-toast,
+  .combat-victory-toast.combat-victory-toast-closing {
+    animation-duration: 80ms;
+  }
+}

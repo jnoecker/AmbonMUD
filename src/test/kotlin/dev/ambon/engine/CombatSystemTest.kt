@@ -1146,6 +1146,73 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `Kill combat event carries autolooted item names`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 1, maxHp = 1)
+            fixture.mobs.upsert(mob)
+            fixture.items.addMobItem(
+                mob.id,
+                ItemInstance(ItemId("demo:tail"), Item(keyword = "tail", displayName = "a rat tail")),
+            )
+            fixture.items.addMobItem(
+                mob.id,
+                ItemInstance(ItemId("demo:ear"), Item(keyword = "ear", displayName = "a rat ear")),
+            )
+
+            val combat = fixture.buildCombat(rng = Random(2))
+
+            val sid = SessionId(301L)
+            fixture.players.loginOrFail(sid, "VictoryToaster")
+            fixture.players.setAutolootEnabled(sid, true)
+
+            val combatEvents = mutableListOf<CombatEvent>()
+            combat.onCombatEvent = { _, event -> combatEvents += event }
+
+            assertNull(combat.startCombat(sid, "rat"))
+            fixture.tickCombat(combat)
+
+            val kill = combatEvents.filterIsInstance<CombatEvent.Kill>().firstOrNull()
+            assertNotNull(kill, "Expected a Kill combat event, got: $combatEvents")
+            assertEquals(
+                listOf("a rat tail", "a rat ear"),
+                kill!!.lootedItems,
+                "Kill event should carry autolooted item display names in pickup order",
+            )
+        }
+
+    @Test
+    fun `Kill combat event has empty lootedItems when autoloot is disabled`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 1, maxHp = 1)
+            fixture.mobs.upsert(mob)
+            fixture.items.addMobItem(
+                mob.id,
+                ItemInstance(ItemId("demo:tail"), Item(keyword = "tail", displayName = "a rat tail")),
+            )
+
+            val combat = fixture.buildCombat(rng = Random(2))
+
+            val sid = SessionId(302L)
+            fixture.players.loginOrFail(sid, "NoAutoloot")
+            fixture.players.setAutolootEnabled(sid, false)
+
+            val combatEvents = mutableListOf<CombatEvent>()
+            combat.onCombatEvent = { _, event -> combatEvents += event }
+
+            assertNull(combat.startCombat(sid, "rat"))
+            fixture.tickCombat(combat)
+
+            val kill = combatEvents.filterIsInstance<CombatEvent.Kill>().firstOrNull()
+            assertNotNull(kill, "Expected a Kill combat event, got: $combatEvents")
+            assertTrue(
+                kill!!.lootedItems.isEmpty(),
+                "Kill event should have empty lootedItems when autoloot is off, got: ${kill.lootedItems}",
+            )
+        }
+
+    @Test
     fun `autoloot also picks up rolled loot-table drops`() =
         runTest {
             val fixture = CombatTestFixture()

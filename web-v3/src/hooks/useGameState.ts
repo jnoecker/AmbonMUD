@@ -21,6 +21,7 @@ import type {
   CombatEventData,
   CombatLogMessage,
   CombatTarget,
+  CombatVictoryNotification,
   CommandEntry,
   ContainerContents,
   CraftingNode,
@@ -144,6 +145,7 @@ function combatEventToLogMessage(event: CombatEventData): CombatLogMessage | nul
 
 const MAX_COMBAT_LOG = 200;
 const MAX_QUEST_NOTIFICATIONS = 5;
+const MAX_COMBAT_VICTORY_NOTIFICATIONS = 3;
 const MAX_FRIEND_NOTIFICATIONS = 5;
 const MAX_UI_FEEDBACK_FEED = 20;
 const MAX_SYSTEM_ACTIVITY = 12;
@@ -194,6 +196,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const gainEventsRef = useRef<GainEvent[]>([]);
   const [levelUpNotification, setLevelUpNotification] = useState<LevelUpNotification | null>(null);
   const levelUpIdRef = useRef(0);
+  const [combatVictoryNotifications, setCombatVictoryNotifications] = useState<CombatVictoryNotification[]>([]);
+  const combatVictoryIdRef = useRef(0);
   const [duelState, setDuelState] = useState<DuelState | null>(null);
   const [duelChallenge, setDuelChallenge] = useState<DuelChallenge | null>(null);
 
@@ -322,6 +326,21 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     canvasEvents.push(event);
     const logMsg = combatEventToLogMessage(event);
     if (logMsg) pushCombatLogMessage(logMsg);
+    if (event.type === "kill" && event.targetName) {
+      combatVictoryIdRef.current += 1;
+      const notification: CombatVictoryNotification = {
+        id: `combat-victory-${combatVictoryIdRef.current}`,
+        targetName: event.targetName,
+        xpGained: event.xpGained,
+        goldGained: event.goldGained,
+        lootedItems: event.lootedItems,
+        receivedAt: Date.now(),
+      };
+      setCombatVictoryNotifications((prev) => {
+        const next = [...prev, notification];
+        return next.length > MAX_COMBAT_VICTORY_NOTIFICATIONS ? next.slice(-MAX_COMBAT_VICTORY_NOTIFICATIONS) : next;
+      });
+    }
   }, [pushCombatLogMessage]);
 
   const pushUiFeedback = useCallback((feedback: UiFeedback) => {
@@ -626,6 +645,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setShop(null);
     setPuzzle(null);
     setQuestNotifications([]);
+    setCombatVictoryNotifications([]);
     setCraftingSkills([]);
     setCraftingRecipes([]);
     setCraftingNodes([]);
@@ -713,6 +733,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // UI
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,
     levelUpNotification, setLevelUpNotification,
+    combatVictoryNotifications, setCombatVictoryNotifications,
     // Setters needed by App
     setQuestsAvailable,
     // GMCP
