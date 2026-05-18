@@ -16878,6 +16878,40 @@ html:has(.game-shell),
   cursor: not-allowed;
 }
 
+/* Combat panel variant — inherits .soft-button base, adds HP/mana color tinting. */
+.combat-quick-potion {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.combat-quick-potion-hp {
+  color: var(--color-hp-light);
+  border-color: rgb(158 191 117 / 38%);
+  background: linear-gradient(135deg, rgb(158 191 117 / 18%), rgb(158 191 117 / 8%));
+}
+
+.combat-quick-potion-hp:hover:not(:disabled) {
+  box-shadow: 0 0 8px rgb(158 191 117 / 30%);
+  background: linear-gradient(135deg, rgb(158 191 117 / 28%), rgb(158 191 117 / 14%));
+}
+
+.combat-quick-potion-mana {
+  color: var(--color-mana-light);
+  border-color: rgb(127 182 207 / 38%);
+  background: linear-gradient(135deg, rgb(127 182 207 / 18%), rgb(127 182 207 / 8%));
+}
+
+.combat-quick-potion-mana:hover:not(:disabled) {
+  box-shadow: 0 0 8px rgb(127 182 207 / 30%);
+  background: linear-gradient(135deg, rgb(127 182 207 / 28%), rgb(127 182 207 / 14%));
+}
+
+.combat-quick-potion:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .vbar-gold-coin {
   width: 12px;
   height: 12px;
