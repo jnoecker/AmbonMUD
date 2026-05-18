@@ -41,6 +41,7 @@ interface WorldPanelProps {
   onPickUpItem: (itemName: string) => void;
   onBuyItem: (keyword: string) => void;
   onSellItem: (keyword: string) => void;
+  onCommand: (command: string) => void;
 }
 
 export function WorldPanel({
@@ -79,6 +80,7 @@ export function WorldPanel({
   onPickUpItem,
   onBuyItem,
   onSellItem,
+  onCommand,
 }: WorldPanelProps) {
   return (
     <section className="panel panel-world" aria-label="World state">
@@ -190,12 +192,14 @@ export function WorldPanel({
             hasRoomDetails={hasRoomDetails}
             combatTarget={combatTarget}
             vitals={vitals}
+            inventory={inventory}
             skills={skills}
             mobs={mobs}
             onCastSkill={onCastSkill}
             onRefreshSkills={onRefreshSkills}
             onFlee={onFlee}
             onAttackMob={onAttackMob}
+            onCommand={onCommand}
           />
         ) : (
           <article className="subpanel split-list">
