@@ -49,23 +49,19 @@ class PostgresPlayerRepository(
 
     override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val trimmed = request.name.trim()
+        // Build the full prospective record with a placeholder id, then write every
+        // column in a single insert so starter equipment / gold / gender land on
+        // disk atomically — if the caller never finishes binding the session, the
+        // row still has the right state for the next login.
+        val prospective = request.toNewPlayerRecord(PlayerId(0))
         try {
             return database.dbQuery {
                 val result =
                     PlayersTable.insert {
-                        it[PlayersTable.name] = trimmed
+                        PlayersTable.writeRecord(it, prospective, includeId = false)
                         it[nameLower] = trimmed.lowercase()
-                        it[roomId] = request.startRoomId.value
-                        it[createdAtEpochMs] = request.nowEpochMs
-                        it[lastSeenEpochMs] = request.nowEpochMs
-                        it[PlayersTable.passwordHash] = request.passwordHash
-                        it[PlayersTable.ansiEnabled] = request.ansiEnabled
-                        it[PlayersTable.race] = request.race
-                        it[PlayersTable.playerClass] = request.playerClass
-                        it[PlayersTable.statsJson] = jsonMapper.writeValueAsString(request.stats)
                     }
-
-                request.toNewPlayerRecord(PlayerId(result[PlayersTable.id]))
+                prospective.copy(id = PlayerId(result[PlayersTable.id]))
             }
         } catch (e: ExposedSQLException) {
             // SQL state 23505 = unique_violation (works across Postgres versions)
