@@ -46,7 +46,7 @@ function CombatVictoryToastInner({ notification, onDismiss }: InnerProps) {
   }, [closing, onDismiss]);
 
   const { targetName, xpGained, goldGained, lootedItems } = notification;
-  const hasRewards = xpGained > 0 || goldGained > 0 || lootedItems.length > 0;
+  const hasRewards = xpGained > 0 || goldGained > 0;
 
   return (
     <div

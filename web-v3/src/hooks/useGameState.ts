@@ -145,7 +145,6 @@ function combatEventToLogMessage(event: CombatEventData): CombatLogMessage | nul
 
 const MAX_COMBAT_LOG = 200;
 const MAX_QUEST_NOTIFICATIONS = 5;
-const MAX_COMBAT_VICTORY_NOTIFICATIONS = 3;
 const MAX_FRIEND_NOTIFICATIONS = 5;
 const MAX_UI_FEEDBACK_FEED = 20;
 const MAX_SYSTEM_ACTIVITY = 12;
@@ -336,10 +335,10 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         lootedItems: event.lootedItems,
         receivedAt: Date.now(),
       };
-      setCombatVictoryNotifications((prev) => {
-        const next = [...prev, notification];
-        return next.length > MAX_COMBAT_VICTORY_NOTIFICATIONS ? next.slice(-MAX_COMBAT_VICTORY_NOTIFICATIONS) : next;
-      });
+      // Replace (rather than append) so back-to-back kills don't queue stale
+      // toasts behind the active one — otherwise the active toast's dismissal
+      // resurfaces a prior kill several seconds late.
+      setCombatVictoryNotifications([notification]);
     }
   }, [pushCombatLogMessage]);
 
