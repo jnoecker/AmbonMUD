@@ -1514,7 +1514,7 @@ ambonmud:
             - itemId: academy:leather_hood
             - itemId: academy:healing_potion
               equip: false
-            - itemId: academy:healing_potion
+            - itemId: academy:hearty_ration
               equip: false
         ROGUE:
           displayName: Rogue
