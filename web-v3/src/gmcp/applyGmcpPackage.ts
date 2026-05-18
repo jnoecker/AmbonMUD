@@ -230,6 +230,15 @@ function isChatChannel(value: string): value is ChatChannel {
   return CHAT_CHANNEL_SET.has(value as ChatChannel);
 }
 
+function parseOnUse(raw: unknown): { healHp: number; healMana: number } | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const obj = raw as Record<string, unknown>;
+  const healHp = typeof obj.healHp === "number" ? obj.healHp : 0;
+  const healMana = typeof obj.healMana === "number" ? obj.healMana : 0;
+  if (healHp <= 0 && healMana <= 0) return undefined;
+  return { healHp, healMana };
+}
+
 function parseMobEffects(raw: unknown): StatusEffect[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const effects = raw
@@ -483,6 +492,7 @@ export function applyGmcpPackage(
               enchantments: Array.isArray(entry.enchantments) ? entry.enchantments.filter((e): e is string => typeof e === "string") : undefined,
               consumable: typeof entry.consumable === "boolean" ? entry.consumable : undefined,
               useEffect: typeof entry.useEffect === "string" ? entry.useEffect : undefined,
+              onUse: parseOnUse(entry.onUse),
             }))
         : [];
 
@@ -529,6 +539,7 @@ export function applyGmcpPackage(
           enchantments: Array.isArray(packet.enchantments) ? (packet.enchantments as unknown[]).filter((e): e is string => typeof e === "string") : undefined,
           consumable: typeof packet.consumable === "boolean" ? packet.consumable : undefined,
           useEffect: typeof packet.useEffect === "string" ? packet.useEffect : undefined,
+          onUse: parseOnUse(packet.onUse),
         },
       ]);
       break;

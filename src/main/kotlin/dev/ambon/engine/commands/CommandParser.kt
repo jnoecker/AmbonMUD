@@ -98,6 +98,12 @@ sealed interface Command {
         val keyword: String,
     ) : Command
 
+    /** Auto-select and consume the best HP potion. See [Command.QuickMana] for the mana counterpart. */
+    data object QuickHeal : Command
+
+    /** Auto-select and consume the best mana potion. */
+    data object QuickMana : Command
+
     data class Give(
         val keyword: String,
         val playerName: String,
@@ -852,6 +858,10 @@ object CommandParser {
 
         // use
         requiredArg(line, listOf("use"), "use <item>", { Command.Use(it) })?.let { return it }
+
+        // quick heal / quick mana
+        matchPrefix(line, listOf("quickheal", "qh")) { Command.QuickHeal }?.let { return it }
+        matchPrefix(line, listOf("quickmana", "qm")) { Command.QuickMana }?.let { return it }
 
         // give
         matchPrefix(line, listOf("give")) { rest ->

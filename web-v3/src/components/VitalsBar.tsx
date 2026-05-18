@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { DragEvent, FormEvent, KeyboardEvent } from "react";
-import type { PopoutPanel, SkillSummary, Vitals } from "../types";
+import type { ItemSummary, PopoutPanel, SkillSummary, Vitals } from "../types";
 import type { AudioEngine } from "../hooks/useAudioEngine";
 import { AudioControls } from "./AudioControls";
+import { selectQuickPotion } from "../combat/quickPotion";
 import { percent } from "../utils";
 import {
   CharacterAvatarIcon,
@@ -62,6 +63,7 @@ interface VitalsBarProps {
   connected: boolean;
   loggedIn: boolean;
   vitals: Vitals;
+  inventory: ItemSummary[];
   quickbarSlots: (SkillSummary | null)[];
   onQuickbarSwap: (fromIndex: number, toIndex: number) => void;
   onQuickbarAssign: (slotIndex: number, skillId: string) => void;
@@ -200,6 +202,7 @@ export function VitalsBar({
   connected,
   loggedIn,
   vitals,
+  inventory,
   quickbarSlots,
   onQuickbarSwap,
   onQuickbarAssign,
@@ -287,29 +290,67 @@ export function VitalsBar({
   return (
     <nav ref={navRef} className="vbar" aria-label="Action bar">
       {/* Vitals row */}
-      {loggedIn && (
-        <div className="vbar-vitals">
-          <div className="vbar-vital" title={`HP: ${vitals.hp}/${vitals.maxHp}`}>
-            <span className="vbar-vital-label">HP</span>
-            <div className="vbar-vital-track">
-              <span className="vbar-vital-fill vbar-vital-hp" style={{ width: `${percent(vitals.hp, vitals.maxHp)}%` }} />
+      {loggedIn && (() => {
+        const hpPick = selectQuickPotion(inventory, vitals.maxHp - vitals.hp, "hp");
+        const manaPick = selectQuickPotion(inventory, vitals.maxMana - vitals.mana, "mana");
+        const hpDisabled = vitals.hp >= vitals.maxHp || hpPick === null;
+        const manaDisabled = vitals.mana >= vitals.maxMana || manaPick === null;
+        const hpTitle = vitals.hp >= vitals.maxHp
+          ? "HP is full"
+          : hpPick
+            ? `Quick Heal — ${hpPick.item.name} (+${hpPick.amount} HP${hpPick.fullyRestores ? ", fully restores" : ""})`
+            : "No healing potion in inventory";
+        const manaTitle = vitals.mana >= vitals.maxMana
+          ? "Mana is full"
+          : manaPick
+            ? `Quick Mana — ${manaPick.item.name} (+${manaPick.amount} mana${manaPick.fullyRestores ? ", fully restores" : ""})`
+            : "No mana potion in inventory";
+        return (
+          <div className="vbar-vitals">
+            <div className="vbar-vital" title={`HP: ${vitals.hp}/${vitals.maxHp}`}>
+              <span className="vbar-vital-label">HP</span>
+              <div className="vbar-vital-track">
+                <span className="vbar-vital-fill vbar-vital-hp" style={{ width: `${percent(vitals.hp, vitals.maxHp)}%` }} />
+              </div>
+              <span className="vbar-vital-text">{vitals.hp}/{vitals.maxHp}</span>
             </div>
-            <span className="vbar-vital-text">{vitals.hp}/{vitals.maxHp}</span>
-          </div>
-          <div className="vbar-vital" title={`MP: ${vitals.mana}/${vitals.maxMana}`}>
-            <span className="vbar-vital-label">MP</span>
-            <div className="vbar-vital-track">
-              <span className="vbar-vital-fill vbar-vital-mp" style={{ width: `${percent(vitals.mana, vitals.maxMana)}%` }} />
+            <button
+              type="button"
+              className="vbar-quick-potion vbar-quick-potion-hp"
+              onClick={() => onCommand("quickheal")}
+              disabled={hpDisabled}
+              title={hpTitle}
+              aria-label={hpTitle}
+            >
+              <span className="vbar-quick-potion-icon" aria-hidden="true">+</span>
+              <span className="vbar-quick-potion-label">Heal</span>
+            </button>
+            <div className="vbar-vital" title={`MP: ${vitals.mana}/${vitals.maxMana}`}>
+              <span className="vbar-vital-label">MP</span>
+              <div className="vbar-vital-track">
+                <span className="vbar-vital-fill vbar-vital-mp" style={{ width: `${percent(vitals.mana, vitals.maxMana)}%` }} />
+              </div>
+              <span className="vbar-vital-text">{vitals.mana}/{vitals.maxMana}</span>
             </div>
-            <span className="vbar-vital-text">{vitals.mana}/{vitals.maxMana}</span>
+            <button
+              type="button"
+              className="vbar-quick-potion vbar-quick-potion-mana"
+              onClick={() => onCommand("quickmana")}
+              disabled={manaDisabled}
+              title={manaTitle}
+              aria-label={manaTitle}
+            >
+              <span className="vbar-quick-potion-icon" aria-hidden="true">+</span>
+              <span className="vbar-quick-potion-label">Mana</span>
+            </button>
+            <div className="vbar-gold">
+              <span className="vbar-gold-coin" />
+              <span className="vbar-gold-text">{vitals.gold.toLocaleString()}</span>
+            </div>
+            <AudioControls audio={audio} />
           </div>
-          <div className="vbar-gold">
-            <span className="vbar-gold-coin" />
-            <span className="vbar-gold-text">{vitals.gold.toLocaleString()}</span>
-          </div>
-          <AudioControls audio={audio} />
-        </div>
-      )}
+        );
+      })()}
 
       {/* Quickbar skills + pet bar (horizontal scroll). Pet bar appears to the right
           of the quickbar with a small divider, auto-populated from the active pet's

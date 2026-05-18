@@ -14530,6 +14530,146 @@ body {
   outline: none;
 }
 
+/* ── Entity detail modal (Look) ────────────────────────────── */
+
+.entity-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 70%);
+  backdrop-filter: blur(8px);
+  animation: videoFadeIn 0.25s ease-out forwards;
+  padding: 24px;
+}
+
+.entity-detail-card {
+  position: relative;
+  width: min(520px, 96vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-edge);
+  background: rgb(18 22 34 / 96%);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 60%);
+  padding: 32px 28px 24px;
+  text-align: center;
+  color: var(--color-text-primary, #d8dcef);
+}
+
+.entity-detail-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-edge);
+  background: rgb(42 16 64 / 92%);
+  color: var(--color-accent-violet, #b9aed8);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.entity-detail-close:hover {
+  background: rgb(62 26 84 / 92%);
+}
+
+.entity-detail-portrait-btn {
+  display: inline-block;
+  padding: 0;
+  margin: 0 auto 14px;
+  background: transparent;
+  border: none;
+  cursor: zoom-in;
+  border-radius: 10px;
+}
+
+.entity-detail-portrait {
+  display: block;
+  width: 220px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--glass-edge);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.entity-detail-portrait-btn:hover .entity-detail-portrait,
+.entity-detail-portrait-btn:focus-visible .entity-detail-portrait {
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 55%);
+}
+
+.entity-detail-name {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary, #d8dcef);
+}
+
+.entity-detail-description {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary, #c0c5dc);
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+/* ── Full-size image preview ───────────────────────────────── */
+
+.image-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 88%);
+  backdrop-filter: blur(10px);
+  animation: videoFadeIn 0.25s ease-out forwards;
+  padding: 24px;
+  cursor: zoom-out;
+}
+
+.image-preview-img {
+  max-width: 96vw;
+  max-height: 92vh;
+  border-radius: 8px;
+  box-shadow: 0 12px 48px rgb(0 0 0 / 70%);
+  cursor: default;
+}
+
+.image-preview-close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-edge);
+  background: rgb(42 16 64 / 92%);
+  color: var(--color-accent-violet, #b9aed8);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview-close:hover {
+  background: rgb(62 26 84 / 92%);
+}
+
 /* ── Command Palette (Ctrl+K) ──────────────────────────────── */
 
 .cmd-palette-backdrop {
@@ -16684,6 +16824,58 @@ html:has(.game-shell),
   background: linear-gradient(135deg, rgb(212 184 92 / 18%), rgb(189 168 115 / 12%));
   border: 1px solid rgb(212 184 92 / 36%);
   border-radius: 999px;
+}
+
+.vbar-quick-potion {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line-faint);
+  background: linear-gradient(135deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 2%));
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.vbar-quick-potion-icon {
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.vbar-quick-potion-hp {
+  color: var(--color-hp-light);
+  border-color: rgb(158 191 117 / 38%);
+  background: linear-gradient(135deg, rgb(158 191 117 / 18%), rgb(158 191 117 / 8%));
+}
+
+.vbar-quick-potion-hp:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 8px rgb(158 191 117 / 30%);
+  background: linear-gradient(135deg, rgb(158 191 117 / 28%), rgb(158 191 117 / 14%));
+}
+
+.vbar-quick-potion-mana {
+  color: var(--color-mana-light);
+  border-color: rgb(127 182 207 / 38%);
+  background: linear-gradient(135deg, rgb(127 182 207 / 18%), rgb(127 182 207 / 8%));
+}
+
+.vbar-quick-potion-mana:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 8px rgb(127 182 207 / 30%);
+  background: linear-gradient(135deg, rgb(127 182 207 / 28%), rgb(127 182 207 / 14%));
+}
+
+.vbar-quick-potion:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .vbar-gold-coin {

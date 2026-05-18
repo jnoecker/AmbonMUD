@@ -1746,6 +1746,8 @@ data class CommandsConfig(
             "get" to CommandMetadata("get/take/pickup <item>", "Pick up an item", "items", requiresTarget = true),
             "drop" to CommandMetadata("drop <item>", "Drop an item", "items", requiresTarget = true),
             "use" to CommandMetadata("use <item>", "Use a consumable item", "items", requiresTarget = true),
+            "quickheal" to CommandMetadata("quickheal/qh", "Auto-use best healing potion", "combat"),
+            "quickmana" to CommandMetadata("quickmana/qm", "Auto-use best mana potion", "combat"),
             "give" to CommandMetadata("give <item> <player>", "Give an item to a player", "items", requiresTarget = true),
             "talk" to CommandMetadata("talk <npc>", "Start a conversation with an NPC", "social", requiresTarget = true),
             "kill" to CommandMetadata("kill <mob>", "Attack a mob", "combat", requiresTarget = true),

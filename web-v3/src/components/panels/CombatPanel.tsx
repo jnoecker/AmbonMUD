@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import type { CombatTarget, RoomMob, SkillSummary, Vitals } from "../../types";
+import type { CombatTarget, ItemSummary, RoomMob, SkillSummary, Vitals } from "../../types";
+import { selectQuickPotion } from "../../combat/quickPotion";
 import { percent } from "../../utils";
 import { CrosshairIcon, FleeIcon, RefreshIcon, SkillCastIcon } from "../Icons";
 
@@ -10,12 +11,14 @@ interface CombatPanelProps {
   hasRoomDetails: boolean;
   combatTarget: CombatTarget | null;
   vitals: Vitals;
+  inventory: ItemSummary[];
   skills: SkillSummary[];
   mobs: RoomMob[];
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onRefreshSkills: () => void;
   onFlee: () => void;
   onAttackMob: (mobName: string) => void;
+  onCommand: (cmd: string) => void;
 }
 
 export function CombatPanel({
@@ -23,12 +26,14 @@ export function CombatPanel({
   hasRoomDetails,
   combatTarget,
   vitals,
+  inventory,
   skills,
   mobs,
   onCastSkill,
   onRefreshSkills,
   onFlee,
   onAttackMob,
+  onCommand,
 }: CombatPanelProps) {
   const [now, setNow] = useState(() => Date.now());
   const [activeTab, setActiveTab] = useState<AbilityTab>("all");
@@ -187,27 +192,67 @@ export function CombatPanel({
       )}
 
       {/* Action bar */}
-      <div className="combat-action-bar">
-        <button
-          type="button"
-          className="combat-flee-button"
-          title="Flee from combat"
-          onClick={onFlee}
-        >
-          <FleeIcon className="combat-action-icon" />
-          <span>Flee</span>
-        </button>
-        <button
-          type="button"
-          className="soft-button"
-          onClick={onRefreshSkills}
-          disabled={!connected || !hasRoomDetails}
-          title="Refresh skills"
-        >
-          <RefreshIcon className="combat-action-icon" />
-          <span>Skills</span>
-        </button>
-      </div>
+      {(() => {
+        const hpPick = selectQuickPotion(inventory, vitals.maxHp - vitals.hp, "hp");
+        const manaPick = selectQuickPotion(inventory, vitals.maxMana - vitals.mana, "mana");
+        const hpDisabled = vitals.hp >= vitals.maxHp || hpPick === null;
+        const manaDisabled = vitals.mana >= vitals.maxMana || manaPick === null;
+        const hpTitle = vitals.hp >= vitals.maxHp
+          ? "HP is full"
+          : hpPick
+            ? `Quick Heal — ${hpPick.item.name} (+${hpPick.amount} HP${hpPick.fullyRestores ? ", fully restores" : ""})`
+            : "No healing potion in inventory";
+        const manaTitle = vitals.mana >= vitals.maxMana
+          ? "Mana is full"
+          : manaPick
+            ? `Quick Mana — ${manaPick.item.name} (+${manaPick.amount} mana${manaPick.fullyRestores ? ", fully restores" : ""})`
+            : "No mana potion in inventory";
+        return (
+          <div className="combat-action-bar">
+            <button
+              type="button"
+              className="combat-flee-button"
+              title="Flee from combat"
+              onClick={onFlee}
+            >
+              <FleeIcon className="combat-action-icon" />
+              <span>Flee</span>
+            </button>
+            <button
+              type="button"
+              className="soft-button"
+              onClick={onRefreshSkills}
+              disabled={!connected || !hasRoomDetails}
+              title="Refresh skills"
+            >
+              <RefreshIcon className="combat-action-icon" />
+              <span>Skills</span>
+            </button>
+            <button
+              type="button"
+              className="soft-button combat-quick-potion combat-quick-potion-hp"
+              onClick={() => onCommand("quickheal")}
+              disabled={hpDisabled}
+              title={hpTitle}
+              aria-label={hpTitle}
+            >
+              <span aria-hidden="true">+</span>
+              <span>Heal</span>
+            </button>
+            <button
+              type="button"
+              className="soft-button combat-quick-potion combat-quick-potion-mana"
+              onClick={() => onCommand("quickmana")}
+              disabled={manaDisabled}
+              title={manaTitle}
+              aria-label={manaTitle}
+            >
+              <span aria-hidden="true">+</span>
+              <span>Mana</span>
+            </button>
+          </div>
+        );
+      })()}
     </article>
   );
 }

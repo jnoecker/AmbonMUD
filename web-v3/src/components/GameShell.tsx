@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { PixiCanvas } from "../canvas/PixiCanvas";
 import { CombatLog } from "./CombatLog";
 import { VitalsBar } from "./VitalsBar";
-import type { CombatLogMessage, CombatTarget, PopoutPanel, SkillSummary, Vitals } from "../types";
+import type { CombatLogMessage, CombatTarget, ItemSummary, PopoutPanel, SkillSummary, Vitals } from "../types";
 import type { AudioEngine } from "../hooks/useAudioEngine";
 
 interface GameShellProps {
@@ -12,6 +12,7 @@ interface GameShellProps {
   vitals: Vitals;
   combatLogMessages: CombatLogMessage[];
   combatTarget: CombatTarget | null;
+  inventory: ItemSummary[];
   quickbarSlots: (SkillSummary | null)[];
   onQuickbarSwap: (fromIndex: number, toIndex: number) => void;
   onQuickbarAssign: (slotIndex: number, skillId: string) => void;
@@ -37,6 +38,7 @@ export function GameShell({
   vitals,
   combatLogMessages,
   combatTarget,
+  inventory,
   quickbarSlots,
   onQuickbarSwap,
   onQuickbarAssign,
@@ -95,6 +97,7 @@ export function GameShell({
         connected={connected}
         loggedIn={loggedIn}
         vitals={vitals}
+        inventory={inventory}
         quickbarSlots={quickbarSlots}
         onQuickbarSwap={onQuickbarSwap}
         onQuickbarAssign={onQuickbarAssign}

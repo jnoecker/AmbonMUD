@@ -399,6 +399,19 @@ class ItemRegistry {
     }
 
     /**
+     * Use a specific owned item by [itemId]. Same semantics as [useItem] but
+     * resolves the item by id rather than keyword, so callers (e.g. quickheal)
+     * can target one exact inventory entry.
+     */
+    fun useItemById(
+        sessionId: SessionId,
+        itemId: ItemId,
+    ): UseResult {
+        val match = findOwnedItemMatchById(sessionId, itemId) ?: return UseResult.NotFound
+        return applyUse(sessionId, match)
+    }
+
+    /**
      * Use an item from inventory or equipment by keyword.
      */
     fun useItem(
@@ -406,6 +419,13 @@ class ItemRegistry {
         keyword: String,
     ): UseResult {
         val match = findOwnedItemMatch(sessionId, keyword) ?: return UseResult.NotFound
+        return applyUse(sessionId, match)
+    }
+
+    private fun applyUse(
+        sessionId: SessionId,
+        match: MatchedOwnedItem,
+    ): UseResult {
         if (match.item.item.onUse == null) return UseResult.NotUsable(match.item)
 
         val currentCharges = match.item.item.charges
@@ -541,6 +561,35 @@ class ItemRegistry {
         val inv = inventoryItems[sessionId] ?: return null
         val idx = findMatchingItemIndex(inv, keyword)
         return if (idx >= 0) inv[idx] else null
+    }
+
+    private fun findOwnedItemMatchById(
+        sessionId: SessionId,
+        itemId: ItemId,
+    ): MatchedOwnedItem? {
+        val inv = inventoryItems[sessionId]
+        if (inv != null) {
+            val invIdx = inv.indexOfFirst { it.id == itemId }
+            if (invIdx >= 0) {
+                return MatchedOwnedItem(
+                    item = inv[invIdx],
+                    location = HeldItemLocation.INVENTORY,
+                    index = invIdx,
+                )
+            }
+        }
+        val equipped = equippedItems[sessionId]
+        if (equipped != null) {
+            val entry = equipped.entries.firstOrNull { (_, equippedItem) -> equippedItem.id == itemId }
+            if (entry != null) {
+                return MatchedOwnedItem(
+                    item = entry.value,
+                    location = HeldItemLocation.EQUIPPED,
+                    slot = entry.key,
+                )
+            }
+        }
+        return null
     }
 
     private fun findOwnedItemMatch(
