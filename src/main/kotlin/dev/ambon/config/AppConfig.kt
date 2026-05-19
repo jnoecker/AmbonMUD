@@ -1295,6 +1295,12 @@ data class CharacterCreationConfig(
     val defaultRace: String = "HUMAN",
     val defaultClass: String = "WARRIOR",
     val defaultGender: String = "enby",
+    /**
+     * When true, typing "demo" at the login name prompt spawns an ephemeral
+     * demo character using the configured default race/class. The character
+     * disappears at disconnect unless they run `/claim`.
+     */
+    val demoEnabled: Boolean = true,
 )
 
 data class EmotePresetConfig(

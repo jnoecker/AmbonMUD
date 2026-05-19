@@ -526,6 +526,7 @@ class GmcpEmitter(
                 isStaff = player.isStaff,
                 autolootEnabled = player.autolootEnabled,
                 wimpyThresholdPct = player.wimpyThresholdPct,
+                isDemo = player.playerId == null,
             ),
         )
     }
@@ -2595,6 +2596,12 @@ class GmcpEmitter(
         val isStaff: Boolean,
         val autolootEnabled: Boolean,
         val wimpyThresholdPct: Int,
+        /**
+         * True for unclaimed demo characters (no persistent account). Web client
+         * surfaces a "Save your progress" prompt when set. Flips to false after
+         * a successful `/claim`.
+         */
+        val isDemo: Boolean,
     )
 
     private data class SessionAuthTokenPayload(

@@ -77,6 +77,33 @@ internal suspend fun requirePlayerOnline(
     return targetSid
 }
 
+/**
+ * Returns `true` if [sessionId]'s player is a claimed (real) account.
+ * For unclaimed demo characters, sends a friendly error suggesting `/claim`
+ * and returns `false`. Handlers should early-return when this returns false.
+ *
+ * Used to gate features that touch persistent or social state (global chat,
+ * trade, mail send, guild, friends, duels, auction) so demo characters can't
+ * spam or grief without committing to an account.
+ */
+internal suspend fun requireClaimed(
+    sessionId: SessionId,
+    players: PlayerRegistry,
+    outbound: OutboundBus,
+    feature: String,
+): Boolean {
+    val me = players.get(sessionId) ?: return false
+    if (me.playerId != null) return true
+    outbound.send(
+        OutboundEvent.SendError(
+            sessionId,
+            "$feature is not available for demo characters. " +
+                "Type 'claim <password>' or 'claim <newname> <password>' to save your character first.",
+        ),
+    )
+    return false
+}
+
 /** Checks that [target] is in the same room as [me]; sends an error and returns false otherwise. */
 internal suspend fun requireSameRoom(
     sessionId: SessionId,

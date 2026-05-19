@@ -12,6 +12,7 @@ class FriendsHandler(
     private val friendsSystem: FriendsSystem? = null,
 ) : CommandHandler {
     private val outbound = ctx.outbound
+    private val players = ctx.players
 
     override fun register(router: CommandRouter) {
         router.on<Command.Friend.List> { sid, _ -> handleFriendCmd(sid, Command.Friend.List) }
@@ -23,6 +24,10 @@ class FriendsHandler(
         sessionId: SessionId,
         cmd: Command.Friend,
     ) {
+        // Add/Remove mutate persistent state; List is fine for demo characters.
+        if (cmd !is Command.Friend.List) {
+            if (!requireClaimed(sessionId, players, outbound, "Adding or removing friends")) return
+        }
         val fs = requireSystemOrNull(sessionId, friendsSystem, "Friends", outbound) ?: return
         val err = when (cmd) {
             Command.Friend.List -> fs.listFriends(sessionId)

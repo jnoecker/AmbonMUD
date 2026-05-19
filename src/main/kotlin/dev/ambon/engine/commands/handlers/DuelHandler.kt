@@ -26,6 +26,7 @@ class DuelHandler(
     }
 
     private suspend fun handleDuel(sessionId: SessionId, cmd: Command.Duel) {
+        if (!requireClaimed(sessionId, players, outbound, "Dueling")) return
         val ds =
             duelSystem
                 ?: return sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, "Dueling is not available.", "duel", code = "UNAVAILABLE")

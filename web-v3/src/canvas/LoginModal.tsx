@@ -67,6 +67,21 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
               />
               <button type="submit" className="login-button">Enter</button>
             </form>
+            {loginPrompt.demoEnabled && (
+              <div className="login-demo-row">
+                <span className="login-demo-divider">— or —</span>
+                <button
+                  type="button"
+                  className="login-button login-button-secondary login-button-demo"
+                  onClick={() => onSubmit("demo")}
+                >
+                  Try Demo (One-click play)
+                </button>
+                <p className="login-demo-hint">
+                  Spawn a quick-start character. Your progress can be saved later from in-game.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

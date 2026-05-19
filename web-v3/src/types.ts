@@ -193,6 +193,11 @@ export interface CharacterInfo {
   autolootEnabled: boolean;
   /** Wimpy auto-flee threshold (HP%). 0 = disabled. */
   wimpyThresholdPct: number;
+  /**
+   * True for ephemeral demo characters. Surfaces a "Save your progress" banner
+   * in the UI and offers a `/claim` form. Flips to false after a successful claim.
+   */
+  isDemo: boolean;
 }
 
 export interface RoomState {
@@ -741,7 +746,7 @@ export interface LoginClassOption {
 }
 
 export type LoginPromptState =
-  | { state: "name" }
+  | { state: "name"; demoEnabled: boolean }
   | { state: "password"; name: string }
   | { state: "confirmCreate"; name: string }
   | { state: "newPassword"; name: string }

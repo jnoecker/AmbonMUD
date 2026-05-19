@@ -110,6 +110,7 @@ class MailHandler(
         sessionId: SessionId,
         cmd: Command.Mail.Send,
     ) {
+        if (!requireClaimed(sessionId, players, outbound, "Sending mail")) return
         players.withPlayer(sessionId) { me ->
             if (me.mailCompose != null) {
                 outbound.send(

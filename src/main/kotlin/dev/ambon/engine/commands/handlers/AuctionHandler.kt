@@ -86,6 +86,7 @@ class AuctionHandler(
     }
 
     private suspend fun handleSell(sessionId: SessionId, cmd: Command.AuctionSell) {
+        if (!requireClaimed(sessionId, players, outbound, "Posting auctions")) return
         val auction =
             auctionSystem
                 ?: return sendErrorWithFeedback(
@@ -144,6 +145,7 @@ class AuctionHandler(
     }
 
     private suspend fun handleBuy(sessionId: SessionId, cmd: Command.AuctionBuy) {
+        if (!requireClaimed(sessionId, players, outbound, "Buying from the auction house")) return
         val auction =
             auctionSystem
                 ?: return sendErrorWithFeedback(

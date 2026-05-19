@@ -45,6 +45,26 @@ sealed interface CreateResult {
 }
 
 /**
+ * Result of converting a demo (unclaimed) character into a real account
+ * via [PlayerRegistry.claim].
+ */
+sealed interface ClaimResult {
+    data class Ok(
+        val playerId: PlayerId,
+        val name: String,
+    ) : ClaimResult
+
+    /** Session has no player bound, or the player is already claimed. */
+    data object NotDemo : ClaimResult
+
+    data object InvalidName : ClaimResult
+
+    data object InvalidPassword : ClaimResult
+
+    data object Taken : ClaimResult
+}
+
+/**
  * Result of the async credential-resolution phase of login.
  * No in-memory engine state is modified during this phase.
  */
@@ -314,6 +334,131 @@ class PlayerRegistry(
         }
     }
 
+    /**
+     * Creates an ephemeral demo character and binds it to [sessionId].
+     *
+     * The character is **not** persisted to the repository — it lives only in
+     * memory and disappears when the session disconnects. Internally this builds
+     * a [PlayerRecord] just like account creation but skips the `repo.create`
+     * call and sets [PlayerState.playerId] to `null`, so [persistIfClaimed] is
+     * a no-op for the lifetime of the session.
+     *
+     * If the player later runs `/claim` they will be upgraded to a real account
+     * via [claim], at which point a real [PlayerRecord] is written.
+     */
+    suspend fun createDemo(
+        sessionId: SessionId,
+        name: String,
+        defaultAnsiEnabled: Boolean = false,
+        race: String = "HUMAN",
+        playerClass: String = "WARRIOR",
+    ): CreateResult {
+        if (players.containsKey(sessionId)) return CreateResult.InvalidName
+        if (!isValidName(name)) return CreateResult.InvalidName
+        if (isNameOnline(name, sessionId)) return CreateResult.Taken
+
+        fun base(id: String): Int = statRegistry?.get(id)?.baseStat ?: PlayerState.BASE_STAT
+        val raceMods = raceRegistry?.get(race)?.statMods ?: StatMap.EMPTY
+        val statKeys = statRegistry?.all()?.map { it.id } ?: listOf("STR", "DEX", "CON", "INT", "WIS", "CHA")
+        val resolvedStats = statKeys.associateWith { id -> base(id) + raceMods[id] }
+        val classDef = classRegistry?.get(playerClass)
+        val classStartRoom = classStartRooms[playerClass.uppercase()]
+            ?: classDef?.startRoom?.let { RoomId(it) }
+        val (starterInventory, starterEquipped) = resolveStarterEquipment(classDef?.starterEquipment.orEmpty())
+
+        val now = clock.millis()
+        // PlayerId(0L) is a sentinel — the PlayerState's playerId is overwritten
+        // to null below so this record id is never used.
+        val record = PlayerRecord(
+            id = PlayerId(0L),
+            name = name,
+            roomId = classStartRoom ?: startRoom,
+            stats = resolvedStats,
+            gender = defaultGender,
+            race = race,
+            playerClass = playerClass,
+            createdAtEpochMs = now,
+            lastSeenEpochMs = now,
+            passwordHash = "",
+            ansiEnabled = defaultAnsiEnabled,
+            gold = startingGold,
+            autolootEnabled = true,
+            inventoryItems = starterInventory,
+            equippedItems = starterEquipped,
+        )
+        bindDemoSession(sessionId, record)
+        return CreateResult.Ok
+    }
+
+    /**
+     * Converts the demo character bound to [sessionId] into a real account.
+     *
+     * Validates [newName] (or keeps the current demo name if null) and [password],
+     * checks the name isn't taken, persists a fresh [PlayerRecord] via
+     * `repo.create`, and updates the in-memory [PlayerState] (`name`, `playerId`,
+     * `passwordHash`) plus the session-by-name index. After this returns
+     * successfully, [persistIfClaimed] writes the player's full current state
+     * (inventory, gold, xp, etc.) and the character is indistinguishable from
+     * one created through the normal login flow.
+     */
+    suspend fun claim(
+        sessionId: SessionId,
+        newNameRaw: String?,
+        passwordRaw: String,
+    ): ClaimResult {
+        val ps = players[sessionId] ?: return ClaimResult.NotDemo
+        if (ps.playerId != null) return ClaimResult.NotDemo
+
+        val targetName = normalizeName(newNameRaw ?: ps.name)
+        val password = normalizePassword(passwordRaw)
+        if (!isValidName(targetName)) return ClaimResult.InvalidName
+        if (!isValidPassword(password)) return ClaimResult.InvalidPassword
+        // Allow keeping the same name (case-insensitive match against self),
+        // otherwise the name must be free both online and in the repo.
+        val keepingSameName = targetName.equals(ps.name, ignoreCase = true)
+        if (!keepingSameName) {
+            if (isNameOnline(targetName, sessionId)) return ClaimResult.Taken
+            if (repo.findByName(targetName) != null) return ClaimResult.Taken
+        }
+
+        val hash = withContext(hashingContext) { passwordHasher.hash(password) }
+        val now = clock.millis()
+
+        val record = try {
+            repo.create(
+                PlayerCreationRequest(
+                    name = targetName,
+                    startRoomId = ps.roomId,
+                    nowEpochMs = now,
+                    passwordHash = hash,
+                    ansiEnabled = ps.ansiEnabled,
+                    race = ps.race,
+                    playerClass = ps.playerClass,
+                    gender = ps.gender,
+                    stats = ps.stats.values,
+                    gold = ps.gold,
+                    // Starter inventory/equipment lives in ItemRegistry and is
+                    // persisted by the trailing persistIfClaimed call below.
+                ),
+            )
+        } catch (_: PersistenceException) {
+            return ClaimResult.Taken
+        }
+
+        // Re-index by name if it changed
+        if (!keepingSameName) {
+            sessionByLowerName.remove(ps.name.lowercase())
+        }
+        ps.name = targetName
+        ps.playerId = record.id
+        ps.passwordHash = hash
+        sessionByLowerName[targetName.lowercase()] = sessionId
+
+        // Persist current runtime state (xp, hp, inventory, equipment, etc.).
+        persistIfClaimed(ps)
+        return ClaimResult.Ok(record.id, targetName)
+    }
+
     suspend fun create(
         sessionId: SessionId,
         nameRaw: String,
@@ -332,6 +477,36 @@ class PlayerRegistry(
             is CreateAccountPrep.Ready -> applyCreateAccount(sessionId, prep.record)
             CreateAccountPrep.InvalidInput -> CreateResult.InvalidName
             CreateAccountPrep.Taken -> CreateResult.Taken
+        }
+    }
+
+    /**
+     * Ephemeral variant of [bindSession] for demo characters. Skips the
+     * trailing `repo.save` and nullifies [PlayerState.playerId] so the player
+     * is never persisted (see [persistIfClaimed]).
+     */
+    private fun bindDemoSession(
+        sessionId: SessionId,
+        boundRecord: PlayerRecord,
+    ) {
+        val xpTotal = boundRecord.xpTotal.coerceAtLeast(0L)
+        val level = progression.computeLevel(xpTotal)
+        val ps = boundRecord.copy(xpTotal = xpTotal, level = level).toPlayerState(sessionId)
+        ps.playerId = null
+        progression.applyLevelStats(ps, level)
+        ps.hp = ps.maxHp
+        ps.mana = ps.maxMana
+        players[sessionId] = ps
+        rebuildAllPlayersSnapshot()
+        roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
+        sessionByLowerName[ps.name.lowercase()] = sessionId
+        items.ensurePlayer(sessionId)
+        for (item in boundRecord.inventoryItems) {
+            items.addToInventory(sessionId, item)
+        }
+        for ((slotName, item) in boundRecord.equippedItems) {
+            val slot = ItemSlot.parse(slotName) ?: continue
+            items.setEquippedItem(sessionId, slot, item)
         }
     }
 

@@ -43,7 +43,7 @@ data class PlayerState(
     var gold: Long = 0L,
     // Immutable after creation — cached here so persistIfClaimed avoids a repo lookup.
     val createdAtEpochMs: Long = 0L,
-    val passwordHash: String = "",
+    var passwordHash: String = "",
     var activeQuests: Map<String, QuestState> = emptyMap(),
     var completedQuestIds: Set<String> = emptySet(),
     /**
