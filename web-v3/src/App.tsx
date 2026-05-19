@@ -28,6 +28,7 @@ import { CombatLogPanel } from "./components/panels/CombatLogPanel";
 import { WorldAtmosphereHud } from "./components/WorldAtmosphereHud";
 import { HelpContent } from "./components/HelpContent";
 import { Atlas } from "./components/Atlas";
+import { DemoBanner } from "./components/DemoBanner";
 import { LevelUpBanner } from "./components/LevelUpBanner";
 import { QuestCompleteToast } from "./components/QuestCompleteToast";
 import { CombatVictoryToast } from "./components/CombatVictoryToast";
@@ -756,6 +757,12 @@ function App() {
 
   return (
     <>
+      {state.character.isDemo && (
+        <DemoBanner
+          autoOpen={(state.character.level ?? 1) >= 2}
+          onClaim={(line) => sendCommand(line)}
+        />
+      )}
       <GameShell
         connected={connected}
         hasCharacterProfile={hasCharacterProfile}

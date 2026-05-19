@@ -347,6 +347,7 @@ export function applyGmcpPackage(
         isStaff: packet.isStaff === true,
         autolootEnabled: packet.autolootEnabled === true,
         wimpyThresholdPct: typeof packet.wimpyThresholdPct === "number" ? packet.wimpyThresholdPct : 10,
+        isDemo: packet.isDemo === true,
       });
       // Login complete — dismiss modal
       ctx.setLoginPrompt(null);
@@ -1542,7 +1543,12 @@ export function applyGmcpPackage(
     }
 
     case "Login.Prompt": {
-      const packet = data as LoginPromptState;
+      const rawPacket = data as Partial<LoginPromptState> & Record<string, unknown>;
+      // Default demoEnabled to false if missing (older server builds).
+      const packet =
+        rawPacket.state === "name"
+          ? ({ state: "name", demoEnabled: rawPacket.demoEnabled === true } as LoginPromptState)
+          : (rawPacket as LoginPromptState);
       // Only attempt auto-authentication on the initial "name" prompt.
       // Subsequent prompts (confirmCreate, password, raceSelection, etc.) must
       // always be shown to the user — otherwise the client intercepts every
