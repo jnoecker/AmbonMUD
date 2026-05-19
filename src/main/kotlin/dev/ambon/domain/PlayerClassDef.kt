@@ -17,16 +17,20 @@ data class PlayerClassDef(
 ) {
     /**
      * Effective archetypal priority list used to resolve PRIMARY/SECONDARY/
-     * TERTIARY stat keys on items. Prefers explicit [statPriorities]; falls
-     * back to a single-element list derived from [primaryStat] so legacy class
-     * YAMLs (which only declare a primaryStat) still get a PRIMARY mapping.
+     * TERTIARY stat keys on items. Prefers explicit [statPriorities] (trimmed,
+     * uppercased, with blanks dropped); falls back to a single-element list
+     * derived from [primaryStat] so legacy class YAMLs (which only declare a
+     * primaryStat) still get a PRIMARY mapping. Defensive normalization here
+     * means resolution works even for class defs constructed outside the
+     * loader (e.g. in tests).
      */
-    fun effectiveStatPriorities(): List<String> =
-        if (statPriorities.isNotEmpty()) {
-            statPriorities
-        } else {
-            listOfNotNull(primaryStat?.takeIf { it.isNotBlank() }?.uppercase())
-        }
+    fun effectiveStatPriorities(): List<String> {
+        val explicit = statPriorities
+            .map { it.trim().uppercase() }
+            .filter { it.isNotEmpty() }
+        if (explicit.isNotEmpty()) return explicit
+        return listOfNotNull(primaryStat?.takeIf { it.isNotBlank() }?.uppercase())
+    }
 }
 
 data class StarterEquipmentEntry(

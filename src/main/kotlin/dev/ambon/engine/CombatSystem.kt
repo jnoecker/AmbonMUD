@@ -285,7 +285,7 @@ class CombatSystem(
         }
 
         val stats = resolvePlayerStats(player, items, statusEffects, classRegistry)
-        val equip = items.equipmentBonuses(sessionId)
+        val equip = items.equipmentBonuses(sessionId, classRegistry?.get(player.playerClass))
         val playerAvgDamage = avgPlayerMeleeDamage(player, stats, equip, mob.armor)
 
         val mobAvgRoll = (mob.damage.min + mob.damage.max) / 2.0
@@ -794,7 +794,7 @@ class CombatSystem(
                 continue
             }
 
-            val playerBonuses = items.equipmentBonuses(sessionId)
+            val playerBonuses = items.equipmentBonuses(sessionId, classRegistry?.get(player.playerClass))
 
             if (player.hp <= 0) {
                 metrics.onPlayerDeath()

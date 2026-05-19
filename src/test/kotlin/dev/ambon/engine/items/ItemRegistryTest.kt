@@ -395,6 +395,40 @@ class ItemRegistryTest {
         assertEquals(2, bonuses.stats["STR"])
     }
 
+    @Test
+    fun `equipmentBonuses normalizes mixed-case and blank statPriorities defensively`() {
+        val registry = ItemRegistry()
+        val sid = SessionId(1004L)
+        registry.setEquippedItem(
+            sid,
+            ItemSlot.WEAPON,
+            ItemInstance(
+                id = ItemId("scruffy:dagger"),
+                item =
+                    Item(
+                        keyword = "dagger",
+                        displayName = "a scruffy dagger",
+                        slot = ItemSlot.WEAPON,
+                        stats = StatMap.of("PRIMARY" to 2, "SECONDARY" to 1),
+                    ),
+            ),
+        )
+        // PlayerClassDef constructed directly with mixed-case + blank entries
+        // (bypassing the loader's normalization) should still resolve correctly.
+        val sloppyClass =
+            PlayerClassDef(
+                id = "ROGUE",
+                displayName = "Rogue",
+                hpScalingRate = 1.0,
+                manaScalingRate = 1.0,
+                statPriorities = listOf("dex", "  ", "Con"),
+            )
+        val bonuses = registry.equipmentBonuses(sid, sloppyClass)
+        assertEquals(2, bonuses.stats["DEX"])
+        // Blank middle slot is dropped, so SECONDARY now maps to "Con" → "CON".
+        assertEquals(1, bonuses.stats["CON"])
+    }
+
     private fun classDef(
         id: String,
         priorities: List<String>,
