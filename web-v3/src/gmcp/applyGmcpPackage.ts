@@ -82,6 +82,7 @@ import type {
   LeaderboardEntry,
   PetState,
   BankState,
+  RecallState,
   StylistState,
   StylistRace,
   DailyQuestBoard,
@@ -214,6 +215,7 @@ interface GmcpContext {
   setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
   setBankState: Dispatch<SetStateAction<BankState | null>>;
   setStylistState: Dispatch<SetStateAction<StylistState | null>>;
+  setRecallState: Dispatch<SetStateAction<RecallState | null>>;
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
   setGuildHall: Dispatch<SetStateAction<GuildHallInfo | null>>;
   setDuelState: Dispatch<SetStateAction<DuelState | null>>;
@@ -1846,6 +1848,14 @@ export function applyGmcpPackage(
 
     case "Char.Stylist.Close": {
       ctx.setStylistState(null);
+      break;
+    }
+
+    case "Char.Recall": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const roomId = typeof packet.roomId === "string" ? packet.roomId : null;
+      const roomTitle = typeof packet.roomTitle === "string" ? packet.roomTitle : null;
+      ctx.setRecallState(roomId == null && roomTitle == null ? null : { roomId, roomTitle });
       break;
     }
 

@@ -117,12 +117,14 @@ class DialogueQuestHandler(
             "set_recall" -> {
                 val me = players.get(sessionId) ?: return
                 players.setRecallRoom(sessionId, me.roomId)
+                val roomTitle = ctx.world.rooms[me.roomId]?.title
                 outbound.send(
                     OutboundEvent.SendText(
                         sessionId,
                         "The innkeeper marks your name in the ledger. This inn is now your recall point.",
                     ),
                 )
+                gmcpEmitter?.sendCharRecall(sessionId, me.roomId, roomTitle)
             }
             "enter_house" -> {
                 val hs = housingSystem

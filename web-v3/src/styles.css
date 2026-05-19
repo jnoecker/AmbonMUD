@@ -16821,6 +16821,104 @@ body {
   overflow-y: auto;
 }
 
+.inn-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.inn-panel .panel-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.inn-panel .panel-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.inn-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.inn-panel-intro {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.inn-panel-recall {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 3%);
+}
+
+.inn-panel-recall-label {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inn-panel-recall-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.inn-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.inn-panel-primary,
+.inn-panel-secondary {
+  padding: var(--space-3) var(--space-4);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.inn-panel-primary {
+  border: 1px solid var(--accent-warm, #c9a84c);
+  background: linear-gradient(180deg, rgb(201 168 76 / 18%), rgb(201 168 76 / 8%));
+  color: var(--text-primary);
+}
+
+.inn-panel-primary:hover {
+  background: linear-gradient(180deg, rgb(201 168 76 / 28%), rgb(201 168 76 / 14%));
+}
+
+.inn-panel-primary:active {
+  transform: translateY(1px);
+}
+
+.inn-panel-secondary {
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.inn-panel-secondary:hover {
+  background: rgb(255 255 255 / 5%);
+  color: var(--text-primary);
+}
+
 .bank-panel .panel-header {
   display: flex;
   align-items: center;

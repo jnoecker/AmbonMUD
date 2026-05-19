@@ -638,6 +638,7 @@ internal class LoginFlowHandler(
             groupSystem,
             players,
             guildSystem,
+            world,
         )
         if (me.isStaff) {
             gmcpEmitter.sendStaffWorldInfo(sessionId, world)

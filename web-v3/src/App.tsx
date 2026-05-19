@@ -20,6 +20,7 @@ import { HousingPanel } from "./components/panels/HousingPanel";
 import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { BankPanel } from "./components/panels/BankPanel";
 import { StylistPanel } from "./components/panels/StylistPanel";
+import { InnPanel } from "./components/panels/InnPanel";
 import { AuctionPanel } from "./components/panels/AuctionPanel";
 import { DungeonPanel } from "./components/panels/DungeonPanel";
 import { LotteryPanel } from "./components/panels/LotteryPanel";
@@ -387,6 +388,7 @@ function App() {
     canvasCallbacks.openDungeon = () => openPanel("dungeon");
     canvasCallbacks.openLottery = () => openPanel("lottery");
     canvasCallbacks.openHousing = () => openPanel("housing");
+    canvasCallbacks.openInn = () => openPanel("inn");
     canvasCallbacks.openMap = () => openPanel("map");
     canvasCallbacks.openRoom = () => openPanel("room");
     canvasCallbacks.openQuests = () => openPanel("quests");
@@ -417,6 +419,7 @@ function App() {
       canvasCallbacks.openDungeon = null;
       canvasCallbacks.openLottery = null;
       canvasCallbacks.openHousing = null;
+      canvasCallbacks.openInn = null;
       canvasCallbacks.openMap = null;
       canvasCallbacks.openRoom = null;
       canvasCallbacks.openQuests = null;
@@ -733,6 +736,7 @@ function App() {
       case "leaderboard": return "Leaderboard";
       case "bank": return "Bank";
       case "stylist": return "Stylist";
+      case "inn": return state.room.title !== "-" ? state.room.title : "Inn";
       case "auction": return "Auction House";
       case "dungeon": return "Dungeon";
       case "lottery": return "Lottery";
@@ -1029,6 +1033,15 @@ function App() {
 
         {drawerPanel === "stylist" && (
           <StylistPanel stylistState={state.stylistState} onCommand={sendCommand} />
+        )}
+
+        {drawerPanel === "inn" && (
+          <InnPanel
+            roomTitle={state.room.title}
+            recall={state.recallState}
+            onSetRecall={() => { sendCommand("rest"); closeDrawer(); }}
+            onClose={closeDrawer}
+          />
         )}
 
         {drawerPanel === "auction" && (

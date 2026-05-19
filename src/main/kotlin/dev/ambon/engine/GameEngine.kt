@@ -2005,6 +2005,7 @@ class GameEngine(
             groupSystem,
             players,
             guildSystem,
+            world,
         )
         // Dungeon catalog + lottery info are now emitted from onAfterLogin above
         // so they fire on every login path, including password/new-char logins.
@@ -2106,6 +2107,7 @@ class GameEngine(
             groupSystem,
             players,
             guildSystem,
+            world,
         )
         // Dungeon catalog + lottery info are now emitted from onAfterLogin above
         // so they fire on every login path, including password/new-char logins.

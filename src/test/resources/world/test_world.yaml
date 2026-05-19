@@ -27,5 +27,6 @@ rooms:
   outpost:
     title: "Test Outpost"
     description: "A northern test room."
+    inn: true
     exits:
       south: hub
