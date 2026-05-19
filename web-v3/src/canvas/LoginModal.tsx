@@ -57,9 +57,9 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
             {loginPrompt.demoEnabled && (
               <section className="login-card login-card--demo">
                 <div className="login-card-glyph" aria-hidden="true">✦</div>
-                <h2 className="login-card-title">Begin a new adventure</h2>
+                <h2 className="login-card-title">Try as a guest</h2>
                 <p className="login-card-body">
-                  Spawn instantly. No signup. Save your progress in-game with <code>/claim</code>.
+                  Spawn a demo character in one click — no signup, no setup. Use <code>/claim</code> in-game to keep them.
                 </p>
                 <button
                   type="button"
@@ -67,7 +67,7 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
                   onClick={() => onSubmit("demo")}
                 >
                   <span className="login-card-cta-sparkle" aria-hidden="true" />
-                  Begin Adventure
+                  Start Demo
                 </button>
               </section>
             )}
@@ -76,8 +76,10 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
 
             <section className="login-card login-card--signin">
               <div className="login-card-glyph" aria-hidden="true">✧</div>
-              <h2 className="login-card-title">Continue your story</h2>
-              <p className="login-card-body">Returning hero? Sign in with your character name.</p>
+              <h2 className="login-card-title">Create a full character</h2>
+              <p className="login-card-body">
+                Pick a name, race, and class. Sign in any time. Returning? Just enter your character name.
+              </p>
               <form onSubmit={handleSubmit} className="login-card-form">
                 <input
                   ref={inputRef}
