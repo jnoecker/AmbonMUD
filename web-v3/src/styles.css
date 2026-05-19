@@ -14493,28 +14493,32 @@ body {
   pointer-events: none;
 }
 
+/* Pulse range is intentionally narrow (0.55 → 0.85). The original 0.15 → 0.95
+   read as rapid "lightning flashes" around the islands, especially in the
+   bottom-left and top-right where fireflies sit near the silhouette glow. */
 .login-scene-firefly {
   position: absolute;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: radial-gradient(circle, rgb(255 240 200 / 95%) 0%, rgb(255 220 140 / 60%) 40%, transparent 70%);
-  box-shadow: 0 0 12px rgb(255 230 160 / 80%), 0 0 24px rgb(255 220 140 / 40%);
-  opacity: 0;
+  box-shadow: 0 0 10px rgb(255 230 160 / 55%), 0 0 20px rgb(255 220 140 / 25%);
+  opacity: 0.65;
+  will-change: transform, opacity;
   animation:
     loginFireflyDrift 18s var(--ease-in-out-smooth) infinite,
-    loginFireflyPulse 3.5s ease-in-out infinite;
+    loginFireflyPulse 7s ease-in-out infinite;
 }
 
 .login-scene-firefly--1 { left: 12%; top: 70%; animation-delay: 0s,     0s;   }
-.login-scene-firefly--2 { left: 24%; top: 58%; animation-delay: -3s,   -1s;  animation-duration: 21s, 4s; }
-.login-scene-firefly--3 { left: 38%; top: 75%; animation-delay: -6s,   -0.5s; animation-duration: 16s, 3s; }
-.login-scene-firefly--4 { left: 52%; top: 50%; animation-delay: -9s,   -2s;  animation-duration: 19s, 4.2s; }
-.login-scene-firefly--5 { left: 64%; top: 68%; animation-delay: -2s,   -1.4s; animation-duration: 22s, 3.6s; }
-.login-scene-firefly--6 { left: 76%; top: 60%; animation-delay: -7s,   -0.8s; animation-duration: 17s, 4s; }
-.login-scene-firefly--7 { left: 86%; top: 78%; animation-delay: -11s,  -2.2s; animation-duration: 20s, 3.4s; }
-.login-scene-firefly--8 { left: 30%; top: 40%; animation-delay: -4s,   -1.6s; animation-duration: 24s, 4.6s; }
-.login-scene-firefly--9 { left: 70%; top: 42%; animation-delay: -8s,   -2.8s; animation-duration: 18s, 3.8s; }
+.login-scene-firefly--2 { left: 24%; top: 58%; animation-delay: -3s,   -1.8s; animation-duration: 21s, 8s; }
+.login-scene-firefly--3 { left: 38%; top: 75%; animation-delay: -6s,   -0.9s; animation-duration: 16s, 6s; }
+.login-scene-firefly--4 { left: 52%; top: 50%; animation-delay: -9s,   -3.6s; animation-duration: 19s, 8.4s; }
+.login-scene-firefly--5 { left: 64%; top: 68%; animation-delay: -2s,   -2.6s; animation-duration: 22s, 7.2s; }
+.login-scene-firefly--6 { left: 76%; top: 60%; animation-delay: -7s,   -1.5s; animation-duration: 17s, 8s; }
+.login-scene-firefly--7 { left: 86%; top: 78%; animation-delay: -11s,  -4.0s; animation-duration: 20s, 6.8s; }
+.login-scene-firefly--8 { left: 30%; top: 40%; animation-delay: -4s,   -2.9s; animation-duration: 24s, 9.2s; }
+.login-scene-firefly--9 { left: 70%; top: 42%; animation-delay: -8s,   -5.1s; animation-duration: 18s, 7.6s; }
 
 @keyframes loginFireflyDrift {
   0%   { transform: translate3d(0, 0, 0); }
@@ -14525,8 +14529,8 @@ body {
 }
 
 @keyframes loginFireflyPulse {
-  0%, 100% { opacity: 0.15; }
-  50%      { opacity: 0.95; }
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.85; }
 }
 
 .login-scene-vignette {
