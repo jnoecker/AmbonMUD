@@ -41,6 +41,7 @@ class ItemHandler(
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val classRegistry = ctx.classRegistry
     private val equipSlots: EquipmentSlotRegistry? = ctx.equipmentSlotRegistry
 
     override fun register(router: CommandRouter) {
@@ -421,7 +422,7 @@ class ItemHandler(
         if (scaledXp <= 0L) return
 
         players.withPlayer(sessionId) { player ->
-            val equipCha = items.equipment(sessionId).values.sumOf { it.item.stats["CHA"] }
+            val equipCha = items.equipmentBonuses(sessionId, classRegistry?.get(player.playerClass)).stats["CHA"]
             val adjustedXp = progression.applyCharismaXpBonus(player.stats["CHA"] + equipCha, scaledXp)
 
             val result = players.grantXp(sessionId, adjustedXp, progression) ?: return

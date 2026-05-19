@@ -27,6 +27,7 @@ class RegenSystem(
     private val bindings: StatBindingsConfig = StatBindingsConfig(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
+    private val classRegistry: PlayerClassRegistry? = null,
 ) : GameSystem {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
     private val lastManaRegenAtMs = mutableMapOf<SessionId, Long>()
@@ -62,7 +63,7 @@ class RegenSystem(
             ran++
 
             val sessionId = player.sessionId
-            val equipStats = items.equipmentBonuses(sessionId).stats
+            val equipStats = items.equipmentBonuses(sessionId, classRegistry?.get(player.playerClass)).stats
             val multiplier = if (inCombat(sessionId)) inCombatMultiplier else 1.0
 
             applyRegen(

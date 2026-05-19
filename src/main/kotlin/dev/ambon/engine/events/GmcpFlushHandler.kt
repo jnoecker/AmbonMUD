@@ -9,6 +9,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.items.ItemRegistry
@@ -32,6 +33,7 @@ class GmcpFlushHandler(
     private val gmcpEmitter: GmcpEmitter,
     private val bindings: StatBindingsConfig = StatBindingsConfig(),
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val classRegistry: PlayerClassRegistry? = null,
 ) {
     /** Flushes all dirty GMCP sets in one call. */
     suspend fun flushAll() {
@@ -88,8 +90,9 @@ class GmcpFlushHandler(
     suspend fun flushDirtyStats() {
         drainDirty(gmcpDirtyStats) { sid ->
             val player = players.get(sid) ?: return@drainDirty
-            val effectiveStats = resolvePlayerStats(player, items, statusEffectSystem)
-            val equipBonuses = items.equipmentBonuses(sid)
+            val classDef = classRegistry?.get(player.playerClass)
+            val effectiveStats = resolvePlayerStats(player, items, statusEffectSystem, classRegistry)
+            val equipBonuses = items.equipmentBonuses(sid, classDef)
             val dodgeStat = effectiveStats[bindings.dodgeStat]
             val dodgePct =
                 ((dodgeStat - PlayerState.BASE_STAT) * bindings.dodgePerPoint).coerceIn(0, bindings.maxDodgePercent)

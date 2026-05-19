@@ -87,13 +87,14 @@ class ProgressionHandler(
                 StatDefinition("WIS", "Wisdom", "WIS"),
                 StatDefinition("CHA", "Charisma", "CHA"),
             )
+            val equipStats = items.equipmentBonuses(sessionId, classRegistry?.get(me.playerClass)).stats
             statDefs.chunked(3).forEach { row ->
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
                         "  " + row.joinToString("  ") { def ->
                             val base = me.stats[def.id]
-                            val equipBonus = equipped.values.sumOf { it.item.stats[def.id] }
+                            val equipBonus = equipStats[def.id]
                             "${def.abbreviation}: ${formatStat(base, equipBonus)}"
                         },
                     ),

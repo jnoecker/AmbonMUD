@@ -1,5 +1,7 @@
 package dev.ambon.engine.items
 
+import dev.ambon.domain.PlayerClassDef
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -302,6 +304,108 @@ class ItemRegistryTest {
         val received = registry.inventory(toSid).single()
         assertEquals("helm", received.item.keyword)
     }
+
+    @Test
+    fun `equipmentBonuses resolves archetypal stats against class priorities`() {
+        val registry = ItemRegistry()
+        val sid = SessionId(1001L)
+
+        val boots =
+            ItemInstance(
+                id = ItemId("auringold:boots"),
+                item =
+                    Item(
+                        keyword = "boots",
+                        displayName = "auringold boots",
+                        slot = ItemSlot.FEET,
+                        armor = 2,
+                        stats = StatMap.of("PRIMARY" to 3, "SECONDARY" to 1),
+                    ),
+            )
+        registry.setEquippedItem(sid, ItemSlot.FEET, boots)
+
+        val warrior = classDef("WARRIOR", priorities = listOf("STR", "CON", "DEX"))
+        val warriorBonuses = registry.equipmentBonuses(sid, warrior)
+        assertEquals(3, warriorBonuses.stats["STR"])
+        assertEquals(1, warriorBonuses.stats["CON"])
+
+        // Same item, different wearer class — archetypal stats follow the new priorities.
+        val wizard = classDef("WIZARD", priorities = listOf("INT", "WIS", "CON"))
+        val wizardBonuses = registry.equipmentBonuses(sid, wizard)
+        assertEquals(0, wizardBonuses.stats["STR"])
+        assertEquals(3, wizardBonuses.stats["INT"])
+        assertEquals(1, wizardBonuses.stats["WIS"])
+    }
+
+    @Test
+    fun `equipmentBonuses without class returns raw archetypal keys unchanged`() {
+        val registry = ItemRegistry()
+        val sid = SessionId(1002L)
+        registry.setEquippedItem(
+            sid,
+            ItemSlot.FEET,
+            ItemInstance(
+                id = ItemId("auringold:boots"),
+                item =
+                    Item(
+                        keyword = "boots",
+                        displayName = "auringold boots",
+                        slot = ItemSlot.FEET,
+                        stats = StatMap.of("PRIMARY" to 3),
+                    ),
+            ),
+        )
+        // No classDef → archetypal entry stays as "PRIMARY" and contributes nothing
+        // to concrete stat lookups, which is the safe degraded-mode behavior.
+        val bonuses = registry.equipmentBonuses(sid)
+        assertEquals(0, bonuses.stats["STR"])
+        assertEquals(3, bonuses.stats["PRIMARY"])
+    }
+
+    @Test
+    fun `equipmentBonuses falls back to primaryStat when statPriorities is empty`() {
+        val registry = ItemRegistry()
+        val sid = SessionId(1003L)
+        registry.setEquippedItem(
+            sid,
+            ItemSlot.WEAPON,
+            ItemInstance(
+                id = ItemId("legacy:sword"),
+                item =
+                    Item(
+                        keyword = "sword",
+                        displayName = "an old sword",
+                        slot = ItemSlot.WEAPON,
+                        damage = 5,
+                        stats = StatMap.of("PRIMARY" to 2),
+                    ),
+            ),
+        )
+        // Legacy class declares only a primaryStat — effectiveStatPriorities should
+        // synthesize a single-element priority list so PRIMARY still resolves.
+        val legacyWarrior =
+            PlayerClassDef(
+                id = "WARRIOR",
+                displayName = "Warrior",
+                hpScalingRate = 1.0,
+                manaScalingRate = 1.0,
+                primaryStat = "STR",
+            )
+        val bonuses = registry.equipmentBonuses(sid, legacyWarrior)
+        assertEquals(2, bonuses.stats["STR"])
+    }
+
+    private fun classDef(
+        id: String,
+        priorities: List<String>,
+    ): PlayerClassDef =
+        PlayerClassDef(
+            id = id,
+            displayName = id,
+            hpScalingRate = 1.0,
+            manaScalingRate = 1.0,
+            statPriorities = priorities,
+        )
 
     private fun instance(
         id: String,

@@ -284,7 +284,7 @@ class CombatSystem(
             return ConsiderOutcome.Error("${mob.name} isn't a threat — no need to size them up.")
         }
 
-        val stats = resolvePlayerStats(player, items, statusEffects)
+        val stats = resolvePlayerStats(player, items, statusEffects, classRegistry)
         val equip = items.equipmentBonuses(sessionId)
         val playerAvgDamage = avgPlayerMeleeDamage(player, stats, equip, mob.armor)
 
@@ -554,9 +554,9 @@ class CombatSystem(
 
             val stunned = statusEffects?.hasPlayerEffect(state.attackerSid, "stun") == true
             if (!stunned) {
-                val attackerStats = resolvePlayerStats(attacker, items, statusEffects)
-                val attackerEquip = items.equipmentBonuses(state.attackerSid)
-                val targetEquip = items.equipmentBonuses(state.targetSid)
+                val attackerStats = resolvePlayerStats(attacker, items, statusEffects, classRegistry)
+                val attackerEquip = items.equipmentBonuses(state.attackerSid, classRegistry?.get(attacker.playerClass))
+                val targetEquip = items.equipmentBonuses(state.targetSid, classRegistry?.get(target.playerClass))
                 val swing = rollPlayerMeleeSwing(attacker, attackerStats, attackerEquip, targetEquip.armor)
                 var effectiveDamage = swing.final
 
@@ -814,7 +814,7 @@ class CombatSystem(
             // STUN check
             val stunned = statusEffects?.hasPlayerEffect(sessionId, "stun") == true
             if (!stunned) {
-                val playerStats = resolvePlayerStats(player, items, statusEffects)
+                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val swing = rollPlayerMeleeSwing(player, playerStats, playerBonuses, mob.armor)
                 val effectivePlayerDamage = swing.final
                 val playerFeedbackSuffix =
@@ -1074,7 +1074,7 @@ class CombatSystem(
 
         // Dodge check for offensive spells
         if (isOffensive) {
-            val targetStats = resolvePlayerStats(target, items, statusEffects)
+            val targetStats = resolvePlayerStats(target, items, statusEffects, classRegistry)
             val dodgePct =
                 ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
                     .coerceIn(0, config.bindings.maxDodgePercent)
@@ -1207,7 +1207,7 @@ class CombatSystem(
         target: PlayerState,
         targetSid: SessionId,
     ) {
-        val targetStats = resolvePlayerStats(target, items, statusEffects)
+        val targetStats = resolvePlayerStats(target, items, statusEffects, classRegistry)
         val dodgePct =
             ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
                 .coerceIn(0, config.bindings.maxDodgePercent)
@@ -1733,7 +1733,7 @@ class CombatSystem(
 
         for (sid in recipients) {
             val player = players.get(sid) ?: continue
-            val equipStats = items.equipmentBonuses(sid).stats
+            val equipStats = items.equipmentBonuses(sid, classRegistry?.get(player.playerClass)).stats
             val totalBonusStat = player.stats[config.bindings.xpBonusStat] + equipStats[config.bindings.xpBonusStat]
             val diminish = progression.diminishingKillXpMultiplier(player.level, mob.level)
             val afterDiminish =

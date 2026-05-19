@@ -74,4 +74,59 @@ class StatMapTest {
         assertEquals(5, result["STR"])
         assertEquals(1, result.values.size)
     }
+
+    @Test
+    fun `resolveArchetypal maps PRIMARY SECONDARY TERTIARY to priorities by index`() {
+        val item = StatMap(mapOf("PRIMARY" to 3, "SECONDARY" to 2, "TERTIARY" to 1))
+        val resolved = item.resolveArchetypal(listOf("STR", "CON", "DEX"))
+        assertEquals(3, resolved["STR"])
+        assertEquals(2, resolved["CON"])
+        assertEquals(1, resolved["DEX"])
+        // Archetypal keys themselves should not survive in the resolved map.
+        assertEquals(0, resolved["PRIMARY"])
+    }
+
+    @Test
+    fun `resolveArchetypal passes through concrete stat ids`() {
+        val item = StatMap(mapOf("PRIMARY" to 2, "DEX" to 4))
+        val resolved = item.resolveArchetypal(listOf("STR", "CON"))
+        assertEquals(2, resolved["STR"])
+        assertEquals(4, resolved["DEX"])
+    }
+
+    @Test
+    fun `resolveArchetypal sums concrete and archetypal contributions to the same stat`() {
+        // PRIMARY resolves to STR; the item also grants an explicit STR — both should merge.
+        val item = StatMap(mapOf("PRIMARY" to 2, "STR" to 1))
+        val resolved = item.resolveArchetypal(listOf("STR"))
+        assertEquals(3, resolved["STR"])
+    }
+
+    @Test
+    fun `resolveArchetypal drops archetypal entries with no matching priority slot`() {
+        // priorities only covers PRIMARY (index 0); SECONDARY and TERTIARY are dropped.
+        val item = StatMap(mapOf("PRIMARY" to 2, "SECONDARY" to 5))
+        val resolved = item.resolveArchetypal(listOf("STR"))
+        assertEquals(2, resolved["STR"])
+        assertEquals(0, resolved["SECONDARY"])
+        assertEquals(1, resolved.values.size)
+    }
+
+    @Test
+    fun `resolveArchetypal with empty priorities passes concrete stats through and drops archetypal`() {
+        val item = StatMap(mapOf("PRIMARY" to 2, "STR" to 4))
+        val resolved = item.resolveArchetypal(emptyList())
+        assertEquals(0, resolved["PRIMARY"])
+        assertEquals(4, resolved["STR"])
+    }
+
+    @Test
+    fun `isArchetypal recognises archetypal keys regardless of case`() {
+        assertTrue(StatMap.isArchetypal("PRIMARY"))
+        assertTrue(StatMap.isArchetypal("primary"))
+        assertTrue(StatMap.isArchetypal("Secondary"))
+        assertTrue(StatMap.isArchetypal("TERTIARY"))
+        assertFalse(StatMap.isArchetypal("STR"))
+        assertFalse(StatMap.isArchetypal("QUATERNARY"))
+    }
 }

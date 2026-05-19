@@ -1,5 +1,6 @@
 package dev.ambon.engine.items
 
+import dev.ambon.domain.PlayerClassDef
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
@@ -167,7 +168,10 @@ class ItemRegistry {
         val stats: StatMap = StatMap.EMPTY,
     )
 
-    fun equipmentBonuses(sessionId: SessionId): EquipmentBonuses {
+    fun equipmentBonuses(
+        sessionId: SessionId,
+        classDef: PlayerClassDef? = null,
+    ): EquipmentBonuses {
         val equipped = equippedItems[sessionId]?.values ?: return EquipmentBonuses()
         var attack = 0
         var armor = 0
@@ -176,6 +180,9 @@ class ItemRegistry {
             attack += inst.item.damage
             armor += inst.item.armor
             stats = stats + inst.item.stats
+        }
+        if (classDef != null) {
+            stats = stats.resolveArchetypal(classDef.effectiveStatPriorities())
         }
         return EquipmentBonuses(attack, armor, stats)
     }
