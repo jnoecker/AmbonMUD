@@ -14290,19 +14290,25 @@ body {
   inset: 0;
   z-index: 200;
   display: flex;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   animation: backdropFadeIn 400ms var(--ease-out-soft);
 }
 
 /* Scene background ----------------------------------------------------- */
 
+/* Pinned to the viewport (not the scrollable scene-root) so the decorative
+   sky/stars/islands don't stretch or scroll when the card stack overflows
+   on short viewports. */
 .login-scene {
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  z-index: 0;
 }
 
 .login-scene-sky {
