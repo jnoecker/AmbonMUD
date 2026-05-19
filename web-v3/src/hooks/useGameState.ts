@@ -340,8 +340,11 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       };
       // Replace (rather than append) so back-to-back kills don't queue stale
       // toasts behind the active one — otherwise the active toast's dismissal
-      // resurfaces a prior kill several seconds late.
+      // resurfaces a prior kill several seconds late. Also clear any active
+      // flee toast: kill and flee share a fixed corner slot, and the freshest
+      // outcome supersedes the stale one.
       setCombatVictoryNotifications([notification]);
+      setFleeNotifications([]);
     }
     if (event.type === "flee" && event.targetName) {
       fleeIdRef.current += 1;
@@ -351,7 +354,12 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         forced: event.forced,
         receivedAt: Date.now(),
       };
+      // Mirror the kill path: share the corner slot, freshest outcome wins.
+      // A kill toast from the previous fight can still be on-screen (4.5s
+      // lifetime) when the player flees the next pull — without this the two
+      // cards stack at the same `top:` and overlap.
       setFleeNotifications([notification]);
+      setCombatVictoryNotifications([]);
     }
   }, [pushCombatLogMessage]);
 

@@ -17901,8 +17901,9 @@ html:has(.game-shell),
 /* ── Flee toast — disengage summary card ───────────────────────── */
 .flee-toast {
   position: fixed;
-  /* Same slot as the victory toast — kill and flee can't fire on the same
-     tick, so sharing the position is safe and avoids stacking real estate. */
+  /* Shares the corner slot with the victory toast. `useGameState`
+     clears the other notification list whenever one fires, so the two cards
+     can never overlap even though both have ~4.5s lifetimes. */
   top: calc(var(--space-4, 16px) + 56px + 180px);
   right: var(--space-4, 16px);
   z-index: 240;

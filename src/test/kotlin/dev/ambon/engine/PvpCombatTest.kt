@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.test.CombatTestFixture
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
@@ -185,6 +186,29 @@ class PvpCombatTest {
 
         val messages = fixture.outbound.drainAll().textMessages(sid1)
         assertTrue(messages.any { it.contains("flee") })
+    }
+
+    @Test
+    fun `fleePvp emits Flee combat event with opponent name and forced=false`() = runTest {
+        val fixture = CombatTestFixture(roomId = roomId)
+        val combat = fixture.buildCombat()
+
+        val sid1 = SessionId(1L)
+        val sid2 = SessionId(2L)
+        fixture.players.loginOrFail(sid1, "Runner")
+        fixture.players.loginOrFail(sid2, "Chaser")
+
+        val events = mutableListOf<Pair<SessionId, CombatEvent>>()
+        combat.onCombatEvent = { sid, event -> events += sid to event }
+
+        combat.startPvpCombat(sid1, sid2)
+        assertNull(combat.fleePvp(sid1))
+
+        val flee = events.firstOrNull { it.first == sid1 && it.second is CombatEvent.Flee }
+        assertNotNull(flee, "Expected a Flee event for the fleeing player, got: $events")
+        val payload = flee!!.second as CombatEvent.Flee
+        assertEquals("Chaser", payload.targetName)
+        assertEquals(false, payload.forced)
     }
 
     @Test
