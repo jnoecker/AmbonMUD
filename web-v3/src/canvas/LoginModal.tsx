@@ -39,6 +39,75 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
 
   const isWide = loginPrompt.state === "raceSelection" || loginPrompt.state === "classSelection";
 
+  if (loginPrompt.state === "name") {
+    return (
+      <div className="login-scene-root" role="dialog" aria-modal="true" aria-label="Welcome to AmbonMUD">
+        <LoginSceneBackground />
+        <main className="login-hero">
+          <header className="login-hero-header">
+            <h1 className="login-hero-title">AmbonMUD</h1>
+            <p className="login-hero-tagline">
+              A cozy text-adventure with a hand-crafted world.
+            </p>
+          </header>
+
+          {errorForState && <p className="login-error login-hero-error">{errorForState}</p>}
+
+          <div className={`login-hero-cards${loginPrompt.demoEnabled ? "" : " login-hero-cards--single"}`}>
+            {loginPrompt.demoEnabled && (
+              <section className="login-card login-card--demo">
+                <div className="login-card-glyph" aria-hidden="true">✦</div>
+                <h2 className="login-card-title">Begin a new adventure</h2>
+                <p className="login-card-body">
+                  Spawn instantly. No signup. Save your progress in-game with <code>/claim</code>.
+                </p>
+                <button
+                  type="button"
+                  className="login-card-cta login-card-cta--demo"
+                  onClick={() => onSubmit("demo")}
+                >
+                  <span className="login-card-cta-sparkle" aria-hidden="true" />
+                  Begin Adventure
+                </button>
+              </section>
+            )}
+
+            {loginPrompt.demoEnabled && <span className="login-card-or" aria-hidden="true">or</span>}
+
+            <section className="login-card login-card--signin">
+              <div className="login-card-glyph" aria-hidden="true">✧</div>
+              <h2 className="login-card-title">Continue your story</h2>
+              <p className="login-card-body">Returning hero? Sign in with your character name.</p>
+              <form onSubmit={handleSubmit} className="login-card-form">
+                <input
+                  ref={inputRef}
+                  className="login-input login-card-input"
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="Character name"
+                  autoComplete="off"
+                  spellCheck={false}
+                  autoFocus
+                  aria-label="Character name"
+                />
+                <button type="submit" className="login-card-cta login-card-cta--signin">
+                  Enter
+                </button>
+              </form>
+            </section>
+          </div>
+
+          <footer className="login-hero-footer">
+            <span>Open source</span>
+            <span className="login-hero-footer-sep" aria-hidden="true">·</span>
+            <span>Play in browser or telnet</span>
+          </footer>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="login-modal-backdrop">
       <div
@@ -48,42 +117,6 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
         aria-label="Login"
       >
         <h2 className="login-modal-title">AmbonMUD</h2>
-
-        {loginPrompt.state === "name" && (
-          <div className="login-step">
-            <p className="login-step-label">Enter your character name</p>
-            {errorForState && <p className="login-error">{errorForState}</p>}
-            <form onSubmit={handleSubmit} className="login-form">
-              <input
-                ref={inputRef}
-                className="login-input"
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Character name"
-                autoComplete="off"
-                spellCheck={false}
-                autoFocus
-              />
-              <button type="submit" className="login-button">Enter</button>
-            </form>
-            {loginPrompt.demoEnabled && (
-              <div className="login-demo-row">
-                <span className="login-demo-divider">— or —</span>
-                <button
-                  type="button"
-                  className="login-button login-button-secondary login-button-demo"
-                  onClick={() => onSubmit("demo")}
-                >
-                  Try Demo (One-click play)
-                </button>
-                <p className="login-demo-hint">
-                  Spawn a quick-start character. Your progress can be saved later from in-game.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
 
         {loginPrompt.state === "password" && (
           <div className="login-step">
@@ -295,6 +328,33 @@ function ClassCardGrid({ classes, error, onSelect }: ClassCardGridProps) {
       >
         Choose {cls.name}
       </button>
+    </div>
+  );
+}
+
+/* ── Magical hero-scene background (name-state only) ──────────────────── */
+
+const FIREFLY_COUNT = 9;
+
+function LoginSceneBackground() {
+  return (
+    <div className="login-scene" aria-hidden="true">
+      <div className="login-scene-sky" />
+      <div className="login-scene-aurora" />
+      <div className="login-scene-stars login-scene-stars--far" />
+      <div className="login-scene-stars login-scene-stars--mid" />
+      <div className="login-scene-stars login-scene-stars--near" />
+      <div className="login-scene-horizon">
+        <div className="login-scene-island login-scene-island--left" />
+        <div className="login-scene-island login-scene-island--center" />
+        <div className="login-scene-island login-scene-island--right" />
+      </div>
+      <div className="login-scene-fireflies">
+        {Array.from({ length: FIREFLY_COUNT }).map((_, i) => (
+          <span key={i} className={`login-scene-firefly login-scene-firefly--${i + 1}`} />
+        ))}
+      </div>
+      <div className="login-scene-vignette" />
     </div>
   );
 }
