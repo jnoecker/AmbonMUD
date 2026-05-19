@@ -12,3 +12,31 @@ fun Direction.opposite(): Direction =
         Direction.UP -> Direction.DOWN
         Direction.DOWN -> Direction.UP
     }
+
+/**
+ * Movement-broadcast phrase for a departure in this direction.
+ * Used to build lines like `"Bob exits to the north."` or `"a goblin flees upward."`.
+ */
+fun Direction.exitPhrase(): String =
+    when (this) {
+        Direction.NORTH -> "to the north"
+        Direction.SOUTH -> "to the south"
+        Direction.EAST -> "to the east"
+        Direction.WEST -> "to the west"
+        Direction.UP -> "upward"
+        Direction.DOWN -> "downward"
+    }
+
+/**
+ * Movement-broadcast phrase for an arrival from this direction (i.e. where the arriver came from).
+ * Used to build lines like `"Bob arrives from the south."` or `"a goblin arrives from above."`.
+ */
+fun Direction.arrivePhrase(): String =
+    when (this) {
+        Direction.NORTH -> "from the north"
+        Direction.SOUTH -> "from the south"
+        Direction.EAST -> "from the east"
+        Direction.WEST -> "from the west"
+        Direction.UP -> "from above"
+        Direction.DOWN -> "from below"
+    }

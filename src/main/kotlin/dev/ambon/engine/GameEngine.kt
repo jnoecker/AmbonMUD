@@ -8,8 +8,10 @@ import dev.ambon.domain.dungeon.DungeonDifficulty
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
+import dev.ambon.domain.world.opposite
 import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.abilities.AbilityRegistry
@@ -58,6 +60,7 @@ import dev.ambon.engine.commands.handlers.TrainerHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.commands.handlers.WorldInfoHandler
+import dev.ambon.engine.commands.handlers.movePlayerWithNotify
 import dev.ambon.engine.commands.handlers.sendLook
 import dev.ambon.engine.crafting.CraftingRegistry
 import dev.ambon.engine.crafting.CraftingSystem
@@ -890,6 +893,8 @@ class GameEngine(
 
     private val duelRng = java.util.Random()
 
+    private val fleeRng = java.util.Random()
+
     private val auctionSystem = AuctionSystem(
         items = items,
         clock = clock,
@@ -1179,6 +1184,46 @@ class GameEngine(
         // Push a fresh room look when a dead player respawns, so the web client
         // stops showing the room they died in.
         combatSystem.onPlayerRespawned = { sid -> ctx.sendLook(sid) }
+
+        // Flee relocates the player to an adjacent room so aggressive mobs (or other
+        // players in PvP) don't just keep hitting them. Prefer the direction opposite
+        // to the one they walked in from — they came from that room and survived, so
+        // it's more likely to be safe than a random new room.
+        combatSystem.onPlayerFled = onPlayerFled@{ sid, _ ->
+            val player = players.get(sid) ?: return@onPlayerFled
+            val from = player.roomId
+            val room = world.rooms[from] ?: return@onPlayerFled
+
+            val candidates = room.exits.entries.filter { (dir, dest) ->
+                if (!world.rooms.containsKey(dest)) return@filter false
+                if (room.remoteExits.contains(dir)) return@filter false
+                val door = worldState.doorOnExit(from, dir)
+                if (door != null && worldState.getDoorState(door.id) != LockableState.OPEN) return@filter false
+                true
+            }
+            if (candidates.isEmpty()) return@onPlayerFled
+
+            val preferred = player.lastEnterDirection?.opposite()
+            val chosen = candidates.firstOrNull { it.key == preferred }
+                ?: candidates[fleeRng.nextInt(candidates.size)]
+
+            movePlayerWithNotify(
+                sid,
+                from,
+                chosen.value,
+                "leaves.",
+                "enters.",
+                players,
+                outbound,
+                gmcpEmitter,
+                dialogueSystem,
+                direction = chosen.key,
+                departVerb = "flees",
+            )
+            player.lastEnterDirection = chosen.key
+            petSystem.followOwner(sid, chosen.value)
+            ctx.sendLook(sid)
+        }
 
         communicationHandler = CommunicationHandler(
             ctx = ctx,

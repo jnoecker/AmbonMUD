@@ -9,6 +9,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.quest.QuestState
+import dev.ambon.domain.world.Direction
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerId
 import dev.ambon.persistence.PlayerRecord
@@ -131,6 +132,11 @@ data class PlayerState(
     var authTokenHash: String = "",
     /** Epoch-ms the current [authTokenHash] was issued. 0 when no token is set. */
     var authTokenIssuedAt: Long = 0L,
+    /**
+     * Direction the player most recently moved through to enter their current room.
+     * Used by flee to prefer retreating back the way they came. Runtime-only; not persisted.
+     */
+    var lastEnterDirection: Direction? = null,
 ) {
     data class MailComposeState(
         val recipientName: String,

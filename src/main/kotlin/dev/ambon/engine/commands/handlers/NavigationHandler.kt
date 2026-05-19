@@ -176,6 +176,7 @@ class NavigationHandler(
                         gmcpEmitter,
                         dialogueSystem,
                     )
+                    me.lastEnterDirection = null
                     onPlayerMoved?.invoke(sessionId, origin)
                     outbound.send(OutboundEvent.SendText(sessionId, "You step outside and find yourself back where you came from."))
                     ctx.sendLook(sessionId)
@@ -206,6 +207,7 @@ class NavigationHandler(
                         gmcpEmitter,
                         dialogueSystem,
                     )
+                    me.lastEnterDirection = null
                     onPlayerMoved?.invoke(sessionId, origin)
                     outbound.send(OutboundEvent.SendText(sessionId, "You leave the guild hall and find yourself back where you came from."))
                     ctx.sendLook(sessionId)
@@ -232,7 +234,9 @@ class NavigationHandler(
                 outbound,
                 gmcpEmitter,
                 dialogueSystem,
+                direction = cmd.dir,
             )
+            me.lastEnterDirection = cmd.dir
             onPlayerMoved?.invoke(sessionId, to)
             ctx.sendLook(sessionId)
         }
@@ -279,6 +283,7 @@ class NavigationHandler(
                         gmcpEmitter,
                         dialogueSystem,
                     )
+                    me.lastEnterDirection = null
                     onPlayerMoved?.invoke(sessionId, result.entryRoomId)
                     outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself home."))
                     ctx.sendLook(sessionId)
@@ -318,6 +323,7 @@ class NavigationHandler(
             gmcpEmitter,
             dialogueSystem,
         )
+        me.lastEnterDirection = null
         onPlayerMoved?.invoke(sessionId, target)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.arrival))
         ctx.sendLook(sessionId)
@@ -364,6 +370,7 @@ class NavigationHandler(
             dialogueSystem,
         )
         me.lastDeathZone = null
+        me.lastEnterDirection = null
         onPlayerMoved?.invoke(sessionId, target)
         ctx.sendLook(sessionId)
     }
@@ -396,6 +403,7 @@ class NavigationHandler(
             gmcpEmitter,
             dialogueSystem,
         )
+        me.lastEnterDirection = null
         onPlayerMoved?.invoke(sessionId, target)
         ctx.sendLook(sessionId)
     }
