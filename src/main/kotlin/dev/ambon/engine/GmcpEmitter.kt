@@ -1058,6 +1058,11 @@ class GmcpEmitter(
                 targetIsPlayer = event.targetIsPlayer,
                 sourceIsPlayer = event.sourceIsPlayer,
             )
+            is CombatEvent.Flee -> CombatEventPayload(
+                type = "flee",
+                targetName = event.targetName,
+                forced = event.forced,
+            )
         }
         emit(sessionId, "Char.Combat.Event", payload, supportCheck = "Char.Combat.Event")
     }
@@ -2769,6 +2774,7 @@ class GmcpEmitter(
         val petName: String? = null,
         val targetIsPlayer: Boolean? = null,
         val lootedItems: List<String> = emptyList(),
+        val forced: Boolean? = null,
     )
 
     // ---------- stats payload ----------

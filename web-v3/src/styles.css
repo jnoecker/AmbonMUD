@@ -17897,3 +17897,121 @@ html:has(.game-shell),
     animation-duration: 80ms;
   }
 }
+
+/* ── Flee toast — disengage summary card ───────────────────────── */
+.flee-toast {
+  position: fixed;
+  /* Same slot as the victory toast — kill and flee can't fire on the same
+     tick, so sharing the position is safe and avoids stacking real estate. */
+  top: calc(var(--space-4, 16px) + 56px + 180px);
+  right: var(--space-4, 16px);
+  z-index: 240;
+  width: min(320px, calc(100vw - 32px));
+  padding: 14px 16px;
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--c-pale-blue, #81a2be) 24%, var(--c-surface-raised, #1e2340)) 0%,
+    var(--c-surface-raised, #1e2340) 60%,
+    color-mix(in srgb, var(--c-accent-lavender, #b294bb) 14%, var(--c-surface-raised, #1e2340)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--c-pale-blue, #81a2be) 50%, transparent);
+  border-radius: 14px;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px color-mix(in srgb, var(--c-pale-blue, #81a2be) 22%, transparent),
+    0 0 32px color-mix(in srgb, var(--c-pale-blue, #81a2be) 28%, transparent);
+  color: var(--c-text-primary, #d8dcef);
+  cursor: pointer;
+  animation: fleeToastIn 380ms var(--ease-out-soft, cubic-bezier(0.22, 1, 0.36, 1));
+  backdrop-filter: blur(8px);
+}
+
+.flee-toast.flee-toast-forced {
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 26%, var(--c-surface-raised, #1e2340)) 0%,
+    var(--c-surface-raised, #1e2340) 60%,
+    color-mix(in srgb, var(--c-pale-blue, #81a2be) 14%, var(--c-surface-raised, #1e2340)) 100%
+  );
+  border-color: color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 55%, transparent);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 26%, transparent),
+    0 0 32px color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 32%, transparent);
+}
+
+.flee-toast.flee-toast-closing {
+  animation: fleeToastOut 320ms var(--ease-out-soft, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+}
+
+@keyframes fleeToastIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes fleeToastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(16px) scale(0.97);
+  }
+}
+
+.flee-toast-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flee-toast-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-pale-blue, #81a2be) 60%, transparent));
+}
+
+.flee-toast-forced .flee-toast-icon {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 65%, transparent));
+}
+
+.flee-toast-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.flee-toast-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--c-pale-blue, #81a2be) 80%, var(--c-text-secondary, #8890b0));
+  font-weight: 600;
+}
+
+.flee-toast-forced .flee-toast-eyebrow {
+  color: color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 80%, var(--c-text-secondary, #8890b0));
+}
+
+.flee-toast-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-primary, #d8dcef);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flee-toast,
+  .flee-toast.flee-toast-closing {
+    animation-duration: 80ms;
+  }
+}

@@ -1656,4 +1656,27 @@ class CombatSystemTest {
             assertTrue(outcome is ConsiderOutcome.Error)
             assertTrue((outcome as ConsiderOutcome.Error).message.contains("don't see"))
         }
+
+    @Test
+    fun `flee emits Flee combat event with mob name and forced=false`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 50, maxHp = 50)
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(7))
+            val sid = SessionId(801L)
+            fixture.players.loginOrFail(sid, "Runner")
+
+            val combatEvents = mutableListOf<CombatEvent>()
+            combat.onCombatEvent = { _, event -> combatEvents += event }
+
+            assertNull(combat.startCombat(sid, "rat"))
+            assertNull(combat.flee(sid))
+
+            val flee = combatEvents.filterIsInstance<CombatEvent.Flee>().firstOrNull()
+            assertNotNull(flee, "Expected a Flee combat event, got: $combatEvents")
+            assertEquals("a rat", flee!!.targetName)
+            assertEquals(false, flee.forced)
+        }
 }

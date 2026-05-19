@@ -40,6 +40,7 @@ import type {
   EquipmentSlotDef,
   FactionActivity,
   FactionStanding,
+  FleeNotification,
   FriendEntry,
   FriendNotification,
   GainEvent,
@@ -197,6 +198,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const levelUpIdRef = useRef(0);
   const [combatVictoryNotifications, setCombatVictoryNotifications] = useState<CombatVictoryNotification[]>([]);
   const combatVictoryIdRef = useRef(0);
+  const [fleeNotifications, setFleeNotifications] = useState<FleeNotification[]>([]);
+  const fleeIdRef = useRef(0);
   const [duelState, setDuelState] = useState<DuelState | null>(null);
   const [duelChallenge, setDuelChallenge] = useState<DuelChallenge | null>(null);
 
@@ -339,6 +342,16 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       // toasts behind the active one — otherwise the active toast's dismissal
       // resurfaces a prior kill several seconds late.
       setCombatVictoryNotifications([notification]);
+    }
+    if (event.type === "flee" && event.targetName) {
+      fleeIdRef.current += 1;
+      const notification: FleeNotification = {
+        id: `flee-${fleeIdRef.current}`,
+        targetName: event.targetName,
+        forced: event.forced,
+        receivedAt: Date.now(),
+      };
+      setFleeNotifications([notification]);
     }
   }, [pushCombatLogMessage]);
 
@@ -645,6 +658,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setPuzzle(null);
     setQuestNotifications([]);
     setCombatVictoryNotifications([]);
+    setFleeNotifications([]);
     setCraftingSkills([]);
     setCraftingRecipes([]);
     setCraftingNodes([]);
@@ -733,6 +747,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,
     levelUpNotification, setLevelUpNotification,
     combatVictoryNotifications, setCombatVictoryNotifications,
+    fleeNotifications, setFleeNotifications,
     // Setters needed by App
     setQuestsAvailable,
     // GMCP
