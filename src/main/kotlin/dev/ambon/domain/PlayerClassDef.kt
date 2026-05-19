@@ -29,7 +29,7 @@ data class PlayerClassDef(
             .map { it.trim().uppercase() }
             .filter { it.isNotEmpty() }
         if (explicit.isNotEmpty()) return explicit
-        return listOfNotNull(primaryStat?.takeIf { it.isNotBlank() }?.uppercase())
+        return listOfNotNull(primaryStat?.trim()?.takeIf { it.isNotEmpty() }?.uppercase())
     }
 }
 

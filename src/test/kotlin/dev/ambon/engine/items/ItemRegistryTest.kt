@@ -396,6 +396,39 @@ class ItemRegistryTest {
     }
 
     @Test
+    fun `equipmentBonuses trims whitespace on legacy primaryStat fallback`() {
+        val registry = ItemRegistry()
+        val sid = SessionId(1005L)
+        registry.setEquippedItem(
+            sid,
+            ItemSlot.WEAPON,
+            ItemInstance(
+                id = ItemId("legacy:sword2"),
+                item =
+                    Item(
+                        keyword = "sword",
+                        displayName = "a worn sword",
+                        slot = ItemSlot.WEAPON,
+                        stats = StatMap.of("PRIMARY" to 4),
+                    ),
+            ),
+        )
+        // Legacy YAML with stray whitespace around primaryStat — must still
+        // resolve to "STR" rather than "STR " (which would silently bypass
+        // all downstream stat lookups).
+        val sloppyLegacy =
+            PlayerClassDef(
+                id = "WARRIOR",
+                displayName = "Warrior",
+                hpScalingRate = 1.0,
+                manaScalingRate = 1.0,
+                primaryStat = " STR ",
+            )
+        val bonuses = registry.equipmentBonuses(sid, sloppyLegacy)
+        assertEquals(4, bonuses.stats["STR"])
+    }
+
+    @Test
     fun `equipmentBonuses normalizes mixed-case and blank statPriorities defensively`() {
         val registry = ItemRegistry()
         val sid = SessionId(1004L)
