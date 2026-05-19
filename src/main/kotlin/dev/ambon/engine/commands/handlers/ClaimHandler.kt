@@ -7,9 +7,17 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class ClaimHandler(
     ctx: EngineContext,
+    /**
+     * Returns the engine's coroutine scope. The handler dispatches the BCrypt
+     * + DB write portion of `claim` here so the engine tick loop is not
+     * blocked while a slow persistence backend completes.
+     */
+    private val getEngineScope: () -> CoroutineScope,
     private val onClaimed: suspend (SessionId) -> Unit = {},
 ) : CommandHandler {
     private val outbound = ctx.outbound
@@ -32,7 +40,18 @@ class ClaimHandler(
             return
         }
 
-        when (val result = players.claim(sessionId, cmd.newName, cmd.password)) {
+        // Off-tick: BCrypt and `repo.create` can be expensive (especially on
+        // Postgres). Launch on the engine scope so the tick loop and inbound
+        // draining keep moving while persistence completes. PlayerRegistry
+        // re-validates state inside `claim`, so a disconnect mid-flight is
+        // handled safely.
+        getEngineScope().launch {
+            handleClaimResult(sessionId, players.claim(sessionId, cmd.newName, cmd.password))
+        }
+    }
+
+    private suspend fun handleClaimResult(sessionId: SessionId, result: ClaimResult) {
+        when (result) {
             is ClaimResult.Ok -> {
                 outbound.send(
                     OutboundEvent.SendInfo(

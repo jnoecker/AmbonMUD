@@ -760,7 +760,9 @@ function App() {
       {state.character.isDemo && (
         <DemoBanner
           autoOpen={(state.character.level ?? 1) >= 2}
-          onClaim={(line) => sendCommand(line)}
+          // sendLine (not sendCommand) — claim contains the user's new password,
+          // so we must NOT push it into command history / localStorage.
+          onClaim={(line) => { sendLine(line); }}
         />
       )}
       <GameShell

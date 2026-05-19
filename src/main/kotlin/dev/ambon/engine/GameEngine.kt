@@ -1339,6 +1339,7 @@ class GameEngine(
             ),
             ClaimHandler(
                 ctx = ctx,
+                getEngineScope = { engineScope },
                 onClaimed = { sid -> issueAuthToken(sid) },
             ),
             HousingHandler(
