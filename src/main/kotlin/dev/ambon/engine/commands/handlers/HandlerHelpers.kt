@@ -610,6 +610,9 @@ internal suspend fun movePlayerWithNotify(
     }
     dialogueSystem?.onPlayerMoved(sessionId)
     players.moveTo(sessionId, to)
+    // moveTo cleared lastEnterDirection (treats every room change as a teleport at that
+    // layer); restore it here for directional walks so flee can retrace the way in.
+    me.lastEnterDirection = direction
     if (!me.invisible) {
         for (other in players.playersInRoom(to).filter { it.sessionId != me.sessionId }) {
             outbound.send(OutboundEvent.SendText(other.sessionId, arriveLine))

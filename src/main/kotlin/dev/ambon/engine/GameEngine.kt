@@ -1220,7 +1220,6 @@ class GameEngine(
                 direction = chosen.key,
                 departVerb = "flees",
             )
-            player.lastEnterDirection = chosen.key
             petSystem.followOwner(sid, chosen.value)
             ctx.sendLook(sid)
         }
