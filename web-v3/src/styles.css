@@ -14331,28 +14331,31 @@ body {
     );
 }
 
+/* Note: mix-blend-mode was removed here — combining it with filter: blur and
+   a position: fixed ancestor causes intermittent compositor flicker in
+   Chromium. Gradient alphas are tuned to give a similar glow without blend. */
 .login-scene-aurora {
   position: absolute;
   inset: -20% -10%;
   background:
     radial-gradient(
       ellipse 60% 30% at 30% 40%,
-      rgb(168 151 210 / 18%) 0%,
+      rgb(196 178 232 / 32%) 0%,
       transparent 60%
     ),
     radial-gradient(
       ellipse 50% 25% at 75% 55%,
-      rgb(140 174 201 / 14%) 0%,
+      rgb(168 196 222 / 26%) 0%,
       transparent 60%
     ),
     radial-gradient(
       ellipse 40% 20% at 50% 30%,
-      rgb(184 143 170 / 10%) 0%,
+      rgb(210 168 196 / 20%) 0%,
       transparent 60%
     );
   filter: blur(40px);
   animation: loginAuroraDrift 22s var(--ease-in-out-smooth) infinite alternate;
-  mix-blend-mode: screen;
+  will-change: transform, opacity;
 }
 
 @keyframes loginAuroraDrift {
