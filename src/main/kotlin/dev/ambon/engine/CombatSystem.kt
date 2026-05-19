@@ -125,6 +125,13 @@ class CombatSystem(
      *  wired by GameEngine to emit GMCP inventory updates and advance collection quests. */
     var onItemAutoLooted: suspend (SessionId, dev.ambon.domain.items.ItemInstance) -> Unit = { _, _ -> }
 
+    /**
+     * Callback fired after [flee] or [fleePvp] successfully disengages the player; wired by
+     * GameEngine to relocate the player to an adjacent room (so flee actually escapes aggro,
+     * not just breaks the current fight). The boolean parameter is `true` for wimpy auto-flee.
+     */
+    var onPlayerFled: suspend (SessionId, Boolean) -> Unit = { _, _ -> }
+
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
         val mobId: MobId,
@@ -342,6 +349,9 @@ class CombatSystem(
                 "You flee from $mobName."
             }
         outbound.send(OutboundEvent.SendText(sessionId, msg))
+        // GameEngine wires this to relocate the player to an adjacent room. The prompt is
+        // sent after the room move so the new room's GMCP/look land before the prompt.
+        onPlayerFled(sessionId, forced)
         outbound.send(OutboundEvent.SendPrompt(sessionId))
         return null
     }
@@ -506,6 +516,7 @@ class CombatSystem(
 
         endPvpCombat(sessionId)
         outbound.send(OutboundEvent.SendText(sessionId, "You flee from $targetName."))
+        onPlayerFled(sessionId, false)
         outbound.send(OutboundEvent.SendPrompt(sessionId))
         return null
     }

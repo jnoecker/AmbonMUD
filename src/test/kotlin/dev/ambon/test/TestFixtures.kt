@@ -66,6 +66,7 @@ object TestWorlds {
     val okFeatures: World by lazy { WorldLoader.loadFromResource("world/ok_features.yaml") }
     val okPuzzles: World by lazy { WorldLoader.loadFromResource("world/ok_puzzles.yaml") }
     val okAchievementGate: World by lazy { WorldLoader.loadFromResource("world/ok_achievement_gate.yaml") }
+    val okFleeGate: World by lazy { WorldLoader.loadFromResource("world/ok_flee_gate.yaml") }
 }
 
 object TestPasswordHasher : PasswordHasher {

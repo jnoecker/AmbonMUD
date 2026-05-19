@@ -232,6 +232,7 @@ class NavigationHandler(
                 outbound,
                 gmcpEmitter,
                 dialogueSystem,
+                direction = cmd.dir,
             )
             onPlayerMoved?.invoke(sessionId, to)
             ctx.sendLook(sessionId)

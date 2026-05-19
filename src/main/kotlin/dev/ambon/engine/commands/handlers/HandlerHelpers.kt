@@ -11,6 +11,9 @@ import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
+import dev.ambon.domain.world.arrivePhrase
+import dev.ambon.domain.world.exitPhrase
+import dev.ambon.domain.world.opposite
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
@@ -483,7 +486,21 @@ internal suspend fun EngineContext.movePlayer(
     departMsg: String,
     arriveMsg: String,
     dialogueSystem: dev.ambon.engine.dialogue.DialogueSystem? = null,
-) = movePlayerWithNotify(sessionId, from, to, departMsg, arriveMsg, players, outbound, gmcpEmitter, dialogueSystem)
+    direction: Direction? = null,
+    departVerb: String = "exits",
+) = movePlayerWithNotify(
+    sessionId,
+    from,
+    to,
+    departMsg,
+    arriveMsg,
+    players,
+    outbound,
+    gmcpEmitter,
+    dialogueSystem,
+    direction,
+    departVerb,
+)
 
 /**
  * Convenience extension on [EngineContext] that syncs item GMCP state,
@@ -555,6 +572,11 @@ internal suspend fun <T> requireSystemOrNull(
 /**
  * Notifies old-room players of departure, moves the player, then notifies new-room players of arrival.
  * Also fires [dialogueSystem] movement callbacks and emits GMCP room-player add/remove.
+ *
+ * When [direction] is non-null the depart/arrive broadcasts are built directionally:
+ *   `"${name} ${departVerb} to the north."` / `"${name} arrives from the south."`
+ * In that case [departMsg]/[arriveMsg] are ignored. When [direction] is null they are
+ * concatenated to the player name as `"${name} ${departMsg}"` (legacy behavior).
  */
 internal suspend fun movePlayerWithNotify(
     sessionId: SessionId,
@@ -566,19 +588,34 @@ internal suspend fun movePlayerWithNotify(
     outbound: OutboundBus,
     gmcpEmitter: GmcpEmitter?,
     dialogueSystem: dev.ambon.engine.dialogue.DialogueSystem? = null,
+    direction: Direction? = null,
+    departVerb: String = "exits",
 ) {
     val me = players.get(sessionId) ?: return
+    val departLine = if (direction != null) {
+        "${me.name} $departVerb ${direction.exitPhrase()}."
+    } else {
+        "${me.name} $departMsg"
+    }
+    val arriveLine = if (direction != null) {
+        "${me.name} arrives ${direction.opposite().arrivePhrase()}."
+    } else {
+        "${me.name} $arriveMsg"
+    }
     if (!me.invisible) {
         for (other in players.playersInRoom(from).filter { it.sessionId != me.sessionId }) {
-            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} $departMsg"))
+            outbound.send(OutboundEvent.SendText(other.sessionId, departLine))
             gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
         }
     }
     dialogueSystem?.onPlayerMoved(sessionId)
     players.moveTo(sessionId, to)
+    // moveTo cleared lastEnterDirection (treats every room change as a teleport at that
+    // layer); restore it here for directional walks so flee can retrace the way in.
+    me.lastEnterDirection = direction
     if (!me.invisible) {
         for (other in players.playersInRoom(to).filter { it.sessionId != me.sessionId }) {
-            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} $arriveMsg"))
+            outbound.send(OutboundEvent.SendText(other.sessionId, arriveLine))
             gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
         }
     }

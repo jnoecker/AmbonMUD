@@ -713,6 +713,11 @@ class PlayerRegistry(
         roomMembers.removeFromSet(ps.roomId, sessionId)
 
         ps.roomId = newRoom
+        // Any room change is a teleport at this layer; directional walks repopulate this
+        // immediately afterwards via movePlayerWithNotify. Clearing here keeps flee from
+        // retracing a stale direction after admin teleports, dungeon entry, housing,
+        // guild-hall entry, death/respawn, etc.
+        ps.lastEnterDirection = null
         roomMembers.getOrPut(newRoom) { mutableSetOf() }.add(sessionId)
 
         // Save room change if claimed

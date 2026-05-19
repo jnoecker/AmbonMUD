@@ -144,15 +144,15 @@ class CommandRouterTest {
 
             assertTrue(
                 outs.any {
-                    it is OutboundEvent.SendText && it.sessionId == bob && it.text == "Alice leaves."
+                    it is OutboundEvent.SendText && it.sessionId == bob && it.text == "Alice exits to the north."
                 },
-                "Bob should see leave broadcast. got=$outs",
+                "Bob should see directional leave broadcast. got=$outs",
             )
             assertTrue(
                 outs.any {
-                    it is OutboundEvent.SendText && it.sessionId == charlie && it.text == "Alice enters."
+                    it is OutboundEvent.SendText && it.sessionId == charlie && it.text == "Alice arrives from the south."
                 },
-                "Charlie should see enter broadcast. got=$outs",
+                "Charlie should see directional enter broadcast. got=$outs",
             )
         }
 
