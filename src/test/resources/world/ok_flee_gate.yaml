@@ -1,0 +1,33 @@
+zone: ok_flee_gate
+lifespan: 1
+startRoom: hall
+mobs:
+  rat:
+    name: "a small rat"
+    room: hall
+    drops:
+      - itemId: tooth
+        chance: 1.0
+items:
+  tooth:
+    displayName: "a rat tooth"
+rooms:
+  hall:
+    title: "Locked Hall"
+    description: "A hall with one open exit south and a sealed door north."
+    exits:
+      south: foyer
+      north:
+        to: sanctum
+        requiresAchievement: hall_boss_slain
+        lockedMessage: "The sanctum door is sealed."
+  foyer:
+    title: "Foyer"
+    description: "A modest foyer."
+    exits:
+      north: hall
+  sanctum:
+    title: "Sanctum"
+    description: "A hidden sanctum."
+    exits:
+      south: hall

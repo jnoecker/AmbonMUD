@@ -176,6 +176,51 @@ class FleeMovementTest {
         }
 
     @Test
+    fun `flee respects achievement gates and never picks a gated exit`() =
+        runTest {
+            // ok_flee_gate: hall has open south (foyer) and achievement-gated north (sanctum).
+            // Alice starts in sanctum and walks south into hall, so lastEnterDirection = SOUTH
+            // and opposite = NORTH — which is the gated exit. With the gate honored, flee
+            // must reject NORTH and fall back to SOUTH (foyer); without the fix, the gated
+            // NORTH would be picked deterministically as the preferred direction.
+            val clock = java.time.Clock.fixed(java.time.Instant.EPOCH, java.time.ZoneOffset.UTC)
+            val repo = InMemoryPlayerRepository()
+            repo.createTestPlayer("Alice", RoomId("ok_flee_gate:sanctum"), password = "pw")
+            val h = GameEngineHarness.start(scope = this, world = TestWorlds.okFleeGate, clock = clock, repo = repo)
+
+            val sid = SessionId(1L)
+            runCurrent()
+            h.inbound.send(InboundEvent.Connected(sid))
+            h.inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "pw"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "s"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "kill rat"))
+            advanceTimeBy(h.tickMillis)
+            runCurrent()
+            h.outbound.drainAll()
+
+            val hall = RoomId("ok_flee_gate:hall")
+            val foyer = RoomId("ok_flee_gate:foyer")
+            val sanctum = RoomId("ok_flee_gate:sanctum")
+            assertEquals(hall, h.players.get(sid)?.roomId, "Should be in hall before flee")
+            assertEquals(
+                Direction.SOUTH,
+                h.players.get(sid)?.lastEnterDirection,
+                "Setup precondition: walked south into hall",
+            )
+
+            h.inbound.send(InboundEvent.LineReceived(sid, "flee"))
+            advanceTimeBy(h.tickMillis)
+            runCurrent()
+
+            val landedIn = h.players.get(sid)?.roomId
+            assertNotEquals(sanctum, landedIn, "Flee must not bypass achievement gate to sanctum")
+            assertEquals(foyer, landedIn, "Flee should fall back to the open south exit")
+
+            h.close()
+        }
+
+    @Test
     fun `recall clears lastEnterDirection so subsequent flee picks random exit`() =
         runTest {
             val h = CommandRouterHarness.create()

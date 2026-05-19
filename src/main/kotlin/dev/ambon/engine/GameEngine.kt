@@ -1199,6 +1199,9 @@ class GameEngine(
                 if (room.remoteExits.contains(dir)) return@filter false
                 val door = worldState.doorOnExit(from, dir)
                 if (door != null && worldState.getDoorState(door.id) != LockableState.OPEN) return@filter false
+                // Honor achievement gates so flee can't bypass progression locks.
+                val gate = room.achievementGates[dir]
+                if (gate != null && gate.achievementId !in player.unlockedAchievementIds) return@filter false
                 true
             }
             if (candidates.isEmpty()) return@onPlayerFled
