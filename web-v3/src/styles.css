@@ -14353,9 +14353,8 @@ body {
       rgb(210 168 196 / 20%) 0%,
       transparent 60%
     );
-  filter: blur(40px);
+  filter: blur(24px);
   animation: loginAuroraDrift 22s var(--ease-in-out-smooth) infinite alternate;
-  will-change: transform, opacity;
 }
 
 @keyframes loginAuroraDrift {
@@ -14374,6 +14373,12 @@ body {
   opacity: 0.85;
 }
 
+/* Stars are static. Earlier versions animated background-position for a
+   parallax drift, which is a paint-thrashing (non-composited) property:
+   the entire layer rectangle had to be re-rasterized every frame, and
+   on layer-eviction the viewport-sized layer briefly flashed as a
+   visible white rectangle in the empty space around the cards. The
+   drift was barely perceptible at 130-240s anyway. */
 .login-scene-stars--far {
   background-image:
     radial-gradient(1px 1px at 20px 30px, rgb(230 232 248 / 70%), transparent 50%),
@@ -14384,7 +14389,6 @@ body {
     radial-gradient(1px 1px at 200px 90px, rgb(218 222 245 / 60%), transparent 50%),
     radial-gradient(1px 1px at 240px 200px, rgb(230 232 248 / 70%), transparent 50%);
   background-size: 280px 240px;
-  animation: loginStarsDriftFar 240s linear infinite;
 }
 
 .login-scene-stars--mid {
@@ -14395,7 +14399,6 @@ body {
     radial-gradient(1.5px 1.5px at 80px 200px, rgb(218 230 252 / 75%), transparent 50%),
     radial-gradient(1.5px 1.5px at 280px 150px, rgb(232 222 250 / 80%), transparent 50%);
   background-size: 360px 280px;
-  animation: loginStarsDriftMid 180s linear infinite, loginStarsTwinkle 5s ease-in-out infinite;
 }
 
 .login-scene-stars--near {
@@ -14405,16 +14408,6 @@ body {
     radial-gradient(2px 2px at 340px 60px, rgb(220 240 255 / 90%), transparent 55%),
     radial-gradient(2px 2px at 140px 240px, rgb(255 232 248 / 92%), transparent 55%);
   background-size: 440px 320px;
-  animation: loginStarsDriftNear 130s linear infinite, loginStarsTwinkle 7s ease-in-out infinite 1.2s;
-}
-
-@keyframes loginStarsDriftFar  { from { background-position: 0 0; } to { background-position: -280px -240px; } }
-@keyframes loginStarsDriftMid  { from { background-position: 0 0; } to { background-position: -360px -280px; } }
-@keyframes loginStarsDriftNear { from { background-position: 0 0; } to { background-position: -440px -320px; } }
-
-@keyframes loginStarsTwinkle {
-  0%, 100% { opacity: 0.85; }
-  50%      { opacity: 1; }
 }
 
 /* Floating islands at the horizon — silhouettes via radial gradients */
