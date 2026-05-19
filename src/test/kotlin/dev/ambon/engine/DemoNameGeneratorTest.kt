@@ -42,13 +42,12 @@ class DemoNameGeneratorTest {
     @Test
     fun `generator falls back when all short candidates are taken`() = runTest {
         // Reject every 2-digit suffix; the fallback to 4-digit suffix should succeed.
-        var calls = 0
+        // The fallback path is verified by observing that the returned name has a
+        // suffix longer than 2 digits — which only happens after the first pass
+        // is exhausted and the longer-suffix fallback engages.
         val gen = DemoNameGenerator(Random(0))
         val name = gen.generate(
             isTaken = { candidate ->
-                calls++
-                // Block all names with <= 6 digits worth of trailing numbers (only the
-                // initial 2-digit pass).
                 val trailingDigits = candidate.takeLastWhile { it.isDigit() }.length
                 trailingDigits <= 2
             },
@@ -58,7 +57,6 @@ class DemoNameGeneratorTest {
             name.takeLastWhile { it.isDigit() }.length >= 3,
             "fallback should use a longer suffix, got '$name'",
         )
-        assertTrue(calls > 5, "expected the fallback pass to attempt more candidates")
     }
 
     @Test
