@@ -74,6 +74,7 @@ bank: <boolean, optional, default false>
 stylist: <boolean, optional, default false>
 tavern: <boolean, optional, default false>
 dungeon: <boolean, optional, default false>
+inn: <boolean, optional, default false>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown as clickable cinematic>
 music: <string, optional - overrides zone audio.music>
@@ -97,6 +98,11 @@ ambient: <string, optional - overrides zone audio.ambient>
 
 `dungeon` notes:
 - When `true`, shows a Dungeon badge on the web client canvas that opens the dungeon kiosk panel.
+
+`inn` notes:
+- When `true`, enables the `rest` command in this room. Resting sets the player's recall point to this room.
+- Shows an Inn badge on the web client canvas; the popout displays the player's current recall point and offers a "Rest & Set Recall Here" button.
+- The recall point is the destination of the `recall` command. Rest is blocked while in combat.
 
 `station` notes:
 - Designates the room as a crafting station of the given type.

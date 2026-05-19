@@ -942,6 +942,11 @@ ambonmud:
           usage: recall
           category: navigation
           staff: false
+        rest:
+          usage: rest
+          description: Rest at an inn to make it your recall point.
+          category: navigation
+          staff: false
         run:
           usage: run <directions> (e.g. 5n3e)
           description: Move along a sequence of directions. Numeric prefixes repeat — '5n3e' walks five north then three east.
