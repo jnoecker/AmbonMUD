@@ -1674,6 +1674,8 @@ data class RecallMessagesConfig(
     val departNotice: String = "vanishes in a flash of light.",
     val arriveNotice: String = "appears in a flash of light.",
     val arrival: String = "You feel a familiar warmth and find yourself back at your recall point.",
+    val restNotAtInn: String = "You can only rest at an inn.",
+    val restSet: String = "You rest at {inn}. The innkeeper marks your name in the ledger — this inn is now your recall point.",
 )
 
 data class CommandMetadata(

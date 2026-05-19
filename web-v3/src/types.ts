@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | "combatlog" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | "combatlog" | "inn" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -225,8 +225,15 @@ export interface RoomState {
   dungeon?: boolean;
   auction?: boolean;
   housingBroker?: boolean;
+  inn?: boolean;
   /** True when this is the death sanctum and the player has somewhere to depart back to. */
   canDepart?: boolean;
+}
+
+/** Recall point info — emitted by Char.Recall GMCP. Null fields when not set. */
+export interface RecallState {
+  roomId: string | null;
+  roomTitle: string | null;
 }
 
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */

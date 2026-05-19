@@ -27,6 +27,8 @@ data class RoomFile(
     val auction: Boolean = false,
     /** True if this room has a housing broker (enables housing kiosk badge). */
     val housingBroker: Boolean = false,
+    /** True if this room is an inn (enables `rest` + recall-point setting). */
+    val inn: Boolean = false,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */

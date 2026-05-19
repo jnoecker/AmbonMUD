@@ -213,6 +213,13 @@ export class WorldScene {
   private housingHitArea = new Graphics();
   private housingVisible = false;
 
+  private innBadge: Container | null = null;
+  private innSprite: Sprite | null = null;
+  private innLabel: Text | null = null;
+  private innLabelBg = new Graphics();
+  private innHitArea = new Graphics();
+  private innVisible = false;
+
   private duelBadge: Container | null = null;
   private duelSprite: Sprite | null = null;
   private duelLabel: Text | null = null;
@@ -548,6 +555,35 @@ export class WorldScene {
     this.dungeonBadge.addChild(this.dungeonLabelBg);
     this.dungeonBadge.addChild(this.dungeonLabel);
 
+    // Inn badge — floating icon when the current room is an inn
+    this.innBadge = new Container();
+    this.innBadge.visible = false;
+    this.innBadge.eventMode = "static";
+    this.innBadge.cursor = "pointer";
+    this.innBadge.on("pointerdown", () => {
+      canvasCallbacks.openInn?.();
+    });
+    this.innBadge.on("pointerover", () => {
+      if (this.innSprite) this.innSprite.alpha = 1;
+    });
+    this.innBadge.on("pointerout", () => {
+      if (this.innSprite) this.innSprite.alpha = 0.85;
+    });
+    this.innHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.innHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.innHitArea.eventMode = "auto";
+    this.innBadge.addChild(this.innHitArea);
+    this.innLabel = new Text({
+      text: "Inn",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#e3c98a", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.innLabel.anchor.set(0.5, 0);
+    this.innLabel.y = hs / 2 + 2;
+    this.innLabel.eventMode = "none";
+    this.innLabelBg.eventMode = "none";
+    this.innBadge.addChild(this.innLabelBg);
+    this.innBadge.addChild(this.innLabel);
+
     // Housing broker badge — floating kiosk icon when a housing broker is present
     this.housingBadge = new Container();
     this.housingBadge.visible = false;
@@ -753,6 +789,7 @@ export class WorldScene {
     this.container.addChild(this.lotteryBadge!);
     this.container.addChild(this.dungeonBadge!);
     this.container.addChild(this.housingBadge!);
+    this.container.addChild(this.innBadge!);
     this.container.addChild(this.duelBadge!);
     this.container.addChild(this.puzzleBadge!);
     this.container.addChild(this.doorBadge!);
@@ -801,6 +838,7 @@ export class WorldScene {
       this.loadLotteryIcon();
       this.loadDungeonIcon();
       this.loadHousingBrokerIcon();
+      this.loadInnIcon();
       this.loadDuelIcon();
       this.loadPuzzleIcon();
       this.loadDoorIcon();
@@ -1008,6 +1046,12 @@ export class WorldScene {
       if (this.housingBadge) this.housingBadge.visible = hasHousingBroker;
     }
 
+    const hasInn = !!state.room.inn;
+    if (hasInn !== this.innVisible) {
+      this.innVisible = hasInn;
+      if (this.innBadge) this.innBadge.visible = hasInn;
+    }
+
     // Duel badge removed — dueling is accessed via player context menu
     if (this.duelVisible) {
       this.duelVisible = false;
@@ -1148,6 +1192,7 @@ export class WorldScene {
     if (this.lotteryBadge) this.lotteryBadge.visible = this.lotteryVisible && !stripMode;
     if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
     if (this.housingBadge) this.housingBadge.visible = this.housingVisible && !stripMode;
+    if (this.innBadge) this.innBadge.visible = this.innVisible && !stripMode;
     if (this.duelBadge) this.duelBadge.visible = this.duelVisible && !stripMode;
     if (this.puzzleBadge) this.puzzleBadge.visible = this.puzzleVisible && !stripMode;
     if (this.doorBadge) this.doorBadge.visible = this.doorVisible && !stripMode;
@@ -1350,6 +1395,7 @@ export class WorldScene {
       this.bankBadge?.visible,
       this.lotteryBadge?.visible, this.dungeonBadge?.visible,
       this.housingBadge?.visible,
+      this.innBadge?.visible,
       this.duelBadge?.visible, this.puzzleBadge?.visible,
       this.doorBadge?.visible, this.containerBadge?.visible,
       this.leverBadge?.visible,
@@ -1424,6 +1470,13 @@ export class WorldScene {
       this.housingBadge.x = badgeX;
       this.housingBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.housingLabelBg, this.housingLabel!);
+      badgeSlot++;
+    }
+
+    if (this.innBadge?.visible) {
+      this.innBadge.x = badgeX;
+      this.innBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.innLabelBg, this.innLabel!);
       badgeSlot++;
     }
 
@@ -2150,6 +2203,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.housingSprite = sprite;
       this.housingBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadInnIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("inn_widget", "inn_widget.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.innSprite = sprite;
+      this.innBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

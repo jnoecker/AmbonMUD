@@ -271,6 +271,7 @@ class GmcpEmitter(
                 dungeon = room.dungeon,
                 auction = room.auction,
                 housingBroker = room.housingBroker,
+                inn = room.inn,
                 canDepart = canDepart,
             ),
         )
@@ -528,6 +529,23 @@ class GmcpEmitter(
                 wimpyThresholdPct = player.wimpyThresholdPct,
                 isDemo = player.playerId == null,
             ),
+        )
+    }
+
+    /**
+     * Sends `Char.Recall` with the player's current recall point so clients can
+     * display it (e.g. inn popout). Emits null fields when no recall is set.
+     */
+    suspend fun sendCharRecall(
+        sessionId: SessionId,
+        roomId: RoomId?,
+        roomTitle: String?,
+    ) {
+        emit(
+            sessionId,
+            "Char.Recall",
+            CharRecallPayload(roomId = roomId?.value, roomTitle = roomTitle),
+            supportCheck = "Char.Recall",
         )
     }
 
@@ -844,6 +862,7 @@ class GmcpEmitter(
         groupSystem: GroupSystem,
         players: PlayerRegistry,
         guildSystem: GuildSystem? = null,
+        world: World? = null,
     ) {
         sendServerAssets(sessionId)
         sendServerCommands(sessionId, player.isStaff)
@@ -866,6 +885,11 @@ class GmcpEmitter(
         sendCharSprites(sessionId, player)
         sendCharClasses(sessionId, player.unlockedClasses.ifEmpty { setOf(player.playerClass) }, player.playerClass)
         sendPrestigeInfoForPlayer(sessionId, player)
+        if (world != null) {
+            val recallId = players.recallTarget(sessionId)
+            val recallTitle = recallId?.let { world.rooms[it]?.title }
+            sendCharRecall(sessionId, recallId, recallTitle)
+        }
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
     }
@@ -2428,6 +2452,7 @@ class GmcpEmitter(
         val dungeon: Boolean = false,
         val auction: Boolean = false,
         val housingBroker: Boolean = false,
+        val inn: Boolean = false,
         val canDepart: Boolean = false,
     )
 
@@ -2589,6 +2614,11 @@ class GmcpEmitter(
     private data class CharClassesPayload(
         val originalClass: String,
         val unlockedClasses: List<String>,
+    )
+
+    private data class CharRecallPayload(
+        val roomId: String?,
+        val roomTitle: String?,
     )
 
     private data class CharNamePayload(

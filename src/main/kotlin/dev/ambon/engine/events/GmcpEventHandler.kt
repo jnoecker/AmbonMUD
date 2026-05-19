@@ -63,6 +63,7 @@ class GmcpEventHandler(
                     groupSystem,
                     players,
                     guildSystem,
+                    world,
                 )
                 gmcpEmitter.sendRoomInfo(
                     sid,

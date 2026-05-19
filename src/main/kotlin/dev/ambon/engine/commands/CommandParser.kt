@@ -273,6 +273,9 @@ sealed interface Command {
 
     data object Recall : Command
 
+    /** Rest at an inn to set the current room as your recall point. */
+    data object Rest : Command
+
     /** Leaves the sanctum after death, returning to the zone where the player last died. */
     data object Depart : Command
 
@@ -1740,6 +1743,7 @@ object CommandParser {
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
             "recall" -> Command.Recall
+            "rest" -> Command.Rest
             "depart" -> Command.Depart
             "score", "sc" -> Command.Score
             "spells", "abilities", "skills" -> Command.Spells

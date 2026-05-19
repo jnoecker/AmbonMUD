@@ -145,6 +145,11 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses rest`() {
+        assertEquals(Command.Rest, CommandParser.parse("rest"))
+    }
+
+    @Test
     fun `parses consider with full and short aliases`() {
         assertEquals(Command.Consider("orc"), CommandParser.parse("consider orc"))
         assertEquals(Command.Consider("orc"), CommandParser.parse("con orc"))

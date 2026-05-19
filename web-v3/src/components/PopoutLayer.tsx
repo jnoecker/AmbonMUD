@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from "react";
-import type { CommandEntry, ContainerContents, CraftingNode, PopoutPanel, RoomFeature, RoomState } from "../types";
+import type { CommandEntry, ContainerContents, CraftingNode, PopoutPanel, RecallState, RoomFeature, RoomState } from "../types";
 import { HelpContent } from "./HelpContent";
 
 const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests", "inventory", "equipment", "mail", "crafting", "housing", "trainer", "leaderboard", "bank", "auction"]);
@@ -16,6 +16,7 @@ interface PopoutLayerProps {
   isStaff: boolean;
   serverCommands: CommandEntry[];
   craftingNodes: CraftingNode[];
+  recallState?: RecallState | null;
   onClose: () => void;
   onFeatureAction: (command: string) => void;
   children?: ReactNode;
@@ -33,6 +34,7 @@ export function PopoutLayer({
   isStaff,
   serverCommands,
   craftingNodes,
+  recallState,
   onClose,
   onFeatureAction,
   children,
@@ -209,6 +211,32 @@ export function PopoutLayer({
         {activePopout === "help" && (
           <div className="popout-content">
             <HelpContent isStaff={isStaff} serverCommands={serverCommands} />
+          </div>
+        )}
+
+        {activePopout === "inn" && (
+          <div className="popout-content">
+            <article className="inn-popout">
+              <p className="inn-popout-intro">
+                You are at <strong>{room.title}</strong>. The innkeeper offers safe lodging — rest here to set your recall point.
+              </p>
+              <div className="inn-popout-recall">
+                <span className="inn-popout-recall-label">Current recall point:</span>
+                <strong className="inn-popout-recall-value">
+                  {recallState?.roomTitle ?? "Not yet set"}
+                </strong>
+              </div>
+              <button
+                type="button"
+                className="soft-button inn-popout-action"
+                onClick={() => {
+                  onFeatureAction("rest");
+                  onClose();
+                }}
+              >
+                Set Recall Here
+              </button>
+            </article>
           </div>
         )}
 

@@ -67,6 +67,7 @@ class NavigationHandler(
         router.on<Command.LookDir> { sid, cmd -> handleLookDir(sid, cmd) }
         router.on<Command.LookAt> { sid, cmd -> handleLookAt(sid, cmd) }
         router.on<Command.Recall> { sid, _ -> handleRecall(sid) }
+        router.on<Command.Rest> { sid, _ -> handleRest(sid) }
         router.on<Command.Depart> { sid, _ -> handleDepart(sid) }
         router.on<Command.Petition> { sid, cmd -> handlePetition(sid, cmd) }
     }
@@ -322,6 +323,28 @@ class NavigationHandler(
         onPlayerMoved?.invoke(sessionId, target)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.arrival))
         ctx.sendLook(sessionId)
+    }
+
+    private suspend fun handleRest(sessionId: SessionId) {
+        val msgs = recallConfig.messages
+        val me = players.get(sessionId) ?: return
+        if (combat.isInCombat(sessionId)) {
+            outbound.send(OutboundEvent.SendError(sessionId, msgs.combatBlocked))
+            return
+        }
+        val room = world.rooms[me.roomId]
+        if (room == null || !room.inn) {
+            outbound.send(OutboundEvent.SendError(sessionId, msgs.restNotAtInn))
+            return
+        }
+        players.setRecallRoom(sessionId, me.roomId)
+        outbound.send(
+            OutboundEvent.SendText(
+                sessionId,
+                msgs.restSet.replace("{inn}", room.title),
+            ),
+        )
+        gmcpEmitter?.sendCharRecall(sessionId, me.roomId, room.title)
     }
 
     private suspend fun handleDepart(sessionId: SessionId) {
