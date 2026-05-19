@@ -14821,6 +14821,7 @@ body {
     inset 0 1px 0 rgb(232 248 232 / 34%),
     0 8px 24px rgb(56 88 64 / 55%),
     0 0 32px rgb(141 169 123 / 50%);
+  animation-play-state: paused;
 }
 
 @keyframes loginCtaPulse {

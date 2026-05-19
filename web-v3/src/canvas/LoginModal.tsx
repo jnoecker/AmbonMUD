@@ -88,7 +88,6 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
                   placeholder="Character name"
                   autoComplete="off"
                   spellCheck={false}
-                  autoFocus
                   aria-label="Character name"
                 />
                 <button type="submit" className="login-card-cta login-card-cta--signin">
