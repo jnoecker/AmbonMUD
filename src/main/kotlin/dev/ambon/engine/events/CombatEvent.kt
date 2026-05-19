@@ -94,4 +94,14 @@ sealed interface CombatEvent {
         val targetIsPlayer: Boolean,
         val sourceIsPlayer: Boolean,
     ) : CombatEvent
+
+    /**
+     * The local player disengaged from combat. [forced] is true for the wimpy
+     * auto-flee path so the client can distinguish a voluntary escape from a
+     * threshold-triggered one.
+     */
+    data class Flee(
+        val targetName: String,
+        val forced: Boolean,
+    ) : CombatEvent
 }

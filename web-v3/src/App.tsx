@@ -32,6 +32,7 @@ import { DemoBanner } from "./components/DemoBanner";
 import { LevelUpBanner } from "./components/LevelUpBanner";
 import { QuestCompleteToast } from "./components/QuestCompleteToast";
 import { CombatVictoryToast } from "./components/CombatVictoryToast";
+import { FleeToast } from "./components/FleeToast";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
 import { CommandPalette } from "./components/CommandPalette";
@@ -1649,6 +1650,14 @@ function App() {
         notifications={state.combatVictoryNotifications}
         onDismiss={(id) =>
           state.setCombatVictoryNotifications((prev) => prev.filter((n) => n.id !== id))
+        }
+      />
+
+      {/* Flee toast — surfaces voluntary and wimpy-forced disengages. */}
+      <FleeToast
+        notifications={state.fleeNotifications}
+        onDismiss={(id) =>
+          state.setFleeNotifications((prev) => prev.filter((n) => n.id !== id))
         }
       />
 

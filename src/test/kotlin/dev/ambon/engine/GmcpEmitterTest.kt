@@ -1172,6 +1172,21 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendCombatEvent emits flee JSON with forced flag`() =
+        runTest {
+            val e = emitter("Char.Combat.Event")
+            e.sendCombatEvent(sid, CombatEvent.Flee(targetName = "a rat", forced = false))
+            e.sendCombatEvent(sid, CombatEvent.Flee(targetName = "Bandit", forced = true))
+            val events = drainGmcp()
+            assertEquals(2, events.size)
+            assertTrue(events[0].jsonData.contains("\"type\":\"flee\""))
+            assertTrue(events[0].jsonData.contains("\"targetName\":\"a rat\""))
+            assertTrue(events[0].jsonData.contains("\"forced\":false"))
+            assertTrue(events[1].jsonData.contains("\"targetName\":\"Bandit\""))
+            assertTrue(events[1].jsonData.contains("\"forced\":true"))
+        }
+
+    @Test
     fun `sendCombatEvent emits abilityCast JSON for buff or debuff`() =
         runTest {
             val e = emitter("Char.Combat")

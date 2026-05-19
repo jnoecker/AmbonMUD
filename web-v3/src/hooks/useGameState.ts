@@ -40,6 +40,7 @@ import type {
   EquipmentSlotDef,
   FactionActivity,
   FactionStanding,
+  FleeNotification,
   FriendEntry,
   FriendNotification,
   GainEvent,
@@ -197,6 +198,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const levelUpIdRef = useRef(0);
   const [combatVictoryNotifications, setCombatVictoryNotifications] = useState<CombatVictoryNotification[]>([]);
   const combatVictoryIdRef = useRef(0);
+  const [fleeNotifications, setFleeNotifications] = useState<FleeNotification[]>([]);
+  const fleeIdRef = useRef(0);
   const [duelState, setDuelState] = useState<DuelState | null>(null);
   const [duelChallenge, setDuelChallenge] = useState<DuelChallenge | null>(null);
 
@@ -337,8 +340,26 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       };
       // Replace (rather than append) so back-to-back kills don't queue stale
       // toasts behind the active one — otherwise the active toast's dismissal
-      // resurfaces a prior kill several seconds late.
+      // resurfaces a prior kill several seconds late. Also clear any active
+      // flee toast: kill and flee share a fixed corner slot, and the freshest
+      // outcome supersedes the stale one.
       setCombatVictoryNotifications([notification]);
+      setFleeNotifications([]);
+    }
+    if (event.type === "flee" && event.targetName) {
+      fleeIdRef.current += 1;
+      const notification: FleeNotification = {
+        id: `flee-${fleeIdRef.current}`,
+        targetName: event.targetName,
+        forced: event.forced,
+        receivedAt: Date.now(),
+      };
+      // Mirror the kill path: share the corner slot, freshest outcome wins.
+      // A kill toast from the previous fight can still be on-screen (4.5s
+      // lifetime) when the player flees the next pull — without this the two
+      // cards stack at the same `top:` and overlap.
+      setFleeNotifications([notification]);
+      setCombatVictoryNotifications([]);
     }
   }, [pushCombatLogMessage]);
 
@@ -645,6 +666,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setPuzzle(null);
     setQuestNotifications([]);
     setCombatVictoryNotifications([]);
+    setFleeNotifications([]);
     setCraftingSkills([]);
     setCraftingRecipes([]);
     setCraftingNodes([]);
@@ -733,6 +755,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,
     levelUpNotification, setLevelUpNotification,
     combatVictoryNotifications, setCombatVictoryNotifications,
+    fleeNotifications, setFleeNotifications,
     // Setters needed by App
     setQuestsAvailable,
     // GMCP

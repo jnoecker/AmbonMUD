@@ -1024,6 +1024,7 @@ export function applyGmcpPackage(
         lootedItems: Array.isArray(packet.lootedItems)
           ? packet.lootedItems.filter((s): s is string => typeof s === "string")
           : [],
+        forced: packet.forced === true,
       });
       break;
     }

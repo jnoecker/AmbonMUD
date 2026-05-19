@@ -503,6 +503,8 @@ export interface CombatEventData {
   targetIsPlayer: boolean;
   /** Display names of items autolooted from the kill (only set on type=="kill"). */
   lootedItems: string[];
+  /** True when the player disengaged via the wimpy threshold rather than typing `flee`. */
+  forced: boolean;
 }
 
 export interface StatEntry {
@@ -650,6 +652,18 @@ export interface CombatVictoryNotification {
   xpGained: number;
   goldGained: number;
   lootedItems: string[];
+  receivedAt: number;
+}
+
+/**
+ * Top-right toast surfaced when the local player disengages from combat via
+ * `flee` or the wimpy threshold. Built from `Char.Combat.Event` packets of
+ * `type: "flee"`.
+ */
+export interface FleeNotification {
+  id: string;
+  targetName: string;
+  forced: boolean;
   receivedAt: number;
 }
 

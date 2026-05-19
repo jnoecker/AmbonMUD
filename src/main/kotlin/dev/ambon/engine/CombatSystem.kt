@@ -349,6 +349,7 @@ class CombatSystem(
                 "You flee from $mobName."
             }
         outbound.send(OutboundEvent.SendText(sessionId, msg))
+        onCombatEvent(sessionId, CombatEvent.Flee(targetName = mobName, forced = forced))
         // GameEngine wires this to relocate the player to an adjacent room. The prompt is
         // sent after the room move so the new room's GMCP/look land before the prompt.
         onPlayerFled(sessionId, forced)
@@ -383,6 +384,7 @@ class CombatSystem(
         val opponent = pvpTarget[targetSid]?.let { players.get(it) }?.name ?: "your opponent"
         endPvpCombat(targetSid)
         outbound.send(OutboundEvent.SendText(targetSid, "You are forced to flee from $opponent!"))
+        onCombatEvent(targetSid, CombatEvent.Flee(targetName = opponent, forced = true))
         outbound.send(OutboundEvent.SendPrompt(targetSid))
         return true
     }
@@ -516,6 +518,7 @@ class CombatSystem(
 
         endPvpCombat(sessionId)
         outbound.send(OutboundEvent.SendText(sessionId, "You flee from $targetName."))
+        onCombatEvent(sessionId, CombatEvent.Flee(targetName = targetName, forced = false))
         onPlayerFled(sessionId, false)
         outbound.send(OutboundEvent.SendPrompt(sessionId))
         return null
