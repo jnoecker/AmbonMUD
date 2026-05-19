@@ -1015,4 +1015,63 @@ class GameEngineLoginFlowTest {
 
             h.close()
         }
+
+    @Test
+    fun `typing demo at the name prompt spawns an unclaimed character`() =
+        runTest {
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val h = GameEngineHarness.start(scope = this, clock = clock)
+
+            val sid = SessionId(1L)
+            runCurrent()
+
+            h.inbound.send(InboundEvent.Connected(sid))
+            h.inbound.send(InboundEvent.LineReceived(sid, "demo"))
+            advanceTimeBy(h.tickMillis * 2)
+            runCurrent()
+
+            val outs = h.outbound.drainAll()
+            val welcome = outs.firstOrNull {
+                it is OutboundEvent.SendInfo &&
+                    it.sessionId == sid &&
+                    it.text.startsWith("Welcome,") &&
+                    it.text.contains("demo character")
+            }
+            assertNotNull(welcome, "expected a welcome message for the demo character. got=$outs")
+
+            val player = h.players.get(sid)
+            assertNotNull(player, "expected a player bound to the session")
+            assertNull(player!!.playerId, "demo character should have a null playerId")
+            assertNull(
+                h.repo.findByName(player.name),
+                "demo character must not be persisted to the repository",
+            )
+
+            h.close()
+        }
+
+    @Test
+    fun `name prompt advertises demo mode`() =
+        runTest {
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val h = GameEngineHarness.start(scope = this, clock = clock)
+
+            val sid = SessionId(1L)
+            runCurrent()
+            h.inbound.send(InboundEvent.Connected(sid))
+            advanceTimeBy(h.tickMillis)
+            runCurrent()
+
+            val outs = h.outbound.drainAll()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text.contains("'demo'", ignoreCase = true)
+                },
+                "Expected the name prompt to mention demo mode. got=$outs",
+            )
+
+            h.close()
+        }
 }

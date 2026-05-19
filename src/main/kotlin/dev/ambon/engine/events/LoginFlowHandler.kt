@@ -79,6 +79,9 @@ internal sealed interface LoginState {
         val raceId: String,
         val classId: String,
     ) : LoginState
+
+    /** Demo character creation in-flight; player input is ignored until complete. */
+    data object AwaitingDemoCreate : LoginState
 }
 
 /** Result posted to [LoginFlowHandler.pendingAuthResults] by a background auth coroutine. */
@@ -101,6 +104,12 @@ private sealed interface PendingAuthResult {
     data class NewAccountAuth(
         override val sessionId: SessionId,
         val prep: dev.ambon.engine.CreateAccountPrep,
+    ) : PendingAuthResult
+
+    data class DemoCharacter(
+        override val sessionId: SessionId,
+        val name: String,
+        val defaultAnsiEnabled: Boolean,
     ) : PendingAuthResult
 }
 
@@ -133,6 +142,14 @@ internal class LoginFlowHandler(
     maxWrongPasswordRetries: Int,
     maxFailedLoginAttemptsBeforeDisconnect: Int,
     maxConcurrentLogins: Int,
+    /**
+     * If true, typing "demo" (case-insensitive) at the name prompt creates an
+     * ephemeral demo character using the configured default race/class.
+     */
+    private val demoEnabled: Boolean = true,
+    private val demoDefaultRace: String = "HUMAN",
+    private val demoDefaultClass: String = "WARRIOR",
+    private val demoNameGenerator: dev.ambon.engine.DemoNameGenerator = dev.ambon.engine.DemoNameGenerator(),
     internal val onAfterLogin: suspend (SessionId) -> Unit = {},
     /**
      * Called on the paths where the client just authenticated with a password
@@ -194,6 +211,13 @@ internal class LoginFlowHandler(
             return
         }
 
+        // Demo (guest) entry — type "demo" at the name prompt to spawn a
+        // throwaway character. Bypasses password and race/class pickers.
+        if (demoEnabled && name.equals("demo", ignoreCase = true)) {
+            startDemoCreation(sessionId)
+            return
+        }
+
         if (!players.isValidName(name)) {
             outbound.send(OutboundEvent.SendError(sessionId, invalidNameMessage))
             emitLoginError(sessionId, "name", invalidNameMessage)
@@ -221,6 +245,34 @@ internal class LoginFlowHandler(
         getEngineScope().launch {
             val exists = players.hasRegisteredName(name)
             pendingAuthResults.send(PendingAuthResult.NameLookup(sessionId, name, exists))
+        }
+    }
+
+    private suspend fun startDemoCreation(sessionId: SessionId) {
+        // Acquire a login slot if not already held (mirrors handleLoginName).
+        if (!sessionsHoldingLoginPermit.contains(sessionId)) {
+            if (!loginSemaphore.tryAcquire()) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "The server is currently at maximum login capacity. Please try again shortly.",
+                    ),
+                )
+                outbound.send(OutboundEvent.Close(sessionId, "Server at maximum login capacity"))
+                return
+            }
+            sessionsHoldingLoginPermit.add(sessionId)
+        }
+
+        pendingLogins[sessionId] = LoginState.AwaitingDemoCreate
+        val ansiDefault = sessionAnsiDefaults[sessionId] ?: false
+        getEngineScope().launch {
+            val chosen = demoNameGenerator.generate(
+                isTaken = { candidate ->
+                    players.isNameOnline(candidate) || players.hasRegisteredName(candidate)
+                },
+            )
+            pendingAuthResults.send(PendingAuthResult.DemoCharacter(sessionId, chosen, ansiDefault))
         }
     }
 
@@ -364,8 +416,13 @@ internal class LoginFlowHandler(
 
     internal suspend fun promptForName(sessionId: SessionId) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "Enter your name:"))
+        if (demoEnabled) {
+            outbound.send(
+                OutboundEvent.SendInfo(sessionId, "(Or type 'demo' to play as a guest.)"),
+            )
+        }
         outbound.send(OutboundEvent.SendPrompt(sessionId))
-        emitLoginPrompt(sessionId, mapOf("state" to "name"))
+        emitLoginPrompt(sessionId, mapOf("state" to "name", "demoEnabled" to demoEnabled))
     }
 
     private suspend fun handlePendingAuthResult(result: PendingAuthResult) {
@@ -445,6 +502,41 @@ internal class LoginFlowHandler(
                     dev.ambon.engine.LoginCredentialPrep.InvalidInput -> {
                         outbound.send(OutboundEvent.SendError(sid, invalidNameMessage))
                         if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                        pendingLogins[sid] = LoginState.AwaitingName
+                        promptForName(sid)
+                    }
+                }
+            }
+
+            is PendingAuthResult.DemoCharacter -> {
+                if (pendingLogins[sid] !is LoginState.AwaitingDemoCreate) return
+                val createResult = players.createDemo(
+                    sessionId = sid,
+                    name = result.name,
+                    defaultAnsiEnabled = result.defaultAnsiEnabled,
+                    race = demoDefaultRace,
+                    playerClass = demoDefaultClass,
+                )
+                when (createResult) {
+                    dev.ambon.engine.CreateResult.Ok -> {
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sid,
+                                "Welcome, ${result.name}! You're playing as a demo character. " +
+                                    "Type 'claim <password>' or 'claim <newname> <password>' to save your progress.",
+                            ),
+                        )
+                        finalizeSuccessfulLogin(sid)
+                    }
+                    dev.ambon.engine.CreateResult.Taken -> {
+                        // Extremely rare — re-roll once.
+                        pendingLogins[sid] = LoginState.AwaitingName
+                        promptForName(sid)
+                    }
+                    else -> {
+                        outbound.send(
+                            OutboundEvent.SendError(sid, "Could not create demo character. Please try again."),
+                        )
                         pendingLogins[sid] = LoginState.AwaitingName
                         promptForName(sid)
                     }

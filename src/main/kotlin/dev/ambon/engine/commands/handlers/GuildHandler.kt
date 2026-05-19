@@ -43,6 +43,11 @@ class GuildHandler(
         sessionId: SessionId,
         cmd: Command.Guild,
     ) {
+        // Read-only commands (Info, Roster) are allowed for demo characters;
+        // anything that mutates persistent state requires a real account.
+        if (cmd !is Command.Guild.Info && cmd !is Command.Guild.Roster) {
+            if (!requireClaimed(sessionId, players, outbound, "Guilds")) return
+        }
         val gs = requireSystemOrNull(sessionId, guildSystem, "Guilds", outbound) ?: return
         val err =
             when (cmd) {

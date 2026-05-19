@@ -24,6 +24,7 @@ import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
 import dev.ambon.engine.commands.handlers.AutoQuestHandler
 import dev.ambon.engine.commands.handlers.BankHandler
+import dev.ambon.engine.commands.handlers.ClaimHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.CraftingHandler
@@ -231,6 +232,9 @@ class GameEngine(
             maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries,
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
             maxConcurrentLogins = loginConfig.maxConcurrentLogins,
+            demoEnabled = engineConfig.characterCreation.demoEnabled,
+            demoDefaultRace = engineConfig.characterCreation.defaultRace,
+            demoDefaultClass = engineConfig.characterCreation.defaultClass,
             onAfterLogin = { sid ->
                 players.get(sid)?.lastActivityEpochMs = clock.millis()
                 housingSystem?.onPlayerLogin(sid)
@@ -1332,6 +1336,10 @@ class GameEngine(
             FriendsHandler(
                 ctx = ctx,
                 friendsSystem = friendsSystem,
+            ),
+            ClaimHandler(
+                ctx = ctx,
+                onClaimed = { sid -> issueAuthToken(sid) },
             ),
             HousingHandler(
                 ctx = ctx,

@@ -9,6 +9,17 @@ sealed interface Command {
 
     data object Quit : Command
 
+    /**
+     * Convert the current demo character into a real account.
+     * Two forms:
+     * - `claim <password>` keeps the current (auto-generated) name
+     * - `claim <newname> <password>` chooses a new name as well
+     */
+    data class Claim(
+        val newName: String?,
+        val password: String,
+    ) : Command
+
     data object AnsiOn : Command
 
     data object AnsiOff : Command
@@ -794,6 +805,21 @@ object CommandParser {
             val msg = line.drop(1).trim()
             return if (msg.isEmpty()) Command.Invalid(line, "'<message>") else Command.Say(msg)
         }
+
+        // claim: "claim <password>" or "claim <name> <password>" — upgrades a demo character.
+        matchPrefix(line, listOf("claim")) { rest ->
+            val trimmed = rest.trim()
+            if (trimmed.isEmpty()) {
+                Command.Invalid(line, "claim <password>  or  claim <newname> <password>")
+            } else {
+                val parts = trimmed.split(Regex("\\s+"), limit = 2)
+                if (parts.size == 1) {
+                    Command.Claim(newName = null, password = parts[0])
+                } else {
+                    Command.Claim(newName = parts[0], password = parts[1])
+                }
+            }
+        }?.let { return it }
 
         // say: "say <msg>"
         requiredArg(line, listOf("say"), "say <message>", { Command.Say(it) })?.let { return it }

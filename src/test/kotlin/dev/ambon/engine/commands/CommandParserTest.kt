@@ -27,6 +27,18 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parser parses claim command`() {
+        assertEquals(Command.Claim(newName = null, password = "secret"), CommandParser.parse("claim secret"))
+        assertEquals(
+            Command.Claim(newName = "Aragorn", password = "secret pass"),
+            CommandParser.parse("claim Aragorn secret pass"),
+        )
+        // Missing password yields an Invalid command, not Claim
+        val invalid = CommandParser.parse("claim")
+        assertTrue(invalid is Command.Invalid, "expected Invalid for bare 'claim', got $invalid")
+    }
+
+    @Test
     fun `parser parses tell and t aliases`() {
         assertEquals(Command.Tell("Bob", "hi there"), CommandParser.parse("tell Bob hi there"))
         assertEquals(Command.Tell("Bob", "hi there"), CommandParser.parse("t Bob hi there"))
