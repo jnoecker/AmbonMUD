@@ -500,6 +500,7 @@ internal suspend fun EngineContext.movePlayer(
     dialogueSystem,
     direction,
     departVerb,
+    world,
 )
 
 /**
@@ -590,6 +591,7 @@ internal suspend fun movePlayerWithNotify(
     dialogueSystem: dev.ambon.engine.dialogue.DialogueSystem? = null,
     direction: Direction? = null,
     departVerb: String = "exits",
+    world: World? = null,
 ) {
     val me = players.get(sessionId) ?: return
     val departLine = if (direction != null) {
@@ -607,6 +609,13 @@ internal suspend fun movePlayerWithNotify(
             outbound.send(OutboundEvent.SendText(other.sessionId, departLine))
             gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
         }
+    }
+    // Record this room as the zone's inn checkpoint if it's an inn. `depart` from the sanctum
+    // will prefer the most recently-walked inn in the death zone over the zone start room.
+    // Set this *before* moveTo so the persist inside moveTo captures the new checkpoint —
+    // otherwise a crash before the next persist would lose the inn marker.
+    if (world != null && world.rooms[to]?.inn == true) {
+        me.lastInnByZone[to.zone] = to
     }
     dialogueSystem?.onPlayerMoved(sessionId)
     players.moveTo(sessionId, to)

@@ -65,6 +65,88 @@ class DepartCommandTest {
         }
 
     @Test
+    fun `depart returns to last inn walked through in death zone`() =
+        runTest {
+            // Sanctum is at hub; outpost is the inn. Player visited the inn before dying
+            // somewhere in test_zone, so depart should land at the inn, not the zone start.
+            val h = CommandRouterHarness.create(
+                clock = MutableClock(0L),
+                deathConfig = DeathConfig(sanctumRoom = hub.value),
+            )
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Hero")
+
+            val player = h.players.get(sid)!!
+            player.lastInnByZone["test_zone"] = outpost
+            player.lastDeathZone = "test_zone"
+            // Player respawned at sanctum.
+            h.players.moveTo(sid, hub)
+            h.drain()
+
+            h.router.handle(sid, Command.Depart)
+            h.drain()
+
+            assertEquals(
+                outpost,
+                h.players.get(sid)!!.roomId,
+                "Expected depart to land at the visited inn, not the zone start",
+            )
+            assertNull(h.players.get(sid)!!.lastDeathZone)
+        }
+
+    @Test
+    fun `depart falls back to zone start when saved inn no longer exists`() =
+        runTest {
+            // Saved checkpoint points at a room the world no longer contains (renamed/removed).
+            // depart must skip the stale entry and use the zone start, not error out.
+            val h = CommandRouterHarness.create(
+                clock = MutableClock(0L),
+                deathConfig = DeathConfig(sanctumRoom = outpost.value),
+            )
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Hero")
+
+            val player = h.players.get(sid)!!
+            player.lastInnByZone["test_zone"] = RoomId("test_zone:removed_inn")
+            player.lastDeathZone = "test_zone"
+            h.players.moveTo(sid, outpost)
+            h.drain()
+
+            h.router.handle(sid, Command.Depart)
+            h.drain()
+
+            assertEquals(
+                hub,
+                h.players.get(sid)!!.roomId,
+                "Expected fallback to zone start when saved inn is missing from world",
+            )
+            assertNull(h.players.get(sid)!!.lastDeathZone)
+        }
+
+    @Test
+    fun `walking through an inn records the checkpoint per zone`() =
+        runTest {
+            // The harness places the player at hub. Walking north to outpost (flagged inn: true)
+            // should record outpost as the test_zone checkpoint without any explicit command.
+            val h = CommandRouterHarness.create(
+                clock = MutableClock(0L),
+                deathConfig = DeathConfig(sanctumRoom = hub.value),
+            )
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Hero")
+            h.drain()
+
+            h.router.handle(sid, Command.Move(dev.ambon.domain.world.Direction.NORTH))
+            h.drain()
+
+            assertEquals(
+                outpost,
+                h.players.get(sid)!!.lastInnByZone["test_zone"],
+                "Walking into the inn should populate lastInnByZone for that zone",
+            )
+        }
+
+    @Test
     fun `depart with no recorded death errors`() =
         runTest {
             val h = CommandRouterHarness.create(

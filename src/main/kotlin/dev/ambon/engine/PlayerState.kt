@@ -65,6 +65,12 @@ data class PlayerState(
     var recallRoomId: RoomId? = null,
     /** Zone ID (e.g. "academy") of the player's last death. Drives `depart` from the sanctum. */
     var lastDeathZone: String? = null,
+    /**
+     * Per-zone checkpoint: the most recent inn room the player walked through in each zone.
+     * Used by `depart` to send the player back to a closer landmark than the zone start.
+     * Entries persist across deaths so a previously-discovered inn keeps acting as a checkpoint.
+     */
+    var lastInnByZone: MutableMap<String, RoomId> = mutableMapOf(),
     var friendsList: MutableSet<String> = mutableSetOf(),
     var bankGold: Long = 0L,
     var bankItems: MutableList<dev.ambon.domain.items.ItemInstance> = mutableListOf(),
@@ -251,6 +257,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         guildId = guildId,
         recallRoomId = recallRoomId,
         lastDeathZone = lastDeathZone,
+        lastInnByZone = lastInnByZone.mapValues { (_, v) -> RoomId(v) }.toMutableMap(),
         craftingSkills = craftingSkills.map { (key, state) ->
             key.lowercase() to state
         }.toMap().toMutableMap(),
@@ -315,6 +322,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         guildId = guildId,
         recallRoomId = recallRoomId,
         lastDeathZone = lastDeathZone,
+        lastInnByZone = lastInnByZone.mapValues { (_, v) -> v.value }.toMap(),
         craftingSkills = craftingSkills.toMap(),
         discoveredRecipes = discoveredRecipes.toSet(),
         craftingSpecialization = craftingSpecialization,

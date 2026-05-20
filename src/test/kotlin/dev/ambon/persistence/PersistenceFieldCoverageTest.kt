@@ -107,6 +107,8 @@ class PersistenceFieldCoverageTest {
                 ),
                 guildId = "knights",
                 recallRoomId = RoomId("town:square"),
+                lastDeathZone = "town",
+                lastInnByZone = mapOf("town" to "town:inn", "wilds" to "wilds:outpost"),
                 craftingSkills = mapOf(
                     "smithing" to CraftingSkillState(level = 5, xp = 120L),
                 ),
