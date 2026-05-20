@@ -13696,6 +13696,7 @@ body {
   max-height: 200px;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 2px 0 4px;
   pointer-events: none;
   scrollbar-width: none;
 }

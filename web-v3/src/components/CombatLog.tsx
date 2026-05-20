@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import type { CombatLogMessage } from "../types";
 
 const MESSAGE_LIFETIME_MS = 6000;
@@ -52,7 +52,7 @@ export function CombatLog({ messages }: CombatLogProps) {
     };
   }, [messages]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length]);
