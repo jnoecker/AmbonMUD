@@ -49,6 +49,7 @@ import type {
   QuestAvailable,
   QuestEntry,
   QuestNotification,
+  QuestRewardItem,
   RoomMob,
   RoomItem,
   RoomPlayer,
@@ -230,6 +231,24 @@ const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout",
 
 function isChatChannel(value: string): value is ChatChannel {
   return CHAT_CHANNEL_SET.has(value as ChatChannel);
+}
+
+function parseRewardItems(raw: unknown): QuestRewardItem[] {
+  if (!Array.isArray(raw)) return [];
+  const result: QuestRewardItem[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== "object" || entry === null) continue;
+    const e = entry as Record<string, unknown>;
+    const itemId = typeof e.itemId === "string" ? e.itemId : "";
+    if (!itemId) continue;
+    const displayName = typeof e.displayName === "string" && e.displayName.length > 0
+      ? e.displayName
+      : itemId;
+    const count = safeNumber(e.count);
+    if (count <= 0) continue;
+    result.push({ itemId, displayName, count });
+  }
+  return result;
 }
 
 function parseOnUse(raw: unknown): { healHp: number; healMana: number } | undefined {
@@ -1128,6 +1147,7 @@ export function applyGmcpPackage(
       for (const [k, v] of Object.entries(currenciesRaw)) {
         currencies[k] = safeNumber(v);
       }
+      const items = parseRewardItems(rewardsRaw.items);
       ctx.setQuests((prev) => prev.filter((q) => q.id !== questId));
       // Drop the completed quest from any open offer panel so its Turn In
       // card disappears the moment Quest.Complete arrives, even before the
@@ -1144,6 +1164,7 @@ export function applyGmcpPackage(
           xp: safeNumber(rewardsRaw.xp),
           gold: safeNumber(rewardsRaw.gold),
           currencies,
+          items,
         },
       });
       break;
@@ -1190,6 +1211,7 @@ export function applyGmcpPackage(
                 xp: safeNumber(rewards.xp),
                 gold: safeNumber(rewards.gold),
                 currencies,
+                items: parseRewardItems(rewards.items),
               },
               levelRequired: typeof e.levelRequired === "number" ? e.levelRequired : null,
               reputationRequired: rep

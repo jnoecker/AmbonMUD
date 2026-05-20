@@ -472,6 +472,40 @@ quests:
 
 Currency keys must match defined currency IDs in `application.yaml` under `engine.currencies.definitions`. See `CurrencySystem` for runtime handling.
 
+### Zero-objective "visit" quests
+
+A quest with `objectives: []` is allowed only when `completionType: npc_turn_in`. It models a pure delivery / "go see this other NPC" quest: it has no tracked progress, is ready to turn in the moment the player accepts it, and completes by walking up to the resolved turn-in NPC (`turnInMob` if set, otherwise `giver`).
+
+```yaml
+quests:
+  message_for_alric:
+    name: "A Message for Alric"
+    description: "Take word to Alric in the next village."
+    giver: village_elder
+    turnInMob: alric         # the override NPC who accepts the hand-in
+    completionType: npc_turn_in
+    objectives: []           # nothing to track — accepting is the whole task
+    rewards:
+      xp: 25
+```
+
+The loader rejects empty objectives with any other completion type (e.g. `auto`), since that would auto-complete the quest the instant the player accepts it.
+
+### Quest reward `items` extension
+
+Quests can hand out fixed items on completion. Each entry references an item id that must exist in the same world load (zone-qualified or bare for same-zone items, normalized like `mobs.*.drops.*.itemId`).
+
+```yaml
+quests:
+  <quest-id>:
+    rewards:
+      items: # optional list
+        - itemId: <string>   # e.g., "academy:rusty_dagger" or "rusty_dagger" within the same zone
+          count: <int>       # >= 1; loader rejects 0 or negative
+```
+
+Items are spawned into the player's inventory at the moment of quest completion (turn-in or auto-complete) and surfaced through GMCP `Quest.Available` (on offer) and `Quest.Complete` (on turn-in) so clients can preview and celebrate them. Unknown template ids are skipped with a `[Quest]` warning to the player.
+
 ## ID Normalization Rules
 
 The loader normalizes IDs with this logic:
@@ -488,6 +522,7 @@ This applies to:
 - room exit targets
 - `mobs` keys and `mobs.*.room`
 - `mobs.*.drops.*.itemId`
+- `quests.*.rewards.items.*.itemId`
 - `items` keys and `items.*.room`
 - `shops.*.room`
 - `shops.*.items` entries

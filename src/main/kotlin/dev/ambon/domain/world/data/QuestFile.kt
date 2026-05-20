@@ -43,4 +43,16 @@ data class QuestRewardsFile(
     val xp: Long = 0L,
     val gold: Long = 0L,
     val currencies: Map<String, Long> = emptyMap(),
+    /**
+     * Optional fixed-item rewards granted on quest completion. Each entry
+     * spawns the named item into the player's inventory from the world's
+     * item template registry — so the referenced id must exist in the same
+     * world load. `count` is clamped to >= 1 by the loader.
+     */
+    val items: List<QuestItemRewardFile> = emptyList(),
+)
+
+data class QuestItemRewardFile(
+    val itemId: String = "",
+    val count: Int = 1,
 )

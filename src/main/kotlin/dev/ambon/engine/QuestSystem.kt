@@ -1,11 +1,13 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.quest.ObjectiveProgress
 import dev.ambon.domain.quest.QuestDef
+import dev.ambon.domain.quest.QuestItemReward
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.quest.QuestState
@@ -39,6 +41,12 @@ class QuestSystem(
 
     /** Invoked when a quest reward grants enough XP to level the player up. */
     var onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null
+
+    /**
+     * Invoked once for each item granted as a quest completion reward, so the
+     * engine can mirror the spawn into the client (Char.Items.Add GMCP).
+     */
+    var onItemRewarded: (suspend (SessionId, ItemInstance) -> Unit)? = null
 
     /**
      * Returns quests offered by this mob that the player can accept.
@@ -200,6 +208,7 @@ class QuestSystem(
             rewardXp = quest.rewards.xp,
             rewardGold = quest.rewards.gold,
             rewardCurrencies = quest.rewards.currencies,
+            rewardItems = summariseRewardItems(quest.rewards.items),
             levelRequired = quest.level,
             reputationRequired = rep,
             readyToTurnIn = state != null && isReadyToTurnIn(quest, state),
@@ -522,7 +531,11 @@ class QuestSystem(
             }
             appendLine("Rewards:")
             if (quest.rewards.xp > 0) appendLine("  XP: ${quest.rewards.xp}")
-            if (quest.rewards.gold > 0) append("  Gold: ${quest.rewards.gold}")
+            if (quest.rewards.gold > 0) appendLine("  Gold: ${quest.rewards.gold}")
+            for (itemReward in quest.rewards.items) {
+                val name = items.getTemplate(ItemId(itemReward.itemId))?.displayName ?: itemReward.itemId
+                appendLine("  ${itemReward.count}x $name")
+            }
         }.trimEnd()
     }
 
@@ -570,6 +583,7 @@ class QuestSystem(
             }
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest complete: ${quest.name}!"))
+        val grantedItems = grantItemRewards(sessionId, effectiveRewards.items)
         onQuestCompletedGmcp?.invoke(
             sessionId,
             QuestCompletionSummary(
@@ -579,6 +593,7 @@ class QuestSystem(
                 rewardXp = effectiveRewards.xp,
                 rewardGold = effectiveRewards.gold,
                 rewardCurrencies = effectiveRewards.currencies,
+                rewardItems = grantedItems,
             ),
         )
         onQuestCompleted?.invoke(sessionId, questId)
@@ -610,6 +625,71 @@ class QuestSystem(
             outbound.send(OutboundEvent.SendText(sessionId, "[Quest] $description: complete!"))
         } else {
             outbound.send(OutboundEvent.SendText(sessionId, "[Quest] $description: ${updated.current}/${updated.required}"))
+        }
+    }
+
+    /**
+     * Spawn each [QuestItemReward] into the player's inventory from item
+     * templates and return display summaries for the GMCP completion payload.
+     * Items whose template is unknown (mis-authored id) are skipped, with a
+     * text warning to the player so the gap is debuggable in-game.
+     */
+    private suspend fun grantItemRewards(
+        sessionId: SessionId,
+        rewardItems: List<QuestItemReward>,
+    ): List<QuestRewardItemSummary> {
+        if (rewardItems.isEmpty()) return emptyList()
+        val summaries = mutableListOf<QuestRewardItemSummary>()
+        for (reward in rewardItems) {
+            val templateItemId = ItemId(reward.itemId)
+            val template = items.getTemplate(templateItemId)
+            if (template == null) {
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "[Quest] (missing reward template '${reward.itemId}')",
+                    ),
+                )
+                continue
+            }
+            repeat(reward.count) {
+                val instance = items.createFromTemplate(templateItemId) ?: return@repeat
+                items.addToInventory(sessionId, instance)
+                onItemRewarded?.invoke(sessionId, instance)
+            }
+            outbound.send(
+                OutboundEvent.SendText(
+                    sessionId,
+                    "You receive ${reward.count}x ${template.displayName}.",
+                ),
+            )
+            summaries.add(
+                QuestRewardItemSummary(
+                    itemId = reward.itemId,
+                    displayName = template.displayName,
+                    count = reward.count,
+                ),
+            )
+        }
+        return summaries
+    }
+
+    /**
+     * Convert authored [QuestItemReward]s into summaries for the offer panel.
+     * Unknown template ids fall back to the raw id as display name so the
+     * offer still renders something useful even before content is fixed.
+     */
+    private fun summariseRewardItems(
+        rewardItems: List<QuestItemReward>,
+    ): List<QuestRewardItemSummary> {
+        if (rewardItems.isEmpty()) return emptyList()
+        return rewardItems.map { reward ->
+            val template = items.getTemplate(ItemId(reward.itemId))
+            QuestRewardItemSummary(
+                itemId = reward.itemId,
+                displayName = template?.displayName ?: reward.itemId,
+                count = reward.count,
+            )
         }
     }
 

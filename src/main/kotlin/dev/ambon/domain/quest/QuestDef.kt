@@ -54,4 +54,15 @@ data class QuestRewards(
     override val xp: Long = 0L,
     override val gold: Long = 0L,
     val currencies: Map<String, Long> = emptyMap(),
+    /**
+     * Fixed-item rewards granted alongside XP, gold, and currencies. Items
+     * are spawned into the player's inventory from world templates at the
+     * moment of completion.
+     */
+    val items: List<QuestItemReward> = emptyList(),
 ) : Rewards
+
+data class QuestItemReward(
+    val itemId: String,
+    val count: Int = 1,
+)

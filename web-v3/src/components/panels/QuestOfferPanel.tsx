@@ -75,8 +75,12 @@ function QuestOfferCard({
 }) {
   const locked = quest.lockedReason !== null;
   const currencyEntries = Object.entries(quest.rewards.currencies);
+  const itemEntries = quest.rewards.items;
   const hasRewards =
-    quest.rewards.xp > 0 || quest.rewards.gold > 0 || currencyEntries.length > 0;
+    quest.rewards.xp > 0 ||
+    quest.rewards.gold > 0 ||
+    currencyEntries.length > 0 ||
+    itemEntries.length > 0;
 
   return (
     <li className="quest-available-card">
@@ -108,6 +112,13 @@ function QuestOfferCard({
           {currencyEntries.map(([id, amount]) => (
             <span key={id} className="quest-reward-gold">
               {amount} {id}
+            </span>
+          ))}
+          {itemEntries.map((item) => (
+            <span key={item.itemId} className="quest-reward-item">
+              <span className="quest-reward-item-icon" aria-hidden="true">{"◆"}</span>
+              {item.count > 1 ? `${item.count}× ` : ""}
+              {item.displayName}
             </span>
           ))}
         </div>

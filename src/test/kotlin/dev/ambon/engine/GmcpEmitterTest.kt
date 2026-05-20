@@ -1323,6 +1323,7 @@ class GmcpEmitterTest {
                 rewardXp = 250L,
                 rewardGold = 30L,
                 rewardCurrencies = mapOf("honor" to 5L),
+                rewardItems = emptyList(),
             )
             val events = drainGmcp()
             assertEquals(1, events.size)
@@ -1341,7 +1342,7 @@ class GmcpEmitterTest {
             val e = emitter()
             e.sendQuestList(sid, emptyList())
             e.sendQuestUpdate(sid, "q", 0, 1, 5, readyToTurnIn = false)
-            e.sendQuestComplete(sid, "q", "Q", "", 0L, 0L, emptyMap())
+            e.sendQuestComplete(sid, "q", "Q", "", 0L, 0L, emptyMap(), emptyList())
             assertTrue(drainGmcp().isEmpty())
         }
 
