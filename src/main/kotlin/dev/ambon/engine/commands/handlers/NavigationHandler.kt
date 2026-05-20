@@ -176,6 +176,7 @@ class NavigationHandler(
                         outbound,
                         gmcpEmitter,
                         dialogueSystem,
+                        world = world,
                     )
                     onPlayerMoved?.invoke(sessionId, origin)
                     outbound.send(OutboundEvent.SendText(sessionId, "You step outside and find yourself back where you came from."))
@@ -206,6 +207,7 @@ class NavigationHandler(
                         outbound,
                         gmcpEmitter,
                         dialogueSystem,
+                        world = world,
                     )
                     onPlayerMoved?.invoke(sessionId, origin)
                     outbound.send(OutboundEvent.SendText(sessionId, "You leave the guild hall and find yourself back where you came from."))
@@ -234,6 +236,7 @@ class NavigationHandler(
                 gmcpEmitter,
                 dialogueSystem,
                 direction = cmd.dir,
+                world = world,
             )
             onPlayerMoved?.invoke(sessionId, to)
             ctx.sendLook(sessionId)
@@ -280,6 +283,7 @@ class NavigationHandler(
                         outbound,
                         gmcpEmitter,
                         dialogueSystem,
+                        world = world,
                     )
                     onPlayerMoved?.invoke(sessionId, result.entryRoomId)
                     outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself home."))
@@ -319,6 +323,7 @@ class NavigationHandler(
             outbound,
             gmcpEmitter,
             dialogueSystem,
+            world = world,
         )
         onPlayerMoved?.invoke(sessionId, target)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.arrival))
@@ -364,7 +369,9 @@ class NavigationHandler(
             return
         }
 
-        val target = world.zoneStartRoom(deathZone) ?: world.startRoom
+        // Prefer the last inn the player walked through in the death zone (autosave checkpoint).
+        // Fall back to the zone's configured start room, then the world's start room.
+        val target = me.lastInnByZone[deathZone] ?: world.zoneStartRoom(deathZone) ?: world.startRoom
         if (!world.rooms.containsKey(target)) {
             if (attemptCrossZoneMove(sessionId, target, onCrossZoneMove, router::suppressAutoPrompt)) {
                 me.lastDeathZone = null
@@ -386,6 +393,7 @@ class NavigationHandler(
             outbound,
             gmcpEmitter,
             dialogueSystem,
+            world = world,
         )
         me.lastDeathZone = null
         onPlayerMoved?.invoke(sessionId, target)
@@ -419,6 +427,7 @@ class NavigationHandler(
             outbound,
             gmcpEmitter,
             dialogueSystem,
+            world = world,
         )
         onPlayerMoved?.invoke(sessionId, target)
         ctx.sendLook(sessionId)

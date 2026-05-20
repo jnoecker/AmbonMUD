@@ -27,6 +27,7 @@ private val inventoryItemsType = object : TypeReference<List<ItemInstance>>() {}
 private val equippedItemsType = object : TypeReference<Map<String, ItemInstance>>() {}
 private val learnedAbilityIdsType = object : TypeReference<Set<String>>() {}
 private val unlockedClassesType = object : TypeReference<Set<String>>() {}
+private val lastInnByZoneType = object : TypeReference<Map<String, String>>() {}
 
 object PlayersTable : Table("players") {
     val id = long("id").autoIncrement("player_id_seq")
@@ -57,6 +58,7 @@ object PlayersTable : Table("players") {
     val guildId = varchar("guild_id", 64).nullable()
     val recallRoomId = varchar("recall_room_id", 128).nullable()
     val lastDeathZone = varchar("last_death_zone", 64).nullable()
+    val lastInnByZone = text("last_inn_by_zone").default("{}")
     val craftingSkills = text("crafting_skills").default("{}")
     val discoveredRecipes = text("discovered_recipes").default("[]")
     val craftingSpecialization = varchar("crafting_specialization", 64).nullable()
@@ -118,6 +120,7 @@ object PlayersTable : Table("players") {
             guildId = row[guildId],
             recallRoomId = row[recallRoomId]?.let { RoomId(it) },
             lastDeathZone = row[lastDeathZone],
+            lastInnByZone = safeReadJson(row[lastInnByZone], lastInnByZoneType, emptyMap()),
             craftingSkills = safeReadJson(row[craftingSkills], craftingSkillsType, emptyMap()),
             discoveredRecipes = safeReadJson(row[discoveredRecipes], discoveredRecipesType, emptySet()),
             craftingSpecialization = row[craftingSpecialization],
@@ -184,6 +187,7 @@ object PlayersTable : Table("players") {
         statement[guildId] = record.guildId
         statement[recallRoomId] = record.recallRoomId?.value
         statement[lastDeathZone] = record.lastDeathZone
+        statement[lastInnByZone] = jsonMapper.writeValueAsString(record.lastInnByZone)
         statement[craftingSkills] = jsonMapper.writeValueAsString(record.craftingSkills)
         statement[discoveredRecipes] = jsonMapper.writeValueAsString(record.discoveredRecipes)
         statement[craftingSpecialization] = record.craftingSpecialization

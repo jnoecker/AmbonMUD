@@ -54,6 +54,12 @@ data class PlayerRecord(
     val recallRoomId: RoomId? = null,
     /** Zone ID (e.g. "academy") of the player's last death. Spirit-gate return target. */
     val lastDeathZone: String? = null,
+    /**
+     * Per-zone "last inn walked through" checkpoint, used by `depart` to send the player
+     * back to a closer landmark than the zone start. Keys are zone IDs, values are full
+     * `<zone>:<room>` RoomId strings.
+     */
+    val lastInnByZone: Map<String, String> = emptyMap(),
     val craftingSkills: Map<String, CraftingSkillState> = emptyMap(),
     val discoveredRecipes: Set<String> = emptySet(),
     val craftingSpecialization: String? = null,

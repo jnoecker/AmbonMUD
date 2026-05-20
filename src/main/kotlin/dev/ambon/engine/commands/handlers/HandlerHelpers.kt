@@ -500,6 +500,7 @@ internal suspend fun EngineContext.movePlayer(
     dialogueSystem,
     direction,
     departVerb,
+    world,
 )
 
 /**
@@ -590,6 +591,7 @@ internal suspend fun movePlayerWithNotify(
     dialogueSystem: dev.ambon.engine.dialogue.DialogueSystem? = null,
     direction: Direction? = null,
     departVerb: String = "exits",
+    world: World? = null,
 ) {
     val me = players.get(sessionId) ?: return
     val departLine = if (direction != null) {
@@ -613,6 +615,11 @@ internal suspend fun movePlayerWithNotify(
     // moveTo cleared lastEnterDirection (treats every room change as a teleport at that
     // layer); restore it here for directional walks so flee can retrace the way in.
     me.lastEnterDirection = direction
+    // Record this room as the zone's inn checkpoint if it's an inn. `depart` from the sanctum
+    // will prefer the most recently-walked inn in the death zone over the zone start room.
+    if (world != null && world.rooms[to]?.inn == true) {
+        me.lastInnByZone[to.zone] = to
+    }
     if (!me.invisible) {
         for (other in players.playersInRoom(to).filter { it.sessionId != me.sessionId }) {
             outbound.send(OutboundEvent.SendText(other.sessionId, arriveLine))

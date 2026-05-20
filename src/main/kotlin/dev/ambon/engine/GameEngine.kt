@@ -1225,6 +1225,7 @@ class GameEngine(
                 dialogueSystem,
                 direction = chosen.key,
                 departVerb = "flees",
+                world = world,
             )
             petSystem.followOwner(sid, chosen.value)
             ctx.sendLook(sid)
