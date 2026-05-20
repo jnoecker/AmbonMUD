@@ -1183,6 +1183,7 @@ class GmcpEmitter(
         rewardXp: Long,
         rewardGold: Long,
         rewardCurrencies: Map<String, Long>,
+        rewardItems: List<QuestRewardItemSummary>,
     ) {
         emit(
             sessionId,
@@ -1195,11 +1196,15 @@ class GmcpEmitter(
                     xp = rewardXp,
                     gold = rewardGold,
                     currencies = rewardCurrencies,
+                    items = rewardItems.map { it.toPayload() },
                 ),
             ),
             supportCheck = "Quest",
         )
     }
+
+    private fun QuestRewardItemSummary.toPayload(): QuestRewardItemPayload =
+        QuestRewardItemPayload(itemId = itemId, displayName = displayName, count = count)
 
     /**
      * Sends available (offerable) quests when the player talks to an NPC.
@@ -1226,6 +1231,7 @@ class GmcpEmitter(
                     xp = q.rewardXp,
                     gold = q.rewardGold,
                     currencies = q.rewardCurrencies,
+                    items = q.rewardItems.map { it.toPayload() },
                 ),
                 levelRequired = q.levelRequired,
                 reputationRequired = q.reputationRequired?.let { rep ->
@@ -2881,6 +2887,13 @@ class GmcpEmitter(
         val xp: Long,
         val gold: Long,
         val currencies: Map<String, Long>,
+        val items: List<QuestRewardItemPayload>,
+    )
+
+    private data class QuestRewardItemPayload(
+        val itemId: String,
+        val displayName: String,
+        val count: Int,
     )
 
     private data class QuestReputationPayload(
@@ -3652,10 +3665,17 @@ data class QuestAvailableEntry(
     val rewardXp: Long,
     val rewardGold: Long,
     val rewardCurrencies: Map<String, Long> = emptyMap(),
+    val rewardItems: List<QuestRewardItemSummary> = emptyList(),
     val levelRequired: Int? = null,
     val reputationRequired: ReputationRequirementSummary? = null,
     val readyToTurnIn: Boolean = false,
     val lockedReason: String? = null,
+)
+
+data class QuestRewardItemSummary(
+    val itemId: String,
+    val displayName: String,
+    val count: Int,
 )
 
 data class QuestAvailableObjectiveSummary(
@@ -3678,6 +3698,7 @@ data class QuestCompletionSummary(
     val rewardXp: Long,
     val rewardGold: Long,
     val rewardCurrencies: Map<String, Long>,
+    val rewardItems: List<QuestRewardItemSummary> = emptyList(),
 )
 
 data class MobInfoEntry(

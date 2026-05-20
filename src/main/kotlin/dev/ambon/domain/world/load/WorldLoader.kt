@@ -34,6 +34,7 @@ import dev.ambon.domain.puzzle.PuzzleReward
 import dev.ambon.domain.puzzle.PuzzleStep
 import dev.ambon.domain.puzzle.PuzzleType
 import dev.ambon.domain.quest.QuestDef
+import dev.ambon.domain.quest.QuestItemReward
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.world.AchievementGate
@@ -665,6 +666,21 @@ object WorldLoader {
                     factionIds,
                     "Quest '$questId'",
                 )
+                val rewardItems = questFile.rewards.items.mapIndexed { index, itemReward ->
+                    val rewardItemId = requireNonBlank(itemReward.itemId) {
+                        "Quest '$questId' reward item #${index + 1} itemId cannot be blank"
+                    }
+                    requireAtLeast(
+                        itemReward.count,
+                        1,
+                        "Quest '$questId' reward item #${index + 1}",
+                        "count",
+                    )
+                    QuestItemReward(
+                        itemId = normalizeItemId(zone, rewardItemId).value,
+                        count = itemReward.count,
+                    )
+                }
                 mergedQuests.add(
                     QuestDef(
                         id = questId,
@@ -676,6 +692,7 @@ object WorldLoader {
                             xp = questFile.rewards.xp,
                             gold = questFile.rewards.gold,
                             currencies = questFile.rewards.currencies,
+                            items = rewardItems,
                         ),
                         completionType = completionType,
                         requiredReputation = questRep,

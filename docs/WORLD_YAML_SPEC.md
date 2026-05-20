@@ -472,6 +472,21 @@ quests:
 
 Currency keys must match defined currency IDs in `application.yaml` under `engine.currencies.definitions`. See `CurrencySystem` for runtime handling.
 
+### Quest reward `items` extension
+
+Quests can hand out fixed items on completion. Each entry references an item id that must exist in the same world load (zone-qualified or bare for same-zone items, normalized like `mobs.*.drops.*.itemId`).
+
+```yaml
+quests:
+  <quest-id>:
+    rewards:
+      items: # optional list
+        - itemId: <string>   # e.g., "academy:rusty_dagger" or "rusty_dagger" within the same zone
+          count: <int>       # >= 1; loader rejects 0 or negative
+```
+
+Items are spawned into the player's inventory at the moment of quest completion (turn-in or auto-complete) and surfaced through GMCP `Quest.Available` (on offer) and `Quest.Complete` (on turn-in) so clients can preview and celebrate them. Unknown template ids are skipped with a `[Quest]` warning to the player.
+
 ## ID Normalization Rules
 
 The loader normalizes IDs with this logic:
@@ -488,6 +503,7 @@ This applies to:
 - room exit targets
 - `mobs` keys and `mobs.*.room`
 - `mobs.*.drops.*.itemId`
+- `quests.*.rewards.items.*.itemId`
 - `items` keys and `items.*.room`
 - `shops.*.room`
 - `shops.*.items` entries

@@ -674,6 +674,12 @@ export interface FleeNotification {
   receivedAt: number;
 }
 
+export interface QuestRewardItem {
+  itemId: string;
+  displayName: string;
+  count: number;
+}
+
 export interface QuestNotification {
   id: string;
   questId: string;
@@ -686,6 +692,7 @@ export interface QuestNotification {
     xp: number;
     gold: number;
     currencies: Record<string, number>;
+    items: QuestRewardItem[];
   };
 }
 
@@ -699,6 +706,7 @@ export interface QuestAvailableRewards {
   xp: number;
   gold: number;
   currencies: Record<string, number>;
+  items: QuestRewardItem[];
 }
 
 export interface QuestAvailableReputation {

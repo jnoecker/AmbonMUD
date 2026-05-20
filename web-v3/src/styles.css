@@ -6144,6 +6144,20 @@ body {
   font-weight: 700;
 }
 
+.quest-reward-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-accent-lavender, var(--text-primary));
+  font-weight: 700;
+}
+
+.quest-reward-item-icon {
+  color: var(--color-accent-lavender, var(--text-secondary));
+  font-size: 0.7em;
+  opacity: 0.85;
+}
+
 /* Accept Quest button — distinctive mossy-gold glow */
 .quest-accept-button {
   display: block;
@@ -18491,6 +18505,16 @@ html:has(.game-shell),
 .quest-complete-toast-reward-currency {
   border-color: color-mix(in srgb, var(--c-pale-blue, #81a2be) 45%, transparent);
   color: color-mix(in srgb, var(--c-pale-blue, #81a2be) 85%, var(--c-text-primary, #d8dcef));
+}
+
+.quest-complete-toast-reward-item {
+  border-color: color-mix(in srgb, var(--c-dusty-rose, #d4a3a3) 50%, transparent);
+  color: color-mix(in srgb, var(--c-dusty-rose, #d4a3a3) 90%, var(--c-text-primary, #d8dcef));
+}
+
+.quest-complete-toast-reward-icon {
+  font-size: 10px;
+  opacity: 0.85;
 }
 
 @media (prefers-reduced-motion: reduce) {

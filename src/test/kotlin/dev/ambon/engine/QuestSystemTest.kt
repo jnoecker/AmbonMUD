@@ -1082,4 +1082,83 @@ class QuestSystemTest {
             assertEquals(1, overrideOffers.size)
             assertTrue(overrideOffers.single().readyToTurnIn)
         }
+
+    @Test
+    fun `quest grants item rewards into inventory on completion`() =
+        runTest {
+            val c = SystemTestComponents(clockInitialMs = 1_000L)
+            val registry = QuestRegistry()
+            val rewardItemId = "zone:reward_gem"
+            val template =
+                ItemInstance(
+                    id = ItemId(rewardItemId),
+                    item = Item(keyword = "gem", displayName = "a glittering gem"),
+                )
+            c.items.updateTemplates(
+                listOf(dev.ambon.domain.world.ItemSpawn(instance = template)),
+            )
+
+            val itemQuestId = "zone:item_reward_quest"
+            val itemQuest =
+                QuestDef(
+                    id = itemQuestId,
+                    name = "Gem Hunt",
+                    description = "Bring back a gem.",
+                    giverMobId = "zone:quest_giver",
+                    objectives = listOf(
+                        QuestObjectiveDef(
+                            type = "kill",
+                            targetId = mobTemplateKey,
+                            count = 1,
+                            description = "Slay 1 target",
+                        ),
+                    ),
+                    rewards = QuestRewards(
+                        xp = 50L,
+                        gold = 10L,
+                        items = listOf(
+                            dev.ambon.domain.quest.QuestItemReward(rewardItemId, count = 2),
+                        ),
+                    ),
+                    completionType = "auto",
+                )
+            registry.register(itemQuest)
+            val qs =
+                QuestSystem(
+                    registry = registry,
+                    players = c.players,
+                    items = c.items,
+                    outbound = c.outbound,
+                    clock = c.clock,
+                )
+
+            val rewardedIds = mutableListOf<String>()
+            qs.onItemRewarded = { _, instance ->
+                rewardedIds.add(instance.id.value)
+            }
+
+            val sid = SessionId(7L)
+            c.players.loginOrFail(sid, "Seeker")
+            qs.acceptQuest(sid, itemQuestId)
+            c.outbound.drainAll()
+
+            qs.onMobKilled(sid, mobTemplateKey)
+
+            val ps = c.players.get(sid)!!
+            assertTrue(
+                ps.completedQuestIds.contains(itemQuestId),
+                "Auto-complete quest should be marked completed",
+            )
+            val inventoryGems = c.items.inventory(sid).count { it.id.value == rewardItemId }
+            assertEquals(2, inventoryGems, "Two gem instances should be in player inventory")
+            assertEquals(2, rewardedIds.size, "onItemRewarded should fire once per granted instance")
+            assertTrue(rewardedIds.all { it == rewardItemId })
+
+            val texts =
+                c.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(
+                texts.any { it.contains("a glittering gem") },
+                "Player should be told what items they received",
+            )
+        }
 }

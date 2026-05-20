@@ -49,7 +49,10 @@ function QuestCompleteToastInner({ notification, onDismiss }: InnerProps) {
 
   const rewards = notification.rewards;
   const currencyEntries = rewards ? Object.entries(rewards.currencies) : [];
-  const hasRewards = !!rewards && (rewards.xp > 0 || rewards.gold > 0 || currencyEntries.length > 0);
+  const itemEntries = rewards?.items ?? [];
+  const hasRewards =
+    !!rewards &&
+    (rewards.xp > 0 || rewards.gold > 0 || currencyEntries.length > 0 || itemEntries.length > 0);
 
   return (
     <div
@@ -86,6 +89,18 @@ function QuestCompleteToastInner({ notification, onDismiss }: InnerProps) {
             <li key={id} className="quest-complete-toast-reward quest-complete-toast-reward-currency">
               <span className="quest-complete-toast-reward-amount">+{amount}</span>
               <span className="quest-complete-toast-reward-label">{id}</span>
+            </li>
+          ))}
+          {itemEntries.map((item) => (
+            <li
+              key={item.itemId}
+              className="quest-complete-toast-reward quest-complete-toast-reward-item"
+            >
+              <span className="quest-complete-toast-reward-icon" aria-hidden="true">{"◆"}</span>
+              <span className="quest-complete-toast-reward-amount">
+                {item.count > 1 ? `×${item.count}` : ""}
+              </span>
+              <span className="quest-complete-toast-reward-label">{item.displayName}</span>
             </li>
           ))}
         </ul>

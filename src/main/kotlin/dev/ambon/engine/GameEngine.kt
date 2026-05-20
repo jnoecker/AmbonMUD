@@ -1058,9 +1058,13 @@ class GameEngine(
                 summary.rewardXp,
                 summary.rewardGold,
                 summary.rewardCurrencies,
+                summary.rewardItems,
             )
             sendQuestListGmcp(sid)
             refreshRoomMobInfoForPlayer(sid)
+        }
+        questSystem.onItemRewarded = { sid, item ->
+            gmcpEmitter.sendCharItemsAdd(sid, item)
         }
         questSystem.onLevelUp = ::onCombatLevelUp
         achievementSystem.onLevelUp = ::onCombatLevelUp
