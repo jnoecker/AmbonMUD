@@ -45,6 +45,7 @@ class AbilitySystem(
     private val groupSystem: GroupSystem? = null,
     private val mobs: MobRegistry? = null,
     private val progression: PlayerProgression = PlayerProgression(),
+    private val classRegistry: dev.ambon.engine.PlayerClassRegistry? = null,
     private val onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> },
     val onSummonPet: suspend (SessionId, String, Long) -> Unit = { _, _, _ -> },
 ) : GameSystem {
@@ -136,7 +137,7 @@ class AbilitySystem(
                     ?: return "Cast ${ability.displayName} on whom?"
             }
 
-        val playerStats = resolvePlayerStats(player, items, statusEffects)
+        val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
 
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
@@ -217,7 +218,7 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val playerStats = resolvePlayerStats(player, items, statusEffects)
+                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val healAmount =
                     computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val healed = applyHeal(sessionId, player, healAmount, dirtyNotifier)
@@ -308,7 +309,7 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val playerStats = resolvePlayerStats(player, items, statusEffects)
+                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val healAmount =
                     computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
@@ -411,7 +412,7 @@ class AbilitySystem(
             return "No enemies in combat to hit."
         }
 
-        val playerStats = resolvePlayerStats(player, items, statusEffects)
+        val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
 
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
@@ -470,7 +471,7 @@ class AbilitySystem(
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val playerStats = resolvePlayerStats(player, items, statusEffects)
+                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 for (targetSid in groupMembers) {
                     val target = players.get(targetSid) ?: continue
                     val healAmount =

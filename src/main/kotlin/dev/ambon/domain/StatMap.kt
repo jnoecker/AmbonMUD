@@ -36,8 +36,43 @@ value class StatMap(
     /** Returns only non-zero entries. */
     fun nonZero(): Map<String, Int> = values.filter { it.value != 0 }
 
+    /**
+     * Returns a new [StatMap] with archetypal keys ("PRIMARY", "SECONDARY",
+     * "TERTIARY") resolved to concrete stat IDs via [priorities]. Concrete
+     * stat IDs pass through unchanged. Archetypal entries with no matching
+     * priority slot are dropped — an item that grants PRIMARY on a class with
+     * no priorities simply contributes nothing rather than crashing.
+     *
+     * Stats resolved to the same concrete ID are summed (e.g. an item with
+     * both `PRIMARY: 2` and `strength: 1` on a STR-primary class yields
+     * `STR: 3`).
+     */
+    fun resolveArchetypal(priorities: List<String>): StatMap {
+        if (values.isEmpty()) return this
+        val resolved = mutableMapOf<String, Int>()
+        for ((key, value) in values) {
+            val concrete =
+                when (key) {
+                    ARCHETYPAL_PRIMARY -> priorities.getOrNull(0)
+                    ARCHETYPAL_SECONDARY -> priorities.getOrNull(1)
+                    ARCHETYPAL_TERTIARY -> priorities.getOrNull(2)
+                    else -> key
+                } ?: continue
+            resolved.merge(concrete, value, Int::plus)
+        }
+        return StatMap(resolved)
+    }
+
     companion object {
         val EMPTY = StatMap()
+
+        const val ARCHETYPAL_PRIMARY = "PRIMARY"
+        const val ARCHETYPAL_SECONDARY = "SECONDARY"
+        const val ARCHETYPAL_TERTIARY = "TERTIARY"
+
+        val ARCHETYPAL_KEYS = setOf(ARCHETYPAL_PRIMARY, ARCHETYPAL_SECONDARY, ARCHETYPAL_TERTIARY)
+
+        fun isArchetypal(id: String): Boolean = id.uppercase() in ARCHETYPAL_KEYS
 
         fun of(vararg pairs: Pair<String, Int>): StatMap =
             StatMap(pairs.associate { (k, v) -> k.uppercase() to v })

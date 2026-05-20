@@ -366,13 +366,21 @@ fun resolveEffectiveStats(
  * Convenience overload that gathers equipment bonuses and status-effect mods
  * from the (possibly null) [items] and [statusEffects] systems, then resolves
  * the player's effective stats in one call.
+ *
+ * When [classRegistry] is provided, equipment archetypal stats
+ * (PRIMARY/SECONDARY/TERTIARY) are resolved against the wearer's class
+ * priorities before being merged into effective stats. Callers that don't
+ * have the class registry available will lose any archetypal-stat bonuses on
+ * equipped items, but won't crash — concrete item stats still apply normally.
  */
 fun resolvePlayerStats(
     player: PlayerState,
     items: ItemRegistry?,
     statusEffects: dev.ambon.engine.status.StatusEffectSystem?,
+    classRegistry: PlayerClassRegistry? = null,
 ): StatMap {
-    val equip = items?.equipmentBonuses(player.sessionId) ?: ItemRegistry.EquipmentBonuses()
+    val classDef = classRegistry?.get(player.playerClass)
+    val equip = items?.equipmentBonuses(player.sessionId, classDef) ?: ItemRegistry.EquipmentBonuses()
     val mods = statusEffects?.getPlayerStatMods(player.sessionId) ?: StatMap.EMPTY
     return resolveEffectiveStats(player, equip, mods)
 }

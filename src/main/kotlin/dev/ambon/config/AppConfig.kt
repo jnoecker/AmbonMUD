@@ -1948,6 +1948,7 @@ data class ClassDefinitionConfig(
     val image: String = "",
     val selectable: Boolean = true,
     val primaryStat: String = "",
+    val statPriorities: List<String> = emptyList(),
     val startRoom: String = "",
     val threatMultiplier: Double = 1.0,
     val starterEquipment: List<StarterEquipmentEntryConfig> = emptyList(),

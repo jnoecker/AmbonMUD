@@ -21,6 +21,10 @@ object PlayerClassRegistryLoader {
                     image = defConfig.image,
                     selectable = defConfig.selectable,
                     primaryStat = defConfig.primaryStat.ifBlank { null },
+                    statPriorities =
+                        defConfig.statPriorities
+                            .map { it.trim().uppercase() }
+                            .filter { it.isNotEmpty() },
                     startRoom = defConfig.startRoom.ifBlank { null },
                     threatMultiplier = defConfig.threatMultiplier,
                     starterEquipment = defConfig.starterEquipment

@@ -447,6 +447,7 @@ class GameEngine(
             gmcpEmitter = gmcpEmitter,
             bindings = engineConfig.stats.bindings,
             metrics = metrics,
+            classRegistry = classRegistry,
         )
     }
 
@@ -758,6 +759,7 @@ class GameEngine(
             bindings = engineConfig.stats.bindings,
             metrics = metrics,
             dirtyNotifier = dirtyNotifier,
+            classRegistry = classRegistry,
         )
 
     init {
@@ -821,6 +823,7 @@ class GameEngine(
             groupSystem = groupSystem,
             mobs = mobs,
             progression = progression,
+            classRegistry = classRegistry,
             onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
             onSummonPet = { sid, templateKey, durationMs ->
                 val player = players.get(sid) ?: return@AbilitySystem

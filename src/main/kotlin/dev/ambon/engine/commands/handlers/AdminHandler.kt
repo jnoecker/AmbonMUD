@@ -902,7 +902,7 @@ class AdminHandler(
             return
         }
         players.withPlayer(targetSid) { target ->
-            val effectiveStats = resolvePlayerStats(target, items, statusEffects)
+            val effectiveStats = resolvePlayerStats(target, items, statusEffects, classRegistry)
             val lines = buildString {
                 appendLine("=== Player Info: ${target.name} ===")
                 appendLine("Level: ${target.level}  |  XP: ${target.xpTotal}  |  Prestige: ${target.prestigeLevel}")
