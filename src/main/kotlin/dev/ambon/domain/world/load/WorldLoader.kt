@@ -640,7 +640,13 @@ object WorldLoader {
                     "Quest '$questId' giver cannot be blank"
                 }
                 val completionType = questFile.completionType.trim().lowercase().ifEmpty { "npc_turn_in" }
-                requireNotEmpty(questFile.objectives, "Quest '$questId'", "objective")
+                if (questFile.objectives.isEmpty() && completionType != "npc_turn_in") {
+                    throw WorldLoadException(
+                        "Quest '$questId' has no objectives, which is only allowed for " +
+                            "completionType 'npc_turn_in' (a delivery/visit quest). " +
+                            "Got completionType '$completionType'.",
+                    )
+                }
                 val objectives =
                     questFile.objectives.mapIndexed { index, obj ->
                         val objectiveType = obj.type.trim().lowercase()

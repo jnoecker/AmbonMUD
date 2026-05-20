@@ -1,0 +1,20 @@
+zone: bad_quest_empty
+startRoom: square
+mobs:
+  giver:
+    name: "a quest giver"
+    description: "He hands out quests with no work."
+    room: square
+quests:
+  do_nothing:
+    name: "Do Nothing"
+    giver: giver
+    completionType: auto
+    objectives: []
+    rewards:
+      xp: 1
+rooms:
+  square:
+    title: "Square"
+    description: "A square."
+    exits: {}

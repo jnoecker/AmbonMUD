@@ -939,6 +939,16 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `quest with empty objectives is rejected when completionType is not npc_turn_in`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_quest_empty_objectives_auto.yaml")
+            }
+        assertTrue(ex.message!!.contains("no objectives"), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("npc_turn_in"), "Got: ${ex.message}")
+    }
+
+    @Test
     fun `loads mob with dialogue tree`() {
         val world = WorldLoader.loadFromResource("world/ok_dialogue.yaml")
         val mob = world.mobTemplates.values.single()
