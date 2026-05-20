@@ -95,6 +95,35 @@ class DepartCommandTest {
         }
 
     @Test
+    fun `depart falls back to zone start when saved inn no longer exists`() =
+        runTest {
+            // Saved checkpoint points at a room the world no longer contains (renamed/removed).
+            // depart must skip the stale entry and use the zone start, not error out.
+            val h = CommandRouterHarness.create(
+                clock = MutableClock(0L),
+                deathConfig = DeathConfig(sanctumRoom = outpost.value),
+            )
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Hero")
+
+            val player = h.players.get(sid)!!
+            player.lastInnByZone["test_zone"] = RoomId("test_zone:removed_inn")
+            player.lastDeathZone = "test_zone"
+            h.players.moveTo(sid, outpost)
+            h.drain()
+
+            h.router.handle(sid, Command.Depart)
+            h.drain()
+
+            assertEquals(
+                hub,
+                h.players.get(sid)!!.roomId,
+                "Expected fallback to zone start when saved inn is missing from world",
+            )
+            assertNull(h.players.get(sid)!!.lastDeathZone)
+        }
+
+    @Test
     fun `walking through an inn records the checkpoint per zone`() =
         runTest {
             // The harness places the player at hub. Walking north to outpost (flagged inn: true)

@@ -610,16 +610,18 @@ internal suspend fun movePlayerWithNotify(
             gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
         }
     }
+    // Record this room as the zone's inn checkpoint if it's an inn. `depart` from the sanctum
+    // will prefer the most recently-walked inn in the death zone over the zone start room.
+    // Set this *before* moveTo so the persist inside moveTo captures the new checkpoint —
+    // otherwise a crash before the next persist would lose the inn marker.
+    if (world != null && world.rooms[to]?.inn == true) {
+        me.lastInnByZone[to.zone] = to
+    }
     dialogueSystem?.onPlayerMoved(sessionId)
     players.moveTo(sessionId, to)
     // moveTo cleared lastEnterDirection (treats every room change as a teleport at that
     // layer); restore it here for directional walks so flee can retrace the way in.
     me.lastEnterDirection = direction
-    // Record this room as the zone's inn checkpoint if it's an inn. `depart` from the sanctum
-    // will prefer the most recently-walked inn in the death zone over the zone start room.
-    if (world != null && world.rooms[to]?.inn == true) {
-        me.lastInnByZone[to.zone] = to
-    }
     if (!me.invisible) {
         for (other in players.playersInRoom(to).filter { it.sessionId != me.sessionId }) {
             outbound.send(OutboundEvent.SendText(other.sessionId, arriveLine))

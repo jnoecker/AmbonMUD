@@ -370,8 +370,11 @@ class NavigationHandler(
         }
 
         // Prefer the last inn the player walked through in the death zone (autosave checkpoint).
-        // Fall back to the zone's configured start room, then the world's start room.
-        val target = me.lastInnByZone[deathZone] ?: world.zoneStartRoom(deathZone) ?: world.startRoom
+        // Fall back to the zone's configured start room, then the world's start room. The saved
+        // inn is only used if it still exists — world updates can remove or rename rooms, and a
+        // stale checkpoint must not strand the player at the spirit gate.
+        val savedInn = me.lastInnByZone[deathZone]?.takeIf { world.rooms.containsKey(it) }
+        val target = savedInn ?: world.zoneStartRoom(deathZone) ?: world.startRoom
         if (!world.rooms.containsKey(target)) {
             if (attemptCrossZoneMove(sessionId, target, onCrossZoneMove, router::suppressAutoPrompt)) {
                 me.lastDeathZone = null
