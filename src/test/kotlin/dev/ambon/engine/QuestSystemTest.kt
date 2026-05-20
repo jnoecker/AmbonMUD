@@ -9,8 +9,10 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.quest.QuestDef
+import dev.ambon.domain.quest.QuestItemReward
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
+import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.ReputationRequirement
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.SystemTestComponents
@@ -1095,7 +1097,7 @@ class QuestSystemTest {
                     item = Item(keyword = "gem", displayName = "a glittering gem"),
                 )
             c.items.updateTemplates(
-                listOf(dev.ambon.domain.world.ItemSpawn(instance = template)),
+                listOf(ItemSpawn(instance = template)),
             )
 
             val itemQuestId = "zone:item_reward_quest"
@@ -1117,7 +1119,7 @@ class QuestSystemTest {
                         xp = 50L,
                         gold = 10L,
                         items = listOf(
-                            dev.ambon.domain.quest.QuestItemReward(rewardItemId, count = 2),
+                            QuestItemReward(rewardItemId, count = 2),
                         ),
                     ),
                     completionType = "auto",
@@ -1159,6 +1161,71 @@ class QuestSystemTest {
             assertTrue(
                 texts.any { it.contains("a glittering gem") },
                 "Player should be told what items they received",
+            )
+        }
+
+    @Test
+    fun `unknown reward item id is skipped with a warning and absent from completion summary`() =
+        runTest {
+            val c = SystemTestComponents(clockInitialMs = 1_000L)
+            val registry = QuestRegistry()
+            val missingItemId = "zone:does_not_exist"
+            val itemQuestId = "zone:bad_reward_quest"
+            val itemQuest =
+                QuestDef(
+                    id = itemQuestId,
+                    name = "Phantom Reward",
+                    description = "Quest with a typo'd reward item.",
+                    giverMobId = "zone:quest_giver",
+                    objectives = listOf(
+                        QuestObjectiveDef(
+                            type = "kill",
+                            targetId = mobTemplateKey,
+                            count = 1,
+                            description = "Slay 1 target",
+                        ),
+                    ),
+                    rewards = QuestRewards(
+                        xp = 10L,
+                        items = listOf(QuestItemReward(missingItemId, count = 1)),
+                    ),
+                    completionType = "auto",
+                )
+            registry.register(itemQuest)
+            val qs =
+                QuestSystem(
+                    registry = registry,
+                    players = c.players,
+                    items = c.items,
+                    outbound = c.outbound,
+                    clock = c.clock,
+                )
+
+            val grantedSummaries = mutableListOf<QuestRewardItemSummary>()
+            qs.onQuestCompletedGmcp = { _, summary ->
+                grantedSummaries.addAll(summary.rewardItems)
+            }
+            val rewardedInstances = mutableListOf<ItemInstance>()
+            qs.onItemRewarded = { _, instance -> rewardedInstances.add(instance) }
+
+            val sid = SessionId(11L)
+            c.players.loginOrFail(sid, "Unlucky")
+            qs.acceptQuest(sid, itemQuestId)
+            c.outbound.drainAll()
+
+            qs.onMobKilled(sid, mobTemplateKey)
+
+            val ps = c.players.get(sid)!!
+            assertTrue(ps.completedQuestIds.contains(itemQuestId), "Quest still completes even with bad reward id")
+            assertTrue(c.items.inventory(sid).isEmpty(), "No items should be granted for unknown template")
+            assertTrue(rewardedInstances.isEmpty(), "onItemRewarded must not fire for unknown templates")
+            assertTrue(grantedSummaries.isEmpty(), "Completion summary should omit unknown rewards")
+
+            val texts =
+                c.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(
+                texts.any { it.contains("[Quest]") && it.contains(missingItemId) },
+                "Player should see a debuggable warning naming the missing template; got: $texts",
             )
         }
 
