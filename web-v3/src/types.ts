@@ -336,6 +336,13 @@ export interface RoomPlayer {
 
 export interface RoomMob {
   id: string;
+  /**
+   * Template/definition key shared by every spawn of the same mob template.
+   * Used to coalesce duplicate instances into a single sprite. Distinct mobs
+   * with the same display name have different templateKeys and stay separate.
+   * Empty string for legacy mobs or mobs without a backing template.
+   */
+  templateKey: string;
   name: string;
   description?: string;
   hp: number;

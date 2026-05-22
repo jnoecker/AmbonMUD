@@ -669,6 +669,7 @@ export function applyGmcpPackage(
           .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
           .map((entry) => ({
             id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
+            templateKey: typeof entry.templateKey === "string" ? entry.templateKey : "",
             name: typeof entry.name === "string" ? entry.name : "Unknown mob",
             description: typeof entry.description === "string" ? entry.description : undefined,
             hp: safeNumber(entry.hp),
@@ -691,6 +692,7 @@ export function applyGmcpPackage(
         ...prev,
         {
           id,
+          templateKey: typeof packet.templateKey === "string" ? packet.templateKey : "",
           name: typeof packet.name === "string" ? packet.name : "Unknown mob",
           description: typeof packet.description === "string" ? packet.description : undefined,
           hp: safeNumber(packet.hp),

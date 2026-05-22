@@ -2356,6 +2356,7 @@ class GmcpEmitter(
         val effects = getMobEffects(mob.id)
         return RoomMobPayload(
             id = mob.id.value,
+            templateKey = mob.templateKey,
             name = mob.name,
             description = mob.description,
             hp = mob.hp,
@@ -2520,6 +2521,7 @@ class GmcpEmitter(
 
     private data class RoomMobPayload(
         val id: String,
+        val templateKey: String,
         val name: String,
         val description: String = "",
         val hp: Int,

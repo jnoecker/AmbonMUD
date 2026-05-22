@@ -1664,7 +1664,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildMobs(mobs: Array<{ id: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null; category?: string }>) {
+  private rebuildMobs(mobs: Array<{ id: string; templateKey: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null; category?: string }>) {
     for (const { sprite, label, labelBg, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(labelBg);
@@ -1697,21 +1697,24 @@ export class WorldScene {
     this.questCompleteIcons.clear();
     this.mobSprites.clear();
 
-    // Group mobs by display name — identical mobs render as a single sprite
-    // with a "(N)" count suffix. All actions (look/kill/consider) work by
-    // name, so collapsing duplicates loses no functional information.
+    // Group mobs by templateKey — every spawn of the same template renders
+    // as a single sprite with a "(N)" count suffix. Two mobs that share a
+    // display name but come from different templates have distinct keys and
+    // remain separate sprites. Mobs without a templateKey (legacy/dynamic
+    // spawns) fall back to their instance id so each stays on its own.
     const groups = new Map<string, { representative: typeof mobs[number]; count: number; ids: string[] }>();
     for (const mob of mobs) {
-      const existing = groups.get(mob.name);
+      const groupKey = mob.templateKey || mob.id;
+      const existing = groups.get(groupKey);
       if (existing) {
         existing.count += 1;
         existing.ids.push(mob.id);
       } else {
-        groups.set(mob.name, { representative: mob, count: 1, ids: [mob.id] });
+        groups.set(groupKey, { representative: mob, count: 1, ids: [mob.id] });
       }
     }
 
-    for (const { representative: mob, count, ids } of groups.values()) {
+    for (const [groupKey, { representative: mob, count, ids }] of groups.entries()) {
       const sprite = new Sprite(Texture.WHITE);
       sprite.width = BASE_SPRITE_SIZE;
       sprite.height = BASE_SPRITE_SIZE;
@@ -1755,7 +1758,7 @@ export class WorldScene {
       this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.mobSprites.set(mob.name, { sprite, label, labelBg, hitArea, name: mob.name, count, ids });
+      this.mobSprites.set(groupKey, { sprite, label, labelBg, hitArea, name: mob.name, count, ids });
     }
   }
 
