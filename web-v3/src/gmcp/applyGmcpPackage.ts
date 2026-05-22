@@ -1379,6 +1379,7 @@ export function applyGmcpPackage(
             shopKeeper: entry.shopKeeper === true,
             dialogue: entry.dialogue === true,
             aggressive: entry.aggressive === true,
+            combatant: entry.combatant !== false,
           })),
       );
       break;

@@ -101,7 +101,7 @@ export class WorldScene {
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
   private playerLabelBg = new Graphics();
-  private mobSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
+  private mobSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics; name: string; count: number; ids: string[] }> = new Map();
   private petSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private itemSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private playerSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
@@ -976,7 +976,7 @@ export class WorldScene {
       this.rebuildPlayers(players);
     }
 
-    const mobInfoKey = mobInfo.map((m) => `${m.id}:${m.questAvailable}:${m.questComplete}:${m.shopKeeper}:${m.dialogue}:${m.aggressive}`).join("|");
+    const mobInfoKey = mobInfo.map((m) => `${m.id}:${m.questAvailable}:${m.questComplete}:${m.shopKeeper}:${m.dialogue}:${m.aggressive}:${m.combatant}`).join("|");
     if (mobInfoKey !== this.lastMobInfoKey) {
       this.lastMobInfoKey = mobInfoKey;
     }
@@ -1205,7 +1205,18 @@ export class WorldScene {
     const scale = Math.min(w / REF_WIDTH, h / REF_HEIGHT);
     const playerSize = clamp(BASE_SPRITE_SIZE * scale, MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
 
-    const mobEntries = [...this.mobSprites.values()];
+    // Order combat-eligible mobs first (left); quest-givers, dialog NPCs, and
+    // props sit on the right. Missing mobInfo defaults to combat (true), which
+    // matches the server default for legacy mobs.
+    const mobInfoByRepId = new Map(gameStateRef.current.mobInfo.map((m) => [m.id, m]));
+    const mobEntries = [...this.mobSprites.values()].sort((a, b) => {
+      const ai = mobInfoByRepId.get(a.ids[0]);
+      const bi = mobInfoByRepId.get(b.ids[0]);
+      const aCombat = ai ? ai.combatant : true;
+      const bCombat = bi ? bi.combatant : true;
+      if (aCombat !== bCombat) return aCombat ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
     const mobCount = mobEntries.length;
     const mobAreaLeft = w * 0.38;
     const mobAreaRight = w - 24;
@@ -1251,9 +1262,9 @@ export class WorldScene {
       // up to 3 rows for 3+ mobs so neighbours-by-2 also don't share a row.
       const mobStaggerStep = mobCount > 1 ? Math.min(32, mobSize * 0.26) : 0;
       const mobStaggerRows = Math.min(mobCount, 3);
-      const mobInfo = gameStateRef.current.mobInfo;
       let mobIdx = 0;
-      for (const { sprite, label, labelBg, hitArea } of mobEntries) {
+      for (const entry of mobEntries) {
+        const { sprite, label, labelBg, hitArea, name, count, ids } = entry;
         const mobYOffset = (mobIdx % mobStaggerRows) * mobStaggerStep;
         const thisMobY = mobY + mobYOffset;
         sprite.x = mobX;
@@ -1263,22 +1274,22 @@ export class WorldScene {
         label.x = mobX;
         label.y = thisMobY + mobSize / 2 + 6;
 
-        // Color label text by mob role + prepend role icon
-        const mid = [...this.mobSprites.entries()].find(([, v]) => v.label === label)?.[0];
-        const info = mid ? mobInfo.find((m) => m.id === mid) : null;
-        const baseName = label.text.replace(/^[\u2620\u2B50]\s*/, "").replace(/^\uD83D\uDCB0\s*/, "");
+        // Color label text by mob role + prepend role icon. Append "(N)" when
+        // duplicates are stacked into a single sprite.
+        const info = mobInfoByRepId.get(ids[0]);
+        const suffix = count > 1 ? ` (${count})` : "";
         if (info?.aggressive) {
           label.style.fill = "#d4888a";
-          label.text = "\u2620 " + baseName;
+          label.text = "\u2620 " + name + suffix;
         } else if (info?.shopKeeper) {
           label.style.fill = "#8caec9";
-          label.text = "\uD83D\uDCB0 " + baseName;
+          label.text = "\uD83D\uDCB0 " + name + suffix;
         } else if (info?.questGiver) {
           label.style.fill = "#bea873";
-          label.text = "\u2B50 " + baseName;
+          label.text = "\u2B50 " + name + suffix;
         } else {
           label.style.fill = MOB_LABEL_COLOR;
-          label.text = baseName;
+          label.text = name + suffix;
         }
         drawLabelPill(labelBg, label, info?.questGiver ? 0xbea873 : undefined);
 
@@ -1545,25 +1556,28 @@ export class WorldScene {
     const activeQuestAvail = new Set<string>();
     const activeQuestComplete = new Set<string>();
     if (mobInfo.length > 0) {
-      for (const info of mobInfo) {
-        const entry = this.mobSprites.get(info.id);
-        if (!entry) continue;
+      // mobSprites is keyed by mob name (groups of duplicates) — look up info
+      // via the representative id, then key icons off that id too.
+      for (const entry of this.mobSprites.values()) {
+        const repId = entry.ids[0];
+        const info = mobInfo.find((m) => m.id === repId);
+        if (!info) continue;
         const { sprite } = entry;
         drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info, this.currentMobSize);
         if (info.dialogue) {
-          activeDialogueMobs.add(info.id);
-          this.ensureDialogueIcon(info.id, sprite.x, sprite.y);
+          activeDialogueMobs.add(repId);
+          this.ensureDialogueIcon(repId, sprite.x, sprite.y);
         }
         if (info.aggressive) {
-          activeAggroMobs.add(info.id);
-          this.ensureAggroIcon(info.id, sprite.x, sprite.y);
+          activeAggroMobs.add(repId);
+          this.ensureAggroIcon(repId, sprite.x, sprite.y);
         }
         if (info.questComplete) {
-          activeQuestComplete.add(info.id);
-          this.ensureQuestIcon(info.id, sprite.x, sprite.y, "complete");
+          activeQuestComplete.add(repId);
+          this.ensureQuestIcon(repId, sprite.x, sprite.y, "complete");
         } else if (info.questAvailable) {
-          activeQuestAvail.add(info.id);
-          this.ensureQuestIcon(info.id, sprite.x, sprite.y, "available");
+          activeQuestAvail.add(repId);
+          this.ensureQuestIcon(repId, sprite.x, sprite.y, "available");
         }
       }
     }
@@ -1683,7 +1697,21 @@ export class WorldScene {
     this.questCompleteIcons.clear();
     this.mobSprites.clear();
 
+    // Group mobs by display name — identical mobs render as a single sprite
+    // with a "(N)" count suffix. All actions (look/kill/consider) work by
+    // name, so collapsing duplicates loses no functional information.
+    const groups = new Map<string, { representative: typeof mobs[number]; count: number; ids: string[] }>();
     for (const mob of mobs) {
+      const existing = groups.get(mob.name);
+      if (existing) {
+        existing.count += 1;
+        existing.ids.push(mob.id);
+      } else {
+        groups.set(mob.name, { representative: mob, count: 1, ids: [mob.id] });
+      }
+    }
+
+    for (const { representative: mob, count, ids } of groups.values()) {
       const sprite = new Sprite(Texture.WHITE);
       sprite.width = BASE_SPRITE_SIZE;
       sprite.height = BASE_SPRITE_SIZE;
@@ -1727,7 +1755,7 @@ export class WorldScene {
       this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.mobSprites.set(mob.id, { sprite, label, labelBg, hitArea });
+      this.mobSprites.set(mob.name, { sprite, label, labelBg, hitArea, name: mob.name, count, ids });
     }
   }
 

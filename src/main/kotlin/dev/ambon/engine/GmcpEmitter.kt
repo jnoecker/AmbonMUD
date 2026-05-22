@@ -1857,6 +1857,7 @@ class GmcpEmitter(
                     shopKeeper = m.shopKeeper,
                     dialogue = m.dialogue,
                     aggressive = m.aggressive,
+                    combatant = m.combatant,
                 )
             },
         )
@@ -1874,6 +1875,7 @@ class GmcpEmitter(
                 shopKeeper = m.shopKeeper,
                 dialogue = m.dialogue,
                 aggressive = m.aggressive,
+                combatant = m.combatant,
             )
         }
         broadcastSerialized(players.playersInRoom(roomId), "Room.MobInfo", payload)
@@ -1901,6 +1903,7 @@ class GmcpEmitter(
             shopKeeper = mid in shopMobIds,
             dialogue = mob.dialogue != null,
             aggressive = mob.aggressive,
+            combatant = mob.role.isCombatant,
         )
     }
 
@@ -3134,6 +3137,7 @@ class GmcpEmitter(
         val shopKeeper: Boolean,
         val dialogue: Boolean,
         val aggressive: Boolean,
+        val combatant: Boolean,
     )
 
     // ---------- look target payload ----------
@@ -3711,6 +3715,7 @@ data class MobInfoEntry(
     val shopKeeper: Boolean,
     val dialogue: Boolean,
     val aggressive: Boolean,
+    val combatant: Boolean,
 )
 
 /** Input DTO for building a Zone.Instances GMCP payload. */

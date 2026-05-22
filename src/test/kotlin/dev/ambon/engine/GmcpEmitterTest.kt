@@ -1487,6 +1487,7 @@ class GmcpEmitterTest {
                         shopKeeper = false,
                         dialogue = true,
                         aggressive = false,
+                        combatant = true,
                     ),
                 ),
             )

@@ -752,6 +752,7 @@ export interface MobInfo {
   shopKeeper: boolean;
   dialogue: boolean;
   aggressive: boolean;
+  combatant: boolean;
 }
 
 export interface LoginRaceOption {
