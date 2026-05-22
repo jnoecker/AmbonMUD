@@ -236,7 +236,11 @@ matchByKey: <boolean, optional, default false>
 basePrice: <integer, optional, default 0, must be >= 0>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown in context menu>
+takeable: <boolean, optional, default true>
 ```
+
+`takeable` notes:
+- When `false`, players cannot `get` the item and auto-loot skips it. Useful for room scenery (statues, fountains, signs) that should appear in the `Items here:` line but stay put.
 
 `basePrice` notes:
 - Determines the item's value in the shop economy.

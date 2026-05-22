@@ -1798,6 +1798,7 @@ class CombatSystem(
 
         val looted = mutableListOf<dev.ambon.domain.items.ItemInstance>()
         for (candidate in candidates) {
+            if (!candidate.item.takeable) continue
             // takeFromRoomByInstance matches by object identity so a same-keyword pickup
             // elsewhere can't accidentally grab an unrelated item.
             val taken = items.takeFromRoomByInstance(killerSessionId, roomId, candidate) ?: continue

@@ -562,6 +562,7 @@ object WorldLoader {
                                         video = itemFile.video?.let { "$videosBase$it" },
                                         itemType = itemType,
                                         questItem = itemFile.questItem,
+                                        takeable = itemFile.takeable,
                                     ),
                             ),
                         roomId = roomId,

@@ -242,6 +242,20 @@ class ItemHandler(
                 return
             }
             val roomId = me.roomId
+            val target = items.peekRoomItem(roomId, cmd.keyword)
+            if (target == null) {
+                outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.keyword}' here."))
+                return
+            }
+            if (!target.item.takeable) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "You can't take ${target.item.displayName}.",
+                    ),
+                )
+                return
+            }
             val moved = items.takeFromRoom(me.sessionId, roomId, cmd.keyword)
             if (moved == null) {
                 outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.keyword}' here."))

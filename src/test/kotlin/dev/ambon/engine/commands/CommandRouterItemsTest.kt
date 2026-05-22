@@ -65,6 +65,35 @@ class CommandRouterItemsTest {
         }
 
     @Test
+    fun `get refuses untakeable item and leaves it in room`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            h.items.setRoomItems(
+                h.world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:statue"),
+                        Item(keyword = "statue", displayName = "a marble statue", takeable = false),
+                    ),
+                ),
+            )
+
+            val sid = SessionId(20L)
+            h.loginPlayer(sid, "Player20")
+
+            h.router.handle(sid, Command.Get("statue"))
+
+            assertEquals(1, h.items.itemsInRoom(h.world.startRoom).size)
+            assertEquals(0, h.items.inventory(sid).size)
+
+            val outs = h.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("can't take a marble statue") },
+                "Missing refusal message. got=$outs",
+            )
+        }
+
+    @Test
     fun `inventory shows carried items`() =
         runTest {
             val h = CommandRouterHarness.create()

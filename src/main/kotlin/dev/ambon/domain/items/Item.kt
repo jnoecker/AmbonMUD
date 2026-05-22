@@ -40,6 +40,7 @@ data class Item(
     val video: String? = null,
     val itemType: ItemType? = null,
     val questItem: Boolean = false,
+    val takeable: Boolean = true,
 ) {
     /**
      * Effective item type for categorization. Uses [itemType] when set,

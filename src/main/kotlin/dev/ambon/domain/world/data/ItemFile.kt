@@ -23,6 +23,7 @@ data class ItemFile(
     val video: String? = null,
     val itemType: String? = null,
     val questItem: Boolean = false,
+    val takeable: Boolean = true,
     /**
      * Optional design-time metadata authored by the Arcanum creator. Accepted
      * for round-trip preservation; the server treats `damage`, `armor`, and

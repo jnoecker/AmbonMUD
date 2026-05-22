@@ -558,6 +558,19 @@ class ItemRegistry {
     ): ItemInstance? = findOwnedItemMatch(sessionId, keyword)?.item
 
     /**
+     * Look up (without removing) an item in [roomId] matching [keyword].
+     * Used by handlers that need to inspect an item before deciding to move it.
+     */
+    fun peekRoomItem(
+        roomId: RoomId,
+        keyword: String,
+    ): ItemInstance? {
+        val items = roomItems[roomId] ?: return null
+        val idx = findMatchingItemIndex(items, keyword)
+        return if (idx >= 0) items[idx] else null
+    }
+
+    /**
      * Look up (without removing) an item in [sessionId]'s inventory only (not equipped)
      * matching [keyword]. Used by handlers that apply only to carried items.
      */
