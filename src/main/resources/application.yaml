@@ -1868,13 +1868,21 @@ ambonmud:
       definitions: {}
     pets:
       manualSkillGraceMs: 8000
+      # Global caps on ratio scaling — keep pets relevant without out-scaling players.
+      maxHpRatio: 1.0
+      maxDamageRatio: 0.8
+      maxArmorRatio: 1.0
       definitions:
         wolf_companion:
           name: a wolf companion
-          hp: 25
-          minDamage: 2
-          maxDamage: 5
-          armor: 1
+          # DPS pet: light HP/armor, strong damage.
+          hpRatio: 0.4
+          damageRatio: 0.7
+          armorRatio: 0.3
+          baseHp: 25
+          baseMinDamage: 2
+          baseMaxDamage: 5
+          baseArmor: 1
           description: A lean grey wolf with sharp yellow eyes, trained to fight alongside its bonded ranger.
           image: a2a1f51c3361391908f68af1083a59c1daa2242750af576ca59b9b5cec03ac62.png
           spells:
@@ -1882,8 +1890,7 @@ ambonmud:
               displayName: Bite
               message: "{pet} clamps onto {target} with vicious jaws"
               roomMessage: "{pet} clamps onto {target} with vicious jaws"
-              minDamage: 4
-              maxDamage: 8
+              damageRatio: 2.0
               statusEffectId: bleed
               cooldownMs: 6000
               weight: 2
@@ -1891,17 +1898,20 @@ ambonmud:
               displayName: Pounce
               message: "{pet} pounces on {target} and slams them to the ground"
               roomMessage: "{pet} pounces on {target} and slams them to the ground"
-              minDamage: 6
-              maxDamage: 10
+              damageRatio: 2.5
               statusEffectId: concuss
               cooldownMs: 12000
               weight: 1
         spirit_hawk:
           name: a spirit hawk
-          hp: 15
-          minDamage: 3
-          maxDamage: 7
-          armor: 0
+          # Glass DPS / utility: very low HP, no armor, but hits hard.
+          hpRatio: 0.3
+          damageRatio: 0.7
+          armorRatio: 0.0
+          baseHp: 15
+          baseMinDamage: 3
+          baseMaxDamage: 7
+          baseArmor: 0
           description: A large hawk wreathed in faint translucent light, striking at enemies with razor talons from above.
           image: f9c143caa4e04b89106323f85d699e9faf58909be1aaef81273b5fc5b5fb44fa.png
           spells:
@@ -1909,8 +1919,7 @@ ambonmud:
               displayName: Dive
               message: "{pet} folds its wings and rakes {target} with talons"
               roomMessage: "{pet} folds its wings and rakes {target} with talons"
-              minDamage: 8
-              maxDamage: 14
+              damageRatio: 2.0
               cooldownMs: 7000
               weight: 2
             screech:
@@ -1922,10 +1931,14 @@ ambonmud:
               weight: 1
         bear_guardian:
           name: a bear guardian
-          hp: 40
-          minDamage: 5
-          maxDamage: 10
-          armor: 2
+          # Tank pet: high HP and armor, lower damage, holds aggro.
+          hpRatio: 0.9
+          damageRatio: 0.4
+          armorRatio: 0.7
+          baseHp: 40
+          baseMinDamage: 5
+          baseMaxDamage: 10
+          baseArmor: 2
           description: A massive brown bear with thick scarred hide, summoned to absorb punishment and crush foes in its grip.
           image: e6ee852324a6ad9cab840afb3731f33ea000dd6da6dc7fc639f61fd2fb045dc0.png
           threatMultiplier: 2.0
@@ -1934,8 +1947,7 @@ ambonmud:
               displayName: Maul
               message: "{pet} swings a massive paw and mauls {target}"
               roomMessage: "{pet} swings a massive paw and mauls {target}"
-              minDamage: 10
-              maxDamage: 16
+              damageRatio: 2.0
               cooldownMs: 8000
               weight: 2
             roar:

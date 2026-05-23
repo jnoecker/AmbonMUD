@@ -5,6 +5,7 @@ import dev.ambon.config.PetTemplateConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.PetSystem
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.AbilityTestFixture
 import dev.ambon.test.MutableClock
@@ -36,21 +37,24 @@ class PetSummonVisibilityTest {
             "fire_familiar" to PetTemplateConfig(
                 name = "a fire familiar",
                 description = "A small elemental of living flame.",
-                hp = 20,
-                minDamage = 2,
-                maxDamage = 5,
-                armor = 1,
+                baseHp = 20,
+                baseMinDamage = 2,
+                baseMaxDamage = 5,
+                baseArmor = 1,
             ),
             "stone_golem" to PetTemplateConfig(
                 name = "a stone golem",
                 description = "A lumbering construct of packed earth.",
-                hp = 30,
-                minDamage = 3,
-                maxDamage = 6,
-                armor = 2,
+                baseHp = 30,
+                baseMinDamage = 3,
+                baseMaxDamage = 6,
+                baseArmor = 2,
             ),
         ),
     )
+
+    private fun ownerStatsFor(player: PlayerState): PetSystem.OwnerStats =
+        PetSystem.OwnerStats(maxHp = player.maxHp, damageMin = 1, damageMax = 4, armor = 0)
 
     @Test
     fun `summoning a pet emits Room_AddMob to summoner and bystanders`() = runTest {
@@ -90,7 +94,7 @@ class PetSummonVisibilityTest {
             onSummonPet = { sid, templateKey, durationMs ->
                 val player = fixture.players.get(sid)
                 if (player != null) {
-                    val pet = petSystem.summon(sid, templateKey, player.roomId, player.level, durationMs, player.name)
+                    val pet = petSystem.summon(sid, templateKey, player.roomId, ownerStatsFor(player), durationMs, player.name)
                     if (pet != null) {
                         gmcpEmitter.broadcastRoomAddMob(player.roomId, pet, fixture.players)
                         val mobsInRoom = fixture.mobs.mobsInRoom(player.roomId)
@@ -187,7 +191,7 @@ class PetSummonVisibilityTest {
                 val player = fixture.players.get(sid)
                 if (player != null) {
                     val replacedPets = petSystem.getPets(sid).map { Triple(it.id, it.roomId, it.name) }
-                    val pet = petSystem.summon(sid, templateKey, player.roomId, player.level, durationMs, player.name)
+                    val pet = petSystem.summon(sid, templateKey, player.roomId, ownerStatsFor(player), durationMs, player.name)
                     if (pet != null) {
                         for ((oldId, oldRoomId, _) in replacedPets) {
                             if (oldId == pet.id) continue

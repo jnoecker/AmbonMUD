@@ -23,6 +23,10 @@ import java.util.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TankPetCombatTest {
+    private companion object {
+        val DEFAULT_OWNER_STATS = PetSystem.OwnerStats(maxHp = 30, damageMin = 1, damageMax = 3, armor = 0)
+    }
+
     private fun buildPetSystem(
         fixture: CombatTestFixture,
         threatMultiplier: Double = 3.0,
@@ -32,17 +36,17 @@ class TankPetCombatTest {
             definitions = mapOf(
                 "tank_bear" to PetTemplateConfig(
                     name = "a bear",
-                    hp = hp,
-                    minDamage = 2,
-                    maxDamage = 4,
-                    armor = 1,
+                    baseHp = hp,
+                    baseMinDamage = 2,
+                    baseMaxDamage = 4,
+                    baseArmor = 1,
                     threatMultiplier = threatMultiplier,
                 ),
                 "dps_sprite" to PetTemplateConfig(
                     name = "a sprite",
-                    hp = 20,
-                    minDamage = 3,
-                    maxDamage = 5,
+                    baseHp = 20,
+                    baseMinDamage = 3,
+                    baseMaxDamage = 5,
                     threatMultiplier = 0.0,
                 ),
             ),
@@ -81,7 +85,7 @@ class TankPetCombatTest {
         fixture.mobs.upsert(mob)
 
         // Summon a tank pet
-        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, ownerLevel = 1)
+        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, DEFAULT_OWNER_STATS)
         assertNotNull(pet)
         assertTrue(pet!!.threatMultiplier > 0.0)
         assertNotNull(petSystem.getPetSessionId(pet.id))
@@ -128,7 +132,7 @@ class TankPetCombatTest {
         fixture.mobs.upsert(mob)
 
         // Summon a DPS pet (no threat)
-        val pet = petSystem.summon(sid, "dps_sprite", TEST_ROOM_ID, ownerLevel = 1)
+        val pet = petSystem.summon(sid, "dps_sprite", TEST_ROOM_ID, DEFAULT_OWNER_STATS)
         assertNotNull(pet)
         assertEquals(0.0, pet!!.threatMultiplier)
         assertNull(petSystem.getPetSessionId(pet.id))
@@ -163,7 +167,7 @@ class TankPetCombatTest {
         val mob = enemyMob(damage = DamageRange(10, 10))
         fixture.mobs.upsert(mob)
 
-        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, ownerLevel = 1)!!
+        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, DEFAULT_OWNER_STATS)!!
 
         combat.startCombat(sid, "goblin")
         fixture.outbound.drainAll()
@@ -223,7 +227,7 @@ class TankPetCombatTest {
         val mob = enemyMob()
         fixture.mobs.upsert(mob)
 
-        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, ownerLevel = 1)!!
+        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, DEFAULT_OWNER_STATS)!!
         val petSid = petSystem.getPetSessionId(pet.id)!!
 
         combat.startCombat(sid, "goblin")
@@ -261,7 +265,7 @@ class TankPetCombatTest {
         val mob = enemyMob()
         fixture.mobs.upsert(mob)
 
-        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, ownerLevel = 1)!!
+        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, DEFAULT_OWNER_STATS)!!
         val petSid = petSystem.getPetSessionId(pet.id)!!
 
         combat.startCombat(sid, "goblin")
@@ -299,7 +303,7 @@ class TankPetCombatTest {
         val mob = enemyMob(hp = 1, templateKey = "goblin")
         fixture.mobs.upsert(mob)
 
-        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, ownerLevel = 1)!!
+        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, DEFAULT_OWNER_STATS)!!
         val petSid = petSystem.getPetSessionId(pet.id)!!
 
         combat.startCombat(sid, "goblin")
@@ -333,7 +337,7 @@ class TankPetCombatTest {
         val mob = enemyMob()
         fixture.mobs.upsert(mob)
 
-        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, ownerLevel = 1)!!
+        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, DEFAULT_OWNER_STATS)!!
         val petSid = petSystem.getPetSessionId(pet.id)!!
 
         combat.startCombat(sid, "goblin")

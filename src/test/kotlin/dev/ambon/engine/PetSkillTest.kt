@@ -56,23 +56,25 @@ class PetSkillTest {
         definitions = mapOf(
             "wolf_companion" to PetTemplateConfig(
                 name = "a wolf companion",
-                hp = 25,
-                minDamage = 2,
-                maxDamage = 2,
-                armor = 0,
+                baseHp = 25,
+                baseMinDamage = 2,
+                baseMaxDamage = 2,
+                baseArmor = 0,
                 spells = mapOf("bite" to biteSkill, "pounce" to pounceSkill),
             ),
             "bear_guardian" to PetTemplateConfig(
                 name = "a bear guardian",
-                hp = 40,
-                minDamage = 5,
-                maxDamage = 5,
-                armor = 2,
+                baseHp = 40,
+                baseMinDamage = 5,
+                baseMaxDamage = 5,
+                baseArmor = 2,
                 threatMultiplier = 2.0,
                 spells = mapOf("roar" to roarSkill),
             ),
         ),
     )
+
+    private val ownerStats = PetSystem.OwnerStats(maxHp = 30, damageMin = 1, damageMax = 3, armor = 0)
 
     private fun newFixture(): Fixture {
         val fixture = CombatTestFixture()
@@ -118,7 +120,7 @@ class PetSkillTest {
         val sid = SessionId(7L)
         fixture.base.players.loginOrFail(sid, "Ranger")
         val player = fixture.base.players.get(sid)!!
-        val pet = fixture.pets.summon(sid, petTemplate, player.roomId, player.level)!!
+        val pet = fixture.pets.summon(sid, petTemplate, player.roomId, ownerStats)!!
         val target = MobState(
             MobId("demo:goblin"),
             "a goblin",
@@ -181,7 +183,7 @@ class PetSkillTest {
         val sid = SessionId(7L)
         f.base.players.loginOrFail(sid, "Ranger")
         val player = f.base.players.get(sid)!!
-        f.pets.summon(sid, "wolf_companion", player.roomId, player.level)
+        f.pets.summon(sid, "wolf_companion", player.roomId, ownerStats)
 
         val result = f.combat.triggerPetSkill(sid, "bite")
         assertTrue(result is CombatSystem.PetSkillResult.Error)
@@ -289,7 +291,7 @@ class PetSkillTest {
         val sid = SessionId(7L)
         f.base.players.loginOrFail(sid, "Ranger")
         val player = f.base.players.get(sid)!!
-        val pet = f.pets.summon(sid, "wolf_companion", player.roomId, player.level)!!
+        val pet = f.pets.summon(sid, "wolf_companion", player.roomId, ownerStats)!!
 
         assertNotNull(f.pets.findSkill(pet, "bite"))
         assertNotNull(f.pets.findSkill(pet, "BITE"))

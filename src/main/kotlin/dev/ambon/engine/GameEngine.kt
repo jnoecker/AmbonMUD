@@ -831,7 +831,17 @@ class GameEngine(
                 // summon() replaces the old pet internally but clients don't hear about it,
                 // leaving a ghost sprite until the owner moves rooms. See issue #1093.
                 val replacedPets = petSystem.getPets(sid).map { Triple(it.id, it.roomId, it.name) }
-                val pet = petSystem.summon(sid, templateKey, player.roomId, player.level, durationMs, player.name)
+                val classDef = classRegistry.get(player.playerClass)
+                val playerStats = resolvePlayerStats(player, items, statusEffectSystem, classRegistry)
+                val equipBonuses = items.equipmentBonuses(sid, classDef)
+                val dmgRange = combatSystem.damageRangeForDisplay(player, playerStats, equipBonuses.attack)
+                val ownerStats = PetSystem.OwnerStats(
+                    maxHp = player.maxHp,
+                    damageMin = dmgRange.first,
+                    damageMax = dmgRange.last,
+                    armor = equipBonuses.armor,
+                )
+                val pet = petSystem.summon(sid, templateKey, player.roomId, ownerStats, durationMs, player.name)
                 if (pet != null) {
                     outbound.send(OutboundEvent.SendText(sid, "You summon ${pet.name}!"))
                     emitPetState(sid, pet)
