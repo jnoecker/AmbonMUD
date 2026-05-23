@@ -12,6 +12,7 @@ import dev.ambon.engine.ERR_NOT_CONNECTED
 import dev.ambon.engine.GameSystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
@@ -44,6 +45,7 @@ class AbilitySystem(
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
     private val mobs: MobRegistry? = null,
+    private val petSystem: PetSystem? = null,
     private val progression: PlayerProgression = PlayerProgression(),
     private val classRegistry: dev.ambon.engine.PlayerClassRegistry? = null,
     private val onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> },
@@ -108,6 +110,7 @@ class AbilitySystem(
             "ally" -> handleAllyCast(sessionId, player, ability, targetKeyword, now)
             "all_enemies" -> handleAllEnemiesCast(sessionId, player, ability, now)
             "all_allies" -> handleAllAlliesCast(sessionId, player, ability, now)
+            "pet" -> handlePetCast(sessionId, player, ability, now)
             else -> "Unknown target type '${ability.targetType}'."
         }
     }
@@ -385,6 +388,75 @@ class AbilitySystem(
             outbound,
             player.roomId,
             "${player.name} casts ${ability.displayName}.",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    /**
+     * Heals or buffs the caster's active pet. The target is always the caster's own pet —
+     * group members' pets are not addressable. Heal threat is generated against mobs already
+     * engaged with the healer, mirroring the player-heal threat model.
+     */
+    private suspend fun handlePetCast(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        now: Long,
+    ): String? {
+        val pets = petSystem ?: return "Pets are not available."
+        val pet = pets.getActivePet(sessionId) ?: return "You have no active pet."
+        if (pet.roomId != player.roomId) return "${pet.name} is not here."
+
+        when (val effect = ability.effect) {
+            is AbilityEffect.DirectHeal -> {
+                deductManaAndCooldown(sessionId, player, ability, now)
+                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+                val healAmount =
+                    computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
+                val before = pet.hp
+                pet.hp = (pet.hp + healAmount).coerceAtMost(pet.maxHp)
+                val healed = pet.hp - before
+                if (healed > 0) {
+                    dirtyNotifier.mobHpDirty(pet.id)
+                    combat.addHealingThreat(sessionId, healed)
+                    onCombatEvent(
+                        sessionId,
+                        CombatEvent.Heal(
+                            abilityName = ability.displayName,
+                            targetName = pet.name,
+                            amount = healed,
+                            sourceIsPlayer = true,
+                            abilityId = ability.id.value,
+                        ),
+                    )
+                }
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Your ${ability.displayName} heals ${pet.name} for $healed HP.",
+                    ),
+                )
+            }
+            is AbilityEffect.ApplyStatus -> {
+                val sys = statusEffects ?: return "Status effects are not available."
+                deductManaAndCooldown(sessionId, player, ability, now)
+                sys.applyToMob(pet.id, effect.statusEffectId, sessionId)
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Your ${ability.displayName} empowers ${pet.name}!",
+                    ),
+                )
+                emitAbilityCast(sessionId, ability, pet.name, pet.id.value, targetIsPlayer = false)
+            }
+            else -> return "Spell misconfigured (unexpected effect for pet target)."
+        }
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName} on ${pet.name}.",
             exclude = sessionId,
         )
         return null

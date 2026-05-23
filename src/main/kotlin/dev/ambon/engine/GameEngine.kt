@@ -822,6 +822,7 @@ class GameEngine(
             statusEffects = statusEffectSystem,
             groupSystem = groupSystem,
             mobs = mobs,
+            petSystem = petSystem,
             progression = progression,
             classRegistry = classRegistry,
             onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
