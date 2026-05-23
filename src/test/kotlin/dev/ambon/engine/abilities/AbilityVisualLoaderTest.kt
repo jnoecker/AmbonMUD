@@ -232,4 +232,48 @@ class AbilityVisualLoaderTest {
         )
         assertEquals(0, registry.all().size)
     }
+
+    @Test
+    fun `composite with any unparseable child rejects whole ability`() {
+        // Mixing one valid child with one typo'd child must NOT load a partial
+        // composite — the typo would silently change combat behavior.
+        val registry = AbilityRegistry()
+        AbilityRegistryLoader.load(
+            AbilityEngineConfig(
+                definitions = mapOf(
+                    "typo_dot" to AbilityDefinitionConfig(
+                        targetType = "ENEMY",
+                        effect = AbilityEffectConfig(
+                            type = "COMPOSITE",
+                            effects = listOf(
+                                AbilityEffectConfig(type = "DIRECT_DAMAGE", minDamage = 5, maxDamage = 5),
+                                AbilityEffectConfig(type = "APPLY_STTUS", statusEffectId = "ignite"),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            registry,
+            imagesBaseUrl = "/img/",
+        )
+        assertEquals(0, registry.all().size)
+    }
+
+    @Test
+    fun `composite with empty effects list is skipped`() {
+        val registry = AbilityRegistry()
+        AbilityRegistryLoader.load(
+            AbilityEngineConfig(
+                definitions = mapOf(
+                    "empty" to AbilityDefinitionConfig(
+                        targetType = "ENEMY",
+                        effect = AbilityEffectConfig(type = "COMPOSITE", effects = emptyList()),
+                    ),
+                ),
+            ),
+            registry,
+            imagesBaseUrl = "/img/",
+        )
+        assertEquals(0, registry.all().size)
+    }
 }
