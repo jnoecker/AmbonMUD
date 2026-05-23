@@ -110,6 +110,26 @@ let combatLogIdCounter = 0;
 function combatEventToLogMessage(event: CombatEventData): CombatLogMessage | null {
   const now = Date.now();
   const id = ++combatLogIdCounter;
+  // Server-rendered text (custom config templates, stat-formula suffixes) takes precedence
+  // over the hardcoded fallback templates below.
+  const styleForType: Record<string, CombatLogMessage["style"]> = {
+    meleeHit: "damage",
+    petHit: "damage",
+    petHurt: "damage",
+    abilityHit: "damage",
+    heal: "heal",
+    hotTick: "heal",
+    dotTick: "damage",
+    coldDot: "damage",
+    dodge: "dodge",
+    shieldAbsorb: "info",
+    kill: "kill",
+    death: "error",
+  };
+  if (event.text) {
+    const style = styleForType[event.type] ?? "info";
+    return { id, text: event.text, style, receivedAt: now };
+  }
   switch (event.type) {
     case "meleeHit":
       return event.sourceIsPlayer

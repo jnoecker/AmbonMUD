@@ -1049,6 +1049,7 @@ export function applyGmcpPackage(
           ? packet.lootedItems.filter((s): s is string => typeof s === "string")
           : [],
         forced: packet.forced === true,
+        text: typeof packet.text === "string" ? packet.text : null,
       });
       break;
     }

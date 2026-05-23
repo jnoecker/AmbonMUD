@@ -175,12 +175,8 @@ class StatusEffectSystem(
                     if (typeConfig?.ticksDamage == true) {
                         player.takeDamage(value)
                         dirtyNotifier.playerVitalsDirty(sessionId)
-                        outbound.send(
-                            OutboundEvent.SendText(
-                                sessionId,
-                                "${def.displayName} burns you for $value damage.",
-                            ),
-                        )
+                        val dotText = "${def.displayName} burns you for $value damage."
+                        outbound.send(OutboundEvent.SendText(sessionId, dotText))
                         onCombatEvent(
                             sessionId,
                             CombatEvent.DotTick(
@@ -188,23 +184,21 @@ class StatusEffectSystem(
                                 targetName = player.name,
                                 targetId = null,
                                 damage = value,
+                                text = dotText,
                             ),
                         )
                     } else if (typeConfig?.ticksHealing == true) {
                         val healed = applyHeal(sessionId, player, value, dirtyNotifier)
                         if (healed > 0) {
-                            outbound.send(
-                                OutboundEvent.SendText(
-                                    sessionId,
-                                    "${def.displayName} heals you for $healed HP.",
-                                ),
-                            )
+                            val hotText = "${def.displayName} heals you for $healed HP."
+                            outbound.send(OutboundEvent.SendText(sessionId, hotText))
                             onCombatEvent(
                                 sessionId,
                                 CombatEvent.HotTick(
                                     effectName = def.displayName,
                                     targetName = player.name,
                                     amount = healed,
+                                    text = hotText,
                                 ),
                             )
                         }
@@ -233,12 +227,8 @@ class StatusEffectSystem(
                     dirtyNotifier.mobHpDirty(mobId)
                     val source = effect.sourceSessionId
                     if (source != null) {
-                        outbound.send(
-                            OutboundEvent.SendText(
-                                source,
-                                "${def.displayName} burns ${mob.name} for $value damage.",
-                            ),
-                        )
+                        val dotText = "${def.displayName} burns ${mob.name} for $value damage."
+                        outbound.send(OutboundEvent.SendText(source, dotText))
                         onCombatEvent(
                             source,
                             CombatEvent.DotTick(
@@ -246,6 +236,7 @@ class StatusEffectSystem(
                                 targetName = mob.name,
                                 targetId = mobId.value,
                                 damage = value,
+                                text = dotText,
                             ),
                         )
                     }

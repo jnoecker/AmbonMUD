@@ -225,6 +225,7 @@ class AbilitySystem(
                 val healAmount =
                     computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val healed = applyHeal(sessionId, player, healAmount, dirtyNotifier)
+                val healText = "Your ${ability.displayName} heals you for $healed HP."
                 if (healed > 0) {
                     combat.addHealingThreat(sessionId, healed)
                     onCombatEvent(
@@ -235,15 +236,11 @@ class AbilitySystem(
                             amount = healed,
                             sourceIsPlayer = true,
                             abilityId = ability.id.value,
+                            text = healText,
                         ),
                     )
                 }
-                outbound.send(
-                    OutboundEvent.SendText(
-                        sessionId,
-                        "Your ${ability.displayName} heals you for $healed HP.",
-                    ),
-                )
+                outbound.send(OutboundEvent.SendText(sessionId, healText))
             }
             is AbilityEffect.ApplyStatus -> {
                 val sys =
@@ -316,6 +313,12 @@ class AbilitySystem(
                 val healAmount =
                     computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
+                val casterText =
+                    if (targetSid == sessionId) {
+                        "Your ${ability.displayName} heals you for $healed HP."
+                    } else {
+                        "Your ${ability.displayName} heals ${target.name} for $healed HP."
+                    }
                 if (healed > 0) {
                     combat.addHealingThreat(sessionId, healed)
                     onCombatEvent(
@@ -326,23 +329,12 @@ class AbilitySystem(
                             amount = healed,
                             sourceIsPlayer = true,
                             abilityId = ability.id.value,
+                            text = casterText,
                         ),
                     )
                 }
-                if (targetSid == sessionId) {
-                    outbound.send(
-                        OutboundEvent.SendText(
-                            sessionId,
-                            "Your ${ability.displayName} heals you for $healed HP.",
-                        ),
-                    )
-                } else {
-                    outbound.send(
-                        OutboundEvent.SendText(
-                            sessionId,
-                            "Your ${ability.displayName} heals ${target.name} for $healed HP.",
-                        ),
-                    )
+                outbound.send(OutboundEvent.SendText(sessionId, casterText))
+                if (targetSid != sessionId) {
                     outbound.send(
                         OutboundEvent.SendText(
                             targetSid,
@@ -417,6 +409,7 @@ class AbilitySystem(
                 val before = pet.hp
                 pet.hp = (pet.hp + healAmount).coerceAtMost(pet.maxHp)
                 val healed = pet.hp - before
+                val petHealText = "Your ${ability.displayName} heals ${pet.name} for $healed HP."
                 if (healed > 0) {
                     dirtyNotifier.mobHpDirty(pet.id)
                     combat.addHealingThreat(sessionId, healed)
@@ -428,15 +421,11 @@ class AbilitySystem(
                             amount = healed,
                             sourceIsPlayer = true,
                             abilityId = ability.id.value,
+                            text = petHealText,
                         ),
                     )
                 }
-                outbound.send(
-                    OutboundEvent.SendText(
-                        sessionId,
-                        "Your ${ability.displayName} heals ${pet.name} for $healed HP.",
-                    ),
-                )
+                outbound.send(OutboundEvent.SendText(sessionId, petHealText))
             }
             is AbilityEffect.ApplyStatus -> {
                 val sys = statusEffects ?: return "Status effects are not available."
@@ -549,6 +538,12 @@ class AbilitySystem(
                     val healAmount =
                         computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                     val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
+                    val casterText =
+                        if (targetSid == sessionId) {
+                            "Your ${ability.displayName} heals you for $healed HP."
+                        } else {
+                            "Your ${ability.displayName} heals ${target.name} for $healed HP."
+                        }
                     if (healed > 0) {
                         combat.addHealingThreat(sessionId, healed)
                         onCombatEvent(
@@ -559,23 +554,12 @@ class AbilitySystem(
                                 amount = healed,
                                 sourceIsPlayer = true,
                                 abilityId = ability.id.value,
+                                text = casterText,
                             ),
                         )
                     }
-                    if (targetSid == sessionId) {
-                        outbound.send(
-                            OutboundEvent.SendText(
-                                sessionId,
-                                "Your ${ability.displayName} heals you for $healed HP.",
-                            ),
-                        )
-                    } else {
-                        outbound.send(
-                            OutboundEvent.SendText(
-                                sessionId,
-                                "Your ${ability.displayName} heals ${target.name} for $healed HP.",
-                            ),
-                        )
+                    outbound.send(OutboundEvent.SendText(sessionId, casterText))
+                    if (targetSid != sessionId) {
                         outbound.send(
                             OutboundEvent.SendText(
                                 targetSid,
@@ -645,12 +629,8 @@ class AbilitySystem(
         mob.takeDamage(damage)
         dirtyNotifier.mobHpDirty(mob.id)
         combat.addThreat(mob.id, sessionId, damage.toDouble())
-        outbound.send(
-            OutboundEvent.SendText(
-                sessionId,
-                "Your ${ability.displayName} hits ${mob.name} for $damage damage.",
-            ),
-        )
+        val hitText = "Your ${ability.displayName} hits ${mob.name} for $damage damage."
+        outbound.send(OutboundEvent.SendText(sessionId, hitText))
         onCombatEvent(
             sessionId,
             CombatEvent.AbilityHit(
@@ -660,6 +640,7 @@ class AbilitySystem(
                 targetId = mob.id.value,
                 damage = damage,
                 sourceIsPlayer = true,
+                text = hitText,
             ),
         )
         if (mob.hp <= 0) {

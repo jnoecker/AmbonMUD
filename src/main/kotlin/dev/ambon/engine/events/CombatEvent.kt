@@ -1,11 +1,18 @@
 package dev.ambon.engine.events
 
+/**
+ * Each variant carries an optional [text] field with the server-rendered narrative line
+ * (custom config templates, stat-formula suffixes, etc.). When present, the web client
+ * combat log prefers it over its hardcoded fallback template. See
+ * `web-v3/src/hooks/useGameState.ts#combatEventToLogMessage`.
+ */
 sealed interface CombatEvent {
     data class MeleeHit(
         val targetName: String,
         val targetId: String?,
         val damage: Int,
         val sourceIsPlayer: Boolean,
+        val text: String? = null,
     ) : CombatEvent
 
     data class AbilityHit(
@@ -15,6 +22,7 @@ sealed interface CombatEvent {
         val targetId: String?,
         val damage: Int,
         val sourceIsPlayer: Boolean,
+        val text: String? = null,
     ) : CombatEvent
 
     data class Heal(
@@ -23,12 +31,14 @@ sealed interface CombatEvent {
         val amount: Int,
         val sourceIsPlayer: Boolean,
         val abilityId: String? = null,
+        val text: String? = null,
     ) : CombatEvent
 
     data class Dodge(
         val targetName: String,
         val targetId: String?,
         val sourceIsPlayer: Boolean,
+        val text: String? = null,
     ) : CombatEvent
 
     data class DotTick(
@@ -36,12 +46,14 @@ sealed interface CombatEvent {
         val targetName: String,
         val targetId: String?,
         val damage: Int,
+        val text: String? = null,
     ) : CombatEvent
 
     data class HotTick(
         val effectName: String,
         val targetName: String,
         val amount: Int,
+        val text: String? = null,
     ) : CombatEvent
 
     data class Kill(
@@ -61,6 +73,7 @@ sealed interface CombatEvent {
         val attackerName: String,
         val absorbed: Int,
         val remaining: Int,
+        val text: String? = null,
     ) : CombatEvent
 
     data class PetHit(
@@ -68,12 +81,14 @@ sealed interface CombatEvent {
         val targetName: String,
         val targetId: String?,
         val damage: Int,
+        val text: String? = null,
     ) : CombatEvent
 
     data class PetHurt(
         val petName: String,
         val attackerName: String,
         val damage: Int,
+        val text: String? = null,
     ) : CombatEvent
 
     /**
@@ -93,6 +108,7 @@ sealed interface CombatEvent {
         val targetId: String?,
         val targetIsPlayer: Boolean,
         val sourceIsPlayer: Boolean,
+        val text: String? = null,
     ) : CombatEvent
 
     /**
