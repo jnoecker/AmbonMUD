@@ -519,6 +519,12 @@ export interface CombatEventData {
   lootedItems: string[];
   /** True when the player disengaged via the wimpy threshold rather than typing `flee`. */
   forced: boolean;
+  /**
+   * Server-rendered narrative line (e.g. custom config templates for mob/pet/ability messages,
+   * stat-formula suffixes on melee). When present, the combat log uses it verbatim instead of
+   * the hardcoded client template.
+   */
+  text: string | null;
 }
 
 export interface StatEntry {

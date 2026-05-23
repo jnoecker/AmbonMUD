@@ -842,6 +842,7 @@ class CombatSystem(
                         targetId = mob.id.value,
                         damage = effectivePlayerDamage,
                         sourceIsPlayer = true,
+                        text = playerHitText,
                     ),
                 )
                 if (config.detailedFeedbackEnabled && config.detailedFeedbackRoomBroadcastEnabled) {
@@ -897,9 +898,8 @@ class CombatSystem(
                 val petDamage = (petRoll - mob.armor).coerceAtLeast(1)
                 mob.takeDamage(petDamage)
                 dirtyNotifier.mobHpDirty(mob.id)
-                outbound.send(
-                    OutboundEvent.SendText(sessionId, "${pet.name} hits ${mob.name} for $petDamage damage."),
-                )
+                val petHitText = "${pet.name} hits ${mob.name} for $petDamage damage."
+                outbound.send(OutboundEvent.SendText(sessionId, petHitText))
                 onCombatEvent(
                     sessionId,
                     CombatEvent.PetHit(
@@ -907,13 +907,14 @@ class CombatSystem(
                         targetName = mob.name,
                         targetId = mob.id.value,
                         damage = petDamage,
+                        text = petHitText,
                     ),
                 )
                 broadcastToRoom(
                     players,
                     outbound,
                     mob.roomId,
-                    "${pet.name} hits ${mob.name} for $petDamage damage.",
+                    petHitText,
                     exclude = sessionId,
                 )
 
@@ -1079,15 +1080,15 @@ class CombatSystem(
                 ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
                     .coerceIn(0, config.bindings.maxDodgePercent)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
-                outbound.send(
-                    OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s ${spell.displayName}!"),
-                )
+                val dodgeText = "You dodge ${mob.name}'s ${spell.displayName}!"
+                outbound.send(OutboundEvent.SendText(targetSid, dodgeText))
                 onCombatEvent(
                     targetSid,
                     CombatEvent.Dodge(
                         targetName = target.name,
                         targetId = null,
                         sourceIsPlayer = false,
+                        text = dodgeText,
                     ),
                 )
                 return
@@ -1108,7 +1109,8 @@ class CombatSystem(
             val msg = spell.message
                 .replace("{target}", target.name)
                 .replace("{damage}", spellDamage.toString())
-            outbound.send(OutboundEvent.SendText(targetSid, "$msg for $spellDamage damage."))
+            val spellHitText = "$msg for $spellDamage damage."
+            outbound.send(OutboundEvent.SendText(targetSid, spellHitText))
 
             if (spell.roomMessage.isNotEmpty()) {
                 broadcastToRoom(
@@ -1142,6 +1144,7 @@ class CombatSystem(
                         targetId = null,
                         damage = spellDamage,
                         sourceIsPlayer = false,
+                        text = spellHitText,
                     ),
                 )
             }
@@ -1212,13 +1215,15 @@ class CombatSystem(
             ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
                 .coerceIn(0, config.bindings.maxDodgePercent)
         if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
-            outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
+            val dodgeText = "You dodge ${mob.name}'s attack!"
+            outbound.send(OutboundEvent.SendText(targetSid, dodgeText))
             onCombatEvent(
                 targetSid,
                 CombatEvent.Dodge(
                     targetName = target.name,
                     targetId = null,
                     sourceIsPlayer = false,
+                    text = dodgeText,
                 ),
             )
             return
@@ -1269,6 +1274,7 @@ class CombatSystem(
                     targetId = null,
                     damage = mobDamage,
                     sourceIsPlayer = false,
+                    text = mobHitText,
                 ),
             )
         }
@@ -1297,22 +1303,22 @@ class CombatSystem(
         val petDamage = (mobRoll - pet.armor).coerceAtLeast(1)
         pet.takeDamage(petDamage)
         dirtyNotifier.mobHpDirty(pet.id)
-        outbound.send(
-            OutboundEvent.SendText(ownerSid, "${mob.name} hits ${pet.name} for $petDamage damage."),
-        )
+        val petHurtText = "${mob.name} hits ${pet.name} for $petDamage damage."
+        outbound.send(OutboundEvent.SendText(ownerSid, petHurtText))
         onCombatEvent(
             ownerSid,
             CombatEvent.PetHurt(
                 petName = pet.name,
                 attackerName = mob.name,
                 damage = petDamage,
+                text = petHurtText,
             ),
         )
         broadcastToRoom(
             players,
             outbound,
             mob.roomId,
-            "${mob.name} hits ${pet.name} for $petDamage damage.",
+            petHurtText,
             exclude = ownerSid,
         )
 
@@ -1450,6 +1456,7 @@ class CombatSystem(
                     targetName = target.name,
                     targetId = target.id.value,
                     damage = reduced,
+                    text = selfMsg,
                 ),
             )
             val roomMsg = skill.roomMessage

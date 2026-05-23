@@ -1004,6 +1004,7 @@ class GmcpEmitter(
                 targetId = event.targetId,
                 damage = event.damage,
                 sourceIsPlayer = event.sourceIsPlayer,
+                text = event.text,
             )
             is CombatEvent.AbilityHit -> CombatEventPayload(
                 type = "abilityHit",
@@ -1013,6 +1014,7 @@ class GmcpEmitter(
                 targetId = event.targetId,
                 damage = event.damage,
                 sourceIsPlayer = event.sourceIsPlayer,
+                text = event.text,
             )
             is CombatEvent.Heal -> CombatEventPayload(
                 type = "heal",
@@ -1021,12 +1023,14 @@ class GmcpEmitter(
                 targetName = event.targetName,
                 healing = event.amount,
                 sourceIsPlayer = event.sourceIsPlayer,
+                text = event.text,
             )
             is CombatEvent.Dodge -> CombatEventPayload(
                 type = "dodge",
                 targetName = event.targetName,
                 targetId = event.targetId,
                 sourceIsPlayer = event.sourceIsPlayer,
+                text = event.text,
             )
             is CombatEvent.DotTick -> CombatEventPayload(
                 type = "dotTick",
@@ -1034,12 +1038,14 @@ class GmcpEmitter(
                 targetName = event.targetName,
                 targetId = event.targetId,
                 damage = event.damage,
+                text = event.text,
             )
             is CombatEvent.HotTick -> CombatEventPayload(
                 type = "hotTick",
                 effectName = event.effectName,
                 targetName = event.targetName,
                 healing = event.amount,
+                text = event.text,
             )
             is CombatEvent.Kill -> CombatEventPayload(
                 type = "kill",
@@ -1059,6 +1065,7 @@ class GmcpEmitter(
                 attackerName = event.attackerName,
                 absorbed = event.absorbed,
                 shieldRemaining = event.remaining,
+                text = event.text,
             )
             is CombatEvent.PetHit -> CombatEventPayload(
                 type = "petHit",
@@ -1066,12 +1073,14 @@ class GmcpEmitter(
                 targetName = event.targetName,
                 targetId = event.targetId,
                 damage = event.damage,
+                text = event.text,
             )
             is CombatEvent.PetHurt -> CombatEventPayload(
                 type = "petHurt",
                 petName = event.petName,
                 attackerName = event.attackerName,
                 damage = event.damage,
+                text = event.text,
             )
             is CombatEvent.AbilityCast -> CombatEventPayload(
                 type = "abilityCast",
@@ -1081,6 +1090,7 @@ class GmcpEmitter(
                 targetId = event.targetId,
                 targetIsPlayer = event.targetIsPlayer,
                 sourceIsPlayer = event.sourceIsPlayer,
+                text = event.text,
             )
             is CombatEvent.Flee -> CombatEventPayload(
                 type = "flee",
@@ -2816,6 +2826,11 @@ class GmcpEmitter(
         val targetIsPlayer: Boolean? = null,
         val lootedItems: List<String> = emptyList(),
         val forced: Boolean? = null,
+        /**
+         * Server-rendered narrative line (custom config templates, stat-formula suffixes).
+         * When present, the web client combat log uses it instead of the hardcoded fallback.
+         */
+        val text: String? = null,
     )
 
     // ---------- stats payload ----------
