@@ -3,9 +3,11 @@ package dev.ambon.engine.abilities
 import dev.ambon.config.PetConfig
 import dev.ambon.config.PetTemplateConfig
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
@@ -57,6 +59,7 @@ class PetTargetSpellTest {
         val abilitySystem: AbilitySystem,
         val petSystem: PetSystem,
         val statusEffects: StatusEffectSystem,
+        val combatEvents: MutableList<Pair<SessionId, CombatEvent>>,
     )
 
     private fun buildHarness(): Harness {
@@ -111,12 +114,14 @@ class PetTargetSpellTest {
             ),
         )
 
+        val combatEvents = mutableListOf<Pair<SessionId, CombatEvent>>()
         val abilitySystem = fixture.buildAbilitySystem(
             registry = registry,
             statusEffects = statusEffects,
             petSystem = petSystem,
+            onCombatEvent = { sid, ev -> combatEvents.add(sid to ev) },
         )
-        return Harness(fixture, abilitySystem, petSystem, statusEffects)
+        return Harness(fixture, abilitySystem, petSystem, statusEffects, combatEvents)
     }
 
     @Test
@@ -144,6 +149,17 @@ class PetTargetSpellTest {
             messages.any { it.contains("Mend Pet heals a tank pet for 20 HP") },
             "Expected pet-heal message; got: $messages",
         )
+
+        // Combat log must see the heal so the canvas/UI can show a healing float
+        // on the pet — the same contract as self/ally heal paths.
+        val healEvent = h.combatEvents
+            .map { it.second }
+            .filterIsInstance<CombatEvent.Heal>()
+            .singleOrNull()
+        assertNotNull(healEvent, "Expected a CombatEvent.Heal for the pet target")
+        assertEquals("a tank pet", healEvent!!.targetName)
+        assertEquals(20, healEvent.amount)
+        assertEquals("mend_pet", healEvent.abilityId)
     }
 
     @Test

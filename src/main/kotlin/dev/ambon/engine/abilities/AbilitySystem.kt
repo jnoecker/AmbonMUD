@@ -420,6 +420,16 @@ class AbilitySystem(
                 if (healed > 0) {
                     dirtyNotifier.mobHpDirty(pet.id)
                     combat.addHealingThreat(sessionId, healed)
+                    onCombatEvent(
+                        sessionId,
+                        CombatEvent.Heal(
+                            abilityName = ability.displayName,
+                            targetName = pet.name,
+                            amount = healed,
+                            sourceIsPlayer = true,
+                            abilityId = ability.id.value,
+                        ),
+                    )
                 }
                 outbound.send(
                     OutboundEvent.SendText(
@@ -427,7 +437,6 @@ class AbilitySystem(
                         "Your ${ability.displayName} heals ${pet.name} for $healed HP.",
                     ),
                 )
-                emitAbilityCast(sessionId, ability, pet.name, pet.id.value, targetIsPlayer = false)
             }
             is AbilityEffect.ApplyStatus -> {
                 val sys = statusEffects ?: return "Status effects are not available."

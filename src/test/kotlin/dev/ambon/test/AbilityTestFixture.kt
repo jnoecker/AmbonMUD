@@ -3,6 +3,7 @@ package dev.ambon.test
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
@@ -12,6 +13,7 @@ import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.abilities.AbilitySystem
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.persistence.InMemoryPlayerRepository
@@ -48,6 +50,7 @@ class AbilityTestFixture(
         bindings: StatBindingsConfig = deterministicMeleeBindings(),
         progression: PlayerProgression = PlayerProgression(bindings = bindings),
         petSystem: PetSystem? = null,
+        onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> },
     ): AbilitySystem =
         AbilitySystem(
             players = players,
@@ -62,5 +65,6 @@ class AbilityTestFixture(
             petSystem = petSystem,
             bindings = bindings,
             progression = progression,
+            onCombatEvent = onCombatEvent,
         )
 }
