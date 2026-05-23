@@ -167,7 +167,7 @@ class TankPetCombatTest {
         val mob = enemyMob(damage = DamageRange(10, 10))
         fixture.mobs.upsert(mob)
 
-        val pet = petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, DEFAULT_OWNER_STATS)!!
+        petSystem.summon(sid, "tank_bear", TEST_ROOM_ID, DEFAULT_OWNER_STATS)!!
 
         combat.startCombat(sid, "goblin")
         fixture.outbound.drainAll()
