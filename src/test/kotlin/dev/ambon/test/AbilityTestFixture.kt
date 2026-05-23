@@ -7,6 +7,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.abilities.AbilityRegistry
@@ -46,6 +47,7 @@ class AbilityTestFixture(
         // exact damage values without modeling the production scaling curve.
         bindings: StatBindingsConfig = deterministicMeleeBindings(),
         progression: PlayerProgression = PlayerProgression(bindings = bindings),
+        petSystem: PetSystem? = null,
     ): AbilitySystem =
         AbilitySystem(
             players = players,
@@ -57,6 +59,7 @@ class AbilityTestFixture(
             statusEffects = statusEffects,
             dirtyNotifier = dirtyNotifier,
             mobs = mobsForAbility ?: mobs,
+            petSystem = petSystem,
             bindings = bindings,
             progression = progression,
         )
