@@ -412,13 +412,19 @@ data class AppConfig(
     }
 
     private fun validateEnginePets() {
+        require(engine.pets.maxHpRatio >= 0.0) { "ambonMUD.engine.pets.maxHpRatio must be >= 0" }
+        require(engine.pets.maxDamageRatio >= 0.0) { "ambonMUD.engine.pets.maxDamageRatio must be >= 0" }
+        require(engine.pets.maxArmorRatio >= 0.0) { "ambonMUD.engine.pets.maxArmorRatio must be >= 0" }
         engine.pets.definitions.forEach { (key, tmpl) ->
-            require(tmpl.hp > 0) { "ambonMUD.engine.pets.definitions.$key.hp must be > 0" }
-            require(tmpl.minDamage > 0) { "ambonMUD.engine.pets.definitions.$key.minDamage must be > 0" }
-            require(tmpl.maxDamage >= tmpl.minDamage) {
-                "ambonMUD.engine.pets.definitions.$key.maxDamage (${tmpl.maxDamage}) must be >= minDamage (${tmpl.minDamage})"
+            require(tmpl.hpRatio >= 0.0) { "ambonMUD.engine.pets.definitions.$key.hpRatio must be >= 0" }
+            require(tmpl.damageRatio >= 0.0) { "ambonMUD.engine.pets.definitions.$key.damageRatio must be >= 0" }
+            require(tmpl.armorRatio >= 0.0) { "ambonMUD.engine.pets.definitions.$key.armorRatio must be >= 0" }
+            require(tmpl.baseHp > 0) { "ambonMUD.engine.pets.definitions.$key.baseHp must be > 0" }
+            require(tmpl.baseMinDamage > 0) { "ambonMUD.engine.pets.definitions.$key.baseMinDamage must be > 0" }
+            require(tmpl.baseMaxDamage >= tmpl.baseMinDamage) {
+                "ambonMUD.engine.pets.definitions.$key.baseMaxDamage (${tmpl.baseMaxDamage}) must be >= baseMinDamage (${tmpl.baseMinDamage})"
             }
-            require(tmpl.armor >= 0) { "ambonMUD.engine.pets.definitions.$key.armor must be >= 0" }
+            require(tmpl.baseArmor >= 0) { "ambonMUD.engine.pets.definitions.$key.baseArmor must be >= 0" }
         }
     }
 
@@ -933,10 +939,23 @@ data class CurrenciesConfig(
 data class PetTemplateConfig(
     val name: String = "a pet",
     val description: String = "",
-    val hp: Int = 20,
-    val minDamage: Int = 1,
-    val maxDamage: Int = 4,
-    val armor: Int = 0,
+    /**
+     * Pet HP as a fraction of the owner's effective maxHp. 1.0 = same as owner.
+     * Combined with [baseHp] as a floor so low-level summons still feel substantial.
+     */
+    val hpRatio: Double = 0.6,
+    /** Pet melee damage as a fraction of the owner's displayed damage range. */
+    val damageRatio: Double = 0.5,
+    /** Pet armor as a fraction of the owner's equipped armor. */
+    val armorRatio: Double = 0.4,
+    /** Floor applied to scaled HP. Also used when no owner stats are available. */
+    val baseHp: Int = 20,
+    /** Floor applied to scaled min damage. */
+    val baseMinDamage: Int = 1,
+    /** Floor applied to scaled max damage. */
+    val baseMaxDamage: Int = 4,
+    /** Floor applied to scaled armor. */
+    val baseArmor: Int = 0,
     val image: String? = null,
     val spells: Map<String, PetSpellConfig> = emptyMap(),
     val defaultAttack: String? = null,
@@ -948,8 +967,18 @@ data class PetSpellConfig(
     val displayName: String = "",
     val message: String = "",
     val roomMessage: String = "",
+    /**
+     * Spell damage as a multiple of the pet's scaled melee swing. 1.0 = same as a normal
+     * swing; 2.0 = twice as hard. When set, the pet's already-scaled damage range is used as
+     * the anchor, so spells inherit level/gear scaling for free.
+     */
+    val damageRatio: Double? = null,
+    /** Heal as a fraction of the owner's maxHp. Used when [healMin]/[healMax] are not set. */
+    val healRatio: Double? = null,
+    /** Absolute fallback damage range, used when [damageRatio] is null. */
     val minDamage: Int? = null,
     val maxDamage: Int? = null,
+    /** Absolute fallback heal range, used when [healRatio] is null. */
     val healMin: Int = 0,
     val healMax: Int = 0,
     val statusEffectId: String? = null,
@@ -969,6 +998,12 @@ data class PetConfig(
      * being clobbered by auto-cast.
      */
     val manualSkillGraceMs: Long = 8_000L,
+    /** Global cap on [PetTemplateConfig.hpRatio]. Prevents a single template from trivializing content. */
+    val maxHpRatio: Double = 1.0,
+    /** Global cap on [PetTemplateConfig.damageRatio]. Prevents gear-stacked pets from out-DPS'ing the player. */
+    val maxDamageRatio: Double = 0.8,
+    /** Global cap on [PetTemplateConfig.armorRatio]. */
+    val maxArmorRatio: Double = 1.0,
 )
 
 data class BankConfig(

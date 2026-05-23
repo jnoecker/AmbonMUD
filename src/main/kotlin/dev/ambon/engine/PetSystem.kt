@@ -58,12 +58,18 @@ class PetSystem(
      * Summons a pet from a template. Dismisses any existing pet first.
      * [durationMs] of 0 means permanent (no automatic expiry).
      * Returns the new pet MobState, or null if the template doesn't exist.
+     *
+     * Stats scale as a fraction of [owner]'s effective stats so pets keep pace with player
+     * level/gear curves. Each template defines `hpRatio`/`damageRatio`/`armorRatio`; the
+     * `baseHp`/`baseMinDamage`/`baseMaxDamage`/`baseArmor` floors keep low-level summons
+     * substantial. Global `maxHpRatio`/`maxDamageRatio`/`maxArmorRatio` caps in `PetConfig`
+     * prevent gear-stacked pets from trivializing content.
      */
     fun summon(
         ownerSid: SessionId,
         templateKey: String,
         roomId: RoomId,
-        ownerLevel: Int,
+        owner: OwnerStats,
         durationMs: Long = 0L,
         ownerName: String? = null,
     ): MobState? {
@@ -72,14 +78,18 @@ class PetSystem(
         // Dismiss existing pet
         dismissAll(ownerSid)
 
-        // Scale pet stats with owner level
-        val levelScale = 1.0 + (ownerLevel - 1) * 0.1
-        val scaledHp = (template.hp * levelScale).toInt().coerceAtLeast(1)
-        val scaledMinDmg = (template.minDamage * levelScale).toInt().coerceAtLeast(1)
-        val scaledMaxDmg = (template.maxDamage * levelScale).toInt().coerceAtLeast(1)
+        val hpRatio = template.hpRatio.coerceAtMost(config.maxHpRatio)
+        val dmgRatio = template.damageRatio.coerceAtMost(config.maxDamageRatio)
+        val armorRatio = template.armorRatio.coerceAtMost(config.maxArmorRatio)
+
+        val scaledHp = maxOf(template.baseHp, (owner.maxHp * hpRatio).toInt()).coerceAtLeast(1)
+        val scaledMinDmg = maxOf(template.baseMinDamage, (owner.damageMin * dmgRatio).toInt()).coerceAtLeast(1)
+        val scaledMaxDmg = maxOf(template.baseMaxDamage, (owner.damageMax * dmgRatio).toInt()).coerceAtLeast(scaledMinDmg)
+        val scaledArmor = maxOf(template.baseArmor, (owner.armor * armorRatio).toInt()).coerceAtLeast(0)
 
         val petId = MobId("pet:${UUID.randomUUID().toString().take(8)}")
-        val petSpells = template.spells.map { (key, sc) -> toMobSpell(key, sc) }
+        val petDamage = DamageRange(scaledMinDmg, scaledMaxDmg)
+        val petSpells = template.spells.map { (key, sc) -> toMobSpell(key, sc, petDamage, owner.maxHp) }
         val pet = MobState(
             id = petId,
             name = template.name,
@@ -87,8 +97,8 @@ class PetSystem(
             roomId = roomId,
             hp = scaledHp,
             maxHp = scaledHp,
-            damage = DamageRange(scaledMinDmg, scaledMaxDmg),
-            armor = template.armor,
+            damage = petDamage,
+            armor = scaledArmor,
             xpReward = 0L,
             templateKey = templateKey,
             image = resolveImage(template.image),
@@ -207,25 +217,44 @@ class PetSystem(
         if (sid != null) sessionToPet.remove(sid)
     }
 
-    private fun toMobSpell(key: String, sc: PetSpellConfig): MobSpell =
-        MobSpell(
+    private fun toMobSpell(
+        key: String,
+        sc: PetSpellConfig,
+        petDamage: DamageRange,
+        ownerMaxHp: Int,
+    ): MobSpell {
+        val scaledDamage: DamageRange? = when {
+            sc.damageRatio != null -> DamageRange(
+                (petDamage.min * sc.damageRatio).toInt().coerceAtLeast(1),
+                (petDamage.max * sc.damageRatio).toInt().coerceAtLeast(1),
+            )
+            sc.minDamage != null || sc.maxDamage != null -> DamageRange(
+                sc.minDamage ?: 1,
+                sc.maxDamage ?: (sc.minDamage ?: 1),
+            )
+            else -> null
+        }
+        val (healMin, healMax) = if (sc.healRatio != null) {
+            val anchor = (ownerMaxHp * sc.healRatio).toInt().coerceAtLeast(1)
+            anchor to anchor
+        } else {
+            sc.healMin to sc.healMax
+        }
+        return MobSpell(
             id = key,
             displayName = sc.displayName,
             message = sc.message,
             roomMessage = sc.roomMessage,
-            damage = if (sc.minDamage != null || sc.maxDamage != null) {
-                DamageRange(sc.minDamage ?: 1, sc.maxDamage ?: (sc.minDamage ?: 1))
-            } else {
-                null
-            },
-            healMin = sc.healMin,
-            healMax = sc.healMax,
+            damage = scaledDamage,
+            healMin = healMin,
+            healMax = healMax,
             statusEffectId = sc.statusEffectId?.let { StatusEffectId(it) },
             cooldownMs = sc.cooldownMs,
             weight = sc.weight,
             threatBonus = sc.threatBonus,
             image = resolveImage(sc.image),
         )
+    }
 
     /** Per-owner timestamp of the most recent manual `pet <skill>` trigger. */
     private val lastManualSkillCastMs = mutableMapOf<SessionId, Long>()
@@ -255,6 +284,17 @@ class PetSystem(
             ?: pet.spells.firstOrNull { it.displayName.lowercase().startsWith(q) }
             ?: pet.spells.firstOrNull { it.displayName.lowercase().contains(q) }
     }
+
+    /**
+     * Snapshot of the owner's effective combat stats at summon time. Pet stats are derived
+     * from these via per-template ratios so pets scale with both level and gear.
+     */
+    data class OwnerStats(
+        val maxHp: Int,
+        val damageMin: Int,
+        val damageMax: Int,
+        val armor: Int,
+    )
 
     data class ExpiredPet(
         val ownerSessionId: SessionId,

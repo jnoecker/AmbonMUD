@@ -91,13 +91,15 @@ class PetCommandTest {
             "fire_familiar" to PetTemplateConfig(
                 name = "a fire familiar",
                 description = "A small elemental of living flame.",
-                hp = 20,
-                minDamage = 2,
-                maxDamage = 5,
-                armor = 1,
+                baseHp = 20,
+                baseMinDamage = 2,
+                baseMaxDamage = 5,
+                baseArmor = 1,
             ),
         ),
     )
+
+    private val ownerStats = PetSystem.OwnerStats(maxHp = 30, damageMin = 1, damageMax = 3, armor = 0)
 
     private fun harness(): Triple<CommandRouterHarness, PetSystem, MobRegistry> {
         val mobs = MobRegistry()
@@ -128,7 +130,7 @@ class PetCommandTest {
             val sid = SessionId(1)
             h.loginPlayer(sid, "Alice")
             val player = h.players.get(sid)!!
-            petSystem.summon(sid, "fire_familiar", player.roomId, player.level)
+            petSystem.summon(sid, "fire_familiar", player.roomId, ownerStats)
             h.drain()
 
             h.router.handle(sid, Command.PetStatus)
@@ -144,7 +146,7 @@ class PetCommandTest {
             val sid = SessionId(1)
             h.loginPlayer(sid, "Alice")
             val player = h.players.get(sid)!!
-            petSystem.summon(sid, "fire_familiar", player.roomId, player.level)
+            petSystem.summon(sid, "fire_familiar", player.roomId, ownerStats)
             h.drain()
 
             h.router.handle(sid, Command.PetDismiss)
@@ -174,7 +176,7 @@ class PetCommandTest {
             val sid = SessionId(1)
             h.loginPlayer(sid, "Alice")
             val player = h.players.get(sid)!!
-            petSystem.summon(sid, "fire_familiar", player.roomId, player.level)
+            petSystem.summon(sid, "fire_familiar", player.roomId, ownerStats)
             h.drain()
 
             h.router.handle(sid, Command.PetName("Sparky"))

@@ -35,14 +35,16 @@ class PetImageAndDismissTest {
             "fire_familiar" to PetTemplateConfig(
                 name = "a fire familiar",
                 description = "A small elemental of living flame.",
-                hp = 20,
-                minDamage = 2,
-                maxDamage = 5,
-                armor = 1,
+                baseHp = 20,
+                baseMinDamage = 2,
+                baseMaxDamage = 5,
+                baseArmor = 1,
                 image = "pets/fire_familiar.png",
             ),
         ),
     )
+
+    private val ownerStats = PetSystem.OwnerStats(maxHp = 30, damageMin = 1, damageMax = 3, armor = 0)
 
     // ─────────────────────────────────────────────────────────────────────────
     // Issue #1068 — pet image must be resolved against the asset host.
@@ -57,7 +59,7 @@ class PetImageAndDismissTest {
             imagesBaseUrl = "https://auringold.ambon.dev/img/",
         )
 
-        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerLevel = 1)!!
+        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerStats)!!
 
         assertTrue(
             pet.image == "https://auringold.ambon.dev/img/pets/fire_familiar.png",
@@ -74,7 +76,7 @@ class PetImageAndDismissTest {
             imagesBaseUrl = "https://auringold.ambon.dev/img",
         )
 
-        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerLevel = 1)!!
+        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerStats)!!
         assertTrue(
             pet.image == "https://auringold.ambon.dev/img/pets/fire_familiar.png",
             "expected normalized URL, got=${pet.image}",
@@ -85,7 +87,7 @@ class PetImageAndDismissTest {
     fun `pet image left untouched when template image is null`() {
         val cfg = PetConfig(definitions = mapOf("no_img" to PetTemplateConfig(name = "a wisp")))
         val pets = PetSystem(config = cfg, mobs = MobRegistry(), clock = MutableClock(0L), imagesBaseUrl = "https://x/")
-        val pet = pets.summon(ownerSid, "no_img", roomId, ownerLevel = 1)!!
+        val pet = pets.summon(ownerSid, "no_img", roomId, ownerStats)!!
         assertNull(pet.image)
     }
 
@@ -97,7 +99,7 @@ class PetImageAndDismissTest {
             ),
         )
         val pets = PetSystem(config = cfg, mobs = MobRegistry(), clock = MutableClock(0L), imagesBaseUrl = "https://x/")
-        val pet = pets.summon(ownerSid, "abs", roomId, ownerLevel = 1)!!
+        val pet = pets.summon(ownerSid, "abs", roomId, ownerStats)!!
         assertTrue(pet.image == "https://other.cdn.example/p.png", "got=${pet.image}")
     }
 
@@ -118,7 +120,7 @@ class PetImageAndDismissTest {
 
         fixture.players.loginOrFail(ownerSid, "Owner")
         fixture.players.loginOrFail(bystanderSid, "Bystander")
-        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerLevel = 1)!!
+        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerStats)!!
         fixture.outbound.drainAll()
 
         // Mirror what PetHandler/GameEngine do after dismissAll: broadcast removal
@@ -155,7 +157,7 @@ class PetImageAndDismissTest {
             clock = clock,
             imagesBaseUrl = "/images/",
         )
-        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerLevel = 1, durationMs = 5_000L)!!
+        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerStats, durationMs = 5_000L)!!
 
         clock.advance(5_000L)
         val expired = pets.tick()
@@ -173,7 +175,7 @@ class PetImageAndDismissTest {
             clock = MutableClock(0L),
             imagesBaseUrl = "/images/",
         )
-        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerLevel = 1)!!
+        val pet = pets.summon(ownerSid, "fire_familiar", roomId, ownerStats)!!
 
         val dismissed = pets.onOwnerDisconnect(ownerSid)
         assertTrue(dismissed.size == 1, "onOwnerDisconnect must return dismissed pets, got=$dismissed")
