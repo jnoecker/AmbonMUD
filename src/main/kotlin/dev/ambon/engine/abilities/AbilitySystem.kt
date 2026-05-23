@@ -115,7 +115,7 @@ class AbilitySystem(
         }
     }
 
-    @Suppress("CyclomaticComplexity", "LongMethod")
+    @Suppress("CyclomaticComplexity", "LongMethod", "ReturnCount")
     private suspend fun handleEnemyCast(
         sessionId: SessionId,
         player: PlayerState,
@@ -123,6 +123,18 @@ class AbilitySystem(
         targetKeyword: String?,
         now: Long,
     ): String? {
+        val effects = ability.effect.flatten()
+        for (e in effects) {
+            when (e) {
+                is AbilityEffect.DirectDamage,
+                is AbilityEffect.AreaDamage,
+                is AbilityEffect.Taunt,
+                is AbilityEffect.ApplyStatus,
+                -> {}
+                else -> return "Spell misconfigured (unexpected effect for enemy target)."
+            }
+        }
+
         val keyword =
             targetKeyword
                 ?: if (combat.isInCombat(sessionId)) {
@@ -140,68 +152,39 @@ class AbilitySystem(
                     ?: return "Cast ${ability.displayName} on whom?"
             }
 
-        val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        if (effects.any { it is AbilityEffect.AreaDamage } && mobs == null) {
+            return "Area damage is not available."
+        }
+        if (effects.any { it is AbilityEffect.ApplyStatus } && statusEffects == null) {
+            return "Status effects are not available."
+        }
+        if (effects.any { it is AbilityEffect.Taunt } && !combat.isMobInCombat(mob.id)) {
+            return "${mob.name} is not in combat."
+        }
 
-        when (val effect = ability.effect) {
-            is AbilityEffect.DirectDamage -> {
-                deductManaAndCooldown(sessionId, player, ability, now)
-                val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
-                applySpellDamage(sessionId, mob, ability, damage)
-            }
-            is AbilityEffect.AreaDamage -> {
-                val mobRegistry = mobs ?: return "Area damage is not available."
+        val areaTargets: List<MobState>? =
+            if (effects.any { it is AbilityEffect.AreaDamage }) {
                 val groupMembers =
                     groupSystem?.membersInRoom(sessionId, player.roomId)
                         ?: listOf(sessionId)
-
-                // Find all mobs in room that are in combat with any group member
-                val targetMobs =
-                    mobRegistry.mobsInRoom(player.roomId).filter { m ->
+                val found =
+                    mobs!!.mobsInRoom(player.roomId).filter { m ->
                         combat.isMobInCombat(m.id) &&
                             groupMembers.any { sid -> combat.threatTable.hasThreat(m.id, sid) }
                     }
+                if (found.isEmpty()) return "No enemies in combat to hit."
+                found
+            } else {
+                null
+            }
 
-                if (targetMobs.isEmpty()) {
-                    return "No enemies in combat to hit."
-                }
+        val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        deductManaAndCooldown(sessionId, player, ability, now)
 
-                deductManaAndCooldown(sessionId, player, ability, now)
-                for (m in targetMobs) {
-                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
-                    applySpellDamage(sessionId, m, ability, damage)
-                }
-            }
-            is AbilityEffect.Taunt -> {
-                if (!combat.isMobInCombat(mob.id)) {
-                    return "${mob.name} is not in combat."
-                }
-                deductManaAndCooldown(sessionId, player, ability, now)
-                val currentMax = combat.threatTable.maxThreatValue(mob.id)
-                combat.threatTable.setThreat(mob.id, sessionId, currentMax + effect.margin + effect.flatThreat)
-                outbound.send(
-                    OutboundEvent.SendText(
-                        sessionId,
-                        "You taunt ${mob.name}! It turns to face you.",
-                    ),
-                )
-                emitAbilityCast(sessionId, ability, mob.name, mob.id.value, targetIsPlayer = false)
-            }
-            is AbilityEffect.ApplyStatus -> {
-                val sys =
-                    statusEffects
-                        ?: return "Status effects are not available."
-                deductManaAndCooldown(sessionId, player, ability, now)
-                sys.applyToMob(mob.id, effect.statusEffectId, sessionId)
-                outbound.send(
-                    OutboundEvent.SendText(
-                        sessionId,
-                        "Your ${ability.displayName} afflicts ${mob.name}!",
-                    ),
-                )
-                emitAbilityCast(sessionId, ability, mob.name, mob.id.value, targetIsPlayer = false)
-            }
-            else -> return "Spell misconfigured (unexpected effect for enemy target)."
+        for (effect in effects) {
+            executeEnemyEffect(sessionId, player, ability, mob, effect, playerStats, areaTargets)
         }
+
         broadcastToRoom(
             players,
             outbound,
@@ -212,16 +195,101 @@ class AbilitySystem(
         return null
     }
 
+    private suspend fun executeEnemyEffect(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        mob: MobState,
+        effect: AbilityEffect,
+        playerStats: StatMap,
+        areaTargets: List<MobState>?,
+    ) {
+        when (effect) {
+            is AbilityEffect.DirectDamage -> {
+                val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                applySpellDamage(sessionId, mob, ability, damage)
+            }
+            is AbilityEffect.AreaDamage -> {
+                for (m in areaTargets.orEmpty()) {
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    applySpellDamage(sessionId, m, ability, damage)
+                }
+            }
+            is AbilityEffect.Taunt -> {
+                val currentMax = combat.threatTable.maxThreatValue(mob.id)
+                combat.threatTable.setThreat(
+                    mob.id,
+                    sessionId,
+                    currentMax + effect.margin + effect.flatThreat,
+                )
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "You taunt ${mob.name}! It turns to face you.",
+                    ),
+                )
+                emitAbilityCast(sessionId, ability, mob.name, mob.id.value, targetIsPlayer = false)
+            }
+            is AbilityEffect.ApplyStatus -> {
+                statusEffects!!.applyToMob(mob.id, effect.statusEffectId, sessionId)
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Your ${ability.displayName} afflicts ${mob.name}!",
+                    ),
+                )
+                emitAbilityCast(sessionId, ability, mob.name, mob.id.value, targetIsPlayer = false)
+            }
+            else -> {}
+        }
+    }
+
     private suspend fun handleSelfCast(
         sessionId: SessionId,
         player: PlayerState,
         ability: AbilityDefinition,
         now: Long,
     ): String? {
-        when (val effect = ability.effect) {
+        val effects = ability.effect.flatten()
+        for (e in effects) {
+            when (e) {
+                is AbilityEffect.DirectHeal,
+                is AbilityEffect.ApplyStatus,
+                is AbilityEffect.SummonPet,
+                -> {}
+                else -> return "Spell misconfigured (unexpected effect for self target)."
+            }
+        }
+        if (effects.any { it is AbilityEffect.ApplyStatus } && statusEffects == null) {
+            return "Status effects are not available."
+        }
+
+        val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        deductManaAndCooldown(sessionId, player, ability, now)
+
+        for (effect in effects) {
+            executeSelfEffect(sessionId, player, ability, effect, playerStats)
+        }
+
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName}.",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    private suspend fun executeSelfEffect(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        effect: AbilityEffect,
+        playerStats: StatMap,
+    ) {
+        when (effect) {
             is AbilityEffect.DirectHeal -> {
-                deductManaAndCooldown(sessionId, player, ability, now)
-                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val healAmount =
                     computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val healed = applyHeal(sessionId, player, healAmount, dirtyNotifier)
@@ -243,11 +311,7 @@ class AbilitySystem(
                 outbound.send(OutboundEvent.SendText(sessionId, healText))
             }
             is AbilityEffect.ApplyStatus -> {
-                val sys =
-                    statusEffects
-                        ?: return "Status effects are not available."
-                deductManaAndCooldown(sessionId, player, ability, now)
-                sys.applyToPlayer(sessionId, effect.statusEffectId, sessionId)
+                statusEffects!!.applyToPlayer(sessionId, effect.statusEffectId, sessionId)
                 dirtyNotifier.playerStatusDirty(sessionId)
                 outbound.send(
                     OutboundEvent.SendText(
@@ -258,20 +322,11 @@ class AbilitySystem(
                 emitAbilityCast(sessionId, ability, player.name, null, targetIsPlayer = true)
             }
             is AbilityEffect.SummonPet -> {
-                deductManaAndCooldown(sessionId, player, ability, now)
                 onSummonPet(sessionId, effect.petTemplateKey, effect.durationMs)
                 emitAbilityCast(sessionId, ability, player.name, null, targetIsPlayer = true)
             }
-            else -> return "Spell misconfigured (unexpected effect for self target)."
+            else -> {}
         }
-        broadcastToRoom(
-            players,
-            outbound,
-            player.roomId,
-            "${player.name} casts ${ability.displayName}.",
-            exclude = sessionId,
-        )
-        return null
     }
 
     private suspend fun handleAllyCast(
@@ -306,10 +361,47 @@ class AbilitySystem(
 
         val target = players.get(targetSid) ?: return "Target not found."
 
-        when (val effect = ability.effect) {
+        val effects = ability.effect.flatten()
+        for (e in effects) {
+            when (e) {
+                is AbilityEffect.DirectHeal,
+                is AbilityEffect.ApplyStatus,
+                -> {}
+                else -> return "Spell misconfigured (unexpected effect for ally target)."
+            }
+        }
+        if (effects.any { it is AbilityEffect.ApplyStatus } && statusEffects == null) {
+            return "Status effects are not available."
+        }
+
+        val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        deductManaAndCooldown(sessionId, player, ability, now)
+
+        for (effect in effects) {
+            executeAllyEffect(sessionId, player, ability, targetSid, target, effect, playerStats)
+        }
+
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName}.",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    private suspend fun executeAllyEffect(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        targetSid: SessionId,
+        target: PlayerState,
+        effect: AbilityEffect,
+        playerStats: StatMap,
+    ) {
+        when (effect) {
             is AbilityEffect.DirectHeal -> {
-                deductManaAndCooldown(sessionId, player, ability, now)
-                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val healAmount =
                     computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
@@ -344,11 +436,7 @@ class AbilitySystem(
                 }
             }
             is AbilityEffect.ApplyStatus -> {
-                val sys =
-                    statusEffects
-                        ?: return "Status effects are not available."
-                deductManaAndCooldown(sessionId, player, ability, now)
-                sys.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
+                statusEffects!!.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
                 dirtyNotifier.playerStatusDirty(targetSid)
                 if (targetSid == sessionId) {
                     outbound.send(
@@ -373,16 +461,8 @@ class AbilitySystem(
                 }
                 emitAbilityCast(sessionId, ability, target.name, null, targetIsPlayer = (targetSid == sessionId))
             }
-            else -> return "Spell misconfigured (unexpected effect for ally target)."
+            else -> {}
         }
-        broadcastToRoom(
-            players,
-            outbound,
-            player.roomId,
-            "${player.name} casts ${ability.displayName}.",
-            exclude = sessionId,
-        )
-        return null
     }
 
     /**
@@ -400,10 +480,46 @@ class AbilitySystem(
         val pet = pets.getActivePet(sessionId) ?: return "You have no active pet."
         if (pet.roomId != player.roomId) return "${pet.name} is not here."
 
-        when (val effect = ability.effect) {
+        val effects = ability.effect.flatten()
+        for (e in effects) {
+            when (e) {
+                is AbilityEffect.DirectHeal,
+                is AbilityEffect.ApplyStatus,
+                -> {}
+                else -> return "Spell misconfigured (unexpected effect for pet target)."
+            }
+        }
+        if (effects.any { it is AbilityEffect.ApplyStatus } && statusEffects == null) {
+            return "Status effects are not available."
+        }
+
+        val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        deductManaAndCooldown(sessionId, player, ability, now)
+
+        for (effect in effects) {
+            executePetEffect(sessionId, player, ability, pet, effect, playerStats)
+        }
+
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName} on ${pet.name}.",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    private suspend fun executePetEffect(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        pet: MobState,
+        effect: AbilityEffect,
+        playerStats: StatMap,
+    ) {
+        when (effect) {
             is AbilityEffect.DirectHeal -> {
-                deductManaAndCooldown(sessionId, player, ability, now)
-                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val healAmount =
                     computeSpellHeal(bindings, player.level, playerStats, effect.minHeal, effect.maxHeal, rng)
                 val before = pet.hp
@@ -428,9 +544,7 @@ class AbilitySystem(
                 outbound.send(OutboundEvent.SendText(sessionId, petHealText))
             }
             is AbilityEffect.ApplyStatus -> {
-                val sys = statusEffects ?: return "Status effects are not available."
-                deductManaAndCooldown(sessionId, player, ability, now)
-                sys.applyToMob(pet.id, effect.statusEffectId, sessionId)
+                statusEffects!!.applyToMob(pet.id, effect.statusEffectId, sessionId)
                 outbound.send(
                     OutboundEvent.SendText(
                         sessionId,
@@ -439,26 +553,32 @@ class AbilitySystem(
                 )
                 emitAbilityCast(sessionId, ability, pet.name, pet.id.value, targetIsPlayer = false)
             }
-            else -> return "Spell misconfigured (unexpected effect for pet target)."
+            else -> {}
         }
-        broadcastToRoom(
-            players,
-            outbound,
-            player.roomId,
-            "${player.name} casts ${ability.displayName} on ${pet.name}.",
-            exclude = sessionId,
-        )
-        return null
     }
 
-    @Suppress("CyclomaticComplexity", "LongMethod")
+    @Suppress("CyclomaticComplexity", "LongMethod", "ReturnCount")
     private suspend fun handleAllEnemiesCast(
         sessionId: SessionId,
         player: PlayerState,
         ability: AbilityDefinition,
         now: Long,
     ): String? {
+        val effects = ability.effect.flatten()
+        for (e in effects) {
+            when (e) {
+                is AbilityEffect.DirectDamage,
+                is AbilityEffect.AreaDamage,
+                is AbilityEffect.ApplyStatus,
+                -> {}
+                else -> return "Spell misconfigured (unexpected effect for all_enemies target)."
+            }
+        }
         val mobRegistry = mobs ?: return "Area damage is not available."
+        if (effects.any { it is AbilityEffect.ApplyStatus } && statusEffects == null) {
+            return "Status effects are not available."
+        }
+
         val groupMembers =
             groupSystem?.membersInRoom(sessionId, player.roomId)
                 ?: listOf(sessionId)
@@ -474,40 +594,12 @@ class AbilitySystem(
         }
 
         val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        deductManaAndCooldown(sessionId, player, ability, now)
 
-        when (val effect = ability.effect) {
-            is AbilityEffect.DirectDamage -> {
-                deductManaAndCooldown(sessionId, player, ability, now)
-                for (m in targetMobs) {
-                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
-                    applySpellDamage(sessionId, m, ability, damage)
-                }
-            }
-            is AbilityEffect.AreaDamage -> {
-                deductManaAndCooldown(sessionId, player, ability, now)
-                for (m in targetMobs) {
-                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
-                    applySpellDamage(sessionId, m, ability, damage)
-                }
-            }
-            is AbilityEffect.ApplyStatus -> {
-                val sys =
-                    statusEffects
-                        ?: return "Status effects are not available."
-                deductManaAndCooldown(sessionId, player, ability, now)
-                for (m in targetMobs) {
-                    sys.applyToMob(m.id, effect.statusEffectId, sessionId)
-                    emitAbilityCast(sessionId, ability, m.name, m.id.value, targetIsPlayer = false)
-                }
-                outbound.send(
-                    OutboundEvent.SendText(
-                        sessionId,
-                        "Your ${ability.displayName} afflicts all enemies!",
-                    ),
-                )
-            }
-            else -> return "Spell misconfigured (unexpected effect for all_enemies target)."
+        for (effect in effects) {
+            executeAllEnemiesEffect(sessionId, player, ability, targetMobs, effect, playerStats)
         }
+
         broadcastToRoom(
             players,
             outbound,
@@ -518,21 +610,94 @@ class AbilitySystem(
         return null
     }
 
-    @Suppress("CyclomaticComplexity", "LongMethod")
+    private suspend fun executeAllEnemiesEffect(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        targetMobs: List<MobState>,
+        effect: AbilityEffect,
+        playerStats: StatMap,
+    ) {
+        when (effect) {
+            is AbilityEffect.DirectDamage -> {
+                for (m in targetMobs) {
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    applySpellDamage(sessionId, m, ability, damage)
+                }
+            }
+            is AbilityEffect.AreaDamage -> {
+                for (m in targetMobs) {
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    applySpellDamage(sessionId, m, ability, damage)
+                }
+            }
+            is AbilityEffect.ApplyStatus -> {
+                for (m in targetMobs) {
+                    statusEffects!!.applyToMob(m.id, effect.statusEffectId, sessionId)
+                    emitAbilityCast(sessionId, ability, m.name, m.id.value, targetIsPlayer = false)
+                }
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Your ${ability.displayName} afflicts all enemies!",
+                    ),
+                )
+            }
+            else -> {}
+        }
+    }
+
+    @Suppress("CyclomaticComplexity", "LongMethod", "ReturnCount")
     private suspend fun handleAllAlliesCast(
         sessionId: SessionId,
         player: PlayerState,
         ability: AbilityDefinition,
         now: Long,
     ): String? {
+        val effects = ability.effect.flatten()
+        for (e in effects) {
+            when (e) {
+                is AbilityEffect.DirectHeal,
+                is AbilityEffect.ApplyStatus,
+                -> {}
+                else -> return "Spell misconfigured (unexpected effect for all_allies target)."
+            }
+        }
+        if (effects.any { it is AbilityEffect.ApplyStatus } && statusEffects == null) {
+            return "Status effects are not available."
+        }
+
         val groupMembers =
             groupSystem?.membersInRoom(sessionId, player.roomId)
                 ?: listOf(sessionId)
 
-        when (val effect = ability.effect) {
+        val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        deductManaAndCooldown(sessionId, player, ability, now)
+
+        for (effect in effects) {
+            executeAllAlliesEffect(sessionId, player, ability, groupMembers, effect, playerStats)
+        }
+
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName}!",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    private suspend fun executeAllAlliesEffect(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        groupMembers: List<SessionId>,
+        effect: AbilityEffect,
+        playerStats: StatMap,
+    ) {
+        when (effect) {
             is AbilityEffect.DirectHeal -> {
-                deductManaAndCooldown(sessionId, player, ability, now)
-                val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 for (targetSid in groupMembers) {
                     val target = players.get(targetSid) ?: continue
                     val healAmount =
@@ -570,12 +735,8 @@ class AbilitySystem(
                 }
             }
             is AbilityEffect.ApplyStatus -> {
-                val sys =
-                    statusEffects
-                        ?: return "Status effects are not available."
-                deductManaAndCooldown(sessionId, player, ability, now)
                 for (targetSid in groupMembers) {
-                    sys.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
+                    statusEffects!!.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
                     dirtyNotifier.playerStatusDirty(targetSid)
                     val targetPlayer = players.get(targetSid)
                     if (targetSid == sessionId) {
@@ -608,16 +769,8 @@ class AbilitySystem(
                     )
                 }
             }
-            else -> return "Spell misconfigured (unexpected effect for all_allies target)."
+            else -> {}
         }
-        broadcastToRoom(
-            players,
-            outbound,
-            player.roomId,
-            "${player.name} casts ${ability.displayName}!",
-            exclude = sessionId,
-        )
-        return null
     }
 
     private suspend fun applySpellDamage(

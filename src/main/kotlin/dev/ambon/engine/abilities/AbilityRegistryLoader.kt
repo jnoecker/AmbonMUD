@@ -1,5 +1,6 @@
 package dev.ambon.engine.abilities
 
+import dev.ambon.config.AbilityEffectConfig
 import dev.ambon.config.AbilityEngineConfig
 import dev.ambon.config.AbilityVisualConfig
 import dev.ambon.domain.DamageRange
@@ -14,37 +15,7 @@ object AbilityRegistryLoader {
         val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
         for ((key, defConfig) in config.definitions) {
             val targetType = defConfig.targetType.trim().lowercase()
-            val effect =
-                when (defConfig.effect.type.uppercase()) {
-                    "DIRECT_DAMAGE" ->
-                        AbilityEffect.DirectDamage(
-                            damage = DamageRange(defConfig.effect.minDamage, defConfig.effect.maxDamage),
-                        )
-                    "DIRECT_HEAL" ->
-                        AbilityEffect.DirectHeal(
-                            minHeal = defConfig.effect.minHeal,
-                            maxHeal = defConfig.effect.maxHeal,
-                        )
-                    "APPLY_STATUS" ->
-                        AbilityEffect.ApplyStatus(
-                            statusEffectId = StatusEffectId(defConfig.effect.statusEffectId),
-                        )
-                    "AREA_DAMAGE" ->
-                        AbilityEffect.AreaDamage(
-                            damage = DamageRange(defConfig.effect.minDamage, defConfig.effect.maxDamage),
-                        )
-                    "TAUNT" ->
-                        AbilityEffect.Taunt(
-                            flatThreat = defConfig.effect.flatThreat,
-                            margin = defConfig.effect.margin,
-                        )
-                    "SUMMON_PET" ->
-                        AbilityEffect.SummonPet(
-                            petTemplateKey = defConfig.effect.petTemplateKey,
-                            durationMs = defConfig.effect.durationMs,
-                        )
-                    else -> continue
-                }
+            val effect = parseEffect(defConfig.effect) ?: continue
             val requiredClass = defConfig.requiredClass.ifBlank { null }
             val prerequisites = defConfig.prerequisites.map { AbilityId(it) }.toSet()
             val tree = defConfig.tree.ifBlank { "" }
@@ -72,6 +43,41 @@ object AbilityRegistryLoader {
         }
         validateNoPrerequisiteCycles(registry)
     }
+
+    /**
+     * Parses a single [AbilityEffectConfig] into an [AbilityEffect], recursing
+     * for composite effects. Returns null for unknown types or for composites
+     * with no parseable children, so the caller can skip the whole ability.
+     */
+    private fun parseEffect(config: AbilityEffectConfig): AbilityEffect? =
+        when (config.type.uppercase()) {
+            "DIRECT_DAMAGE" -> AbilityEffect.DirectDamage(
+                damage = DamageRange(config.minDamage, config.maxDamage),
+            )
+            "DIRECT_HEAL" -> AbilityEffect.DirectHeal(
+                minHeal = config.minHeal,
+                maxHeal = config.maxHeal,
+            )
+            "APPLY_STATUS" -> AbilityEffect.ApplyStatus(
+                statusEffectId = StatusEffectId(config.statusEffectId),
+            )
+            "AREA_DAMAGE" -> AbilityEffect.AreaDamage(
+                damage = DamageRange(config.minDamage, config.maxDamage),
+            )
+            "TAUNT" -> AbilityEffect.Taunt(
+                flatThreat = config.flatThreat,
+                margin = config.margin,
+            )
+            "SUMMON_PET" -> AbilityEffect.SummonPet(
+                petTemplateKey = config.petTemplateKey,
+                durationMs = config.durationMs,
+            )
+            "COMPOSITE" -> {
+                val children = config.effects.mapNotNull { parseEffect(it) }
+                if (children.isEmpty()) null else AbilityEffect.Composite(effects = children)
+            }
+            else -> null
+        }
 
     /**
      * Resolves the [AbilityVisual] for an ability. An empty [AbilityVisualConfig.archetype]

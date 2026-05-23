@@ -18,7 +18,7 @@ import dev.ambon.domain.world.World
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.AbilitySystem
-import dev.ambon.engine.abilities.toEffectType
+import dev.ambon.engine.abilities.primaryEffectType
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -493,7 +493,7 @@ class GmcpEmitter(
                     cooldownRemainingMs = cooldownRemainingMs(a.id).coerceAtLeast(0L),
                     levelRequired = a.levelRequired,
                     targetType = a.targetType,
-                    effectType = a.effect.toEffectType(),
+                    effectType = a.effect.primaryEffectType(),
                     classRestriction = a.requiredClass,
                     image = a.image,
                     prerequisites = a.prerequisites.map { it.value },
@@ -821,7 +821,7 @@ class GmcpEmitter(
             manaCost = manaCost.coerceAtLeast(0),
             cooldownMs = ability.cooldownMs,
             targetType = ability.targetType,
-            effectType = ability.effect.toEffectType(),
+            effectType = ability.effect.primaryEffectType(),
             image = ability.image,
             prerequisites = ability.prerequisites.map { it.value },
             tree = ability.tree,

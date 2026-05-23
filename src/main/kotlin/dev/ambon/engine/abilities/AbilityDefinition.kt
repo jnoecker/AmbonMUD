@@ -46,7 +46,38 @@ sealed interface AbilityEffect {
         val petTemplateKey: String,
         val durationMs: Long = 0L,
     ) : AbilityEffect
+
+    /**
+     * Combines multiple effects into a single ability cast. The ability pays
+     * its mana/cooldown once; every child effect resolves against the same
+     * primary target. All children must be compatible with the ability's
+     * `targetType` — composite is intended for stacking effects on the same
+     * target (e.g. "damage + apply DoT"), not for cross-target combos.
+     * Nested composites are flattened by the runtime.
+     */
+    data class Composite(
+        val effects: List<AbilityEffect>,
+    ) : AbilityEffect {
+        init {
+            require(effects.isNotEmpty()) { "Composite ability effect must have at least one child effect" }
+        }
+    }
 }
+
+/** Returns a flat list of leaf effects, recursively unwrapping any [AbilityEffect.Composite]. */
+fun AbilityEffect.flatten(): List<AbilityEffect> = when (this) {
+    is AbilityEffect.Composite -> effects.flatMap { it.flatten() }
+    else -> listOf(this)
+}
+
+/**
+ * Effect type string sent to the web client. For composites the *primary*
+ * (first leaf) child's type is used — the client uses this for category
+ * styling, and a "damage + status" composite should still register as
+ * damage in the UI. Use [toEffectType] when you want the literal composite
+ * marker.
+ */
+fun AbilityEffect.primaryEffectType(): String = flatten().first().toEffectType()
 
 fun AbilityEffect.toEffectType(): String = when (this) {
     is AbilityEffect.DirectDamage -> "DIRECT_DAMAGE"
@@ -55,6 +86,7 @@ fun AbilityEffect.toEffectType(): String = when (this) {
     is AbilityEffect.AreaDamage -> "AREA_DAMAGE"
     is AbilityEffect.Taunt -> "TAUNT"
     is AbilityEffect.SummonPet -> "SUMMON_PET"
+    is AbilityEffect.Composite -> "COMPOSITE"
 }
 
 /**
@@ -123,6 +155,8 @@ data class AbilityDefinition(
  * - AREA_DAMAGE: AREA_BURST.
  * - TAUNT: BUFF_AURA on the caster.
  * - SUMMON_PET: SUMMON_POOF.
+ * - COMPOSITE: defers to the first child effect (composites are typically
+ *   "damage + status" — the dominant child drives the cast visual).
  */
 fun deriveDefaultVisual(
     effect: AbilityEffect,
@@ -150,6 +184,7 @@ fun deriveDefaultVisual(
         is AbilityEffect.AreaDamage -> AbilityVisualArchetype.AREA_BURST
         is AbilityEffect.Taunt -> AbilityVisualArchetype.BUFF_AURA
         is AbilityEffect.SummonPet -> AbilityVisualArchetype.SUMMON_POOF
+        is AbilityEffect.Composite -> deriveDefaultVisual(effect.flatten().first(), targetType, requiredClass).archetype
     }
     return AbilityVisual(archetype = archetype)
 }

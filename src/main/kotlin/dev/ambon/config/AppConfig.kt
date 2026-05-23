@@ -2479,6 +2479,12 @@ data class AbilityEffectConfig(
     val margin: Double = 10.0,
     val petTemplateKey: String = "",
     val durationMs: Long = 0L,
+    /**
+     * Child effects used when [type] is `COMPOSITE`. The ability pays its
+     * mana/cooldown once and every child resolves against the same target.
+     * Ignored for non-composite types.
+     */
+    val effects: List<AbilityEffectConfig> = emptyList(),
 )
 
 data class SkillPointsConfig(
