@@ -113,6 +113,14 @@ class DialogueQuestHandler(
             handleUnlockFlag(sessionId, action.removePrefix("unlock_flag:").trim())
             return
         }
+        if (action.startsWith("accept_quest:")) {
+            handleDialogueAcceptQuest(sessionId, action.removePrefix("accept_quest:").trim())
+            return
+        }
+        if (action.startsWith("turn_in_quest:")) {
+            handleDialogueTurnInQuest(sessionId, action.removePrefix("turn_in_quest:").trim())
+            return
+        }
         when (action) {
             "set_recall" -> {
                 val me = players.get(sessionId) ?: return
@@ -155,6 +163,49 @@ class DialogueQuestHandler(
                 }
             }
         }
+    }
+
+    /**
+     * Accept a quest as the outcome of a dialogue choice. Validates that the
+     * quest-giver is in the player's current room (always true for a
+     * well-configured dialogue, since the player is talking to that mob right
+     * now) — the check guards against authoring mistakes.
+     */
+    private suspend fun handleDialogueAcceptQuest(sessionId: SessionId, questId: String) {
+        if (questId.isEmpty()) return
+        val qs = questSystem ?: return
+        val me = players.get(sessionId) ?: return
+        val quest = questRegistry.get(questId)
+        if (quest == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Unknown quest '$questId'."))
+            return
+        }
+        val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }.toSet()
+        if (quest.giverMobId !in roomMobIds) {
+            outbound.send(OutboundEvent.SendError(sessionId, "The quest-giver isn't here."))
+            return
+        }
+        outbound.sendIfError(sessionId, qs.acceptQuest(sessionId, questId))
+    }
+
+    /**
+     * Turn in a quest as the outcome of a dialogue choice. Delegates to
+     * [QuestSystem.turnInQuestById], which checks the resolved turn-in NPC is
+     * present, then refreshes the quest-offer panel for that NPC so any open
+     * web client UI reflects the post-turn-in state.
+     */
+    private suspend fun handleDialogueTurnInQuest(sessionId: SessionId, questId: String) {
+        if (questId.isEmpty()) return
+        val qs = questSystem ?: return
+        val me = players.get(sessionId) ?: return
+        val quest = questRegistry.get(questId)
+        val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }
+        val err = qs.turnInQuestById(sessionId, questId, roomMobIds)
+        if (err != null) {
+            outbound.send(OutboundEvent.SendError(sessionId, err))
+            return
+        }
+        refreshOffersAfterTurnIn(sessionId, qs, quest, roomMobIds)
     }
 
     private suspend fun handleUnlockFlag(sessionId: SessionId, flag: String) {
