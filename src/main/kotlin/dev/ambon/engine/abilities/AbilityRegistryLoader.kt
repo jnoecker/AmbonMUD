@@ -1,9 +1,13 @@
 package dev.ambon.engine.abilities
 
+import dev.ambon.config.AbilityEffectConfig
 import dev.ambon.config.AbilityEngineConfig
 import dev.ambon.config.AbilityVisualConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.engine.status.StatusEffectId
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 object AbilityRegistryLoader {
     fun load(
@@ -14,37 +18,14 @@ object AbilityRegistryLoader {
         val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
         for ((key, defConfig) in config.definitions) {
             val targetType = defConfig.targetType.trim().lowercase()
-            val effect =
-                when (defConfig.effect.type.uppercase()) {
-                    "DIRECT_DAMAGE" ->
-                        AbilityEffect.DirectDamage(
-                            damage = DamageRange(defConfig.effect.minDamage, defConfig.effect.maxDamage),
-                        )
-                    "DIRECT_HEAL" ->
-                        AbilityEffect.DirectHeal(
-                            minHeal = defConfig.effect.minHeal,
-                            maxHeal = defConfig.effect.maxHeal,
-                        )
-                    "APPLY_STATUS" ->
-                        AbilityEffect.ApplyStatus(
-                            statusEffectId = StatusEffectId(defConfig.effect.statusEffectId),
-                        )
-                    "AREA_DAMAGE" ->
-                        AbilityEffect.AreaDamage(
-                            damage = DamageRange(defConfig.effect.minDamage, defConfig.effect.maxDamage),
-                        )
-                    "TAUNT" ->
-                        AbilityEffect.Taunt(
-                            flatThreat = defConfig.effect.flatThreat,
-                            margin = defConfig.effect.margin,
-                        )
-                    "SUMMON_PET" ->
-                        AbilityEffect.SummonPet(
-                            petTemplateKey = defConfig.effect.petTemplateKey,
-                            durationMs = defConfig.effect.durationMs,
-                        )
-                    else -> continue
+            val effect = parseEffect(defConfig.effect)
+            if (effect == null) {
+                logger.warn {
+                    "Ability '$key' skipped: effect type '${defConfig.effect.type}' is unknown " +
+                        "or has unparseable children."
                 }
+                continue
+            }
             val requiredClass = defConfig.requiredClass.ifBlank { null }
             val prerequisites = defConfig.prerequisites.map { AbilityId(it) }.toSet()
             val tree = defConfig.tree.ifBlank { "" }
@@ -72,6 +53,61 @@ object AbilityRegistryLoader {
         }
         validateNoPrerequisiteCycles(registry)
     }
+
+    /**
+     * Parses a single [AbilityEffectConfig] into an [AbilityEffect], recursing
+     * for composite effects. Returns null for unknown effect types. For
+     * composites, returns null if any declared child fails to parse — partial
+     * composites are not allowed because they would silently change the
+     * intended combat behavior (e.g. a typo'd child silently dropped from a
+     * damage+status spell). Composites with an empty `effects` list are also
+     * rejected. The caller surfaces a warning and skips the whole ability.
+     */
+    private fun parseEffect(config: AbilityEffectConfig): AbilityEffect? =
+        when (config.type.uppercase()) {
+            "DIRECT_DAMAGE" -> AbilityEffect.DirectDamage(
+                damage = DamageRange(config.minDamage, config.maxDamage),
+            )
+            "DIRECT_HEAL" -> AbilityEffect.DirectHeal(
+                minHeal = config.minHeal,
+                maxHeal = config.maxHeal,
+            )
+            "APPLY_STATUS" -> AbilityEffect.ApplyStatus(
+                statusEffectId = StatusEffectId(config.statusEffectId),
+            )
+            "AREA_DAMAGE" -> AbilityEffect.AreaDamage(
+                damage = DamageRange(config.minDamage, config.maxDamage),
+            )
+            "TAUNT" -> AbilityEffect.Taunt(
+                flatThreat = config.flatThreat,
+                margin = config.margin,
+            )
+            "SUMMON_PET" -> AbilityEffect.SummonPet(
+                petTemplateKey = config.petTemplateKey,
+                durationMs = config.durationMs,
+            )
+            "COMPOSITE" -> {
+                if (config.effects.isEmpty()) {
+                    logger.warn {
+                        "COMPOSITE effect has no children — composites must declare at least one child effect."
+                    }
+                    null
+                } else {
+                    val children = config.effects.map { child ->
+                        val parsed = parseEffect(child)
+                        if (parsed == null) {
+                            logger.warn {
+                                "COMPOSITE child of type '${child.type}' failed to parse — " +
+                                    "the entire composite will be rejected to avoid partial behavior."
+                            }
+                        }
+                        parsed
+                    }
+                    if (children.any { it == null }) null else AbilityEffect.Composite(effects = children.filterNotNull())
+                }
+            }
+            else -> null
+        }
 
     /**
      * Resolves the [AbilityVisual] for an ability. An empty [AbilityVisualConfig.archetype]

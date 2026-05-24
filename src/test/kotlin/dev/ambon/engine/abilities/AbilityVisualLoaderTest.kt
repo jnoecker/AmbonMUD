@@ -155,4 +155,125 @@ class AbilityVisualLoaderTest {
         )
         assertEquals(AbilityVisualArchetype.RANGED_PROJECTILE, a.visual.archetype)
     }
+
+    @Test
+    fun `composite parses children and derives visual from first child`() {
+        val a = load(
+            "fire_bolt_dot",
+            AbilityDefinitionConfig(
+                targetType = "ENEMY",
+                requiredClass = "MAGE",
+                effect = AbilityEffectConfig(
+                    type = "COMPOSITE",
+                    effects = listOf(
+                        AbilityEffectConfig(type = "DIRECT_DAMAGE", minDamage = 4, maxDamage = 8),
+                        AbilityEffectConfig(type = "APPLY_STATUS", statusEffectId = "ignite"),
+                    ),
+                ),
+            ),
+        )
+        val composite = a.effect as AbilityEffect.Composite
+        assertEquals(2, composite.effects.size)
+        assertEquals(AbilityEffect.DirectDamage::class, composite.effects[0]::class)
+        assertEquals(AbilityEffect.ApplyStatus::class, composite.effects[1]::class)
+        // First child is DirectDamage on mage → RANGED_PROJECTILE.
+        assertEquals(AbilityVisualArchetype.RANGED_PROJECTILE, a.visual.archetype)
+        assertEquals("DIRECT_DAMAGE", a.effect.primaryEffectType())
+    }
+
+    @Test
+    fun `composite flattens nested children`() {
+        val a = load(
+            "nested",
+            AbilityDefinitionConfig(
+                targetType = "ENEMY",
+                requiredClass = "MAGE",
+                effect = AbilityEffectConfig(
+                    type = "COMPOSITE",
+                    effects = listOf(
+                        AbilityEffectConfig(
+                            type = "COMPOSITE",
+                            effects = listOf(
+                                AbilityEffectConfig(type = "DIRECT_DAMAGE", minDamage = 1, maxDamage = 1),
+                                AbilityEffectConfig(type = "APPLY_STATUS", statusEffectId = "ignite"),
+                            ),
+                        ),
+                        AbilityEffectConfig(type = "AREA_DAMAGE", minDamage = 2, maxDamage = 2),
+                    ),
+                ),
+            ),
+        )
+        val flat = a.effect.flatten()
+        assertEquals(3, flat.size)
+        assertEquals(AbilityEffect.DirectDamage::class, flat[0]::class)
+        assertEquals(AbilityEffect.ApplyStatus::class, flat[1]::class)
+        assertEquals(AbilityEffect.AreaDamage::class, flat[2]::class)
+    }
+
+    @Test
+    fun `composite with only unknown child types is skipped`() {
+        val registry = AbilityRegistry()
+        AbilityRegistryLoader.load(
+            AbilityEngineConfig(
+                definitions = mapOf(
+                    "junk" to AbilityDefinitionConfig(
+                        targetType = "ENEMY",
+                        effect = AbilityEffectConfig(
+                            type = "COMPOSITE",
+                            effects = listOf(
+                                AbilityEffectConfig(type = "NOT_A_REAL_TYPE"),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            registry,
+            imagesBaseUrl = "/img/",
+        )
+        assertEquals(0, registry.all().size)
+    }
+
+    @Test
+    fun `composite with any unparseable child rejects whole ability`() {
+        // Mixing one valid child with one typo'd child must NOT load a partial
+        // composite — the typo would silently change combat behavior.
+        val registry = AbilityRegistry()
+        AbilityRegistryLoader.load(
+            AbilityEngineConfig(
+                definitions = mapOf(
+                    "typo_dot" to AbilityDefinitionConfig(
+                        targetType = "ENEMY",
+                        effect = AbilityEffectConfig(
+                            type = "COMPOSITE",
+                            effects = listOf(
+                                AbilityEffectConfig(type = "DIRECT_DAMAGE", minDamage = 5, maxDamage = 5),
+                                AbilityEffectConfig(type = "APPLY_STTUS", statusEffectId = "ignite"),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            registry,
+            imagesBaseUrl = "/img/",
+        )
+        assertEquals(0, registry.all().size)
+    }
+
+    @Test
+    fun `composite with empty effects list is skipped`() {
+        val registry = AbilityRegistry()
+        AbilityRegistryLoader.load(
+            AbilityEngineConfig(
+                definitions = mapOf(
+                    "empty" to AbilityDefinitionConfig(
+                        targetType = "ENEMY",
+                        effect = AbilityEffectConfig(type = "COMPOSITE", effects = emptyList()),
+                    ),
+                ),
+            ),
+            registry,
+            imagesBaseUrl = "/img/",
+        )
+        assertEquals(0, registry.all().size)
+    }
 }
