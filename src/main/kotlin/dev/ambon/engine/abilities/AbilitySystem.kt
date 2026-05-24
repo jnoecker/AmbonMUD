@@ -231,7 +231,13 @@ class AbilitySystem(
                 emitAbilityCast(sessionId, ability, mob.name, mob.id.value, targetIsPlayer = false)
             }
             is AbilityEffect.ApplyStatus -> {
-                statusEffects!!.applyToMob(mob.id, effect.statusEffectId, sessionId)
+                statusEffects!!.applyToMob(
+                    mobId = mob.id,
+                    effectId = effect.statusEffectId,
+                    sourceSessionId = sessionId,
+                    casterLevel = player.level,
+                    casterStats = playerStats,
+                )
                 outbound.send(
                     OutboundEvent.SendText(
                         sessionId,
@@ -311,7 +317,13 @@ class AbilitySystem(
                 outbound.send(OutboundEvent.SendText(sessionId, healText))
             }
             is AbilityEffect.ApplyStatus -> {
-                statusEffects!!.applyToPlayer(sessionId, effect.statusEffectId, sessionId)
+                statusEffects!!.applyToPlayer(
+                    sessionId = sessionId,
+                    effectId = effect.statusEffectId,
+                    sourceSessionId = sessionId,
+                    casterLevel = player.level,
+                    casterStats = playerStats,
+                )
                 dirtyNotifier.playerStatusDirty(sessionId)
                 outbound.send(
                     OutboundEvent.SendText(
@@ -436,7 +448,13 @@ class AbilitySystem(
                 }
             }
             is AbilityEffect.ApplyStatus -> {
-                statusEffects!!.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
+                statusEffects!!.applyToPlayer(
+                    sessionId = targetSid,
+                    effectId = effect.statusEffectId,
+                    sourceSessionId = sessionId,
+                    casterLevel = player.level,
+                    casterStats = playerStats,
+                )
                 dirtyNotifier.playerStatusDirty(targetSid)
                 if (targetSid == sessionId) {
                     outbound.send(
@@ -544,7 +562,13 @@ class AbilitySystem(
                 outbound.send(OutboundEvent.SendText(sessionId, petHealText))
             }
             is AbilityEffect.ApplyStatus -> {
-                statusEffects!!.applyToMob(pet.id, effect.statusEffectId, sessionId)
+                statusEffects!!.applyToMob(
+                    mobId = pet.id,
+                    effectId = effect.statusEffectId,
+                    sourceSessionId = sessionId,
+                    casterLevel = player.level,
+                    casterStats = playerStats,
+                )
                 outbound.send(
                     OutboundEvent.SendText(
                         sessionId,
@@ -633,7 +657,13 @@ class AbilitySystem(
             }
             is AbilityEffect.ApplyStatus -> {
                 for (m in targetMobs) {
-                    statusEffects!!.applyToMob(m.id, effect.statusEffectId, sessionId)
+                    statusEffects!!.applyToMob(
+                        mobId = m.id,
+                        effectId = effect.statusEffectId,
+                        sourceSessionId = sessionId,
+                        casterLevel = player.level,
+                        casterStats = playerStats,
+                    )
                     emitAbilityCast(sessionId, ability, m.name, m.id.value, targetIsPlayer = false)
                 }
                 outbound.send(
@@ -736,7 +766,13 @@ class AbilitySystem(
             }
             is AbilityEffect.ApplyStatus -> {
                 for (targetSid in groupMembers) {
-                    statusEffects!!.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
+                    statusEffects!!.applyToPlayer(
+                        sessionId = targetSid,
+                        effectId = effect.statusEffectId,
+                        sourceSessionId = sessionId,
+                        casterLevel = player.level,
+                        casterStats = playerStats,
+                    )
                     dirtyNotifier.playerStatusDirty(targetSid)
                     val targetPlayer = players.get(targetSid)
                     if (targetSid == sessionId) {

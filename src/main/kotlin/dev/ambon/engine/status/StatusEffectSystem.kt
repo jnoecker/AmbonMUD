@@ -2,6 +2,7 @@ package dev.ambon.engine.status
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EffectTypesConfig
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
@@ -9,6 +10,7 @@ import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GameSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.applyHeal
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -17,6 +19,8 @@ import dev.ambon.engine.rollRange
 import dev.ambon.engine.takeDamage
 import java.time.Clock
 import java.util.Random
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 class StatusEffectSystem(
     private val registry: StatusEffectRegistry,
@@ -27,6 +31,7 @@ class StatusEffectSystem(
     private val rng: Random = Random(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
     private val effectTypes: EffectTypesConfig = EffectTypesConfig(),
+    private val bindings: StatBindingsConfig = StatBindingsConfig(),
 ) : GameSystem {
     /** Callback for combat events (DOT/HOT ticks); wired by GameEngine after construction. */
     var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
@@ -39,14 +44,18 @@ class StatusEffectSystem(
         sessionId: SessionId,
         effectId: StatusEffectId,
         sourceSessionId: SessionId? = null,
-    ): Boolean = applyTo(playerEffects, sessionId, effectId, sourceSessionId)
+        casterLevel: Int? = null,
+        casterStats: StatMap? = null,
+    ): Boolean = applyTo(playerEffects, sessionId, effectId, sourceSessionId, casterLevel, casterStats)
 
     fun applyToMob(
         mobId: MobId,
         effectId: StatusEffectId,
         sourceSessionId: SessionId? = null,
+        casterLevel: Int? = null,
+        casterStats: StatMap? = null,
     ): Boolean {
-        val applied = applyTo(mobEffects, mobId, effectId, sourceSessionId)
+        val applied = applyTo(mobEffects, mobId, effectId, sourceSessionId, casterLevel, casterStats)
         if (applied) dirtyNotifier.mobHpDirty(mobId)
         return applied
     }
@@ -56,11 +65,13 @@ class StatusEffectSystem(
         key: K,
         effectId: StatusEffectId,
         sourceSessionId: SessionId?,
+        casterLevel: Int?,
+        casterStats: StatMap?,
     ): Boolean {
         val def = registry.get(effectId) ?: return false
         val now = clock.millis()
         val list = map.getOrPut(key) { mutableListOf() }
-        return applyEffect(list, def, now, sourceSessionId)
+        return applyEffect(list, def, now, sourceSessionId, casterLevel, casterStats)
     }
 
     private fun applyEffect(
@@ -68,6 +79,8 @@ class StatusEffectSystem(
         def: StatusEffectDefinition,
         now: Long,
         sourceSessionId: SessionId?,
+        casterLevel: Int?,
+        casterStats: StatMap?,
     ): Boolean {
         val existing = list.filter { it.definitionId == def.id }
         val effectiveMaxStacks = def.maxStacks.coerceAtLeast(1)
@@ -100,9 +113,59 @@ class StatusEffectSystem(
                 lastTickAtMs = now,
                 sourceSessionId = sourceSessionId,
                 shieldRemaining = def.shieldAmount,
+                tickAnchor = computeTickAnchor(def, casterLevel, casterStats),
             ),
         )
         return true
+    }
+
+    /**
+     * Snapshots a scaled per-tick anchor for damage/heal-over-time effects using
+     * the same shape as direct spell/heal damage:
+     *
+     *   anchor     = (tickMinValue + tickMaxValue) / 2
+     *   statBonus  = (stats[stat] - BASE_STAT) × statMultiplier
+     *   levelScale = levelScalingRate ^ (level - 1)
+     *   tickAnchor = (anchor + statBonus) × levelScale
+     *
+     * Variance is applied per-tick, not snapshotted, so each tick still rolls a
+     * fresh spread. Returns null when the effect doesn't tick damage/healing,
+     * when no caster context was provided, or when the authored range is zero
+     * (nothing to scale) — in which case the tick loop falls back to rolling
+     * the authored range directly.
+     */
+    private fun computeTickAnchor(
+        def: StatusEffectDefinition,
+        casterLevel: Int?,
+        casterStats: StatMap?,
+    ): Double? {
+        if (casterLevel == null) return null
+        if (def.tickIntervalMs <= 0L) return null
+        val typeConfig = effectTypes.get(def.effectType) ?: return null
+        val (statKey, statMul, rate) = when {
+            typeConfig.ticksDamage -> Triple(bindings.spellDamageStat, bindings.spellStatMultiplier, bindings.spellLevelScalingRate)
+            typeConfig.ticksHealing -> Triple(bindings.healStat, bindings.healStatMultiplier, bindings.healLevelScalingRate)
+            else -> return null
+        }
+        val anchor = (def.tickMinValue + def.tickMaxValue) / 2.0
+        val statTotal = casterStats?.get(statKey) ?: PlayerState.BASE_STAT
+        val statBonus = (statTotal - PlayerState.BASE_STAT) * statMul
+        val levelScale = rate.pow((casterLevel - 1).coerceAtLeast(0))
+        return (anchor + statBonus) * levelScale
+    }
+
+    private fun rollTickValue(
+        def: StatusEffectDefinition,
+        anchor: Double?,
+    ): Int {
+        if (anchor == null) return rollRange(rng, def.tickMinValue, def.tickMaxValue)
+        // Reuse the same variance window as direct spell damage so DOT/HOT
+        // roll-to-roll spread matches a comparable direct spell.
+        val varianceMin = bindings.spellVarianceMin
+        val varianceMax = bindings.spellVarianceMax
+        val span = varianceMax - varianceMin
+        val variance = if (span <= 0.0) varianceMin else varianceMin + rng.nextDouble() * span
+        return (anchor * variance).roundToInt().coerceAtLeast(1)
     }
 
     // ── Tick ───────────────────────────────────────────────────────────
@@ -171,7 +234,7 @@ class StatusEffectSystem(
                 // Tick DOT/HOT
                 if (def.tickIntervalMs > 0 && nowMs - effect.lastTickAtMs >= def.tickIntervalMs) {
                     effect.lastTickAtMs = nowMs
-                    val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
+                    val value = rollTickValue(def, effect.tickAnchor)
                     if (typeConfig?.ticksDamage == true) {
                         player.takeDamage(value)
                         dirtyNotifier.playerVitalsDirty(sessionId)
@@ -222,7 +285,7 @@ class StatusEffectSystem(
                     nowMs - effect.lastTickAtMs >= def.tickIntervalMs
                 ) {
                     effect.lastTickAtMs = nowMs
-                    val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
+                    val value = rollTickValue(def, effect.tickAnchor)
                     mob.takeDamage(value)
                     dirtyNotifier.mobHpDirty(mobId)
                     val source = effect.sourceSessionId

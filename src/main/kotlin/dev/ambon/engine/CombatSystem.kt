@@ -1194,12 +1194,22 @@ class CombatSystem(
             )
         }
 
-        // Apply status effect
+        // Apply status effect — mob is the caster; pass mob level so DOT/HOT
+        // ticks scale with mob power. Mobs have no stat bonus, so casterStats is
+        // omitted (the snapshot falls back to BASE_STAT).
         if (spell.statusEffectId != null && statusEffects != null) {
             if (isOffensive) {
-                statusEffects.applyToPlayer(targetSid, spell.statusEffectId)
+                statusEffects.applyToPlayer(
+                    sessionId = targetSid,
+                    effectId = spell.statusEffectId,
+                    casterLevel = mob.level,
+                )
             } else {
-                statusEffects.applyToMob(mob.id, spell.statusEffectId)
+                statusEffects.applyToMob(
+                    mobId = mob.id,
+                    effectId = spell.statusEffectId,
+                    casterLevel = mob.level,
+                )
             }
         }
     }
@@ -1479,7 +1489,15 @@ class CombatSystem(
         }
 
         if (skill.statusEffectId != null && statusEffects != null) {
-            statusEffects.applyToMob(target.id, skill.statusEffectId, threatSid)
+            // Pet is the caster — pet skills already scale via the pet's
+            // damage budget on the authored roll, so we scale the DOT/HOT tick
+            // off the pet's level for consistency. No stat bonus.
+            statusEffects.applyToMob(
+                mobId = target.id,
+                effectId = skill.statusEffectId,
+                sourceSessionId = threatSid,
+                casterLevel = pet.level,
+            )
         }
 
         // Threat: damage portion uses pet's threat multiplier (tank pets hold aggro);

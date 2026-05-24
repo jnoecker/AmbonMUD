@@ -9,6 +9,17 @@ data class ActiveEffect(
     var lastTickAtMs: Long,
     val sourceSessionId: SessionId?,
     var shieldRemaining: Int = 0,
+    /**
+     * Snapshot of the scaled per-tick value computed at apply time from the
+     * caster's level + relevant stat using the same shape as direct
+     * spell/heal damage. Null when no caster context was provided (e.g.
+     * environmental or admin-applied effects); the tick loop then falls
+     * back to rolling the authored `tickMinValue`..`tickMaxValue` range.
+     *
+     * Variance is applied per-tick (not snapshotted) so each tick still
+     * rolls a fresh spread.
+     */
+    val tickAnchor: Double? = null,
 )
 
 /** Immutable snapshot for display / GMCP. */

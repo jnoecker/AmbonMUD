@@ -637,6 +637,7 @@ class GameEngine(
             clock = clock,
             dirtyNotifier = dirtyNotifier,
             effectTypes = engineConfig.effectTypes,
+            bindings = engineConfig.stats.bindings,
         )
     private val groupSystem: GroupSystem =
         GroupSystem(
