@@ -159,10 +159,14 @@ class StatusEffectSystem(
         anchor: Double?,
     ): Int {
         if (anchor == null) return rollRange(rng, def.tickMinValue, def.tickMaxValue)
-        // Reuse the same variance window as direct spell damage so DOT/HOT
-        // roll-to-roll spread matches a comparable direct spell.
-        val varianceMin = bindings.spellVarianceMin
-        val varianceMax = bindings.spellVarianceMax
+        // Match the variance window of the comparable direct spell — DOTs use
+        // spell variance, HOTs use heal variance — so roll-to-roll spread stays
+        // consistent with the direct-cast equivalent.
+        val typeConfig = effectTypes.get(def.effectType)
+        val (varianceMin, varianceMax) = when {
+            typeConfig?.ticksHealing == true -> bindings.healVarianceMin to bindings.healVarianceMax
+            else -> bindings.spellVarianceMin to bindings.spellVarianceMax
+        }
         val span = varianceMax - varianceMin
         val variance = if (span <= 0.0) varianceMin else varianceMin + rng.nextDouble() * span
         return (anchor * variance).roundToInt().coerceAtLeast(1)

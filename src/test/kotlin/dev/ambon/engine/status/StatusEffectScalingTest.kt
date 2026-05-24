@@ -211,4 +211,47 @@ class StatusEffectScalingTest {
 
             assertTrue(mob.hp == 100_000 - 20, "Both ticks should use level-1 snapshot (10 each)")
         }
+
+    @Test
+    fun `HOT tick uses heal variance, not spell variance`() =
+        runTest {
+            // Heal variance is locked to 2.0× while spell variance is 1.0× — the
+            // tick must follow the heal binding, otherwise HOT roll-to-roll
+            // spread silently drifts from direct heals.
+            val healVarianceBindings =
+                bindings.copy(
+                    spellVarianceMin = 1.0,
+                    spellVarianceMax = 1.0,
+                    healVarianceMin = 2.0,
+                    healVarianceMax = 2.0,
+                )
+            val h = Fixture()
+            // Rebuild the system with the variance-skewed bindings.
+            val skewedSystem =
+                StatusEffectSystem(
+                    registry = h.registry,
+                    players = h.players,
+                    mobs = h.mobs,
+                    outbound = h.outbound,
+                    clock = h.clock,
+                    rng = Random(42),
+                    bindings = healVarianceBindings,
+                )
+            h.login()
+            val player = h.players.get(sid)!!
+            player.maxHp = 100_000
+            player.hp = 1
+            h.registerHot(min = 4, max = 4)
+
+            // Level 1, no stat bonus → anchor = 4. Heal variance 2.0× → tick = 8.
+            skewedSystem.applyToPlayer(
+                sessionId = sid,
+                effectId = StatusEffectId("rejuv"),
+                casterLevel = 1,
+            )
+            h.clock.advance(2000)
+            skewedSystem.tick(h.clock.millis())
+
+            assertEquals(1 + 8, player.hp, "HOT should roll with heal variance window")
+        }
 }
