@@ -22,7 +22,7 @@ val hopliteVersion = "2.9.0"
 val micrometerVersion = "1.16.5"
 val grpcVersion = "1.81.0"
 val grpcKotlinVersion = "1.5.0"
-val protobufVersion = "4.34.1"
+val protobufVersion = "4.35.0"
 val exposedVersion = "1.3.0"
 
 dependencies {
