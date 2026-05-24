@@ -36,6 +36,20 @@ class PlainRendererTest {
         assertEquals("a\r\nb\r\nc\r\nd\r\n", line)
     }
 
+    @Test
+    fun `color tags are stripped without leaving syntax`() {
+        val r = PlainRenderer()
+        val line = r.renderLine("alpha {c:quest}(!){/c} omega", TextKind.NORMAL)
+        assertEquals("alpha (!) omega\r\n", line)
+    }
+
+    @Test
+    fun `multiple and unknown color tags all strip cleanly`() {
+        val r = PlainRenderer()
+        val line = r.renderLine("{c:quest}(!){/c} bob {c:aggro}[A]{/c} {c:bogus}x{/c}", TextKind.INFO)
+        assertEquals("(!) bob [A] x\r\n", line)
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `prompt rendering uses PromptSpec text not toString`() =

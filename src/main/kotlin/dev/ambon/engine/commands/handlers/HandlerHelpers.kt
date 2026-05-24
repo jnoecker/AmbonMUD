@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.ids.qualifyId
+import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.puzzle.PuzzleType
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.LockableState
@@ -248,6 +249,34 @@ internal suspend fun EngineContext.emitStylistGmcp(sessionId: SessionId) {
     }
 }
 
+/**
+ * Builds the inline status markers shown after a mob's name in the "You see:"
+ * line. The web client already paints these states on the canvas via GMCP; this
+ * brings parity to telnet / text clients.
+ *
+ * Marker precedence for quest state: turn-in beats accept-available beats
+ * dialogue (so the player always sees the most actionable hint). The aggro
+ * marker is independent and appended after.
+ *
+ * Each marker is wrapped in a `{c:NAME}…{/c}` color tag so [AnsiRenderer]
+ * lights it up on color-capable terminals while [PlainRenderer] strips the
+ * tags cleanly.
+ */
+internal fun mobMarkers(
+    mob: MobState,
+    hasQuestAvailable: Boolean,
+    hasQuestTurnIn: Boolean,
+): String {
+    val parts = mutableListOf<String>()
+    when {
+        hasQuestTurnIn -> parts.add("{c:turnin}(?){/c}")
+        hasQuestAvailable -> parts.add("{c:quest}(!){/c}")
+        mob.dialogue != null -> parts.add("{c:dialogue}(*){/c}")
+    }
+    if (mob.aggressive) parts.add("{c:aggro}[A]{/c}")
+    return parts.joinToString(" ")
+}
+
 /** Sends a full room description (title, description, exits, items, resources, players, mobs) to [sessionId]. */
 internal suspend fun sendLook(
     sessionId: SessionId,
@@ -343,10 +372,20 @@ internal suspend fun sendLook(
             }.sorted()
 
     val rawRoomMobs = mobs.mobsInRoom(roomId)
+    val mobIds = rawRoomMobs.map { it.id.value }
+    val questAvailable = questSystem?.questAvailableMobIds(sessionId, mobIds) ?: emptySet()
+    val questComplete = questSystem?.questCompleteMobIds(sessionId, mobIds) ?: emptySet()
     val roomMobs =
         rawRoomMobs
-            .map { it.name }
-            .sorted()
+            .sortedBy { it.name }
+            .map { mob ->
+                val markers = mobMarkers(
+                    mob = mob,
+                    hasQuestAvailable = mob.id.value in questAvailable,
+                    hasQuestTurnIn = mob.id.value in questComplete,
+                )
+                if (markers.isEmpty()) mob.name else "${mob.name} $markers"
+            }
 
     outbound.send(
         OutboundEvent.SendInfo(
@@ -385,9 +424,6 @@ internal suspend fun sendLook(
     )
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
-    val mobIds = rawRoomMobs.map { it.id.value }
-    val questAvailable = questSystem?.questAvailableMobIds(sessionId, mobIds) ?: emptySet()
-    val questComplete = questSystem?.questCompleteMobIds(sessionId, mobIds) ?: emptySet()
     gmcpEmitter?.sendRoomMobInfo(
         sessionId,
         gmcpEmitter.buildMobInfoEntries(
