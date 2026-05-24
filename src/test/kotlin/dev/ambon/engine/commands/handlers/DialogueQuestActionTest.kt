@@ -97,6 +97,15 @@ class DialogueQuestActionTest {
                                         requiredClass = null,
                                         action = "accept_quest:test_zone:does_not_exist",
                                     ),
+                                    DialogueChoice(
+                                        text = "Accept (bare id)",
+                                        nextNodeId = null,
+                                        minLevel = null,
+                                        requiredClass = null,
+                                        // Unqualified id — the handler should auto-qualify
+                                        // it against the conversation NPC's zone.
+                                        action = "accept_quest:fetch",
+                                    ),
                                 ),
                         ),
                 ),
@@ -226,6 +235,26 @@ class DialogueQuestActionTest {
             assertTrue(
                 errors.any { it.contains("Unknown quest") },
                 "Expected an 'Unknown quest' error. got=$errors",
+            )
+        }
+
+    @Test
+    fun `accept_quest auto-qualifies a bare quest id against the player's zone`() =
+        runTest {
+            val env = setup()
+
+            env.router.handle(env.sid, Command.Talk("giver"))
+            // Choice #4 carries action "accept_quest:fetch" — the engine should
+            // qualify that to "test_zone:fetch" (the registered id) using the
+            // player's current zone, the same convention `turnInMob` uses in
+            // world YAML.
+            env.router.handle(env.sid, Command.DialogueChoice(4))
+            env.outbound.drainAll()
+
+            val ps = env.players.get(env.sid)!!
+            assertTrue(
+                ps.activeQuests.containsKey(questId),
+                "Bare-id accept_quest should resolve to '$questId'. got=${ps.activeQuests}",
             )
         }
 }

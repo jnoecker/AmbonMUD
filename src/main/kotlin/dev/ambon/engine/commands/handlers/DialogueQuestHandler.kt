@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.ids.qualifyId
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.AchievementSystem
@@ -166,15 +167,20 @@ class DialogueQuestHandler(
     }
 
     /**
-     * Accept a quest as the outcome of a dialogue choice. Validates that the
-     * quest-giver is in the player's current room (always true for a
+     * Accept a quest as the outcome of a dialogue choice. The id may be bare
+     * (`auringold_visit_naraxian`) or fully qualified
+     * (`auringold_academy:auringold_visit_naraxian`); bare ids are resolved
+     * against the player's current zone, matching the convention used
+     * elsewhere in the world YAML (e.g. `turnInMob`). Validates that the
+     * quest-giver is in the player's current room — always true for a
      * well-configured dialogue, since the player is talking to that mob right
-     * now) — the check guards against authoring mistakes.
+     * now; the check guards against authoring mistakes.
      */
-    private suspend fun handleDialogueAcceptQuest(sessionId: SessionId, questId: String) {
-        if (questId.isEmpty()) return
+    private suspend fun handleDialogueAcceptQuest(sessionId: SessionId, rawQuestId: String) {
+        if (rawQuestId.isEmpty()) return
         val qs = questSystem ?: return
         val me = players.get(sessionId) ?: return
+        val questId = qualifyId(me.roomId.zone, rawQuestId)
         val quest = questRegistry.get(questId)
         if (quest == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Unknown quest '$questId'."))
@@ -194,10 +200,11 @@ class DialogueQuestHandler(
      * present, then refreshes the quest-offer panel for that NPC so any open
      * web client UI reflects the post-turn-in state.
      */
-    private suspend fun handleDialogueTurnInQuest(sessionId: SessionId, questId: String) {
-        if (questId.isEmpty()) return
+    private suspend fun handleDialogueTurnInQuest(sessionId: SessionId, rawQuestId: String) {
+        if (rawQuestId.isEmpty()) return
         val qs = questSystem ?: return
         val me = players.get(sessionId) ?: return
+        val questId = qualifyId(me.roomId.zone, rawQuestId)
         val quest = questRegistry.get(questId)
         val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }
         val err = qs.turnInQuestById(sessionId, questId, roomMobIds)
