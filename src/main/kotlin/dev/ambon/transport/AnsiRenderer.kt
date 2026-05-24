@@ -20,7 +20,7 @@ class AnsiRenderer : TextRenderer {
             }
         return buildString {
             append(prefix)
-            append(text.normalizeToCrlf())
+            append(ColorTags.applyAnsi(text, prefix).normalizeToCrlf())
             append(reset)
             append("\r\n")
         }

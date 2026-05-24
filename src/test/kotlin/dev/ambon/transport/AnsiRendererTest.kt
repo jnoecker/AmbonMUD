@@ -36,6 +36,35 @@ class AnsiRendererTest {
         assertTrue(line.endsWith("\r\n"))
     }
 
+    @Test
+    fun `color tag is translated to ANSI escape`() {
+        val r = AnsiRenderer()
+        val line = r.renderLine("alpha {c:quest}(!){/c} omega", TextKind.NORMAL)
+        // {c:quest} -> bright yellow; {/c} -> base prefix (NORMAL = reset)
+        assertTrue(line.contains("\u001B[93m(!)"), "Expected quest color around (!): $line")
+        // Tag literals must not leak
+        assertFalse(line.contains("{c:quest}"), "Open tag should not leak: $line")
+        assertFalse(line.contains("{/c}"), "Close tag should not leak: $line")
+    }
+
+    @Test
+    fun `unknown color tag name is stripped without leaking`() {
+        val r = AnsiRenderer()
+        val line = r.renderLine("hello {c:bogus}world{/c}", TextKind.NORMAL)
+        assertTrue(line.contains("hello world"), "Wrapped text must survive: $line")
+        assertFalse(line.contains("{c:bogus}"), "Unknown open tag must be stripped: $line")
+        assertFalse(line.contains("{/c}"), "Close tag must be stripped: $line")
+    }
+
+    @Test
+    fun `close tag restores INFO base color`() {
+        val r = AnsiRenderer()
+        val line = r.renderLine("a{c:aggro}[A]{/c}b", TextKind.INFO)
+        // After {/c}, the INFO base color (dim + bright cyan) should be re-asserted so 'b' keeps it.
+        val infoPrefix = "\u001B[2m\u001B[96m"
+        assertTrue(line.contains("[A]" + infoPrefix + "b"), "Expected INFO prefix restored after {/c}: $line")
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `prompt rendering uses PromptSpec text not toString`() =
