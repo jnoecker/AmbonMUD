@@ -17968,8 +17968,12 @@ html:has(.game-shell),
 }
 
 .bottom-stack-themed .room-panel-desc {
-  color: #2a2014;
-  text-shadow: 0 1px 2px rgb(250 244 228 / 55%);
+  color: #160f04;
+  font-weight: 600;
+  text-shadow:
+    0 0 4px rgb(252 247 232 / 88%),
+    0 0 8px rgb(252 247 232 / 70%),
+    0 1px 1px rgb(252 247 232 / 80%);
 }
 
 .room-panel {
@@ -17985,7 +17989,9 @@ html:has(.game-shell),
   gap: var(--space-5);
   align-items: stretch;
   height: 100%;
-  padding: 28px 28px 16px;
+  /* Extra left padding so the description sits on the page, clear of the book's
+     left cover/edge in the parchment backdrop. */
+  padding: 28px 28px 16px 64px;
   box-sizing: border-box;
 }
 
@@ -18179,7 +18185,7 @@ html:has(.game-shell),
   }
 
   .room-panel-body {
-    padding: 26px 14px 14px;
+    padding: 26px 14px 14px 32px;
     gap: var(--space-3);
   }
 
