@@ -17960,6 +17960,18 @@ html:has(.game-shell),
   border-top: 1px solid var(--line-soft);
 }
 
+/* With a custom backdrop, drop the dark scrim so the art shows, and write the
+   description as dark "ink" (the image is light through the middle, dark at the
+   bottom where the kiosks sit, so their labels stay light). */
+.bottom-stack-themed {
+  background-image: var(--room-bg, none);
+}
+
+.bottom-stack-themed .room-panel-desc {
+  color: #2a2014;
+  text-shadow: 0 1px 2px rgb(250 244 228 / 55%);
+}
+
 .room-panel {
   position: relative;
   flex: 0 0 auto;

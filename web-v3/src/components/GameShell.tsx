@@ -152,7 +152,7 @@ export function GameShell({
       {/* Room description + action dock share one continuous background. */}
       {loggedIn && (
         <div
-          className="bottom-stack"
+          className={`bottom-stack${serverAssets["room_panel_bg"] ? " bottom-stack-themed" : ""}`}
           style={serverAssets["room_panel_bg"] ? { ["--room-bg" as string]: `url("${serverAssets["room_panel_bg"]}")` } : undefined}
         >
           <RoomPanel
