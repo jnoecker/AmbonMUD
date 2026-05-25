@@ -18007,11 +18007,11 @@ html:has(.game-shell),
   background: radial-gradient(circle at 50% 50%, rgb(34 41 60 / 65%), rgb(16 19 31 / 80%));
 }
 
+/* Rose fills the whole pad as a backdrop; buttons overlay it at the edges. */
 .room-compass-rose {
-  grid-column: 2;
-  grid-row: 2;
-  width: 78px;
-  height: 78px;
+  position: absolute;
+  inset: 6px;
+  z-index: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18033,6 +18033,8 @@ html:has(.game-shell),
 .compass-dir-south { grid-column: 2; grid-row: 3; }
 
 .compass-btn {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -18056,19 +18058,52 @@ html:has(.game-shell),
   transform: scale(1.05);
 }
 
-/* Missing exit — greyed-out label, no box, not interactive. */
+/* Asset buttons: the artwork is the button — drop the box chrome. */
+.compass-btn-art {
+  border: none;
+  background: none;
+  padding: 0;
+  min-width: 0;
+}
+
+.compass-btn-art:hover {
+  border: none;
+  background: none;
+}
+
+.compass-btn-img {
+  display: block;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  transition: filter 150ms var(--ease-out-soft);
+}
+
+.compass-btn-art:hover .compass-btn-img {
+  filter: drop-shadow(0 0 8px rgb(212 198 150 / 70%));
+}
+
+/* Missing exit — greyed-out, not interactive. */
 .compass-btn-off {
   border-color: transparent;
   background: none;
   color: var(--text-disabled);
   cursor: default;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .compass-btn-off:hover {
   border-color: transparent;
   background: none;
   transform: none;
+}
+
+.compass-btn-art.compass-btn-off .compass-btn-img {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.compass-btn-art.compass-btn-off:hover .compass-btn-img {
+  filter: grayscale(1) brightness(0.7);
 }
 
 .room-panel-toggle {
@@ -18132,6 +18167,11 @@ html:has(.game-shell),
     min-width: 32px;
     padding: 5px 7px;
     font-size: 0.82rem;
+  }
+
+  .compass-btn-img {
+    width: 38px;
+    height: 38px;
   }
 }
 
