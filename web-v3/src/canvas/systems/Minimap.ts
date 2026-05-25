@@ -25,6 +25,7 @@ const A_ROOM_CURRENT = "minimap_room_current"; // "you are here"
 const A_ROOM_FOG = "minimap_unexplored"; // unexplored room (pre-existing key)
 const A_ROOM_HOUSING = "minimap_room_housing"; // player housing
 const A_QUEST = "minimap_quest"; // quest objective marker (overlay)
+const A_EXPAND = "minimap_expand"; // corner button that opens the world map
 
 /** Server-validated terrain vocabulary (WorldLoader.kt VALID_TERRAINS). A
  *  visited room prefers minimap_room_<terrain>, falling back to minimap_room. */
@@ -49,6 +50,7 @@ const ASSET_KEYS = [
   A_ROOM_FOG,
   A_ROOM_HOUSING,
   A_QUEST,
+  A_EXPAND,
   ...TERRAINS.map(terrainKey),
 ];
 
@@ -106,6 +108,7 @@ export class Minimap {
   private assetsLoaded = false;
   private destroyed = false;
   private paperSprite: Sprite | null = null;
+  private expandSprite: Sprite | null = null;
   private roomSprites = new Map<string, Sprite>();
   private questSprites = new Map<string, Sprite>();
 
@@ -236,6 +239,7 @@ export class Minimap {
     // Expand-to-world-map button — tucked into the bottom-right corner.
     this.expandButton.x = this._width - 22 - 7;
     this.expandButton.y = this._height - 22 - 7;
+    this.layoutExpand();
 
     // Up/down buttons stacked just to the left of the parchment, vertically centered.
     const btnR = 14;
@@ -281,6 +285,14 @@ export class Minimap {
     e.stroke({ color: INK_SOFT, width: 1, alpha: 0.4 });
     e.poly(this.tornPath);
     e.stroke({ color: INK, width: 2.5, alpha: 0.85 });
+  }
+
+  /** Size + position the custom open-map sprite in the bottom-right corner. */
+  private layoutExpand() {
+    if (!this.expandSprite) return;
+    this.fitSprite(this.expandSprite, this.expandSprite.texture, 30);
+    this.expandSprite.x = this._width - 18;
+    this.expandSprite.y = this._height - 18;
   }
 
   private rebuildExpandButton() {
@@ -812,6 +824,21 @@ export class Minimap {
       s.height = this._height;
       this.paperSprite = s;
       this.inner.addChildAt(s, 0); // behind lines/glyphs, clipped to the torn edge
+    }
+
+    // Custom open-world-map button (rolled map / globe / …) replaces the
+    // procedural corner icon when supplied.
+    const expandTex = this.texCache.get(A_EXPAND);
+    if (expandTex && !this.expandSprite) {
+      const s = new Sprite(expandTex);
+      s.anchor.set(0.5);
+      s.eventMode = "static";
+      s.cursor = "pointer";
+      s.on("pointerdown", () => { canvasCallbacks.openMap?.(); });
+      this.expandSprite = s;
+      this.container.addChild(s);
+      this.expandButton.visible = false; // hide the procedural icon
+      this.layoutExpand();
     }
 
     this.drawParchment(); // drop the procedural fill now that the texture covers it
