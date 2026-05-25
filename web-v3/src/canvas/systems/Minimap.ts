@@ -61,8 +61,8 @@ const PAPER_SHADE = 0xd8c49a;
 const PAPER_STAIN = 0xcdb487;
 const SHADOW = 0x000000;
 const INK = 0x4a3a28; // dark sepia pen ink
-const INK_SOFT = 0x6e5a40; // lighter ink for secondary strokes / connectors
-const LINE_COLOR = 0x6e5a40;
+const INK_SOFT = 0x6e5a40; // lighter ink for secondary strokes
+const LINE_COLOR = 0xe0c486; // light parchment-gold route line (reads in the dark gaps)
 const NODE_FILL = 0xcdb487; // explored room wash
 const CURRENT_FILL = 0x9c3b22; // sienna "you are here"
 const CURRENT_MARK = 0xf3e6c8; // cream center dot
@@ -480,7 +480,7 @@ export class Minimap {
         if (this.inBounds(sp.px, sp.py) && this.inBounds(tp.px, tp.py)) {
           this.mapGraphics.moveTo(sp.px, sp.py);
           this.mapGraphics.lineTo(tp.px, tp.py);
-          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.7 });
+          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2.5, alpha: 0.9 });
         }
       }
     }
@@ -529,8 +529,8 @@ export class Minimap {
         const off = MAP_OFFSETS[dir];
         if (!off) continue;
         this.mapGraphics.moveTo(nx + off.dx * half, ny + off.dy * half);
-        this.mapGraphics.lineTo(nx + off.dx * (half + 5), ny + off.dy * (half + 5));
-        this.mapGraphics.stroke({ color: INK_SOFT, width: 1.5, alpha: 0.55 });
+        this.mapGraphics.lineTo(nx + off.dx * (half + 6), ny + off.dy * (half + 6));
+        this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.8 });
       }
 
       // Pick the room stamp: current / fog / housing take priority; a plain
