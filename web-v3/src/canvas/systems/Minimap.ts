@@ -1,4 +1,4 @@
-import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
+import { Assets, Container, Graphics, Rectangle, Sprite, Texture } from "pixi.js";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 import { MAP_OFFSETS } from "../../constants";
 
@@ -641,11 +641,18 @@ export class Minimap {
     } else if (spr.texture !== tex) {
       spr.texture = tex;
     }
-    spr.width = size;
-    spr.height = size;
+    this.fitSprite(spr, tex, size);
     spr.x = nx;
     spr.y = ny;
     spr.visible = true;
+  }
+
+  /** Scale a sprite to fit `size`, preserving the (possibly-trimmed) aspect ratio. */
+  private fitSprite(spr: Sprite, tex: Texture, size: number) {
+    const max = Math.max(tex.width, tex.height) || 1;
+    const s = size / max;
+    spr.width = tex.width * s;
+    spr.height = tex.height * s;
   }
 
   /** Show/position a textured quest marker overlay (reused across redraws). */
@@ -660,9 +667,7 @@ export class Minimap {
     } else if (spr.texture !== tex) {
       spr.texture = tex;
     }
-    const size = (half + 6) * 2;
-    spr.width = size;
-    spr.height = size;
+    this.fitSprite(spr, tex, (half + 6) * 2);
     spr.x = nx;
     spr.y = ny;
     spr.alpha = alpha;
@@ -784,7 +789,10 @@ export class Minimap {
         const url = sa[k];
         if (!url) return;
         try {
-          this.texCache.set(k, await Assets.load(url));
+          const tex = await Assets.load(url);
+          // Auto-trim the transparent margin off room/quest glyphs so the
+          // artwork fills the node; the parchment scrap is left untouched.
+          this.texCache.set(k, k === A_BG ? tex : (this.trimTexture(tex) ?? tex));
         } catch { /* keep the procedural fallback for this key */ }
       }),
     );
@@ -802,6 +810,52 @@ export class Minimap {
     this.drawParchment(); // drop the procedural fill now that the texture covers it
     this.lastKey = "";
     this.redraw();
+  }
+
+  /**
+   * Return a texture reframed to the opaque bounding box of `tex`, dropping any
+   * transparent margin so the glyph fills its node. Returns null (keep original)
+   * if there's no meaningful padding, the image is empty, or pixels can't be
+   * read (e.g. a CORS-tainted canvas).
+   */
+  private trimTexture(tex: Texture): Texture | null {
+    const res = tex.source?.resource as CanvasImageSource | undefined;
+    const w = tex.source?.pixelWidth ?? 0;
+    const h = tex.source?.pixelHeight ?? 0;
+    if (!res || w === 0 || h === 0) return null;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return null;
+      ctx.drawImage(res, 0, 0, w, h);
+      const data = ctx.getImageData(0, 0, w, h).data;
+      const threshold = 12; // alpha below this counts as transparent margin
+      let minX = w;
+      let minY = h;
+      let maxX = -1;
+      let maxY = -1;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (data[(y * w + x) * 4 + 3] > threshold) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < minX || maxY < minY) return null; // fully transparent
+      const pad = Math.min(minX, minY, w - 1 - maxX, h - 1 - maxY);
+      if (pad <= 1) return null; // nothing worth trimming
+      return new Texture({
+        source: tex.source,
+        frame: new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1),
+      });
+    } catch {
+      return null; // tainted canvas or other failure — keep the original
+    }
   }
 
   private clearNodeSprites() {
