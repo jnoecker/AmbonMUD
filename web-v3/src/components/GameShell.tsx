@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { PixiCanvas } from "../canvas/PixiCanvas";
 import { CombatLog } from "./CombatLog";
 import { RoomPanel } from "./RoomPanel";
@@ -74,6 +74,17 @@ export function GameShell({
   children,
 }: GameShellProps) {
   const loggedIn = connected && hasCharacterProfile;
+  const [signZoom, setSignZoom] = useState(false);
+
+  // Dismiss the enlarged sign on Escape.
+  useEffect(() => {
+    if (!signZoom) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSignZoom(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [signZoom]);
 
   return (
     <main className="game-shell">
@@ -96,10 +107,16 @@ export function GameShell({
                 Skinned: the room_sign_bg art has its own rope + decorations, so we
                 just crop it and center the title in the blank plaque. */}
             {room.title !== "-" && serverAssets["room_sign_bg"] && (
-              <div className="canvas-room-sign canvas-room-sign-skinned">
+              <button
+                type="button"
+                className="canvas-room-sign canvas-room-sign-skinned"
+                onClick={() => setSignZoom(true)}
+                title="Enlarge room name"
+                aria-label={`Room: ${room.title}. Click to enlarge.`}
+              >
                 <img className="rsign-art" src={serverAssets["room_sign_bg"]} alt="" aria-hidden="true" />
-                <h2 className="rsign-title" style={{ ["--rsign-fit" as string]: signFit(room.title) }}>{room.title}</h2>
-              </div>
+                <span className="rsign-title" style={{ ["--rsign-fit" as string]: signFit(room.title) }}>{room.title}</span>
+              </button>
             )}
             {room.title !== "-" && !serverAssets["room_sign_bg"] && (
               <div className="canvas-room-sign">
@@ -230,6 +247,22 @@ export function GameShell({
                 onOpenPanel={onOpenPanel}
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Enlarged, static view of the room sign — click anywhere / Esc to close. */}
+      {signZoom && room.title !== "-" && serverAssets["room_sign_bg"] && (
+        <div
+          className="sign-zoom-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Room: ${room.title}`}
+          onClick={() => setSignZoom(false)}
+        >
+          <div className="sign-zoom">
+            <img className="rsign-art" src={serverAssets["room_sign_bg"]} alt="" aria-hidden="true" />
+            <span className="rsign-title" style={{ ["--rsign-fit" as string]: signFit(room.title) }}>{room.title}</span>
           </div>
         </div>
       )}

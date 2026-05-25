@@ -17905,6 +17905,11 @@ html:has(.game-shell),
   overflow: hidden;
   /* Behind the bar (z 9) so the rope strands tuck behind the branch. */
   z-index: 8;
+  /* It's a <button> (click to enlarge) — strip the chrome. */
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .rsign-art {
@@ -17932,6 +17937,49 @@ html:has(.game-shell),
   color: #5b4326;
   text-shadow: 0 1px 0 rgb(255 248 232 / 55%);
   pointer-events: none;
+}
+
+/* Enlarged, static view of the sign (click the sign to open). */
+.sign-zoom-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(8 6 12 / 55%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  cursor: zoom-out;
+  animation: sign-zoom-fade 150ms var(--ease-out-soft);
+}
+
+.sign-zoom {
+  position: relative;
+  width: min(620px, 84vw);
+  aspect-ratio: 1216 / 794;
+  overflow: hidden;
+  filter: drop-shadow(0 16px 34px rgb(0 0 0 / 55%));
+  animation: sign-zoom-pop 200ms var(--ease-out-soft);
+}
+
+.sign-zoom .rsign-title {
+  font-size: calc(clamp(1.5rem, 5vw, 3rem) * var(--rsign-fit, 1));
+}
+
+@keyframes sign-zoom-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sign-zoom-pop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-zoom-backdrop,
+  .sign-zoom { animation: none; }
 }
 
 /* ── Action dock (below the room panel; swaps kiosks <-> skill bar) ───── */
