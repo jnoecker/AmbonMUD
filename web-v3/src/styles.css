@@ -18037,12 +18037,14 @@ html:has(.game-shell),
   object-fit: contain;
 }
 
-.compass-dir-north { grid-column: 2; grid-row: 1; }
-.compass-dir-up { grid-column: 3; grid-row: 1; }
-.compass-dir-west { grid-column: 1; grid-row: 2; }
-.compass-dir-east { grid-column: 3; grid-row: 2; }
-.compass-dir-down { grid-column: 1; grid-row: 3; }
-.compass-dir-south { grid-column: 2; grid-row: 3; }
+/* Each control is pulled toward the inner edge of its cell so they sit closer
+   to the rose; the corner Up/Down move diagonally inward the most. */
+.compass-dir-north { grid-column: 2; grid-row: 1; align-self: end; }
+.compass-dir-up { grid-column: 3; grid-row: 1; align-self: end; justify-self: start; }
+.compass-dir-west { grid-column: 1; grid-row: 2; justify-self: end; }
+.compass-dir-east { grid-column: 3; grid-row: 2; justify-self: start; }
+.compass-dir-down { grid-column: 1; grid-row: 3; align-self: start; justify-self: end; }
+.compass-dir-south { grid-column: 2; grid-row: 3; align-self: start; }
 
 .compass-btn {
   position: relative;
