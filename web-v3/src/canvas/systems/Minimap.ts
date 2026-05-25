@@ -12,18 +12,45 @@ interface MapNode {
   exits: Record<string, string>;
   title: string;
   image: string | null;
+  /** Terrain key (forest, mountain, …) once the room has been visited. */
+  terrain?: string;
   housing?: boolean;
 }
 
 // Server-asset keys (all optional — each falls back to the procedural look).
 // Background follows the existing `*_bg` convention (compass_bg, room_panel_bg).
 const A_BG = "minimap_bg"; // the torn parchment "scrap"
-const A_ROOM = "minimap_room"; // explored room stamp
+const A_ROOM = "minimap_room"; // explored room stamp (generic fallback)
 const A_ROOM_CURRENT = "minimap_room_current"; // "you are here"
 const A_ROOM_FOG = "minimap_unexplored"; // unexplored room (pre-existing key)
 const A_ROOM_HOUSING = "minimap_room_housing"; // player housing
 const A_QUEST = "minimap_quest"; // quest objective marker (overlay)
-const ASSET_KEYS = [A_BG, A_ROOM, A_ROOM_CURRENT, A_ROOM_FOG, A_ROOM_HOUSING, A_QUEST];
+
+/** Server-validated terrain vocabulary (WorldLoader.kt VALID_TERRAINS). A
+ *  visited room prefers minimap_room_<terrain>, falling back to minimap_room. */
+const TERRAINS = [
+  "inside",
+  "outside",
+  "forest",
+  "mountain",
+  "underground",
+  "underwater",
+  "desert",
+  "swamp",
+  "urban",
+  "sky",
+];
+const terrainKey = (t: string) => `minimap_room_${t}`;
+
+const ASSET_KEYS = [
+  A_BG,
+  A_ROOM,
+  A_ROOM_CURRENT,
+  A_ROOM_FOG,
+  A_ROOM_HOUSING,
+  A_QUEST,
+  ...TERRAINS.map(terrainKey),
+];
 
 const DEFAULT_WIDTH = 140;
 const HEIGHT_RATIO = 0.8; // parchment is a landscape rectangle
@@ -308,7 +335,7 @@ export class Minimap {
     }
   }
 
-  updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) {
+  updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, terrain: string | null) {
     if (!roomId) return;
 
     // Load the optional minimap textures once Server.Assets GMCP arrives.
@@ -332,7 +359,7 @@ export class Minimap {
     this.currentRoomId = roomId;
 
     if (!this.visited.has(roomId)) {
-      this.visited.set(roomId, { x: mapX, y: mapY, exits, title, image });
+      this.visited.set(roomId, { x: mapX, y: mapY, exits, title, image, terrain: terrain ?? undefined });
     } else {
       const node = this.visited.get(roomId)!;
       node.exits = exits;
@@ -340,6 +367,7 @@ export class Minimap {
       node.image = image;
       node.x = mapX;
       node.y = mapY;
+      if (terrain) node.terrain = terrain;
     }
 
     // Pre-place unvisited horizontal neighbors (N/S/E/W only).
@@ -502,14 +530,19 @@ export class Minimap {
         this.mapGraphics.stroke({ color: INK_SOFT, width: 1.5, alpha: 0.55 });
       }
 
-      const assetKey = isCurrent
-        ? A_ROOM_CURRENT
-        : !visited
-            ? A_ROOM_FOG
-            : isHousing
-                ? A_ROOM_HOUSING
-                : A_ROOM;
-      const tex = this.texCache.get(assetKey);
+      // Pick the room stamp: current / fog / housing take priority; a plain
+      // explored room prefers its terrain glyph, falling back to the generic.
+      let tex: Texture | undefined;
+      if (isCurrent) {
+        tex = this.texCache.get(A_ROOM_CURRENT);
+      } else if (!visited) {
+        tex = this.texCache.get(A_ROOM_FOG);
+      } else if (isHousing) {
+        tex = this.texCache.get(A_ROOM_HOUSING);
+      } else {
+        tex = (node.terrain ? this.texCache.get(terrainKey(node.terrain)) : undefined)
+          ?? this.texCache.get(A_ROOM);
+      }
 
       if (tex) {
         this.placeRoomSprite(id, tex, nx, ny, half);

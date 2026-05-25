@@ -915,7 +915,7 @@ export class WorldScene {
     this.ambientMotes.update(deltaMs);
 
     // Update minimap
-    this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "", room.image ?? null, room.mapX, room.mapY);
+    this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "", room.image ?? null, room.mapX, room.mapY, room.terrain ?? null);
     this.minimap.tick(deltaMs);
 
     // Resolve room background: custom image, or terrain-based default from server assets
