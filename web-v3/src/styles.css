@@ -17661,7 +17661,11 @@ html:has(.game-shell),
   justify-content: center;
   min-height: 0;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(180deg, rgb(20 24 40 / 96%), rgb(14 17 28 / 99%));
+  background-color: #10131f;
+  background-image: linear-gradient(180deg, rgb(20 24 40 / 66%), rgb(14 17 28 / 82%)), var(--dock-bg, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   border-top: 1px solid var(--line-soft);
 }
 
@@ -17951,7 +17955,11 @@ html:has(.game-shell),
   flex: 0 0 auto;
   height: 212px;
   overflow: hidden;
-  background: linear-gradient(180deg, rgb(20 24 40 / 97%), rgb(15 18 30 / 99%));
+  background-color: #10131f;
+  background-image: linear-gradient(180deg, rgb(15 18 30 / 55%), rgb(10 12 22 / 72%)), var(--room-bg, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   border-top: 1px solid var(--line-soft);
   color: var(--text-primary);
 }
@@ -18001,6 +18009,12 @@ html:has(.game-shell),
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
   place-items: center;
+  /* Optional custom backdrop; floats with no box when unset. */
+  background-image: var(--compass-bg, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: var(--radius-lg);
 }
 
 /* Centered rose in the middle cell; the edge cells stay clear for the

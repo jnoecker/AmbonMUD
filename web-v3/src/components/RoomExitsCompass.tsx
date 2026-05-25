@@ -45,10 +45,12 @@ export function RoomExitsCompass({ exits, serverAssets, onCommand }: RoomExitsCo
   const present = new Set(exits.map(([dir]) => dir));
   const go = (dir: string) => (e: MouseEvent) => onCommand(e.shiftKey ? `look ${dir}` : dir);
   const rose = serverAssets["compass_widget"];
+  const bg = serverAssets["compass_bg"];
+  const padStyle = bg ? { ["--compass-bg" as string]: `url("${bg}")` } : undefined;
 
   return (
     <div className="room-compass" aria-label="Exits">
-      <div className="room-compass-pad">
+      <div className="room-compass-pad" style={padStyle}>
         <div className="room-compass-rose">
           {rose ? <img src={rose} alt="" className="room-compass-rose-img" /> : <CompassRose />}
         </div>

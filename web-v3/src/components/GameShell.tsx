@@ -161,7 +161,10 @@ export function GameShell({
       {/* Action dock — kiosks (out of combat) / skill bar (in combat).
           The command input now lives in the Terminal overlay. */}
       {loggedIn && (
-        <div className="action-dock">
+        <div
+          className="action-dock"
+          style={serverAssets["action_bar_bg"] ? { ["--dock-bg" as string]: `url("${serverAssets["action_bar_bg"]}")` } : undefined}
+        >
           {inCombat ? (
             <SkillBar
               quickbarSlots={quickbarSlots}
