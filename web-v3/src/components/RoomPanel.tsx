@@ -21,13 +21,9 @@ export function RoomPanel({ room, exits, serverAssets, loggedIn, onCommand }: Ro
 
   if (!loggedIn || room.title === "-") return null;
 
-  const bg = serverAssets["room_panel_bg"];
-  const style = bg ? { ["--room-bg" as string]: `url("${bg}")` } : undefined;
-
   return (
     <section
       className={`room-panel${collapsed ? " room-panel-collapsed" : ""}`}
-      style={style}
       aria-label="Room details"
     >
       {!collapsed && (

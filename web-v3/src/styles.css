@@ -17661,12 +17661,6 @@ html:has(.game-shell),
   justify-content: center;
   min-height: 0;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
-  background-color: #10131f;
-  background-image: linear-gradient(180deg, rgb(20 24 40 / 66%), rgb(14 17 28 / 82%)), var(--dock-bg, none);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-top: 1px solid var(--line-soft);
 }
 
 /* Kiosk row — soft in-world icon plinths (radial glow, label underneath). */
@@ -17950,17 +17944,25 @@ html:has(.game-shell),
 /* ── Room panel (between canvas and action bar) ───────── */
 /* Fixed height so the panel doesn't jump room-to-room; the description column
    scrolls and the compass pad on the right anchors the height. */
-.room-panel {
-  position: relative;
+/* Shared backdrop for the room description + action dock (one continuous
+   surface, no seam between them). */
+.bottom-stack {
   flex: 0 0 auto;
-  height: 256px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background-color: #10131f;
   background-image: linear-gradient(180deg, rgb(15 18 30 / 55%), rgb(10 12 22 / 72%)), var(--room-bg, none);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   border-top: 1px solid var(--line-soft);
+}
+
+.room-panel {
+  position: relative;
+  flex: 0 0 auto;
+  height: 264px;
+  overflow: hidden;
   color: var(--text-primary);
 }
 
@@ -17969,7 +17971,7 @@ html:has(.game-shell),
   gap: var(--space-5);
   align-items: stretch;
   height: 100%;
-  padding: 16px 28px;
+  padding: 28px 28px 16px;
   box-sizing: border-box;
 }
 
@@ -18159,11 +18161,11 @@ html:has(.game-shell),
    shrinks so it stays a square next to the (scrolling) description. */
 @media (max-width: 640px) {
   .room-panel {
-    height: 224px;
+    height: 234px;
   }
 
   .room-panel-body {
-    padding: 14px;
+    padding: 26px 14px 14px;
     gap: var(--space-3);
   }
 

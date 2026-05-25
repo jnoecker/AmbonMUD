@@ -149,38 +149,40 @@ export function GameShell({
         )}
       </div>
 
-      {/* Room description panel — below the canvas */}
-      <RoomPanel
-        room={room}
-        exits={exits}
-        serverAssets={serverAssets}
-        loggedIn={loggedIn}
-        onCommand={onCommand}
-      />
-
-      {/* Action dock — kiosks (out of combat) / skill bar (in combat).
-          The command input now lives in the Terminal overlay. */}
+      {/* Room description + action dock share one continuous background. */}
       {loggedIn && (
         <div
-          className="action-dock"
-          style={serverAssets["action_bar_bg"] ? { ["--dock-bg" as string]: `url("${serverAssets["action_bar_bg"]}")` } : undefined}
+          className="bottom-stack"
+          style={serverAssets["room_panel_bg"] ? { ["--room-bg" as string]: `url("${serverAssets["room_panel_bg"]}")` } : undefined}
         >
-          {inCombat ? (
-            <SkillBar
-              quickbarSlots={quickbarSlots}
-              petSkills={petSkills}
-              onCastSkill={onCastSkill}
-              onQuickbarSwap={onQuickbarSwap}
-              onQuickbarAssign={onQuickbarAssign}
-              onQuickbarClear={onQuickbarClear}
-            />
-          ) : (
-            <KioskBar
-              serverAssets={serverAssets}
-              activePopout={activePopout}
-              onOpenPanel={onOpenPanel}
-            />
-          )}
+          <RoomPanel
+            room={room}
+            exits={exits}
+            serverAssets={serverAssets}
+            loggedIn={loggedIn}
+            onCommand={onCommand}
+          />
+
+          {/* Kiosks (out of combat) / skill bar (in combat). The command input
+              now lives in the Terminal overlay. */}
+          <div className="action-dock">
+            {inCombat ? (
+              <SkillBar
+                quickbarSlots={quickbarSlots}
+                petSkills={petSkills}
+                onCastSkill={onCastSkill}
+                onQuickbarSwap={onQuickbarSwap}
+                onQuickbarAssign={onQuickbarAssign}
+                onQuickbarClear={onQuickbarClear}
+              />
+            ) : (
+              <KioskBar
+                serverAssets={serverAssets}
+                activePopout={activePopout}
+                onOpenPanel={onOpenPanel}
+              />
+            )}
+          </div>
         </div>
       )}
 
