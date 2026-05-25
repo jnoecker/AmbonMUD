@@ -153,6 +153,7 @@ export function GameShell({
       <RoomPanel
         room={room}
         exits={exits}
+        serverAssets={serverAssets}
         loggedIn={loggedIn}
         onCommand={onCommand}
       />

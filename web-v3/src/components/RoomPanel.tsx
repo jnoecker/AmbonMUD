@@ -1,24 +1,22 @@
 import { useState } from "react";
 import type { RoomState } from "../types";
+import { RoomExitsCompass } from "./RoomExitsCompass";
 
 interface RoomPanelProps {
   room: RoomState;
   /** Sorted [direction, targetRoomId] pairs. */
   exits: Array<[string, string]>;
+  serverAssets: Record<string, string>;
   loggedIn: boolean;
   onCommand: (cmd: string) => void;
 }
 
-function capitalize(word: string): string {
-  return word.charAt(0).toUpperCase() + word.slice(1);
-}
-
 /**
  * Room description panel between the canvas and the bottom of the screen.
- * Left column carries the title + description; the right column lists the
- * room exits. Collapsible so it can fold away on small screens.
+ * Left column carries the (scrolling) description; the right column holds the
+ * compass exit pad. Fixed height so it doesn't jump between rooms. Collapsible.
  */
-export function RoomPanel({ room, exits, loggedIn, onCommand }: RoomPanelProps) {
+export function RoomPanel({ room, exits, serverAssets, loggedIn, onCommand }: RoomPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   if (!loggedIn || room.title === "-") return null;
@@ -34,25 +32,7 @@ export function RoomPanel({ room, exits, loggedIn, onCommand }: RoomPanelProps) 
           </div>
 
           <div className="room-panel-nav">
-            <div className="room-panel-nav-group">
-              <h3 className="room-panel-nav-heading">Room Exits</h3>
-              {exits.length === 0 ? (
-                <p className="room-panel-nav-empty">No visible exits.</p>
-              ) : (
-                exits.map(([direction]) => (
-                  <button
-                    key={direction}
-                    type="button"
-                    className="room-panel-exit"
-                    title={`Move ${direction} (Shift+Click to peek)`}
-                    onClick={(e) => onCommand(e.shiftKey ? `look ${direction}` : direction)}
-                  >
-                    <span className="room-panel-exit-label">Exit {capitalize(direction)}</span>
-                    <span className="room-panel-exit-arrow" aria-hidden="true">{"→"}</span>
-                  </button>
-                ))
-              )}
-            </div>
+            <RoomExitsCompass exits={exits} serverAssets={serverAssets} onCommand={onCommand} />
           </div>
         </div>
       )}

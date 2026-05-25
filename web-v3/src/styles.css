@@ -17945,11 +17945,13 @@ html:has(.game-shell),
 }
 
 /* ── Room panel (between canvas and action bar) ───────── */
+/* Fixed height so the panel doesn't jump room-to-room; the description column
+   scrolls and the compass pad on the right anchors the height. */
 .room-panel {
   position: relative;
   flex: 0 0 auto;
-  max-height: 34vh;
-  overflow-y: auto;
+  height: 212px;
+  overflow: hidden;
   background: linear-gradient(180deg, rgb(20 24 40 / 97%), rgb(15 18 30 / 99%));
   border-top: 1px solid var(--line-soft);
   color: var(--text-primary);
@@ -17958,106 +17960,111 @@ html:has(.game-shell),
 .room-panel-body {
   display: flex;
   gap: var(--space-5);
-  align-items: flex-start;
-  padding: 18px 28px 10px;
+  align-items: stretch;
+  height: 100%;
+  padding: 16px 28px;
+  box-sizing: border-box;
 }
 
 .room-panel-main {
-  flex: 1 1 70%;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .room-panel-desc {
-  margin: 10px 0 0;
+  margin: 0;
   font-size: 0.98rem;
   line-height: 1.6;
   color: var(--text-secondary);
 }
 
 .room-panel-nav {
-  flex: 0 0 28%;
+  flex: 0 0 auto;
   display: flex;
-  gap: var(--space-5);
-  min-width: 0;
+  align-items: center;
+  justify-content: center;
 }
 
-.room-panel-nav-group {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.room-panel-nav-heading {
-  margin: 0 0 2px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-tertiary);
-}
-
-.room-panel-nav-empty {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-disabled);
-}
-
-.room-panel-exit,
-.room-panel-nav-btn {
+/* ── Compass exit pad ─────────────────────────────────── */
+.room-compass {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.room-compass-pad {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  place-items: center;
+  border: 1px solid rgb(190 168 115 / 28%);
+  border-radius: var(--radius-lg);
+  background: radial-gradient(circle at 50% 50%, rgb(34 41 60 / 65%), rgb(16 19 31 / 80%));
+}
+
+.room-compass-rose {
+  grid-column: 2;
+  grid-row: 2;
+  width: 78px;
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.room-compass-rose-svg,
+.room-compass-rose-img {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--line-faint);
-  border-radius: var(--radius-md);
-  background: rgb(39 47 73 / 45%);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
+  height: 100%;
+  object-fit: contain;
 }
 
-.room-panel-exit:hover,
-.room-panel-nav-btn:hover {
-  border-color: rgb(176 193 255 / 48%);
-  background: rgb(56 67 100 / 60%);
-}
+.compass-dir-north { grid-column: 2; grid-row: 1; }
+.compass-dir-south { grid-column: 2; grid-row: 3; }
+.compass-dir-west { grid-column: 1; grid-row: 2; }
+.compass-dir-east { grid-column: 3; grid-row: 2; }
 
-.room-panel-exit-label {
-  flex: 1;
-  font-weight: 600;
-}
-
-.room-panel-exit-arrow {
-  color: var(--text-tertiary);
-}
-
-.room-panel-nav-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  color: var(--text-tertiary);
-}
-
-.room-panel-nav-text {
-  flex: 1;
+.room-compass-vert {
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  justify-content: center;
+  gap: 10px;
 }
 
-.room-panel-nav-name {
-  font-weight: 600;
+.compass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 40px;
+  padding: 6px 10px;
+  border: 1px solid rgb(190 168 115 / 42%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, rgb(34 41 60 / 90%), rgb(20 24 40 / 94%));
+  color: var(--text-bright);
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft), transform 120ms var(--ease-out-soft);
 }
 
-.room-panel-nav-sub {
-  font-size: 0.78rem;
-  color: var(--text-tertiary);
+.compass-btn:hover {
+  border-color: rgb(212 198 150 / 85%);
+  background: linear-gradient(160deg, rgb(56 67 100 / 94%), rgb(30 36 56 / 96%));
+  transform: scale(1.05);
+}
+
+.room-compass-vert .compass-btn {
+  width: 66px;
+  font-size: 0.76rem;
 }
 
 .room-panel-toggle {
@@ -18095,11 +18102,16 @@ html:has(.game-shell),
   transform: rotate(180deg);
 }
 
-/* Stack the room panel vertically on narrow screens. */
+/* Stack the room panel vertically on narrow screens (taller fixed height to fit
+   the description above the compass). */
 @media (max-width: 640px) {
+  .room-panel {
+    height: 320px;
+  }
+
   .room-panel-body {
     flex-direction: column;
-    padding: 16px 16px 8px;
+    padding: 14px 16px;
     gap: var(--space-3);
   }
 
