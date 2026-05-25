@@ -180,16 +180,44 @@ export function GameShell({
               worldEvents={worldEvents}
             />
 
-            {/* Help — small glyph near the time / weather HUD */}
-            <button
-              type="button"
-              className="canvas-help-btn"
-              onClick={() => onOpenPanel("help")}
-              title="Help"
-              aria-label="Help"
-            >
-              ?
-            </button>
+            {/* Services stack — Help / Social / Mail, top-right under the minimap.
+                Tiny round widget buttons; the corner overlaps the minimap's
+                decorative torn margin only. */}
+            <nav className="canvas-hud-stack" aria-label="Services">
+              <button
+                type="button"
+                className="hud-stack-btn"
+                onClick={() => onOpenPanel("help")}
+                title="Help"
+                aria-label="Help"
+              >
+                {serverAssets["help_widget"]
+                  ? <img className="hud-stack-img" src={serverAssets["help_widget"]} alt="" />
+                  : <span className="hud-stack-glyph">?</span>}
+              </button>
+              <button
+                type="button"
+                className="hud-stack-btn"
+                onClick={() => onOpenPanel("chat")}
+                title="Social"
+                aria-label="Social"
+              >
+                {serverAssets["social_widget"]
+                  ? <img className="hud-stack-img" src={serverAssets["social_widget"]} alt="" />
+                  : <span className="hud-stack-glyph">☺</span>}
+              </button>
+              <button
+                type="button"
+                className="hud-stack-btn"
+                onClick={() => onOpenPanel("mail")}
+                title="Mail"
+                aria-label="Mail"
+              >
+                {serverAssets["mail_widget"]
+                  ? <img className="hud-stack-img" src={serverAssets["mail_widget"]} alt="" />
+                  : <span className="hud-stack-glyph">✉</span>}
+              </button>
+            </nav>
 
             {/* Flee — only during combat */}
             {inCombat && (
