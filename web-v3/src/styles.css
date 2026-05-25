@@ -17987,11 +17987,11 @@ html:has(.game-shell),
   justify-content: center;
 }
 
-/* ── Compass exit pad ─────────────────────────────────── */
+/* ── Compass exit pad (constant-size square) ──────────── */
 .room-compass {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
 }
 
 .room-compass-pad {
@@ -18026,30 +18026,24 @@ html:has(.game-shell),
 }
 
 .compass-dir-north { grid-column: 2; grid-row: 1; }
-.compass-dir-south { grid-column: 2; grid-row: 3; }
+.compass-dir-up { grid-column: 3; grid-row: 1; }
 .compass-dir-west { grid-column: 1; grid-row: 2; }
 .compass-dir-east { grid-column: 3; grid-row: 2; }
-
-.room-compass-vert {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-}
+.compass-dir-down { grid-column: 1; grid-row: 3; }
+.compass-dir-south { grid-column: 2; grid-row: 3; }
 
 .compass-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-width: 40px;
-  padding: 6px 10px;
+  min-width: 38px;
+  padding: 6px 9px;
   border: 1px solid rgb(190 168 115 / 42%);
   border-radius: var(--radius-sm);
   background: linear-gradient(160deg, rgb(34 41 60 / 90%), rgb(20 24 40 / 94%));
   color: var(--text-bright);
   font-family: var(--font-display);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -18062,9 +18056,19 @@ html:has(.game-shell),
   transform: scale(1.05);
 }
 
-.room-compass-vert .compass-btn {
-  width: 66px;
-  font-size: 0.76rem;
+/* Missing exit — greyed-out label, no box, not interactive. */
+.compass-btn-off {
+  border-color: transparent;
+  background: none;
+  color: var(--text-disabled);
+  cursor: default;
+  opacity: 0.55;
+}
+
+.compass-btn-off:hover {
+  border-color: transparent;
+  background: none;
+  transform: none;
 }
 
 .room-panel-toggle {
@@ -18102,22 +18106,32 @@ html:has(.game-shell),
   transform: rotate(180deg);
 }
 
-/* Stack the room panel vertically on narrow screens (taller fixed height to fit
-   the description above the compass). */
+/* Narrow screens keep the description | compass side-by-side; the compass just
+   shrinks so it stays a square next to the (scrolling) description. */
 @media (max-width: 640px) {
   .room-panel {
-    height: 320px;
+    height: 188px;
   }
 
   .room-panel-body {
-    flex-direction: column;
-    padding: 14px 16px;
+    padding: 14px;
     gap: var(--space-3);
   }
 
-  .room-panel-nav {
-    flex-basis: auto;
-    width: 100%;
+  .room-compass-pad {
+    width: 148px;
+    height: 148px;
+  }
+
+  .room-compass-rose {
+    width: 66px;
+    height: 66px;
+  }
+
+  .compass-btn {
+    min-width: 32px;
+    padding: 5px 7px;
+    font-size: 0.82rem;
   }
 }
 
