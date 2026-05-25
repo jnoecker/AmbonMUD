@@ -1,4 +1,4 @@
-import { Assets, Container, Graphics, Sprite } from "pixi.js";
+import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 import { MAP_OFFSETS } from "../../constants";
 
@@ -15,10 +15,20 @@ interface MapNode {
   housing?: boolean;
 }
 
+// Server-asset keys (all optional — each falls back to the procedural look).
+// Background follows the existing `*_bg` convention (compass_bg, room_panel_bg).
+const A_BG = "minimap_bg"; // the torn parchment "scrap"
+const A_ROOM = "minimap_room"; // explored room stamp
+const A_ROOM_CURRENT = "minimap_room_current"; // "you are here"
+const A_ROOM_FOG = "minimap_unexplored"; // unexplored room (pre-existing key)
+const A_ROOM_HOUSING = "minimap_room_housing"; // player housing
+const A_QUEST = "minimap_quest"; // quest objective marker (overlay)
+const ASSET_KEYS = [A_BG, A_ROOM, A_ROOM_CURRENT, A_ROOM_FOG, A_ROOM_HOUSING, A_QUEST];
+
 const DEFAULT_WIDTH = 140;
 const HEIGHT_RATIO = 0.8; // parchment is a landscape rectangle
 
-// Parchment / ink palette — replaces the old dark-blue glass look.
+// Parchment / ink palette — the procedural fallback look.
 const PAPER = 0xe6d8b8;
 const PAPER_SHADE = 0xd8c49a;
 const PAPER_STAIN = 0xcdb487;
@@ -40,9 +50,12 @@ export class Minimap {
   readonly container = new Container();
 
   private bg = new Graphics();
+  private border = new Graphics();
   private clipMask = new Graphics();
   private mapGraphics = new Graphics();
   private expandButton = new Graphics();
+  private nodeLayer = new Container(); // textured room glyphs (when assets present)
+  private markerLayer = new Container(); // textured quest markers
   private inner = new Container();
   private visited = new Map<string, MapNode>();
   private currentRoomId: string | null = null;
@@ -61,9 +74,12 @@ export class Minimap {
   private tornInner: number[] = [];
   private tornShadow: number[] = [];
 
-  // Optional parchment texture (server asset: minimap_parchment)
+  // Server-asset textures + the sprites that use them.
+  private texCache = new Map<string, Texture>();
+  private assetsLoaded = false;
   private paperSprite: Sprite | null = null;
-  private paperAssetLoaded = false;
+  private roomSprites = new Map<string, Sprite>();
+  private questSprites = new Map<string, Sprite>();
 
   // Click navigation
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
@@ -76,12 +92,17 @@ export class Minimap {
   constructor() {
     this.buildFloorButtons();
 
-    // Inner content group that gets clipped to the torn parchment edge.
+    // Inner content group, clipped to the torn parchment edge: the paper texture
+    // sits at the back, then connector lines / procedural glyphs, then textured
+    // room glyphs, then quest markers.
     this.inner.addChild(this.mapGraphics);
+    this.inner.addChild(this.nodeLayer);
+    this.inner.addChild(this.markerLayer);
 
     this.container.addChild(this.bg);
-    this.container.addChild(this.clipMask);
     this.container.addChild(this.inner);
+    this.container.addChild(this.border);
+    this.container.addChild(this.clipMask);
     this.container.addChild(this.expandButton);
     this.container.addChild(this.upButton);
     this.container.addChild(this.downButton);
@@ -205,12 +226,13 @@ export class Minimap {
     g.poly(this.tornShadow);
     g.fill({ color: SHADOW, alpha: 0.28 });
 
-    // Paper body (skipped when a texture sprite covers it; ink edge still drawn).
+    // Procedural paper body — skipped when a `minimap_bg` texture covers it. The
+    // texture sprite is itself clipped to the torn polygon, so the parchment
+    // takes the same scrap shape whether art is supplied or not.
     if (!this.paperSprite) {
       g.poly(this.tornPath);
       g.fill({ color: PAPER, alpha: 0.97 });
 
-      // A few faint stains / shading blobs for aged-paper character.
       const stains = 4;
       for (let i = 0; i < stains; i++) {
         const sx = this._width * (0.2 + 0.6 * (this.jitter(i * 3 + 1, 0.5) + 0.5));
@@ -221,11 +243,14 @@ export class Minimap {
       }
     }
 
-    // Torn ink edge — a soft inner line under a darker outer line (pen-nib feel).
-    g.poly(this.tornInner);
-    g.stroke({ color: INK_SOFT, width: 1, alpha: 0.3 });
-    g.poly(this.tornPath);
-    g.stroke({ color: INK, width: 1.5, alpha: 0.5 });
+    // Torn ink edge — drawn on its own layer above the paper (soft inner line
+    // under a darker outer line, a pen-nib feel) so it frames any texture.
+    const e = this.border;
+    e.clear();
+    e.poly(this.tornInner);
+    e.stroke({ color: INK_SOFT, width: 1, alpha: 0.3 });
+    e.poly(this.tornPath);
+    e.stroke({ color: INK, width: 1.5, alpha: 0.5 });
   }
 
   private rebuildExpandButton() {
@@ -245,6 +270,7 @@ export class Minimap {
     btn.stroke({ color: INK, width: 1.5 });
     btn.eventMode = "static";
     btn.cursor = "pointer";
+    btn.removeAllListeners();
     btn.on("pointerdown", () => {
       canvasCallbacks.openMap?.();
     });
@@ -285,10 +311,10 @@ export class Minimap {
   updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) {
     if (!roomId) return;
 
-    // Load the optional parchment texture once Server.Assets GMCP arrives.
-    if (!this.paperAssetLoaded && Object.keys(gameStateRef.current.serverAssets).length > 0) {
-      this.paperAssetLoaded = true;
-      this.loadPaperTexture();
+    // Load the optional minimap textures once Server.Assets GMCP arrives.
+    if (!this.assetsLoaded && Object.keys(gameStateRef.current.serverAssets).length > 0) {
+      this.assetsLoaded = true;
+      this.loadAssets();
     }
 
     const key = `${roomId}:${mapX},${mapY}:${JSON.stringify(exits)}`;
@@ -300,6 +326,7 @@ export class Minimap {
     const zone = roomId.split(":")[0];
     if (this.currentZone && zone !== this.currentZone) {
       this.visited.clear();
+      this.clearNodeSprites();
     }
     this.currentZone = zone;
     this.currentRoomId = roomId;
@@ -330,6 +357,7 @@ export class Minimap {
   /** Pre-populate all rooms in a zone as fog nodes. */
   loadZoneMap(zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) {
     this.visited.clear();
+    this.clearNodeSprites();
     this.currentZone = zone;
     this.currentRoomId = null;
     this.lastKey = "";
@@ -344,6 +372,7 @@ export class Minimap {
     this.currentRoomId = null;
     this.currentZone = null;
     this.lastKey = "";
+    this.clearNodeSprites();
     this.redraw();
   }
 
@@ -364,6 +393,9 @@ export class Minimap {
     this.clickAreas = [];
 
     this.mapGraphics.clear();
+    // Hide all textured glyphs; the ones in view are re-shown below.
+    for (const s of this.roomSprites.values()) s.visible = false;
+    for (const s of this.questSprites.values()) s.visible = false;
 
     if (!this.currentRoomId) return;
     const current = this.visited.get(this.currentRoomId);
@@ -442,7 +474,7 @@ export class Minimap {
       }
     }
 
-    // Inked room glyphs.
+    // Room glyphs — textured stamp when an asset exists, else inked vectors.
     for (const [id] of localPos) {
       const node = this.visited.get(id);
       if (!node) continue;
@@ -455,10 +487,10 @@ export class Minimap {
       const isCurrent = id === this.currentRoomId;
       const half = isCurrent ? this._currentHalf : this._nodeHalf;
       const visited = node.title !== "";
+      const isHousing = node.housing === true;
       const seed = this.hashSeed(id);
 
-      // Direction ticks for exits that leave the visible map — little inked
-      // stubs at the room edge hinting at unexplored passages.
+      // Direction ticks for exits that leave the visible map.
       for (const dir of Object.keys(node.exits)) {
         if (!HORIZONTAL_DIRS.has(dir)) continue;
         const tp = posOf(node.exits[dir]);
@@ -470,49 +502,39 @@ export class Minimap {
         this.mapGraphics.stroke({ color: INK_SOFT, width: 1.5, alpha: 0.55 });
       }
 
-      if (isCurrent) {
-        this.inkRect(nx, ny, half, seed, { fill: CURRENT_FILL, fillAlpha: 0.9, stroke: INK, width: 1.6, doubleStroke: true });
-        // Cream "you are here" dot.
-        this.mapGraphics.circle(nx, ny, Math.max(2, half * 0.3));
-        this.mapGraphics.fill({ color: CURRENT_MARK, alpha: 0.95 });
-      } else if (visited) {
-        const isHousing = node.housing === true;
-        this.inkRect(nx, ny, half, seed, {
-          fill: isHousing ? HOUSING_FILL : NODE_FILL,
-          fillAlpha: 0.9,
-          stroke: INK,
-          width: 1.2,
-          alpha: 0.85,
-          doubleStroke: true,
-        });
-        if (isHousing) {
-          // Tiny roof peak on the top edge.
-          this.mapGraphics.moveTo(nx - half * 0.6, ny - half);
-          this.mapGraphics.lineTo(nx, ny - half * 1.5);
-          this.mapGraphics.lineTo(nx + half * 0.6, ny - half);
-          this.mapGraphics.stroke({ color: INK, width: 1.2, alpha: 0.8 });
-        }
+      const assetKey = isCurrent
+        ? A_ROOM_CURRENT
+        : !visited
+            ? A_ROOM_FOG
+            : isHousing
+                ? A_ROOM_HOUSING
+                : A_ROOM;
+      const tex = this.texCache.get(assetKey);
+
+      if (tex) {
+        this.placeRoomSprite(id, tex, nx, ny, half);
       } else {
-        // Unexplored — faint outline plus a single hatch stroke for "unknown".
-        this.inkRect(nx, ny, half, seed, { stroke: FOG_INK, width: 1.2, alpha: 0.55 });
-        this.mapGraphics.moveTo(nx - half * 0.6, ny + half * 0.6);
-        this.mapGraphics.lineTo(nx + half * 0.6, ny - half * 0.6);
-        this.mapGraphics.stroke({ color: FOG_INK, width: 1, alpha: 0.4 });
+        this.drawRoomGlyph(nx, ny, half, seed, isCurrent, visited, isHousing);
       }
 
-      // Quest objective marker — pulsing amber outline + diamond.
+      // Quest objective marker.
       if (!isCurrent && questTargets.has(id)) {
         const pulse = 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
-        this.inkRect(nx, ny, half + 3, seed + 7, { stroke: QUEST_COLOR, width: 2, alpha: pulse });
-        const ds = this._width <= 180 ? 3 : 5;
-        const dOff = this._width <= 180 ? 4 : 7;
-        const dy = ny - half - dOff;
-        this.mapGraphics.moveTo(nx, dy - ds);
-        this.mapGraphics.lineTo(nx + ds - 1, dy);
-        this.mapGraphics.lineTo(nx, dy + ds);
-        this.mapGraphics.lineTo(nx - ds + 1, dy);
-        this.mapGraphics.closePath();
-        this.mapGraphics.fill({ color: QUEST_COLOR, alpha: pulse });
+        const qTex = this.texCache.get(A_QUEST);
+        if (qTex) {
+          this.placeQuestSprite(id, qTex, nx, ny, half, pulse);
+        } else {
+          this.inkRect(nx, ny, half + 3, seed + 7, { stroke: QUEST_COLOR, width: 2, alpha: pulse });
+          const ds = this._width <= 180 ? 3 : 5;
+          const dOff = this._width <= 180 ? 4 : 7;
+          const dy = ny - half - dOff;
+          this.mapGraphics.moveTo(nx, dy - ds);
+          this.mapGraphics.lineTo(nx + ds - 1, dy);
+          this.mapGraphics.lineTo(nx, dy + ds);
+          this.mapGraphics.lineTo(nx - ds + 1, dy);
+          this.mapGraphics.closePath();
+          this.mapGraphics.fill({ color: QUEST_COLOR, alpha: pulse });
+        }
       }
     }
 
@@ -529,7 +551,6 @@ export class Minimap {
         const ddx = targetNode.x - current.x;
         const ddy = targetNode.y - current.y;
         if (ddx === 0 && ddy === 0) continue;
-        // Project the direction onto the rectangular rim.
         const scale = 1 / Math.max(Math.abs(ddx) / halfW, Math.abs(ddy) / halfH);
         const ex = cx + ddx * scale;
         const ey = cy + ddy * scale;
@@ -569,6 +590,76 @@ export class Minimap {
     }
   }
 
+  /** Show/position a textured room glyph (reused across redraws). */
+  private placeRoomSprite(id: string, tex: Texture, nx: number, ny: number, half: number) {
+    let spr = this.roomSprites.get(id);
+    if (!spr) {
+      spr = new Sprite(tex);
+      spr.anchor.set(0.5);
+      spr.eventMode = "none";
+      this.nodeLayer.addChild(spr);
+      this.roomSprites.set(id, spr);
+    } else if (spr.texture !== tex) {
+      spr.texture = tex;
+    }
+    const size = half * 2.4; // a touch of bleed past the node box reads well
+    spr.width = size;
+    spr.height = size;
+    spr.x = nx;
+    spr.y = ny;
+    spr.visible = true;
+  }
+
+  /** Show/position a textured quest marker overlay (reused across redraws). */
+  private placeQuestSprite(id: string, tex: Texture, nx: number, ny: number, half: number, alpha: number) {
+    let spr = this.questSprites.get(id);
+    if (!spr) {
+      spr = new Sprite(tex);
+      spr.anchor.set(0.5);
+      spr.eventMode = "none";
+      this.markerLayer.addChild(spr);
+      this.questSprites.set(id, spr);
+    } else if (spr.texture !== tex) {
+      spr.texture = tex;
+    }
+    const size = (half + 6) * 2;
+    spr.width = size;
+    spr.height = size;
+    spr.x = nx;
+    spr.y = ny;
+    spr.alpha = alpha;
+    spr.visible = true;
+  }
+
+  /** Procedural inked room glyph (fallback when no room asset is present). */
+  private drawRoomGlyph(nx: number, ny: number, half: number, seed: number, isCurrent: boolean, visited: boolean, isHousing: boolean) {
+    if (isCurrent) {
+      this.inkRect(nx, ny, half, seed, { fill: CURRENT_FILL, fillAlpha: 0.9, stroke: INK, width: 1.6, doubleStroke: true });
+      this.mapGraphics.circle(nx, ny, Math.max(2, half * 0.3));
+      this.mapGraphics.fill({ color: CURRENT_MARK, alpha: 0.95 });
+    } else if (visited) {
+      this.inkRect(nx, ny, half, seed, {
+        fill: isHousing ? HOUSING_FILL : NODE_FILL,
+        fillAlpha: 0.9,
+        stroke: INK,
+        width: 1.2,
+        alpha: 0.85,
+        doubleStroke: true,
+      });
+      if (isHousing) {
+        this.mapGraphics.moveTo(nx - half * 0.6, ny - half);
+        this.mapGraphics.lineTo(nx, ny - half * 1.5);
+        this.mapGraphics.lineTo(nx + half * 0.6, ny - half);
+        this.mapGraphics.stroke({ color: INK, width: 1.2, alpha: 0.8 });
+      }
+    } else {
+      this.inkRect(nx, ny, half, seed, { stroke: FOG_INK, width: 1.2, alpha: 0.55 });
+      this.mapGraphics.moveTo(nx - half * 0.6, ny + half * 0.6);
+      this.mapGraphics.lineTo(nx + half * 0.6, ny - half * 0.6);
+      this.mapGraphics.stroke({ color: FOG_INK, width: 1, alpha: 0.4 });
+    }
+  }
+
   /** Draw a hand-drawn (jittered) inked rectangle glyph for a room. */
   private inkRect(
     cx: number,
@@ -591,7 +682,6 @@ export class Minimap {
       g.fill({ color: opts.fill, alpha: opts.fillAlpha ?? 1 });
     }
     if (opts.doubleStroke) {
-      // Offset under-stroke fakes a pen nib's heavier edge.
       g.poly(poly.map((v) => v + 0.8));
       g.stroke({ color: opts.stroke, width: opts.width + 0.6, alpha: (opts.alpha ?? 1) * 0.4 });
     }
@@ -648,23 +738,39 @@ export class Minimap {
     return edges;
   }
 
-  private async loadPaperTexture() {
-    const key = gameStateRef.current.serverAssets["minimap_parchment"];
-    if (!key) return;
-    try {
-      const tex = await Assets.load(key);
-      if (this.paperSprite) this.paperSprite.destroy();
-      const s = new Sprite(tex);
-      s.x = 0;
-      s.y = 0;
+  /** Load all optional minimap textures from Server.Assets, then redraw. */
+  private async loadAssets() {
+    const sa = gameStateRef.current.serverAssets;
+    await Promise.all(
+      ASSET_KEYS.map(async (k) => {
+        const url = sa[k];
+        if (!url) return;
+        try {
+          this.texCache.set(k, await Assets.load(url));
+        } catch { /* keep the procedural fallback for this key */ }
+      }),
+    );
+
+    const bgTex = this.texCache.get(A_BG);
+    if (bgTex && !this.paperSprite) {
+      const s = new Sprite(bgTex);
+      s.eventMode = "none";
       s.width = this._width;
       s.height = this._height;
-      s.alpha = 0.97;
-      s.eventMode = "none";
       this.paperSprite = s;
-      this.inner.addChildAt(s, 0); // under the map graphics, clipped by the torn mask
-      this.drawParchment(); // re-draw bg without the procedural fill
-    } catch { /* no parchment texture; procedural fill stays */ }
+      this.inner.addChildAt(s, 0); // behind lines/glyphs, clipped to the torn edge
+    }
+
+    this.drawParchment(); // drop the procedural fill now that the texture covers it
+    this.lastKey = "";
+    this.redraw();
+  }
+
+  private clearNodeSprites() {
+    for (const s of this.roomSprites.values()) s.destroy();
+    for (const s of this.questSprites.values()) s.destroy();
+    this.roomSprites.clear();
+    this.questSprites.clear();
   }
 
   private inBounds(x: number, y: number): boolean {
@@ -684,6 +790,7 @@ export class Minimap {
   }
 
   destroy() {
+    this.clearNodeSprites();
     this.container.destroy({ children: true });
   }
 }
