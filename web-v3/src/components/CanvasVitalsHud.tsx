@@ -34,11 +34,51 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
       ? `Quick Mana — ${manaPick.item.name} (+${manaPick.amount} mana${manaPick.fullyRestores ? ", fully restores" : ""})`
       : "No mana potion in inventory";
 
+  // Skinned mode: the vitals_bar_bg art carries the carved slots/buttons; we
+  // crop it to its content box and overlay only the live bits (drain shadows,
+  // numbers, and invisible click targets on the painted heal/mana/gear buttons).
+  if (barBg) {
+    const hpPct = percent(vitals.hp, vitals.maxHp);
+    const mpPct = percent(vitals.mana, vitals.maxMana);
+    return (
+      <div className="canvas-vitals-skin">
+        <img className="vskin-art" src={barBg} alt="" aria-hidden="true" />
+        <div className="vskin-overlay">
+          <div className="vskin-slot vskin-slot-hp" title={`HP: ${vitals.hp}/${vitals.maxHp}`}>
+            <span className="vskin-drain" style={{ left: `${hpPct}%` }} />
+          </div>
+          <div className="vskin-slot vskin-slot-mp" title={`MP: ${vitals.mana}/${vitals.maxMana}`}>
+            <span className="vskin-drain" style={{ left: `${mpPct}%` }} />
+          </div>
+          <span className="vskin-num vskin-num-hp">{vitals.hp}/{vitals.maxHp}</span>
+          <span className="vskin-num vskin-num-mp">{vitals.mana}/{vitals.maxMana}</span>
+          <span className="vskin-num vskin-num-gold">{vitals.gold.toLocaleString()}</span>
+          <button
+            type="button"
+            className="vskin-hotspot vskin-heal"
+            onClick={() => onCommand("quickheal")}
+            disabled={hpDisabled}
+            title={hpTitle}
+            aria-label={hpTitle}
+          />
+          <button
+            type="button"
+            className="vskin-hotspot vskin-mana"
+            onClick={() => onCommand("quickmana")}
+            disabled={manaDisabled}
+            title={manaTitle}
+            aria-label={manaTitle}
+          />
+          <div className="vskin-gear">
+            <AudioControls audio={audio} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="canvas-vitals-hud"
-      style={barBg ? { ["--vitals-bg" as string]: `url("${barBg}")` } : undefined}
-    >
+    <div className="canvas-vitals-hud">
       {/* Flowering sprig growing from the branch (the vitals bar). */}
       <svg className="vitals-sprig" viewBox="0 0 40 44" aria-hidden="true">
         <path d="M20 44 C 16 30 22 20 18 7" stroke="#6f8a3a" strokeWidth="2.4" fill="none" strokeLinecap="round" />

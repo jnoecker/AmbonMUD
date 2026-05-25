@@ -82,8 +82,16 @@ export function GameShell({
               audio={audio}
             />
 
-            {/* Room name — a hand-made wooden sign hung by chains from the branch */}
-            {room.title !== "-" && (
+            {/* Room name — a hand-made wooden sign hung by chains from the branch.
+                Skinned: the room_sign_bg art has its own rope + decorations, so we
+                just crop it and center the title in the blank plaque. */}
+            {room.title !== "-" && serverAssets["room_sign_bg"] && (
+              <div className="canvas-room-sign canvas-room-sign-skinned">
+                <img className="rsign-art" src={serverAssets["room_sign_bg"]} alt="" aria-hidden="true" />
+                <h2 className="rsign-title">{room.title}</h2>
+              </div>
+            )}
+            {room.title !== "-" && !serverAssets["room_sign_bg"] && (
               <div className="canvas-room-sign">
                 <svg className="sign-chain sign-chain-left" viewBox="0 0 10 20" aria-hidden="true">
                   <ellipse cx="5" cy="5" rx="2.6" ry="4" fill="none" stroke="#6e6450" strokeWidth="1.6" />
