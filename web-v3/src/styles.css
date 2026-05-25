@@ -18157,11 +18157,6 @@ html:has(.game-shell),
     height: 148px;
   }
 
-  .room-compass-rose {
-    width: 66px;
-    height: 66px;
-  }
-
   .compass-btn {
     min-width: 32px;
     padding: 5px 7px;
