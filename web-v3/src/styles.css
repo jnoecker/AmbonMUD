@@ -17982,6 +17982,33 @@ html:has(.game-shell),
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
+  /* Slim, themed scrollbar instead of the chunky native one. */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(150 126 86 / 60%) transparent;
+}
+
+.room-panel-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.room-panel-main::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.room-panel-main::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(176 150 104 / 70%), rgb(130 108 72 / 70%));
+  border-radius: 4px;
+}
+
+.room-panel-main::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(198 170 120 / 85%), rgb(150 126 86 / 85%));
+}
+
+.room-panel-main::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
 }
 
 .room-panel-desc {
