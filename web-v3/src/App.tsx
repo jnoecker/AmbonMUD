@@ -736,6 +736,18 @@ function App() {
     return () => window.clearTimeout(t);
   }, [state.activePopout]);
 
+  // React 19 registers `wheel` as a passive listener, so calling preventDefault()
+  // inside the synthetic onWheel handler is ignored. Attach a native non-passive
+  // listener so wheel-zooming the world map doesn't also scroll the drawer/page.
+  useEffect(() => {
+    if (drawerPanel !== "map") return;
+    const canvas = mapCanvasRef.current;
+    if (!canvas) return;
+    const stop = (e: WheelEvent) => e.preventDefault();
+    canvas.addEventListener("wheel", stop, { passive: false });
+    return () => canvas.removeEventListener("wheel", stop);
+  }, [drawerPanel]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const drawerTitle = useMemo(() => {
     switch (drawerPanel) {
       case "character": return "Character";
