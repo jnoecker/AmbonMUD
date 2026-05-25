@@ -18092,6 +18092,28 @@ html:has(.game-shell),
   min-width: 0;
 }
 
+/* Soft scrim pooled behind the marker art so the letters/glyphs read against
+   the busy compass engraving without a hard-edged box. Sits between the
+   compass_bg backdrop and the marker image. */
+.compass-btn-art::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(16 14 10 / 78%) 0%,
+    rgb(16 14 10 / 58%) 45%,
+    rgb(16 14 10 / 0%) 78%
+  );
+  z-index: -1;
+  pointer-events: none;
+}
+
 .compass-btn-art:hover {
   border: none;
   background: none;
@@ -18102,6 +18124,8 @@ html:has(.game-shell),
   width: 46px;
   height: 46px;
   object-fit: contain;
+  /* Subtle base shadow lifts the marker off the busy engraving. */
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 75%));
   transition: filter 150ms var(--ease-out-soft);
 }
 
@@ -18193,6 +18217,11 @@ html:has(.game-shell),
   .compass-btn-img {
     width: 38px;
     height: 38px;
+  }
+
+  .compass-btn-art::before {
+    width: 46px;
+    height: 46px;
   }
 }
 
