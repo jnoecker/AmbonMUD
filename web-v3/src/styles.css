@@ -17925,8 +17925,8 @@ html:has(.game-shell),
 
 .rsign-title {
   position: absolute;
-  left: 49%;
-  top: 48%;
+  left: 50.5%;
+  top: 52%;
   transform: translate(-50%, -50%);
   max-width: 46%;
   margin: 0;
