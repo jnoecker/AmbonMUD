@@ -1,6 +1,5 @@
 import { useState } from "react";
-import type { PopoutPanel, RoomState } from "../types";
-import { ExpandRoomIcon } from "./Icons";
+import type { RoomState } from "../types";
 
 interface RoomPanelProps {
   room: RoomState;
@@ -8,7 +7,6 @@ interface RoomPanelProps {
   exits: Array<[string, string]>;
   loggedIn: boolean;
   onCommand: (cmd: string) => void;
-  onOpenPanel: (panel: PopoutPanel) => void;
 }
 
 function capitalize(word: string): string {
@@ -20,7 +18,7 @@ function capitalize(word: string): string {
  * Left column carries the title + description; the right column lists the
  * room exits. Collapsible so it can fold away on small screens.
  */
-export function RoomPanel({ room, exits, loggedIn, onCommand, onOpenPanel }: RoomPanelProps) {
+export function RoomPanel({ room, exits, loggedIn, onCommand }: RoomPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   if (!loggedIn || room.title === "-") return null;
@@ -30,18 +28,6 @@ export function RoomPanel({ room, exits, loggedIn, onCommand, onOpenPanel }: Roo
       {!collapsed && (
         <div className="room-panel-body">
           <div className="room-panel-main">
-            <header className="room-panel-header">
-              <h2 className="room-panel-title">{room.title}</h2>
-              <button
-                type="button"
-                className="room-panel-expand"
-                aria-label="Expand room details"
-                title="Expand room details"
-                onClick={() => onOpenPanel("room")}
-              >
-                <ExpandRoomIcon className="room-panel-expand-icon" />
-              </button>
-            </header>
             <p className="room-panel-desc">
               {room.description || "No room description available yet."}
             </p>

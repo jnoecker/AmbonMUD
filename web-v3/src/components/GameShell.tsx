@@ -6,6 +6,7 @@ import { CanvasVitalsHud } from "./CanvasVitalsHud";
 import { CanvasKiosks } from "./CanvasKiosks";
 import { SkillBar } from "./SkillBar";
 import { WorldAtmosphereHud } from "./WorldAtmosphereHud";
+import { ExpandRoomIcon } from "./Icons";
 import type { CombatLogMessage, CombatTarget, ItemSummary, PopoutPanel, RoomState, SkillSummary, Vitals, WorldEvent, WorldTime, WorldWeather } from "../types";
 import type { AudioEngine } from "../hooks/useAudioEngine";
 
@@ -80,6 +81,22 @@ export function GameShell({
               audio={audio}
             />
 
+            {/* Room name + expand — under the vitals strip */}
+            {room.title !== "-" && (
+              <div className="canvas-room-title">
+                <h2 className="canvas-room-title-text">{room.title}</h2>
+                <button
+                  type="button"
+                  className="canvas-room-title-expand"
+                  aria-label="Expand room details"
+                  title="Expand room details"
+                  onClick={() => onOpenPanel("room")}
+                >
+                  <ExpandRoomIcon className="canvas-room-title-icon" />
+                </button>
+              </div>
+            )}
+
             {/* Combat log — centered above the fight */}
             <CombatLog messages={combatLogMessages} />
 
@@ -138,7 +155,6 @@ export function GameShell({
         exits={exits}
         loggedIn={loggedIn}
         onCommand={onCommand}
-        onOpenPanel={onOpenPanel}
       />
 
       {/* Action dock — kiosks (out of combat) / skill bar (in combat).

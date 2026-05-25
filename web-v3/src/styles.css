@@ -17685,6 +17685,59 @@ html:has(.game-shell),
   width: clamp(120px, 18vw, 220px);
 }
 
+/* ── Canvas room title (under the vitals strip) ───────── */
+.canvas-room-title {
+  position: absolute;
+  top: 70px;
+  left: 16px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 300px);
+  padding: 5px 14px;
+  background: linear-gradient(160deg, rgb(20 24 40 / 68%), rgb(14 17 28 / 74%));
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgb(8 10 18 / 40%);
+}
+
+.canvas-room-title-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-heading);
+}
+
+.canvas-room-title-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: rgb(39 47 73 / 50%);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.canvas-room-title-expand:hover {
+  border-color: rgb(176 193 255 / 50%);
+  color: var(--text-bright);
+}
+
+.canvas-room-title-icon {
+  width: 14px;
+  height: 14px;
+}
+
 /* ── Action dock (below the room panel; swaps kiosks <-> skill bar) ───── */
 .action-dock {
   position: relative;
@@ -17940,6 +17993,17 @@ html:has(.game-shell),
 
   .canvas-vitals-hud .audio-controls {
     display: none;
+  }
+
+  /* Room title overlay: smaller, less reserved space (minimap is smaller) */
+  .canvas-room-title {
+    top: 64px;
+    max-width: calc(100% - 170px);
+    padding: 4px 10px;
+  }
+
+  .canvas-room-title-text {
+    font-size: 1.1rem;
   }
 
   /* Kiosks: smaller discs, tighter row on the bottom */
