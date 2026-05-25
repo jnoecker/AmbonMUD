@@ -18001,9 +18001,6 @@ html:has(.game-shell),
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
   place-items: center;
-  border: 1px solid rgb(190 168 115 / 28%);
-  border-radius: var(--radius-lg);
-  background: radial-gradient(circle at 50% 50%, rgb(34 41 60 / 65%), rgb(16 19 31 / 80%));
 }
 
 /* Centered rose in the middle cell; the edge cells stay clear for the
