@@ -5,8 +5,8 @@ import type { MapRoom } from "../types";
 
 // Parchment / ink palette — matches the in-scene minimap.
 const BG_COLOR = "#241c14"; // dark fallback when the scroll image hasn't loaded
-const LINE_COLOR = "rgba(224, 196, 134, 0.9)"; // e0c486 parchment-gold route line
-const TICK_COLOR = "rgba(224, 196, 134, 0.8)";
+const LINE_COLOR = "rgba(74, 55, 34, 0.92)"; // dark sepia route line (reads on light parchment)
+const TICK_COLOR = "rgba(74, 55, 34, 0.85)";
 const INK = "#4a3a28"; // dark sepia pen ink
 const NODE_FILL = "#cdb487"; // explored room wash (procedural fallback)
 const CURRENT_FILL = "#9c3b22"; // sienna "you are here"
