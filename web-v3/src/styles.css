@@ -17673,18 +17673,7 @@ html:has(.game-shell),
   z-index: 9;
   padding-top: 15px;
   max-width: min(48vw, 440px);
-  transform-origin: top center;
-  animation: sign-sway 5.5s ease-in-out infinite alternate;
   filter: drop-shadow(0 7px 10px rgb(8 10 18 / 45%));
-}
-
-@keyframes sign-sway {
-  from { transform: rotate(-1.4deg); }
-  to { transform: rotate(1.4deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .canvas-room-sign { animation: none; }
 }
 
 /* Twin chains splaying down from the branch to the plank. */
