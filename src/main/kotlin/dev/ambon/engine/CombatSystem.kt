@@ -1548,7 +1548,11 @@ class CombatSystem(
             val respawnRoom = sanctumRoomLookup()
                 ?: zoneStartRoomLookup(roomId.zone)
                 ?: player.roomId
-            player.roomId = respawnRoom
+            // Use moveTo (not a direct roomId assignment) so the registry's
+            // room→sessions index is updated. A direct assignment left the
+            // session indexed in the death room, so it kept receiving that
+            // room's mob enter/leave broadcasts after respawning/departing.
+            players.moveTo(sessionId, respawnRoom)
 
             // Restore a fraction of HP/mana. Leaves the player vulnerable so they have to rest in the sanctum.
             player.hp = ((player.maxHp * deathConfig.respawnHpFraction).toInt()).coerceAtLeast(1)
