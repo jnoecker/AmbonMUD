@@ -104,6 +104,7 @@ export class Minimap {
   // Server-asset textures + the sprites that use them.
   private texCache = new Map<string, Texture>();
   private assetsLoaded = false;
+  private destroyed = false;
   private paperSprite: Sprite | null = null;
   private roomSprites = new Map<string, Sprite>();
   private questSprites = new Map<string, Sprite>();
@@ -791,12 +792,17 @@ export class Minimap {
         if (!url) return;
         try {
           const tex = await Assets.load(url);
+          if (this.destroyed) return;
           // Auto-trim the transparent margin off room/quest glyphs so the
           // artwork fills the node; the parchment scrap is left untouched.
           this.texCache.set(k, k === A_BG ? tex : (this.trimTexture(tex) ?? tex));
         } catch { /* keep the procedural fallback for this key */ }
       }),
     );
+
+    // The whole Pixi app may have been torn down while assets were loading;
+    // bail before touching the (now destroyed) container.
+    if (this.destroyed) return;
 
     const bgTex = this.texCache.get(A_BG);
     if (bgTex && !this.paperSprite) {
@@ -883,6 +889,7 @@ export class Minimap {
   }
 
   destroy() {
+    this.destroyed = true;
     this.clearNodeSprites();
     this.container.destroy({ children: true });
   }
