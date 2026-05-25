@@ -17791,7 +17791,7 @@ html:has(.game-shell),
   top: 6px;
   left: 12px;
   z-index: 9;
-  width: clamp(380px, 54vw, 660px);
+  width: clamp(300px, 38vw, 480px);
   aspect-ratio: 1258 / 294;
   pointer-events: none; /* let the scene through; controls re-enable below */
   filter: drop-shadow(0 6px 14px rgb(8 10 18 / 45%));
@@ -17817,8 +17817,8 @@ html:has(.game-shell),
   overflow: hidden;
 }
 
-.vskin-slot-hp { left: 14.5%; width: 26.2%; top: 23.5%; height: 61%; }
-.vskin-slot-mp { left: 45.4%; width: 17.8%; top: 23.1%; height: 61%; }
+.vskin-slot-hp { left: 13.4%; width: 28.3%; top: 30%; height: 58%; }
+.vskin-slot-mp { left: 45.4%; width: 18.3%; top: 34%; height: 50%; }
 
 /* Darkens the depleted (right) portion of a painted capsule. */
 .vskin-drain {
@@ -17843,9 +17843,9 @@ html:has(.game-shell),
   pointer-events: none;
 }
 
-.vskin-num-hp { left: 27.6%; top: 53.9%; }
-.vskin-num-mp { left: 54.3%; top: 53.4%; }
-.vskin-num-gold { left: 71.2%; top: 58%; color: #4a3410; }
+.vskin-num-hp { left: 27.5%; top: 56.7%; }
+.vskin-num-mp { left: 54.2%; top: 57.2%; }
+.vskin-num-gold { left: 71.4%; top: 54.7%; color: #4a3410; }
 
 .vskin-hotspot {
   position: absolute;
@@ -17860,13 +17860,13 @@ html:has(.game-shell),
 }
 
 .vskin-hotspot:disabled { cursor: default; }
-.vskin-heal { left: 79.8%; top: 58%; }
-.vskin-mana { left: 85.9%; top: 58%; }
+.vskin-heal { left: 79.8%; top: 55%; }
+.vskin-mana { left: 85.9%; top: 55%; }
 
 .vskin-gear {
   position: absolute;
   left: 92.5%;
-  top: 58%;
+  top: 55%;
   transform: translate(-50%, -50%);
   width: 5.5%;
   aspect-ratio: 1;
@@ -17889,7 +17889,7 @@ html:has(.game-shell),
 
 /* ── Skinned room sign (room_sign_bg art, with its own rope baked in) ───── */
 .canvas-room-sign-skinned {
-  width: min(300px, 54vw);
+  width: clamp(170px, 22vw, 270px);
   max-width: none;
   padding-top: 0;
   aspect-ratio: 1216 / 794;
