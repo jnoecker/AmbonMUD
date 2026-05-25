@@ -81,19 +81,23 @@ export function GameShell({
               audio={audio}
             />
 
-            {/* Room name + expand — under the vitals strip */}
+            {/* Room name — a hand-made wooden sign hanging from the vitals branch */}
             {room.title !== "-" && (
-              <div className="canvas-room-title">
-                <h2 className="canvas-room-title-text">{room.title}</h2>
-                <button
-                  type="button"
-                  className="canvas-room-title-expand"
-                  aria-label="Expand room details"
-                  title="Expand room details"
-                  onClick={() => onOpenPanel("room")}
-                >
-                  <ExpandRoomIcon className="canvas-room-title-icon" />
-                </button>
+              <div className="canvas-room-sign">
+                <span className="sign-rope sign-rope-left" aria-hidden="true" />
+                <span className="sign-rope sign-rope-right" aria-hidden="true" />
+                <div className="sign-plank">
+                  <h2 className="sign-title">{room.title}</h2>
+                  <button
+                    type="button"
+                    className="sign-expand"
+                    aria-label="Expand room details"
+                    title="Expand room details"
+                    onClick={() => onOpenPanel("room")}
+                  >
+                    <ExpandRoomIcon className="canvas-room-title-icon" />
+                  </button>
+                </div>
               </div>
             )}
 

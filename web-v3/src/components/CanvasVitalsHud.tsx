@@ -34,6 +34,20 @@ export function CanvasVitalsHud({ vitals, inventory, onCommand, audio }: CanvasV
 
   return (
     <div className="canvas-vitals-hud">
+      {/* Flowering sprig growing from the branch (the vitals bar). */}
+      <svg className="vitals-sprig" viewBox="0 0 40 44" aria-hidden="true">
+        <path d="M20 44 C 16 30 22 20 18 7" stroke="#6f8a3a" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+        <path d="M18 31 C 7 27 6 18 16 20 C 20 24 20 29 18 31 Z" fill="#7fa03e" />
+        <path d="M20 23 C 31 19 32 10 22 12 C 18 16 18 21 20 23 Z" fill="#8fae4c" />
+        <g transform="translate(18 6)">
+          <circle cx="0" cy="-4" r="3" fill="#e7b6d2" />
+          <circle cx="4" cy="-1" r="3" fill="#e7b6d2" />
+          <circle cx="2" cy="3" r="3" fill="#e7b6d2" />
+          <circle cx="-2" cy="3" r="3" fill="#e7b6d2" />
+          <circle cx="-4" cy="-1" r="3" fill="#e7b6d2" />
+          <circle cx="0" cy="0" r="2.3" fill="#f0cf72" />
+        </g>
+      </svg>
       <div className="vbar-vital" title={`HP: ${vitals.hp}/${vitals.maxHp}`}>
         <span className="vbar-vital-label">HP</span>
         <div className="vbar-vital-track">

@@ -17632,13 +17632,14 @@ html:has(.game-shell),
   align-items: center;
   gap: 10px;
   max-width: calc(100% - 24px);
-  padding: 8px 12px;
-  background: linear-gradient(160deg, rgb(20 24 40 / 80%), rgb(14 17 28 / 86%));
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-lg);
+  padding: 8px 14px;
+  /* Warm "bark" branch the vitals nestle along + the room sign hangs from. */
+  background: linear-gradient(160deg, rgb(52 38 24 / 82%), rgb(34 24 15 / 88%));
+  border: 1px solid rgb(122 92 54 / 55%);
+  border-radius: 14px 14px 16px 16px / 16px 16px 14px 14px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 6px 18px rgb(8 10 18 / 45%);
+  box-shadow: 0 6px 18px rgb(8 10 18 / 45%), inset 0 1px 0 rgb(255 240 210 / 10%);
 }
 
 .canvas-vitals-hud .vbar-vital {
@@ -17646,57 +17647,119 @@ html:has(.game-shell),
   width: clamp(120px, 18vw, 220px);
 }
 
-/* ── Canvas room title (under the vitals strip) ───────── */
-.canvas-room-title {
+/* Flowering sprig growing out of the branch's top-left. */
+.vitals-sprig {
   position: absolute;
-  top: 70px;
-  left: 16px;
+  top: -26px;
+  left: -2px;
+  width: 34px;
+  height: 38px;
+  pointer-events: none;
+  transform: rotate(-6deg);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 35%));
+}
+
+/* ── Room title: a hand-made wooden sign hanging from the vitals branch ── */
+.canvas-room-sign {
+  position: absolute;
+  top: 58px;
+  left: 24px;
   z-index: 9;
+  padding-top: 15px;
+  max-width: min(48vw, 440px);
+  transform-origin: top center;
+  animation: sign-sway 5.5s ease-in-out infinite alternate;
+  filter: drop-shadow(0 7px 10px rgb(8 10 18 / 45%));
+}
+
+@keyframes sign-sway {
+  from { transform: rotate(-1.4deg); }
+  to { transform: rotate(1.4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-room-sign { animation: none; }
+}
+
+/* Twin ropes splaying down from the branch to the plank. */
+.sign-rope {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 17px;
+  background: linear-gradient(180deg, #8a6638, #5a3e22);
+  border-radius: 2px;
+  transform-origin: top center;
+}
+
+.sign-rope-left { left: 20px; transform: rotate(9deg); }
+.sign-rope-right { right: 20px; transform: rotate(-9deg); }
+
+.sign-plank {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: calc(100% - 300px);
-  padding: 5px 14px;
-  background: linear-gradient(160deg, rgb(20 24 40 / 68%), rgb(14 17 28 / 74%));
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 4px 14px rgb(8 10 18 / 40%);
+  padding: 8px 16px;
+  border-radius: 9px;
+  transform: rotate(-1.1deg);
+  background:
+    repeating-linear-gradient(91deg, rgb(0 0 0 / 6%) 0 5px, rgb(255 255 255 / 3%) 5px 11px),
+    linear-gradient(180deg, #7c5733, #674428);
+  border: 2px solid #3f2914;
+  box-shadow:
+    inset 0 1px 0 rgb(255 235 200 / 14%),
+    inset 0 -4px 7px rgb(0 0 0 / 38%);
 }
 
-.canvas-room-title-text {
+/* Peg holes where the ropes meet the plank. */
+.sign-plank::before,
+.sign-plank::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #2a1a0c, #100904);
+}
+
+.sign-plank::before { left: 11px; }
+.sign-plank::after { right: 11px; }
+
+.sign-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.45rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  line-height: 1.15;
-  color: var(--text-heading);
+  line-height: 1.12;
+  color: #f4e7c8;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 55%), 0 0 2px rgb(0 0 0 / 35%);
+  letter-spacing: 0.01em;
 }
 
-.canvas-room-title-expand {
+.sign-expand {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
-  border: 1px solid var(--line-faint);
-  border-radius: var(--radius-sm);
-  background: rgb(39 47 73 / 50%);
-  color: var(--text-tertiary);
+  border: 1px solid #3f2914;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #8a6638, #5a3c20);
+  color: #f4e7c8;
   cursor: pointer;
-  transition: border-color 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+  transition: filter 150ms var(--ease-out-soft);
 }
 
-.canvas-room-title-expand:hover {
-  border-color: rgb(176 193 255 / 50%);
-  color: var(--text-bright);
+.sign-expand:hover {
+  filter: brightness(1.2);
 }
 
 .canvas-room-title-icon {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 /* ── Action dock (below the room panel; swaps kiosks <-> skill bar) ───── */
@@ -17947,15 +18010,15 @@ html:has(.game-shell),
     display: none;
   }
 
-  /* Room title overlay: smaller, less reserved space (minimap is smaller) */
-  .canvas-room-title {
-    top: 64px;
-    max-width: calc(100% - 170px);
-    padding: 4px 10px;
+  /* Hanging room sign: smaller, less reserved space (minimap is smaller) */
+  .canvas-room-sign {
+    top: 56px;
+    left: 16px;
+    max-width: calc(100% - 160px);
   }
 
-  .canvas-room-title-text {
-    font-size: 1.1rem;
+  .sign-title {
+    font-size: 1.05rem;
   }
 
   /* Kiosks: smaller art, tighter row on the bottom */
