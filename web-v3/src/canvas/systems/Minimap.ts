@@ -158,9 +158,9 @@ export class Minimap {
     const compact = d <= 160;
     // Cell spacing stays comfortably larger than the node glyph so the inked
     // connector lines between rooms remain visible (the signal for an exit).
-    this._cell = Math.round(d * (compact ? 0.2 : 0.16));
-    this._nodeHalf = Math.round(d * (compact ? 0.05 : 0.045));
-    this._currentHalf = Math.round(d * (compact ? 0.06 : 0.055));
+    this._cell = Math.round(d * (compact ? 0.22 : 0.195));
+    this._nodeHalf = Math.round(d * (compact ? 0.066 : 0.062));
+    this._currentHalf = Math.round(d * (compact ? 0.08 : 0.078));
     this.applyDiameter();
     this.lastKey = ""; // force redraw
   }
