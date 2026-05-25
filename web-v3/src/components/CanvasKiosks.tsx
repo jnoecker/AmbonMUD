@@ -6,6 +6,7 @@ import {
   SpellbookIcon,
   QuestsTabIcon,
   AttackIcon,
+  TerminalIcon,
 } from "./Icons";
 
 interface KioskDef {
@@ -22,6 +23,7 @@ const LEFT_KIOSKS: KioskDef[] = [
   { panel: "spellbook", label: "Spellbook", assetKey: "spellbook_widget", fallback: <SpellbookIcon className="kiosk-icon-svg" /> },
   { panel: "quests", label: "Quests", assetKey: "quests_widget", fallback: <QuestsTabIcon className="kiosk-icon-svg" /> },
   { panel: "combatlog", label: "Combat Log", assetKey: "combat_log_widget", fallback: <AttackIcon className="kiosk-icon-svg" /> },
+  { panel: "terminal", label: "Terminal", assetKey: "terminal_widget", fallback: <TerminalIcon className="kiosk-icon-svg" /> },
 ];
 
 interface CanvasKiosksProps {

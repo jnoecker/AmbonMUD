@@ -17685,21 +17685,33 @@ html:has(.game-shell),
   width: clamp(120px, 18vw, 220px);
 }
 
-/* ── Canvas kiosks (bottom-center row, swaps with the skill bar) ──────── */
-/* Styled as soft in-world icon plinths rather than hard web buttons: no boxy
-   border, a radial glow behind the icon, and the label tucked underneath. */
+/* ── Action dock (below the room panel; swaps kiosks <-> skill bar) ───── */
+.action-dock {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgb(20 24 40 / 96%), rgb(14 17 28 / 99%));
+  border-top: 1px solid var(--line-soft);
+}
+
+/* Kiosk row — soft in-world icon plinths (radial glow, label underneath). */
 .canvas-kiosks {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9;
   display: flex;
   flex-direction: row;
   align-items: flex-end;
-  gap: 18px;
-  max-width: calc(100% - 220px);
-  padding: 4px 8px;
+  gap: 22px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 2px 4px;
+  scrollbar-width: none;
+}
+
+.canvas-kiosks::-webkit-scrollbar {
+  display: none;
 }
 
 .canvas-kiosk {
@@ -17775,16 +17787,31 @@ html:has(.game-shell),
   text-shadow: 0 1px 4px rgb(8 10 18 / 90%);
 }
 
-/* ── Command input (bottom of the stack, below the room panel) ── */
+/* ── Command input (lives inside the Terminal overlay for now) ── */
 .canvas-command {
   position: relative;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(180deg, rgb(20 24 40 / 96%), rgb(14 17 28 / 99%));
-  border-top: 1px solid var(--line-soft);
+  padding: 8px 10px 8px 14px;
+  background: var(--surface-input);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+}
+
+/* ── Terminal overlay (placeholder) ───────────────────── */
+.terminal-overlay-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.terminal-overlay-note {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 0.92rem;
 }
 
 .canvas-command-input {
@@ -17821,25 +17848,19 @@ html:has(.game-shell),
   height: 18px;
 }
 
-/* ── Skill bar (bottom-center overlay) ────────────────── */
+/* ── Skill bar (lives in the action dock during combat) ───────────────── */
 .skill-bar {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9;
   display: flex;
   align-items: center;
   gap: 6px;
-  max-width: calc(100% - 240px);
-  padding: 8px 10px;
+  max-width: 100%;
+  padding: 2px 4px;
   overflow-x: auto;
-  background: linear-gradient(160deg, rgb(20 24 40 / 82%), rgb(14 17 28 / 88%));
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 6px 18px rgb(8 10 18 / 45%);
+  scrollbar-width: none;
+}
+
+.skill-bar::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Canvas help glyph (near time / weather) ──────────── */

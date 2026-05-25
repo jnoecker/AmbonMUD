@@ -4,7 +4,6 @@ import { CombatLog } from "./CombatLog";
 import { RoomPanel } from "./RoomPanel";
 import { CanvasVitalsHud } from "./CanvasVitalsHud";
 import { CanvasKiosks } from "./CanvasKiosks";
-import { CommandInput } from "./CommandInput";
 import { SkillBar } from "./SkillBar";
 import { WorldAtmosphereHud } from "./WorldAtmosphereHud";
 import type { CombatLogMessage, CombatTarget, ItemSummary, PopoutPanel, RoomState, SkillSummary, Vitals, WorldEvent, WorldTime, WorldWeather } from "../types";
@@ -34,9 +33,6 @@ interface GameShellProps {
   onCommand: (cmd: string) => void;
   onOpenPanel: (panel: PopoutPanel) => void;
   audio: AudioEngine;
-  inputValue: string;
-  onInputChange: (value: string) => void;
-  onInputKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   children?: ReactNode;
 }
 
@@ -64,9 +60,6 @@ export function GameShell({
   onCommand,
   onOpenPanel,
   audio,
-  inputValue,
-  onInputChange,
-  onInputKeyDown,
   children,
 }: GameShellProps) {
   const loggedIn = connected && hasCharacterProfile;
@@ -87,16 +80,7 @@ export function GameShell({
               audio={audio}
             />
 
-            {/* Bottom-center: panel kiosks out of combat, skill bar in combat */}
-            {!inCombat && (
-              <CanvasKiosks
-                serverAssets={serverAssets}
-                activePopout={activePopout}
-                onOpenPanel={onOpenPanel}
-              />
-            )}
-
-            {/* Combat log — over the canvas, clear of the kiosks + command input */}
+            {/* Combat log — centered above the fight */}
             <CombatLog messages={combatLogMessages} />
 
             {/* Combat target indicator — top-center */}
@@ -144,18 +128,6 @@ export function GameShell({
                 Flee
               </button>
             )}
-
-            {/* Skill bar — bottom-center, only during combat */}
-            {inCombat && (
-              <SkillBar
-                quickbarSlots={quickbarSlots}
-                petSkills={petSkills}
-                onCastSkill={onCastSkill}
-                onQuickbarSwap={onQuickbarSwap}
-                onQuickbarAssign={onQuickbarAssign}
-                onQuickbarClear={onQuickbarClear}
-              />
-            )}
           </>
         )}
       </div>
@@ -169,14 +141,27 @@ export function GameShell({
         onOpenPanel={onOpenPanel}
       />
 
-      {/* Command input — bottom of the stack, below the room description */}
+      {/* Action dock — kiosks (out of combat) / skill bar (in combat).
+          The command input now lives in the Terminal overlay. */}
       {loggedIn && (
-        <CommandInput
-          inputValue={inputValue}
-          onInputChange={onInputChange}
-          onInputKeyDown={onInputKeyDown}
-          onCommand={onCommand}
-        />
+        <div className="action-dock">
+          {inCombat ? (
+            <SkillBar
+              quickbarSlots={quickbarSlots}
+              petSkills={petSkills}
+              onCastSkill={onCastSkill}
+              onQuickbarSwap={onQuickbarSwap}
+              onQuickbarAssign={onQuickbarAssign}
+              onQuickbarClear={onQuickbarClear}
+            />
+          ) : (
+            <CanvasKiosks
+              serverAssets={serverAssets}
+              activePopout={activePopout}
+              onOpenPanel={onOpenPanel}
+            />
+          )}
+        </div>
       )}
 
       {children}

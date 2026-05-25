@@ -26,6 +26,7 @@ import { LotteryPanel } from "./components/panels/LotteryPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { CombatLogPanel } from "./components/panels/CombatLogPanel";
 import { HelpContent } from "./components/HelpContent";
+import { CommandInput } from "./components/CommandInput";
 import { Atlas } from "./components/Atlas";
 import { DemoBanner } from "./components/DemoBanner";
 import { LevelUpBanner } from "./components/LevelUpBanner";
@@ -739,6 +740,7 @@ function App() {
       case "lottery": return "Lottery";
       case "combatlog": return "Combat Log";
       case "help": return "Command Reference";
+      case "terminal": return "Terminal";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
       default: return "";
@@ -791,12 +793,6 @@ function App() {
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
         audio={audio}
-        inputValue={inputValue}
-        onInputChange={(value) => {
-          setInputValue(value);
-          resetComposerCompletion();
-        }}
-        onInputKeyDown={handleInputKeyDown}
       />
 
       <Drawer open={state.activePopout !== null} title={drawerTitle} onClose={closeDrawer}>
@@ -1081,6 +1077,23 @@ function App() {
             serverCommands={state.serverCommands}
             isStaff={state.character.isStaff}
           />
+        )}
+
+        {drawerPanel === "terminal" && (
+          <div className="terminal-overlay-body">
+            <p className="terminal-overlay-note">
+              Full terminal coming soon. For now, type commands here:
+            </p>
+            <CommandInput
+              inputValue={inputValue}
+              onInputChange={(value) => {
+                setInputValue(value);
+                resetComposerCompletion();
+              }}
+              onInputKeyDown={handleInputKeyDown}
+              onCommand={sendCommand}
+            />
+          </div>
         )}
 
         {drawerPanel === "map" && (
