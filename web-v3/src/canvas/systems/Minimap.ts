@@ -145,9 +145,9 @@ export class Minimap {
     return this._width;
   }
 
-  /** Total height including the expand button below the parchment. */
+  /** Total height of the parchment (the expand button now sits inside it). */
   get totalHeight(): number {
-    return this._height + 26;
+    return this._height;
   }
 
   /** Resize the map. `d` is the parchment width; height is derived. */
@@ -232,9 +232,9 @@ export class Minimap {
     this.drawParchment();
     this.rebuildExpandButton();
 
-    // Expand button centered below the parchment.
-    this.expandButton.x = this._width / 2 - 11;
-    this.expandButton.y = this._height + 4;
+    // Expand-to-world-map button — tucked into the bottom-right corner.
+    this.expandButton.x = this._width - 22 - 7;
+    this.expandButton.y = this._height - 22 - 7;
 
     // Up/down buttons stacked just to the left of the parchment, vertically centered.
     const btnR = 14;
