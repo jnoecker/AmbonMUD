@@ -18068,14 +18068,18 @@ html:has(.game-shell),
   object-fit: contain;
 }
 
-/* Each control is pulled toward the inner edge of its cell so they sit closer
-   to the rose; the corner Up/Down move diagonally inward the most. */
-.compass-dir-north { grid-column: 2; grid-row: 1; align-self: end; }
-.compass-dir-up { grid-column: 3; grid-row: 1; align-self: end; justify-self: start; }
-.compass-dir-west { grid-column: 1; grid-row: 2; justify-self: end; }
-.compass-dir-east { grid-column: 3; grid-row: 2; justify-self: start; }
-.compass-dir-down { grid-column: 1; grid-row: 3; align-self: start; justify-self: end; }
-.compass-dir-south { grid-column: 2; grid-row: 3; align-self: start; }
+/* N/S/E/W sit out toward the gold ring (outer cell edge); the corner Up/Down
+   tuck a little further toward the center. */
+.compass-dir-north { grid-column: 2; grid-row: 1; align-self: start; }
+.compass-dir-up { grid-column: 3; grid-row: 1; align-self: end; justify-self: start; transform: translate(-8px, 8px); }
+.compass-dir-west { grid-column: 1; grid-row: 2; justify-self: start; }
+.compass-dir-east { grid-column: 3; grid-row: 2; justify-self: end; }
+.compass-dir-down { grid-column: 1; grid-row: 3; align-self: start; justify-self: end; transform: translate(8px, -8px); }
+.compass-dir-south { grid-column: 2; grid-row: 3; align-self: end; }
+
+/* Keep the corner nudge through the hover scale. */
+.compass-dir-up:hover { transform: translate(-8px, 8px) scale(1.05); }
+.compass-dir-down:hover { transform: translate(8px, -8px) scale(1.05); }
 
 .compass-btn {
   position: relative;
