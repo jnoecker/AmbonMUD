@@ -18048,26 +18048,6 @@ html:has(.game-shell),
   border-radius: var(--radius-lg);
 }
 
-/* Centered rose in the middle cell; the edge cells stay clear for the
-   direction buttons so the letters read cleanly. */
-.room-compass-rose {
-  grid-column: 2;
-  grid-row: 2;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.room-compass-rose-svg,
-.room-compass-rose-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
 /* Each control sits at its outer cell edge and is nudged radially outward via
    --dir-shift (applied through the hover scale so it doesn't jump). */
 .compass-dir-north { grid-column: 2; grid-row: 1; align-self: start; --dir-shift: translate(0, -6px); }
@@ -18202,11 +18182,6 @@ html:has(.game-shell),
   .room-compass-pad {
     width: 184px;
     height: 184px;
-  }
-
-  .room-compass-rose {
-    width: 68px;
-    height: 68px;
   }
 
   .compass-btn {
