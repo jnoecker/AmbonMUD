@@ -17971,13 +17971,28 @@ html:has(.game-shell),
   color: #120c02;
   font-weight: 600;
   /* Translucent "writing area" gives the ink uniform contrast while the
-     parchment still shows through. */
-  background: rgb(247 240 222 / 56%);
-  border: 1px solid rgb(120 100 70 / 28%);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  box-shadow: 0 2px 10px rgb(8 10 18 / 18%);
-  text-shadow: 0 1px 1px rgb(252 247 232 / 70%);
+     parchment still shows through — a soft inscription panel. */
+  background: linear-gradient(180deg, rgb(250 245 230 / 64%), rgb(240 231 210 / 50%));
+  border: 1px solid rgb(120 100 70 / 32%);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  box-shadow:
+    0 3px 14px rgb(8 10 18 / 22%),
+    inset 0 1px 0 rgb(255 250 238 / 50%);
+  text-shadow: 0 1px 1px rgb(252 247 232 / 65%);
+}
+
+/* On wider screens, keep the description on the left page and slide the compass
+   onto the right page (clear of the book's edges). */
+@media (min-width: 641px) {
+  .bottom-stack-themed .room-panel-body {
+    justify-content: space-between;
+    padding: 28px 96px 18px 96px;
+  }
+
+  .bottom-stack-themed .room-panel-main {
+    flex: 0 0 42%;
+  }
 }
 
 .room-panel {
