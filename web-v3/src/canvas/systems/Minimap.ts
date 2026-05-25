@@ -1,9 +1,9 @@
-import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
+import { Assets, Container, Graphics, Sprite } from "pixi.js";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 import { MAP_OFFSETS } from "../../constants";
 
 /** Directions that represent the same horizontal plane. Up/down exits are shown
- *  as indicators on the current room but don't place nodes on the minimap. */
+ *  as buttons beside the map but don't place nodes on the parchment. */
 const HORIZONTAL_DIRS = new Set(["north", "south", "east", "west"]);
 
 interface MapNode {
@@ -15,20 +15,25 @@ interface MapNode {
   housing?: boolean;
 }
 
-const DEFAULT_DIAMETER = 140;
-const BG_COLOR = 0x141828;
-const BG_ALPHA = 0.88;
-const BORDER_COLOR = 0x3a4060;
-const OUTER_GLOW_COLOR = 0x4a5880;
-const NODE_COLOR = 0x4a6080;
-const CURRENT_COLOR = 0xb9aed8;
-const CURRENT_GLOW = 0xe8d8a8;
-const LINE_COLOR = 0x8a9ace;
-const FOG_COLOR = 0x2a3050;
-const QUEST_COLOR = 0xbea873;
-const HOUSING_COLOR = 0xc8a078;
+const DEFAULT_WIDTH = 140;
+const HEIGHT_RATIO = 0.8; // parchment is a landscape rectangle
+
+// Parchment / ink palette — replaces the old dark-blue glass look.
+const PAPER = 0xe6d8b8;
+const PAPER_SHADE = 0xd8c49a;
+const PAPER_STAIN = 0xcdb487;
+const SHADOW = 0x000000;
+const INK = 0x4a3a28; // dark sepia pen ink
+const INK_SOFT = 0x6e5a40; // lighter ink for secondary strokes / connectors
+const LINE_COLOR = 0x6e5a40;
+const NODE_FILL = 0xcdb487; // explored room wash
+const CURRENT_FILL = 0x9c3b22; // sienna "you are here"
+const CURRENT_MARK = 0xf3e6c8; // cream center dot
+const FOG_INK = 0x8a7a5e; // faint "unknown" outline
+const QUEST_COLOR = 0xc69a2e; // amber gold
+const HOUSING_FILL = 0xb98a5a;
 const QUEST_PULSE_PERIOD = 2500; // ms
-const PATH_COLOR = 0xd4b86a;
+const PATH_COLOR = 0xc69a2e;
 const PATH_SHIMMER_PERIOD = 1800; // ms
 
 export class Minimap {
@@ -37,7 +42,6 @@ export class Minimap {
   private bg = new Graphics();
   private clipMask = new Graphics();
   private mapGraphics = new Graphics();
-  private nodeContainer = new Container();
   private expandButton = new Graphics();
   private inner = new Container();
   private visited = new Map<string, MapNode>();
@@ -46,34 +50,34 @@ export class Minimap {
   private lastKey = "";
 
   // Current sizing — updated via setDiameter()
-  private _diameter = DEFAULT_DIAMETER;
-  private _radius = DEFAULT_DIAMETER / 2;
-  private _cell = 44;
-  private _nodeRadius = 12;
-  private _currentRadius = 16;
+  private _width = DEFAULT_WIDTH;
+  private _height = Math.round(DEFAULT_WIDTH * HEIGHT_RATIO);
+  private _cell = 28;
+  private _nodeHalf = 7;
+  private _currentHalf = 9;
 
-  // Sprite cache for room thumbnails
-  private thumbSprites = new Map<string, Sprite>();
-  private thumbMasks = new Map<string, Graphics>();
-  private loadingImages = new Set<string>();
-  private fogTexture: Texture | null = null;
-  private fogAssetLoaded = false;
+  // Cached torn-edge polygons (flat x,y pairs), rebuilt on resize.
+  private tornPath: number[] = [];
+  private tornInner: number[] = [];
+  private tornShadow: number[] = [];
+
+  // Optional parchment texture (server asset: minimap_parchment)
+  private paperSprite: Sprite | null = null;
+  private paperAssetLoaded = false;
 
   // Click navigation
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
   private pulseAccum = 0;
 
-  // Up/down floor buttons (drawn outside the circle)
+  // Up/down floor buttons (drawn beside the parchment)
   private upButton = new Graphics();
   private downButton = new Graphics();
 
   constructor() {
-    this.rebuildExpandButton();
     this.buildFloorButtons();
 
-    // Inner content group that gets masked
+    // Inner content group that gets clipped to the torn parchment edge.
     this.inner.addChild(this.mapGraphics);
-    this.inner.addChild(this.nodeContainer);
 
     this.container.addChild(this.bg);
     this.container.addChild(this.clipMask);
@@ -88,74 +92,157 @@ export class Minimap {
     canvasCallbacks.loadZoneMap = (zone, rooms) => this.loadZoneMap(zone, rooms);
   }
 
+  /** Width of the parchment — kept as `diameter` for layout-call compatibility. */
   get diameter(): number {
-    return this._diameter;
+    return this._width;
   }
 
-  /** Total height including the expand button below the circle. */
+  /** Total height including the expand button below the parchment. */
   get totalHeight(): number {
-    return this._diameter + 26;
+    return this._height + 26;
   }
 
-  /** Resize the minimap. Recalculates proportional node/cell sizes. */
+  /** Resize the map. `d` is the parchment width; height is derived. */
   setDiameter(d: number) {
-    if (d === this._diameter) return;
-    this._diameter = d;
-    this._radius = d / 2;
-    // Tight cell proportions so several hops of surrounding rooms fit inside the
-    // circle. At 240px: cell=32, node=11, current=14 — roughly three hops visible.
+    if (d === this._width) return;
+    this._width = d;
+    this._height = Math.round(d * HEIGHT_RATIO);
     const compact = d <= 160;
-    // Cell spacing is kept comfortably larger than node diameter so the exit
-    // connector lines between rooms stay clearly visible (not hidden under the
-    // node circles) — that's the signal for whether a direct exit exists.
-    this._cell = Math.round(d * (compact ? 0.22 : 0.17));
-    this._nodeRadius = Math.round(d * 0.066);
-    this._currentRadius = Math.round(d * 0.082);
+    // Cell spacing stays comfortably larger than the node glyph so the inked
+    // connector lines between rooms remain visible (the signal for an exit).
+    this._cell = Math.round(d * (compact ? 0.2 : 0.16));
+    this._nodeHalf = Math.round(d * (compact ? 0.05 : 0.045));
+    this._currentHalf = Math.round(d * (compact ? 0.06 : 0.055));
     this.applyDiameter();
     this.lastKey = ""; // force redraw
   }
 
-  /** How many exit hops out from the current room to place on the minimap. */
+  /** How many exit hops out from the current room to place on the map. */
   private readonly MAX_HOPS = 4;
 
-  private applyDiameter() {
-    const r = this._radius;
-    const d = this._diameter;
+  /** Deterministic [-amp, amp] jitter from an integer seed (stable per redraw). */
+  private jitter(seed: number, amp: number): number {
+    const s = Math.sin(seed * 12.9898) * 43758.5453;
+    return (s - Math.floor(s) - 0.5) * 2 * amp;
+  }
 
-    // Rebuild clip mask for new size
+  /** Stable integer seed derived from a room id, so glyph wobble never animates. */
+  private hashSeed(id: string): number {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+    return Math.abs(h) % 100000;
+  }
+
+  /** Build a jittered "torn paper" perimeter polygon as flat x,y pairs. */
+  private buildTornPath(inset: number, amp: number): number[] {
+    const pts: number[] = [];
+    const step = 11;
+    let seed = inset * 7 + 1; // vary the tear per inset so edges don't overlap
+    const w = this._width;
+    const h = this._height;
+    const a = inset;
+    const r = w - inset;
+    const t = inset;
+    const b = h - inset;
+    const edge = (x0: number, y0: number, x1: number, y1: number) => {
+      const dx = x1 - x0;
+      const dy = y1 - y0;
+      const len = Math.hypot(dx, dy) || 1;
+      const n = Math.max(1, Math.round(len / step));
+      const nx = -dy / len; // perpendicular for the wobble
+      const ny = dx / len;
+      for (let i = 0; i < n; i++) {
+        const f = i / n;
+        const j = this.jitter(seed++, amp);
+        pts.push(x0 + dx * f + nx * j, y0 + dy * f + ny * j);
+      }
+    };
+    edge(a, t, r, t);
+    edge(r, t, r, b);
+    edge(r, b, a, b);
+    edge(a, b, a, t);
+    return pts;
+  }
+
+  private applyDiameter() {
+    this.tornShadow = this.buildTornPath(0, 4);
+    this.tornPath = this.buildTornPath(3, 4);
+    this.tornInner = this.buildTornPath(7, 3);
+
+    // Clip inner content to the torn parchment edge.
     this.clipMask.clear();
-    this.clipMask.circle(r, r, r - 2);
+    this.clipMask.poly(this.tornPath);
     this.clipMask.fill(0xffffff);
     this.inner.mask = this.clipMask;
 
-    // Expand button centered below the circle
-    this.expandButton.x = r - 11;
-    this.expandButton.y = d + 4;
+    if (this.paperSprite) {
+      this.paperSprite.width = this._width;
+      this.paperSprite.height = this._height;
+    }
 
-    // Up/down buttons — diagonal offset outside the circle, to the left
+    this.drawParchment();
+    this.rebuildExpandButton();
+
+    // Expand button centered below the parchment.
+    this.expandButton.x = this._width / 2 - 11;
+    this.expandButton.y = this._height + 4;
+
+    // Up/down buttons stacked just to the left of the parchment, vertically centered.
     const btnR = 14;
-    this.upButton.x = r - r * 0.85 - btnR - 4;
-    this.upButton.y = r - r * 0.5 - btnR;
-    this.downButton.x = r - r * 0.85 - btnR - 4;
-    this.downButton.y = r + r * 0.5 - btnR;
+    const bx = -btnR * 2 - 8;
+    this.upButton.x = bx;
+    this.upButton.y = this._height / 2 - btnR * 2 - 3;
+    this.downButton.x = bx;
+    this.downButton.y = this._height / 2 + 3;
+  }
+
+  /** Static parchment backdrop — drawn once per size, not per frame. */
+  private drawParchment() {
+    const g = this.bg;
+    g.clear();
+
+    // Drop shadow under the torn sheet.
+    g.poly(this.tornShadow);
+    g.fill({ color: SHADOW, alpha: 0.28 });
+
+    // Paper body (skipped when a texture sprite covers it; ink edge still drawn).
+    if (!this.paperSprite) {
+      g.poly(this.tornPath);
+      g.fill({ color: PAPER, alpha: 0.97 });
+
+      // A few faint stains / shading blobs for aged-paper character.
+      const stains = 4;
+      for (let i = 0; i < stains; i++) {
+        const sx = this._width * (0.2 + 0.6 * (this.jitter(i * 3 + 1, 0.5) + 0.5));
+        const sy = this._height * (0.2 + 0.6 * (this.jitter(i * 3 + 2, 0.5) + 0.5));
+        const rad = this._width * 0.08 * (1 + this.jitter(i * 3 + 3, 0.4));
+        g.ellipse(sx, sy, rad, rad * 0.7);
+        g.fill({ color: i % 2 ? PAPER_STAIN : PAPER_SHADE, alpha: 0.18 });
+      }
+    }
+
+    // Torn ink edge — a soft inner line under a darker outer line (pen-nib feel).
+    g.poly(this.tornInner);
+    g.stroke({ color: INK_SOFT, width: 1, alpha: 0.3 });
+    g.poly(this.tornPath);
+    g.stroke({ color: INK, width: 1.5, alpha: 0.5 });
   }
 
   private rebuildExpandButton() {
     const btn = this.expandButton;
     btn.clear();
     btn.roundRect(0, 0, 22, 22, 4);
-    btn.fill({ color: BG_COLOR, alpha: 0.95 });
+    btn.fill({ color: PAPER_SHADE, alpha: 0.97 });
     btn.roundRect(0, 0, 22, 22, 4);
-    btn.stroke({ color: BORDER_COLOR, width: 1 });
-    const ic = CURRENT_COLOR;
+    btn.stroke({ color: INK, width: 1, alpha: 0.6 });
     btn.moveTo(5, 8); btn.lineTo(5, 5); btn.lineTo(8, 5);
-    btn.stroke({ color: ic, width: 1.5 });
+    btn.stroke({ color: INK, width: 1.5 });
     btn.moveTo(14, 5); btn.lineTo(17, 5); btn.lineTo(17, 8);
-    btn.stroke({ color: ic, width: 1.5 });
+    btn.stroke({ color: INK, width: 1.5 });
     btn.moveTo(17, 14); btn.lineTo(17, 17); btn.lineTo(14, 17);
-    btn.stroke({ color: ic, width: 1.5 });
+    btn.stroke({ color: INK, width: 1.5 });
     btn.moveTo(8, 17); btn.lineTo(5, 17); btn.lineTo(5, 14);
-    btn.stroke({ color: ic, width: 1.5 });
+    btn.stroke({ color: INK, width: 1.5 });
     btn.eventMode = "static";
     btn.cursor = "pointer";
     btn.on("pointerdown", () => {
@@ -171,9 +258,9 @@ export class Minimap {
     ] as const) {
       btn.clear();
       btn.circle(btnR, btnR, btnR);
-      btn.fill({ color: BG_COLOR, alpha: 0.9 });
+      btn.fill({ color: PAPER_SHADE, alpha: 0.95 });
       btn.circle(btnR, btnR, btnR);
-      btn.stroke({ color: BORDER_COLOR, width: 1 });
+      btn.stroke({ color: INK, width: 1, alpha: 0.6 });
       const cy = btnR;
       const cx = btnR;
       if (arrowUp) {
@@ -181,14 +268,13 @@ export class Minimap {
         btn.lineTo(cx - 5, cy + 3);
         btn.moveTo(cx, cy - 5);
         btn.lineTo(cx + 5, cy + 3);
-        btn.stroke({ color: CURRENT_GLOW, width: 2 });
       } else {
         btn.moveTo(cx, cy + 5);
         btn.lineTo(cx - 5, cy - 3);
         btn.moveTo(cx, cy + 5);
         btn.lineTo(cx + 5, cy - 3);
-        btn.stroke({ color: CURRENT_GLOW, width: 2 });
       }
+      btn.stroke({ color: INK, width: 2 });
       btn.eventMode = "static";
       btn.cursor = "pointer";
       btn.visible = false;
@@ -199,13 +285,13 @@ export class Minimap {
   updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) {
     if (!roomId) return;
 
-    // Reload fog texture once Server.Assets GMCP arrives
-    if (!this.fogAssetLoaded && Object.keys(gameStateRef.current.serverAssets).length > 0) {
-      this.fogAssetLoaded = true;
-      this.loadFogTexture();
+    // Load the optional parchment texture once Server.Assets GMCP arrives.
+    if (!this.paperAssetLoaded && Object.keys(gameStateRef.current.serverAssets).length > 0) {
+      this.paperAssetLoaded = true;
+      this.loadPaperTexture();
     }
 
-    const key = `${roomId}:${mapX},${mapY}:${JSON.stringify(exits)}:${image ?? ""}`;
+    const key = `${roomId}:${mapX},${mapY}:${JSON.stringify(exits)}`;
     if (key === this.lastKey) return;
     this.lastKey = key;
 
@@ -214,13 +300,11 @@ export class Minimap {
     const zone = roomId.split(":")[0];
     if (this.currentZone && zone !== this.currentZone) {
       this.visited.clear();
-      this.clearThumbs();
     }
     this.currentZone = zone;
     this.currentRoomId = roomId;
 
     if (!this.visited.has(roomId)) {
-      // Use server-provided coordinates directly
       this.visited.set(roomId, { x: mapX, y: mapY, exits, title, image });
     } else {
       const node = this.visited.get(roomId)!;
@@ -232,7 +316,6 @@ export class Minimap {
     }
 
     // Pre-place unvisited horizontal neighbors (N/S/E/W only).
-    // Up/down exits are shown as indicators on the current room, not as separate nodes.
     for (const [dir, targetId] of Object.entries(exits)) {
       if (!HORIZONTAL_DIRS.has(dir)) continue;
       if (this.visited.has(targetId)) continue;
@@ -247,7 +330,6 @@ export class Minimap {
   /** Pre-populate all rooms in a zone as fog nodes. */
   loadZoneMap(zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) {
     this.visited.clear();
-    this.clearThumbs();
     this.currentZone = zone;
     this.currentRoomId = null;
     this.lastKey = "";
@@ -262,7 +344,6 @@ export class Minimap {
     this.currentRoomId = null;
     this.currentZone = null;
     this.lastKey = "";
-    this.clearThumbs();
     this.redraw();
   }
 
@@ -272,10 +353,7 @@ export class Minimap {
   }
 
   private redraw() {
-    const R = this._radius;
     const CELL = this._cell;
-    const NODE_R = this._nodeRadius;
-    const CUR_R = this._currentRadius;
     const questTargets = gameStateRef.current.questTargetRoomIds;
 
     // Clear click areas
@@ -285,40 +363,21 @@ export class Minimap {
     }
     this.clickAreas = [];
 
-    // Draw circular background with decorative border
-    this.bg.clear();
-    this.bg.circle(R, R, R);
-    this.bg.stroke({ color: OUTER_GLOW_COLOR, width: 2, alpha: 0.4 });
-    this.bg.circle(R, R, R - 1);
-    this.bg.fill({ color: BG_COLOR, alpha: BG_ALPHA });
-    this.bg.circle(R, R, R - 3);
-    this.bg.stroke({ color: BORDER_COLOR, width: 1, alpha: 0.6 });
-
     this.mapGraphics.clear();
-
-    // Hide all existing thumbs
-    for (const sprite of this.thumbSprites.values()) {
-      sprite.visible = false;
-    }
 
     if (!this.currentRoomId) return;
     const current = this.visited.get(this.currentRoomId);
     if (!current) return;
 
-    const cx = R;
-    const cy = R;
+    const cx = this._width / 2;
+    const cy = this._height / 2;
 
-    // Build a local position map using exit directions so neighbors always
-    // appear at cardinal offsets regardless of BFS-computed absolute coords.
-    // This prevents collision-displaced rooms from showing at diagonal positions.
+    // Local position map keyed on exit directions so neighbors always appear at
+    // cardinal offsets regardless of BFS-computed absolute coords.
     const localPos = new Map<string, { lx: number; ly: number }>();
-    localPos.set(this.currentRoomId!, { lx: 0, ly: 0 });
+    localPos.set(this.currentRoomId, { lx: 0, ly: 0 });
 
-    // BFS out from the current room along cardinal exits, placing each room at a
-    // local grid offset. Going several hops deep fills the (now larger) circle
-    // with surrounding rooms instead of just immediate exits. inBounds() clips
-    // anything that falls outside the visible disc.
-    let frontier: string[] = [this.currentRoomId!];
+    let frontier: string[] = [this.currentRoomId];
     for (let hop = 0; hop < this.MAX_HOPS && frontier.length > 0; hop++) {
       const next: string[] = [];
       for (const id of frontier) {
@@ -337,61 +396,53 @@ export class Minimap {
       frontier = next;
     }
 
-    // Helper to get pixel position for a room
     const posOf = (id: string): { px: number; py: number } | null => {
       const lp = localPos.get(id);
       if (!lp) return null;
       return { px: cx + lp.lx * CELL, py: cy + lp.ly * CELL };
     };
 
-    // Compute shortest path to nearest quest target (BFS)
     const pathEdges = this.computeQuestPath(questTargets);
 
-    // Draw connecting lines
+    // Inked connector lines between rooms.
     for (const [id] of localPos) {
       const node = this.visited.get(id);
       if (!node) continue;
       const sp = posOf(id);
       if (!sp) continue;
-
       for (const [dir, targetId] of Object.entries(node.exits)) {
         if (!HORIZONTAL_DIRS.has(dir)) continue;
         const tp = posOf(targetId);
         if (!tp) continue;
-
         if (this.inBounds(sp.px, sp.py) || this.inBounds(tp.px, tp.py)) {
           this.mapGraphics.moveTo(sp.px, sp.py);
           this.mapGraphics.lineTo(tp.px, tp.py);
-          this.mapGraphics.stroke({ color: LINE_COLOR, width: 3, alpha: 0.85 });
+          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.7 });
         }
       }
     }
 
-    // Draw quest path trail — gold glow over the shortest path edges
+    // Quest path trail — amber glow over the shortest-path edges.
     if (pathEdges.length > 0) {
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const shimmer = reducedMotion
         ? 0.7
         : 0.45 + 0.3 * (0.5 + 0.5 * Math.sin(Date.now() / PATH_SHIMMER_PERIOD * Math.PI * 2));
-
       for (const [fromId, toId] of pathEdges) {
         const sp = posOf(fromId);
         const tp = posOf(toId);
         if (!sp || !tp) continue;
         if (!this.inBounds(sp.px, sp.py) && !this.inBounds(tp.px, tp.py)) continue;
-
-        // Outer glow
         this.mapGraphics.moveTo(sp.px, sp.py);
         this.mapGraphics.lineTo(tp.px, tp.py);
         this.mapGraphics.stroke({ color: PATH_COLOR, width: 5, alpha: shimmer * 0.3 });
-        // Inner bright line
         this.mapGraphics.moveTo(sp.px, sp.py);
         this.mapGraphics.lineTo(tp.px, tp.py);
         this.mapGraphics.stroke({ color: PATH_COLOR, width: 2, alpha: shimmer });
       }
     }
 
-    // Draw nodes — only rooms in the local neighborhood
+    // Inked room glyphs.
     for (const [id] of localPos) {
       const node = this.visited.get(id);
       if (!node) continue;
@@ -399,48 +450,63 @@ export class Minimap {
       if (!p) continue;
       const nx = p.px;
       const ny = p.py;
-
       if (!this.inBounds(nx, ny)) continue;
 
       const isCurrent = id === this.currentRoomId;
-      const radius = isCurrent ? CUR_R : NODE_R;
+      const half = isCurrent ? this._currentHalf : this._nodeHalf;
       const visited = node.title !== "";
+      const seed = this.hashSeed(id);
+
+      // Direction ticks for exits that leave the visible map — little inked
+      // stubs at the room edge hinting at unexplored passages.
+      for (const dir of Object.keys(node.exits)) {
+        if (!HORIZONTAL_DIRS.has(dir)) continue;
+        const tp = posOf(node.exits[dir]);
+        if (tp && this.inBounds(tp.px, tp.py)) continue; // drawn as a connector
+        const off = MAP_OFFSETS[dir];
+        if (!off) continue;
+        this.mapGraphics.moveTo(nx + off.dx * half, ny + off.dy * half);
+        this.mapGraphics.lineTo(nx + off.dx * (half + 5), ny + off.dy * (half + 5));
+        this.mapGraphics.stroke({ color: INK_SOFT, width: 1.5, alpha: 0.55 });
+      }
 
       if (isCurrent) {
-        this.mapGraphics.circle(nx, ny, radius + 4);
-        this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.5 });
-      }
-
-      if (visited) {
+        this.inkRect(nx, ny, half, seed, { fill: CURRENT_FILL, fillAlpha: 0.9, stroke: INK, width: 1.6, doubleStroke: true });
+        // Cream "you are here" dot.
+        this.mapGraphics.circle(nx, ny, Math.max(2, half * 0.3));
+        this.mapGraphics.fill({ color: CURRENT_MARK, alpha: 0.95 });
+      } else if (visited) {
         const isHousing = node.housing === true;
-        const fillColor = isCurrent ? CURRENT_COLOR : isHousing ? HOUSING_COLOR : NODE_COLOR;
-        this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.fill({ color: fillColor });
-        this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.stroke({ color: isCurrent ? CURRENT_GLOW : isHousing ? 0x9a7858 : 0x5a6a90, width: 1, alpha: isCurrent ? 0.8 : 0.5 });
-      } else {
-        this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.75 });
-        this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.stroke({ color: 0x5a6a90, width: 1.5, alpha: 0.6 });
-        if (this.fogTexture) {
-          this.ensureThumb(`__fog__${id}`, null, nx, ny, radius, 0.7, this.fogTexture);
+        this.inkRect(nx, ny, half, seed, {
+          fill: isHousing ? HOUSING_FILL : NODE_FILL,
+          fillAlpha: 0.9,
+          stroke: INK,
+          width: 1.2,
+          alpha: 0.85,
+          doubleStroke: true,
+        });
+        if (isHousing) {
+          // Tiny roof peak on the top edge.
+          this.mapGraphics.moveTo(nx - half * 0.6, ny - half);
+          this.mapGraphics.lineTo(nx, ny - half * 1.5);
+          this.mapGraphics.lineTo(nx + half * 0.6, ny - half);
+          this.mapGraphics.stroke({ color: INK, width: 1.2, alpha: 0.8 });
         }
+      } else {
+        // Unexplored — faint outline plus a single hatch stroke for "unknown".
+        this.inkRect(nx, ny, half, seed, { stroke: FOG_INK, width: 1.2, alpha: 0.55 });
+        this.mapGraphics.moveTo(nx - half * 0.6, ny + half * 0.6);
+        this.mapGraphics.lineTo(nx + half * 0.6, ny - half * 0.6);
+        this.mapGraphics.stroke({ color: FOG_INK, width: 1, alpha: 0.4 });
       }
 
-      if (node.image) {
-        this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.8, null);
-      }
-
-      // Quest objective marker — pulsing gold ring + diamond
+      // Quest objective marker — pulsing amber outline + diamond.
       if (!isCurrent && questTargets.has(id)) {
         const pulse = 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
-        this.mapGraphics.circle(nx, ny, radius + 3);
-        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2, alpha: pulse });
-        // Small diamond above the node (scaled for compact minimaps)
-        const ds = this._diameter <= 180 ? 3 : 5;
-        const dOff = this._diameter <= 180 ? 4 : 7;
-        const dy = ny - radius - dOff;
+        this.inkRect(nx, ny, half + 3, seed + 7, { stroke: QUEST_COLOR, width: 2, alpha: pulse });
+        const ds = this._width <= 180 ? 3 : 5;
+        const dOff = this._width <= 180 ? 4 : 7;
+        const dy = ny - half - dOff;
         this.mapGraphics.moveTo(nx, dy - ds);
         this.mapGraphics.lineTo(nx + ds - 1, dy);
         this.mapGraphics.lineTo(nx, dy + ds);
@@ -450,24 +516,23 @@ export class Minimap {
       }
     }
 
-    // Off-screen quest target edge indicators — pulsing gold chevrons at the rim
-    // pointing toward quest rooms that are beyond the 2-hop local neighborhood.
+    // Off-map quest indicators — amber chevrons on the parchment edge pointing
+    // toward quest rooms beyond the visible neighborhood.
     const edgePulse = 0.35 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
     if (questTargets.size > 0) {
+      const halfW = this._width / 2 - 8;
+      const halfH = this._height / 2 - 8;
       for (const targetRoomId of questTargets) {
-        if (localPos.has(targetRoomId)) continue; // already visible on the map
+        if (localPos.has(targetRoomId)) continue;
         const targetNode = this.visited.get(targetRoomId);
         if (!targetNode) continue;
-        // Compute direction from current room to the target in zone coordinates
         const ddx = targetNode.x - current.x;
         const ddy = targetNode.y - current.y;
-        const dist = Math.sqrt(ddx * ddx + ddy * ddy);
-        if (dist === 0) continue;
-        // Normalize and place on the circle rim (inset slightly so the glow is visible)
-        const rimR = R - 8;
-        const ex = cx + (ddx / dist) * rimR;
-        const ey = cy + (ddy / dist) * rimR;
-        // Small gold chevron pointing outward
+        if (ddx === 0 && ddy === 0) continue;
+        // Project the direction onto the rectangular rim.
+        const scale = 1 / Math.max(Math.abs(ddx) / halfW, Math.abs(ddy) / halfH);
+        const ex = cx + ddx * scale;
+        const ey = cy + ddy * scale;
         const angle = Math.atan2(ddy, ddx);
         const chevLen = 6;
         const chevSpread = 0.5;
@@ -478,50 +543,71 @@ export class Minimap {
         this.mapGraphics.moveTo(tipX, tipY);
         this.mapGraphics.lineTo(tipX - Math.cos(angle + chevSpread) * chevLen, tipY - Math.sin(angle + chevSpread) * chevLen);
         this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2, alpha: edgePulse });
-        // Small glow dot
         this.mapGraphics.circle(ex, ey, 3);
         this.mapGraphics.fill({ color: QUEST_COLOR, alpha: edgePulse * 0.7 });
       }
     }
 
-    // Show/hide floor buttons based on current room exits
-    this.upButton.visible = current ? "up" in current.exits : false;
-    this.downButton.visible = current ? "down" in current.exits : false;
+    // Floor buttons reflect the current room's vertical exits.
+    this.upButton.visible = "up" in current.exits;
+    this.downButton.visible = "down" in current.exits;
 
-    // Click areas for cardinal navigation — separate pass so they're on top.
-    if (current) {
-      for (const [dir, targetId] of Object.entries(current.exits)) {
-        // Up/down handled by the floor buttons outside the circle
-        if (!HORIZONTAL_DIRS.has(dir)) continue;
-
-        const tp = posOf(targetId);
-        if (!tp) continue;
-        const tnx = tp.px;
-        const tny = tp.py;
-        if (!this.inBounds(tnx, tny)) continue;
-
-        const area = new Graphics();
-        area.circle(tnx, tny, NODE_R + 3);
-        area.fill({ color: 0x000000, alpha: 0.001 });
-        area.eventMode = "static";
-        area.cursor = "pointer";
-        area.on("pointerdown", () => { canvasCallbacks.sendCommand?.(dir); });
-        this.container.addChild(area);
-        this.clickAreas.push({ roomId: targetId, area });
-      }
+    // Click areas for cardinal navigation — separate pass so they sit on top.
+    for (const [dir, targetId] of Object.entries(current.exits)) {
+      if (!HORIZONTAL_DIRS.has(dir)) continue;
+      const tp = posOf(targetId);
+      if (!tp) continue;
+      if (!this.inBounds(tp.px, tp.py)) continue;
+      const area = new Graphics();
+      area.rect(tp.px - this._nodeHalf - 4, tp.py - this._nodeHalf - 4, (this._nodeHalf + 4) * 2, (this._nodeHalf + 4) * 2);
+      area.fill({ color: 0x000000, alpha: 0.001 });
+      area.eventMode = "static";
+      area.cursor = "pointer";
+      area.on("pointerdown", () => { canvasCallbacks.sendCommand?.(dir); });
+      this.container.addChild(area);
+      this.clickAreas.push({ roomId: targetId, area });
     }
+  }
+
+  /** Draw a hand-drawn (jittered) inked rectangle glyph for a room. */
+  private inkRect(
+    cx: number,
+    cy: number,
+    half: number,
+    seed: number,
+    opts: { fill?: number; fillAlpha?: number; stroke: number; width: number; alpha?: number; doubleStroke?: boolean },
+  ) {
+    const g = this.mapGraphics;
+    const amp = half * 0.16;
+    const j = (s: number) => this.jitter(seed + s, amp);
+    const poly = [
+      cx - half + j(0), cy - half + j(1),
+      cx + half + j(2), cy - half + j(3),
+      cx + half + j(4), cy + half + j(5),
+      cx - half + j(6), cy + half + j(7),
+    ];
+    if (opts.fill !== undefined) {
+      g.poly(poly);
+      g.fill({ color: opts.fill, alpha: opts.fillAlpha ?? 1 });
+    }
+    if (opts.doubleStroke) {
+      // Offset under-stroke fakes a pen nib's heavier edge.
+      g.poly(poly.map((v) => v + 0.8));
+      g.stroke({ color: opts.stroke, width: opts.width + 0.6, alpha: (opts.alpha ?? 1) * 0.4 });
+    }
+    g.poly(poly);
+    g.stroke({ color: opts.stroke, width: opts.width, alpha: opts.alpha ?? 1 });
   }
 
   /**
    * BFS from the current room to the nearest quest target.
-   * Returns an array of [fromId, toId] edge pairs representing the shortest path,
-   * or an empty array if no path exists.
+   * Returns [fromId, toId] edge pairs for the shortest path, or [] if none.
    */
   private computeQuestPath(questTargets: Set<string>): Array<[string, string]> {
     if (questTargets.size === 0 || !this.currentRoomId) return [];
 
     const start = this.currentRoomId;
-    if (questTargets.has(start)) return []; // already at a quest target
+    if (questTargets.has(start)) return [];
 
     const visited = new Set<string>();
     const parent = new Map<string, string>();
@@ -534,15 +620,12 @@ export class Minimap {
       const current = queue.shift()!;
       const node = this.visited.get(current);
       if (!node) continue;
-
       for (const [dir, neighborId] of Object.entries(node.exits)) {
         if (!HORIZONTAL_DIRS.has(dir)) continue;
         if (visited.has(neighborId)) continue;
-        if (!this.visited.has(neighborId)) continue; // only traverse explored rooms
-
+        if (!this.visited.has(neighborId)) continue;
         visited.add(neighborId);
         parent.set(neighborId, current);
-
         if (questTargets.has(neighborId)) {
           target = neighborId;
           break;
@@ -554,7 +637,6 @@ export class Minimap {
 
     if (!target) return [];
 
-    // Reconstruct path as edge pairs
     const edges: Array<[string, string]> = [];
     let current = target;
     while (parent.has(current)) {
@@ -566,91 +648,33 @@ export class Minimap {
     return edges;
   }
 
-  private ensureThumb(roomId: string, imagePath: string | null, nx: number, ny: number, radius: number, alpha: number, preloaded: Texture | null) {
-    const existing = this.thumbSprites.get(roomId);
-    if (existing) {
-      existing.x = nx;
-      existing.y = ny;
-      existing.width = radius * 2;
-      existing.height = radius * 2;
-      existing.alpha = alpha;
-      existing.visible = true;
-
-      const mask = this.thumbMasks.get(roomId);
-      if (mask) {
-        mask.clear();
-        mask.circle(nx, ny, radius);
-        mask.fill(0xffffff);
-      }
-      return;
-    }
-
-    if (preloaded) {
-      this.createThumbSprite(roomId, preloaded, nx, ny, radius, alpha);
-      return;
-    }
-
-    if (!imagePath || this.loadingImages.has(roomId)) return;
-    this.loadingImages.add(roomId);
-
-    Assets.load(imagePath).then((texture: Texture) => {
-      this.loadingImages.delete(roomId);
-      this.createThumbSprite(roomId, texture, nx, ny, radius, alpha);
-    }).catch(() => {
-      this.loadingImages.delete(roomId);
-    });
-  }
-
-  private createThumbSprite(roomId: string, texture: Texture, nx: number, ny: number, radius: number, alpha: number) {
-    const sprite = new Sprite(texture);
-    sprite.anchor.set(0.5);
-    sprite.width = radius * 2;
-    sprite.height = radius * 2;
-    sprite.x = nx;
-    sprite.y = ny;
-    sprite.alpha = alpha;
-    sprite.eventMode = "none";
-
-    const mask = new Graphics();
-    mask.circle(nx, ny, radius);
-    mask.fill(0xffffff);
-    sprite.mask = mask;
-
-    this.nodeContainer.addChild(mask);
-    this.nodeContainer.addChild(sprite);
-    this.thumbSprites.set(roomId, sprite);
-    this.thumbMasks.set(roomId, mask);
-  }
-
-  private clearThumbs() {
-    for (const sprite of this.thumbSprites.values()) {
-      sprite.destroy();
-    }
-    for (const mask of this.thumbMasks.values()) {
-      mask.destroy();
-    }
-    this.thumbSprites.clear();
-    this.thumbMasks.clear();
-    this.loadingImages.clear();
-  }
-
-  private async loadFogTexture() {
+  private async loadPaperTexture() {
+    const key = gameStateRef.current.serverAssets["minimap_parchment"];
+    if (!key) return;
     try {
-      this.fogTexture = await Assets.load(
-        gameStateRef.current.serverAssets["minimap_unexplored"] ?? "/images/global_assets/minimap-unexplored.png",
-      );
-    } catch { /* no fog texture */ }
+      const tex = await Assets.load(key);
+      if (this.paperSprite) this.paperSprite.destroy();
+      const s = new Sprite(tex);
+      s.x = 0;
+      s.y = 0;
+      s.width = this._width;
+      s.height = this._height;
+      s.alpha = 0.97;
+      s.eventMode = "none";
+      this.paperSprite = s;
+      this.inner.addChildAt(s, 0); // under the map graphics, clipped by the torn mask
+      this.drawParchment(); // re-draw bg without the procedural fill
+    } catch { /* no parchment texture; procedural fill stays */ }
   }
 
   private inBounds(x: number, y: number): boolean {
-    const dx = x - this._radius;
-    const dy = y - this._radius;
-    const pad = this._diameter <= 160 ? 6 : 10;
-    const maxR = this._radius - this._currentRadius - pad;
-    return dx * dx + dy * dy <= maxR * maxR;
+    const pad = this._width <= 160 ? 6 : 10;
+    const halfW = this._width / 2 - this._currentHalf - pad;
+    const halfH = this._height / 2 - this._currentHalf - pad;
+    return Math.abs(x - this._width / 2) <= halfW && Math.abs(y - this._height / 2) <= halfH;
   }
 
-  /** Called from the PixiJS ticker to animate quest marker pulse (~15fps). */
+  /** Called from the PixiJS ticker to animate the quest pulse (~15fps). */
   tick(deltaMs: number) {
     if (gameStateRef.current.questTargetRoomIds.size === 0 || !this.currentRoomId) return;
     this.pulseAccum += deltaMs;
@@ -660,7 +684,6 @@ export class Minimap {
   }
 
   destroy() {
-    this.clearThumbs();
     this.container.destroy({ children: true });
   }
 }
