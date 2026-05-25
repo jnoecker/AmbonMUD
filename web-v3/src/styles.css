@@ -17982,28 +17982,19 @@ html:has(.game-shell),
   text-shadow: 0 1px 1px rgb(252 247 232 / 65%);
 }
 
-/* On wider screens, keep the description on the left page and slide the compass
-   onto the right page. Percentage margins track the book's pages as the
-   stretched backdrop scales with the window. */
+/* On wider screens, anchor around the book's center line: the description's
+   right edge sits at the center, then a small gap, then the compass just to the
+   right of center. Percentages track the stretched backdrop as it scales.
+   (left margin 9% + main 45% of the 91% content area => right edge at ~50%.) */
 @media (min-width: 641px) {
   .bottom-stack-themed .room-panel-body {
-    justify-content: space-between;
-    padding: 28px 16% 18px 9%;
+    justify-content: flex-start;
+    padding: 28px 0 18px 9%;
+    gap: 3%;
   }
 
   .bottom-stack-themed .room-panel-main {
-    flex: 0 0 46%;
-  }
-}
-
-/* Large displays: a bit more left margin and a wider inscription. */
-@media (min-width: 1440px) {
-  .bottom-stack-themed .room-panel-body {
-    padding-left: 11%;
-  }
-
-  .bottom-stack-themed .room-panel-main {
-    flex-basis: 52%;
+    flex: 0 0 45%;
   }
 }
 
