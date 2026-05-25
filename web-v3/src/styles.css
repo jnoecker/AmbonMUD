@@ -17990,11 +17990,17 @@ html:has(.game-shell),
   .bottom-stack-themed .room-panel-body {
     justify-content: flex-start;
     padding: 28px 0 18px 9%;
-    gap: 7%;
+    gap: 0;
   }
 
   .bottom-stack-themed .room-panel-main {
     flex: 0 0 45%;
+  }
+
+  /* The compass fills the right half (center -> right edge) and centers itself
+     within it. */
+  .bottom-stack-themed .room-panel-nav {
+    flex: 1 1 auto;
   }
 }
 
