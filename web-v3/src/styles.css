@@ -17953,7 +17953,7 @@ html:has(.game-shell),
 .room-panel {
   position: relative;
   flex: 0 0 auto;
-  height: 232px;
+  height: 256px;
   overflow: hidden;
   background-color: #10131f;
   background-image: linear-gradient(180deg, rgb(15 18 30 / 55%), rgb(10 12 22 / 72%)), var(--room-bg, none);
@@ -18003,8 +18003,8 @@ html:has(.game-shell),
 
 .room-compass-pad {
   position: relative;
-  width: 188px;
-  height: 188px;
+  width: 216px;
+  height: 216px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
@@ -18157,7 +18157,7 @@ html:has(.game-shell),
    shrinks so it stays a square next to the (scrolling) description. */
 @media (max-width: 640px) {
   .room-panel {
-    height: 204px;
+    height: 224px;
   }
 
   .room-panel-body {
@@ -18166,8 +18166,8 @@ html:has(.game-shell),
   }
 
   .room-compass-pad {
-    width: 164px;
-    height: 164px;
+    width: 184px;
+    height: 184px;
   }
 
   .room-compass-rose {
