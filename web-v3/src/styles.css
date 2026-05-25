@@ -17903,6 +17903,8 @@ html:has(.game-shell),
   padding-top: 0;
   aspect-ratio: 1216 / 794;
   overflow: hidden;
+  /* Query container so the title font scales with the sign (cqw). */
+  container-type: inline-size;
   /* Behind the bar (z 9) so the rope strands tuck behind the branch. */
   z-index: 8;
   /* It's a <button> (click to enlarge) — strip the chrome. */
@@ -17923,17 +17925,19 @@ html:has(.game-shell),
 
 .rsign-title {
   position: absolute;
-  left: 51%;
-  top: 53%;
+  left: 49%;
+  top: 48%;
   transform: translate(-50%, -50%);
   max-width: 46%;
   margin: 0;
   text-align: center;
   font-family: var(--font-display);
   font-weight: 700;
-  /* Base size, scaled down for longer names via --rsign-fit (set in JS). */
-  font-size: calc(clamp(0.72rem, 1.9vw, 1.15rem) * var(--rsign-fit, 1));
+  /* Sized in container units so it scales with the sign (not the viewport),
+     then scaled down for longer names via --rsign-fit (set in JS). */
+  font-size: calc(8cqw * var(--rsign-fit, 1));
   line-height: 1.06;
+  overflow-wrap: break-word;
   color: #5b4326;
   text-shadow: 0 1px 0 rgb(255 248 232 / 55%);
   pointer-events: none;
@@ -17959,12 +17963,9 @@ html:has(.game-shell),
   width: min(620px, 84vw);
   aspect-ratio: 1216 / 794;
   overflow: hidden;
+  container-type: inline-size;
   filter: drop-shadow(0 16px 34px rgb(0 0 0 / 55%));
   animation: sign-zoom-pop 200ms var(--ease-out-soft);
-}
-
-.sign-zoom .rsign-title {
-  font-size: calc(clamp(1.5rem, 5vw, 3rem) * var(--rsign-fit, 1));
 }
 
 @keyframes sign-zoom-fade {
@@ -17980,6 +17981,17 @@ html:has(.game-shell),
 @media (prefers-reduced-motion: reduce) {
   .sign-zoom-backdrop,
   .sign-zoom { animation: none; }
+}
+
+/* Fade the room sign while an in-canvas (Pixi) entity menu is open — it can't
+   paint above the DOM sign, so the sign yields. */
+.canvas-room-sign {
+  transition: opacity 150ms var(--ease-out-soft);
+}
+
+.entity-menu-open .canvas-room-sign {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ── Action dock (below the room panel; swaps kiosks <-> skill bar) ───── */

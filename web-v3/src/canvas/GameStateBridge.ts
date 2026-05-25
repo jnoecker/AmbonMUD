@@ -89,6 +89,9 @@ export const canvasCallbacks: {
   loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
   openMobDetail: ((detail: { name: string; description: string; image: string | null }) => void) | null;
   openImagePreview: ((url: string) => void) | null;
+  /** Fired when the in-canvas entity menu opens/closes so DOM overlays (the
+   *  room sign) can yield — Pixi can't paint above them. */
+  onEntityMenu: ((open: boolean) => void) | null;
 } = {
   sendCommand: null,
   prefillCommand: null,
@@ -116,6 +119,7 @@ export const canvasCallbacks: {
   loadZoneMap: null,
   openMobDetail: null,
   openImagePreview: null,
+  onEntityMenu: null,
 };
 
 export const pendingCastRef: { current: PendingCast | null } = { current: null };

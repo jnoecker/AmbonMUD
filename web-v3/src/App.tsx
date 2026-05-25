@@ -421,6 +421,10 @@ function App() {
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
     canvasCallbacks.openMobDetail = (detail) => setMobDetail(detail);
     canvasCallbacks.openImagePreview = (url: string) => setImagePreviewUrl(url);
+    // In-canvas entity menu (Pixi) can't paint above DOM overlays, so flag the
+    // root while it's open and let CSS fade the room sign out of the way.
+    canvasCallbacks.onEntityMenu = (open: boolean) =>
+      document.documentElement.classList.toggle("entity-menu-open", open);
     canvasCallbacks.prefillCommand = (text: string) => prefillInput(text);
     return () => {
       canvasCallbacks.sendCommand = null;
@@ -446,6 +450,8 @@ function App() {
       canvasCallbacks.openVideo = null;
       canvasCallbacks.openMobDetail = null;
       canvasCallbacks.openImagePreview = null;
+      canvasCallbacks.onEntityMenu = null;
+      document.documentElement.classList.remove("entity-menu-open");
       canvasCallbacks.prefillCommand = null;
     };
   }, [sendCommand]); // eslint-disable-line react-hooks/exhaustive-deps
