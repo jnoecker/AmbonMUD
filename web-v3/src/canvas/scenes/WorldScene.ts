@@ -1383,9 +1383,10 @@ export class WorldScene {
       }
     }
 
-    // Room-feature badges — right side, stacked vertically below the minimap.
-    const badgeX = w - 70;
-    const badgeStartY = h * 0.35;
+    // Room-feature badges — left side, stacked vertically. Kept off the right
+    // so they don't interfere with the minimap / its navigation controls.
+    const badgeX = 76;
+    const badgeStartY = h * 0.3;
     // Count visible badges to compute adaptive spacing
     const visibleBadgeCount = [
       this.shopBadge.visible, this.auctionBadge.visible, this.stylistBadge.visible,

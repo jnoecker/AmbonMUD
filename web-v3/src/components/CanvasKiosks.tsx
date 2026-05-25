@@ -37,7 +37,7 @@ interface CanvasKiosksProps {
  */
 export function CanvasKiosks({ serverAssets, activePopout, onOpenPanel }: CanvasKiosksProps) {
   return (
-    <nav className="canvas-kiosks canvas-kiosks-left" aria-label="Panels">
+    <nav className="canvas-kiosks" aria-label="Panels">
       {LEFT_KIOSKS.map((def) => {
         const art = serverAssets[def.assetKey];
         return (

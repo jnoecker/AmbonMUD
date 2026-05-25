@@ -87,12 +87,14 @@ export function GameShell({
               audio={audio}
             />
 
-            {/* Panel kiosks — left column (context services use Pixi room badges) */}
-            <CanvasKiosks
-              serverAssets={serverAssets}
-              activePopout={activePopout}
-              onOpenPanel={onOpenPanel}
-            />
+            {/* Bottom-center: panel kiosks out of combat, skill bar in combat */}
+            {!inCombat && (
+              <CanvasKiosks
+                serverAssets={serverAssets}
+                activePopout={activePopout}
+                onOpenPanel={onOpenPanel}
+              />
+            )}
 
             {/* Combat log — over the canvas, clear of the kiosks + command input */}
             <CombatLog messages={combatLogMessages} />
@@ -143,15 +145,17 @@ export function GameShell({
               </button>
             )}
 
-            {/* Skill bar — bottom-center */}
-            <SkillBar
-              quickbarSlots={quickbarSlots}
-              petSkills={petSkills}
-              onCastSkill={onCastSkill}
-              onQuickbarSwap={onQuickbarSwap}
-              onQuickbarAssign={onQuickbarAssign}
-              onQuickbarClear={onQuickbarClear}
-            />
+            {/* Skill bar — bottom-center, only during combat */}
+            {inCombat && (
+              <SkillBar
+                quickbarSlots={quickbarSlots}
+                petSkills={petSkills}
+                onCastSkill={onCastSkill}
+                onQuickbarSwap={onQuickbarSwap}
+                onQuickbarAssign={onQuickbarAssign}
+                onQuickbarClear={onQuickbarClear}
+              />
+            )}
           </>
         )}
       </div>

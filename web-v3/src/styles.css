@@ -17685,25 +17685,21 @@ html:has(.game-shell),
   width: clamp(120px, 18vw, 220px);
 }
 
-/* ── Canvas kiosks (left-edge panel column) ───────────── */
+/* ── Canvas kiosks (bottom-center row, swaps with the skill bar) ──────── */
 /* Styled as soft in-world icon plinths rather than hard web buttons: no boxy
    border, a radial glow behind the icon, and the label tucked underneath. */
 .canvas-kiosks {
   position: absolute;
-  top: 132px;
-  left: 20px;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-height: calc(100% - 200px);
-  overflow-y: auto;
-  padding: 4px 2px;
-  scrollbar-width: none;
-}
-
-.canvas-kiosks::-webkit-scrollbar {
-  display: none;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 18px;
+  max-width: calc(100% - 220px);
+  padding: 4px 8px;
 }
 
 .canvas-kiosk {
@@ -17922,11 +17918,10 @@ html:has(.game-shell),
     display: none;
   }
 
-  /* Kiosks: smaller discs, tighter to the edge, start below the vitals strip */
-  .canvas-kiosks-left {
-    top: 92px;
-    left: 8px;
+  /* Kiosks: smaller discs, tighter row on the bottom */
+  .canvas-kiosks {
     gap: 10px;
+    max-width: calc(100% - 24px);
   }
 
   .canvas-kiosk {
