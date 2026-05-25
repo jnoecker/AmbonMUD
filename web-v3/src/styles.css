@@ -17700,46 +17700,39 @@ html:has(.game-shell),
   transform: scale(1.06);
 }
 
-.kiosk:hover .kiosk-icon {
-  border-color: rgb(176 193 255 / 55%);
-  box-shadow: 0 0 18px rgb(118 133 190 / 45%);
-}
-
-.kiosk-active .kiosk-icon {
-  border-color: rgb(176 193 255 / 70%);
-  box-shadow: 0 0 20px rgb(118 133 190 / 55%);
-}
-
 .kiosk-active {
   color: var(--text-bright);
 }
 
+/* No disc frame — the widget artwork stands on its own like the Pixi room
+   badges (Shop / Inn / Mail), brightening + glowing on hover / active. */
 .kiosk-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 1px solid var(--line-faint);
-  background:
-    radial-gradient(circle at 50% 38%, rgb(76 90 132 / 55%), rgb(20 24 40 / 70%) 72%);
-  box-shadow: 0 4px 14px rgb(8 10 18 / 50%);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  transition: border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+  width: 60px;
+  height: 60px;
 }
 
 .kiosk-img {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 6px rgb(8 10 18 / 65%));
+  transition: opacity 150ms var(--ease-out-soft), filter 150ms var(--ease-out-soft);
+}
+
+.kiosk:hover .kiosk-img,
+.kiosk-active .kiosk-img {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgb(176 193 255 / 60%));
 }
 
 .kiosk-icon-svg {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 1px 4px rgb(8 10 18 / 80%));
 }
 
 .kiosk-label {
@@ -17920,7 +17913,7 @@ html:has(.game-shell),
     font-size: 1.1rem;
   }
 
-  /* Kiosks: smaller discs, tighter row on the bottom */
+  /* Kiosks: smaller art, tighter row on the bottom */
   .kiosks {
     gap: 10px;
     max-width: calc(100% - 24px);
@@ -17931,18 +17924,13 @@ html:has(.game-shell),
   }
 
   .kiosk-icon {
-    width: 42px;
-    height: 42px;
-  }
-
-  .kiosk-img {
-    width: 38px;
-    height: 38px;
+    width: 46px;
+    height: 46px;
   }
 
   .kiosk-icon-svg {
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
   }
 
   .kiosk-label {
