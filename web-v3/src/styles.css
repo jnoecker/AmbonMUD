@@ -17889,7 +17889,10 @@ html:has(.game-shell),
 
 /* ── Skinned room sign (room_sign_bg art, with its own rope baked in) ───── */
 .canvas-room-sign-skinned {
-  width: clamp(170px, 22vw, 270px);
+  /* Left edge lines up with the HP<->MP gap (~0.43 of the bar width); the
+     clamp must match .canvas-vitals-skin's width so the two track together. */
+  left: calc(12px + 0.43 * clamp(300px, 38vw, 480px));
+  width: clamp(150px, 17vw, 215px);
   max-width: none;
   padding-top: 0;
   aspect-ratio: 1216 / 794;
