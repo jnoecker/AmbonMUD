@@ -18071,6 +18071,46 @@ html:has(.game-shell),
   }
 }
 
+/* Narrow phones: let the six kiosks share the row evenly so none clip. */
+@media (max-width: 430px) {
+  .action-dock {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .kiosks {
+    gap: 0;
+    width: 100%;
+    max-width: 100%;
+    justify-content: space-between;
+    padding: 2px 0;
+    overflow-x: visible;
+  }
+
+  .kiosk {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    padding: 2px;
+    gap: 3px;
+  }
+
+  .kiosk-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .kiosk-icon-svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .kiosk-label {
+    font-size: 0.52rem;
+    min-height: 2.1em;
+  }
+}
+
 /* ── Room panel (between canvas and action bar) ───────── */
 /* Fixed height so the panel doesn't jump room-to-room; the description column
    scrolls and the compass pad on the right anchors the height. */
