@@ -17769,6 +17769,9 @@ html:has(.game-shell),
   letter-spacing: 0.02em;
   text-align: center;
   line-height: 1.1;
+  /* Reserve two lines so multi-word labels (e.g. "Combat Log") don't make their
+     kiosk taller than the rest and knock the icon row out of alignment. */
+  min-height: 2.2em;
   text-shadow: 0 1px 4px rgb(8 10 18 / 90%);
 }
 
