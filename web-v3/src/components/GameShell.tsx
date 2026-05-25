@@ -37,6 +37,16 @@ interface GameShellProps {
   children?: ReactNode;
 }
 
+/** Font-size multiplier so longer room names shrink to fit the sign plaque. */
+function signFit(title: string): number {
+  const n = title.length;
+  if (n <= 12) return 1;
+  if (n <= 18) return 0.86;
+  if (n <= 26) return 0.72;
+  if (n <= 36) return 0.6;
+  return 0.5;
+}
+
 export function GameShell({
   connected,
   hasCharacterProfile,
@@ -88,7 +98,7 @@ export function GameShell({
             {room.title !== "-" && serverAssets["room_sign_bg"] && (
               <div className="canvas-room-sign canvas-room-sign-skinned">
                 <img className="rsign-art" src={serverAssets["room_sign_bg"]} alt="" aria-hidden="true" />
-                <h2 className="rsign-title">{room.title}</h2>
+                <h2 className="rsign-title" style={{ ["--rsign-fit" as string]: signFit(room.title) }}>{room.title}</h2>
               </div>
             )}
             {room.title !== "-" && !serverAssets["room_sign_bg"] && (

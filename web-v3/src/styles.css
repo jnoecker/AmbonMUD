@@ -17845,8 +17845,8 @@ html:has(.game-shell),
   pointer-events: none;
 }
 
-.vskin-num-hp { left: 27.5%; top: 56.7%; }
-.vskin-num-mp { left: 54.2%; top: 57.2%; }
+.vskin-num-hp { left: 26.8%; top: 56.2%; }
+.vskin-num-mp { left: 54.2%; top: 56.2%; }
 .vskin-num-gold { left: 71.4%; top: 54.7%; color: #4a3410; }
 
 .vskin-hotspot {
@@ -17895,12 +17895,14 @@ html:has(.game-shell),
      the bar's height (bar aspect 1258/294) so the rope tucks just under the
      branch at any viewport size, instead of ending mid-bar. */
   left: calc(12px + 0.43 * var(--vbar-w));
-  top: calc(6px + var(--vbar-w) / 4.279 - 6px);
+  top: calc(6px + var(--vbar-w) / 4.279 - 22px);
   width: clamp(125px, 13vw, 175px);
   max-width: none;
   padding-top: 0;
   aspect-ratio: 1216 / 794;
   overflow: hidden;
+  /* Behind the bar (z 9) so the rope strands tuck behind the branch. */
+  z-index: 8;
 }
 
 .rsign-art {
@@ -17917,13 +17919,14 @@ html:has(.game-shell),
   left: 51%;
   top: 53%;
   transform: translate(-50%, -50%);
-  max-width: 40%;
+  max-width: 46%;
   margin: 0;
   text-align: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(0.8rem, 2.2vw, 1.3rem);
-  line-height: 1.1;
+  /* Base size, scaled down for longer names via --rsign-fit (set in JS). */
+  font-size: calc(clamp(0.72rem, 1.9vw, 1.15rem) * var(--rsign-fit, 1));
+  line-height: 1.06;
   color: #5b4326;
   text-shadow: 0 1px 0 rgb(255 248 232 / 55%);
   pointer-events: none;
