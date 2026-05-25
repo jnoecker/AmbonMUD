@@ -53,7 +53,7 @@ const ASSET_KEYS = [
 ];
 
 const DEFAULT_WIDTH = 140;
-const HEIGHT_RATIO = 0.8; // parchment is a landscape rectangle
+const HEIGHT_RATIO = 0.85; // parchment is a (gently) landscape rectangle
 
 // Parchment / ink palette — the procedural fallback look.
 const PAPER = 0xe6d8b8;
@@ -92,9 +92,9 @@ export class Minimap {
   // Current sizing — updated via setDiameter()
   private _width = DEFAULT_WIDTH;
   private _height = Math.round(DEFAULT_WIDTH * HEIGHT_RATIO);
-  private _cell = 28;
-  private _nodeHalf = 7;
-  private _currentHalf = 9;
+  private _cell = 38;
+  private _nodeHalf = 15;
+  private _currentHalf = 18;
 
   // Cached torn-edge polygons (flat x,y pairs), rebuilt on resize.
   private tornPath: number[] = [];
@@ -156,11 +156,12 @@ export class Minimap {
     this._width = d;
     this._height = Math.round(d * HEIGHT_RATIO);
     const compact = d <= 160;
-    // Cell spacing stays comfortably larger than the node glyph so the inked
-    // connector lines between rooms remain visible (the signal for an exit).
-    this._cell = Math.round(d * (compact ? 0.22 : 0.195));
-    this._nodeHalf = Math.round(d * (compact ? 0.066 : 0.062));
-    this._currentHalf = Math.round(d * (compact ? 0.08 : 0.078));
+    // Cell spacing sets the scale; node glyphs are sized as a fraction of it
+    // (see redraw) so the rooms stay large relative to the gaps. The logical
+    // node half-boxes (hit area, clip, procedural fallback) track the cell too.
+    this._cell = Math.round(d * (compact ? 0.27 : 0.24));
+    this._nodeHalf = Math.round(this._cell * 0.4);
+    this._currentHalf = Math.round(this._cell * 0.48);
     this.applyDiameter();
     this.lastKey = ""; // force redraw
   }
@@ -474,7 +475,9 @@ export class Minimap {
         if (!HORIZONTAL_DIRS.has(dir)) continue;
         const tp = posOf(targetId);
         if (!tp) continue;
-        if (this.inBounds(sp.px, sp.py) || this.inBounds(tp.px, tp.py)) {
+        // Only connect two visible rooms; exits to clipped/off-map rooms are
+        // shown by the short direction ticks instead of long stubs into space.
+        if (this.inBounds(sp.px, sp.py) && this.inBounds(tp.px, tp.py)) {
           this.mapGraphics.moveTo(sp.px, sp.py);
           this.mapGraphics.lineTo(tp.px, tp.py);
           this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.7 });
@@ -545,7 +548,10 @@ export class Minimap {
       }
 
       if (tex) {
-        this.placeRoomSprite(id, tex, nx, ny, half);
+        // Size the stamp off the cell so it stays large relative to the gaps,
+        // with the current room rendered a touch bigger than its neighbours.
+        const roomSize = (isCurrent ? 1.0 : 0.84) * this._cell;
+        this.placeRoomSprite(id, tex, nx, ny, roomSize);
       } else {
         this.drawRoomGlyph(nx, ny, half, seed, isCurrent, visited, isHousing);
       }
@@ -623,8 +629,8 @@ export class Minimap {
     }
   }
 
-  /** Show/position a textured room glyph (reused across redraws). */
-  private placeRoomSprite(id: string, tex: Texture, nx: number, ny: number, half: number) {
+  /** Show/position a textured room glyph at an explicit pixel size (reused across redraws). */
+  private placeRoomSprite(id: string, tex: Texture, nx: number, ny: number, size: number) {
     let spr = this.roomSprites.get(id);
     if (!spr) {
       spr = new Sprite(tex);
@@ -635,7 +641,6 @@ export class Minimap {
     } else if (spr.texture !== tex) {
       spr.texture = tex;
     }
-    const size = half * 2.4; // a touch of bleed past the node box reads well
     spr.width = size;
     spr.height = size;
     spr.x = nx;
@@ -807,9 +812,9 @@ export class Minimap {
   }
 
   private inBounds(x: number, y: number): boolean {
-    const pad = this._width <= 160 ? 6 : 10;
-    const halfW = this._width / 2 - this._currentHalf - pad;
-    const halfH = this._height / 2 - this._currentHalf - pad;
+    const pad = this._width <= 160 ? 6 : 8;
+    const halfW = this._width / 2 - this._nodeHalf - pad;
+    const halfH = this._height / 2 - this._nodeHalf - pad;
     return Math.abs(x - this._width / 2) <= halfW && Math.abs(y - this._height / 2) <= halfH;
   }
 
