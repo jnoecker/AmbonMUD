@@ -17990,7 +17990,7 @@ html:has(.game-shell),
   .bottom-stack-themed .room-panel-body {
     justify-content: flex-start;
     padding: 28px 0 18px 9%;
-    gap: 3%;
+    gap: 7%;
   }
 
   .bottom-stack-themed .room-panel-main {
@@ -18001,7 +18001,7 @@ html:has(.game-shell),
 .room-panel {
   position: relative;
   flex: 0 0 auto;
-  height: 264px;
+  height: 272px;
   overflow: hidden;
   color: var(--text-primary);
 }
@@ -18074,12 +18074,15 @@ html:has(.game-shell),
 
 .room-compass-pad {
   position: relative;
-  width: 216px;
-  height: 216px;
+  /* Scales with the viewport so its size (and thus position relative to the
+     book center) stays consistent across widths. Inner pieces use cqw. */
+  width: clamp(184px, 14vw, 224px);
+  height: clamp(184px, 14vw, 224px);
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
   place-items: center;
+  container-type: inline-size;
   /* Optional custom backdrop; floats with no box when unset. */
   background-image: var(--compass-bg, none);
   background-size: cover;
@@ -18089,12 +18092,13 @@ html:has(.game-shell),
 }
 
 /* Centered rose in the middle cell; the edge cells stay clear for the
-   direction buttons so the letters read cleanly. */
+   direction buttons so the letters read cleanly. Sized in cqw so it scales
+   with the pad. */
 .room-compass-rose {
   grid-column: 2;
   grid-row: 2;
-  width: 80px;
-  height: 80px;
+  width: 38cqw;
+  height: 38cqw;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18158,8 +18162,8 @@ html:has(.game-shell),
 
 .compass-btn-img {
   display: block;
-  width: 46px;
-  height: 46px;
+  width: 22cqw;
+  height: 22cqw;
   object-fit: contain;
   transition: filter 150ms var(--ease-out-soft);
 }
@@ -18238,25 +18242,10 @@ html:has(.game-shell),
     gap: var(--space-3);
   }
 
-  .room-compass-pad {
-    width: 184px;
-    height: 184px;
-  }
-
-  .room-compass-rose {
-    width: 68px;
-    height: 68px;
-  }
-
   .compass-btn {
     min-width: 32px;
     padding: 5px 7px;
     font-size: 0.82rem;
-  }
-
-  .compass-btn-img {
-    width: 38px;
-    height: 38px;
   }
 }
 
