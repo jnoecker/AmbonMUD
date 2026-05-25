@@ -18068,18 +18068,14 @@ html:has(.game-shell),
   object-fit: contain;
 }
 
-/* N/S/E/W sit out toward the gold ring (outer cell edge); the corner Up/Down
-   tuck a little further toward the center. */
-.compass-dir-north { grid-column: 2; grid-row: 1; align-self: start; }
-.compass-dir-up { grid-column: 3; grid-row: 1; align-self: end; justify-self: start; transform: translate(-8px, 8px); }
-.compass-dir-west { grid-column: 1; grid-row: 2; justify-self: start; }
-.compass-dir-east { grid-column: 3; grid-row: 2; justify-self: end; }
-.compass-dir-down { grid-column: 1; grid-row: 3; align-self: start; justify-self: end; transform: translate(8px, -8px); }
-.compass-dir-south { grid-column: 2; grid-row: 3; align-self: end; }
-
-/* Keep the corner nudge through the hover scale. */
-.compass-dir-up:hover { transform: translate(-8px, 8px) scale(1.05); }
-.compass-dir-down:hover { transform: translate(8px, -8px) scale(1.05); }
+/* Each control sits at its outer cell edge and is nudged radially outward via
+   --dir-shift (applied through the hover scale so it doesn't jump). */
+.compass-dir-north { grid-column: 2; grid-row: 1; align-self: start; --dir-shift: translate(0, -6px); }
+.compass-dir-up { grid-column: 3; grid-row: 1; align-self: end; justify-self: start; --dir-shift: translate(-4px, 4px); }
+.compass-dir-west { grid-column: 1; grid-row: 2; justify-self: start; --dir-shift: translate(-6px, 0); }
+.compass-dir-east { grid-column: 3; grid-row: 2; justify-self: end; --dir-shift: translate(6px, 0); }
+.compass-dir-down { grid-column: 1; grid-row: 3; align-self: start; justify-self: end; --dir-shift: translate(4px, -4px); }
+.compass-dir-south { grid-column: 2; grid-row: 3; align-self: end; --dir-shift: translate(0, 6px); }
 
 .compass-btn {
   position: relative;
@@ -18098,13 +18094,14 @@ html:has(.game-shell),
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
+  transform: var(--dir-shift, none);
   transition: border-color 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft), transform 120ms var(--ease-out-soft);
 }
 
 .compass-btn:hover {
   border-color: rgb(212 198 150 / 85%);
   background: linear-gradient(160deg, rgb(56 67 100 / 94%), rgb(30 36 56 / 96%));
-  transform: scale(1.05);
+  transform: var(--dir-shift, none) scale(1.05);
 }
 
 /* Asset buttons: the artwork is the button — drop the box chrome. */
@@ -18144,7 +18141,7 @@ html:has(.game-shell),
 .compass-btn-off:hover {
   border-color: transparent;
   background: none;
-  transform: none;
+  transform: var(--dir-shift, none);
 }
 
 .compass-btn-art.compass-btn-off .compass-btn-img {
