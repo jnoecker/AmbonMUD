@@ -1201,6 +1201,11 @@ export class WorldScene {
     const mobAreaLeft = w * 0.38;
     const mobAreaRight = w - 24;
     const mobAreaWidth = mobAreaRight - mobAreaLeft;
+    const mobBaselineY = h * 0.68;
+    // A lone (often large, non-combat) mob must also fit vertically so it doesn't
+    // run off the canvas bottom / into the bottom HUD. Bound by the room left
+    // below the sprite's baseline, leaving a reserve for the bottom overlays.
+    const mobVerticalFit = Math.max(MIN_SPRITE_SIZE, 2 * (h - 90 - mobBaselineY));
     // Per-mob base size: combatants use BASE_SPRITE_SIZE, non-combat NPCs
     // (props / quest givers / dialogue) render larger so they read as characters.
     const mobFitSize = mobCount > 0 ? (mobAreaWidth - 16) / mobCount - 16 : BASE_SPRITE_SIZE * scale;
@@ -1208,7 +1213,7 @@ export class WorldScene {
       const info = mobInfoByRepId.get(entry.ids[0]);
       const isCombat = info ? info.combatant : true;
       const base = (isCombat ? BASE_SPRITE_SIZE : NONCOMBAT_SPRITE_SIZE) * scale;
-      return clamp(Math.min(base, mobFitSize), MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
+      return clamp(Math.min(base, mobFitSize, mobVerticalFit), MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
     };
     const maxMobSize = mobCount > 0 ? Math.max(...mobEntries.map(mobSizeFor)) : BASE_SPRITE_SIZE * scale;
 

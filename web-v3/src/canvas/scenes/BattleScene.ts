@@ -13,7 +13,6 @@ const MAX_SPRITE_SIZE = 340;
 const SMALL_SPRITE = 124;
 const HP_BAR_WIDTH = 200;
 const HP_BAR_HEIGHT = 14;
-const MANA_BAR_HEIGHT = 10;
 const LABEL_FONT_SIZE = 18;
 const PARTY_LABEL_FONT_SIZE = 15;
 
@@ -22,7 +21,6 @@ const PET_TINT = 0xb294bb;
 const ENEMY_TINT = 0xf0c674;
 const HP_COLOR = 0x8abf8a;
 const HP_BG_COLOR = 0x3a3a3a;
-const MANA_COLOR = 0x64b5f6;
 const LABEL_COLOR = "#d8dcef";
 const ENEMY_LABEL_COLOR = "#f0c674";
 const PARTY_LABEL_COLOR = "#81a2be";
@@ -462,29 +460,12 @@ export class BattleScene {
     this.playerLabel.x = playerDrawX;
     this.playerLabel.y = playerDrawY + playerSize / 2 + 6;
 
-    // Player HP bar
-    const playerHpPct = percent(vitals.hp, vitals.maxHp);
+    // Player HP/MP bars are now shown in the top vitals strip, so the battle
+    // scene no longer draws them under the player sprite (they collided with the
+    // bottom-center skill bar). The enemy HP bar is still drawn below.
     this.playerHpBar.clear();
-    this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
-    this.playerHpBar.fill(HP_BG_COLOR);
-    if (playerHpPct > 0) {
-      this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 24, HP_BAR_WIDTH * playerHpPct / 100, HP_BAR_HEIGHT, 2);
-      this.playerHpBar.fill(HP_COLOR);
-    }
-
-    this.playerHpText.text = `${vitals.hp}/${vitals.maxHp}`;
-    this.playerHpText.x = playerPos.x;
-    this.playerHpText.y = playerPos.y + playerSize / 2 + 34;
-
-    // Player mana bar
-    const manaPct = percent(vitals.mana, vitals.maxMana);
     this.playerManaBar.clear();
-    this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 46, HP_BAR_WIDTH, MANA_BAR_HEIGHT, 2);
-    this.playerManaBar.fill(HP_BG_COLOR);
-    if (manaPct > 0) {
-      this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 46, HP_BAR_WIDTH * manaPct / 100, MANA_BAR_HEIGHT, 2);
-      this.playerManaBar.fill(MANA_COLOR);
-    }
+    this.playerHpText.text = "";
 
     // Status effects above the player
     this.statusEffects.update(gameStateRef.current.effects, playerDrawX, playerDrawY - playerSize / 2 - 28);
