@@ -550,7 +550,7 @@ export class Minimap {
       if (tex) {
         // Size the stamp off the cell so it stays large relative to the gaps,
         // with the current room rendered a touch bigger than its neighbours.
-        const roomSize = (isCurrent ? 1.0 : 0.84) * this._cell;
+        const roomSize = (isCurrent ? 0.88 : 0.72) * this._cell;
         this.placeRoomSprite(id, tex, nx, ny, roomSize);
       } else {
         this.drawRoomGlyph(nx, ny, half, seed, isCurrent, visited, isHousing);
