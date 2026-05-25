@@ -9,10 +9,10 @@ import type { CombatEventData } from "../../types";
  * projectiles; melee attacks use the existing lunge/slash system.
  */
 
-const PROJECTILE_DURATION_MS = 400;
-const TRAIL_COUNT = 8;
-const IMPACT_PARTICLE_COUNT = 10;
-const IMPACT_LIFETIME_MS = 500;
+const PROJECTILE_DURATION_MS = 700;
+const TRAIL_COUNT = 12;
+const IMPACT_PARTICLE_COUNT = 14;
+const IMPACT_LIFETIME_MS = 850;
 
 /** Visual profiles keyed by combat event type. */
 interface ProjectileStyle {
@@ -33,36 +33,36 @@ const STYLES: Record<string, ProjectileStyle> = {
     color: 0xc8a8f0,
     trailColor: 0xa888d0,
     glowColor: 0x9070c0,
-    size: 5,
-    arcHeight: 0.2,
+    size: 9,
+    arcHeight: 0.24,
   },
   heal: {
     color: 0x90e090,
     trailColor: 0x60c060,
     glowColor: 0x40a040,
-    size: 4,
-    arcHeight: 0.25,
+    size: 7,
+    arcHeight: 0.28,
   },
   hotTick: {
     color: 0xa8e8a8,
     trailColor: 0x78c878,
     glowColor: 0x58a858,
-    size: 3,
-    arcHeight: 0.15,
+    size: 5,
+    arcHeight: 0.18,
   },
   dotTick: {
     color: 0xd088d0,
     trailColor: 0xb060b0,
     glowColor: 0x904090,
-    size: 3.5,
-    arcHeight: 0.1,
+    size: 6,
+    arcHeight: 0.12,
   },
   shieldAbsorb: {
     color: 0x70c8f0,
     trailColor: 0x50a8d0,
     glowColor: 0x3088b0,
-    size: 4,
-    arcHeight: 0.15,
+    size: 7,
+    arcHeight: 0.18,
   },
 };
 

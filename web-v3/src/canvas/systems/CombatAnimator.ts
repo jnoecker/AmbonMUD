@@ -18,8 +18,8 @@ const LUNGE_RETURN_MS = 200;
 const LUNGE_DISTANCE = 0.35; // fraction of distance between attacker and target
 
 // Slash effect
-const SLASH_DURATION_MS = 300;
-const SLASH_SIZE = 48;
+const SLASH_DURATION_MS = 440;
+const SLASH_SIZE = 72;
 
 // Shake effect
 const SHAKE_DURATION_MS = 250;
@@ -42,8 +42,10 @@ interface FlashEffect {
   color: number;
 }
 
+// Lunge/shake/glow are keyed by a free-form combatant id so allies (pets,
+// party members) can animate independently — "player", "enemy", or "pet:<id>".
 interface LungeEffect {
-  who: "player" | "enemy";
+  who: string;
   elapsed: number;
   phase: "lunge" | "return";
   dx: number;
@@ -58,12 +60,12 @@ interface SlashEffect {
 }
 
 interface ShakeEffect {
-  who: "player" | "enemy";
+  who: string;
   elapsed: number;
 }
 
 interface GlowEffect {
-  who: "player" | "enemy";
+  who: string;
   elapsed: number;
   color: number;
 }
@@ -98,10 +100,10 @@ const DEATH_DISSOLVE_FRAC = 0.55; // 15–55% = dissolve/shrink (~960ms)
 const KILL_POSTROLL_DELAY_MS = LUNGE_DURATION_MS;
 
 // Firework / sparkle particles
-const PARTICLE_LIFETIME_MS = 900;
-const PARTICLE_GRAVITY = 80; // pixels/s²
+const PARTICLE_LIFETIME_MS = 1350;
+const PARTICLE_GRAVITY = 52; // pixels/s²
 const PARTICLE_COLORS = [0xf0c674, 0xbea873, 0xd4888a, 0xb9aed8, 0x8abf8a, 0x8caec9, 0xd9c8a1, 0xdbe3f8];
-const BURST_COUNT = 16; // particles per burst
+const BURST_COUNT = 24; // particles per burst
 const SPARKLE_TRAIL_COUNT = 3; // trail dots per particle
 
 interface Particle {
@@ -293,7 +295,7 @@ export class CombatAnimator {
     this.flashes.push({ target, elapsed: 0, duration, color });
   }
 
-  private addLunge(who: "player" | "enemy", dx: number, dy: number) {
+  private addLunge(who: string, dx: number, dy: number) {
     // Only one lunge per character at a time
     this.lunges = this.lunges.filter((l) => l.who !== who);
     this.lunges.push({ who, elapsed: 0, phase: "lunge", dx, dy });
@@ -304,30 +306,63 @@ export class CombatAnimator {
     this.slashes.push({ x, y, elapsed: 0, angle });
   }
 
-  private addShake(who: "player" | "enemy") {
+  private addShake(who: string) {
     // Only one shake per character at a time
     this.shakes = this.shakes.filter((s) => s.who !== who);
     this.shakes.push({ who, elapsed: 0 });
   }
 
-  private addGlow(who: "player" | "enemy", color: number) {
+  private addGlow(who: string, color: number) {
     this.glows.push({ who, elapsed: 0, color });
+  }
+
+  /**
+   * Animate an allied combatant (pet / party member) striking the enemy.
+   * The ally — identified by `attackerKey` (e.g. "pet:<id>") — lunges toward
+   * the enemy, the damage number floats on the enemy, and the enemy reacts
+   * with a shake + flash. Without this, pet attacks were misrouted through the
+   * enemy→player branch of processEvent and animated backwards.
+   */
+  processAllyAttack(
+    attackerKey: string,
+    event: CombatEventData,
+    allyX: number,
+    allyY: number,
+    enemyX: number,
+    enemyY: number,
+    options: { suppressSlash?: boolean } = {},
+  ) {
+    if (event.type === "dodge") {
+      this.spawnFloat("DODGE", EVENT_COLORS.dodge, enemyX, enemyY);
+      return;
+    }
+    if (event.damage <= 0) return;
+
+    registerDamagingHit(this.killDeferral);
+    const color = EVENT_COLORS[event.type] ?? EVENT_COLORS.meleeHit;
+    this.spawnFloat(`-${event.damage}`, color, enemyX, enemyY);
+    this.addLunge(attackerKey, (enemyX - allyX) * LUNGE_DISTANCE, (enemyY - allyY) * LUNGE_DISTANCE);
+    if (!options.suppressSlash) {
+      this.addSlash(enemyX, enemyY);
+    }
+    this.addShake("enemy");
+    this.addFlash("enemy", 0xd4888a, 200);
   }
 
   /** Spawn a radial burst of sparkle particles. */
   private spawnBurst(cx: number, cy: number, count: number) {
     for (let i = 0; i < count; i++) {
       const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
-      const speed = 60 + Math.random() * 120;
+      const speed = 45 + Math.random() * 95;
       this.particles.push({
-        x: cx + (Math.random() - 0.5) * 16,
-        y: cy + (Math.random() - 0.5) * 16,
+        x: cx + (Math.random() - 0.5) * 20,
+        y: cy + (Math.random() - 0.5) * 20,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 40, // slight upward bias
+        vy: Math.sin(angle) * speed - 35, // slight upward bias
         color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
         elapsed: 0,
         lifetime: PARTICLE_LIFETIME_MS * (0.7 + Math.random() * 0.6),
-        size: 2 + Math.random() * 2.5,
+        size: 3.5 + Math.random() * 3.5,
       });
     }
   }
@@ -450,7 +485,7 @@ export class CombatAnimator {
   }
 
   /** Get the offset for a sprite due to lunge animation */
-  getLungeOffset(who: "player" | "enemy"): { x: number; y: number } {
+  getLungeOffset(who: string): { x: number; y: number } {
     const lunge = this.lunges.find((l) => l.who === who);
     if (!lunge) return { x: 0, y: 0 };
 
@@ -469,7 +504,7 @@ export class CombatAnimator {
   }
 
   /** Get the shake offset for a sprite */
-  getShakeOffset(who: "player" | "enemy"): { x: number; y: number } {
+  getShakeOffset(who: string): { x: number; y: number } {
     const shake = this.shakes.find((s) => s.who === who);
     if (!shake) return { x: 0, y: 0 };
 

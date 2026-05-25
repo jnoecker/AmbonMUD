@@ -7166,8 +7166,8 @@ body {
 
 .paperdoll-sprite-wrap {
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: clamp(280px, 34vw, 440px);
+  height: clamp(280px, 34vw, 440px);
 }
 
 .paperdoll-sprite {
@@ -7188,8 +7188,8 @@ body {
 .paperdoll-slot {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 34px;
-  height: 34px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: 2px solid rgb(168 151 210 / 50%);
   background: rgb(34 41 60 / 90%);
@@ -7228,15 +7228,15 @@ body {
 }
 
 .paperdoll-slot-img {
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .paperdoll-slot-letter {
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-disabled);
 }
@@ -10074,7 +10074,7 @@ body {
 }
 
 .mini-map-popout {
-  height: min(62vh, 560px);
+  height: min(72vh, 720px);
 }
 
 /* --- Map drawer tabs (Local Map / Atlas) ----------------------------- */
@@ -13072,10 +13072,10 @@ body {
   color: var(--color-primary-lavender);
 }
 
-/* ---------- Atmosphere HUD (canvas overlay, top-left) ---------- */
+/* ---------- Atmosphere HUD (canvas overlay, above command input) ---------- */
 .atmosphere-hud {
-  position: fixed;
-  bottom: calc(var(--game-bottom-inset, 0px) + env(safe-area-inset-bottom, 0px) + 12px);
+  position: absolute;
+  bottom: 16px;
   right: calc(env(safe-area-inset-right, 0px) + 12px);
   top: auto;
   left: auto;
@@ -17526,11 +17526,9 @@ html:has(.game-shell),
 }
 
 .game-canvas-layer {
-  position: absolute;
-  top: env(safe-area-inset-top, 0);
-  right: env(safe-area-inset-right, 0);
-  bottom: var(--game-bottom-inset, 0px);
-  left: env(safe-area-inset-left, 0);
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
   z-index: 0;
 }
 
@@ -17633,21 +17631,491 @@ html:has(.game-shell),
 }
 
 /* ── Combat log positioning override for new shell ───── */
+/* Centered above the fight — just the last round or two. */
 .game-shell .combat-log-wrap {
   position: absolute;
-  left: 12px;
-  bottom: calc(var(--game-bottom-inset, 0px) + 12px);
+  top: 84px;
+  left: 50%;
+  transform: translateX(-50%);
   right: auto;
+  bottom: auto;
   z-index: 9;
-  max-width: min(420px, calc(100vw - 24px));
+  width: max-content;
+  max-width: min(560px, calc(100vw - 220px));
+  pointer-events: none;
+}
+
+.game-shell .combat-log-wrap .combat-log {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.game-shell .combat-log-wrap .combat-log-msg {
+  background: rgb(10 12 22 / 62%);
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Canvas vitals HUD (horizontal strip, top) ────────── */
+.canvas-vitals-hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 8px 12px;
+  background: linear-gradient(160deg, rgb(20 24 40 / 80%), rgb(14 17 28 / 86%));
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgb(8 10 18 / 45%);
+}
+
+.canvas-vitals-hud .vbar-vital {
+  flex: 0 0 auto;
+  width: clamp(120px, 18vw, 220px);
+}
+
+/* ── Canvas kiosks (left-edge panel column) ───────────── */
+/* Styled as soft in-world icon plinths rather than hard web buttons: no boxy
+   border, a radial glow behind the icon, and the label tucked underneath. */
+.canvas-kiosks {
+  position: absolute;
+  top: 132px;
+  left: 20px;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: calc(100% - 200px);
+  overflow-y: auto;
+  padding: 4px 2px;
+  scrollbar-width: none;
+}
+
+.canvas-kiosks::-webkit-scrollbar {
+  display: none;
+}
+
+.canvas-kiosk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 72px;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.canvas-kiosk:hover {
+  color: var(--text-bright);
+  transform: scale(1.06);
+}
+
+.canvas-kiosk:hover .canvas-kiosk-icon {
+  border-color: rgb(176 193 255 / 55%);
+  box-shadow: 0 0 18px rgb(118 133 190 / 45%);
+}
+
+.canvas-kiosk-active .canvas-kiosk-icon {
+  border-color: rgb(176 193 255 / 70%);
+  box-shadow: 0 0 20px rgb(118 133 190 / 55%);
+}
+
+.canvas-kiosk-active {
+  color: var(--text-bright);
+}
+
+.canvas-kiosk-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--line-faint);
+  background:
+    radial-gradient(circle at 50% 38%, rgb(76 90 132 / 55%), rgb(20 24 40 / 70%) 72%);
+  box-shadow: 0 4px 14px rgb(8 10 18 / 50%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+}
+
+.canvas-kiosk-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.kiosk-icon-svg {
+  width: 28px;
+  height: 28px;
+}
+
+.canvas-kiosk-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 1px 4px rgb(8 10 18 / 90%);
+}
+
+/* ── Command input (bottom of the stack, below the room panel) ── */
+.canvas-command {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgb(20 24 40 / 96%), rgb(14 17 28 / 99%));
+  border-top: 1px solid var(--line-soft);
+}
+
+.canvas-command-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.canvas-command-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.canvas-command-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgb(118 133 190 / 90%), rgb(98 112 158 / 90%));
+  color: var(--text-white);
+  cursor: pointer;
+}
+
+.canvas-command-send-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Skill bar (bottom-center overlay) ────────────────── */
+.skill-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 240px);
+  padding: 8px 10px;
+  overflow-x: auto;
+  background: linear-gradient(160deg, rgb(20 24 40 / 82%), rgb(14 17 28 / 88%));
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgb(8 10 18 / 45%);
+}
+
+/* ── Canvas help glyph (near time / weather) ──────────── */
+.canvas-help-btn {
+  position: absolute;
+  bottom: 16px;
+  right: calc(env(safe-area-inset-right, 0px) + 130px);
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line-soft);
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgb(20 24 40 / 84%), rgb(14 17 28 / 90%));
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.canvas-help-btn:hover {
+  border-color: rgb(176 193 255 / 50%);
+  color: var(--text-bright);
+}
+
+/* ── Flee button (combat-only, bottom-right above the weather HUD) ── */
+.canvas-flee-btn {
+  position: absolute;
+  bottom: 64px;
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  z-index: 11;
+  padding: 9px 22px;
+  border: 1px solid rgb(212 136 138 / 60%);
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg, rgb(74 26 26 / 92%), rgb(48 16 16 / 95%));
+  color: #f0c0c2;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgb(40 8 8 / 55%);
+  transition: border-color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.canvas-flee-btn:hover {
+  border-color: rgb(232 160 160 / 80%);
+  transform: translateY(-1px);
+}
+
+/* ── Right-edge kiosk column (vertically centered, clear of minimap) ── */
+.canvas-kiosks-right {
+  left: auto;
+  right: 12px;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  max-height: calc(100% - 200px);
+}
+
+/* ── Room panel (between canvas and action bar) ───────── */
+.room-panel {
+  position: relative;
+  flex: 0 0 auto;
+  max-height: 34vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgb(20 24 40 / 97%), rgb(15 18 30 / 99%));
+  border-top: 1px solid var(--line-soft);
+  color: var(--text-primary);
+}
+
+.room-panel-body {
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+  padding: 18px 28px 10px;
+}
+
+.room-panel-main {
+  flex: 1 1 70%;
+  min-width: 0;
+}
+
+.room-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.room-panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.room-panel-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: rgb(39 47 73 / 50%);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.room-panel-expand:hover {
+  border-color: rgb(176 193 255 / 50%);
+  color: var(--text-bright);
+}
+
+.room-panel-expand-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.room-panel-desc {
+  margin: 10px 0 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.room-panel-nav {
+  flex: 0 0 28%;
+  display: flex;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.room-panel-nav-group {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.room-panel-nav-heading {
+  margin: 0 0 2px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+}
+
+.room-panel-nav-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-disabled);
+}
+
+.room-panel-exit,
+.room-panel-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-md);
+  background: rgb(39 47 73 / 45%);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
+}
+
+.room-panel-exit:hover,
+.room-panel-nav-btn:hover {
+  border-color: rgb(176 193 255 / 48%);
+  background: rgb(56 67 100 / 60%);
+}
+
+.room-panel-exit-label {
+  flex: 1;
+  font-weight: 600;
+}
+
+.room-panel-exit-arrow {
+  color: var(--text-tertiary);
+}
+
+.room-panel-nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.room-panel-nav-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.room-panel-nav-name {
+  font-weight: 600;
+}
+
+.room-panel-nav-sub {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.room-panel-toggle {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 18px;
+  border: 1px solid var(--line-faint);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  border-top: none;
+  background: rgb(39 47 73 / 70%);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+/* Collapsed: shrink to a thin strip that still shows the restore toggle. */
+.room-panel-collapsed {
+  max-height: 26px;
+  min-height: 26px;
+  overflow: visible;
+}
+
+.room-panel-toggle-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 150ms var(--ease-out-soft);
+}
+
+.room-panel-toggle-icon-up {
+  transform: rotate(180deg);
+}
+
+/* Stack the room panel vertically on narrow screens. */
+@media (max-width: 640px) {
+  .room-panel-body {
+    flex-direction: column;
+    padding: 16px 16px 8px;
+    gap: var(--space-3);
+  }
+
+  .room-panel-nav {
+    flex-basis: auto;
+    width: 100%;
+  }
 }
 
 /* ── Vitals bar (bottom-anchored) ─────────────────────── */
 .vbar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  flex: 0 0 auto;
   z-index: 20;
   background: linear-gradient(180deg, rgb(34 41 60 / 86%), rgb(20 24 40 / 96%));
   backdrop-filter: blur(14px);
@@ -18340,6 +18808,22 @@ html:has(.game-shell),
   .drawer-sheet {
     width: min(840px, 80vw);
     max-height: 80vh;
+  }
+}
+
+/* The world map wants far more room than other panels so the room graph is
+   readable and spread out — give its modal a much wider, taller footprint. */
+@media (min-width: 768px) {
+  .drawer-sheet:has(.drawer-map-body) {
+    width: min(1280px, 94vw);
+    max-height: 94vh;
+  }
+
+  /* Equipment paperdoll benefits from a wide modal so the sprite and the slot
+     list sit comfortably side by side. */
+  .drawer-sheet:has(.equipment-panel-v2) {
+    width: min(1040px, 92vw);
+    max-height: 90vh;
   }
 }
 

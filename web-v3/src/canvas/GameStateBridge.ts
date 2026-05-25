@@ -79,6 +79,7 @@ export const canvasCallbacks: {
   openInn: (() => void) | null;
   openMap: (() => void) | null;
   openRoom: (() => void) | null;
+  openCharacter: (() => void) | null;
   openQuests: (() => void) | null;
   onTargetSelected: ((targetName: string) => void) | null;
   openVideo: ((videoUrl: string) => void) | null;
@@ -104,6 +105,7 @@ export const canvasCallbacks: {
   openInn: null,
   openMap: null,
   openRoom: null,
+  openCharacter: null,
   openQuests: null,
   onTargetSelected: null,
   openVideo: null,

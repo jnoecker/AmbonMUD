@@ -17,7 +17,6 @@ import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { MailPanel } from "./components/panels/MailPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
-import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { BankPanel } from "./components/panels/BankPanel";
 import { StylistPanel } from "./components/panels/StylistPanel";
 import { InnPanel } from "./components/panels/InnPanel";
@@ -26,7 +25,6 @@ import { DungeonPanel } from "./components/panels/DungeonPanel";
 import { LotteryPanel } from "./components/panels/LotteryPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { CombatLogPanel } from "./components/panels/CombatLogPanel";
-import { WorldAtmosphereHud } from "./components/WorldAtmosphereHud";
 import { HelpContent } from "./components/HelpContent";
 import { Atlas } from "./components/Atlas";
 import { DemoBanner } from "./components/DemoBanner";
@@ -391,6 +389,7 @@ function App() {
     canvasCallbacks.openInn = () => openPanel("inn");
     canvasCallbacks.openMap = () => openPanel("map");
     canvasCallbacks.openRoom = () => openPanel("room");
+    canvasCallbacks.openCharacter = () => openPanel("character");
     canvasCallbacks.openQuests = () => openPanel("quests");
     canvasCallbacks.dismissDialogue = () => {
       // Tell the server to drop dialogue state too — otherwise the next "1"-style
@@ -422,6 +421,7 @@ function App() {
       canvasCallbacks.openInn = null;
       canvasCallbacks.openMap = null;
       canvasCallbacks.openRoom = null;
+      canvasCallbacks.openCharacter = null;
       canvasCallbacks.openQuests = null;
       canvasCallbacks.dismissDialogue = null;
       canvasCallbacks.openQuestOffers = null;
@@ -653,11 +653,6 @@ function App() {
     () => state.inventory.some((i) => i.slot != null),
     [state.inventory],
   );
-  const showInventoryHint =
-    hasCharacterProfile
-    && hasUnequippedWearable
-    && !onboarding.flags.invHintDone
-    && !onboarding.flags.equipHintDone;
   const showEquipHint =
     hasCharacterProfile
     && hasUnequippedWearable
@@ -774,20 +769,25 @@ function App() {
         connected={connected}
         hasCharacterProfile={hasCharacterProfile}
         vitals={state.vitals}
+        room={state.room}
+        exits={sortedExits}
+        serverAssets={state.serverAssets}
+        worldTime={state.worldTime}
+        worldWeather={state.worldWeather}
+        worldEvents={state.worldEvents}
         combatLogMessages={state.combatLogMessages}
         combatTarget={state.combatTarget}
+        inCombat={state.vitals.inCombat}
         inventory={state.inventory}
         quickbarSlots={quickbar.slots}
+        petSkills={state.petSkills}
+        onCastSkill={handleCastSkill}
         onQuickbarSwap={quickbar.swap}
         onQuickbarAssign={quickbar.assign}
         onQuickbarClear={quickbar.clear}
-        petSkills={state.petSkills}
         activePopout={state.activePopout}
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
-        onCastSkill={handleCastSkill}
-        onReconnect={() => { intentionalDisconnectRef.current = true; reconnect(); }}
-        dungeonActive={state.dungeonInfo?.active ?? false}
         audio={audio}
         inputValue={inputValue}
         onInputChange={(value) => {
@@ -795,7 +795,6 @@ function App() {
           resetComposerCompletion();
         }}
         onInputKeyDown={handleInputKeyDown}
-        inventoryHint={showInventoryHint}
       />
 
       <Drawer open={state.activePopout !== null} title={drawerTitle} onClose={closeDrawer}>
@@ -827,6 +826,7 @@ function App() {
             factions={state.factions}
             petState={state.petState}
             prestigeInfo={state.prestigeInfo}
+            leaderboard={state.leaderboard}
             onDismissQuestNotification={(id) => state.setQuestNotifications((prev) => prev.filter((n) => n.id !== id))}
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
             onOpenInventory={() => openPanel("inventory")}
@@ -1023,10 +1023,6 @@ function App() {
           />
         )}
 
-        {drawerPanel === "leaderboard" && (
-          <LeaderboardPanel leaderboard={state.leaderboard} onCommand={sendCommand} />
-        )}
-
         {drawerPanel === "bank" && (
           <BankPanel bankState={state.bankState} onCommand={sendCommand} />
         )}
@@ -1113,8 +1109,8 @@ function App() {
               <canvas
                 ref={mapCanvasRef}
                 className="mini-map mini-map-popout"
-                width={900}
-                height={560}
+                width={1280}
+                height={760}
                 role="img"
                 aria-label={questMarkerCount > 0
                   ? `Visited room map — ${questMarkerCount} quest objective${questMarkerCount !== 1 ? "s" : ""} marked`
@@ -1460,15 +1456,6 @@ function App() {
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-      )}
-
-      {/* World atmosphere HUD — time, weather, events on the canvas */}
-      {hasCharacterProfile && (
-        <WorldAtmosphereHud
-          worldTime={state.worldTime}
-          worldWeather={state.worldWeather}
-          worldEvents={state.worldEvents}
-        />
       )}
 
       {/* Staff-only floating controls + admin panel */}

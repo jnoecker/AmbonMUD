@@ -18,9 +18,9 @@ const PATH_GLOW_OUTER = "rgba(212, 184, 106, 0.25)";
 const HOUSING_FILL = "#c8a078";
 const QUEST_PULSE_PERIOD = 2500; // ms for one full cycle
 const PATH_SHIMMER_PERIOD = 1800; // ms
-const CELL = 80;
-const NODE_RADIUS = 18;
-const CURRENT_RADIUS = 24;
+const CELL = 120;
+const NODE_RADIUS = 22;
+const CURRENT_RADIUS = 28;
 
 // Inset fractions so map nodes stay within the visible scroll parchment area.
 // The scroll image has rollers on the sides and curled edges top/bottom.

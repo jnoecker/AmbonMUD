@@ -7,15 +7,15 @@ import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { SpellProjectileSystem } from "../systems/SpellProjectile";
 
-const BASE_SPRITE_SIZE = 160;
-const MIN_SPRITE_SIZE = 120;
-const MAX_SPRITE_SIZE = 200;
-const SMALL_SPRITE = 80;
-const HP_BAR_WIDTH = 140;
-const HP_BAR_HEIGHT = 10;
-const MANA_BAR_HEIGHT = 8;
-const LABEL_FONT_SIZE = 15;
-const PARTY_LABEL_FONT_SIZE = 13;
+const BASE_SPRITE_SIZE = 248;
+const MIN_SPRITE_SIZE = 184;
+const MAX_SPRITE_SIZE = 340;
+const SMALL_SPRITE = 124;
+const HP_BAR_WIDTH = 200;
+const HP_BAR_HEIGHT = 14;
+const MANA_BAR_HEIGHT = 10;
+const LABEL_FONT_SIZE = 18;
+const PARTY_LABEL_FONT_SIZE = 15;
 
 const PLAYER_TINT = 0x81a2be;
 const PET_TINT = 0xb294bb;
@@ -48,7 +48,7 @@ export class BattleScene {
   private enemyHpText: Text;
 
   private partyMembers: Array<{ sprite: Sprite; label: Text; hpBar: Graphics }> = [];
-  private petMembers: Array<{ sprite: Sprite; label: Text; hpBar: Graphics; id: string }> = [];
+  private petMembers: Array<{ sprite: Sprite; label: Text; hpBar: Graphics; id: string; name: string }> = [];
 
   private combatAnimator: CombatAnimator;
   private gainPopups: GainPopupSystem;
@@ -131,6 +131,9 @@ export class BattleScene {
     this.fleeBtn = this.buildActionButton("Flee", 0xd4888a, 0x4a1a1a, () => {
       canvasCallbacks.sendCommand?.("flee");
     });
+    // Flee is now a DOM overlay in GameShell (the canvas button would sit under
+    // the HUD overlays), so keep the Pixi one hidden.
+    this.fleeBtn.visible = false;
     this.smiteBtn = this.buildActionButton("Smite", 0xbea873, 0x3a3020, () => {
       const target = gameStateRef.current.combatTarget?.targetName;
       if (target) {
@@ -278,12 +281,30 @@ export class BattleScene {
       // abilityCast events carry no damage/heal — skip the CombatAnimator entirely
       // (it would otherwise emit dodge/death/etc. branches that don't apply).
       if (event.type !== "abilityCast") {
-        this.combatAnimator.processEvent(
-          event,
-          playerPos.x, playerPos.y,
-          enemyPos.x, enemyPos.y,
-          { suppressSlash: route.suppressSlash },
-        );
+        // A pet-sourced attack must animate the pet lunging at the enemy, not the
+        // enemy lunging at the player (which is what the sourceIsPlayer=false
+        // branch of processEvent would otherwise do).
+        const petIdx = event.petName
+          ? this.petMembers.findIndex((p) => p.name === event.petName)
+          : -1;
+        if (petIdx >= 0 && event.damage > 0) {
+          const playerSize = this.computeSpriteScales(vitals.maxHp, combatTarget?.targetMaxHp ?? null).playerSize;
+          const petPos = this.getPetPosition(petIdx, playerPos, playerSize);
+          this.combatAnimator.processAllyAttack(
+            `pet:${this.petMembers[petIdx].id}`,
+            event,
+            petPos.x, petPos.y,
+            enemyPos.x, enemyPos.y,
+            { suppressSlash: route.suppressSlash },
+          );
+        } else {
+          this.combatAnimator.processEvent(
+            event,
+            playerPos.x, playerPos.y,
+            enemyPos.x, enemyPos.y,
+            { suppressSlash: route.suppressSlash },
+          );
+        }
       }
     }
 
@@ -364,13 +385,19 @@ export class BattleScene {
   private getPlayerPosition() {
     const w = this.width;
     const h = this.height;
-    return { x: w * 0.25, y: h * 0.6 };
+    return { x: w * 0.26, y: h * 0.62 };
   }
 
   private getEnemyPosition() {
     const w = this.width;
     const h = this.height;
-    return { x: w * 0.75, y: h * 0.45 };
+    return { x: w * 0.74, y: h * 0.47 };
+  }
+
+  /** Base (pre-lunge) screen position of the i-th pet, below the player. */
+  private getPetPosition(index: number, playerPos: { x: number; y: number }, playerSize: number) {
+    const petStartY = playerPos.y + playerSize / 2 + 20;
+    return { x: playerPos.x + 60, y: petStartY + index * (SMALL_SPRITE + 30) };
   }
 
   /**
@@ -531,13 +558,16 @@ export class BattleScene {
       }
     }
 
-    // Pets (positioned below player on the right)
-    const petStartY = playerPos.y + playerSize / 2 + 20;
+    // Pets (positioned below player on the right) — apply lunge + shake so the
+    // pet visibly strikes toward the enemy when it attacks.
     for (let i = 0; i < this.petMembers.length; i++) {
       const pet = this.petMembers[i];
       const petMob = gameStateRef.current.mobs.find((m: { id: string }) => m.id === pet.id);
-      const px = playerPos.x + 60;
-      const py = petStartY + i * (SMALL_SPRITE + 30);
+      const base = this.getPetPosition(i, playerPos, playerSize);
+      const petLunge = this.combatAnimator.getLungeOffset(`pet:${pet.id}`);
+      const petShake = this.combatAnimator.getShakeOffset(`pet:${pet.id}`);
+      const px = base.x + petLunge.x + petShake.x;
+      const py = base.y + petLunge.y + petShake.y;
 
       pet.sprite.x = px;
       pet.sprite.y = py;
@@ -686,7 +716,7 @@ export class BattleScene {
       this.container.addChild(sprite);
       this.container.addChild(label);
       this.container.addChild(hpBar);
-      this.petMembers.push({ sprite, label, hpBar, id: pet.id });
+      this.petMembers.push({ sprite, label, hpBar, id: pet.id, name: pet.name });
     }
   }
 

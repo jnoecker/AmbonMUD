@@ -23,7 +23,7 @@ const OUTER_GLOW_COLOR = 0x4a5880;
 const NODE_COLOR = 0x4a6080;
 const CURRENT_COLOR = 0xb9aed8;
 const CURRENT_GLOW = 0xe8d8a8;
-const LINE_COLOR = 0x4a5070;
+const LINE_COLOR = 0x8a9ace;
 const FOG_COLOR = 0x2a3050;
 const QUEST_COLOR = 0xbea873;
 const HOUSING_COLOR = 0xc8a078;
@@ -102,15 +102,21 @@ export class Minimap {
     if (d === this._diameter) return;
     this._diameter = d;
     this._radius = d / 2;
-    // On smaller diameters, use tighter proportions so neighbors fit.
-    // At 160px: cell=34, node=8, current=10 — one full hop of neighbors visible.
-    const compact = d <= 180;
-    this._cell = Math.round(d * (compact ? 0.21 : 0.31));
-    this._nodeRadius = Math.round(d * (compact ? 0.05 : 0.085));
-    this._currentRadius = Math.round(d * (compact ? 0.065 : 0.11));
+    // Tight cell proportions so several hops of surrounding rooms fit inside the
+    // circle. At 240px: cell=32, node=11, current=14 — roughly three hops visible.
+    const compact = d <= 160;
+    // Cell spacing is kept comfortably larger than node diameter so the exit
+    // connector lines between rooms stay clearly visible (not hidden under the
+    // node circles) — that's the signal for whether a direct exit exists.
+    this._cell = Math.round(d * (compact ? 0.22 : 0.17));
+    this._nodeRadius = Math.round(d * 0.066);
+    this._currentRadius = Math.round(d * 0.082);
     this.applyDiameter();
     this.lastKey = ""; // force redraw
   }
+
+  /** How many exit hops out from the current room to place on the minimap. */
+  private readonly MAX_HOPS = 4;
 
   private applyDiameter() {
     const r = this._radius;
@@ -308,26 +314,27 @@ export class Minimap {
     const localPos = new Map<string, { lx: number; ly: number }>();
     localPos.set(this.currentRoomId!, { lx: 0, ly: 0 });
 
-    // First hop: immediate neighbors at cardinal offsets
-    for (const [dir, targetId] of Object.entries(current.exits)) {
-      if (!HORIZONTAL_DIRS.has(dir)) continue;
-      const off = MAP_OFFSETS[dir];
-      if (!off) continue;
-      localPos.set(targetId, { lx: off.dx, ly: off.dy });
-    }
-    // Second hop: neighbors of neighbors
-    for (const [dir, neighborId] of Object.entries(current.exits)) {
-      if (!HORIZONTAL_DIRS.has(dir)) continue;
-      const neighbor = this.visited.get(neighborId);
-      if (!neighbor) continue;
-      const nPos = localPos.get(neighborId)!;
-      for (const [ndir, nextId] of Object.entries(neighbor.exits)) {
-        if (!HORIZONTAL_DIRS.has(ndir)) continue;
-        if (localPos.has(nextId)) continue;
-        const nOff = MAP_OFFSETS[ndir];
-        if (!nOff) continue;
-        localPos.set(nextId, { lx: nPos.lx + nOff.dx, ly: nPos.ly + nOff.dy });
+    // BFS out from the current room along cardinal exits, placing each room at a
+    // local grid offset. Going several hops deep fills the (now larger) circle
+    // with surrounding rooms instead of just immediate exits. inBounds() clips
+    // anything that falls outside the visible disc.
+    let frontier: string[] = [this.currentRoomId!];
+    for (let hop = 0; hop < this.MAX_HOPS && frontier.length > 0; hop++) {
+      const next: string[] = [];
+      for (const id of frontier) {
+        const node = this.visited.get(id);
+        if (!node) continue;
+        const base = localPos.get(id)!;
+        for (const [dir, targetId] of Object.entries(node.exits)) {
+          if (!HORIZONTAL_DIRS.has(dir)) continue;
+          if (localPos.has(targetId)) continue;
+          const off = MAP_OFFSETS[dir];
+          if (!off) continue;
+          localPos.set(targetId, { lx: base.lx + off.dx, ly: base.ly + off.dy });
+          next.push(targetId);
+        }
       }
+      frontier = next;
     }
 
     // Helper to get pixel position for a room
@@ -355,7 +362,7 @@ export class Minimap {
         if (this.inBounds(sp.px, sp.py) || this.inBounds(tp.px, tp.py)) {
           this.mapGraphics.moveTo(sp.px, sp.py);
           this.mapGraphics.lineTo(tp.px, tp.py);
-          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.65 });
+          this.mapGraphics.stroke({ color: LINE_COLOR, width: 3, alpha: 0.85 });
         }
       }
     }
@@ -638,7 +645,7 @@ export class Minimap {
   private inBounds(x: number, y: number): boolean {
     const dx = x - this._radius;
     const dy = y - this._radius;
-    const pad = this._diameter <= 180 ? 6 : 14;
+    const pad = this._diameter <= 160 ? 6 : 10;
     const maxR = this._radius - this._currentRadius - pad;
     return dx * dx + dy * dy <= maxR * maxR;
   }

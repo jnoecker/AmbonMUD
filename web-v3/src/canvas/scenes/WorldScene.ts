@@ -16,7 +16,11 @@ function assetUrl(key: string, fallbackFilename: string): string {
 }
 
 const SHOP_BADGE_SIZE = 96;
-const QUEST_ICON_SIZE = 28;
+// Status indicator icons (quest/dialogue/aggro) size responsively off the mob
+// sprite, clamped to this range so they stay prominent without overwhelming.
+const STATUS_ICON_RATIO = 0.42;
+const STATUS_ICON_MIN = 36;
+const STATUS_ICON_MAX = 88;
 const LABEL_BG_COLOR = 0x0a0c14;
 const LABEL_BG_ALPHA = 0.7;
 const LABEL_PAD_X = 10;
@@ -50,25 +54,32 @@ const ITEM_LABEL_COLOR = "#8abeb7";
 const PLAYER_LABEL_FONT_SIZE = 15;
 const MOB_LABEL_FONT_SIZE = 14;
 const ITEM_LABEL_FONT_SIZE = 13;
-const MINIMAP_DESKTOP = 140;
-const MINIMAP_MOBILE = 192;
+const MINIMAP_DESKTOP = 240;
+const MINIMAP_MOBILE = 208;
 const MINIMAP_MARGIN = 14;
-const BASE_SPRITE_SIZE = 128;
-const BASE_ITEM_SPRITE_SIZE = 96;
+// Player and combat mobs share BASE_SPRITE_SIZE; non-combat NPCs (prop / quest
+// giver / dialogue) render notably larger so they read as characters, not props.
+const BASE_SPRITE_SIZE = 168;
+const PLAYER_SPRITE_SIZE = 196;
+const NONCOMBAT_SPRITE_SIZE = 236;
+const BASE_ITEM_SPRITE_SIZE = 116;
 const REF_WIDTH = 1200;
 const REF_HEIGHT = 800;
-const MIN_SPRITE_SIZE = 64;
-const MAX_SPRITE_SIZE = 192;
-const MIN_ITEM_SIZE = 32;
-const MAX_ITEM_SIZE = 96;
+const MIN_SPRITE_SIZE = 72;
+const MAX_SPRITE_SIZE = 320;
+const MIN_ITEM_SIZE = 40;
+const MAX_ITEM_SIZE = 140;
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 const ROLE_ICON_SIZE = 12;
 const ROLE_ICON_GAP = 4;
 // Role indicator colors
 const ROLE_SHOP_COLOR = 0x81a2be;
-const DIALOGUE_ICON_SIZE = 28;
-const AGGRO_ICON_SIZE = 24;
+
+/** Responsive size for a status indicator icon given the host mob's sprite size. */
+function statusIconSize(mobSize: number): number {
+  return clamp(mobSize * STATUS_ICON_RATIO, STATUS_ICON_MIN, STATUS_ICON_MAX);
+}
 
 function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo, spriteSize: number) {
   const icons: number[] = [];
@@ -95,9 +106,6 @@ export class WorldScene {
   readonly overlayContainer = new Container();
 
   private background: Sprite | null = null;
-  private titleText: Text;
-  private descText: Text;
-  private descBg = new Graphics();
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
   private playerLabelBg = new Graphics();
@@ -124,9 +132,6 @@ export class WorldScene {
   private questAvailableIcons: Map<string, Sprite> = new Map();
   private questCompleteTexture: Texture | null = null;
   private questCompleteIcons: Map<string, Sprite> = new Map();
-
-  private roomExpandBtn = new Graphics();
-  private currentMobSize = BASE_SPRITE_SIZE;
 
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
@@ -273,40 +278,6 @@ export class WorldScene {
   private backdropHit = new Graphics();
 
   constructor() {
-    this.titleText = new Text({
-      text: "",
-      style: { fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 26, fill: "#d8dcef", fontWeight: "700", dropShadow: { color: 0x000000, alpha: 0.8, blur: 6, distance: 3 } },
-    });
-    this.titleText.anchor.set(0, 0);
-
-    this.descText = new Text({
-      text: "",
-      style: { fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 18, fill: "#d0d4e8", fontWeight: "500", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.9, blur: 6, distance: 2 } },
-    });
-    this.descText.anchor.set(0, 0);
-    this.descText.alpha = 0.95;
-
-    // Room expand button next to title
-    const rb = this.roomExpandBtn;
-    rb.roundRect(0, 0, 20, 20, 4);
-    rb.fill({ color: 0x141828, alpha: 0.85 });
-    rb.roundRect(0, 0, 20, 20, 4);
-    rb.stroke({ color: 0x3a4060, width: 1 });
-    const rc = 0xb9aed8;
-    rb.moveTo(4, 7); rb.lineTo(4, 4); rb.lineTo(7, 4);
-    rb.stroke({ color: rc, width: 1.5 });
-    rb.moveTo(13, 4); rb.lineTo(16, 4); rb.lineTo(16, 7);
-    rb.stroke({ color: rc, width: 1.5 });
-    rb.moveTo(16, 13); rb.lineTo(16, 16); rb.lineTo(13, 16);
-    rb.stroke({ color: rc, width: 1.5 });
-    rb.moveTo(7, 16); rb.lineTo(4, 16); rb.lineTo(4, 13);
-    rb.stroke({ color: rc, width: 1.5 });
-    rb.eventMode = "static";
-    rb.cursor = "pointer";
-    rb.on("pointerdown", () => {
-      canvasCallbacks.openRoom?.();
-    });
-
     this.playerLabel = new Text({
       text: "",
       style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
@@ -773,10 +744,6 @@ export class WorldScene {
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
-    this.container.addChild(this.titleText);
-    this.container.addChild(this.descBg);
-    this.container.addChild(this.descText);
-    this.container.addChild(this.roomExpandBtn);
     this.container.addChild(this.playerLabelBg);
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
@@ -897,8 +864,6 @@ export class WorldScene {
         this.roomTransition.start();
       }
       this.lastRoomId = room.id;
-      this.titleText.text = room.title !== "-" ? room.title : "";
-      this.descText.text = room.description || "";
       // Dismiss popout on room change
       this.entityPopout.hide();
       this.backdropHit.visible = false;
@@ -1121,42 +1086,11 @@ export class WorldScene {
       this.background.height = h;
     }
 
-    // Scale text sizes for small canvases (mobile)
-    const textScale = Math.max(0.6, Math.min(1.0, w / 700));
-    this.titleText.style.fontSize = Math.round(26 * textScale);
-    this.descText.style.fontSize = Math.round(18 * textScale);
-
-    // Minimap in top-right
+    // Minimap in the top-right corner. Room title/description now live in a DOM
+    // panel below the canvas, so the scene itself carries no text overlay.
     const mapDiam = w < 500 ? MINIMAP_MOBILE : MINIMAP_DESKTOP;
     this.minimap.setDiameter(mapDiam);
     this.minimap.layout(w - mapDiam - MINIMAP_MARGIN, MINIMAP_MARGIN);
-
-    // Room title and description in top-left, leaving space for minimap
-    const textLeft = 16;
-    const textRight = mapDiam + MINIMAP_MARGIN * 2 + 8; // space for minimap
-    const textMaxWidth = Math.max(200, w - textLeft - textRight);
-    this.titleText.x = textLeft;
-    this.titleText.y = 14;
-    this.descText.x = textLeft + 10;
-    this.descText.y = 48 + 8;
-    this.descText.style.wordWrapWidth = textMaxWidth - 20;
-
-    // Semi-transparent background pill behind description
-    this.descBg.clear();
-    if (this.descText.text) {
-      const pad = 10;
-      this.descBg.roundRect(
-        textLeft, 48,
-        Math.min(this.descText.width + pad * 2, textMaxWidth),
-        this.descText.height + pad * 2,
-        8,
-      );
-      this.descBg.fill({ color: 0x0a0e1a, alpha: 0.55 });
-    }
-
-    // Room expand button next to title
-    this.roomExpandBtn.x = textLeft + this.titleText.width + 12;
-    this.roomExpandBtn.y = this.titleText.y;
 
     // In strip mode (text layout), hide entity sprites — they're just placeholders
     // and clutter the compact room header.
@@ -1203,7 +1137,7 @@ export class WorldScene {
 
     // Dynamic entity sizing
     const scale = Math.min(w / REF_WIDTH, h / REF_HEIGHT);
-    const playerSize = clamp(BASE_SPRITE_SIZE * scale, MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
+    const playerSize = clamp(PLAYER_SPRITE_SIZE * scale, MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
 
     // Order combat-eligible mobs first (left); quest-givers, dialog NPCs, and
     // props sit on the right. Missing mobInfo defaults to combat (true), which
@@ -1221,10 +1155,16 @@ export class WorldScene {
     const mobAreaLeft = w * 0.38;
     const mobAreaRight = w - 24;
     const mobAreaWidth = mobAreaRight - mobAreaLeft;
-    const mobBaseSize = BASE_SPRITE_SIZE * scale;
-    const mobFitSize = mobCount > 0 ? (mobAreaWidth - 16) / mobCount - 16 : mobBaseSize;
-    const mobSize = clamp(Math.min(mobBaseSize, mobFitSize), MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
-    this.currentMobSize = mobSize;
+    // Per-mob base size: combatants use BASE_SPRITE_SIZE, non-combat NPCs
+    // (props / quest givers / dialogue) render larger so they read as characters.
+    const mobFitSize = mobCount > 0 ? (mobAreaWidth - 16) / mobCount - 16 : BASE_SPRITE_SIZE * scale;
+    const mobSizeFor = (entry: (typeof mobEntries)[number]): number => {
+      const info = mobInfoByRepId.get(entry.ids[0]);
+      const isCombat = info ? info.combatant : true;
+      const base = (isCombat ? BASE_SPRITE_SIZE : NONCOMBAT_SPRITE_SIZE) * scale;
+      return clamp(Math.min(base, mobFitSize), MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
+    };
+    const maxMobSize = mobCount > 0 ? Math.max(...mobEntries.map(mobSizeFor)) : BASE_SPRITE_SIZE * scale;
 
     const itemCount = this.itemSprites.length;
     const itemAreaWidth = w * 0.6;
@@ -1255,24 +1195,25 @@ export class WorldScene {
       const mobY = h * 0.68;
       const mobSpacing = mobCount === 1
         ? 0
-        : Math.min(mobSize + 24, mobAreaWidth / mobCount);
+        : Math.min(maxMobSize + 24, mobAreaWidth / mobCount);
       const totalMobWidth = (mobCount - 1) * mobSpacing;
       let mobX = mobAreaLeft + (mobAreaWidth - totalMobWidth) / 2;
       // Vertical stagger so adjacent mob labels don't collide. Cycles through
       // up to 3 rows for 3+ mobs so neighbours-by-2 also don't share a row.
-      const mobStaggerStep = mobCount > 1 ? Math.min(32, mobSize * 0.26) : 0;
+      const mobStaggerStep = mobCount > 1 ? Math.min(32, maxMobSize * 0.26) : 0;
       const mobStaggerRows = Math.min(mobCount, 3);
       let mobIdx = 0;
       for (const entry of mobEntries) {
         const { sprite, label, labelBg, hitArea, name, count, ids } = entry;
+        const thisMobSize = mobSizeFor(entry);
         const mobYOffset = (mobIdx % mobStaggerRows) * mobStaggerStep;
         const thisMobY = mobY + mobYOffset;
         sprite.x = mobX;
         sprite.y = thisMobY;
-        sprite.width = mobSize;
-        sprite.height = mobSize;
+        sprite.width = thisMobSize;
+        sprite.height = thisMobSize;
         label.x = mobX;
-        label.y = thisMobY + mobSize / 2 + 6;
+        label.y = thisMobY + thisMobSize / 2 + 6;
 
         // Color label text by mob role + prepend role icon. Append "(N)" when
         // duplicates are stacked into a single sprite.
@@ -1294,10 +1235,10 @@ export class WorldScene {
         drawLabelPill(labelBg, label, info?.questGiver ? 0xbea873 : undefined);
 
         hitArea.clear();
-        hitArea.rect(0, 0, mobSize, mobSize);
+        hitArea.rect(0, 0, thisMobSize, thisMobSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
-        hitArea.x = mobX - mobSize / 2;
-        hitArea.y = thisMobY - mobSize / 2;
+        hitArea.x = mobX - thisMobSize / 2;
+        hitArea.y = thisMobY - thisMobSize / 2;
         mobX += mobSpacing;
         mobIdx += 1;
       }
@@ -1350,7 +1291,7 @@ export class WorldScene {
 
     // Layout item sprites in a horizontal row, centered
     if (itemCount > 0) {
-      const itemY = h * 0.38;
+      const itemY = h * 0.40;
       const itemSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, itemCount));
       const totalItemWidth = (itemCount - 1) * itemSpacing;
       let itemX = w / 2 - totalItemWidth / 2;
@@ -1374,7 +1315,7 @@ export class WorldScene {
     // Layout gathering node sprites — below items
     const nodeCount = this.nodeSprites.length;
     if (nodeCount > 0) {
-      const nodeY = h * 0.52;
+      const nodeY = h * 0.55;
       const nodeSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, nodeCount));
       const totalNodeWidth = (nodeCount - 1) * nodeSpacing;
       let nodeX = w / 2 - totalNodeWidth / 2;
@@ -1396,7 +1337,7 @@ export class WorldScene {
       }
     }
 
-    // Room-feature badges — right side, stacked vertically below description area
+    // Room-feature badges — right side, stacked vertically below the minimap.
     const badgeX = w - 70;
     const badgeStartY = h * 0.35;
     // Count visible badges to compute adaptive spacing
@@ -1563,21 +1504,22 @@ export class WorldScene {
         const info = mobInfo.find((m) => m.id === repId);
         if (!info) continue;
         const { sprite } = entry;
-        drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info, this.currentMobSize);
+        const mobSize = sprite.height;
+        drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info, mobSize);
         if (info.dialogue) {
           activeDialogueMobs.add(repId);
-          this.ensureDialogueIcon(repId, sprite.x, sprite.y);
+          this.ensureDialogueIcon(repId, sprite.x, sprite.y, mobSize);
         }
         if (info.aggressive) {
           activeAggroMobs.add(repId);
-          this.ensureAggroIcon(repId, sprite.x, sprite.y);
+          this.ensureAggroIcon(repId, sprite.x, sprite.y, mobSize);
         }
         if (info.questComplete) {
           activeQuestComplete.add(repId);
-          this.ensureQuestIcon(repId, sprite.x, sprite.y, "complete");
+          this.ensureQuestIcon(repId, sprite.x, sprite.y, "complete", mobSize);
         } else if (info.questAvailable) {
           activeQuestAvail.add(repId);
-          this.ensureQuestIcon(repId, sprite.x, sprite.y, "available");
+          this.ensureQuestIcon(repId, sprite.x, sprite.y, "available", mobSize);
         }
       }
     }
@@ -2047,6 +1989,13 @@ export class WorldScene {
     this.videoBtn = sprite;
   }
 
+  /** Clicking your own avatar opens the Character panel. */
+  private bindPlayerInteractivity(sprite: Sprite) {
+    sprite.eventMode = "static";
+    sprite.cursor = "pointer";
+    sprite.on("pointerdown", () => canvasCallbacks.openCharacter?.());
+  }
+
   private async loadPlayerSprite(spritePath: string | null) {
     if (this.playerSprite) {
       this.container.removeChild(this.playerSprite);
@@ -2063,6 +2012,7 @@ export class WorldScene {
       sprite.tint = 0x81a2be;
       this.container.addChild(sprite);
       this.playerSprite = sprite;
+      this.bindPlayerInteractivity(sprite);
       return;
     }
 
@@ -2074,6 +2024,7 @@ export class WorldScene {
       sprite.anchor.set(0.5);
       this.container.addChild(sprite);
       this.playerSprite = sprite;
+      this.bindPlayerInteractivity(sprite);
     } catch {
       const sprite = new Sprite(Texture.WHITE);
       sprite.width = BASE_SPRITE_SIZE;
@@ -2082,6 +2033,7 @@ export class WorldScene {
       sprite.tint = 0x81a2be;
       this.container.addChild(sprite);
       this.playerSprite = sprite;
+      this.bindPlayerInteractivity(sprite);
     }
   }
 
@@ -2351,36 +2303,38 @@ export class WorldScene {
     }
   }
 
-  private ensureDialogueIcon(mobId: string, cx: number, cy: number) {
+  private ensureDialogueIcon(mobId: string, cx: number, cy: number, mobSize: number) {
     if (!this.dialogueTexture) return;
     let icon = this.dialogueIcons.get(mobId);
     if (!icon) {
       icon = new Sprite(this.dialogueTexture);
-      icon.width = DIALOGUE_ICON_SIZE;
-      icon.height = DIALOGUE_ICON_SIZE;
       icon.anchor.set(0.5);
       icon.eventMode = "none";
       this.dialogueIcons.set(mobId, icon);
       this.container.addChild(icon);
     }
-    icon.x = cx - 20;
-    icon.y = cy - this.currentMobSize / 2 - 8;
+    const size = statusIconSize(mobSize);
+    icon.width = size;
+    icon.height = size;
+    icon.x = cx - mobSize * 0.28;
+    icon.y = cy - mobSize / 2 - size / 2;
   }
 
-  private ensureAggroIcon(mobId: string, cx: number, cy: number) {
+  private ensureAggroIcon(mobId: string, cx: number, cy: number, mobSize: number) {
     if (!this.aggroTexture) return;
     let icon = this.aggroIcons.get(mobId);
     if (!icon) {
       icon = new Sprite(this.aggroTexture);
-      icon.width = AGGRO_ICON_SIZE;
-      icon.height = AGGRO_ICON_SIZE;
       icon.anchor.set(0.5);
       icon.eventMode = "none";
       this.aggroIcons.set(mobId, icon);
       this.container.addChild(icon);
     }
-    icon.x = cx + this.currentMobSize / 2 - 4;
-    icon.y = cy - this.currentMobSize / 2 - 8;
+    const size = statusIconSize(mobSize) * 0.85;
+    icon.width = size;
+    icon.height = size;
+    icon.x = cx + mobSize * 0.28;
+    icon.y = cy - mobSize / 2 - size / 2;
   }
 
   private async loadQuestTextures() {
@@ -2392,7 +2346,7 @@ export class WorldScene {
     } catch { /* no sprite */ }
   }
 
-  private ensureQuestIcon(mobId: string, cx: number, cy: number, type: "available" | "complete") {
+  private ensureQuestIcon(mobId: string, cx: number, cy: number, type: "available" | "complete", mobSize: number) {
     const map = type === "complete" ? this.questCompleteIcons : this.questAvailableIcons;
     const otherMap = type === "complete" ? this.questAvailableIcons : this.questCompleteIcons;
     const texture = type === "complete" ? this.questCompleteTexture : this.questAvailableTexture;
@@ -2407,15 +2361,16 @@ export class WorldScene {
     let icon = map.get(mobId);
     if (!icon) {
       icon = new Sprite(texture);
-      icon.width = QUEST_ICON_SIZE;
-      icon.height = QUEST_ICON_SIZE;
       icon.anchor.set(0.5);
       icon.eventMode = "none";
       map.set(mobId, icon);
       this.container.addChild(icon);
     }
+    const size = statusIconSize(mobSize);
+    icon.width = size;
+    icon.height = size;
     icon.x = cx;
-    icon.y = cy - this.currentMobSize / 2 - 20;
+    icon.y = cy - mobSize / 2 - size / 2 - 4;
   }
 
   private pruneIcons(map: Map<string, Sprite>, active: Set<string>) {
