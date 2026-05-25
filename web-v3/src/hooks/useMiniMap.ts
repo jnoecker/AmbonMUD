@@ -37,11 +37,14 @@ const A_ROOM_HOUSING = "minimap_room_housing";
 const A_QUEST = "minimap_quest";
 const terrainKey = (t: string) => `minimap_room_${t}`;
 
-// Inset fractions so map nodes stay within the visible scroll parchment area.
-const SCROLL_INSET_LEFT = 0.08;
-const SCROLL_INSET_RIGHT = 0.10;
-const SCROLL_INSET_TOP = 0.08;
-const SCROLL_INSET_BOTTOM = 0.12;
+// Inset fractions reserving an edge margin around the plotted rooms. The
+// reworked full-bleed background needs none, so rooms use the entire canvas.
+const SCROLL_INSET_LEFT = 0;
+const SCROLL_INSET_RIGHT = 0;
+const SCROLL_INSET_TOP = 0;
+const SCROLL_INSET_BOTTOM = 0;
+// Extra margin (px) keeping a node's centre off the very edge. 0 = full canvas.
+const EDGE_PAD = 0;
 // How much to zoom the background image (1.0 = fill canvas, >1 = zoom in)
 const BG_ZOOM = 1.15;
 
@@ -214,7 +217,7 @@ function renderMap(
   const scrollTop = height * SCROLL_INSET_TOP;
   const scrollBottom = height * (1 - SCROLL_INSET_BOTTOM);
 
-  const nodePad = MAX_CURRENT / 2 + 16;
+  const nodePad = EDGE_PAD;
   const availW = (scrollRight - scrollLeft) - nodePad * 2;
   const availH = (scrollBottom - scrollTop) - nodePad * 2;
   const originX = (scrollLeft + scrollRight) / 2;
@@ -497,7 +500,7 @@ export function useMiniMap() {
     const spanX = hasRooms ? maxX - minX : 0;
     const spanY = hasRooms ? maxY - minY : 0;
 
-    const nodePad = MAX_CURRENT / 2 + 16;
+    const nodePad = EDGE_PAD;
     const availW = width * (1 - SCROLL_INSET_LEFT - SCROLL_INSET_RIGHT) - nodePad * 2;
     const availH = height * (1 - SCROLL_INSET_TOP - SCROLL_INSET_BOTTOM) - nodePad * 2;
     // Whole-zone fit = minimum zoom (you can't zoom out past seeing everything).
