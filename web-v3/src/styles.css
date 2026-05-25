@@ -18006,11 +18006,13 @@ html:has(.game-shell),
   background: radial-gradient(circle at 50% 50%, rgb(34 41 60 / 65%), rgb(16 19 31 / 80%));
 }
 
-/* Rose fills the whole pad as a backdrop; buttons overlay it at the edges. */
+/* Centered rose in the middle cell; the edge cells stay clear for the
+   direction buttons so the letters read cleanly. */
 .room-compass-rose {
-  position: absolute;
-  inset: 6px;
-  z-index: 0;
+  grid-column: 2;
+  grid-row: 2;
+  width: 80px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18155,6 +18157,11 @@ html:has(.game-shell),
   .room-compass-pad {
     width: 148px;
     height: 148px;
+  }
+
+  .room-compass-rose {
+    width: 68px;
+    height: 68px;
   }
 
   .compass-btn {
