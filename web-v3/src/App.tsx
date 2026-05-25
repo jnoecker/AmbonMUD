@@ -184,7 +184,22 @@ function App() {
   };
 
   // Minimap canvas + drawing helpers (owns its own ref, kept out of useGameState)
-  const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap, startPulse, stopPulse } = useMiniMap();
+  const {
+    mapCanvasRef,
+    drawMap,
+    updateMap,
+    loadZoneMap,
+    resetMap,
+    startPulse,
+    stopPulse,
+    onMapPointerDown,
+    onMapPointerMove,
+    onMapPointerUp,
+    onMapWheel,
+    zoomIn: mapZoomIn,
+    zoomOut: mapZoomOut,
+    recenter: mapRecenter,
+  } = useMiniMap();
 
   const state = useGameState(
     { resumeTokenRef, pendingAuthCharRef, sendGmcpRef },
@@ -1127,10 +1142,20 @@ function App() {
                 width={1280}
                 height={760}
                 role="img"
+                onPointerDown={onMapPointerDown}
+                onPointerMove={onMapPointerMove}
+                onPointerUp={onMapPointerUp}
+                onPointerLeave={onMapPointerUp}
+                onWheel={onMapWheel}
                 aria-label={questMarkerCount > 0
                   ? `Visited room map — ${questMarkerCount} quest objective${questMarkerCount !== 1 ? "s" : ""} marked`
                   : "Visited room map"}
               />
+              <div className="map-zoom-controls" aria-hidden="false">
+                <button type="button" className="map-zoom-btn" onClick={mapZoomIn} title="Zoom in" aria-label="Zoom in">+</button>
+                <button type="button" className="map-zoom-btn" onClick={mapZoomOut} title="Zoom out" aria-label="Zoom out">−</button>
+                <button type="button" className="map-zoom-btn" onClick={mapRecenter} title="Re-center on you" aria-label="Re-center on you">⌖</button>
+              </div>
             </div>
             {mapTab === "atlas" && (
               <Atlas areas={state.worldAreas} currentZone={currentZone} />

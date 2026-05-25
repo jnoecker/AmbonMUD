@@ -10122,8 +10122,55 @@ body {
   box-shadow: 0 0 12px rgb(118 133 190 / 26%);
 }
 
+.drawer-map-canvas-wrap {
+  position: relative;
+}
+
 .drawer-map-canvas-wrap[hidden] {
   display: none;
+}
+
+/* World map is drag-to-pan / scroll-to-zoom. */
+.mini-map-popout {
+  cursor: grab;
+  touch-action: none;
+}
+
+.mini-map-popout:active {
+  cursor: grabbing;
+}
+
+/* Zoom / recenter cluster, bottom-right of the map. */
+.map-zoom-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+
+.map-zoom-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-bright);
+  border: 1px solid rgb(190 168 115 / 50%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, rgb(34 41 60 / 88%), rgb(20 24 40 / 92%));
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
+}
+
+.map-zoom-btn:hover {
+  border-color: rgb(212 198 150 / 85%);
+  background: linear-gradient(160deg, rgb(56 67 100 / 94%), rgb(30 36 56 / 96%));
 }
 
 /* --- Atlas (zone browser) -------------------------------------------- */
