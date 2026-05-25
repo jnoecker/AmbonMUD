@@ -17970,14 +17970,14 @@ html:has(.game-shell),
 .bottom-stack-themed .room-panel-desc {
   color: #120c02;
   font-weight: 600;
-  /* Crisp light "paper" outline around each glyph reads better over the
-     textured page than a soft glow. */
-  text-shadow:
-    -1px -1px 0 rgb(250 244 226 / 92%),
-    1px -1px 0 rgb(250 244 226 / 92%),
-    -1px 1px 0 rgb(250 244 226 / 92%),
-    1px 1px 0 rgb(250 244 226 / 92%),
-    0 0 4px rgb(250 244 226 / 75%);
+  /* Translucent "writing area" gives the ink uniform contrast while the
+     parchment still shows through. */
+  background: rgb(247 240 222 / 56%);
+  border: 1px solid rgb(120 100 70 / 28%);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: 0 2px 10px rgb(8 10 18 / 18%);
+  text-shadow: 0 1px 1px rgb(252 247 232 / 70%);
 }
 
 .room-panel {
