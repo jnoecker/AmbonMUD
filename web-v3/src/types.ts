@@ -368,6 +368,8 @@ export interface MapRoom {
   exits: Record<string, string>;
   title: string;
   image: string | null;
+  /** Terrain key (forest, mountain, …) once the room has been visited. */
+  terrain?: string;
   housing?: boolean;
 }
 
