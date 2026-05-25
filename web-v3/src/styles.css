@@ -17633,8 +17633,12 @@ html:has(.game-shell),
   gap: 10px;
   max-width: calc(100% - 24px);
   padding: 8px 14px;
-  /* Warm "bark" branch the vitals nestle along + the room sign hangs from. */
-  background: linear-gradient(160deg, rgb(52 38 24 / 82%), rgb(34 24 15 / 88%));
+  /* Warm "bark" branch the vitals nestle along + the room sign hangs from.
+     An optional vitals_bar_bg asset (carved-wood art) layers over the fill. */
+  background-image: var(--vitals-bg, none), linear-gradient(160deg, rgb(52 38 24 / 82%), rgb(34 24 15 / 88%));
+  background-size: 100% 100%, auto;
+  background-repeat: no-repeat, no-repeat;
+  background-position: center;
   border: 1px solid rgb(122 92 54 / 55%);
   border-radius: 14px 14px 16px 16px / 16px 16px 14px 14px;
   backdrop-filter: blur(8px);
@@ -17681,19 +17685,17 @@ html:has(.game-shell),
   .canvas-room-sign { animation: none; }
 }
 
-/* Twin ropes splaying down from the branch to the plank. */
-.sign-rope {
+/* Twin chains splaying down from the branch to the plank. */
+.sign-chain {
   position: absolute;
   top: 0;
-  width: 3px;
-  height: 17px;
-  background: linear-gradient(180deg, #8a6638, #5a3e22);
-  border-radius: 2px;
+  width: 10px;
+  height: 16px;
   transform-origin: top center;
 }
 
-.sign-rope-left { left: 20px; transform: rotate(9deg); }
-.sign-rope-right { right: 20px; transform: rotate(-9deg); }
+.sign-chain-left { left: 22px; transform: rotate(10deg); }
+.sign-chain-right { right: 22px; transform: rotate(-10deg); }
 
 .sign-plank {
   position: relative;
@@ -17703,14 +17705,32 @@ html:has(.game-shell),
   padding: 8px 16px;
   border-radius: 9px;
   transform: rotate(-1.1deg);
-  background:
+  /* Optional room_sign_bg art stretches over the procedural wood. */
+  background-image:
+    var(--sign-bg, none),
     repeating-linear-gradient(91deg, rgb(0 0 0 / 6%) 0 5px, rgb(255 255 255 / 3%) 5px 11px),
     linear-gradient(180deg, #7c5733, #674428);
+  background-size: 100% 100%, auto, auto;
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-position: center;
   border: 2px solid #3f2914;
   box-shadow:
     inset 0 1px 0 rgb(255 235 200 / 14%),
     inset 0 -4px 7px rgb(0 0 0 / 38%);
 }
+
+/* Little toadstools tucked at the plank's base (procedural fallback only). */
+.sign-mushroom {
+  position: absolute;
+  bottom: -6px;
+  width: 18px;
+  height: 16px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%));
+}
+
+.sign-mushroom-left { left: -4px; transform: rotate(-8deg); }
+.sign-mushroom-right { right: -4px; transform: rotate(8deg); }
 
 /* Peg holes where the ropes meet the plank. */
 .sign-plank::before,

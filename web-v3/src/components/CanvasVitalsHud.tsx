@@ -7,6 +7,7 @@ import { percent } from "../utils";
 interface CanvasVitalsHudProps {
   vitals: Vitals;
   inventory: ItemSummary[];
+  serverAssets: Record<string, string>;
   onCommand: (cmd: string) => void;
   audio: AudioEngine;
 }
@@ -16,7 +17,8 @@ interface CanvasVitalsHudProps {
  * in a single row so it claims minimal vertical space and frees the left edge
  * for the kiosk column.
  */
-export function CanvasVitalsHud({ vitals, inventory, onCommand, audio }: CanvasVitalsHudProps) {
+export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, audio }: CanvasVitalsHudProps) {
+  const barBg = serverAssets["vitals_bar_bg"];
   const hpPick = selectQuickPotion(inventory, vitals.maxHp - vitals.hp, "hp");
   const manaPick = selectQuickPotion(inventory, vitals.maxMana - vitals.mana, "mana");
   const hpDisabled = vitals.hp >= vitals.maxHp || hpPick === null;
@@ -33,7 +35,10 @@ export function CanvasVitalsHud({ vitals, inventory, onCommand, audio }: CanvasV
       : "No mana potion in inventory";
 
   return (
-    <div className="canvas-vitals-hud">
+    <div
+      className="canvas-vitals-hud"
+      style={barBg ? { ["--vitals-bg" as string]: `url("${barBg}")` } : undefined}
+    >
       {/* Flowering sprig growing from the branch (the vitals bar). */}
       <svg className="vitals-sprig" viewBox="0 0 40 44" aria-hidden="true">
         <path d="M20 44 C 16 30 22 20 18 7" stroke="#6f8a3a" strokeWidth="2.4" fill="none" strokeLinecap="round" />

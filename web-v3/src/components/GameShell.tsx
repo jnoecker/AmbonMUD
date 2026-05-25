@@ -77,16 +77,26 @@ export function GameShell({
             <CanvasVitalsHud
               vitals={vitals}
               inventory={inventory}
+              serverAssets={serverAssets}
               onCommand={onCommand}
               audio={audio}
             />
 
-            {/* Room name — a hand-made wooden sign hanging from the vitals branch */}
+            {/* Room name — a hand-made wooden sign hung by chains from the branch */}
             {room.title !== "-" && (
               <div className="canvas-room-sign">
-                <span className="sign-rope sign-rope-left" aria-hidden="true" />
-                <span className="sign-rope sign-rope-right" aria-hidden="true" />
-                <div className="sign-plank">
+                <svg className="sign-chain sign-chain-left" viewBox="0 0 10 20" aria-hidden="true">
+                  <ellipse cx="5" cy="5" rx="2.6" ry="4" fill="none" stroke="#6e6450" strokeWidth="1.6" />
+                  <ellipse cx="5" cy="13" rx="2.6" ry="4" fill="none" stroke="#6e6450" strokeWidth="1.6" />
+                </svg>
+                <svg className="sign-chain sign-chain-right" viewBox="0 0 10 20" aria-hidden="true">
+                  <ellipse cx="5" cy="5" rx="2.6" ry="4" fill="none" stroke="#6e6450" strokeWidth="1.6" />
+                  <ellipse cx="5" cy="13" rx="2.6" ry="4" fill="none" stroke="#6e6450" strokeWidth="1.6" />
+                </svg>
+                <div
+                  className="sign-plank"
+                  style={serverAssets["room_sign_bg"] ? { ["--sign-bg" as string]: `url("${serverAssets["room_sign_bg"]}")` } : undefined}
+                >
                   <h2 className="sign-title">{room.title}</h2>
                   <button
                     type="button"
@@ -97,6 +107,22 @@ export function GameShell({
                   >
                     <ExpandRoomIcon className="canvas-room-title-icon" />
                   </button>
+                  {!serverAssets["room_sign_bg"] && (
+                    <>
+                      <svg className="sign-mushroom sign-mushroom-left" viewBox="0 0 20 18" aria-hidden="true">
+                        <ellipse cx="10" cy="13" rx="3" ry="4" fill="#efe1bf" />
+                        <path d="M2 8 a8 6 0 0 1 16 0 z" fill="#c0392b" />
+                        <circle cx="7" cy="6" r="1.4" fill="#f5d9c0" />
+                        <circle cx="12.5" cy="5" r="1.1" fill="#f5d9c0" />
+                      </svg>
+                      <svg className="sign-mushroom sign-mushroom-right" viewBox="0 0 20 18" aria-hidden="true">
+                        <ellipse cx="10" cy="13" rx="3" ry="4" fill="#efe1bf" />
+                        <path d="M2 8 a8 6 0 0 1 16 0 z" fill="#c0392b" />
+                        <circle cx="7" cy="6" r="1.4" fill="#f5d9c0" />
+                        <circle cx="12.5" cy="5" r="1.1" fill="#f5d9c0" />
+                      </svg>
+                    </>
+                  )}
                 </div>
               </div>
             )}
