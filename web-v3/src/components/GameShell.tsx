@@ -3,7 +3,7 @@ import { PixiCanvas } from "../canvas/PixiCanvas";
 import { CombatLog } from "./CombatLog";
 import { RoomPanel } from "./RoomPanel";
 import { CanvasVitalsHud } from "./CanvasVitalsHud";
-import { CanvasKiosks } from "./CanvasKiosks";
+import { KioskBar } from "./KioskBar";
 import { SkillBar } from "./SkillBar";
 import { WorldAtmosphereHud } from "./WorldAtmosphereHud";
 import { ExpandRoomIcon } from "./Icons";
@@ -171,7 +171,7 @@ export function GameShell({
               onQuickbarClear={onQuickbarClear}
             />
           ) : (
-            <CanvasKiosks
+            <KioskBar
               serverAssets={serverAssets}
               activePopout={activePopout}
               onOpenPanel={onOpenPanel}
