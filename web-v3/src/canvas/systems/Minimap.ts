@@ -214,9 +214,9 @@ export class Minimap {
   }
 
   private applyDiameter() {
-    this.tornShadow = this.buildTornPath(0, 4);
-    this.tornPath = this.buildTornPath(3, 4);
-    this.tornInner = this.buildTornPath(7, 3);
+    this.tornShadow = this.buildTornPath(0, 6);
+    this.tornPath = this.buildTornPath(4, 6);
+    this.tornInner = this.buildTornPath(8, 4);
 
     // Clip inner content to the torn parchment edge.
     this.clipMask.clear();
@@ -250,9 +250,9 @@ export class Minimap {
     const g = this.bg;
     g.clear();
 
-    // Drop shadow under the torn sheet.
+    // Drop shadow under the torn sheet — helps the scrap read against the canvas.
     g.poly(this.tornShadow);
-    g.fill({ color: SHADOW, alpha: 0.28 });
+    g.fill({ color: SHADOW, alpha: 0.4 });
 
     // Procedural paper body — skipped when a `minimap_bg` texture covers it. The
     // texture sprite is itself clipped to the torn polygon, so the parchment
@@ -271,14 +271,15 @@ export class Minimap {
       }
     }
 
-    // Torn ink edge — drawn on its own layer above the paper (soft inner line
-    // under a darker outer line, a pen-nib feel) so it frames any texture.
+    // Torn ink edge — drawn on its own layer above the paper so it frames any
+    // texture. A crisp dark outer line defines the scrap's edge against a busy
+    // custom background; a soft inner line adds a hand-drawn pen-nib depth.
     const e = this.border;
     e.clear();
     e.poly(this.tornInner);
-    e.stroke({ color: INK_SOFT, width: 1, alpha: 0.3 });
+    e.stroke({ color: INK_SOFT, width: 1, alpha: 0.4 });
     e.poly(this.tornPath);
-    e.stroke({ color: INK, width: 1.5, alpha: 0.5 });
+    e.stroke({ color: INK, width: 2.5, alpha: 0.85 });
   }
 
   private rebuildExpandButton() {
