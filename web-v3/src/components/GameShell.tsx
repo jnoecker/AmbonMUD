@@ -87,11 +87,10 @@ export function GameShell({
               audio={audio}
             />
 
-            {/* Panel kiosks — left column + context kiosks on the right */}
+            {/* Panel kiosks — left column (context services use Pixi room badges) */}
             <CanvasKiosks
               serverAssets={serverAssets}
               activePopout={activePopout}
-              room={room}
               onOpenPanel={onOpenPanel}
             />
 

@@ -55,7 +55,7 @@ const PLAYER_LABEL_FONT_SIZE = 15;
 const MOB_LABEL_FONT_SIZE = 14;
 const ITEM_LABEL_FONT_SIZE = 13;
 const MINIMAP_DESKTOP = 240;
-const MINIMAP_MOBILE = 208;
+const MINIMAP_MOBILE = 144;
 const MINIMAP_MARGIN = 14;
 // Player and combat mobs share BASE_SPRITE_SIZE; non-combat NPCs (prop / quest
 // giver / dialogue) render notably larger so they read as characters, not props.
@@ -224,6 +224,13 @@ export class WorldScene {
   private innLabelBg = new Graphics();
   private innHitArea = new Graphics();
   private innVisible = false;
+
+  private mailBadge: Container | null = null;
+  private mailSprite: Sprite | null = null;
+  private mailLabel: Text | null = null;
+  private mailLabelBg = new Graphics();
+  private mailHitArea = new Graphics();
+  private mailVisible = false;
 
   private duelBadge: Container | null = null;
   private duelSprite: Sprite | null = null;
@@ -555,6 +562,35 @@ export class WorldScene {
     this.innBadge.addChild(this.innLabelBg);
     this.innBadge.addChild(this.innLabel);
 
+    // Mail badge — floating icon at inns / player homes
+    this.mailBadge = new Container();
+    this.mailBadge.visible = false;
+    this.mailBadge.eventMode = "static";
+    this.mailBadge.cursor = "pointer";
+    this.mailBadge.on("pointerdown", () => {
+      canvasCallbacks.openMail?.();
+    });
+    this.mailBadge.on("pointerover", () => {
+      if (this.mailSprite) this.mailSprite.alpha = 1;
+    });
+    this.mailBadge.on("pointerout", () => {
+      if (this.mailSprite) this.mailSprite.alpha = 0.85;
+    });
+    this.mailHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.mailHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.mailHitArea.eventMode = "auto";
+    this.mailBadge.addChild(this.mailHitArea);
+    this.mailLabel = new Text({
+      text: "Mail",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#a7c0ff", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.mailLabel.anchor.set(0.5, 0);
+    this.mailLabel.y = hs / 2 + 2;
+    this.mailLabel.eventMode = "none";
+    this.mailLabelBg.eventMode = "none";
+    this.mailBadge.addChild(this.mailLabelBg);
+    this.mailBadge.addChild(this.mailLabel);
+
     // Housing broker badge — floating kiosk icon when a housing broker is present
     this.housingBadge = new Container();
     this.housingBadge.visible = false;
@@ -757,6 +793,7 @@ export class WorldScene {
     this.container.addChild(this.dungeonBadge!);
     this.container.addChild(this.housingBadge!);
     this.container.addChild(this.innBadge!);
+    this.container.addChild(this.mailBadge!);
     this.container.addChild(this.duelBadge!);
     this.container.addChild(this.puzzleBadge!);
     this.container.addChild(this.doorBadge!);
@@ -806,6 +843,7 @@ export class WorldScene {
       this.loadDungeonIcon();
       this.loadHousingBrokerIcon();
       this.loadInnIcon();
+      this.loadMailIcon();
       this.loadDuelIcon();
       this.loadPuzzleIcon();
       this.loadDoorIcon();
@@ -1017,6 +1055,13 @@ export class WorldScene {
       if (this.innBadge) this.innBadge.visible = hasInn;
     }
 
+    // Mail is available at inns and player homes.
+    const hasMail = !!state.room.inn || !!state.room.housing;
+    if (hasMail !== this.mailVisible) {
+      this.mailVisible = hasMail;
+      if (this.mailBadge) this.mailBadge.visible = hasMail;
+    }
+
     // Duel badge removed — dueling is accessed via player context menu
     if (this.duelVisible) {
       this.duelVisible = false;
@@ -1127,6 +1172,7 @@ export class WorldScene {
     if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
     if (this.housingBadge) this.housingBadge.visible = this.housingVisible && !stripMode;
     if (this.innBadge) this.innBadge.visible = this.innVisible && !stripMode;
+    if (this.mailBadge) this.mailBadge.visible = this.mailVisible && !stripMode;
     if (this.duelBadge) this.duelBadge.visible = this.duelVisible && !stripMode;
     if (this.puzzleBadge) this.puzzleBadge.visible = this.puzzleVisible && !stripMode;
     if (this.doorBadge) this.doorBadge.visible = this.doorVisible && !stripMode;
@@ -1348,6 +1394,7 @@ export class WorldScene {
       this.lotteryBadge?.visible, this.dungeonBadge?.visible,
       this.housingBadge?.visible,
       this.innBadge?.visible,
+      this.mailBadge?.visible,
       this.duelBadge?.visible, this.puzzleBadge?.visible,
       this.doorBadge?.visible, this.containerBadge?.visible,
       this.leverBadge?.visible,
@@ -1429,6 +1476,13 @@ export class WorldScene {
       this.innBadge.x = badgeX;
       this.innBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.innLabelBg, this.innLabel!);
+      badgeSlot++;
+    }
+
+    if (this.mailBadge?.visible) {
+      this.mailBadge.x = badgeX;
+      this.mailBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.mailLabelBg, this.mailLabel!);
       badgeSlot++;
     }
 
@@ -2202,6 +2256,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.innSprite = sprite;
       this.innBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadMailIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("mail_widget", "mail_widget.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.mailSprite = sprite;
+      this.mailBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

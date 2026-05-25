@@ -17899,15 +17899,71 @@ html:has(.game-shell),
   transform: translateY(-1px);
 }
 
-/* ── Right-edge kiosk column (vertically centered, clear of minimap) ── */
-.canvas-kiosks-right {
-  left: auto;
-  right: 12px;
-  top: 50%;
-  bottom: auto;
-  transform: translateY(-50%);
-  max-height: calc(100% - 200px);
+/* ── Small-screen overlay adjustments ─────────────────── */
+@media (max-width: 640px) {
+  /* Vitals strip shrinks to fit; drop the quick-potion text + audio control */
+  .canvas-vitals-hud {
+    gap: 6px;
+    padding: 6px 8px;
+    max-width: calc(100% - 16px);
+  }
+
+  .canvas-vitals-hud .vbar-vital {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 48px;
+  }
+
+  .canvas-vitals-hud .vbar-quick-potion-label {
+    display: none;
+  }
+
+  .canvas-vitals-hud .audio-controls {
+    display: none;
+  }
+
+  /* Kiosks: smaller discs, tighter to the edge, start below the vitals strip */
+  .canvas-kiosks-left {
+    top: 92px;
+    left: 8px;
+    gap: 10px;
+  }
+
+  .canvas-kiosk {
+    width: 56px;
+  }
+
+  .canvas-kiosk-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .canvas-kiosk-img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .kiosk-icon-svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .canvas-kiosk-label {
+    font-size: 0.58rem;
+  }
+
+  .skill-bar {
+    max-width: calc(100% - 24px);
+    bottom: 12px;
+  }
+
+  .canvas-flee-btn,
+  .canvas-help-btn,
+  .atmosphere-hud {
+    bottom: 12px;
+  }
 }
+
 
 /* ── Room panel (between canvas and action bar) ───────── */
 .room-panel {
