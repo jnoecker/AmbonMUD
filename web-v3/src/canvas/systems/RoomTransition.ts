@@ -9,9 +9,7 @@ import { Graphics } from "pixi.js";
  * Respects prefers-reduced-motion by falling back to a simple fade.
  */
 
-const DISSOLVE_DURATION_MS = 500;
-const REFORM_DURATION_MS = 400;
-const TOTAL_DURATION_MS = DISSOLVE_DURATION_MS + REFORM_DURATION_MS;
+const TOTAL_DURATION_MS = 550;
 const PARTICLE_COUNT = 80;
 
 const DEFAULT_MOTE_COLORS = [0xc8b8e8, 0xa897d2, 0x8caec9, 0xbea873, 0xd8def1];
@@ -64,19 +62,16 @@ export class RoomTransition {
     this.height = h;
   }
 
-  /** Start a room transition. Call this when room ID changes. */
+  /** Start a room transition. Call this when room ID changes. The new room
+   *  starts hidden (sceneAlpha 0) and materialises in — no fade-out, so the
+   *  incoming room never flashes at full opacity first. */
   start() {
-    if (prefersReducedMotion) {
-      // Simple fade fallback: we'll handle this via sceneAlpha only
-      this.active = true;
-      this.elapsed = 0;
-      this.motes.length = 0;
-      return;
-    }
-
     this.active = true;
     this.elapsed = 0;
+    this._sceneAlpha = 0;
     this.motes.length = 0;
+
+    if (prefersReducedMotion) return; // plain fade-in via sceneAlpha, no motes
 
     const w = this.width;
     const h = this.height;
@@ -110,49 +105,20 @@ export class RoomTransition {
     if (!this.active) return false;
 
     this.elapsed += deltaMs;
+    const t = Math.min(1, this.elapsed / TOTAL_DURATION_MS);
+    // Ease-out fade-in: the new room materialises from hidden to full.
+    this._sceneAlpha = 1 - (1 - t) * (1 - t);
 
-    if (prefersReducedMotion) {
-      // Simple fade: out then in
-      if (this.elapsed < DISSOLVE_DURATION_MS) {
-        this._sceneAlpha = 1 - this.elapsed / DISSOLVE_DURATION_MS;
-      } else {
-        const rt = Math.min(1, (this.elapsed - DISSOLVE_DURATION_MS) / REFORM_DURATION_MS);
-        this._sceneAlpha = rt;
+    if (!prefersReducedMotion) {
+      const dt = deltaMs / 1000;
+      for (const m of this.motes) {
+        m.sx += m.vx * dt;
+        m.sy += m.vy * dt;
+        m.vx *= 0.985;
+        m.vy *= 0.985;
       }
-      if (this.elapsed >= TOTAL_DURATION_MS) {
-        this.active = false;
-        this._sceneAlpha = 1;
-      }
-      return this.active;
+      this.draw(t);
     }
-
-    // Dissolve phase: scene fades out, motes appear and swirl
-    if (this.elapsed < DISSOLVE_DURATION_MS) {
-      const dt = this.elapsed / DISSOLVE_DURATION_MS;
-      // Smooth ease-in-out
-      this._sceneAlpha = 1 - dt * dt;
-    }
-    // Reform phase: scene fades back in, motes dissolve
-    else {
-      const rt = Math.min(1, (this.elapsed - DISSOLVE_DURATION_MS) / REFORM_DURATION_MS);
-      // Smooth ease-out
-      const eased = 1 - (1 - rt) * (1 - rt);
-      this._sceneAlpha = eased;
-    }
-
-    // Update mote positions
-    const dt = deltaMs / 1000;
-    for (const m of this.motes) {
-      m.sx += m.vx * dt;
-      m.sy += m.vy * dt;
-      // Reverse drift midway through
-      if (this.elapsed > DISSOLVE_DURATION_MS * 0.8) {
-        m.vx *= 0.97;
-        m.vy *= 0.97;
-      }
-    }
-
-    this.draw();
 
     if (this.elapsed >= TOTAL_DURATION_MS) {
       this.active = false;
@@ -164,24 +130,13 @@ export class RoomTransition {
     return this.active;
   }
 
-  private draw() {
+  private draw(t: number) {
     const g = this.graphics;
     g.clear();
 
-    const dissolveT = Math.min(1, this.elapsed / DISSOLVE_DURATION_MS);
-    const reformT = this.elapsed > DISSOLVE_DURATION_MS
-      ? Math.min(1, (this.elapsed - DISSOLVE_DURATION_MS) / REFORM_DURATION_MS)
-      : 0;
-
-    // Mote visibility: fade in during dissolve, fade out during reform
-    let moteAlpha: number;
-    if (dissolveT < 1) {
-      // Fade in quickly
-      moteAlpha = Math.min(1, dissolveT * 2);
-    } else {
-      // Fade out
-      moteAlpha = 1 - reformT;
-    }
+    // Motes are densest at the start (covering the hidden room) and dissolve
+    // as the scene materialises.
+    const moteAlpha = 1 - t;
 
     for (const m of this.motes) {
       const breathe = 0.8 + 0.2 * Math.sin(this.elapsed * 0.004 + m.phase);

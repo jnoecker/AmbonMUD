@@ -864,14 +864,6 @@ export class WorldScene {
       this.videoBtn.scale.set(breathe);
     }
 
-    // Handle room transition animation (magical particle dissolve)
-    if (this.roomTransition.isActive) {
-      this.roomTransition.update(deltaMs);
-      this.container.alpha = this.roomTransition.sceneAlpha;
-    } else {
-      this.container.alpha = 1;
-    }
-
     // Apply zone environment theme when it changes (from Zone.Environment GMCP)
     const zoneEnv = state.zoneEnvironment;
     if (zoneEnv !== null && zoneEnv.zone !== this.lastZoneEnvZone) {
@@ -905,6 +897,15 @@ export class WorldScene {
       // Dismiss popout on room change
       this.entityPopout.hide();
       this.backdropHit.visible = false;
+    }
+
+    // Apply the room-transition fade *after* start() above, so the new room
+    // fades in on the same frame instead of flashing at full opacity first.
+    if (this.roomTransition.isActive) {
+      this.roomTransition.update(deltaMs);
+      this.container.alpha = this.roomTransition.sceneAlpha;
+    } else {
+      this.container.alpha = 1;
     }
 
     // Update sky gradient and weather particles
