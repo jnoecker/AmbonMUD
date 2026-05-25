@@ -1055,8 +1055,9 @@ export class WorldScene {
       if (this.innBadge) this.innBadge.visible = hasInn;
     }
 
-    // Mail is available at inns and player homes.
-    const hasMail = !!state.room.inn || !!state.room.housing;
+    // Mail badge removed pending a new home (GH #1189); the badge code is kept
+    // dormant. Was: !!state.room.inn || !!state.room.housing.
+    const hasMail = false;
     if (hasMail !== this.mailVisible) {
       this.mailVisible = hasMail;
       if (this.mailBadge) this.mailBadge.visible = hasMail;

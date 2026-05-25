@@ -17890,7 +17890,9 @@ html:has(.game-shell),
 }
 
 /* ── Skinned room sign (room_sign_bg art, with its own rope baked in) ───── */
-.canvas-room-sign-skinned {
+/* Two classes (higher specificity) so this wins over the mobile
+   .canvas-room-sign override — the sign stays out on the branch on phones. */
+.canvas-room-sign.canvas-room-sign-skinned {
   /* Left edge lines up with the HP<->MP gap (~0.43 of the bar width). Top tracks
      the bar's height (bar aspect 1258/294) so the rope tucks just under the
      branch at any viewport size, instead of ending mid-bar. */
