@@ -17983,15 +17983,27 @@ html:has(.game-shell),
 }
 
 /* On wider screens, keep the description on the left page and slide the compass
-   onto the right page (clear of the book's edges). */
+   onto the right page. Percentage margins track the book's pages as the
+   stretched backdrop scales with the window. */
 @media (min-width: 641px) {
   .bottom-stack-themed .room-panel-body {
     justify-content: space-between;
-    padding: 28px 96px 18px 96px;
+    padding: 28px 16% 18px 9%;
   }
 
   .bottom-stack-themed .room-panel-main {
-    flex: 0 0 42%;
+    flex: 0 0 46%;
+  }
+}
+
+/* Large displays: a bit more left margin and a wider inscription. */
+@media (min-width: 1440px) {
+  .bottom-stack-themed .room-panel-body {
+    padding-left: 11%;
+  }
+
+  .bottom-stack-themed .room-panel-main {
+    flex-basis: 52%;
   }
 }
 
