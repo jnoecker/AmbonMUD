@@ -85,8 +85,10 @@ function QuestOfferCard({
   return (
     <li className="quest-available-card">
       <div className="quest-available-header">
-        <span className="quest-available-icon">{"✦"}</span>
         <span className="quest-available-name">{quest.name}</span>
+        {quest.levelRequired !== null && (
+          <span className="quest-available-level-pill">Lv {quest.levelRequired}</span>
+        )}
       </div>
       <p className="quest-available-description">{quest.description}</p>
       <ul className="quest-available-objectives">
@@ -123,13 +125,8 @@ function QuestOfferCard({
           ))}
         </div>
       )}
-      {(quest.levelRequired !== null || quest.reputationRequired !== null) && (
+      {quest.reputationRequired !== null && (
         <div className="quest-offer-requirements">
-          {quest.levelRequired !== null && (
-            <span className="quest-offer-requirement">
-              Level {quest.levelRequired}
-            </span>
-          )}
           {quest.reputationRequired !== null && (
             <span className="quest-offer-requirement">
               {quest.reputationRequired.factionName}

@@ -6083,6 +6083,18 @@ body {
   letter-spacing: 0.01em;
 }
 
+.quest-available-level-pill {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--color-primary-soft-gold);
+  background: rgb(212 175 90 / 16%);
+  border: 1px solid rgb(212 175 90 / 32%);
+}
+
 .quest-available-description {
   margin: 0 0 var(--space-2);
   font-size: 0.76rem;
@@ -20287,23 +20299,35 @@ html:has(.game-shell),
   color: #6a4a24;
 }
 .mm-view .quest-available-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+/* No box — the offer reads directly on the parchment like the dialogue. */
 .mm-view .quest-available-card {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  padding: 12px;
-  border-radius: 10px;
-  background: rgb(247 240 222 / 60%);
-  border: 1px solid rgb(106 74 36 / 38%);
+  padding: 0;
+  border: none;
+  background: none;
   box-shadow: none;
+  animation: none;
 }
-.mm-view .quest-available-header { display: flex; align-items: center; gap: 8px; }
-.mm-view .quest-available-icon { color: #b88a2e; }
+.mm-view .quest-available-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .mm-view .quest-available-name {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   color: #2e2212;
+}
+/* Level shown as a tiny pill next to the quest name. */
+.mm-view .quest-available-level-pill {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 9px;
+  border-radius: 999px;
+  color: #5a4226;
+  background: rgb(184 138 46 / 20%);
+  border: 1px solid rgb(184 138 46 / 45%);
 }
 .mm-view .quest-available-description { margin: 0; font-size: 0.92rem; line-height: 1.45; color: #3a2c1a; }
 .mm-view .quest-available-objectives { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -20333,26 +20357,49 @@ html:has(.game-shell),
   border: 1px solid rgb(106 74 36 / 35%);
 }
 .mm-view .quest-offer-locked { margin: 0; font-size: 0.82rem; font-style: italic; color: #9a5a3a; }
+/* Accept / Turn In styled like the dialogue choices: parchment chip with a ❧
+   flourish, so quests and conversations feel like the same journal. */
 .mm-view .quest-accept-button {
-  margin-top: 2px;
-  padding: 9px 14px;
+  position: relative;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 9px 16px 9px 32px;
   border-radius: 8px;
+  border: 1px solid rgb(74 56 37 / 35%);
+  background: rgb(247 240 222 / 68%);
+  color: #33271a;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.97rem;
   cursor: pointer;
-  color: #f3ead2;
-  border: 1px solid #1d2a45;
-  background: linear-gradient(160deg, #2e436e, #1e2c49);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%);
-  transition: filter 150ms var(--ease-out-soft);
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
 }
-.mm-view .quest-accept-button:hover:not(:disabled) { filter: brightness(1.12); }
-.mm-view .quest-accept-button:disabled { opacity: 0.5; cursor: not-allowed; }
-.mm-view .quest-turnin-button {
-  color: #2e2212;
+.mm-view .quest-accept-button::before {
+  content: "❧";
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a6a2e;
+  font-size: 0.95em;
+  transition: transform 150ms var(--ease-out-soft);
+}
+.mm-view .quest-accept-button:hover:not(:disabled) {
+  background: rgb(250 244 228 / 95%);
   border-color: #8a6a2e;
-  background: linear-gradient(160deg, #e6c46a, #c79a3a);
+  transform: translateX(2px);
+}
+.mm-view .quest-accept-button:hover:not(:disabled)::before { transform: translateY(-50%) scale(1.18); }
+.mm-view .quest-accept-button:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Turn In carries a warm gold tint to read as the rewarding action. */
+.mm-view .quest-turnin-button {
+  border-color: rgb(138 106 46 / 55%);
+  background: rgb(230 196 106 / 38%);
+  color: #2e2212;
+}
+.mm-view .quest-turnin-button:hover:not(:disabled) {
+  background: rgb(230 196 106 / 60%);
+  border-color: #8a6a2e;
 }
 .mm-view .quest-offer-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .mm-view .quest-empty-icon { color: #b88a2e; font-size: 1.4rem; }
