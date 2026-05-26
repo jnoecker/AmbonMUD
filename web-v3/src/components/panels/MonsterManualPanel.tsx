@@ -165,6 +165,10 @@ export function MonsterManualPanel({
         style={bg ? { ["--mm-bg" as string]: `url("${bg}")` } : undefined}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile-only close: a tall card can fill the screen, leaving no
+            backdrop to tap. Desktop keeps the clean click-away. */}
+        <button type="button" className="mm-close-x" aria-label="Close" onClick={close}>✕</button>
+
         {/* Difficulty badge — sits on the painted ribbon when skinned. */}
         {c && <span className="mm-badge">{c.ratingLabel}</span>}
 

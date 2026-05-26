@@ -75,6 +75,9 @@ export function ItemManualPanel({
         style={bg ? { ["--mm-bg" as string]: `url("${bg}")` } : undefined}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile-only close (a tall card can fill the screen). */}
+        <button type="button" className="mm-close-x" aria-label="Close" onClick={onClose}>✕</button>
+
         {/* Framed art (left) */}
         <figure className="mm-figure">
           {item.image ? (
