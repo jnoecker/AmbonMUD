@@ -912,7 +912,9 @@ function App() {
                         ? "grimoire"
                         : drawerPanel === "terminal"
                           ? "desk"
-                          : "default"
+                          : drawerPanel === "mail"
+                            ? "mail"
+                            : "default"
         }
         skinBg={
           drawerPanel === "inventory"
@@ -931,7 +933,9 @@ function App() {
                         ? state.serverAssets["spellbook_bg"]
                         : drawerPanel === "terminal"
                           ? state.serverAssets["terminal_bg"]
-                          : undefined
+                          : drawerPanel === "mail"
+                            ? state.serverAssets["mail_bg"]
+                            : undefined
         }
       >
         {drawerPanel === "character" && (
