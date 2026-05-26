@@ -589,6 +589,7 @@ export function applyGmcpPackage(
             description: typeof entry.description === "string" ? entry.description : undefined,
             image: typeof entry.image === "string" ? entry.image : null,
             video: typeof entry.video === "string" ? entry.video : null,
+            takeable: typeof entry.takeable === "boolean" ? entry.takeable : true,
           })),
       );
       break;

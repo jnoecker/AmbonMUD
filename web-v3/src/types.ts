@@ -326,6 +326,8 @@ export interface RoomItem {
   description?: string;
   image?: string | null;
   video?: string | null;
+  /** Whether the item can be picked up (false for fixed scenery). */
+  takeable?: boolean;
 }
 
 export interface RoomPlayer {
@@ -478,6 +480,8 @@ export interface ItemEntry {
   description: string | null;
   image: string | null;
   video: string | null;
+  /** Whether the item can be picked up (hides Get for fixed scenery). */
+  takeable: boolean;
 }
 
 /**

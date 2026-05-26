@@ -49,9 +49,8 @@ export function ItemManualPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const actions: ItemAction[] = [
-    { key: "get", label: "Get", glyph: "⤓", assetKey: "action_get", variant: "primary", run: () => { onCommand(`get ${name}`); onClose(); } },
-  ];
+  const actions: ItemAction[] = [];
+  if (item.takeable) actions.push({ key: "get", label: "Get", glyph: "⤓", assetKey: "action_get", variant: "primary", run: () => { onCommand(`get ${name}`); onClose(); } });
   if (item.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(item.video!) });
 
   // An action icon: custom asset when registered, else the unicode glyph.

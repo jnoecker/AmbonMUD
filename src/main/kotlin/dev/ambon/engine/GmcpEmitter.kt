@@ -411,6 +411,7 @@ class GmcpEmitter(
                     description = it.item.description,
                     image = it.item.image,
                     video = it.item.video,
+                    takeable = it.item.takeable,
                 )
             },
         )
@@ -459,6 +460,7 @@ class GmcpEmitter(
                 description = it.item.description,
                 image = it.item.image,
                 video = it.item.video,
+                takeable = it.item.takeable,
             )
         }
         broadcastSerialized(players.playersInRoom(roomId), "Room.Items", payload)
@@ -2560,6 +2562,7 @@ class GmcpEmitter(
         val description: String = "",
         val image: String? = null,
         val video: String? = null,
+        val takeable: Boolean = true,
     )
 
     private data class CharSkillPayload(

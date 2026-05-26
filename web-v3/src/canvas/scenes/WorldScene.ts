@@ -1783,7 +1783,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildItems(items: Array<{ id: string; name: string; description?: string; image?: string | null; video?: string | null }>) {
+  private rebuildItems(items: Array<{ id: string; name: string; description?: string; image?: string | null; video?: string | null; takeable?: boolean }>) {
     for (const { sprite, label, labelBg, hitArea } of this.itemSprites) {
       this.container.removeChild(sprite);
       this.container.removeChild(labelBg);
@@ -1832,6 +1832,7 @@ export class WorldScene {
           description: itemData.description ?? null,
           image: itemData.image ?? null,
           video: itemData.video ?? null,
+          takeable: itemData.takeable ?? true,
         });
       });
 
