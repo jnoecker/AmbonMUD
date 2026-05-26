@@ -20106,13 +20106,14 @@ html:has(.game-shell),
   box-shadow: 0 22px 48px rgb(0 0 0 / 55%);
 }
 
-/* Creature in the arched vine frame — transparent, fit inside (no dark box). */
+/* Creature in the arched vine frame — transparent, fit inside (no dark box).
+   Sized to nearly fill the vine area; object-fit keeps the art undistorted. */
 .mm-card-skinned .mm-figure {
   position: absolute;
-  left: 12.5%;
-  top: 15%;
-  width: 28%;
-  height: 68%;
+  left: 9%;
+  top: 11%;
+  width: 34%;
+  height: 76%;
   flex: none;
   max-width: none;
 }
