@@ -15,7 +15,7 @@ interface QuestCompleteToastProps {
  */
 export function QuestCompleteToast({ notifications, onDismiss }: QuestCompleteToastProps) {
   const current = useMemo(
-    () => notifications.find((n) => n.event === "complete") ?? null,
+    () => notifications.find((n) => n.event === "complete" || n.event === "accept") ?? null,
     [notifications],
   );
   if (!current) return null;
@@ -62,9 +62,9 @@ function QuestCompleteToastInner({ notification, onDismiss }: InnerProps) {
       onClick={() => setClosing(true)}
     >
       <div className="quest-complete-toast-header">
-        <span className="quest-complete-toast-icon" aria-hidden="true">{"✨"}</span>
+        <span className="quest-complete-toast-icon" aria-hidden="true">{notification.event === "accept" ? "✦" : "✨"}</span>
         <div className="quest-complete-toast-titles">
-          <span className="quest-complete-toast-eyebrow">Quest Complete</span>
+          <span className="quest-complete-toast-eyebrow">{notification.event === "accept" ? "Quest Accepted" : "Quest Complete"}</span>
           <span className="quest-complete-toast-name">{notification.questName}</span>
         </div>
       </div>

@@ -714,7 +714,7 @@ export interface QuestNotification {
   id: string;
   questId: string;
   questName: string;
-  event: "complete" | "update";
+  event: "complete" | "update" | "accept";
   receivedAt: number;
   // Populated for "complete" events; null/empty for "update".
   questDescription?: string;

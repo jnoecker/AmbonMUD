@@ -32,6 +32,8 @@ interface MonsterManualPanelProps {
   onTurnInQuest: (questId: string) => void;
   onDialogueChoice: (index: number) => void;
   onDialogueDismiss: () => void;
+  /** Clear the conversation without sending `bye` (it already ended server-side). */
+  onDialogueEnd: () => void;
   onShop: () => void;
   onVideo: (url: string) => void;
 }
@@ -71,6 +73,7 @@ export function MonsterManualPanel({
   onTurnInQuest,
   onDialogueChoice,
   onDialogueDismiss,
+  onDialogueEnd,
   onShop,
   onVideo,
 }: MonsterManualPanelProps) {
@@ -93,6 +96,17 @@ export function MonsterManualPanel({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }); // re-bind each render so `view`/`dialogue` stay current
+
+  // When a conversation reaches a terminal node (no choices), show the closing
+  // line briefly, then return to the entry and clear the dialogue.
+  useEffect(() => {
+    if (view !== "dialog" || !dialogue || dialogue.choices.length > 0) return;
+    const t = window.setTimeout(() => {
+      onDialogueEnd();
+      setView("info");
+    }, 1700);
+    return () => window.clearTimeout(t);
+  }, [view, dialogue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { info, name } = monster;
   const skinned = !!bg; // a monster_manual_bg frame is registered
@@ -120,6 +134,10 @@ export function MonsterManualPanel({
 
   const lvDiff = c ? c.mobLevel - c.playerLevel : 0;
   const shortName = name.split(" ").slice(-1)[0];
+
+  // Accepting / turning in returns to the entry (the sub-window auto-closes).
+  const acceptQuest = (id: string) => { onAcceptQuest(id); setView("info"); };
+  const turnInQuest = (id: string) => { onTurnInQuest(id); setView("info"); };
 
   return (
     <div
@@ -162,7 +180,8 @@ export function MonsterManualPanel({
           <header className="mm-head">
             <div className="mm-titles">
               <h2 className="mm-name">{name}</h2>
-              {(level != null || category) && (
+              {/* Level/category only matters for things you can fight. */}
+              {monster.canAttack && (level != null || category) && (
                 <span className="mm-meta">
                   {level != null ? `Lv ${level}` : ""}{level != null && category ? " " : ""}{category}
                 </span>
@@ -208,8 +227,8 @@ export function MonsterManualPanel({
               <QuestOfferPanel
                 connected={connected}
                 questsAvailable={questsAvailable}
-                onAcceptQuest={onAcceptQuest}
-                onTurnInQuest={onTurnInQuest}
+                onAcceptQuest={acceptQuest}
+                onTurnInQuest={turnInQuest}
               />
             </div>
           )}
@@ -220,7 +239,7 @@ export function MonsterManualPanel({
               {dialogue ? (
                 <>
                   <p className="mm-dialog-text">{dialogue.text}</p>
-                  {dialogue.choices.length > 0 ? (
+                  {dialogue.choices.length > 0 && (
                     <ul className="mm-dialog-choices">
                       {dialogue.choices.map((ch) => (
                         <li key={ch.index}>
@@ -230,8 +249,6 @@ export function MonsterManualPanel({
                         </li>
                       ))}
                     </ul>
-                  ) : (
-                    <p className="mm-dialog-end">The conversation has ended.</p>
                   )}
                 </>
               ) : (

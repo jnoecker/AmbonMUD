@@ -295,6 +295,24 @@ function App() {
     resetComposerTraversal();
   };
 
+  // Accept a quest and surface an "accepted" toast (no server signal for accept,
+  // so we fire it optimistically from the name we already have on the offer).
+  const acceptQuest = (questId: string) => {
+    sendCommand(`accept #${questId}`);
+    const q = state.questsAvailable.find((x) => x.id === questId);
+    state.setQuestNotifications((prev) => [
+      {
+        id: `${Date.now()}-${Math.random()}`,
+        questId,
+        questName: q?.name ?? "Quest",
+        event: "accept" as const,
+        receivedAt: Date.now(),
+        questDescription: q?.description,
+      },
+      ...prev,
+    ]);
+  };
+
   // Inline command-input keydown: history navigation + tab completion
   const handleInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     const liveValue = event.currentTarget.value;
@@ -1050,7 +1068,7 @@ function App() {
           <QuestOfferPanel
             connected={connected}
             questsAvailable={state.questsAvailable}
-            onAcceptQuest={(questId) => sendCommand(`accept #${questId}`)}
+            onAcceptQuest={acceptQuest}
             onTurnInQuest={(questId) => sendCommand(`quest turnin #${questId}`)}
           />
         )}
@@ -1638,10 +1656,11 @@ function App() {
           onCommand={sendCommand}
           onZoomImage={(url) => setImagePreviewUrl(url)}
           onQuest={(mobName) => sendCommand(`qoffers ${mobName}`)}
-          onAcceptQuest={(questId) => sendCommand(`accept #${questId}`)}
+          onAcceptQuest={acceptQuest}
           onTurnInQuest={(questId) => sendCommand(`quest turnin #${questId}`)}
           onDialogueChoice={(index) => sendCommand(`${index}`)}
           onDialogueDismiss={() => { if (state.dialogue) sendCommand("bye"); state.setDialogue(null); }}
+          onDialogueEnd={() => state.setDialogue(null)}
           onShop={() => { sendCommand("list"); openPanel("shop"); }}
           onVideo={(url) => setVideoUrl(url)}
         />
