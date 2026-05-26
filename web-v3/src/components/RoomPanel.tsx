@@ -29,6 +29,9 @@ export function RoomPanel({ room, exits, serverAssets, loggedIn, onCommand }: Ro
       {!collapsed && (
         <div className="room-panel-body">
           <div className="room-panel-main">
+            {/* Echo the room name here too (also on the hanging sign) for
+                cohesion. Hidden on narrow screens where vertical room is tight. */}
+            <h2 className="room-panel-title">{room.title}</h2>
             <p className="room-panel-desc">
               {room.description || "No room description available yet."}
             </p>

@@ -18417,6 +18417,18 @@ html:has(.game-shell),
   width: 0;
 }
 
+.room-panel-title {
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-faint);
+  font-family: var(--font-display);
+  font-size: 1.42rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: var(--text-heading);
+}
+
 .room-panel-desc {
   margin: 0;
   font-size: 0.98rem;
@@ -18602,6 +18614,11 @@ html:has(.game-shell),
 @media (max-width: 640px) {
   .room-panel {
     height: 234px;
+  }
+
+  /* The hanging sign still carries the name; reclaim the vertical space here. */
+  .room-panel-title {
+    display: none;
   }
 
   .room-panel-body {
