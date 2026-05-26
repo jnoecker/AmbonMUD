@@ -926,9 +926,18 @@ function App() {
             canManageItems={connected && hasCharacterProfile}
             roomFeatures={state.roomFeatures}
             containerContents={state.containerContents}
+            serverAssets={state.serverAssets}
             onWearItem={(name) => sendCommand(`wear ${name}`)}
             onDropItem={(name) => sendCommand(`drop ${name}`)}
             onGiveItem={(keyword, player) => sendCommand(`give ${keyword} ${player}`)}
+            onExamineItem={(it, image) => setItem({
+              id: it.id,
+              name: it.name,
+              description: null,
+              image,
+              video: it.video ?? null,
+              takeable: false,
+            })}
             onCommand={sendCommand}
             equipHint={showEquipHint}
           />

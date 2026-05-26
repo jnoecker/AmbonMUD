@@ -7061,6 +7061,21 @@ body {
   flex-shrink: 0;
 }
 
+/* Custom action-button art (action_look/use/equip/store/drop). */
+.inventory-action-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Unicode fallback shown until the action art is registered. */
+.inventory-action-glyph {
+  font-size: 1.1rem;
+  line-height: 1;
+  color: inherit;
+}
+
 .inventory-give-picker {
   display: flex;
   align-items: center;
@@ -19968,7 +19983,9 @@ html:has(.game-shell),
 .mm-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  /* Above the drawer (121) so an item card can be examined from the inventory
+     satchel; below the video (250) and image-preview (260) it can spawn. */
+  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
