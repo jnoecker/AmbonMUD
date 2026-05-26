@@ -6621,42 +6621,19 @@ body {
 /* ────────── Inventory Panel ────────── */
 
 /* ===== Satchel theme =================================================== */
-/* The inventory reads as an open leather satchel: a stitched leather body
-   holding canvas "pockets" (sections) of parchment item tags. Shares the
-   manual/item-card palette (parchment cream, ink, sepia, soft gold). */
+/* The inventory drawer is skinned as an open leather satchel (see
+   .drawer-sheet-satchel). The panel itself is just the stack of canvas
+   "pocket" sections holding parchment item tags. Shares the manual/item-card
+   palette (parchment cream, ink, sepia, soft gold). */
 .inventory-panel {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 18px 16px 20px;
+  padding: 2px 0 4px;
   container-type: inline-size;
-  border-radius: 16px;
-  background-image:
-    var(--satchel-bg, none),
-    radial-gradient(130% 90% at 50% -10%, rgb(132 94 48 / 38%), transparent 62%),
-    linear-gradient(165deg, #5b4226, #402d18 58%, #34250f);
-  background-size: cover, auto, auto;
-  background-position: center;
-  border: 2px solid #2b1f10;
-  box-shadow:
-    inset 0 2px 12px rgb(18 10 3 / 60%),
-    inset 0 0 0 2px rgb(132 94 48 / 20%);
   color: #f0e2c4;
 }
-
-/* Stitched inner seam. */
-.inventory-panel::before {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 11px;
-  border: 1.5px dashed rgb(216 186 122 / 42%);
-  pointer-events: none;
-}
-
-/* Keep content above the stitch overlay. */
-.inventory-panel > * { position: relative; z-index: 1; }
 
 .inventory-active-container {
   display: flex;
@@ -7112,9 +7089,54 @@ body {
   background: rgb(230 196 106 / 45%);
 }
 
+/* Empty satchel: a soft, stitched empty pocket above a warm note. */
 .inventory-empty-state {
-  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 36px 24px 40px;
   text-align: center;
+}
+
+.inventory-empty-pocket {
+  position: relative;
+  width: 132px;
+  height: 92px;
+  border-radius: 10px 10px 14px 14px;
+  background: linear-gradient(165deg, rgb(78 56 32 / 70%), rgb(54 39 22 / 70%));
+  border: 1.5px dashed rgb(216 186 122 / 45%);
+  box-shadow: inset 0 8px 18px rgb(18 10 3 / 55%);
+}
+
+/* The pocket's fold-over flap. */
+.inventory-empty-pocket-flap {
+  position: absolute;
+  left: -1.5px;
+  right: -1.5px;
+  top: -1.5px;
+  height: 34px;
+  border-radius: 10px 10px 16px 16px / 10px 10px 22px 22px;
+  background: linear-gradient(180deg, #5b4226, #43301a);
+  border: 1.5px solid rgb(132 94 48 / 70%);
+  box-shadow: 0 3px 6px rgb(18 10 3 / 45%);
+}
+
+.inventory-empty-note {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f2e6c8;
+}
+
+.inventory-empty-sub {
+  margin: 0;
+  max-width: 30ch;
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: #c9b182;
 }
 
 /* ---------- Container section ---------- */
@@ -19408,6 +19430,66 @@ html:has(.game-shell),
     width: min(1040px, 92vw);
     max-height: 90vh;
   }
+}
+
+/* Satchel-skinned drawer (inventory): the sheet itself becomes the leather
+   satchel, so there's no competing blue box around the pockets. Compound
+   selectors keep these ahead of the responsive .drawer-sheet overrides. */
+.drawer-sheet.drawer-sheet-satchel {
+  background-image:
+    var(--satchel-bg, none),
+    radial-gradient(130% 90% at 50% -8%, rgb(132 94 48 / 38%), transparent 62%),
+    linear-gradient(168deg, #5b4226, #402d18 58%, #34250f);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 2px solid #2b1f10;
+  border-top: 2px solid #2b1f10;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-satchel {
+    border: 2px solid #2b1f10;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%);
+  }
+}
+
+/* Stitched inner seam around the whole satchel. */
+.drawer-sheet-satchel::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  z-index: 0;
+  border-radius: 14px;
+  border: 1.5px dashed rgb(216 186 122 / 38%);
+  pointer-events: none;
+}
+
+/* Keep the sheet's content above the stitch overlay. */
+.drawer-sheet-satchel > * { position: relative; z-index: 1; }
+
+.drawer-sheet-satchel .drawer-handle {
+  background: rgb(216 186 122 / 50%);
+}
+
+.drawer-sheet-satchel .drawer-header {
+  border-bottom: 1px solid rgb(132 94 48 / 50%);
+}
+
+.drawer-sheet-satchel .drawer-title {
+  color: #f4e9cb;
+  text-shadow: 0 1px 2px rgb(18 10 3 / 55%);
+}
+
+.drawer-sheet-satchel .drawer-close {
+  border-color: rgb(132 94 48 / 60%);
+  background: rgb(54 39 22 / 82%);
+  color: #e6d2a4;
+}
+
+.drawer-sheet-satchel .drawer-close:hover {
+  background: rgb(74 54 31 / 92%);
+  color: #f4e9cb;
 }
 
 /* Hide legacy desktop chrome that no longer renders */

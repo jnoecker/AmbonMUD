@@ -864,7 +864,13 @@ function App() {
         audio={audio}
       />
 
-      <Drawer open={state.activePopout !== null} title={drawerTitle} onClose={closeDrawer}>
+      <Drawer
+        open={state.activePopout !== null}
+        title={drawerTitle}
+        onClose={closeDrawer}
+        variant={drawerPanel === "inventory" ? "satchel" : "default"}
+        skinBg={drawerPanel === "inventory" ? state.serverAssets["inventory_satchel_bg"] : undefined}
+      >
         {drawerPanel === "character" && (
           <CharacterPanel
             connected={connected}
@@ -920,7 +926,6 @@ function App() {
             canManageItems={connected && hasCharacterProfile}
             roomFeatures={state.roomFeatures}
             containerContents={state.containerContents}
-            bg={state.serverAssets["inventory_satchel_bg"]}
             onWearItem={(name) => sendCommand(`wear ${name}`)}
             onDropItem={(name) => sendCommand(`drop ${name}`)}
             onGiveItem={(keyword, player) => sendCommand(`give ${keyword} ${player}`)}

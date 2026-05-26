@@ -11,8 +11,6 @@ interface InventoryPanelProps {
   canManageItems: boolean;
   roomFeatures: RoomFeature[];
   containerContents: ContainerContents | null;
-  /** Optional leather-texture art (server asset inventory_satchel_bg). */
-  bg?: string;
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onGiveItem: (itemKeyword: string, playerName: string) => void;
@@ -112,7 +110,6 @@ export function InventoryPanel({
   canManageItems,
   roomFeatures,
   containerContents,
-  bg,
   onWearItem,
   onDropItem,
   onGiveItem,
@@ -134,7 +131,11 @@ export function InventoryPanel({
   if (inventory.length === 0) {
     return (
       <div className="inventory-empty-state">
-        <p className="empty-note">Your bags are empty.</p>
+        <div className="inventory-empty-pocket" aria-hidden="true">
+          <span className="inventory-empty-pocket-flap" />
+        </div>
+        <p className="empty-note inventory-empty-note">Your satchel is empty.</p>
+        <p className="inventory-empty-sub">Pick things up and they&rsquo;ll be tucked away here.</p>
       </div>
     );
   }
@@ -294,10 +295,7 @@ export function InventoryPanel({
   };
 
   return (
-    <div
-      className="inventory-panel"
-      style={bg ? { ["--satchel-bg" as string]: `url("${bg}")` } : undefined}
-    >
+    <div className="inventory-panel">
       {containerContents && (
         <div className="inventory-active-container" role="status" aria-live="polite">
           <span className="inventory-active-container-label">Storing in</span>
