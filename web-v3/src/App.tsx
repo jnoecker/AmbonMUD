@@ -16,6 +16,7 @@ import { InventoryPanel } from "./components/panels/InventoryPanel";
 import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { MailPanel } from "./components/panels/MailPanel";
 import { MonsterManualPanel } from "./components/panels/MonsterManualPanel";
+import { ItemManualPanel } from "./components/panels/ItemManualPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
 import { BankPanel } from "./components/panels/BankPanel";
@@ -49,6 +50,7 @@ import type {
   ChatChannel,
   ConsiderRating,
   FeaturePopoutFocus,
+  ItemEntry,
   LookTargetInfo,
   MonsterEntry,
   PopoutPanel,
@@ -168,6 +170,8 @@ function App() {
 
   // Monster-manual / bestiary panel (clicked mob or pet)
   const [monster, setMonster] = useState<MonsterEntry | null>(null);
+  // Item card (clicked room item)
+  const [item, setItem] = useState<ItemEntry | null>(null);
 
   // Full-size image preview — opened by clicking the entity preview sprite
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -449,6 +453,7 @@ function App() {
       state.setConsiderResult(null);
       setMonster(entry);
     };
+    canvasCallbacks.openItemManual = (entry) => setItem(entry);
     canvasCallbacks.openImagePreview = (url: string) => setImagePreviewUrl(url);
     // In-canvas entity menu (Pixi) can't paint above DOM overlays, so flag the
     // root while it's open and let CSS fade the room sign out of the way.
@@ -479,6 +484,7 @@ function App() {
       canvasCallbacks.openVideo = null;
       canvasCallbacks.openMobDetail = null;
       canvasCallbacks.openMonsterManual = null;
+      canvasCallbacks.openItemManual = null;
       canvasCallbacks.openImagePreview = null;
       canvasCallbacks.onEntityMenu = null;
       document.documentElement.classList.remove("entity-menu-open");
@@ -1662,6 +1668,20 @@ function App() {
           onDialogueDismiss={() => { if (state.dialogue) sendCommand("bye"); state.setDialogue(null); }}
           onDialogueEnd={() => state.setDialogue(null)}
           onShop={() => { sendCommand("list"); openPanel("shop"); }}
+          onVideo={(url) => setVideoUrl(url)}
+        />
+      )}
+
+      {/* Item card — parchment "field manual" page for a clicked room item. */}
+      {item && (
+        <ItemManualPanel
+          key={item.id ?? item.name}
+          item={item}
+          bg={state.serverAssets["item_manual_bg"] ?? state.serverAssets["monster_manual_bg"]}
+          serverAssets={state.serverAssets}
+          onClose={() => setItem(null)}
+          onCommand={sendCommand}
+          onZoomImage={(url) => setImagePreviewUrl(url)}
           onVideo={(url) => setVideoUrl(url)}
         />
       )}

@@ -6,6 +6,7 @@ import type {
   DialogueState,
   FeaturePopoutFocus,
   GroupInfo,
+  ItemEntry,
   MobInfo,
   MonsterEntry,
   PuzzleState,
@@ -95,6 +96,8 @@ export const canvasCallbacks: {
   onEntityMenu: ((open: boolean) => void) | null;
   /** Open the monster-manual / bestiary panel for a clicked creature. */
   openMonsterManual: ((entry: MonsterEntry) => void) | null;
+  /** Open the parchment item card for a clicked room item. */
+  openItemManual: ((entry: ItemEntry) => void) | null;
 } = {
   sendCommand: null,
   prefillCommand: null,
@@ -124,6 +127,7 @@ export const canvasCallbacks: {
   openImagePreview: null,
   onEntityMenu: null,
   openMonsterManual: null,
+  openItemManual: null,
 };
 
 export const pendingCastRef: { current: PendingCast | null } = { current: null };

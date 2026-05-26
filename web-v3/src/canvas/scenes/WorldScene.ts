@@ -1826,8 +1826,13 @@ export class WorldScene {
 
       const itemData = item;
       hitArea.on("pointerdown", () => {
-        this.entityPopout.showItem(itemData.name, itemData.description, itemData.image, itemData.video);
-        this.showPopout();
+        canvasCallbacks.openItemManual?.({
+          id: itemData.id,
+          name: itemData.name,
+          description: itemData.description ?? null,
+          image: itemData.image ?? null,
+          video: itemData.video ?? null,
+        });
       });
 
       this.container.addChild(sprite);

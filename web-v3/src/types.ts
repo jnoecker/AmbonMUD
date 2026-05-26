@@ -470,6 +470,16 @@ export interface MonsterEntry {
   canAttack: boolean;
 }
 
+/** A clicked room item, surfaced in the parchment item card (analogous to the
+ *  monster manual). */
+export interface ItemEntry {
+  id?: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  video: string | null;
+}
+
 /**
  * Per-skill visual archetype that drives how the web client renders the
  * cast moment. Sent in the Char.Skills GMCP payload as `visual.archetype`.
