@@ -7466,6 +7466,29 @@ body {
   font-weight: 500;
 }
 
+/* Mobile: the two columns won't fit side by side in the bottom sheet — stack
+   the sprite above a full-width slot list so cards stop overflowing. */
+@media (max-width: 640px) {
+  .paperdoll-layout {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .paperdoll-sprite-col {
+    align-self: center;
+  }
+
+  .paperdoll-sprite-wrap {
+    width: clamp(220px, 64vw, 320px);
+    height: clamp(220px, 64vw, 320px);
+  }
+
+  .paperdoll-slots-col {
+    width: 100%;
+  }
+}
+
 /* Equipped-item bonus badges — mirror the inventory meta row style so both
    panels share the same visual vocabulary. */
 .paperdoll-list-badges {
