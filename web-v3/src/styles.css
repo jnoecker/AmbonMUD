@@ -20301,7 +20301,7 @@ html:has(.game-shell),
 }
 
 .drawer-sheet-grimoire .drawer-header { border-bottom: 1px solid rgb(90 60 30 / 30%); }
-.drawer-sheet-grimoire .drawer-title { color: #3a2810; text-shadow: 0 1px 0 rgb(255 246 224 / 45%); }
+.drawer-sheet-grimoire .drawer-title { color: #2e2212; text-shadow: 0 0 8px rgb(247 240 222 / 85%), 0 1px 0 rgb(255 250 236 / 60%); }
 .drawer-sheet-grimoire .drawer-close { border-color: rgb(90 60 30 / 50%); background: rgb(90 60 30 / 16%); color: #4a3014; }
 .drawer-sheet-grimoire .drawer-close:hover { background: rgb(90 60 30 / 30%); color: #2a1c08; }
 .drawer-sheet-grimoire .drawer-handle { background: rgb(90 60 30 / 40%); }
@@ -20310,9 +20310,10 @@ html:has(.game-shell),
 .drawer-sheet-grimoire .spellbook { height: 100%; min-height: 0; }
 
 .drawer-sheet-grimoire .spellbook-header { align-items: baseline; }
-.drawer-sheet-grimoire .spellbook-class { color: #2e2212; }
-.drawer-sheet-grimoire .spellbook-level { color: #6a4a24; }
-.drawer-sheet-grimoire .spellbook-hint { color: #7a5e38; }
+/* Header sits directly on the (possibly busy) page art — give it a cream halo. */
+.drawer-sheet-grimoire .spellbook-class { color: #2e2212; text-shadow: 0 0 7px rgb(247 240 222 / 85%), 0 1px 0 rgb(255 250 236 / 60%); }
+.drawer-sheet-grimoire .spellbook-level { color: #5a4226; text-shadow: 0 0 6px rgb(247 240 222 / 85%); }
+.drawer-sheet-grimoire .spellbook-hint { color: #5a4226; text-shadow: 0 0 6px rgb(247 240 222 / 80%); }
 
 .drawer-sheet-grimoire .spellbook-sp-badge {
   background: rgb(106 74 36 / 16%);
@@ -20327,8 +20328,8 @@ html:has(.game-shell),
 
 /* Search field. */
 .drawer-sheet-grimoire .spellbook-search-input {
-  background: rgb(255 250 236 / 55%);
-  border: 1px solid rgb(106 74 36 / 40%);
+  background: rgb(247 240 222 / 90%);
+  border: 1px solid rgb(106 74 36 / 50%);
   color: #2e2212;
 }
 .drawer-sheet-grimoire .spellbook-search-input::placeholder { color: rgb(106 74 36 / 60%); }
@@ -20364,16 +20365,17 @@ html:has(.game-shell),
 }
 .drawer-sheet-grimoire .spellbook-grid::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 45%); }
 
-/* Illuminated spell entries on vellum. */
+/* Illuminated spell entries — near-opaque vellum so they read as notes laid on
+   the page, even over a busy illustrated background. */
 .drawer-sheet-grimoire .spellbook-card {
-  background: rgb(255 250 236 / 38%);
-  border: 1px solid rgb(138 106 46 / 38%);
+  background: linear-gradient(150deg, rgb(247 240 222 / 94%), rgb(234 222 192 / 92%));
+  border: 1px solid rgb(138 106 46 / 50%);
   border-radius: 6px;
   color: #33271a;
-  box-shadow: 0 1px 2px rgb(40 28 14 / 16%);
+  box-shadow: 0 2px 6px rgb(20 12 4 / 35%);
 }
 .drawer-sheet-grimoire .spellbook-card:hover:not(:disabled) {
-  background: rgb(255 252 242 / 60%);
+  background: linear-gradient(150deg, rgb(252 246 230 / 97%), rgb(240 228 198 / 95%));
   border-color: #8a6a2e;
 }
 .drawer-sheet-grimoire .spellbook-card-icon {
