@@ -19923,7 +19923,10 @@ html:has(.game-shell),
 }
 
 .mm-badge {
-  flex: 0 0 auto;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
   padding: 5px 12px;
   border-radius: 4px;
   font-family: var(--font-display);
@@ -20061,6 +20064,78 @@ html:has(.game-shell),
   background: linear-gradient(160deg, #5a4630, #3e2f1c);
 }
 
+/* Skinned: lay content onto the monster_manual_bg frame's painted regions
+   (arched art frame left, ribbon top-right, parchment text area right). The
+   region percentages are eyeballed off the 1280x853 art and easy to nudge. */
+.mm-card-skinned {
+  display: block;
+  width: min(840px, 96vw);
+  max-height: none;
+  aspect-ratio: 1280 / 853;
+  padding: 0;
+  border: none;
+  background-size: 100% 100%, auto;
+  box-shadow: 0 22px 48px rgb(0 0 0 / 55%);
+}
+
+/* Creature in the arched vine frame — transparent, fit inside (no dark box). */
+.mm-card-skinned .mm-figure {
+  position: absolute;
+  left: 9.5%;
+  top: 11%;
+  width: 29%;
+  height: 73%;
+  flex: none;
+  max-width: none;
+}
+
+.mm-card-skinned .mm-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.mm-card-skinned .mm-zoom { right: 2px; bottom: 2px; }
+
+/* Difficulty as tiny text on the painted ribbon. */
+.mm-card-skinned .mm-badge {
+  left: 84.5%;
+  top: 10.5%;
+  right: auto;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: #5a4326;
+}
+
+/* Manual text over the parchment (right side). */
+.mm-card-skinned .mm-content {
+  position: absolute;
+  left: 45%;
+  top: 12.5%;
+  right: 5.5%;
+  bottom: 9%;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.mm-card-skinned .mm-desc {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.mm-card-skinned .mm-assess { margin-top: 0; }
+.mm-card-skinned .mm-assessing { margin-top: 0; }
+
 @keyframes mm-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes mm-pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 
@@ -20068,7 +20143,9 @@ html:has(.game-shell),
   .mm-backdrop, .mm-card { animation: none; }
 }
 
-/* Narrow screens: stack art over the entry. */
+/* Narrow screens: stack art over the entry. The landscape frame art can't
+   shrink usefully, so the skinned card reverts to the stacked procedural
+   layout (art dropped to avoid distortion). */
 @media (max-width: 640px) {
   .mm-card { flex-direction: column; gap: 12px; padding: 16px; max-height: 92vh; overflow-y: auto; }
   .mm-figure { flex: 0 0 auto; max-width: none; width: 100%; }
@@ -20076,4 +20153,23 @@ html:has(.game-shell),
   .mm-content { overflow-y: visible; }
   .mm-name { font-size: 1.4rem; }
   .mm-stats { grid-template-columns: repeat(2, 1fr); }
+
+  .mm-card-skinned {
+    display: flex;
+    aspect-ratio: auto;
+    width: min(420px, 92vw);
+    height: auto;
+    padding: 16px;
+    border: 2px solid #4a3825;
+    background-image: linear-gradient(155deg, #ece2c8, #ddcba6);
+  }
+  .mm-card-skinned .mm-figure { position: static; width: 100%; height: 200px; }
+  .mm-card-skinned .mm-content { position: static; inset: auto; overflow: visible; }
+  .mm-card-skinned .mm-desc { overflow-y: visible; }
+  .mm-card-skinned .mm-badge {
+    top: 14px; right: 14px; left: auto; transform: none;
+    padding: 4px 10px; font-size: 0.7rem; color: #2e2212;
+    background: color-mix(in srgb, var(--consider-accent, #d9c89a) 70%, #f3ead2);
+    border: 1px solid #4a3825;
+  }
 }

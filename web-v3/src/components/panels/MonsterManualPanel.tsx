@@ -57,6 +57,7 @@ export function MonsterManualPanel({
   }, [onClose]);
 
   const { info, name } = monster;
+  const skinned = !!bg; // a monster_manual_bg frame is registered
   // Only show stats once the consider result is for *this* creature.
   const c = consider && (consider.mobId === monster.id || consider.mobName === name) ? consider : null;
   const level = c?.mobLevel ?? monster.level;
@@ -83,10 +84,13 @@ export function MonsterManualPanel({
       onClick={onClose}
     >
       <div
-        className={`mm-card ${c ? TIER_CLASS[c.rating] ?? "" : ""}`}
+        className={`mm-card${skinned ? " mm-card-skinned" : ""} ${c ? TIER_CLASS[c.rating] ?? "" : ""}`}
         style={bg ? { ["--mm-bg" as string]: `url("${bg}")` } : undefined}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Difficulty badge — sits on the painted ribbon when skinned. */}
+        {c && <span className="mm-badge">{c.ratingLabel}</span>}
+
         {/* Framed art (left) */}
         <figure className="mm-figure">
           {monster.image ? (
@@ -118,7 +122,6 @@ export function MonsterManualPanel({
                 </span>
               )}
             </div>
-            {c && <span className="mm-badge">{c.ratingLabel}</span>}
           </header>
 
           {monster.description && <p className="mm-desc">{monster.description}</p>}
