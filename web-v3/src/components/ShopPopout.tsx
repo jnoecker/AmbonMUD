@@ -8,6 +8,10 @@ interface ShopPopoutProps {
   gold: number;
   onBuyItem: (keyword: string) => void;
   onSellItem: (keyword: string) => void;
+  /** Open the item detail card for a shop stock item (has full description). */
+  onShowBuyItem: (item: ShopItem) => void;
+  /** Open the item detail card for an owned item (looks up its full detail). */
+  onShowSellItem: (item: ItemSummary, image: string | null) => void;
 }
 
 /**
@@ -71,7 +75,7 @@ function shopItemChips(item: ShopItem, equipment: Record<string, ItemSummary>) {
   return chips;
 }
 
-export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSellItem }: ShopPopoutProps) {
+export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSellItem, onShowBuyItem, onShowSellItem }: ShopPopoutProps) {
   const [tab, setTab] = useState<"buy" | "sell">("buy");
 
   return (
@@ -116,6 +120,10 @@ export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSell
                 <div
                   key={item.id}
                   className={`shop-popout-card${canAfford ? "" : " shop-popout-card-unaffordable"}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onShowBuyItem(item)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onShowBuyItem(item); } }}
                 >
                   <div className="shop-popout-card-top">
                     <div className="shop-popout-card-info">
@@ -149,7 +157,7 @@ export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSell
                         type="button"
                         className="soft-button shop-popout-buy-btn"
                         disabled={!canAfford}
-                        onClick={() => onBuyItem(item.keyword)}
+                        onClick={(e) => { e.stopPropagation(); onBuyItem(item.keyword); }}
                       >
                         Buy
                       </button>
@@ -168,7 +176,14 @@ export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSell
             inventory.map((item, index) => {
               const sellPrice = Math.round((item.basePrice ?? 0) * shop.sellMultiplier);
               return (
-                <div key={`${item.id}-${index}`} className="shop-popout-card">
+                <div
+                  key={`${item.id}-${index}`}
+                  className="shop-popout-card"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onShowSellItem(item, item.image ?? null)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onShowSellItem(item, item.image ?? null); } }}
+                >
                   <div className="shop-popout-card-top">
                     <div className="shop-popout-card-info">
                       {item.image && <img src={item.image} alt="" className="shop-popout-thumb" />}
@@ -189,7 +204,7 @@ export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSell
                         type="button"
                         className="soft-button shop-popout-sell-btn"
                         disabled={sellPrice <= 0}
-                        onClick={() => onSellItem(item.keyword)}
+                        onClick={(e) => { e.stopPropagation(); onSellItem(item.keyword); }}
                       >
                         Sell
                       </button>

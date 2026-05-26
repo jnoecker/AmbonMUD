@@ -1032,6 +1032,18 @@ function App() {
             gold={state.vitals.gold}
             onBuyItem={(keyword) => sendCommand(`buy ${keyword}`)}
             onSellItem={(keyword) => sendCommand(`sell ${keyword}`)}
+            onShowBuyItem={(it) => setItem({
+              name: it.name,
+              description: it.description || null,
+              image: it.image,
+              video: it.video,
+              takeable: false,
+            })}
+            onShowSellItem={(it, image) => {
+              pendingExamineRef.current = { image };
+              sendCommand(`look ${it.keyword}`);
+              window.setTimeout(() => { pendingExamineRef.current = null; }, 2500);
+            }}
           />
         )}
 

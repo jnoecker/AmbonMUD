@@ -2781,6 +2781,7 @@ body {
   background: linear-gradient(155deg, #ece0c4, #dccaa3);
   border: 1px solid rgb(106 74 36 / 50%);
   box-shadow: 0 1px 2px rgb(20 12 4 / 30%), inset 0 1px 0 rgb(255 251 240 / 45%);
+  cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -2838,7 +2839,7 @@ body {
   color: #5a4226;
   line-height: 1.4;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
