@@ -174,7 +174,7 @@ function App() {
   const [item, setItem] = useState<ItemEntry | null>(null);
   // When Examine is clicked we `look` the item and route the resulting
   // Room.LookTarget into the item card (so it carries the full description).
-  const pendingExamineRef = useRef<{ image: string | null } | null>(null);
+  const pendingExamineRef = useRef<{ image: string | null; equippedSlot?: string } | null>(null);
 
   // Full-size image preview — opened by clicking the entity preview sprite
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -598,8 +598,8 @@ function App() {
   // of the default look-target inspect modal), carrying its full description.
   useEffect(() => {
     const lt = state.lookTarget;
-    if (!pendingExamineRef.current || !lt || lt.type !== "item") return;
-    const fallbackImage = pendingExamineRef.current.image;
+    const pending = pendingExamineRef.current;
+    if (!pending || !lt || lt.type !== "item") return;
     pendingExamineRef.current = null;
     // Defer out of the effect body so we swap modals in a fresh tick rather
     // than cascading renders synchronously.
@@ -607,9 +607,10 @@ function App() {
       setItem({
         name: lt.name,
         description: lt.description || null,
-        image: lt.image ?? fallbackImage,
+        image: lt.image ?? pending.image,
         video: null,
         takeable: false,
+        equippedSlot: pending.equippedSlot,
       });
       state.setLookTarget(null);
     });
@@ -979,8 +980,11 @@ function App() {
             character={state.character}
             equipment={state.equipment}
             slotDefs={state.equipmentSlotDefs}
-            canManageItems={connected && hasCharacterProfile}
-            onRemoveItem={(slot) => sendCommand(`remove ${slot}`)}
+            onExamineItem={(it, image, slot) => {
+              pendingExamineRef.current = { image, equippedSlot: slot };
+              sendCommand(`look ${it.keyword}`);
+              window.setTimeout(() => { pendingExamineRef.current = null; }, 2500);
+            }}
           />
         )}
 

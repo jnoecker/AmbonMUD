@@ -51,6 +51,7 @@ export function ItemManualPanel({
 
   const actions: ItemAction[] = [];
   if (item.takeable) actions.push({ key: "get", label: "Get", glyph: "⤓", assetKey: "action_get", variant: "primary", run: () => { onCommand(`get ${name}`); onClose(); } });
+  if (item.equippedSlot) actions.push({ key: "unequip", label: "Unequip", glyph: "⊖", assetKey: "action_unequip", variant: "ghost", run: () => { onCommand(`remove ${item.equippedSlot}`); onClose(); } });
   if (item.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(item.video!) });
 
   // An action icon: custom asset when registered, else the unicode glyph.

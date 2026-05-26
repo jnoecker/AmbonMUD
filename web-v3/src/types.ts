@@ -482,6 +482,8 @@ export interface ItemEntry {
   video: string | null;
   /** Whether the item can be picked up (hides Get for fixed scenery). */
   takeable: boolean;
+  /** Set when opened from an equipped slot — surfaces an Unequip action. */
+  equippedSlot?: string;
 }
 
 /**
