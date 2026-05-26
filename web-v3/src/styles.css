@@ -20053,11 +20053,11 @@ html:has(.game-shell),
   .drawer-sheet:has(.quest-panel) { height: min(680px, 88vh); max-height: 88vh; }
 }
 
-.drawer-sheet-questboard .drawer-header { border-bottom: 1px solid rgb(60 40 20 / 35%); }
-.drawer-sheet-questboard .drawer-title { color: #3a2810; text-shadow: 0 1px 0 rgb(255 246 224 / 45%); }
-.drawer-sheet-questboard .drawer-close { border-color: rgb(60 40 20 / 50%); background: rgb(60 40 20 / 18%); color: #4a3014; }
-.drawer-sheet-questboard .drawer-close:hover { background: rgb(60 40 20 / 30%); color: #2a1c08; }
-.drawer-sheet-questboard .drawer-handle { background: rgb(60 40 20 / 40%); }
+.drawer-sheet-questboard .drawer-header { border-bottom: 1px solid rgb(240 225 190 / 20%); }
+.drawer-sheet-questboard .drawer-title { color: #f6ecce; text-shadow: 0 1px 3px rgb(20 12 4 / 70%); }
+.drawer-sheet-questboard .drawer-close { border-color: rgb(240 225 190 / 40%); background: rgb(30 18 8 / 45%); color: #f0e3c4; }
+.drawer-sheet-questboard .drawer-close:hover { background: rgb(50 32 16 / 65%); color: #fff; }
+.drawer-sheet-questboard .drawer-handle { background: rgb(240 225 190 / 40%); }
 
 /* ── Quest board contents (scoped so shared .quest-* stays put elsewhere) ── */
 .drawer-sheet-questboard .quest-panel {
