@@ -20240,22 +20240,124 @@ html:has(.game-shell),
 }
 
 .mm-dialog-choice {
+  position: relative;
   width: 100%;
   text-align: left;
-  padding: 8px 12px;
+  padding: 9px 14px 9px 30px;
   border-radius: 8px;
-  border: 1px solid rgb(74 56 37 / 40%);
-  background: rgb(247 240 222 / 72%);
+  border: 1px solid rgb(74 56 37 / 35%);
+  background: rgb(247 240 222 / 68%);
   color: #33271a;
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 0.97rem;
   cursor: pointer;
-  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft);
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
 }
 
-.mm-dialog-choice:hover { background: rgb(250 244 228 / 94%); border-color: #6a4a24; }
+.mm-dialog-choice::before {
+  content: "❧";
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a6a2e;
+  font-size: 0.95em;
+  transition: transform 150ms var(--ease-out-soft);
+}
+
+.mm-dialog-choice:hover {
+  background: rgb(250 244 228 / 95%);
+  border-color: #8a6a2e;
+  transform: translateX(2px);
+}
+
+.mm-dialog-choice:hover::before { transform: translateY(-50%) scale(1.18); }
 
 .mm-dialog-end { margin: 0; font-style: italic; color: #7a6044; }
+
+/* Quest offers reskinned for parchment (the drawer version stays dark). */
+.mm-view .quest-offer-panel { display: flex; flex-direction: column; gap: 12px; }
+.mm-view .quest-offer-section { display: flex; flex-direction: column; gap: 8px; }
+.mm-view .quest-offer-section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6a4a24;
+}
+.mm-view .quest-available-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.mm-view .quest-available-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgb(247 240 222 / 60%);
+  border: 1px solid rgb(106 74 36 / 38%);
+  box-shadow: none;
+}
+.mm-view .quest-available-header { display: flex; align-items: center; gap: 8px; }
+.mm-view .quest-available-icon { color: #b88a2e; }
+.mm-view .quest-available-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #2e2212;
+}
+.mm-view .quest-available-description { margin: 0; font-size: 0.92rem; line-height: 1.45; color: #3a2c1a; }
+.mm-view .quest-available-objectives { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.mm-view .quest-available-objective { display: flex; align-items: center; gap: 6px; font-size: 0.84rem; color: #5a4628; }
+.mm-view .quest-available-obj-icon { color: #6a4a24; }
+.mm-view .quest-available-obj-count { margin-left: auto; font-variant-numeric: tabular-nums; color: #6a4a24; }
+.mm-view .quest-available-rewards { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.82rem; }
+.mm-view .quest-available-rewards-label { color: #6a4a24; font-weight: 600; }
+.mm-view .quest-reward-xp,
+.mm-view .quest-reward-gold,
+.mm-view .quest-reward-item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #5a4226;
+  background: rgb(184 138 46 / 18%);
+  border: 1px solid rgb(184 138 46 / 40%);
+}
+.mm-view .quest-reward-item-icon { color: #b88a2e; margin-right: 2px; }
+.mm-view .quest-offer-requirements { display: flex; flex-wrap: wrap; gap: 6px; }
+.mm-view .quest-offer-requirement {
+  font-size: 0.76rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #5a4226;
+  background: rgb(106 74 36 / 12%);
+  border: 1px solid rgb(106 74 36 / 35%);
+}
+.mm-view .quest-offer-locked { margin: 0; font-size: 0.82rem; font-style: italic; color: #9a5a3a; }
+.mm-view .quest-accept-button {
+  margin-top: 2px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: #f3ead2;
+  border: 1px solid #1d2a45;
+  background: linear-gradient(160deg, #2e436e, #1e2c49);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%);
+  transition: filter 150ms var(--ease-out-soft);
+}
+.mm-view .quest-accept-button:hover:not(:disabled) { filter: brightness(1.12); }
+.mm-view .quest-accept-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.mm-view .quest-turnin-button {
+  color: #2e2212;
+  border-color: #8a6a2e;
+  background: linear-gradient(160deg, #e6c46a, #c79a3a);
+}
+.mm-view .quest-offer-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.mm-view .quest-empty-icon { color: #b88a2e; font-size: 1.4rem; }
+.mm-view .empty-note { color: #6a4a24; }
 
 @keyframes mm-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes mm-pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
