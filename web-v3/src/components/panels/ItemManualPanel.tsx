@@ -51,7 +51,6 @@ export function ItemManualPanel({
 
   const actions: ItemAction[] = [
     { key: "get", label: "Get", glyph: "⤓", assetKey: "action_get", variant: "primary", run: () => { onCommand(`get ${name}`); onClose(); } },
-    { key: "look", label: "Look", glyph: "❍", assetKey: "action_look", variant: "ghost", run: () => onCommand(`look ${name}`) },
   ];
   if (item.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(item.video!) });
 
