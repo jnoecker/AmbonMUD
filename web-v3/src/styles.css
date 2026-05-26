@@ -19972,8 +19972,8 @@ html:has(.game-shell),
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.78rem;
-  color: #6b5640;
+  font-size: 0.82rem;
+  color: #5a4628;
 }
 
 .mm-winbar-label { flex: 0 0 auto; letter-spacing: 0.03em; }
@@ -20007,10 +20007,10 @@ html:has(.game-shell),
   align-items: baseline;
   justify-content: space-between;
   gap: 6px;
-  font-size: 0.74rem;
+  font-size: 0.8rem;
 }
 
-.mm-stat dt { color: #7a6044; text-transform: uppercase; letter-spacing: 0.02em; }
+.mm-stat dt { color: #5a4226; text-transform: uppercase; letter-spacing: 0.02em; }
 .mm-stat dd { margin: 0; font-weight: 700; color: #3a2c1a; font-variant-numeric: tabular-nums; }
 
 .mm-assessing {
@@ -20141,14 +20141,20 @@ html:has(.game-shell),
   inset: -2px -6px -4px -6px;
   z-index: -1;
   border-radius: 12px;
-  background: rgb(247 240 222 / 72%);
-  filter: blur(7px);
+  background: rgb(247 240 222 / 88%);
+  filter: blur(6px);
 }
 
 .mm-card-skinned .mm-desc {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Slightly larger + heavier, with a light halo, so it reads on the parchment. */
+  font-size: 1.12rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #33271a;
+  text-shadow: 0 1px 1px rgb(255 250 236 / 55%);
   /* Slim sepia scrollbar so a long entry still reads like a journal page. */
   scrollbar-width: thin;
   scrollbar-color: rgb(106 74 36 / 55%) transparent;
