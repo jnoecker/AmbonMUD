@@ -2727,21 +2727,23 @@ body {
 .shop-popout-tab {
   flex: 1;
   padding: 9px 12px;
-  border: 1px solid rgb(120 86 44 / 55%);
+  border: 1px solid rgb(170 128 70 / 60%);
   border-radius: 10px;
-  background: rgb(30 20 10 / 35%);
-  color: #d8c39a;
+  /* Solid enough to read as a tab against the busy wood art. */
+  background: linear-gradient(180deg, rgb(70 50 28 / 88%), rgb(50 35 19 / 88%));
+  color: #ecd9b4;
   font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   text-align: center;
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 16%);
   transition: background 0.15s var(--ease-in-out-smooth), color 0.15s, border-color 0.15s;
 }
 
 .shop-popout-tab:hover {
-  background: rgb(60 43 24 / 45%);
-  color: #f2e6cc;
+  background: linear-gradient(180deg, rgb(88 64 36 / 92%), rgb(64 46 25 / 92%));
+  color: #fbf0d4;
 }
 
 .shop-popout-tab-active {
