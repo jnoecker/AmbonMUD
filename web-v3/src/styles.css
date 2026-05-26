@@ -6752,18 +6752,18 @@ body {
   gap: var(--space-1);
 }
 
-/* Parchment luggage tag. */
+/* Aged-leather luggage tag — muted so it doesn't glare against the satchel. */
 .inventory-item {
   border-radius: 8px;
-  background: linear-gradient(150deg, #f4ecd6, #e6d8b8);
-  border: 1px solid rgb(106 74 36 / 48%);
-  box-shadow: 0 1px 2px rgb(40 28 14 / 22%), inset 0 1px 0 rgb(255 251 240 / 60%);
+  background: linear-gradient(155deg, #c7b184, #af9968);
+  border: 1px solid rgb(60 42 22 / 68%);
+  box-shadow: 0 1px 2px rgb(18 10 3 / 40%), inset 0 1px 0 rgb(228 212 176 / 22%);
   transition: border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
 }
 
 .inventory-item:hover {
   border-color: #8a6a2e;
-  box-shadow: 0 3px 8px rgb(40 28 14 / 32%), inset 0 1px 0 rgb(255 251 240 / 70%);
+  box-shadow: 0 3px 8px rgb(18 10 3 / 50%), inset 0 1px 0 rgb(228 212 176 / 28%);
 }
 
 .inventory-item-row {
@@ -6809,8 +6809,8 @@ body {
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid rgb(106 74 36 / 50%);
-  background: rgb(255 251 240 / 60%);
+  border: 1px solid rgb(60 42 22 / 55%);
+  background: rgb(54 39 22 / 30%);
   display: block;
 }
 
@@ -6969,8 +6969,8 @@ body {
   padding: 0 10px;
   border: 1px solid rgb(92 64 32 / 65%);
   border-radius: 999px;
-  /* Raised tan "leather button" so dark icons read against the cream tag. */
-  background: linear-gradient(180deg, #e7d6b0, #d4bf92);
+  /* Raised tan "leather button" so dark icons read against the tag. */
+  background: linear-gradient(180deg, #d9c498, #c2ac7c);
   color: #382a18;
   cursor: pointer;
   white-space: nowrap;
@@ -6989,7 +6989,7 @@ body {
 }
 
 .inventory-action-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #f1e4c4, #e0cea2);
+  background: linear-gradient(180deg, #e6d4ab, #d3bd8e);
   color: #2e2212;
   border-color: #8a6a2e;
   transform: translateY(-1px);
