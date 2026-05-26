@@ -20031,6 +20031,10 @@ html:has(.game-shell),
 
 .mm-action {
   flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 10px 16px;
   border-radius: 8px;
   font-family: var(--font-display);
@@ -20039,6 +20043,19 @@ html:has(.game-shell),
   letter-spacing: 0.02em;
   cursor: pointer;
   transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.mm-action-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.mm-action-glyph {
+  font-size: 1.05em;
+  line-height: 1;
+  flex: 0 0 auto;
 }
 
 .mm-action:hover { filter: brightness(1.1); transform: translateY(-1px); }

@@ -1629,6 +1629,7 @@ function App() {
           monster={monster}
           consider={state.considerResult}
           bg={state.serverAssets["monster_manual_bg"]}
+          serverAssets={state.serverAssets}
           onClose={() => { setMonster(null); state.setConsiderResult(null); }}
           onCommand={sendCommand}
           onZoomImage={(url) => setImagePreviewUrl(url)}

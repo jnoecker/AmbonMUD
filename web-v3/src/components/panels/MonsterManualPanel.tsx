@@ -16,6 +16,8 @@ interface MonsterManualPanelProps {
   consider: ConsiderResult | null;
   /** Optional parchment-frame art (server asset monster_manual_bg). */
   bg?: string;
+  /** Resolved server assets, for the optional action-button icons. */
+  serverAssets: Record<string, string>;
   onClose: () => void;
   onCommand: (cmd: string) => void;
   onZoomImage: (url: string) => void;
@@ -27,6 +29,10 @@ interface MonsterManualPanelProps {
 interface ManualAction {
   key: string;
   label: string;
+  /** Unicode fallback shown when the icon asset isn't registered. */
+  glyph: string;
+  /** Server-asset key for a custom icon (sword, scroll, …). */
+  assetKey: string;
   variant: "primary" | "ghost";
   run: () => void;
 }
@@ -41,6 +47,7 @@ export function MonsterManualPanel({
   monster,
   consider,
   bg,
+  serverAssets,
   onClose,
   onCommand,
   onZoomImage,
@@ -64,13 +71,21 @@ export function MonsterManualPanel({
   const category = c?.mobCategory ?? info?.tier ?? "";
 
   const actions: ManualAction[] = [];
-  if (info?.questComplete) actions.push({ key: "quest", label: "★ Turn In Quest", variant: "primary", run: () => onQuest(name) });
-  else if (info?.questAvailable) actions.push({ key: "quest", label: "★ Quest", variant: "primary", run: () => onQuest(name) });
-  if (info?.dialogue) actions.push({ key: "talk", label: "Talk", variant: "primary", run: () => { onCommand(`talk ${name}`); onClose(); } });
-  if (info?.shopKeeper) actions.push({ key: "shop", label: "Browse Shop", variant: "primary", run: onShop });
-  if (monster.canAttack) actions.push({ key: "attack", label: "⚔ Attack", variant: "primary", run: () => { onCommand(`kill ${name}`); onClose(); } });
-  if (monster.video) actions.push({ key: "video", label: "▶ Cinematic", variant: "ghost", run: () => onVideo(monster.video!) });
-  if (monster.isStaff) actions.push({ key: "possess", label: "✦ Possess", variant: "ghost", run: () => { onCommand(`possess ${name}`); onClose(); } });
+  if (info?.questComplete) actions.push({ key: "quest", label: "Turn In Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => onQuest(name) });
+  else if (info?.questAvailable) actions.push({ key: "quest", label: "Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => onQuest(name) });
+  if (info?.dialogue) actions.push({ key: "talk", label: "Talk", glyph: "", assetKey: "action_talk", variant: "primary", run: () => { onCommand(`talk ${name}`); onClose(); } });
+  if (info?.shopKeeper) actions.push({ key: "shop", label: "Browse Shop", glyph: "", assetKey: "action_shop", variant: "primary", run: onShop });
+  if (monster.canAttack) actions.push({ key: "attack", label: "Attack", glyph: "⚔", assetKey: "action_attack", variant: "primary", run: () => { onCommand(`kill ${name}`); onClose(); } });
+  if (monster.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(monster.video!) });
+  if (monster.isStaff) actions.push({ key: "possess", label: "Possess", glyph: "✦", assetKey: "action_possess", variant: "ghost", run: () => { onCommand(`possess ${name}`); onClose(); } });
+
+  // An action icon: custom asset when registered, else the unicode glyph.
+  const actionIcon = (assetKey: string, glyph: string) => {
+    const url = serverAssets[assetKey];
+    if (url) return <img className="mm-action-icon" src={url} alt="" aria-hidden="true" />;
+    if (glyph) return <span className="mm-action-glyph" aria-hidden="true">{glyph}</span>;
+    return null;
+  };
 
   const lvDiff = c ? c.mobLevel - c.playerLevel : 0;
   const shortName = name.split(" ").slice(-1)[0];
@@ -157,10 +172,14 @@ export function MonsterManualPanel({
                 className={`mm-action mm-action-${a.variant}`}
                 onClick={a.run}
               >
-                {a.label}
+                {actionIcon(a.assetKey, a.glyph)}
+                <span className="mm-action-label">{a.label}</span>
               </button>
             ))}
-            <button type="button" className="mm-action mm-action-close" onClick={onClose}>‹ Close</button>
+            <button type="button" className="mm-action mm-action-close" onClick={onClose}>
+              {actionIcon("action_close", "‹")}
+              <span className="mm-action-label">Close</span>
+            </button>
           </footer>
         </div>
       </div>
