@@ -109,6 +109,8 @@ export class WorldScene {
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
   private playerLabelBg = new Graphics();
+  /** Small, exact HP/Mana bars drawn under the player sprite. */
+  private playerVitalsBar = new Graphics();
   private mobSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics; name: string; count: number; ids: string[] }> = new Map();
   private petSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private itemSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
@@ -782,6 +784,7 @@ export class WorldScene {
     this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.playerLabelBg);
     this.container.addChild(this.playerLabel);
+    this.container.addChild(this.playerVitalsBar);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
     this.container.addChild(this.auctionBadge);
@@ -1241,7 +1244,39 @@ export class WorldScene {
       this.playerSprite.height = playerSize;
     }
     this.playerLabel.x = playerX;
-    this.playerLabel.y = playerY + playerSize / 2 + 6;
+
+    // Player HP / Mana bars under the sprite — small but exact, so it's easy to
+    // judge when to flee (the ornamental top bar isn't pixel-accurate).
+    const pv = this.playerVitalsBar;
+    pv.clear();
+    const pvVitals = gameStateRef.current.vitals;
+    const pvLoggedIn = gameStateRef.current.character.name !== "-";
+    let playerLabelY = playerY + playerSize / 2 + 6;
+    if (pvLoggedIn && !stripMode && pvVitals.maxHp > 0) {
+      const barW = clamp(playerSize * 0.85, 64, 150);
+      const barH = 6;
+      const barGap = 3;
+      const barX = playerX - barW / 2;
+      const barTop = playerY + playerSize / 2 + 8;
+      const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+      const hpFrac = clamp01(pvVitals.hp / pvVitals.maxHp);
+      const hasMana = pvVitals.maxMana > 0;
+      const manaFrac = hasMana ? clamp01(pvVitals.mana / pvVitals.maxMana) : 0;
+      const drawBar = (yTop: number, frac: number, color: number) => {
+        pv.roundRect(barX, yTop, barW, barH, 3).fill({ color: 0x14121f, alpha: 0.78 });
+        if (frac > 0) pv.roundRect(barX, yTop, Math.max(2, barW * frac), barH, 3).fill({ color, alpha: 0.96 });
+        pv.roundRect(barX, yTop, barW, barH, 3).stroke({ color: 0x000000, width: 1, alpha: 0.45 });
+      };
+      // HP shifts green → amber → red as it drops, so danger reads at a glance.
+      const hpColor = hpFrac > 0.5 ? 0x6fae5e : hpFrac > 0.25 ? 0xd9a23a : 0xcf5446;
+      drawBar(barTop, hpFrac, hpColor);
+      if (hasMana) drawBar(barTop + barH + barGap, manaFrac, 0x5f93d8);
+      pv.visible = true;
+      playerLabelY = barTop + barH + (hasMana ? barH + barGap : 0) + 8;
+    } else {
+      pv.visible = false;
+    }
+    this.playerLabel.y = playerLabelY;
     drawLabelPill(this.playerLabelBg, this.playerLabel);
 
     // Status effects above the player sprite
