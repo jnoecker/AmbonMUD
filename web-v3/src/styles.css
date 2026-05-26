@@ -2680,6 +2680,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  /* Fill the (pinned) sheet so the list — not the window — is what changes
+     between Buy and Sell. */
+  height: 100%;
+  min-height: 0;
 }
 
 .shop-popout-wallet {
@@ -2751,10 +2755,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-height: 50vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgb(90 82 120 / 70%) transparent;
+  scrollbar-color: rgb(150 110 56 / 70%) transparent;
 }
 
 .shop-popout-list::-webkit-scrollbar {
@@ -19720,6 +19725,13 @@ html:has(.game-shell),
     width: min(1040px, 92vw);
     max-height: 90vh;
   }
+
+  /* Pin the shop modal to a fixed height so it doesn't jump between the Buy
+     and Sell lists — the list scrolls inside instead. */
+  .drawer-sheet:has(.shop-popout) {
+    height: min(640px, 86vh);
+    max-height: 86vh;
+  }
 }
 
 /* Satchel-skinned drawer (inventory): the sheet itself becomes the leather
@@ -19838,7 +19850,7 @@ html:has(.game-shell),
   position: relative;
   padding: 12px 16px 24px;
   border-bottom: none;
-  background: repeating-linear-gradient(90deg, #b5573a 0 32px, #c2904a 32px 64px);
+  background: repeating-linear-gradient(90deg, #4e807b 0 32px, #b07d8a 32px 64px);
   box-shadow: inset 0 -2px 6px rgb(40 20 8 / 35%);
   -webkit-mask:
     radial-gradient(15px 15px at 50% 0, #000 98%, transparent 100%) 0 100% / 32px 15px repeat-x,
