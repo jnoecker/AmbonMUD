@@ -237,8 +237,9 @@ export class Minimap {
     this.rebuildExpandButton();
 
     // Expand-to-world-map button — tucked into the bottom-right corner.
-    this.expandButton.x = this._width - 22 - 7;
-    this.expandButton.y = this._height - 22 - 7;
+    // (22px drawn × 1.3 scale ≈ 29px, plus a ~6px margin.)
+    this.expandButton.x = this._width - 35;
+    this.expandButton.y = this._height - 35;
     this.layoutExpand();
 
     // Up/down buttons stacked just to the left of the parchment, vertically centered.
@@ -290,13 +291,14 @@ export class Minimap {
   /** Size + position the custom open-map sprite in the bottom-right corner. */
   private layoutExpand() {
     if (!this.expandSprite) return;
-    this.fitSprite(this.expandSprite, this.expandSprite.texture, 30);
-    this.expandSprite.x = this._width - 18;
-    this.expandSprite.y = this._height - 18;
+    this.fitSprite(this.expandSprite, this.expandSprite.texture, 38);
+    this.expandSprite.x = this._width - 22;
+    this.expandSprite.y = this._height - 22;
   }
 
   private rebuildExpandButton() {
     const btn = this.expandButton;
+    btn.scale.set(1.3); // a bit bigger / easier to hit
     btn.clear();
     btn.roundRect(0, 0, 22, 22, 4);
     btn.fill({ color: PAPER_SHADE, alpha: 0.97 });
