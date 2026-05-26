@@ -6701,9 +6701,9 @@ body {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: #e6d2a4;
-  background: rgb(216 186 122 / 18%);
-  border: 1px solid rgb(216 186 122 / 28%);
+  color: #f4e3b4;
+  background: rgb(216 186 122 / 24%);
+  border: 1px solid rgb(216 186 122 / 42%);
   border-radius: 999px;
   padding: 1px 8px;
   flex-shrink: 0;
@@ -6845,9 +6845,9 @@ body {
 
 .inventory-item-slot {
   font-size: 0.66rem;
-  color: #6a4a24;
-  background: rgb(106 74 36 / 12%);
-  border: 1px solid rgb(106 74 36 / 28%);
+  color: #4f3819;
+  background: rgb(106 74 36 / 18%);
+  border: 1px solid rgb(106 74 36 / 45%);
   padding: 1px 6px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -6855,9 +6855,9 @@ body {
 
 .inventory-item-effect {
   font-size: 0.66rem;
-  color: #6a4a24;
-  background: rgb(106 74 36 / 12%);
-  border: 1px solid rgb(106 74 36 / 28%);
+  color: #4f3819;
+  background: rgb(106 74 36 / 18%);
+  border: 1px solid rgb(106 74 36 / 45%);
   padding: 1px 6px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -6869,9 +6869,9 @@ body {
 
 .inventory-item-price {
   font-size: 0.66rem;
-  color: #8a6a2e;
-  background: rgb(230 196 106 / 26%);
-  border: 1px solid rgb(184 138 46 / 40%);
+  color: #6e4e16;
+  background: rgb(230 196 106 / 34%);
+  border: 1px solid rgb(184 138 46 / 55%);
   padding: 1px 6px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -6967,10 +6967,11 @@ body {
   width: auto;
   height: auto;
   padding: 0 10px;
-  border: 1px solid rgb(106 74 36 / 45%);
+  border: 1px solid rgb(92 64 32 / 65%);
   border-radius: 999px;
-  background: rgb(255 250 236 / 70%);
-  color: #5a4226;
+  /* Raised tan "leather button" so dark icons read against the cream tag. */
+  background: linear-gradient(180deg, #e7d6b0, #d4bf92);
+  color: #382a18;
   cursor: pointer;
   white-space: nowrap;
   font: inherit;
@@ -6978,6 +6979,7 @@ body {
   font-weight: 700;
   line-height: 1;
   flex: 0 0 auto;
+  box-shadow: 0 1px 2px rgb(40 28 14 / 28%), inset 0 1px 0 rgb(255 250 236 / 45%);
   transition:
     background 140ms var(--ease-out-soft),
     color 140ms var(--ease-out-soft),
@@ -6987,11 +6989,11 @@ body {
 }
 
 .inventory-action-btn:hover:not(:disabled) {
-  background: #fffaf0;
+  background: linear-gradient(180deg, #f1e4c4, #e0cea2);
   color: #2e2212;
   border-color: #8a6a2e;
   transform: translateY(-1px);
-  box-shadow: 0 4px 9px rgb(40 28 14 / 28%);
+  box-shadow: 0 4px 9px rgb(40 28 14 / 32%);
 }
 
 .inventory-action-btn:disabled {
@@ -7010,25 +7012,25 @@ body {
 }
 
 .inventory-action-btn-active {
-  background: rgb(230 196 106 / 40%);
+  background: linear-gradient(180deg, #efd9a0, #e0c279);
   border-color: #8a6a2e;
   color: #2e2212;
 }
 
 .inventory-action-examine {
-  color: #6a4a24;
+  color: #4a3620;
 }
 
 .inventory-action-use {
-  color: #2f5a76;
+  color: #245268;
 }
 
 .inventory-action-equip {
-  color: #3c5e34;
+  color: #2c5430;
 }
 
 .inventory-action-put {
-  color: #8a6a2e;
+  color: #6e4e16;
 }
 
 /* First-time onboarding hint: pulse the Equip action on wearable items until
@@ -7069,11 +7071,14 @@ body {
   flex-shrink: 0;
 }
 
-/* Unicode fallback shown until the action art is registered. */
+/* Unicode fallback shown until the action art is registered. Force text
+   (non-emoji) presentation so it stays a crisp ink glyph, not a color emoji. */
 .inventory-action-glyph {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
   line-height: 1;
   color: inherit;
+  font-variant-emoji: text;
 }
 
 .inventory-give-picker {

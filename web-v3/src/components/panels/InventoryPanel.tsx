@@ -220,7 +220,7 @@ export function InventoryPanel({
                 disabled={!canManageItems}
                 onClick={() => onCommand(`use ${item.keyword}`)}
               >
-                {actionAsset("action_use") ?? <span className="inventory-action-glyph" aria-hidden="true">⚗</span>}
+                {actionAsset("action_use") ?? <span className="inventory-action-glyph" aria-hidden="true">✚</span>}
               </button>
             )}
             {item.slot && (
