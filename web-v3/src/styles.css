@@ -20103,8 +20103,8 @@ html:has(.game-shell),
 
 /* Difficulty as tiny text on the painted ribbon. */
 .mm-card-skinned .mm-badge {
-  left: 86.5%;
-  top: 7.5%;
+  left: 85.5%;
+  top: 9.5%;
   right: auto;
   transform: translate(-50%, -50%);
   padding: 0;
@@ -20116,33 +20116,49 @@ html:has(.game-shell),
   color: #5a4326;
 }
 
-/* Manual text over the parchment (right side). A soft scrim keeps the
-   description + stats legible over the textured/decorated parchment. */
+/* Manual text written directly on the parchment (no panel/box) so it reads as
+   part of the journal. */
 .mm-card-skinned .mm-content {
   position: absolute;
-  left: 44%;
-  top: 11%;
-  right: 5%;
+  left: 45%;
+  top: 12%;
+  right: 5.5%;
   bottom: 8%;
   gap: 8px;
   overflow: hidden;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgb(245 238 219 / 58%);
-  box-shadow: inset 0 0 0 1px rgb(255 250 236 / 45%), 0 2px 10px rgb(74 56 37 / 20%);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
 }
 
-/* Stronger backing under the stats (they sit over busy bottom botanicals). */
+/* Only the stats get a soft, feathered wash — they sit over the busy bottom
+   botanicals. Blurred pseudo = no hard box edges. */
 .mm-card-skinned .mm-assess {
-  border-top-color: rgb(74 56 37 / 40%);
+  position: relative;
+  border-top-color: rgb(74 56 37 / 35%);
+}
+
+.mm-card-skinned .mm-assess::before {
+  content: "";
+  position: absolute;
+  inset: -2px -6px -4px -6px;
+  z-index: -1;
+  border-radius: 12px;
+  background: rgb(247 240 222 / 72%);
+  filter: blur(7px);
 }
 
 .mm-card-skinned .mm-desc {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Slim sepia scrollbar so a long entry still reads like a journal page. */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(106 74 36 / 55%) transparent;
+}
+
+.mm-card-skinned .mm-desc::-webkit-scrollbar { width: 6px; }
+.mm-card-skinned .mm-desc::-webkit-scrollbar-track { background: transparent; }
+.mm-card-skinned .mm-desc::-webkit-scrollbar-thumb {
+  background: rgb(106 74 36 / 50%);
+  border-radius: 3px;
 }
 
 .mm-card-skinned .mm-assess { margin-top: 0; }
