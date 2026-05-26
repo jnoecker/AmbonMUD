@@ -1758,8 +1758,10 @@ export class WorldScene {
         }
         const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
         const isStaff = gameStateRef.current.character.isStaff;
-        const isNpc = !!(info && (info.shopKeeper || info.questGiver || info.dialogue));
-        const canAttack = info?.aggressive === true || !isNpc;
+        // Attackable only for true combatants (role COMBAT). Vendors, quest-givers,
+        // dialog NPCs and props are not — props get neither Attack nor a threat
+        // line. Absent info defaults to attackable (legacy mobs are COMBAT).
+        const canAttack = info ? info.combatant : true;
         canvasCallbacks.openMonsterManual?.({
           id: mobData.id,
           name: mobData.name,
