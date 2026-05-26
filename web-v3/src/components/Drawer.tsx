@@ -6,9 +6,10 @@ interface DrawerProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
-  /** Visual skin for the sheet chrome. "satchel" themes it as warm leather. */
-  variant?: "default" | "satchel";
-  /** Optional texture art for the satchel variant (server asset). */
+  /** Visual skin for the sheet chrome: warm leather (satchel) or a dim
+   *  dressing-chamber (equipment). */
+  variant?: "default" | "satchel" | "equipment";
+  /** Optional background art for a skinned variant (server asset). */
   skinBg?: string;
 }
 
@@ -146,14 +147,14 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
       />
       <div
         ref={sheetRef}
-        className={`drawer-sheet${variant === "satchel" ? " drawer-sheet-satchel" : ""}`}
+        className={`drawer-sheet${variant !== "default" ? ` drawer-sheet-${variant}` : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         style={{
           ["--drawer-height" as string]: `${height * 100}vh`,
           ["--drawer-transition" as string]: transition,
-          ...(skinBg ? { ["--satchel-bg" as string]: `url("${skinBg}")` } : {}),
+          ...(skinBg ? { ["--skin-bg" as string]: `url("${skinBg}")` } : {}),
         }}
       >
         <div

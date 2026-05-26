@@ -7360,44 +7360,100 @@ body {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
 }
 
+/* Each slot is a dark framed card: thumbnail + label/name + bonus badges. */
 .paperdoll-list-item {
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgb(120 104 168 / 22%);
+  background: linear-gradient(160deg, rgb(42 39 62 / 82%), rgb(30 28 46 / 82%));
+  box-shadow: inset 0 1px 0 rgb(214 206 240 / 8%);
   cursor: pointer;
-  transition: background 120ms var(--ease-out-soft);
+  transition:
+    border-color 150ms var(--ease-out-soft),
+    background 150ms var(--ease-out-soft),
+    box-shadow 150ms var(--ease-out-soft);
 }
 
 .paperdoll-list-item:hover {
-  background: rgb(255 255 255 / 4%);
+  border-color: rgb(168 151 210 / 42%);
+  box-shadow: inset 0 1px 0 rgb(214 206 240 / 10%), 0 4px 12px rgb(8 10 18 / 35%);
 }
 
 .paperdoll-list-item-selected {
-  background: rgb(168 151 210 / 12%);
+  border-color: var(--color-primary-lavender, #a897d2);
+  background: linear-gradient(160deg, rgb(58 52 86 / 90%), rgb(40 36 62 / 90%));
 }
 
-.paperdoll-list-header {
+/* Empty slots recede until hovered. */
+.paperdoll-list-item-empty {
+  opacity: 0.7;
+}
+
+.paperdoll-list-item-empty:hover {
+  opacity: 1;
+}
+
+/* Brass-framed item thumbnail. */
+.paperdoll-card-thumb {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(198 162 74 / 45%);
+  background: radial-gradient(circle at 50% 38%, rgb(60 54 88 / 92%), rgb(26 24 42 / 96%));
+  box-shadow: inset 0 0 10px rgb(8 6 16 / 55%);
+  overflow: hidden;
+}
+
+.paperdoll-list-item-empty .paperdoll-card-thumb {
+  border-style: dashed;
+  border-color: rgb(120 104 168 / 38%);
+}
+
+.paperdoll-card-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.paperdoll-card-thumb-letter {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: rgb(168 151 210 / 58%);
+}
+
+.paperdoll-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .paperdoll-list-slot {
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--color-primary-soft-gold, #bea873);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
+  letter-spacing: 0.08em;
 }
 
 .paperdoll-list-name {
-  font-size: 0.78rem;
-  color: var(--text-primary);
-  text-align: right;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-heading);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7407,6 +7463,7 @@ body {
 .paperdoll-list-name-empty {
   color: var(--text-disabled);
   font-style: italic;
+  font-weight: 500;
 }
 
 /* Equipped-item bonus badges — mirror the inventory meta row style so both
@@ -19458,7 +19515,7 @@ html:has(.game-shell),
    selectors keep these ahead of the responsive .drawer-sheet overrides. */
 .drawer-sheet.drawer-sheet-satchel {
   background-image:
-    var(--satchel-bg, none),
+    var(--skin-bg, none),
     radial-gradient(130% 90% at 50% -8%, rgb(132 94 48 / 38%), transparent 62%),
     linear-gradient(168deg, #5b4226, #402d18 58%, #34250f);
   background-size: cover, auto, auto;
@@ -19511,6 +19568,36 @@ html:has(.game-shell),
 .drawer-sheet-satchel .drawer-close:hover {
   background: rgb(74 54 31 / 92%);
   color: #f4e9cb;
+}
+
+/* Dressing-chamber drawer (equipment): a dim, atmospheric backdrop so the
+   sprite and the dark slot cards read against it. */
+.drawer-sheet.drawer-sheet-equipment {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(120% 75% at 50% -6%, rgb(86 76 132 / 32%), transparent 62%),
+    linear-gradient(172deg, #2b2742, #1d1b30 58%, #14121f);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 1px solid rgb(120 104 168 / 28%);
+  border-top: 1px solid rgb(120 104 168 / 28%);
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 62%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-equipment {
+    border: 1px solid rgb(120 104 168 / 28%);
+    box-shadow: 0 24px 60px rgb(8 10 18 / 64%), 0 8px 24px rgb(8 10 18 / 44%);
+  }
+}
+
+.drawer-sheet-equipment .drawer-header {
+  border-bottom: 1px solid rgb(120 104 168 / 26%);
+}
+
+.drawer-sheet-equipment .drawer-title {
+  color: #ece6d2;
+  text-shadow: 0 1px 2px rgb(8 6 16 / 55%);
 }
 
 /* Hide legacy desktop chrome that no longer renders */

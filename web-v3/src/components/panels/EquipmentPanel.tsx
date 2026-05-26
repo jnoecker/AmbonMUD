@@ -116,36 +116,44 @@ export function EquipmentPanel({
             {slotDefs.map((def) => {
               const item = equipment[def.id];
               const isSelected = selectedSlot === def.id;
+              const thumb = item ? resolveItemImage(item) : null;
               return (
                 <li
                   key={def.id}
-                  className={`paperdoll-list-item ${isSelected ? "paperdoll-list-item-selected" : ""}`}
+                  className={`paperdoll-list-item ${item ? "paperdoll-list-item-filled" : "paperdoll-list-item-empty"} ${isSelected ? "paperdoll-list-item-selected" : ""}`}
                   onClick={() => setSelectedSlot(isSelected ? null : def.id)}
                 >
-                  <div className="paperdoll-list-header">
+                  <div className="paperdoll-card-thumb">
+                    {thumb ? (
+                      <img src={thumb} alt="" className="paperdoll-card-thumb-img" />
+                    ) : (
+                      <span className="paperdoll-card-thumb-letter">{def.displayName.charAt(0)}</span>
+                    )}
+                  </div>
+                  <div className="paperdoll-card-body">
                     <span className="paperdoll-list-slot">{def.displayName}</span>
                     <span className={`paperdoll-list-name ${item ? "" : "paperdoll-list-name-empty"}`}>
-                      {item ? item.name : "\u2014"}
+                      {item ? item.name : "Empty"}
                     </span>
+                    {item && renderItemBonuses(item)}
+                    {isSelected && item && (
+                      <div className="paperdoll-list-actions">
+                        <button
+                          type="button"
+                          className="paperdoll-remove-btn"
+                          disabled={!canManageItems}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveItem(def.id);
+                            setSelectedSlot(null);
+                          }}
+                        >
+                          <RemoveItemIcon className="paperdoll-remove-icon" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  {item && renderItemBonuses(item)}
-                  {isSelected && item && (
-                    <div className="paperdoll-list-actions">
-                      <button
-                        type="button"
-                        className="paperdoll-remove-btn"
-                        disabled={!canManageItems}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveItem(def.id);
-                          setSelectedSlot(null);
-                        }}
-                      >
-                        <RemoveItemIcon className="paperdoll-remove-icon" />
-                        <span>Remove</span>
-                      </button>
-                    </div>
-                  )}
                 </li>
               );
             })}
