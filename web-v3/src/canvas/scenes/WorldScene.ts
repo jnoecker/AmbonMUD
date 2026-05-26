@@ -1112,6 +1112,10 @@ export class WorldScene {
       this.recallBtn.visible = showRecall;
     }
 
+    // Hide the minimap until logged in — otherwise its parchment flashes on the
+    // pre-login screen (the minimap is drawn in-scene, not a gated DOM overlay).
+    this.minimap.container.visible = loggedIn;
+
     // Depart button visibility — only at sanctum with a recorded death zone
     const canDepart = !!state.room.canDepart;
     if (canDepart !== this.lastCanDepart) {

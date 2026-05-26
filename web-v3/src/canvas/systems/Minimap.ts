@@ -139,6 +139,8 @@ export class Minimap {
     this.container.addChild(this.downButton);
 
     this.applyDiameter();
+    // Hidden until WorldScene shows it once logged in (avoids a pre-login flash).
+    this.container.visible = false;
 
     // Register for zone map data from the React layer
     canvasCallbacks.loadZoneMap = (zone, rooms) => this.loadZoneMap(zone, rooms);
