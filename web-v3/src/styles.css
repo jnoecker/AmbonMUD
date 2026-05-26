@@ -7255,11 +7255,12 @@ body {
   padding: var(--space-2) 0;
 }
 
-/* Side-by-side: sprite left, slot list right */
+/* Side-by-side: sprite left, slot list right. Bottom-align so the sprite's
+   feet line up with the bottom of the (taller) slot list. */
 .paperdoll-layout {
   display: flex;
   gap: var(--space-3);
-  align-items: flex-start;
+  align-items: flex-end;
 }
 
 .paperdoll-sprite-col {
