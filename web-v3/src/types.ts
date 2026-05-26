@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | "combatlog" | "inn" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | "combatlog" | "inn" | "terminal" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -326,6 +326,8 @@ export interface RoomItem {
   description?: string;
   image?: string | null;
   video?: string | null;
+  /** Whether the item can be picked up (false for fixed scenery). */
+  takeable?: boolean;
 }
 
 export interface RoomPlayer {
@@ -368,6 +370,8 @@ export interface MapRoom {
   exits: Record<string, string>;
   title: string;
   image: string | null;
+  /** Terrain key (forest, mountain, …) once the room has been visited. */
+  terrain?: string;
   housing?: boolean;
 }
 
@@ -451,6 +455,35 @@ export interface ConsiderResult {
   ratingLabel: string;
   ratingFlavor: string;
   receivedAt: number;
+}
+
+/** A clicked creature opened in the monster-manual / bestiary panel. */
+export interface MonsterEntry {
+  id?: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  video: string | null;
+  /** Level from MobInfo (shown before the consider stats arrive). */
+  level: number | null;
+  info: MobInfo | null;
+  isStaff: boolean;
+  /** Whether an Attack button + threat assessment apply (false for pets). */
+  canAttack: boolean;
+}
+
+/** A clicked room item, surfaced in the parchment item card (analogous to the
+ *  monster manual). */
+export interface ItemEntry {
+  id?: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  video: string | null;
+  /** Whether the item can be picked up (hides Get for fixed scenery). */
+  takeable: boolean;
+  /** Set when opened from an equipped slot — surfaces an Unequip action. */
+  equippedSlot?: string;
 }
 
 /**
@@ -697,7 +730,7 @@ export interface QuestNotification {
   id: string;
   questId: string;
   questName: string;
-  event: "complete" | "update";
+  event: "complete" | "update" | "accept";
   receivedAt: number;
   // Populated for "complete" events; null/empty for "update".
   questDescription?: string;

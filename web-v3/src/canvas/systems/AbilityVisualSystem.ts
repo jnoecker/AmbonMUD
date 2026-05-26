@@ -16,22 +16,22 @@ import type { AbilityVisualArchetype, CombatEventData, SkillVisual } from "../..
  *  - SUMMON_POOF: sparkle puff at caster.
  */
 
-const PROJECTILE_DURATION_MS = 420;
-const TRAIL_COUNT = 8;
+const PROJECTILE_DURATION_MS = 700;
+const TRAIL_COUNT = 12;
 
-const ICON_PULSE_DURATION_MS = 420;
+const ICON_PULSE_DURATION_MS = 560;
 const ICON_PULSE_START_SCALE = 0.4;
-const ICON_PULSE_END_SCALE = 1.4;
-const ICON_PULSE_TARGET_SIZE = 64;
+const ICON_PULSE_END_SCALE = 1.6;
+const ICON_PULSE_TARGET_SIZE = 88;
 
-const AURA_DURATION_MS = 700;
-const AURA_RADIUS = 56;
+const AURA_DURATION_MS = 950;
+const AURA_RADIUS = 76;
 
-const AREA_BURST_DURATION_MS = 520;
-const AREA_BURST_RADIUS = 110;
+const AREA_BURST_DURATION_MS = 760;
+const AREA_BURST_RADIUS = 150;
 
-const SUMMON_POOF_DURATION_MS = 650;
-const SUMMON_POOF_PARTICLES = 14;
+const SUMMON_POOF_DURATION_MS = 950;
+const SUMMON_POOF_PARTICLES = 18;
 
 const ARCHETYPE_DEFAULT_COLOR: Record<AbilityVisualArchetype, number> = {
   RANGED_PROJECTILE: 0xc8a8f0,

@@ -6,7 +6,9 @@ import type {
   DialogueState,
   FeaturePopoutFocus,
   GroupInfo,
+  ItemEntry,
   MobInfo,
+  MonsterEntry,
   PuzzleState,
   QuestAvailable,
   QuestEntry,
@@ -77,8 +79,10 @@ export const canvasCallbacks: {
   openLottery: (() => void) | null;
   openHousing: (() => void) | null;
   openInn: (() => void) | null;
+  openMail: (() => void) | null;
   openMap: (() => void) | null;
   openRoom: (() => void) | null;
+  openCharacter: (() => void) | null;
   openQuests: (() => void) | null;
   onTargetSelected: ((targetName: string) => void) | null;
   openVideo: ((videoUrl: string) => void) | null;
@@ -87,6 +91,13 @@ export const canvasCallbacks: {
   loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
   openMobDetail: ((detail: { name: string; description: string; image: string | null }) => void) | null;
   openImagePreview: ((url: string) => void) | null;
+  /** Fired when the in-canvas entity menu opens/closes so DOM overlays (the
+   *  room sign) can yield — Pixi can't paint above them. */
+  onEntityMenu: ((open: boolean) => void) | null;
+  /** Open the monster-manual / bestiary panel for a clicked creature. */
+  openMonsterManual: ((entry: MonsterEntry) => void) | null;
+  /** Open the parchment item card for a clicked room item. */
+  openItemManual: ((entry: ItemEntry) => void) | null;
 } = {
   sendCommand: null,
   prefillCommand: null,
@@ -102,8 +113,10 @@ export const canvasCallbacks: {
   openLottery: null,
   openHousing: null,
   openInn: null,
+  openMail: null,
   openMap: null,
   openRoom: null,
+  openCharacter: null,
   openQuests: null,
   onTargetSelected: null,
   openVideo: null,
@@ -112,6 +125,9 @@ export const canvasCallbacks: {
   loadZoneMap: null,
   openMobDetail: null,
   openImagePreview: null,
+  onEntityMenu: null,
+  openMonsterManual: null,
+  openItemManual: null,
 };
 
 export const pendingCastRef: { current: PendingCast | null } = { current: null };

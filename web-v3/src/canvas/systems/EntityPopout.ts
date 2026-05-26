@@ -179,6 +179,7 @@ export class EntityPopout {
   hide() {
     this.visible = false;
     this.container.visible = false;
+    canvasCallbacks.onEntityMenu?.(false);
   }
 
   get isVisible() {
@@ -355,6 +356,7 @@ export class EntityPopout {
 
     this.visible = true;
     this.container.visible = true;
+    canvasCallbacks.onEntityMenu?.(true);
   }
 
   destroy() {

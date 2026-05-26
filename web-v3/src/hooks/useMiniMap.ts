@@ -1,47 +1,184 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { MAP_OFFSETS } from "../constants";
 import { canvasCallbacks, gameStateRef } from "../canvas/GameStateBridge";
 import type { MapRoom } from "../types";
 
-const BG_COLOR = "#141828";
-const NODE_FILL = "#4a6080";
-const CURRENT_FILL = "#b9aed8";
-const CURRENT_GLOW = "rgba(232, 216, 168, 0.5)";
-const CURRENT_GLOW_STROKE = "rgba(232, 216, 168, 0.8)";
-const LINE_STROKE = "rgba(40, 35, 28, 0.6)";
-const FOG_FILL = "rgba(42, 48, 80, 0.5)";
-const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
-const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
-const QUEST_MARKER = "#bea873";
-const PATH_GLOW = "rgba(212, 184, 106, 0.7)";
-const PATH_GLOW_OUTER = "rgba(212, 184, 106, 0.25)";
-const HOUSING_FILL = "#c8a078";
+// Parchment / ink palette — matches the in-scene minimap.
+const BG_COLOR = "#241c14"; // dark fallback when the scroll image hasn't loaded
+const LINE_COLOR = "rgba(74, 55, 34, 0.92)"; // dark sepia route line (reads on light parchment)
+const TICK_COLOR = "rgba(74, 55, 34, 0.85)";
+const INK = "#4a3a28"; // dark sepia pen ink
+const NODE_FILL = "#cdb487"; // explored room wash (procedural fallback)
+const CURRENT_FILL = "#9c3b22"; // sienna "you are here"
+const CURRENT_MARK = "#f3e6c8"; // cream center dot
+const FOG_INK = "rgba(138, 122, 94, 0.6)"; // faint "unknown" outline
+const HOUSING_FILL = "#b98a5a";
+const QUEST_MARKER = "#c69a2e"; // amber gold
+const PATH_GLOW = "rgba(198, 154, 46, 0.9)";
+const PATH_GLOW_OUTER = "rgba(198, 154, 46, 0.3)";
+const LABEL_CURRENT = "#f3e6c8";
+const LABEL_VISITED = "rgba(238, 224, 196, 0.92)";
+const LABEL_OUTLINE = "rgba(28, 20, 10, 0.85)";
 const QUEST_PULSE_PERIOD = 2500; // ms for one full cycle
 const PATH_SHIMMER_PERIOD = 1800; // ms
-const CELL = 80;
-const NODE_RADIUS = 18;
-const CURRENT_RADIUS = 24;
 
-// Inset fractions so map nodes stay within the visible scroll parchment area.
-// The scroll image has rollers on the sides and curled edges top/bottom.
-const SCROLL_INSET_LEFT = 0.08;
-const SCROLL_INSET_RIGHT = 0.10;
-const SCROLL_INSET_TOP = 0.08;
-const SCROLL_INSET_BOTTOM = 0.12;
+// Zoom is expressed as the cell spacing in CSS px. The view pans by tracking the
+// grid coordinate sitting at the centre of the scroll area.
+const MAX_ZOOM = 120; // most zoomed-in cell size
+const DEFAULT_ZOOM = 88; // comfortable default centred on the player
+const MAX_NODE = 52; // glyph size caps (px); scaled down to fit the cell
+const MAX_CURRENT = 64;
+
+// Server-asset keys (shared with the in-scene minimap).
+const A_ROOM = "minimap_room";
+const A_ROOM_CURRENT = "minimap_room_current";
+const A_ROOM_FOG = "minimap_unexplored";
+const A_ROOM_HOUSING = "minimap_room_housing";
+const A_QUEST = "minimap_quest";
+const terrainKey = (t: string) => `minimap_room_${t}`;
+
+// Inset fractions reserving an edge margin around the plotted rooms. The
+// reworked full-bleed background needs none, so rooms use the entire canvas.
+const SCROLL_INSET_LEFT = 0;
+const SCROLL_INSET_RIGHT = 0;
+const SCROLL_INSET_TOP = 0;
+const SCROLL_INSET_BOTTOM = 0;
+// Extra margin (px) keeping a node's centre off the very edge. 0 = full canvas.
+const EDGE_PAD = 0;
 // How much to zoom the background image (1.0 = fill canvas, >1 = zoom in)
 const BG_ZOOM = 1.15;
 
-/** Pure drawing function — no hooks, no closures over React state */
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+interface Trim {
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+}
+
+interface GlyphEntry {
+  img: HTMLImageElement;
+  trim: Trim | null;
+  ready: boolean;
+}
+
+interface View {
+  cell: number;
+  panGx: number;
+  panGy: number;
+}
+
+/** Opaque bounding box of an image, or null if there's no real padding / pixels
+ *  can't be read (CORS-tainted offscreen canvas). */
+function computeTrim(img: HTMLImageElement): Trim | null {
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  if (w === 0 || h === 0) return null;
+  try {
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const cx = c.getContext("2d", { willReadFrequently: true });
+    if (!cx) return null;
+    cx.drawImage(img, 0, 0);
+    const data = cx.getImageData(0, 0, w, h).data;
+    const threshold = 12;
+    let minX = w;
+    let minY = h;
+    let maxX = -1;
+    let maxY = -1;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (data[(y * w + x) * 4 + 3] > threshold) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < minX || maxY < minY) return null;
+    const pad = Math.min(minX, minY, w - 1 - maxX, h - 1 - maxY);
+    if (pad <= 1) return null;
+    return { sx: minX, sy: minY, sw: maxX - minX + 1, sh: maxY - minY + 1 };
+  } catch {
+    return null;
+  }
+}
+
+/** Procedural inked-rect room (fallback when no glyph asset is available). */
+function drawProceduralRoom(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  half: number,
+  isCurrent: boolean,
+  isVisited: boolean,
+  isHousing: boolean,
+) {
+  const x0 = cx - half;
+  const y0 = cy - half;
+  const s = half * 2;
+  ctx.lineJoin = "round";
+  if (isCurrent) {
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = CURRENT_FILL;
+    ctx.fillRect(x0, y0, s, s);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x0, y0, s, s);
+    ctx.fillStyle = CURRENT_MARK;
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.max(2, half * 0.3), 0, Math.PI * 2);
+    ctx.fill();
+  } else if (isVisited) {
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = isHousing ? HOUSING_FILL : NODE_FILL;
+    ctx.fillRect(x0, y0, s, s);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x0, y0, s, s);
+  } else {
+    ctx.strokeStyle = FOG_INK;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x0, y0, s, s);
+  }
+}
+
+/** Procedural quest marker (fallback when no minimap_quest asset). */
+function drawProceduralQuest(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: number, pulse: number) {
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.strokeStyle = QUEST_MARKER;
+  ctx.lineWidth = 2.5;
+  ctx.strokeRect(cx - half - 3, cy - half - 3, (half + 3) * 2, (half + 3) * 2);
+  const my = cy - half - 9;
+  ctx.fillStyle = QUEST_MARKER;
+  ctx.beginPath();
+  ctx.moveTo(cx, my - 5);
+  ctx.lineTo(cx + 4, my);
+  ctx.lineTo(cx, my + 5);
+  ctx.lineTo(cx - 4, my);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Pure drawing function — renders the map at the supplied zoom/pan view. */
 function renderMap(
   canvas: HTMLCanvasElement,
   visited: Map<string, MapRoom>,
   currentId: string | null,
-  imageCache: Map<string, HTMLImageElement>,
-  loadingImages: Set<string>,
-  fogImage: HTMLImageElement | null,
   bgImage: HTMLImageElement | null,
   questTargetRoomIds: Set<string>,
-  scheduleRedraw: () => void,
+  serverAssets: Record<string, string>,
+  view: View,
+  drawGlyph: (ctx: CanvasRenderingContext2D, key: string, cx: number, cy: number, size: number, alpha: number) => boolean,
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -59,24 +196,20 @@ function renderMap(
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
-  // Background: map scroll image (zoomed in) or dark fallback
+  // Background: custom map scroll image (zoomed in) or dark fallback. Fixed —
+  // it does not pan/zoom with the plotted rooms.
   if (bgImage && bgImage.complete) {
     const zw = width * BG_ZOOM;
     const zh = height * BG_ZOOM;
     const zx = (width - zw) / 2;
     const zy = (height - zh) / 2;
     ctx.drawImage(bgImage, zx, zy, zw, zh);
-    // Slight dark overlay so nodes remain readable
-    ctx.fillStyle = "rgba(10, 12, 22, 0.25)";
-    ctx.fillRect(0, 0, width, height);
   } else {
     ctx.fillStyle = BG_COLOR;
     ctx.fillRect(0, 0, width, height);
   }
 
   if (!currentId) return;
-  const current = visited.get(currentId);
-  if (!current) return;
 
   // Scroll parchment bounds — nodes must stay within these
   const scrollLeft = width * SCROLL_INSET_LEFT;
@@ -84,31 +217,18 @@ function renderMap(
   const scrollTop = height * SCROLL_INSET_TOP;
   const scrollBottom = height * (1 - SCROLL_INSET_BOTTOM);
 
-  // Pad inward by the largest node radius + quest diamond height so markers don't clip
-  const nodePad = CURRENT_RADIUS + 14;
-
-  // Compute bounding box of all rooms in the zone to auto-fit
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const node of visited.values()) {
-    if (node.x < minX) minX = node.x;
-    if (node.x > maxX) maxX = node.x;
-    if (node.y < minY) minY = node.y;
-    if (node.y > maxY) maxY = node.y;
-  }
-  const spanX = maxX - minX;
-  const spanY = maxY - minY;
+  const nodePad = EDGE_PAD;
   const availW = (scrollRight - scrollLeft) - nodePad * 2;
   const availH = (scrollBottom - scrollTop) - nodePad * 2;
-  // Scale to fit the entire zone, but don't exceed the default CELL size
-  const cell = Math.min(CELL, spanX > 0 ? availW / spanX : CELL, spanY > 0 ? availH / spanY : CELL);
-  // Center the zone bounding-box midpoint in the scroll area
-  const zoneMidX = (minX + maxX) / 2;
-  const zoneMidY = (minY + maxY) / 2;
   const originX = (scrollLeft + scrollRight) / 2;
   const originY = (scrollTop + scrollBottom) / 2;
 
-  function nodeX(n: MapRoom): number { return originX + (n.x - zoneMidX) * cell; }
-  function nodeY(n: MapRoom): number { return originY + (n.y - zoneMidY) * cell; }
+  const cell = view.cell;
+  const nodeSize = Math.min(MAX_NODE, cell * 0.62);
+  const currentSize = Math.min(MAX_CURRENT, cell * 0.74);
+
+  function nodeX(n: MapRoom): number { return originX + (n.x - view.panGx) * cell; }
+  function nodeY(n: MapRoom): number { return originY + (n.y - view.panGy) * cell; }
 
   function inScrollBounds(px: number, py: number): boolean {
     return px >= scrollLeft + nodePad && px <= scrollRight - nodePad &&
@@ -121,23 +241,34 @@ function renderMap(
   ctx.rect(scrollLeft, scrollTop, scrollRight - scrollLeft, scrollBottom - scrollTop);
   ctx.clip();
 
-  // Connecting lines
-  ctx.strokeStyle = LINE_STROKE;
-  ctx.lineWidth = 2;
+  // Connecting lines — only between two visible rooms; off-map exits get a tick.
   for (const node of visited.values()) {
     const sx = nodeX(node);
     const sy = nodeY(node);
+    const sIn = inScrollBounds(sx, sy);
     for (const [dir, targetId] of Object.entries(node.exits)) {
       if (dir === "up" || dir === "down") continue;
       const target = visited.get(targetId);
-      if (!target) continue;
-      const tx = nodeX(target);
-      const ty = nodeY(target);
-      if (inScrollBounds(sx, sy) || inScrollBounds(tx, ty)) {
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(tx, ty);
-        ctx.stroke();
+      const offset = MAP_OFFSETS[dir];
+      if (target) {
+        const tx = nodeX(target);
+        const ty = nodeY(target);
+        if (sIn && inScrollBounds(tx, ty)) {
+          ctx.strokeStyle = LINE_COLOR;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(tx, ty);
+          ctx.stroke();
+        } else if (sIn && offset) {
+          // Target clipped — short tick toward it.
+          ctx.strokeStyle = TICK_COLOR;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(sx + offset.dx * nodeSize * 0.5, sy + offset.dy * nodeSize * 0.5);
+          ctx.lineTo(sx + offset.dx * (nodeSize * 0.5 + 8), sy + offset.dy * (nodeSize * 0.5 + 8));
+          ctx.stroke();
+        }
       }
     }
   }
@@ -161,7 +292,6 @@ function renderMap(
         const ty = nodeY(toNode);
         if (!inScrollBounds(sx, sy) && !inScrollBounds(tx, ty)) continue;
 
-        // Outer glow
         ctx.globalAlpha = shimmer * 0.35;
         ctx.strokeStyle = PATH_GLOW_OUTER;
         ctx.lineWidth = 6;
@@ -170,7 +300,6 @@ function renderMap(
         ctx.lineTo(tx, ty);
         ctx.stroke();
 
-        // Inner bright line
         ctx.globalAlpha = shimmer;
         ctx.strokeStyle = PATH_GLOW;
         ctx.lineWidth = 2.5;
@@ -183,120 +312,51 @@ function renderMap(
     }
   }
 
-  // Nodes
+  // Nodes — terrain-aware glyph stamps (with procedural inked-rect fallback)
   for (const [id, node] of visited.entries()) {
     const x = nodeX(node);
     const y = nodeY(node);
     if (!inScrollBounds(x, y)) continue;
 
     const isCurrent = id === currentId;
-    const radius = isCurrent ? CURRENT_RADIUS : NODE_RADIUS;
     const isVisited = node.title !== "";
+    const isHousing = !!node.housing;
+    const size = isCurrent ? currentSize : nodeSize;
 
-    if (isCurrent) {
-      ctx.strokeStyle = CURRENT_GLOW;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    let key: string;
+    if (isCurrent) key = A_ROOM_CURRENT;
+    else if (!isVisited) key = A_ROOM_FOG;
+    else if (isHousing) key = A_ROOM_HOUSING;
+    else if (node.terrain && serverAssets[terrainKey(node.terrain)]) key = terrainKey(node.terrain);
+    else key = A_ROOM;
 
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    const normalFill = node.housing ? HOUSING_FILL : NODE_FILL;
-    ctx.fillStyle = isVisited ? (isCurrent ? CURRENT_FILL : normalFill) : FOG_FILL;
-    ctx.fill();
+    const drew = drawGlyph(ctx, key, x, y, size, 1);
+    if (!drew) drawProceduralRoom(ctx, x, y, size / 2, isCurrent, isVisited, isHousing);
 
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    if (isVisited) {
-      ctx.strokeStyle = isCurrent ? CURRENT_GLOW_STROKE : NODE_STROKE;
-      ctx.lineWidth = isCurrent ? 1.5 : 1;
-    } else {
-      ctx.strokeStyle = FOG_STROKE;
-      ctx.lineWidth = 1;
-    }
-    ctx.stroke();
-
-    // Quest objective marker — pulsing gold ring (static at 0.7 for reduced-motion)
+    // Quest objective marker
     if (!isCurrent && questTargetRoomIds.has(id)) {
-      const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const pulse = reducedMotion ? 0.7 : 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
-      ctx.save();
-      ctx.globalAlpha = pulse;
-      ctx.strokeStyle = QUEST_MARKER;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
-      ctx.stroke();
-      // Small diamond marker above the node
-      const mx = x;
-      const my = y - radius - 7;
-      ctx.fillStyle = QUEST_MARKER;
-      ctx.beginPath();
-      ctx.moveTo(mx, my - 5);
-      ctx.lineTo(mx + 4, my);
-      ctx.lineTo(mx, my + 5);
-      ctx.lineTo(mx - 4, my);
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.restore();
-    }
-
-    // Fog-of-war thumbnail for unexplored rooms
-    if (!isVisited && fogImage && fogImage.complete) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.globalAlpha = 0.7;
-      ctx.drawImage(fogImage, x - radius, y - radius, radius * 2, radius * 2);
-      ctx.globalAlpha = 1;
-      ctx.restore();
-    }
-
-    // Room image thumbnail
-    if (node.image) {
-      const cached = imageCache.get(id);
-      if (cached && cached.complete) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.globalAlpha = isCurrent ? 1 : 0.8;
-        ctx.drawImage(cached, x - radius, y - radius, radius * 2, radius * 2);
-        ctx.globalAlpha = 1;
-        ctx.restore();
-      } else if (!loadingImages.has(id)) {
-        loadingImages.add(id);
-        const img = new Image();
-        img.onload = () => {
-          loadingImages.delete(id);
-          imageCache.set(id, img);
-          scheduleRedraw();
-        };
-        img.onerror = () => {
-          loadingImages.delete(id);
-        };
-        img.src = node.image;
+      if (!drawGlyph(ctx, A_QUEST, x, y, size * 1.3, pulse)) {
+        drawProceduralQuest(ctx, x, y, size / 2, pulse);
       }
     }
 
     // Labels
     if (isVisited && node.title) {
-      if (isCurrent) {
-        ctx.fillStyle = "rgba(232, 216, 168, 0.9)";
-        ctx.font = "bold 11px 'JetBrains Mono', 'Cascadia Mono', monospace";
-      } else {
-        ctx.fillStyle = "rgba(216, 220, 239, 0.7)";
-        ctx.font = "10px 'JetBrains Mono', 'Cascadia Mono', monospace";
-      }
+      ctx.font = isCurrent
+        ? "bold 12px 'JetBrains Mono', 'Cascadia Mono', monospace"
+        : "11px 'JetBrains Mono', 'Cascadia Mono', monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       const maxLen = isCurrent ? 18 : 14;
-      const label = node.title.length > maxLen ? node.title.slice(0, maxLen - 1) + "\u2026" : node.title;
-      ctx.fillText(label, x, y + radius + (isCurrent ? 5 : 3));
+      const label = node.title.length > maxLen ? node.title.slice(0, maxLen - 1) + "…" : node.title;
+      const ly = y + size / 2 + 4;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = LABEL_OUTLINE;
+      ctx.strokeText(label, x, ly);
+      ctx.fillStyle = isCurrent ? LABEL_CURRENT : LABEL_VISITED;
+      ctx.fillText(label, x, ly);
     }
   }
 
@@ -310,14 +370,12 @@ function renderMap(
     const tx = nodeX(targetNode);
     const ty = nodeY(targetNode);
     if (inScrollBounds(tx, ty)) continue; // already visible
-    // Direction from center to the target
     const ddx = tx - originX;
     const ddy = ty - originY;
     const dist = Math.sqrt(ddx * ddx + ddy * ddy);
     if (dist === 0) continue;
     const nx = ddx / dist;
     const ny = ddy / dist;
-    // Place on the scroll edge
     const padIn = 14;
     const ex = Math.max(scrollLeft + padIn, Math.min(scrollRight - padIn, originX + nx * Math.min(dist, availW / 2)));
     const ey = Math.max(scrollTop + padIn, Math.min(scrollBottom - padIn, originY + ny * Math.min(dist, availH / 2)));
@@ -338,7 +396,6 @@ function renderMap(
     ctx.moveTo(tipX, tipY);
     ctx.lineTo(tipX - Math.cos(angle + chevSpread) * chevLen, tipY - Math.sin(angle + chevSpread) * chevLen);
     ctx.stroke();
-    // Glow dot
     ctx.fillStyle = QUEST_MARKER;
     ctx.beginPath();
     ctx.arc(ex, ey, 3, 0, Math.PI * 2);
@@ -393,74 +450,228 @@ export function useMiniMap() {
   const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const visitedRef = useRef<Map<string, MapRoom>>(new Map());
   const currentRoomIdRef = useRef<string | null>(null);
-  const imageCache = useRef<Map<string, HTMLImageElement>>(new Map());
-  const loadingImages = useRef<Set<string>>(new Set());
-  const fogImageRef = useRef<HTMLImageElement | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
+  // Glyph textures keyed by asset key (loaded once; global, not per-zone).
+  const glyphCacheRef = useRef<Map<string, GlyphEntry>>(new Map());
   const pulseRafRef = useRef<number | null>(null);
+  const drawMapRef = useRef<() => void>(() => {});
+
+  // Pan/zoom view state. zoom 0 = "uninitialised" (pick a default on next draw);
+  // pan null = "follow the current room" until the user drags/zooms.
+  const zoomRef = useRef(0);
+  const panRef = useRef<{ gx: number; gy: number } | null>(null);
+  const userAdjustedRef = useRef(false);
+  const zoomBoundsRef = useRef({ min: 8, max: MAX_ZOOM });
+  const dragRef = useRef<{ x: number; y: number; gx: number; gy: number } | null>(null);
 
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
 
-    // Lazily create fog/bg images once Server.Assets GMCP provides resolved URLs.
-    // This avoids 404s from fallback paths when assets are on a CDN.
-    const a = gameStateRef.current.serverAssets;
-    if (fogImageRef.current == null && a["minimap_unexplored"]) {
+    const assets = gameStateRef.current.serverAssets;
+
+    // Custom scroll background — draw-only, so no crossOrigin needed.
+    if (bgImageRef.current == null && assets["map_background"]) {
       const img = new Image();
-      img.src = a["minimap_unexplored"];
-      fogImageRef.current = img;
-    }
-    if (bgImageRef.current == null && a["map_background"]) {
-      const img = new Image();
-      img.src = a["map_background"];
+      img.onload = () => drawMapRef.current();
+      img.src = assets["map_background"];
       bgImageRef.current = img;
     }
-
-    const fog = fogImageRef.current?.complete ? fogImageRef.current : null;
     const bg = bgImageRef.current?.complete ? bgImageRef.current : null;
-    const questRooms = gameStateRef.current.questTargetRoomIds;
+
+    // Resolve the zoom/pan view from the canvas size + zone bounds.
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, rect.width);
+    const height = Math.max(1, rect.height);
+    const visited = visitedRef.current;
+    const current = currentRoomIdRef.current ? visited.get(currentRoomIdRef.current) : undefined;
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const node of visited.values()) {
+      if (node.x < minX) minX = node.x;
+      if (node.x > maxX) maxX = node.x;
+      if (node.y < minY) minY = node.y;
+      if (node.y > maxY) maxY = node.y;
+    }
+    const hasRooms = minX !== Infinity;
+    const spanX = hasRooms ? maxX - minX : 0;
+    const spanY = hasRooms ? maxY - minY : 0;
+
+    const nodePad = EDGE_PAD;
+    const availW = width * (1 - SCROLL_INSET_LEFT - SCROLL_INSET_RIGHT) - nodePad * 2;
+    const availH = height * (1 - SCROLL_INSET_TOP - SCROLL_INSET_BOTTOM) - nodePad * 2;
+    // Whole-zone fit = minimum zoom (you can't zoom out past seeing everything).
+    const fitCell = Math.min(MAX_ZOOM, spanX > 0 ? availW / spanX : MAX_ZOOM, spanY > 0 ? availH / spanY : MAX_ZOOM);
+    const minZoom = Math.max(10, Math.min(fitCell, DEFAULT_ZOOM));
+    const maxZoom = MAX_ZOOM;
+    zoomBoundsRef.current = { min: minZoom, max: maxZoom };
+
+    if (zoomRef.current === 0) zoomRef.current = clamp(DEFAULT_ZOOM, minZoom, maxZoom);
+    zoomRef.current = clamp(zoomRef.current, minZoom, maxZoom);
+
+    // Pan: follow the current room (or zone centre) until the user takes over.
+    const centerGx = current ? current.x : hasRooms ? (minX + maxX) / 2 : 0;
+    const centerGy = current ? current.y : hasRooms ? (minY + maxY) / 2 : 0;
+    if (!userAdjustedRef.current || !panRef.current) {
+      panRef.current = { gx: centerGx, gy: centerGy };
+    }
+    if (hasRooms) {
+      panRef.current.gx = clamp(panRef.current.gx, minX - 1, maxX + 1);
+      panRef.current.gy = clamp(panRef.current.gy, minY - 1, maxY + 1);
+    }
+
+    // Draw a room/quest glyph (auto-trimmed, aspect-fit). Lazily loads the
+    // texture with crossOrigin so its transparent margin can be measured.
+    const drawGlyph = (
+      ctx: CanvasRenderingContext2D,
+      key: string,
+      cx: number,
+      cy: number,
+      size: number,
+      alpha: number,
+    ): boolean => {
+      const url = assets[key];
+      if (!url) return false;
+      const entry = glyphCacheRef.current.get(key);
+      if (!entry) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        const created: GlyphEntry = { img, trim: null, ready: false };
+        glyphCacheRef.current.set(key, created);
+        img.onload = () => {
+          created.trim = computeTrim(img);
+          created.ready = true;
+          drawMapRef.current();
+        };
+        img.src = url;
+        return false;
+      }
+      if (!entry.ready) return false;
+      const { img, trim } = entry;
+      const sx = trim?.sx ?? 0;
+      const sy = trim?.sy ?? 0;
+      const sw = trim?.sw ?? img.naturalWidth;
+      const sh = trim?.sh ?? img.naturalHeight;
+      if (sw <= 0 || sh <= 0) return false;
+      const scale = size / Math.max(sw, sh);
+      const dw = sw * scale;
+      const dh = sh * scale;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, sx, sy, sw, sh, cx - dw / 2, cy - dh / 2, dw, dh);
+      ctx.restore();
+      return true;
+    };
+
     renderMap(
       canvas,
-      visitedRef.current,
+      visited,
       currentRoomIdRef.current,
-      imageCache.current,
-      loadingImages.current,
-      fog,
       bg,
-      questRooms,
-      () => {
-        const c = mapCanvasRef.current;
-        if (c) {
-          const f = fogImageRef.current?.complete ? fogImageRef.current : null;
-          const b = bgImageRef.current?.complete ? bgImageRef.current : null;
-          renderMap(c, visitedRef.current, currentRoomIdRef.current, imageCache.current, loadingImages.current, f, b, questRooms, () => {});
-        }
-      },
+      gameStateRef.current.questTargetRoomIds,
+      assets,
+      { cell: zoomRef.current, panGx: panRef.current.gx, panGy: panRef.current.gy },
+      drawGlyph,
     );
   }, []);
 
+  // Keep a stable handle to the latest drawMap for async (glyph/bg) reloads.
+  useEffect(() => {
+    drawMapRef.current = drawMap;
+  }, [drawMap]);
+
+  // Centre of the scroll area in CSS px, for cursor-anchored zoom math.
+  const scrollOrigin = (rect: DOMRect) => ({
+    x: (rect.width * SCROLL_INSET_LEFT + rect.width * (1 - SCROLL_INSET_RIGHT)) / 2,
+    y: (rect.height * SCROLL_INSET_TOP + rect.height * (1 - SCROLL_INSET_BOTTOM)) / 2,
+  });
+
+  const onMapPointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    dragRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      gx: panRef.current?.gx ?? 0,
+      gy: panRef.current?.gy ?? 0,
+    };
+  }, []);
+
+  const onMapPointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const cell = zoomRef.current || 1;
+    panRef.current = {
+      gx: d.gx - (e.clientX - d.x) / cell,
+      gy: d.gy - (e.clientY - d.y) / cell,
+    };
+    userAdjustedRef.current = true;
+    drawMap();
+  }, [drawMap]);
+
+  const onMapPointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    dragRef.current = null;
+  }, []);
+
+  const onMapWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const origin = scrollOrigin(rect);
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const cell = zoomRef.current || DEFAULT_ZOOM;
+    const { min, max } = zoomBoundsRef.current;
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    const newCell = clamp(cell * factor, min, max);
+    if (newCell === cell) return;
+    // Keep the grid point under the cursor fixed while zooming.
+    const p = panRef.current ?? { gx: 0, gy: 0 };
+    const gx = p.gx + (mx - origin.x) / cell;
+    const gy = p.gy + (my - origin.y) / cell;
+    panRef.current = { gx: gx - (mx - origin.x) / newCell, gy: gy - (my - origin.y) / newCell };
+    zoomRef.current = newCell;
+    userAdjustedRef.current = true;
+    drawMap();
+  }, [drawMap]);
+
+  const zoomBy = useCallback((factor: number) => {
+    const { min, max } = zoomBoundsRef.current;
+    zoomRef.current = clamp((zoomRef.current || DEFAULT_ZOOM) * factor, min, max);
+    drawMap();
+  }, [drawMap]);
+
+  const zoomIn = useCallback(() => zoomBy(1.25), [zoomBy]);
+  const zoomOut = useCallback(() => zoomBy(0.8), [zoomBy]);
+
+  /** Re-centre on the player and reset to the default zoom. */
+  const recenter = useCallback(() => {
+    userAdjustedRef.current = false;
+    panRef.current = null;
+    zoomRef.current = 0;
+    drawMap();
+  }, [drawMap]);
+
   const updateMap = useCallback(
-    (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean) => {
+    (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean, terrain?: string | null) => {
       currentRoomIdRef.current = roomId;
       const rooms = visitedRef.current;
 
       if (!rooms.has(roomId)) {
-        // Use server-provided coordinates directly
-        rooms.set(roomId, { x: mapX, y: mapY, exits, title, image, housing });
+        rooms.set(roomId, { x: mapX, y: mapY, exits, title, image, housing, terrain: terrain ?? undefined });
       } else {
         const node = rooms.get(roomId)!;
         node.exits = exits;
         node.title = title;
         node.image = image;
         node.housing = housing;
-        // Update coordinates in case they were speculative from a neighbor pre-placement
+        if (terrain) node.terrain = terrain;
         node.x = mapX;
         node.y = mapY;
       }
 
       // Pre-place unvisited horizontal neighbors (N/S/E/W only).
-      // Up/down exits are vertical transitions and don't belong on the 2D minimap grid.
       for (const [dir, targetId] of Object.entries(exits)) {
         if (dir === "up" || dir === "down") continue;
         if (rooms.has(targetId)) continue;
@@ -478,13 +689,13 @@ export function useMiniMap() {
   const loadZoneMap = useCallback(
     (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => {
       const map = visitedRef.current;
-      // Clear previous zone data
       map.clear();
-      imageCache.current.clear();
-      loadingImages.current.clear();
       currentRoomIdRef.current = null;
+      // New zone — reset the view so it re-centres at the default zoom.
+      userAdjustedRef.current = false;
+      panRef.current = null;
+      zoomRef.current = 0;
 
-      // Pre-place all rooms as unvisited fog nodes
       for (const r of rooms) {
         map.set(r.id, { x: r.x, y: r.y, exits: r.exits, title: "", image: null });
       }
@@ -499,8 +710,9 @@ export function useMiniMap() {
   const resetMap = useCallback(() => {
     visitedRef.current.clear();
     currentRoomIdRef.current = null;
-    imageCache.current.clear();
-    loadingImages.current.clear();
+    userAdjustedRef.current = false;
+    panRef.current = null;
+    zoomRef.current = 0;
     drawMap();
   }, [drawMap]);
 
@@ -532,5 +744,12 @@ export function useMiniMap() {
     resetMap,
     startPulse,
     stopPulse,
+    onMapPointerDown,
+    onMapPointerMove,
+    onMapPointerUp,
+    onMapWheel,
+    zoomIn,
+    zoomOut,
+    recenter,
   };
 }

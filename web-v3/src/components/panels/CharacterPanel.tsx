@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, FactionStanding, GroupInfo, GuildInfo, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
-import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
+import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, FactionStanding, GroupInfo, GuildInfo, LeaderboardData, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
+import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, GlobeIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
+import { LeaderboardPanel } from "./LeaderboardPanel";
 
-type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions";
+type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions" | "leaderboard";
 
 function factionTierClass(tier: string): "positive" | "neutral" | "negative" {
   switch (tier) {
@@ -46,6 +47,7 @@ interface CharacterPanelProps {
   factions: FactionStanding[];
   petState: PetState | null;
   prestigeInfo: PrestigeInfo | null;
+  leaderboard: Record<string, LeaderboardData>;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -81,6 +83,7 @@ export function CharacterPanel({
   factions,
   petState,
   prestigeInfo,
+  leaderboard,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -478,6 +481,17 @@ export function CharacterPanel({
                 <FactionsTabIcon className="detail-tab-icon" />
               </button>
             )}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeDetailTab === "leaderboard"}
+              aria-label="Leaderboard"
+              title="Leaderboard"
+              className={`character-detail-tab ${activeDetailTab === "leaderboard" ? "character-detail-tab-active" : ""}`}
+              onClick={() => setActiveDetailTab("leaderboard")}
+            >
+              <GlobeIcon className="detail-tab-icon" />
+            </button>
           </div>
 
           <div className="character-detail-body">
@@ -877,6 +891,17 @@ export function CharacterPanel({
                     </ul>
                   </>
                 )}
+              </section>
+            )}
+
+            {activeDetailTab === "leaderboard" && (
+              <section
+                key="leaderboard"
+                className="character-detail-panel character-detail-panel-flip character-leaderboard"
+                role="tabpanel"
+                aria-label="Leaderboard"
+              >
+                <LeaderboardPanel leaderboard={leaderboard} onCommand={onCommand} />
               </section>
             )}
           </div>

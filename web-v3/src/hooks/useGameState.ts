@@ -181,6 +181,7 @@ export interface MiniMapBridge {
     mapX: number,
     mapY: number,
     housing?: boolean,
+    terrain?: string | null,
   ) => void;
   loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
   resetMap: () => void;

@@ -7,22 +7,20 @@ import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { SpellProjectileSystem } from "../systems/SpellProjectile";
 
-const BASE_SPRITE_SIZE = 160;
-const MIN_SPRITE_SIZE = 120;
-const MAX_SPRITE_SIZE = 200;
-const SMALL_SPRITE = 80;
-const HP_BAR_WIDTH = 140;
-const HP_BAR_HEIGHT = 10;
-const MANA_BAR_HEIGHT = 8;
-const LABEL_FONT_SIZE = 15;
-const PARTY_LABEL_FONT_SIZE = 13;
+const BASE_SPRITE_SIZE = 248;
+const MIN_SPRITE_SIZE = 184;
+const MAX_SPRITE_SIZE = 340;
+const SMALL_SPRITE = 124;
+const HP_BAR_WIDTH = 200;
+const HP_BAR_HEIGHT = 14;
+const LABEL_FONT_SIZE = 18;
+const PARTY_LABEL_FONT_SIZE = 15;
 
 const PLAYER_TINT = 0x81a2be;
 const PET_TINT = 0xb294bb;
 const ENEMY_TINT = 0xf0c674;
 const HP_COLOR = 0x8abf8a;
 const HP_BG_COLOR = 0x3a3a3a;
-const MANA_COLOR = 0x64b5f6;
 const LABEL_COLOR = "#d8dcef";
 const ENEMY_LABEL_COLOR = "#f0c674";
 const PARTY_LABEL_COLOR = "#81a2be";
@@ -48,7 +46,7 @@ export class BattleScene {
   private enemyHpText: Text;
 
   private partyMembers: Array<{ sprite: Sprite; label: Text; hpBar: Graphics }> = [];
-  private petMembers: Array<{ sprite: Sprite; label: Text; hpBar: Graphics; id: string }> = [];
+  private petMembers: Array<{ sprite: Sprite; label: Text; hpBar: Graphics; id: string; name: string }> = [];
 
   private combatAnimator: CombatAnimator;
   private gainPopups: GainPopupSystem;
@@ -131,6 +129,9 @@ export class BattleScene {
     this.fleeBtn = this.buildActionButton("Flee", 0xd4888a, 0x4a1a1a, () => {
       canvasCallbacks.sendCommand?.("flee");
     });
+    // Flee is now a DOM overlay in GameShell (the canvas button would sit under
+    // the HUD overlays), so keep the Pixi one hidden.
+    this.fleeBtn.visible = false;
     this.smiteBtn = this.buildActionButton("Smite", 0xbea873, 0x3a3020, () => {
       const target = gameStateRef.current.combatTarget?.targetName;
       if (target) {
@@ -278,12 +279,30 @@ export class BattleScene {
       // abilityCast events carry no damage/heal — skip the CombatAnimator entirely
       // (it would otherwise emit dodge/death/etc. branches that don't apply).
       if (event.type !== "abilityCast") {
-        this.combatAnimator.processEvent(
-          event,
-          playerPos.x, playerPos.y,
-          enemyPos.x, enemyPos.y,
-          { suppressSlash: route.suppressSlash },
-        );
+        // A pet-sourced attack must animate the pet lunging at the enemy, not the
+        // enemy lunging at the player (which is what the sourceIsPlayer=false
+        // branch of processEvent would otherwise do).
+        const petIdx = event.petName
+          ? this.petMembers.findIndex((p) => p.name === event.petName)
+          : -1;
+        if (petIdx >= 0 && event.damage > 0) {
+          const playerSize = this.computeSpriteScales(vitals.maxHp, combatTarget?.targetMaxHp ?? null).playerSize;
+          const petPos = this.getPetPosition(petIdx, playerPos, playerSize);
+          this.combatAnimator.processAllyAttack(
+            `pet:${this.petMembers[petIdx].id}`,
+            event,
+            petPos.x, petPos.y,
+            enemyPos.x, enemyPos.y,
+            { suppressSlash: route.suppressSlash },
+          );
+        } else {
+          this.combatAnimator.processEvent(
+            event,
+            playerPos.x, playerPos.y,
+            enemyPos.x, enemyPos.y,
+            { suppressSlash: route.suppressSlash },
+          );
+        }
       }
     }
 
@@ -364,13 +383,19 @@ export class BattleScene {
   private getPlayerPosition() {
     const w = this.width;
     const h = this.height;
-    return { x: w * 0.25, y: h * 0.6 };
+    return { x: w * 0.26, y: h * 0.58 };
   }
 
   private getEnemyPosition() {
     const w = this.width;
     const h = this.height;
-    return { x: w * 0.75, y: h * 0.45 };
+    return { x: w * 0.74, y: h * 0.47 };
+  }
+
+  /** Base (pre-lunge) screen position of the i-th pet, below the player. */
+  private getPetPosition(index: number, playerPos: { x: number; y: number }, playerSize: number) {
+    const petStartY = playerPos.y + playerSize / 2 + 20;
+    return { x: playerPos.x + 60, y: petStartY + index * (SMALL_SPRITE + 30) };
   }
 
   /**
@@ -414,10 +439,13 @@ export class BattleScene {
     this.uiGraphics.stroke({ color: 0x4a4a6a, alpha: 0.4, width: 1 });
 
     // Compute dynamic sprite sizes based on relative power (maxHP ratio)
-    const { playerSize, enemySize } = this.computeSpriteScales(
+    const { playerSize: rawPlayerSize, enemySize } = this.computeSpriteScales(
       vitals.maxHp,
       combatTarget?.targetMaxHp ?? null,
     );
+    // Shrink the player so its sprite + HP/Mana bars + name stay clear of the
+    // room text below the scene.
+    const playerSize = Math.round(rawPlayerSize * 0.74);
 
     // Player position (left side) with lunge + shake offsets
     const playerPos = this.getPlayerPosition();
@@ -433,31 +461,38 @@ export class BattleScene {
     }
 
     this.playerLabel.x = playerDrawX;
-    this.playerLabel.y = playerDrawY + playerSize / 2 + 6;
 
-    // Player HP bar
-    const playerHpPct = percent(vitals.hp, vitals.maxHp);
+    // Player HP / Mana bars under the sprite (mirrors the enemy + party). Drawn
+    // at the stable player position (not the shake offset) so they don't jitter,
+    // and well above the bottom skill dock since the player sits on the left.
+    const pv = gameStateRef.current.vitals;
     this.playerHpBar.clear();
-    this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
-    this.playerHpBar.fill(HP_BG_COLOR);
-    if (playerHpPct > 0) {
-      this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 24, HP_BAR_WIDTH * playerHpPct / 100, HP_BAR_HEIGHT, 2);
-      this.playerHpBar.fill(HP_COLOR);
-    }
-
-    this.playerHpText.text = `${vitals.hp}/${vitals.maxHp}`;
-    this.playerHpText.x = playerPos.x;
-    this.playerHpText.y = playerPos.y + playerSize / 2 + 34;
-
-    // Player mana bar
-    const manaPct = percent(vitals.mana, vitals.maxMana);
     this.playerManaBar.clear();
-    this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 46, HP_BAR_WIDTH, MANA_BAR_HEIGHT, 2);
-    this.playerManaBar.fill(HP_BG_COLOR);
-    if (manaPct > 0) {
-      this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 46, HP_BAR_WIDTH * manaPct / 100, MANA_BAR_HEIGHT, 2);
-      this.playerManaBar.fill(MANA_COLOR);
+    const pBarW = 168;
+    const pHpH = 12;
+    const pManaH = 9;
+    const pGap = 3;
+    const pBarX = playerPos.x - pBarW / 2;
+    const pBarTop = playerPos.y + playerSize / 2 + 22;
+    const hpPct = percent(pv.hp, pv.maxHp);
+    this.playerHpBar.roundRect(pBarX, pBarTop, pBarW, pHpH, 2).fill(HP_BG_COLOR);
+    if (hpPct > 0) {
+      // Green → amber → red so danger reads at a glance for flee timing.
+      const hpCol = hpPct > 50 ? 0x6fae5e : hpPct > 25 ? 0xd9a23a : 0xcf5446;
+      this.playerHpBar.roundRect(pBarX, pBarTop, pBarW * hpPct / 100, pHpH, 2).fill(hpCol);
     }
+    const hasMana = pv.maxMana > 0;
+    const pManaTop = pBarTop + pHpH + pGap;
+    if (hasMana) {
+      const manaPct = percent(pv.mana, pv.maxMana);
+      this.playerManaBar.roundRect(pBarX, pManaTop, pBarW, pManaH, 2).fill(HP_BG_COLOR);
+      if (manaPct > 0) this.playerManaBar.roundRect(pBarX, pManaTop, pBarW * manaPct / 100, pManaH, 2).fill(0x5f93d8);
+    }
+    const pBarsBottom = pBarTop + pHpH + (hasMana ? pGap + pManaH : 0);
+    this.playerHpText.text = `${Math.max(0, pv.hp)}/${pv.maxHp}`;
+    this.playerHpText.x = playerPos.x;
+    this.playerHpText.y = pBarsBottom + 3;
+    this.playerLabel.y = pBarsBottom + 22;
 
     // Status effects above the player
     this.statusEffects.update(gameStateRef.current.effects, playerDrawX, playerDrawY - playerSize / 2 - 28);
@@ -531,13 +566,16 @@ export class BattleScene {
       }
     }
 
-    // Pets (positioned below player on the right)
-    const petStartY = playerPos.y + playerSize / 2 + 20;
+    // Pets (positioned below player on the right) — apply lunge + shake so the
+    // pet visibly strikes toward the enemy when it attacks.
     for (let i = 0; i < this.petMembers.length; i++) {
       const pet = this.petMembers[i];
       const petMob = gameStateRef.current.mobs.find((m: { id: string }) => m.id === pet.id);
-      const px = playerPos.x + 60;
-      const py = petStartY + i * (SMALL_SPRITE + 30);
+      const base = this.getPetPosition(i, playerPos, playerSize);
+      const petLunge = this.combatAnimator.getLungeOffset(`pet:${pet.id}`);
+      const petShake = this.combatAnimator.getShakeOffset(`pet:${pet.id}`);
+      const px = base.x + petLunge.x + petShake.x;
+      const py = base.y + petLunge.y + petShake.y;
 
       pet.sprite.x = px;
       pet.sprite.y = py;
@@ -686,7 +724,7 @@ export class BattleScene {
       this.container.addChild(sprite);
       this.container.addChild(label);
       this.container.addChild(hpBar);
-      this.petMembers.push({ sprite, label, hpBar, id: pet.id });
+      this.petMembers.push({ sprite, label, hpBar, id: pet.id, name: pet.name });
     }
   }
 

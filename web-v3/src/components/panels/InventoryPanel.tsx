@@ -11,9 +11,13 @@ interface InventoryPanelProps {
   canManageItems: boolean;
   roomFeatures: RoomFeature[];
   containerContents: ContainerContents | null;
+  /** Resolved server assets, for the optional action-button icons. */
+  serverAssets: Record<string, string>;
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onGiveItem: (itemKeyword: string, playerName: string) => void;
+  /** Open the parchment item card (same window as clicking a ground item). */
+  onExamineItem: (item: ItemSummary, image: string | null) => void;
   onCommand: (command: string) => void;
   /** Pulse the equip action on wearable items as a first-time onboarding cue. */
   equipHint?: boolean;
@@ -110,9 +114,11 @@ export function InventoryPanel({
   canManageItems,
   roomFeatures,
   containerContents,
+  serverAssets,
   onWearItem,
   onDropItem,
   onGiveItem,
+  onExamineItem,
   onCommand,
   equipHint = false,
 }: InventoryPanelProps) {
@@ -131,10 +137,21 @@ export function InventoryPanel({
   if (inventory.length === 0) {
     return (
       <div className="inventory-empty-state">
-        <p className="empty-note">Your bags are empty.</p>
+        <div className="inventory-empty-pocket" aria-hidden="true">
+          <span className="inventory-empty-pocket-flap" />
+        </div>
+        <p className="empty-note inventory-empty-note">Your satchel is empty.</p>
+        <p className="inventory-empty-sub">Pick things up and they&rsquo;ll be tucked away here.</p>
       </div>
     );
   }
+
+  // A custom action icon when its asset is registered; else null (the caller
+  // supplies a unicode/SVG fallback).
+  const actionAsset = (key: string) =>
+    serverAssets[key] ? (
+      <img className="inventory-action-img" src={serverAssets[key]} alt="" aria-hidden="true" />
+    ) : null;
 
   const renderStack = (stack: ItemStack, type: ItemType) => {
     const item = stack.lead;
@@ -187,48 +204,47 @@ export function InventoryPanel({
           <div className="inventory-item-actions">
             <button
               type="button"
-              className="inventory-action-btn inventory-action-btn-pill inventory-action-examine"
+              className="inventory-action-btn inventory-action-btn-icon inventory-action-examine"
               aria-label={`Examine ${item.name}`}
               title={`Examine ${item.name}`}
-              onClick={() => onCommand(`look ${item.keyword}`)}
+              onClick={() => onExamineItem(item, image)}
             >
-              Examine
+              {actionAsset("action_look") ?? <span className="inventory-action-glyph" aria-hidden="true">❍</span>}
             </button>
             {!item.slot && item.consumable && (
               <button
                 type="button"
-                className="inventory-action-btn inventory-action-btn-pill inventory-action-use"
+                className="inventory-action-btn inventory-action-btn-icon inventory-action-use"
                 aria-label={`Use ${item.name}`}
                 title={`Use ${item.name}${item.useEffect ? ` - ${item.useEffect}` : ""}`}
                 disabled={!canManageItems}
                 onClick={() => onCommand(`use ${item.keyword}`)}
               >
-                Use
+                {actionAsset("action_use") ?? <span className="inventory-action-glyph" aria-hidden="true">✚</span>}
               </button>
             )}
             {item.slot && (
               <button
                 type="button"
-                className={`inventory-action-btn inventory-action-btn-pill inventory-action-equip${equipHint ? " inventory-action-equip-hint" : ""}`}
+                className={`inventory-action-btn inventory-action-btn-icon inventory-action-equip${equipHint ? " inventory-action-equip-hint" : ""}`}
                 aria-label={`Equip ${item.name}`}
                 title={equipHint ? `Equip ${item.name}` : `Wear ${item.name}`}
                 disabled={!canManageItems}
                 onClick={() => onWearItem(item.name)}
               >
-                <WearItemIcon className="inventory-action-icon" />
-                <span>Equip</span>
+                {actionAsset("action_equip") ?? <WearItemIcon className="inventory-action-icon" />}
               </button>
             )}
             {containerContents && !isQuest && (
               <button
                 type="button"
-                className="inventory-action-btn inventory-action-btn-pill inventory-action-put"
+                className="inventory-action-btn inventory-action-btn-icon inventory-action-put"
                 aria-label={`Store ${item.name} in ${containerContents.name}`}
                 title={`Store ${item.name} in ${containerContents.name}`}
                 disabled={!canManageItems}
                 onClick={() => onCommand(`put ${item.keyword} in ${containerContents.keyword}`)}
               >
-                Store
+                {actionAsset("action_store") ?? <span className="inventory-action-glyph" aria-hidden="true">⊞</span>}
               </button>
             )}
             {players.length > 0 && !isQuest && (
@@ -253,7 +269,7 @@ export function InventoryPanel({
                 disabled={!canManageItems}
                 onClick={() => onDropItem(item.name)}
               >
-                <DropItemIcon className="inventory-action-icon" />
+                {actionAsset("action_drop") ?? <DropItemIcon className="inventory-action-icon" />}
               </button>
             )}
             {isQuest && (

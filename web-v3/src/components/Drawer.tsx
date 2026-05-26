@@ -6,6 +6,12 @@ interface DrawerProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** Visual skin for the sheet chrome: warm leather (satchel), a dim
+   *  dressing-chamber (equipment), a merchant cart (shop), a chalkboard
+   *  (trainer), a parchment journal (combat log), or a cork quest board. */
+  variant?: "default" | "satchel" | "equipment" | "shop" | "trainer" | "journal" | "questboard" | "grimoire" | "desk" | "mail";
+  /** Optional background art for a skinned variant (server asset). */
+  skinBg?: string;
 }
 
 const SNAP_HALF = 0.6;
@@ -14,7 +20,7 @@ const DISMISS_THRESHOLD = 0.3;
 const DRAG_VELOCITY_DISMISS = 800; // px/s
 const ANIMATION_MS = 300;
 
-export function Drawer({ open, title, onClose, children }: DrawerProps) {
+export function Drawer({ open, title, onClose, children, variant = "default", skinBg }: DrawerProps) {
   const [height, setHeight] = useState(SNAP_HALF);
   const [dragging, setDragging] = useState(false);
   const [renderPhase, setRenderPhase] = useState<"hidden" | "animating" | "open">(open ? "open" : "hidden");
@@ -142,13 +148,14 @@ export function Drawer({ open, title, onClose, children }: DrawerProps) {
       />
       <div
         ref={sheetRef}
-        className="drawer-sheet"
+        className={`drawer-sheet${variant !== "default" ? ` drawer-sheet-${variant}` : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         style={{
           ["--drawer-height" as string]: `${height * 100}vh`,
           ["--drawer-transition" as string]: transition,
+          ...(skinBg ? { ["--skin-bg" as string]: `url("${skinBg}")` } : {}),
         }}
       >
         <div

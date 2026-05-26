@@ -99,17 +99,19 @@ export function TrainerPanel({ trainer, playerLevel, playerGold, onCommand }: Tr
   const hasPoints = trainer.availableSkillPoints > 0;
   const isMultiClass = trainer.classes.length > 1;
 
-  // Selected class tab — defaults to the first class, or the first unlocked one if any are unlocked
+  // Selected class — defaults to the first class, or the first unlocked one.
   const initialClass = trainer.classes.find((c) => c.classUnlocked)?.className
     ?? trainer.classes[0]?.className
     ?? "";
   const [selectedClass, setSelectedClass] = useState<string>(initialClass);
   const [prevTrainerId, setPrevTrainerId] = useState<string>(trainer.trainerId);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Reset the selected tab when the trainer changes (e.g. switching rooms)
+  // Reset selection when the trainer changes (e.g. switching rooms).
   if (trainer.trainerId !== prevTrainerId) {
     setPrevTrainerId(trainer.trainerId);
     setSelectedClass(initialClass);
+    setMenuOpen(false);
   }
 
   const activeClass: TrainerClass | undefined =
@@ -118,9 +120,6 @@ export function TrainerPanel({ trainer, playerLevel, playerGold, onCommand }: Tr
   if (!activeClass) {
     return (
       <div className="trainer-panel">
-        <div className="trainer-header">
-          <span className="trainer-name">{trainer.name}</span>
-        </div>
         <p className="trainer-empty">This trainer has no classes configured.</p>
       </div>
     );
@@ -132,40 +131,54 @@ export function TrainerPanel({ trainer, playerLevel, playerGold, onCommand }: Tr
 
   return (
     <div className="trainer-panel">
-      <div className="trainer-header">
-        <span className="trainer-name">{trainer.name}</span>
-        <span className="trainer-class">
-          {isMultiClass
-            ? `${trainer.classes.map((c) => prettyClass(c.className)).join(" / ")} Trainer`
-            : `${classLabel} Trainer`}
-        </span>
+      {/* Centered wooden class plaque — the "topic" on the board. Click to swap
+          class or multiclass. */}
+      <div className="trainer-sign-wrap">
+        <button
+          type="button"
+          className={`trainer-class-sign${menuOpen ? " trainer-class-sign-open" : ""}`}
+          onClick={() => { if (isMultiClass) setMenuOpen((o) => !o); }}
+          aria-haspopup={isMultiClass || undefined}
+          aria-expanded={isMultiClass ? menuOpen : undefined}
+          disabled={!isMultiClass}
+          title={isMultiClass ? "Change class / multiclass" : classLabel}
+        >
+          <span className="trainer-class-sign-label">{classLabel}</span>
+          {isMultiClass && <span className="trainer-class-sign-caret" aria-hidden="true">▾</span>}
+        </button>
+
+        {menuOpen && isMultiClass && (
+          <div className="trainer-class-menu" role="menu" aria-label="Classes">
+            {trainer.classes.map((c) => {
+              const isActive = c.className === activeClass.className;
+              return (
+                <button
+                  key={c.className}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={isActive}
+                  className={`trainer-class-opt${isActive ? " trainer-class-opt-active" : ""}${c.classUnlocked ? "" : " trainer-class-opt-locked"}`}
+                  onClick={() => { setSelectedClass(c.className); setMenuOpen(false); }}
+                >
+                  <span className="trainer-class-opt-name">{prettyClass(c.className)}</span>
+                  {c.classUnlocked
+                    ? (isActive && <span className="trainer-class-opt-check" aria-hidden="true">✓</span>)
+                    : <span className="trainer-class-opt-lock" aria-hidden="true">{"🔒"}</span>}
+                </button>
+              );
+            })}
+            <p className="trainer-class-menu-hint">
+              {trainer.multiclassUnlockedCount}/{trainer.multiclassMaxClasses} classes · multiclass at Lv {trainer.multiclassMinLevel}
+            </p>
+          </div>
+        )}
       </div>
 
-      {isMultiClass && (
-        <div className="trainer-class-tabs" role="tablist" aria-label="Trainer classes">
-          {trainer.classes.map((c) => {
-            const isActive = c.className === activeClass.className;
-            return (
-              <button
-                key={c.className}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                className={`trainer-class-tab${isActive ? " trainer-class-tab-active" : ""}${c.classUnlocked ? "" : " trainer-class-tab-locked"}`}
-                onClick={() => setSelectedClass(c.className)}
-              >
-                {prettyClass(c.className)}
-                {!c.classUnlocked && <span className="trainer-class-tab-lock" aria-hidden="true">{"\uD83D\uDD12"}</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="trainer-skill-points">
-        <span className="trainer-sp-label">Skill Points Available</span>
-        <span className={`trainer-sp-value${hasPoints ? " trainer-sp-available" : " trainer-sp-empty"}`}>
-          {trainer.availableSkillPoints}
+      {/* Skill points, chalked onto the board. */}
+      <div className={`trainer-sp-chalk${hasPoints ? " trainer-sp-chalk-has" : ""}`}>
+        <span className="trainer-sp-chalk-value">{trainer.availableSkillPoints}</span>
+        <span className="trainer-sp-chalk-label">
+          skill point{trainer.availableSkillPoints === 1 ? "" : "s"} to spend
         </span>
       </div>
 
@@ -215,7 +228,7 @@ export function TrainerPanel({ trainer, playerLevel, playerGold, onCommand }: Tr
         </div>
       ) : activeClass.abilities.length === 0 ? (
         <p className="trainer-empty">
-          No new {classLabel} abilities available at your level. Keep adventuring!
+          No new {classLabel} lessons at your level. Keep adventuring!
         </p>
       ) : (
         <div className="trainer-ability-list">

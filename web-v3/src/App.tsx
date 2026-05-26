@@ -15,9 +15,10 @@ import { QuestOfferPanel } from "./components/panels/QuestOfferPanel";
 import { InventoryPanel } from "./components/panels/InventoryPanel";
 import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { MailPanel } from "./components/panels/MailPanel";
+import { MonsterManualPanel } from "./components/panels/MonsterManualPanel";
+import { ItemManualPanel } from "./components/panels/ItemManualPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
-import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { BankPanel } from "./components/panels/BankPanel";
 import { StylistPanel } from "./components/panels/StylistPanel";
 import { InnPanel } from "./components/panels/InnPanel";
@@ -26,8 +27,8 @@ import { DungeonPanel } from "./components/panels/DungeonPanel";
 import { LotteryPanel } from "./components/panels/LotteryPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { CombatLogPanel } from "./components/panels/CombatLogPanel";
-import { WorldAtmosphereHud } from "./components/WorldAtmosphereHud";
 import { HelpContent } from "./components/HelpContent";
+import { CommandInput } from "./components/CommandInput";
 import { Atlas } from "./components/Atlas";
 import { DemoBanner } from "./components/DemoBanner";
 import { LevelUpBanner } from "./components/LevelUpBanner";
@@ -49,7 +50,9 @@ import type {
   ChatChannel,
   ConsiderRating,
   FeaturePopoutFocus,
+  ItemEntry,
   LookTargetInfo,
+  MonsterEntry,
   PopoutPanel,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
@@ -165,6 +168,16 @@ function App() {
   // Expanded mob detail card — opened from canvas Look button
   const [mobDetail, setMobDetail] = useState<{ name: string; description: string; image: string | null } | null>(null);
 
+  // Monster-manual / bestiary panel (clicked mob or pet)
+  const [monster, setMonster] = useState<MonsterEntry | null>(null);
+  // Item card (clicked room item)
+  const [item, setItem] = useState<ItemEntry | null>(null);
+  // When Examine is clicked we `look` the item and route the resulting
+  // Room.LookTarget into the item card (so it carries the full description).
+  const pendingExamineRef = useRef<{ image: string | null; equippedSlot?: string } | null>(null);
+  // Inn modal (key-on-a-hook recall) — a click-away modal, not a drawer panel.
+  const [showInn, setShowInn] = useState(false);
+
   // Full-size image preview — opened by clicking the entity preview sprite
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
@@ -185,7 +198,22 @@ function App() {
   };
 
   // Minimap canvas + drawing helpers (owns its own ref, kept out of useGameState)
-  const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap, startPulse, stopPulse } = useMiniMap();
+  const {
+    mapCanvasRef,
+    drawMap,
+    updateMap,
+    loadZoneMap,
+    resetMap,
+    startPulse,
+    stopPulse,
+    onMapPointerDown,
+    onMapPointerMove,
+    onMapPointerUp,
+    onMapWheel,
+    zoomIn: mapZoomIn,
+    zoomOut: mapZoomOut,
+    recenter: mapRecenter,
+  } = useMiniMap();
 
   const state = useGameState(
     { resumeTokenRef, pendingAuthCharRef, sendGmcpRef },
@@ -274,6 +302,24 @@ function App() {
     if (!sendLine(command)) return;
     pushHistory(command);
     resetComposerTraversal();
+  };
+
+  // Accept a quest and surface an "accepted" toast (no server signal for accept,
+  // so we fire it optimistically from the name we already have on the offer).
+  const acceptQuest = (questId: string) => {
+    sendCommand(`accept #${questId}`);
+    const q = state.questsAvailable.find((x) => x.id === questId);
+    state.setQuestNotifications((prev) => [
+      {
+        id: `${Date.now()}-${Math.random()}`,
+        questId,
+        questName: q?.name ?? "Quest",
+        event: "accept" as const,
+        receivedAt: Date.now(),
+        questDescription: q?.description,
+      },
+      ...prev,
+    ]);
   };
 
   // Inline command-input keydown: history navigation + tab completion
@@ -388,9 +434,11 @@ function App() {
     canvasCallbacks.openDungeon = () => openPanel("dungeon");
     canvasCallbacks.openLottery = () => openPanel("lottery");
     canvasCallbacks.openHousing = () => openPanel("housing");
-    canvasCallbacks.openInn = () => openPanel("inn");
+    canvasCallbacks.openInn = () => setShowInn(true);
+    canvasCallbacks.openMail = () => openPanel("mail");
     canvasCallbacks.openMap = () => openPanel("map");
     canvasCallbacks.openRoom = () => openPanel("room");
+    canvasCallbacks.openCharacter = () => openPanel("character");
     canvasCallbacks.openQuests = () => openPanel("quests");
     canvasCallbacks.dismissDialogue = () => {
       // Tell the server to drop dialogue state too — otherwise the next "1"-style
@@ -404,7 +452,18 @@ function App() {
     };
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
     canvasCallbacks.openMobDetail = (detail) => setMobDetail(detail);
+    canvasCallbacks.openMonsterManual = (entry) => {
+      // Clear any stale assessment so the new creature shows "Assessing…" until
+      // its own consider result arrives.
+      state.setConsiderResult(null);
+      setMonster(entry);
+    };
+    canvasCallbacks.openItemManual = (entry) => setItem(entry);
     canvasCallbacks.openImagePreview = (url: string) => setImagePreviewUrl(url);
+    // In-canvas entity menu (Pixi) can't paint above DOM overlays, so flag the
+    // root while it's open and let CSS fade the room sign out of the way.
+    canvasCallbacks.onEntityMenu = (open: boolean) =>
+      document.documentElement.classList.toggle("entity-menu-open", open);
     canvasCallbacks.prefillCommand = (text: string) => prefillInput(text);
     return () => {
       canvasCallbacks.sendCommand = null;
@@ -420,14 +479,20 @@ function App() {
       canvasCallbacks.openLottery = null;
       canvasCallbacks.openHousing = null;
       canvasCallbacks.openInn = null;
+      canvasCallbacks.openMail = null;
       canvasCallbacks.openMap = null;
       canvasCallbacks.openRoom = null;
+      canvasCallbacks.openCharacter = null;
       canvasCallbacks.openQuests = null;
       canvasCallbacks.dismissDialogue = null;
       canvasCallbacks.openQuestOffers = null;
       canvasCallbacks.openVideo = null;
       canvasCallbacks.openMobDetail = null;
+      canvasCallbacks.openMonsterManual = null;
+      canvasCallbacks.openItemManual = null;
       canvasCallbacks.openImagePreview = null;
+      canvasCallbacks.onEntityMenu = null;
+      document.documentElement.classList.remove("entity-menu-open");
       canvasCallbacks.prefillCommand = null;
     };
   }, [sendCommand]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -529,6 +594,28 @@ function App() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
+  }, [state.lookTarget]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Route an Examine-triggered item look into the parchment item card (instead
+  // of the default look-target inspect modal), carrying its full description.
+  useEffect(() => {
+    const lt = state.lookTarget;
+    const pending = pendingExamineRef.current;
+    if (!pending || !lt || lt.type !== "item") return;
+    pendingExamineRef.current = null;
+    // Defer out of the effect body so we swap modals in a fresh tick rather
+    // than cascading renders synchronously.
+    queueMicrotask(() => {
+      setItem({
+        name: lt.name,
+        description: lt.description || null,
+        image: lt.image ?? pending.image,
+        video: null,
+        takeable: false,
+        equippedSlot: pending.equippedSlot,
+      });
+      state.setLookTarget(null);
+    });
   }, [state.lookTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close consider card on Escape
@@ -653,11 +740,6 @@ function App() {
     () => state.inventory.some((i) => i.slot != null),
     [state.inventory],
   );
-  const showInventoryHint =
-    hasCharacterProfile
-    && hasUnequippedWearable
-    && !onboarding.flags.invHintDone
-    && !onboarding.flags.equipHintDone;
   const showEquipHint =
     hasCharacterProfile
     && hasUnequippedWearable
@@ -717,6 +799,18 @@ function App() {
     return () => window.clearTimeout(t);
   }, [state.activePopout]);
 
+  // React 19 registers `wheel` as a passive listener, so calling preventDefault()
+  // inside the synthetic onWheel handler is ignored. Attach a native non-passive
+  // listener so wheel-zooming the world map doesn't also scroll the drawer/page.
+  useEffect(() => {
+    if (drawerPanel !== "map") return;
+    const canvas = mapCanvasRef.current;
+    if (!canvas) return;
+    const stop = (e: WheelEvent) => e.preventDefault();
+    canvas.addEventListener("wheel", stop, { passive: false });
+    return () => canvas.removeEventListener("wheel", stop);
+  }, [drawerPanel]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const drawerTitle = useMemo(() => {
     switch (drawerPanel) {
       case "character": return "Character";
@@ -729,7 +823,7 @@ function App() {
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
       case "features": return "World Features";
-      case "trainer": return state.trainer?.name ?? "Trainer";
+      case "trainer": return "Trainer";
       case "mail": return "Mail";
       case "crafting": return "Crafting";
       case "housing": return "Housing";
@@ -740,13 +834,14 @@ function App() {
       case "auction": return "Auction House";
       case "dungeon": return "Dungeon";
       case "lottery": return "Lottery";
-      case "combatlog": return "Combat Log";
+      case "combatlog": return "Battle Journal";
       case "help": return "Command Reference";
+      case "terminal": return "Terminal";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
       default: return "";
     }
-  }, [drawerPanel, state.shop?.name, state.trainer?.name, state.room.title]);
+  }, [drawerPanel, state.shop?.name, state.room.title]);
 
   const sortedExits = useMemo(() => sortExits(state.room.exits), [state.room.exits]);
   const questMarkerCount = useMemo(
@@ -774,31 +869,75 @@ function App() {
         connected={connected}
         hasCharacterProfile={hasCharacterProfile}
         vitals={state.vitals}
+        room={state.room}
+        exits={sortedExits}
+        serverAssets={state.serverAssets}
+        worldTime={state.worldTime}
+        worldWeather={state.worldWeather}
+        worldEvents={state.worldEvents}
         combatLogMessages={state.combatLogMessages}
         combatTarget={state.combatTarget}
+        inCombat={state.vitals.inCombat}
         inventory={state.inventory}
         quickbarSlots={quickbar.slots}
+        petSkills={state.petSkills}
+        onCastSkill={handleCastSkill}
         onQuickbarSwap={quickbar.swap}
         onQuickbarAssign={quickbar.assign}
         onQuickbarClear={quickbar.clear}
-        petSkills={state.petSkills}
         activePopout={state.activePopout}
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
-        onCastSkill={handleCastSkill}
-        onReconnect={() => { intentionalDisconnectRef.current = true; reconnect(); }}
-        dungeonActive={state.dungeonInfo?.active ?? false}
         audio={audio}
-        inputValue={inputValue}
-        onInputChange={(value) => {
-          setInputValue(value);
-          resetComposerCompletion();
-        }}
-        onInputKeyDown={handleInputKeyDown}
-        inventoryHint={showInventoryHint}
       />
 
-      <Drawer open={state.activePopout !== null} title={drawerTitle} onClose={closeDrawer}>
+      <Drawer
+        open={state.activePopout !== null}
+        title={drawerTitle}
+        onClose={closeDrawer}
+        variant={
+          drawerPanel === "inventory"
+            ? "satchel"
+            : drawerPanel === "equipment"
+              ? "equipment"
+              : drawerPanel === "shop"
+                ? "shop"
+                : drawerPanel === "trainer"
+                  ? "trainer"
+                  : drawerPanel === "combatlog"
+                    ? "journal"
+                    : drawerPanel === "quests"
+                      ? "questboard"
+                      : drawerPanel === "spellbook"
+                        ? "grimoire"
+                        : drawerPanel === "terminal"
+                          ? "desk"
+                          : drawerPanel === "mail"
+                            ? "mail"
+                            : "default"
+        }
+        skinBg={
+          drawerPanel === "inventory"
+            ? state.serverAssets["inventory_satchel_bg"]
+            : drawerPanel === "equipment"
+              ? state.serverAssets["equipment_bg"]
+              : drawerPanel === "shop"
+                ? state.serverAssets["shop_bg"]
+                : drawerPanel === "trainer"
+                  ? state.serverAssets["trainer_bg"]
+                  : drawerPanel === "combatlog"
+                    ? state.serverAssets["journal_bg"]
+                    : drawerPanel === "quests"
+                      ? state.serverAssets["quest_board_bg"]
+                      : drawerPanel === "spellbook"
+                        ? state.serverAssets["spellbook_bg"]
+                        : drawerPanel === "terminal"
+                          ? state.serverAssets["terminal_bg"]
+                          : drawerPanel === "mail"
+                            ? state.serverAssets["mail_bg"]
+                            : undefined
+        }
+      >
         {drawerPanel === "character" && (
           <CharacterPanel
             connected={connected}
@@ -827,6 +966,7 @@ function App() {
             factions={state.factions}
             petState={state.petState}
             prestigeInfo={state.prestigeInfo}
+            leaderboard={state.leaderboard}
             onDismissQuestNotification={(id) => state.setQuestNotifications((prev) => prev.filter((n) => n.id !== id))}
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
             onOpenInventory={() => openPanel("inventory")}
@@ -853,9 +993,17 @@ function App() {
             canManageItems={connected && hasCharacterProfile}
             roomFeatures={state.roomFeatures}
             containerContents={state.containerContents}
+            serverAssets={state.serverAssets}
             onWearItem={(name) => sendCommand(`wear ${name}`)}
             onDropItem={(name) => sendCommand(`drop ${name}`)}
             onGiveItem={(keyword, player) => sendCommand(`give ${keyword} ${player}`)}
+            onExamineItem={(it, image) => {
+              // Fetch the full look; the response (Room.LookTarget) is routed
+              // into the item card by the effect below.
+              pendingExamineRef.current = { image };
+              sendCommand(`look ${it.keyword}`);
+              window.setTimeout(() => { pendingExamineRef.current = null; }, 2500);
+            }}
             onCommand={sendCommand}
             equipHint={showEquipHint}
           />
@@ -868,8 +1016,11 @@ function App() {
             character={state.character}
             equipment={state.equipment}
             slotDefs={state.equipmentSlotDefs}
-            canManageItems={connected && hasCharacterProfile}
-            onRemoveItem={(slot) => sendCommand(`remove ${slot}`)}
+            onExamineItem={(it, image, slot) => {
+              pendingExamineRef.current = { image, equippedSlot: slot };
+              sendCommand(`look ${it.keyword}`);
+              window.setTimeout(() => { pendingExamineRef.current = null; }, 2500);
+            }}
           />
         )}
 
@@ -905,6 +1056,18 @@ function App() {
             gold={state.vitals.gold}
             onBuyItem={(keyword) => sendCommand(`buy ${keyword}`)}
             onSellItem={(keyword) => sendCommand(`sell ${keyword}`)}
+            onShowBuyItem={(it) => setItem({
+              name: it.name,
+              description: it.description || null,
+              image: it.image,
+              video: it.video,
+              takeable: false,
+            })}
+            onShowSellItem={(it, image) => {
+              pendingExamineRef.current = { image };
+              sendCommand(`look ${it.keyword}`);
+              window.setTimeout(() => { pendingExamineRef.current = null; }, 2500);
+            }}
           />
         )}
 
@@ -1007,7 +1170,7 @@ function App() {
           <QuestOfferPanel
             connected={connected}
             questsAvailable={state.questsAvailable}
-            onAcceptQuest={(questId) => sendCommand(`accept #${questId}`)}
+            onAcceptQuest={acceptQuest}
             onTurnInQuest={(questId) => sendCommand(`quest turnin #${questId}`)}
           />
         )}
@@ -1023,25 +1186,12 @@ function App() {
           />
         )}
 
-        {drawerPanel === "leaderboard" && (
-          <LeaderboardPanel leaderboard={state.leaderboard} onCommand={sendCommand} />
-        )}
-
         {drawerPanel === "bank" && (
           <BankPanel bankState={state.bankState} onCommand={sendCommand} />
         )}
 
         {drawerPanel === "stylist" && (
           <StylistPanel stylistState={state.stylistState} onCommand={sendCommand} />
-        )}
-
-        {drawerPanel === "inn" && (
-          <InnPanel
-            roomTitle={state.room.title}
-            recall={state.recallState}
-            onSetRecall={() => { sendCommand("rest"); closeDrawer(); }}
-            onClose={closeDrawer}
-          />
         )}
 
         {drawerPanel === "auction" && (
@@ -1085,6 +1235,30 @@ function App() {
           />
         )}
 
+        {drawerPanel === "terminal" && (
+          <div className="terminal-overlay-body terminal-desk">
+            <div className="terminal-desk-slip">
+              <span className="terminal-desk-quill" aria-hidden="true">
+                {state.serverAssets["desk_quill"]
+                  ? <img src={state.serverAssets["desk_quill"]} alt="" className="terminal-desk-quill-img" />
+                  : "✒"}
+              </span>
+              <p className="terminal-overlay-note">
+                Pen a command and dispatch it to the world.
+              </p>
+              <CommandInput
+                inputValue={inputValue}
+                onInputChange={(value) => {
+                  setInputValue(value);
+                  resetComposerCompletion();
+                }}
+                onInputKeyDown={handleInputKeyDown}
+                onCommand={sendCommand}
+              />
+            </div>
+          </div>
+        )}
+
         {drawerPanel === "map" && (
           <div className="drawer-map-body">
             <div className="drawer-map-tabs" role="tablist" aria-label="Map views">
@@ -1113,13 +1287,23 @@ function App() {
               <canvas
                 ref={mapCanvasRef}
                 className="mini-map mini-map-popout"
-                width={900}
-                height={560}
+                width={1280}
+                height={760}
                 role="img"
+                onPointerDown={onMapPointerDown}
+                onPointerMove={onMapPointerMove}
+                onPointerUp={onMapPointerUp}
+                onPointerLeave={onMapPointerUp}
+                onWheel={onMapWheel}
                 aria-label={questMarkerCount > 0
                   ? `Visited room map — ${questMarkerCount} quest objective${questMarkerCount !== 1 ? "s" : ""} marked`
                   : "Visited room map"}
               />
+              <div className="map-zoom-controls" aria-hidden="false">
+                <button type="button" className="map-zoom-btn" onClick={mapZoomIn} title="Zoom in" aria-label="Zoom in">+</button>
+                <button type="button" className="map-zoom-btn" onClick={mapZoomOut} title="Zoom out" aria-label="Zoom out">−</button>
+                <button type="button" className="map-zoom-btn" onClick={mapRecenter} title="Re-center on you" aria-label="Re-center on you">⌖</button>
+              </div>
             </div>
             {mapTab === "atlas" && (
               <Atlas areas={state.worldAreas} currentZone={currentZone} />
@@ -1462,15 +1646,6 @@ function App() {
         </div>
       )}
 
-      {/* World atmosphere HUD — time, weather, events on the canvas */}
-      {hasCharacterProfile && (
-        <WorldAtmosphereHud
-          worldTime={state.worldTime}
-          worldWeather={state.worldWeather}
-          worldEvents={state.worldEvents}
-        />
-      )}
-
       {/* Staff-only floating controls + admin panel */}
       {state.character.isStaff && (
         <>
@@ -1565,8 +1740,60 @@ function App() {
         </div>
       )}
 
-      {/* Consider — verbal threat assessment for a mob in the current room */}
-      {state.considerResult && (
+      {/* Monster manual — bestiary page for a clicked creature (consolidates the
+          old look + consider + attack popouts). */}
+      {monster && (
+        <MonsterManualPanel
+          key={monster.id ?? monster.name}
+          monster={monster}
+          consider={state.considerResult}
+          bg={state.serverAssets["monster_manual_bg"]}
+          serverAssets={state.serverAssets}
+          connected={connected}
+          questsAvailable={state.questsAvailable}
+          dialogue={state.dialogue}
+          onClose={() => { setMonster(null); state.setConsiderResult(null); }}
+          onCommand={sendCommand}
+          onZoomImage={(url) => setImagePreviewUrl(url)}
+          onQuest={(mobName) => sendCommand(`qoffers ${mobName}`)}
+          onAcceptQuest={acceptQuest}
+          onTurnInQuest={(questId) => sendCommand(`quest turnin #${questId}`)}
+          onDialogueChoice={(index) => sendCommand(`${index}`)}
+          onDialogueDismiss={() => { if (state.dialogue) sendCommand("bye"); state.setDialogue(null); }}
+          onDialogueEnd={() => state.setDialogue(null)}
+          onShop={() => { sendCommand("list"); openPanel("shop"); }}
+          onVideo={(url) => setVideoUrl(url)}
+        />
+      )}
+
+      {/* Item card — parchment "field manual" page for a clicked room item. */}
+      {item && (
+        <ItemManualPanel
+          key={item.id ?? item.name}
+          item={item}
+          bg={state.serverAssets["item_manual_bg"] ?? state.serverAssets["monster_manual_bg"]}
+          serverAssets={state.serverAssets}
+          onClose={() => setItem(null)}
+          onCommand={sendCommand}
+          onZoomImage={(url) => setImagePreviewUrl(url)}
+          onVideo={(url) => setVideoUrl(url)}
+        />
+      )}
+
+      {/* Inn — key-on-a-hook recall modal (click away to dismiss). */}
+      {showInn && (
+        <InnPanel
+          roomTitle={state.room.title}
+          recall={state.recallState}
+          serverAssets={state.serverAssets}
+          onSetRecall={() => { sendCommand("rest"); setShowInn(false); }}
+          onClose={() => setShowInn(false)}
+        />
+      )}
+
+      {/* Consider — verbal threat assessment for a mob (typed `consider`). Hidden
+          while the monster manual is open (it shows the assessment inline). */}
+      {state.considerResult && !monster && (
         <div
           className="consider-backdrop"
           role="presentation"

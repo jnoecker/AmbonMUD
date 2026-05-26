@@ -2680,16 +2680,22 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  /* Fill the (pinned) sheet so the list — not the window — is what changes
+     between Buy and Sell. */
+  height: 100%;
+  min-height: 0;
 }
 
 .shop-popout-wallet {
+  align-self: flex-start;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgb(190 168 115 / 12%), rgb(190 168 115 / 6%));
-  border: 1px solid rgb(190 168 115 / 22%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(60 43 24 / 75%), rgb(44 31 17 / 75%));
+  border: 1px solid rgb(200 162 74 / 50%);
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 22%);
 }
 
 .shop-popout-gold-icon {
@@ -2704,13 +2710,13 @@ body {
 .shop-popout-gold-amount {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--color-primary-soft-gold);
+  color: #f0d48a;
 }
 
 .shop-popout-gold-label {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #d8c39a;
 }
 
 .shop-popout-tabs {
@@ -2720,36 +2726,42 @@ body {
 
 .shop-popout-tab {
   flex: 1;
-  padding: 8px 12px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.88rem;
+  padding: 9px 12px;
+  border: 1px solid rgb(170 128 70 / 60%);
+  border-radius: 10px;
+  /* Solid enough to read as a tab against the busy wood art. */
+  background: linear-gradient(180deg, rgb(70 50 28 / 88%), rgb(50 35 19 / 88%));
+  color: #ecd9b4;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   text-align: center;
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 16%);
   transition: background 0.15s var(--ease-in-out-smooth), color 0.15s, border-color 0.15s;
 }
 
 .shop-popout-tab:hover {
-  background: rgb(255 255 255 / 6%);
+  background: linear-gradient(180deg, rgb(88 64 36 / 92%), rgb(64 46 25 / 92%));
+  color: #fbf0d4;
 }
 
 .shop-popout-tab-active {
-  background: var(--surface-chip);
-  color: var(--text-primary);
-  border-color: var(--glass-edge);
+  background: linear-gradient(180deg, #e7d6b0, #d2bb8c);
+  color: #382a18;
+  border-color: #8a6a2e;
+  box-shadow: inset 0 1px 0 rgb(255 250 236 / 50%);
 }
 
 .shop-popout-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-height: 50vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgb(90 82 120 / 70%) transparent;
+  scrollbar-color: rgb(150 110 56 / 70%) transparent;
 }
 
 .shop-popout-list::-webkit-scrollbar {
@@ -2758,22 +2770,24 @@ body {
 
 .shop-popout-list::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgb(90 82 120 / 70%), rgb(70 90 110 / 65%));
+  background: linear-gradient(180deg, rgb(150 110 56 / 75%), rgb(110 80 40 / 70%));
 }
 
 .shop-popout-card {
   display: flex;
   flex-direction: column;
   padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 4%);
-  border: 1px solid var(--line-faint);
-  transition: background 0.15s, border-color 0.15s;
+  border-radius: 10px;
+  background: linear-gradient(155deg, #ece0c4, #dccaa3);
+  border: 1px solid rgb(106 74 36 / 50%);
+  box-shadow: 0 1px 2px rgb(20 12 4 / 30%), inset 0 1px 0 rgb(255 251 240 / 45%);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .shop-popout-card:hover {
-  background: rgb(255 255 255 / 7%);
-  border-color: var(--line-soft);
+  border-color: #8a6a2e;
+  box-shadow: 0 3px 8px rgb(20 12 4 / 38%), inset 0 1px 0 rgb(255 251 240 / 55%);
 }
 
 .shop-popout-card-unaffordable {
@@ -2796,12 +2810,14 @@ body {
 }
 
 .shop-popout-thumb {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: contain;
   flex-shrink: 0;
-  border: 1px solid var(--line-faint);
+  border: 1px solid rgb(106 74 36 / 45%);
+  background: rgb(54 39 22 / 12%);
+  padding: 2px;
 }
 
 .shop-popout-card-text {
@@ -2812,17 +2828,18 @@ body {
 }
 
 .shop-popout-card-name {
-  font-size: 0.92rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #2e2212;
 }
 
 .shop-popout-card-desc {
   font-size: 0.78rem;
-  color: var(--text-secondary);
+  color: #5a4226;
   line-height: 1.4;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2833,13 +2850,13 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: var(--color-primary-pale-blue);
+  color: #6a4a24;
   font-weight: 600;
 }
 
 .shop-stat-slot {
-  color: var(--color-primary-pale-blue);
-  opacity: 0.8;
+  color: #6a4a24;
+  opacity: 0.85;
   text-transform: capitalize;
 }
 
@@ -2847,21 +2864,22 @@ body {
   display: inline-flex;
   align-items: baseline;
   gap: 4px;
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--color-primary-pale-blue) 12%, transparent);
-  color: var(--text-primary);
+  background: rgb(106 74 36 / 14%);
+  border: 1px solid rgb(106 74 36 / 30%);
+  color: #2e2212;
   white-space: nowrap;
 }
 
 .shop-stat-chip-label {
   font-weight: 600;
-  color: var(--color-primary-pale-blue);
+  color: #6a4a24;
 }
 
 .shop-stat-chip-value {
   font-weight: 700;
-  color: var(--text-primary);
+  color: #2e2212;
 }
 
 .shop-stat-delta {
@@ -2872,18 +2890,18 @@ body {
 }
 
 .shop-stat-delta-up {
-  color: var(--color-primary-moss-green);
-  background: color-mix(in srgb, var(--color-primary-moss-green) 18%, transparent);
+  color: #2c5430;
+  background: rgb(96 132 86 / 24%);
 }
 
 .shop-stat-delta-down {
-  color: var(--color-primary-dusty-rose);
-  background: color-mix(in srgb, var(--color-primary-dusty-rose) 18%, transparent);
+  color: #8a4a5e;
+  background: rgb(170 96 116 / 22%);
 }
 
 .shop-stat-delta-same {
-  color: var(--text-tertiary);
-  opacity: 0.75;
+  color: #7a5e38;
+  opacity: 0.8;
 }
 
 .shop-popout-card-action {
@@ -2895,18 +2913,29 @@ body {
 }
 
 .shop-popout-card-price {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--color-primary-soft-gold);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #5a3e16;
   white-space: nowrap;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgb(230 196 106 / 45%);
+  border: 1px solid rgb(184 138 46 / 60%);
 }
 
 .shop-popout-card-price-cant {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-disabled);
+  color: #9a5a3a;
   font-style: italic;
   white-space: nowrap;
+}
+
+/* Unaffordable price reads red. */
+.shop-popout-card-unaffordable .shop-popout-card-price {
+  color: #8a3a2a;
+  background: rgb(170 80 58 / 22%);
+  border-color: rgb(138 62 44 / 50%);
 }
 
 .shop-popout .soft-button.shop-popout-buy-btn,
@@ -6083,6 +6112,18 @@ body {
   letter-spacing: 0.01em;
 }
 
+.quest-available-level-pill {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--color-primary-soft-gold);
+  background: rgb(212 175 90 / 16%);
+  border: 1px solid rgb(212 175 90 / 32%);
+}
+
 .quest-available-description {
   margin: 0 0 var(--space-2);
   font-size: 0.76rem;
@@ -6608,12 +6649,19 @@ body {
 
 /* ────────── Inventory Panel ────────── */
 
+/* ===== Satchel theme =================================================== */
+/* The inventory drawer is skinned as an open leather satchel (see
+   .drawer-sheet-satchel). The panel itself is just the stack of canvas
+   "pocket" sections holding parchment item tags. Shares the manual/item-card
+   palette (parchment cream, ink, sepia, soft gold). */
 .inventory-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-2) 0;
+  gap: 14px;
+  padding: 2px 0 4px;
   container-type: inline-size;
+  color: #f0e2c4;
 }
 
 .inventory-active-container {
@@ -6622,12 +6670,12 @@ body {
   gap: var(--space-2);
   align-self: flex-start;
   min-width: 0;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid rgb(190 168 115 / 26%);
-  background: linear-gradient(135deg, rgb(190 168 115 / 16%), rgb(168 151 210 / 10%));
-  color: var(--text-secondary);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+  border: 1px solid rgb(138 106 46 / 55%);
+  background: rgb(230 196 106 / 28%);
+  color: #4a3620;
+  box-shadow: inset 0 1px 0 rgb(255 250 236 / 30%);
 }
 
 .inventory-active-container-label {
@@ -6635,37 +6683,43 @@ body {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-primary-soft-gold);
+  color: #8a6a2e;
 }
 
 .inventory-active-container-name {
   min-width: 0;
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #33271a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* A canvas pocket holding the parchment item tags. */
 .inventory-section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 8px;
+  padding: 10px 12px 12px;
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgb(78 56 32 / 60%), rgb(54 39 22 / 60%));
+  border: 1px solid rgb(132 94 48 / 50%);
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 14%), 0 1px 3px rgb(18 10 3 / 35%);
 }
 
 .inventory-section-header {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 0 var(--space-1);
+  padding: 0;
 }
 
 .inventory-section-title {
   font-family: var(--font-display);
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--text-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f2e6c8;
   margin: 0;
   letter-spacing: 0.02em;
   flex: 1 1 auto;
@@ -6676,17 +6730,18 @@ body {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--text-disabled);
-  background: rgb(255 255 255 / 6%);
+  color: #f4e3b4;
+  background: rgb(216 186 122 / 24%);
+  border: 1px solid rgb(216 186 122 / 42%);
   border-radius: 999px;
   padding: 1px 8px;
   flex-shrink: 0;
 }
 
 .inventory-section-hint {
-  margin: 0 var(--space-1);
+  margin: 0;
   font-size: 0.7rem;
-  color: var(--text-secondary);
+  color: #d8c39a;
   font-style: italic;
   line-height: 1.3;
 }
@@ -6726,15 +6781,18 @@ body {
   gap: var(--space-1);
 }
 
+/* Aged-leather luggage tag — muted so it doesn't glare against the satchel. */
 .inventory-item {
-  border-radius: var(--radius-sm);
-  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
-  border: 1px solid var(--line-faint);
-  transition: border-color 150ms var(--ease-out-soft);
+  border-radius: 8px;
+  background: linear-gradient(155deg, #c7b184, #af9968);
+  border: 1px solid rgb(60 42 22 / 68%);
+  box-shadow: 0 1px 2px rgb(18 10 3 / 40%), inset 0 1px 0 rgb(228 212 176 / 22%);
+  transition: border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
 }
 
 .inventory-item:hover {
-  border-color: rgb(168 151 210 / 30%);
+  border-color: #8a6a2e;
+  box-shadow: 0 3px 8px rgb(18 10 3 / 50%), inset 0 1px 0 rgb(228 212 176 / 28%);
 }
 
 .inventory-item-row {
@@ -6780,7 +6838,8 @@ body {
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid var(--line-faint);
+  border: 1px solid rgb(60 42 22 / 55%);
+  background: rgb(54 39 22 / 30%);
   display: block;
 }
 
@@ -6804,9 +6863,10 @@ body {
 }
 
 .inventory-item-name {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #2e2212;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6814,8 +6874,9 @@ body {
 
 .inventory-item-slot {
   font-size: 0.66rem;
-  color: var(--text-disabled);
-  background: rgb(255 255 255 / 6%);
+  color: #4f3819;
+  background: rgb(106 74 36 / 18%);
+  border: 1px solid rgb(106 74 36 / 45%);
   padding: 1px 6px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -6823,8 +6884,9 @@ body {
 
 .inventory-item-effect {
   font-size: 0.66rem;
-  color: var(--accent-gold, var(--text-secondary));
-  background: rgb(255 255 255 / 6%);
+  color: #4f3819;
+  background: rgb(106 74 36 / 18%);
+  border: 1px solid rgb(106 74 36 / 45%);
   padding: 1px 6px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -6836,8 +6898,9 @@ body {
 
 .inventory-item-price {
   font-size: 0.66rem;
-  color: var(--color-primary-soft-gold);
-  background: rgb(190 168 115 / 12%);
+  color: #6e4e16;
+  background: rgb(230 196 106 / 34%);
+  border: 1px solid rgb(184 138 46 / 55%);
   padding: 1px 6px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -6858,33 +6921,33 @@ body {
 }
 
 .inventory-item-chip-equipment {
-  background: rgb(132 168 122 / 16%);
-  color: var(--color-primary-moss-green);
-  border-color: rgb(132 168 122 / 32%);
+  background: rgb(96 132 86 / 22%);
+  color: #3c5e34;
+  border-color: rgb(96 132 86 / 50%);
 }
 
 .inventory-item-chip-consumable {
-  background: rgb(130 164 199 / 16%);
-  color: var(--color-primary-pale-blue);
-  border-color: rgb(130 164 199 / 32%);
+  background: rgb(74 122 158 / 20%);
+  color: #2f5a76;
+  border-color: rgb(74 122 158 / 48%);
 }
 
 .inventory-item-chip-quest {
-  background: rgb(190 168 115 / 20%);
-  color: var(--color-primary-soft-gold);
-  border-color: rgb(190 168 115 / 40%);
+  background: rgb(184 138 46 / 24%);
+  color: #7a5a1e;
+  border-color: rgb(184 138 46 / 50%);
 }
 
 .inventory-item-chip-treasure {
-  background: rgb(192 138 154 / 16%);
-  color: var(--color-primary-dusty-rose, #c08a9a);
-  border-color: rgb(192 138 154 / 32%);
+  background: rgb(170 96 116 / 20%);
+  color: #8a4a5e;
+  border-color: rgb(170 96 116 / 48%);
 }
 
 .inventory-item-chip-misc {
-  background: rgb(168 151 210 / 14%);
-  color: var(--color-accent-lavender, #a897d2);
-  border-color: rgb(168 151 210 / 28%);
+  background: rgb(122 104 178 / 20%);
+  color: #5a4a86;
+  border-color: rgb(122 104 178 / 46%);
 }
 
 /* Quest items get a warm left edge to reinforce "soulbound." */
@@ -6909,9 +6972,9 @@ body {
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: 999px;
-  color: var(--color-primary-soft-gold);
-  background: rgb(190 168 115 / 14%);
-  border: 1px solid rgb(190 168 115 / 32%);
+  color: #7a3e2a;
+  background: rgb(168 78 58 / 22%);
+  border: 1px solid rgb(138 62 44 / 50%);
   cursor: help;
 }
 
@@ -6933,10 +6996,11 @@ body {
   width: auto;
   height: auto;
   padding: 0 10px;
-  border: 1px solid var(--line-faint);
+  border: 1px solid rgb(24 15 6 / 72%);
   border-radius: 999px;
-  background: rgb(255 255 255 / 4%);
-  color: var(--text-secondary);
+  /* Dark leather button so the pale icon art pops against it. */
+  background: linear-gradient(180deg, #4a3620, #322310);
+  color: #f0e2c4;
   cursor: pointer;
   white-space: nowrap;
   font: inherit;
@@ -6944,6 +7008,7 @@ body {
   font-weight: 700;
   line-height: 1;
   flex: 0 0 auto;
+  box-shadow: 0 1px 2px rgb(12 7 2 / 45%), inset 0 1px 0 rgb(150 112 60 / 28%);
   transition:
     background 140ms var(--ease-out-soft),
     color 140ms var(--ease-out-soft),
@@ -6953,11 +7018,11 @@ body {
 }
 
 .inventory-action-btn:hover:not(:disabled) {
-  background: rgb(255 255 255 / 10%);
-  color: var(--text-primary);
-  border-color: rgb(168 151 210 / 28%);
+  background: linear-gradient(180deg, #5b4329, #433015);
+  color: #fff;
+  border-color: #b88a3e;
   transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgb(8 10 18 / 18%);
+  box-shadow: 0 4px 10px rgb(12 7 2 / 52%);
 }
 
 .inventory-action-btn:disabled {
@@ -6976,24 +7041,26 @@ body {
 }
 
 .inventory-action-btn-active {
-  background: rgb(168 151 210 / 20%);
-  border-color: rgb(168 151 210 / 40%);
+  background: linear-gradient(180deg, #6a4e28, #4c3617);
+  border-color: #c8a24a;
+  color: #f6e8c2;
 }
 
+/* Glyph-fallback tints (the registered art is an image and ignores color). */
 .inventory-action-examine {
-  color: var(--color-accent-moonlit-silver);
+  color: #ecdcb0;
 }
 
 .inventory-action-use {
-  color: var(--color-primary-pale-blue);
+  color: #bcd6e8;
 }
 
 .inventory-action-equip {
-  color: var(--color-primary-moss-green);
+  color: #bfe0b8;
 }
 
 .inventory-action-put {
-  color: var(--color-primary-soft-gold);
+  color: #ecd9a4;
 }
 
 /* First-time onboarding hint: pulse the Equip action on wearable items until
@@ -7026,6 +7093,24 @@ body {
   flex-shrink: 0;
 }
 
+/* Custom action-button art (action_look/use/equip/store/drop). */
+.inventory-action-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Unicode fallback shown until the action art is registered. Force text
+   (non-emoji) presentation so it stays a crisp ink glyph, not a color emoji. */
+.inventory-action-glyph {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  color: inherit;
+  font-variant-emoji: text;
+}
+
 .inventory-give-picker {
   display: flex;
   align-items: center;
@@ -7036,27 +7121,72 @@ body {
 
 .inventory-give-label {
   font-size: 0.72rem;
-  color: var(--text-secondary);
+  color: #6a4a24;
 }
 
 .inventory-give-option {
   font-size: 0.72rem;
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid var(--line-faint);
-  background: rgb(255 255 255 / 6%);
-  color: var(--text-primary);
+  border: 1px solid rgb(106 74 36 / 45%);
+  background: rgb(255 250 236 / 75%);
+  color: #3a2c1a;
   cursor: pointer;
   transition: background 120ms var(--ease-out-soft);
 }
 
 .inventory-give-option:hover {
-  background: rgb(168 151 210 / 24%);
+  background: rgb(230 196 106 / 45%);
 }
 
+/* Empty satchel: a soft, stitched empty pocket above a warm note. */
 .inventory-empty-state {
-  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 36px 24px 40px;
   text-align: center;
+}
+
+.inventory-empty-pocket {
+  position: relative;
+  width: 132px;
+  height: 92px;
+  border-radius: 10px 10px 14px 14px;
+  background: linear-gradient(165deg, rgb(78 56 32 / 70%), rgb(54 39 22 / 70%));
+  border: 1.5px dashed rgb(216 186 122 / 45%);
+  box-shadow: inset 0 8px 18px rgb(18 10 3 / 55%);
+}
+
+/* The pocket's fold-over flap. */
+.inventory-empty-pocket-flap {
+  position: absolute;
+  left: -1.5px;
+  right: -1.5px;
+  top: -1.5px;
+  height: 34px;
+  border-radius: 10px 10px 16px 16px / 10px 10px 22px 22px;
+  background: linear-gradient(180deg, #5b4226, #43301a);
+  border: 1.5px solid rgb(132 94 48 / 70%);
+  box-shadow: 0 3px 6px rgb(18 10 3 / 45%);
+}
+
+.inventory-empty-note {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f2e6c8;
+}
+
+.inventory-empty-sub {
+  margin: 0;
+  max-width: 30ch;
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: #c9b182;
 }
 
 /* ---------- Container section ---------- */
@@ -7068,16 +7198,16 @@ body {
 }
 
 .container-entry {
-  border: 1px solid rgb(106 96 136 / 16%);
+  border: 1px solid rgb(132 94 48 / 45%);
   border-radius: var(--radius-md);
-  background: rgb(50 58 82 / 30%);
+  background: rgb(54 39 22 / 45%);
   padding: 6px 8px;
   transition: border-color 140ms var(--ease-out-soft), background 140ms var(--ease-out-soft);
 }
 
 .container-entry-active {
-  border-color: rgb(190 168 115 / 34%);
-  background: linear-gradient(145deg, rgb(190 168 115 / 10%), rgb(50 58 82 / 38%));
+  border-color: rgb(216 186 122 / 50%);
+  background: linear-gradient(145deg, rgb(216 186 122 / 16%), rgb(54 39 22 / 55%));
 }
 
 .container-entry-header {
@@ -7088,9 +7218,10 @@ body {
 }
 
 .container-entry-name {
+  font-family: var(--font-display);
   font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text-primary);
+  font-weight: 600;
+  color: #f2e6c8;
 }
 
 .container-items {
@@ -7112,12 +7243,12 @@ body {
 }
 
 .container-item:hover {
-  background: rgb(70 83 117 / 30%);
+  background: rgb(216 186 122 / 14%);
 }
 
 .container-item-name {
   font-size: 0.78rem;
-  color: var(--text-secondary);
+  color: #e6d8b8;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7153,11 +7284,12 @@ body {
   padding: var(--space-2) 0;
 }
 
-/* Side-by-side: sprite left, slot list right */
+/* Side-by-side: sprite left, slot list right. Bottom-align so the sprite's
+   feet line up with the bottom of the (taller) slot list. */
 .paperdoll-layout {
   display: flex;
   gap: var(--space-3);
-  align-items: flex-start;
+  align-items: flex-end;
 }
 
 .paperdoll-sprite-col {
@@ -7166,8 +7298,8 @@ body {
 
 .paperdoll-sprite-wrap {
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: clamp(280px, 34vw, 440px);
+  height: clamp(280px, 34vw, 440px);
 }
 
 .paperdoll-sprite {
@@ -7188,8 +7320,8 @@ body {
 .paperdoll-slot {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 34px;
-  height: 34px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: 2px solid rgb(168 151 210 / 50%);
   background: rgb(34 41 60 / 90%);
@@ -7228,15 +7360,15 @@ body {
 }
 
 .paperdoll-slot-img {
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .paperdoll-slot-letter {
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-disabled);
 }
@@ -7258,44 +7390,100 @@ body {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
 }
 
+/* Each slot is a dark framed card: thumbnail + label/name + bonus badges. */
 .paperdoll-list-item {
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgb(120 104 168 / 22%);
+  background: linear-gradient(160deg, rgb(42 39 62 / 82%), rgb(30 28 46 / 82%));
+  box-shadow: inset 0 1px 0 rgb(214 206 240 / 8%);
   cursor: pointer;
-  transition: background 120ms var(--ease-out-soft);
+  transition:
+    border-color 150ms var(--ease-out-soft),
+    background 150ms var(--ease-out-soft),
+    box-shadow 150ms var(--ease-out-soft);
 }
 
 .paperdoll-list-item:hover {
-  background: rgb(255 255 255 / 4%);
+  border-color: rgb(168 151 210 / 42%);
+  box-shadow: inset 0 1px 0 rgb(214 206 240 / 10%), 0 4px 12px rgb(8 10 18 / 35%);
 }
 
 .paperdoll-list-item-selected {
-  background: rgb(168 151 210 / 12%);
+  border-color: var(--color-primary-lavender, #a897d2);
+  background: linear-gradient(160deg, rgb(58 52 86 / 90%), rgb(40 36 62 / 90%));
 }
 
-.paperdoll-list-header {
+/* Empty slots recede until hovered. */
+.paperdoll-list-item-empty {
+  opacity: 0.7;
+}
+
+.paperdoll-list-item-empty:hover {
+  opacity: 1;
+}
+
+/* Brass-framed item thumbnail. */
+.paperdoll-card-thumb {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(198 162 74 / 45%);
+  background: radial-gradient(circle at 50% 38%, rgb(60 54 88 / 92%), rgb(26 24 42 / 96%));
+  box-shadow: inset 0 0 10px rgb(8 6 16 / 55%);
+  overflow: hidden;
+}
+
+.paperdoll-list-item-empty .paperdoll-card-thumb {
+  border-style: dashed;
+  border-color: rgb(120 104 168 / 38%);
+}
+
+.paperdoll-card-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.paperdoll-card-thumb-letter {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: rgb(168 151 210 / 58%);
+}
+
+.paperdoll-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .paperdoll-list-slot {
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--color-primary-soft-gold, #bea873);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
+  letter-spacing: 0.08em;
 }
 
 .paperdoll-list-name {
-  font-size: 0.78rem;
-  color: var(--text-primary);
-  text-align: right;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-heading);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7305,6 +7493,30 @@ body {
 .paperdoll-list-name-empty {
   color: var(--text-disabled);
   font-style: italic;
+  font-weight: 500;
+}
+
+/* Mobile: the two columns won't fit side by side in the bottom sheet — stack
+   the sprite above a full-width slot list so cards stop overflowing. */
+@media (max-width: 640px) {
+  .paperdoll-layout {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .paperdoll-sprite-col {
+    align-self: center;
+  }
+
+  .paperdoll-sprite-wrap {
+    width: clamp(220px, 64vw, 320px);
+    height: clamp(220px, 64vw, 320px);
+  }
+
+  .paperdoll-slots-col {
+    width: 100%;
+  }
 }
 
 /* Equipped-item bonus badges — mirror the inventory meta row style so both
@@ -10074,7 +10286,7 @@ body {
 }
 
 .mini-map-popout {
-  height: min(62vh, 560px);
+  height: min(72vh, 720px);
 }
 
 /* --- Map drawer tabs (Local Map / Atlas) ----------------------------- */
@@ -10122,8 +10334,55 @@ body {
   box-shadow: 0 0 12px rgb(118 133 190 / 26%);
 }
 
+.drawer-map-canvas-wrap {
+  position: relative;
+}
+
 .drawer-map-canvas-wrap[hidden] {
   display: none;
+}
+
+/* World map is drag-to-pan / scroll-to-zoom. */
+.mini-map-popout {
+  cursor: grab;
+  touch-action: none;
+}
+
+.mini-map-popout:active {
+  cursor: grabbing;
+}
+
+/* Zoom / recenter cluster, bottom-right of the map. */
+.map-zoom-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+
+.map-zoom-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-bright);
+  border: 1px solid rgb(190 168 115 / 50%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, rgb(34 41 60 / 88%), rgb(20 24 40 / 92%));
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
+}
+
+.map-zoom-btn:hover {
+  border-color: rgb(212 198 150 / 85%);
+  background: linear-gradient(160deg, rgb(56 67 100 / 94%), rgb(30 36 56 / 96%));
 }
 
 /* --- Atlas (zone browser) -------------------------------------------- */
@@ -10719,109 +10978,136 @@ body {
   gap: var(--space-3);
   padding: var(--space-4);
   height: 100%;
-  overflow-y: auto;
+  min-height: 0;
+  /* The plaque + chalked points stay put; only the lessons scroll. */
+  overflow: hidden;
 }
 
-.trainer-header {
+/* Wooden class plaque ("the topic"), centered; click to swap class. */
+.trainer-sign-wrap {
+  position: relative;
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border-subtle);
+  justify-content: center;
+  margin: 2px 0 12px;
 }
 
-.trainer-name {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.trainer-class {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-left: auto;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Multi-class trainer tabs */
-.trainer-class-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.trainer-class-tab {
-  appearance: none;
-  border: 1px solid var(--line-soft);
-  background: linear-gradient(135deg, rgb(60 70 100 / 88%), rgb(46 56 80 / 84%));
-  color: var(--text-primary);
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  cursor: pointer;
+.trainer-class-sign {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: transform 0.12s var(--ease-out-soft), background 0.15s, border-color 0.15s;
+  gap: 10px;
+  padding: 12px 30px;
+  border-radius: 12px;
+  border: 1px solid #2b1c0e;
+  background:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 0%) 0 7px, rgb(40 24 10 / 12%) 7px 8px),
+    linear-gradient(180deg, #7a5a32, #573e24);
+  color: #f6ecd2;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgb(20 10 2 / 70%);
+  box-shadow:
+    0 3px 8px rgb(8 6 2 / 50%),
+    inset 0 1px 0 rgb(216 186 122 / 30%),
+    inset 0 -2px 4px rgb(20 10 2 / 45%);
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out-soft), filter 140ms var(--ease-out-soft);
 }
 
-.trainer-class-tab:hover {
-  transform: translateY(-1px);
-  border-color: rgb(168 151 210 / 50%);
+.trainer-class-sign:disabled { cursor: default; }
+.trainer-class-sign:not(:disabled):hover { filter: brightness(1.07); transform: translateY(-1px); }
+
+.trainer-class-sign-caret {
+  font-size: 0.8rem;
+  color: #e6c46a;
+  transition: transform 160ms var(--ease-out-soft);
 }
 
-.trainer-class-tab:active {
-  transform: scale(0.96);
+.trainer-class-sign-open .trainer-class-sign-caret { transform: rotate(180deg); }
+
+/* Class switch / multiclass menu, hung below the plaque. */
+.trainer-class-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: max-content;
+  min-width: 200px;
+  max-width: 92%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid #2b1c0e;
+  background: linear-gradient(180deg, #6a4c2c, #49331f);
+  box-shadow: 0 14px 30px rgb(8 6 2 / 55%);
+  animation: mm-pop 160ms var(--ease-out-soft);
 }
 
-.trainer-class-tab-active {
-  background: linear-gradient(135deg, rgb(168 151 210 / 92%), rgb(140 174 201 / 86%));
-  border-color: rgb(216 197 232 / 60%);
-  color: var(--text-bright);
-}
-
-.trainer-class-tab-locked {
-  opacity: 0.78;
-}
-
-.trainer-class-tab-lock {
-  font-size: 0.7rem;
-  opacity: 0.85;
-}
-
-.trainer-skill-points {
+.trainer-class-opt {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: rgb(255 255 255 / 4%);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #f2e6cc;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms var(--ease-out-soft);
 }
 
-.trainer-sp-label {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
+.trainer-class-opt-name { flex: 1 1 auto; }
+.trainer-class-opt:hover { background: rgb(255 246 230 / 12%); }
+.trainer-class-opt-active { background: rgb(230 196 106 / 22%); }
+.trainer-class-opt-check { color: #e6c46a; font-weight: 800; }
+.trainer-class-opt-locked { color: #cbbb9f; }
+.trainer-class-opt-lock { font-size: 0.78rem; }
+
+.trainer-class-menu-hint {
+  margin: 4px 6px 2px;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: rgb(242 230 204 / 70%);
 }
 
-.trainer-sp-value {
-  margin-left: auto;
-  font-size: 1.1rem;
+/* Skill points, chalked onto the board. */
+.trainer-sp-chalk {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: rgb(238 240 230 / 55%);
+  font-family: var(--font-display);
+}
+
+.trainer-sp-chalk-value {
+  font-size: 1.55rem;
   font-weight: 700;
-  min-width: 1.5ch;
-  text-align: right;
+  color: rgb(238 240 230 / 60%);
+  text-shadow: 0 0 8px rgb(238 240 230 / 22%);
 }
 
-.trainer-sp-available {
-  color: var(--accent-gold);
+.trainer-sp-chalk-label {
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
 }
 
-.trainer-sp-empty {
-  color: var(--text-tertiary);
+.trainer-sp-chalk-has { color: rgb(238 240 230 / 82%); }
+
+.trainer-sp-chalk-has .trainer-sp-chalk-value {
+  color: #fff7d8;
+  text-shadow: 0 0 10px rgb(255 235 150 / 40%);
 }
 
 .trainer-empty {
@@ -10835,6 +11121,17 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(238 240 230 / 35%) transparent;
+}
+
+.trainer-ability-list::-webkit-scrollbar { width: 7px; }
+.trainer-ability-list::-webkit-scrollbar-thumb {
+  background: rgb(238 240 230 / 28%);
+  border-radius: 999px;
 }
 
 .trainer-ability-row {
@@ -11026,6 +11323,73 @@ body {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* ===== Chalkboard overrides — lessons written on the slate ============= */
+.trainer-empty {
+  color: rgb(238 240 230 / 70%);
+  font-style: italic;
+}
+
+/* Lessons: chalk text on the slate, separated by faint chalk rules. */
+.trainer-ability-row {
+  background: rgb(255 255 255 / 3%);
+  border: none;
+  border-bottom: 1px dashed rgb(238 240 230 / 16%);
+  border-radius: 0;
+}
+
+.trainer-ability-row:hover { background: rgb(255 255 255 / 6%); }
+
+.trainer-ability-icon {
+  background: rgb(8 12 10 / 35%);
+  border: 1px solid rgb(238 240 230 / 16%);
+}
+
+.trainer-ability-name { color: #f1f3ea; }
+.trainer-ability-desc { color: rgb(218 222 208 / 82%); }
+
+.trainer-meta-tag {
+  background: transparent;
+  border: 1px solid rgb(238 240 230 / 26%);
+  color: rgb(230 234 220 / 85%);
+}
+
+.trainer-meta-tag-lock {
+  border-color: rgb(230 196 106 / 50%);
+  color: #ecd9a4;
+  background: transparent;
+}
+
+.trainer-ability-lock-reason { color: rgb(218 222 208 / 70%); }
+.trainer-ability-row-locked { opacity: 0.5; background: rgb(255 255 255 / 2%); }
+.trainer-ability-row-locked .trainer-ability-name,
+.trainer-ability-row-locked .trainer-ability-desc { color: rgb(218 222 208 / 70%); }
+
+/* Learn / unlock — small wooden buttons so the action pops off the slate. */
+.trainer-learn-btn,
+.trainer-unlock-btn {
+  background: linear-gradient(180deg, #6a4e28, #4c3617);
+  color: #f6e8c2;
+  border: 1px solid #c8a24a;
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 22%);
+}
+
+.trainer-learn-btn:hover:not(:disabled),
+.trainer-unlock-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #7a5a30, #573e1c);
+  filter: brightness(1.05);
+}
+
+.trainer-learn-btn-disabled,
+.trainer-unlock-btn-disabled {
+  background: rgb(238 240 230 / 8%);
+  color: rgb(238 240 230 / 45%);
+  border: 1px solid rgb(238 240 230 / 16%);
+  box-shadow: none;
+}
+
+.trainer-locked-msg { color: #f1f3ea; }
+.trainer-locked-req { color: rgb(218 222 208 / 80%); }
 
 .entity-detail-dialog {
   width: min(380px, 100%);
@@ -13072,10 +13436,10 @@ body {
   color: var(--color-primary-lavender);
 }
 
-/* ---------- Atmosphere HUD (canvas overlay, top-left) ---------- */
+/* ---------- Atmosphere HUD (canvas overlay, above command input) ---------- */
 .atmosphere-hud {
-  position: fixed;
-  bottom: calc(var(--game-bottom-inset, 0px) + env(safe-area-inset-bottom, 0px) + 12px);
+  position: absolute;
+  bottom: 16px;
   right: calc(env(safe-area-inset-right, 0px) + 12px);
   top: auto;
   left: auto;
@@ -13616,92 +13980,6 @@ body {
   }
 }
 
-/* Filter toggle button */
-.combat-log-filter-toggle {
-  pointer-events: auto;
-  position: relative;
-  width: 26px;
-  height: 26px;
-  border: 1px solid rgb(140 154 193 / 24%);
-  border-radius: var(--radius-sm, 6px);
-  background: rgb(18 22 34 / 65%);
-  backdrop-filter: blur(4px);
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-bottom: 4px;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.combat-log-filter-toggle:hover {
-  border-color: var(--color-primary-lavender);
-  color: var(--text-primary);
-}
-
-.combat-log-filter-toggle-active {
-  border-color: var(--color-primary-lavender);
-  color: var(--color-primary-lavender);
-}
-
-/* Filter chip bar */
-.combat-log-filters {
-  pointer-events: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 6px;
-}
-
-.combat-log-filter-chip {
-  font-size: 0.68rem;
-  font-family: var(--font-mono, monospace);
-  padding: 2px 7px;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid rgb(140 154 193 / 20%);
-  background: rgb(18 22 34 / 50%);
-  backdrop-filter: blur(4px);
-  color: var(--text-disabled);
-  cursor: pointer;
-  transition: opacity 0.15s, border-color 0.15s, color 0.15s;
-  opacity: 0.55;
-}
-
-.combat-log-filter-chip-on {
-  opacity: 1;
-}
-
-.combat-log-filter-chip-on.combat-log-filter-chip-damage {
-  color: var(--color-damage, #d4888a);
-  border-color: var(--color-damage, #d4888a);
-}
-
-.combat-log-filter-chip-on.combat-log-filter-chip-heal {
-  color: var(--color-heal, #8abf8a);
-  border-color: var(--color-heal, #8abf8a);
-}
-
-.combat-log-filter-chip-on.combat-log-filter-chip-dodge {
-  color: var(--color-dodge, #d9c8a1);
-  border-color: var(--color-dodge, #d9c8a1);
-}
-
-.combat-log-filter-chip-on.combat-log-filter-chip-kill {
-  color: var(--color-xp, #bea873);
-  border-color: var(--color-xp, #bea873);
-}
-
-.combat-log-filter-chip-on.combat-log-filter-chip-info {
-  color: var(--color-info, #8caec9);
-  border-color: var(--color-info, #8caec9);
-}
-
-.combat-log-filter-chip-on.combat-log-filter-chip-xp {
-  color: var(--color-xp, #bea873);
-  border-color: var(--color-xp, #bea873);
-}
-
 /* Combat log — floating messages over the canvas */
 .combat-log {
   display: flex;
@@ -13786,38 +14064,38 @@ body {
 
 .combat-log-panel-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2, 8px);
   flex-wrap: wrap;
 }
 
-.combat-log-panel-title {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.combat-log-panel-title h3 {
-  margin: 0;
-  font-family: var(--font-display, inherit);
-  font-size: 1.1rem;
-  color: var(--text-heading, var(--color-text));
-}
-
 .combat-log-panel-count {
-  font-size: 0.8rem;
-  color: var(--text-muted, rgb(200 208 224 / 70%));
+  font-size: 0.82rem;
+  font-style: italic;
+  color: rgb(240 225 190 / 72%);
 }
 
-.combat-log-panel-actions {
-  display: flex;
-  gap: var(--space-1, 4px);
+.combat-log-panel-clear {
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: 1px solid rgb(240 225 190 / 35%);
+  background: rgb(30 18 8 / 40%);
+  color: #ecdcb8;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.combat-log-panel-clear:hover:not([disabled]) {
+  background: rgb(50 32 16 / 60%);
+  color: #fff7e0;
 }
 
 .combat-log-panel-clear[disabled] {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -13828,123 +14106,100 @@ body {
 }
 
 .combat-log-panel-chip {
-  border: 1px solid rgb(140 174 201 / 28%);
-  background: rgb(22 27 41 / 55%);
-  color: var(--text-muted, rgb(200 208 224 / 78%));
-  border-radius: var(--radius-sm, 6px);
-  padding: 3px 10px;
-  font-size: 0.78rem;
-  font-family: inherit;
+  border: 1px solid rgb(240 225 190 / 30%);
+  background: rgb(30 18 8 / 30%);
+  color: rgb(240 225 190 / 60%);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  /* Filtered-out chips read as crossed off the ledger. */
+  text-decoration: line-through;
+  text-decoration-color: rgb(240 225 190 / 45%);
+  opacity: 0.65;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
 }
 
-.combat-log-panel-chip:hover {
-  background: rgb(38 48 70 / 70%);
-  color: var(--color-text, #e0e0e0);
-}
+.combat-log-panel-chip:hover { opacity: 0.9; }
 
 .combat-log-panel-chip-on {
-  background: rgb(60 80 120 / 60%);
-  color: var(--color-text, #e0e0e0);
-  border-color: rgb(140 174 201 / 50%);
+  opacity: 1;
+  text-decoration: none;
+  background: rgb(30 18 8 / 42%);
 }
 
-.combat-log-panel-chip-on.combat-log-panel-chip-damage {
-  color: var(--color-damage, #d4888a);
-  border-color: var(--color-damage, #d4888a);
-}
-
-.combat-log-panel-chip-on.combat-log-panel-chip-heal {
-  color: var(--color-heal, #8abf8a);
-  border-color: var(--color-heal, #8abf8a);
-}
-
-.combat-log-panel-chip-on.combat-log-panel-chip-dodge {
-  color: var(--color-dodge, #d9c8a1);
-  border-color: var(--color-dodge, #d9c8a1);
-}
-
+.combat-log-panel-chip-on.combat-log-panel-chip-damage { color: #e89078; border-color: rgb(232 144 120 / 60%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-heal { color: #a6cf86; border-color: rgb(166 207 134 / 60%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-dodge { color: #86ccc2; border-color: rgb(134 204 194 / 60%); }
 .combat-log-panel-chip-on.combat-log-panel-chip-kill,
-.combat-log-panel-chip-on.combat-log-panel-chip-xp {
-  color: var(--color-xp, #bea873);
-  border-color: var(--color-xp, #bea873);
-}
-
-.combat-log-panel-chip-on.combat-log-panel-chip-info {
-  color: var(--color-info, #8caec9);
-  border-color: var(--color-info, #8caec9);
-}
-
-.combat-log-panel-chip-on.combat-log-panel-chip-error {
-  color: var(--color-error, #e8a0a0);
-  border-color: var(--color-error, #e8a0a0);
-}
+.combat-log-panel-chip-on.combat-log-panel-chip-xp { color: #f2d488; border-color: rgb(242 212 136 / 60%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-info { color: #e6d2a4; border-color: rgb(230 210 164 / 55%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-error { color: #f0907a; border-color: rgb(240 144 122 / 60%); }
 
 .combat-log-panel-empty {
   text-align: center;
-  padding: var(--space-4, 16px);
-  color: var(--text-muted, rgb(200 208 224 / 70%));
-  border: 1px dashed rgb(140 174 201 / 20%);
-  border-radius: var(--radius-md, 8px);
-  background: rgb(18 22 34 / 35%);
+  padding: var(--space-5, 24px) var(--space-4, 16px);
+  color: rgb(240 225 190 / 78%);
 }
 
 .combat-log-panel-empty p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-style: italic;
 }
 
 .combat-log-panel-empty-hint {
   margin-top: var(--space-1, 4px) !important;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   opacity: 0.8;
 }
 
+/* Ruled journal page: a red margin rule with the timestamps written to its
+   left and the events in ink to its right. No inner box. */
 .combat-log-panel-scroll {
   flex: 1 1 auto;
-  min-height: 200px;
-  max-height: 60vh;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 6px 4px;
-  background: rgb(12 14 24 / 35%);
-  border-radius: var(--radius-md, 8px);
-  border: 1px solid rgb(140 174 201 / 14%);
+  /* Vertical red margin line at the time/text gutter. */
+  background: linear-gradient(90deg, transparent 0 70px, rgb(210 96 70 / 45%) 70px 71.5px, transparent 71.5px);
   scrollbar-width: thin;
+  scrollbar-color: rgb(240 225 190 / 35%) transparent;
 }
 
 .combat-log-panel-scroll::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
 }
 
 .combat-log-panel-scroll::-webkit-scrollbar-thumb {
-  background: rgb(140 174 201 / 30%);
-  border-radius: 4px;
+  background: rgb(240 225 190 / 30%);
+  border-radius: 999px;
 }
 
 .combat-log-panel-row {
   display: grid;
-  grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+  grid-template-columns: 62px minmax(0, 1fr);
   align-items: baseline;
-  gap: var(--space-2, 8px);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.85rem;
-  line-height: 1.4;
-  background: rgb(18 22 34 / 55%);
-  border-left: 2px solid transparent;
-  color: var(--color-text, #e0e0e0);
+  gap: 16px;
+  padding: 5px 6px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  /* Faint ruled line between entries. */
+  border-bottom: 1px solid rgb(240 225 190 / 14%);
+  color: #ecdcb8;
+  text-shadow: 0 1px 2px rgb(16 8 2 / 55%);
   word-break: break-word;
 }
 
 .combat-log-panel-row-time {
   font-family: var(--font-mono, monospace);
-  font-size: 0.72rem;
-  color: var(--text-muted, rgb(200 208 224 / 65%));
+  font-size: 0.68rem;
+  text-align: right;
+  color: rgb(240 225 190 / 60%);
   white-space: nowrap;
 }
 
@@ -13952,43 +14207,13 @@ body {
   min-width: 0;
 }
 
-.combat-log-panel-row-damage {
-  color: var(--color-damage, #d4888a);
-  border-left-color: var(--color-damage, #d4888a);
-}
-
-.combat-log-panel-row-heal {
-  color: var(--color-heal, #8abf8a);
-  border-left-color: var(--color-heal, #8abf8a);
-}
-
-.combat-log-panel-row-error {
-  color: var(--color-error, #e8a0a0);
-  border-left-color: var(--color-error, #e8a0a0);
-  font-weight: 600;
-}
-
-.combat-log-panel-row-info {
-  color: var(--color-info, #8caec9);
-  border-left-color: var(--color-info, #8caec9);
-}
-
-.combat-log-panel-row-kill {
-  color: var(--color-xp, #bea873);
-  border-left-color: var(--color-xp, #bea873);
-  font-weight: 600;
-}
-
-.combat-log-panel-row-dodge {
-  color: var(--color-dodge, #d9c8a1);
-  border-left-color: var(--color-dodge, #d9c8a1);
-  font-style: italic;
-}
-
-.combat-log-panel-row-xp {
-  color: var(--color-xp, #bea873);
-  border-left-color: var(--color-xp, #bea873);
-}
+.combat-log-panel-row-damage { color: #ec9078; }
+.combat-log-panel-row-heal { color: #a8d18a; }
+.combat-log-panel-row-error { color: #f2917b; font-weight: 700; }
+.combat-log-panel-row-info { color: #e6d2a4; }
+.combat-log-panel-row-kill { color: #f2d488; font-weight: 700; }
+.combat-log-panel-row-dodge { color: #8ad0c6; font-style: italic; }
+.combat-log-panel-row-xp { color: #f2d488; }
 
 @media (prefers-reduced-motion: reduce) {
   .combat-log-panel-chip {
@@ -16836,6 +17061,173 @@ body {
   overflow-y: auto;
 }
 
+/* ===== Inn modal — a brass key on a hook ============================== */
+.inn-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(8 10 18 / 55%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: mm-fade 160ms var(--ease-out-soft);
+}
+
+.inn-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(380px, 92vw);
+  padding: 26px 28px 30px;
+  border-radius: 18px;
+  text-align: center;
+  color: #f2e6cc;
+  border: 1px solid rgb(132 94 48 / 55%);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgb(96 70 38 / 45%), transparent 65%),
+    linear-gradient(170deg, #3a2c1a, #261b10);
+  box-shadow: 0 22px 48px rgb(0 0 0 / 55%), inset 0 1px 0 rgb(216 186 122 / 18%);
+  animation: mm-pop 200ms var(--ease-out-soft);
+}
+
+.inn-card-skinned {
+  background-image: var(--inn-bg), linear-gradient(170deg, #3a2c1a, #261b10);
+  background-size: cover;
+  background-position: center;
+}
+
+.inn-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #f4e9cb;
+}
+
+/* Hook + hanging key */
+.inn-hook-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0 2px;
+}
+
+.inn-hook {
+  width: 10px;
+  height: 15px;
+  border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(180deg, #d4af5a, #8a6a2e);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 45%);
+  z-index: 1;
+}
+
+.inn-key {
+  margin-top: -7px; /* tuck the ring over the hook */
+  border: none;
+  background: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #e6c46a; /* brass */
+  transform: rotate(-4deg);
+  transform-origin: 50% 8px;
+  filter: drop-shadow(0 3px 5px rgb(0 0 0 / 45%));
+  transition: transform 200ms var(--ease-out-soft), filter 200ms var(--ease-out-soft);
+}
+
+.inn-key:hover {
+  transform: rotate(0deg) translateY(-2px);
+  filter: drop-shadow(0 0 11px rgb(230 196 106 / 65%));
+}
+
+.inn-key-held {
+  transform: translateY(-4px) rotate(3deg);
+  filter: drop-shadow(0 0 12px rgb(230 196 106 / 75%));
+}
+
+.inn-key-svg { width: 54px; height: auto; display: block; }
+.inn-key-img { width: 72px; height: auto; display: block; }
+
+.inn-sub {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #d8c39a;
+  max-width: 30ch;
+}
+
+.inn-recall {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: rgb(20 12 4 / 38%);
+  border: 1px solid rgb(132 94 48 / 42%);
+}
+
+.inn-recall-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c8a24a;
+}
+
+.inn-recall-value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f2e6cc;
+}
+
+.inn-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+}
+
+.inn-confirm-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #ece0c4;
+  max-width: 30ch;
+}
+
+.inn-confirm-btn {
+  padding: 11px 28px;
+  border-radius: 12px;
+  border: 1px solid #c8a24a;
+  background: linear-gradient(180deg, #6a4e28, #4c3617);
+  color: #f6e8c2;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 40%), inset 0 1px 0 rgb(216 186 122 / 25%);
+  transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.inn-confirm-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+.inn-hint {
+  margin: 0;
+  font-size: 0.74rem;
+  font-style: italic;
+  color: rgb(216 195 154 / 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inn-backdrop, .inn-card { animation: none; }
+}
+
 .inn-panel {
   display: flex;
   flex-direction: column;
@@ -17526,12 +17918,12 @@ html:has(.game-shell),
 }
 
 .game-canvas-layer {
-  position: absolute;
-  top: env(safe-area-inset-top, 0);
-  right: env(safe-area-inset-right, 0);
-  bottom: var(--game-bottom-inset, 0px);
-  left: env(safe-area-inset-left, 0);
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
   z-index: 0;
+  /* Width of the skinned vitals bar; the sign's position derives from it. */
+  --vbar-w: clamp(300px, 38vw, 480px);
 }
 
 .game-canvas-layer canvas {
@@ -17633,21 +18025,1052 @@ html:has(.game-shell),
 }
 
 /* ── Combat log positioning override for new shell ───── */
+/* Centered above the fight — just the last round or two. */
 .game-shell .combat-log-wrap {
   position: absolute;
-  left: 12px;
-  bottom: calc(var(--game-bottom-inset, 0px) + 12px);
+  top: 84px;
+  left: 50%;
+  transform: translateX(-50%);
   right: auto;
+  bottom: auto;
   z-index: 9;
-  max-width: min(420px, calc(100vw - 24px));
+  width: max-content;
+  max-width: min(560px, calc(100vw - 220px));
+  pointer-events: none;
+}
+
+.game-shell .combat-log-wrap .combat-log {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.game-shell .combat-log-wrap .combat-log-msg {
+  background: rgb(10 12 22 / 62%);
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Canvas vitals HUD (horizontal strip, top) ────────── */
+.canvas-vitals-hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 8px 14px;
+  /* Warm "bark" branch the vitals nestle along + the room sign hangs from.
+     An optional vitals_bar_bg asset (carved-wood art) layers over the fill. */
+  background-image: var(--vitals-bg, none), linear-gradient(160deg, rgb(52 38 24 / 82%), rgb(34 24 15 / 88%));
+  background-size: 100% 100%, auto;
+  background-repeat: no-repeat, no-repeat;
+  background-position: center;
+  border: 1px solid rgb(122 92 54 / 55%);
+  border-radius: 14px 14px 16px 16px / 16px 16px 14px 14px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgb(8 10 18 / 45%), inset 0 1px 0 rgb(255 240 210 / 10%);
+}
+
+.canvas-vitals-hud .vbar-vital {
+  flex: 0 0 auto;
+  width: clamp(120px, 18vw, 220px);
+}
+
+/* Flowering sprig growing out of the branch's top-left. */
+.vitals-sprig {
+  position: absolute;
+  top: -26px;
+  left: -2px;
+  width: 34px;
+  height: 38px;
+  pointer-events: none;
+  transform: rotate(-6deg);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 35%));
+}
+
+/* ── Room title: a hand-made wooden sign hanging from the vitals branch ── */
+.canvas-room-sign {
+  position: absolute;
+  top: 58px;
+  left: 24px;
+  z-index: 9;
+  padding-top: 15px;
+  max-width: min(48vw, 440px);
+  filter: drop-shadow(0 7px 10px rgb(8 10 18 / 45%));
+}
+
+/* Twin chains splaying down from the branch to the plank. */
+.sign-chain {
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 16px;
+  transform-origin: top center;
+}
+
+.sign-chain-left { left: 22px; transform: rotate(10deg); }
+.sign-chain-right { right: 22px; transform: rotate(-10deg); }
+
+.sign-plank {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  transform: rotate(-1.1deg);
+  /* Optional room_sign_bg art stretches over the procedural wood. */
+  background-image:
+    var(--sign-bg, none),
+    repeating-linear-gradient(91deg, rgb(0 0 0 / 6%) 0 5px, rgb(255 255 255 / 3%) 5px 11px),
+    linear-gradient(180deg, #7c5733, #674428);
+  background-size: 100% 100%, auto, auto;
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-position: center;
+  border: 2px solid #3f2914;
+  box-shadow:
+    inset 0 1px 0 rgb(255 235 200 / 14%),
+    inset 0 -4px 7px rgb(0 0 0 / 38%);
+}
+
+/* Little toadstools tucked at the plank's base (procedural fallback only). */
+.sign-mushroom {
+  position: absolute;
+  bottom: -6px;
+  width: 18px;
+  height: 16px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%));
+}
+
+.sign-mushroom-left { left: -4px; transform: rotate(-8deg); }
+.sign-mushroom-right { right: -4px; transform: rotate(8deg); }
+
+/* Peg holes where the ropes meet the plank. */
+.sign-plank::before,
+.sign-plank::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #2a1a0c, #100904);
+}
+
+.sign-plank::before { left: 11px; }
+.sign-plank::after { right: 11px; }
+
+.sign-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.12;
+  color: #f4e7c8;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 55%), 0 0 2px rgb(0 0 0 / 35%);
+  letter-spacing: 0.01em;
+}
+
+.sign-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1px solid #3f2914;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #8a6638, #5a3c20);
+  color: #f4e7c8;
+  cursor: pointer;
+  transition: filter 150ms var(--ease-out-soft);
+}
+
+.sign-expand:hover {
+  filter: brightness(1.2);
+}
+
+.canvas-room-title-icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* ── Skinned vitals bar (vitals_bar_bg art) ──────────────────────────────
+   Slot/button positions are content-relative fractions measured off the art
+   (content box 1258x294 of the 1280x853 PNG). The art is cropped to that box
+   via the negative-offset img trick; overlays sit on top. */
+.canvas-vitals-skin {
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  z-index: 9;
+  width: var(--vbar-w);
+  aspect-ratio: 1258 / 294;
+  pointer-events: none; /* let the scene through; controls re-enable below */
+  filter: drop-shadow(0 6px 14px rgb(8 10 18 / 45%));
+}
+
+.vskin-art {
+  position: absolute;
+  width: 101.75%;
+  left: -0.79%;
+  top: -87.07%;
+  height: auto;
+  pointer-events: none;
+}
+
+.vskin-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.vskin-slot {
+  position: absolute;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.vskin-slot-hp { left: 13.4%; width: 28.3%; top: 30%; height: 58%; }
+.vskin-slot-mp { left: 45.4%; width: 18.3%; top: 34%; height: 50%; }
+
+/* Darkens the depleted (right) portion of a painted capsule. */
+.vskin-drain {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgb(10 7 3 / 0%) 0, rgb(10 7 3 / 62%) 14px);
+  transition: left 0.3s var(--ease-out-soft);
+}
+
+.vskin-num {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(0.55rem, 1.1vw, 0.76rem);
+  line-height: 1;
+  white-space: nowrap;
+  color: #3a2a14;
+  text-shadow: 0 1px 0 rgb(255 250 238 / 55%);
+  pointer-events: none;
+}
+
+.vskin-num-hp { left: 26.8%; top: 56.2%; }
+.vskin-num-mp { left: 54.2%; top: 56.2%; }
+.vskin-num-gold { left: 71.4%; top: 54.7%; color: #4a3410; }
+
+.vskin-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 5.5%;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.vskin-hotspot:disabled { cursor: default; }
+.vskin-heal { left: 79.8%; top: 55%; }
+.vskin-mana { left: 85.9%; top: 55%; }
+
+.vskin-gear {
+  position: absolute;
+  left: 92.5%;
+  top: 55%;
+  transform: translate(-50%, -50%);
+  width: 5.5%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.vskin-gear .audio-controls,
+.vskin-gear .audio-controls > button {
+  width: 100%;
+  height: 100%;
+}
+
+/* The painted gear is the visible affordance; the real control sits over it. */
+.vskin-gear .audio-controls > button {
+  opacity: 0;
+}
+
+/* ── Skinned room sign (room_sign_bg art, with its own rope baked in) ───── */
+/* Two classes (higher specificity) so this wins over the mobile
+   .canvas-room-sign override — the sign stays out on the branch on phones. */
+.canvas-room-sign.canvas-room-sign-skinned {
+  /* Left edge lines up with the HP<->MP gap (~0.43 of the bar width). Top tracks
+     the bar's height (bar aspect 1258/294) so the rope tucks just under the
+     branch at any viewport size, instead of ending mid-bar. */
+  left: calc(12px + 0.43 * var(--vbar-w));
+  top: calc(6px + var(--vbar-w) / 4.279 - 22px);
+  width: clamp(125px, 13vw, 175px);
+  max-width: none;
+  padding-top: 0;
+  aspect-ratio: 1216 / 794;
+  overflow: hidden;
+  /* Query container so the title font scales with the sign (cqw). */
+  container-type: inline-size;
+  /* Behind the bar (z 9) so the rope strands tuck behind the branch. */
+  z-index: 8;
+  /* It's a <button> (click to enlarge) — strip the chrome. */
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rsign-art {
+  position: absolute;
+  width: 105.26%;
+  left: -2.47%;
+  top: 0;
+  height: auto;
+  pointer-events: none;
+}
+
+.rsign-title {
+  position: absolute;
+  left: 50.5%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  max-width: 46%;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  /* Sized in container units so it scales with the sign (not the viewport),
+     then scaled down for longer names via --rsign-fit (set in JS). */
+  font-size: calc(8cqw * var(--rsign-fit, 1));
+  line-height: 1.06;
+  overflow-wrap: break-word;
+  color: #5b4326;
+  text-shadow: 0 1px 0 rgb(255 248 232 / 55%);
+  pointer-events: none;
+}
+
+/* Enlarged, static view of the sign (click the sign to open). */
+.sign-zoom-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(8 6 12 / 55%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  cursor: zoom-out;
+  animation: sign-zoom-fade 150ms var(--ease-out-soft);
+}
+
+.sign-zoom {
+  position: relative;
+  width: min(620px, 84vw);
+  aspect-ratio: 1216 / 794;
+  overflow: hidden;
+  container-type: inline-size;
+  filter: drop-shadow(0 16px 34px rgb(0 0 0 / 55%));
+  animation: sign-zoom-pop 200ms var(--ease-out-soft);
+}
+
+@keyframes sign-zoom-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sign-zoom-pop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-zoom-backdrop,
+  .sign-zoom { animation: none; }
+}
+
+/* Fade the room sign while an in-canvas (Pixi) entity menu is open — it can't
+   paint above the DOM sign, so the sign yields. */
+.canvas-room-sign {
+  transition: opacity 150ms var(--ease-out-soft);
+}
+
+.entity-menu-open .canvas-room-sign {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Action dock (below the room panel; swaps kiosks <-> skill bar) ───── */
+.action-dock {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Kiosk row — soft in-world icon plinths (radial glow, label underneath). */
+.kiosks {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 22px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 2px 4px;
+  scrollbar-width: none;
+}
+
+.kiosks::-webkit-scrollbar {
+  display: none;
+}
+
+.kiosk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 72px;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.kiosk:hover {
+  color: var(--text-bright);
+  transform: scale(1.06);
+}
+
+.kiosk-active {
+  color: var(--text-bright);
+}
+
+/* No disc frame — the widget artwork stands on its own like the Pixi room
+   badges (Shop / Inn / Mail), brightening + glowing on hover / active. */
+.kiosk-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+}
+
+.kiosk-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 6px rgb(8 10 18 / 65%));
+  transition: opacity 150ms var(--ease-out-soft), filter 150ms var(--ease-out-soft);
+}
+
+.kiosk:hover .kiosk-img,
+.kiosk-active .kiosk-img {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgb(176 193 255 / 60%));
+}
+
+.kiosk-icon-svg {
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 1px 4px rgb(8 10 18 / 80%));
+}
+
+.kiosk-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  line-height: 1.1;
+  /* Reserve two lines so multi-word labels (e.g. "Combat Log") don't make their
+     kiosk taller than the rest and knock the icon row out of alignment. */
+  min-height: 2.2em;
+  text-shadow: 0 1px 4px rgb(8 10 18 / 90%);
+}
+
+/* ── Command input (lives inside the Terminal overlay for now) ── */
+.canvas-command {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 14px;
+  background: var(--surface-input);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+}
+
+/* ── Terminal overlay (placeholder) ───────────────────── */
+.terminal-overlay-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.terminal-overlay-note {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 0.92rem;
+}
+
+.canvas-command-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.canvas-command-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.canvas-command-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgb(118 133 190 / 90%), rgb(98 112 158 / 90%));
+  color: var(--text-white);
+  cursor: pointer;
+}
+
+.canvas-command-send-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Skill bar (lives in the action dock during combat) ───────────────── */
+.skill-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 2px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.skill-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Canvas help glyph (near time / weather) ──────────── */
+/* Services stack — Help / Social / Mail, top-right (overlaps the minimap's
+   decorative torn margin only). */
+.canvas-hud-stack {
+  position: absolute;
+  top: 12px;
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-stack-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgb(20 24 40 / 84%), rgb(14 17 28 / 90%));
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.hud-stack-btn:hover {
+  border-color: rgb(176 193 255 / 50%);
+  color: var(--text-bright);
+  transform: scale(1.06);
+}
+
+.hud-stack-img {
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgb(8 10 18 / 70%));
+}
+
+.hud-stack-glyph {
+  line-height: 1;
+}
+
+/* ── Flee button (combat-only, bottom-right above the weather HUD) ── */
+.canvas-flee-btn {
+  position: absolute;
+  bottom: 64px;
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  z-index: 11;
+  padding: 9px 22px;
+  border: 1px solid rgb(212 136 138 / 60%);
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg, rgb(74 26 26 / 92%), rgb(48 16 16 / 95%));
+  color: #f0c0c2;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgb(40 8 8 / 55%);
+  transition: border-color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.canvas-flee-btn:hover {
+  border-color: rgb(232 160 160 / 80%);
+  transform: translateY(-1px);
+}
+
+/* ── Small-screen overlay adjustments ─────────────────── */
+@media (max-width: 640px) {
+  /* Vitals strip shrinks to fit; drop the quick-potion text + audio control */
+  .canvas-vitals-hud {
+    gap: 6px;
+    padding: 6px 8px;
+    max-width: calc(100% - 16px);
+  }
+
+  .canvas-vitals-hud .vbar-vital {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 48px;
+  }
+
+  .canvas-vitals-hud .vbar-quick-potion-label {
+    display: none;
+  }
+
+  .canvas-vitals-hud .audio-controls {
+    display: none;
+  }
+
+  /* Hanging room sign: smaller, less reserved space (minimap is smaller) */
+  .canvas-room-sign {
+    top: 56px;
+    left: 16px;
+    max-width: calc(100% - 160px);
+  }
+
+  .sign-title {
+    font-size: 1.05rem;
+  }
+
+  /* Kiosks: smaller art, tighter row on the bottom */
+  .kiosks {
+    gap: 10px;
+    max-width: calc(100% - 24px);
+  }
+
+  .kiosk {
+    width: 56px;
+  }
+
+  .kiosk-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .kiosk-icon-svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .kiosk-label {
+    font-size: 0.58rem;
+  }
+
+  .canvas-flee-btn,
+  .atmosphere-hud {
+    bottom: 12px;
+  }
+}
+
+/* Narrow phones: let the six kiosks share the row evenly so none clip. */
+@media (max-width: 430px) {
+  .action-dock {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .kiosks {
+    gap: 0;
+    width: 100%;
+    max-width: 100%;
+    justify-content: space-between;
+    padding: 2px 0;
+    overflow-x: visible;
+  }
+
+  .kiosk {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    padding: 2px;
+    gap: 3px;
+  }
+
+  .kiosk-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .kiosk-icon-svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .kiosk-label {
+    font-size: 0.52rem;
+    min-height: 2.1em;
+  }
+}
+
+/* ── Room panel (between canvas and action bar) ───────── */
+/* Fixed height so the panel doesn't jump room-to-room; the description column
+   scrolls and the compass pad on the right anchors the height. */
+/* Shared backdrop for the room description + action dock (one continuous
+   surface, no seam between them). */
+.bottom-stack {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  background-color: #10131f;
+  background-image: linear-gradient(180deg, rgb(15 18 30 / 55%), rgb(10 12 22 / 72%)), var(--room-bg, none);
+  /* Stretch the backdrop to the box so the whole image shows (rather than
+     cover, which crops the edges). */
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-top: 1px solid var(--line-soft);
+}
+
+.room-panel {
+  position: relative;
+  flex: 0 0 auto;
+  height: 264px;
+  overflow: hidden;
+  color: var(--text-primary);
+}
+
+.room-panel-body {
+  display: flex;
+  gap: var(--space-5);
+  align-items: stretch;
+  height: 100%;
+  padding: 28px 28px 16px;
+  box-sizing: border-box;
+}
+
+.room-panel-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  /* Slim, themed scrollbar instead of the chunky native one. */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(150 126 86 / 60%) transparent;
+}
+
+.room-panel-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.room-panel-main::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.room-panel-main::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(176 150 104 / 70%), rgb(130 108 72 / 70%));
+  border-radius: 4px;
+}
+
+.room-panel-main::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(198 170 120 / 85%), rgb(150 126 86 / 85%));
+}
+
+.room-panel-main::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+.room-panel-title {
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-faint);
+  font-family: var(--font-display);
+  font-size: 1.42rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: var(--text-heading);
+}
+
+.room-panel-desc {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.room-panel-nav {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Compass exit pad (constant-size square) ──────────── */
+.room-compass {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.room-compass-pad {
+  position: relative;
+  width: 216px;
+  height: 216px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  place-items: center;
+  /* Optional custom backdrop; floats with no box when unset. */
+  background-image: var(--compass-bg, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: var(--radius-lg);
+}
+
+/* Each control sits at its outer cell edge and is nudged radially outward via
+   --dir-shift (applied through the hover scale so it doesn't jump). */
+.compass-dir-north { grid-column: 2; grid-row: 1; align-self: start; --dir-shift: translate(0, -6px); }
+.compass-dir-up { grid-column: 3; grid-row: 1; align-self: end; justify-self: start; --dir-shift: translate(-4px, 4px); }
+.compass-dir-west { grid-column: 1; grid-row: 2; justify-self: start; --dir-shift: translate(-6px, 0); }
+.compass-dir-east { grid-column: 3; grid-row: 2; justify-self: end; --dir-shift: translate(6px, 0); }
+.compass-dir-down { grid-column: 1; grid-row: 3; align-self: start; justify-self: end; --dir-shift: translate(4px, -4px); }
+.compass-dir-south { grid-column: 2; grid-row: 3; align-self: end; --dir-shift: translate(0, 6px); }
+
+.compass-btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  padding: 6px 9px;
+  border: 1px solid rgb(190 168 115 / 42%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, rgb(34 41 60 / 90%), rgb(20 24 40 / 94%));
+  color: var(--text-bright);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transform: var(--dir-shift, none);
+  transition: border-color 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft), transform 120ms var(--ease-out-soft);
+}
+
+.compass-btn:hover {
+  border-color: rgb(212 198 150 / 85%);
+  background: linear-gradient(160deg, rgb(56 67 100 / 94%), rgb(30 36 56 / 96%));
+  transform: var(--dir-shift, none) scale(1.05);
+}
+
+/* Asset buttons: the artwork is the button — drop the box chrome. */
+.compass-btn-art {
+  border: none;
+  background: none;
+  padding: 0;
+  min-width: 0;
+}
+
+/* Soft scrim pooled behind the marker art so the letters/glyphs read against
+   the busy compass engraving without a hard-edged box. Sits between the
+   compass_bg backdrop and the marker image. */
+.compass-btn-art::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(16 14 10 / 78%) 0%,
+    rgb(16 14 10 / 58%) 45%,
+    rgb(16 14 10 / 0%) 78%
+  );
+  z-index: -1;
+  pointer-events: none;
+}
+
+.compass-btn-art:hover {
+  border: none;
+  background: none;
+}
+
+.compass-btn-img {
+  display: block;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  /* Subtle base shadow lifts the marker off the busy engraving. */
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 75%));
+  transition: filter 150ms var(--ease-out-soft);
+}
+
+.compass-btn-art:hover .compass-btn-img {
+  filter: drop-shadow(0 0 8px rgb(212 198 150 / 70%));
+}
+
+/* Missing exit — greyed-out, not interactive. */
+.compass-btn-off {
+  border-color: transparent;
+  background: none;
+  color: var(--text-disabled);
+  cursor: default;
+  opacity: 0.5;
+}
+
+.compass-btn-off:hover {
+  border-color: transparent;
+  background: none;
+  transform: var(--dir-shift, none);
+}
+
+.compass-btn-art.compass-btn-off .compass-btn-img {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.compass-btn-art.compass-btn-off:hover .compass-btn-img {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.room-panel-toggle {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 18px;
+  border: 1px solid var(--line-faint);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  border-top: none;
+  background: rgb(39 47 73 / 70%);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+/* Collapsed: shrink to a thin strip that still shows the restore toggle. */
+.room-panel-collapsed {
+  max-height: 26px;
+  min-height: 26px;
+  overflow: visible;
+}
+
+.room-panel-toggle-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 150ms var(--ease-out-soft);
+}
+
+.room-panel-toggle-icon-up {
+  transform: rotate(180deg);
+}
+
+/* Narrow screens keep the description | compass side-by-side; the compass just
+   shrinks so it stays a square next to the (scrolling) description. */
+@media (max-width: 640px) {
+  .room-panel {
+    height: 234px;
+  }
+
+  /* The hanging sign still carries the name; reclaim the vertical space here. */
+  .room-panel-title {
+    display: none;
+  }
+
+  .room-panel-body {
+    padding: 26px 14px 14px;
+    gap: var(--space-3);
+  }
+
+  .room-compass-pad {
+    width: 184px;
+    height: 184px;
+  }
+
+  .compass-btn {
+    min-width: 32px;
+    padding: 5px 7px;
+    font-size: 0.82rem;
+  }
+
+  .compass-btn-img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .compass-btn-art::before {
+    width: 46px;
+    height: 46px;
+  }
 }
 
 /* ── Vitals bar (bottom-anchored) ─────────────────────── */
 .vbar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  flex: 0 0 auto;
   z-index: 20;
   background: linear-gradient(180deg, rgb(34 41 60 / 86%), rgb(20 24 40 / 96%));
   backdrop-filter: blur(14px);
@@ -18343,6 +19766,872 @@ html:has(.game-shell),
   }
 }
 
+/* The world map wants far more room than other panels so the room graph is
+   readable and spread out — give its modal a much wider, taller footprint. */
+@media (min-width: 768px) {
+  .drawer-sheet:has(.drawer-map-body) {
+    width: min(1280px, 94vw);
+    max-height: 94vh;
+  }
+
+  /* Equipment paperdoll benefits from a wide modal so the sprite and the slot
+     list sit comfortably side by side. */
+  .drawer-sheet:has(.equipment-panel-v2) {
+    width: min(1040px, 92vw);
+    max-height: 90vh;
+  }
+
+  /* Pin the shop modal to a fixed height so it doesn't jump between the Buy
+     and Sell lists — the list scrolls inside instead. */
+  .drawer-sheet:has(.shop-popout) {
+    height: min(640px, 86vh);
+    max-height: 86vh;
+  }
+
+  /* Pin the trainer chalkboard so the plaque + chalked points stay put and the
+     lessons scroll within. */
+  .drawer-sheet:has(.trainer-panel) {
+    height: min(660px, 86vh);
+    max-height: 86vh;
+  }
+}
+
+/* Satchel-skinned drawer (inventory): the sheet itself becomes the leather
+   satchel, so there's no competing blue box around the pockets. Compound
+   selectors keep these ahead of the responsive .drawer-sheet overrides. */
+.drawer-sheet.drawer-sheet-satchel {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(130% 90% at 50% -8%, rgb(132 94 48 / 38%), transparent 62%),
+    linear-gradient(168deg, #5b4226, #402d18 58%, #34250f);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 2px solid #2b1f10;
+  border-top: 2px solid #2b1f10;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-satchel {
+    border: 2px solid #2b1f10;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%);
+  }
+}
+
+/* Stitched inner seam around the whole satchel. */
+.drawer-sheet-satchel::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  z-index: 0;
+  border-radius: 14px;
+  border: 1.5px dashed rgb(216 186 122 / 38%);
+  pointer-events: none;
+}
+
+/* Keep the sheet's content above the stitch overlay. */
+.drawer-sheet-satchel > * { position: relative; z-index: 1; }
+
+.drawer-sheet-satchel .drawer-handle {
+  background: rgb(216 186 122 / 50%);
+}
+
+.drawer-sheet-satchel .drawer-header {
+  border-bottom: 1px solid rgb(132 94 48 / 50%);
+}
+
+.drawer-sheet-satchel .drawer-title {
+  color: #f4e9cb;
+  text-shadow: 0 1px 2px rgb(18 10 3 / 55%);
+}
+
+.drawer-sheet-satchel .drawer-close {
+  border-color: rgb(132 94 48 / 60%);
+  background: rgb(54 39 22 / 82%);
+  color: #e6d2a4;
+}
+
+.drawer-sheet-satchel .drawer-close:hover {
+  background: rgb(74 54 31 / 92%);
+  color: #f4e9cb;
+}
+
+/* Dressing-chamber drawer (equipment): a dim, atmospheric backdrop so the
+   sprite and the dark slot cards read against it. */
+.drawer-sheet.drawer-sheet-equipment {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(120% 75% at 50% -6%, rgb(86 76 132 / 32%), transparent 62%),
+    linear-gradient(172deg, #2b2742, #1d1b30 58%, #14121f);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 1px solid rgb(120 104 168 / 28%);
+  border-top: 1px solid rgb(120 104 168 / 28%);
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 62%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-equipment {
+    border: 1px solid rgb(120 104 168 / 28%);
+    box-shadow: 0 24px 60px rgb(8 10 18 / 64%), 0 8px 24px rgb(8 10 18 / 44%);
+  }
+}
+
+.drawer-sheet-equipment .drawer-header {
+  border-bottom: 1px solid rgb(120 104 168 / 26%);
+}
+
+.drawer-sheet-equipment .drawer-title {
+  color: #ece6d2;
+  text-shadow: 0 1px 2px rgb(8 6 16 / 55%);
+}
+
+/* Merchant-cart drawer (shop): a wood-grain body under a striped market awning
+   with a scalloped valance. The buy/sell list sits inside as the goods. */
+.drawer-sheet.drawer-sheet-shop {
+  background-image:
+    var(--skin-bg, none),
+    repeating-linear-gradient(91deg, rgb(58 40 22 / 0%) 0 38px, rgb(28 18 8 / 22%) 38px 40px),
+    linear-gradient(176deg, #573f24, #3d2a16 60%, #2f2011);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 2px solid #271a0d;
+  border-top: 2px solid #271a0d;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-shop {
+    border: 2px solid #271a0d;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%);
+  }
+}
+
+/* The header becomes the striped awning, scalloped along its bottom edge. */
+.drawer-sheet-shop .drawer-header {
+  position: relative;
+  padding: 12px 16px 24px;
+  border-bottom: none;
+  background: repeating-linear-gradient(90deg, #4e807b 0 32px, #b07d8a 32px 64px);
+  box-shadow: inset 0 -2px 6px rgb(40 20 8 / 35%);
+  -webkit-mask:
+    radial-gradient(15px 15px at 50% 0, #000 98%, transparent 100%) 0 100% / 32px 15px repeat-x,
+    linear-gradient(#000, #000) top / 100% calc(100% - 14px) no-repeat;
+  mask:
+    radial-gradient(15px 15px at 50% 0, #000 98%, transparent 100%) 0 100% / 32px 15px repeat-x,
+    linear-gradient(#000, #000) top / 100% calc(100% - 14px) no-repeat;
+}
+
+.drawer-sheet-shop .drawer-title {
+  color: #fff6e6;
+  text-shadow: 0 1px 3px rgb(40 16 6 / 70%);
+}
+
+.drawer-sheet-shop .drawer-close {
+  border-color: rgb(255 246 230 / 45%);
+  background: rgb(60 30 16 / 70%);
+  color: #fff6e6;
+}
+
+.drawer-sheet-shop .drawer-close:hover {
+  background: rgb(80 42 22 / 85%);
+}
+
+.drawer-sheet-shop .drawer-handle {
+  background: rgb(255 246 230 / 55%);
+}
+
+/* Chalkboard drawer (trainer): a slate board inside a wood frame; lessons are
+   chalked on, the class sits on a wooden plaque. */
+.drawer-sheet.drawer-sheet-trainer {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(120% 80% at 50% 12%, rgb(255 255 255 / 5%), transparent 60%),
+    linear-gradient(170deg, #33453c, #26342d 60%, #1f2a25);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 7px solid #543c22;
+  border-top: 7px solid #543c22;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%), inset 0 0 0 1px rgb(20 14 6 / 60%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-trainer {
+    border: 7px solid #543c22;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%), inset 0 0 0 1px rgb(20 14 6 / 60%);
+  }
+}
+
+.drawer-sheet-trainer .drawer-header {
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+}
+
+.drawer-sheet-trainer .drawer-title {
+  color: #eef0e6;
+  text-shadow: 0 1px 2px rgb(8 12 10 / 60%);
+}
+
+.drawer-sheet-trainer .drawer-handle {
+  background: rgb(238 240 230 / 45%);
+}
+
+/* Aged battle-journal drawer (combat log): a dark amber page in a leather
+   binding — text is warm/light so it reads on the rich parchment art. */
+.drawer-sheet.drawer-sheet-journal {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(120% 80% at 50% 0%, rgb(150 104 52 / 18%), transparent 60%),
+    linear-gradient(172deg, #6a4a28, #4a3118 70%, #3a260f);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 6px solid #5a4128;
+  border-top: 6px solid #5a4128;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%), inset 0 0 0 1px rgb(40 26 12 / 45%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-journal {
+    border: 6px solid #5a4128;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%), inset 0 0 0 1px rgb(40 26 12 / 45%);
+  }
+  /* Pin the journal so the toolbar stays put and entries scroll within. */
+  .drawer-sheet:has(.combat-log-panel) {
+    height: min(660px, 86vh);
+    max-height: 86vh;
+  }
+}
+
+.drawer-sheet-journal .drawer-header {
+  border-bottom: 1px solid rgb(240 225 190 / 22%);
+}
+
+.drawer-sheet-journal .drawer-title {
+  color: #f6ecce;
+  text-shadow: 0 1px 3px rgb(20 10 2 / 70%);
+}
+
+.drawer-sheet-journal .drawer-close {
+  border-color: rgb(240 225 190 / 40%);
+  background: rgb(30 18 8 / 45%);
+  color: #f0e3c4;
+}
+
+.drawer-sheet-journal .drawer-close:hover {
+  background: rgb(50 32 16 / 65%);
+  color: #fff;
+}
+
+.drawer-sheet-journal .drawer-handle {
+  background: rgb(240 225 190 / 40%);
+}
+
+/* Cork quest board: speckled cork in a wood frame; quests pinned as notes. */
+.drawer-sheet.drawer-sheet-questboard {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(circle at 18% 28%, rgb(120 86 48 / 22%) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 64% 58%, rgb(96 68 38 / 20%) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 42% 82%, rgb(120 86 48 / 18%) 0 1.5px, transparent 2.5px),
+    linear-gradient(168deg, #cdac79, #bb9a63);
+  background-size: cover, 84px 84px, 116px 116px, 64px 64px, auto;
+  border: 9px solid #5e4226;
+  border-top: 9px solid #5e4226;
+  box-shadow:
+    0 -16px 48px rgb(8 10 18 / 60%),
+    inset 0 0 0 2px rgb(40 26 12 / 45%),
+    inset 0 0 28px rgb(70 46 22 / 35%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-questboard {
+    border: 9px solid #5e4226;
+    box-shadow:
+      0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%),
+      inset 0 0 0 2px rgb(40 26 12 / 45%), inset 0 0 28px rgb(70 46 22 / 35%);
+  }
+  /* Pin the board so the tabs stay put and notes scroll within. */
+  .drawer-sheet:has(.quest-panel) { height: min(680px, 88vh); max-height: 88vh; }
+}
+
+.drawer-sheet-questboard .drawer-header { border-bottom: 1px solid rgb(240 225 190 / 20%); }
+.drawer-sheet-questboard .drawer-title { color: #f6ecce; text-shadow: 0 1px 3px rgb(20 12 4 / 70%); }
+.drawer-sheet-questboard .drawer-close { border-color: rgb(240 225 190 / 40%); background: rgb(30 18 8 / 45%); color: #f0e3c4; }
+.drawer-sheet-questboard .drawer-close:hover { background: rgb(50 32 16 / 65%); color: #fff; }
+.drawer-sheet-questboard .drawer-handle { background: rgb(240 225 190 / 40%); }
+
+/* ── Quest board contents (scoped so shared .quest-* stays put elsewhere) ── */
+.drawer-sheet-questboard .quest-panel {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Wooden section tabs pinned along the top. */
+.drawer-sheet-questboard .quest-tab-bar {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  border-bottom: none;
+  gap: 6px;
+  padding: 0;
+}
+
+.drawer-sheet-questboard .quest-tab {
+  padding: 6px 14px;
+  border: 1px solid rgb(60 40 20 / 55%);
+  border-radius: 8px;
+  border-bottom: 1px solid rgb(60 40 20 / 55%);
+  background: linear-gradient(180deg, rgb(70 48 26 / 80%), rgb(50 34 18 / 80%));
+  color: #e6d2a4;
+  font-family: var(--font-display);
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 16%);
+}
+
+.drawer-sheet-questboard .quest-tab:hover { color: #fbf0d4; }
+
+.drawer-sheet-questboard .quest-tab-active {
+  background: linear-gradient(180deg, #e7d6b0, #d2bb8c);
+  border-color: #8a6a2e;
+  color: #382a18;
+}
+
+.drawer-sheet-questboard .quest-tab-badge {
+  background: rgb(60 40 20 / 35%);
+  color: #f0dca8;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.drawer-sheet-questboard .quest-tab-active .quest-tab-badge { background: rgb(138 106 46 / 35%); color: #3a2810; }
+.drawer-sheet-questboard .quest-tab-badge-available { background: rgb(96 132 86 / 45%); color: #1f3a1c; }
+
+/* The active section scrolls; the notes sit on the cork. */
+.drawer-sheet-questboard .quest-panel-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 4px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(60 40 20 / 55%) transparent;
+}
+
+.drawer-sheet-questboard .quest-panel-section::-webkit-scrollbar { width: 8px; }
+.drawer-sheet-questboard .quest-panel-section::-webkit-scrollbar-thumb { background: rgb(60 40 20 / 45%); border-radius: 999px; }
+
+/* Pinned parchment notes — active items + available cards + timed/bounty/global. */
+.drawer-sheet-questboard .quest-item,
+.drawer-sheet-questboard .quest-available-card,
+.drawer-sheet-questboard .quest-timed-row,
+.drawer-sheet-questboard .quest-bounty-card,
+.drawer-sheet-questboard .quest-global-card {
+  position: relative;
+  background: linear-gradient(155deg, #f2e8ce, #e3d4ad);
+  border: 1px solid rgb(106 74 36 / 45%);
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgb(20 12 4 / 35%);
+  color: #33271a;
+}
+
+/* The pushpin. */
+.drawer-sheet-questboard .quest-item::before,
+.drawer-sheet-questboard .quest-available-card::before,
+.drawer-sheet-questboard .quest-timed-row::before,
+.drawer-sheet-questboard .quest-bounty-card::before,
+.drawer-sheet-questboard .quest-global-card::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #f0a0a0, #b5482f 70%);
+  box-shadow: 0 2px 3px rgb(20 12 4 / 50%);
+  z-index: 2;
+}
+
+/* A gentle tacked-up tilt; straighten on hover/expand for reading. */
+.drawer-sheet-questboard .quest-list { display: flex; flex-direction: column; gap: 14px; }
+.drawer-sheet-questboard .quest-available-list { display: flex; flex-direction: column; gap: 16px; }
+.drawer-sheet-questboard .quest-list > .quest-item:nth-child(odd) { transform: rotate(-0.8deg); }
+.drawer-sheet-questboard .quest-list > .quest-item:nth-child(even) { transform: rotate(0.7deg); }
+.drawer-sheet-questboard .quest-available-list > li:nth-child(odd) { transform: rotate(0.7deg); }
+.drawer-sheet-questboard .quest-available-list > li:nth-child(even) { transform: rotate(-0.8deg); }
+.drawer-sheet-questboard .quest-item:hover,
+.drawer-sheet-questboard .quest-item-expanded,
+.drawer-sheet-questboard .quest-available-card:hover { transform: rotate(0deg) !important; }
+.drawer-sheet-questboard .quest-item,
+.drawer-sheet-questboard .quest-available-card { transition: transform 160ms var(--ease-out-soft), box-shadow 160ms var(--ease-out-soft); }
+
+/* Ink text + warm accents on the notes. */
+.drawer-sheet-questboard .quest-item-header,
+.drawer-sheet-questboard .quest-available-name { color: #2e2212; }
+.drawer-sheet-questboard .quest-item-header:hover { background: rgb(106 74 36 / 8%); }
+.drawer-sheet-questboard .quest-item-name { font-family: var(--font-display); font-weight: 700; }
+.drawer-sheet-questboard .quest-item-description,
+.drawer-sheet-questboard .quest-available-description { color: #5a4226; }
+.drawer-sheet-questboard .quest-objective-text { color: #3a2c1a; }
+.drawer-sheet-questboard .quest-objective-count,
+.drawer-sheet-questboard .quest-available-obj-count,
+.drawer-sheet-questboard .quest-item-progress-badge {
+  color: #6a4a24;
+  background: rgb(106 74 36 / 14%);
+}
+.drawer-sheet-questboard .quest-objective-check,
+.drawer-sheet-questboard .quest-available-obj-icon,
+.drawer-sheet-questboard .quest-item-icon { color: #8a6a2e; }
+.drawer-sheet-questboard .quest-available-icon { color: #8a6a2e; }
+.drawer-sheet-questboard .quest-objective-done .quest-objective-text { color: #3c6e3a; }
+
+/* Meters → parchment track, mossy fill. */
+.drawer-sheet-questboard .meter-track { background: rgb(60 40 20 / 22%); }
+.drawer-sheet-questboard .meter-fill-quest { background: linear-gradient(90deg, #8a6a2e, #b88a3e); }
+.drawer-sheet-questboard .meter-fill-quest-done { background: linear-gradient(90deg, #4c7a44, #6fa05e); }
+
+/* Reward chips. */
+.drawer-sheet-questboard .quest-reward-xp,
+.drawer-sheet-questboard .quest-reward-gold,
+.drawer-sheet-questboard .quest-reward-item {
+  color: #6e4e16;
+  background: rgb(230 196 106 / 34%);
+  border: 1px solid rgb(184 138 46 / 50%);
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+.drawer-sheet-questboard .quest-available-rewards-label { color: #6a4a24; }
+
+/* Status badges. */
+.drawer-sheet-questboard .quest-item-ready-badge {
+  background: rgb(96 132 86 / 30%);
+  border: 1px solid rgb(60 110 58 / 50%);
+  color: #2f5226;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+/* Action buttons. */
+.drawer-sheet-questboard .quest-turnin-button,
+.drawer-sheet-questboard .quest-accept-button {
+  background: linear-gradient(180deg, #e6c46a, #c79a3a);
+  border: 1px solid #8a6a2e;
+  color: #2e2212;
+}
+.drawer-sheet-questboard .quest-abandon-button {
+  background: rgb(60 40 20 / 12%);
+  border: 1px solid rgb(138 62 44 / 45%);
+  color: #8a3a2a;
+}
+.drawer-sheet-questboard .quest-load-button {
+  background: linear-gradient(180deg, #e6c46a, #c79a3a);
+  border: 1px solid #8a6a2e;
+  color: #2e2212;
+}
+
+/* Daily / weekly rows + bounty/global cards: pad for the pushpin and tint. */
+.drawer-sheet-questboard .quest-timed-row,
+.drawer-sheet-questboard .quest-bounty-card,
+.drawer-sheet-questboard .quest-global-card { padding-top: 14px; }
+.drawer-sheet-questboard .quest-timed-list { display: flex; flex-direction: column; gap: 14px; }
+.drawer-sheet-questboard .quest-timed-description,
+.drawer-sheet-questboard .quest-bounty-title,
+.drawer-sheet-questboard .quest-global-title { color: #2e2212; }
+.drawer-sheet-questboard .quest-timed-type-badge {
+  background: rgb(106 74 36 / 16%);
+  border: 1px solid rgb(106 74 36 / 35%);
+  color: #6a4a24;
+}
+.drawer-sheet-questboard .quest-bounty-icon,
+.drawer-sheet-questboard .quest-global-icon,
+.drawer-sheet-questboard .quest-streak-icon { color: #8a6a2e; }
+.drawer-sheet-questboard .quest-timed-done-check { color: #3c6e3a; }
+
+/* Streak banner + notifications as little tacked slips. */
+.drawer-sheet-questboard .quest-streak-banner {
+  background: rgb(230 196 106 / 28%);
+  border: 1px solid rgb(184 138 46 / 45%);
+  color: #6e4e16;
+}
+.drawer-sheet-questboard .quest-notifications { flex: 0 0 auto; }
+.drawer-sheet-questboard .quest-notification {
+  background: linear-gradient(155deg, #f2e8ce, #e3d4ad);
+  border: 1px solid rgb(106 74 36 / 45%);
+  color: #33271a;
+  box-shadow: 0 2px 6px rgb(20 12 4 / 30%);
+}
+.drawer-sheet-questboard .quest-notification-text strong { color: #2e2212; }
+.drawer-sheet-questboard .quest-notification-icon { color: #8a6a2e; }
+.drawer-sheet-questboard .quest-notification-dismiss { color: #6a4a24; }
+
+/* Empty states + their drifting icon read in ink. */
+.drawer-sheet-questboard .quest-empty-state .empty-note { color: #5a4226; }
+.drawer-sheet-questboard .quest-empty-icon { color: #6a4a24; opacity: 0.5; }
+
+/* Grimoire drawer (spellbook): an open leather-bound book of parchment pages
+   with a soft center gutter; spells are illuminated entries. */
+.drawer-sheet.drawer-sheet-grimoire {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(60px 100% at 50% 50%, rgb(60 40 20 / 22%), transparent),
+    radial-gradient(130% 90% at 50% -6%, rgb(150 110 64 / 16%), transparent 60%),
+    linear-gradient(170deg, #e9dcba, #dccaa0 68%, #d2bf94);
+  background-size: cover, auto, auto, auto;
+  background-position: center;
+  border: 10px solid #4a3320;
+  border-top: 10px solid #4a3320;
+  box-shadow:
+    0 -16px 48px rgb(8 10 18 / 60%),
+    inset 0 0 0 2px rgb(30 18 8 / 50%),
+    inset 0 0 30px rgb(70 46 22 / 30%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-grimoire {
+    border: 10px solid #4a3320;
+    box-shadow:
+      0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%),
+      inset 0 0 0 2px rgb(30 18 8 / 50%), inset 0 0 30px rgb(70 46 22 / 30%);
+  }
+  /* A wider book so two pages of spells sit side by side, pinned + scroll. */
+  .drawer-sheet:has(.spellbook) { width: min(960px, 92vw); height: min(680px, 88vh); max-height: 88vh; }
+}
+
+.drawer-sheet-grimoire .drawer-header { border-bottom: 1px solid rgb(90 60 30 / 30%); }
+.drawer-sheet-grimoire .drawer-title { color: #2e2212; text-shadow: 0 0 8px rgb(247 240 222 / 85%), 0 1px 0 rgb(255 250 236 / 60%); }
+.drawer-sheet-grimoire .drawer-close { border-color: rgb(90 60 30 / 50%); background: rgb(90 60 30 / 16%); color: #4a3014; }
+.drawer-sheet-grimoire .drawer-close:hover { background: rgb(90 60 30 / 30%); color: #2a1c08; }
+.drawer-sheet-grimoire .drawer-handle { background: rgb(90 60 30 / 40%); }
+
+/* ── Spellbook contents (scoped to the grimoire) ── */
+.drawer-sheet-grimoire .spellbook { height: 100%; min-height: 0; }
+
+.drawer-sheet-grimoire .spellbook-header { align-items: baseline; }
+/* Header text sits directly on the page — dark ink + a faint cream halo so it
+   reads on both clean and busy parchment. */
+.drawer-sheet-grimoire .spellbook-class { color: #281b0d; text-shadow: 0 0 6px rgb(247 240 222 / 80%), 0 1px 0 rgb(255 250 236 / 55%); }
+.drawer-sheet-grimoire .spellbook-level { color: #463218; text-shadow: 0 0 6px rgb(247 240 222 / 80%); }
+.drawer-sheet-grimoire .spellbook-hint { color: #463218; text-shadow: 0 0 6px rgb(247 240 222 / 75%); }
+
+.drawer-sheet-grimoire .spellbook-sp-badge {
+  background: rgb(106 74 36 / 16%);
+  border: 1px solid rgb(106 74 36 / 35%);
+  color: #6a4a24;
+}
+.drawer-sheet-grimoire .spellbook-sp-badge-available {
+  background: rgb(230 196 106 / 34%);
+  border-color: rgb(184 138 46 / 55%);
+  color: #6e4e16;
+}
+
+/* Search field. */
+.drawer-sheet-grimoire .spellbook-search-input {
+  background: rgb(247 240 222 / 90%);
+  border: 1px solid rgb(106 74 36 / 50%);
+  color: #2e2212;
+}
+.drawer-sheet-grimoire .spellbook-search-input::placeholder { color: rgb(106 74 36 / 60%); }
+.drawer-sheet-grimoire .spellbook-search-input:focus { border-color: #8a6a2e; }
+.drawer-sheet-grimoire .spellbook-result-count { color: #5a4226; text-shadow: 0 0 5px rgb(247 240 222 / 75%); }
+
+/* Category tabs + class pills → ink ribbons. */
+.drawer-sheet-grimoire .spellbook-tab,
+.drawer-sheet-grimoire .spellbook-class-pill {
+  background: rgb(90 60 30 / 10%);
+  border: 1px solid rgb(106 74 36 / 38%);
+  color: #6a4a24;
+}
+.drawer-sheet-grimoire .spellbook-tab:hover,
+.drawer-sheet-grimoire .spellbook-class-pill:hover { background: rgb(90 60 30 / 18%); color: #3a2c1a; }
+.drawer-sheet-grimoire .spellbook-tab-active,
+.drawer-sheet-grimoire .spellbook-class-pill-active {
+  background: linear-gradient(180deg, #e7d6b0, #d2bb8c);
+  border-color: #8a6a2e;
+  color: #382a18;
+}
+
+/* Two-page spread: spells in two columns with a soft center gutter. */
+.drawer-sheet-grimoire .spellbook-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 30px;
+  align-content: start;
+  scrollbar-color: rgb(106 74 36 / 50%) transparent;
+}
+.drawer-sheet-grimoire .spellbook-grid::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 45%); }
+
+/* Illuminated spell entries — near-opaque vellum so they read as notes laid on
+   the page, even over a busy illustrated background. */
+.drawer-sheet-grimoire .spellbook-card {
+  background: linear-gradient(150deg, rgb(247 240 222 / 94%), rgb(234 222 192 / 92%));
+  border: 1px solid rgb(138 106 46 / 50%);
+  border-radius: 6px;
+  color: #33271a;
+  box-shadow: 0 2px 6px rgb(20 12 4 / 35%);
+}
+.drawer-sheet-grimoire .spellbook-card:hover:not(:disabled) {
+  background: linear-gradient(150deg, rgb(252 246 230 / 97%), rgb(240 228 198 / 95%));
+  border-color: #8a6a2e;
+}
+.drawer-sheet-grimoire .spellbook-card-icon {
+  border: 1px solid rgb(184 138 46 / 55%);
+  box-shadow: inset 0 0 0 1px rgb(255 250 236 / 30%);
+}
+.drawer-sheet-grimoire .spellbook-card-name { color: #2e2212; font-family: var(--font-display); }
+.drawer-sheet-grimoire .spellbook-card-desc { color: #5a4226; }
+
+/* Rune stat tags. */
+.drawer-sheet-grimoire .spellbook-stat {
+  background: rgb(106 74 36 / 12%);
+  border: 1px solid rgb(106 74 36 / 26%);
+}
+.drawer-sheet-grimoire .spellbook-stat-mana { color: #2f5a76; }
+.drawer-sheet-grimoire .spellbook-stat-cd { color: #6a4a24; }
+.drawer-sheet-grimoire .spellbook-stat-target { color: #5a4226; }
+.drawer-sheet-grimoire .spellbook-stat-level { color: #6e4e16; }
+.drawer-sheet-grimoire .spellbook-stat-class { color: #5a4a86; }
+.drawer-sheet-grimoire .spellbook-stat-pet { color: #3c6e3a; }
+
+/* Quickbar bind button → a gilt wax seal. */
+.drawer-sheet-grimoire .spellbook-assign-btn {
+  background: linear-gradient(180deg, #e6c46a, #c79a3a);
+  border: 1px solid #8a6a2e;
+  color: #2e2212;
+}
+.drawer-sheet-grimoire .spellbook-assign-btn:hover { filter: brightness(1.08); }
+.drawer-sheet-grimoire .spellbook-assign-btn-active { box-shadow: 0 0 0 2px rgb(138 106 46 / 45%); }
+
+.drawer-sheet-grimoire .spellbook-slot-picker {
+  background: linear-gradient(180deg, #f2e8ce, #e3d4ad);
+  border: 1px solid rgb(106 74 36 / 45%);
+}
+.drawer-sheet-grimoire .spellbook-slot-pick { color: #3a2c1a; }
+.drawer-sheet-grimoire .spellbook-slot-pick:hover { background: rgb(230 196 106 / 40%); }
+
+.drawer-sheet-grimoire .spellbook-empty { color: #5a4226; }
+.drawer-sheet-grimoire .spellbook-empty-hint { color: #7a5e38; }
+
+/* One page on narrow screens. */
+@media (max-width: 640px) {
+  .drawer-sheet-grimoire .spellbook-grid {
+    grid-template-columns: 1fr;
+    background: none;
+  }
+}
+
+/* Writing-desk drawer (terminal): a dark wood desk; you pen commands on a
+   parchment slip with a quill at hand. */
+.drawer-sheet.drawer-sheet-desk {
+  background-image:
+    var(--skin-bg, none),
+    repeating-linear-gradient(92deg, rgb(0 0 0 / 0%) 0 46px, rgb(20 12 4 / 16%) 46px 48px),
+    linear-gradient(168deg, #5a3f22, #402c16 62%, #311f0e);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 8px solid #2e1f10;
+  border-top: 8px solid #2e1f10;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%), inset 0 0 28px rgb(20 12 4 / 45%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-desk {
+    border: 8px solid #2e1f10;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%), inset 0 0 28px rgb(20 12 4 / 45%);
+  }
+}
+
+.drawer-sheet-desk .drawer-header { border-bottom: 1px solid rgb(240 225 190 / 18%); }
+.drawer-sheet-desk .drawer-title { color: #f4e6c6; text-shadow: 0 1px 3px rgb(16 8 2 / 70%); }
+.drawer-sheet-desk .drawer-close { border-color: rgb(240 225 190 / 38%); background: rgb(24 14 6 / 50%); color: #f0e3c4; }
+.drawer-sheet-desk .drawer-close:hover { background: rgb(48 30 14 / 70%); color: #fff; }
+.drawer-sheet-desk .drawer-handle { background: rgb(240 225 190 / 38%); }
+
+/* The desk surface centers a parchment slip. */
+.terminal-desk {
+  align-items: center;
+  justify-content: center;
+  padding: 24px 8px;
+}
+
+.terminal-desk-slip {
+  position: relative;
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 26px 26px 22px;
+  border-radius: 4px;
+  background: linear-gradient(160deg, #f3ead2, #e6d8b4);
+  border: 1px solid rgb(106 74 36 / 40%);
+  box-shadow: 0 10px 26px rgb(8 6 2 / 50%), inset 0 1px 0 rgb(255 252 244 / 55%);
+  /* A faint baseline ruling so it reads as writing paper. */
+  background-image:
+    linear-gradient(160deg, #f3ead2, #e6d8b4),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgb(106 74 36 / 12%) 31px 32px);
+  transform: rotate(-0.6deg);
+}
+
+.terminal-desk .terminal-overlay-note {
+  margin: 0;
+  color: #5a4226;
+  font-style: italic;
+  font-size: 0.96rem;
+}
+
+/* The command line reads as an ink line on the slip. */
+.terminal-desk .canvas-command {
+  background: rgb(255 252 244 / 35%);
+  border: none;
+  border-bottom: 2px solid rgb(106 74 36 / 50%);
+  border-radius: 4px 4px 0 0;
+  padding: 6px 8px 8px 4px;
+}
+
+.terminal-desk .canvas-command-input {
+  color: #2e2212;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.terminal-desk .canvas-command-input::placeholder { color: rgb(106 74 36 / 55%); }
+
+.terminal-desk .canvas-command-send {
+  width: 34px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #6a4e28, #4c3617);
+  border: 1px solid #c8a24a;
+  color: #f6e8c2;
+}
+
+.terminal-desk .canvas-command-send:hover { filter: brightness(1.08); }
+
+/* The quill, resting over the slip's corner. */
+.terminal-desk-quill {
+  position: absolute;
+  top: -22px;
+  right: 8px;
+  font-size: 3.4rem;
+  line-height: 1;
+  color: #3a2c1a;
+  transform: rotate(28deg);
+  text-shadow: 0 2px 4px rgb(8 6 2 / 45%);
+  pointer-events: none;
+}
+
+.terminal-desk-quill-img {
+  display: block;
+  width: 96px;
+  height: auto;
+  /* Cancel the container tilt so a supplied quill asset shows as drawn. */
+  transform: rotate(-28deg);
+  filter: drop-shadow(0 3px 6px rgb(8 6 2 / 50%));
+}
+
+/* Letters drawer (mail): warm parchment correspondence with wax-seal accents. */
+.drawer-sheet.drawer-sheet-mail {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(130% 90% at 50% -6%, rgb(150 110 64 / 14%), transparent 60%),
+    linear-gradient(170deg, #efe4c8, #e2d2ad 70%, #d6c596);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 7px solid #5a4128;
+  border-top: 7px solid #5a4128;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%), inset 0 0 0 1px rgb(40 26 12 / 40%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-mail {
+    border: 7px solid #5a4128;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%), inset 0 0 0 1px rgb(40 26 12 / 40%);
+  }
+  .drawer-sheet:has(.mail-panel) { height: min(640px, 86vh); max-height: 86vh; }
+}
+
+.drawer-sheet-mail .drawer-header { border-bottom: 1px solid rgb(90 60 30 / 30%); }
+.drawer-sheet-mail .drawer-title { color: #2e2212; text-shadow: 0 0 6px rgb(247 240 222 / 80%), 0 1px 0 rgb(255 250 236 / 55%); }
+.drawer-sheet-mail .drawer-close { border-color: rgb(90 60 30 / 50%); background: rgb(90 60 30 / 16%); color: #4a3014; }
+.drawer-sheet-mail .drawer-close:hover { background: rgb(90 60 30 / 30%); color: #2a1c08; }
+.drawer-sheet-mail .drawer-handle { background: rgb(90 60 30 / 40%); }
+
+/* ── Mail contents (scoped to the letters drawer) ── */
+.drawer-sheet-mail .mail-panel { height: 100%; min-height: 0; overflow-y: auto; }
+.drawer-sheet-mail .empty-note { color: #5a4226; }
+.drawer-sheet-mail .mail-empty-icon { color: #6a4a24; opacity: 0.5; }
+
+/* Inbox toolbar. */
+.drawer-sheet-mail .mail-inbox-label { color: #3a2c1a; font-family: var(--font-display); }
+.drawer-sheet-mail .mail-unread-badge {
+  background: linear-gradient(180deg, #c0563f, #9a3f2c);
+  color: #f7e9da;
+}
+.drawer-sheet-mail .mail-compose-button {
+  background: linear-gradient(180deg, #e6c46a, #c79a3a);
+  border: 1px solid #8a6a2e;
+  color: #2e2212;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.drawer-sheet-mail .mail-compose-button:hover { filter: brightness(1.08); color: #2e2212; }
+
+/* Inbox letters. */
+.drawer-sheet-mail .mail-inbox-item { border-bottom: 1px solid rgb(106 74 36 / 22%); }
+.drawer-sheet-mail .mail-inbox-item.mail-unread { background: rgb(230 196 106 / 18%); }
+.drawer-sheet-mail .mail-inbox-row { color: #5a4226; }
+.drawer-sheet-mail .mail-inbox-row:hover { color: #2e2212; box-shadow: inset 0 0 12px rgb(106 74 36 / 8%); }
+/* Unread marker reads as a little red wax seal. */
+.drawer-sheet-mail .mail-inbox-marker { color: #b5482f; }
+.drawer-sheet-mail .mail-inbox-from { color: #2e2212; font-family: var(--font-display); }
+.drawer-sheet-mail .mail-inbox-preview { color: #6a4a24; opacity: 1; }
+.drawer-sheet-mail .mail-inbox-date { color: #7a5e38; opacity: 1; }
+.drawer-sheet-mail .mail-delete-button { color: #6a4a24; }
+.drawer-sheet-mail .mail-delete-button:hover,
+.drawer-sheet-mail .mail-delete-confirm { color: #a8442f; }
+
+/* Reading a letter. */
+.drawer-sheet-mail .mail-message-title { color: #2e2212; font-family: var(--font-display); }
+.drawer-sheet-mail .mail-message-header .mail-message-date { color: #6a4a24; opacity: 1; }
+.drawer-sheet-mail .mail-message-body {
+  color: #33271a;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.drawer-sheet-mail .mail-back-button {
+  background: rgb(90 60 30 / 12%);
+  border: 1px solid rgb(106 74 36 / 45%);
+  color: #5a4226;
+}
+.drawer-sheet-mail .mail-back-button:hover { background: rgb(90 60 30 / 22%); color: #2e2212; }
+
+/* Compose a letter — parchment fields, wax-seal Send. */
+.drawer-sheet-mail .mail-compose-label { color: #5a4226; font-family: var(--font-display); }
+.drawer-sheet-mail .mail-compose-input,
+.drawer-sheet-mail .mail-compose-textarea {
+  background: rgb(255 250 236 / 75%);
+  border: 1px solid rgb(106 74 36 / 45%);
+  color: #2e2212;
+}
+.drawer-sheet-mail .mail-compose-input::placeholder,
+.drawer-sheet-mail .mail-compose-textarea::placeholder { color: rgb(106 74 36 / 55%); }
+.drawer-sheet-mail .mail-compose-send {
+  background: linear-gradient(180deg, #c0563f, #9a3f2c);
+  color: #f7e9da;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.drawer-sheet-mail .mail-compose-abort {
+  border: 1px solid rgb(106 74 36 / 45%);
+  color: #6a4a24;
+}
+.drawer-sheet-mail .mail-compose-abort:hover { color: #2e2212; border-color: #8a6a2e; }
+
 /* Hide legacy desktop chrome that no longer renders */
 .app-shell,
 .top-banner,
@@ -18809,5 +21098,678 @@ html:has(.game-shell),
   .flee-toast,
   .flee-toast.flee-toast-closing {
     animation-duration: 80ms;
+  }
+}
+
+/* ── Monster manual / bestiary page ──────────────────────────────────────
+   A parchment "field manual" entry for a clicked creature. Tier classes
+   (.consider-tier-*) set --consider-accent, reused for the badge + win bar.
+   Optional monster_manual_bg art layers over the procedural parchment. */
+.mm-backdrop {
+  position: fixed;
+  inset: 0;
+  /* Above the drawer (121) so an item card can be examined from the inventory
+     satchel; below the video (250) and image-preview (260) it can spawn. */
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(8 6 12 / 58%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: mm-fade 160ms var(--ease-out-soft);
+}
+
+.mm-card {
+  position: relative;
+  display: flex;
+  gap: 18px;
+  width: min(760px, 95vw);
+  max-height: 90vh;
+  padding: 22px;
+  color: #3a2c1a;
+  border-radius: 14px;
+  border: 2px solid #4a3825;
+  background-image: var(--mm-bg, none), linear-gradient(155deg, #ece2c8, #ddcba6);
+  background-size: 100% 100%, auto;
+  background-repeat: no-repeat, no-repeat;
+  box-shadow: 0 22px 48px rgb(0 0 0 / 55%), inset 0 0 0 1px rgb(255 248 230 / 35%), inset 0 2px 18px rgb(120 92 56 / 25%);
+  animation: mm-pop 200ms var(--ease-out-soft);
+}
+
+/* Framed creature art (left). */
+.mm-figure {
+  position: relative;
+  flex: 0 0 40%;
+  max-width: 300px;
+  margin: 0;
+  align-self: stretch;
+  min-height: 0;
+}
+
+.mm-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #4a3825;
+  box-shadow: inset 0 0 0 2px rgb(255 248 230 / 40%), 0 4px 12px rgb(0 0 0 / 35%);
+  background: #2a3242;
+}
+
+.mm-image-empty {
+  min-height: 220px;
+}
+
+.mm-zoom {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  border-radius: 50%;
+  border: 1px solid #4a3825;
+  background: rgb(236 226 200 / 92%);
+  color: #3a2c1a;
+  cursor: pointer;
+  transition: transform 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
+}
+
+.mm-zoom:hover {
+  transform: scale(1.08);
+  background: #f3ead2;
+}
+
+/* Manual entry (right). */
+.mm-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.mm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid rgb(74 56 37 / 35%);
+  padding-bottom: 8px;
+}
+
+.mm-titles { min-width: 0; }
+
+.mm-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #2e2212;
+}
+
+.mm-meta {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: #6b5640;
+  letter-spacing: 0.02em;
+}
+
+.mm-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2e2212;
+  background: color-mix(in srgb, var(--consider-accent, #d9c89a) 70%, #f3ead2);
+  border: 1px solid color-mix(in srgb, var(--consider-accent, #d9c89a) 60%, #4a3825);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+}
+
+/* Description — the hero of the entry. */
+.mm-desc {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  color: #3a2c1a;
+}
+
+.mm-desc::first-letter {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 0.8;
+  float: left;
+  margin: 4px 8px 0 0;
+  color: #6a4a24;
+}
+
+/* Threat assessment — compact, de-emphasized. */
+.mm-assess {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgb(74 56 37 / 30%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mm-winbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #5a4628;
+}
+
+.mm-winbar-label { flex: 0 0 auto; letter-spacing: 0.03em; }
+.mm-winbar-pct { flex: 0 0 auto; font-weight: 700; color: #4a3410; }
+
+.mm-winbar-track {
+  flex: 1 1 auto;
+  height: 7px;
+  border-radius: 4px;
+  background: rgb(74 56 37 / 22%);
+  border: 1px solid rgb(74 56 37 / 30%);
+  overflow: hidden;
+}
+
+.mm-winbar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--consider-accent, #d9c89a);
+}
+
+.mm-stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 14px;
+}
+
+.mm-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.mm-stat dt { color: #5a4226; text-transform: uppercase; letter-spacing: 0.02em; }
+.mm-stat dd { margin: 0; font-weight: 700; color: #3a2c1a; font-variant-numeric: tabular-nums; }
+
+.mm-assessing {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgb(74 56 37 / 30%);
+  font-style: italic;
+  color: #7a6044;
+}
+
+/* Actions. */
+/* Bare icon buttons (kiosk-style) with a small pill label — no jewel box. */
+.mm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 18px;
+  padding-top: 8px;
+}
+
+.mm-action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: transform 150ms var(--ease-out-soft);
+}
+
+.mm-action:hover { transform: translateY(-2px); }
+
+.mm-action-icon {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgb(40 28 14 / 45%));
+  transition: filter 150ms var(--ease-out-soft);
+}
+
+.mm-action:hover .mm-action-icon { filter: drop-shadow(0 0 12px rgb(230 196 106 / 75%)); }
+
+.mm-action-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  font-size: 3.4rem;
+  line-height: 1;
+  color: #5a4226;
+  filter: drop-shadow(0 1px 2px rgb(40 28 14 / 35%));
+}
+
+.mm-action-label {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 10px;
+  border-radius: 999px;
+  color: #f0e6cf;
+  background: rgb(58 44 26 / 85%);
+}
+
+/* Skinned: lay content onto the monster_manual_bg frame's painted regions
+   (arched art frame left, ribbon top-right, parchment text area right). The
+   region percentages are eyeballed off the 1280x853 art and easy to nudge. */
+.mm-card-skinned {
+  display: block;
+  width: min(840px, 96vw);
+  max-height: none;
+  aspect-ratio: 1280 / 853;
+  padding: 0;
+  border: none;
+  background-size: 100% 100%, auto;
+  box-shadow: 0 22px 48px rgb(0 0 0 / 55%);
+}
+
+/* Creature in the arched vine frame — transparent, fit inside (no dark box).
+   Sized to nearly fill the vine area; object-fit keeps the art undistorted. */
+.mm-card-skinned .mm-figure {
+  position: absolute;
+  left: 9%;
+  top: 11%;
+  width: 34%;
+  height: 76%;
+  flex: none;
+  max-width: none;
+}
+
+.mm-card-skinned .mm-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.mm-card-skinned .mm-zoom { right: 2px; bottom: 2px; }
+
+/* Difficulty as tiny text on the painted ribbon. */
+.mm-card-skinned .mm-badge {
+  left: 85.5%;
+  top: 9.5%;
+  right: auto;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: #5a4326;
+}
+
+/* Manual text written directly on the parchment (no panel/box) so it reads as
+   part of the journal. */
+.mm-card-skinned .mm-content {
+  position: absolute;
+  left: 45%;
+  top: 12%;
+  right: 5.5%;
+  bottom: 8%;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* Only the stats get a soft, feathered wash — they sit over the busy bottom
+   botanicals. Blurred pseudo = no hard box edges. */
+.mm-card-skinned .mm-assess {
+  position: relative;
+  border-top-color: rgb(74 56 37 / 35%);
+}
+
+.mm-card-skinned .mm-assess::before {
+  content: "";
+  position: absolute;
+  inset: -2px -6px -4px -6px;
+  z-index: -1;
+  border-radius: 12px;
+  background: rgb(247 240 222 / 88%);
+  filter: blur(6px);
+}
+
+.mm-card-skinned .mm-desc {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Slightly larger + heavier, with a light halo, so it reads on the parchment. */
+  font-size: 1.12rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #33271a;
+  text-shadow: 0 1px 1px rgb(255 250 236 / 55%);
+  /* Slim sepia scrollbar so a long entry still reads like a journal page. */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(106 74 36 / 55%) transparent;
+}
+
+.mm-card-skinned .mm-desc::-webkit-scrollbar { width: 6px; }
+.mm-card-skinned .mm-desc::-webkit-scrollbar-track { background: transparent; }
+.mm-card-skinned .mm-desc::-webkit-scrollbar-thumb {
+  background: rgb(106 74 36 / 50%);
+  border-radius: 3px;
+}
+
+.mm-card-skinned .mm-assess { margin-top: 0; }
+.mm-card-skinned .mm-assessing { margin-top: 0; }
+
+/* In-manual views (quest / dialogue) + the back link. */
+.mm-back {
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: #6a4a24;
+  cursor: pointer;
+}
+
+.mm-back:hover { color: #2e2212; }
+
+.mm-view {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* overflow-y:auto would otherwise promote overflow-x to auto; an explicit
+     hidden stops a hover translate from flashing a horizontal scrollbar (which
+     reflows the text and makes the choices jump). */
+  overflow-x: hidden;
+}
+
+.mm-card-skinned .mm-view {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(106 74 36 / 55%) transparent;
+}
+
+.mm-card-skinned .mm-view::-webkit-scrollbar { width: 6px; }
+.mm-card-skinned .mm-view::-webkit-scrollbar-track { background: transparent; }
+.mm-card-skinned .mm-view::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 50%); border-radius: 3px; }
+
+/* Fill the view so the NPC's line scrolls on its own while the choices stay
+   pinned at the bottom (a long description never pushes them around). */
+.mm-dialog { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
+
+.mm-dialog-text {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin: 0;
+  font-size: 1.04rem;
+  line-height: 1.5;
+  font-style: italic;
+  color: #33271a;
+  text-shadow: 0 1px 1px rgb(255 250 236 / 50%);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(106 74 36 / 55%) transparent;
+}
+
+.mm-dialog-text::-webkit-scrollbar { width: 6px; }
+.mm-dialog-text::-webkit-scrollbar-track { background: transparent; }
+.mm-dialog-text::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 50%); border-radius: 3px; }
+
+.mm-dialog-waiting { flex: 0 0 auto; opacity: 0.6; font-style: normal; }
+
+.mm-dialog-choices {
+  flex: 0 0 auto;
+  list-style: none;
+  margin: 0;
+  /* Slim side padding so the hover translate never clips a button's border. */
+  padding: 0 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mm-dialog-choice {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  padding: 9px 14px 9px 30px;
+  border-radius: 8px;
+  border: 1px solid rgb(74 56 37 / 35%);
+  background: rgb(247 240 222 / 68%);
+  color: #33271a;
+  font-family: var(--font-display);
+  font-size: 0.97rem;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.mm-dialog-choice::before {
+  content: "❧";
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a6a2e;
+  font-size: 0.95em;
+  transition: transform 150ms var(--ease-out-soft);
+}
+
+.mm-dialog-choice:hover {
+  background: rgb(250 244 228 / 95%);
+  border-color: #8a6a2e;
+  transform: translateX(2px);
+}
+
+.mm-dialog-choice:hover::before { transform: translateY(-50%) scale(1.18); }
+
+.mm-dialog-end { margin: 0; font-style: italic; color: #7a6044; }
+
+/* Quest offers reskinned for parchment (the drawer version stays dark). */
+.mm-view .quest-offer-panel { display: flex; flex-direction: column; gap: 12px; }
+.mm-view .quest-offer-section { display: flex; flex-direction: column; gap: 8px; }
+.mm-view .quest-offer-section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6a4a24;
+}
+.mm-view .quest-available-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+/* No box — the offer reads directly on the parchment like the dialogue. */
+.mm-view .quest-available-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  animation: none;
+}
+.mm-view .quest-available-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mm-view .quest-available-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #2e2212;
+}
+/* Level shown as a tiny pill next to the quest name. */
+.mm-view .quest-available-level-pill {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 9px;
+  border-radius: 999px;
+  color: #5a4226;
+  background: rgb(184 138 46 / 20%);
+  border: 1px solid rgb(184 138 46 / 45%);
+}
+.mm-view .quest-available-description { margin: 0; font-size: 0.92rem; line-height: 1.45; color: #3a2c1a; }
+.mm-view .quest-available-objectives { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.mm-view .quest-available-objective { display: flex; align-items: center; gap: 6px; font-size: 0.84rem; color: #5a4628; }
+.mm-view .quest-available-obj-icon { color: #6a4a24; }
+.mm-view .quest-available-obj-count { margin-left: auto; font-variant-numeric: tabular-nums; color: #6a4a24; }
+.mm-view .quest-available-rewards { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.82rem; }
+.mm-view .quest-available-rewards-label { color: #6a4a24; font-weight: 600; }
+.mm-view .quest-reward-xp,
+.mm-view .quest-reward-gold,
+.mm-view .quest-reward-item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #5a4226;
+  background: rgb(184 138 46 / 18%);
+  border: 1px solid rgb(184 138 46 / 40%);
+}
+.mm-view .quest-reward-item-icon { color: #b88a2e; margin-right: 2px; }
+.mm-view .quest-offer-requirements { display: flex; flex-wrap: wrap; gap: 6px; }
+.mm-view .quest-offer-requirement {
+  font-size: 0.76rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #5a4226;
+  background: rgb(106 74 36 / 12%);
+  border: 1px solid rgb(106 74 36 / 35%);
+}
+.mm-view .quest-offer-locked { margin: 0; font-size: 0.82rem; font-style: italic; color: #9a5a3a; }
+/* Accept / Turn In styled like the dialogue choices: parchment chip with a ❧
+   flourish, so quests and conversations feel like the same journal. */
+.mm-view .quest-accept-button {
+  position: relative;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 9px 16px 9px 32px;
+  border-radius: 8px;
+  border: 1px solid rgb(74 56 37 / 35%);
+  background: rgb(247 240 222 / 68%);
+  color: #33271a;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.97rem;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+.mm-view .quest-accept-button::before {
+  content: "❧";
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a6a2e;
+  font-size: 0.95em;
+  transition: transform 150ms var(--ease-out-soft);
+}
+.mm-view .quest-accept-button:hover:not(:disabled) {
+  background: rgb(250 244 228 / 95%);
+  border-color: #8a6a2e;
+  transform: translateX(2px);
+}
+.mm-view .quest-accept-button:hover:not(:disabled)::before { transform: translateY(-50%) scale(1.18); }
+.mm-view .quest-accept-button:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Turn In carries a warm gold tint to read as the rewarding action. */
+.mm-view .quest-turnin-button {
+  border-color: rgb(138 106 46 / 55%);
+  background: rgb(230 196 106 / 38%);
+  color: #2e2212;
+}
+.mm-view .quest-turnin-button:hover:not(:disabled) {
+  background: rgb(230 196 106 / 60%);
+  border-color: #8a6a2e;
+}
+.mm-view .quest-offer-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.mm-view .quest-empty-icon { color: #b88a2e; font-size: 1.4rem; }
+.mm-view .empty-note { color: #6a4a24; }
+
+@keyframes mm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mm-pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-backdrop, .mm-card { animation: none; }
+}
+
+/* Desktop dismisses via click-away; the mobile ✕ is hidden there. */
+.mm-close-x { display: none; }
+
+/* Narrow screens: stack art over the entry. The landscape frame art can't
+   shrink usefully, so the skinned card reverts to the stacked procedural
+   layout (art dropped to avoid distortion). */
+@media (max-width: 640px) {
+  .mm-card { flex-direction: column; gap: 12px; padding: 16px; max-height: 90vh; overflow-y: auto; }
+
+  /* A tall card can fill the screen, leaving no backdrop to tap — pin a fixed
+     close button so there's always a way out. */
+  .mm-close-x {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    right: 12px;
+    z-index: 210;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgb(255 246 230 / 45%);
+    background: rgb(30 18 8 / 82%);
+    color: #f4e9cb;
+    font-size: 1.05rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .mm-figure { flex: 0 0 auto; max-width: none; width: 100%; }
+  .mm-image { height: 200px; }
+  .mm-content { overflow-y: visible; }
+  .mm-name { font-size: 1.4rem; }
+  .mm-stats { grid-template-columns: repeat(2, 1fr); }
+
+  .mm-card-skinned {
+    display: flex;
+    aspect-ratio: auto;
+    width: min(420px, 92vw);
+    height: auto;
+    padding: 16px;
+    border: 2px solid #4a3825;
+    background-image: linear-gradient(155deg, #ece2c8, #ddcba6);
+  }
+  .mm-card-skinned .mm-figure { position: static; width: 100%; height: 200px; }
+  .mm-card-skinned .mm-content { position: static; inset: auto; overflow: visible; }
+  .mm-card-skinned .mm-desc { overflow-y: visible; }
+  .mm-card-skinned .mm-badge {
+    top: 14px; right: 14px; left: auto; transform: none;
+    padding: 4px 10px; font-size: 0.7rem; color: #2e2212;
+    background: color-mix(in srgb, var(--consider-accent, #d9c89a) 70%, #f3ead2);
+    border: 1px solid #4a3825;
   }
 }
