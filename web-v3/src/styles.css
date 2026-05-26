@@ -20310,10 +20310,11 @@ html:has(.game-shell),
 .drawer-sheet-grimoire .spellbook { height: 100%; min-height: 0; }
 
 .drawer-sheet-grimoire .spellbook-header { align-items: baseline; }
-/* Header sits directly on the (possibly busy) page art — give it a cream halo. */
-.drawer-sheet-grimoire .spellbook-class { color: #2e2212; text-shadow: 0 0 7px rgb(247 240 222 / 85%), 0 1px 0 rgb(255 250 236 / 60%); }
-.drawer-sheet-grimoire .spellbook-level { color: #5a4226; text-shadow: 0 0 6px rgb(247 240 222 / 85%); }
-.drawer-sheet-grimoire .spellbook-hint { color: #5a4226; text-shadow: 0 0 6px rgb(247 240 222 / 80%); }
+/* Header text sits directly on the page — dark ink + a faint cream halo so it
+   reads on both clean and busy parchment. */
+.drawer-sheet-grimoire .spellbook-class { color: #281b0d; text-shadow: 0 0 6px rgb(247 240 222 / 80%), 0 1px 0 rgb(255 250 236 / 55%); }
+.drawer-sheet-grimoire .spellbook-level { color: #463218; text-shadow: 0 0 6px rgb(247 240 222 / 80%); }
+.drawer-sheet-grimoire .spellbook-hint { color: #463218; text-shadow: 0 0 6px rgb(247 240 222 / 75%); }
 
 .drawer-sheet-grimoire .spellbook-sp-badge {
   background: rgb(106 74 36 / 16%);
@@ -20334,7 +20335,7 @@ html:has(.game-shell),
 }
 .drawer-sheet-grimoire .spellbook-search-input::placeholder { color: rgb(106 74 36 / 60%); }
 .drawer-sheet-grimoire .spellbook-search-input:focus { border-color: #8a6a2e; }
-.drawer-sheet-grimoire .spellbook-result-count { color: #7a5e38; }
+.drawer-sheet-grimoire .spellbook-result-count { color: #5a4226; text-shadow: 0 0 5px rgb(247 240 222 / 75%); }
 
 /* Category tabs + class pills → ink ribbons. */
 .drawer-sheet-grimoire .spellbook-tab,
