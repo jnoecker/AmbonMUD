@@ -58,11 +58,13 @@ const adminTokenSsmParameterName =
   app.node.tryGetContext('adminTokenSsmParameterName') as string | undefined;
 
 // When true, deploys a Postgres 16 container on the same EC2 host and
-// switches the app to POSTGRES persistence. Demo-only — data lives on the
-// root EBS and is destroyed on instance replacement. Toggle with
-// --context postgresSidecar=false (or omit) to revert to YAML.
+// switches the app to POSTGRES persistence. Opt-in — default is YAML, which
+// is the right state for the always-on demo. The sidecar's data lives on the
+// root EBS and is destroyed on instance replacement, so it's only for demo
+// load testing. Enable with --context postgresSidecar=true; omit (or any
+// other value) to keep YAML.
 const postgresSidecar =
-  (app.node.tryGetContext('postgresSidecar') as string | undefined) !== 'false';
+  (app.node.tryGetContext('postgresSidecar') as string | undefined) === 'true';
 
 // JVM flags passed to the container as JAVA_OPTS. The default targets the
 // t4g.medium (4 GB RAM) demo instance: 2 GB fixed heap + Generational ZGC for

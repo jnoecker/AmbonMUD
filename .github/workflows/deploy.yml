@@ -33,6 +33,11 @@ on:
           - hobby
           - moderate
           - production
+      postgres-sidecar:
+        description: "Run a Postgres sidecar on the ec2 demo (load testing only — data is wiped on instance replacement; default is YAML)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -92,6 +97,7 @@ jobs:
           [ -n "${{ vars.HOSTNAME }}" ] && ARGS="$ARGS --context hostname=${{ vars.HOSTNAME }}"
           [ -n "${{ vars.DOMAIN }}" ]   && ARGS="$ARGS --context domain=${{ vars.DOMAIN }}"
           [ -n "$ADMIN_TOKEN_SSM_PARAM" ] && ARGS="$ARGS --context adminTokenSsmParameterName=$ADMIN_TOKEN_SSM_PARAM"
+          [ "${{ inputs.postgres-sidecar }}" = "true" ] && ARGS="$ARGS --context postgresSidecar=true"
           npx cdk deploy --all --require-approval never $ARGS
 
   deploy-production:

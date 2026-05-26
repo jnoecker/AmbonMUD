@@ -100,10 +100,11 @@ export interface Ec2StackProps extends StackProps {
   readonly javaOpts?: string;
   /**
    * When true, launches a Postgres 16 container on the same host and flips
-   * the app to AMBONMUD_PERSISTENCE_BACKEND=POSTGRES. Data lives in a named
-   * docker volume (`pgdata`) on the root EBS, so it survives container
-   * recycles but **not** instance replacement. Intended for demo load
-   * testing — use RDS for anything you care about keeping.
+   * the app to AMBONMUD_PERSISTENCE_BACKEND=POSTGRES. Opt-in (default is YAML
+   * persistence). Data lives in a named docker volume (`pgdata`) on the root
+   * EBS, so it survives container recycles but **not** instance replacement.
+   * Intended for demo load testing — use RDS for anything you care about
+   * keeping.
    *
    * A random DB password is generated once at first boot and stashed in
    * /etc/ambonmud/db.env (root-only, 0600). Both containers read it via
