@@ -6967,11 +6967,11 @@ body {
   width: auto;
   height: auto;
   padding: 0 10px;
-  border: 1px solid rgb(92 64 32 / 65%);
+  border: 1px solid rgb(24 15 6 / 72%);
   border-radius: 999px;
-  /* Raised tan "leather button" so dark icons read against the tag. */
-  background: linear-gradient(180deg, #d9c498, #c2ac7c);
-  color: #382a18;
+  /* Dark leather button so the pale icon art pops against it. */
+  background: linear-gradient(180deg, #4a3620, #322310);
+  color: #f0e2c4;
   cursor: pointer;
   white-space: nowrap;
   font: inherit;
@@ -6979,7 +6979,7 @@ body {
   font-weight: 700;
   line-height: 1;
   flex: 0 0 auto;
-  box-shadow: 0 1px 2px rgb(40 28 14 / 28%), inset 0 1px 0 rgb(255 250 236 / 45%);
+  box-shadow: 0 1px 2px rgb(12 7 2 / 45%), inset 0 1px 0 rgb(150 112 60 / 28%);
   transition:
     background 140ms var(--ease-out-soft),
     color 140ms var(--ease-out-soft),
@@ -6989,11 +6989,11 @@ body {
 }
 
 .inventory-action-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #e6d4ab, #d3bd8e);
-  color: #2e2212;
-  border-color: #8a6a2e;
+  background: linear-gradient(180deg, #5b4329, #433015);
+  color: #fff;
+  border-color: #b88a3e;
   transform: translateY(-1px);
-  box-shadow: 0 4px 9px rgb(40 28 14 / 32%);
+  box-shadow: 0 4px 10px rgb(12 7 2 / 52%);
 }
 
 .inventory-action-btn:disabled {
@@ -7012,25 +7012,26 @@ body {
 }
 
 .inventory-action-btn-active {
-  background: linear-gradient(180deg, #efd9a0, #e0c279);
-  border-color: #8a6a2e;
-  color: #2e2212;
+  background: linear-gradient(180deg, #6a4e28, #4c3617);
+  border-color: #c8a24a;
+  color: #f6e8c2;
 }
 
+/* Glyph-fallback tints (the registered art is an image and ignores color). */
 .inventory-action-examine {
-  color: #4a3620;
+  color: #ecdcb0;
 }
 
 .inventory-action-use {
-  color: #245268;
+  color: #bcd6e8;
 }
 
 .inventory-action-equip {
-  color: #2c5430;
+  color: #bfe0b8;
 }
 
 .inventory-action-put {
-  color: #6e4e16;
+  color: #ecd9a4;
 }
 
 /* First-time onboarding hint: pulse the Equip action on wearable items until
