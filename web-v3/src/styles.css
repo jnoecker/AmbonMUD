@@ -20023,6 +20023,252 @@ html:has(.game-shell),
   background: rgb(90 65 40 / 40%);
 }
 
+/* Cork quest board: speckled cork in a wood frame; quests pinned as notes. */
+.drawer-sheet.drawer-sheet-questboard {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(circle at 18% 28%, rgb(120 86 48 / 22%) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 64% 58%, rgb(96 68 38 / 20%) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 42% 82%, rgb(120 86 48 / 18%) 0 1.5px, transparent 2.5px),
+    linear-gradient(168deg, #cdac79, #bb9a63);
+  background-size: cover, 84px 84px, 116px 116px, 64px 64px, auto;
+  border: 9px solid #5e4226;
+  border-top: 9px solid #5e4226;
+  box-shadow:
+    0 -16px 48px rgb(8 10 18 / 60%),
+    inset 0 0 0 2px rgb(40 26 12 / 45%),
+    inset 0 0 28px rgb(70 46 22 / 35%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-questboard {
+    border: 9px solid #5e4226;
+    box-shadow:
+      0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%),
+      inset 0 0 0 2px rgb(40 26 12 / 45%), inset 0 0 28px rgb(70 46 22 / 35%);
+  }
+  /* Pin the board so the tabs stay put and notes scroll within. */
+  .drawer-sheet:has(.quest-panel) { height: min(680px, 88vh); max-height: 88vh; }
+}
+
+.drawer-sheet-questboard .drawer-header { border-bottom: 1px solid rgb(60 40 20 / 35%); }
+.drawer-sheet-questboard .drawer-title { color: #3a2810; text-shadow: 0 1px 0 rgb(255 246 224 / 45%); }
+.drawer-sheet-questboard .drawer-close { border-color: rgb(60 40 20 / 50%); background: rgb(60 40 20 / 18%); color: #4a3014; }
+.drawer-sheet-questboard .drawer-close:hover { background: rgb(60 40 20 / 30%); color: #2a1c08; }
+.drawer-sheet-questboard .drawer-handle { background: rgb(60 40 20 / 40%); }
+
+/* ── Quest board contents (scoped so shared .quest-* stays put elsewhere) ── */
+.drawer-sheet-questboard .quest-panel {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Wooden section tabs pinned along the top. */
+.drawer-sheet-questboard .quest-tab-bar {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  border-bottom: none;
+  gap: 6px;
+  padding: 0;
+}
+
+.drawer-sheet-questboard .quest-tab {
+  padding: 6px 14px;
+  border: 1px solid rgb(60 40 20 / 55%);
+  border-radius: 8px;
+  border-bottom: 1px solid rgb(60 40 20 / 55%);
+  background: linear-gradient(180deg, rgb(70 48 26 / 80%), rgb(50 34 18 / 80%));
+  color: #e6d2a4;
+  font-family: var(--font-display);
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 16%);
+}
+
+.drawer-sheet-questboard .quest-tab:hover { color: #fbf0d4; }
+
+.drawer-sheet-questboard .quest-tab-active {
+  background: linear-gradient(180deg, #e7d6b0, #d2bb8c);
+  border-color: #8a6a2e;
+  color: #382a18;
+}
+
+.drawer-sheet-questboard .quest-tab-badge {
+  background: rgb(60 40 20 / 35%);
+  color: #f0dca8;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.drawer-sheet-questboard .quest-tab-active .quest-tab-badge { background: rgb(138 106 46 / 35%); color: #3a2810; }
+.drawer-sheet-questboard .quest-tab-badge-available { background: rgb(96 132 86 / 45%); color: #1f3a1c; }
+
+/* The active section scrolls; the notes sit on the cork. */
+.drawer-sheet-questboard .quest-panel-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 4px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(60 40 20 / 55%) transparent;
+}
+
+.drawer-sheet-questboard .quest-panel-section::-webkit-scrollbar { width: 8px; }
+.drawer-sheet-questboard .quest-panel-section::-webkit-scrollbar-thumb { background: rgb(60 40 20 / 45%); border-radius: 999px; }
+
+/* Pinned parchment notes — active items + available cards + timed/bounty/global. */
+.drawer-sheet-questboard .quest-item,
+.drawer-sheet-questboard .quest-available-card,
+.drawer-sheet-questboard .quest-timed-row,
+.drawer-sheet-questboard .quest-bounty-card,
+.drawer-sheet-questboard .quest-global-card {
+  position: relative;
+  background: linear-gradient(155deg, #f2e8ce, #e3d4ad);
+  border: 1px solid rgb(106 74 36 / 45%);
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgb(20 12 4 / 35%);
+  color: #33271a;
+}
+
+/* The pushpin. */
+.drawer-sheet-questboard .quest-item::before,
+.drawer-sheet-questboard .quest-available-card::before,
+.drawer-sheet-questboard .quest-timed-row::before,
+.drawer-sheet-questboard .quest-bounty-card::before,
+.drawer-sheet-questboard .quest-global-card::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #f0a0a0, #b5482f 70%);
+  box-shadow: 0 2px 3px rgb(20 12 4 / 50%);
+  z-index: 2;
+}
+
+/* A gentle tacked-up tilt; straighten on hover/expand for reading. */
+.drawer-sheet-questboard .quest-list { display: flex; flex-direction: column; gap: 14px; }
+.drawer-sheet-questboard .quest-available-list { display: flex; flex-direction: column; gap: 16px; }
+.drawer-sheet-questboard .quest-list > .quest-item:nth-child(odd) { transform: rotate(-0.8deg); }
+.drawer-sheet-questboard .quest-list > .quest-item:nth-child(even) { transform: rotate(0.7deg); }
+.drawer-sheet-questboard .quest-available-list > li:nth-child(odd) { transform: rotate(0.7deg); }
+.drawer-sheet-questboard .quest-available-list > li:nth-child(even) { transform: rotate(-0.8deg); }
+.drawer-sheet-questboard .quest-item:hover,
+.drawer-sheet-questboard .quest-item-expanded,
+.drawer-sheet-questboard .quest-available-card:hover { transform: rotate(0deg) !important; }
+.drawer-sheet-questboard .quest-item,
+.drawer-sheet-questboard .quest-available-card { transition: transform 160ms var(--ease-out-soft), box-shadow 160ms var(--ease-out-soft); }
+
+/* Ink text + warm accents on the notes. */
+.drawer-sheet-questboard .quest-item-header,
+.drawer-sheet-questboard .quest-available-name { color: #2e2212; }
+.drawer-sheet-questboard .quest-item-header:hover { background: rgb(106 74 36 / 8%); }
+.drawer-sheet-questboard .quest-item-name { font-family: var(--font-display); font-weight: 700; }
+.drawer-sheet-questboard .quest-item-description,
+.drawer-sheet-questboard .quest-available-description { color: #5a4226; }
+.drawer-sheet-questboard .quest-objective-text { color: #3a2c1a; }
+.drawer-sheet-questboard .quest-objective-count,
+.drawer-sheet-questboard .quest-available-obj-count,
+.drawer-sheet-questboard .quest-item-progress-badge {
+  color: #6a4a24;
+  background: rgb(106 74 36 / 14%);
+}
+.drawer-sheet-questboard .quest-objective-check,
+.drawer-sheet-questboard .quest-available-obj-icon,
+.drawer-sheet-questboard .quest-item-icon { color: #8a6a2e; }
+.drawer-sheet-questboard .quest-available-icon { color: #8a6a2e; }
+.drawer-sheet-questboard .quest-objective-done .quest-objective-text { color: #3c6e3a; }
+
+/* Meters → parchment track, mossy fill. */
+.drawer-sheet-questboard .meter-track { background: rgb(60 40 20 / 22%); }
+.drawer-sheet-questboard .meter-fill-quest { background: linear-gradient(90deg, #8a6a2e, #b88a3e); }
+.drawer-sheet-questboard .meter-fill-quest-done { background: linear-gradient(90deg, #4c7a44, #6fa05e); }
+
+/* Reward chips. */
+.drawer-sheet-questboard .quest-reward-xp,
+.drawer-sheet-questboard .quest-reward-gold,
+.drawer-sheet-questboard .quest-reward-item {
+  color: #6e4e16;
+  background: rgb(230 196 106 / 34%);
+  border: 1px solid rgb(184 138 46 / 50%);
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+.drawer-sheet-questboard .quest-available-rewards-label { color: #6a4a24; }
+
+/* Status badges. */
+.drawer-sheet-questboard .quest-item-ready-badge {
+  background: rgb(96 132 86 / 30%);
+  border: 1px solid rgb(60 110 58 / 50%);
+  color: #2f5226;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+/* Action buttons. */
+.drawer-sheet-questboard .quest-turnin-button,
+.drawer-sheet-questboard .quest-accept-button {
+  background: linear-gradient(180deg, #e6c46a, #c79a3a);
+  border: 1px solid #8a6a2e;
+  color: #2e2212;
+}
+.drawer-sheet-questboard .quest-abandon-button {
+  background: rgb(60 40 20 / 12%);
+  border: 1px solid rgb(138 62 44 / 45%);
+  color: #8a3a2a;
+}
+.drawer-sheet-questboard .quest-load-button {
+  background: linear-gradient(180deg, #e6c46a, #c79a3a);
+  border: 1px solid #8a6a2e;
+  color: #2e2212;
+}
+
+/* Daily / weekly rows + bounty/global cards: pad for the pushpin and tint. */
+.drawer-sheet-questboard .quest-timed-row,
+.drawer-sheet-questboard .quest-bounty-card,
+.drawer-sheet-questboard .quest-global-card { padding-top: 14px; }
+.drawer-sheet-questboard .quest-timed-list { display: flex; flex-direction: column; gap: 14px; }
+.drawer-sheet-questboard .quest-timed-description,
+.drawer-sheet-questboard .quest-bounty-title,
+.drawer-sheet-questboard .quest-global-title { color: #2e2212; }
+.drawer-sheet-questboard .quest-timed-type-badge {
+  background: rgb(106 74 36 / 16%);
+  border: 1px solid rgb(106 74 36 / 35%);
+  color: #6a4a24;
+}
+.drawer-sheet-questboard .quest-bounty-icon,
+.drawer-sheet-questboard .quest-global-icon,
+.drawer-sheet-questboard .quest-streak-icon { color: #8a6a2e; }
+.drawer-sheet-questboard .quest-timed-done-check { color: #3c6e3a; }
+
+/* Streak banner + notifications as little tacked slips. */
+.drawer-sheet-questboard .quest-streak-banner {
+  background: rgb(230 196 106 / 28%);
+  border: 1px solid rgb(184 138 46 / 45%);
+  color: #6e4e16;
+}
+.drawer-sheet-questboard .quest-notifications { flex: 0 0 auto; }
+.drawer-sheet-questboard .quest-notification {
+  background: linear-gradient(155deg, #f2e8ce, #e3d4ad);
+  border: 1px solid rgb(106 74 36 / 45%);
+  color: #33271a;
+  box-shadow: 0 2px 6px rgb(20 12 4 / 30%);
+}
+.drawer-sheet-questboard .quest-notification-text strong { color: #2e2212; }
+.drawer-sheet-questboard .quest-notification-icon { color: #8a6a2e; }
+.drawer-sheet-questboard .quest-notification-dismiss { color: #6a4a24; }
+
+/* Empty states + their drifting icon read in ink. */
+.drawer-sheet-questboard .quest-empty-state .empty-note { color: #5a4226; }
+.drawer-sheet-questboard .quest-empty-icon { color: #6a4a24; opacity: 0.5; }
+
 /* Hide legacy desktop chrome that no longer renders */
 .app-shell,
 .top-banner,

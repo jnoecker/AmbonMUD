@@ -906,7 +906,9 @@ function App() {
                   ? "trainer"
                   : drawerPanel === "combatlog"
                     ? "journal"
-                    : "default"
+                    : drawerPanel === "quests"
+                      ? "questboard"
+                      : "default"
         }
         skinBg={
           drawerPanel === "inventory"
@@ -919,7 +921,9 @@ function App() {
                   ? state.serverAssets["trainer_bg"]
                   : drawerPanel === "combatlog"
                     ? state.serverAssets["journal_bg"]
-                    : undefined
+                    : drawerPanel === "quests"
+                      ? state.serverAssets["quest_board_bg"]
+                      : undefined
         }
       >
         {drawerPanel === "character" && (
