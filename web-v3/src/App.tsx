@@ -895,13 +895,23 @@ function App() {
         open={state.activePopout !== null}
         title={drawerTitle}
         onClose={closeDrawer}
-        variant={drawerPanel === "inventory" ? "satchel" : drawerPanel === "equipment" ? "equipment" : "default"}
+        variant={
+          drawerPanel === "inventory"
+            ? "satchel"
+            : drawerPanel === "equipment"
+              ? "equipment"
+              : drawerPanel === "shop"
+                ? "shop"
+                : "default"
+        }
         skinBg={
           drawerPanel === "inventory"
             ? state.serverAssets["inventory_satchel_bg"]
             : drawerPanel === "equipment"
               ? state.serverAssets["equipment_bg"]
-              : undefined
+              : drawerPanel === "shop"
+                ? state.serverAssets["shop_bg"]
+                : undefined
         }
       >
         {drawerPanel === "character" && (

@@ -2683,13 +2683,15 @@ body {
 }
 
 .shop-popout-wallet {
+  align-self: flex-start;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgb(190 168 115 / 12%), rgb(190 168 115 / 6%));
-  border: 1px solid rgb(190 168 115 / 22%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(60 43 24 / 75%), rgb(44 31 17 / 75%));
+  border: 1px solid rgb(200 162 74 / 50%);
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 22%);
 }
 
 .shop-popout-gold-icon {
@@ -2704,13 +2706,13 @@ body {
 .shop-popout-gold-amount {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--color-primary-soft-gold);
+  color: #f0d48a;
 }
 
 .shop-popout-gold-label {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #d8c39a;
 }
 
 .shop-popout-tabs {
@@ -2720,12 +2722,13 @@ body {
 
 .shop-popout-tab {
   flex: 1;
-  padding: 8px 12px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.88rem;
+  padding: 9px 12px;
+  border: 1px solid rgb(120 86 44 / 55%);
+  border-radius: 10px;
+  background: rgb(30 20 10 / 35%);
+  color: #d8c39a;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   text-align: center;
@@ -2733,13 +2736,15 @@ body {
 }
 
 .shop-popout-tab:hover {
-  background: rgb(255 255 255 / 6%);
+  background: rgb(60 43 24 / 45%);
+  color: #f2e6cc;
 }
 
 .shop-popout-tab-active {
-  background: var(--surface-chip);
-  color: var(--text-primary);
-  border-color: var(--glass-edge);
+  background: linear-gradient(180deg, #e7d6b0, #d2bb8c);
+  color: #382a18;
+  border-color: #8a6a2e;
+  box-shadow: inset 0 1px 0 rgb(255 250 236 / 50%);
 }
 
 .shop-popout-list {
@@ -2758,22 +2763,23 @@ body {
 
 .shop-popout-list::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgb(90 82 120 / 70%), rgb(70 90 110 / 65%));
+  background: linear-gradient(180deg, rgb(150 110 56 / 75%), rgb(110 80 40 / 70%));
 }
 
 .shop-popout-card {
   display: flex;
   flex-direction: column;
   padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 4%);
-  border: 1px solid var(--line-faint);
-  transition: background 0.15s, border-color 0.15s;
+  border-radius: 10px;
+  background: linear-gradient(155deg, #ece0c4, #dccaa3);
+  border: 1px solid rgb(106 74 36 / 50%);
+  box-shadow: 0 1px 2px rgb(20 12 4 / 30%), inset 0 1px 0 rgb(255 251 240 / 45%);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .shop-popout-card:hover {
-  background: rgb(255 255 255 / 7%);
-  border-color: var(--line-soft);
+  border-color: #8a6a2e;
+  box-shadow: 0 3px 8px rgb(20 12 4 / 38%), inset 0 1px 0 rgb(255 251 240 / 55%);
 }
 
 .shop-popout-card-unaffordable {
@@ -2796,12 +2802,14 @@ body {
 }
 
 .shop-popout-thumb {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: contain;
   flex-shrink: 0;
-  border: 1px solid var(--line-faint);
+  border: 1px solid rgb(106 74 36 / 45%);
+  background: rgb(54 39 22 / 12%);
+  padding: 2px;
 }
 
 .shop-popout-card-text {
@@ -2812,14 +2820,15 @@ body {
 }
 
 .shop-popout-card-name {
-  font-size: 0.92rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #2e2212;
 }
 
 .shop-popout-card-desc {
   font-size: 0.78rem;
-  color: var(--text-secondary);
+  color: #5a4226;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -2833,13 +2842,13 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: var(--color-primary-pale-blue);
+  color: #6a4a24;
   font-weight: 600;
 }
 
 .shop-stat-slot {
-  color: var(--color-primary-pale-blue);
-  opacity: 0.8;
+  color: #6a4a24;
+  opacity: 0.85;
   text-transform: capitalize;
 }
 
@@ -2847,21 +2856,22 @@ body {
   display: inline-flex;
   align-items: baseline;
   gap: 4px;
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--color-primary-pale-blue) 12%, transparent);
-  color: var(--text-primary);
+  background: rgb(106 74 36 / 14%);
+  border: 1px solid rgb(106 74 36 / 30%);
+  color: #2e2212;
   white-space: nowrap;
 }
 
 .shop-stat-chip-label {
   font-weight: 600;
-  color: var(--color-primary-pale-blue);
+  color: #6a4a24;
 }
 
 .shop-stat-chip-value {
   font-weight: 700;
-  color: var(--text-primary);
+  color: #2e2212;
 }
 
 .shop-stat-delta {
@@ -2872,18 +2882,18 @@ body {
 }
 
 .shop-stat-delta-up {
-  color: var(--color-primary-moss-green);
-  background: color-mix(in srgb, var(--color-primary-moss-green) 18%, transparent);
+  color: #2c5430;
+  background: rgb(96 132 86 / 24%);
 }
 
 .shop-stat-delta-down {
-  color: var(--color-primary-dusty-rose);
-  background: color-mix(in srgb, var(--color-primary-dusty-rose) 18%, transparent);
+  color: #8a4a5e;
+  background: rgb(170 96 116 / 22%);
 }
 
 .shop-stat-delta-same {
-  color: var(--text-tertiary);
-  opacity: 0.75;
+  color: #7a5e38;
+  opacity: 0.8;
 }
 
 .shop-popout-card-action {
@@ -2895,18 +2905,29 @@ body {
 }
 
 .shop-popout-card-price {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--color-primary-soft-gold);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #5a3e16;
   white-space: nowrap;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgb(230 196 106 / 45%);
+  border: 1px solid rgb(184 138 46 / 60%);
 }
 
 .shop-popout-card-price-cant {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-disabled);
+  color: #9a5a3a;
   font-style: italic;
   white-space: nowrap;
+}
+
+/* Unaffordable price reads red. */
+.shop-popout-card-unaffordable .shop-popout-card-price {
+  color: #8a3a2a;
+  background: rgb(170 80 58 / 22%);
+  border-color: rgb(138 62 44 / 50%);
 }
 
 .shop-popout .soft-button.shop-popout-buy-btn,
@@ -19789,6 +19810,61 @@ html:has(.game-shell),
 .drawer-sheet-equipment .drawer-title {
   color: #ece6d2;
   text-shadow: 0 1px 2px rgb(8 6 16 / 55%);
+}
+
+/* Merchant-cart drawer (shop): a wood-grain body under a striped market awning
+   with a scalloped valance. The buy/sell list sits inside as the goods. */
+.drawer-sheet.drawer-sheet-shop {
+  background-image:
+    var(--skin-bg, none),
+    repeating-linear-gradient(91deg, rgb(58 40 22 / 0%) 0 38px, rgb(28 18 8 / 22%) 38px 40px),
+    linear-gradient(176deg, #573f24, #3d2a16 60%, #2f2011);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 2px solid #271a0d;
+  border-top: 2px solid #271a0d;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-shop {
+    border: 2px solid #271a0d;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%);
+  }
+}
+
+/* The header becomes the striped awning, scalloped along its bottom edge. */
+.drawer-sheet-shop .drawer-header {
+  position: relative;
+  padding: 12px 16px 24px;
+  border-bottom: none;
+  background: repeating-linear-gradient(90deg, #b5573a 0 32px, #c2904a 32px 64px);
+  box-shadow: inset 0 -2px 6px rgb(40 20 8 / 35%);
+  -webkit-mask:
+    radial-gradient(15px 15px at 50% 0, #000 98%, transparent 100%) 0 100% / 32px 15px repeat-x,
+    linear-gradient(#000, #000) top / 100% calc(100% - 14px) no-repeat;
+  mask:
+    radial-gradient(15px 15px at 50% 0, #000 98%, transparent 100%) 0 100% / 32px 15px repeat-x,
+    linear-gradient(#000, #000) top / 100% calc(100% - 14px) no-repeat;
+}
+
+.drawer-sheet-shop .drawer-title {
+  color: #fff6e6;
+  text-shadow: 0 1px 3px rgb(40 16 6 / 70%);
+}
+
+.drawer-sheet-shop .drawer-close {
+  border-color: rgb(255 246 230 / 45%);
+  background: rgb(60 30 16 / 70%);
+  color: #fff6e6;
+}
+
+.drawer-sheet-shop .drawer-close:hover {
+  background: rgb(80 42 22 / 85%);
+}
+
+.drawer-sheet-shop .drawer-handle {
+  background: rgb(255 246 230 / 55%);
 }
 
 /* Hide legacy desktop chrome that no longer renders */

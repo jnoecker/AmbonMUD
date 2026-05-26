@@ -6,9 +6,9 @@ interface DrawerProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
-  /** Visual skin for the sheet chrome: warm leather (satchel) or a dim
-   *  dressing-chamber (equipment). */
-  variant?: "default" | "satchel" | "equipment";
+  /** Visual skin for the sheet chrome: warm leather (satchel), a dim
+   *  dressing-chamber (equipment), or a merchant cart (shop). */
+  variant?: "default" | "satchel" | "equipment" | "shop";
   /** Optional background art for a skinned variant (server asset). */
   skinBg?: string;
 }
