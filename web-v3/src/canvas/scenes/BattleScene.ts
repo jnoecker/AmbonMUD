@@ -458,14 +458,38 @@ export class BattleScene {
     }
 
     this.playerLabel.x = playerDrawX;
-    this.playerLabel.y = playerDrawY + playerSize / 2 + 6;
 
-    // Player HP/MP bars are now shown in the top vitals strip, so the battle
-    // scene no longer draws them under the player sprite (they collided with the
-    // bottom-center skill bar). The enemy HP bar is still drawn below.
+    // Player HP / Mana bars under the sprite (mirrors the enemy + party). Drawn
+    // at the stable player position (not the shake offset) so they don't jitter,
+    // and well above the bottom skill dock since the player sits on the left.
+    const pv = gameStateRef.current.vitals;
     this.playerHpBar.clear();
     this.playerManaBar.clear();
-    this.playerHpText.text = "";
+    const pBarW = 168;
+    const pHpH = 12;
+    const pManaH = 9;
+    const pGap = 3;
+    const pBarX = playerPos.x - pBarW / 2;
+    const pBarTop = playerPos.y + playerSize / 2 + 22;
+    const hpPct = percent(pv.hp, pv.maxHp);
+    this.playerHpBar.roundRect(pBarX, pBarTop, pBarW, pHpH, 2).fill(HP_BG_COLOR);
+    if (hpPct > 0) {
+      // Green → amber → red so danger reads at a glance for flee timing.
+      const hpCol = hpPct > 50 ? 0x6fae5e : hpPct > 25 ? 0xd9a23a : 0xcf5446;
+      this.playerHpBar.roundRect(pBarX, pBarTop, pBarW * hpPct / 100, pHpH, 2).fill(hpCol);
+    }
+    const hasMana = pv.maxMana > 0;
+    const pManaTop = pBarTop + pHpH + pGap;
+    if (hasMana) {
+      const manaPct = percent(pv.mana, pv.maxMana);
+      this.playerManaBar.roundRect(pBarX, pManaTop, pBarW, pManaH, 2).fill(HP_BG_COLOR);
+      if (manaPct > 0) this.playerManaBar.roundRect(pBarX, pManaTop, pBarW * manaPct / 100, pManaH, 2).fill(0x5f93d8);
+    }
+    const pBarsBottom = pBarTop + pHpH + (hasMana ? pGap + pManaH : 0);
+    this.playerHpText.text = `${Math.max(0, pv.hp)}/${pv.maxHp}`;
+    this.playerHpText.x = playerPos.x;
+    this.playerHpText.y = pBarsBottom + 3;
+    this.playerLabel.y = pBarsBottom + 22;
 
     // Status effects above the player
     this.statusEffects.update(gameStateRef.current.effects, playerDrawX, playerDrawY - playerSize / 2 - 28);
