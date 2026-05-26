@@ -10981,106 +10981,131 @@ body {
   overflow-y: auto;
 }
 
-.trainer-header {
+/* Wooden class plaque ("the topic"), centered; click to swap class. */
+.trainer-sign-wrap {
+  position: relative;
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border-subtle);
+  justify-content: center;
+  margin: 2px 0 12px;
 }
 
-.trainer-name {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.trainer-class {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-left: auto;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Multi-class trainer tabs */
-.trainer-class-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.trainer-class-tab {
-  appearance: none;
-  border: 1px solid var(--line-soft);
-  background: linear-gradient(135deg, rgb(60 70 100 / 88%), rgb(46 56 80 / 84%));
-  color: var(--text-primary);
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  cursor: pointer;
+.trainer-class-sign {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: transform 0.12s var(--ease-out-soft), background 0.15s, border-color 0.15s;
+  gap: 10px;
+  padding: 12px 30px;
+  border-radius: 12px;
+  border: 1px solid #2b1c0e;
+  background:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 0%) 0 7px, rgb(40 24 10 / 12%) 7px 8px),
+    linear-gradient(180deg, #7a5a32, #573e24);
+  color: #f6ecd2;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgb(20 10 2 / 70%);
+  box-shadow:
+    0 3px 8px rgb(8 6 2 / 50%),
+    inset 0 1px 0 rgb(216 186 122 / 30%),
+    inset 0 -2px 4px rgb(20 10 2 / 45%);
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out-soft), filter 140ms var(--ease-out-soft);
 }
 
-.trainer-class-tab:hover {
-  transform: translateY(-1px);
-  border-color: rgb(168 151 210 / 50%);
+.trainer-class-sign:disabled { cursor: default; }
+.trainer-class-sign:not(:disabled):hover { filter: brightness(1.07); transform: translateY(-1px); }
+
+.trainer-class-sign-caret {
+  font-size: 0.8rem;
+  color: #e6c46a;
+  transition: transform 160ms var(--ease-out-soft);
 }
 
-.trainer-class-tab:active {
-  transform: scale(0.96);
+.trainer-class-sign-open .trainer-class-sign-caret { transform: rotate(180deg); }
+
+/* Class switch / multiclass menu, hung below the plaque. */
+.trainer-class-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: max-content;
+  min-width: 200px;
+  max-width: 92%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid #2b1c0e;
+  background: linear-gradient(180deg, #6a4c2c, #49331f);
+  box-shadow: 0 14px 30px rgb(8 6 2 / 55%);
+  animation: mm-pop 160ms var(--ease-out-soft);
 }
 
-.trainer-class-tab-active {
-  background: linear-gradient(135deg, rgb(168 151 210 / 92%), rgb(140 174 201 / 86%));
-  border-color: rgb(216 197 232 / 60%);
-  color: var(--text-bright);
-}
-
-.trainer-class-tab-locked {
-  opacity: 0.78;
-}
-
-.trainer-class-tab-lock {
-  font-size: 0.7rem;
-  opacity: 0.85;
-}
-
-.trainer-skill-points {
+.trainer-class-opt {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: rgb(255 255 255 / 4%);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #f2e6cc;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms var(--ease-out-soft);
 }
 
-.trainer-sp-label {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
+.trainer-class-opt-name { flex: 1 1 auto; }
+.trainer-class-opt:hover { background: rgb(255 246 230 / 12%); }
+.trainer-class-opt-active { background: rgb(230 196 106 / 22%); }
+.trainer-class-opt-check { color: #e6c46a; font-weight: 800; }
+.trainer-class-opt-locked { color: #cbbb9f; }
+.trainer-class-opt-lock { font-size: 0.78rem; }
+
+.trainer-class-menu-hint {
+  margin: 4px 6px 2px;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: rgb(242 230 204 / 70%);
 }
 
-.trainer-sp-value {
-  margin-left: auto;
-  font-size: 1.1rem;
+/* Skill points, chalked onto the board. */
+.trainer-sp-chalk {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: rgb(238 240 230 / 55%);
+  font-family: var(--font-display);
+}
+
+.trainer-sp-chalk-value {
+  font-size: 1.55rem;
   font-weight: 700;
-  min-width: 1.5ch;
-  text-align: right;
+  color: rgb(238 240 230 / 60%);
+  text-shadow: 0 0 8px rgb(238 240 230 / 22%);
 }
 
-.trainer-sp-available {
-  color: var(--accent-gold);
+.trainer-sp-chalk-label {
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
 }
 
-.trainer-sp-empty {
-  color: var(--text-tertiary);
+.trainer-sp-chalk-has { color: rgb(238 240 230 / 82%); }
+
+.trainer-sp-chalk-has .trainer-sp-chalk-value {
+  color: #fff7d8;
+  text-shadow: 0 0 10px rgb(255 235 150 / 40%);
 }
 
 .trainer-empty {
@@ -11285,6 +11310,73 @@ body {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* ===== Chalkboard overrides — lessons written on the slate ============= */
+.trainer-empty {
+  color: rgb(238 240 230 / 70%);
+  font-style: italic;
+}
+
+/* Lessons: chalk text on the slate, separated by faint chalk rules. */
+.trainer-ability-row {
+  background: rgb(255 255 255 / 3%);
+  border: none;
+  border-bottom: 1px dashed rgb(238 240 230 / 16%);
+  border-radius: 0;
+}
+
+.trainer-ability-row:hover { background: rgb(255 255 255 / 6%); }
+
+.trainer-ability-icon {
+  background: rgb(8 12 10 / 35%);
+  border: 1px solid rgb(238 240 230 / 16%);
+}
+
+.trainer-ability-name { color: #f1f3ea; }
+.trainer-ability-desc { color: rgb(218 222 208 / 82%); }
+
+.trainer-meta-tag {
+  background: transparent;
+  border: 1px solid rgb(238 240 230 / 26%);
+  color: rgb(230 234 220 / 85%);
+}
+
+.trainer-meta-tag-lock {
+  border-color: rgb(230 196 106 / 50%);
+  color: #ecd9a4;
+  background: transparent;
+}
+
+.trainer-ability-lock-reason { color: rgb(218 222 208 / 70%); }
+.trainer-ability-row-locked { opacity: 0.5; background: rgb(255 255 255 / 2%); }
+.trainer-ability-row-locked .trainer-ability-name,
+.trainer-ability-row-locked .trainer-ability-desc { color: rgb(218 222 208 / 70%); }
+
+/* Learn / unlock — small wooden buttons so the action pops off the slate. */
+.trainer-learn-btn,
+.trainer-unlock-btn {
+  background: linear-gradient(180deg, #6a4e28, #4c3617);
+  color: #f6e8c2;
+  border: 1px solid #c8a24a;
+  box-shadow: inset 0 1px 0 rgb(216 186 122 / 22%);
+}
+
+.trainer-learn-btn:hover:not(:disabled),
+.trainer-unlock-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #7a5a30, #573e1c);
+  filter: brightness(1.05);
+}
+
+.trainer-learn-btn-disabled,
+.trainer-unlock-btn-disabled {
+  background: rgb(238 240 230 / 8%);
+  color: rgb(238 240 230 / 45%);
+  border: 1px solid rgb(238 240 230 / 16%);
+  box-shadow: none;
+}
+
+.trainer-locked-msg { color: #f1f3ea; }
+.trainer-locked-req { color: rgb(218 222 208 / 80%); }
 
 .entity-detail-dialog {
   width: min(380px, 100%);
@@ -19880,6 +19972,40 @@ html:has(.game-shell),
 
 .drawer-sheet-shop .drawer-handle {
   background: rgb(255 246 230 / 55%);
+}
+
+/* Chalkboard drawer (trainer): a slate board inside a wood frame; lessons are
+   chalked on, the class sits on a wooden plaque. */
+.drawer-sheet.drawer-sheet-trainer {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(120% 80% at 50% 12%, rgb(255 255 255 / 5%), transparent 60%),
+    linear-gradient(170deg, #33453c, #26342d 60%, #1f2a25);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 7px solid #543c22;
+  border-top: 7px solid #543c22;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%), inset 0 0 0 1px rgb(20 14 6 / 60%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-trainer {
+    border: 7px solid #543c22;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%), inset 0 0 0 1px rgb(20 14 6 / 60%);
+  }
+}
+
+.drawer-sheet-trainer .drawer-header {
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+}
+
+.drawer-sheet-trainer .drawer-title {
+  color: #eef0e6;
+  text-shadow: 0 1px 2px rgb(8 12 10 / 60%);
+}
+
+.drawer-sheet-trainer .drawer-handle {
+  background: rgb(238 240 230 / 45%);
 }
 
 /* Hide legacy desktop chrome that no longer renders */

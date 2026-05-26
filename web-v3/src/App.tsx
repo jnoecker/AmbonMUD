@@ -823,7 +823,7 @@ function App() {
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
       case "features": return "World Features";
-      case "trainer": return state.trainer?.name ?? "Trainer";
+      case "trainer": return "Trainer";
       case "mail": return "Mail";
       case "crafting": return "Crafting";
       case "housing": return "Housing";
@@ -841,7 +841,7 @@ function App() {
       case "map": return "World Map";
       default: return "";
     }
-  }, [drawerPanel, state.shop?.name, state.trainer?.name, state.room.title]);
+  }, [drawerPanel, state.shop?.name, state.room.title]);
 
   const sortedExits = useMemo(() => sortExits(state.room.exits), [state.room.exits]);
   const questMarkerCount = useMemo(
@@ -902,7 +902,9 @@ function App() {
               ? "equipment"
               : drawerPanel === "shop"
                 ? "shop"
-                : "default"
+                : drawerPanel === "trainer"
+                  ? "trainer"
+                  : "default"
         }
         skinBg={
           drawerPanel === "inventory"
@@ -911,7 +913,9 @@ function App() {
               ? state.serverAssets["equipment_bg"]
               : drawerPanel === "shop"
                 ? state.serverAssets["shop_bg"]
-                : undefined
+                : drawerPanel === "trainer"
+                  ? state.serverAssets["trainer_bg"]
+                  : undefined
         }
       >
         {drawerPanel === "character" && (
