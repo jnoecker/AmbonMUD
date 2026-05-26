@@ -89,27 +89,22 @@ export function CombatLogPanel({ messages, onClearLog }: CombatLogPanelProps) {
   const hiddenCount = messages.length - visible.length;
 
   return (
-    <article className="subpanel combat-log-panel" aria-label="Combat log">
+    <article className="combat-log-panel" aria-label="Battle journal">
       <header className="combat-log-panel-header">
-        <div className="combat-log-panel-title">
-          <h3>Combat Log</h3>
-          <span className="combat-log-panel-count">
-            {hasMessages
-              ? `${messages.length} entr${messages.length === 1 ? "y" : "ies"}${hiddenCount > 0 ? ` (${hiddenCount} filtered)` : ""}`
-              : "No activity yet"}
-          </span>
-        </div>
-        <div className="combat-log-panel-actions">
-          <button
-            type="button"
-            className="soft-button combat-log-panel-clear"
-            onClick={onClearLog}
-            disabled={!hasMessages}
-            aria-label="Clear combat log"
-          >
-            Clear
-          </button>
-        </div>
+        <span className="combat-log-panel-count">
+          {hasMessages
+            ? `${messages.length} entr${messages.length === 1 ? "y" : "ies"}${hiddenCount > 0 ? ` · ${hiddenCount} filtered` : ""}`
+            : "No activity yet"}
+        </span>
+        <button
+          type="button"
+          className="combat-log-panel-clear"
+          onClick={onClearLog}
+          disabled={!hasMessages}
+          aria-label="Clear the journal"
+        >
+          Clear
+        </button>
       </header>
 
       <div className="combat-log-panel-filters" role="group" aria-label="Combat log filters">

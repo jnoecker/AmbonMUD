@@ -834,7 +834,7 @@ function App() {
       case "auction": return "Auction House";
       case "dungeon": return "Dungeon";
       case "lottery": return "Lottery";
-      case "combatlog": return "Combat Log";
+      case "combatlog": return "Battle Journal";
       case "help": return "Command Reference";
       case "terminal": return "Terminal";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
@@ -904,7 +904,9 @@ function App() {
                 ? "shop"
                 : drawerPanel === "trainer"
                   ? "trainer"
-                  : "default"
+                  : drawerPanel === "combatlog"
+                    ? "journal"
+                    : "default"
         }
         skinBg={
           drawerPanel === "inventory"
@@ -915,7 +917,9 @@ function App() {
                 ? state.serverAssets["shop_bg"]
                 : drawerPanel === "trainer"
                   ? state.serverAssets["trainer_bg"]
-                  : undefined
+                  : drawerPanel === "combatlog"
+                    ? state.serverAssets["journal_bg"]
+                    : undefined
         }
       >
         {drawerPanel === "character" && (

@@ -14064,38 +14064,38 @@ body {
 
 .combat-log-panel-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2, 8px);
   flex-wrap: wrap;
 }
 
-.combat-log-panel-title {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.combat-log-panel-title h3 {
-  margin: 0;
-  font-family: var(--font-display, inherit);
-  font-size: 1.1rem;
-  color: var(--text-heading, var(--color-text));
-}
-
 .combat-log-panel-count {
-  font-size: 0.8rem;
-  color: var(--text-muted, rgb(200 208 224 / 70%));
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #6a4a24;
 }
 
-.combat-log-panel-actions {
-  display: flex;
-  gap: var(--space-1, 4px);
+.combat-log-panel-clear {
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: 1px solid rgb(106 74 36 / 50%);
+  background: rgb(90 65 40 / 14%);
+  color: #5a4128;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.combat-log-panel-clear:hover:not([disabled]) {
+  background: rgb(90 65 40 / 26%);
+  color: #2e2212;
 }
 
 .combat-log-panel-clear[disabled] {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -14106,123 +14106,99 @@ body {
 }
 
 .combat-log-panel-chip {
-  border: 1px solid rgb(140 174 201 / 28%);
-  background: rgb(22 27 41 / 55%);
-  color: var(--text-muted, rgb(200 208 224 / 78%));
-  border-radius: var(--radius-sm, 6px);
-  padding: 3px 10px;
-  font-size: 0.78rem;
-  font-family: inherit;
+  border: 1px solid rgb(106 74 36 / 38%);
+  background: rgb(90 65 40 / 8%);
+  color: rgb(106 74 36 / 70%);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  /* Filtered-out chips read as crossed off the ledger. */
+  text-decoration: line-through;
+  text-decoration-color: rgb(106 74 36 / 45%);
+  opacity: 0.6;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
 }
 
-.combat-log-panel-chip:hover {
-  background: rgb(38 48 70 / 70%);
-  color: var(--color-text, #e0e0e0);
-}
+.combat-log-panel-chip:hover { opacity: 0.85; }
 
 .combat-log-panel-chip-on {
-  background: rgb(60 80 120 / 60%);
-  color: var(--color-text, #e0e0e0);
-  border-color: rgb(140 174 201 / 50%);
+  opacity: 1;
+  text-decoration: none;
+  background: rgb(90 65 40 / 14%);
 }
 
-.combat-log-panel-chip-on.combat-log-panel-chip-damage {
-  color: var(--color-damage, #d4888a);
-  border-color: var(--color-damage, #d4888a);
-}
-
-.combat-log-panel-chip-on.combat-log-panel-chip-heal {
-  color: var(--color-heal, #8abf8a);
-  border-color: var(--color-heal, #8abf8a);
-}
-
-.combat-log-panel-chip-on.combat-log-panel-chip-dodge {
-  color: var(--color-dodge, #d9c8a1);
-  border-color: var(--color-dodge, #d9c8a1);
-}
-
+.combat-log-panel-chip-on.combat-log-panel-chip-damage { color: #a8442f; border-color: rgb(168 68 47 / 55%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-heal { color: #3c6e3a; border-color: rgb(60 110 58 / 55%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-dodge { color: #2f6a6a; border-color: rgb(47 106 106 / 55%); }
 .combat-log-panel-chip-on.combat-log-panel-chip-kill,
-.combat-log-panel-chip-on.combat-log-panel-chip-xp {
-  color: var(--color-xp, #bea873);
-  border-color: var(--color-xp, #bea873);
-}
-
-.combat-log-panel-chip-on.combat-log-panel-chip-info {
-  color: var(--color-info, #8caec9);
-  border-color: var(--color-info, #8caec9);
-}
-
-.combat-log-panel-chip-on.combat-log-panel-chip-error {
-  color: var(--color-error, #e8a0a0);
-  border-color: var(--color-error, #e8a0a0);
-}
+.combat-log-panel-chip-on.combat-log-panel-chip-xp { color: #8a6a1e; border-color: rgb(138 106 30 / 55%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-info { color: #5a4226; border-color: rgb(90 66 38 / 55%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-error { color: #8a3a2a; border-color: rgb(138 58 42 / 55%); }
 
 .combat-log-panel-empty {
   text-align: center;
-  padding: var(--space-4, 16px);
-  color: var(--text-muted, rgb(200 208 224 / 70%));
-  border: 1px dashed rgb(140 174 201 / 20%);
-  border-radius: var(--radius-md, 8px);
-  background: rgb(18 22 34 / 35%);
+  padding: var(--space-5, 24px) var(--space-4, 16px);
+  color: #6a4a24;
 }
 
 .combat-log-panel-empty p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-style: italic;
 }
 
 .combat-log-panel-empty-hint {
   margin-top: var(--space-1, 4px) !important;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   opacity: 0.8;
 }
 
+/* Ruled journal page: a red margin rule with the timestamps written to its
+   left and the events in ink to its right. No inner box. */
 .combat-log-panel-scroll {
   flex: 1 1 auto;
-  min-height: 200px;
-  max-height: 60vh;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 6px 4px;
-  background: rgb(12 14 24 / 35%);
-  border-radius: var(--radius-md, 8px);
-  border: 1px solid rgb(140 174 201 / 14%);
+  /* Vertical red margin line at the time/text gutter. */
+  background: linear-gradient(90deg, transparent 0 70px, rgb(168 68 47 / 30%) 70px 71.5px, transparent 71.5px);
   scrollbar-width: thin;
+  scrollbar-color: rgb(106 74 36 / 50%) transparent;
 }
 
 .combat-log-panel-scroll::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
 }
 
 .combat-log-panel-scroll::-webkit-scrollbar-thumb {
-  background: rgb(140 174 201 / 30%);
-  border-radius: 4px;
+  background: rgb(106 74 36 / 45%);
+  border-radius: 999px;
 }
 
 .combat-log-panel-row {
   display: grid;
-  grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+  grid-template-columns: 62px minmax(0, 1fr);
   align-items: baseline;
-  gap: var(--space-2, 8px);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.85rem;
-  line-height: 1.4;
-  background: rgb(18 22 34 / 55%);
-  border-left: 2px solid transparent;
-  color: var(--color-text, #e0e0e0);
+  gap: 16px;
+  padding: 5px 6px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  /* Faint ruled line between entries. */
+  border-bottom: 1px solid rgb(106 74 36 / 16%);
+  color: #3a2c1a;
   word-break: break-word;
 }
 
 .combat-log-panel-row-time {
   font-family: var(--font-mono, monospace);
-  font-size: 0.72rem;
-  color: var(--text-muted, rgb(200 208 224 / 65%));
+  font-size: 0.68rem;
+  text-align: right;
+  color: rgb(106 74 36 / 70%);
   white-space: nowrap;
 }
 
@@ -14230,43 +14206,13 @@ body {
   min-width: 0;
 }
 
-.combat-log-panel-row-damage {
-  color: var(--color-damage, #d4888a);
-  border-left-color: var(--color-damage, #d4888a);
-}
-
-.combat-log-panel-row-heal {
-  color: var(--color-heal, #8abf8a);
-  border-left-color: var(--color-heal, #8abf8a);
-}
-
-.combat-log-panel-row-error {
-  color: var(--color-error, #e8a0a0);
-  border-left-color: var(--color-error, #e8a0a0);
-  font-weight: 600;
-}
-
-.combat-log-panel-row-info {
-  color: var(--color-info, #8caec9);
-  border-left-color: var(--color-info, #8caec9);
-}
-
-.combat-log-panel-row-kill {
-  color: var(--color-xp, #bea873);
-  border-left-color: var(--color-xp, #bea873);
-  font-weight: 600;
-}
-
-.combat-log-panel-row-dodge {
-  color: var(--color-dodge, #d9c8a1);
-  border-left-color: var(--color-dodge, #d9c8a1);
-  font-style: italic;
-}
-
-.combat-log-panel-row-xp {
-  color: var(--color-xp, #bea873);
-  border-left-color: var(--color-xp, #bea873);
-}
+.combat-log-panel-row-damage { color: #a8442f; }
+.combat-log-panel-row-heal { color: #3c6e3a; }
+.combat-log-panel-row-error { color: #8a3a2a; font-weight: 700; }
+.combat-log-panel-row-info { color: #5a4226; }
+.combat-log-panel-row-kill { color: #8a6a1e; font-weight: 700; }
+.combat-log-panel-row-dodge { color: #2f6a6a; font-style: italic; }
+.combat-log-panel-row-xp { color: #8a6a1e; }
 
 @media (prefers-reduced-motion: reduce) {
   .combat-log-panel-chip {
@@ -20026,6 +19972,55 @@ html:has(.game-shell),
 
 .drawer-sheet-trainer .drawer-handle {
   background: rgb(238 240 230 / 45%);
+}
+
+/* Parchment journal drawer (combat log): aged pages in a leather binding. */
+.drawer-sheet.drawer-sheet-journal {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(120% 80% at 50% 0%, rgb(120 86 44 / 14%), transparent 60%),
+    linear-gradient(172deg, #efe4c8, #e2d2ad 70%, #d8c69d);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 6px solid #5a4128;
+  border-top: 6px solid #5a4128;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%), inset 0 0 0 1px rgb(40 26 12 / 45%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-journal {
+    border: 6px solid #5a4128;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%), inset 0 0 0 1px rgb(40 26 12 / 45%);
+  }
+  /* Pin the journal so the toolbar stays put and entries scroll within. */
+  .drawer-sheet:has(.combat-log-panel) {
+    height: min(660px, 86vh);
+    max-height: 86vh;
+  }
+}
+
+.drawer-sheet-journal .drawer-header {
+  border-bottom: 1px solid rgb(90 65 40 / 35%);
+}
+
+.drawer-sheet-journal .drawer-title {
+  color: #3a2c1a;
+  text-shadow: 0 1px 0 rgb(255 250 236 / 50%);
+}
+
+.drawer-sheet-journal .drawer-close {
+  border-color: rgb(90 65 40 / 50%);
+  background: rgb(90 65 40 / 16%);
+  color: #5a4128;
+}
+
+.drawer-sheet-journal .drawer-close:hover {
+  background: rgb(90 65 40 / 28%);
+  color: #2e2212;
+}
+
+.drawer-sheet-journal .drawer-handle {
+  background: rgb(90 65 40 / 40%);
 }
 
 /* Hide legacy desktop chrome that no longer renders */
