@@ -20422,6 +20422,115 @@ html:has(.game-shell),
   }
 }
 
+/* Writing-desk drawer (terminal): a dark wood desk; you pen commands on a
+   parchment slip with a quill at hand. */
+.drawer-sheet.drawer-sheet-desk {
+  background-image:
+    var(--skin-bg, none),
+    repeating-linear-gradient(92deg, rgb(0 0 0 / 0%) 0 46px, rgb(20 12 4 / 16%) 46px 48px),
+    linear-gradient(168deg, #5a3f22, #402c16 62%, #311f0e);
+  background-size: cover, auto, auto;
+  background-position: center;
+  border: 8px solid #2e1f10;
+  border-top: 8px solid #2e1f10;
+  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%), inset 0 0 28px rgb(20 12 4 / 45%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-desk {
+    border: 8px solid #2e1f10;
+    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%), inset 0 0 28px rgb(20 12 4 / 45%);
+  }
+}
+
+.drawer-sheet-desk .drawer-header { border-bottom: 1px solid rgb(240 225 190 / 18%); }
+.drawer-sheet-desk .drawer-title { color: #f4e6c6; text-shadow: 0 1px 3px rgb(16 8 2 / 70%); }
+.drawer-sheet-desk .drawer-close { border-color: rgb(240 225 190 / 38%); background: rgb(24 14 6 / 50%); color: #f0e3c4; }
+.drawer-sheet-desk .drawer-close:hover { background: rgb(48 30 14 / 70%); color: #fff; }
+.drawer-sheet-desk .drawer-handle { background: rgb(240 225 190 / 38%); }
+
+/* The desk surface centers a parchment slip. */
+.terminal-desk {
+  align-items: center;
+  justify-content: center;
+  padding: 24px 8px;
+}
+
+.terminal-desk-slip {
+  position: relative;
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 26px 26px 22px;
+  border-radius: 4px;
+  background: linear-gradient(160deg, #f3ead2, #e6d8b4);
+  border: 1px solid rgb(106 74 36 / 40%);
+  box-shadow: 0 10px 26px rgb(8 6 2 / 50%), inset 0 1px 0 rgb(255 252 244 / 55%);
+  /* A faint baseline ruling so it reads as writing paper. */
+  background-image:
+    linear-gradient(160deg, #f3ead2, #e6d8b4),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgb(106 74 36 / 12%) 31px 32px);
+  transform: rotate(-0.6deg);
+}
+
+.terminal-desk .terminal-overlay-note {
+  margin: 0;
+  color: #5a4226;
+  font-style: italic;
+  font-size: 0.96rem;
+}
+
+/* The command line reads as an ink line on the slip. */
+.terminal-desk .canvas-command {
+  background: rgb(255 252 244 / 35%);
+  border: none;
+  border-bottom: 2px solid rgb(106 74 36 / 50%);
+  border-radius: 4px 4px 0 0;
+  padding: 6px 8px 8px 4px;
+}
+
+.terminal-desk .canvas-command-input {
+  color: #2e2212;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.terminal-desk .canvas-command-input::placeholder { color: rgb(106 74 36 / 55%); }
+
+.terminal-desk .canvas-command-send {
+  width: 34px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #6a4e28, #4c3617);
+  border: 1px solid #c8a24a;
+  color: #f6e8c2;
+}
+
+.terminal-desk .canvas-command-send:hover { filter: brightness(1.08); }
+
+/* The quill, resting over the slip's corner. */
+.terminal-desk-quill {
+  position: absolute;
+  top: -22px;
+  right: 8px;
+  font-size: 3.4rem;
+  line-height: 1;
+  color: #3a2c1a;
+  transform: rotate(28deg);
+  text-shadow: 0 2px 4px rgb(8 6 2 / 45%);
+  pointer-events: none;
+}
+
+.terminal-desk-quill-img {
+  display: block;
+  width: 96px;
+  height: auto;
+  /* Cancel the container tilt so a supplied quill asset shows as drawn. */
+  transform: rotate(-28deg);
+  filter: drop-shadow(0 3px 6px rgb(8 6 2 / 50%));
+}
+
 /* Hide legacy desktop chrome that no longer renders */
 .app-shell,
 .top-banner,

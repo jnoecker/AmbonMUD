@@ -910,7 +910,9 @@ function App() {
                       ? "questboard"
                       : drawerPanel === "spellbook"
                         ? "grimoire"
-                        : "default"
+                        : drawerPanel === "terminal"
+                          ? "desk"
+                          : "default"
         }
         skinBg={
           drawerPanel === "inventory"
@@ -927,7 +929,9 @@ function App() {
                       ? state.serverAssets["quest_board_bg"]
                       : drawerPanel === "spellbook"
                         ? state.serverAssets["spellbook_bg"]
-                        : undefined
+                        : drawerPanel === "terminal"
+                          ? state.serverAssets["terminal_bg"]
+                          : undefined
         }
       >
         {drawerPanel === "character" && (
@@ -1228,19 +1232,26 @@ function App() {
         )}
 
         {drawerPanel === "terminal" && (
-          <div className="terminal-overlay-body">
-            <p className="terminal-overlay-note">
-              Full terminal coming soon. For now, type commands here:
-            </p>
-            <CommandInput
-              inputValue={inputValue}
-              onInputChange={(value) => {
-                setInputValue(value);
-                resetComposerCompletion();
-              }}
-              onInputKeyDown={handleInputKeyDown}
-              onCommand={sendCommand}
-            />
+          <div className="terminal-overlay-body terminal-desk">
+            <div className="terminal-desk-slip">
+              <span className="terminal-desk-quill" aria-hidden="true">
+                {state.serverAssets["desk_quill"]
+                  ? <img src={state.serverAssets["desk_quill"]} alt="" className="terminal-desk-quill-img" />
+                  : "✒"}
+              </span>
+              <p className="terminal-overlay-note">
+                Pen a command and dispatch it to the world.
+              </p>
+              <CommandInput
+                inputValue={inputValue}
+                onInputChange={(value) => {
+                  setInputValue(value);
+                  resetComposerCompletion();
+                }}
+                onInputKeyDown={handleInputKeyDown}
+                onCommand={sendCommand}
+              />
+            </div>
           </div>
         )}
 
