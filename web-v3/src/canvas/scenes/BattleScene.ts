@@ -383,7 +383,7 @@ export class BattleScene {
   private getPlayerPosition() {
     const w = this.width;
     const h = this.height;
-    return { x: w * 0.26, y: h * 0.62 };
+    return { x: w * 0.26, y: h * 0.58 };
   }
 
   private getEnemyPosition() {
@@ -439,10 +439,13 @@ export class BattleScene {
     this.uiGraphics.stroke({ color: 0x4a4a6a, alpha: 0.4, width: 1 });
 
     // Compute dynamic sprite sizes based on relative power (maxHP ratio)
-    const { playerSize, enemySize } = this.computeSpriteScales(
+    const { playerSize: rawPlayerSize, enemySize } = this.computeSpriteScales(
       vitals.maxHp,
       combatTarget?.targetMaxHp ?? null,
     );
+    // Shrink the player a touch so its sprite + HP/Mana bars stay clear of the
+    // room text below the scene.
+    const playerSize = Math.round(rawPlayerSize * 0.82);
 
     // Player position (left side) with lunge + shake offsets
     const playerPos = this.getPlayerPosition();
