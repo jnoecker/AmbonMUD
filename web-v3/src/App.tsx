@@ -175,6 +175,8 @@ function App() {
   // When Examine is clicked we `look` the item and route the resulting
   // Room.LookTarget into the item card (so it carries the full description).
   const pendingExamineRef = useRef<{ image: string | null; equippedSlot?: string } | null>(null);
+  // Inn modal (key-on-a-hook recall) — a click-away modal, not a drawer panel.
+  const [showInn, setShowInn] = useState(false);
 
   // Full-size image preview — opened by clicking the entity preview sprite
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -432,7 +434,7 @@ function App() {
     canvasCallbacks.openDungeon = () => openPanel("dungeon");
     canvasCallbacks.openLottery = () => openPanel("lottery");
     canvasCallbacks.openHousing = () => openPanel("housing");
-    canvasCallbacks.openInn = () => openPanel("inn");
+    canvasCallbacks.openInn = () => setShowInn(true);
     canvasCallbacks.openMail = () => openPanel("mail");
     canvasCallbacks.openMap = () => openPanel("map");
     canvasCallbacks.openRoom = () => openPanel("room");
@@ -1146,15 +1148,6 @@ function App() {
           <StylistPanel stylistState={state.stylistState} onCommand={sendCommand} />
         )}
 
-        {drawerPanel === "inn" && (
-          <InnPanel
-            roomTitle={state.room.title}
-            recall={state.recallState}
-            onSetRecall={() => { sendCommand("rest"); closeDrawer(); }}
-            onClose={closeDrawer}
-          />
-        )}
-
         {drawerPanel === "auction" && (
           <AuctionPanel
             listings={state.auctionListings}
@@ -1731,6 +1724,17 @@ function App() {
           onCommand={sendCommand}
           onZoomImage={(url) => setImagePreviewUrl(url)}
           onVideo={(url) => setVideoUrl(url)}
+        />
+      )}
+
+      {/* Inn — key-on-a-hook recall modal (click away to dismiss). */}
+      {showInn && (
+        <InnPanel
+          roomTitle={state.room.title}
+          recall={state.recallState}
+          serverAssets={state.serverAssets}
+          onSetRecall={() => { sendCommand("rest"); setShowInn(false); }}
+          onClose={() => setShowInn(false)}
         />
       )}
 

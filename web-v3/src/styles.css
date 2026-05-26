@@ -16980,6 +16980,173 @@ body {
   overflow-y: auto;
 }
 
+/* ===== Inn modal — a brass key on a hook ============================== */
+.inn-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(8 10 18 / 55%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: mm-fade 160ms var(--ease-out-soft);
+}
+
+.inn-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(380px, 92vw);
+  padding: 26px 28px 30px;
+  border-radius: 18px;
+  text-align: center;
+  color: #f2e6cc;
+  border: 1px solid rgb(132 94 48 / 55%);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgb(96 70 38 / 45%), transparent 65%),
+    linear-gradient(170deg, #3a2c1a, #261b10);
+  box-shadow: 0 22px 48px rgb(0 0 0 / 55%), inset 0 1px 0 rgb(216 186 122 / 18%);
+  animation: mm-pop 200ms var(--ease-out-soft);
+}
+
+.inn-card-skinned {
+  background-image: var(--inn-bg), linear-gradient(170deg, #3a2c1a, #261b10);
+  background-size: cover;
+  background-position: center;
+}
+
+.inn-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #f4e9cb;
+}
+
+/* Hook + hanging key */
+.inn-hook-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0 2px;
+}
+
+.inn-hook {
+  width: 10px;
+  height: 15px;
+  border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(180deg, #d4af5a, #8a6a2e);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 45%);
+  z-index: 1;
+}
+
+.inn-key {
+  margin-top: -7px; /* tuck the ring over the hook */
+  border: none;
+  background: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #e6c46a; /* brass */
+  transform: rotate(-4deg);
+  transform-origin: 50% 8px;
+  filter: drop-shadow(0 3px 5px rgb(0 0 0 / 45%));
+  transition: transform 200ms var(--ease-out-soft), filter 200ms var(--ease-out-soft);
+}
+
+.inn-key:hover {
+  transform: rotate(0deg) translateY(-2px);
+  filter: drop-shadow(0 0 11px rgb(230 196 106 / 65%));
+}
+
+.inn-key-held {
+  transform: translateY(-4px) rotate(3deg);
+  filter: drop-shadow(0 0 12px rgb(230 196 106 / 75%));
+}
+
+.inn-key-svg { width: 54px; height: auto; display: block; }
+.inn-key-img { width: 72px; height: auto; display: block; }
+
+.inn-sub {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #d8c39a;
+  max-width: 30ch;
+}
+
+.inn-recall {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: rgb(20 12 4 / 38%);
+  border: 1px solid rgb(132 94 48 / 42%);
+}
+
+.inn-recall-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c8a24a;
+}
+
+.inn-recall-value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f2e6cc;
+}
+
+.inn-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+}
+
+.inn-confirm-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #ece0c4;
+  max-width: 30ch;
+}
+
+.inn-confirm-btn {
+  padding: 11px 28px;
+  border-radius: 12px;
+  border: 1px solid #c8a24a;
+  background: linear-gradient(180deg, #6a4e28, #4c3617);
+  color: #f6e8c2;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 40%), inset 0 1px 0 rgb(216 186 122 / 25%);
+  transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.inn-confirm-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+.inn-hint {
+  margin: 0;
+  font-size: 0.74rem;
+  font-style: italic;
+  color: rgb(216 195 154 / 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inn-backdrop, .inn-card { animation: none; }
+}
+
 .inn-panel {
   display: flex;
   flex-direction: column;
