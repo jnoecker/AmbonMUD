@@ -443,9 +443,9 @@ export class BattleScene {
       vitals.maxHp,
       combatTarget?.targetMaxHp ?? null,
     );
-    // Shrink the player a touch so its sprite + HP/Mana bars stay clear of the
+    // Shrink the player so its sprite + HP/Mana bars + name stay clear of the
     // room text below the scene.
-    const playerSize = Math.round(rawPlayerSize * 0.82);
+    const playerSize = Math.round(rawPlayerSize * 0.74);
 
     // Player position (left side) with lunge + shake offsets
     const playerPos = this.getPlayerPosition();
