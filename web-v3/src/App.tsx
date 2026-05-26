@@ -1626,14 +1626,22 @@ function App() {
           old look + consider + attack popouts). */}
       {monster && (
         <MonsterManualPanel
+          key={monster.id ?? monster.name}
           monster={monster}
           consider={state.considerResult}
           bg={state.serverAssets["monster_manual_bg"]}
           serverAssets={state.serverAssets}
+          connected={connected}
+          questsAvailable={state.questsAvailable}
+          dialogue={state.dialogue}
           onClose={() => { setMonster(null); state.setConsiderResult(null); }}
           onCommand={sendCommand}
           onZoomImage={(url) => setImagePreviewUrl(url)}
-          onQuest={(mobName) => { sendCommand(`qoffers ${mobName}`); openPanel("questOffers"); }}
+          onQuest={(mobName) => sendCommand(`qoffers ${mobName}`)}
+          onAcceptQuest={(questId) => sendCommand(`accept #${questId}`)}
+          onTurnInQuest={(questId) => sendCommand(`quest turnin #${questId}`)}
+          onDialogueChoice={(index) => sendCommand(`${index}`)}
+          onDialogueDismiss={() => { if (state.dialogue) sendCommand("bye"); state.setDialogue(null); }}
           onShop={() => { sendCommand("list"); openPanel("shop"); }}
           onVideo={(url) => setVideoUrl(url)}
         />

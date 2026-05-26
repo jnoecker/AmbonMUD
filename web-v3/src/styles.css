@@ -20187,6 +20187,76 @@ html:has(.game-shell),
 .mm-card-skinned .mm-assess { margin-top: 0; }
 .mm-card-skinned .mm-assessing { margin-top: 0; }
 
+/* In-manual views (quest / dialogue) + the back link. */
+.mm-back {
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: #6a4a24;
+  cursor: pointer;
+}
+
+.mm-back:hover { color: #2e2212; }
+
+.mm-view {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.mm-card-skinned .mm-view {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(106 74 36 / 55%) transparent;
+}
+
+.mm-card-skinned .mm-view::-webkit-scrollbar { width: 6px; }
+.mm-card-skinned .mm-view::-webkit-scrollbar-track { background: transparent; }
+.mm-card-skinned .mm-view::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 50%); border-radius: 3px; }
+
+.mm-dialog { display: flex; flex-direction: column; gap: 10px; }
+
+.mm-dialog-text {
+  margin: 0;
+  font-size: 1.04rem;
+  line-height: 1.5;
+  font-style: italic;
+  color: #33271a;
+  text-shadow: 0 1px 1px rgb(255 250 236 / 50%);
+}
+
+.mm-dialog-waiting { opacity: 0.6; font-style: normal; }
+
+.mm-dialog-choices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mm-dialog-choice {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgb(74 56 37 / 40%);
+  background: rgb(247 240 222 / 72%);
+  color: #33271a;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft);
+}
+
+.mm-dialog-choice:hover { background: rgb(250 244 228 / 94%); border-color: #6a4a24; }
+
+.mm-dialog-end { margin: 0; font-style: italic; color: #7a6044; }
+
 @keyframes mm-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes mm-pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 

@@ -1,5 +1,6 @@
-import { useEffect } from "react";
-import type { ConsiderResult, MonsterEntry } from "../../types";
+import { useEffect, useState } from "react";
+import type { ConsiderResult, DialogueState, MonsterEntry, QuestAvailable } from "../../types";
+import { QuestOfferPanel } from "./QuestOfferPanel";
 
 const TIER_CLASS: Record<string, string> = {
   TRIVIAL: "consider-tier-trivial",
@@ -18,13 +19,24 @@ interface MonsterManualPanelProps {
   bg?: string;
   /** Resolved server assets, for the optional action-button icons. */
   serverAssets: Record<string, string>;
+  connected: boolean;
+  /** Quest offers + dialogue render inside the manual (right column). */
+  questsAvailable: QuestAvailable[];
+  dialogue: DialogueState | null;
   onClose: () => void;
   onCommand: (cmd: string) => void;
   onZoomImage: (url: string) => void;
+  /** Fetch quest offers for this NPC (no longer opens a separate drawer). */
   onQuest: (mobName: string) => void;
+  onAcceptQuest: (questId: string) => void;
+  onTurnInQuest: (questId: string) => void;
+  onDialogueChoice: (index: number) => void;
+  onDialogueDismiss: () => void;
   onShop: () => void;
   onVideo: (url: string) => void;
 }
+
+type ManualView = "info" | "quest" | "dialog";
 
 interface ManualAction {
   key: string;
@@ -48,20 +60,39 @@ export function MonsterManualPanel({
   consider,
   bg,
   serverAssets,
+  connected,
+  questsAvailable,
+  dialogue,
   onClose,
   onCommand,
   onZoomImage,
   onQuest,
+  onAcceptQuest,
+  onTurnInQuest,
+  onDialogueChoice,
+  onDialogueDismiss,
   onShop,
   onVideo,
 }: MonsterManualPanelProps) {
+  const [view, setView] = useState<ManualView>("info");
+
+  // Closing mid-conversation should also end the dialogue (so the in-canvas
+  // overlay doesn't resurface once the manual is gone).
+  const close = () => {
+    if (dialogue) onDialogueDismiss();
+    onClose();
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (view !== "info") setView("info");
+        else close();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }); // re-bind each render so `view`/`dialogue` stay current
 
   const { info, name } = monster;
   const skinned = !!bg; // a monster_manual_bg frame is registered
@@ -71,13 +102,13 @@ export function MonsterManualPanel({
   const category = c?.mobCategory ?? info?.tier ?? "";
 
   const actions: ManualAction[] = [];
-  if (info?.questComplete) actions.push({ key: "quest", label: "Turn In Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => onQuest(name) });
-  else if (info?.questAvailable) actions.push({ key: "quest", label: "Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => onQuest(name) });
-  if (info?.dialogue) actions.push({ key: "talk", label: "Talk", glyph: "", assetKey: "action_talk", variant: "primary", run: () => { onCommand(`talk ${name}`); onClose(); } });
+  if (info?.questComplete) actions.push({ key: "quest", label: "Turn In Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => { onQuest(name); setView("quest"); } });
+  else if (info?.questAvailable) actions.push({ key: "quest", label: "Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => { onQuest(name); setView("quest"); } });
+  if (info?.dialogue) actions.push({ key: "talk", label: "Talk", glyph: "", assetKey: "action_talk", variant: "primary", run: () => { onCommand(`talk ${name}`); setView("dialog"); } });
   if (info?.shopKeeper) actions.push({ key: "shop", label: "Browse Shop", glyph: "", assetKey: "action_shop", variant: "primary", run: onShop });
-  if (monster.canAttack) actions.push({ key: "attack", label: "Attack", glyph: "⚔", assetKey: "action_attack", variant: "primary", run: () => { onCommand(`kill ${name}`); onClose(); } });
+  if (monster.canAttack) actions.push({ key: "attack", label: "Attack", glyph: "⚔", assetKey: "action_attack", variant: "primary", run: () => { onCommand(`kill ${name}`); close(); } });
   if (monster.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(monster.video!) });
-  if (monster.isStaff) actions.push({ key: "possess", label: "Possess", glyph: "✦", assetKey: "action_possess", variant: "ghost", run: () => { onCommand(`possess ${name}`); onClose(); } });
+  if (monster.isStaff) actions.push({ key: "possess", label: "Possess", glyph: "✦", assetKey: "action_possess", variant: "ghost", run: () => { onCommand(`possess ${name}`); close(); } });
 
   // An action icon: custom asset when registered, else the unicode glyph.
   const actionIcon = (assetKey: string, glyph: string) => {
@@ -96,7 +127,7 @@ export function MonsterManualPanel({
       role="dialog"
       aria-modal="true"
       aria-label={`${name} — field manual`}
-      onClick={onClose}
+      onClick={close}
     >
       <div
         className={`mm-card${skinned ? " mm-card-skinned" : ""} ${c ? TIER_CLASS[c.rating] ?? "" : ""}`}
@@ -139,30 +170,75 @@ export function MonsterManualPanel({
             </div>
           </header>
 
-          {monster.description && <p className="mm-desc">{monster.description}</p>}
+          {view !== "info" && (
+            <button type="button" className="mm-back" onClick={() => setView("info")}>‹ Entry</button>
+          )}
 
-          {/* Threat assessment — de-emphasized. */}
-          {c ? (
-            <div className="mm-assess">
-              <div className="mm-winbar" aria-label="Estimated win chance">
-                <span className="mm-winbar-label">Win chance</span>
-                <div className="mm-winbar-track" role="progressbar" aria-valuenow={c.winChancePct} aria-valuemin={0} aria-valuemax={100}>
-                  <span className="mm-winbar-fill" style={{ width: `${c.winChancePct}%` }} />
+          {/* Info view — description + threat assessment. */}
+          {view === "info" && (
+            <>
+              {monster.description && <p className="mm-desc">{monster.description}</p>}
+              {c ? (
+                <div className="mm-assess">
+                  <div className="mm-winbar" aria-label="Estimated win chance">
+                    <span className="mm-winbar-label">Win chance</span>
+                    <div className="mm-winbar-track" role="progressbar" aria-valuenow={c.winChancePct} aria-valuemin={0} aria-valuemax={100}>
+                      <span className="mm-winbar-fill" style={{ width: `${c.winChancePct}%` }} />
+                    </div>
+                    <span className="mm-winbar-pct">{c.winChancePct}%</span>
+                  </div>
+                  <dl className="mm-stats">
+                    <div className="mm-stat"><dt>Your hit</dt><dd>~{c.playerAvgDamage}</dd></div>
+                    <div className="mm-stat"><dt>Their hit</dt><dd>~{c.mobAvgDamage}</dd></div>
+                    <div className="mm-stat"><dt>Kill {shortName}</dt><dd>{c.hitsToKillMob} hits</dd></div>
+                    <div className="mm-stat"><dt>Kill you</dt><dd>{c.hitsToKillPlayer} hits</dd></div>
+                    {c.dodgeChancePct > 0 && <div className="mm-stat"><dt>Dodge</dt><dd>{c.dodgeChancePct}%</dd></div>}
+                    <div className="mm-stat"><dt>Lvl diff</dt><dd>{lvDiff > 0 ? "+" : ""}{lvDiff}</dd></div>
+                  </dl>
                 </div>
-                <span className="mm-winbar-pct">{c.winChancePct}%</span>
-              </div>
-              <dl className="mm-stats">
-                <div className="mm-stat"><dt>Your hit</dt><dd>~{c.playerAvgDamage}</dd></div>
-                <div className="mm-stat"><dt>Their hit</dt><dd>~{c.mobAvgDamage}</dd></div>
-                <div className="mm-stat"><dt>Kill {shortName}</dt><dd>{c.hitsToKillMob} hits</dd></div>
-                <div className="mm-stat"><dt>Kill you</dt><dd>{c.hitsToKillPlayer} hits</dd></div>
-                {c.dodgeChancePct > 0 && <div className="mm-stat"><dt>Dodge</dt><dd>{c.dodgeChancePct}%</dd></div>}
-                <div className="mm-stat"><dt>Lvl diff</dt><dd>{lvDiff > 0 ? "+" : ""}{lvDiff}</dd></div>
-              </dl>
+              ) : monster.canAttack ? (
+                <p className="mm-assessing">Assessing threat…</p>
+              ) : null}
+            </>
+          )}
+
+          {/* Quest view — offers + turn-ins for this NPC. */}
+          {view === "quest" && (
+            <div className="mm-view">
+              <QuestOfferPanel
+                connected={connected}
+                questsAvailable={questsAvailable}
+                onAcceptQuest={onAcceptQuest}
+                onTurnInQuest={onTurnInQuest}
+              />
             </div>
-          ) : monster.canAttack ? (
-            <p className="mm-assessing">Assessing threat…</p>
-          ) : null}
+          )}
+
+          {/* Dialog view — the NPC's conversation. */}
+          {view === "dialog" && (
+            <div className="mm-view mm-dialog">
+              {dialogue ? (
+                <>
+                  <p className="mm-dialog-text">{dialogue.text}</p>
+                  {dialogue.choices.length > 0 ? (
+                    <ul className="mm-dialog-choices">
+                      {dialogue.choices.map((ch) => (
+                        <li key={ch.index}>
+                          <button type="button" className="mm-dialog-choice" onClick={() => onDialogueChoice(ch.index)}>
+                            {ch.text}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mm-dialog-end">The conversation has ended.</p>
+                  )}
+                </>
+              ) : (
+                <p className="mm-dialog-text mm-dialog-waiting">…</p>
+              )}
+            </div>
+          )}
 
           <footer className="mm-actions">
             {actions.map((a) => (
@@ -176,7 +252,7 @@ export function MonsterManualPanel({
                 <span className="mm-action-label">{a.label}</span>
               </button>
             ))}
-            <button type="button" className="mm-action mm-action-close" onClick={onClose}>
+            <button type="button" className="mm-action mm-action-close" onClick={close}>
               {actionIcon("action_close", "‹")}
               <span className="mm-action-label">Close</span>
             </button>
