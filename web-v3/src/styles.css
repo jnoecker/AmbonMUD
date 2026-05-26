@@ -14073,15 +14073,15 @@ body {
 .combat-log-panel-count {
   font-size: 0.82rem;
   font-style: italic;
-  color: #6a4a24;
+  color: rgb(240 225 190 / 72%);
 }
 
 .combat-log-panel-clear {
   padding: 5px 14px;
   border-radius: 8px;
-  border: 1px solid rgb(106 74 36 / 50%);
-  background: rgb(90 65 40 / 14%);
-  color: #5a4128;
+  border: 1px solid rgb(240 225 190 / 35%);
+  background: rgb(30 18 8 / 40%);
+  color: #ecdcb8;
   font-family: var(--font-display);
   font-size: 0.78rem;
   font-weight: 700;
@@ -14090,8 +14090,8 @@ body {
 }
 
 .combat-log-panel-clear:hover:not([disabled]) {
-  background: rgb(90 65 40 / 26%);
-  color: #2e2212;
+  background: rgb(50 32 16 / 60%);
+  color: #fff7e0;
 }
 
 .combat-log-panel-clear[disabled] {
@@ -14106,9 +14106,9 @@ body {
 }
 
 .combat-log-panel-chip {
-  border: 1px solid rgb(106 74 36 / 38%);
-  background: rgb(90 65 40 / 8%);
-  color: rgb(106 74 36 / 70%);
+  border: 1px solid rgb(240 225 190 / 30%);
+  background: rgb(30 18 8 / 30%);
+  color: rgb(240 225 190 / 60%);
   border-radius: 999px;
   padding: 3px 12px;
   font-family: var(--font-display);
@@ -14117,31 +14117,31 @@ body {
   cursor: pointer;
   /* Filtered-out chips read as crossed off the ledger. */
   text-decoration: line-through;
-  text-decoration-color: rgb(106 74 36 / 45%);
-  opacity: 0.6;
+  text-decoration-color: rgb(240 225 190 / 45%);
+  opacity: 0.65;
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
 }
 
-.combat-log-panel-chip:hover { opacity: 0.85; }
+.combat-log-panel-chip:hover { opacity: 0.9; }
 
 .combat-log-panel-chip-on {
   opacity: 1;
   text-decoration: none;
-  background: rgb(90 65 40 / 14%);
+  background: rgb(30 18 8 / 42%);
 }
 
-.combat-log-panel-chip-on.combat-log-panel-chip-damage { color: #a8442f; border-color: rgb(168 68 47 / 55%); }
-.combat-log-panel-chip-on.combat-log-panel-chip-heal { color: #3c6e3a; border-color: rgb(60 110 58 / 55%); }
-.combat-log-panel-chip-on.combat-log-panel-chip-dodge { color: #2f6a6a; border-color: rgb(47 106 106 / 55%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-damage { color: #e89078; border-color: rgb(232 144 120 / 60%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-heal { color: #a6cf86; border-color: rgb(166 207 134 / 60%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-dodge { color: #86ccc2; border-color: rgb(134 204 194 / 60%); }
 .combat-log-panel-chip-on.combat-log-panel-chip-kill,
-.combat-log-panel-chip-on.combat-log-panel-chip-xp { color: #8a6a1e; border-color: rgb(138 106 30 / 55%); }
-.combat-log-panel-chip-on.combat-log-panel-chip-info { color: #5a4226; border-color: rgb(90 66 38 / 55%); }
-.combat-log-panel-chip-on.combat-log-panel-chip-error { color: #8a3a2a; border-color: rgb(138 58 42 / 55%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-xp { color: #f2d488; border-color: rgb(242 212 136 / 60%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-info { color: #e6d2a4; border-color: rgb(230 210 164 / 55%); }
+.combat-log-panel-chip-on.combat-log-panel-chip-error { color: #f0907a; border-color: rgb(240 144 122 / 60%); }
 
 .combat-log-panel-empty {
   text-align: center;
   padding: var(--space-5, 24px) var(--space-4, 16px);
-  color: #6a4a24;
+  color: rgb(240 225 190 / 78%);
 }
 
 .combat-log-panel-empty p {
@@ -14166,9 +14166,9 @@ body {
   display: flex;
   flex-direction: column;
   /* Vertical red margin line at the time/text gutter. */
-  background: linear-gradient(90deg, transparent 0 70px, rgb(168 68 47 / 30%) 70px 71.5px, transparent 71.5px);
+  background: linear-gradient(90deg, transparent 0 70px, rgb(210 96 70 / 45%) 70px 71.5px, transparent 71.5px);
   scrollbar-width: thin;
-  scrollbar-color: rgb(106 74 36 / 50%) transparent;
+  scrollbar-color: rgb(240 225 190 / 35%) transparent;
 }
 
 .combat-log-panel-scroll::-webkit-scrollbar {
@@ -14176,7 +14176,7 @@ body {
 }
 
 .combat-log-panel-scroll::-webkit-scrollbar-thumb {
-  background: rgb(106 74 36 / 45%);
+  background: rgb(240 225 190 / 30%);
   border-radius: 999px;
 }
 
@@ -14189,8 +14189,9 @@ body {
   font-size: 0.9rem;
   line-height: 1.45;
   /* Faint ruled line between entries. */
-  border-bottom: 1px solid rgb(106 74 36 / 16%);
-  color: #3a2c1a;
+  border-bottom: 1px solid rgb(240 225 190 / 14%);
+  color: #ecdcb8;
+  text-shadow: 0 1px 2px rgb(16 8 2 / 55%);
   word-break: break-word;
 }
 
@@ -14198,7 +14199,7 @@ body {
   font-family: var(--font-mono, monospace);
   font-size: 0.68rem;
   text-align: right;
-  color: rgb(106 74 36 / 70%);
+  color: rgb(240 225 190 / 60%);
   white-space: nowrap;
 }
 
@@ -14206,13 +14207,13 @@ body {
   min-width: 0;
 }
 
-.combat-log-panel-row-damage { color: #a8442f; }
-.combat-log-panel-row-heal { color: #3c6e3a; }
-.combat-log-panel-row-error { color: #8a3a2a; font-weight: 700; }
-.combat-log-panel-row-info { color: #5a4226; }
-.combat-log-panel-row-kill { color: #8a6a1e; font-weight: 700; }
-.combat-log-panel-row-dodge { color: #2f6a6a; font-style: italic; }
-.combat-log-panel-row-xp { color: #8a6a1e; }
+.combat-log-panel-row-damage { color: #ec9078; }
+.combat-log-panel-row-heal { color: #a8d18a; }
+.combat-log-panel-row-error { color: #f2917b; font-weight: 700; }
+.combat-log-panel-row-info { color: #e6d2a4; }
+.combat-log-panel-row-kill { color: #f2d488; font-weight: 700; }
+.combat-log-panel-row-dodge { color: #8ad0c6; font-style: italic; }
+.combat-log-panel-row-xp { color: #f2d488; }
 
 @media (prefers-reduced-motion: reduce) {
   .combat-log-panel-chip {
@@ -19974,12 +19975,13 @@ html:has(.game-shell),
   background: rgb(238 240 230 / 45%);
 }
 
-/* Parchment journal drawer (combat log): aged pages in a leather binding. */
+/* Aged battle-journal drawer (combat log): a dark amber page in a leather
+   binding — text is warm/light so it reads on the rich parchment art. */
 .drawer-sheet.drawer-sheet-journal {
   background-image:
     var(--skin-bg, none),
-    radial-gradient(120% 80% at 50% 0%, rgb(120 86 44 / 14%), transparent 60%),
-    linear-gradient(172deg, #efe4c8, #e2d2ad 70%, #d8c69d);
+    radial-gradient(120% 80% at 50% 0%, rgb(150 104 52 / 18%), transparent 60%),
+    linear-gradient(172deg, #6a4a28, #4a3118 70%, #3a260f);
   background-size: cover, auto, auto;
   background-position: center;
   border: 6px solid #5a4128;
@@ -20000,27 +20002,27 @@ html:has(.game-shell),
 }
 
 .drawer-sheet-journal .drawer-header {
-  border-bottom: 1px solid rgb(90 65 40 / 35%);
+  border-bottom: 1px solid rgb(240 225 190 / 22%);
 }
 
 .drawer-sheet-journal .drawer-title {
-  color: #3a2c1a;
-  text-shadow: 0 1px 0 rgb(255 250 236 / 50%);
+  color: #f6ecce;
+  text-shadow: 0 1px 3px rgb(20 10 2 / 70%);
 }
 
 .drawer-sheet-journal .drawer-close {
-  border-color: rgb(90 65 40 / 50%);
-  background: rgb(90 65 40 / 16%);
-  color: #5a4128;
+  border-color: rgb(240 225 190 / 40%);
+  background: rgb(30 18 8 / 45%);
+  color: #f0e3c4;
 }
 
 .drawer-sheet-journal .drawer-close:hover {
-  background: rgb(90 65 40 / 28%);
-  color: #2e2212;
+  background: rgb(50 32 16 / 65%);
+  color: #fff;
 }
 
 .drawer-sheet-journal .drawer-handle {
-  background: rgb(90 65 40 / 40%);
+  background: rgb(240 225 190 / 40%);
 }
 
 /* Cork quest board: speckled cork in a wood frame; quests pinned as notes. */
