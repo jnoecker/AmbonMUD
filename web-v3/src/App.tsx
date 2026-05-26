@@ -15,6 +15,7 @@ import { QuestOfferPanel } from "./components/panels/QuestOfferPanel";
 import { InventoryPanel } from "./components/panels/InventoryPanel";
 import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { MailPanel } from "./components/panels/MailPanel";
+import { MonsterManualPanel } from "./components/panels/MonsterManualPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
 import { BankPanel } from "./components/panels/BankPanel";
@@ -49,6 +50,7 @@ import type {
   ConsiderRating,
   FeaturePopoutFocus,
   LookTargetInfo,
+  MonsterEntry,
   PopoutPanel,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
@@ -163,6 +165,9 @@ function App() {
 
   // Expanded mob detail card — opened from canvas Look button
   const [mobDetail, setMobDetail] = useState<{ name: string; description: string; image: string | null } | null>(null);
+
+  // Monster-manual / bestiary panel (clicked mob or pet)
+  const [monster, setMonster] = useState<MonsterEntry | null>(null);
 
   // Full-size image preview — opened by clicking the entity preview sprite
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -420,6 +425,12 @@ function App() {
     };
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
     canvasCallbacks.openMobDetail = (detail) => setMobDetail(detail);
+    canvasCallbacks.openMonsterManual = (entry) => {
+      // Clear any stale assessment so the new creature shows "Assessing…" until
+      // its own consider result arrives.
+      state.setConsiderResult(null);
+      setMonster(entry);
+    };
     canvasCallbacks.openImagePreview = (url: string) => setImagePreviewUrl(url);
     // In-canvas entity menu (Pixi) can't paint above DOM overlays, so flag the
     // root while it's open and let CSS fade the room sign out of the way.
@@ -449,6 +460,7 @@ function App() {
       canvasCallbacks.openQuestOffers = null;
       canvasCallbacks.openVideo = null;
       canvasCallbacks.openMobDetail = null;
+      canvasCallbacks.openMonsterManual = null;
       canvasCallbacks.openImagePreview = null;
       canvasCallbacks.onEntityMenu = null;
       document.documentElement.classList.remove("entity-menu-open");
@@ -1610,8 +1622,25 @@ function App() {
         </div>
       )}
 
-      {/* Consider — verbal threat assessment for a mob in the current room */}
-      {state.considerResult && (
+      {/* Monster manual — bestiary page for a clicked creature (consolidates the
+          old look + consider + attack popouts). */}
+      {monster && (
+        <MonsterManualPanel
+          monster={monster}
+          consider={state.considerResult}
+          bg={state.serverAssets["monster_manual_bg"]}
+          onClose={() => { setMonster(null); state.setConsiderResult(null); }}
+          onCommand={sendCommand}
+          onZoomImage={(url) => setImagePreviewUrl(url)}
+          onQuest={(mobName) => { sendCommand(`qoffers ${mobName}`); openPanel("questOffers"); }}
+          onShop={() => { sendCommand("list"); openPanel("shop"); }}
+          onVideo={(url) => setVideoUrl(url)}
+        />
+      )}
+
+      {/* Consider — verbal threat assessment for a mob (typed `consider`). Hidden
+          while the monster manual is open (it shows the assessment inline). */}
+      {state.considerResult && !monster && (
         <div
           className="consider-backdrop"
           role="presentation"

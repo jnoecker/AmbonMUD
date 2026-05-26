@@ -19802,3 +19802,278 @@ html:has(.game-shell),
     animation-duration: 80ms;
   }
 }
+
+/* ── Monster manual / bestiary page ──────────────────────────────────────
+   A parchment "field manual" entry for a clicked creature. Tier classes
+   (.consider-tier-*) set --consider-accent, reused for the badge + win bar.
+   Optional monster_manual_bg art layers over the procedural parchment. */
+.mm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(8 6 12 / 58%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: mm-fade 160ms var(--ease-out-soft);
+}
+
+.mm-card {
+  position: relative;
+  display: flex;
+  gap: 18px;
+  width: min(760px, 95vw);
+  max-height: 90vh;
+  padding: 22px;
+  color: #3a2c1a;
+  border-radius: 14px;
+  border: 2px solid #4a3825;
+  background-image: var(--mm-bg, none), linear-gradient(155deg, #ece2c8, #ddcba6);
+  background-size: 100% 100%, auto;
+  background-repeat: no-repeat, no-repeat;
+  box-shadow: 0 22px 48px rgb(0 0 0 / 55%), inset 0 0 0 1px rgb(255 248 230 / 35%), inset 0 2px 18px rgb(120 92 56 / 25%);
+  animation: mm-pop 200ms var(--ease-out-soft);
+}
+
+/* Framed creature art (left). */
+.mm-figure {
+  position: relative;
+  flex: 0 0 40%;
+  max-width: 300px;
+  margin: 0;
+  align-self: stretch;
+  min-height: 0;
+}
+
+.mm-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #4a3825;
+  box-shadow: inset 0 0 0 2px rgb(255 248 230 / 40%), 0 4px 12px rgb(0 0 0 / 35%);
+  background: #2a3242;
+}
+
+.mm-image-empty {
+  min-height: 220px;
+}
+
+.mm-zoom {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  border-radius: 50%;
+  border: 1px solid #4a3825;
+  background: rgb(236 226 200 / 92%);
+  color: #3a2c1a;
+  cursor: pointer;
+  transition: transform 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
+}
+
+.mm-zoom:hover {
+  transform: scale(1.08);
+  background: #f3ead2;
+}
+
+/* Manual entry (right). */
+.mm-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.mm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid rgb(74 56 37 / 35%);
+  padding-bottom: 8px;
+}
+
+.mm-titles { min-width: 0; }
+
+.mm-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #2e2212;
+}
+
+.mm-meta {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: #6b5640;
+  letter-spacing: 0.02em;
+}
+
+.mm-badge {
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2e2212;
+  background: color-mix(in srgb, var(--consider-accent, #d9c89a) 70%, #f3ead2);
+  border: 1px solid color-mix(in srgb, var(--consider-accent, #d9c89a) 60%, #4a3825);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+}
+
+/* Description — the hero of the entry. */
+.mm-desc {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  color: #3a2c1a;
+}
+
+.mm-desc::first-letter {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 0.8;
+  float: left;
+  margin: 4px 8px 0 0;
+  color: #6a4a24;
+}
+
+/* Threat assessment — compact, de-emphasized. */
+.mm-assess {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgb(74 56 37 / 30%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mm-winbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #6b5640;
+}
+
+.mm-winbar-label { flex: 0 0 auto; letter-spacing: 0.03em; }
+.mm-winbar-pct { flex: 0 0 auto; font-weight: 700; color: #4a3410; }
+
+.mm-winbar-track {
+  flex: 1 1 auto;
+  height: 7px;
+  border-radius: 4px;
+  background: rgb(74 56 37 / 22%);
+  border: 1px solid rgb(74 56 37 / 30%);
+  overflow: hidden;
+}
+
+.mm-winbar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--consider-accent, #d9c89a);
+}
+
+.mm-stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 14px;
+}
+
+.mm-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.74rem;
+}
+
+.mm-stat dt { color: #7a6044; text-transform: uppercase; letter-spacing: 0.02em; }
+.mm-stat dd { margin: 0; font-weight: 700; color: #3a2c1a; font-variant-numeric: tabular-nums; }
+
+.mm-assessing {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgb(74 56 37 / 30%);
+  font-style: italic;
+  color: #7a6044;
+}
+
+/* Actions. */
+.mm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+.mm-action {
+  flex: 1 1 auto;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.mm-action:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.mm-action-primary {
+  color: #f3ead2;
+  border: 1px solid #1d2a45;
+  background: linear-gradient(160deg, #2e436e, #1e2c49);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%);
+}
+
+.mm-action-ghost {
+  flex: 0 0 auto;
+  color: #3a2c1a;
+  border: 1px solid #4a3825;
+  background: rgb(236 226 200 / 70%);
+}
+
+.mm-action-close {
+  flex: 0 0 auto;
+  color: #ece2c8;
+  border: 1px solid #3a2c1a;
+  background: linear-gradient(160deg, #5a4630, #3e2f1c);
+}
+
+@keyframes mm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mm-pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-backdrop, .mm-card { animation: none; }
+}
+
+/* Narrow screens: stack art over the entry. */
+@media (max-width: 640px) {
+  .mm-card { flex-direction: column; gap: 12px; padding: 16px; max-height: 92vh; overflow-y: auto; }
+  .mm-figure { flex: 0 0 auto; max-width: none; width: 100%; }
+  .mm-image { height: 200px; }
+  .mm-content { overflow-y: visible; }
+  .mm-name { font-size: 1.4rem; }
+  .mm-stats { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1758,8 +1758,21 @@ export class WorldScene {
         }
         const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
         const isStaff = gameStateRef.current.character.isStaff;
-        this.entityPopout.showMob(mobData.name, mobData.description, mobData.image, mobData.video, mobData.hp, mobData.maxHp, info, isStaff);
-        this.showPopout();
+        const isNpc = !!(info && (info.shopKeeper || info.questGiver || info.dialogue));
+        const canAttack = info?.aggressive === true || !isNpc;
+        canvasCallbacks.openMonsterManual?.({
+          id: mobData.id,
+          name: mobData.name,
+          description: mobData.description ?? null,
+          image: mobData.image ?? null,
+          video: mobData.video ?? null,
+          level: info?.level ?? null,
+          info,
+          isStaff,
+          canAttack,
+        });
+        // Auto-fetch the threat assessment so the manual fills in its stats.
+        if (canAttack) canvasCallbacks.sendCommand?.(`consider ${mobData.name}`);
       });
 
       this.container.addChild(sprite);
@@ -1979,8 +1992,16 @@ export class WorldScene {
 
       const petData = pet;
       hitArea.on("pointerdown", () => {
-        this.entityPopout.showMob(petData.name, undefined, petData.image, undefined, petData.hp, petData.maxHp, null, false);
-        this.showPopout();
+        canvasCallbacks.openMonsterManual?.({
+          name: petData.name,
+          description: null,
+          image: petData.image ?? null,
+          video: null,
+          level: null,
+          info: null,
+          isStaff: false,
+          canAttack: false,
+        });
       });
 
       this.container.addChild(sprite);

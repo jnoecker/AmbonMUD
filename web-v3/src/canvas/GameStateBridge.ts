@@ -7,6 +7,7 @@ import type {
   FeaturePopoutFocus,
   GroupInfo,
   MobInfo,
+  MonsterEntry,
   PuzzleState,
   QuestAvailable,
   QuestEntry,
@@ -92,6 +93,8 @@ export const canvasCallbacks: {
   /** Fired when the in-canvas entity menu opens/closes so DOM overlays (the
    *  room sign) can yield — Pixi can't paint above them. */
   onEntityMenu: ((open: boolean) => void) | null;
+  /** Open the monster-manual / bestiary panel for a clicked creature. */
+  openMonsterManual: ((entry: MonsterEntry) => void) | null;
 } = {
   sendCommand: null,
   prefillCommand: null,
@@ -120,6 +123,7 @@ export const canvasCallbacks: {
   openMobDetail: null,
   openImagePreview: null,
   onEntityMenu: null,
+  openMonsterManual: null,
 };
 
 export const pendingCastRef: { current: PendingCast | null } = { current: null };

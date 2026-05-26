@@ -455,6 +455,21 @@ export interface ConsiderResult {
   receivedAt: number;
 }
 
+/** A clicked creature opened in the monster-manual / bestiary panel. */
+export interface MonsterEntry {
+  id?: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  video: string | null;
+  /** Level from MobInfo (shown before the consider stats arrive). */
+  level: number | null;
+  info: MobInfo | null;
+  isStaff: boolean;
+  /** Whether an Attack button + threat assessment apply (false for pets). */
+  canAttack: boolean;
+}
+
 /**
  * Per-skill visual archetype that drives how the web client renders the
  * cast moment. Sent in the Char.Skills GMCP payload as `visual.archetype`.
