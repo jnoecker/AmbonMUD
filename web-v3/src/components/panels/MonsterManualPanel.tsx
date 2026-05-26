@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ConsiderResult, DialogueState, MonsterEntry, QuestAvailable } from "../../types";
 import { QuestOfferPanel } from "./QuestOfferPanel";
 
@@ -78,6 +78,9 @@ export function MonsterManualPanel({
   onVideo,
 }: MonsterManualPanelProps) {
   const [view, setView] = useState<ManualView>("info");
+  // Tracks whether the current conversation has produced any node yet, so the
+  // initial "…" wait isn't mistaken for the conversation having ended.
+  const dialogueSeenRef = useRef(false);
 
   // Closing mid-conversation should also end the dialogue (so the in-canvas
   // overlay doesn't resurface once the manual is gone).
@@ -97,14 +100,24 @@ export function MonsterManualPanel({
     return () => window.removeEventListener("keydown", onKey);
   }); // re-bind each render so `view`/`dialogue` stay current
 
-  // When a conversation reaches a terminal node (no choices), show the closing
-  // line briefly, then return to the entry and clear the dialogue.
+  // Start each conversation fresh (reset the "seen a node yet" tracker).
   useEffect(() => {
-    if (view !== "dialog" || !dialogue || dialogue.choices.length > 0) return;
+    if (view === "dialog") dialogueSeenRef.current = false;
+  }, [view]);
+
+  // Return to the entry when a conversation ends — whether the server sends a
+  // terminal node (no choices; show its closing line briefly) or just clears
+  // the dialogue (e.g. "Maybe later"). The initial "…" wait is ignored.
+  useEffect(() => {
+    if (view !== "dialog") return;
+    if (dialogue) dialogueSeenRef.current = true;
+    const endedWithNode = dialogue && dialogue.choices.length === 0;
+    const endedByClear = !dialogue && dialogueSeenRef.current;
+    if (!endedWithNode && !endedByClear) return;
     const t = window.setTimeout(() => {
-      onDialogueEnd();
+      if (dialogue) onDialogueEnd();
       setView("info");
-    }, 1700);
+    }, endedWithNode ? 1700 : 150);
     return () => window.clearTimeout(t);
   }, [view, dialogue]); // eslint-disable-line react-hooks/exhaustive-deps
 

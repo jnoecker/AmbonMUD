@@ -20048,22 +20048,22 @@ html:has(.game-shell),
 .mm-action:hover { transform: translateY(-2px); }
 
 .mm-action-icon {
-  width: 56px;
-  height: 56px;
+  width: 88px;
+  height: 88px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgb(40 28 14 / 45%));
+  filter: drop-shadow(0 2px 5px rgb(40 28 14 / 45%));
   transition: filter 150ms var(--ease-out-soft);
 }
 
-.mm-action:hover .mm-action-icon { filter: drop-shadow(0 0 9px rgb(230 196 106 / 75%)); }
+.mm-action:hover .mm-action-icon { filter: drop-shadow(0 0 12px rgb(230 196 106 / 75%)); }
 
 .mm-action-glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  font-size: 2.1rem;
+  width: 88px;
+  height: 88px;
+  font-size: 3.4rem;
   line-height: 1;
   color: #5a4226;
   filter: drop-shadow(0 1px 2px rgb(40 28 14 / 35%));
@@ -20071,10 +20071,10 @@ html:has(.game-shell),
 
 .mm-action-label {
   font-family: var(--font-display);
-  font-size: 0.64rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  padding: 1px 9px;
+  padding: 1px 10px;
   border-radius: 999px;
   color: #f0e6cf;
   background: rgb(58 44 26 / 85%);
