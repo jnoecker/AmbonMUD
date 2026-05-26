@@ -20218,6 +20218,10 @@ html:has(.game-shell),
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* overflow-y:auto would otherwise promote overflow-x to auto; an explicit
+     hidden stops a hover translate from flashing a horizontal scrollbar (which
+     reflows the text and makes the choices jump). */
+  overflow-x: hidden;
 }
 
 .mm-card-skinned .mm-view {
@@ -20229,23 +20233,37 @@ html:has(.game-shell),
 .mm-card-skinned .mm-view::-webkit-scrollbar-track { background: transparent; }
 .mm-card-skinned .mm-view::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 50%); border-radius: 3px; }
 
-.mm-dialog { display: flex; flex-direction: column; gap: 10px; }
+/* Fill the view so the NPC's line scrolls on its own while the choices stay
+   pinned at the bottom (a long description never pushes them around). */
+.mm-dialog { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
 
 .mm-dialog-text {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
   margin: 0;
   font-size: 1.04rem;
   line-height: 1.5;
   font-style: italic;
   color: #33271a;
   text-shadow: 0 1px 1px rgb(255 250 236 / 50%);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(106 74 36 / 55%) transparent;
 }
 
-.mm-dialog-waiting { opacity: 0.6; font-style: normal; }
+.mm-dialog-text::-webkit-scrollbar { width: 6px; }
+.mm-dialog-text::-webkit-scrollbar-track { background: transparent; }
+.mm-dialog-text::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 50%); border-radius: 3px; }
+
+.mm-dialog-waiting { flex: 0 0 auto; opacity: 0.6; font-style: normal; }
 
 .mm-dialog-choices {
+  flex: 0 0 auto;
   list-style: none;
   margin: 0;
-  padding: 0;
+  /* Slim side padding so the hover translate never clips a button's border. */
+  padding: 0 3px;
   display: flex;
   flex-direction: column;
   gap: 6px;
