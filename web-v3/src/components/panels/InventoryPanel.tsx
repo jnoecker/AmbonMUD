@@ -11,6 +11,8 @@ interface InventoryPanelProps {
   canManageItems: boolean;
   roomFeatures: RoomFeature[];
   containerContents: ContainerContents | null;
+  /** Optional leather-texture art (server asset inventory_satchel_bg). */
+  bg?: string;
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onGiveItem: (itemKeyword: string, playerName: string) => void;
@@ -110,6 +112,7 @@ export function InventoryPanel({
   canManageItems,
   roomFeatures,
   containerContents,
+  bg,
   onWearItem,
   onDropItem,
   onGiveItem,
@@ -291,7 +294,10 @@ export function InventoryPanel({
   };
 
   return (
-    <div className="inventory-panel">
+    <div
+      className="inventory-panel"
+      style={bg ? { ["--satchel-bg" as string]: `url("${bg}")` } : undefined}
+    >
       {containerContents && (
         <div className="inventory-active-container" role="status" aria-live="polite">
           <span className="inventory-active-container-label">Storing in</span>

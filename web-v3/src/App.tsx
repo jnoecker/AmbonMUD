@@ -920,6 +920,7 @@ function App() {
             canManageItems={connected && hasCharacterProfile}
             roomFeatures={state.roomFeatures}
             containerContents={state.containerContents}
+            bg={state.serverAssets["inventory_satchel_bg"]}
             onWearItem={(name) => sendCommand(`wear ${name}`)}
             onDropItem={(name) => sendCommand(`drop ${name}`)}
             onGiveItem={(keyword, player) => sendCommand(`give ${keyword} ${player}`)}
