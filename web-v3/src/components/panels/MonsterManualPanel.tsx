@@ -267,13 +267,12 @@ export function MonsterManualPanel({
           )}
 
           <footer className="mm-actions">
-            {/* Journal "Entry" returns to the info page from quest/dialog. */}
-            {view !== "info" && (
-              <button type="button" className="mm-action mm-action-entry" onClick={() => setView("info")}>
-                {actionIcon("action_entry", "❦")}
-                <span className="mm-action-label">Entry</span>
-              </button>
-            )}
+            {/* Journal "Entry" always sits in the row; it returns to the info
+                page from quest/dialog (and is a no-op on the entry itself). */}
+            <button type="button" className="mm-action mm-action-entry" onClick={() => setView("info")}>
+              {actionIcon("action_entry", "❦")}
+              <span className="mm-action-label">Entry</span>
+            </button>
             {actions.map((a) => (
               <button
                 key={a.key}
@@ -285,10 +284,6 @@ export function MonsterManualPanel({
                 <span className="mm-action-label">{a.label}</span>
               </button>
             ))}
-            <button type="button" className="mm-action mm-action-close" onClick={close}>
-              {actionIcon("action_close", "‹")}
-              <span className="mm-action-label">Close</span>
-            </button>
           </footer>
         </div>
       </div>
