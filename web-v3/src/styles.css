@@ -20271,6 +20271,157 @@ html:has(.game-shell),
 .drawer-sheet-questboard .quest-empty-state .empty-note { color: #5a4226; }
 .drawer-sheet-questboard .quest-empty-icon { color: #6a4a24; opacity: 0.5; }
 
+/* Grimoire drawer (spellbook): an open leather-bound book of parchment pages
+   with a soft center gutter; spells are illuminated entries. */
+.drawer-sheet.drawer-sheet-grimoire {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(60px 100% at 50% 50%, rgb(60 40 20 / 22%), transparent),
+    radial-gradient(130% 90% at 50% -6%, rgb(150 110 64 / 16%), transparent 60%),
+    linear-gradient(170deg, #e9dcba, #dccaa0 68%, #d2bf94);
+  background-size: cover, auto, auto, auto;
+  background-position: center;
+  border: 10px solid #4a3320;
+  border-top: 10px solid #4a3320;
+  box-shadow:
+    0 -16px 48px rgb(8 10 18 / 60%),
+    inset 0 0 0 2px rgb(30 18 8 / 50%),
+    inset 0 0 30px rgb(70 46 22 / 30%);
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-grimoire {
+    border: 10px solid #4a3320;
+    box-shadow:
+      0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%),
+      inset 0 0 0 2px rgb(30 18 8 / 50%), inset 0 0 30px rgb(70 46 22 / 30%);
+  }
+  /* A wider book so two pages of spells sit side by side, pinned + scroll. */
+  .drawer-sheet:has(.spellbook) { width: min(960px, 92vw); height: min(680px, 88vh); max-height: 88vh; }
+}
+
+.drawer-sheet-grimoire .drawer-header { border-bottom: 1px solid rgb(90 60 30 / 30%); }
+.drawer-sheet-grimoire .drawer-title { color: #3a2810; text-shadow: 0 1px 0 rgb(255 246 224 / 45%); }
+.drawer-sheet-grimoire .drawer-close { border-color: rgb(90 60 30 / 50%); background: rgb(90 60 30 / 16%); color: #4a3014; }
+.drawer-sheet-grimoire .drawer-close:hover { background: rgb(90 60 30 / 30%); color: #2a1c08; }
+.drawer-sheet-grimoire .drawer-handle { background: rgb(90 60 30 / 40%); }
+
+/* ── Spellbook contents (scoped to the grimoire) ── */
+.drawer-sheet-grimoire .spellbook { height: 100%; min-height: 0; }
+
+.drawer-sheet-grimoire .spellbook-header { align-items: baseline; }
+.drawer-sheet-grimoire .spellbook-class { color: #2e2212; }
+.drawer-sheet-grimoire .spellbook-level { color: #6a4a24; }
+.drawer-sheet-grimoire .spellbook-hint { color: #7a5e38; }
+
+.drawer-sheet-grimoire .spellbook-sp-badge {
+  background: rgb(106 74 36 / 16%);
+  border: 1px solid rgb(106 74 36 / 35%);
+  color: #6a4a24;
+}
+.drawer-sheet-grimoire .spellbook-sp-badge-available {
+  background: rgb(230 196 106 / 34%);
+  border-color: rgb(184 138 46 / 55%);
+  color: #6e4e16;
+}
+
+/* Search field. */
+.drawer-sheet-grimoire .spellbook-search-input {
+  background: rgb(255 250 236 / 55%);
+  border: 1px solid rgb(106 74 36 / 40%);
+  color: #2e2212;
+}
+.drawer-sheet-grimoire .spellbook-search-input::placeholder { color: rgb(106 74 36 / 60%); }
+.drawer-sheet-grimoire .spellbook-search-input:focus { border-color: #8a6a2e; }
+.drawer-sheet-grimoire .spellbook-result-count { color: #7a5e38; }
+
+/* Category tabs + class pills → ink ribbons. */
+.drawer-sheet-grimoire .spellbook-tab,
+.drawer-sheet-grimoire .spellbook-class-pill {
+  background: rgb(90 60 30 / 10%);
+  border: 1px solid rgb(106 74 36 / 38%);
+  color: #6a4a24;
+}
+.drawer-sheet-grimoire .spellbook-tab:hover,
+.drawer-sheet-grimoire .spellbook-class-pill:hover { background: rgb(90 60 30 / 18%); color: #3a2c1a; }
+.drawer-sheet-grimoire .spellbook-tab-active,
+.drawer-sheet-grimoire .spellbook-class-pill-active {
+  background: linear-gradient(180deg, #e7d6b0, #d2bb8c);
+  border-color: #8a6a2e;
+  color: #382a18;
+}
+
+/* Two-page spread: spells in two columns with a soft center gutter. */
+.drawer-sheet-grimoire .spellbook-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 30px;
+  align-content: start;
+  scrollbar-color: rgb(106 74 36 / 50%) transparent;
+}
+.drawer-sheet-grimoire .spellbook-grid::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 45%); }
+
+/* Illuminated spell entries on vellum. */
+.drawer-sheet-grimoire .spellbook-card {
+  background: rgb(255 250 236 / 38%);
+  border: 1px solid rgb(138 106 46 / 38%);
+  border-radius: 6px;
+  color: #33271a;
+  box-shadow: 0 1px 2px rgb(40 28 14 / 16%);
+}
+.drawer-sheet-grimoire .spellbook-card:hover:not(:disabled) {
+  background: rgb(255 252 242 / 60%);
+  border-color: #8a6a2e;
+}
+.drawer-sheet-grimoire .spellbook-card-icon {
+  border: 1px solid rgb(184 138 46 / 55%);
+  box-shadow: inset 0 0 0 1px rgb(255 250 236 / 30%);
+}
+.drawer-sheet-grimoire .spellbook-card-name { color: #2e2212; font-family: var(--font-display); }
+.drawer-sheet-grimoire .spellbook-card-desc { color: #5a4226; }
+
+/* Rune stat tags. */
+.drawer-sheet-grimoire .spellbook-stat {
+  background: rgb(106 74 36 / 12%);
+  border: 1px solid rgb(106 74 36 / 26%);
+}
+.drawer-sheet-grimoire .spellbook-stat-mana { color: #2f5a76; }
+.drawer-sheet-grimoire .spellbook-stat-cd { color: #6a4a24; }
+.drawer-sheet-grimoire .spellbook-stat-target { color: #5a4226; }
+.drawer-sheet-grimoire .spellbook-stat-level { color: #6e4e16; }
+.drawer-sheet-grimoire .spellbook-stat-class { color: #5a4a86; }
+.drawer-sheet-grimoire .spellbook-stat-pet { color: #3c6e3a; }
+
+/* Quickbar bind button → a gilt wax seal. */
+.drawer-sheet-grimoire .spellbook-assign-btn {
+  background: linear-gradient(180deg, #e6c46a, #c79a3a);
+  border: 1px solid #8a6a2e;
+  color: #2e2212;
+}
+.drawer-sheet-grimoire .spellbook-assign-btn:hover { filter: brightness(1.08); }
+.drawer-sheet-grimoire .spellbook-assign-btn-active { box-shadow: 0 0 0 2px rgb(138 106 46 / 45%); }
+
+.drawer-sheet-grimoire .spellbook-slot-picker {
+  background: linear-gradient(180deg, #f2e8ce, #e3d4ad);
+  border: 1px solid rgb(106 74 36 / 45%);
+}
+.drawer-sheet-grimoire .spellbook-slot-pick { color: #3a2c1a; }
+.drawer-sheet-grimoire .spellbook-slot-pick:hover { background: rgb(230 196 106 / 40%); }
+
+.drawer-sheet-grimoire .spellbook-empty { color: #5a4226; }
+.drawer-sheet-grimoire .spellbook-empty-hint { color: #7a5e38; }
+
+/* One page on narrow screens. */
+@media (max-width: 640px) {
+  .drawer-sheet-grimoire .spellbook-grid {
+    grid-template-columns: 1fr;
+    background: none;
+  }
+}
+
 /* Hide legacy desktop chrome that no longer renders */
 .app-shell,
 .top-banner,

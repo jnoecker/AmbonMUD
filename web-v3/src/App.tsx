@@ -908,7 +908,9 @@ function App() {
                     ? "journal"
                     : drawerPanel === "quests"
                       ? "questboard"
-                      : "default"
+                      : drawerPanel === "spellbook"
+                        ? "grimoire"
+                        : "default"
         }
         skinBg={
           drawerPanel === "inventory"
@@ -923,7 +925,9 @@ function App() {
                     ? state.serverAssets["journal_bg"]
                     : drawerPanel === "quests"
                       ? state.serverAssets["quest_board_bg"]
-                      : undefined
+                      : drawerPanel === "spellbook"
+                        ? state.serverAssets["spellbook_bg"]
+                        : undefined
         }
       >
         {drawerPanel === "character" && (
