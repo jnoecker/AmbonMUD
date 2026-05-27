@@ -231,7 +231,7 @@ class HousingCommandTest {
     }
 
     @Test
-    fun `house list rejected when not at a broker`() = runTest {
+    fun `house list shows templates from any room`() = runTest {
         val (h, _, _) = harness()
         val sid = SessionId(1)
         h.loginPlayer(sid, "Alice")
@@ -240,8 +240,11 @@ class HousingCommandTest {
 
         h.router.handle(sid, Command.House.ListTemplates)
 
-        val errors = h.drain().errorMessages(sid)
-        assertTrue(errors.any { it.contains("housing broker") }, "got=$errors")
+        val events = h.drain()
+        val errors = events.errorMessages(sid)
+        val infos = events.infoMessages(sid)
+        assertTrue(errors.isEmpty(), "expected no broker error, got=$errors")
+        assertTrue(infos.any { it.contains("Cottage Entryway") }, "got=$infos")
     }
 
     @Test

@@ -980,6 +980,10 @@ class GmcpEmitter(
         )
     }
 
+    suspend fun sendHousingTemplates(sessionId: SessionId, templates: List<HousingTemplatePayload>) {
+        emit(sessionId, "Housing.Templates", HousingTemplatesPayload(templates = templates))
+    }
+
     data class HousingRoomPayload(
         val templateId: String,
         val title: String,
@@ -991,6 +995,19 @@ class GmcpEmitter(
         val ownerName: String?,
         val rooms: List<HousingRoomPayload>,
         val available: Boolean,
+    )
+
+    data class HousingTemplatePayload(
+        val id: String,
+        val title: String,
+        val description: String,
+        val cost: Long,
+        val owned: Boolean,
+        val isEntry: Boolean,
+    )
+
+    private data class HousingTemplatesPayload(
+        val templates: List<HousingTemplatePayload>,
     )
 
     // ---------- combat events ----------

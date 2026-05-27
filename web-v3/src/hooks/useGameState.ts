@@ -50,6 +50,7 @@ import type {
   GuildInfo,
   GuildMemberEntry,
   HousingInfo,
+  HousingTemplate,
   ItemSummary,
   LeaderboardData,
   LevelUpNotification,
@@ -293,6 +294,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
 
   // ── Housing & pets ────────────────────────────────
   const [housing, setHousing] = useState<HousingInfo | null>(null);
+  const [housingTemplates, setHousingTemplates] = useState<HousingTemplate[]>([]);
   const [petState, setPetState] = useState<PetState | null>(null);
 
   // ── Mail ──────────────────────────────────────────
@@ -616,6 +618,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setZoneInstances,
         setSpriteList,
         setHousing,
+        setHousingTemplates,
         setTradeState,
         setAuctionListings,
         setLeaderboard,
@@ -701,6 +704,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setLoginError(null);
     setSavedCharacters([]);
     setHousing(null);
+    setHousingTemplates([]);
     setTradeState(null);
     setAuctionListings([]);
     setCurrencies([]);
@@ -764,7 +768,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // World
     dialogue, setDialogue, zoneInstances, worldTime, worldWeather, worldEvents, zoneEnvironment, factions, factionActivity, dungeonInfo, dungeonCatalog,
     // Housing & pets
-    housing, petState,
+    housing, housingTemplates, petState,
     // Mail
     mailInbox, mailMessage, setMailMessage,
     // Leaderboard

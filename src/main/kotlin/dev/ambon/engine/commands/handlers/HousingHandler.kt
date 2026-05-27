@@ -58,9 +58,7 @@ class HousingHandler(
     private suspend fun handleListTemplates(sessionId: SessionId) {
         val hs = requireSystemOrNull(sessionId, housingSystem, "Housing", outbound) ?: return
         val me = players.get(sessionId) ?: return
-        if (!requireBroker(sessionId, me, command = "list")) return
-        val pid = me.playerId ?: return
-        val house = hs.getHouse(pid)
+        val house = me.playerId?.let { hs.getHouse(it) }
 
         outbound.send(OutboundEvent.SendText(sessionId, "Available Room Templates"))
         for ((_, template) in hs.templates) {
@@ -70,6 +68,20 @@ class HousingHandler(
             outbound.send(OutboundEvent.SendInfo(sessionId, "  ${template.title} (${template.id}) - $cost$label"))
             outbound.send(OutboundEvent.SendInfo(sessionId, "    ${template.description}"))
         }
+
+        gmcpEmitter?.sendHousingTemplates(
+            sessionId,
+            hs.templates.values.map { template ->
+                GmcpEmitter.HousingTemplatePayload(
+                    id = template.id,
+                    title = template.title,
+                    description = template.description,
+                    cost = template.cost,
+                    owned = house?.rooms?.any { it.templateId == template.id } == true,
+                    isEntry = template.isEntry,
+                )
+            },
+        )
     }
 
     private suspend fun handleBuy(sessionId: SessionId) {

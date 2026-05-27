@@ -751,7 +751,7 @@ sealed interface Command {
         /** `house` or `house status` — show house summary. */
         data object Status : House
 
-        /** `house list` — show available room templates (at broker NPC). */
+        /** `house list` — show available room templates. */
         data object ListTemplates : House
 
         /** `house buy` — purchase your initial house (at broker NPC). */
