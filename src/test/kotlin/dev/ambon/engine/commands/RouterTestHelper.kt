@@ -8,6 +8,7 @@ import dev.ambon.config.StylistConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
+import dev.ambon.engine.AuctionSystem
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.GenderRegistry
@@ -30,6 +31,7 @@ import dev.ambon.engine.SpriteRegistry
 import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.commands.handlers.AdminHandler
+import dev.ambon.engine.commands.handlers.AuctionHandler
 import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
@@ -58,6 +60,7 @@ import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.dungeon.DungeonManager
 import dev.ambon.engine.dungeon.DungeonRegistry
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.persistence.PlayerRepository
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.PlayerLocationIndex
 import java.time.Clock
@@ -109,6 +112,9 @@ internal fun buildTestRouter(
     abilitySystem: dev.ambon.engine.abilities.AbilitySystem? = null,
     spriteRegistry: SpriteRegistry? = null,
     deathConfig: dev.ambon.config.DeathConfig = dev.ambon.config.DeathConfig(),
+    auctionSystem: AuctionSystem? = null,
+    markVitalsDirty: (SessionId) -> Unit = {},
+    playerRepo: PlayerRepository? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -173,6 +179,14 @@ internal fun buildTestRouter(
         tradeSystem?.let { TradeHandler(ctx = ctx, tradeSystem = it) },
         DungeonHandler(ctx = ctx, dungeonManager = dungeonManager, dungeonRegistry = dungeonRegistry, groupSystem = groupSystem),
         housingSystem?.let { HousingHandler(ctx = ctx, housingSystem = it) },
+        auctionSystem?.let {
+            AuctionHandler(
+                ctx = ctx,
+                auctionSystem = it,
+                markVitalsDirty = markVitalsDirty,
+                playerRepo = playerRepo,
+            )
+        },
         PrestigeHandler(
             ctx = ctx,
             prestigeSystem = PrestigeSystem(PrestigeConfig(), progression),

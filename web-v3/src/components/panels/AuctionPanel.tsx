@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { AuctionListing, ItemSummary, UiFeedbackEntry } from "../../types";
 
 type AuctionView = "browse" | "sell" | "mine";
@@ -17,6 +17,18 @@ export function AuctionPanel({ listings, inventory, playerName, feedbackFeed, on
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [priceDraft, setPriceDraft] = useState("");
   const [localMessage, setLocalMessage] = useState<string | null>(null);
+
+  // Fetch the current listings when the panel opens. The panel is only mounted
+  // while open (see App.tsx), so an effect guarded by a ref fires exactly once
+  // per open — otherwise the panel would show stale/empty data until the user
+  // hit Refresh. Mirrors the shop panel's load-on-open behaviour.
+  const fetched = useRef(false);
+  useEffect(() => {
+    if (!fetched.current) {
+      fetched.current = true;
+      onCommand("auction list");
+    }
+  }, [onCommand]);
 
   const filtered = useMemo(() => {
     const lowered = filter.trim().toLowerCase();
