@@ -1012,8 +1012,13 @@ export class WorldScene {
     if (hasStation !== this.stationVisible) {
       this.stationVisible = hasStation;
       this.stationBadge.visible = hasStation;
-      if (hasStation) {
-        const stationName = state.room.station!.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    }
+    // Sync the label whenever a station is present (not just on the
+    // visibility transition) so moving between two station rooms updates the
+    // name instead of showing the previous room's station.
+    if (hasStation) {
+      const stationName = state.room.station!.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      if (this.stationLabel.text !== stationName) {
         this.stationLabel.text = stationName;
       }
     }
@@ -1023,9 +1028,13 @@ export class WorldScene {
     if (hasTrainer !== this.trainerVisible) {
       this.trainerVisible = hasTrainer;
       this.trainerBadge.visible = hasTrainer;
-      if (hasTrainer) {
-        this.trainerLabel.text = state.room.trainer!;
-      }
+    }
+    // Keep the label synced with the current trainer's name even when moving
+    // directly between two trainer rooms — visibility stays true so the
+    // transition check above is skipped, which otherwise leaves the previous
+    // room's trainer name on the badge until you leave and return.
+    if (hasTrainer && this.trainerLabel.text !== state.room.trainer) {
+      this.trainerLabel.text = state.room.trainer!;
     }
 
     // Bank badge visibility
