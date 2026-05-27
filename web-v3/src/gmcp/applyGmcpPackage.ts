@@ -32,6 +32,7 @@ import type {
   GuildMemberEntry,
   HousingInfo,
   HousingRoomInfo,
+  HousingTemplate,
   PendingGroupInvite,
   PendingGuildInvite,
   InProgressAchievement,
@@ -202,6 +203,7 @@ interface GmcpContext {
   setZoneInstances: Dispatch<SetStateAction<ZoneInstances>>;
   setSpriteList: Dispatch<SetStateAction<SpriteList>>;
   setHousing: Dispatch<SetStateAction<HousingInfo | null>>;
+  setHousingTemplates: Dispatch<SetStateAction<HousingTemplate[]>>;
   setTradeState: Dispatch<SetStateAction<TradeState | null>>;
   setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
@@ -2121,6 +2123,24 @@ export function applyGmcpPackage(
             }))
         : [];
       ctx.setHousing({ hasHouse, ownerName, rooms, available });
+      break;
+    }
+
+    case "Housing.Templates": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const templates: HousingTemplate[] = Array.isArray(packet.templates)
+        ? packet.templates
+            .filter((t): t is Record<string, unknown> => typeof t === "object" && t !== null)
+            .map((t) => ({
+              id: typeof t.id === "string" ? t.id : "",
+              title: typeof t.title === "string" ? t.title : "",
+              description: typeof t.description === "string" ? t.description : "",
+              cost: typeof t.cost === "number" ? t.cost : 0,
+              owned: t.owned === true,
+              isEntry: t.isEntry === true,
+            }))
+        : [];
+      ctx.setHousingTemplates(templates);
       break;
     }
 

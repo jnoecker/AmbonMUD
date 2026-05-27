@@ -1180,6 +1180,7 @@ function App() {
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
             housing={state.housing}
+            templates={state.housingTemplates}
             room={state.room}
             uiFeedbackFeed={state.uiFeedbackFeed}
             onSendCommand={sendCommand}

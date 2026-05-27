@@ -1,19 +1,46 @@
 import { useMemo, useState } from "react";
-import type { HousingInfo, RoomState, UiFeedbackEntry } from "../../types";
+import type { HousingInfo, HousingTemplate, RoomState, UiFeedbackEntry } from "../../types";
 
 interface HousingPanelProps {
   connected: boolean;
   hasCharacterProfile: boolean;
   housing: HousingInfo | null;
+  templates: HousingTemplate[];
   room: RoomState;
   uiFeedbackFeed: UiFeedbackEntry[];
   onSendCommand: (cmd: string) => void;
+}
+
+function TemplateList({ templates }: { templates: HousingTemplate[] }) {
+  if (templates.length === 0) return null;
+  return (
+    <div className="housing-templates-section">
+      <p className="housing-section-label">Available Templates</p>
+      <ul className="housing-room-list">
+        {templates.map((t) => (
+          <li key={t.id} className="housing-room-item">
+            <div className="housing-room-header">
+              <span className="housing-room-title">{t.title}</span>
+              <span className="housing-template-cost">{t.cost > 0 ? `${t.cost} gold` : "Free"}</span>
+            </div>
+            <p className="housing-room-desc">{t.description}</p>
+            <div className="housing-template-meta">
+              <span className="housing-room-template">{t.id}</span>
+              {t.owned && <span className="housing-template-badge">Owned</span>}
+              {t.isEntry && <span className="housing-template-badge housing-template-badge-entry">Entry</span>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export function HousingPanel({
   connected,
   hasCharacterProfile,
   housing,
+  templates,
   room,
   uiFeedbackFeed,
   onSendCommand,
@@ -44,9 +71,14 @@ export function HousingPanel({
           <span className="housing-empty-icon">{"\u{1F3E0}"}</span>
           <p className="empty-note">You don't own a house yet.</p>
           {room.housingBroker && housing?.available !== false ? (
-            <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house buy")}>
-              Purchase a House
-            </button>
+            <div className="housing-actions">
+              <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house buy")}>
+                Purchase a House
+              </button>
+              <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house list")}>
+                Browse Templates
+              </button>
+            </div>
           ) : housing?.available === false ? (
             <p className="housing-hint">Housing is not available on this server.</p>
           ) : (
@@ -58,6 +90,7 @@ export function HousingPanel({
             </p>
           )}
         </div>
+        <TemplateList templates={templates} />
       </div>
     );
   }
@@ -136,6 +169,8 @@ export function HousingPanel({
           </li>
         ))}
       </ul>
+
+      <TemplateList templates={templates} />
 
       {inOwnHouse && (
         <div className="housing-customize-section">

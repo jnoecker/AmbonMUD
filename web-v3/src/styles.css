@@ -16044,6 +16044,42 @@ body {
   line-height: 1.45;
 }
 
+.housing-templates-section {
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line-faint);
+}
+
+.housing-template-cost {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-accent-soft-gold, var(--text-bright));
+  white-space: nowrap;
+}
+
+.housing-template-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 4px;
+}
+
+.housing-template-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--line-subtle);
+  color: var(--text-muted);
+}
+
+.housing-template-badge-entry {
+  color: var(--color-accent-lavender, var(--text-secondary));
+  border-color: var(--color-accent-lavender, var(--line-subtle));
+}
+
 .housing-customize-section {
   padding: var(--space-2);
   border-top: 1px solid var(--line-faint);

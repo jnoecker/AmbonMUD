@@ -1844,7 +1844,7 @@ data class CommandsConfig(
             "recipes" to CommandMetadata("recipes [filter]", "Browse available recipes", "crafting"),
             "craftskills" to CommandMetadata("craftskills/professions", "View crafting skill levels", "crafting"),
             "house" to CommandMetadata("house [status]", "View your house info", "housing"),
-            "house_list" to CommandMetadata("house list", "Browse room templates (at broker)", "housing"),
+            "house_list" to CommandMetadata("house list", "Browse available room templates", "housing"),
             "house_buy" to CommandMetadata("house buy", "Purchase your house (at broker)", "housing"),
             "house_expand" to CommandMetadata(
                 "house expand <template> <direction>",

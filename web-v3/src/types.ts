@@ -976,6 +976,15 @@ export interface HousingRoomInfo {
   description: string;
 }
 
+export interface HousingTemplate {
+  id: string;
+  title: string;
+  description: string;
+  cost: number;
+  owned: boolean;
+  isEntry: boolean;
+}
+
 export interface HousingInfo {
   hasHouse: boolean;
   ownerName: string | null;
