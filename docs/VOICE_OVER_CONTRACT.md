@@ -47,7 +47,7 @@ deterministic with no extra coordination beyond agreeing on the hash spec.
 
 `<sha8>` must be computed identically on both sides:
 
-1. Take the **raw node text** string — exactly as authored in the dialogue YAML, no trimming,
+1. Take the **raw node text** string — exactly as the YAML parser materializes it, no trimming,
    normalization, or interpolation.
 2. Encode it as **UTF-8** bytes.
 3. `SHA-256` those bytes.
@@ -55,13 +55,31 @@ deterministic with no extra coordination beyond agreeing on the hash spec.
 
 Reference vectors (verify your generator against these):
 
-| text | sha8 |
-|---|---|
-| `Hello!` | `334d016f` |
-| `Hello there!` | `89b8b8e4` |
+| YAML | parsed text | sha8 |
+|---|---|---|
+| `text: Hello!` | `Hello!` | `334d016f` |
+| `text: Hello there!` | `Hello there!` | `89b8b8e4` |
+| `text: \|` + `Hello there!` / `Stay a while.` | `Hello there!\nStay a while.\n` | `df658e4d` |
 
 Equivalent shell check: `printf 'Hello!' | sha256sum` → starts with `334d016f`.
 The engine implementation lives in `GmcpEmitter.sha8(...)`.
+
+#### Block-scalar parity (the one real desync risk)
+
+Plain scalars are unambiguous across parsers. **Block scalars are not** — the trailing-newline
+outcome depends on the chomping indicator, and that newline is hash-significant:
+
+- `|` (clip, the default) → interior newlines preserved, **exactly one** trailing newline.
+  `df658e4d` above is this case.
+- `|-` (strip) → **no** trailing newline (`Hello there!\nStay a while.` → a different hash).
+- `>` (fold) → newlines folded to spaces.
+
+The engine follows standard YAML 1.1 chomping via Jackson's `YAMLFactory` (SnakeYAML). Arcanum's
+parser must agree byte-for-byte. The third vector above is the end-to-end check for this: author
+that literal `|` block in real YAML, parse it on the Arcanum side, and confirm you get
+`Hello there!\nStay a while.\n` → `df658e4d`. The engine side is pinned by
+`DialogueVoiceHashVectorTest` (`src/test/.../domain/world/load/`), which loads these through the
+real `WorldLoader` mapper config.
 
 ## GMCP shape (AmbonMUD → web client)
 
