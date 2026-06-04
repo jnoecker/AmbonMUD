@@ -941,6 +941,73 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendDialogueNode omits voiceUrl when voices disabled`() =
+        runTest {
+            val e = emitter("Dialogue")
+            e.sendDialogueNode(
+                sid,
+                "a sage",
+                "Hello!",
+                listOf(1 to "Hi"),
+                zone = "academy",
+                templateKey = "headmaster_aldric",
+                nodeId = "root",
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"voiceUrl\":null"))
+        }
+
+    @Test
+    fun `sendDialogueNode resolves voiceUrl when voices enabled`() =
+        runTest {
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg == "Dialogue" || pkg.startsWith("Dialogue.") },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    voicesBaseUrl = "https://cdn.example.com/voices/",
+                    voicesEnabled = true,
+                )
+            e.sendDialogueNode(
+                sid,
+                "a sage",
+                "Hello!",
+                listOf(1 to "Hi"),
+                zone = "academy",
+                templateKey = "headmaster_aldric",
+                nodeId = "root",
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(
+                events[0].jsonData.contains(
+                    "\"voiceUrl\":\"https://cdn.example.com/voices/academy/headmaster_aldric/root.mp3\"",
+                ),
+                "Expected resolved voiceUrl, got=${events[0].jsonData}",
+            )
+        }
+
+    @Test
+    fun `sendDialogueNode omits voiceUrl when identity blank even if enabled`() =
+        runTest {
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg == "Dialogue" || pkg.startsWith("Dialogue.") },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    voicesBaseUrl = "https://cdn.example.com/voices/",
+                    voicesEnabled = true,
+                )
+            e.sendDialogueNode(sid, "a sage", "Hello!", listOf(1 to "Hi"))
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"voiceUrl\":null"))
+        }
+
+    @Test
     fun `sendDialogueNode skipped when not supported`() =
         runTest {
             val e = emitter()

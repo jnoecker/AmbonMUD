@@ -83,16 +83,26 @@ The client never receives `voiceId` or `templateKey` — only the resolved URL.
 
 ## Engine config
 
-A `voices` base mirrors the existing `images` / `videos` config blocks:
+A `voices` block mirrors the existing `images` / `videos` config blocks:
 
 ```yaml
 ambonmud:
   voices:
-    baseUrl: "https://<r2-host>/voices/"   # local fallback: /voices/
+    enabled: false                          # opt-in; when false no voiceUrl is emitted
+    baseUrl: "https://<r2-host>/voices/"    # local fallback: /voices/
 ```
 
-Inject `voicesBaseUrl` into `GmcpEmitter` the same way `imagesBaseUrl` is injected, and build
-the normalized base the same way (trailing-slash guard, as `imagesBase` does).
+`enabled` defaults to **false** so the engine emits `voiceUrl: null` until a real clip CDN is
+wired up — no 404 noise in local/dev, and zero behavior change by default. `voicesBaseUrl` is
+injected into `GmcpEmitter` the same way `imagesBaseUrl` is, with the same trailing-slash guard
+(`voicesBase`). The engine emits `voiceUrl` only when `enabled` is true **and** the line has a
+complete identity (non-blank zone, templateKey, and nodeId); otherwise it sends `null`.
+
+> **Path version note:** the engine currently emits the **structural** path
+> (`voices/<zone>/<templateKey>/<nodeId>.mp3`). The `.<sha8>` edit-safe variant is documented
+> above but not yet implemented — adopting it is a one-line change to `dialogueVoiceUrl` in
+> `GmcpEmitter.kt` plus the matching change in Arcanum's generator, and does not change the
+> `voiceUrl` field shape.
 
 ## Engine change surface
 
@@ -121,7 +131,7 @@ Small — a state addition and a signature tweak, no new systems:
 | R2 path | `voices/<zone>/<templateKey>/<nodeId>.mp3` (`+.<sha8>` for edit-safety) |
 | Hash (if used) | SHA-256 of raw node text, first 8 hex chars |
 | Audio format | MP3 (ElevenLabs default, Web Audio-native) |
-| Engine config | `ambonmud.voices.baseUrl`, local `/voices/` fallback |
+| Engine config | `ambonmud.voices.enabled` (opt-in) + `ambonmud.voices.baseUrl`, local `/voices/` fallback |
 | Voiced content | NPC node text only; choices stay text |
 | Identity sent to client | Resolved URL only — never `voiceId` / `templateKey` |
 | Transport scope | Web client only; telnet unaffected |

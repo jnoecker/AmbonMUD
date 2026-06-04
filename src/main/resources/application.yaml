@@ -2192,3 +2192,6 @@ ambonmud:
     baseUrl: /videos/
   audio:
     baseUrl: /audio/
+  voices:
+    enabled: false
+    baseUrl: /voices/

@@ -21,6 +21,9 @@ class DialogueSystem(
         val currentNodeId: String,
         val tree: DialogueTree,
         val mobName: String,
+        // Stable identity for resolving voice-over clips (see docs/VOICE_OVER_CONTRACT.md).
+        val templateKey: String,
+        val zone: String,
     )
 
     private val conversations = mutableMapOf<SessionId, ConversationState>()
@@ -43,15 +46,18 @@ class DialogueSystem(
             dialogue.nodes[dialogue.rootNodeId]
                 ?: return "${mob.name} has nothing to say."
 
-        conversations[sessionId] =
+        val state =
             ConversationState(
                 mobId = mob.id,
                 currentNodeId = dialogue.rootNodeId,
                 tree = dialogue,
                 mobName = mob.name,
+                templateKey = mob.templateKey,
+                zone = mob.roomId.zone,
             )
+        conversations[sessionId] = state
 
-        renderNode(sessionId, mob.name, rootNode, player.level, player.playerClass)
+        renderNode(sessionId, state, rootNode, player.level, player.playerClass)
         return null
     }
 
@@ -106,8 +112,9 @@ class DialogueSystem(
             return DialogueOutcome.Err("${state.mobName} has nothing more to say.")
         }
 
-        conversations[sessionId] = state.copy(currentNodeId = nextNodeId)
-        renderNode(sessionId, state.mobName, nextNode, player.level, player.playerClass)
+        val nextState = state.copy(currentNodeId = nextNodeId)
+        conversations[sessionId] = nextState
+        renderNode(sessionId, nextState, nextNode, player.level, player.playerClass)
         return DialogueOutcome.Ok(action = chosen.action)
     }
 
@@ -145,21 +152,24 @@ class DialogueSystem(
 
     private suspend fun renderNode(
         sessionId: SessionId,
-        mobName: String,
+        state: ConversationState,
         node: DialogueNode,
         playerLevel: Int,
         playerClass: String,
     ) {
-        outbound.send(OutboundEvent.SendText(sessionId, "$mobName says: ${node.text}"))
+        outbound.send(OutboundEvent.SendText(sessionId, "${state.mobName} says: ${node.text}"))
 
         val visibleChoices = filterChoices(node.choices, playerLevel, playerClass)
 
         // Always send Dialogue.Node so the canvas overlay can display NPC text and quest cards
         gmcpEmitter?.sendDialogueNode(
             sessionId,
-            mobName,
+            state.mobName,
             node.text,
             visibleChoices.mapIndexed { index, choice -> (index + 1) to choice.text },
+            zone = state.zone,
+            templateKey = state.templateKey,
+            nodeId = state.currentNodeId,
         )
 
         if (visibleChoices.isEmpty()) {

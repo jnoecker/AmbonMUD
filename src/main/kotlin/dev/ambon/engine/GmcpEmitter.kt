@@ -90,6 +90,8 @@ class GmcpEmitter(
     private val statRegistry: StatRegistry? = null,
     private val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
     imagesBaseUrl: String = "/images/",
+    voicesBaseUrl: String = "/voices/",
+    private val voicesEnabled: Boolean = false,
     private val globalAssets: Map<String, String> = emptyMap(),
     private val spriteRegistry: SpriteRegistry? = null,
     private val getMobEffects: (dev.ambon.domain.ids.MobId) -> List<ActiveEffectSnapshot> = { emptyList() },
@@ -107,6 +109,7 @@ class GmcpEmitter(
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
+    private val voicesBase = if (voicesBaseUrl.endsWith("/")) voicesBaseUrl else "$voicesBaseUrl/"
 
     /**
      * Tracks the last zone seen by each session so we only emit zone-change GMCP
@@ -1943,6 +1946,9 @@ class GmcpEmitter(
         mobName: String,
         text: String,
         choices: List<Pair<Int, String>>,
+        zone: String = "",
+        templateKey: String = "",
+        nodeId: String = "",
     ) {
         emit(
             sessionId,
@@ -1950,10 +1956,27 @@ class GmcpEmitter(
             DialogueNodePayload(
                 mobName = mobName,
                 text = text,
+                voiceUrl = dialogueVoiceUrl(zone, templateKey, nodeId),
                 choices = choices.map { (index, choiceText) -> DialogueChoicePayload(index = index, text = choiceText) },
             ),
         )
     }
+
+    /**
+     * Resolves the voice-over clip URL for a dialogue node, or null when voice-over is disabled
+     * or the line lacks a stable identity. Path shape mirrors `docs/VOICE_OVER_CONTRACT.md`:
+     * `<voicesBase><zone>/<templateKey>/<nodeId>.mp3`.
+     */
+    private fun dialogueVoiceUrl(
+        zone: String,
+        templateKey: String,
+        nodeId: String,
+    ): String? =
+        if (!voicesEnabled || zone.isBlank() || templateKey.isBlank() || nodeId.isBlank()) {
+            null
+        } else {
+            "$voicesBase$zone/$templateKey/$nodeId.mp3"
+        }
 
     suspend fun sendDialogueEnd(
         sessionId: SessionId,
@@ -2815,6 +2838,7 @@ class GmcpEmitter(
     private data class DialogueNodePayload(
         val mobName: String,
         val text: String,
+        val voiceUrl: String?,
         val choices: List<DialogueChoicePayload>,
     )
 

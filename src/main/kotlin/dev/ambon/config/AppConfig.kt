@@ -56,6 +56,7 @@ data class AppConfig(
     val images: ImagesConfig = ImagesConfig(),
     val videos: VideosConfig = VideosConfig(),
     val audio: AudioConfig = AudioConfig(),
+    val voices: VoicesConfig = VoicesConfig(),
 ) {
     private fun warnConfig(message: String) {
         logger.warn { "CONFIG WARNING: $message" }
@@ -2891,6 +2892,17 @@ data class VideosConfig(
 
 data class AudioConfig(
     val baseUrl: String = "/audio/",
+)
+
+/**
+ * Dialogue voice-over (text-to-speech) clips. Clips are generated and uploaded out-of-band
+ * (see `docs/VOICE_OVER_CONTRACT.md`); the engine only resolves and emits clip URLs in the
+ * `Dialogue.Node` GMCP package. Disabled by default so no `voiceUrl` is emitted unless a real
+ * clip CDN is configured. Path shape: `<baseUrl><zone>/<templateKey>/<nodeId>.mp3`.
+ */
+data class VoicesConfig(
+    val enabled: Boolean = false,
+    val baseUrl: String = "/voices/",
 )
 
 private fun Int.requireValidPort(fieldName: String) {

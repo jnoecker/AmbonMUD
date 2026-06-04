@@ -1010,6 +1010,7 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const mobName = typeof packet.mobName === "string" ? packet.mobName : "Unknown";
       const text = typeof packet.text === "string" ? packet.text : "";
+      const voiceUrl = typeof packet.voiceUrl === "string" ? packet.voiceUrl : null;
       const choices: DialogueChoice[] = Array.isArray(packet.choices)
         ? packet.choices
             .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
@@ -1018,7 +1019,7 @@ export function applyGmcpPackage(
               text: typeof e.text === "string" ? e.text : "",
             }))
         : [];
-      ctx.setDialogue({ mobName, text, choices });
+      ctx.setDialogue({ mobName, text, choices, voiceUrl });
       break;
     }
 

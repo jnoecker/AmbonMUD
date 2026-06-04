@@ -222,6 +222,8 @@ class EngineServer(
                         playerLocationIndex = playerLocationIndex,
                     ),
                     imagesBaseUrl = config.images.baseUrl,
+                    voicesBaseUrl = config.voices.baseUrl,
+                    voicesEnabled = config.voices.enabled,
                 ).run()
             }
 

@@ -562,6 +562,8 @@ function App() {
   // Audio for room music/ambient
   useEffect(() => { audio.playMusic(state.room.music ?? null); }, [state.room.music]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { audio.playAmbient(state.room.ambient ?? null); }, [state.room.ambient]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Dialogue voice-over: play the current node's clip, stop when dialogue clears
+  useEffect(() => { audio.playVoice(state.dialogue?.voiceUrl ?? null); }, [state.dialogue?.voiceUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Combat audio
   const hpPercent = state.vitals.maxHp > 0 ? state.vitals.hp / state.vitals.maxHp : 1;
