@@ -23,39 +23,45 @@ text they do today and simply have no audio.
 
 ## R2 path shape
 
+This is the canonical path. **Both repos must build it identically** — the engine resolves it
+into `voiceUrl`, and Arcanum must upload to exactly this key or the client 404s.
+
 ```
-voices/<zone>/<templateKey>/<nodeId>.mp3
+voices/<zone>/<templateKey>/<nodeId>.<sha8>.mp3
 ```
 
 - `<zone>` — the zone segment of the mob's `RoomId` (`<zone>:<room>`). Disambiguates
   `templateKey` collisions across zones.
 - `<templateKey>` — the mob template key (e.g. `headmaster_aldric`), present on `MobState`.
 - `<nodeId>` — the dialogue node's map key (e.g. `root`, `quest_info`, `farewell`).
+- `<sha8>` — the **first 8 lowercase-hex chars of `SHA-256` over the raw node text**, UTF-8
+  encoded (see "Hash spec" below). Makes the path edit-safe: changing a line yields a new
+  filename, so stale audio is never served and old clips become GC-able.
 - `.mp3` — ElevenLabs' default output. Web Audio's `decodeAudioData` decodes MP3 natively,
   so no transcoding is required.
 
-This tuple is the natural primary key for a line: human-debuggable in the R2 console, and
-Arcanum has all three values while walking the YAML. Both sides construct the identical string
-from the same three values.
+The engine computes `<sha8>` from the same `node.text` it already sends, so the URL stays
+deterministic with no extra coordination beyond agreeing on the hash spec.
 
-### Edit-safety variant (recommended)
+### Hash spec
 
-Append a short content hash of the line text:
+`<sha8>` must be computed identically on both sides:
 
-```
-voices/<zone>/<templateKey>/<nodeId>.<sha8>.mp3
-```
+1. Take the **raw node text** string — exactly as authored in the dialogue YAML, no trimming,
+   normalization, or interpolation.
+2. Encode it as **UTF-8** bytes.
+3. `SHA-256` those bytes.
+4. Render the digest as **lowercase hex** and take the **first 8 characters**.
 
-where `<sha8>` is the first 8 hex chars of `SHA-256(text)` over the exact node text string.
+Reference vectors (verify your generator against these):
 
-- A text edit changes the hash → new filename → no stale audio is ever served; old clips
-  become GC-able.
-- The engine computes `<sha8>` from the same `node.text` it already sends, so the URL stays
-  deterministic and the two repos stay in sync with no extra coordination beyond agreeing on
-  "SHA-256, first 8 hex chars, of the raw text".
+| text | sha8 |
+|---|---|
+| `Hello!` | `334d016f` |
+| `Hello there!` | `89b8b8e4` |
 
-Without the hash, an edited line plays the previous clip until Arcanum overwrites it in place —
-acceptable for a CDN, but it leaves a staleness window during content authoring.
+Equivalent shell check: `printf 'Hello!' | sha256sum` → starts with `334d016f`.
+The engine implementation lives in `GmcpEmitter.sha8(...)`.
 
 ## GMCP shape (AmbonMUD → web client)
 
@@ -98,11 +104,8 @@ injected into `GmcpEmitter` the same way `imagesBaseUrl` is, with the same trail
 (`voicesBase`). The engine emits `voiceUrl` only when `enabled` is true **and** the line has a
 complete identity (non-blank zone, templateKey, and nodeId); otherwise it sends `null`.
 
-> **Path version note:** the engine currently emits the **structural** path
-> (`voices/<zone>/<templateKey>/<nodeId>.mp3`). The `.<sha8>` edit-safe variant is documented
-> above but not yet implemented — adopting it is a one-line change to `dialogueVoiceUrl` in
-> `GmcpEmitter.kt` plus the matching change in Arcanum's generator, and does not change the
-> `voiceUrl` field shape.
+The engine emits the hashed path (`voices/<zone>/<templateKey>/<nodeId>.<sha8>.mp3`) — see
+"Hash spec" above. Arcanum must upload to the same hashed key.
 
 ## Engine change surface
 
@@ -128,8 +131,8 @@ Small — a state addition and a signature tweak, no new systems:
 | Concern | Decision |
 |---|---|
 | GMCP field | `voiceUrl: String?` on `DialogueNodePayload`, fully-resolved URL |
-| R2 path | `voices/<zone>/<templateKey>/<nodeId>.mp3` (`+.<sha8>` for edit-safety) |
-| Hash (if used) | SHA-256 of raw node text, first 8 hex chars |
+| R2 path | `voices/<zone>/<templateKey>/<nodeId>.<sha8>.mp3` |
+| Hash | SHA-256 of raw UTF-8 node text, first 8 lowercase-hex chars |
 | Audio format | MP3 (ElevenLabs default, Web Audio-native) |
 | Engine config | `ambonmud.voices.enabled` (opt-in) + `ambonmud.voices.baseUrl`, local `/voices/` fallback |
 | Voiced content | NPC node text only; choices stay text |

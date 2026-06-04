@@ -195,8 +195,9 @@ class DialogueSystemTest {
                     .filterIsInstance<OutboundEvent.GmcpData>()
                     .firstOrNull { it.gmcpPackage == "Dialogue.Node" }
                     ?: error("Expected a Dialogue.Node GMCP event")
+            // root node text is "Hello there!"; sha8("Hello there!") = 89b8b8e4
             assertTrue(
-                gmcp.jsonData.contains("\"voiceUrl\":\"/voices/test/wise_sage/root.mp3\""),
+                gmcp.jsonData.contains("\"voiceUrl\":\"/voices/test/wise_sage/root.89b8b8e4.mp3\""),
                 "Expected resolved voiceUrl, got=${gmcp.jsonData}",
             )
         }

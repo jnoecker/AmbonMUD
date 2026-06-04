@@ -981,9 +981,10 @@ class GmcpEmitterTest {
             )
             val events = drainGmcp()
             assertEquals(1, events.size)
+            // sha8("Hello!") = 334d016f
             assertTrue(
                 events[0].jsonData.contains(
-                    "\"voiceUrl\":\"https://cdn.example.com/voices/academy/headmaster_aldric/root.mp3\"",
+                    "\"voiceUrl\":\"https://cdn.example.com/voices/academy/headmaster_aldric/root.334d016f.mp3\"",
                 ),
                 "Expected resolved voiceUrl, got=${events[0].jsonData}",
             )

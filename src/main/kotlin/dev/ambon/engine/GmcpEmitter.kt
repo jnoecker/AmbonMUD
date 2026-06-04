@@ -1956,7 +1956,7 @@ class GmcpEmitter(
             DialogueNodePayload(
                 mobName = mobName,
                 text = text,
-                voiceUrl = dialogueVoiceUrl(zone, templateKey, nodeId),
+                voiceUrl = dialogueVoiceUrl(zone, templateKey, nodeId, text),
                 choices = choices.map { (index, choiceText) -> DialogueChoicePayload(index = index, text = choiceText) },
             ),
         )
@@ -1965,18 +1965,29 @@ class GmcpEmitter(
     /**
      * Resolves the voice-over clip URL for a dialogue node, or null when voice-over is disabled
      * or the line lacks a stable identity. Path shape mirrors `docs/VOICE_OVER_CONTRACT.md`:
-     * `<voicesBase><zone>/<templateKey>/<nodeId>.mp3`.
+     * `<voicesBase><zone>/<templateKey>/<nodeId>.<sha8>.mp3`, where `<sha8>` is the first 8 hex
+     * chars of SHA-256 over the raw node text. The hash makes the path edit-safe: changing a
+     * line yields a new filename, so stale audio is never served. Arcanum must hash identically.
      */
     private fun dialogueVoiceUrl(
         zone: String,
         templateKey: String,
         nodeId: String,
+        text: String,
     ): String? =
         if (!voicesEnabled || zone.isBlank() || templateKey.isBlank() || nodeId.isBlank()) {
             null
         } else {
-            "$voicesBase$zone/$templateKey/$nodeId.mp3"
+            "$voicesBase$zone/$templateKey/$nodeId.${sha8(text)}.mp3"
         }
+
+    /** First 8 lowercase-hex chars of SHA-256 over the UTF-8 bytes of [text]. */
+    private fun sha8(text: String): String =
+        java.security.MessageDigest
+            .getInstance("SHA-256")
+            .digest(text.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+            .take(8)
 
     suspend fun sendDialogueEnd(
         sessionId: SessionId,
