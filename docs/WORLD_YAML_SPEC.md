@@ -129,7 +129,7 @@ room:           <room-id string, required>
 tier:           <string, optional - one of weak|standard|elite|boss (case-insensitive); default standard>
 level:          <integer >= 1, optional; default 1>
 hp:             <integer >= 1, optional - overrides tier-computed hp>
-minDamage:      <integer >= 1, optional - overrides tier-computed minDamage>
+minDamage:      <integer >= 0, optional - overrides tier-computed minDamage; 0 allows harmless mobs (e.g. a training dummy)>
 maxDamage:      <integer >= minDamage, optional - overrides tier-computed maxDamage>
 armor:          <integer >= 0, optional - overrides tier baseArmor (flat damage reduction, no level scaling)>
 xpReward:       <long >= 0, optional - overrides tier-computed xpReward>
