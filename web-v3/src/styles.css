@@ -18954,6 +18954,15 @@ html:has(.game-shell),
   color: var(--text-secondary);
 }
 
+/* Auto-peek paragraph — quieter than the description so it reads as wayfinding, not prose. */
+.room-panel-peek {
+  margin: 6px 0 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 .room-panel-nav {
   flex: 0 0 auto;
   display: flex;
