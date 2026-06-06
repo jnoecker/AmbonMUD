@@ -95,7 +95,7 @@ export function AudioControls({ audio, skinned = false }: AudioControlsProps) {
   }, [expanded]);
 
   const panel = (
-    <div className="audio-sliders" role="group" aria-label="Volume controls">
+    <div className="audio-sliders" role="group" aria-label={skinned ? "Audio settings" : "Volume controls"}>
       {skinned && (
         <button
           type="button"
@@ -121,8 +121,8 @@ export function AudioControls({ audio, skinned = false }: AudioControlsProps) {
           type="button"
           className="vskin-audio-hotspot"
           onClick={toggleExpanded}
-          title="Audio settings"
-          aria-label="Audio settings"
+          title={audio.enabled ? "Audio settings (sound on)" : "Audio settings (sound off)"}
+          aria-label={audio.enabled ? "Audio settings (sound on)" : "Audio settings (sound off)"}
           aria-expanded={expanded}
         >
           <span
