@@ -83,13 +83,22 @@ class DialogueSystemTest {
                 ),
         )
 
-    private fun createEnv(withGmcp: Boolean = false): TestEnv {
+    private fun createEnv(
+        withGmcp: Boolean = false,
+        voicesEnabled: Boolean = false,
+        voicesBaseUrl: String = "/voices/",
+    ): TestEnv {
         val mobs = MobRegistry()
         val outbound = LocalOutboundBus()
         val items = ItemRegistry()
         val players = dev.ambon.test.buildTestPlayerRegistry(testRoom, InMemoryPlayerRepository(), items)
         val gmcpEmitter = if (withGmcp) {
-            GmcpEmitter(outbound = outbound, supportsPackage = { _, _ -> true })
+            GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                voicesBaseUrl = voicesBaseUrl,
+                voicesEnabled = voicesEnabled,
+            )
         } else {
             null
         }
@@ -123,6 +132,7 @@ class DialogueSystemTest {
     private fun TestEnv.addDialogueMob(
         dialogue: DialogueTree = simpleDialogue,
         room: RoomId = testRoom,
+        templateKey: String = "",
     ): MobId {
         val mobId = MobId("test:sage")
         mobs.upsert(
@@ -131,6 +141,7 @@ class DialogueSystemTest {
                 name = "a wise sage",
                 roomId = room,
                 dialogue = dialogue,
+                templateKey = templateKey,
             ),
         )
         return mobId
@@ -166,6 +177,71 @@ class DialogueSystemTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("1.") },
                 "Expected choice listing. got=$outs",
+            )
+        }
+
+    @Test
+    fun `dialogue node emits resolved voiceUrl from mob identity when voices enabled`() =
+        runTest {
+            val env = createEnv(withGmcp = true, voicesEnabled = true)
+            val sid = env.loginPlayer()
+            // testRoom is "test:plaza" → zone "test"; rootNodeId is "root".
+            env.addDialogueMob(templateKey = "wise_sage")
+
+            assertNull(env.system.startConversation(sid, "sage"))
+
+            val gmcp =
+                env.outbound.drainAll()
+                    .filterIsInstance<OutboundEvent.GmcpData>()
+                    .firstOrNull { it.gmcpPackage == "Dialogue.Node" }
+                    ?: error("Expected a Dialogue.Node GMCP event")
+            // root node text is "Hello there!"; sha8("Hello there!") = 89b8b8e4
+            assertTrue(
+                gmcp.jsonData.contains("\"voiceUrl\":\"/voices/test/wise_sage/root.89b8b8e4.mp3\""),
+                "Expected resolved voiceUrl, got=${gmcp.jsonData}",
+            )
+        }
+
+    @Test
+    fun `dialogue node omits voiceUrl when voices disabled`() =
+        runTest {
+            val env = createEnv(withGmcp = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob(templateKey = "wise_sage")
+
+            assertNull(env.system.startConversation(sid, "sage"))
+
+            val gmcp =
+                env.outbound.drainAll()
+                    .filterIsInstance<OutboundEvent.GmcpData>()
+                    .firstOrNull { it.gmcpPackage == "Dialogue.Node" }
+                    ?: error("Expected a Dialogue.Node GMCP event")
+            assertTrue(gmcp.jsonData.contains("\"voiceUrl\":null"))
+        }
+
+    @Test
+    fun `advancing via selectChoice resolves voiceUrl for the child node`() =
+        runTest {
+            // Guards the second nodeId threading site (selectChoice's nextNode), distinct from
+            // the root path above — the voiceUrl must reflect the child node's id + text hash.
+            val env = createEnv(withGmcp = true, voicesEnabled = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob(templateKey = "wise_sage")
+            assertNull(env.system.startConversation(sid, "sage"))
+            env.outbound.drainAll() // discard the root Dialogue.Node
+
+            val outcome = env.system.selectChoice(sid, 1) // "Tell me more." → node "more"
+            assertTrue(outcome is DialogueOutcome.Ok, "Expected Ok outcome. got=$outcome")
+
+            val gmcp =
+                env.outbound.drainAll()
+                    .filterIsInstance<OutboundEvent.GmcpData>()
+                    .firstOrNull { it.gmcpPackage == "Dialogue.Node" }
+                    ?: error("Expected a Dialogue.Node GMCP event")
+            // "more" node text is "This is more info."; sha8("This is more info.") = 004276fc
+            assertTrue(
+                gmcp.jsonData.contains("\"voiceUrl\":\"/voices/test/wise_sage/more.004276fc.mp3\""),
+                "Expected child-node voiceUrl, got=${gmcp.jsonData}",
             )
         }
 

@@ -18,6 +18,7 @@ interface AudioPrefs {
   enabled: boolean;
   musicVolume: number;
   ambientVolume: number;
+  voiceVolume: number;
 }
 
 function loadPrefs(): AudioPrefs {
@@ -29,10 +30,11 @@ function loadPrefs(): AudioPrefs {
         enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : false,
         musicVolume: typeof parsed.musicVolume === "number" ? parsed.musicVolume : 0.5,
         ambientVolume: typeof parsed.ambientVolume === "number" ? parsed.ambientVolume : 0.5,
+        voiceVolume: typeof parsed.voiceVolume === "number" ? parsed.voiceVolume : 0.7,
       };
     }
   } catch { /* ignore */ }
-  return { enabled: false, musicVolume: 0.5, ambientVolume: 0.5 };
+  return { enabled: false, musicVolume: 0.5, ambientVolume: 0.5, voiceVolume: 0.7 };
 }
 
 function savePrefs(prefs: AudioPrefs) {
@@ -86,11 +88,15 @@ export interface AudioEngine {
   enabled: boolean;
   musicVolume: number;
   ambientVolume: number;
+  voiceVolume: number;
   toggle: () => void;
   setMusicVolume: (v: number) => void;
   setAmbientVolume: (v: number) => void;
+  setVoiceVolume: (v: number) => void;
   playMusic: (url: string | null) => void;
   playAmbient: (url: string | null) => void;
+  /** Play a one-shot dialogue voice-over clip (or stop the current one when null). */
+  playVoice: (url: string | null) => void;
   setCombatState: (inCombat: boolean, hpPercent: number) => void;
   stopAll: () => void;
 }
@@ -100,6 +106,12 @@ export function useAudioEngine(): AudioEngine {
   const ctxRef = useRef<AudioContext | null>(null);
   const musicRef = useRef<TrackState>(emptyTrack());
   const ambientRef = useRef<TrackState>(emptyTrack());
+  const voiceRef = useRef<{ source: AudioBufferSourceNode | null; gain: GainNode | null }>({
+    source: null,
+    gain: null,
+  });
+  // Incremented per playVoice call so a slow fetch can't resurrect a superseded clip.
+  const voiceTokenRef = useRef(0);
   const combatFxRef = useRef<CombatFxState>(emptyCombatFx());
   const combatActiveRef = useRef(false);
   const prefsRef = useRef(prefs);
@@ -253,7 +265,13 @@ export function useAudioEngine(): AudioEngine {
       const target = prefs.enabled ? prefs.ambientVolume : 0;
       fadeGain(ambientGain, ambientGain.gain.value, target, 300);
     }
-  }, [prefs.enabled, prefs.musicVolume, prefs.ambientVolume]);
+    // Voice is one-shot, but a clip in flight should track live slider changes too.
+    const voiceGain = voiceRef.current?.gain;
+    if (voiceGain) {
+      const target = prefs.enabled ? prefs.voiceVolume : 0;
+      fadeGain(voiceGain, voiceGain.gain.value, target, 300);
+    }
+  }, [prefs.enabled, prefs.musicVolume, prefs.ambientVolume, prefs.voiceVolume]);
 
   const playMusic = useCallback((url: string | null) => {
     startTrack(musicRef, url, prefsRef.current.musicVolume, true);
@@ -262,6 +280,62 @@ export function useAudioEngine(): AudioEngine {
   const playAmbient = useCallback((url: string | null) => {
     startTrack(ambientRef, url, prefsRef.current.ambientVolume, false);
   }, [startTrack]);
+
+  // ── Dialogue voice-over (one-shot) ──────────────────────────
+
+  const stopVoice = useCallback(() => {
+    voiceTokenRef.current += 1;
+    const v = voiceRef.current;
+    if (v.source) {
+      try { v.source.stop(); } catch { /* already stopped */ }
+      try { v.source.disconnect(); } catch { /* ok */ }
+    }
+    if (v.gain) {
+      try { v.gain.disconnect(); } catch { /* ok */ }
+    }
+    voiceRef.current = { source: null, gain: null };
+  }, []);
+
+  const playVoice = useCallback(async (url: string | null) => {
+    stopVoice();
+    // Skip entirely (incl. the network fetch) when muted via master toggle or voice slider at 0.
+    if (!url || !prefsRef.current.enabled || prefsRef.current.voiceVolume <= 0) return;
+    const token = voiceTokenRef.current;
+
+    const ctx = getCtx();
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      try { await ctx.resume(); } catch { return; }
+    }
+
+    let buffer = bufferCache.current.get(url);
+    if (!buffer) {
+      try {
+        buffer = await fetchAudioBuffer(ctx, url);
+        bufferCache.current.set(url, buffer);
+      } catch {
+        return;
+      }
+    }
+
+    // A newer playVoice/stopVoice (or disable) superseded this one while fetching/decoding.
+    if (token !== voiceTokenRef.current || !prefsRef.current.enabled) return;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(prefsRef.current.voiceVolume, ctx.currentTime);
+    gain.connect(ctx.destination);
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = false;
+    source.connect(gain);
+    source.onended = () => {
+      try { gain.disconnect(); } catch { /* ok */ }
+    };
+    source.start(0);
+
+    voiceRef.current = { source, gain };
+  }, [getCtx, stopVoice]);
 
   // ── Combat effects ──────────────────────────────────────────
 
@@ -352,12 +426,13 @@ export function useAudioEngine(): AudioEngine {
 
   const stopAll = useCallback(() => {
     stopPulseLfo();
+    stopVoice();
     combatActiveRef.current = false;
     if (musicRef.current) stopTrack(musicRef.current, 500);
     if (ambientRef.current) stopTrack(ambientRef.current, 500);
     Object.assign(musicRef, { current: emptyTrack() });
     Object.assign(ambientRef, { current: emptyTrack() });
-  }, [stopTrack, stopPulseLfo]);
+  }, [stopTrack, stopPulseLfo, stopVoice]);
 
   const toggle = useCallback(() => {
     const next = !prefsRef.current.enabled;
@@ -380,16 +455,22 @@ export function useAudioEngine(): AudioEngine {
     updatePrefs({ ambientVolume: Math.max(0, Math.min(1, v)) });
   }, [updatePrefs]);
 
+  const setVoiceVolume = useCallback((v: number) => {
+    updatePrefs({ voiceVolume: Math.max(0, Math.min(1, v)) });
+  }, [updatePrefs]);
+
   // Cleanup on unmount
   useEffect(() => {
     const music = musicRef;
     const ambient = ambientRef;
     const ctx = ctxRef;
     const combatFx = combatFxRef;
+    const voice = voiceRef;
     return () => {
       if (combatFx.current.lfo) try { combatFx.current.lfo.stop(); } catch { /* ok */ }
       if (music.current?.source) try { music.current.source.stop(); } catch { /* ok */ }
       if (ambient.current?.source) try { ambient.current.source.stop(); } catch { /* ok */ }
+      if (voice.current?.source) try { voice.current.source.stop(); } catch { /* ok */ }
       if (ctx.current) try { ctx.current.close(); } catch { /* ok */ }
     };
   }, []);
@@ -398,11 +479,14 @@ export function useAudioEngine(): AudioEngine {
     enabled: prefs.enabled,
     musicVolume: prefs.musicVolume,
     ambientVolume: prefs.ambientVolume,
+    voiceVolume: prefs.voiceVolume,
     toggle,
     setMusicVolume,
     setAmbientVolume,
+    setVoiceVolume,
     playMusic,
     playAmbient,
+    playVoice,
     setCombatState,
     stopAll,
   };

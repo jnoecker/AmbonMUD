@@ -941,6 +941,109 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendDialogueNode omits voiceUrl when voices disabled`() =
+        runTest {
+            val e = emitter("Dialogue")
+            e.sendDialogueNode(
+                sid,
+                "a sage",
+                "Hello!",
+                listOf(1 to "Hi"),
+                zone = "academy",
+                templateKey = "headmaster_aldric",
+                nodeId = "root",
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"voiceUrl\":null"))
+        }
+
+    @Test
+    fun `sendDialogueNode resolves voiceUrl when voices enabled`() =
+        runTest {
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg == "Dialogue" || pkg.startsWith("Dialogue.") },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    voicesBaseUrl = "https://cdn.example.com/voices/",
+                    voicesEnabled = true,
+                )
+            e.sendDialogueNode(
+                sid,
+                "a sage",
+                "Hello!",
+                listOf(1 to "Hi"),
+                zone = "academy",
+                templateKey = "headmaster_aldric",
+                nodeId = "root",
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            // sha8("Hello!") = 334d016f
+            assertTrue(
+                events[0].jsonData.contains(
+                    "\"voiceUrl\":\"https://cdn.example.com/voices/academy/headmaster_aldric/root.334d016f.mp3\"",
+                ),
+                "Expected resolved voiceUrl, got=${events[0].jsonData}",
+            )
+        }
+
+    @Test
+    fun `sendDialogueNode strips zone prefix from a qualified templateKey`() =
+        runTest {
+            // Zone-loaded mobs carry a qualified templateKey (WorldLoader: "<zone>:<rawId>").
+            // The path must use the unqualified key in its own segment, not "academy:headmaster_aldric"
+            // (which would also duplicate the zone and put an illegal ':' in the path).
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg == "Dialogue" || pkg.startsWith("Dialogue.") },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    voicesBaseUrl = "https://cdn.example.com/voices/",
+                    voicesEnabled = true,
+                )
+            e.sendDialogueNode(
+                sid,
+                "a sage",
+                "Hello!",
+                listOf(1 to "Hi"),
+                zone = "academy",
+                templateKey = "academy:headmaster_aldric",
+                nodeId = "root",
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            // sha8("Hello!") = 334d016f; key segment is unqualified.
+            assertTrue(
+                events[0].jsonData.contains(
+                    "\"voiceUrl\":\"https://cdn.example.com/voices/academy/headmaster_aldric/root.334d016f.mp3\"",
+                ),
+                "Expected zone prefix stripped from templateKey, got=${events[0].jsonData}",
+            )
+        }
+
+    @Test
+    fun `sendDialogueNode omits voiceUrl when identity blank even if enabled`() =
+        runTest {
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg == "Dialogue" || pkg.startsWith("Dialogue.") },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    voicesBaseUrl = "https://cdn.example.com/voices/",
+                    voicesEnabled = true,
+                )
+            e.sendDialogueNode(sid, "a sage", "Hello!", listOf(1 to "Hi"))
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"voiceUrl\":null"))
+        }
+
+    @Test
     fun `sendDialogueNode skipped when not supported`() =
         runTest {
             val e = emitter()

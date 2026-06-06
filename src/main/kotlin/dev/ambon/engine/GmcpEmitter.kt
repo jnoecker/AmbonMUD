@@ -90,6 +90,8 @@ class GmcpEmitter(
     private val statRegistry: StatRegistry? = null,
     private val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
     imagesBaseUrl: String = "/images/",
+    voicesBaseUrl: String = "/voices/",
+    private val voicesEnabled: Boolean = false,
     private val globalAssets: Map<String, String> = emptyMap(),
     private val spriteRegistry: SpriteRegistry? = null,
     private val getMobEffects: (dev.ambon.domain.ids.MobId) -> List<ActiveEffectSnapshot> = { emptyList() },
@@ -107,6 +109,7 @@ class GmcpEmitter(
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
+    private val voicesBase = if (voicesBaseUrl.endsWith("/")) voicesBaseUrl else "$voicesBaseUrl/"
 
     /**
      * Tracks the last zone seen by each session so we only emit zone-change GMCP
@@ -1943,6 +1946,9 @@ class GmcpEmitter(
         mobName: String,
         text: String,
         choices: List<Pair<Int, String>>,
+        zone: String = "",
+        templateKey: String = "",
+        nodeId: String = "",
     ) {
         emit(
             sessionId,
@@ -1950,10 +1956,43 @@ class GmcpEmitter(
             DialogueNodePayload(
                 mobName = mobName,
                 text = text,
+                voiceUrl = dialogueVoiceUrl(zone, templateKey, nodeId, text),
                 choices = choices.map { (index, choiceText) -> DialogueChoicePayload(index = index, text = choiceText) },
             ),
         )
     }
+
+    /**
+     * Resolves the voice-over clip URL for a dialogue node, or null when voice-over is disabled
+     * or the line lacks a stable identity. Path shape mirrors `docs/VOICE_OVER_CONTRACT.md`:
+     * `<voicesBase><zone>/<templateKey>/<nodeId>.<sha8>.mp3`, where `<sha8>` is the first 8 hex
+     * chars of SHA-256 over the raw node text. The hash makes the path edit-safe: changing a
+     * line yields a new filename, so stale audio is never served. Arcanum must hash identically.
+     *
+     * [templateKey] arrives zone-qualified for zone-loaded mobs (`WorldLoader` qualifies template
+     * ids as `<zone>:<rawId>`), so we strip the prefix to the local key — the contract puts the
+     * unqualified key in its own segment (`headmaster_aldric`, not `academy:headmaster_aldric`),
+     * and `zone` is already a separate segment. Unqualified keys pass through unchanged.
+     */
+    private fun dialogueVoiceUrl(
+        zone: String,
+        templateKey: String,
+        nodeId: String,
+        text: String,
+    ): String? =
+        if (!voicesEnabled || zone.isBlank() || templateKey.isBlank() || nodeId.isBlank()) {
+            null
+        } else {
+            "$voicesBase$zone/${templateKey.substringAfter(':')}/$nodeId.${sha8(text)}.mp3"
+        }
+
+    /** First 8 lowercase-hex chars of SHA-256 over the UTF-8 bytes of [text]. */
+    private fun sha8(text: String): String =
+        java.security.MessageDigest
+            .getInstance("SHA-256")
+            .digest(text.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+            .take(8)
 
     suspend fun sendDialogueEnd(
         sessionId: SessionId,
@@ -2815,6 +2854,7 @@ class GmcpEmitter(
     private data class DialogueNodePayload(
         val mobName: String,
         val text: String,
+        val voiceUrl: String?,
         val choices: List<DialogueChoicePayload>,
     )
 

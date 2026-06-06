@@ -412,6 +412,8 @@ class MudServer(
                     raceRegistryOverride = raceRegistry,
                     statRegistryOverride = statRegistry,
                     imagesBaseUrl = config.images.baseUrl,
+                    voicesBaseUrl = config.voices.baseUrl,
+                    voicesEnabled = config.voices.enabled,
                     globalAssets = config.images.globalAssets,
                     spriteRegistry = spriteRegistry,
                     worldLoader = {

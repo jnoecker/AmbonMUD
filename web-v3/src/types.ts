@@ -164,6 +164,8 @@ export interface DialogueState {
   mobName: string;
   text: string;
   choices: DialogueChoice[];
+  /** Resolved voice-over clip URL for the current node, or null when none. */
+  voiceUrl: string | null;
 }
 
 export interface Vitals {
