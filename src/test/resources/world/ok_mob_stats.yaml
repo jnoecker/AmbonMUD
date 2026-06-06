@@ -23,6 +23,13 @@ mobs:
     name: "the dungeon boss"
     room: hall
     tier: boss
+  harmless_dummy:
+    name: "a training dummy"
+    room: hall
+    hp: 500
+    minDamage: 0
+    maxDamage: 0
+    xpReward: 0
 rooms:
   hall:
     title: "Hall"

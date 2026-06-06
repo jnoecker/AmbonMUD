@@ -385,7 +385,9 @@ object WorldLoader {
 
                 val mobCtx = "Mob '${mobId.value}'"
                 requireAtLeast(resolvedHp, 1, mobCtx, "resolved hp")
-                requireAtLeast(resolvedMinDamage, 1, mobCtx, "resolved minDamage")
+                // 0 is allowed so builders can make harmless mobs (e.g. a training
+                // dummy that never hits back); negative damage is still rejected.
+                requireAtLeast(resolvedMinDamage, 0, mobCtx, "resolved minDamage")
                 if (resolvedMaxDamage < resolvedMinDamage) {
                     throw WorldLoadException(
                         "Mob '${mobId.value}' resolved maxDamage ($resolvedMaxDamage) must be >= " +

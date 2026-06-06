@@ -579,6 +579,26 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `loads mob with zero damage range as a harmless mob`() {
+        val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
+        val mobs = world.mobTemplates.mapKeys { it.key.value }
+
+        val dummy = mobs.getValue("ok_mob_stats:harmless_dummy")
+        assertEquals(500, dummy.maxHp)
+        assertEquals(0, dummy.damage.min)
+        assertEquals(0, dummy.damage.max)
+    }
+
+    @Test
+    fun `fails when mob minDamage is negative`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_mob_negative_damage.yaml")
+            }
+        assertTrue(ex.message!!.contains("minDamage", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
     fun `fails when mob drop chance is out of range`() {
         val ex =
             assertThrows(WorldLoadException::class.java) {
