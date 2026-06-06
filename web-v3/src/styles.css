@@ -18335,14 +18335,58 @@ html:has(.game-shell),
 }
 
 .vskin-gear .audio-controls,
-.vskin-gear .audio-controls > button {
+.vskin-audio-hotspot {
   width: 100%;
   height: 100%;
 }
 
-/* The painted gear is the visible affordance; the real control sits over it. */
-.vskin-gear .audio-controls > button {
-  opacity: 0;
+/* The painted gear is the visible affordance; the transparent hotspot sits over
+   it and opens the audio panel. A small badge in the gear's corner shows the
+   current sound state so the control reads as live, not just decoration. */
+.vskin-audio-hotspot {
+  position: relative;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.vskin-audio-badge {
+  position: absolute;
+  top: 4%;
+  right: 2%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-disabled);
+  border: 1px solid rgb(0 0 0 / 35%);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 40%);
+}
+
+.vskin-audio-badge-on {
+  background: var(--color-status-online);
+  box-shadow: 0 0 6px var(--color-status-online), 0 1px 3px rgb(0 0 0 / 40%);
+}
+
+/* Master sound toggle row at the top of the skinned audio panel. */
+.audio-master-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface-chip);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.audio-master-row.audio-master-on {
+  color: var(--text-bright);
+  background: linear-gradient(135deg, rgb(91 121 84 / 78%), rgb(73 107 80 / 74%));
+  border-color: rgb(120 160 110 / 40%);
 }
 
 /* ── Skinned room sign (room_sign_bg art, with its own rope baked in) ───── */
