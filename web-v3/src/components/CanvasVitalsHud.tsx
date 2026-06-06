@@ -70,7 +70,7 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
             aria-label={manaTitle}
           />
           <div className="vskin-gear">
-            <AudioControls audio={audio} />
+            <AudioControls audio={audio} skinned />
           </div>
         </div>
       </div>
