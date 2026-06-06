@@ -48,7 +48,7 @@ class AutopeekCommandRouterTest {
             h.router.handle(sid, Command.Look)
             val outs = h.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text == "You see Test Outpost to the north." },
+                outs.any { it is OutboundEvent.SendText && it.text == "You see {c:room}Test Outpost{/c} to the north." },
                 "Expected peek line under room description, got=$outs",
             )
         }
@@ -65,7 +65,7 @@ class AutopeekCommandRouterTest {
             h.router.handle(sid, Command.Look)
             val outs = h.outbound.drainAll()
             assertFalse(
-                outs.any { it is OutboundEvent.SendText && it.text.startsWith("You see Test Outpost") },
+                outs.any { it is OutboundEvent.SendText && it.text.startsWith("You see ") },
                 "Expected no peek line when autopeek is off, got=$outs",
             )
         }
@@ -87,7 +87,7 @@ class AutopeekCommandRouterTest {
                 "Expected confirmation, got=$onOuts",
             )
             assertTrue(
-                onOuts.any { it is OutboundEvent.SendText && it.text == "You see Test Outpost to the north." },
+                onOuts.any { it is OutboundEvent.SendText && it.text == "You see {c:room}Test Outpost{/c} to the north." },
                 "Expected immediate room refresh with peek line, got=$onOuts",
             )
 
@@ -99,7 +99,7 @@ class AutopeekCommandRouterTest {
                 "Expected confirmation, got=$offOuts",
             )
             assertFalse(
-                offOuts.any { it is OutboundEvent.SendText && it.text.startsWith("You see Test Outpost") },
+                offOuts.any { it is OutboundEvent.SendText && it.text.startsWith("You see ") },
                 "Expected refreshed room view without peek line, got=$offOuts",
             )
         }

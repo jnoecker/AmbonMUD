@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { GameShell } from "./components/GameShell";
 import { Drawer } from "./components/Drawer";
+import { PeekSentence } from "./components/PeekSentence";
 import { PuzzlePopout } from "./components/PuzzlePopout";
 import { ShopPopout } from "./components/ShopPopout";
 import { TrainerPanel } from "./components/TrainerPanel";
@@ -55,7 +56,7 @@ import type {
   MonsterEntry,
   PopoutPanel,
 } from "./types";
-import { formatPeekSentence, sortExits, titleCaseWords } from "./utils";
+import { sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
 
 // ── Consider (threat assessment) helpers ────────────────────────────────────
@@ -1329,7 +1330,7 @@ function App() {
             )}
             <p className="room-popout-text">{state.room.description || "No room description available yet."}</p>
             {state.room.peek && state.room.peek.length > 0 && (
-              <p className="room-popout-peek">{formatPeekSentence(state.room.peek)}</p>
+              <p className="room-popout-peek"><PeekSentence peek={state.room.peek} /></p>
             )}
             <div className="room-popout-exits">
               {sortedExits.length === 0 ? (

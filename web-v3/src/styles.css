@@ -18963,6 +18963,11 @@ html:has(.game-shell),
   font-style: italic;
 }
 
+/* Room names inside the auto-peek sentence — dusty rose so destinations pop from the prose. */
+.peek-room-name {
+  color: var(--color-primary-dusty-rose);
+}
+
 .room-panel-nav {
   flex: 0 0 auto;
   display: flex;

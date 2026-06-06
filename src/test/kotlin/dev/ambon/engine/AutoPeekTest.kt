@@ -120,7 +120,7 @@ class AutoPeekTest {
     @Test
     fun `formats a single exit`() {
         assertEquals(
-            "You see The Old Mill to the north.",
+            "You see {c:room}The Old Mill{/c} to the north.",
             formatPeekLine(listOf(PeekExit(Direction.NORTH, "The Old Mill"))),
         )
     }
@@ -128,7 +128,7 @@ class AutoPeekTest {
     @Test
     fun `formats two exits with and`() {
         assertEquals(
-            "You see The Old Mill to the north and The Riverbank to the south.",
+            "You see {c:room}The Old Mill{/c} to the north and {c:room}The Riverbank{/c} to the south.",
             formatPeekLine(
                 listOf(
                     PeekExit(Direction.NORTH, "The Old Mill"),
@@ -141,7 +141,7 @@ class AutoPeekTest {
     @Test
     fun `formats three or more exits with oxford comma and vertical phrasing`() {
         assertEquals(
-            "You see The Old Mill to the north, The Attic above you, and The Cellar below you.",
+            "You see {c:room}The Old Mill{/c} to the north, {c:room}The Attic{/c} above you, and {c:room}The Cellar{/c} below you.",
             formatPeekLine(
                 listOf(
                     PeekExit(Direction.NORTH, "The Old Mill"),

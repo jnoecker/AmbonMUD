@@ -48,6 +48,9 @@ fun buildPeekExits(
 /**
  * Formats peek entries as a single sentence, e.g.
  * "You see The Old Mill to the north, The Riverbank to the south, and The Attic above you."
+ *
+ * Room names are wrapped in `{c:room}…{/c}` color tags — dusty rose on
+ * ANSI-enabled sessions, stripped everywhere else.
  */
 fun formatPeekLine(peeks: List<PeekExit>): String {
     val phrases = peeks.map { peek ->
@@ -56,7 +59,7 @@ fun formatPeekLine(peeks: List<PeekExit>): String {
             Direction.DOWN -> "below you"
             else -> "to the ${peek.direction.name.lowercase()}"
         }
-        "${peek.title} $where"
+        "{c:room}${peek.title}{/c} $where"
     }
     val joined = when (phrases.size) {
         1 -> phrases.single()

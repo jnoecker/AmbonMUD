@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { RoomState } from "../types";
-import { formatPeekSentence } from "../utils";
+import { PeekSentence } from "./PeekSentence";
 import { RoomExitsCompass } from "./RoomExitsCompass";
 
 interface RoomPanelProps {
@@ -37,7 +37,7 @@ export function RoomPanel({ room, exits, serverAssets, loggedIn, onCommand }: Ro
               {room.description || "No room description available yet."}
             </p>
             {room.peek && room.peek.length > 0 && (
-              <p className="room-panel-peek">{formatPeekSentence(room.peek)}</p>
+              <p className="room-panel-peek"><PeekSentence peek={room.peek} /></p>
             )}
           </div>
 

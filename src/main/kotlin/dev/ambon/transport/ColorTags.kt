@@ -16,6 +16,7 @@ internal object ColorTags {
         "turnin" to "\u001B[92m", // bright green  — quest turn-in ready
         "dialogue" to "\u001B[96m", // bright cyan   — has dialogue
         "aggro" to "\u001B[91m", // bright red    — aggressive mob
+        "room" to "\u001B[38;5;139m", // dusty rose (256-color) — adjacent room names in the auto-peek line
     )
 
     private val tagRegex = Regex("""\{c:([a-z]+)\}|\{/c\}""")
