@@ -9997,6 +9997,14 @@ body {
   white-space: pre-wrap;
 }
 
+/* Auto-peek paragraph — quieter than the description so it reads as wayfinding, not prose. */
+.room-popout-peek {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-style: italic;
+}
+
 .room-popout-exits {
   margin: 0;
   color: var(--text-secondary);

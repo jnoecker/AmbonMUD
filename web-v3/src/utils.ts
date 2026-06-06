@@ -28,6 +28,24 @@ export function sortExits(exits: Record<string, string>): Array<[string, string]
   });
 }
 
+/**
+ * Formats auto-peek entries as a sentence matching the server's telnet line, e.g.
+ * "You see The Old Mill to the north, The Riverbank to the south, and The Attic above you."
+ */
+export function formatPeekSentence(peek: Array<{ direction: string; title: string }>): string {
+  const phrases = peek.map((p) => {
+    const where = p.direction === "up" ? "above you" : p.direction === "down" ? "below you" : `to the ${p.direction}`;
+    return `${p.title} ${where}`;
+  });
+  const joined =
+    phrases.length === 1
+      ? phrases[0]
+      : phrases.length === 2
+        ? `${phrases[0]} and ${phrases[1]}`
+        : `${phrases.slice(0, -1).join(", ")}, and ${phrases[phrases.length - 1]}`;
+  return `You see ${joined}.`;
+}
+
 export function parseGmcp(text: string): { pkg: string; data: unknown } | null {
   if (!text.trimStart().startsWith("{")) return null;
   try {

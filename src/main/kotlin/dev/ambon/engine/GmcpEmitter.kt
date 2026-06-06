@@ -244,6 +244,7 @@ class GmcpEmitter(
         pvpEnabled: Boolean = false,
         trainerName: String? = null,
         lastDeathZone: String? = null,
+        peek: List<RoomPeekEntry> = emptyList(),
     ) {
         val canDepart = lastDeathZone != null && sanctumRoomId() == room.id
         emit(
@@ -276,6 +277,7 @@ class GmcpEmitter(
                 housingBroker = room.housingBroker,
                 inn = room.inn,
                 canDepart = canDepart,
+                peek = peek,
             ),
         )
     }
@@ -531,6 +533,7 @@ class GmcpEmitter(
                 sprite = resolveSprite(player),
                 isStaff = player.isStaff,
                 autolootEnabled = player.autolootEnabled,
+                autopeekEnabled = player.autopeekEnabled,
                 wimpyThresholdPct = player.wimpyThresholdPct,
                 isDemo = player.playerId == null,
             ),
@@ -2532,6 +2535,14 @@ class GmcpEmitter(
         val housingBroker: Boolean = false,
         val inn: Boolean = false,
         val canDepart: Boolean = false,
+        /** Auto-peek entries: open exits paired with destination room titles. Empty when the player has autopeek off. */
+        val peek: List<RoomPeekEntry> = emptyList(),
+    )
+
+    /** One auto-peek entry for `Room.Info`: an open exit and the title of the room it leads to. */
+    data class RoomPeekEntry(
+        val direction: String,
+        val title: String,
     )
 
     private data class ItemPayload(
@@ -2710,6 +2721,7 @@ class GmcpEmitter(
         val sprite: String,
         val isStaff: Boolean,
         val autolootEnabled: Boolean,
+        val autopeekEnabled: Boolean,
         val wimpyThresholdPct: Int,
         /**
          * True for unclaimed demo characters (no persistent account). Web client

@@ -1895,6 +1895,11 @@ data class CommandsConfig(
                 description = "Auto-loot mob corpses when enabled",
                 category = "utility",
             ),
+            "autopeek" to CommandMetadata(
+                usage = "autopeek on/off/status",
+                description = "Append adjacent room names below room descriptions",
+                category = "utility",
+            ),
             "colors" to CommandMetadata("colors", "Preview ANSI color palette", "utility"),
             "clear" to CommandMetadata("clear", "Clear the terminal", "utility"),
             "quit" to CommandMetadata("quit/exit", "Disconnect", "utility"),

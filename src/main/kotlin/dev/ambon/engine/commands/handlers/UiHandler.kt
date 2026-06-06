@@ -11,7 +11,7 @@ import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
 
 class UiHandler(
-    ctx: EngineContext,
+    private val ctx: EngineContext,
     private val onPhase: (suspend (SessionId, String?) -> PhaseResult)? = null,
     private val commandsConfig: CommandsConfig = CommandsConfig(),
 ) : CommandHandler {
@@ -51,9 +51,12 @@ class UiHandler(
         router.on<Command.AnsiOff> { sid, _ -> handleAnsiOff(sid) }
         router.on<Command.ScreenReaderOn> { sid, _ -> handleScreenReaderToggle(sid, true) }
         router.on<Command.ScreenReaderOff> { sid, _ -> handleScreenReaderToggle(sid, false) }
-        router.on<Command.AutolootOn> { sid, _ -> handleAutoloot(sid, AutolootAction.ON) }
-        router.on<Command.AutolootOff> { sid, _ -> handleAutoloot(sid, AutolootAction.OFF) }
-        router.on<Command.AutolootStatus> { sid, _ -> handleAutoloot(sid, AutolootAction.STATUS) }
+        router.on<Command.AutolootOn> { sid, _ -> handleAutoloot(sid, ToggleAction.ON) }
+        router.on<Command.AutolootOff> { sid, _ -> handleAutoloot(sid, ToggleAction.OFF) }
+        router.on<Command.AutolootStatus> { sid, _ -> handleAutoloot(sid, ToggleAction.STATUS) }
+        router.on<Command.AutopeekOn> { sid, _ -> handleAutopeek(sid, ToggleAction.ON) }
+        router.on<Command.AutopeekOff> { sid, _ -> handleAutopeek(sid, ToggleAction.OFF) }
+        router.on<Command.AutopeekStatus> { sid, _ -> handleAutopeek(sid, ToggleAction.STATUS) }
         router.on<Command.Wimpy> { sid, cmd -> handleWimpy(sid, cmd) }
         router.on<Command.Clear> { sid, _ ->
             outbound.send(OutboundEvent.ClearScreen(sid))
@@ -88,27 +91,52 @@ class UiHandler(
         const val MAX_WIMPY_PCT = 95
     }
 
-    private enum class AutolootAction { ON, OFF, STATUS }
+    private enum class ToggleAction { ON, OFF, STATUS }
 
     private suspend fun handleAutoloot(
         sessionId: SessionId,
-        action: AutolootAction,
+        action: ToggleAction,
     ) {
         val me = players.get(sessionId) ?: return
         when (action) {
-            AutolootAction.ON -> {
+            ToggleAction.ON -> {
                 players.setAutolootEnabled(sessionId, true)
                 gmcpEmitter?.sendCharName(sessionId, me)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot enabled."))
             }
-            AutolootAction.OFF -> {
+            ToggleAction.OFF -> {
                 players.setAutolootEnabled(sessionId, false)
                 gmcpEmitter?.sendCharName(sessionId, me)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot disabled."))
             }
-            AutolootAction.STATUS -> {
+            ToggleAction.STATUS -> {
                 val status = if (me.autolootEnabled) "ON" else "OFF"
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-loot is $status."))
+            }
+        }
+    }
+
+    private suspend fun handleAutopeek(
+        sessionId: SessionId,
+        action: ToggleAction,
+    ) {
+        val me = players.get(sessionId) ?: return
+        when (action) {
+            ToggleAction.ON -> {
+                players.setAutopeekEnabled(sessionId, true)
+                gmcpEmitter?.sendCharName(sessionId, me)
+                outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-peek enabled."))
+                ctx.sendLook(sessionId)
+            }
+            ToggleAction.OFF -> {
+                players.setAutopeekEnabled(sessionId, false)
+                gmcpEmitter?.sendCharName(sessionId, me)
+                outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-peek disabled."))
+                ctx.sendLook(sessionId)
+            }
+            ToggleAction.STATUS -> {
+                val status = if (me.autopeekEnabled) "ON" else "OFF"
+                outbound.send(OutboundEvent.SendInfo(sessionId, "Auto-peek is $status."))
             }
         }
     }

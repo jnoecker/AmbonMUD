@@ -369,6 +369,7 @@ export function applyGmcpPackage(
         sprite: typeof packet.sprite === "string" ? packet.sprite : null,
         isStaff: packet.isStaff === true,
         autolootEnabled: packet.autolootEnabled === true,
+        autopeekEnabled: packet.autopeekEnabled === true,
         wimpyThresholdPct: typeof packet.wimpyThresholdPct === "number" ? packet.wimpyThresholdPct : 10,
         isDemo: packet.isDemo === true,
       });
@@ -423,6 +424,14 @@ export function applyGmcpPackage(
       const housingBroker = packet.housingBroker === true;
       const inn = packet.inn === true;
       const canDepart = packet.canDepart === true;
+      const rawPeek = Array.isArray(packet.peek) ? packet.peek : [];
+      const peek = rawPeek
+        .filter((p): p is Record<string, unknown> => p !== null && typeof p === "object")
+        .map((p) => ({
+          direction: typeof p.direction === "string" ? p.direction : "",
+          title: typeof p.title === "string" ? p.title : "",
+        }))
+        .filter((p) => p.direction.length > 0 && p.title.length > 0);
 
       // Detect actual room change (not just a look/refresh of the same room)
       ctx.setRoom((prev) => {
@@ -435,7 +444,7 @@ export function applyGmcpPackage(
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, canDepart };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, canDepart, peek };
       });
 
       if (id) {

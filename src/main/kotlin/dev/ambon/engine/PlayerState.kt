@@ -122,6 +122,8 @@ data class PlayerState(
     var description: String = "",
     /** When true, items dropped by mobs the player kills are auto-looted into inventory. */
     var autolootEnabled: Boolean = false,
+    /** When true, room descriptions append a peek line naming what lies through each open exit. */
+    var autopeekEnabled: Boolean = false,
     /**
      * Auto-flee HP-percent threshold (0..95, where 0 disables). When the player's HP is at or
      * below this percentage of max after a mob hit, combat is broken automatically. Default `10`
@@ -286,6 +288,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         authTokenHash = authTokenHash,
         authTokenIssuedAt = authTokenIssuedAt,
         autolootEnabled = autolootEnabled,
+        autopeekEnabled = autopeekEnabled,
         wimpyThresholdPct = wimpyThresholdPct,
         lastRespecAtMs = lastRespecAtMs,
     )
@@ -346,6 +349,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         authTokenHash = authTokenHash,
         authTokenIssuedAt = authTokenIssuedAt,
         autolootEnabled = autolootEnabled,
+        autopeekEnabled = autopeekEnabled,
         wimpyThresholdPct = wimpyThresholdPct,
         lastRespecAtMs = lastRespecAtMs,
     )

@@ -84,6 +84,7 @@ object PlayersTable : Table("players") {
     val screenReaderEnabled = bool("screen_reader_enabled").default(false)
     val description = text("description").default("")
     val autolootEnabled = bool("autoloot_enabled").default(false)
+    val autopeekEnabled = bool("autopeek_enabled").default(false)
     val wimpyThresholdPct = integer("wimpy_threshold_pct").default(10)
     val lastRespecAtMs = long("last_respec_at_ms").default(0L)
     val dialogueFlags = text("dialogue_flags").default("[]")
@@ -146,6 +147,7 @@ object PlayersTable : Table("players") {
             screenReaderEnabled = row[screenReaderEnabled],
             description = row[description],
             autolootEnabled = row[autolootEnabled],
+            autopeekEnabled = row[autopeekEnabled],
             wimpyThresholdPct = row[wimpyThresholdPct],
             lastRespecAtMs = row[lastRespecAtMs],
             dialogueFlags = safeReadJson(row[dialogueFlags], dialogueFlagsType, emptySet()),
@@ -213,6 +215,7 @@ object PlayersTable : Table("players") {
         statement[screenReaderEnabled] = record.screenReaderEnabled
         statement[description] = record.description
         statement[autolootEnabled] = record.autolootEnabled
+        statement[autopeekEnabled] = record.autopeekEnabled
         statement[wimpyThresholdPct] = record.wimpyThresholdPct
         statement[lastRespecAtMs] = record.lastRespecAtMs
         statement[dialogueFlags] = jsonMapper.writeValueAsString(record.dialogueFlags)

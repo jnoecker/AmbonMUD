@@ -23,9 +23,12 @@ import dev.ambon.engine.PlayerState
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.WorldStateRegistry
+import dev.ambon.engine.buildPeekExits
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.formatPeekLine
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.toGmcpPeek
 
 /**
  * Resolves [sessionId] to a [PlayerState] and executes [block] with it.
@@ -298,6 +301,14 @@ internal suspend fun sendLook(
     outbound.send(OutboundEvent.SendText(sessionId, room.title))
     outbound.send(OutboundEvent.SendText(sessionId, room.description))
 
+    // Auto-peek: a separate paragraph naming what lies through each open exit.
+    // Kept out of room.description so the description stays pure prose (e.g.
+    // for image generation) and never drifts out of sync with actual exits.
+    val peekExits = if (me.autopeekEnabled) buildPeekExits(room, world, worldState) else emptyList()
+    if (peekExits.isNotEmpty()) {
+        outbound.send(OutboundEvent.SendText(sessionId, formatPeekLine(peekExits)))
+    }
+
     val ws = worldState
     val exits =
         if (room.exits.isEmpty()) {
@@ -421,6 +432,7 @@ internal suspend fun sendLook(
         pvpEnabled = isPvpZone,
         trainerName = trainerHere?.name,
         lastDeathZone = me.lastDeathZone,
+        peek = peekExits.toGmcpPeek(),
     )
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)

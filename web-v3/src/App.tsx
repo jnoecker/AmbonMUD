@@ -55,7 +55,7 @@ import type {
   MonsterEntry,
   PopoutPanel,
 } from "./types";
-import { sortExits, titleCaseWords } from "./utils";
+import { formatPeekSentence, sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
 
 // ── Consider (threat assessment) helpers ────────────────────────────────────
@@ -1328,6 +1328,9 @@ function App() {
               />
             )}
             <p className="room-popout-text">{state.room.description || "No room description available yet."}</p>
+            {state.room.peek && state.room.peek.length > 0 && (
+              <p className="room-popout-peek">{formatPeekSentence(state.room.peek)}</p>
+            )}
             <div className="room-popout-exits">
               {sortedExits.length === 0 ? (
                 <span>No exits listed.</span>
