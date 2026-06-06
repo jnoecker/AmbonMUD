@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AudioEngine } from "../hooks/useAudioEngine";
-import { VolumeOnIcon, VolumeOffIcon, MusicNoteIcon, WavesIcon } from "./Icons";
+import { VolumeOnIcon, VolumeOffIcon, MusicNoteIcon, WavesIcon, SpeechBubbleIcon } from "./Icons";
 
 interface AudioControlsProps {
   audio: AudioEngine;
@@ -89,6 +89,19 @@ export function AudioControls({ audio }: AudioControlsProps) {
               onChange={(e) => audio.setAmbientVolume(parseInt(e.target.value, 10) / 100)}
               title={`Ambient: ${Math.round(audio.ambientVolume * 100)}%`}
               aria-label="Ambient volume"
+            />
+          </div>
+          <div className="audio-slider-row">
+            <SpeechBubbleIcon className="audio-slider-icon" />
+            <input
+              type="range"
+              className="audio-slider"
+              min={0}
+              max={100}
+              value={Math.round(audio.voiceVolume * 100)}
+              onChange={(e) => audio.setVoiceVolume(parseInt(e.target.value, 10) / 100)}
+              title={`Voice: ${Math.round(audio.voiceVolume * 100)}%`}
+              aria-label="Voice volume"
             />
           </div>
         </div>

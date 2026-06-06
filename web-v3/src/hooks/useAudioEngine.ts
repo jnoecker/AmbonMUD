@@ -18,6 +18,7 @@ interface AudioPrefs {
   enabled: boolean;
   musicVolume: number;
   ambientVolume: number;
+  voiceVolume: number;
 }
 
 function loadPrefs(): AudioPrefs {
@@ -29,10 +30,11 @@ function loadPrefs(): AudioPrefs {
         enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : false,
         musicVolume: typeof parsed.musicVolume === "number" ? parsed.musicVolume : 0.5,
         ambientVolume: typeof parsed.ambientVolume === "number" ? parsed.ambientVolume : 0.5,
+        voiceVolume: typeof parsed.voiceVolume === "number" ? parsed.voiceVolume : 0.7,
       };
     }
   } catch { /* ignore */ }
-  return { enabled: false, musicVolume: 0.5, ambientVolume: 0.5 };
+  return { enabled: false, musicVolume: 0.5, ambientVolume: 0.5, voiceVolume: 0.7 };
 }
 
 function savePrefs(prefs: AudioPrefs) {
@@ -86,9 +88,11 @@ export interface AudioEngine {
   enabled: boolean;
   musicVolume: number;
   ambientVolume: number;
+  voiceVolume: number;
   toggle: () => void;
   setMusicVolume: (v: number) => void;
   setAmbientVolume: (v: number) => void;
+  setVoiceVolume: (v: number) => void;
   playMusic: (url: string | null) => void;
   playAmbient: (url: string | null) => void;
   /** Play a one-shot dialogue voice-over clip (or stop the current one when null). */
@@ -102,6 +106,12 @@ export function useAudioEngine(): AudioEngine {
   const ctxRef = useRef<AudioContext | null>(null);
   const musicRef = useRef<TrackState>(emptyTrack());
   const ambientRef = useRef<TrackState>(emptyTrack());
+  const voiceRef = useRef<{ source: AudioBufferSourceNode | null; gain: GainNode | null }>({
+    source: null,
+    gain: null,
+  });
+  // Incremented per playVoice call so a slow fetch can't resurrect a superseded clip.
+  const voiceTokenRef = useRef(0);
   const combatFxRef = useRef<CombatFxState>(emptyCombatFx());
   const combatActiveRef = useRef(false);
   const prefsRef = useRef(prefs);
@@ -255,7 +265,13 @@ export function useAudioEngine(): AudioEngine {
       const target = prefs.enabled ? prefs.ambientVolume : 0;
       fadeGain(ambientGain, ambientGain.gain.value, target, 300);
     }
-  }, [prefs.enabled, prefs.musicVolume, prefs.ambientVolume]);
+    // Voice is one-shot, but a clip in flight should track live slider changes too.
+    const voiceGain = voiceRef.current?.gain;
+    if (voiceGain) {
+      const target = prefs.enabled ? prefs.voiceVolume : 0;
+      fadeGain(voiceGain, voiceGain.gain.value, target, 300);
+    }
+  }, [prefs.enabled, prefs.musicVolume, prefs.ambientVolume, prefs.voiceVolume]);
 
   const playMusic = useCallback((url: string | null) => {
     startTrack(musicRef, url, prefsRef.current.musicVolume, true);
@@ -266,13 +282,6 @@ export function useAudioEngine(): AudioEngine {
   }, [startTrack]);
 
   // ── Dialogue voice-over (one-shot) ──────────────────────────
-
-  const voiceRef = useRef<{ source: AudioBufferSourceNode | null; gain: GainNode | null }>({
-    source: null,
-    gain: null,
-  });
-  // Incremented per playVoice call so a slow fetch can't resurrect a superseded clip.
-  const voiceTokenRef = useRef(0);
 
   const stopVoice = useCallback(() => {
     voiceTokenRef.current += 1;
@@ -289,7 +298,8 @@ export function useAudioEngine(): AudioEngine {
 
   const playVoice = useCallback(async (url: string | null) => {
     stopVoice();
-    if (!url || !prefsRef.current.enabled) return;
+    // Skip entirely (incl. the network fetch) when muted via master toggle or voice slider at 0.
+    if (!url || !prefsRef.current.enabled || prefsRef.current.voiceVolume <= 0) return;
     const token = voiceTokenRef.current;
 
     const ctx = getCtx();
@@ -312,7 +322,7 @@ export function useAudioEngine(): AudioEngine {
     if (token !== voiceTokenRef.current || !prefsRef.current.enabled) return;
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(prefsRef.current.musicVolume, ctx.currentTime);
+    gain.gain.setValueAtTime(prefsRef.current.voiceVolume, ctx.currentTime);
     gain.connect(ctx.destination);
 
     const source = ctx.createBufferSource();
@@ -445,6 +455,10 @@ export function useAudioEngine(): AudioEngine {
     updatePrefs({ ambientVolume: Math.max(0, Math.min(1, v)) });
   }, [updatePrefs]);
 
+  const setVoiceVolume = useCallback((v: number) => {
+    updatePrefs({ voiceVolume: Math.max(0, Math.min(1, v)) });
+  }, [updatePrefs]);
+
   // Cleanup on unmount
   useEffect(() => {
     const music = musicRef;
@@ -465,9 +479,11 @@ export function useAudioEngine(): AudioEngine {
     enabled: prefs.enabled,
     musicVolume: prefs.musicVolume,
     ambientVolume: prefs.ambientVolume,
+    voiceVolume: prefs.voiceVolume,
     toggle,
     setMusicVolume,
     setAmbientVolume,
+    setVoiceVolume,
     playMusic,
     playAmbient,
     playVoice,

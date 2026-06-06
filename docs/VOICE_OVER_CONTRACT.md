@@ -137,12 +137,16 @@ Small — a state addition and a signature tweak, no new systems:
 
 ## Web client change surface
 
-1. Parse `voiceUrl` in the `Dialogue.Node` case of `applyGmcpPackage.ts`.
-2. On `Dialogue.Node`, play `voiceUrl` through the existing audio engine
-   (`web-v3/src/hooks/useAudioEngine.ts` already owns an `AudioContext` with music/ambient buses
-   — add a voice bus).
-3. On `Dialogue.End`, stop any in-flight voice playback.
-4. Add a mute/skip toggle; honor it before playback.
+All implemented in this PR:
+
+1. `voiceUrl` parsed in the `Dialogue.Node` case of `applyGmcpPackage.ts` and carried on
+   `DialogueState`.
+2. `useAudioEngine` plays the clip as a one-shot (its own gain bus) via `playVoice`; `App.tsx`
+   drives it off `state.dialogue?.voiceUrl`, mirroring the room music/ambient effects.
+3. On `Dialogue.End` (dialogue cleared), in-flight voice playback is stopped.
+4. Independent **Voice** volume slider in `AudioControls` (alongside Music and Ambient), backed
+   by a persisted `voiceVolume` pref. The master audio toggle still mutes everything; the Voice
+   slider at 0 mutes voice only and skips the fetch. Default voice volume `0.7`.
 
 ## Summary
 
