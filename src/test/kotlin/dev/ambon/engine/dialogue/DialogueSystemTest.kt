@@ -220,6 +220,32 @@ class DialogueSystemTest {
         }
 
     @Test
+    fun `advancing via selectChoice resolves voiceUrl for the child node`() =
+        runTest {
+            // Guards the second nodeId threading site (selectChoice's nextNode), distinct from
+            // the root path above — the voiceUrl must reflect the child node's id + text hash.
+            val env = createEnv(withGmcp = true, voicesEnabled = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob(templateKey = "wise_sage")
+            assertNull(env.system.startConversation(sid, "sage"))
+            env.outbound.drainAll() // discard the root Dialogue.Node
+
+            val outcome = env.system.selectChoice(sid, 1) // "Tell me more." → node "more"
+            assertTrue(outcome is DialogueOutcome.Ok, "Expected Ok outcome. got=$outcome")
+
+            val gmcp =
+                env.outbound.drainAll()
+                    .filterIsInstance<OutboundEvent.GmcpData>()
+                    .firstOrNull { it.gmcpPackage == "Dialogue.Node" }
+                    ?: error("Expected a Dialogue.Node GMCP event")
+            // "more" node text is "This is more info."; sha8("This is more info.") = 004276fc
+            assertTrue(
+                gmcp.jsonData.contains("\"voiceUrl\":\"/voices/test/wise_sage/more.004276fc.mp3\""),
+                "Expected child-node voiceUrl, got=${gmcp.jsonData}",
+            )
+        }
+
+    @Test
     fun `start conversation with no mob returns error`() =
         runTest {
             val env = createEnv()
