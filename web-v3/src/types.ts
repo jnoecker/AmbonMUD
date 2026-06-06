@@ -193,6 +193,8 @@ export interface CharacterInfo {
   sprite: string | null;
   isStaff: boolean;
   autolootEnabled: boolean;
+  /** When true, room descriptions gain a peek paragraph naming adjacent rooms. */
+  autopeekEnabled: boolean;
   /** Wimpy auto-flee threshold (HP%). 0 = disabled. */
   wimpyThresholdPct: number;
   /**
@@ -230,6 +232,8 @@ export interface RoomState {
   inn?: boolean;
   /** True when this is the death sanctum and the player has somewhere to depart back to. */
   canDepart?: boolean;
+  /** Auto-peek entries: open exits paired with destination room titles. Empty when autopeek is off. */
+  peek?: { direction: string; title: string }[];
 }
 
 /** Recall point info — emitted by Char.Recall GMCP. Null fields when not set. */

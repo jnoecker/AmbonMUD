@@ -423,6 +423,7 @@ class GameEngine(
             groupSystem = groupSystem,
             guildSystem = guildSystem,
             trainerRegistry = trainerRegistry,
+            worldState = worldState,
             gmcpEmitter = gmcpEmitter,
             onResumeRequested = if (gracePeriodManager != null) ::handleSessionResume else null,
             onAuthenticateRequested = { sid, token, name -> handleSessionAuthenticate(sid, token, name) },

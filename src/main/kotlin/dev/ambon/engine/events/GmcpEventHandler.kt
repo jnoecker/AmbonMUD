@@ -10,9 +10,12 @@ import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.abilities.AbilitySystem
+import dev.ambon.engine.buildPeekExits
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.StatusEffectSystem
+import dev.ambon.engine.toGmcpPeek
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KLogger
 
@@ -28,6 +31,7 @@ class GmcpEventHandler(
     private val groupSystem: GroupSystem,
     private val guildSystem: GuildSystem? = null,
     private val trainerRegistry: dev.ambon.engine.TrainerRegistry? = null,
+    private val worldState: WorldStateRegistry? = null,
     private val gmcpEmitter: GmcpEmitter,
     private val onResumeRequested: (suspend (SessionId, String) -> Unit)? = null,
     private val onAuthenticateRequested: (suspend (SessionId, String, String?) -> Unit)? = null,
@@ -71,6 +75,7 @@ class GmcpEventHandler(
                     pvpEnabled = world.isZonePvpEnabled(room.id.zone),
                     trainerName = trainerRegistry?.trainerInRoom(room.id)?.name,
                     lastDeathZone = player.lastDeathZone,
+                    peek = if (player.autopeekEnabled) buildPeekExits(room, world, worldState).toGmcpPeek() else emptyList(),
                 )
                 gmcpEmitter.sendZoneEnvironment(
                     sid,

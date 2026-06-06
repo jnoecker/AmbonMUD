@@ -41,6 +41,7 @@ fun PlayerCreationRequest.toNewPlayerRecord(id: PlayerId): PlayerRecord =
         stats = stats,
         gold = gold,
         autolootEnabled = true,
+        autopeekEnabled = true,
         inventoryItems = inventoryItems,
         equippedItems = equippedItems,
     )

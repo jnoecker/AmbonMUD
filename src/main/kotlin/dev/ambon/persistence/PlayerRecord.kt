@@ -100,6 +100,8 @@ data class PlayerRecord(
     val description: String = "",
     /** When true, items dropped by mobs the player kills are auto-looted into inventory. */
     val autolootEnabled: Boolean = false,
+    /** When true, room descriptions append a peek line naming what lies through each open exit. */
+    val autopeekEnabled: Boolean = false,
     /** Auto-flee HP% threshold (1..95); 0 disables wimpy. Default 10. */
     val wimpyThresholdPct: Int = 10,
     /** Epoch-ms of the last stat/ability respec. 0 means never respec'd. */

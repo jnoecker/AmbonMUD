@@ -105,6 +105,7 @@ export function CharacterPanel({
     [achievements.completed],
   );
   const autolootEnabled = character.autolootEnabled;
+  const autopeekEnabled = character.autopeekEnabled;
   const wimpyPct = character.wimpyThresholdPct ?? 0;
   const WIMPY_PRESETS = [0, 10, 25, 50, 75] as const;
   const wimpyOptions = WIMPY_PRESETS.includes(wimpyPct as (typeof WIMPY_PRESETS)[number])
@@ -305,6 +306,36 @@ export function CharacterPanel({
                     <span className="character-utility-toggle-thumb" />
                   </span>
                   <span className="character-utility-toggle-label">{autolootEnabled ? "On" : "Off"}</span>
+                </button>
+              </div>
+              <div className="character-utility-strip" role="group" aria-label="Auto-peek setting">
+                <span
+                  className="character-utility-label"
+                  title={
+                    autopeekEnabled
+                      ? "Room descriptions name what lies through each open exit."
+                      : "Room descriptions show only the room itself."
+                  }
+                >
+                  Auto-Peek
+                </span>
+                <button
+                  type="button"
+                  className={`character-utility-toggle ${autopeekEnabled ? "character-utility-toggle-active" : ""}`}
+                  aria-pressed={autopeekEnabled}
+                  aria-label={autopeekEnabled ? "Disable auto-peek" : "Enable auto-peek"}
+                  title={
+                    autopeekEnabled
+                      ? "Room descriptions name what lies through each open exit. Click to disable."
+                      : "Room descriptions show only the room itself. Click to enable."
+                  }
+                  disabled={!connected}
+                  onClick={() => onCommand(autopeekEnabled ? "autopeek off" : "autopeek on")}
+                >
+                  <span className="character-utility-toggle-track" aria-hidden="true">
+                    <span className="character-utility-toggle-thumb" />
+                  </span>
+                  <span className="character-utility-toggle-label">{autopeekEnabled ? "On" : "Off"}</span>
                 </button>
               </div>
               <div className="character-utility-strip" role="group" aria-label="Wimpy auto-flee setting">

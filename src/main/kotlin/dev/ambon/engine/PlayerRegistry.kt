@@ -383,6 +383,7 @@ class PlayerRegistry(
             ansiEnabled = defaultAnsiEnabled,
             gold = startingGold,
             autolootEnabled = true,
+            autopeekEnabled = true,
             inventoryItems = starterInventory,
             equippedItems = starterEquipped,
         )
@@ -808,6 +809,16 @@ class PlayerRegistry(
         val ps = players[sessionId] ?: return
         if (ps.autolootEnabled == enabled) return
         ps.autolootEnabled = enabled
+        persistIfClaimed(ps)
+    }
+
+    suspend fun setAutopeekEnabled(
+        sessionId: SessionId,
+        enabled: Boolean,
+    ) {
+        val ps = players[sessionId] ?: return
+        if (ps.autopeekEnabled == enabled) return
+        ps.autopeekEnabled = enabled
         persistIfClaimed(ps)
     }
 

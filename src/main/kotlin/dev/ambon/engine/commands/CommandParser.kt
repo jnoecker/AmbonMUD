@@ -38,6 +38,12 @@ sealed interface Command {
 
     data object AutolootStatus : Command
 
+    data object AutopeekOn : Command
+
+    data object AutopeekOff : Command
+
+    data object AutopeekStatus : Command
+
     /**
      * Set or query the wimpy auto-flee threshold.
      * `null` arg → status. `"off"` / `0` → disable. `1..95` → enable at that HP%.
@@ -1730,6 +1736,9 @@ object CommandParser {
             "autoloot on" -> Command.AutolootOn
             "autoloot off" -> Command.AutolootOff
             "autoloot status", "autoloot" -> Command.AutolootStatus
+            "autopeek on" -> Command.AutopeekOn
+            "autopeek off" -> Command.AutopeekOff
+            "autopeek status", "autopeek" -> Command.AutopeekStatus
             "wimpy" -> Command.Wimpy(null)
             "clear" -> Command.Clear
             "colors" -> Command.Colors
