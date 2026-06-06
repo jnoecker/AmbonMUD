@@ -1968,6 +1968,11 @@ class GmcpEmitter(
      * `<voicesBase><zone>/<templateKey>/<nodeId>.<sha8>.mp3`, where `<sha8>` is the first 8 hex
      * chars of SHA-256 over the raw node text. The hash makes the path edit-safe: changing a
      * line yields a new filename, so stale audio is never served. Arcanum must hash identically.
+     *
+     * [templateKey] arrives zone-qualified for zone-loaded mobs (`WorldLoader` qualifies template
+     * ids as `<zone>:<rawId>`), so we strip the prefix to the local key — the contract puts the
+     * unqualified key in its own segment (`headmaster_aldric`, not `academy:headmaster_aldric`),
+     * and `zone` is already a separate segment. Unqualified keys pass through unchanged.
      */
     private fun dialogueVoiceUrl(
         zone: String,
@@ -1978,7 +1983,7 @@ class GmcpEmitter(
         if (!voicesEnabled || zone.isBlank() || templateKey.isBlank() || nodeId.isBlank()) {
             null
         } else {
-            "$voicesBase$zone/$templateKey/$nodeId.${sha8(text)}.mp3"
+            "$voicesBase$zone/${templateKey.substringAfter(':')}/$nodeId.${sha8(text)}.mp3"
         }
 
     /** First 8 lowercase-hex chars of SHA-256 over the UTF-8 bytes of [text]. */

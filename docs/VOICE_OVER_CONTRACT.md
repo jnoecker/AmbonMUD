@@ -32,7 +32,10 @@ voices/<zone>/<templateKey>/<nodeId>.<sha8>.mp3
 
 - `<zone>` — the zone segment of the mob's `RoomId` (`<zone>:<room>`). Disambiguates
   `templateKey` collisions across zones.
-- `<templateKey>` — the mob template key (e.g. `headmaster_aldric`), present on `MobState`.
+- `<templateKey>` — the mob template key (e.g. `headmaster_aldric`), present on `MobState`. Note:
+  for zone-loaded mobs this field is zone-qualified at runtime (`academy:headmaster_aldric`, since
+  `WorldLoader` qualifies template ids); the engine strips the `<zone>:` prefix so the path segment
+  is the **unqualified** key. Arcanum should likewise use the unqualified key.
 - `<nodeId>` — the dialogue node's map key (e.g. `root`, `quest_info`, `farewell`).
 - `<sha8>` — the **first 8 lowercase-hex chars of `SHA-256` over the raw node text**, UTF-8
   encoded (see "Hash spec" below). Makes the path edit-safe: changing a line yields a new
