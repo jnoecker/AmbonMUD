@@ -1098,6 +1098,9 @@ class GameEngine(
         questSystem.onItemRewarded = { sid, item ->
             gmcpEmitter.sendCharItemsAdd(sid, item)
         }
+        questSystem.onItemsConsumed = { sid ->
+            gmcpEmitter.sendCharItemsList(sid, items.inventory(sid), items.equipment(sid))
+        }
         questSystem.onLevelUp = ::onCombatLevelUp
         achievementSystem.onLevelUp = ::onCombatLevelUp
         combatSystem.onItemAutoLooted = { sid, item ->

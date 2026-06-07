@@ -697,6 +697,72 @@ class QuestSystemTest {
         }
 
     @Test
+    fun `completing a collect quest consumes the gathered items`() =
+        runTest {
+            val c = SystemTestComponents(clockInitialMs = 1_000L)
+            val registry = QuestRegistry()
+            val collectItemId = "zone:shiny_rock"
+            val collectQuestId = "zone:collect_quest"
+            val collectQuest =
+                QuestDef(
+                    id = collectQuestId,
+                    name = "Collect Rocks",
+                    description = "Gather shiny rocks.",
+                    giverMobId = "zone:quest_giver",
+                    objectives =
+                        listOf(
+                            QuestObjectiveDef(
+                                type = "collect",
+                                targetId = collectItemId,
+                                count = 2,
+                                description = "Collect 2 shiny rocks",
+                            ),
+                        ),
+                    rewards = QuestRewards(xp = 50L, gold = 10L),
+                    completionType = "auto",
+                )
+            registry.register(collectQuest)
+            val qs =
+                QuestSystem(
+                    registry = registry,
+                    players = c.players,
+                    items = c.items,
+                    outbound = c.outbound,
+                    clock = c.clock,
+                )
+            var inventorySyncs = 0
+            qs.onItemsConsumed = { _ -> inventorySyncs++ }
+
+            val sid = SessionId(12L)
+            c.players.loginOrFail(sid, "Gatherer")
+            qs.acceptQuest(sid, collectQuestId)
+
+            // Three rocks in the bag; the quest only needs two.
+            repeat(3) {
+                c.items.addToInventory(
+                    sid,
+                    ItemInstance(id = ItemId(collectItemId), item = Item(keyword = "rock", displayName = "a shiny rock")),
+                )
+            }
+            c.outbound.drainAll()
+            qs.onItemCollected(sid, c.items.inventory(sid).first())
+
+            val ps = c.players.get(sid)!!
+            assertTrue(ps.completedQuestIds.contains(collectQuestId), "quest should auto-complete")
+            assertEquals(
+                1,
+                c.items.inventory(sid).count { it.id.value == collectItemId },
+                "turn-in should consume exactly the required 2 rocks and leave the spare",
+            )
+            assertEquals(1, inventorySyncs, "inventory re-sync callback should fire exactly once")
+            val texts = c.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(
+                texts.any { it == "You hand over 2x a shiny rock." },
+                "player should see the hand-over message, got: $texts",
+            )
+        }
+
+    @Test
     fun `accepting collect quest with full required inventory auto-completes`() =
         runTest {
             val c = SystemTestComponents(clockInitialMs = 1_000L)

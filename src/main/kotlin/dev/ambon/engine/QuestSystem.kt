@@ -49,6 +49,12 @@ class QuestSystem(
     var onItemRewarded: (suspend (SessionId, ItemInstance) -> Unit)? = null
 
     /**
+     * Invoked after collect-objective items are consumed at quest completion,
+     * so the engine can re-sync the client's full inventory list.
+     */
+    var onItemsConsumed: (suspend (SessionId) -> Unit)? = null
+
+    /**
      * Returns quests offered by this mob that the player can accept.
      *
      * Excludes quests already active, already completed, whose reputation ceiling
@@ -582,6 +588,7 @@ class QuestSystem(
                 rewards
             }
 
+        consumeCollectedItems(sessionId, quest)
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest complete: ${quest.name}!"))
         val grantedItems = grantItemRewards(sessionId, effectiveRewards.items)
         onQuestCompletedGmcp?.invoke(
@@ -614,6 +621,39 @@ class QuestSystem(
             onLevelUp = { result -> onLevelUp?.invoke(sessionId, result) },
         )
         if (effectiveRewards.xp == 0L) players.persistPlayer(ps.sessionId)
+    }
+
+    /**
+     * Removes the items gathered for collect-type objectives from the player's
+     * inventory when the quest completes — handing in the quest hands over the
+     * goods (#1223). Item matching mirrors the built-in collect handler: exact
+     * id, or any zone's `:<localId>` suffix. Consumption is best-effort: items
+     * the player no longer carries are simply skipped.
+     */
+    private suspend fun consumeCollectedItems(
+        sessionId: SessionId,
+        quest: QuestDef,
+    ) {
+        var removedAny = false
+        for (obj in quest.objectives) {
+            if (objectiveHandlers.collectHandler(obj.type) == null) continue
+            val localSuffix = ":${obj.targetId.substringAfterLast(':')}"
+            var removed = 0
+            var removedName: String? = null
+            while (removed < obj.count) {
+                val match = items.inventory(sessionId).firstOrNull { inv ->
+                    inv.id.value == obj.targetId || inv.id.value.endsWith(localSuffix)
+                } ?: break
+                if (items.removeFromInventoryById(sessionId, match.id) == null) break
+                removedName = match.item.displayName
+                removed++
+            }
+            if (removed > 0 && removedName != null) {
+                removedAny = true
+                outbound.send(OutboundEvent.SendText(sessionId, "You hand over ${removed}x $removedName."))
+            }
+        }
+        if (removedAny) onItemsConsumed?.invoke(sessionId)
     }
 
     private suspend fun sendObjectiveProgress(
