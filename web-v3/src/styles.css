@@ -16895,11 +16895,17 @@ body {
   transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
 }
 
-.auction-buy-btn:hover {
+.auction-buy-btn:hover:not(:disabled) {
   background: var(--primary-glass);
   color: var(--text-primary);
   border-color: var(--primary-dim);
   transform: translateY(-1px);
+}
+
+.auction-buy-btn:disabled,
+.auction-create-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .auction-buy-btn-secondary {
@@ -17017,7 +17023,7 @@ body {
   transition: transform 0.15s, border-color 0.15s, background 0.15s;
 }
 
-.auction-create-submit:hover {
+.auction-create-submit:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: var(--color-primary-lavender);
   background: rgb(190 176 255 / 18%);

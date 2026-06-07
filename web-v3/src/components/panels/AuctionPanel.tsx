@@ -7,11 +7,13 @@ interface Props {
   listings: AuctionListing[];
   inventory: ItemSummary[];
   playerName: string;
+  /** Unclaimed demo characters can browse but not buy or sell. */
+  isDemo: boolean;
   feedbackFeed: UiFeedbackEntry[];
   onCommand: (cmd: string) => void;
 }
 
-export function AuctionPanel({ listings, inventory, playerName, feedbackFeed, onCommand }: Props) {
+export function AuctionPanel({ listings, inventory, playerName, isDemo, feedbackFeed, onCommand }: Props) {
   const [view, setView] = useState<AuctionView>("browse");
   const [filter, setFilter] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string>("");
@@ -56,6 +58,10 @@ export function AuctionPanel({ listings, inventory, playerName, feedbackFeed, on
   );
 
   const createListing = () => {
+    if (isDemo) {
+      setLocalMessage("Demo characters can't post auction listings. Claim your character first.");
+      return;
+    }
     if (!selectedItem) {
       setLocalMessage("Choose an inventory item to list.");
       return;
@@ -124,6 +130,12 @@ export function AuctionPanel({ listings, inventory, playerName, feedbackFeed, on
         </button>
       </div>
 
+      {isDemo && (
+        <p className="auction-local-message auction-local-message-error">
+          Demo characters can browse the auction house but can&rsquo;t buy or sell.
+          Use &ldquo;Save Progress&rdquo; in the top bar to claim your character first.
+        </p>
+      )}
       {localMessage && <p className="auction-local-message">{localMessage}</p>}
       {activeFeedback && (
         <p className={`auction-local-message auction-local-message-${activeFeedback.type}`}>
@@ -180,6 +192,8 @@ export function AuctionPanel({ listings, inventory, playerName, feedbackFeed, on
                           <button
                             type="button"
                             className="auction-buy-btn"
+                            disabled={isDemo}
+                            title={isDemo ? "Claim your character to buy from the auction house." : undefined}
                             onClick={() => {
                               onCommand(`auction buy ${listing.id}`);
                               setLocalMessage(`Purchasing ${listing.itemName}.`);
@@ -245,6 +259,8 @@ export function AuctionPanel({ listings, inventory, playerName, feedbackFeed, on
                     <button
                       type="button"
                       className="auction-create-submit"
+                      disabled={isDemo}
+                      title={isDemo ? "Claim your character to post auction listings." : undefined}
                       onClick={createListing}
                     >
                       Post Listing

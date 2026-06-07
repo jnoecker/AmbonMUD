@@ -92,22 +92,28 @@ internal suspend fun requirePlayerOnline(
  * Used to gate features that touch persistent or social state (global chat,
  * trade, mail send, guild, friends, duels, auction) so demo characters can't
  * spam or grief without committing to an account.
+ *
+ * Pass [gmcpEmitter] + [scope] for panel-driven features so the rejection also
+ * reaches the web client as scoped UI.Feedback — without it, panels show
+ * nothing and the action appears to silently fail.
  */
 internal suspend fun requireClaimed(
     sessionId: SessionId,
     players: PlayerRegistry,
     outbound: OutboundBus,
     feature: String,
+    gmcpEmitter: GmcpEmitter? = null,
+    scope: String? = null,
+    command: String? = null,
 ): Boolean {
     val me = players.get(sessionId) ?: return false
     if (me.playerId != null) return true
-    outbound.send(
-        OutboundEvent.SendError(
-            sessionId,
-            "$feature is not available for demo characters. " +
-                "Type 'claim <password>' or 'claim <newname> <password>' to save your character first.",
-        ),
-    )
+    val message = "$feature is not available for demo characters. " +
+        "Type 'claim <password>' or 'claim <newname> <password>' to save your character first."
+    outbound.send(OutboundEvent.SendError(sessionId, message))
+    if (scope != null) {
+        sendScopedFeedback(sessionId, gmcpEmitter, "error", message, scope, code = "DEMO_CHARACTER", command = command)
+    }
     return false
 }
 

@@ -1208,6 +1208,7 @@ function App() {
             listings={state.auctionListings}
             inventory={state.inventory}
             playerName={state.character.name}
+            isDemo={state.character.isDemo}
             feedbackFeed={state.uiFeedbackFeed}
             onCommand={sendCommand}
           />
