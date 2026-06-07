@@ -53,12 +53,12 @@ class WorldFeaturesHandler(
         keyword: String,
     ): Unit = withLockable(sessionId, keyword, "open") { me, lockable ->
         when (lockable.state) {
-            LockableState.LOCKED -> outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is locked."))
-            LockableState.OPEN -> outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is already open."))
+            LockableState.LOCKED -> outbound.send(OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} is locked."))
+            LockableState.OPEN -> outbound.send(OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} is already open."))
             LockableState.CLOSED -> {
                 lockable.applyState(LockableState.OPEN)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You open the ${lockable.displayName}."))
-                broadcastToRoomExcept(me.roomId, sessionId, "${me.name} opens the ${lockable.displayName}.", players, outbound)
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You open ${the(lockable.displayName)}."))
+                broadcastToRoomExcept(me.roomId, sessionId, "${me.name} opens ${the(lockable.displayName)}.", players, outbound)
                 world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
             }
         }
@@ -71,15 +71,15 @@ class WorldFeaturesHandler(
         when (lockable.state) {
             LockableState.OPEN -> {
                 lockable.applyState(LockableState.CLOSED)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You close the ${lockable.displayName}."))
-                broadcastToRoomExcept(me.roomId, sessionId, "${me.name} closes the ${lockable.displayName}.", players, outbound)
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You close ${the(lockable.displayName)}."))
+                broadcastToRoomExcept(me.roomId, sessionId, "${me.name} closes ${the(lockable.displayName)}.", players, outbound)
                 world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
             }
             LockableState.CLOSED -> outbound.send(
-                OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is already closed."),
+                OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} is already closed."),
             )
             LockableState.LOCKED -> outbound.send(
-                OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is already closed and locked."),
+                OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} is already closed and locked."),
             )
         }
     }
@@ -90,7 +90,7 @@ class WorldFeaturesHandler(
     ): Unit = withLockable(sessionId, keyword, "unlock") { me, lockable ->
         when {
             lockable.state != LockableState.LOCKED ->
-                outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is not locked."))
+                outbound.send(OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} is not locked."))
             lockable.keyItemId == null ->
                 outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
             else -> {
@@ -113,9 +113,9 @@ class WorldFeaturesHandler(
     ): Unit = withLockable(sessionId, keyword, "lock") { me, lockable ->
         when {
             lockable.state == LockableState.LOCKED ->
-                outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is already locked."))
+                outbound.send(OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} is already locked."))
             lockable.state != LockableState.CLOSED ->
-                outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} must be closed before locking."))
+                outbound.send(OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} must be closed before locking."))
             lockable.keyItemId == null ->
                 outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
             else -> applyKeyAction(sessionId, me, lockable, LockableState.LOCKED, "lock", "locks")
@@ -129,10 +129,10 @@ class WorldFeaturesHandler(
         val feature = requireOpenContainer(sessionId, room, keyword, worldState, outbound) ?: return
         val contents = worldState?.getContainerContents(feature.id) ?: emptyList()
         if (contents.isEmpty()) {
-            outbound.send(OutboundEvent.SendInfo(sessionId, "The ${feature.displayName} is empty."))
+            outbound.send(OutboundEvent.SendInfo(sessionId, "${theCap(feature.displayName)} is empty."))
         } else {
             val list = contents.map { it.item.displayName }.sorted().joinToString(", ")
-            outbound.send(OutboundEvent.SendInfo(sessionId, "In the ${feature.displayName}: $list"))
+            outbound.send(OutboundEvent.SendInfo(sessionId, "In ${the(feature.displayName)}: $list"))
         }
         emitContainerContents(sessionId, feature)
     }
@@ -145,14 +145,14 @@ class WorldFeaturesHandler(
         val feature = requireOpenContainer(sessionId, room, containerKeyword, worldState, outbound) ?: return
         val item = worldState?.removeFromContainer(feature.id, itemKeyword)
         if (item == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "There is no '$itemKeyword' in the ${feature.displayName}."))
+            outbound.send(OutboundEvent.SendError(sessionId, "There is no '$itemKeyword' in ${the(feature.displayName)}."))
         } else {
             items.addToInventory(sessionId, item)
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You take ${item.item.displayName} from the ${feature.displayName}."))
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You take ${item.item.displayName} from ${the(feature.displayName)}."))
             broadcastToRoomExcept(
                 me.roomId,
                 sessionId,
-                "${me.name} takes ${item.item.displayName} from the ${feature.displayName}.",
+                "${me.name} takes ${item.item.displayName} from ${the(feature.displayName)}.",
                 players,
                 outbound,
             )
@@ -182,11 +182,11 @@ class WorldFeaturesHandler(
             outbound.send(OutboundEvent.SendError(sessionId, "You don't have any '$itemKeyword'."))
         } else {
             worldState?.addToContainer(feature.id, item)
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You put ${item.item.displayName} in the ${feature.displayName}."))
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You put ${item.item.displayName} in ${the(feature.displayName)}."))
             broadcastToRoomExcept(
                 me.roomId,
                 sessionId,
-                "${me.name} puts ${item.item.displayName} in the ${feature.displayName}.",
+                "${me.name} puts ${item.item.displayName} in ${the(feature.displayName)}.",
                 players,
                 outbound,
             )
@@ -207,8 +207,8 @@ class WorldFeaturesHandler(
         val state = worldState?.getLeverState(feature.id) ?: feature.initialState
         val newState = if (state == LeverState.UP) LeverState.DOWN else LeverState.UP
         worldState?.setLeverState(feature.id, newState)
-        outbound.send(OutboundEvent.SendInfo(sessionId, "You pull the ${feature.displayName}. It moves ${newState.name.lowercase()}."))
-        broadcastToRoomExcept(me.roomId, sessionId, "${me.name} pulls the ${feature.displayName}.", players, outbound)
+        outbound.send(OutboundEvent.SendInfo(sessionId, "You pull ${the(feature.displayName)}. It moves ${newState.name.lowercase()}."))
+        broadcastToRoomExcept(me.roomId, sessionId, "${me.name} pulls ${the(feature.displayName)}.", players, outbound)
         emitRoomFeatures(room)
         // Notify puzzle system of the lever interaction
         puzzleHandler?.onFeatureInteraction(sessionId, feature.keyword, "pull")
@@ -236,15 +236,15 @@ class WorldFeaturesHandler(
     ) {
         val key = findKeyInInventory(sessionId, lockable.keyItemId!!, items)
         if (key == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You don't have the key for the ${lockable.displayName}."))
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't have the key for ${the(lockable.displayName)}."))
         } else {
             lockable.applyState(newState)
             if (lockable.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You $verb the ${lockable.displayName}."))
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You $verb ${the(lockable.displayName)}."))
             broadcastToRoomExcept(
                 me.roomId,
                 sessionId,
-                "${me.name} $verbThirdPerson the ${lockable.displayName}.",
+                "${me.name} $verbThirdPerson ${the(lockable.displayName)}.",
                 players,
                 outbound,
             )

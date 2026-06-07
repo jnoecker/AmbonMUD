@@ -8,6 +8,7 @@ import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
 import dev.ambon.engine.commands.handlers.buildFeaturePayload
+import dev.ambon.engine.commands.handlers.theCap
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import java.time.Clock
@@ -129,9 +130,9 @@ internal class TimedRespawnHandler(
             is RoomFeature.Door -> {
                 worldState.setLockableState(feature.id, feature.initialState)
                 if (feature.initialState == LockableState.OPEN) {
-                    "The ${feature.displayName} swings open."
+                    "${theCap(feature.displayName)} swings open."
                 } else {
-                    "The ${feature.displayName} swings shut."
+                    "${theCap(feature.displayName)} swings shut."
                 }
             }
             is RoomFeature.Container -> {
@@ -139,14 +140,14 @@ internal class TimedRespawnHandler(
                 val instances = feature.initialItems.mapNotNull { items.createFromTemplate(it) }
                 worldState.resetContainer(feature.id, instances)
                 if (feature.initialState == LockableState.OPEN) {
-                    "${feature.displayName} creaks open, its contents restored."
+                    "${theCap(feature.displayName)} creaks open, its contents restored."
                 } else {
-                    "${feature.displayName} clicks shut."
+                    "${theCap(feature.displayName)} clicks shut."
                 }
             }
             is RoomFeature.Lever -> {
                 worldState.setLeverState(feature.id, feature.initialState)
-                "${feature.displayName} snaps back into place."
+                "${theCap(feature.displayName)} snaps back into place."
             }
             is RoomFeature.Sign -> return
         }

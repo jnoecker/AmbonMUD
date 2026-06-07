@@ -158,7 +158,7 @@ class TimedRespawnHandlerTest {
 
         val texts = h.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
         assertTrue(
-            texts.any { it == "a sprung lever snaps back into place." },
+            texts.any { it == "The sprung lever snaps back into place." },
             "players in the room should see the lever reset, got: $texts",
         )
     }
