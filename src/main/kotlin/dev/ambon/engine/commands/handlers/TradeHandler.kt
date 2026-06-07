@@ -33,7 +33,7 @@ class TradeHandler(
     }
 
     private suspend fun handleTradeRequest(sessionId: SessionId, cmd: Command.TradeRequest) {
-        if (!requireClaimed(sessionId, players, outbound, "Trading")) return
+        if (!requireClaimed(sessionId, players, outbound, "Trading", gmcpEmitter, "trade", "request")) return
         val ts = tradeSystem ?: return sendUnavailable(sessionId)
 
         players.withPlayer(sessionId) { me ->

@@ -1710,6 +1710,12 @@ export function applyGmcpPackage(
         command: typeof raw.command === "string" ? raw.command : undefined,
       };
       ctx.pushUiFeedback(packet);
+      // Demo-character rejections can originate from anywhere (player context
+      // menus, chat input, panels) — surface them globally so the action never
+      // appears to silently fail. Panels with scoped feedback also show them inline.
+      if (packet.code === "DEMO_CHARACTER" && packet.message) {
+        ctx.setToast(packet.message);
+      }
       break;
     }
 

@@ -148,7 +148,7 @@ class CommunicationHandler(
         sessionId: SessionId,
         cmd: Command.Gossip,
     ) {
-        if (!requireClaimed(sessionId, players, outbound, "Global chat")) return
+        if (!requireClaimed(sessionId, players, outbound, "Global chat", gmcpEmitter, "chat", "gossip")) return
         if (isBroadcastRateLimited(sessionId)) return
         broadcastGlobalChannel(
             sessionId = sessionId,
@@ -164,7 +164,7 @@ class CommunicationHandler(
         sessionId: SessionId,
         cmd: Command.Shout,
     ) {
-        if (!requireClaimed(sessionId, players, outbound, "Shout")) return
+        if (!requireClaimed(sessionId, players, outbound, "Shout", gmcpEmitter, "chat", "shout")) return
         if (isBroadcastRateLimited(sessionId)) return
         players.withPlayer(sessionId) { me ->
             val zone = me.roomId.zone
@@ -182,7 +182,7 @@ class CommunicationHandler(
         sessionId: SessionId,
         cmd: Command.Ooc,
     ) {
-        if (!requireClaimed(sessionId, players, outbound, "OOC chat")) return
+        if (!requireClaimed(sessionId, players, outbound, "OOC chat", gmcpEmitter, "chat", "ooc")) return
         if (isBroadcastRateLimited(sessionId)) return
         broadcastGlobalChannel(
             sessionId = sessionId,
