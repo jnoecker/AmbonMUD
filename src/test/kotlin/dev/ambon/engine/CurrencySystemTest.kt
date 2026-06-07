@@ -53,8 +53,8 @@ class CurrencySystemTest {
     }
 
     @Test
-    fun `award increases balance`() {
-        system.award(player, "quest_points", 50)
+    fun `award increases balance and reports success`() {
+        assertTrue(system.award(player, "quest_points", 50))
         assertEquals(50L, system.balance(player, "quest_points"))
     }
 
@@ -66,21 +66,32 @@ class CurrencySystemTest {
     }
 
     @Test
-    fun `award with zero amount does nothing`() {
-        system.award(player, "quest_points", 0)
+    fun `award with zero amount does nothing and reports failure`() {
+        assertFalse(system.award(player, "quest_points", 0))
         assertEquals(0L, system.balance(player, "quest_points"))
     }
 
     @Test
-    fun `award with negative amount does nothing`() {
-        system.award(player, "quest_points", -5)
+    fun `award with negative amount does nothing and reports failure`() {
+        assertFalse(system.award(player, "quest_points", -5))
         assertEquals(0L, system.balance(player, "quest_points"))
     }
 
     @Test
-    fun `award unknown currency does nothing`() {
-        system.award(player, "unknown_currency", 100)
+    fun `award unknown currency does nothing and reports failure`() {
+        assertFalse(system.award(player, "unknown_currency", 100))
         assertFalse(player.currencies.containsKey("unknown_currency"))
+    }
+
+    @Test
+    fun `award reports failure when no currencies are defined`() {
+        // A server with tokensPerCraft/honorPerPvpKill set but no currency
+        // definitions must not credit (or announce) anything — callers gate
+        // their "[Currency] You receive ..." messages on this return value.
+        val undefinedSystem = CurrencySystem(config = CurrenciesConfig(definitions = emptyMap()))
+        assertFalse(undefinedSystem.award(player, "crafting_tokens", undefinedSystem.tokensPerCraft))
+        assertFalse(undefinedSystem.award(player, "honor", undefinedSystem.honorPerPvpKill))
+        assertTrue(player.currencies.isEmpty())
     }
 
     @Test

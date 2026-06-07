@@ -30,17 +30,20 @@ class CurrencySystem(
 
     /**
      * Awards [amount] of [currencyId] to the player.
-     * Does nothing if the currency is not defined or amount is not positive.
+     * Returns `true` if the amount was credited. Returns `false` — without
+     * mutating anything — if the currency is not defined or amount is not
+     * positive, so callers can suppress player-facing award announcements.
      */
-    fun award(player: PlayerState, currencyId: String, amount: Long) {
-        if (amount <= 0) return
+    fun award(player: PlayerState, currencyId: String, amount: Long): Boolean {
+        if (amount <= 0) return false
         if (currencyId !in config.definitions) {
             log.warn { "Attempted to award unknown currency '$currencyId' to ${player.name}" }
-            return
+            return false
         }
         val current = player.currencies.getOrDefault(currencyId, 0L)
         player.currencies[currencyId] = current + amount
         log.debug { "Currency awarded: ${player.name} +$amount $currencyId (new balance: ${current + amount})" }
+        return true
     }
 
     /**
