@@ -181,6 +181,10 @@ class AbilitySystem(
         val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
         deductManaAndCooldown(sessionId, player, ability, now)
 
+        // A hostile cast provokes its target: engage combat so the mob fights
+        // back instead of standing idle while being farmed from out of combat.
+        combat.engageMobCombat(sessionId, mob)
+
         for (effect in effects) {
             executeEnemyEffect(sessionId, player, ability, mob, effect, playerStats, areaTargets)
         }
