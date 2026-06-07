@@ -103,6 +103,17 @@ export function SystemsPanel({
     setActiveView(initialView);
   }, [initialView]);
 
+  // nextDrawingMs is an absolute epoch timestamp; tick while the lottery
+  // view is open so the pill counts down.
+  const [now, setNow] = useState(() => Date.now());
+  const lotteryViewOpen = activeView === "lottery" && lotteryInfo !== null;
+  useEffect(() => {
+    if (!lotteryViewOpen) return;
+    setNow(Date.now());
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [lotteryViewOpen]);
+
   useEffect(() => {
     setPetNameDraft(petState?.active ? petState.name ?? "" : "");
   }, [petState?.active, petState?.name]);
@@ -400,7 +411,7 @@ export function SystemsPanel({
                     <p className="systems-card-label">Current Drawing</p>
                     <h4>{lotteryInfo.jackpot.toLocaleString()} gold jackpot</h4>
                   </div>
-                  <span className="systems-pill">{formatCountdown(lotteryInfo.nextDrawingMs)}</span>
+                  <span className="systems-pill">{formatCountdown(lotteryInfo.nextDrawingMs - now)}</span>
                 </div>
                 <dl className="systems-stat-grid">
                   <div><dt>Your Tickets</dt><dd>{lotteryInfo.playerTickets}</dd></div>

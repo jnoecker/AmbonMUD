@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { LotteryInfo, UiFeedbackEntry } from "../../types";
 
 interface LotteryPanelProps {
@@ -20,6 +20,12 @@ function formatCountdown(ms: number): string {
 
 export function LotteryPanel({ lotteryInfo, uiFeedbackFeed, onCommand }: LotteryPanelProps) {
   const [ticketDraft, setTicketDraft] = useState("1");
+  // nextDrawingMs is an absolute epoch timestamp; tick so the pill counts down.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const activeFeedback = useMemo(
     () => [...uiFeedbackFeed].reverse().find((e) => e.scope === "lottery") ?? null,
@@ -45,7 +51,7 @@ export function LotteryPanel({ lotteryInfo, uiFeedbackFeed, onCommand }: Lottery
               <p className="systems-card-label">Current Drawing</p>
               <h4>{lotteryInfo.jackpot.toLocaleString()} gold jackpot</h4>
             </div>
-            <span className="systems-pill">{formatCountdown(lotteryInfo.nextDrawingMs)}</span>
+            <span className="systems-pill">{formatCountdown(lotteryInfo.nextDrawingMs - now)}</span>
           </div>
           <dl className="systems-stat-grid">
             <div><dt>Your Tickets</dt><dd>{lotteryInfo.playerTickets}</dd></div>
