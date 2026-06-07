@@ -206,6 +206,13 @@ export class WorldScene {
   private lotteryHitArea = new Graphics();
   private lotteryVisible = false;
 
+  private diceBadge: Container | null = null;
+  private diceSprite: Sprite | null = null;
+  private diceLabel: Text | null = null;
+  private diceLabelBg = new Graphics();
+  private diceHitArea = new Graphics();
+  private diceVisible = false;
+
   private dungeonBadge: Container | null = null;
   private dungeonSprite: Sprite | null = null;
   private dungeonLabel: Text | null = null;
@@ -507,6 +514,34 @@ export class WorldScene {
     this.lotteryBadge.addChild(this.lotteryLabelBg);
     this.lotteryBadge.addChild(this.lotteryLabel);
 
+    this.diceBadge = new Container();
+    this.diceBadge.visible = false;
+    this.diceBadge.eventMode = "static";
+    this.diceBadge.cursor = "pointer";
+    this.diceBadge.on("pointerdown", () => {
+      canvasCallbacks.openDice?.();
+    });
+    this.diceBadge.on("pointerover", () => {
+      if (this.diceSprite) this.diceSprite.alpha = 1;
+    });
+    this.diceBadge.on("pointerout", () => {
+      if (this.diceSprite) this.diceSprite.alpha = 0.85;
+    });
+    this.diceHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.diceHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.diceHitArea.eventMode = "auto";
+    this.diceBadge.addChild(this.diceHitArea);
+    this.diceLabel = new Text({
+      text: ROOM_SURFACE_WIDGETS.dice.label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#f0c674", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.diceLabel.anchor.set(0.5, 0);
+    this.diceLabel.y = hs / 2 + 2;
+    this.diceLabel.eventMode = "none";
+    this.diceLabelBg.eventMode = "none";
+    this.diceBadge.addChild(this.diceLabelBg);
+    this.diceBadge.addChild(this.diceLabel);
+
     this.dungeonBadge = new Container();
     this.dungeonBadge.visible = false;
     this.dungeonBadge.eventMode = "static";
@@ -793,6 +828,7 @@ export class WorldScene {
     this.container.addChild(this.trainerBadge);
     this.container.addChild(this.bankBadge!);
     this.container.addChild(this.lotteryBadge!);
+    this.container.addChild(this.diceBadge!);
     this.container.addChild(this.dungeonBadge!);
     this.container.addChild(this.housingBadge!);
     this.container.addChild(this.innBadge!);
@@ -843,6 +879,7 @@ export class WorldScene {
       this.loadTrainerIcon();
       this.loadBankIcon();
       this.loadLotteryIcon();
+      this.loadDiceIcon();
       this.loadDungeonIcon();
       this.loadHousingBrokerIcon();
       this.loadInnIcon();
@@ -1050,6 +1087,13 @@ export class WorldScene {
       if (this.lotteryBadge) this.lotteryBadge.visible = hasLottery;
     }
 
+    // Dice kiosk shares the tavern flag — it's the lottery board's rowdier neighbor.
+    const hasDice = !!state.room.tavern;
+    if (hasDice !== this.diceVisible) {
+      this.diceVisible = hasDice;
+      if (this.diceBadge) this.diceBadge.visible = hasDice;
+    }
+
     const hasDungeon = !!state.room.dungeon;
     if (hasDungeon !== this.dungeonVisible) {
       this.dungeonVisible = hasDungeon;
@@ -1187,6 +1231,7 @@ export class WorldScene {
     this.trainerBadge.visible = this.trainerVisible && !stripMode;
     if (this.bankBadge) this.bankBadge.visible = this.bankVisible && !stripMode;
     if (this.lotteryBadge) this.lotteryBadge.visible = this.lotteryVisible && !stripMode;
+    if (this.diceBadge) this.diceBadge.visible = this.diceVisible && !stripMode;
     if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
     if (this.housingBadge) this.housingBadge.visible = this.housingVisible && !stripMode;
     if (this.innBadge) this.innBadge.visible = this.innVisible && !stripMode;
@@ -1447,7 +1492,7 @@ export class WorldScene {
       this.shopBadge.visible, this.auctionBadge.visible, this.stylistBadge.visible,
       this.stationBadge.visible, this.trainerBadge.visible,
       this.bankBadge?.visible,
-      this.lotteryBadge?.visible, this.dungeonBadge?.visible,
+      this.lotteryBadge?.visible, this.diceBadge?.visible, this.dungeonBadge?.visible,
       this.housingBadge?.visible,
       this.innBadge?.visible,
       this.mailBadge?.visible,
@@ -1511,6 +1556,13 @@ export class WorldScene {
       this.lotteryBadge.x = badgeX;
       this.lotteryBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.lotteryLabelBg, this.lotteryLabel!);
+      badgeSlot++;
+    }
+
+    if (this.diceBadge?.visible) {
+      this.diceBadge.x = badgeX;
+      this.diceBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.diceLabelBg, this.diceLabel!);
       badgeSlot++;
     }
 
@@ -2293,6 +2345,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.lotterySprite = sprite;
       this.lotteryBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadDiceIcon() {
+    try {
+      const texture = await Assets.load(assetUrl(ROOM_SURFACE_WIDGETS.dice.assetKey, ROOM_SURFACE_WIDGETS.dice.fallbackFilename));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.diceSprite = sprite;
+      this.diceBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

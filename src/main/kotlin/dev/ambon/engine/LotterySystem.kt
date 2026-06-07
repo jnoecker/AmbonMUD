@@ -21,6 +21,14 @@ data class LotteryInfo(
     val totalTickets: Int,
     val nextDrawingMs: Long,
     val playerTickets: Int,
+    val ticketCost: Long,
+    val maxTicketsPerPlayer: Int,
+    val diceMinBet: Long,
+    val diceMaxBet: Long,
+    val diceWinMultiplier: Double,
+    /** Roll this value or less on a d100 to win. */
+    val diceWinThreshold: Int,
+    val diceCooldownMs: Long,
 )
 
 /** Result of a lottery ticket purchase attempt. */
@@ -40,6 +48,8 @@ sealed interface LotteryBuyResult {
         val current: Int,
         val max: Int,
     ) : LotteryBuyResult
+
+    data object NotInTavern : LotteryBuyResult
 
     data object Disabled : LotteryBuyResult
 }
@@ -120,6 +130,12 @@ class LotterySystem(
     /** Session id -> last gamble timestamp. */
     private val lastGambleTime = mutableMapOf<SessionId, Long>()
 
+    /** Roll this value or less on a d100 to win. */
+    private val diceWinThreshold = (gamblingConfig.diceWinChance * 100).toInt()
+
+    /** Cooldown between dice rolls; exposed for GMCP gamble payloads. */
+    val diceCooldownMs: Long get() = gamblingConfig.cooldownMs
+
     /** Returns lottery info for a specific player. */
     fun getInfo(playerName: String): LotteryInfo {
         val totalTickets = tickets.values.sum()
@@ -129,6 +145,13 @@ class LotterySystem(
             totalTickets = totalTickets,
             nextDrawingMs = nextDrawingMs,
             playerTickets = playerTickets,
+            ticketCost = lotteryConfig.ticketCost,
+            maxTicketsPerPlayer = lotteryConfig.maxTicketsPerPlayer,
+            diceMinBet = gamblingConfig.diceMinBet,
+            diceMaxBet = gamblingConfig.diceMaxBet,
+            diceWinMultiplier = gamblingConfig.diceWinMultiplier,
+            diceWinThreshold = diceWinThreshold,
+            diceCooldownMs = gamblingConfig.cooldownMs,
         )
     }
 
@@ -139,6 +162,7 @@ class LotterySystem(
      * @param sessionId the player's session
      * @param count number of tickets to buy
      * @param currentGold player's current gold
+     * @param inTavern whether the player is in a tavern room
      * @param deductGold callback to deduct gold from the player
      */
     fun buyTickets(
@@ -146,9 +170,11 @@ class LotterySystem(
         sessionId: SessionId,
         count: Int,
         currentGold: Long,
+        inTavern: Boolean,
         deductGold: (Long) -> Unit,
     ): LotteryBuyResult {
         if (!lotteryConfig.enabled) return LotteryBuyResult.Disabled
+        if (!inTavern) return LotteryBuyResult.NotInTavern
 
         val key = playerName.lowercase()
         val current = tickets[key] ?: 0
@@ -256,7 +282,7 @@ class LotterySystem(
         lastGambleTime[sessionId] = now
 
         // Roll 1-100; win threshold based on configured chance
-        val needed = (gamblingConfig.diceWinChance * 100).toInt()
+        val needed = diceWinThreshold
         val roll = random.nextInt(100) + 1
 
         return if (roll <= needed) {

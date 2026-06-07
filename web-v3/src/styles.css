@@ -21918,3 +21918,127 @@ html:has(.game-shell),
     border: 1px solid #4a3825;
   }
 }
+
+/* ── Dice Table panel ─────────────────────────────────────────────────── */
+
+.dice-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dice-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem 0 0.4rem;
+}
+
+.dice-die {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 20px;
+  background: linear-gradient(150deg, var(--surface-chip), var(--surface-panel-b));
+  border: 1px solid var(--glass-edge);
+  box-shadow: 0 14px 28px rgb(0 0 0 / 30%), inset 0 1px 0 rgb(255 255 255 / 8%);
+  transition: box-shadow 360ms ease, border-color 360ms ease, transform 360ms ease;
+}
+
+.dice-die-number,
+.dice-die-mystery {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.dice-die-mystery {
+  color: var(--text-placeholder);
+}
+
+.dice-die-pip {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary-soft-gold);
+  opacity: 0.55;
+}
+
+.dice-die-pip-tl { top: 10px; left: 10px; }
+.dice-die-pip-tr { top: 10px; right: 10px; }
+.dice-die-pip-bl { bottom: 10px; left: 10px; }
+.dice-die-pip-br { bottom: 10px; right: 10px; }
+
+.dice-die-rolling {
+  animation: dice-tumble 240ms ease-in-out infinite;
+}
+
+@keyframes dice-tumble {
+  0% { transform: rotate(-7deg) translateY(0); }
+  25% { transform: rotate(5deg) translateY(-7px); }
+  50% { transform: rotate(-4deg) translateY(2px); }
+  75% { transform: rotate(7deg) translateY(-4px); }
+  100% { transform: rotate(-7deg) translateY(0); }
+}
+
+.dice-die-won {
+  border-color: color-mix(in srgb, var(--color-primary-moss-green) 70%, transparent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--color-primary-moss-green) 45%, transparent),
+    0 14px 28px rgb(0 0 0 / 30%);
+  animation: dice-win-pop 420ms ease;
+}
+
+@keyframes dice-win-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.16) rotate(3deg); }
+  100% { transform: scale(1); }
+}
+
+.dice-die-won .dice-die-number {
+  color: var(--color-hp-light);
+}
+
+.dice-die-won .dice-die-pip {
+  background: var(--color-primary-moss-green);
+  opacity: 0.9;
+}
+
+.dice-die-lost {
+  border-color: color-mix(in srgb, var(--color-primary-dusty-rose) 50%, transparent);
+  box-shadow: 0 10px 22px rgb(0 0 0 / 36%);
+  filter: saturate(0.8);
+}
+
+.dice-die-lost .dice-die-number {
+  color: var(--color-primary-dusty-rose);
+}
+
+.dice-outcome {
+  margin: 0;
+  min-height: 1.4em;
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.dice-outcome-win {
+  color: var(--color-hp-light);
+  font-weight: 600;
+}
+
+.dice-outcome-lose {
+  color: var(--color-primary-dusty-rose);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-die-rolling,
+  .dice-die-won {
+    animation: none;
+  }
+}

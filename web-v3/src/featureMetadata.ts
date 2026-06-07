@@ -1,8 +1,3 @@
-export const LOTTERY_SETTINGS = {
-  ticketCost: 100,
-  maxTicketsPerPlayer: 10,
-} as const;
-
 export const FACTION_TIERS = [
   { label: "Hated", min: Number.NEGATIVE_INFINITY, short: "Kill-on-sight hostility" },
   { label: "Hostile", min: -1000, short: "Enemies will treat you as a threat" },
@@ -68,7 +63,7 @@ export const CURRENCY_METADATA: Record<string, { description: string; gainHints:
   },
 };
 
-export type RoomSurfaceWidgetId = "auction" | "dungeon" | "duel" | "lottery";
+export type RoomSurfaceWidgetId = "auction" | "dungeon" | "duel" | "lottery" | "dice";
 
 export const ROOM_SURFACE_WIDGETS: Record<
   RoomSurfaceWidgetId,
@@ -101,6 +96,12 @@ export const ROOM_SURFACE_WIDGETS: Record<
     label: "Lottery",
     assetKey: "lottery_board_widget",
     fallbackFilename: "lottery_board_widget.png",
+    roomIds: ["thornhaven_city:tarnished_flagon_inn"],
+  },
+  dice: {
+    label: "Dice",
+    assetKey: "dice_table_widget",
+    fallbackFilename: "dice_table_widget.png",
     roomIds: ["thornhaven_city:tarnished_flagon_inn"],
   },
 };

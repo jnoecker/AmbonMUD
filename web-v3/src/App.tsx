@@ -26,6 +26,7 @@ import { InnPanel } from "./components/panels/InnPanel";
 import { AuctionPanel } from "./components/panels/AuctionPanel";
 import { DungeonPanel } from "./components/panels/DungeonPanel";
 import { LotteryPanel } from "./components/panels/LotteryPanel";
+import { DicePanel } from "./components/panels/DicePanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { CombatLogPanel } from "./components/panels/CombatLogPanel";
 import { HelpContent } from "./components/HelpContent";
@@ -436,6 +437,7 @@ function App() {
     canvasCallbacks.openCrafting = () => openPanel("crafting");
     canvasCallbacks.openDungeon = () => openPanel("dungeon");
     canvasCallbacks.openLottery = () => openPanel("lottery");
+    canvasCallbacks.openDice = () => openPanel("dice");
     canvasCallbacks.openHousing = () => openPanel("housing");
     canvasCallbacks.openInn = () => setShowInn(true);
     canvasCallbacks.openMail = () => openPanel("mail");
@@ -839,6 +841,7 @@ function App() {
       case "auction": return "Auction House";
       case "dungeon": return "Dungeon";
       case "lottery": return "Lottery";
+      case "dice": return "Dice Table";
       case "combatlog": return "Battle Journal";
       case "help": return "Command Reference";
       case "terminal": return "Terminal";
@@ -1223,6 +1226,16 @@ function App() {
           <LotteryPanel
             lotteryInfo={state.lotteryInfo}
             uiFeedbackFeed={state.uiFeedbackFeed}
+            onCommand={sendCommand}
+          />
+        )}
+
+        {drawerPanel === "dice" && (
+          <DicePanel
+            diceResult={state.diceResult}
+            lotteryInfo={state.lotteryInfo}
+            uiFeedbackFeed={state.uiFeedbackFeed}
+            gold={state.vitals.gold}
             onCommand={sendCommand}
           />
         )}

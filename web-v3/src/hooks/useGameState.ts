@@ -60,6 +60,7 @@ import type {
   ConsiderResult,
   LookTargetInfo,
   LotteryInfo,
+  DiceGambleResult,
   MailEntry,
   MailMessage,
   MailNotification,
@@ -274,6 +275,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [stylistState, setStylistState] = useState<StylistState | null>(null);
   const [recallState, setRecallState] = useState<RecallState | null>(null);
   const [lotteryInfo, setLotteryInfo] = useState<LotteryInfo | null>(null);
+  const [diceResult, setDiceResult] = useState<DiceGambleResult | null>(null);
   const [currencyActivity, setCurrencyActivity] = useState<CurrencyActivity[]>([]);
 
   // ── Crafting ──────────────────────────────────────
@@ -642,6 +644,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setStylistState,
         setRecallState,
         setLotteryInfo,
+        setDiceResult,
         setGuildHall,
         setDuelState,
         setDuelChallenge,
@@ -724,6 +727,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setStylistState(null);
     setRecallState(null);
     setLotteryInfo(null);
+    setDiceResult(null);
     setDuelState(null);
     setDuelChallenge(null);
     setDungeonInfo(null);
@@ -770,7 +774,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     quests, questsAvailable, questNotifications, setQuestNotifications,
     dailyQuests, weeklyQuests, autoQuest, globalQuest,
     // Economy
-    shop, puzzle, auctionListings, currencies, currencyActivity, bankState, stylistState, recallState, lotteryInfo,
+    shop, puzzle, auctionListings, currencies, currencyActivity, bankState, stylistState, recallState, lotteryInfo, diceResult,
     // Crafting
     craftingSkills, craftingRecipes, craftingNodes, gatherCooldownUntilMs,
     // World

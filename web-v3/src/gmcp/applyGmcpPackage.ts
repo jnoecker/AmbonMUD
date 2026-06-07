@@ -94,6 +94,7 @@ import type {
   GlobalQuest,
   GlobalQuestLeaderboardEntry,
   LotteryInfo,
+  DiceGambleResult,
   GuildHallInfo,
   GuildHallRoom,
   DuelState,
@@ -224,6 +225,7 @@ interface GmcpContext {
   setStylistState: Dispatch<SetStateAction<StylistState | null>>;
   setRecallState: Dispatch<SetStateAction<RecallState | null>>;
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
+  setDiceResult: Dispatch<SetStateAction<DiceGambleResult | null>>;
   setGuildHall: Dispatch<SetStateAction<GuildHallInfo | null>>;
   setDuelState: Dispatch<SetStateAction<DuelState | null>>;
   setDuelChallenge: Dispatch<SetStateAction<DuelChallenge | null>>;
@@ -2287,7 +2289,28 @@ export function applyGmcpPackage(
         totalTickets: safeNumber(packet.totalTickets, 0),
         playerTickets: safeNumber(packet.playerTickets, 0),
         nextDrawingMs: safeNumber(packet.nextDrawingMs, 0),
+        ticketCost: safeNumber(packet.ticketCost, 25),
+        maxTicketsPerPlayer: safeNumber(packet.maxTicketsPerPlayer, 10),
+        diceMinBet: safeNumber(packet.diceMinBet, 10),
+        diceMaxBet: safeNumber(packet.diceMaxBet, 1000),
+        diceWinMultiplier: safeNumber(packet.diceWinMultiplier, 2),
+        diceWinThreshold: safeNumber(packet.diceWinThreshold, 45),
+        diceCooldownMs: safeNumber(packet.diceCooldownMs, 5000),
       });
+      break;
+    }
+
+    case "Lottery.Gamble": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setDiceResult((prev) => ({
+        outcome: packet.outcome === "win" ? "win" : "lose",
+        bet: safeNumber(packet.bet, 0),
+        payout: safeNumber(packet.payout, 0),
+        roll: safeNumber(packet.roll, 0),
+        needed: safeNumber(packet.needed, 45),
+        cooldownMs: safeNumber(packet.cooldownMs, 5000),
+        seq: (prev?.seq ?? 0) + 1,
+      }));
       break;
     }
 

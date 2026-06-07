@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "puzzle" | "features" | "combatlog" | "inn" | "terminal" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "dice" | "puzzle" | "features" | "combatlog" | "inn" | "terminal" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -1143,6 +1143,26 @@ export interface LotteryInfo {
   totalTickets: number;
   playerTickets: number;
   nextDrawingMs: number;
+  ticketCost: number;
+  maxTicketsPerPlayer: number;
+  diceMinBet: number;
+  diceMaxBet: number;
+  diceWinMultiplier: number;
+  /** Roll this value or less on a d100 to win. */
+  diceWinThreshold: number;
+  diceCooldownMs: number;
+}
+
+/** One resolved tavern dice roll, from the Lottery.Gamble GMCP package. */
+export interface DiceGambleResult {
+  outcome: "win" | "lose";
+  bet: number;
+  payout: number;
+  roll: number;
+  needed: number;
+  cooldownMs: number;
+  /** Client-side monotonic id so the panel can animate each new roll. */
+  seq: number;
 }
 
 export interface GuildHallRoom {
