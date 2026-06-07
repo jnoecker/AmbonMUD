@@ -203,6 +203,77 @@ class PuzzleSystemTest {
         )
     }
 
+    // ---- Telnet look parity (issue #1218) ----
+
+    @Test
+    fun `look shows the riddle question and answer hint`() = runTest {
+        val h = harness()
+
+        h.router.handle(h.sid, Command.Look)
+        val infos = h.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+
+        assertTrue(
+            infos.any {
+                it.startsWith("Riddle: ") && it.contains("What has roots") && it.contains("answer <your guess>")
+            },
+            "Expected riddle question + answer hint in look output, got: $infos",
+        )
+    }
+
+    @Test
+    fun `look marks a solved riddle as solved and stops prompting`() = runTest {
+        val h = harness()
+        h.router.handle(h.sid, Command.Answer("mountain"))
+        h.outbound.drainAll()
+
+        h.router.handle(h.sid, Command.Look)
+        val infos = h.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+
+        assertTrue(
+            infos.any { it.startsWith("Riddle (solved): ") },
+            "Expected solved riddle marker in look output, got: $infos",
+        )
+        assertFalse(
+            infos.any { it.contains("answer <your guess>") },
+            "A solved riddle should not re-prompt for an answer, got: $infos",
+        )
+    }
+
+    @Test
+    fun `look shows sequence puzzle progress`() = runTest {
+        val h = harness()
+
+        h.router.handle(h.sid, Command.Look)
+        var infos = h.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+        assertTrue(
+            infos.any { it.startsWith("Puzzle: ") && it.contains("step 0/3") },
+            "Expected sequence progress 0/3 in look output, got: $infos",
+        )
+
+        h.router.handle(h.sid, Command.Pull("red"))
+        h.outbound.drainAll()
+
+        h.router.handle(h.sid, Command.Look)
+        infos = h.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+        assertTrue(
+            infos.any { it.startsWith("Puzzle: ") && it.contains("step 1/3") },
+            "Expected sequence progress 1/3 after pulling red, got: $infos",
+        )
+    }
+
+    @Test
+    fun `look lists every riddle in a room`() = runTest {
+        val h = harness()
+        h.players.moveTo(h.sid, RoomId("ok_puzzles:lever_room"))
+        h.outbound.drainAll()
+
+        h.router.handle(h.sid, Command.Look)
+        val infos = h.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+
+        val riddleLines = infos.filter { it.startsWith("Riddle: ") }
+        assertEquals(3, riddleLines.size, "Expected all three lever_room riddles, got: $infos")
+    }
+
     // ---- Sequence puzzle tests ----
 
     @Test

@@ -1285,6 +1285,10 @@ ambonmud:
           usage: read <sign>
           category: world
           staff: false
+        answer:
+          usage: answer <text>
+          category: world
+          staff: false
         title:
           usage: title <titleName> | title clear
           category: progression

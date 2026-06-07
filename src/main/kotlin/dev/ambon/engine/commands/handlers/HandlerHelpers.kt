@@ -20,6 +20,7 @@ import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.PuzzleSystem
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.WorldStateRegistry
@@ -173,7 +174,20 @@ internal suspend fun sendErrorWithFeedback(
 
 /** Convenience extension that delegates to the full [sendLook], pulling all dependencies from this context. */
 internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
-    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry, questSystem, trainerRegistry)
+    sendLook(
+        sessionId,
+        world,
+        players,
+        mobs,
+        items,
+        worldState,
+        outbound,
+        gmcpEmitter,
+        gatheringRegistry,
+        questSystem,
+        trainerRegistry,
+        puzzleSystem,
+    )
     emitShopGmcp(sessionId)
     emitBankGmcp(sessionId)
     emitPuzzleGmcp(sessionId)
@@ -299,6 +313,7 @@ internal suspend fun sendLook(
     gatheringRegistry: GatheringRegistry? = null,
     questSystem: QuestSystem? = null,
     trainerRegistry: TrainerRegistry? = null,
+    puzzleSystem: PuzzleSystem? = null,
 ) {
     val me = players.get(sessionId) ?: return
     val roomId = me.roomId
@@ -352,6 +367,35 @@ internal suspend fun sendLook(
                 }
             }
         outbound.send(OutboundEvent.SendInfo(sessionId, "You notice: $featureDesc"))
+    }
+
+    // Puzzles — parity with the web client's Puzzle.List popout. Without this,
+    // riddle questions and sequence progress are GMCP-only and telnet players
+    // have no way to discover them (issue #1218).
+    if (puzzleSystem != null) {
+        for (puzzle in puzzleSystem.puzzlesInRoom(roomId)) {
+            val solved = puzzleSystem.isSolved(sessionId, puzzle.id)
+            val line = when (puzzle.type) {
+                PuzzleType.RIDDLE -> {
+                    val question = puzzle.question ?: "An ancient riddle awaits your answer."
+                    if (solved) {
+                        "Riddle (solved): $question"
+                    } else {
+                        "Riddle: $question  (type 'answer <your guess>')"
+                    }
+                }
+                PuzzleType.SEQUENCE -> {
+                    if (solved) {
+                        "Puzzle (solved): the mechanisms here rest in their final arrangement."
+                    } else {
+                        val step = puzzleSystem.sequenceStep(sessionId, puzzle.id)
+                        "Puzzle: interact with the features here in the correct order " +
+                            "(step $step/${puzzle.steps.size})."
+                    }
+                }
+            }
+            outbound.send(OutboundEvent.SendInfo(sessionId, line))
+        }
     }
 
     // Crafting station

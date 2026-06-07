@@ -1881,6 +1881,7 @@ data class CommandsConfig(
             "put_in" to CommandMetadata("put <item> <container>", "Place an item in a container", "world", requiresTarget = true),
             "pull" to CommandMetadata("pull <lever>", "Pull a lever or object", "world", requiresTarget = true),
             "read" to CommandMetadata("read <sign>", "Read a sign or inscription", "world", requiresTarget = true),
+            "answer" to CommandMetadata("answer <text>", "Answer a riddle in the room", "world", requiresTarget = true),
             "title" to CommandMetadata("title <titleName> | title clear", "Set or clear your title", "progression", requiresTarget = true),
             "gender" to CommandMetadata("gender <option>", "Set your gender", "progression", requiresTarget = true),
             "sprite" to CommandMetadata("sprite list | set <id> | default", "Manage your character sprite", "progression"),
