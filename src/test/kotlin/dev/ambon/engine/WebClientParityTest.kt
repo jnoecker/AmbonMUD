@@ -69,6 +69,7 @@ class WebClientParityTest {
             "Search" to "search",
             "Pull" to "pull",
             "Read" to "read",
+            "Answer" to "answer",
             "Put" to "put_in",
             "GetFrom" to "get_from",
             // Combat

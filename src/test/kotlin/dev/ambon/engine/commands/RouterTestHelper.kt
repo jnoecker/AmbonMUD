@@ -134,6 +134,7 @@ internal fun buildTestRouter(
         genderRegistry = genderRegistry,
         bankConfig = bankConfig ?: BankConfig(),
         stylistConfig = stylistConfig ?: StylistConfig(),
+        puzzleSystem = puzzleSystem,
     )
     val puzzleHandler = puzzleSystem?.let { PuzzleHandler(ctx = ctx, puzzleSystem = it) }
     listOfNotNull(
