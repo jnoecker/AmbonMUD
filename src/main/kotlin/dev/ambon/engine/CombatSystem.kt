@@ -259,6 +259,26 @@ class CombatSystem(
     }
 
     /**
+     * Engages combat between a player and a specific mob without keyword resolution
+     * or attack messaging. Used by hostile ability casts so an out-of-combat target
+     * fights back instead of being farmed risk-free from outside combat.
+     * No-op if the player already has a target, the mob is not a combatant, or
+     * either side is already dead.
+     */
+    suspend fun engageMobCombat(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        val player = players.get(sessionId) ?: return
+        if (playerTarget[sessionId] != null) return
+        if (!mob.role.isCombatant) return
+        if (mob.hp <= 0 || player.hp <= 0) return
+
+        registerCombatant(sessionId, mob.id, player, clock.millis())
+        onPlayerEnteredCombat(sessionId)
+    }
+
+    /**
      * Estimate the player's odds against a mob in the same room without engaging.
      *
      * Uses expected-value damage (mean of the damage range) on both sides, applies

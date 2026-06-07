@@ -999,18 +999,19 @@ class GameEngine(
         combatSystem.onXpGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "xp", amount, source) }
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
-        combatSystem.onPvpKill = { sid -> notifyDailyQuest(sid, "pvpKill") }
         combatSystem.zoneStartRoomLookup = { zoneId -> world.zoneStartRoom(zoneId) }
         combatSystem.deathConfig = engineConfig.death
         combatSystem.sanctumRoomLookup = {
             engineConfig.death.sanctumRoom?.let { RoomId(it) }?.takeIf { world.rooms.containsKey(it) }
         }
+        // Single assignment: a second `onPvpKill =` would silently overwrite the first.
         combatSystem.onPvpKill = { killerSid ->
+            notifyDailyQuest(killerSid, "pvpKill")
             val killer = players.get(killerSid)
-            if (killer != null && currencySystem.honorPerPvpKill > 0) {
+            if (killer != null &&
                 currencySystem.award(killer, "honor", currencySystem.honorPerPvpKill)
-                val def = currencySystem.getDefinition("honor")
-                val displayName = def?.displayName ?: "Honor"
+            ) {
+                val displayName = currencySystem.getDefinition("honor")?.displayName ?: "Honor"
                 outbound.send(
                     OutboundEvent.SendInfo(
                         killerSid,
@@ -1043,15 +1044,16 @@ class GameEngine(
                 // Award secondary currencies from quest rewards
                 val questDef = questRegistry.get(questId)
                 if (questDef != null) {
+                    var awardedAny = false
                     for ((currencyId, amount) in questDef.rewards.currencies) {
-                        currencySystem.award(player, currencyId, amount)
-                        val def = currencySystem.getDefinition(currencyId)
-                        val displayName = def?.displayName ?: currencyId
+                        if (!currencySystem.award(player, currencyId, amount)) continue
+                        awardedAny = true
+                        val displayName = currencySystem.getDefinition(currencyId)?.displayName ?: currencyId
                         outbound.send(
                             OutboundEvent.SendInfo(sid, "[Currency] You receive $amount $displayName."),
                         )
                     }
-                    if (questDef.rewards.currencies.isNotEmpty()) emitCurrencies(sid, player)
+                    if (awardedAny) emitCurrencies(sid, player)
                 }
             }
         }
@@ -1344,10 +1346,11 @@ class GameEngine(
                     notifyDailyQuest(sid, "craft")
                     globalQuestSystem?.onEvent(sid, GlobalQuestObjectiveType.CRAFT)
                     val crafter = players.get(sid)
-                    if (crafter != null && currencySystem.tokensPerCraft > 0) {
+                    if (crafter != null &&
                         currencySystem.award(crafter, "crafting_tokens", currencySystem.tokensPerCraft)
-                        val def = currencySystem.getDefinition("crafting_tokens")
-                        val displayName = def?.displayName ?: "Crafting Tokens"
+                    ) {
+                        val displayName =
+                            currencySystem.getDefinition("crafting_tokens")?.displayName ?: "Crafting Tokens"
                         outbound.send(
                             OutboundEvent.SendInfo(
                                 sid,

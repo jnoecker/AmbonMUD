@@ -322,6 +322,64 @@ class AbilitySystemTest {
         }
 
     @Test
+    fun `cast at an out-of-combat mob engages combat so the target fights back`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Provoker")
+            h.abilitySystem.syncAbilities(sid, 1)
+            h.players.get(sid)!!.mana = 20
+
+            val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
+            h.mobs.upsert(mob)
+
+            assertFalse(h.combat.isInCombat(sid))
+            val err = h.abilitySystem.cast(sid, "magic_missile", "rat")
+            assertNull(err)
+
+            assertTrue(h.combat.isInCombat(sid), "a hostile cast must engage combat with its target")
+            assertEquals(mob.id, h.combat.currentTarget(sid))
+        }
+
+    @Test
+    fun `cast that kills its target does not leave the player stuck in combat`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Slayer")
+            h.abilitySystem.syncAbilities(sid, 1)
+            h.players.get(sid)!!.mana = 20
+
+            val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 3, maxHp = 20)
+            h.mobs.upsert(mob)
+
+            val err = h.abilitySystem.cast(sid, "magic_missile", "rat")
+            assertNull(err)
+
+            assertNull(h.mobs.get(MobId("zone:rat")))
+            assertFalse(h.combat.isInCombat(sid), "combat must end when the spell kills the target")
+        }
+
+    @Test
+    fun `cast while fighting another mob does not retarget`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Splitter")
+            h.abilitySystem.syncAbilities(sid, 1)
+            h.players.get(sid)!!.mana = 20
+
+            val first = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
+            val second = MobState(MobId("zone:bat"), "a bat", roomId, hp = 20, maxHp = 20)
+            h.mobs.upsert(first)
+            h.mobs.upsert(second)
+            assertNull(h.combat.startCombat(sid, "rat"))
+
+            val err = h.abilitySystem.cast(sid, "magic_missile", "bat")
+            assertNull(err)
+
+            assertEquals(first.id, h.combat.currentTarget(sid), "off-target cast must not switch the melee target")
+            assertEquals(15, second.hp)
+        }
+
+    @Test
     fun `knownAbilities reflects level`() =
         runTest {
             val h = buildSystem()

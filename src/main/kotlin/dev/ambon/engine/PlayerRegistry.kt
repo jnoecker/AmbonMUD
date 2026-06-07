@@ -62,6 +62,9 @@ sealed interface ClaimResult {
     data object InvalidPassword : ClaimResult
 
     data object Taken : ClaimResult
+
+    /** The requested name is reserved by the login flow (e.g. the "demo" guest keyword). */
+    data object Reserved : ClaimResult
 }
 
 /**
@@ -412,6 +415,7 @@ class PlayerRegistry(
 
         val targetName = normalizeName(newNameRaw ?: ps.name)
         val password = normalizePassword(passwordRaw)
+        if (isReservedName(targetName)) return ClaimResult.Reserved
         if (!isValidName(targetName)) return ClaimResult.InvalidName
         if (!isValidPassword(password)) return ClaimResult.InvalidPassword
         // Allow keeping the same name (case-insensitive match against self),
@@ -867,8 +871,16 @@ class PlayerRegistry(
             val ok = c.isLetterOrDigit() || c == '_'
             if (!ok) return false
         }
-        return true
+        return !isReservedName(name)
     }
+
+    /**
+     * Names that can never belong to an account because the login flow intercepts
+     * them as keywords before name resolution (see LoginFlowHandler's demo-guest
+     * entry). An account named "Demo" would be permanently unreachable: any case
+     * variant typed at the name prompt starts a guest session instead of logging in.
+     */
+    fun isReservedName(name: String): Boolean = normalizeName(name).lowercase() in RESERVED_NAMES
 
     /**
      * Remap a player from [oldSid] to [newSid] atomically.
@@ -919,4 +931,9 @@ class PlayerRegistry(
     private fun normalizeName(nameRaw: String): String = nameRaw.trim()
 
     private fun normalizePassword(passwordRaw: String): String = passwordRaw
+
+    companion object {
+        /** Lowercase names reserved by login-flow keywords. See [isReservedName]. */
+        val RESERVED_NAMES = setOf("demo")
+    }
 }
