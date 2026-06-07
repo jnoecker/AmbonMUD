@@ -16,6 +16,11 @@ data class ItemFile(
     val charges: Int? = null,
     val onUse: ItemUseEffect? = null,
     val room: String? = null,
+    /**
+     * Seconds after this room-placed item leaves its room before it respawns
+     * there. Null = the item only returns on zone reset. Requires `room`.
+     */
+    val respawnSeconds: Long? = null,
     val mob: String? = null,
     val matchByKey: Boolean = false,
     val basePrice: Int = 0,

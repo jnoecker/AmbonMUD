@@ -13,6 +13,12 @@ data class FeatureFile(
     val keyItemId: String? = null,
     val keyConsumed: Boolean = false,
     val resetWithZone: Boolean = true,
+    /**
+     * Seconds after the feature leaves its initial condition before it reverts
+     * (state restored; container contents refilled). Null = zone reset only.
+     * Not valid for SIGN.
+     */
+    val respawnSeconds: Long? = null,
     /** Initial item IDs inside this container. Only applies to CONTAINER type. */
     val items: List<String> = emptyList(),
     /** Text content. Only applies to SIGN type. */

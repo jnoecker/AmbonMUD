@@ -9,6 +9,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.items.ItemType
 import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.domain.world.data.ItemFile
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -643,6 +644,51 @@ class WorldLoaderTest {
             }
         assertTrue(ex.message!!.contains("respawnSeconds", ignoreCase = true), "Got: ${ex.message}")
         assertTrue(ex.message!!.contains("> 0", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `loads item and feature respawnSeconds`() {
+        val world = WorldLoader.loadFromResource("world/ok_timed_respawn.yaml")
+
+        val coin = world.itemSpawns.first { it.instance.id.value == "ok_timed:coin" }
+        assertEquals(30L, coin.respawnSeconds)
+        val relic = world.itemSpawns.first { it.instance.id.value == "ok_timed:relic" }
+        assertEquals(null, relic.respawnSeconds)
+
+        val features = world.rooms.getValue(RoomId("ok_timed:hall")).features
+        val lever = features.filterIsInstance<RoomFeature.Lever>().single()
+        assertEquals(10L, lever.respawnSeconds)
+        val chest = features.filterIsInstance<RoomFeature.Container>().single()
+        assertEquals(15L, chest.respawnSeconds)
+        val door = features.filterIsInstance<RoomFeature.Door>().single()
+        assertEquals(20L, door.respawnSeconds)
+    }
+
+    @Test
+    fun `fails when item respawnSeconds is zero`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_item_respawn_zero.yaml")
+            }
+        assertTrue(ex.message!!.contains("respawnSeconds must be > 0"), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when item respawnSeconds has no room placement`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_item_respawn_unplaced.yaml")
+            }
+        assertTrue(ex.message!!.contains("requires room placement"), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when a sign has respawnSeconds`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_feature_respawn_sign.yaml")
+            }
+        assertTrue(ex.message!!.contains("cannot have respawnSeconds"), "Got: ${ex.message}")
     }
 
     @Test

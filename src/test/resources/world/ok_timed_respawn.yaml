@@ -1,0 +1,51 @@
+zone: ok_timed
+startRoom: hall
+
+items:
+  coin:
+    displayName: "a gleaming coin"
+    keyword: coin
+    description: "It glints invitingly."
+    room: hall
+    respawnSeconds: 30
+  relic:
+    displayName: "a dusty relic"
+    keyword: relic
+    description: "Old and dusty. Only a zone reset brings it back."
+    room: hall
+  gem:
+    displayName: "a tiny gem"
+    keyword: gem
+    description: "Sparkles."
+
+rooms:
+  hall:
+    title: "Timed Hall"
+    description: "A room full of self-restoring things."
+    exits:
+      north:
+        to: vault
+        door:
+          initialState: closed
+          respawnSeconds: 20
+    features:
+      snap_lever:
+        type: LEVER
+        displayName: "a sprung lever"
+        keyword: lever
+        initialState: up
+        respawnSeconds: 10
+      gem_chest:
+        type: CONTAINER
+        displayName: "a self-filling chest"
+        keyword: chest
+        initialState: closed
+        respawnSeconds: 15
+        items:
+          - gem
+
+  vault:
+    title: "Vault"
+    description: "Behind the door."
+    exits:
+      south: hall

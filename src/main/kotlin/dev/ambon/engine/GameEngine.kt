@@ -484,6 +484,18 @@ class GameEngine(
             onLineReceived = ::handleLineReceived,
         )
 
+    private val timedRespawnHandler by lazy {
+        TimedRespawnHandler(
+            world = world,
+            items = items,
+            players = players,
+            outbound = outbound,
+            worldState = worldState,
+            gmcpEmitter = gmcpEmitter,
+            clock = clock,
+        )
+    }
+
     private val zoneResetHandler by lazy {
         ZoneResetHandler(
             world = world,
@@ -1162,7 +1174,10 @@ class GameEngine(
                 engineConfig = engineConfig,
                 imagesBaseUrl = imagesBaseUrl,
                 worldLoader = worldLoader,
-                onZoneScheduleRefresh = { zoneResetHandler.refreshSchedule() },
+                onZoneScheduleRefresh = {
+                    zoneResetHandler.refreshSchedule()
+                    timedRespawnHandler.refresh()
+                },
             )
         } else {
             null
@@ -1870,6 +1885,9 @@ class GameEngine(
 
                     // Reset zones when their lifespan elapses.
                     zoneResetHandler.tick()
+
+                    // Restore item spawns / features that declare their own respawnSeconds.
+                    timedRespawnHandler.tick()
                     metrics.recordTickPhase("outbound_flush", outboundFlushPhaseSample)
                 } catch (t: Throwable) {
                     if (t is kotlinx.coroutines.CancellationException) throw t

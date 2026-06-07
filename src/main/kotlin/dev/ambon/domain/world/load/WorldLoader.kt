@@ -291,6 +291,13 @@ object WorldLoader {
                                         doorFile.initialState,
                                         "Room ‘${fromId.value}’ door at ‘$dirStr’",
                                     )
+                                val doorRespawn = doorFile.respawnSeconds
+                                if (doorRespawn != null && doorRespawn <= 0L) {
+                                    throw WorldLoadException(
+                                        "Room '${fromId.value}' door at '$dirStr' respawnSeconds must be > 0 " +
+                                            "(got $doorRespawn)",
+                                    )
+                                }
                                 val dirAbbrev = dirAbbrev(dir)
                                 featList.add(
                                     RoomFeature.Door(
@@ -303,6 +310,7 @@ object WorldLoader {
                                         keyItemId = doorKeyItemId,
                                         keyConsumed = doorFile.keyConsumed,
                                         resetWithZone = doorFile.resetWithZone,
+                                        respawnSeconds = doorRespawn,
                                     ),
                                 )
                             }
@@ -543,6 +551,16 @@ object WorldLoader {
 
                 val roomId = roomRaw?.let { normalizeTarget(zone, it) }
 
+                val itemRespawn = itemFile.respawnSeconds
+                if (itemRespawn != null && itemRespawn <= 0L) {
+                    throw WorldLoadException("Item '${itemId.value}' respawnSeconds must be > 0 (got $itemRespawn)")
+                }
+                if (itemRespawn != null && roomId == null) {
+                    throw WorldLoadException(
+                        "Item '${itemId.value}' respawnSeconds requires room placement (set 'room')",
+                    )
+                }
+
                 mergedItems[itemId] =
                     ItemSpawn(
                         instance =
@@ -570,6 +588,7 @@ object WorldLoader {
                                     ),
                             ),
                         roomId = roomId,
+                        respawnSeconds = itemRespawn,
                     )
             }
 
@@ -1530,6 +1549,10 @@ object WorldLoader {
         val keyword = requireNonBlank(ff.keyword) {
             "Feature '$featId' keyword cannot be blank"
         }
+        val respawnSeconds = ff.respawnSeconds
+        if (respawnSeconds != null && respawnSeconds <= 0L) {
+            throw WorldLoadException("Feature '$featId' respawnSeconds must be > 0 (got $respawnSeconds)")
+        }
         return when (type) {
             "CONTAINER" -> {
                 val keyItemId =
@@ -1554,6 +1577,7 @@ object WorldLoader {
                     keyConsumed = ff.keyConsumed,
                     resetWithZone = ff.resetWithZone,
                     initialItems = initialItems,
+                    respawnSeconds = respawnSeconds,
                 )
             }
             "LEVER" -> {
@@ -1565,9 +1589,13 @@ object WorldLoader {
                     keyword = keyword,
                     initialState = initialState,
                     resetWithZone = ff.resetWithZone,
+                    respawnSeconds = respawnSeconds,
                 )
             }
             "SIGN" -> {
+                if (respawnSeconds != null) {
+                    throw WorldLoadException("Sign '$featId' cannot have respawnSeconds (signs have no state)")
+                }
                 val text = ff.text ?: throw WorldLoadException("Sign '$featId' must have a 'text' field")
                 RoomFeature.Sign(
                     id = featId,
