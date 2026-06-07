@@ -1018,7 +1018,7 @@ ambonmud:
           category: items
           staff: false
         use:
-          usage: use <item>
+          usage: use/eat/drink <item>
           category: items
           staff: false
         give:

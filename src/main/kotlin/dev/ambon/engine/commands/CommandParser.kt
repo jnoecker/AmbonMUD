@@ -891,8 +891,8 @@ object CommandParser {
         // drop
         requiredArg(line, listOf("drop"), "drop <item>", { Command.Drop(it) })?.let { return it }
 
-        // use
-        requiredArg(line, listOf("use"), "use <item>", { Command.Use(it) })?.let { return it }
+        // use — eat/drink are discoverability aliases; consumables all go through `use`.
+        requiredArg(line, listOf("use", "eat", "drink"), "use <item>", { Command.Use(it) })?.let { return it }
 
         // quick heal / quick mana
         matchPrefix(line, listOf("quickheal", "qh")) { Command.QuickHeal }?.let { return it }

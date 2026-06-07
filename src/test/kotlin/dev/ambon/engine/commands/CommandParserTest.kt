@@ -116,6 +116,14 @@ class CommandParserTest {
     }
 
     @Test
+    fun `eat and drink alias to use`() {
+        assertEquals(Command.Use("sandwich"), CommandParser.parse("eat sandwich"))
+        assertEquals(Command.Use("tea"), CommandParser.parse("drink tea"))
+        assertTrue(CommandParser.parse("eat") is Command.Invalid)
+        assertTrue(CommandParser.parse("drink") is Command.Invalid)
+    }
+
+    @Test
     fun `parses quickheal and quickmana with aliases`() {
         assertEquals(Command.QuickHeal, CommandParser.parse("quickheal"))
         assertEquals(Command.QuickHeal, CommandParser.parse("qh"))

@@ -322,6 +322,38 @@ class AbilitySystemTest {
         }
 
     @Test
+    fun `cast resolves a multi-word spell name with a trailing target`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Caster")
+            h.abilitySystem.syncAbilities(sid, 1)
+            h.players.get(sid)!!.mana = 20
+
+            val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
+            h.mobs.upsert(mob)
+
+            // The parser splits "cast magic missile rat" into spell="magic",
+            // target="missile rat" — the longest known-spell prefix must win (#1221).
+            val err = h.abilitySystem.cast(sid, "magic", "missile rat")
+            assertNull(err)
+            assertEquals(15, mob.hp)
+        }
+
+    @Test
+    fun `cast with a full multi-word spell name and no target prompts for one`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Caster")
+            h.abilitySystem.syncAbilities(sid, 1)
+            h.players.get(sid)!!.mana = 20
+
+            // "cast magic missile" out of combat: the whole input is the spell
+            // name, not spell "magic" with target "missile".
+            val err = h.abilitySystem.cast(sid, "magic", "missile")
+            assertEquals("Cast Magic Missile on whom?", err)
+        }
+
+    @Test
     fun `cast at an out-of-combat mob engages combat so the target fights back`() =
         runTest {
             val h = buildSystem()

@@ -32,6 +32,8 @@ import java.util.Random
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
+private val WHITESPACE = Regex("\\s+")
+
 class AbilitySystem(
     private val players: PlayerRegistry,
     val registry: AbilityRegistry,
@@ -83,9 +85,26 @@ class AbilitySystem(
         val player = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         ensureAbilitiesCurrent(sessionId)
 
-        // 1. Resolve ability
-        val ability = registry.findByKeyword(spellName)
-        if (ability == null || ability.id !in effectiveAbilities[sessionId].orEmpty()) {
+        // 1. Resolve ability. The parser splits `cast <word> <rest>` blindly, so a
+        //    multi-word spell name swallows part of itself into the target
+        //    ("cast hammer strike rat" arrives as spell "hammer", target
+        //    "strike rat"). Re-tokenize and try the longest known-spell prefix
+        //    first, treating the remainder as the target (#1221).
+        val known = effectiveAbilities[sessionId].orEmpty()
+        val tokens = buildList {
+            addAll(spellName.trim().split(WHITESPACE))
+            targetKeyword?.trim()?.takeIf { it.isNotEmpty() }?.let { addAll(it.split(WHITESPACE)) }
+        }
+        var ability: AbilityDefinition? = null
+        var resolvedTarget: String? = null
+        for (wordCount in tokens.size downTo 1) {
+            val candidate = registry.findByKeyword(tokens.take(wordCount).joinToString(" ")) ?: continue
+            if (candidate.id !in known) continue
+            ability = candidate
+            resolvedTarget = tokens.drop(wordCount).joinToString(" ").takeIf { it.isNotEmpty() }
+            break
+        }
+        if (ability == null) {
             return "You don't know a spell called '$spellName'."
         }
 
@@ -105,9 +124,9 @@ class AbilitySystem(
 
         // 4. Resolve target and apply
         return when (ability.targetType) {
-            "enemy" -> handleEnemyCast(sessionId, player, ability, targetKeyword, now)
+            "enemy" -> handleEnemyCast(sessionId, player, ability, resolvedTarget, now)
             "self" -> handleSelfCast(sessionId, player, ability, now)
-            "ally" -> handleAllyCast(sessionId, player, ability, targetKeyword, now)
+            "ally" -> handleAllyCast(sessionId, player, ability, resolvedTarget, now)
             "all_enemies" -> handleAllEnemiesCast(sessionId, player, ability, now)
             "all_allies" -> handleAllAlliesCast(sessionId, player, ability, now)
             "pet" -> handlePetCast(sessionId, player, ability, now)
