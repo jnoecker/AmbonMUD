@@ -89,7 +89,9 @@ export class DialogueOverlay {
     const state = gameStateRef.current;
     const dialogue = state.dialogue;
 
-    if (!dialogue) {
+    // The monster-manual panel renders dialogue in its own styled window;
+    // showing the canvas overlay too would double the dialogue on screen.
+    if (!dialogue || state.monsterPanelOpen) {
       this.container.visible = false;
       this.fullBg.visible = false;
       this.fullBg.eventMode = "none";
