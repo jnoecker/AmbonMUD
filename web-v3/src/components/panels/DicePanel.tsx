@@ -154,7 +154,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, onCom
               onClick={() => placeBet(amount)}
             >
               <span className="systems-choice-title">{amount.toLocaleString()} gold</span>
-              <span className="systems-choice-copy">wins {(amount * multiplier).toLocaleString()}</span>
+              <span className="systems-choice-copy">wins {Math.floor(amount * multiplier).toLocaleString()}</span>
             </button>
           ))}
         </div>
