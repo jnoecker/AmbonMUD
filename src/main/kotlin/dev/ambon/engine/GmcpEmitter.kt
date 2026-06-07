@@ -1477,6 +1477,13 @@ class GmcpEmitter(
         val totalTickets: Int,
         val playerTickets: Int,
         val nextDrawingMs: Long,
+        val ticketCost: Long,
+        val maxTicketsPerPlayer: Int,
+        val diceMinBet: Long,
+        val diceMaxBet: Long,
+        val diceWinMultiplier: Double,
+        val diceWinThreshold: Int,
+        val diceCooldownMs: Long,
     )
 
     suspend fun sendLotteryInfo(
@@ -1491,8 +1498,32 @@ class GmcpEmitter(
                 totalTickets = info.totalTickets,
                 playerTickets = info.playerTickets,
                 nextDrawingMs = info.nextDrawingMs,
+                ticketCost = info.ticketCost,
+                maxTicketsPerPlayer = info.maxTicketsPerPlayer,
+                diceMinBet = info.diceMinBet,
+                diceMaxBet = info.diceMaxBet,
+                diceWinMultiplier = info.diceWinMultiplier,
+                diceWinThreshold = info.diceWinThreshold,
+                diceCooldownMs = info.diceCooldownMs,
             ),
         )
+    }
+
+    data class GambleResultPayload(
+        val outcome: String,
+        val bet: Long,
+        val payout: Long,
+        val roll: Int,
+        val needed: Int,
+        val cooldownMs: Long,
+    )
+
+    /** Emits the result of a tavern dice roll so the web client can animate it. */
+    suspend fun sendGambleResult(
+        sessionId: SessionId,
+        payload: GambleResultPayload,
+    ) {
+        emit(sessionId, "Lottery.Gamble", payload)
     }
 
     // ---------- pets ----------

@@ -1306,11 +1306,11 @@ ambonmud:
           category: social
           staff: false
         lottery:
-          usage: lottery [info] | lottery buy [count]
+          usage: lottery [info] | lottery buy [count] (buying requires a tavern)
           category: social
           staff: false
         gamble:
-          usage: gamble/dice <amount>
+          usage: gamble/dice <amount> (requires a tavern)
           category: social
           staff: false
         ansi:

@@ -1557,7 +1557,8 @@ Every outbound package name currently emitted by `GmcpEmitter.kt`. Packages mark
 | `Dungeon.Catalog` | Available dungeon templates |
 | `Dungeon.Info` | Active dungeon instance state |
 | `Prestige.Info` | Prestige rank / perks / cost |
-| `Lottery.Info` | Active lottery state |
+| `Lottery.Info` | Active lottery state + ticket/dice settings |
+| `Lottery.Gamble` | Resolved tavern dice roll (outcome, bet, payout, roll) |
 | `Leaderboard.Data` | Leaderboard rows |
 | `Puzzle.List` | Available puzzles |
 | `Puzzle.Close` | Puzzle session end |

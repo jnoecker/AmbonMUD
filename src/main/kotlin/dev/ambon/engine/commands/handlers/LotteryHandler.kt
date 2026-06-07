@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GambleResult
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.LotteryBuyResult
 import dev.ambon.engine.LotterySystem
 import dev.ambon.engine.commands.Command
@@ -50,6 +51,12 @@ class LotteryHandler(
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
+                    "  Ticket cost:  ${info.ticketCost} gold (max ${info.maxTicketsPerPlayer} per drawing)",
+                ),
+            )
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
                     "  Next drawing: ${minutesLeft}m ${secondsLeft}s",
                 ),
             )
@@ -79,6 +86,7 @@ class LotteryHandler(
                 sessionId = sessionId,
                 count = cmd.count,
                 currentGold = me.gold,
+                inTavern = ctx.world.rooms[me.roomId]?.tavern == true,
                 deductGold = { cost -> me.gold -= cost },
             )
 
@@ -128,6 +136,18 @@ class LotteryHandler(
                         message,
                         "lottery",
                         code = "TICKET_LIMIT",
+                        command = "buy",
+                    )
+                }
+
+                is LotteryBuyResult.NotInTavern -> {
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        "You must be in a tavern to buy lottery tickets.",
+                        "lottery",
+                        code = "NOT_IN_TAVERN",
                         command = "buy",
                     )
                 }
@@ -185,6 +205,7 @@ class LotteryHandler(
                         ),
                     )
                     markVitalsDirty(sessionId)
+                    emitGambleGmcp(sessionId, me.name, system, "win", result.bet, result.payout, result.roll, result.needed)
                     broadcastToRoomExcept(
                         me.roomId,
                         sessionId,
@@ -209,6 +230,7 @@ class LotteryHandler(
                         ),
                     )
                     markVitalsDirty(sessionId)
+                    emitGambleGmcp(sessionId, me.name, system, "lose", result.bet, 0L, result.roll, result.needed)
                     broadcastToRoomExcept(
                         me.roomId,
                         sessionId,
@@ -219,48 +241,63 @@ class LotteryHandler(
                 }
 
                 is GambleResult.InsufficientGold -> {
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "You need ${result.need} gold but only have ${result.have}.",
-                        ),
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        "You need ${result.need} gold but only have ${result.have}.",
+                        "dice",
+                        code = "INSUFFICIENT_GOLD",
+                        command = "gamble",
                     )
                 }
 
                 is GambleResult.BetTooLow -> {
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "Minimum bet is ${result.min} gold.",
-                        ),
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        "Minimum bet is ${result.min} gold.",
+                        "dice",
+                        code = "BET_TOO_LOW",
+                        command = "gamble",
                     )
                 }
 
                 is GambleResult.BetTooHigh -> {
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "Maximum bet is ${result.max} gold.",
-                        ),
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        "Maximum bet is ${result.max} gold.",
+                        "dice",
+                        code = "BET_TOO_HIGH",
+                        command = "gamble",
                     )
                 }
 
                 is GambleResult.OnCooldown -> {
                     val seconds = (result.remainingMs + 999) / 1000
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "You need to wait ${seconds}s before gambling again.",
-                        ),
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        "You need to wait ${seconds}s before gambling again.",
+                        "dice",
+                        code = "ON_COOLDOWN",
+                        command = "gamble",
                     )
                 }
 
                 is GambleResult.NotInTavern -> {
-                    outbound.send(
-                        OutboundEvent.SendError(
-                            sessionId,
-                            "You must be in a tavern to gamble.",
-                        ),
+                    sendErrorWithFeedback(
+                        sessionId,
+                        outbound,
+                        gmcpEmitter,
+                        "You must be in a tavern to gamble.",
+                        "dice",
+                        code = "NOT_IN_TAVERN",
+                        command = "gamble",
                     )
                 }
 
@@ -285,5 +322,28 @@ class LotteryHandler(
     ) {
         val info = system.getInfo(playerName)
         gmcpEmitter?.sendLotteryInfo(sessionId, info)
+    }
+
+    private suspend fun emitGambleGmcp(
+        sessionId: SessionId,
+        playerName: String,
+        system: LotterySystem,
+        outcome: String,
+        bet: Long,
+        payout: Long,
+        roll: Int,
+        needed: Int,
+    ) {
+        gmcpEmitter?.sendGambleResult(
+            sessionId,
+            GmcpEmitter.GambleResultPayload(
+                outcome = outcome,
+                bet = bet,
+                payout = payout,
+                roll = roll,
+                needed = needed,
+                cooldownMs = system.getInfo(playerName).diceCooldownMs,
+            ),
+        )
     }
 }

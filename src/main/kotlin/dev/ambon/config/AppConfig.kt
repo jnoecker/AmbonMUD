@@ -2846,6 +2846,7 @@ data class ImagesConfig(
             "bank_vault" to "global_assets/bank_vault.png",
             "stylist_mirror" to "global_assets/stylist_mirror.png",
             "lottery_board_widget" to "global_assets/lottery_board_widget.png",
+            "dice_table_widget" to "global_assets/dice_table_widget.png",
             "dungeon_portal_widget" to "global_assets/dungeon_portal_widget.png",
             "auction_hall_widget" to "global_assets/auction_hall_widget.png",
             "duel_arena_widget" to "global_assets/duel_arena_widget.png",

@@ -77,6 +77,7 @@ export const canvasCallbacks: {
   openCrafting: (() => void) | null;
   openDungeon: (() => void) | null;
   openLottery: (() => void) | null;
+  openDice: (() => void) | null;
   openHousing: (() => void) | null;
   openInn: (() => void) | null;
   openMail: (() => void) | null;
@@ -111,6 +112,7 @@ export const canvasCallbacks: {
   openCrafting: null,
   openDungeon: null,
   openLottery: null,
+  openDice: null,
   openHousing: null,
   openInn: null,
   openMail: null,

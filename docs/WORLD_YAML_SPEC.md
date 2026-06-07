@@ -93,8 +93,8 @@ ambient: <string, optional - overrides zone audio.ambient>
 - Shows a Stylist badge on the web client via the standard panel drawer.
 
 `tavern` notes:
-- When `true`, enables gambling commands (`gamble`, `dice`) in this room.
-- Also shows a Lottery badge on the web client canvas.
+- When `true`, enables gambling commands (`gamble`, `dice`) and lottery ticket purchases (`lottery buy`) in this room. (`lottery` info works anywhere.)
+- Also shows Lottery and Dice badges on the web client canvas.
 
 `dungeon` notes:
 - When `true`, shows a Dungeon badge on the web client canvas that opens the dungeon kiosk panel.

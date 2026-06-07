@@ -1,4 +1,4 @@
-package dev.ambon.engine
+﻿package dev.ambon.engine
 
 import dev.ambon.config.GamblingConfig
 import dev.ambon.config.LotteryConfig
@@ -60,6 +60,7 @@ class LotterySystemTest {
                 sessionId = sid1,
                 count = 3,
                 currentGold = gold,
+                inTavern = true,
                 deductGold = { cost -> gold -= cost },
             )
             assertTrue(result is LotteryBuyResult.Success)
@@ -77,6 +78,7 @@ class LotterySystemTest {
                 sessionId = sid1,
                 count = 1,
                 currentGold = 50L,
+                inTavern = true,
                 deductGold = { },
             )
             assertTrue(result is LotteryBuyResult.InsufficientGold)
@@ -87,8 +89,8 @@ class LotterySystemTest {
 
         @Test
         fun `max ticket limit enforced`() {
-            system.buyTickets("Alice", sid1, 5, 10000L) { }
-            val result = system.buyTickets("Alice", sid1, 1, 10000L) { }
+            system.buyTickets("Alice", sid1, 5, 10000L, inTavern = true) { }
+            val result = system.buyTickets("Alice", sid1, 1, 10000L, inTavern = true) { }
             assertTrue(result is LotteryBuyResult.ExceedsLimit)
             val err = result as LotteryBuyResult.ExceedsLimit
             assertEquals(5, err.current)
@@ -97,7 +99,7 @@ class LotterySystemTest {
 
         @Test
         fun `ticket purchase adds to jackpot`() {
-            system.buyTickets("Alice", sid1, 1, 10000L) { }
+            system.buyTickets("Alice", sid1, 1, 10000L, inTavern = true) { }
             val info = system.getInfo("Alice")
             // Base seed 500 + 80% of 100 = 580
             assertEquals(580L, info.jackpot)
@@ -110,8 +112,17 @@ class LotterySystemTest {
                 gamblingConfig = gamblingConfig,
                 clock = clock,
             )
-            val result = disabledSystem.buyTickets("Alice", sid1, 1, 10000L) { }
+            val result = disabledSystem.buyTickets("Alice", sid1, 1, 10000L, inTavern = true) { }
             assertTrue(result is LotteryBuyResult.Disabled)
+        }
+
+        @Test
+        fun `buying outside a tavern returns NotInTavern`() {
+            var deducted = false
+            val result = system.buyTickets("Alice", sid1, 1, 10000L, inTavern = false) { deducted = true }
+            assertTrue(result is LotteryBuyResult.NotInTavern)
+            assertTrue(!deducted)
+            assertEquals(0, system.getInfo("Alice").playerTickets)
         }
     }
 
@@ -126,7 +137,7 @@ class LotterySystemTest {
 
         @Test
         fun `drawing occurs after interval`() {
-            system.buyTickets("Alice", sid1, 1, 10000L) { }
+            system.buyTickets("Alice", sid1, 1, 10000L, inTavern = true) { }
             clock.advance(60_000L)
             val result = system.tick(clock.millis())
             assertNotNull(result)
@@ -145,7 +156,7 @@ class LotterySystemTest {
 
         @Test
         fun `jackpot resets to seed after drawing with winner`() {
-            system.buyTickets("Alice", sid1, 1, 10000L) { }
+            system.buyTickets("Alice", sid1, 1, 10000L, inTavern = true) { }
             clock.advance(60_000L)
             system.tick(clock.millis())
             val info = system.getInfo("Alice")
@@ -158,8 +169,8 @@ class LotterySystemTest {
             // Buy 5 tickets at 100 gold each = 500 gold total
             // 80% of 500 = 400 added to jackpot
             // Base seed 500 + 400 = 900
-            system.buyTickets("Alice", sid1, 3, 10000L) { }
-            system.buyTickets("Bob", sid2, 2, 10000L) { }
+            system.buyTickets("Alice", sid1, 3, 10000L, inTavern = true) { }
+            system.buyTickets("Bob", sid2, 2, 10000L, inTavern = true) { }
             val info = system.getInfo("Alice")
             assertEquals(900L, info.jackpot)
             assertEquals(5, info.totalTickets)
@@ -174,8 +185,8 @@ class LotterySystemTest {
                 clock = clock,
                 random = fixedRandom,
             )
-            fixedSystem.buyTickets("Alice", sid1, 3, 10000L) { }
-            fixedSystem.buyTickets("Bob", sid2, 2, 10000L) { }
+            fixedSystem.buyTickets("Alice", sid1, 3, 10000L, inTavern = true) { }
+            fixedSystem.buyTickets("Bob", sid2, 2, 10000L, inTavern = true) { }
 
             clock.advance(60_000L)
             val result = fixedSystem.tick(clock.millis())
@@ -189,8 +200,8 @@ class LotterySystemTest {
     inner class LotteryInfoDisplay {
         @Test
         fun `getInfo shows correct state`() {
-            system.buyTickets("Alice", sid1, 2, 10000L) { }
-            system.buyTickets("Bob", sid2, 3, 10000L) { }
+            system.buyTickets("Alice", sid1, 2, 10000L, inTavern = true) { }
+            system.buyTickets("Bob", sid2, 3, 10000L, inTavern = true) { }
             val info = system.getInfo("Alice")
             assertEquals(2, info.playerTickets)
             assertEquals(5, info.totalTickets)
@@ -200,7 +211,7 @@ class LotterySystemTest {
 
         @Test
         fun `getInfo shows zero tickets for non-participant`() {
-            system.buyTickets("Alice", sid1, 2, 10000L) { }
+            system.buyTickets("Alice", sid1, 2, 10000L, inTavern = true) { }
             val info = system.getInfo("Bob")
             assertEquals(0, info.playerTickets)
             assertEquals(2, info.totalTickets)
@@ -330,8 +341,8 @@ class LotterySystemTest {
                 clock = clock,
                 persistPath = path,
             )
-            sys1.buyTickets("Alice", sid1, 3, 10000L) { }
-            sys1.buyTickets("Bob", sid2, 2, 10000L) { }
+            sys1.buyTickets("Alice", sid1, 3, 10000L, inTavern = true) { }
+            sys1.buyTickets("Bob", sid2, 2, 10000L, inTavern = true) { }
             assertTrue(path.exists())
 
             val sys2 = LotterySystem(

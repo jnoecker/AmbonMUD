@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CURRENCY_METADATA, FACTION_METADATA, FACTION_TIERS, LOTTERY_SETTINGS } from "../../featureMetadata";
+import { CURRENCY_METADATA, FACTION_METADATA, FACTION_TIERS } from "../../featureMetadata";
 import type { CurrencyActivity, CurrencyBalance, DuelChallenge, DuelState, DungeonCatalogEntry, DungeonInfo, FactionActivity, FactionStanding, LotteryInfo, PetState, PrestigeInfo, RoomPlayer, SystemPanelView, UiFeedbackEntry, Vitals } from "../../types";
 
 interface SystemsPanelProps {
@@ -405,8 +405,8 @@ export function SystemsPanel({
                 <dl className="systems-stat-grid">
                   <div><dt>Your Tickets</dt><dd>{lotteryInfo.playerTickets}</dd></div>
                   <div><dt>Total Tickets</dt><dd>{lotteryInfo.totalTickets}</dd></div>
-                  <div><dt>Ticket Cost</dt><dd>{LOTTERY_SETTINGS.ticketCost} gold</dd></div>
-                  <div><dt>Per-Player Limit</dt><dd>{LOTTERY_SETTINGS.maxTicketsPerPlayer}</dd></div>
+                  <div><dt>Ticket Cost</dt><dd>{lotteryInfo.ticketCost} gold</dd></div>
+                  <div><dt>Per-Player Limit</dt><dd>{lotteryInfo.maxTicketsPerPlayer}</dd></div>
                 </dl>
                 <div className="systems-choice-list systems-choice-list-compact">
                   {[1, 3, 5].map((count) => (
@@ -420,7 +420,7 @@ export function SystemsPanel({
                       }}
                     >
                       <span className="systems-choice-title">{count} ticket{count === 1 ? "" : "s"}</span>
-                      <span className="systems-choice-copy">{(count * LOTTERY_SETTINGS.ticketCost).toLocaleString()} gold</span>
+                      <span className="systems-choice-copy">{(count * lotteryInfo.ticketCost).toLocaleString()} gold</span>
                     </button>
                   ))}
                 </div>
@@ -428,7 +428,7 @@ export function SystemsPanel({
                   <input
                     type="number"
                     min={1}
-                    max={LOTTERY_SETTINGS.maxTicketsPerPlayer}
+                    max={lotteryInfo.maxTicketsPerPlayer}
                     step={1}
                     inputMode="numeric"
                     className="systems-number-input"
