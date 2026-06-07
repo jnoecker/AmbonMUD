@@ -130,6 +130,12 @@ class LotterySystem(
     /** Session id -> last gamble timestamp. */
     private val lastGambleTime = mutableMapOf<SessionId, Long>()
 
+    /** Roll this value or less on a d100 to win. */
+    private val diceWinThreshold = (gamblingConfig.diceWinChance * 100).toInt()
+
+    /** Cooldown between dice rolls; exposed for GMCP gamble payloads. */
+    val diceCooldownMs: Long get() = gamblingConfig.cooldownMs
+
     /** Returns lottery info for a specific player. */
     fun getInfo(playerName: String): LotteryInfo {
         val totalTickets = tickets.values.sum()
@@ -144,7 +150,7 @@ class LotterySystem(
             diceMinBet = gamblingConfig.diceMinBet,
             diceMaxBet = gamblingConfig.diceMaxBet,
             diceWinMultiplier = gamblingConfig.diceWinMultiplier,
-            diceWinThreshold = (gamblingConfig.diceWinChance * 100).toInt(),
+            diceWinThreshold = diceWinThreshold,
             diceCooldownMs = gamblingConfig.cooldownMs,
         )
     }
@@ -276,7 +282,7 @@ class LotterySystem(
         lastGambleTime[sessionId] = now
 
         // Roll 1-100; win threshold based on configured chance
-        val needed = (gamblingConfig.diceWinChance * 100).toInt()
+        val needed = diceWinThreshold
         val roll = random.nextInt(100) + 1
 
         return if (roll <= needed) {

@@ -205,7 +205,7 @@ class LotteryHandler(
                         ),
                     )
                     markVitalsDirty(sessionId)
-                    emitGambleGmcp(sessionId, me.name, system, "win", result.bet, result.payout, result.roll, result.needed)
+                    emitGambleGmcp(sessionId, system, "win", result.bet, result.payout, result.roll, result.needed)
                     broadcastToRoomExcept(
                         me.roomId,
                         sessionId,
@@ -230,7 +230,7 @@ class LotteryHandler(
                         ),
                     )
                     markVitalsDirty(sessionId)
-                    emitGambleGmcp(sessionId, me.name, system, "lose", result.bet, 0L, result.roll, result.needed)
+                    emitGambleGmcp(sessionId, system, "lose", result.bet, 0L, result.roll, result.needed)
                     broadcastToRoomExcept(
                         me.roomId,
                         sessionId,
@@ -326,7 +326,6 @@ class LotteryHandler(
 
     private suspend fun emitGambleGmcp(
         sessionId: SessionId,
-        playerName: String,
         system: LotterySystem,
         outcome: String,
         bet: Long,
@@ -342,7 +341,7 @@ class LotteryHandler(
                 payout = payout,
                 roll = roll,
                 needed = needed,
-                cooldownMs = system.getInfo(playerName).diceCooldownMs,
+                cooldownMs = system.diceCooldownMs,
             ),
         )
     }

@@ -1,4 +1,4 @@
-﻿package dev.ambon.engine
+package dev.ambon.engine
 
 import dev.ambon.config.GamblingConfig
 import dev.ambon.config.LotteryConfig

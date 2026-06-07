@@ -114,7 +114,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, onCom
         </div>
 
         <div className="dice-stage">
-          <div className={`dice-die dice-die-${phase}`} aria-live="polite">
+          <div className={`dice-die dice-die-${phase}`} aria-hidden="true">
             {displayRoll !== null ? (
               <span className="dice-die-number">{displayRoll}</span>
             ) : (
@@ -125,8 +125,11 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, onCom
             <span className="dice-die-pip dice-die-pip-bl" />
             <span className="dice-die-pip dice-die-pip-br" />
           </div>
-          <p className="dice-outcome">
+          <p className="dice-outcome" aria-live="polite">
             {rolling && "The die clatters across the table…"}
+            {(phase === "won" || phase === "lost") && settled && (
+              <span className="sr-only">Rolled {settled.roll}, needed {settled.needed} or less. </span>
+            )}
             {phase === "won" && settled && (
               <span className="dice-outcome-win">
                 You win {settled.payout.toLocaleString()} gold! (net +{(settled.payout - settled.bet).toLocaleString()})
