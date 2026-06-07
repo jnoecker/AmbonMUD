@@ -1,0 +1,14 @@
+zone: bad_feature_respawn_sign
+startRoom: a
+
+rooms:
+  a:
+    title: "Room A"
+    description: "A room."
+    features:
+      notice:
+        type: SIGN
+        displayName: "a notice board"
+        keyword: board
+        text: "Signs have no state to reset."
+        respawnSeconds: 30

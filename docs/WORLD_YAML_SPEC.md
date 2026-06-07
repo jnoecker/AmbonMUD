@@ -234,6 +234,7 @@ consumable: <boolean, optional, default false>
 charges: <integer, optional, must be > 0 when present>
 onUse: <OnUse, optional>
 room: <room-id string, optional>
+respawnSeconds: <long > 0, optional - requires room placement; see "Timed respawn" below>
 matchByKey: <boolean, optional, default false>
 basePrice: <integer, optional, default 0, must be >= 0>
 image: <string, optional - relative path under /images/>
@@ -271,6 +272,30 @@ Location rules for items:
 
 - `room` may be omitted (item starts unplaced).
 - `mob` placement is deprecated and rejected by the loader.
+
+### Timed respawn (`respawnSeconds` on items, doors, and features)
+
+Without `respawnSeconds`, ground items and stateful features (doors, levers,
+containers) only return to their authored state on a **zone reset** (`lifespan`).
+Setting `respawnSeconds` gives an individual spawn or feature its own timer:
+
+- **Item** (`items.<id>.respawnSeconds`): the item is re-placed in its `room`
+  that many seconds after it is observed missing from it. Requires `room`
+  placement; must be > 0.
+- **Door** (`exits.<dir>.door.respawnSeconds`): the door reverts to its
+  `initialState` (re-closing/re-locking, or re-opening) that many seconds after
+  it leaves it.
+- **Lever** (`features.<id>.respawnSeconds`): the lever snaps back to its
+  `initialState`.
+- **Container** (`features.<id>.respawnSeconds`): the container reverts to its
+  `initialState` *and refills its `items` list* that many seconds after either
+  its state or its contents differ from the authored initial condition. Note
+  that — like a `resetWithZone` zone reset — refilling replaces whatever is in
+  the container, including player-stored items.
+- `SIGN` features have no state; the loader rejects `respawnSeconds` on them.
+
+Timers are independent of, and reset by, zone resets: whenever the item or
+feature returns to its initial condition by any means, the timer disarms.
 
 ### `shops` map
 

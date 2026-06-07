@@ -26,6 +26,8 @@ sealed class RoomFeature {
         val keyItemId: ItemId?,
         val keyConsumed: Boolean,
         val resetWithZone: Boolean,
+        /** Seconds out of [initialState] before the door reverts on its own. Null = zone reset only. */
+        val respawnSeconds: Long? = null,
     ) : RoomFeature()
 
     data class Container(
@@ -38,6 +40,11 @@ sealed class RoomFeature {
         val keyConsumed: Boolean,
         val resetWithZone: Boolean,
         val initialItems: List<ItemId>,
+        /**
+         * Seconds out of its initial condition (state or contents) before the
+         * container reverts and refills [initialItems]. Null = zone reset only.
+         */
+        val respawnSeconds: Long? = null,
     ) : RoomFeature()
 
     data class Lever(
@@ -47,6 +54,8 @@ sealed class RoomFeature {
         override val keyword: String,
         val initialState: LeverState,
         val resetWithZone: Boolean,
+        /** Seconds out of [initialState] before the lever snaps back. Null = zone reset only. */
+        val respawnSeconds: Long? = null,
     ) : RoomFeature()
 
     data class Sign(

@@ -1,0 +1,14 @@
+zone: bad_item_respawn_zero
+startRoom: a
+
+items:
+  coin:
+    displayName: "a coin"
+    keyword: coin
+    room: a
+    respawnSeconds: 0
+
+rooms:
+  a:
+    title: "Room A"
+    description: "A room."
