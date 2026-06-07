@@ -497,6 +497,7 @@ class GameEngine(
             behaviorTreeSystem = behaviorTreeSystem,
             gmcpEmitter = gmcpEmitter,
             clock = clock,
+            isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
         )
     }
 
