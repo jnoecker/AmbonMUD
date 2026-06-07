@@ -40,6 +40,9 @@ export interface GameStateSnapshot {
   mobInfo: MobInfo[];
   groupInfo: GroupInfo;
   dialogue: DialogueState | null;
+  /** True while the monster-manual panel is open — it renders dialogue itself,
+   *  so the in-canvas DialogueOverlay must yield to avoid a doubled window. */
+  monsterPanelOpen: boolean;
   quests: QuestEntry[];
   questsAvailable: QuestAvailable[];
   shop: ShopState | null;
@@ -150,6 +153,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     mobInfo: [],
     groupInfo: { leader: null, members: [] },
     dialogue: null,
+    monsterPanelOpen: false,
     quests: [],
     questsAvailable: [],
     shop: null,

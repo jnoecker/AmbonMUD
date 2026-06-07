@@ -366,6 +366,7 @@ function App() {
       mobInfo: state.mobInfo,
       groupInfo: state.groupInfo,
       dialogue: state.dialogue,
+      monsterPanelOpen: monster !== null,
       quests: state.quests,
       questsAvailable: state.questsAvailable,
       shop: state.shop,
