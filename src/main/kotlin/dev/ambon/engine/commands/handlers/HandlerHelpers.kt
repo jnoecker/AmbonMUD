@@ -418,6 +418,16 @@ internal suspend fun sendLook(
         val zoneRooms = world.rooms.values.filter { it.id.zone == zone }
         gmcpEmitter.sendZoneMap(sessionId, zone, zoneRooms)
         gmcpEmitter.sendZoneEnvironment(sessionId, gmcpEmitter.buildZoneEnvironmentPayload(zone))
+        // Zone intro cinematic: auto-plays on the player's first-ever entry,
+        // then stays replayable from the expanded map.
+        world.zoneVideo(zone)?.let { videoUrl ->
+            val firstVisit = zone !in me.seenZoneCinematics
+            if (firstVisit) players.markZoneCinematicSeen(sessionId, zone)
+            gmcpEmitter.sendZoneCinematic(
+                sessionId,
+                GmcpEmitter.ZoneCinematicPayload(zone = zone, url = videoUrl, autoplay = firstVisit),
+            )
+        }
     }
 
     val isHousing = room.id.zone.startsWith("house_")

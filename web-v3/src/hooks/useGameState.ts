@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { SetStateAction } from "react";
 import { applyGmcpPackage } from "../gmcp/applyGmcpPackage";
+import { canvasCallbacks } from "../canvas/GameStateBridge";
 import { canvasEvents } from "../canvas/CanvasEventBus";
 import {
   DEFAULT_SERVER_FEATURES,
@@ -97,6 +98,7 @@ import type {
   WorldEvent,
   WorldTime,
   WorldWeather,
+  ZoneCinematicState,
   ZoneEnvironment,
   ZoneInstances,
   CurrencyActivity,
@@ -287,6 +289,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [worldWeather, setWorldWeather] = useState<WorldWeather | null>(null);
   const [worldEvents, setWorldEvents] = useState<WorldEvent[]>([]);
   const [zoneEnvironment, setZoneEnvironment] = useState<ZoneEnvironment | null>(null);
+  const [zoneCinematic, setZoneCinematic] = useState<ZoneCinematicState | null>(null);
   const [factions, setFactions] = useState<FactionStanding[]>([]);
   const [dungeonInfo, setDungeonInfo] = useState<DungeonInfo | null>(null);
   const [dungeonCatalog, setDungeonCatalog] = useState<DungeonCatalogEntry[]>([]);
@@ -629,6 +632,10 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setWorldWeather,
         setWorldEvents,
         setZoneEnvironment,
+        setZoneCinematic,
+        // Zone-cinematic autoplay rides the same bridge as the canvas video
+        // button — App registers openVideo to open the cinematic modal.
+        openCinematic: (url: string) => { canvasCallbacks.openVideo?.(url); },
         setPetState,
         setFactions: applyFactions,
         setBankState,
@@ -677,6 +684,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setDialogue(null);
     setWhoPlayers([]);
     setZoneInstances({ zone: null, currentEngineId: null, instances: [] });
+    setZoneCinematic(null);
     setCombatTarget(null);
     setConsiderResult(null);
     setCharStats(null);
@@ -766,7 +774,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // Crafting
     craftingSkills, craftingRecipes, craftingNodes, gatherCooldownUntilMs,
     // World
-    dialogue, setDialogue, zoneInstances, worldTime, worldWeather, worldEvents, zoneEnvironment, factions, factionActivity, dungeonInfo, dungeonCatalog,
+    dialogue, setDialogue, zoneInstances, worldTime, worldWeather, worldEvents, zoneEnvironment, zoneCinematic, factions, factionActivity, dungeonInfo, dungeonCatalog,
     // Housing & pets
     housing, housingTemplates, petState,
     // Mail

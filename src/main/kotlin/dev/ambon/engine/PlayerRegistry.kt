@@ -822,6 +822,16 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
+    /** Records that this player has watched [zone]'s intro cinematic so it won't auto-play again. */
+    suspend fun markZoneCinematicSeen(
+        sessionId: SessionId,
+        zone: String,
+    ) {
+        val ps = players[sessionId] ?: return
+        if (!ps.seenZoneCinematics.add(zone)) return
+        persistIfClaimed(ps)
+    }
+
     /** Sets the wimpy auto-flee HP-percent threshold. Caller is responsible for clamping to 0..95. */
     suspend fun setWimpyThresholdPct(
         sessionId: SessionId,

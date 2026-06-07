@@ -53,6 +53,8 @@ data class PlayerState(
      * by [QuestSystem] to gate quests behind prior conversations.
      */
     var dialogueFlags: MutableSet<String> = mutableSetOf(),
+    /** Zones whose intro cinematic this player has already watched (auto-plays once per zone). */
+    var seenZoneCinematics: MutableSet<String> = mutableSetOf(),
     var unlockedAchievementIds: Set<String> = emptySet(),
     var achievementProgress: Map<String, AchievementState> = emptyMap(),
     var activeTitle: String? = null,
@@ -252,6 +254,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         activeQuests = activeQuests,
         completedQuestIds = completedQuestIds,
         dialogueFlags = dialogueFlags.toMutableSet(),
+        seenZoneCinematics = seenZoneCinematics.toMutableSet(),
         unlockedAchievementIds = unlockedAchievementIds,
         achievementProgress = achievementProgress,
         activeTitle = activeTitle,
@@ -318,6 +321,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         activeQuests = activeQuests,
         completedQuestIds = completedQuestIds,
         dialogueFlags = dialogueFlags.toSet(),
+        seenZoneCinematics = seenZoneCinematics.toSet(),
         unlockedAchievementIds = unlockedAchievementIds,
         achievementProgress = achievementProgress,
         activeTitle = activeTitle,

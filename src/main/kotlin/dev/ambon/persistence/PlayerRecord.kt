@@ -108,6 +108,8 @@ data class PlayerRecord(
     val lastRespecAtMs: Long = 0L,
     /** Persisted dialogue-flag set used to gate quests behind prior conversations. */
     val dialogueFlags: Set<String> = emptySet(),
+    /** Zones whose intro cinematic this player has already watched (auto-plays once per zone). */
+    val seenZoneCinematics: Set<String> = emptySet(),
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

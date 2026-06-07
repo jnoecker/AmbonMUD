@@ -157,6 +157,7 @@ object WorldLoader {
         val pvpZones = mutableSetOf<String>()
         val zoneStartRooms = LinkedHashMap<String, RoomId>()
         val zoneScalings = LinkedHashMap<String, ZoneScaling>()
+        val zoneVideos = LinkedHashMap<String, String>()
 
         // startRoomOverride wins; otherwise fall back to first file’s declared startRoom.
         val worldStart = startRoomOverride ?: normalizeId(files.first().zone, files.first().startRoom)
@@ -166,6 +167,7 @@ object WorldLoader {
             if (!zoneStartRooms.containsKey(zone)) {
                 zoneStartRooms[zone] = normalizeId(zone, file.startRoom)
             }
+            file.video?.takeIf { it.isNotBlank() }?.let { zoneVideos.putIfAbsent(zone, "$videosBase$it") }
             val declaredLifespanMinutes = file.lifespan
             if (!zoneLifespansMinutes.containsKey(zone)) {
                 zoneLifespansMinutes[zone] = declaredLifespanMinutes
@@ -1153,6 +1155,7 @@ object WorldLoader {
             pvpZones = pvpZones.toSet(),
             zoneStartRooms = zoneStartRooms.toMap(),
             zoneScaling = zoneScalings.toMap(),
+            zoneVideos = zoneVideos.toMap(),
             shopDefinitions = mergedShops.toList(),
             trainerDefinitions = mergedTrainers.toList(),
             questDefinitions = mergedQuests.toList(),

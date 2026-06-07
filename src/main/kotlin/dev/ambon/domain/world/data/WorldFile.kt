@@ -16,6 +16,8 @@ data class WorldFile(
     val scaling: ZoneScalingFile? = null,
     val image: ZoneImageDefaults? = null,
     val audio: ZoneAudioDefaults? = null,
+    /** Zone cinematic video (relative path under /videos/). Auto-plays on a player's first entry; replayable from the map. */
+    val video: String? = null,
     val rooms: Map<String, RoomFile>,
     val mobs: Map<String, MobFile> = emptyMap(),
     val items: Map<String, ItemFile> = emptyMap(),

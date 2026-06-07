@@ -15,6 +15,7 @@ private val statsType = object : TypeReference<Map<String, Int>>() {}
 private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
 private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
 private val dialogueFlagsType = object : TypeReference<Set<String>>() {}
+private val seenZoneCinematicsType = object : TypeReference<Set<String>>() {}
 private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
 private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
@@ -88,6 +89,7 @@ object PlayersTable : Table("players") {
     val wimpyThresholdPct = integer("wimpy_threshold_pct").default(10)
     val lastRespecAtMs = long("last_respec_at_ms").default(0L)
     val dialogueFlags = text("dialogue_flags").default("[]")
+    val seenZoneCinematics = text("seen_zone_cinematics").default("[]")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -151,6 +153,7 @@ object PlayersTable : Table("players") {
             wimpyThresholdPct = row[wimpyThresholdPct],
             lastRespecAtMs = row[lastRespecAtMs],
             dialogueFlags = safeReadJson(row[dialogueFlags], dialogueFlagsType, emptySet()),
+            seenZoneCinematics = safeReadJson(row[seenZoneCinematics], seenZoneCinematicsType, emptySet()),
         ).migrateDefaults()
 
     /**
@@ -219,5 +222,6 @@ object PlayersTable : Table("players") {
         statement[wimpyThresholdPct] = record.wimpyThresholdPct
         statement[lastRespecAtMs] = record.lastRespecAtMs
         statement[dialogueFlags] = jsonMapper.writeValueAsString(record.dialogueFlags)
+        statement[seenZoneCinematics] = jsonMapper.writeValueAsString(record.seenZoneCinematics)
     }
 }

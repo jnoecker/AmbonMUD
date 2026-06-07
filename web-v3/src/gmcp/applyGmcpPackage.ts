@@ -77,6 +77,7 @@ import type {
   WorldArea,
   WorldTime,
   WorldWeather,
+  ZoneCinematicState,
   ZoneEnvironment,
   ZoneInstances,
   ZoneInstanceItem,
@@ -214,6 +215,9 @@ interface GmcpContext {
   setWorldWeather: Dispatch<SetStateAction<WorldWeather | null>>;
   setWorldEvents: Dispatch<SetStateAction<WorldEvent[]>>;
   setZoneEnvironment: Dispatch<SetStateAction<ZoneEnvironment | null>>;
+  setZoneCinematic: Dispatch<SetStateAction<ZoneCinematicState | null>>;
+  /** Opens the cinematic video modal (server-requested autoplay on first zone entry). */
+  openCinematic: (url: string) => void;
   setPetState: Dispatch<SetStateAction<PetState | null>>;
   setFactions: Dispatch<SetStateAction<FactionStanding[]>>;
   setBankState: Dispatch<SetStateAction<BankState | null>>;
@@ -2007,6 +2011,21 @@ export function applyGmcpPackage(
         transitionColors,
         weatherParticleOverrides,
       });
+      break;
+    }
+
+    case "Zone.Cinematic": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const zone = typeof packet.zone === "string" ? packet.zone : "";
+      const url = typeof packet.url === "string" ? packet.url : "";
+      const autoplay = packet.autoplay === true;
+      if (zone && url) {
+        // State is sticky between zones — the map replay button gates on the
+        // cinematic's zone matching the current zone. Autoplay is an event:
+        // the server requests it at most once per player per zone.
+        ctx.setZoneCinematic({ zone, url });
+        if (autoplay) ctx.openCinematic(url);
+      }
       break;
     }
 

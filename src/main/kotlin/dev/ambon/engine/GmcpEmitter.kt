@@ -1670,6 +1670,23 @@ class GmcpEmitter(
         emit(sessionId, "Zone.Environment", payload)
     }
 
+    // ---------- zone cinematic ----------
+
+    /**
+     * Zone intro cinematic. [autoplay] is true only on the player's first-ever
+     * entry to the zone; the client keeps [url] around so the cinematic stays
+     * replayable from the expanded map.
+     */
+    data class ZoneCinematicPayload(
+        val zone: String,
+        val url: String,
+        val autoplay: Boolean,
+    )
+
+    suspend fun sendZoneCinematic(sessionId: SessionId, payload: ZoneCinematicPayload) {
+        emit(sessionId, "Zone.Cinematic", payload)
+    }
+
     /** Resolves the environment theme for a zone (zone override merged over defaults). */
     fun buildZoneEnvironmentPayload(zone: String): ZoneEnvironmentPayload {
         val defaults = environmentConfig.defaultTheme

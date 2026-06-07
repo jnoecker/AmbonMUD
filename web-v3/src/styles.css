@@ -10306,10 +10306,42 @@ body {
   min-height: 0;
 }
 
+.drawer-map-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 .drawer-map-tabs {
   display: flex;
   gap: var(--space-1);
   padding: 0 var(--space-1);
+}
+
+/* Replay button for the zone intro cinematic — styled like a tab, gold accent. */
+.drawer-map-cinematic-btn {
+  appearance: none;
+  border: 1px solid rgb(219 191 128 / 28%);
+  background: rgb(73 62 39 / 50%);
+  color: rgb(234 219 195 / 90%);
+  padding: 6px 16px;
+  margin-right: var(--space-1);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background-color 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft),
+    color 150ms var(--ease-out-soft);
+}
+
+.drawer-map-cinematic-btn:hover {
+  border-color: rgb(255 224 176 / 46%);
+  color: rgb(247 238 225 / 96%);
 }
 
 .drawer-map-tab {

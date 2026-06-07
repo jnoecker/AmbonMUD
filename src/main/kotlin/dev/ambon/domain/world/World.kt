@@ -19,6 +19,7 @@ class World(
     pvpZones: Set<String> = emptySet(),
     zoneStartRooms: Map<String, RoomId> = emptyMap(),
     zoneScaling: Map<String, ZoneScaling> = emptyMap(),
+    zoneVideos: Map<String, String> = emptyMap(),
     shopDefinitions: List<ShopDefinition> = emptyList(),
     trainerDefinitions: List<TrainerDefinition> = emptyList(),
     questDefinitions: List<QuestDef> = emptyList(),
@@ -65,6 +66,12 @@ class World(
 
     /** Returns the scaling config for a zone. Falls back to STATIC when unset. */
     fun zoneScaling(zoneId: String): ZoneScaling = _zoneScaling[zoneId] ?: ZoneScaling()
+
+    private val _zoneVideos = zoneVideos.toMutableMap()
+    val zoneVideos: Map<String, String> get() = _zoneVideos
+
+    /** Returns the cinematic video URL for a zone, or null when the zone has none. */
+    fun zoneVideo(zoneId: String): String? = _zoneVideos[zoneId]
 
     private val _shopDefinitions = shopDefinitions.toMutableList()
     val shopDefinitions: List<ShopDefinition> get() = _shopDefinitions
@@ -151,6 +158,9 @@ class World(
         source._zoneScaling[zone]?.let { _zoneScaling[zone] = it }
             ?: _zoneScaling.remove(zone)
 
+        source._zoneVideos[zone]?.let { _zoneVideos[zone] = it }
+            ?: _zoneVideos.remove(zone)
+
         return oldRoomIds - newRooms.keys
     }
 
@@ -185,6 +195,9 @@ class World(
 
         _zoneScaling.clear()
         _zoneScaling.putAll(source._zoneScaling)
+
+        _zoneVideos.clear()
+        _zoneVideos.putAll(source._zoneVideos)
 
         _shopDefinitions.clear()
         _shopDefinitions.addAll(source.shopDefinitions)
