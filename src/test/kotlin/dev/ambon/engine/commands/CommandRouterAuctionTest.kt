@@ -8,6 +8,7 @@ import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.AuctionSystem
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.CreateResult
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -255,6 +256,33 @@ class CommandRouterAuctionTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.text.contains("need 100 gold") },
                 "Expected an insufficient-gold rejection. got=$outs",
+            )
+        }
+
+    @Test
+    fun `buy is rejected for an unclaimed demo character without changing state`() =
+        runTest {
+            val env = setup()
+            giveSword(env.items, env.sellerSid)
+            env.auction.postListing(env.sellerSid, "Seller", "sword", 100)
+            val demoSid = SessionId(3L)
+            env.items.ensurePlayer(demoSid)
+            require(env.players.createDemo(demoSid, "Demobuyer") == CreateResult.Ok)
+            val demo = env.players.get(demoSid)!!
+            demo.gold = 500L
+            env.outbound.drainAll()
+            val listingId = env.auction.allListings().first().id
+
+            env.router.handle(demoSid, Command.AuctionBuy(listingId))
+
+            assertEquals(500L, demo.gold, "Demo buyer's gold should be untouched")
+            assertTrue(env.items.inventory(demoSid).isEmpty(), "No item should transfer")
+            assertEquals(1, env.auction.allListings().size, "Listing should remain available")
+
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("demo characters") },
+                "Expected a demo-character rejection. got=$outs",
             )
         }
 
