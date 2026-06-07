@@ -1,0 +1,14 @@
+zone: ok_zone_video
+startRoom: a
+video: intro_flyover.mp4
+rooms:
+  a:
+    title: Room A
+    description: A quiet room.
+    exits:
+      n: b
+  b:
+    title: Room B
+    description: Another quiet room.
+    exits:
+      s: a

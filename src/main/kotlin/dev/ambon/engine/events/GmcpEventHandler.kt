@@ -81,6 +81,14 @@ class GmcpEventHandler(
                     sid,
                     gmcpEmitter.buildZoneEnvironmentPayload(room.id.zone),
                 )
+                // Re-sync the zone cinematic URL (never autoplay here) so the
+                // map's replay button survives reconnects.
+                world.zoneVideo(room.id.zone)?.let { videoUrl ->
+                    gmcpEmitter.sendZoneCinematic(
+                        sid,
+                        GmcpEmitter.ZoneCinematicPayload(zone = room.id.zone, url = videoUrl, autoplay = false),
+                    )
+                }
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendRoomItems(sid, items.itemsInRoom(player.roomId))

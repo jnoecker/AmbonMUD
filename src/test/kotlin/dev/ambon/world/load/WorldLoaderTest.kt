@@ -211,6 +211,13 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `zone-level video resolves under the videos base url`() {
+        val world = WorldLoader.loadFromResource("world/ok_zone_video.yaml")
+        assertEquals("/videos/intro_flyover.mp4", world.zoneVideo("ok_zone_video"))
+        assertNull(world.zoneVideo("zone_without_video"))
+    }
+
+    @Test
     fun `loads zone lifespan minutes`() {
         val world = dev.ambon.test.TestWorlds.okSmall
 

@@ -43,6 +43,17 @@ export interface ZoneEnvironment {
   weatherParticleOverrides: Record<string, string>;
 }
 
+/**
+ * Zone intro cinematic — powers the map's replay button. Autoplay (first-ever
+ * zone entry) is handled as an event via the canvas video bridge, not state:
+ * the server marks the cinematic seen immediately, so it requests autoplay
+ * at most once per player per zone.
+ */
+export interface ZoneCinematicState {
+  zone: string;
+  url: string;
+}
+
 export interface CurrencyBalance {
   id: string;
   name: string;

@@ -162,7 +162,8 @@ function App() {
   const intentionalDisconnectRef = useRef(false);
   const connectedRef = useRef(false);
 
-  // Cinematic video state — driven by canvas openVideo callback
+  // Cinematic video state — driven by canvas openVideo callback (room videos,
+  // zone-cinematic autoplay, and the map's replay button all route through it)
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoClosing, setVideoClosing] = useState(false);
 
@@ -1265,25 +1266,38 @@ function App() {
 
         {drawerPanel === "map" && (
           <div className="drawer-map-body">
-            <div className="drawer-map-tabs" role="tablist" aria-label="Map views">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mapTab === "map"}
-                className={`drawer-map-tab ${mapTab === "map" ? "drawer-map-tab-active" : ""}`}
-                onClick={() => setMapTab("map")}
-              >
-                Local Map
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mapTab === "atlas"}
-                className={`drawer-map-tab ${mapTab === "atlas" ? "drawer-map-tab-active" : ""}`}
-                onClick={() => setMapTab("atlas")}
-              >
-                Atlas
-              </button>
+            <div className="drawer-map-toolbar">
+              <div className="drawer-map-tabs" role="tablist" aria-label="Map views">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mapTab === "map"}
+                  className={`drawer-map-tab ${mapTab === "map" ? "drawer-map-tab-active" : ""}`}
+                  onClick={() => setMapTab("map")}
+                >
+                  Local Map
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mapTab === "atlas"}
+                  className={`drawer-map-tab ${mapTab === "atlas" ? "drawer-map-tab-active" : ""}`}
+                  onClick={() => setMapTab("atlas")}
+                >
+                  Atlas
+                </button>
+              </div>
+              {state.zoneCinematic && state.zoneCinematic.zone === currentZone && (
+                <button
+                  type="button"
+                  className="drawer-map-cinematic-btn"
+                  title="Replay this zone's intro cinematic"
+                  aria-label="Replay zone cinematic"
+                  onClick={() => setVideoUrl(state.zoneCinematic?.url ?? null)}
+                >
+                  <span aria-hidden="true">{"▶"}</span> Zone cinematic
+                </button>
+              )}
             </div>
             {/* Keep the canvas mounted so the minimap renderer can keep drawing into it
                 even while the Atlas tab is in front — switching back must not lose state. */}

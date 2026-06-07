@@ -34,6 +34,8 @@ image:                  # zone-wide image defaults
 audio:                  # zone-wide audio defaults
   music: <string, optional>
   ambient: <string, optional>
+video: <string, optional - relative path under /videos/; zone cinematic that auto-plays
+        on a player's first entry to the zone and is replayable from the expanded map>
 rooms: <map<string, Room>, required, must be non-empty>
 mobs: <map<string, Mob>, optional, default {}>
 items: <map<string, Item>, optional, default {}>
