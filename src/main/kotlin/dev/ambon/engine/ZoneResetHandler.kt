@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.mob.MobState
@@ -129,6 +130,11 @@ internal class ZoneResetHandler(
     private val behaviorTreeSystem: BehaviorTreeSystem,
     private val gmcpEmitter: GmcpEmitter,
     private val clock: Clock,
+    /**
+     * Whether a mob is currently fighting a player. Mobs in combat survive
+     * zone resets (#1222); wired to [CombatSystem.isMobInCombat] by GameEngine.
+     */
+    private val isMobInCombat: (MobId) -> Boolean = { false },
 ) {
     private val zoneResetDueAtMillis: MutableMap<String, Long> =
         world.zoneLifespansMinutes
@@ -218,12 +224,20 @@ internal class ZoneResetHandler(
             (zoneMobSpawns.map { spawn -> spawn.id } + activeZoneMobIds)
                 .toSet()
 
+        // Mobs actively fighting a player survive the reset (#1222): yanking an
+        // opponent mid-swing forfeits kill credit and feels broken. Their spawn
+        // slots are skipped too — when the fight ends, the normal post-death
+        // respawn timer (or the next reset, once out of combat) refills the slot.
+        val survivingMobIds = zoneMobIds.filterTo(hashSetOf()) { mobId -> isMobInCombat(mobId) }
+
         for (mobId in zoneMobIds) {
+            if (mobId in survivingMobIds) continue
             mobRemovalCoordinator.removeMobExternally(mobId)
         }
 
         val referenceLevel = highestPlayerLevelInZone(players, zone)
         for (spawn in zoneMobSpawns) {
+            if (spawn.id in survivingMobIds) continue
             mobs.upsert(spawnToMobState(spawn, world, referenceLevel))
             mobSystem.onMobSpawned(spawn.id)
             behaviorTreeSystem.onMobSpawned(spawn.id)
@@ -236,7 +250,8 @@ internal class ZoneResetHandler(
         items.resetZone(
             zone = zone,
             roomIds = zoneRoomIds,
-            mobIds = zoneMobIds,
+            // Surviving mobs keep their carried loot for the imminent kill.
+            mobIds = zoneMobIds - survivingMobIds,
             spawns = zoneItemSpawns,
         )
 
