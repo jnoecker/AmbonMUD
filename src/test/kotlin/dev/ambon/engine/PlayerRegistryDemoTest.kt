@@ -116,6 +116,34 @@ class PlayerRegistryDemoTest {
     }
 
     @Test
+    fun `claim rejects the reserved demo login keyword as a name`() = runTest {
+        val repo = InMemoryPlayerRepository()
+        val registry = buildTestPlayerRegistry(startRoom, repo, ItemRegistry())
+
+        registry.createDemo(SessionId(1), "Keris8")
+        // Any case variant of "demo" is intercepted by the login flow as the
+        // guest keyword, so a claimed account with that name could never log in.
+        for (reserved in listOf("demo", "Demo", "DEMO")) {
+            assertEquals(
+                ClaimResult.Reserved,
+                registry.claim(SessionId(1), newNameRaw = reserved, passwordRaw = "secret"),
+                "claim must reject reserved name '$reserved'",
+            )
+        }
+        assertNull(registry.get(SessionId(1))!!.playerId, "failed claim must leave demo unchanged")
+        assertNull(repo.findByName("Demo"))
+    }
+
+    @Test
+    fun `create rejects the reserved demo login keyword as a name`() = runTest {
+        val repo = InMemoryPlayerRepository()
+        val registry = buildTestPlayerRegistry(startRoom, repo, ItemRegistry())
+
+        assertEquals(CreateResult.InvalidName, registry.create(SessionId(1), "Demo", "password"))
+        assertNull(repo.findByName("Demo"))
+    }
+
+    @Test
     fun `claim rejects invalid passwords and names`() = runTest {
         val repo = InMemoryPlayerRepository()
         val registry = buildTestPlayerRegistry(startRoom, repo, ItemRegistry())

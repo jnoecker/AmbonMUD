@@ -81,6 +81,13 @@ class ClaimHandler(
             ClaimResult.Taken -> outbound.send(
                 OutboundEvent.SendError(sessionId, "That name is already taken."),
             )
+            ClaimResult.Reserved -> outbound.send(
+                OutboundEvent.SendError(
+                    sessionId,
+                    "That name is reserved and cannot be used. Pick another with " +
+                        "'claim <newname> <password>'.",
+                ),
+            )
         }
     }
 }
