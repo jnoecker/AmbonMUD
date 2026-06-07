@@ -220,11 +220,11 @@ class PuzzleHandler(
                 items.removeFromInventoryById(sessionId, keyItemId)
                 syncItemsGmcp(sessionId, items, gmcpEmitter)
             }
-            outbound.send(OutboundEvent.SendInfo(sessionId, "The $displayName swings open."))
+            outbound.send(OutboundEvent.SendInfo(sessionId, "${theCap(displayName)} swings open."))
             broadcastToRoomExcept(
                 roomId,
                 sessionId,
-                "The $displayName swings open.",
+                "${theCap(displayName)} swings open.",
                 players,
                 outbound,
             )

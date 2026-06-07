@@ -46,6 +46,27 @@ internal inline fun PlayerRegistry.withPlayer(
     block(player)
 }
 
+/**
+ * Definite-article form of a feature display name for mid-sentence use.
+ * Authored names usually carry their own indefinite article ("a lacquered
+ * curio chest"), so blindly prefixing "the " produced "the a lacquered curio
+ * chest" (#1220). Swaps a leading "a "/"an " for "the "; names already
+ * starting with "the" pass through; bare names get "the " prefixed.
+ */
+internal fun the(displayName: String): String {
+    val trimmed = displayName.trim()
+    val lower = trimmed.lowercase()
+    return when {
+        lower.startsWith("the ") -> trimmed
+        lower.startsWith("a ") -> "the ${trimmed.drop(2)}"
+        lower.startsWith("an ") -> "the ${trimmed.drop(3)}"
+        else -> "the $trimmed"
+    }
+}
+
+/** Sentence-initial variant of [the]: "The lacquered curio chest". */
+internal fun theCap(displayName: String): String = the(displayName).replaceFirstChar { it.uppercaseChar() }
+
 /** Sends the full GMCP Char.Items list (inventory + equipment) for [sessionId]. */
 internal suspend fun syncItemsGmcp(
     sessionId: SessionId,
@@ -854,7 +875,7 @@ internal suspend fun requireContainerOpen(
 ): Boolean {
     val state = worldState?.getContainerState(feature.id) ?: feature.initialState
     if (state != LockableState.OPEN) {
-        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
+        outbound.send(OutboundEvent.SendError(sessionId, "${theCap(feature.displayName)} is not open."))
         return false
     }
     return true

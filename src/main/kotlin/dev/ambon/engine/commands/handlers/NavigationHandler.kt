@@ -142,7 +142,7 @@ class NavigationHandler(
                     val doorState = worldState.getDoorState(door.id)
                     if (doorState != LockableState.OPEN) {
                         val reason = if (doorState == LockableState.LOCKED) "locked" else "closed"
-                        outbound.send(OutboundEvent.SendText(sessionId, "The ${door.displayName} is $reason."))
+                        outbound.send(OutboundEvent.SendText(sessionId, "${theCap(door.displayName)} is $reason."))
                         return
                     }
                 }

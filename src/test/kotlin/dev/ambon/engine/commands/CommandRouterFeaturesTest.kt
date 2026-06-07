@@ -167,6 +167,30 @@ class CommandRouterFeaturesTest {
         }
 
     @Test
+    fun `feature messages render a single definite article`() =
+        runTest {
+            val h = harness()
+
+            // "a supply chest" must read "the supply chest", not "the a supply chest" (#1220).
+            h.players.moveTo(h.sid, RoomId("ok_features:storeroom"))
+            h.router.handle(h.sid, Command.OpenFeature("chest"))
+            var outs = h.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text == "You open the supply chest." },
+                "Expected single-article open message, got: $outs",
+            )
+
+            // "an iron lever" must read "The iron lever ..." in pull messages.
+            h.players.moveTo(h.sid, RoomId("ok_features:vault"))
+            h.router.handle(h.sid, Command.Pull("lever"))
+            outs = h.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text == "You pull the iron lever. It moves down." },
+                "Expected single-article pull message, got: $outs",
+            )
+        }
+
+    @Test
     fun `open locked door fails with error`() =
         runTest {
             val h = harness()
