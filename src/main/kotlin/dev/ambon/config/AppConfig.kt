@@ -3062,6 +3062,18 @@ data class ImagesConfig(
             // Server-wide vault interior backdrop for the bank ("The Vault") panel.
             // Global only — banks share one look; the bank_vault icon is the emblem.
             "bank_bg" to "global_assets/bank_bg.png",
+            // Character panel — "Woodland Fae Cabinet". All optional; each degrades
+            // to a carved-CSS fallback. bg + niche are full art; frame/plaque/charm
+            // are 9-slice carved frames; the two buttons are ornate gem buttons.
+            "character_bg" to "global_assets/character_bg.png",
+            "character_niche" to "global_assets/character_niche.png",
+            "character_frame" to "global_assets/character_frame.png",
+            "character_plaque" to "global_assets/character_plaque.png",
+            "character_charm" to "global_assets/character_charm.png",
+            "char_btn_achievements" to "global_assets/char_btn_achievements.png",
+            "char_btn_prestige" to "global_assets/char_btn_prestige.png",
+            // Parchment backdrop for the pop-out describe editor.
+            "character_scribe_bg" to "global_assets/character_scribe_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",
