@@ -23551,3 +23551,30 @@ html:has(.game-shell),
   opacity: 0.5;
   cursor: default;
 }
+
+/* On desktop the drawer is a centered modal that sizes to content (width
+   capped at 720px, height auto). The chat board is meant to dominate the
+   screen, so override both: claim most of the viewport and let the feed
+   stretch. (Mobile already opens tall via the drawer `initialHeight`.) */
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-board {
+    /* Size to the painted frame's aspect (~4:3) so it scales up whole rather
+       than cropping the banner/composer. Height-led on wide screens, width-
+       clamped on tall ones — either way it dominates the viewport. */
+    width: auto;
+    height: 94vh;
+    max-height: 94vh;
+    max-width: 96vw;
+    aspect-ratio: 4 / 3;
+  }
+
+  .drawer-sheet-board .drawer-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .drawer-sheet-board .chatboard {
+    flex: 1 1 auto;
+  }
+}
