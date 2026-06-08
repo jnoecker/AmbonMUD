@@ -33,7 +33,7 @@ class CommandManifestSyncTest {
         require(!entriesNode.isMissingNode) { "commands.entries not found in application.yaml" }
 
         val yamlEntries = linkedMapOf<String, CommandMetadata>()
-        for ((key, node) in entriesNode.properties) {
+        for ((key, node) in entriesNode.properties()) {
             yamlEntries[key] = CommandMetadata(
                 usage = node.path("usage").asText(""),
                 description = node.path("description").asText(""),
