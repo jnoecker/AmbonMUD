@@ -23812,3 +23812,317 @@ html:has(.game-shell),
   color: rgb(168 196 255 / 90%);
   font-size: 0.95rem;
 }
+
+/* ════════════════════════════════════════════════════════════
+   Guild board — standalone guild archive (drawerPanel "guildboard")
+   Fae-botanical guild_bg parchment frame (skin) with all content built in
+   plain CSS over the painted interior: dark ink on parchment cards, botanical
+   accent buttons. Two states — not-in-a-guild (invite + create) and in-guild.
+   ════════════════════════════════════════════════════════════ */
+.drawer-sheet.drawer-sheet-archive {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(ellipse at 50% 40%, rgb(34 30 52 / 96%), rgb(14 14 28 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.drawer-sheet-archive .drawer-title { display: none; }
+.drawer-sheet-archive .drawer-handle-zone { display: none; }
+
+/* The painted frame has its close glyph in the upper-right — float the real
+   button there. */
+.drawer-sheet-archive .drawer-header {
+  position: absolute;
+  top: 9.5%;
+  right: 6.8%;
+  left: auto;
+  z-index: 6;
+  padding: 0;
+  min-height: 0;
+  border-bottom: none;
+}
+
+.drawer-sheet-archive .drawer-close {
+  background: transparent;
+  border-color: transparent;
+  color: #3a2f25;
+}
+
+.drawer-sheet-archive .drawer-body {
+  padding: 0;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-archive {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* Content inset into the parchment interior of the frame. */
+.guildboard {
+  position: absolute;
+  top: 12.5%;
+  left: 6.5%;
+  right: 6.5%;
+  bottom: 6.5%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.2vh, 12px);
+  overflow-y: auto;
+  color: #3a2f25;
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(120 100 70 / 55%) transparent;
+}
+
+.guildboard-centered { align-items: center; justify-content: center; }
+
+.guildboard-state-a {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(8px, 1.6vw, 18px);
+  align-content: start;
+}
+
+/* Parchment cards. */
+.gb-card {
+  background: rgb(248 242 225 / 55%);
+  border: 1px solid rgb(120 100 70 / 30%);
+  border-radius: 10px;
+  padding: clamp(8px, 1.4vh, 14px) clamp(10px, 1.4vw, 16px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 2px 8px rgb(40 30 20 / 18%);
+}
+
+.gb-card-title {
+  margin: 0 0 8px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(0.82rem, 1.7vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #3a5048;
+  border-bottom: 1px solid rgb(90 110 100 / 30%);
+  padding-bottom: 5px;
+}
+
+.gb-card-titlerow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gb-card-titlerow .gb-card-title { flex: 1; margin-bottom: 6px; }
+
+.gb-empty {
+  margin: 6px 0;
+  font-style: italic;
+  color: rgb(58 47 37 / 65%);
+  text-align: center;
+}
+
+/* Buttons. */
+.gb-btn {
+  border: 1px solid rgb(80 70 50 / 35%);
+  border-radius: 8px;
+  padding: clamp(5px, 0.9vh, 9px) clamp(10px, 1.4vw, 16px);
+  font-family: var(--font-display);
+  font-size: clamp(0.74rem, 1.4vw, 0.9rem);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #f3ecd8;
+  cursor: pointer;
+  transition: transform 150ms var(--ease-out-soft), filter 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+}
+
+.gb-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); box-shadow: 0 2px 8px rgb(40 30 20 / 30%); }
+.gb-btn:disabled { opacity: 0.45; cursor: default; }
+
+.gb-btn-accept,
+.gb-btn-promote,
+.gb-btn-setmotd,
+.gb-btn-primary { background: linear-gradient(165deg, #5a8a7e, #3f6a60); }
+.gb-btn-decline,
+.gb-btn-kick { background: linear-gradient(165deg, #a8615a, #82433d); }
+.gb-btn-demote { background: linear-gradient(165deg, #8a6ca0, #634a78); }
+.gb-btn-ghost {
+  background: rgb(236 226 200 / 70%);
+  color: #4a3c2c;
+  border-color: rgb(120 100 70 / 40%);
+}
+
+/* State A: invites + create. */
+.gb-invite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 4px;
+}
+
+.gb-invite-info { display: flex; flex-direction: column; min-width: 0; }
+.gb-invite-guild { font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; color: #3a2f25; }
+.gb-tag { color: #7a5f8e; font-weight: 600; }
+.gb-invite-from { font-size: 0.8rem; font-style: italic; color: rgb(58 47 37 / 70%); }
+.gb-invite-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.gb-create-form { display: flex; flex-direction: column; gap: 10px; }
+.gb-field { display: flex; flex-direction: column; gap: 4px; }
+.gb-label { font-size: 0.82rem; font-weight: 600; color: #4a3c2c; }
+.gb-label em { font-style: italic; font-weight: 400; color: rgb(74 60 44 / 70%); }
+
+.gb-input {
+  border: 1px solid rgb(120 100 70 / 40%);
+  border-radius: 8px;
+  background: rgb(255 252 244 / 80%);
+  color: #3a2f25;
+  padding: clamp(7px, 1.2vh, 11px) 12px;
+  font-size: 0.9rem;
+  min-width: 0;
+}
+.gb-input::placeholder { color: rgb(90 76 58 / 55%); font-style: italic; }
+.gb-input:focus { outline: none; border-color: #5a8a7e; box-shadow: 0 0 0 2px rgb(90 138 126 / 30%); }
+.gb-input-tag { max-width: 120px; text-transform: uppercase; letter-spacing: 0.1em; }
+.gb-create-btn { margin-top: 4px; align-self: stretch; }
+
+/* State B: identity / MOTD / roster / controls / chat. */
+.guildboard-state-b { padding-right: 2px; }
+
+.gb-identity { display: flex; align-items: center; gap: clamp(10px, 1.6vw, 18px); }
+
+.gb-crest {
+  flex: 0 0 auto;
+  width: clamp(48px, 9vw, 78px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid rgb(150 130 90 / 55%);
+  background:
+    radial-gradient(circle at 50% 35%, rgb(70 90 140 / 70%), transparent 65%),
+    linear-gradient(160deg, #2a3354, #16203c);
+  box-shadow: inset 0 0 14px rgb(0 0 0 / 50%), 0 0 10px rgb(120 140 200 / 30%);
+}
+
+.gb-crest-tag {
+  font-family: var(--font-display);
+  font-size: clamp(0.8rem, 1.8vw, 1.1rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #cfe0ff;
+}
+
+.gb-guild-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.6vw, 1.7rem);
+  font-weight: 700;
+  color: #2f2519;
+}
+
+.gb-identity-meta { margin: 2px 0 0; font-size: 0.9rem; color: rgb(58 47 37 / 80%); }
+
+.gb-motd-text { margin: 0; line-height: 1.4; }
+.gb-motd-edit { display: flex; gap: 6px; }
+.gb-motd-edit .gb-input { flex: 1; }
+.gb-icon-btn {
+  border: 1px solid rgb(120 100 70 / 35%);
+  border-radius: 7px;
+  background: rgb(236 226 200 / 70%);
+  color: #4a3c2c;
+  padding: 3px 9px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.gb-icon-btn:hover { filter: brightness(1.08); }
+
+.gb-columns {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: clamp(8px, 1.4vw, 16px);
+  align-items: start;
+}
+
+.gb-roster-scroll {
+  max-height: clamp(140px, 28vh, 280px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(120 100 70 / 55%) transparent;
+}
+
+.gb-member-list { list-style: none; margin: 0; padding: 0; }
+
+.gb-member {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: none;
+  color: #3a2f25;
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft);
+}
+
+.gb-member:hover { background: rgb(120 138 126 / 16%); }
+.gb-member.is-selected { background: rgb(90 138 126 / 22%); border-color: rgb(90 138 126 / 60%); }
+.gb-member.is-offline { opacity: 0.55; }
+
+.gb-member-num { color: rgb(58 47 37 / 55%); font-variant-numeric: tabular-nums; min-width: 1.4em; }
+.gb-member-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.gb-member-dot.is-online { background: #5a8a5a; box-shadow: 0 0 5px rgb(90 138 90 / 70%); }
+.gb-member-dot.is-offline { background: rgb(120 100 70 / 50%); }
+.gb-member-name { font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gb-member-level { font-size: 0.78rem; color: rgb(58 47 37 / 70%); }
+.gb-member-rank { font-size: 0.8rem; color: #5a4a78; font-weight: 600; min-width: 4em; text-align: right; }
+
+.gb-controls-hint { margin: 0 0 8px; font-size: 0.82rem; font-style: italic; color: rgb(58 47 37 / 70%); text-align: center; }
+.gb-controls-actions { display: grid; gap: 6px; }
+.gb-controls-actions .gb-btn { width: 100%; }
+.gb-invite-bar { display: flex; gap: 6px; margin-top: 10px; }
+.gb-invite-bar .gb-input { flex: 1; }
+
+.gb-hall { display: flex; flex-direction: column; gap: 8px; }
+.gb-hall-meta { font-size: 0.78rem; color: rgb(58 47 37 / 70%); }
+.gb-hall-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Guild chat. */
+.gb-chat { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; }
+.gb-chat-feed {
+  flex: 1 1 auto;
+  min-height: clamp(80px, 16vh, 180px);
+  max-height: 28vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid rgb(120 100 70 / 30%);
+  background: rgb(28 26 22 / 78%);
+  padding: 8px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(150 130 90 / 55%) transparent;
+}
+
+.gb-chat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.gb-chat-msg { line-height: 1.35; color: #e8ddc4; font-size: 0.9rem; }
+.gb-chat-sender { color: #9fc4b8; font-weight: 600; margin-right: 6px; }
+
+.gb-chat-form { display: flex; align-items: center; gap: 6px; }
+.gb-chat-say { font-family: var(--font-display); font-weight: 600; color: #4a3c2c; }
+.gb-chat-form .gb-input { flex: 1; }
+
+.gb-footer { display: flex; justify-content: flex-end; gap: 8px; padding-top: 2px; }
+.gb-confirm { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: #4a3c2c; }
+
+@media (max-width: 720px) {
+  .guildboard-state-a,
+  .gb-columns { grid-template-columns: 1fr; }
+}
