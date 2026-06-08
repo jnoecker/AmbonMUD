@@ -158,13 +158,9 @@ export function CharacterPanel({
     0,
     spriteOrder.findIndex((s) => s.id === spriteList.active),
   );
-  const cycleSprite = (dir: 1 | -1) => {
-    if (spriteOrder.length <= 1) return;
-    const next = (activeSpriteIdx + dir + spriteOrder.length) % spriteOrder.length;
-    const target = spriteOrder[next];
-    onCommand(target.id === null ? "sprite default" : `sprite set ${target.id}`);
+  const selectSprite = (s: { id: string | null }) => {
+    onCommand(s.id === null ? "sprite default" : `sprite set ${s.id}`);
   };
-  const currentSpriteName = spriteOrder[activeSpriteIdx]?.name ?? character.name;
 
   const autolootEnabled = character.autolootEnabled;
   const autopeekEnabled = character.autopeekEnabled;
@@ -218,26 +214,24 @@ export function CharacterPanel({
               <div className="cc-sprite-empty" aria-hidden="true" />
             )}
           </div>
-          <div className="cc-carousel">
-            <button
-              type="button"
-              className="cc-carousel-arrow"
-              aria-label="Previous sprite"
-              disabled={spriteOrder.length <= 1}
-              onClick={() => cycleSprite(-1)}
-            >
-              ‹
-            </button>
-            <span className="cc-carousel-name" title={currentSpriteName}>{currentSpriteName}</span>
-            <button
-              type="button"
-              className="cc-carousel-arrow"
-              aria-label="Next sprite"
-              disabled={spriteOrder.length <= 1}
-              onClick={() => cycleSprite(1)}
-            >
-              ›
-            </button>
+          <div className="cc-sprite-rack" role="listbox" aria-label="Choose your sprite">
+            {spriteOrder.map((s, i) => (
+              <button
+                key={s.id ?? "__default"}
+                type="button"
+                role="option"
+                aria-selected={i === activeSpriteIdx}
+                className={`cc-thumb${i === activeSpriteIdx ? " is-active" : ""}`}
+                title={s.name}
+                onClick={() => selectSprite(s)}
+              >
+                {s.image ? (
+                  <img src={s.image} alt={s.name} draggable={false} />
+                ) : (
+                  <span className="cc-thumb-auto">Auto</span>
+                )}
+              </button>
+            ))}
           </div>
         </section>
 

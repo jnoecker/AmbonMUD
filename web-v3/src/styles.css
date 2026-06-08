@@ -22432,10 +22432,10 @@ html:has(.game-shell),
 .cc-sprite {
   position: absolute;
   left: 50%;
-  bottom: 4%;
+  bottom: 2%;
   transform: translateX(-50%);
-  max-width: 86%;
-  max-height: 92%;
+  max-width: 98%;
+  max-height: 99%;
   object-fit: contain;
   filter: drop-shadow(0 6px 14px rgb(0 0 0 / 55%));
 }
@@ -22447,43 +22447,64 @@ html:has(.game-shell),
   background: rgb(255 255 255 / 4%);
 }
 
-.cc-carousel {
+/* Scrolling thumbnail rack — fills the vertical room below the preview. */
+.cc-sprite-rack {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 8px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgb(201 162 74 / 28%);
+  background: linear-gradient(160deg, rgb(40 31 20 / 88%), rgb(26 20 13 / 86%));
+  box-shadow: inset 0 0 18px rgb(0 0 0 / 45%);
+  overflow-y: auto;
+  min-height: 60px;
+  max-height: 188px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(201 162 74 / 65%) transparent;
+}
+
+.cc-sprite-rack::-webkit-scrollbar { width: 8px; }
+.cc-sprite-rack::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  border: 1px solid rgb(201 162 74 / 30%);
-  background: linear-gradient(160deg, rgb(40 31 20 / 90%), rgb(26 20 13 / 88%));
+  background: linear-gradient(180deg, rgb(201 162 74 / 70%), rgb(140 104 52 / 65%));
 }
+.cc-sprite-rack::-webkit-scrollbar-track { background: transparent; }
 
-.cc-carousel-arrow {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid rgb(201 162 74 / 36%);
-  background: rgb(60 46 26 / 70%);
-  color: var(--cc-brass-soft);
-  font-size: 1.2rem;
-  line-height: 1;
+.cc-thumb {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  border-radius: 9px;
+  border: 1px solid rgb(201 162 74 / 26%);
+  background: rgb(20 28 22 / 70%);
   cursor: pointer;
-  transition: background 150ms, transform 150ms;
+  transition: border-color 150ms, transform 150ms, box-shadow 150ms;
 }
 
-.cc-carousel-arrow:hover:not(:disabled) { background: rgb(82 62 34 / 85%); transform: translateY(-1px); }
-.cc-carousel-arrow:disabled { opacity: 0.4; cursor: default; }
+.cc-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-.cc-carousel-name {
-  flex: 1;
-  text-align: center;
+.cc-thumb:hover {
+  transform: translateY(-1px);
+  border-color: rgb(230 205 146 / 55%);
+}
+
+.cc-thumb.is-active {
+  border-color: var(--cc-brass, #c9a24a);
+  box-shadow: 0 0 0 1px var(--cc-brass, #c9a24a), 0 0 10px rgb(201 162 74 / 45%);
+}
+
+.cc-thumb-auto {
   font-family: var(--font-display);
-  font-size: 0.92rem;
-  color: var(--cc-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.6rem;
+  line-height: 1.05;
+  text-align: center;
+  color: var(--cc-brass-soft);
 }
 
 /* ── Identity card ─────────────────────────────────────────── */
