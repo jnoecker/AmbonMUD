@@ -23606,6 +23606,11 @@ html:has(.game-shell),
   justify-content: center;
 }
 
+/* The action buttons read a touch high in the row — drop them a smidge. */
+.whoboard-row .whoboard-col-actions {
+  transform: translateY(4px);
+}
+
 .whoboard-body {
   flex: 1 1 auto;
   min-height: 0;
