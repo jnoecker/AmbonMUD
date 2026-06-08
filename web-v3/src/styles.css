@@ -23483,3 +23483,327 @@ html:has(.game-shell),
   box-shadow: 0 6px 20px rgb(0 0 0 / 55%);
 }
 
+
+/* ════════════════════════════════════════════════════════════
+   Who board — standalone player roster (drawerPanel "whoboard")
+   Celestial `who_bg` frame (skin) with a generated table inset into the
+   painted interior: portrait, name + title, class, race, level, actions.
+   ════════════════════════════════════════════════════════════ */
+.drawer-sheet.drawer-sheet-starframe {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(ellipse at 50% 30%, rgb(30 40 80 / 96%), rgb(12 16 34 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.drawer-sheet-starframe .drawer-title {
+  display: none;
+}
+
+.drawer-sheet-starframe .drawer-handle-zone {
+  display: none;
+}
+
+/* The painted frame has its own ✕ in the top-right — float the real button there. */
+.drawer-sheet-starframe .drawer-header {
+  position: absolute;
+  top: 1.5%;
+  right: 2.2%;
+  left: auto;
+  z-index: 6;
+  padding: 0;
+  min-height: 0;
+  border-bottom: none;
+}
+
+.drawer-sheet-starframe .drawer-close {
+  background: transparent;
+  border-color: transparent;
+}
+
+.drawer-sheet-starframe .drawer-body {
+  padding: 0;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-starframe {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* Table inset into the frame's interior window. */
+.whoboard {
+  position: absolute;
+  top: 16%;
+  left: 6%;
+  right: 6%;
+  bottom: 10.5%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.2vh, 12px);
+  color: #dfe6ff;
+}
+
+.whoboard-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.whoboard-head,
+.whoboard-row {
+  display: grid;
+  grid-template-columns: clamp(40px, 6%, 70px) 1.7fr 1fr 1fr 0.6fr clamp(78px, 12%, 124px);
+  align-items: center;
+  gap: clamp(4px, 1vw, 12px);
+  padding: 0 clamp(4px, 1vw, 14px);
+}
+
+.whoboard-head {
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgb(150 180 255 / 28%);
+}
+
+.whoboard-th {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: clamp(0.78rem, 1.6vw, 0.96rem);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgb(196 212 255 / 90%);
+  cursor: pointer;
+  transition: color 150ms var(--ease-out-soft);
+}
+
+.whoboard-th:hover {
+  color: #fff;
+}
+
+.whoboard-col-level {
+  text-align: center;
+}
+
+.whoboard-col-actions {
+  font-family: var(--font-display);
+  font-size: clamp(0.78rem, 1.6vw, 0.96rem);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgb(196 212 255 / 90%);
+  text-align: center;
+  display: flex;
+  gap: clamp(4px, 0.8vw, 10px);
+  justify-content: center;
+}
+
+.whoboard-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(150 180 255 / 60%) transparent;
+}
+
+.whoboard-body::-webkit-scrollbar { width: 8px; }
+.whoboard-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(150 180 255 / 70%), rgb(90 120 210 / 65%));
+}
+.whoboard-body::-webkit-scrollbar-track { background: transparent; }
+
+.whoboard-row {
+  min-height: clamp(44px, 9%, 76px);
+  border-bottom: 1px solid rgb(120 150 230 / 14%);
+  transition: background 150ms var(--ease-out-soft);
+}
+
+.whoboard-row:hover {
+  background: rgb(120 150 255 / 10%);
+}
+
+/* Portrait column — sprite in a small celestial frame. */
+.whoboard-portrait {
+  display: grid;
+  place-items: center;
+  width: clamp(34px, 90%, 52px);
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid rgb(150 180 255 / 40%);
+  background:
+    radial-gradient(circle at 50% 35%, rgb(70 100 180 / 55%), transparent 65%),
+    linear-gradient(160deg, rgb(24 32 64 / 90%), rgb(12 16 34 / 92%));
+  box-shadow: inset 0 0 10px rgb(0 0 0 / 55%), 0 0 8px rgb(120 150 255 / 25%);
+  overflow: hidden;
+}
+
+.whoboard-sprite {
+  max-width: 92%;
+  max-height: 92%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 55%));
+}
+
+.whoboard-sprite-empty {
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  background: rgb(150 180 255 / 12%);
+}
+
+.whoboard-col-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.whoboard-name {
+  font-family: var(--font-display);
+  font-size: clamp(0.92rem, 2vw, 1.18rem);
+  font-weight: 600;
+  color: #eaf0ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.whoboard-title {
+  font-size: clamp(0.66rem, 1.3vw, 0.82rem);
+  font-style: italic;
+  color: rgb(168 196 255 / 85%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.whoboard-col-class,
+.whoboard-col-race {
+  font-size: clamp(0.8rem, 1.6vw, 1rem);
+  color: rgb(214 224 255 / 92%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.whoboard-col-level {
+  font-family: var(--font-display);
+  font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+  color: #eaf0ff;
+}
+
+/* Action buttons — painted who_examine_btn / who_tell_btn, glyph fallback. */
+.whoboard-action {
+  display: grid;
+  place-items: center;
+  width: clamp(30px, 46%, 46px);
+  aspect-ratio: 1;
+  padding: 2px;
+  border-radius: 9px;
+  border: 1px solid rgb(150 180 255 / 30%);
+  background: linear-gradient(160deg, rgb(40 54 104 / 75%), rgb(22 30 60 / 80%));
+  color: #cfe0ff;
+  cursor: pointer;
+  transition: transform 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+}
+
+.whoboard-action img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.whoboard-action:hover {
+  transform: translateY(-1px);
+  border-color: rgb(176 200 255 / 70%);
+  box-shadow: 0 0 12px rgb(120 150 255 / 40%);
+}
+
+.whoboard-action-glyph {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.whoboard-empty {
+  margin: auto;
+  text-align: center;
+  font-style: italic;
+  color: rgb(196 212 255 / 60%);
+  padding: clamp(20px, 8vh, 70px) 12px;
+}
+
+/* Footer — total online, search, class filter, refresh. */
+.whoboard-footer {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 1.2vw, 14px);
+  padding-top: clamp(4px, 1vh, 10px);
+  border-top: 1px solid rgb(150 180 255 / 24%);
+  flex-wrap: wrap;
+}
+
+.whoboard-count {
+  font-family: var(--font-display);
+  font-size: clamp(0.78rem, 1.5vw, 0.95rem);
+  color: rgb(214 224 255 / 92%);
+}
+
+.whoboard-count strong {
+  color: #9fc0ff;
+}
+
+.whoboard-search {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: clamp(6px, 1vh, 9px) 12px;
+  border-radius: 999px;
+  border: 1px solid rgb(150 180 255 / 35%);
+  background: rgb(16 22 46 / 75%);
+  color: #eaf0ff;
+  font-size: 0.88rem;
+}
+
+.whoboard-search::placeholder { color: rgb(176 196 255 / 55%); }
+.whoboard-search:focus { outline: none; border-color: rgb(176 200 255 / 75%); box-shadow: 0 0 0 2px rgb(120 150 255 / 30%); }
+
+.whoboard-classfilter {
+  padding: clamp(6px, 1vh, 9px) 10px;
+  border-radius: 10px;
+  border: 1px solid rgb(150 180 255 / 35%);
+  background: rgb(16 22 46 / 85%);
+  color: #eaf0ff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.whoboard-refresh {
+  flex: 0 0 auto;
+  width: clamp(30px, 5vw, 38px);
+  height: clamp(30px, 5vw, 38px);
+  border-radius: 50%;
+  border: 1px solid rgb(150 180 255 / 35%);
+  background: rgb(30 40 78 / 80%);
+  color: #cfe0ff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft);
+}
+
+.whoboard-refresh:hover:not(:disabled) { transform: rotate(90deg); border-color: rgb(176 200 255 / 70%); }
+.whoboard-refresh:disabled { opacity: 0.4; cursor: default; }
+
+/* Player examine card reuses .mm-* styling; just the title line is new. */
+.mm-player-title {
+  margin: 0 0 6px;
+  font-style: italic;
+  color: rgb(168 196 255 / 90%);
+  font-size: 0.95rem;
+}

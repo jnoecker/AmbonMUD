@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, FriendEntry, FriendNotification, GroupInfo, GuildHallInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab, WhoPlayer } from "../../types";
-
-type WhoSortField = "name" | "level" | "race" | "class" | "idle";
-type SortDir = "asc" | "desc";
+import { TellIcon } from "../Icons";
+import type { ChatChannel, ChatMessage, FriendEntry, FriendNotification, GroupInfo, GuildHallInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab } from "../../types";
 
 interface ChatPanelProps {
   connected: boolean;
   canChat: boolean;
   playerName: string;
   chatByChannel: Record<ChatChannel, ChatMessage[]>;
-  whoPlayers: WhoPlayer[];
   groupInfo: GroupInfo;
   pendingGroupInvite: PendingGroupInvite | null;
   guildInfo: GuildInfo;
@@ -20,23 +16,15 @@ interface ChatPanelProps {
   guildHall: GuildHallInfo | null;
   friends: FriendEntry[];
   friendNotifications: FriendNotification[];
-  onRequestWho: () => void;
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
   onTellPlayer: (target: string) => void;
   onCommand: (command: string) => void;
-}
-
-function formatIdleTime(seconds: number): string {
-  if (seconds < 60) return "";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  return `${Math.floor(seconds / 3600)}h${Math.floor((seconds % 3600) / 60)}m`;
 }
 
 const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
   { id: "friends", label: "Friends" },
   { id: "guild", label: "Guild" },
   { id: "group", label: "Group" },
-  { id: "who", label: "Who" },
 ];
 
 export function ChatPanel({
@@ -44,7 +32,6 @@ export function ChatPanel({
   canChat,
   playerName,
   chatByChannel,
-  whoPlayers,
   groupInfo,
   pendingGroupInvite,
   guildInfo,
@@ -53,7 +40,6 @@ export function ChatPanel({
   guildHall,
   friends,
   friendNotifications,
-  onRequestWho,
   onSendMessage,
   onTellPlayer,
   onCommand,
@@ -64,9 +50,6 @@ export function ChatPanel({
   const [guildDraft, setGuildDraft] = useState("");
   const [groupDraft, setGroupDraft] = useState("");
   const [activeSocialTab, setActiveSocialTab] = useState<SocialTab>("friends");
-  const [whoFilter, setWhoFilter] = useState("");
-  const [whoSort, setWhoSort] = useState<WhoSortField>("name");
-  const [whoSortDir, setWhoSortDir] = useState<SortDir>("asc");
   // Guild action state
   const [guildCreateName, setGuildCreateName] = useState("");
   const [guildCreateTag, setGuildCreateTag] = useState("");
@@ -83,41 +66,11 @@ export function ChatPanel({
   const gchatMessages = chatByChannel.gchat;
   const gtellMessages = chatByChannel.gtell;
 
-  const filteredSortedWho = useMemo(() => {
-    const lower = whoFilter.toLowerCase();
-    const filtered = lower
-      ? whoPlayers.filter((p) =>
-        p.name.toLowerCase().includes(lower) ||
-        p.race.toLowerCase().includes(lower) ||
-        p.playerClass.toLowerCase().includes(lower) ||
-        (p.guild?.toLowerCase().includes(lower) ?? false))
-      : whoPlayers;
-    const dir = whoSortDir === "asc" ? 1 : -1;
-    return [...filtered].sort((a, b) => {
-      switch (whoSort) {
-        case "level": return (a.level - b.level) * dir;
-        case "race": return a.race.localeCompare(b.race) * dir;
-        case "class": return a.playerClass.localeCompare(b.playerClass) * dir;
-        case "idle": return (a.idle - b.idle) * dir;
-        default: return a.name.localeCompare(b.name) * dir;
-      }
-    });
-  }, [whoPlayers, whoFilter, whoSort, whoSortDir]);
-
-  const toggleWhoSort = (field: WhoSortField) => {
-    if (whoSort === field) {
-      setWhoSortDir((d) => d === "asc" ? "desc" : "asc");
-    } else {
-      setWhoSort(field);
-      setWhoSortDir("asc");
-    }
-  };
-
   useEffect(() => {
     const feed = feedRef.current;
     if (!feed) return;
     feed.scrollTop = feed.scrollHeight;
-  }, [activeSocialTab, whoPlayers.length]);
+  }, [activeSocialTab]);
 
   useEffect(() => {
     const feed = guildFeedRef.current;
@@ -133,7 +86,6 @@ export function ChatPanel({
 
   const handleSocialTabChange = (tab: SocialTab) => {
     setActiveSocialTab(tab);
-    if (tab === "who" && canChat) onRequestWho();
   };
 
   const handleTellFromWho = (target: string) => {
@@ -633,105 +585,6 @@ export function ChatPanel({
           )
         )}
 
-
-        {activeSocialTab === "who" && (
-          <>
-            <div className="who-filter-bar">
-              <input
-                type="text"
-                className="who-filter-input"
-                placeholder="Filter players\u2026"
-                value={whoFilter}
-                onChange={(e) => setWhoFilter(e.target.value)}
-                aria-label="Filter who list"
-              />
-              <button type="button" className="soft-button who-refresh-button" onClick={onRequestWho} disabled={!canChat} title="Refresh who list">
-                <RefreshIcon className="who-refresh-icon" />
-              </button>
-            </div>
-            <div ref={feedRef} className="chat-feed" role="log" aria-label="Who player list">
-              <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Who subwindow">
-                {!canChat ? (
-                  <p className="empty-note">
-                    {connected ? "Log in to unlock social features." : "Reconnect to load social data."}
-                  </p>
-                ) : whoPlayers.length === 0 ? (
-                  <p className="empty-note">No players online yet.</p>
-                ) : (
-                  <table className="who-table" role="grid">
-                    <thead>
-                      <tr>
-                        <th className="who-th who-th-name">
-                          <button type="button" className="who-sort-btn" onClick={() => toggleWhoSort("name")}>
-                            Name{whoSort === "name" ? (whoSortDir === "asc" ? " \u25B4" : " \u25BE") : ""}
-                          </button>
-                        </th>
-                        <th className="who-th who-th-level">
-                          <button type="button" className="who-sort-btn" onClick={() => toggleWhoSort("level")}>
-                            Lvl{whoSort === "level" ? (whoSortDir === "asc" ? " \u25B4" : " \u25BE") : ""}
-                          </button>
-                        </th>
-                        <th className="who-th who-th-race">
-                          <button type="button" className="who-sort-btn" onClick={() => toggleWhoSort("race")}>
-                            Race{whoSort === "race" ? (whoSortDir === "asc" ? " \u25B4" : " \u25BE") : ""}
-                          </button>
-                        </th>
-                        <th className="who-th who-th-class">
-                          <button type="button" className="who-sort-btn" onClick={() => toggleWhoSort("class")}>
-                            Class{whoSort === "class" ? (whoSortDir === "asc" ? " \u25B4" : " \u25BE") : ""}
-                          </button>
-                        </th>
-                        <th className="who-th who-th-info">Info</th>
-                        <th className="who-th who-th-idle">
-                          <button type="button" className="who-sort-btn" onClick={() => toggleWhoSort("idle")}>
-                            Idle{whoSort === "idle" ? (whoSortDir === "asc" ? " \u25B4" : " \u25BE") : ""}
-                          </button>
-                        </th>
-                        <th className="who-th who-th-action"><span className="sr-only">Actions</span></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredSortedWho.map((p) => {
-                        const idle = formatIdleTime(p.idle);
-                        const infoParts: string[] = [];
-                        if (p.guild) infoParts.push(p.guild);
-                        if (p.title) infoParts.push(p.title);
-                        if (p.groupSize > 1) infoParts.push(`G:${p.groupSize}`);
-                        return (
-                          <tr key={p.name} className="who-row">
-                            <td className="who-td who-td-name">{p.name}</td>
-                            <td className="who-td who-td-level">{p.level}</td>
-                            <td className="who-td who-td-race">{p.race}</td>
-                            <td className="who-td who-td-class">{p.playerClass}</td>
-                            <td className="who-td who-td-info">{infoParts.join(" \u00B7 ")}</td>
-                            <td className="who-td who-td-idle">{idle}</td>
-                            <td className="who-td who-td-action">
-                              {p.name !== playerName && (
-                                <button
-                                  type="button"
-                                  className="who-tell-button"
-                                  title={`Tell ${p.name}`}
-                                  aria-label={`Tell ${p.name}`}
-                                  onClick={() => handleTellFromWho(p.name)}
-                                >
-                                  <TellIcon className="who-tell-icon" />
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
-              </section>
-            </div>
-
-            <div className="who-status-bar">
-              <span className="who-count">{filteredSortedWho.length} player{filteredSortedWho.length !== 1 ? "s" : ""} online</span>
-            </div>
-          </>
-        )}
       </div>
     </section>
   );

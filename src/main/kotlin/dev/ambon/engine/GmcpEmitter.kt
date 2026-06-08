@@ -48,6 +48,10 @@ data class WhoEntry(
     val guild: String?,
     val groupSize: Int,
     val idleSeconds: Long,
+    /** Resolved sprite URL — shown in the Who panel's portrait column. */
+    val sprite: String = "",
+    /** Player-written RP description — shown when another player examines them. */
+    val description: String = "",
 )
 
 data class PrestigePerkPayload(
@@ -733,6 +737,8 @@ class GmcpEmitter(
                     guild = e.guild,
                     groupSize = e.groupSize,
                     idle = e.idleSeconds,
+                    sprite = e.sprite,
+                    description = e.description,
                 )
             },
         )
@@ -3258,6 +3264,8 @@ class GmcpEmitter(
         val guild: String?,
         val groupSize: Int,
         val idle: Long,
+        val sprite: String,
+        val description: String,
     )
 
     // ---------- server broadcast payload ----------

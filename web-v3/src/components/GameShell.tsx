@@ -256,6 +256,17 @@ export function GameShell({
                 <button
                   type="button"
                   className="hud-stack-btn"
+                  onClick={() => openServicePanel("whoboard")}
+                  title="Who"
+                  aria-label="Who's online"
+                >
+                  {serverAssets["who_widget"]
+                    ? <img className="hud-stack-img" src={serverAssets["who_widget"]} alt="" />
+                    : <span className="hud-stack-glyph">&#9776;</span>}
+                </button>
+                <button
+                  type="button"
+                  className="hud-stack-btn"
                   onClick={() => openServicePanel("chat")}
                   title="Social"
                   aria-label="Social"
