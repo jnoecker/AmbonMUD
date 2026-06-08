@@ -20,6 +20,8 @@ class RegenSystem(
     private val manaRegenPercent: Double = 0.05,
     private val inCombatMultiplier: Double = 0.5,
     private val inCombat: (SessionId) -> Boolean = { false },
+    private val innMultiplier: Double = 2.0,
+    private val inInn: (SessionId) -> Boolean = { false },
     private val tickIntervalMs: Long = 100L,
     private val cycleTargetMs: Long = 2_000L,
     private val minPlayersPerTick: Int = 5,
@@ -64,7 +66,9 @@ class RegenSystem(
 
             val sessionId = player.sessionId
             val equipStats = items.equipmentBonuses(sessionId, classRegistry?.get(player.playerClass)).stats
-            val multiplier = if (inCombat(sessionId)) inCombatMultiplier else 1.0
+            val combatMult = if (inCombat(sessionId)) inCombatMultiplier else 1.0
+            val innMult = if (inInn(sessionId)) innMultiplier else 1.0
+            val multiplier = combatMult * innMult
 
             applyRegen(
                 now = now,
