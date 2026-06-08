@@ -23300,36 +23300,58 @@ html:has(.game-shell),
 }
 
 /* ════════════════════════════════════════════════════════════
-   Social Board — standalone painted chat panel (drawerPanel "chatboard")
-   The frame comes from the `chat_bg` skin; the channel rail, chalkboard
-   feed, and parchment composer are laid on top with carved-CSS fallbacks
-   so the panel works before any art ships.
+   Social Board — standalone painted chat (drawerPanel "chatboard")
+   The whole frame — banner, channel plaques, side notes, parchment input,
+   Send/Clear buttons, footer — is painted into the `chat_bg` art. The board
+   is an aspect-locked canvas carrying that image; transparent hotspots and
+   the live feed/input are pixel-mapped on top (see *_RECT in the panel).
    ════════════════════════════════════════════════════════════ */
 .drawer-sheet.drawer-sheet-board {
-  background-image:
-    var(--skin-bg, none),
-    linear-gradient(165deg, rgb(48 34 20 / 98%), rgb(28 20 12 / 98%));
-  background-size: cover, auto;
-  background-position: center, center;
-  background-repeat: no-repeat, no-repeat;
+  background:
+    linear-gradient(165deg, rgb(34 24 14 / 96%), rgb(20 14 8 / 97%));
 }
 
-/* The painted board carries its own banner, so hide the drawer title and
-   shrink the header to just the close button. */
+/* The painted board carries its own banner, so drop the title and the drag
+   handle, and float the close button over the art. */
 .drawer-sheet-board .drawer-title {
   display: none;
 }
 
+.drawer-sheet-board .drawer-handle-zone {
+  display: none;
+}
+
 .drawer-sheet-board .drawer-header {
-  border-bottom: none;
-  padding: 6px 12px 0;
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  z-index: 6;
+  padding: 0;
   min-height: 0;
+  border-bottom: none;
 }
 
 .drawer-sheet-board .drawer-body {
-  padding: clamp(8px, 2vh, 18px) clamp(10px, 3vw, 30px) clamp(12px, 2.5vh, 22px);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Desktop: size the sheet to the painted frame's 4:3 ratio so it scales up
+   whole and dominates the viewport. height is pre-clamped against width so
+   the derived width never exceeds 96vw. */
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-board {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 1447 / 1087;
+  }
+}
+
+/* The board canvas: the painted frame stretched to a 4:3 box (it is 4:3, so
+   no distortion), with hotspots positioned as percentages of this box. */
 .chatboard {
   --chat-accent-say: #79c46b;
   --chat-accent-tell: #b08be0;
@@ -23337,244 +23359,127 @@ html:has(.game-shell),
   --chat-accent-shout: #e08a46;
   --chat-accent-ooc: #5fb0e0;
   --chat-ink: #f3e7cf;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(8px, 1.6vh, 14px);
-  height: 100%;
-  min-height: 0;
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1447 / 1087;
+  margin: auto;
+  background-image: var(--chat-bg, none);
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-/* ── Channel rail ─────────────────────────────────────────── */
-.chatboard-channels {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(5px, 1vw, 10px);
-}
-
-.chatboard-channel {
-  flex: 1 1 0;
-  min-width: 84px;
-  max-width: 150px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: clamp(6px, 1vh, 10px) 8px;
-  border-radius: 12px;
-  border: 1px solid rgb(201 162 74 / 30%);
-  background: linear-gradient(160deg, rgb(48 37 22 / 92%), rgb(30 23 14 / 94%));
-  box-shadow: inset 0 1px 0 rgb(230 205 146 / 12%), 0 2px 6px rgb(0 0 0 / 40%);
-  color: var(--chat-ink);
+/* Shared transparent hotspot — the painted control shows through. */
+.cb-hotspot {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
   cursor: pointer;
-  transition: transform 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+  transition: box-shadow 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
 }
 
-.chatboard-channel:hover {
-  transform: translateY(-1px);
-  border-color: rgb(230 205 146 / 50%);
+.cb-hotspot:hover:not(:disabled) {
+  background: rgb(255 255 255 / 8%);
 }
 
-.chatboard-channel.is-active {
-  border-color: var(--chat-accent);
-  box-shadow: inset 0 0 0 1px var(--chat-accent), 0 0 12px rgb(201 162 74 / 40%);
+.cb-hotspot:disabled {
+  cursor: default;
 }
 
-.chatboard-channel-gem {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 65%), transparent 60%), var(--chat-accent);
-  box-shadow: 0 0 8px rgb(255 255 255 / 22%);
+.cb-hotspot:focus-visible {
+  outline: 2px solid rgb(230 205 146 / 80%);
+  outline-offset: 1px;
 }
 
-.chatboard-channel-label {
-  font-family: var(--font-display);
-  font-size: clamp(0.82rem, 2.4vw, 0.98rem);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--chat-accent);
+/* Active channel: glow ring in the channel's accent over the painted plaque. */
+.cb-channel.is-active {
+  box-shadow: inset 0 0 0 2px var(--chat-accent), 0 0 14px rgb(201 162 74 / 35%);
+  border-radius: 12px;
 }
 
-.chatboard-channel-sub {
-  font-size: 0.64rem;
-  color: rgb(243 231 207 / 62%);
-  white-space: nowrap;
+.cb-emote.is-active {
+  box-shadow: inset 0 0 0 2px var(--chat-accent-gossip);
 }
 
-/* ── Chalkboard feed ──────────────────────────────────────── */
-.chatboard-feed {
-  flex: 1 1 auto;
-  min-height: 0;
+/* Live message feed over the painted chalkboard. */
+.cb-feed {
+  position: absolute;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
-  border: 1px solid rgb(201 162 74 / 28%);
-  background: linear-gradient(180deg, rgb(18 16 14 / 88%), rgb(10 9 8 / 90%));
-  box-shadow: inset 0 0 40px rgb(0 0 0 / 70%);
-  padding: clamp(8px, 1.6vh, 14px) clamp(10px, 2vw, 16px);
+  padding: clamp(6px, 1.2vh, 12px) clamp(8px, 1.4vw, 14px);
+  color: var(--chat-ink);
   scrollbar-width: thin;
-  scrollbar-color: rgb(201 162 74 / 55%) transparent;
+  scrollbar-color: rgb(201 162 74 / 50%) transparent;
 }
 
-.chatboard-feed::-webkit-scrollbar {
-  width: 8px;
+.cb-feed::-webkit-scrollbar {
+  width: 7px;
 }
 
-.chatboard-feed::-webkit-scrollbar-thumb {
+.cb-feed::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgb(201 162 74 / 70%), rgb(140 104 52 / 65%));
+  background: linear-gradient(180deg, rgb(201 162 74 / 65%), rgb(140 104 52 / 60%));
 }
 
-.chatboard-feed::-webkit-scrollbar-track {
+.cb-feed::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.chatboard-empty {
+.cb-empty {
   margin: auto;
   text-align: center;
   font-style: italic;
-  color: rgb(243 231 207 / 55%);
-  padding: clamp(20px, 6vh, 60px) 12px;
+  color: rgb(243 231 207 / 50%);
 }
 
-/* ── Composer (parchment) ─────────────────────────────────── */
-.chatboard-compose {
-  display: flex;
-  align-items: stretch;
-  flex-wrap: wrap;
-  gap: clamp(5px, 1vw, 9px);
+/* Composer is a layout-less wrapper; its inputs/buttons are absolutely placed. */
+.cb-compose {
+  display: contents;
 }
 
-.chatboard-target {
-  flex: 0 0 auto;
-  width: clamp(110px, 22%, 180px);
-}
-
-.chatboard-target,
-.chatboard-input {
-  border-radius: 10px;
-  border: 1px solid rgb(201 162 74 / 30%);
-  background: linear-gradient(180deg, rgb(232 215 176 / 95%), rgb(214 193 150 / 95%));
+/* Text inputs over the painted parchment — transparent so the parchment
+   texture shows; dark ink for legibility. */
+.cb-input {
+  position: absolute;
+  border: none;
+  background: transparent;
   color: #2a2113;
-  padding: clamp(8px, 1.4vh, 12px) 12px;
-  font-size: 0.92rem;
+  font-size: clamp(0.78rem, 1.5vw, 1rem);
+  padding: 0 clamp(6px, 1vw, 14px);
+  border-radius: 8px;
 }
 
-.chatboard-input {
-  flex: 1 1 160px;
-  min-width: 0;
-}
-
-.chatboard-target::placeholder,
-.chatboard-input::placeholder {
-  color: rgb(42 33 19 / 55%);
+.cb-input::placeholder {
+  color: rgb(42 33 19 / 50%);
   font-style: italic;
 }
 
-.chatboard-input:focus,
-.chatboard-target:focus {
+.cb-input:focus {
   outline: none;
-  border-color: rgb(201 162 74 / 90%);
-  box-shadow: 0 0 0 2px rgb(201 162 74 / 35%);
+  box-shadow: inset 0 0 0 2px rgb(201 162 74 / 45%);
 }
 
-.chatboard-emote-btn,
-.chatboard-clear-btn {
-  flex: 0 0 auto;
-  border-radius: 10px;
-  border: 1px solid rgb(201 162 74 / 32%);
-  background: linear-gradient(160deg, rgb(60 46 26 / 90%), rgb(40 31 18 / 92%));
-  color: var(--chat-ink);
-  cursor: pointer;
-  padding: 0 clamp(8px, 1.4vw, 12px);
-  font-size: 1rem;
-  transition: border-color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+.cb-target {
+  border-right: 1px solid rgb(120 96 52 / 35%);
 }
 
-.chatboard-clear-btn {
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  letter-spacing: 0.04em;
-}
-
-.chatboard-emote-btn:hover:not(:disabled),
-.chatboard-clear-btn:hover:not(:disabled) {
-  border-color: rgb(230 205 146 / 55%);
-  transform: translateY(-1px);
-}
-
-.chatboard-emote-btn.is-active {
-  border-color: var(--chat-accent-gossip);
-  color: var(--chat-accent-gossip);
-}
-
-.chatboard-emote-btn:disabled,
-.chatboard-clear-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.chatboard-send-btn {
-  flex: 0 0 auto;
+/* Emote picker floats over the lower feed when toggled. */
+.cb-emote-picker {
+  position: absolute;
+  z-index: 7;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.05;
-  min-width: clamp(96px, 22%, 150px);
-  padding: clamp(6px, 1vh, 10px) clamp(12px, 2vw, 20px);
-  border-radius: 12px;
-  border: 1px solid rgb(201 162 74 / 45%);
-  background: linear-gradient(165deg, rgb(86 60 120 / 95%), rgb(58 40 86 / 96%));
-  color: #f3e7cf;
-  font-family: var(--font-display);
-  font-size: clamp(0.9rem, 2.4vw, 1.05rem);
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 3px 10px rgb(0 0 0 / 45%);
-  transition: transform 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+  gap: 6px;
+  padding: 8px;
+  overflow-y: auto;
+  border-radius: 10px;
+  border: 1px solid rgb(201 162 74 / 35%);
+  background: linear-gradient(160deg, rgb(40 31 20 / 96%), rgb(26 20 13 / 97%));
+  box-shadow: 0 6px 20px rgb(0 0 0 / 55%);
 }
 
-.chatboard-send-btn-line {
-  font-size: 0.82em;
-}
-
-.chatboard-send-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 22%), 0 0 16px rgb(140 110 200 / 50%);
-}
-
-.chatboard-send-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-/* On desktop the drawer is a centered modal that sizes to content (width
-   capped at 720px, height auto). The chat board is meant to dominate the
-   screen, so override both: claim most of the viewport and let the feed
-   stretch. (Mobile already opens tall via the drawer `initialHeight`.) */
-@media (min-width: 768px) {
-  .drawer-sheet.drawer-sheet-board {
-    /* Size to the painted frame's aspect (~4:3) so it scales up whole rather
-       than cropping the banner/composer. Height-led on wide screens, width-
-       clamped on tall ones — either way it dominates the viewport. */
-    width: auto;
-    height: 94vh;
-    max-height: 94vh;
-    max-width: 96vw;
-    aspect-ratio: 4 / 3;
-  }
-
-  .drawer-sheet-board .drawer-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  .drawer-sheet-board .chatboard {
-    flex: 1 1 auto;
-  }
-}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { CSSProperties, FormEvent } from "react";
 import { CHAT_CHANNELS } from "../../constants";
 import type { ChatChannel, ChatMessage, EmotePreset } from "../../types";
 
@@ -11,30 +11,56 @@ interface ChatBoardPanelProps {
   chatByChannel: Record<ChatChannel, ChatMessage[]>;
   emotePresets: EmotePreset[];
   tellTarget: string;
+  backgroundImage: string | null;
   onTellTargetChange: (value: string) => void;
   onChannelChange: (channel: ChatChannel) => void;
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
   onCommand: (command: string) => void;
 }
 
-/** Per-channel flavour for the painted plaques: a sub-label and accent colour. */
-const CHANNEL_META: Record<string, { sub: string; accent: string }> = {
-  say: { sub: "Local Room", accent: "var(--chat-accent-say)" },
-  tell: { sub: "Private", accent: "var(--chat-accent-tell)" },
-  gossip: { sub: "Server-Wide", accent: "var(--chat-accent-gossip)" },
-  shout: { sub: "Zone-Wide", accent: "var(--chat-accent-shout)" },
-  ooc: { sub: "Out of Character", accent: "var(--chat-accent-ooc)" },
+type Rect = { left: number; top: number; width: number; height: number };
+
+/**
+ * Hotspot rectangles, expressed as percentages of the painted `chat_bg`
+ * frame (1447×1087, 4:3). The labels/icons/buttons are baked into the art;
+ * these transparent overlays sit on top to make the chrome interactive.
+ * Tweak these to nudge the lineup against the painted frame.
+ */
+const CHANNEL_RECTS: Record<string, Rect> = {
+  say: { left: 17.8, top: 23.0, width: 12.1, height: 7.8 },
+  tell: { left: 31.0, top: 23.0, width: 12.0, height: 7.8 },
+  gossip: { left: 44.1, top: 23.0, width: 12.0, height: 7.8 },
+  shout: { left: 57.2, top: 23.0, width: 12.0, height: 7.8 },
+  ooc: { left: 70.4, top: 23.0, width: 12.0, height: 7.8 },
 };
+const FEED_RECT: Rect = { left: 15.5, top: 33.0, width: 69.1, height: 46.0 };
+const INPUT_RECT: Rect = { left: 17.1, top: 81.7, width: 53.2, height: 11.2 };
+const EMOTE_RECT: Rect = { left: 72.0, top: 80.8, width: 4.6, height: 6.0 };
+const CLEAR_RECT: Rect = { left: 71.5, top: 87.6, width: 6.6, height: 6.0 };
+const SEND_RECT: Rect = { left: 80.0, top: 81.7, width: 13.4, height: 12.0 };
+
+const CHANNEL_ACCENTS: Record<string, string> = {
+  say: "var(--chat-accent-say)",
+  tell: "var(--chat-accent-tell)",
+  gossip: "var(--chat-accent-gossip)",
+  shout: "var(--chat-accent-shout)",
+  ooc: "var(--chat-accent-ooc)",
+};
+
+function rectStyle(r: Rect): CSSProperties {
+  return { left: `${r.left}%`, top: `${r.top}%`, width: `${r.width}%`, height: `${r.height}%` };
+}
 
 function createEmptyDrafts(): Record<ChatChannel, string> {
   return { say: "", tell: "", gossip: "", shout: "", ooc: "", gtell: "", gchat: "" };
 }
 
 /**
- * Standalone, fully-painted "Social Board" — the chat channels split out of the
- * larger Social panel. The board frame comes from the `chat_bg` drawer skin;
- * this component lays the channel rail, the chalkboard feed, and the parchment
- * composer on top, with carved-CSS fallbacks so it works before the art ships.
+ * Standalone "Social Board" — chat split out of the larger Social panel.
+ * The entire frame (banner, channel plaques, side notes, parchment input,
+ * Send/Clear buttons, footer) is painted into the `chat_bg` art; this
+ * component overlays transparent hotspots + the live feed and input text on
+ * top, pixel-mapped to the painted controls.
  */
 export function ChatBoardPanel({
   connected,
@@ -44,6 +70,7 @@ export function ChatBoardPanel({
   chatByChannel,
   emotePresets,
   tellTarget,
+  backgroundImage,
   onTellTargetChange,
   onChannelChange,
   onSendMessage,
@@ -77,39 +104,52 @@ export function ChatBoardPanel({
     setDraftByChannel((prev) => ({ ...prev, [activeChannel]: "" }));
   };
 
-  return (
-    <section className="chatboard" aria-label="Social board">
-      <div className="chatboard-channels" role="tablist" aria-label="Chat channels">
-        {CHAT_CHANNELS.map((channel) => {
-          const meta = CHANNEL_META[channel.id];
-          const isActive = activeChannel === channel.id;
-          return (
-            <button
-              key={channel.id}
-              type="button"
-              role="tab"
-              className={`chatboard-channel${isActive ? " is-active" : ""}`}
-              style={{ ["--chat-accent" as string]: meta?.accent ?? "var(--brass)" }}
-              onClick={() => onChannelChange(channel.id)}
-              aria-selected={isActive}
-            >
-              <span className="chatboard-channel-gem" aria-hidden="true" />
-              <span className="chatboard-channel-label">{channel.label}</span>
-              {meta && <span className="chatboard-channel-sub">{meta.sub}</span>}
-            </button>
-          );
-        })}
-      </div>
+  // When the "tell" channel is active, split the painted input field into a
+  // target box (left third) and a message box (right two-thirds).
+  const targetRect: Rect = { ...INPUT_RECT, width: INPUT_RECT.width * 0.32 };
+  const messageRect: Rect = isTargetedChannel
+    ? {
+      ...INPUT_RECT,
+      left: INPUT_RECT.left + INPUT_RECT.width * 0.35,
+      width: INPUT_RECT.width * 0.65,
+    }
+    : INPUT_RECT;
 
+  const boardStyle: CSSProperties = backgroundImage
+    ? { ["--chat-bg" as string]: `url("${backgroundImage}")` }
+    : {};
+
+  return (
+    <div className="chatboard" style={boardStyle}>
+      {/* ── Channel hotspots (labels painted into the art) ────── */}
+      {CHAT_CHANNELS.map((channel) => {
+        const isActive = activeChannel === channel.id;
+        return (
+          <button
+            key={channel.id}
+            type="button"
+            role="tab"
+            className={`cb-hotspot cb-channel${isActive ? " is-active" : ""}`}
+            style={{ ...rectStyle(CHANNEL_RECTS[channel.id] ?? FEED_RECT), ["--chat-accent" as string]: CHANNEL_ACCENTS[channel.id] ?? "var(--chat-accent-say)" }}
+            onClick={() => onChannelChange(channel.id)}
+            aria-selected={isActive}
+            aria-label={channel.label}
+            title={channel.label}
+          />
+        );
+      })}
+
+      {/* ── Message feed (over the painted chalkboard) ────────── */}
       <div
         ref={feedRef}
-        className="chatboard-feed"
+        className="cb-feed"
+        style={rectStyle(FEED_RECT)}
         role="log"
         aria-live="polite"
         aria-label={`${activeMeta.label} messages`}
       >
         {messages.length === 0 ? (
-          <p className="chatboard-empty">
+          <p className="cb-empty">
             {canChat
               ? `No ${activeMeta.label.toLowerCase()} messages yet.`
               : connected
@@ -141,8 +181,9 @@ export function ChatBoardPanel({
         )}
       </div>
 
+      {/* ── Emote picker (floats over the feed when open) ─────── */}
       {emotePickerOpen && canChat && (
-        <div className="emote-picker">
+        <div className="cb-emote-picker" style={rectStyle({ ...FEED_RECT, top: FEED_RECT.top + FEED_RECT.height - 22, height: 22 })}>
           <div className="emote-presets">
             {emotePresets.map((preset) => (
               <button
@@ -174,27 +215,17 @@ export function ChatBoardPanel({
               onChange={(e) => setCustomEmote(e.target.value)}
               aria-label="Custom emote"
             />
-            <button
-              type="button"
-              className="emote-name-btn"
-              title="Insert your name for freeform pose"
-              aria-label="Insert your character name"
-              onClick={() => setCustomEmote((prev) => prev + playerName + " ")}
-            >
-              @me
-            </button>
             <button type="submit" className="social-action-btn" disabled={!customEmote.trim()}>Emote</button>
           </form>
         </div>
       )}
 
-      <form
-        className={`chatboard-compose${isTargetedChannel ? " is-targeted" : ""}`}
-        onSubmit={submitMessage}
-      >
+      {/* ── Composer (over the painted parchment + buttons) ───── */}
+      <form className="cb-compose" onSubmit={submitMessage}>
         {isTargetedChannel && (
           <input
-            className="chatboard-target"
+            className="cb-input cb-target"
+            style={rectStyle(targetRect)}
             type="text"
             value={tellTarget}
             onChange={(event) => onTellTargetChange(event.target.value)}
@@ -206,7 +237,8 @@ export function ChatBoardPanel({
         )}
         <input
           ref={messageInputRef}
-          className="chatboard-input"
+          className="cb-input"
+          style={rectStyle(messageRect)}
           type="text"
           value={draft}
           onChange={(event) => setDraftByChannel((prev) => ({ ...prev, [activeChannel]: event.target.value }))}
@@ -218,29 +250,32 @@ export function ChatBoardPanel({
         />
         <button
           type="button"
-          className={`chatboard-emote-btn${emotePickerOpen ? " is-active" : ""}`}
+          className={`cb-hotspot cb-emote${emotePickerOpen ? " is-active" : ""}`}
+          style={rectStyle(EMOTE_RECT)}
           title="Emotes"
           aria-label="Toggle emote picker"
           aria-expanded={emotePickerOpen}
           onClick={() => setEmotePickerOpen((v) => !v)}
           disabled={!canChat}
-        >
-          &#9786;
-        </button>
+        />
         <button
           type="button"
-          className="chatboard-clear-btn"
+          className="cb-hotspot cb-clear"
+          style={rectStyle(CLEAR_RECT)}
           title="Clear message"
           aria-label="Clear message"
           onClick={() => setDraftByChannel((prev) => ({ ...prev, [activeChannel]: "" }))}
           disabled={!draft}
-        >
-          Clear
-        </button>
-        <button type="submit" className="chatboard-send-btn" disabled={!canChat}>
-          Send<span className="chatboard-send-btn-line">Message</span>
-        </button>
+        />
+        <button
+          type="submit"
+          className="cb-hotspot cb-send"
+          style={rectStyle(SEND_RECT)}
+          title="Send message"
+          aria-label="Send message"
+          disabled={!canChat}
+        />
       </form>
-    </section>
+    </div>
   );
 }

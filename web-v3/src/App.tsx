@@ -961,8 +961,6 @@ function App() {
           drawerPanel === "puzzle"
             ? (state.puzzle?.puzzles.find((p) => p.backgroundImage)?.backgroundImage
                 ?? state.serverAssets["puzzle_bg"])
-            : drawerPanel === "chatboard"
-            ? state.serverAssets["chat_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1089,6 +1087,7 @@ function App() {
             chatByChannel={state.chatByChannel}
             emotePresets={state.emotePresets}
             tellTarget={state.tellTarget}
+            backgroundImage={state.serverAssets["chat_bg"] ?? null}
             onTellTargetChange={state.setTellTarget}
             onChannelChange={state.setActiveChatChannel}
             onSendMessage={sendChatMessage}
