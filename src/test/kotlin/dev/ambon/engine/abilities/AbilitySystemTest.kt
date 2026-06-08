@@ -6,6 +6,7 @@ import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
+import dev.ambon.domain.mob.MobRole
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
@@ -319,6 +320,46 @@ class AbilitySystemTest {
                     .filterIsInstance<OutboundEvent.SendText>()
                     .map { it.text }
             assertTrue(messages.any { it.contains("dies") })
+        }
+
+    @Test
+    fun `cast refuses non-combatant targets without spending mana or dealing damage`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Caster")
+            h.abilitySystem.syncAbilities(sid, 1)
+            val player = h.players.get(sid)!!
+
+            val nonCombatants = mapOf(
+                MobRole.VENDOR to "isn't interested in fighting",
+                MobRole.QUEST_GIVER to "has no quarrel with you",
+                MobRole.DIALOG to "has no interest in fighting you",
+                MobRole.PROP to "is not something you can attack",
+            )
+            for ((role, expectedRefusal) in nonCombatants) {
+                player.mana = 20
+                val mob = MobState(
+                    id = MobId("zone:npc_${role.name.lowercase()}"),
+                    name = "an innocent ${role.name.lowercase()}",
+                    roomId = roomId,
+                    hp = 20,
+                    maxHp = 20,
+                    role = role,
+                )
+                h.mobs.upsert(mob)
+
+                val err = h.abilitySystem.cast(sid, "magic_missile", role.name.lowercase())
+
+                assertNotNull(err, "$role should refuse a hostile cast")
+                assertTrue(
+                    err!!.contains(expectedRefusal),
+                    "$role refusal should match the kill command's wording, got: $err",
+                )
+                assertEquals(20, mob.hp, "$role must take no spell damage")
+                assertEquals(20, player.mana, "refused cast must not spend mana")
+                assertFalse(h.combat.isInCombat(sid), "refused cast must not start combat")
+                h.mobs.remove(mob.id)
+            }
         }
 
     @Test
