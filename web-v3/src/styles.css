@@ -3671,8 +3671,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  /* Heavier top padding biases the door downward toward the floor. */
-  padding: clamp(28px, 7vh, 72px) 16px clamp(6px, 1vh, 12px);
+  /* Symmetric padding — the info floats absolutely now, so no downward bias. */
+  padding: clamp(8px, 1.5vh, 16px) 16px;
 }
 
 .feat-door-stage {
