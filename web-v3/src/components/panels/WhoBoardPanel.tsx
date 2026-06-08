@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { WhoPlayer } from "../../types";
 
 type WhoSortField = "name" | "level" | "race" | "class";
@@ -35,6 +35,16 @@ export function WhoBoardPanel({
   const [classFilter, setClassFilter] = useState("");
   const [sort, setSort] = useState<WhoSortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  // Refresh the roster every time the board opens — the panel remounts on open,
+  // so descriptions/levels/titles reflect the latest state without a manual refresh.
+  const requested = useRef(false);
+  useEffect(() => {
+    if (canChat && !requested.current) {
+      requested.current = true;
+      onRequestWho();
+    }
+  }, [canChat, onRequestWho]);
 
   const classes = useMemo(
     () => Array.from(new Set(whoPlayers.map((p) => p.playerClass).filter(Boolean))).sort(),
