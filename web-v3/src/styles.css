@@ -22461,7 +22461,9 @@ html:has(.game-shell),
   box-shadow: inset 0 0 18px rgb(0 0 0 / 45%);
   overflow-y: auto;
   min-height: 60px;
-  max-height: 188px;
+  /* Exactly three 46px rows (138 + 2*6 gap + 16 padding) so the showcase
+     column doesn't outgrow the rows beside it and scroll the whole drawer. */
+  max-height: 166px;
   scrollbar-width: thin;
   scrollbar-color: rgb(201 162 74 / 65%) transparent;
 }
