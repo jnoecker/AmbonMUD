@@ -4,16 +4,26 @@
   "schemaVersion": 38,
   "version": 1,
   "refresh": "15s",
-  "time": { "from": "now-15m", "to": "now" },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
   "panels": [
     {
       "id": 1,
       "title": "Players Online",
       "type": "stat",
-      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "players_online",
           "legendFormat": "players"
         }
@@ -23,10 +33,17 @@
       "id": 2,
       "title": "Mobs Alive",
       "type": "stat",
-      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "mobs_alive",
           "legendFormat": "mobs"
         }
@@ -36,10 +53,17 @@
       "id": 3,
       "title": "Rooms Occupied",
       "type": "stat",
-      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "rooms_occupied",
           "legendFormat": "rooms"
         }
@@ -49,15 +73,24 @@
       "id": 4,
       "title": "Mob System Tick Duration (seconds)",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 6
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "histogram_quantile(0.50, rate(mob_system_tick_duration_seconds_bucket[1m]))",
           "legendFormat": "p50"
         },
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "histogram_quantile(0.95, rate(mob_system_tick_duration_seconds_bucket[1m]))",
           "legendFormat": "p95"
         }
@@ -67,15 +100,24 @@
       "id": 5,
       "title": "Combat System Tick Duration (seconds)",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 6 },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 6
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "histogram_quantile(0.50, rate(combat_system_tick_duration_seconds_bucket[1m]))",
           "legendFormat": "p50"
         },
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "histogram_quantile(0.95, rate(combat_system_tick_duration_seconds_bucket[1m]))",
           "legendFormat": "p95"
         }
@@ -85,15 +127,24 @@
       "id": 6,
       "title": "Regen Tick Duration (seconds)",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 12,
+        "h": 6
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "rate(regen_tick_duration_seconds_sum[1m]) / rate(regen_tick_duration_seconds_count[1m])",
           "legendFormat": "avg"
         },
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "regen_tick_duration_seconds_max",
           "legendFormat": "max"
         }
@@ -103,10 +154,17 @@
       "id": 7,
       "title": "Mob Moves / sec",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 10, "w": 6, "h": 6 },
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 6,
+        "h": 6
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "rate(mob_moves_total[1m])",
           "legendFormat": "moves/s"
         }
@@ -116,10 +174,17 @@
       "id": 8,
       "title": "Combats Processed / sec",
       "type": "timeseries",
-      "gridPos": { "x": 18, "y": 10, "w": 6, "h": 6 },
+      "gridPos": {
+        "x": 18,
+        "y": 10,
+        "w": 6,
+        "h": 6
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "rate(combats_processed_total[1m])",
           "legendFormat": "combats/s"
         }
@@ -129,10 +194,17 @@
       "id": 9,
       "title": "XP Awarded / sec",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 6
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "rate(xp_awarded_total[1m])",
           "legendFormat": "{{source}}"
         }
@@ -142,10 +214,17 @@
       "id": 10,
       "title": "Level Ups / sec",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 16, "w": 6, "h": 6 },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 6,
+        "h": 6
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "rate(level_ups_total[1m])",
           "legendFormat": "levelups/s"
         }
@@ -155,12 +234,199 @@
       "id": 11,
       "title": "Player Deaths / sec",
       "type": "timeseries",
-      "gridPos": { "x": 18, "y": 16, "w": 6, "h": 6 },
+      "gridPos": {
+        "x": 18,
+        "y": 16,
+        "w": 6,
+        "h": 6
+      },
       "targets": [
         {
-          "datasource": { "type": "prometheus" },
+          "datasource": {
+            "type": "prometheus"
+          },
           "expr": "rate(player_deaths_total[1m])",
           "legendFormat": "deaths/s"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Demo Players Online",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "demo_players_online",
+          "legendFormat": "demo"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Demo Created (24h)",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "increase(game_events_total{system=\"demo\",event=\"created\"}[24h])",
+          "legendFormat": "created"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Demo Claimed (24h)",
+      "type": "stat",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "increase(game_events_total{system=\"demo\",event=\"claimed\"}[24h])",
+          "legendFormat": "claimed"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Demo Account Events / hour",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "sum by (event) (increase(game_events_total{system=\"demo\"}[1h]))",
+          "legendFormat": "{{event}}"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Quest Events / hour",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "sum by (event) (increase(game_events_total{system=\"quest\"}[1h]))",
+          "legendFormat": "{{event}}"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Economy Events / hour",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "sum by (system, event) (increase(game_events_total{system=~\"auction|tavern|bank|trade\"}[1h]))",
+          "legendFormat": "{{system}}/{{event}}"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Crafting Events / hour",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 28,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "sum by (event) (increase(game_events_total{system=\"crafting\"}[1h]))",
+          "legendFormat": "{{event}}"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Adventure Events / hour",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "sum by (system, event) (increase(game_events_total{system=~\"dungeon|duel|puzzle|ability\"}[1h]))",
+          "legendFormat": "{{system}}/{{event}}"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Social & Progression Events / hour",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "expr": "sum by (system, event) (increase(game_events_total{system=~\"housing|stylist|prestige|pet|guild|mail\"}[1h]))",
+          "legendFormat": "{{system}}/{{event}}"
         }
       ]
     }
