@@ -282,6 +282,14 @@ export class WorldScene {
   private leverVisible = false;
   private leverCount = 0;
 
+  private signBadge: Container | null = null;
+  private signSprite: Sprite | null = null;
+  private signLabel: Text | null = null;
+  private signLabelBg = new Graphics();
+  private signHitArea = new Graphics();
+  private signVisible = false;
+  private signCount = 0;
+
   private lastMobsKey = "";
   private lastPetsKey = "";
   private lastItemsKey = "";
@@ -805,6 +813,35 @@ export class WorldScene {
     this.leverBadge.addChild(this.leverLabelBg);
     this.leverBadge.addChild(this.leverLabel);
 
+    // Sign badge — readable placard/sign quick access
+    this.signBadge = new Container();
+    this.signBadge.visible = false;
+    this.signBadge.eventMode = "static";
+    this.signBadge.cursor = "pointer";
+    this.signBadge.on("pointerdown", () => {
+      canvasCallbacks.openFeatures?.("sign");
+    });
+    this.signBadge.on("pointerover", () => {
+      if (this.signSprite) this.signSprite.alpha = 1;
+    });
+    this.signBadge.on("pointerout", () => {
+      if (this.signSprite) this.signSprite.alpha = 0.85;
+    });
+    this.signHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.signHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.signHitArea.eventMode = "auto";
+    this.signBadge.addChild(this.signHitArea);
+    this.signLabel = new Text({
+      text: "Sign",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#cdbd9a", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.signLabel.anchor.set(0.5, 0);
+    this.signLabel.y = hs / 2 + 2;
+    this.signLabel.eventMode = "none";
+    this.signLabelBg.eventMode = "none";
+    this.signBadge.addChild(this.signLabelBg);
+    this.signBadge.addChild(this.signLabel);
+
     // Recall button
     this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
       canvasCallbacks.sendCommand?.("recall");
@@ -842,6 +879,7 @@ export class WorldScene {
     this.container.addChild(this.doorBadge!);
     this.container.addChild(this.containerBadge!);
     this.container.addChild(this.leverBadge!);
+    this.container.addChild(this.signBadge!);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.departBtn);
     this.container.addChild(this.backdropHit);
@@ -893,6 +931,7 @@ export class WorldScene {
       this.loadDoorIcon();
       this.loadContainerIcon();
       this.loadLeverIcon();
+      this.loadSignIcon();
       this.loadDialogueTexture();
       this.loadAggroTexture();
       this.loadQuestTextures();
@@ -1164,6 +1203,15 @@ export class WorldScene {
       if (this.leverLabel) this.leverLabel.text = featureCountLabel(leverCount, "Lever", "Levers");
     }
 
+    const signCount = state.roomFeatures.filter((feature) => feature.type === "sign").length;
+    const hasSigns = signCount > 0;
+    if (hasSigns !== this.signVisible || signCount !== this.signCount) {
+      this.signVisible = hasSigns;
+      this.signCount = signCount;
+      if (this.signBadge) this.signBadge.visible = hasSigns;
+      if (this.signLabel) this.signLabel.text = featureCountLabel(signCount, "Sign", "Signs");
+    }
+
     // Recall button visibility — show when logged in and not in combat
     const loggedIn = state.character.name !== "-";
     const showRecall = loggedIn && !state.vitals.inCombat;
@@ -1245,6 +1293,7 @@ export class WorldScene {
     if (this.doorBadge) this.doorBadge.visible = this.doorVisible && !stripMode;
     if (this.containerBadge) this.containerBadge.visible = this.containerVisible && !stripMode;
     if (this.leverBadge) this.leverBadge.visible = this.leverVisible && !stripMode;
+    if (this.signBadge) this.signBadge.visible = this.signVisible && !stripMode;
     this.recallBtn.visible = this.recallBtn.visible && !stripMode;
     this.departBtn.visible = this.departBtn.visible && !stripMode;
 
@@ -1502,7 +1551,7 @@ export class WorldScene {
       this.mailBadge?.visible,
       this.duelBadge?.visible, this.puzzleBadge?.visible,
       this.doorBadge?.visible, this.containerBadge?.visible,
-      this.leverBadge?.visible,
+      this.leverBadge?.visible, this.signBadge?.visible,
     ].filter(Boolean).length;
     const availableHeight = h * 0.58; // from 35% to ~93% of viewport
     // Minimum spacing must clear the full badge footprint (icon + label pill + gap)
@@ -1630,6 +1679,13 @@ export class WorldScene {
       this.leverBadge.x = badgeX;
       this.leverBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.leverLabelBg, this.leverLabel!);
+      badgeSlot++;
+    }
+
+    if (this.signBadge?.visible) {
+      this.signBadge.x = badgeX;
+      this.signBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.signLabelBg, this.signLabel!);
       badgeSlot++;
     }
 
@@ -2509,6 +2565,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.leverSprite = sprite;
       this.leverBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadSignIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("feature_sign", "feature_sign.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.signSprite = sprite;
+      this.signBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }
