@@ -1747,24 +1747,32 @@ data class CommandsConfig(
             "utility",
         )
 
+        // Categories the ordered list doesn't know about are appended at the
+        // end rather than silently dropped from help.
+        val categories = orderedCategories.filter { it in grouped } +
+            (grouped.keys - orderedCategories.toSet()).sorted()
+
         appendLine("Commands:")
-        for (category in orderedCategories) {
-            val cmds = grouped[category] ?: continue
-            for ((_, meta) in cmds) {
-                appendLine("    ${meta.usage}")
+        for (category in categories) {
+            appendLine("  [${category.replaceFirstChar { it.uppercaseChar() }}]")
+            for ((_, meta) in grouped.getValue(category)) {
+                appendLine(formatHelpLine(meta))
             }
         }
 
         if (isStaff) {
             val staffCmds = entries.entries.filter { it.value.staff }
             if (staffCmds.isNotEmpty()) {
-                appendLine("Staff commands (requires staff flag):")
+                appendLine("  [Staff] (requires staff flag)")
                 for ((_, meta) in staffCmds) {
-                    appendLine("    ${meta.usage}")
+                    appendLine(formatHelpLine(meta))
                 }
             }
         }
     }.trimEnd()
+
+    private fun formatHelpLine(meta: CommandMetadata): String =
+        if (meta.description.isEmpty()) "    ${meta.usage}" else "    ${meta.usage} — ${meta.description}"
 
     companion object {
         @Suppress("LongMethod")
@@ -1773,7 +1781,21 @@ data class CommandsConfig(
             "look" to CommandMetadata("look/l [target|direction]", "Look around, at a target, or in a direction", "navigation"),
             "move" to CommandMetadata("n/s/e/w/u/d", "Move in a direction", "navigation"),
             "exits" to CommandMetadata("exits/ex", "List available exits", "navigation"),
-            "recall" to CommandMetadata("recall", "Return to your recall point", "navigation"),
+            "recall" to CommandMetadata("recall", "Teleport to your recall point (set by resting at an inn)", "navigation"),
+            "rest" to CommandMetadata("rest", "Rest at an inn to make it your recall point.", "navigation"),
+            "depart" to CommandMetadata("depart", "Leave the death sanctum and return to the world", "navigation"),
+            "run" to CommandMetadata(
+                usage = "run <directions> (e.g. 5n3e)",
+                description = "Move along a sequence of directions. Numeric prefixes repeat — '5n3e' walks five north then three east.",
+                category = "navigation",
+                requiresTarget = true,
+            ),
+            "areas" to CommandMetadata(
+                usage = "areas [<minLevel> [<maxLevel>]]",
+                description = "List known areas. With one level, shows areas covering that level; " +
+                    "with two, shows areas overlapping the range.",
+                category = "navigation",
+            ),
             "say" to CommandMetadata("say <msg> or '<msg>", "Speak to the room", "communication", requiresTarget = true),
             "emote" to CommandMetadata("emote <msg>", "Perform an emote", "communication", requiresTarget = true),
             "pose" to CommandMetadata("pose <msg>", "Strike a pose", "communication", requiresTarget = true),
@@ -1794,17 +1816,77 @@ data class CommandsConfig(
             "quickmana" to CommandMetadata("quickmana/qm", "Auto-use best mana potion", "combat"),
             "give" to CommandMetadata("give <item> <player>", "Give an item to a player", "items", requiresTarget = true),
             "talk" to CommandMetadata("talk <npc>", "Start a conversation with an NPC", "social", requiresTarget = true),
+            "bye" to CommandMetadata("bye/goodbye", "End the current NPC conversation", "social"),
             "kill" to CommandMetadata("kill <mob>", "Attack a mob", "combat", requiresTarget = true),
             "flee" to CommandMetadata("flee", "Attempt to flee combat", "combat"),
             "cast" to CommandMetadata("cast/c <spell> [target]", "Cast a spell or ability", "combat", requiresTarget = true),
+            "consider" to CommandMetadata(
+                usage = "consider/con <mob>",
+                description = "Estimate your odds against a mob before attacking",
+                category = "combat",
+                requiresTarget = true,
+            ),
+            "wimpy" to CommandMetadata("wimpy [off | 0-95]", "View or set the HP percent where you auto-flee combat", "combat"),
+            "duel" to CommandMetadata(
+                usage = "duel <player> | duel accept | duel decline",
+                description = "Challenge another player to a PvP duel",
+                category = "combat",
+                requiresTarget = true,
+            ),
             "spells" to CommandMetadata("spells/abilities/skills", "List your abilities", "progression"),
             "effects" to CommandMetadata("effects/buffs/debuffs", "View active status effects", "progression"),
             "score" to CommandMetadata("score/sc", "View your character sheet", "progression"),
-            "balance" to CommandMetadata("gold/balance", "Check your gold", "shops"),
+            "balance" to CommandMetadata("gold/balance", "Check the gold you are carrying", "shops"),
             "currencies" to CommandMetadata("currencies/currency/wallet", "View secondary currencies", "progression"),
+            "reputation" to CommandMetadata("reputation/rep/factions", "View your faction standings", "progression"),
             "shop_list" to CommandMetadata("list/shop", "Browse a shop's wares", "shops"),
             "buy" to CommandMetadata("buy <item>", "Purchase from a shop", "shops", requiresTarget = true),
             "sell" to CommandMetadata("sell <item>", "Sell to a shop", "shops", requiresTarget = true),
+            "bank" to CommandMetadata("bank", "View bank balance and vault contents (requires a bank)", "shops"),
+            "deposit" to CommandMetadata(
+                usage = "deposit <amount|item>",
+                description = "Deposit gold or an item into your bank vault",
+                category = "shops",
+                requiresTarget = true,
+            ),
+            "withdraw" to CommandMetadata(
+                usage = "withdraw <amount|item>",
+                description = "Withdraw gold or an item from your bank vault",
+                category = "shops",
+                requiresTarget = true,
+            ),
+            "auction" to CommandMetadata("auction", "Browse auction house listings", "shops"),
+            "auction_sell" to CommandMetadata(
+                usage = "auction sell <item> <price>",
+                description = "List an item on the auction house",
+                category = "shops",
+                requiresTarget = true,
+            ),
+            "auction_buy" to CommandMetadata("auction buy <#>", "Buy an auction listing by number", "shops", requiresTarget = true),
+            "auction_cancel" to CommandMetadata(
+                usage = "auction cancel <#>",
+                description = "Cancel your listing and reclaim the item",
+                category = "shops",
+                requiresTarget = true,
+            ),
+            "trade" to CommandMetadata(
+                usage = "trade <player> | trade accept | trade cancel | trade status",
+                description = "Trade items and gold with another player",
+                category = "items",
+                requiresTarget = true,
+            ),
+            "trade_offer" to CommandMetadata(
+                usage = "trade offer <item> | trade offer <amount> gold",
+                description = "Add an item or gold to the active trade",
+                category = "items",
+                requiresTarget = true,
+            ),
+            "trade_remove" to CommandMetadata(
+                usage = "trade remove <item>",
+                description = "Remove an item from your trade offer",
+                category = "items",
+                requiresTarget = true,
+            ),
             "quest_log" to CommandMetadata("quest log/list", "View active quests", "quests"),
             "quest_info" to CommandMetadata("quest info <name>", "Quest details", "quests", requiresTarget = true),
             "quest_abandon" to CommandMetadata("quest abandon <name>", "Abandon a quest", "quests", requiresTarget = true),
@@ -1822,6 +1904,7 @@ data class CommandsConfig(
             "daily" to CommandMetadata("daily/dailies", "View daily quest board", "quests"),
             "weekly" to CommandMetadata("weekly", "View weekly quest board", "quests"),
             "gquest" to CommandMetadata("gquest/gq/global", "View active global quest status", "quests"),
+            "qoffers" to CommandMetadata("qoffers <mob>", "List the quests an NPC has to offer", "quests", requiresTarget = true),
             "group_invite" to CommandMetadata("group invite <player>", "Invite to your group", "groups", requiresTarget = true),
             "group_accept" to CommandMetadata("group accept", "Accept a group invite", "groups"),
             "group_leave" to CommandMetadata("group leave", "Leave your group", "groups"),
@@ -1840,10 +1923,23 @@ data class CommandsConfig(
             "guild_roster" to CommandMetadata("guild roster", "View guild members", "guilds"),
             "guild_info" to CommandMetadata("guild info (or just 'guild')", "Guild overview", "guilds"),
             "gchat" to CommandMetadata("gchat/g <message>", "Guild chat", "guilds", requiresTarget = true),
+            "guild_hall" to CommandMetadata(
+                usage = "guild hall [buy | expand <template> <direction> | enter | leave]",
+                description = "View, buy, expand, and visit your guild hall",
+                category = "guilds",
+            ),
             "gather" to CommandMetadata("gather/harvest/mine <node>", "Gather from a resource node", "crafting", requiresTarget = true),
             "craft" to CommandMetadata("craft/make <recipe>", "Craft an item from a recipe", "crafting", requiresTarget = true),
             "recipes" to CommandMetadata("recipes [filter]", "Browse available recipes", "crafting"),
             "craftskills" to CommandMetadata("craftskills/professions", "View crafting skill levels", "crafting"),
+            "specialize" to CommandMetadata("specialize/spec [profession]", "View or choose a crafting specialization", "crafting"),
+            "enchant" to CommandMetadata(
+                usage = "enchant <item> [enchantment]",
+                description = "Enchant an item with a known enchantment",
+                category = "crafting",
+                requiresTarget = true,
+            ),
+            "enchantments" to CommandMetadata("enchantments", "List available enchantments", "crafting"),
             "house" to CommandMetadata("house [status]", "View your house info", "housing"),
             "house_list" to CommandMetadata("house list", "Browse available room templates", "housing"),
             "house_buy" to CommandMetadata("house buy", "Purchase your house (at broker)", "housing"),
@@ -1882,13 +1978,48 @@ data class CommandsConfig(
             "pull" to CommandMetadata("pull <lever>", "Pull a lever or object", "world", requiresTarget = true),
             "read" to CommandMetadata("read <sign>", "Read a sign or inscription", "world", requiresTarget = true),
             "answer" to CommandMetadata("answer <text>", "Answer a riddle in the room", "world", requiresTarget = true),
+            "dungeon" to CommandMetadata(
+                usage = "dungeon enter <name> [difficulty] | dungeon leave",
+                description = "Enter or leave an instanced dungeon",
+                category = "world",
+                requiresTarget = true,
+            ),
             "title" to CommandMetadata("title <titleName> | title clear", "Set or clear your title", "progression", requiresTarget = true),
             "gender" to CommandMetadata("gender <option>", "Set your gender", "progression", requiresTarget = true),
             "sprite" to CommandMetadata("sprite list | set <id> | default", "Manage your character sprite", "progression"),
+            "describe" to CommandMetadata(
+                usage = "describe <text> | describe clear | describe check <player>",
+                description = "Set, clear, or view a character description",
+                category = "progression",
+                requiresTarget = true,
+            ),
+            "train" to CommandMetadata(
+                usage = "train [list] | train learn <ability> | train unlock <class> | train reset",
+                description = "Learn abilities, unlock classes, or respec at a class trainer",
+                category = "progression",
+            ),
+            "prestige" to CommandMetadata("prestige | prestige info", "Reset at max level for permanent prestige perks", "progression"),
+            "leaderboard" to CommandMetadata("leaderboard/top [category]", "View player leaderboards", "progression"),
+            "stylist" to CommandMetadata("stylist", "View race-change options and fee (requires a stylist)", "progression"),
+            "changerace" to CommandMetadata(
+                usage = "changerace <race>",
+                description = "Pay the stylist to change your race",
+                category = "progression",
+                requiresTarget = true,
+            ),
+            "pet" to CommandMetadata(
+                usage = "pet [status] | pet name <name> | pet skills | pet <skill> | pet dismiss",
+                description = "Manage your pet and trigger its skills",
+                category = "progression",
+            ),
             "friend" to CommandMetadata("friend list | add <player> | remove <player>", "Manage your friends list", "social"),
             "mail" to CommandMetadata("mail list | read <n> | send <player> | delete <n>", "Manage mail", "social"),
-            "lottery" to CommandMetadata("lottery [info] | lottery buy [count]", "View or buy lottery tickets", "social"),
-            "gamble" to CommandMetadata("gamble/dice <amount>", "Roll the dice at a tavern", "social"),
+            "lottery" to CommandMetadata(
+                usage = "lottery [info] | lottery buy [count]",
+                description = "View the lottery or buy tickets (buying requires a tavern)",
+                category = "social",
+            ),
+            "gamble" to CommandMetadata("gamble/dice <amount>", "Roll d100 against the house (requires a tavern)", "social"),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),
             "screenreader" to CommandMetadata("screenreader [on/off]", "Toggle screen reader mode", "utility"),
             "autoloot" to CommandMetadata(
@@ -1905,6 +2036,12 @@ data class CommandsConfig(
             "clear" to CommandMetadata("clear", "Clear the terminal", "utility"),
             "quit" to CommandMetadata("quit/exit", "Disconnect", "utility"),
             "phase" to CommandMetadata("phase/layer [instance]", "Switch zone instance", "utility"),
+            "time" to CommandMetadata("time", "Show the in-game time of day", "utility"),
+            "claim" to CommandMetadata(
+                usage = "claim <password> | claim <newname> <password>",
+                description = "Save a demo character as a permanent account",
+                category = "utility",
+            ),
             // Staff commands
             "goto" to CommandMetadata(
                 usage = "goto <zone:room | room | zone:>",
@@ -1969,6 +2106,50 @@ data class CommandsConfig(
             "broadcast" to CommandMetadata(
                 usage = "broadcast <message>",
                 description = "Send a server-wide announcement",
+                category = "admin",
+                staff = true,
+                requiresTarget = true,
+            ),
+            "heal" to CommandMetadata("heal [player]", "Fully restore a player's HP and mana", "admin", staff = true),
+            "pinfo" to CommandMetadata("pinfo <player>", "Inspect a player's state", "admin", staff = true, requiresTarget = true),
+            "setstaff" to CommandMetadata(
+                usage = "setstaff/grantstaff <player> | revokestaff <player>",
+                description = "Grant or revoke staff access",
+                category = "admin",
+                staff = true,
+                requiresTarget = true,
+            ),
+            "setgold" to CommandMetadata(
+                usage = "setgold <player> <amount>",
+                description = "Set a player's gold",
+                category = "admin",
+                staff = true,
+                requiresTarget = true,
+            ),
+            "setrace" to CommandMetadata(
+                usage = "setrace <player> <race>",
+                description = "Set a player's race",
+                category = "admin",
+                staff = true,
+                requiresTarget = true,
+            ),
+            "setclass" to CommandMetadata(
+                usage = "setclass <player> <class>",
+                description = "Set a player's class",
+                category = "admin",
+                staff = true,
+                requiresTarget = true,
+            ),
+            "setgender" to CommandMetadata(
+                usage = "setgender <player> <gender>",
+                description = "Set a player's gender",
+                category = "admin",
+                staff = true,
+                requiresTarget = true,
+            ),
+            "setxp" to CommandMetadata(
+                usage = "setxp <player> <xp>",
+                description = "Set a player's XP",
                 category = "admin",
                 staff = true,
                 requiresTarget = true,

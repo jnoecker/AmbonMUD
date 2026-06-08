@@ -923,480 +923,878 @@ ambonmud:
     commands:
       entries:
         help:
-          usage: help/?
-          category: utility
+          usage: "help/?"
+          description: "Show this help"
+          category: "utility"
           staff: false
         look:
-          usage: look/l [target|direction]
-          category: navigation
+          usage: "look/l [target|direction]"
+          description: "Look around, at a target, or in a direction"
+          category: "navigation"
           staff: false
         move:
-          usage: n/s/e/w/u/d
-          category: navigation
+          usage: "n/s/e/w/u/d"
+          description: "Move in a direction"
+          category: "navigation"
           staff: false
         exits:
-          usage: exits/ex
-          category: navigation
+          usage: "exits/ex"
+          description: "List available exits"
+          category: "navigation"
           staff: false
         recall:
-          usage: recall
-          category: navigation
+          usage: "recall"
+          description: "Teleport to your recall point (set by resting at an inn)"
+          category: "navigation"
           staff: false
         rest:
-          usage: rest
-          description: Rest at an inn to make it your recall point.
-          category: navigation
+          usage: "rest"
+          description: "Rest at an inn to make it your recall point."
+          category: "navigation"
+          staff: false
+        depart:
+          usage: "depart"
+          description: "Leave the death sanctum and return to the world"
+          category: "navigation"
           staff: false
         run:
-          usage: run <directions> (e.g. 5n3e)
-          description: Move along a sequence of directions. Numeric prefixes repeat — '5n3e' walks five north then three east.
-          category: navigation
+          usage: "run <directions> (e.g. 5n3e)"
+          description: "Move along a sequence of directions. Numeric prefixes repeat — '5n3e' walks five north then three east."
+          category: "navigation"
           staff: false
+          requiresTarget: true
         areas:
-          usage: areas [<minLevel> [<maxLevel>]]
-          description: List known areas. With one level, shows areas covering that level; with two, shows areas overlapping the range.
-          category: navigation
+          usage: "areas [<minLevel> [<maxLevel>]]"
+          description: "List known areas. With one level, shows areas covering that level; with two, shows areas overlapping the range."
+          category: "navigation"
           staff: false
         say:
-          usage: say <msg> or '<msg>
-          category: communication
+          usage: "say <msg> or '<msg>"
+          description: "Speak to the room"
+          category: "communication"
           staff: false
+          requiresTarget: true
         emote:
-          usage: emote <msg>
-          category: communication
+          usage: "emote <msg>"
+          description: "Perform an emote"
+          category: "communication"
           staff: false
+          requiresTarget: true
         pose:
-          usage: pose <msg>
-          category: communication
+          usage: "pose <msg>"
+          description: "Strike a pose"
+          category: "communication"
           staff: false
+          requiresTarget: true
         who:
-          usage: who
-          category: communication
+          usage: "who"
+          description: "List online players"
+          category: "communication"
           staff: false
         tell:
-          usage: tell/t <player> <msg>
-          category: communication
+          usage: "tell/t <player> <msg>"
+          description: "Private message a player"
+          category: "communication"
           staff: false
+          requiresTarget: true
         whisper:
-          usage: whisper/wh <player> <msg>
-          category: communication
+          usage: "whisper/wh <player> <msg>"
+          description: "Whisper to a player"
+          category: "communication"
           staff: false
+          requiresTarget: true
         gossip:
-          usage: gossip/gs <msg>
-          category: communication
+          usage: "gossip/gs <msg>"
+          description: "Global chat channel"
+          category: "communication"
           staff: false
+          requiresTarget: true
         shout:
-          usage: shout/sh <msg>
-          category: communication
+          usage: "shout/sh <msg>"
+          description: "Shout to your zone"
+          category: "communication"
           staff: false
+          requiresTarget: true
         ooc:
-          usage: ooc <msg>
-          category: communication
+          usage: "ooc <msg>"
+          description: "Out-of-character channel"
+          category: "communication"
           staff: false
+          requiresTarget: true
         inventory:
-          usage: inventory/inv/i
-          category: items
+          usage: "inventory/inv/i"
+          description: "View your inventory"
+          category: "items"
           staff: false
         equipment:
-          usage: equipment/eq
-          category: items
+          usage: "equipment/eq"
+          description: "View worn equipment"
+          category: "items"
           staff: false
         wear:
-          usage: wear/equip <item>
-          category: items
+          usage: "wear/equip <item>"
+          description: "Equip an item"
+          category: "items"
           staff: false
+          requiresTarget: true
         remove:
-          usage: remove/unequip <slot>
-          category: items
+          usage: "remove/unequip <slot>"
+          description: "Unequip from a slot"
+          category: "items"
           staff: false
+          requiresTarget: true
         get:
-          usage: get/take/pickup <item>
-          category: items
+          usage: "get/take/pickup <item>"
+          description: "Pick up an item"
+          category: "items"
           staff: false
+          requiresTarget: true
         drop:
-          usage: drop <item>
-          category: items
+          usage: "drop <item>"
+          description: "Drop an item"
+          category: "items"
           staff: false
+          requiresTarget: true
         use:
-          usage: use/eat/drink <item>
-          category: items
+          usage: "use/eat/drink <item>"
+          description: "Use a consumable item"
+          category: "items"
+          staff: false
+          requiresTarget: true
+        quickheal:
+          usage: "quickheal/qh"
+          description: "Auto-use best healing potion"
+          category: "combat"
+          staff: false
+        quickmana:
+          usage: "quickmana/qm"
+          description: "Auto-use best mana potion"
+          category: "combat"
           staff: false
         give:
-          usage: give <item> <player>
-          category: items
+          usage: "give <item> <player>"
+          description: "Give an item to a player"
+          category: "items"
           staff: false
+          requiresTarget: true
         talk:
-          usage: talk <npc>
-          category: social
+          usage: "talk <npc>"
+          description: "Start a conversation with an NPC"
+          category: "social"
+          staff: false
+          requiresTarget: true
+        bye:
+          usage: "bye/goodbye"
+          description: "End the current NPC conversation"
+          category: "social"
           staff: false
         kill:
-          usage: kill <mob>
-          category: combat
+          usage: "kill <mob>"
+          description: "Attack a mob"
+          category: "combat"
           staff: false
-        consider:
-          usage: consider/con <mob>
-          category: combat
-          staff: false
-        wimpy:
-          usage: wimpy [off | 0-95]
-          category: combat
-          staff: false
+          requiresTarget: true
         flee:
-          usage: flee
-          category: combat
+          usage: "flee"
+          description: "Attempt to flee combat"
+          category: "combat"
           staff: false
         cast:
-          usage: cast/c <spell> [target]
-          category: combat
+          usage: "cast/c <spell> [target]"
+          description: "Cast a spell or ability"
+          category: "combat"
           staff: false
+          requiresTarget: true
+        consider:
+          usage: "consider/con <mob>"
+          description: "Estimate your odds against a mob before attacking"
+          category: "combat"
+          staff: false
+          requiresTarget: true
+        wimpy:
+          usage: "wimpy [off | 0-95]"
+          description: "View or set the HP percent where you auto-flee combat"
+          category: "combat"
+          staff: false
+        duel:
+          usage: "duel <player> | duel accept | duel decline"
+          description: "Challenge another player to a PvP duel"
+          category: "combat"
+          staff: false
+          requiresTarget: true
         spells:
-          usage: spells/abilities/skills
-          category: progression
+          usage: "spells/abilities/skills"
+          description: "List your abilities"
+          category: "progression"
           staff: false
         effects:
-          usage: effects/buffs/debuffs
-          category: progression
+          usage: "effects/buffs/debuffs"
+          description: "View active status effects"
+          category: "progression"
           staff: false
         score:
-          usage: score/sc
-          category: progression
+          usage: "score/sc"
+          description: "View your character sheet"
+          category: "progression"
           staff: false
         balance:
-          usage: gold/balance
-          category: shops
+          usage: "gold/balance"
+          description: "Check the gold you are carrying"
+          category: "shops"
           staff: false
         currencies:
-          usage: currencies/currency/wallet
-          category: progression
+          usage: "currencies/currency/wallet"
+          description: "View secondary currencies"
+          category: "progression"
+          staff: false
+        reputation:
+          usage: "reputation/rep/factions"
+          description: "View your faction standings"
+          category: "progression"
           staff: false
         shop_list:
-          usage: list/shop
-          category: shops
+          usage: "list/shop"
+          description: "Browse a shop's wares"
+          category: "shops"
           staff: false
         buy:
-          usage: buy <item>
-          category: shops
+          usage: "buy <item>"
+          description: "Purchase from a shop"
+          category: "shops"
           staff: false
+          requiresTarget: true
         sell:
-          usage: sell <item>
-          category: shops
+          usage: "sell <item>"
+          description: "Sell to a shop"
+          category: "shops"
           staff: false
+          requiresTarget: true
+        bank:
+          usage: "bank"
+          description: "View bank balance and vault contents (requires a bank)"
+          category: "shops"
+          staff: false
+        deposit:
+          usage: "deposit <amount|item>"
+          description: "Deposit gold or an item into your bank vault"
+          category: "shops"
+          staff: false
+          requiresTarget: true
+        withdraw:
+          usage: "withdraw <amount|item>"
+          description: "Withdraw gold or an item from your bank vault"
+          category: "shops"
+          staff: false
+          requiresTarget: true
+        auction:
+          usage: "auction"
+          description: "Browse auction house listings"
+          category: "shops"
+          staff: false
+        auction_sell:
+          usage: "auction sell <item> <price>"
+          description: "List an item on the auction house"
+          category: "shops"
+          staff: false
+          requiresTarget: true
+        auction_buy:
+          usage: "auction buy <#>"
+          description: "Buy an auction listing by number"
+          category: "shops"
+          staff: false
+          requiresTarget: true
+        auction_cancel:
+          usage: "auction cancel <#>"
+          description: "Cancel your listing and reclaim the item"
+          category: "shops"
+          staff: false
+          requiresTarget: true
+        trade:
+          usage: "trade <player> | trade accept | trade cancel | trade status"
+          description: "Trade items and gold with another player"
+          category: "items"
+          staff: false
+          requiresTarget: true
+        trade_offer:
+          usage: "trade offer <item> | trade offer <amount> gold"
+          description: "Add an item or gold to the active trade"
+          category: "items"
+          staff: false
+          requiresTarget: true
+        trade_remove:
+          usage: "trade remove <item>"
+          description: "Remove an item from your trade offer"
+          category: "items"
+          staff: false
+          requiresTarget: true
         quest_log:
-          usage: quest log/list
-          category: quests
+          usage: "quest log/list"
+          description: "View active quests"
+          category: "quests"
           staff: false
         quest_info:
-          usage: quest info <name>
-          category: quests
+          usage: "quest info <name>"
+          description: "Quest details"
+          category: "quests"
           staff: false
+          requiresTarget: true
         quest_abandon:
-          usage: quest abandon <name>
-          category: quests
+          usage: "quest abandon <name>"
+          description: "Abandon a quest"
+          category: "quests"
           staff: false
+          requiresTarget: true
         quest_turnin:
-          usage: quest turnin <name>
-          category: quests
+          usage: "quest turnin <name>"
+          description: "Turn in a completed quest to its giver NPC"
+          category: "quests"
           staff: false
+          requiresTarget: true
         accept:
-          usage: accept <quest>
-          category: quests
+          usage: "accept <quest>"
+          description: "Accept a quest from an NPC"
+          category: "quests"
           staff: false
+          requiresTarget: true
         bounty:
-          usage: bounty / quest auto
-          category: quests
+          usage: "bounty / quest auto"
+          description: "Request an auto-generated bounty quest"
+          category: "quests"
           staff: false
         bounty_info:
-          usage: bounty info / quest auto info
-          category: quests
+          usage: "bounty info / quest auto info"
+          description: "View active bounty progress"
+          category: "quests"
           staff: false
         bounty_abandon:
-          usage: bounty abandon / quest auto abandon
-          category: quests
+          usage: "bounty abandon / quest auto abandon"
+          description: "Abandon active bounty"
+          category: "quests"
           staff: false
         achievements:
-          usage: achievements/ach
-          category: quests
+          usage: "achievements/ach"
+          description: "View achievements"
+          category: "quests"
           staff: false
         daily:
-          usage: daily/dailies
-          category: quests
+          usage: "daily/dailies"
+          description: "View daily quest board"
+          category: "quests"
           staff: false
         weekly:
-          usage: weekly
-          category: quests
+          usage: "weekly"
+          description: "View weekly quest board"
+          category: "quests"
           staff: false
         gquest:
-          usage: gquest/gq/global
-          category: quests
+          usage: "gquest/gq/global"
+          description: "View active global quest status"
+          category: "quests"
           staff: false
+        qoffers:
+          usage: "qoffers <mob>"
+          description: "List the quests an NPC has to offer"
+          category: "quests"
+          staff: false
+          requiresTarget: true
         group_invite:
-          usage: group invite <player>
-          category: groups
+          usage: "group invite <player>"
+          description: "Invite to your group"
+          category: "groups"
           staff: false
+          requiresTarget: true
         group_accept:
-          usage: group accept
-          category: groups
+          usage: "group accept"
+          description: "Accept a group invite"
+          category: "groups"
           staff: false
         group_leave:
-          usage: group leave
-          category: groups
+          usage: "group leave"
+          description: "Leave your group"
+          category: "groups"
           staff: false
         group_kick:
-          usage: group kick <player>
-          category: groups
+          usage: "group kick <player>"
+          description: "Kick from group"
+          category: "groups"
           staff: false
+          requiresTarget: true
         group_list:
-          usage: group list (or just 'group')
-          category: groups
+          usage: "group list (or just 'group')"
+          description: "List group members"
+          category: "groups"
           staff: false
         gtell:
-          usage: gtell/gt <message>
-          category: groups
+          usage: "gtell/gt <message>"
+          description: "Group chat"
+          category: "groups"
           staff: false
+          requiresTarget: true
         guild_create:
-          usage: guild create <name> <tag>
-          category: guilds
+          usage: "guild create <name> <tag>"
+          description: "Create a guild"
+          category: "guilds"
           staff: false
+          requiresTarget: true
         guild_disband:
-          usage: guild disband
-          category: guilds
+          usage: "guild disband"
+          description: "Disband your guild"
+          category: "guilds"
           staff: false
         guild_invite:
-          usage: guild invite <player>
-          category: guilds
+          usage: "guild invite <player>"
+          description: "Invite to guild"
+          category: "guilds"
           staff: false
+          requiresTarget: true
         guild_accept:
-          usage: guild accept
-          category: guilds
+          usage: "guild accept"
+          description: "Accept a guild invite"
+          category: "guilds"
           staff: false
         guild_leave:
-          usage: guild leave
-          category: guilds
+          usage: "guild leave"
+          description: "Leave your guild"
+          category: "guilds"
           staff: false
         guild_kick:
-          usage: guild kick <player>
-          category: guilds
+          usage: "guild kick <player>"
+          description: "Remove from guild"
+          category: "guilds"
           staff: false
+          requiresTarget: true
         guild_promote:
-          usage: guild promote <player>
-          category: guilds
+          usage: "guild promote <player>"
+          description: "Promote a member"
+          category: "guilds"
           staff: false
+          requiresTarget: true
         guild_demote:
-          usage: guild demote <player>
-          category: guilds
+          usage: "guild demote <player>"
+          description: "Demote a member"
+          category: "guilds"
           staff: false
+          requiresTarget: true
         guild_motd:
-          usage: guild motd <message>
-          category: guilds
+          usage: "guild motd <message>"
+          description: "Set guild message of the day"
+          category: "guilds"
           staff: false
+          requiresTarget: true
         guild_roster:
-          usage: guild roster
-          category: guilds
+          usage: "guild roster"
+          description: "View guild members"
+          category: "guilds"
           staff: false
         guild_info:
-          usage: guild info (or just 'guild')
-          category: guilds
+          usage: "guild info (or just 'guild')"
+          description: "Guild overview"
+          category: "guilds"
           staff: false
         gchat:
-          usage: gchat/g <message>
-          category: guilds
+          usage: "gchat/g <message>"
+          description: "Guild chat"
+          category: "guilds"
+          staff: false
+          requiresTarget: true
+        guild_hall:
+          usage: "guild hall [buy | expand <template> <direction> | enter | leave]"
+          description: "View, buy, expand, and visit your guild hall"
+          category: "guilds"
           staff: false
         gather:
-          usage: gather/harvest/mine <node>
-          category: crafting
+          usage: "gather/harvest/mine <node>"
+          description: "Gather from a resource node"
+          category: "crafting"
           staff: false
+          requiresTarget: true
         craft:
-          usage: craft/make <recipe>
-          category: crafting
+          usage: "craft/make <recipe>"
+          description: "Craft an item from a recipe"
+          category: "crafting"
           staff: false
+          requiresTarget: true
         recipes:
-          usage: recipes [filter]
-          category: crafting
+          usage: "recipes [filter]"
+          description: "Browse available recipes"
+          category: "crafting"
           staff: false
         craftskills:
-          usage: craftskills/professions
-          category: crafting
+          usage: "craftskills/professions"
+          description: "View crafting skill levels"
+          category: "crafting"
+          staff: false
+        specialize:
+          usage: "specialize/spec [profession]"
+          description: "View or choose a crafting specialization"
+          category: "crafting"
+          staff: false
+        enchant:
+          usage: "enchant <item> [enchantment]"
+          description: "Enchant an item with a known enchantment"
+          category: "crafting"
+          staff: false
+          requiresTarget: true
+        enchantments:
+          usage: "enchantments"
+          description: "List available enchantments"
+          category: "crafting"
           staff: false
         house:
-          usage: house [status]
-          category: housing
+          usage: "house [status]"
+          description: "View your house info"
+          category: "housing"
           staff: false
         house_list:
-          usage: house list
-          category: housing
+          usage: "house list"
+          description: "Browse available room templates"
+          category: "housing"
           staff: false
         house_buy:
-          usage: house buy
-          category: housing
+          usage: "house buy"
+          description: "Purchase your house (at broker)"
+          category: "housing"
           staff: false
         house_expand:
-          usage: house expand <template> <direction>
-          category: housing
+          usage: "house expand <template> <direction>"
+          description: "Add a room to your house"
+          category: "housing"
           staff: false
+          requiresTarget: true
         house_describe:
-          usage: house describe [title|desc] <text>
-          category: housing
+          usage: "house describe [title|desc] <text>"
+          description: "Customize room title or description"
+          category: "housing"
           staff: false
+          requiresTarget: true
         house_invite:
-          usage: house invite <player>
-          category: housing
+          usage: "house invite <player>"
+          description: "Invite a player to your house"
+          category: "housing"
           staff: false
+          requiresTarget: true
         house_kick:
-          usage: house kick <player>
-          category: housing
+          usage: "house kick <player>"
+          description: "Remove a visitor from your house"
+          category: "housing"
           staff: false
+          requiresTarget: true
         house_guests:
-          usage: house guests
-          category: housing
+          usage: "house guests"
+          description: "List visitors in your house"
+          category: "housing"
           staff: false
         open:
-          usage: open <door|container>
-          category: world
+          usage: "open <door|container>"
+          description: "Open a door or container"
+          category: "world"
           staff: false
+          requiresTarget: true
         close:
-          usage: close <door|container>
-          category: world
+          usage: "close <door|container>"
+          description: "Close a door or container"
+          category: "world"
           staff: false
+          requiresTarget: true
         unlock:
-          usage: unlock <door|container>
-          category: world
+          usage: "unlock <door|container>"
+          description: "Unlock with a key"
+          category: "world"
           staff: false
+          requiresTarget: true
         lock:
-          usage: lock <door|container>
-          category: world
+          usage: "lock <door|container>"
+          description: "Lock with a key"
+          category: "world"
           staff: false
+          requiresTarget: true
         search:
-          usage: search <container>
-          category: world
+          usage: "search <container>"
+          description: "Search a container for its contents"
+          category: "world"
           staff: false
+          requiresTarget: true
         get_from:
-          usage: get <item> from <container>
-          category: world
+          usage: "get <item> from <container>"
+          description: "Take an item from a container"
+          category: "world"
           staff: false
+          requiresTarget: true
         put_in:
-          usage: put <item> <container>
-          category: world
+          usage: "put <item> <container>"
+          description: "Place an item in a container"
+          category: "world"
           staff: false
+          requiresTarget: true
         pull:
-          usage: pull <lever>
-          category: world
+          usage: "pull <lever>"
+          description: "Pull a lever or object"
+          category: "world"
           staff: false
+          requiresTarget: true
         read:
-          usage: read <sign>
-          category: world
+          usage: "read <sign>"
+          description: "Read a sign or inscription"
+          category: "world"
           staff: false
+          requiresTarget: true
         answer:
-          usage: answer <text>
-          category: world
+          usage: "answer <text>"
+          description: "Answer a riddle in the room"
+          category: "world"
           staff: false
+          requiresTarget: true
+        dungeon:
+          usage: "dungeon enter <name> [difficulty] | dungeon leave"
+          description: "Enter or leave an instanced dungeon"
+          category: "world"
+          staff: false
+          requiresTarget: true
         title:
-          usage: title <titleName> | title clear
-          category: progression
+          usage: "title <titleName> | title clear"
+          description: "Set or clear your title"
+          category: "progression"
           staff: false
+          requiresTarget: true
         gender:
-          usage: gender <option>
-          category: progression
+          usage: "gender <option>"
+          description: "Set your gender"
+          category: "progression"
           staff: false
+          requiresTarget: true
         sprite:
-          usage: sprite list | set <id> | default
-          category: progression
+          usage: "sprite list | set <id> | default"
+          description: "Manage your character sprite"
+          category: "progression"
+          staff: false
+        describe:
+          usage: "describe <text> | describe clear | describe check <player>"
+          description: "Set, clear, or view a character description"
+          category: "progression"
+          staff: false
+          requiresTarget: true
+        train:
+          usage: "train [list] | train learn <ability> | train unlock <class> | train reset"
+          description: "Learn abilities, unlock classes, or respec at a class trainer"
+          category: "progression"
+          staff: false
+        prestige:
+          usage: "prestige | prestige info"
+          description: "Reset at max level for permanent prestige perks"
+          category: "progression"
+          staff: false
+        leaderboard:
+          usage: "leaderboard/top [category]"
+          description: "View player leaderboards"
+          category: "progression"
+          staff: false
+        stylist:
+          usage: "stylist"
+          description: "View race-change options and fee (requires a stylist)"
+          category: "progression"
+          staff: false
+        changerace:
+          usage: "changerace <race>"
+          description: "Pay the stylist to change your race"
+          category: "progression"
+          staff: false
+          requiresTarget: true
+        pet:
+          usage: "pet [status] | pet name <name> | pet skills | pet <skill> | pet dismiss"
+          description: "Manage your pet and trigger its skills"
+          category: "progression"
           staff: false
         friend:
-          usage: friend list | add <player> | remove <player>
-          category: social
+          usage: "friend list | add <player> | remove <player>"
+          description: "Manage your friends list"
+          category: "social"
           staff: false
         mail:
-          usage: mail list | read <n> | send <player> | delete <n>
-          category: social
+          usage: "mail list | read <n> | send <player> | delete <n>"
+          description: "Manage mail"
+          category: "social"
           staff: false
         lottery:
-          usage: lottery [info] | lottery buy [count] (buying requires a tavern)
-          category: social
+          usage: "lottery [info] | lottery buy [count]"
+          description: "View the lottery or buy tickets (buying requires a tavern)"
+          category: "social"
           staff: false
         gamble:
-          usage: gamble/dice <amount> (requires a tavern)
-          category: social
+          usage: "gamble/dice <amount>"
+          description: "Roll d100 against the house (requires a tavern)"
+          category: "social"
           staff: false
         ansi:
-          usage: ansi on/off
-          category: utility
+          usage: "ansi on/off"
+          description: "Toggle color output"
+          category: "utility"
           staff: false
         screenreader:
-          usage: screenreader [on/off]
-          category: utility
+          usage: "screenreader [on/off]"
+          description: "Toggle screen reader mode"
+          category: "utility"
           staff: false
         autoloot:
-          usage: autoloot on/off/status
-          category: utility
+          usage: "autoloot on/off/status"
+          description: "Auto-loot mob corpses when enabled"
+          category: "utility"
+          staff: false
+        autopeek:
+          usage: "autopeek on/off/status"
+          description: "Append adjacent room names below room descriptions"
+          category: "utility"
           staff: false
         colors:
-          usage: colors
-          category: utility
+          usage: "colors"
+          description: "Preview ANSI color palette"
+          category: "utility"
           staff: false
         clear:
-          usage: clear
-          category: utility
+          usage: "clear"
+          description: "Clear the terminal"
+          category: "utility"
           staff: false
         quit:
-          usage: quit/exit
-          category: utility
+          usage: "quit/exit"
+          description: "Disconnect"
+          category: "utility"
           staff: false
         phase:
-          usage: phase/layer [instance]
-          category: utility
+          usage: "phase/layer [instance]"
+          description: "Switch zone instance"
+          category: "utility"
+          staff: false
+        time:
+          usage: "time"
+          description: "Show the in-game time of day"
+          category: "utility"
+          staff: false
+        claim:
+          usage: "claim <password> | claim <newname> <password>"
+          description: "Save a demo character as a permanent account"
+          category: "utility"
           staff: false
         goto:
-          usage: goto <zone:room | room | zone:>
-          category: admin
+          usage: "goto <zone:room | room | zone:>"
+          description: "Teleport to a room"
+          category: "admin"
           staff: true
+          requiresTarget: true
         transfer:
-          usage: transfer <player> <room>
-          category: admin
+          usage: "transfer <player> <room>"
+          description: "Move a player"
+          category: "admin"
           staff: true
+          requiresTarget: true
         spawn:
-          usage: spawn <mob-template>
-          category: admin
+          usage: "spawn <mob-template>"
+          description: "Spawn a mob"
+          category: "admin"
           staff: true
+          requiresTarget: true
         smite:
-          usage: smite <player|mob>
-          category: admin
+          usage: "smite <player|mob>"
+          description: "Instantly kill a target"
+          category: "admin"
           staff: true
+          requiresTarget: true
         staff_kick:
-          usage: kick <player>
-          category: admin
+          usage: "kick <player>"
+          description: "Disconnect a player"
+          category: "admin"
           staff: true
+          requiresTarget: true
         dispel:
-          usage: dispel <player|mob>
-          category: admin
+          usage: "dispel <player|mob>"
+          description: "Remove all effects"
+          category: "admin"
           staff: true
+          requiresTarget: true
         setlevel:
-          usage: setlevel <player> <level>
-          category: admin
+          usage: "setlevel <player> <level>"
+          description: "Set a player's level"
+          category: "admin"
           staff: true
+          requiresTarget: true
         shutdown:
-          usage: shutdown
-          category: admin
+          usage: "shutdown"
+          description: "Shut down the server"
+          category: "admin"
           staff: true
         reload:
-          usage: reload [scope]
-          category: admin
+          usage: "reload [scope]"
+          description: "Reload world data"
+          category: "admin"
           staff: true
         possess:
-          usage: possess/switch <mob>
-          category: admin
+          usage: "possess/switch <mob>"
+          description: "Take control of a mob"
+          category: "admin"
           staff: true
+          requiresTarget: true
         return:
-          usage: return/unpossess
-          category: admin
+          usage: "return/unpossess"
+          description: "Release a possessed mob"
+          category: "admin"
           staff: true
         invis:
-          usage: invis
-          category: admin
+          usage: "invis"
+          description: "Toggle staff invisibility"
+          category: "admin"
           staff: true
         broadcast:
-          usage: broadcast <message>
-          category: admin
+          usage: "broadcast <message>"
+          description: "Send a server-wide announcement"
+          category: "admin"
           staff: true
+          requiresTarget: true
+        heal:
+          usage: "heal [player]"
+          description: "Fully restore a player's HP and mana"
+          category: "admin"
+          staff: true
+        pinfo:
+          usage: "pinfo <player>"
+          description: "Inspect a player's state"
+          category: "admin"
+          staff: true
+          requiresTarget: true
+        setstaff:
+          usage: "setstaff/grantstaff <player> | revokestaff <player>"
+          description: "Grant or revoke staff access"
+          category: "admin"
+          staff: true
+          requiresTarget: true
+        setgold:
+          usage: "setgold <player> <amount>"
+          description: "Set a player's gold"
+          category: "admin"
+          staff: true
+          requiresTarget: true
+        setrace:
+          usage: "setrace <player> <race>"
+          description: "Set a player's race"
+          category: "admin"
+          staff: true
+          requiresTarget: true
+        setclass:
+          usage: "setclass <player> <class>"
+          description: "Set a player's class"
+          category: "admin"
+          staff: true
+          requiresTarget: true
+        setgender:
+          usage: "setgender <player> <gender>"
+          description: "Set a player's gender"
+          category: "admin"
+          staff: true
+          requiresTarget: true
+        setxp:
+          usage: "setxp <player> <xp>"
+          description: "Set a player's XP"
+          category: "admin"
+          staff: true
+          requiresTarget: true
     group:
       maxSize: 5
       inviteTimeoutMs: 60000
