@@ -535,6 +535,7 @@ class GmcpEmitter(
                 autolootEnabled = player.autolootEnabled,
                 autopeekEnabled = player.autopeekEnabled,
                 wimpyThresholdPct = player.wimpyThresholdPct,
+                title = player.activeTitle,
                 isDemo = player.playerId == null,
             ),
         )
@@ -2790,6 +2791,8 @@ class GmcpEmitter(
         val autolootEnabled: Boolean,
         val autopeekEnabled: Boolean,
         val wimpyThresholdPct: Int,
+        /** The player's currently-equipped achievement title, or null when none is set. */
+        val title: String?,
         /**
          * True for unclaimed demo characters (no persistent account). Web client
          * surfaces a "Save your progress" prompt when set. Flips to false after

@@ -1008,7 +1008,7 @@ function App() {
             charStats={state.charStats}
             guildInfo={state.guildInfo}
             groupInfo={state.groupInfo}
-            activeTitle={state.whoPlayers.find((p) => p.name === state.character.name)?.title ?? null}
+            activeTitle={state.character.title}
             spriteList={state.spriteList}
             currencies={state.currencies}
             factions={state.factions}

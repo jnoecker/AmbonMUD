@@ -558,6 +558,19 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"class\":\"MAGE\""))
             assertTrue(data.jsonData.contains("\"level\":10"))
             assertTrue(data.jsonData.contains("\"autolootEnabled\":true"))
+            assertTrue(data.jsonData.contains("\"title\":null"))
+        }
+
+    @Test
+    fun `sendCharName emits the active title verbatim including commas`() =
+        runTest {
+            val e = emitter("Char.Name")
+            e.sendCharName(
+                sid,
+                player(name = "Alice").copy(activeTitle = "Ambonien, King of Ambon"),
+            )
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"title\":\"Ambonien, King of Ambon\""))
         }
 
     // ── Comm.Channel ──
