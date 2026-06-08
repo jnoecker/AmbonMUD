@@ -27,18 +27,19 @@ type Rect = { left: number; top: number; width: number; height: number };
  * Tweak these to nudge the lineup against the painted frame.
  */
 const CHANNEL_RECTS: Record<string, Rect> = {
-  say: { left: 18.2, top: 23.0, width: 12.1, height: 7.8 },
-  tell: { left: 31.6, top: 23.0, width: 12.0, height: 7.8 },
-  gossip: { left: 44.7, top: 23.0, width: 12.0, height: 7.8 },
-  shout: { left: 59.5, top: 23.0, width: 12.0, height: 7.8 },
-  ooc: { left: 73.2, top: 23.0, width: 12.0, height: 7.8 },
+  say: { left: 17.5, top: 25.5, width: 11.2, height: 7.5 },
+  tell: { left: 30.5, top: 25.5, width: 11.2, height: 7.5 },
+  gossip: { left: 43.5, top: 25.5, width: 11.2, height: 7.5 },
+  shout: { left: 56.5, top: 25.5, width: 11.2, height: 7.5 },
+  ooc: { left: 69.5, top: 25.5, width: 11.2, height: 7.5 },
 };
-const FEED_RECT: Rect = { left: 15.5, top: 33.0, width: 69.1, height: 46.0 };
-// Parchment interior measured from the base art: l19.7 t84.2 r66.0 b97.1.
-const INPUT_RECT: Rect = { left: 19.3, top: 84.0, width: 46.7, height: 13.0 };
-const EMOTE_RECT: Rect = { left: 72.0, top: 80.2, width: 4.8, height: 6.8 };
-const CLEAR_RECT: Rect = { left: 71.5, top: 87.6, width: 6.6, height: 7.6 };
-const SEND_RECT: Rect = { left: 78.3, top: 81.7, width: 17.0, height: 12.0 };
+// Measured off social-final.png (1448×1086): chalkboard l15.9 t34.3 w69.3 h44.7;
+// parchment l21.3 t82.0 w46.3 h13.4; send-scroll l~77 w~17.
+const FEED_RECT: Rect = { left: 16.0, top: 34.5, width: 69.0, height: 44.5 };
+const INPUT_RECT: Rect = { left: 20.5, top: 81.8, width: 47.0, height: 13.6 };
+const EMOTE_RECT: Rect = { left: 70.5, top: 80.0, width: 5.2, height: 6.0 };
+const CLEAR_RECT: Rect = { left: 69.8, top: 87.0, width: 6.6, height: 6.8 };
+const SEND_RECT: Rect = { left: 77.0, top: 80.5, width: 16.8, height: 13.5 };
 
 const CHANNEL_ACCENTS: Record<string, string> = {
   say: "var(--chat-accent-say)",
