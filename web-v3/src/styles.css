@@ -3685,37 +3685,42 @@ body {
   transform: translateY(clamp(-40px, -4vh, -22px));
 }
 
-/* Holds the destination peek label, centred in the doorway. Transparent — the
-   frame art paints its own opening, so no recess fill (that read as a black box). */
+/* The doorway portal — a swirling vortex in the opening box (same box as the
+   leaf), revealed when the leaf swings open. Sits behind the frame + leaf, so
+   it stays confined to the opening (no black box around the frame). */
 .feat-door-portal {
   position: absolute;
-  inset: 0;
   z-index: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  border-radius: 8px 8px 4px 4px;
 }
 
-.feat-door-peek {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  opacity: 0;
-  color: rgb(206 224 246 / 92%);
-  font-size: 0.86rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-shadow: 0 0 10px rgb(120 160 220 / 70%), 0 1px 3px rgb(0 0 0 / 70%);
-  transition: opacity 300ms var(--ease-out-soft) 250ms;
+.feat-door-portal-art,
+.feat-door-portal-css {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: door-portal-swirl 26s linear infinite;
 }
 
-.feat-door-peek-icon {
-  width: 18px;
-  height: 18px;
+.feat-door-portal-css {
+  background:
+    radial-gradient(circle at 50% 50%, rgb(190 226 255 / 42%), transparent 58%),
+    conic-gradient(
+      from 0deg,
+      rgb(40 86 160 / 78%),
+      rgb(118 80 200 / 78%),
+      rgb(44 132 188 / 78%),
+      rgb(84 60 184 / 78%),
+      rgb(40 86 160 / 78%)
+    );
+  filter: blur(1px);
 }
 
-.feat-door-stage.is-open .feat-door-peek {
-  opacity: 1;
+@keyframes door-portal-swirl {
+  from { transform: scale(1.35) rotate(0deg); }
+  to { transform: scale(1.35) rotate(360deg); }
 }
 
 /* The swinging leaf — pivots on its hinge edge between 0° and the open angle. */
@@ -3917,11 +3922,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .feat-door-leaf,
-  .feat-door-peek {
+  .feat-door-leaf {
     transition: none;
   }
 
+  .feat-door-portal-art,
+  .feat-door-portal-css,
   .feat-door-seal.is-locked,
   .feat-door-seal.is-shatter,
   .feat-door-keyhole,
