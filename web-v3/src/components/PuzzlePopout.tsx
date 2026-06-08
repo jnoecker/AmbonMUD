@@ -48,7 +48,8 @@ function SequenceBlock({ puzzle }: { puzzle: PuzzleItem }) {
 
 export function PuzzlePopout({ puzzle, puzzleResult, serverAssets, onCommand }: PuzzlePopoutProps) {
   const [answer, setAnswer] = useState("");
-  const [burn, setBurn] = useState<{ correct: boolean; text: string; message: string } | null>(null);
+  const [burn, setBurn] = useState<{ correct: boolean; text: string } | null>(null);
+  const [verdict, setVerdict] = useState<{ correct: boolean; message: string } | null>(null);
   const [seenResult, setSeenResult] = useState<PuzzleResult | null>(puzzleResult);
   const [pendingText, setPendingText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,14 +61,12 @@ export function PuzzlePopout({ puzzle, puzzleResult, serverAssets, onCommand }: 
   // A fresh Puzzle.Result ignites the ink: gold flare if correct, ash scatter if
   // not. Derived during render (the blessed "adjust state on prop change" form)
   // so we react the instant the result lands, showing what was just inscribed.
+  // The flame (`burn`) is brief; the verdict message stays so it can be read.
   if (puzzleResult !== seenResult) {
     setSeenResult(puzzleResult);
     if (puzzleResult) {
-      setBurn({
-        correct: puzzleResult.correct,
-        text: pendingText,
-        message: puzzleResult.message,
-      });
+      setBurn({ correct: puzzleResult.correct, text: pendingText });
+      setVerdict({ correct: puzzleResult.correct, message: puzzleResult.message });
       setAnswer("");
     }
   }
@@ -76,18 +75,19 @@ export function PuzzlePopout({ puzzle, puzzleResult, serverAssets, onCommand }: 
     const trimmed = answer.trim();
     if (trimmed.length === 0 || burn) return;
     setPendingText(trimmed);
+    setVerdict(null);
     onCommand(`answer ${trimmed}`);
   };
 
   // Clear the flame once it's burned out; re-arm the page for another attempt
-  // when the answer was wrong.
+  // when the answer was wrong. The verdict message persists.
   useEffect(() => {
     if (!burn) return;
     const wasWrong = !burn.correct;
     const timer = setTimeout(() => {
       setBurn(null);
       if (wasWrong) inputRef.current?.focus();
-    }, 1500);
+    }, 1200);
     return () => clearTimeout(timer);
   }, [burn]);
 
@@ -139,12 +139,13 @@ export function PuzzlePopout({ puzzle, puzzleResult, serverAssets, onCommand }: 
             >
               Inscribe
             </button>
-            {burn && (
-              <p className={`puzzle-verdict${burn.correct ? " is-success" : " is-fail"}`} role="status">
-                {burn.message}
-              </p>
-            )}
           </form>
+        )}
+
+        {verdict && (
+          <p className={`puzzle-verdict${verdict.correct ? " is-success" : " is-fail"}`} role="status">
+            {verdict.message}
+          </p>
         )}
       </div>
     </div>

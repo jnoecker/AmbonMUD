@@ -2999,8 +2999,8 @@ body {
 }
 
 .drawer-sheet-tome .drawer-header {
-  border-bottom-color: transparent;
-  background: linear-gradient(to bottom, rgb(8 10 18 / 50%), transparent);
+  border-bottom: none;
+  background: none;
 }
 
 .drawer-sheet-tome .drawer-body {
@@ -3050,21 +3050,33 @@ body {
   gap: 10px;
 }
 
+/* A soft cream glow lifts the ink off the parchment (and over the book's gutter)
+   for even legibility regardless of the underlying art — not a hard panel. */
+.puzzle-riddle::before {
+  content: "";
+  position: absolute;
+  inset: -14% -10%;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, rgb(248 240 218 / 66%), rgb(248 240 218 / 0%) 72%);
+  filter: blur(10px);
+}
+
 .puzzle-eyebrow {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-weight: 700;
-  color: #8a6a3a;
+  color: #7a5326;
 }
 
 .puzzle-riddle-text {
   margin: 0;
-  max-width: 46ch;
+  max-width: 42ch;
   font-family: var(--font-display);
-  font-size: clamp(1.05rem, 1.7vw, 1.34rem);
+  font-size: clamp(1.08rem, 1.7vw, 1.36rem);
   line-height: 1.55;
-  color: #3f2e18;
+  color: #2c1d0c;
+  text-shadow: 0 1px 1px rgb(250 244 226 / 70%);
 }
 
 .puzzle-riddle.is-solved .puzzle-riddle-text {
@@ -3327,11 +3339,11 @@ body {
   text-shadow: 0 1px 2px rgb(0 0 0 / 72%), 0 1px 12px rgb(0 0 0 / 55%);
 }
 
-/* Soft top scrim keeps the title + close legible over bright art, without a
-   hard band (fades to transparent). */
+/* No divider, no scrim band — the title rides directly on the art (legibility
+   comes from its text-shadow). */
 .drawer-sheet-feature .drawer-header {
-  border-bottom-color: transparent;
-  background: linear-gradient(to bottom, rgb(8 10 18 / 52%), transparent);
+  border-bottom: none;
+  background: none;
 }
 
 /* The body is just the foreground content floating over the sheet art. */
@@ -3374,10 +3386,12 @@ body {
 }
 
 /* ── Sign ─────────────────────────────────────────────────── */
+/* The placard art sits in the upper-centre of the spread, so we bias the text
+   upward (heavier bottom padding) to land it on the board rather than the grass. */
 .feat-sign {
   align-items: center;
   justify-content: center;
-  padding: clamp(28px, 7vw, 72px) clamp(32px, 9vw, 120px);
+  padding: clamp(20px, 4vh, 44px) clamp(32px, 9vw, 120px) clamp(80px, 22vh, 220px);
   min-height: 46vh;
 }
 
@@ -3544,18 +3558,25 @@ body {
   background: linear-gradient(135deg, rgb(188 158 100 / 82%), rgb(142 118 74 / 74%));
 }
 
-/* ── Lever — a tall vertical box with the lever in the centre ── */
+/* ── Lever — a tall vertical box; the art fills the panel ────── */
+/* Levers are portrait, so give their panel a narrow, tall footprint — the art
+   fills it instead of floating in a wide, empty modal. */
+@media (min-width: 600px) {
+  .drawer-sheet:has(.feat-lever) {
+    width: min(460px, 92vw);
+  }
+}
+
 .feat-lever {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: clamp(20px, 4vw, 36px) 16px clamp(18px, 3vw, 28px);
+  padding: clamp(14px, 2.5vh, 26px) 16px;
 }
 
 .feat-lever-stage {
   position: relative;
-  width: min(340px, 74vw);
+  width: min(400px, 86vw);
   margin: 0 auto;
   padding: 0;
   border: none;
@@ -3653,35 +3674,6 @@ body {
   fill: rgb(220 195 250 / 50%);
   filter: blur(2px);
   pointer-events: none;
-}
-
-.feat-lever-caption {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  text-align: center;
-}
-
-.feat-lever-name {
-  font-size: 0.96rem;
-  font-weight: 700;
-  color: var(--text-bright);
-}
-
-.feat-lever-state {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  font-weight: 700;
-}
-
-.feat-lever-state-up {
-  color: rgb(150 200 130);
-}
-
-.feat-lever-state-down {
-  color: rgb(220 175 120);
 }
 
 /* ── Door (no art — a tidy centred card) ──────────────────── */

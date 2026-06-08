@@ -228,10 +228,6 @@ function LeverPanel({
           </span>
         )}
       </button>
-      <span className="feat-lever-caption">
-        <span className="feat-lever-name">{feature.name}</span>
-        <span className={`feat-lever-state feat-lever-state-${isUp ? "up" : "down"}`}>{label}</span>
-      </span>
     </div>
   );
 }
