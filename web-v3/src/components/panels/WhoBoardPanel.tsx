@@ -10,9 +10,12 @@ interface WhoBoardPanelProps {
   playerName: string;
   whoPlayers: WhoPlayer[];
   serverAssets: Record<string, string>;
+  /** Names already on the player's friends list — hides the Friend action for them. */
+  friendNames: string[];
   onRequestWho: () => void;
   onExamine: (player: WhoPlayer) => void;
   onTellPlayer: (name: string) => void;
+  onAddFriend: (name: string) => void;
 }
 
 /**
@@ -27,9 +30,11 @@ export function WhoBoardPanel({
   playerName,
   whoPlayers,
   serverAssets,
+  friendNames,
   onRequestWho,
   onExamine,
   onTellPlayer,
+  onAddFriend,
 }: WhoBoardPanelProps) {
   const [filter, setFilter] = useState("");
   const [classFilter, setClassFilter] = useState("");
@@ -82,6 +87,8 @@ export function WhoBoardPanel({
 
   const examineArt = serverAssets["who_examine_btn"];
   const tellArt = serverAssets["who_tell_btn"];
+  const friendArt = serverAssets["who_friend_btn"];
+  const friendSet = useMemo(() => new Set(friendNames.map((n) => n.toLowerCase())), [friendNames]);
 
   return (
     <div className="whoboard">
@@ -138,6 +145,17 @@ export function WhoBoardPanel({
                         onClick={() => onTellPlayer(p.name)}
                       >
                         {tellArt ? <img src={tellArt} alt="" aria-hidden="true" /> : <span className="whoboard-action-glyph" aria-hidden="true">✉</span>}
+                      </button>
+                    )}
+                    {!isSelf && !friendSet.has(p.name.toLowerCase()) && (
+                      <button
+                        type="button"
+                        className="whoboard-action"
+                        title={`Add ${p.name} as a friend`}
+                        aria-label={`Add ${p.name} as a friend`}
+                        onClick={() => onAddFriend(p.name)}
+                      >
+                        {friendArt ? <img src={friendArt} alt="" aria-hidden="true" /> : <span className="whoboard-action-glyph" aria-hidden="true">✚</span>}
                       </button>
                     )}
                   </span>
