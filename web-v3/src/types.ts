@@ -3,7 +3,7 @@ export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 export type RoomFeatureType = "door" | "container" | "lever" | "sign";
-export type FeaturePopoutFocus = Exclude<RoomFeatureType, "sign"> | null;
+export type FeaturePopoutFocus = RoomFeatureType | null;
 
 export interface WorldTime {
   period: string;
