@@ -921,7 +921,9 @@ function App() {
         title={drawerTitle}
         onClose={closeDrawer}
         variant={
-          drawerPanel === "features"
+          drawerPanel === "puzzle"
+            ? "tome"
+            : drawerPanel === "features"
             ? "feature"
             : drawerPanel === "inventory"
             ? "satchel"
@@ -944,7 +946,10 @@ function App() {
                             : "default"
         }
         skinBg={
-          drawerPanel === "features"
+          drawerPanel === "puzzle"
+            ? (state.puzzle?.puzzles.find((p) => p.backgroundImage)?.backgroundImage
+                ?? state.serverAssets["puzzle_bg"])
+            : drawerPanel === "features"
             ? (featurePanelFeature && featurePanelFeature.type !== "lever"
                 ? (featureArt(featurePanelFeature, state.serverAssets) ?? undefined)
                 : undefined)
@@ -1103,7 +1108,12 @@ function App() {
         )}
 
         {drawerPanel === "puzzle" && state.puzzle && (
-          <PuzzlePopout puzzle={state.puzzle} onCommand={sendCommand} />
+          <PuzzlePopout
+            puzzle={state.puzzle}
+            puzzleResult={state.puzzleResult}
+            serverAssets={state.serverAssets}
+            onCommand={sendCommand}
+          />
         )}
 
         {drawerPanel === "features" && (

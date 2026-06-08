@@ -3047,6 +3047,10 @@ data class ImagesConfig(
             "container_bg" to "global_assets/container_bg.png",
             "sign_bg" to "global_assets/sign_bg.png",
             "lever_bg" to "global_assets/lever_bg.png",
+            // Server-wide default backdrop for the puzzle (grimoire/parchment) panel.
+            // Used when a puzzle doesn't author its own backgroundImage; falls back
+            // further to a CSS tome treatment when this isn't present either.
+            "puzzle_bg" to "global_assets/puzzle_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

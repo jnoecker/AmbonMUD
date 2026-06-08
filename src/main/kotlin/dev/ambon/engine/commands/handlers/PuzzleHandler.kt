@@ -58,12 +58,16 @@ class PuzzleHandler(
         // Try each riddle in the room — if any succeeds, stop immediately.
         // Otherwise, show the fail message from the last attempted riddle.
         var lastFailMessage: String? = null
+        var lastFailPuzzleId: String? = null
         for (puzzle in riddles) {
             val result = system.attemptRiddleAnswer(sessionId, puzzle, answerText)
             when (result) {
                 is PuzzleResult.Success -> {
                     ctx.metrics.onGameEvent("puzzle", "solved")
                     outbound.send(OutboundEvent.SendInfo(sessionId, result.message))
+                    // Drives the web client's inscribe → gold-flame beat before the
+                    // room refresh marks the puzzle solved.
+                    gmcpEmitter?.sendPuzzleResult(sessionId, puzzle.id, correct = true, message = result.message)
                     grantReward(sessionId, result.reward)
                     // Refresh room state so newly-unlocked exits, minimap, and Puzzle.List
                     // (marking the puzzle as solved) reach the client immediately.
@@ -72,6 +76,7 @@ class PuzzleHandler(
                 }
                 is PuzzleResult.Failure -> {
                     lastFailMessage = result.message
+                    lastFailPuzzleId = puzzle.id
                     // Continue to try next riddle
                 }
                 is PuzzleResult.AlreadySolved -> {
@@ -89,6 +94,8 @@ class PuzzleHandler(
         // No riddle succeeded — show last fail or generic message
         if (lastFailMessage != null) {
             outbound.send(OutboundEvent.SendError(sessionId, lastFailMessage))
+            // Drives the web client's ash-scatter beat with the riddle's fail message.
+            gmcpEmitter?.sendPuzzleResult(sessionId, lastFailPuzzleId ?: riddles.first().id, correct = false, message = lastFailMessage)
         } else {
             outbound.send(OutboundEvent.SendInfo(sessionId, "You have already solved this puzzle."))
         }

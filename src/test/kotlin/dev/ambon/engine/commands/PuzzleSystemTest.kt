@@ -80,12 +80,16 @@ class PuzzleSystemTest {
         assertEquals("ok_puzzles:sphinx", riddle.mobId)
         assertTrue(riddle.acceptableAnswers.contains("mountain"))
         assertTrue(riddle.acceptableAnswers.contains("a mountain"))
+        // Optional grimoire backdrop art resolves against the world image base.
+        assertTrue(riddle.backgroundImage!!.endsWith("sphinx_tome.webp"), "got=${riddle.backgroundImage}")
 
         val sequence = puzzles.first { it.id == "ok_puzzles:lever_sequence" }
         assertEquals(PuzzleType.SEQUENCE, sequence.type)
         assertEquals(3, sequence.steps.size)
         assertEquals("red", sequence.steps[0].featureKeyword)
         assertEquals("pull", sequence.steps[0].action)
+        // No art authored — stays null (client falls back to puzzle_bg, then CSS).
+        assertNull(sequence.backgroundImage)
     }
 
     // ---- Riddle tests ----

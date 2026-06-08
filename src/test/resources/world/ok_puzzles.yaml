@@ -80,6 +80,7 @@ puzzles:
     question: "What has roots that nobody sees, is taller than trees, up it goes, and yet never grows?"
     answer: "mountain"
     acceptableAnswers: ["mountain", "a mountain", "the mountain"]
+    backgroundImage: "sphinx_tome.webp"
     reward:
       type: unlock_exit
       exitDirection: north

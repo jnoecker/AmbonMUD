@@ -31,6 +31,13 @@ data class PuzzleFile(
     val cooldownMs: Long = 0L,
     /** Whether a failed sequence resets to the beginning (sequence type only). */
     val resetOnFail: Boolean = true,
+    /**
+     * Optional grimoire/parchment backdrop art (content-addressed filename) for
+     * the web client's puzzle panel, resolved against the world image base like
+     * room/mob/item art. Absent → the `puzzle_bg` global default, then a built-in
+     * CSS tome treatment.
+     */
+    val backgroundImage: String? = null,
 )
 
 /** A single step in a sequence puzzle. */

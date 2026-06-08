@@ -60,6 +60,7 @@ import type {
   StaffWorldZone,
   ShopState,
   PuzzleItem,
+  PuzzleResult,
   PuzzleState,
   SkillSummary,
   SpriteEntry,
@@ -157,6 +158,7 @@ interface GmcpContext {
   setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
   setShop: Dispatch<SetStateAction<ShopState | null>>;
   setPuzzle: Dispatch<SetStateAction<PuzzleState | null>>;
+  setPuzzleResult: Dispatch<SetStateAction<PuzzleResult | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean, terrain?: string | null) => void;
   loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
@@ -1504,11 +1506,22 @@ export function applyGmcpPackage(
                 totalSteps: typeof p.totalSteps === "number" ? p.totalSteps : null,
                 currentStep: typeof p.currentStep === "number" ? p.currentStep : null,
                 solved: p.solved === true,
+                backgroundImage: typeof p.backgroundImage === "string" ? p.backgroundImage : null,
               } satisfies PuzzleItem;
             })
             .filter((p) => p.id.length > 0)
         : [];
       ctx.setPuzzle(puzzles.length > 0 ? { puzzles } : null);
+      break;
+    }
+
+    case "Puzzle.Result": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setPuzzleResult({
+        id: typeof packet.id === "string" ? packet.id : "",
+        correct: packet.correct === true,
+        message: typeof packet.message === "string" ? packet.message : "",
+      });
       break;
     }
 

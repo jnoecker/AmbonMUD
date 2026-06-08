@@ -2978,190 +2978,331 @@ body {
   50% { box-shadow: 0 0 12px rgb(190 168 115 / 50%); }
 }
 
-/* ── Puzzle popout ─────────────────────────────────────── */
-.puzzle-popout {
+/* ── Puzzle: the grimoire / parchment tome ─────────────────
+   Each puzzle opens as a full-bleed Drawer panel whose background is an open
+   grimoire spread (puzzle_bg / per-puzzle backgroundImage). You inscribe your
+   answer on the page; on submit the ink combusts — gold flare if correct, ash
+   scatter if not. */
+
+.drawer-sheet.drawer-sheet-tome {
+  background-image:
+    var(--skin-bg, none),
+    linear-gradient(180deg, rgb(43 53 79 / 98%), rgb(34 41 64 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.drawer-sheet-tome .drawer-title {
+  color: #f3e7cf;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 72%), 0 1px 12px rgb(0 0 0 / 55%);
+}
+
+.drawer-sheet-tome .drawer-header {
+  border-bottom-color: transparent;
+  background: linear-gradient(to bottom, rgb(8 10 18 / 50%), transparent);
+}
+
+.drawer-sheet-tome .drawer-body {
+  padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
 }
 
-/* Shared puzzle card — compact row layout with icon */
-.puzzle-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgb(196 168 232 / 8%), rgb(140 110 190 / 4%));
-  transition: border-color 200ms var(--ease-out-soft), background 200ms var(--ease-out-soft);
-}
-
-.puzzle-card:hover {
-  border-color: rgb(196 168 232 / 36%);
-}
-
-.puzzle-card-solved {
-  opacity: 0.6;
-}
-
-.puzzle-card-solved .puzzle-card-question,
-.puzzle-card-solved .puzzle-card-hint {
-  text-decoration: line-through;
-  text-decoration-color: rgb(255 255 255 / 18%);
-}
-
-/* Icon circle */
-.puzzle-card-icon {
-  flex-shrink: 0;
+.puzzle-tome {
+  position: relative;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgb(196 168 232 / 14%);
-  color: #d9b3e2;
+  min-height: 0;
 }
 
-.puzzle-card-icon > svg {
-  width: 20px;
-  height: 20px;
-}
-
-.puzzle-card-icon-sequence {
-  background: rgb(156 190 228 / 14%);
-  color: #bdd8ee;
-}
-
-/* Card body */
-.puzzle-card-body {
-  flex: 1;
-  min-width: 0;
+.puzzle-page {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  max-width: 560px;
+  padding: clamp(30px, 6vw, 60px) clamp(28px, 7vw, 76px);
+  text-align: center;
 }
 
-.puzzle-card-top {
+/* No art shipped — render a parchment card so the ink reads. */
+.puzzle-page.on-css {
+  max-width: 520px;
+  margin: clamp(16px, 4vw, 32px);
+  border-radius: 14px;
+  background: linear-gradient(160deg, #efe3c6, #e2d1ab);
+  border: 1px solid #b89b6a;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 40%),
+    0 14px 36px rgb(20 14 6 / 42%);
+}
+
+.puzzle-riddle {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 10px;
+}
+
+.puzzle-eyebrow {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #8a6a3a;
+}
+
+.puzzle-riddle-text {
+  margin: 0;
+  max-width: 46ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 1.7vw, 1.34rem);
+  line-height: 1.55;
+  color: #3f2e18;
+}
+
+.puzzle-riddle.is-solved .puzzle-riddle-text {
+  opacity: 0.6;
+}
+
+.puzzle-seal {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 32% 28%, #c0532f, #8a2d18);
+  color: #f3dcc0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: 0 2px 6px rgb(60 20 10 / 40%), inset 0 1px 0 rgb(255 255 255 / 22%);
+}
+
+.puzzle-seq-dots {
+  display: flex;
   gap: 8px;
 }
 
-.puzzle-card-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
-  font-weight: 700;
-}
-
-.puzzle-card-badge {
-  font-size: 0.68rem;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: rgb(140 174 123 / 22%);
-  color: rgb(180 210 160);
-  font-weight: 600;
-}
-
-.puzzle-card-question {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.45;
-  color: var(--text-primary);
-  font-style: italic;
-  font-family: var(--font-display);
-}
-
-.puzzle-card-hint {
-  margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  color: var(--text-secondary);
-}
-
-/* Sequence progress dots */
-.puzzle-sequence-dots {
-  display: flex;
-  gap: 6px;
-  padding-top: 4px;
-}
-
-.puzzle-sequence-dot {
-  width: 10px;
-  height: 10px;
+.puzzle-seq-dot {
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: rgb(255 255 255 / 10%);
-  border: 1.5px solid rgb(255 255 255 / 18%);
-  transition: background 300ms var(--ease-out-soft), border-color 300ms var(--ease-out-soft), box-shadow 300ms var(--ease-out-soft);
+  border: 1.5px solid rgb(80 60 30 / 45%);
+  background: rgb(80 60 30 / 12%);
 }
 
-.puzzle-sequence-dot-done {
-  background: rgb(140 174 123 / 70%);
-  border-color: rgb(140 174 123 / 50%);
+.puzzle-seq-dot.is-done {
+  background: #8a6a3a;
+  border-color: #8a6a3a;
 }
 
-.puzzle-sequence-dot-next {
-  background: rgb(196 168 232 / 30%);
-  border-color: rgb(196 168 232 / 50%);
-  box-shadow: 0 0 6px rgb(196 168 232 / 40%);
-  animation: dot-pulse 2s var(--ease-in-out-smooth) infinite;
+.puzzle-seq-dot.is-next {
+  border-color: #b6831f;
+  box-shadow: 0 0 6px rgb(182 131 31 / 50%);
+  animation: dot-pulse-ink 2s var(--ease-in-out-smooth) infinite;
 }
 
-@keyframes dot-pulse {
-  0%, 100% { box-shadow: 0 0 6px rgb(196 168 232 / 40%); }
-  50% { box-shadow: 0 0 12px rgb(196 168 232 / 65%); }
+@keyframes dot-pulse-ink {
+  0%, 100% { box-shadow: 0 0 5px rgb(182 131 31 / 40%); }
+  50% { box-shadow: 0 0 11px rgb(182 131 31 / 70%); }
 }
 
-/* Answer bar — slim inline form */
-.puzzle-answer-bar {
+/* ── Inscribe row ─────────────────────────────────────────── */
+.puzzle-inscribe {
+  width: min(440px, 100%);
   display: flex;
-  gap: var(--space-2);
-  padding-top: 2px;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
 }
 
-.puzzle-answer-input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-md);
-  background: var(--surface-chip);
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  font-family: inherit;
-  transition: border-color 150ms, background 150ms;
+.puzzle-inscribe-field {
+  position: relative;
+  width: 100%;
+  min-height: 2.6em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.puzzle-answer-input:focus {
+.puzzle-inscribe-input {
+  width: 100%;
+  text-align: center;
+  padding: 6px 4px;
+  border: none;
+  border-bottom: 2px solid rgb(90 64 28 / 50%);
+  background: transparent;
+  color: #3f2e18;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.12rem;
+  transition: border-color 150ms var(--ease-out-soft), opacity 200ms var(--ease-out-soft);
+}
+
+.puzzle-inscribe-input::placeholder {
+  color: rgb(90 64 28 / 50%);
+  font-style: italic;
+}
+
+.puzzle-inscribe-input:focus {
   outline: none;
-  border-color: rgb(196 168 232 / 55%);
-  background: rgb(255 255 255 / 5%);
+  border-bottom-color: #b6831f;
 }
 
-.puzzle-answer-submit {
-  padding: 8px 14px;
-  white-space: nowrap;
-  border: 1px solid rgb(196 168 232 / 28%);
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgb(196 168 232 / 50%), rgb(160 130 200 / 44%));
-  color: var(--text-primary);
+.puzzle-inscribe-field.is-success .puzzle-inscribe-input,
+.puzzle-inscribe-field.is-fail .puzzle-inscribe-input {
+  opacity: 0;
+}
+
+.puzzle-inscribe-submit {
+  padding: 8px 24px;
+  border: 1px solid rgb(150 107 30 / 60%);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b98a3e, #8a5a1e);
+  color: #fff4dc;
   font-family: var(--font-body);
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 700;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  transition: background 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+  box-shadow: 0 2px 8px rgb(60 40 10 / 30%);
+  transition: transform 150ms var(--ease-out-soft), filter 150ms var(--ease-out-soft);
 }
 
-.puzzle-answer-submit:not(:disabled):hover {
-  background: linear-gradient(135deg, rgb(210 182 246 / 66%), rgb(174 144 214 / 62%));
+.puzzle-inscribe-submit:not(:disabled):hover {
   transform: translateY(-1px);
+  filter: brightness(1.08);
 }
 
-.puzzle-answer-submit:disabled {
-  opacity: 0.45;
+.puzzle-inscribe-submit:disabled {
+  opacity: 0.5;
   cursor: default;
+}
+
+/* ── The puff of flame ────────────────────────────────────── */
+.puzzle-burn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.puzzle-burn-text {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.12rem;
+  color: #3f2e18;
+}
+
+.puzzle-burn.is-success .puzzle-burn-text {
+  animation: burn-gold 1.15s ease-in forwards;
+}
+
+.puzzle-burn.is-fail .puzzle-burn-text {
+  animation: burn-ash 1.15s ease-in forwards;
+}
+
+@keyframes burn-gold {
+  0% { color: #3f2e18; text-shadow: none; transform: translateY(0); opacity: 1; filter: blur(0); }
+  35% { color: #eab53c; text-shadow: 0 0 10px #ffb43a, 0 0 24px #ff8a1a; }
+  100% { color: #6b3a12; opacity: 0; transform: translateY(-18px); filter: blur(3px); }
+}
+
+@keyframes burn-ash {
+  0% { color: #3f2e18; opacity: 1; transform: translateY(0); filter: blur(0); letter-spacing: normal; }
+  40% { color: #8a7d6a; text-shadow: 0 0 8px rgb(120 70 40 / 50%); }
+  100% { color: #4a4640; opacity: 0; transform: translateY(10px) scale(0.97); filter: blur(2px); letter-spacing: 0.25em; }
+}
+
+.puzzle-flame {
+  position: absolute;
+  left: 50%;
+  bottom: -10%;
+  width: 56%;
+  height: 130%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgb(255 214 96 / 92%),
+    rgb(255 142 32 / 60%) 34%,
+    rgb(198 60 20 / 22%) 60%,
+    transparent 72%
+  );
+  filter: blur(3px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: flame-rise 1.1s ease-out forwards;
+}
+
+.puzzle-flame-2 {
+  width: 36%;
+  animation-delay: 0.12s;
+}
+
+.puzzle-burn.is-fail .puzzle-flame {
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgb(140 104 78 / 72%),
+    rgb(88 66 52 / 42%) 42%,
+    transparent 70%
+  );
+}
+
+@keyframes flame-rise {
+  0% { opacity: 0; transform: translateX(-50%) scaleY(0.4) translateY(16%); }
+  25% { opacity: 0.95; }
+  100% { opacity: 0; transform: translateX(-50%) scaleY(1.28) translateY(-42%); }
+}
+
+.puzzle-verdict {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  opacity: 0;
+  animation: verdict-in 0.4s var(--ease-out-soft) 0.18s forwards;
+}
+
+.puzzle-verdict.is-success {
+  color: #9a6b1e;
+}
+
+.puzzle-verdict.is-fail {
+  color: #8a3a1e;
+}
+
+@keyframes verdict-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-flame,
+  .puzzle-verdict,
+  .puzzle-seq-dot.is-next {
+    animation: none;
+  }
+
+  .puzzle-verdict {
+    opacity: 1;
+  }
+
+  .puzzle-burn.is-success .puzzle-burn-text,
+  .puzzle-burn.is-fail .puzzle-burn-text {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════════

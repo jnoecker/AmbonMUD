@@ -27,6 +27,12 @@ data class PuzzleDef(
     val cooldownMs: Long = 0L,
     /** Whether a failed sequence resets to the beginning. */
     val resetOnFail: Boolean = true,
+    /**
+     * Optional parchment/grimoire backdrop art (resolved URL) for the web
+     * client's puzzle panel. Absent → the `puzzle_bg` global default, then a
+     * built-in CSS treatment.
+     */
+    val backgroundImage: String? = null,
 )
 
 enum class PuzzleType {
