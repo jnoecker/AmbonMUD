@@ -161,7 +161,6 @@ export function CharacterPanel({
   const selectSprite = (s: { id: string | null }) => {
     onCommand(s.id === null ? "sprite default" : `sprite set ${s.id}`);
   };
-  const currentSpriteName = spriteOrder[activeSpriteIdx]?.name ?? character.name;
 
   const autolootEnabled = character.autolootEnabled;
   const autopeekEnabled = character.autopeekEnabled;
@@ -215,7 +214,6 @@ export function CharacterPanel({
               <div className="cc-sprite-empty" aria-hidden="true" />
             )}
           </div>
-          <span className="cc-sprite-caption" title={currentSpriteName}>{currentSpriteName}</span>
           <div className="cc-sprite-rack" role="listbox" aria-label="Choose your sprite">
             {spriteOrder.map((s, i) => (
               <button
