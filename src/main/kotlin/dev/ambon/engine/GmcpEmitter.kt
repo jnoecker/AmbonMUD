@@ -3167,6 +3167,8 @@ class GmcpEmitter(
         val leafImage: String? = null,
         val hinge: String? = null,
         val openAngle: Double? = null,
+        val leafScale: Double? = null,
+        val leafOffsetY: Double? = null,
         // The key that locks/unlocks this door (DOOR only), for the lock UI.
         val keyImage: String? = null,
         val keyName: String? = null,

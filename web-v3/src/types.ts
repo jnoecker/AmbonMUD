@@ -722,6 +722,10 @@ export interface RoomFeature {
   leafImage: string | null;
   hinge: "left" | "right" | null;
   openAngle: number | null;
+  /** Leaf size as a fraction of the frame box (fits it inside the opening). Default 0.72. */
+  leafScale: number | null;
+  /** Vertical placement of the leaf within the frame (fraction; + = down). Default 0.04. */
+  leafOffsetY: number | null;
   /** The key that locks/unlocks this door (DOOR only) — image + name for the lock UI. */
   keyImage: string | null;
   keyName: string | null;

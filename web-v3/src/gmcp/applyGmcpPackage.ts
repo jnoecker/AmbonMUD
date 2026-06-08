@@ -1445,6 +1445,8 @@ export function applyGmcpPackage(
             leafImage: typeof e.leafImage === "string" ? e.leafImage : null,
             hinge: e.hinge === "left" || e.hinge === "right" ? e.hinge : null,
             openAngle: typeof e.openAngle === "number" ? e.openAngle : null,
+            leafScale: typeof e.leafScale === "number" ? e.leafScale : null,
+            leafOffsetY: typeof e.leafOffsetY === "number" ? e.leafOffsetY : null,
             keyImage: typeof e.keyImage === "string" ? e.keyImage : null,
             keyName: typeof e.keyName === "string" ? e.keyName : null,
           })),

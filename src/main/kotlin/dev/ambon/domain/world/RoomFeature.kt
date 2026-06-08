@@ -38,6 +38,10 @@ sealed class RoomFeature {
         val leafImage: String? = null,
         val hinge: String? = null,
         val openAngle: Double? = null,
+        /** Leaf size as a fraction of the frame box (fits it inside the opening). Default 0.76. */
+        val leafScale: Double? = null,
+        /** Vertical placement of the leaf within the frame (fraction; + = down). Default 0.09. */
+        val leafOffsetY: Double? = null,
     ) : RoomFeature()
 
     data class Container(

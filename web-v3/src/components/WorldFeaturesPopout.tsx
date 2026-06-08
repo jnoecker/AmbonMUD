@@ -246,9 +246,25 @@ function DoorPanel({
   const frameSrc = feature.frameImage ?? serverAssets["door_frame"] ?? null;
   const leafSrc = feature.leafImage ?? serverAssets["door_leaf"] ?? null;
   const lockSrc = serverAssets["door_lock"] ?? null;
-  const hinge = feature.hinge === "right" ? "right" : "left";
-  const openAngle = feature.openAngle ?? 100;
+  const hinge = feature.hinge === "left" ? "left" : "right";
+  const openAngle = feature.openAngle ?? 60;
+  // Door opens toward the viewer; swing direction comes from the hinge, not the
+  // angle's sign (left hinge → right edge swings out = negative rotateY).
   const leafAngle = isOpen ? (hinge === "right" ? openAngle : -openAngle) : 0;
+  // Fit the leaf inside the frame's opening: leafScale (fraction of the box) +
+  // leafOffsetY (vertical nudge, + = down). Pivot on the hinge edge. Defaults
+  // match the bundled default door art.
+  const leafScale = feature.leafScale ?? 0.76;
+  const leafOffsetY = feature.leafOffsetY ?? 0.09;
+  const leafInset = (1 - leafScale) / 2;
+  const leafStyle = {
+    left: `${leafInset * 100}%`,
+    top: `${(leafInset + leafOffsetY) * 100}%`,
+    width: `${leafScale * 100}%`,
+    height: `${leafScale * 100}%`,
+    transformOrigin: hinge === "right" ? "right center" : "left center",
+    transform: `rotateY(${leafAngle}deg)`,
+  };
   const actions = featureActions(feature);
 
   // Track the door's state so the warded seal can shatter the instant it unlocks.
@@ -279,22 +295,18 @@ function DoorPanel({
             </span>
           )}
         </div>
-        {leafSrc ? (
-          <img
-            className="feat-door-leaf"
-            src={leafSrc}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            style={{ transform: `rotateY(${leafAngle}deg)` }}
-          />
-        ) : (
-          <div className="feat-door-leaf feat-door-leaf-css" style={{ transform: `rotateY(${leafAngle}deg)` }} aria-hidden="true" />
-        )}
         {frameSrc ? (
           <img className="feat-door-frame" src={frameSrc} alt="" aria-hidden="true" draggable={false} />
         ) : (
           <div className="feat-door-frame feat-door-frame-css" aria-hidden="true" />
+        )}
+        {leafSrc ? (
+          <img className="feat-door-leaf" src={leafSrc} alt="" aria-hidden="true" draggable={false} style={leafStyle} />
+        ) : (
+          <div className="feat-door-leaf feat-door-leaf-css" style={leafStyle} aria-hidden="true" />
+        )}
+        {feature.keyRequired && feature.state === "closed" && (
+          <span className="feat-door-keyhole" aria-hidden="true" />
         )}
         {showLock && (
           <div className={`feat-door-seal${isLocked ? " is-locked" : ""}${shatter ? " is-shatter" : ""}`} aria-hidden="true">

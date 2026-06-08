@@ -27,6 +27,8 @@ rooms:
           leafImage: "doorleaf.webp"
           hinge: right
           openAngle: 95
+          leafScale: 0.8
+          leafOffsetY: 0.06
       east: storeroom
     features:
       notice_board:

@@ -41,6 +41,8 @@ class WorldLoaderFeaturesTest {
         assertTrue(door.leafImage!!.endsWith("doorleaf.webp"), "got=${door.leafImage}")
         assertEquals("right", door.hinge)
         assertEquals(95.0, door.openAngle)
+        assertEquals(0.8, door.leafScale)
+        assertEquals(0.06, door.leafOffsetY)
     }
 
     @Test

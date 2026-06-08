@@ -315,6 +315,8 @@ object WorldLoader {
                                         leafImage = doorFile.leafImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
                                         hinge = doorFile.hinge?.trim()?.lowercase()?.takeIf { it == "left" || it == "right" },
                                         openAngle = doorFile.openAngle,
+                                        leafScale = doorFile.leafScale,
+                                        leafOffsetY = doorFile.leafOffsetY,
                                     ),
                                 )
                             }

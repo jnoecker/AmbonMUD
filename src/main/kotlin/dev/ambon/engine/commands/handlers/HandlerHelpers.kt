@@ -578,6 +578,8 @@ internal fun buildFeaturePayload(
             leafImage = feature.leafImage,
             hinge = feature.hinge,
             openAngle = feature.openAngle,
+            leafScale = feature.leafScale,
+            leafOffsetY = feature.leafOffsetY,
             keyImage = keyTemplate?.image,
             keyName = keyTemplate?.displayName,
         )

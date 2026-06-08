@@ -18,8 +18,12 @@ data class DoorFile(
      */
     val frameImage: String? = null,
     val leafImage: String? = null,
-    /** Which edge the leaf pivots on: "left" or "right". Default "left". */
+    /** Fixed edge the leaf is hinged on: "left" or "right". Default "right". */
     val hinge: String? = null,
-    /** Leaf swing angle (degrees) when open; closed is always 0. Default ~100. */
+    /** Leaf swing angle (degrees, unsigned) when open; closed is always 0. Default ~60. */
     val openAngle: Double? = null,
+    /** Leaf size as a fraction of the frame box, to fit it inside the opening. Default 0.76. */
+    val leafScale: Double? = null,
+    /** Vertical placement of the leaf within the frame (fraction; + = down). Default 0.09. */
+    val leafOffsetY: Double? = null,
 )

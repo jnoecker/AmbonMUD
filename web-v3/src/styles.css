@@ -3719,25 +3719,16 @@ body {
 }
 
 /* The swinging leaf — pivots on its hinge edge between 0° and the open angle. */
+/* The leaf sits in front of the frame (the door opens toward the viewer); its
+   box (size/position/pivot) is set inline from leafScale + leafOffsetY + hinge. */
 .feat-door-leaf {
   position: absolute;
-  inset: 8%;
-  z-index: 1;
-  width: 84%;
-  height: 84%;
+  z-index: 2;
   object-fit: fill;
   backface-visibility: hidden;
   transition: transform 0.6s cubic-bezier(0.45, 0.05, 0.3, 1);
   pointer-events: none;
   user-select: none;
-}
-
-.feat-door-stage.hinge-left .feat-door-leaf {
-  transform-origin: left center;
-}
-
-.feat-door-stage.hinge-right .feat-door-leaf {
-  transform-origin: right center;
 }
 
 .feat-door-leaf-css {
@@ -3761,16 +3752,36 @@ body {
   transform: translateY(-50%);
 }
 
-/* Static frame, on top of the leaf (authored art has a transparent opening). */
+/* Static frame, behind the leaf (the door opens toward the viewer). */
 .feat-door-frame {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+}
+
+/* Keyhole glow — a small warded glint on the closed leaf when a key is needed. */
+.feat-door-keyhole {
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  z-index: 3;
+  width: 10px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  border-radius: 50% 50% 40% 40%;
+  background: radial-gradient(circle at 50% 34%, rgb(255 226 150 / 95%), rgb(190 140 50 / 70%) 60%, transparent 72%);
+  box-shadow: 0 0 10px rgb(255 210 120 / 75%), 0 0 22px rgb(255 190 90 / 45%);
+  animation: door-keyhole-glow 2.6s var(--ease-in-out-smooth) infinite;
+}
+
+@keyframes door-keyhole-glow {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
 }
 
 .feat-door-frame-css {
@@ -3900,6 +3911,7 @@ body {
 
   .feat-door-seal.is-locked,
   .feat-door-seal.is-shatter,
+  .feat-door-keyhole,
   .feat-door-key.is-using .feat-door-key-img {
     animation: none;
   }
