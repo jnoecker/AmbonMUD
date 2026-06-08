@@ -105,21 +105,24 @@ export function MonsterManualPanel({
     if (view === "dialog") dialogueSeenRef.current = false;
   }, [view]);
 
-  // Return to the entry when a conversation ends — whether the server sends a
-  // terminal node (no choices; show its closing line briefly) or just clears
-  // the dialogue (e.g. "Maybe later"). The initial "…" wait is ignored.
+  // Auto-return to the entry only when the conversation ends with nothing left to
+  // read — i.e. the server cleared the dialogue outright (a terminal "Maybe
+  // later"-style choice, walking away, entering combat). A terminal *node* (the
+  // NPC's final line, which has no choices) is deliberately KEPT on screen so its
+  // voice-over can play to the end and the player can read it at their own pace;
+  // they dismiss it with the Farewell button, the Entry button, or by closing the
+  // manual. Auto-closing it on a fixed timer (the old behaviour) cut the voice off
+  // after a few words and yanked dialogue-only NPCs back to the description.
   useEffect(() => {
     if (view !== "dialog") return;
-    if (dialogue) dialogueSeenRef.current = true;
-    const endedWithNode = dialogue && dialogue.choices.length === 0;
-    const endedByClear = !dialogue && dialogueSeenRef.current;
-    if (!endedWithNode && !endedByClear) return;
-    const t = window.setTimeout(() => {
-      if (dialogue) onDialogueEnd();
-      setView("info");
-    }, endedWithNode ? 1700 : 150);
+    if (dialogue) {
+      dialogueSeenRef.current = true;
+      return;
+    }
+    if (!dialogueSeenRef.current) return; // still waiting for the first node ("…")
+    const t = window.setTimeout(() => setView("info"), 150);
     return () => window.clearTimeout(t);
-  }, [view, dialogue]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [view, dialogue]);
 
   const { info, name } = monster;
   const skinned = !!bg; // a monster_manual_bg frame is registered
@@ -252,7 +255,7 @@ export function MonsterManualPanel({
               {dialogue ? (
                 <>
                   <p className="mm-dialog-text">{dialogue.text}</p>
-                  {dialogue.choices.length > 0 && (
+                  {dialogue.choices.length > 0 ? (
                     <ul className="mm-dialog-choices">
                       {dialogue.choices.map((ch) => (
                         <li key={ch.index}>
@@ -261,6 +264,16 @@ export function MonsterManualPanel({
                           </button>
                         </li>
                       ))}
+                    </ul>
+                  ) : (
+                    // Terminal node: no further choices. Let the player linger on
+                    // the line (and its voice-over) and leave on their own terms.
+                    <ul className="mm-dialog-choices">
+                      <li>
+                        <button type="button" className="mm-dialog-choice" onClick={() => { onDialogueEnd(); setView("info"); }}>
+                          Farewell.
+                        </button>
+                      </li>
                     </ul>
                   )}
                 </>
