@@ -10,6 +10,7 @@ import { TradePanel } from "./components/TradePanel";
 import { WorldFeaturesPopout } from "./components/WorldFeaturesPopout";
 import { featureArt, pickFocusedFeature } from "./components/worldFeatures";
 import { ChatPanel } from "./components/panels/ChatPanel";
+import { ChatBoardPanel } from "./components/panels/ChatBoardPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
 import { QuestPanel } from "./components/panels/QuestPanel";
@@ -846,6 +847,7 @@ function App() {
       case "quests": return "Quests";
       case "questOffers": return "Quest Offers";
       case "chat": return "Social";
+      case "chatboard": return "Social Board";
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
       case "features": return featurePanelFeature
@@ -927,6 +929,8 @@ function App() {
         variant={
           drawerPanel === "puzzle"
             ? "tome"
+            : drawerPanel === "chatboard"
+            ? "board"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -957,6 +961,8 @@ function App() {
           drawerPanel === "puzzle"
             ? (state.puzzle?.puzzles.find((p) => p.backgroundImage)?.backgroundImage
                 ?? state.serverAssets["puzzle_bg"])
+            : drawerPanel === "chatboard"
+            ? state.serverAssets["chat_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -985,6 +991,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
+        initialHeight={drawerPanel === "chatboard" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
@@ -1073,14 +1080,28 @@ function App() {
           />
         )}
 
-        {drawerPanel === "chat" && (
-          <ChatPanel
+        {drawerPanel === "chatboard" && (
+          <ChatBoardPanel
             connected={connected}
             canChat={connected && hasCharacterProfile}
             playerName={state.character.name}
             activeChannel={state.activeChatChannel}
             chatByChannel={state.chatByChannel}
             emotePresets={state.emotePresets}
+            tellTarget={state.tellTarget}
+            onTellTargetChange={state.setTellTarget}
+            onChannelChange={state.setActiveChatChannel}
+            onSendMessage={sendChatMessage}
+            onCommand={sendCommand}
+          />
+        )}
+
+        {drawerPanel === "chat" && (
+          <ChatPanel
+            connected={connected}
+            canChat={connected && hasCharacterProfile}
+            playerName={state.character.name}
+            chatByChannel={state.chatByChannel}
             whoPlayers={state.whoPlayers}
             groupInfo={state.groupInfo}
             pendingGroupInvite={state.pendingGroupInvite}
@@ -1090,9 +1111,13 @@ function App() {
             guildHall={state.guildHall}
             friends={state.friends}
             friendNotifications={state.friendNotifications}
-            onChannelChange={state.setActiveChatChannel}
             onRequestWho={() => sendCommand("who")}
             onSendMessage={sendChatMessage}
+            onTellPlayer={(name) => {
+              state.setActiveChatChannel("tell");
+              state.setTellTarget(name);
+              openPanel("chatboard");
+            }}
             onCommand={sendCommand}
           />
         )}

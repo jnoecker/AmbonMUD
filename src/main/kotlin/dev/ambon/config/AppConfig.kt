@@ -3082,6 +3082,8 @@ data class ImagesConfig(
             "char_btn_prestige" to "global_assets/char_btn_prestige.png",
             // Parchment backdrop for the pop-out describe editor.
             "character_scribe_bg" to "global_assets/character_scribe_bg.png",
+            "chat_bg" to "global_assets/chat_bg.png",
+            "chat_widget" to "global_assets/chat_widget.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

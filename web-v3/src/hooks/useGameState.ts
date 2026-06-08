@@ -255,6 +255,9 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [friendNotifications, setFriendNotifications] = useState<FriendNotification[]>([]);
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [activeChatChannel, setActiveChatChannel] = useState<ChatChannel>("say");
+  // The "tell" target, lifted to app state so the Who/Friends "Tell" buttons can
+  // prefill it when they open the standalone chat board.
+  const [tellTarget, setTellTarget] = useState("");
   const [whoPlayers, setWhoPlayers] = useState<WhoPlayer[]>([]);
   const [tradeState, setTradeState] = useState<TradeState | null>(null);
 
@@ -698,6 +701,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setFriendNotifications([]);
     setChatByChannel(createEmptyChatByChannel());
     setActiveChatChannel("say");
+    setTellTarget("");
     setDialogue(null);
     setWhoPlayers([]);
     setZoneInstances({ zone: null, currentEngineId: null, instances: [] });
@@ -784,7 +788,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     achievements, charStats, prestigeInfo,
     // Social
     groupInfo, pendingGroupInvite, guildInfo, pendingGuildInvite, guildMembers, guildHall,
-    friends, friendNotifications, chatByChannel, activeChatChannel, setActiveChatChannel,
+    friends, friendNotifications, chatByChannel, activeChatChannel, setActiveChatChannel, tellTarget, setTellTarget,
     whoPlayers, tradeState,
     // Quests
     quests, questsAvailable, questNotifications, setQuestNotifications,

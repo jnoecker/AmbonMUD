@@ -9,9 +9,11 @@ interface DrawerProps {
   /** Visual skin for the sheet chrome: warm leather (satchel), a dim
    *  dressing-chamber (equipment), a merchant cart (shop), a chalkboard
    *  (trainer), a parchment journal (combat log), or a cork quest board. */
-  variant?: "default" | "satchel" | "equipment" | "shop" | "trainer" | "journal" | "questboard" | "grimoire" | "desk" | "mail" | "feature" | "tome" | "vault" | "cabinet";
+  variant?: "default" | "satchel" | "equipment" | "shop" | "trainer" | "journal" | "questboard" | "grimoire" | "desk" | "mail" | "feature" | "tome" | "vault" | "cabinet" | "board";
   /** Optional background art for a skinned variant (server asset). */
   skinBg?: string;
+  /** Height (as a fraction of the viewport) the drawer snaps to when it opens. */
+  initialHeight?: number;
 }
 
 const SNAP_HALF = 0.6;
@@ -20,8 +22,8 @@ const DISMISS_THRESHOLD = 0.3;
 const DRAG_VELOCITY_DISMISS = 800; // px/s
 const ANIMATION_MS = 300;
 
-export function Drawer({ open, title, onClose, children, variant = "default", skinBg }: DrawerProps) {
-  const [height, setHeight] = useState(SNAP_HALF);
+export function Drawer({ open, title, onClose, children, variant = "default", skinBg, initialHeight = SNAP_HALF }: DrawerProps) {
+  const [height, setHeight] = useState(initialHeight);
   const [dragging, setDragging] = useState(false);
   const [renderPhase, setRenderPhase] = useState<"hidden" | "animating" | "open">(open ? "open" : "hidden");
   const [prevOpen, setPrevOpen] = useState(open);
@@ -32,8 +34,8 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (open) {
-      // Drawer is opening — mount it and snap to half-height
-      setHeight(SNAP_HALF);
+      // Drawer is opening — mount it and snap to its initial height
+      setHeight(initialHeight);
       setRenderPhase("open");
     } else {
       // Drawer is closing — collapse height, animation phase will unmount when done

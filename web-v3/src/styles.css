@@ -23298,3 +23298,256 @@ html:has(.game-shell),
     transition: none;
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+   Social Board — standalone painted chat panel (drawerPanel "chatboard")
+   The frame comes from the `chat_bg` skin; the channel rail, chalkboard
+   feed, and parchment composer are laid on top with carved-CSS fallbacks
+   so the panel works before any art ships.
+   ════════════════════════════════════════════════════════════ */
+.drawer-sheet.drawer-sheet-board {
+  background-image:
+    var(--skin-bg, none),
+    linear-gradient(165deg, rgb(48 34 20 / 98%), rgb(28 20 12 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* The painted board carries its own banner, so hide the drawer title and
+   shrink the header to just the close button. */
+.drawer-sheet-board .drawer-title {
+  display: none;
+}
+
+.drawer-sheet-board .drawer-header {
+  border-bottom: none;
+  padding: 6px 12px 0;
+  min-height: 0;
+}
+
+.drawer-sheet-board .drawer-body {
+  padding: clamp(8px, 2vh, 18px) clamp(10px, 3vw, 30px) clamp(12px, 2.5vh, 22px);
+}
+
+.chatboard {
+  --chat-accent-say: #79c46b;
+  --chat-accent-tell: #b08be0;
+  --chat-accent-gossip: #e0b24f;
+  --chat-accent-shout: #e08a46;
+  --chat-accent-ooc: #5fb0e0;
+  --chat-ink: #f3e7cf;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vh, 14px);
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── Channel rail ─────────────────────────────────────────── */
+.chatboard-channels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(5px, 1vw, 10px);
+}
+
+.chatboard-channel {
+  flex: 1 1 0;
+  min-width: 84px;
+  max-width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: clamp(6px, 1vh, 10px) 8px;
+  border-radius: 12px;
+  border: 1px solid rgb(201 162 74 / 30%);
+  background: linear-gradient(160deg, rgb(48 37 22 / 92%), rgb(30 23 14 / 94%));
+  box-shadow: inset 0 1px 0 rgb(230 205 146 / 12%), 0 2px 6px rgb(0 0 0 / 40%);
+  color: var(--chat-ink);
+  cursor: pointer;
+  transition: transform 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+}
+
+.chatboard-channel:hover {
+  transform: translateY(-1px);
+  border-color: rgb(230 205 146 / 50%);
+}
+
+.chatboard-channel.is-active {
+  border-color: var(--chat-accent);
+  box-shadow: inset 0 0 0 1px var(--chat-accent), 0 0 12px rgb(201 162 74 / 40%);
+}
+
+.chatboard-channel-gem {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 65%), transparent 60%), var(--chat-accent);
+  box-shadow: 0 0 8px rgb(255 255 255 / 22%);
+}
+
+.chatboard-channel-label {
+  font-family: var(--font-display);
+  font-size: clamp(0.82rem, 2.4vw, 0.98rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--chat-accent);
+}
+
+.chatboard-channel-sub {
+  font-size: 0.64rem;
+  color: rgb(243 231 207 / 62%);
+  white-space: nowrap;
+}
+
+/* ── Chalkboard feed ──────────────────────────────────────── */
+.chatboard-feed {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid rgb(201 162 74 / 28%);
+  background: linear-gradient(180deg, rgb(18 16 14 / 88%), rgb(10 9 8 / 90%));
+  box-shadow: inset 0 0 40px rgb(0 0 0 / 70%);
+  padding: clamp(8px, 1.6vh, 14px) clamp(10px, 2vw, 16px);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(201 162 74 / 55%) transparent;
+}
+
+.chatboard-feed::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chatboard-feed::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(201 162 74 / 70%), rgb(140 104 52 / 65%));
+}
+
+.chatboard-feed::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatboard-empty {
+  margin: auto;
+  text-align: center;
+  font-style: italic;
+  color: rgb(243 231 207 / 55%);
+  padding: clamp(20px, 6vh, 60px) 12px;
+}
+
+/* ── Composer (parchment) ─────────────────────────────────── */
+.chatboard-compose {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: clamp(5px, 1vw, 9px);
+}
+
+.chatboard-target {
+  flex: 0 0 auto;
+  width: clamp(110px, 22%, 180px);
+}
+
+.chatboard-target,
+.chatboard-input {
+  border-radius: 10px;
+  border: 1px solid rgb(201 162 74 / 30%);
+  background: linear-gradient(180deg, rgb(232 215 176 / 95%), rgb(214 193 150 / 95%));
+  color: #2a2113;
+  padding: clamp(8px, 1.4vh, 12px) 12px;
+  font-size: 0.92rem;
+}
+
+.chatboard-input {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.chatboard-target::placeholder,
+.chatboard-input::placeholder {
+  color: rgb(42 33 19 / 55%);
+  font-style: italic;
+}
+
+.chatboard-input:focus,
+.chatboard-target:focus {
+  outline: none;
+  border-color: rgb(201 162 74 / 90%);
+  box-shadow: 0 0 0 2px rgb(201 162 74 / 35%);
+}
+
+.chatboard-emote-btn,
+.chatboard-clear-btn {
+  flex: 0 0 auto;
+  border-radius: 10px;
+  border: 1px solid rgb(201 162 74 / 32%);
+  background: linear-gradient(160deg, rgb(60 46 26 / 90%), rgb(40 31 18 / 92%));
+  color: var(--chat-ink);
+  cursor: pointer;
+  padding: 0 clamp(8px, 1.4vw, 12px);
+  font-size: 1rem;
+  transition: border-color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.chatboard-clear-btn {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+
+.chatboard-emote-btn:hover:not(:disabled),
+.chatboard-clear-btn:hover:not(:disabled) {
+  border-color: rgb(230 205 146 / 55%);
+  transform: translateY(-1px);
+}
+
+.chatboard-emote-btn.is-active {
+  border-color: var(--chat-accent-gossip);
+  color: var(--chat-accent-gossip);
+}
+
+.chatboard-emote-btn:disabled,
+.chatboard-clear-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.chatboard-send-btn {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+  min-width: clamp(96px, 22%, 150px);
+  padding: clamp(6px, 1vh, 10px) clamp(12px, 2vw, 20px);
+  border-radius: 12px;
+  border: 1px solid rgb(201 162 74 / 45%);
+  background: linear-gradient(165deg, rgb(86 60 120 / 95%), rgb(58 40 86 / 96%));
+  color: #f3e7cf;
+  font-family: var(--font-display);
+  font-size: clamp(0.9rem, 2.4vw, 1.05rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 3px 10px rgb(0 0 0 / 45%);
+  transition: transform 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+}
+
+.chatboard-send-btn-line {
+  font-size: 0.82em;
+}
+
+.chatboard-send-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 22%), 0 0 16px rgb(140 110 200 / 50%);
+}
+
+.chatboard-send-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
