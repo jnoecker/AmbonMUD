@@ -23,4 +23,20 @@ data class FeatureFile(
     val items: List<String> = emptyList(),
     /** Text content. Only applies to SIGN type. */
     val text: String? = null,
+    /** Static base-plate art (content-addressed filename), drawn behind the handle. LEVER only. */
+    val plateImage: String? = null,
+    /** Rotating handle art (content-addressed filename), neutral upright pose. LEVER only. */
+    val handleImage: String? = null,
+    /** Handle pivot as a fraction of the handle sprite. LEVER only. Defaults to {0.5, 0.85}. */
+    val leverPivot: LeverPivotFile? = null,
+    /** Handle rotation in degrees when state = up. LEVER only. Default -28. */
+    val upAngle: Double? = null,
+    /** Handle rotation in degrees when state = down. LEVER only. Default 28. */
+    val downAngle: Double? = null,
+)
+
+/** Handle pivot as fractions (0..1) of the handle sprite box. */
+data class LeverPivotFile(
+    val x: Double = 0.5,
+    val y: Double = 0.85,
 )

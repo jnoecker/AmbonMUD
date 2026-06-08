@@ -8,6 +8,8 @@ interface WorldFeaturesPopoutProps {
   roomFeatures: RoomFeature[];
   containerContents: ContainerContents | null;
   preferredType: FeaturePopoutFocus;
+  /** Resolved server assets — supplies the global default lever plate/handle art. */
+  serverAssets: Record<string, string>;
   onCommand: (command: string) => void;
 }
 
@@ -38,58 +40,89 @@ function stateLabel(feature: RoomFeature): string | null {
 
 function LeverWidget({
   feature,
+  serverAssets,
   onCommand,
 }: {
   feature: RoomFeature;
+  serverAssets: Record<string, string>;
   onCommand: (cmd: string) => void;
 }) {
   const isUp = feature.state === "up";
   const label = isUp ? "Ready" : "Pulled";
 
+  // Custom art (authored in Arcanum): a static plate plus a handle sprite that
+  // rotates around its pivot between the up/down angles. Per-lever art wins;
+  // otherwise the server-wide default plate/handle; otherwise the hand-drawn
+  // vector lever.
+  const px = feature.leverPivot?.x ?? 0.5;
+  const py = feature.leverPivot?.y ?? 0.85;
+  const angle = isUp ? (feature.upAngle ?? -28) : (feature.downAngle ?? 28);
+  const handleSrc = feature.handleImage ?? serverAssets["lever_handle"] ?? null;
+  const plateSrc = feature.plateImage ?? serverAssets["lever_plate"] ?? null;
+
   return (
     <div className="lever-widget" onClick={() => onCommand(`pull ${feature.keyword}`)}>
-      <div className="lever-widget-plate">
-        <svg
-          className="lever-widget-svg"
-          viewBox="0 0 64 96"
-          aria-label={`${feature.name}: ${label}`}
-        >
-          {/* Base plate arc */}
-          <path
-            d="M12 78 Q32 86 52 78"
-            fill="none"
-            stroke="rgb(180 150 210 / 40%)"
-            strokeWidth="2"
-            strokeLinecap="round"
+      {handleSrc ? (
+        <div className="lever-widget-art" aria-label={`${feature.name}: ${label}`} role="img">
+          {plateSrc && (
+            <img className="lever-widget-art-plate" src={plateSrc} alt="" aria-hidden="true" draggable={false} />
+          )}
+          <img
+            className="lever-widget-art-handle"
+            src={handleSrc}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            style={{
+              transformOrigin: `${px * 100}% ${py * 100}%`,
+              transform: `translate(${(0.5 - px) * 100}%, ${(0.5 - py) * 100}%) rotate(${angle}deg)`,
+            }}
           />
-          {/* Pivot point */}
-          <circle cx="32" cy="72" r="6" className="lever-widget-pivot" />
-          {/* Handle shaft */}
-          <line
-            x1="32"
-            y1="72"
-            x2={isUp ? "32" : "46"}
-            y2={isUp ? "22" : "32"}
-            className="lever-widget-shaft"
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-          {/* Handle grip */}
-          <circle
-            cx={isUp ? "32" : "46"}
-            cy={isUp ? "18" : "28"}
-            r="7"
-            className="lever-widget-grip"
-          />
-          {/* Glow on grip */}
-          <circle
-            cx={isUp ? "32" : "46"}
-            cy={isUp ? "18" : "28"}
-            r="4"
-            className="lever-widget-glow"
-          />
-        </svg>
-      </div>
+        </div>
+      ) : (
+        <div className="lever-widget-plate">
+          <svg
+            className="lever-widget-svg"
+            viewBox="0 0 64 96"
+            aria-label={`${feature.name}: ${label}`}
+          >
+            {/* Base plate arc */}
+            <path
+              d="M12 78 Q32 86 52 78"
+              fill="none"
+              stroke="rgb(180 150 210 / 40%)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            {/* Pivot point */}
+            <circle cx="32" cy="72" r="6" className="lever-widget-pivot" />
+            {/* Handle shaft */}
+            <line
+              x1="32"
+              y1="72"
+              x2={isUp ? "32" : "46"}
+              y2={isUp ? "22" : "32"}
+              className="lever-widget-shaft"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            {/* Handle grip */}
+            <circle
+              cx={isUp ? "32" : "46"}
+              cy={isUp ? "18" : "28"}
+              r="7"
+              className="lever-widget-grip"
+            />
+            {/* Glow on grip */}
+            <circle
+              cx={isUp ? "32" : "46"}
+              cy={isUp ? "18" : "28"}
+              r="4"
+              className="lever-widget-glow"
+            />
+          </svg>
+        </div>
+      )}
       <div className="lever-widget-info">
         <span className="lever-widget-name">{feature.name}</span>
         <span className={`lever-widget-state lever-widget-state-${isUp ? "up" : "down"}`}>
@@ -290,6 +323,7 @@ export function WorldFeaturesPopout({
   roomFeatures,
   containerContents,
   preferredType,
+  serverAssets,
   onCommand,
 }: WorldFeaturesPopoutProps) {
   const groupedFeatures = useMemo(
@@ -397,7 +431,7 @@ export function WorldFeaturesPopout({
       <div className={`feature-popout-grid${activeTab === "lever" ? " feature-popout-grid-levers" : ""}`}>
         {visibleFeatures.map((feature) => {
           if (feature.type === "lever") {
-            return <LeverWidget key={feature.id} feature={feature} onCommand={onCommand} />;
+            return <LeverWidget key={feature.id} feature={feature} serverAssets={serverAssets} onCommand={onCommand} />;
           }
 
           if (

@@ -329,7 +329,7 @@ object WorldLoader {
                 val featList = allRoomFeatures.getOrPut(fromId) { mutableListOf() }
                 for ((featLocalId, ff) in rf.features) {
                     val featId = "${fromId.value}/$featLocalId"
-                    featList.add(parseFeatureFile(featId, fromId, zone, ff))
+                    featList.add(parseFeatureFile(featId, fromId, zone, ff, imagesBase))
                 }
             }
 
@@ -1541,6 +1541,7 @@ object WorldLoader {
         roomId: RoomId,
         zone: String,
         ff: FeatureFile,
+        imagesBase: String,
     ): RoomFeature {
         val type = ff.type.trim().uppercase()
         val displayName = requireNonBlank(ff.displayName) {
@@ -1590,6 +1591,13 @@ object WorldLoader {
                     initialState = initialState,
                     resetWithZone = ff.resetWithZone,
                     respawnSeconds = respawnSeconds,
+                    // Optional custom art. Image refs are content-addressed filenames
+                    // resolved against the world image base, exactly like room/mob/item art.
+                    plateImage = ff.plateImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
+                    handleImage = ff.handleImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
+                    leverPivot = ff.leverPivot?.let { RoomFeature.LeverPivot(it.x, it.y) },
+                    upAngle = ff.upAngle,
+                    downAngle = ff.downAngle,
                 )
             }
             "SIGN" -> {

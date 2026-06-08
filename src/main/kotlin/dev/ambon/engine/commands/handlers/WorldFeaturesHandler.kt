@@ -57,7 +57,9 @@ class WorldFeaturesHandler(
             LockableState.OPEN -> outbound.send(OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} is already open."))
             LockableState.CLOSED -> {
                 lockable.applyState(LockableState.OPEN)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You open ${the(lockable.displayName)}."))
+                val msg = "You open ${the(lockable.displayName)}."
+                outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+                gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "features", command = "open")
                 broadcastToRoomExcept(me.roomId, sessionId, "${me.name} opens ${the(lockable.displayName)}.", players, outbound)
                 world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
             }
@@ -71,7 +73,9 @@ class WorldFeaturesHandler(
         when (lockable.state) {
             LockableState.OPEN -> {
                 lockable.applyState(LockableState.CLOSED)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You close ${the(lockable.displayName)}."))
+                val msg = "You close ${the(lockable.displayName)}."
+                outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+                gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "features", command = "close")
                 broadcastToRoomExcept(me.roomId, sessionId, "${me.name} closes ${the(lockable.displayName)}.", players, outbound)
                 world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
             }
@@ -207,7 +211,12 @@ class WorldFeaturesHandler(
         val state = worldState?.getLeverState(feature.id) ?: feature.initialState
         val newState = if (state == LeverState.UP) LeverState.DOWN else LeverState.UP
         worldState?.setLeverState(feature.id, newState)
-        outbound.send(OutboundEvent.SendInfo(sessionId, "You pull ${the(feature.displayName)}. It moves ${newState.name.lowercase()}."))
+        val pullMessage = "You pull ${the(feature.displayName)}. It moves ${newState.name.lowercase()}."
+        outbound.send(OutboundEvent.SendInfo(sessionId, pullMessage))
+        // Web clients drop plain text — surface the result via UI.Feedback so the
+        // pull isn't just a silent state flip on the canvas (telnet still gets the
+        // SendInfo above).
+        gmcpEmitter?.sendUiFeedback(sessionId, "success", pullMessage, scope = "features", command = "pull")
         broadcastToRoomExcept(me.roomId, sessionId, "${me.name} pulls ${the(feature.displayName)}.", players, outbound)
         emitRoomFeatures(room)
         // Notify puzzle system of the lever interaction
@@ -224,6 +233,7 @@ class WorldFeaturesHandler(
             return
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, feature.text))
+        gmcpEmitter?.sendUiFeedback(sessionId, "info", feature.text, scope = "features", command = "read")
     }
 
     private suspend fun applyKeyAction(
@@ -240,7 +250,9 @@ class WorldFeaturesHandler(
         } else {
             lockable.applyState(newState)
             if (lockable.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You $verb ${the(lockable.displayName)}."))
+            val msg = "You $verb ${the(lockable.displayName)}."
+            outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+            gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "features", command = verb)
             broadcastToRoomExcept(
                 me.roomId,
                 sessionId,

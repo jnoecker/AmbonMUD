@@ -64,6 +64,29 @@ class WorldLoaderFeaturesTest {
         assertEquals("lever", lever.keyword)
         assertEquals(LeverState.UP, lever.initialState)
         assertTrue(lever.resetWithZone)
+        // No custom art authored — fields stay null so the client renders its
+        // built-in vector lever (backward compatibility).
+        assertNull(lever.plateImage)
+        assertNull(lever.handleImage)
+        assertNull(lever.leverPivot)
+        assertNull(lever.upAngle)
+        assertNull(lever.downAngle)
+    }
+
+    @Test
+    fun `lever with custom art is parsed and image refs are resolved`() {
+        val world = dev.ambon.test.TestWorlds.okFeatures
+        val entrance = world.rooms.getValue(RoomId("ok_features:entrance"))
+
+        val lever = entrance.features.filterIsInstance<RoomFeature.Lever>().single { it.keyword == "brass" }
+        assertEquals("an ostentatious brass lever", lever.displayName)
+        assertEquals(LeverState.DOWN, lever.initialState)
+        // Image refs are content-addressed filenames resolved against the image base.
+        assertTrue(lever.plateImage!!.endsWith("plate123.webp"), "got=${lever.plateImage}")
+        assertTrue(lever.handleImage!!.endsWith("handle456.webp"), "got=${lever.handleImage}")
+        assertEquals(RoomFeature.LeverPivot(0.4, 0.9), lever.leverPivot)
+        assertEquals(-30.0, lever.upAngle)
+        assertEquals(35.0, lever.downAngle)
     }
 
     @Test

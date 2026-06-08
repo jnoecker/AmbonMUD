@@ -56,7 +56,25 @@ sealed class RoomFeature {
         val resetWithZone: Boolean,
         /** Seconds out of [initialState] before the lever snaps back. Null = zone reset only. */
         val respawnSeconds: Long? = null,
+        /**
+         * Optional custom artwork: a static base plate plus a handle that rotates
+         * around [leverPivot] between [upAngle] and [downAngle]. Image refs are
+         * content-addressed filenames resolved against the world image base, like
+         * room/mob/item art. When [handleImage] is absent the client renders its
+         * built-in vector lever (full backward compatibility).
+         */
+        val plateImage: String? = null,
+        val handleImage: String? = null,
+        val leverPivot: LeverPivot? = null,
+        val upAngle: Double? = null,
+        val downAngle: Double? = null,
     ) : RoomFeature()
+
+    /** Handle pivot as fractions (0..1) of the handle sprite box. */
+    data class LeverPivot(
+        val x: Double,
+        val y: Double,
+    )
 
     data class Sign(
         override val id: String,
