@@ -27,11 +27,11 @@ type Rect = { left: number; top: number; width: number; height: number };
  * Tweak these to nudge the lineup against the painted frame.
  */
 const CHANNEL_RECTS: Record<string, Rect> = {
-  say: { left: 18.3, top: 24.8, width: 11.2, height: 9.0 },
-  tell: { left: 30.1, top: 24.8, width: 11.2, height: 9.0 },
-  gossip: { left: 42.0, top: 24.8, width: 11.2, height: 9.0 },
-  shout: { left: 55.0, top: 24.8, width: 11.2, height: 9.0 },
-  ooc: { left: 68.7, top: 24.8, width: 11.2, height: 9.0 },
+  say: { left: 17.7, top: 23.1, width: 11.2, height: 9.0 },
+  tell: { left: 30.1, top: 23.1, width: 11.2, height: 9.0 },
+  gossip: { left: 43.0, top: 23.1, width: 11.2, height: 9.0 },
+  shout: { left: 56.0, top: 23.1, width: 11.2, height: 9.0 },
+  ooc: { left: 69.0, top: 23.1, width: 11.2, height: 9.0 },
 };
 // Measured off social-final.png (1448×1086): chalkboard l15.9 t34.3 w69.3 h44.7;
 // parchment l21.3 t82.0 w46.3 h13.4; send-scroll l~77 w~17.
