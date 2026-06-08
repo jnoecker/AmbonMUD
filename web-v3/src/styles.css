@@ -22827,20 +22827,28 @@ html:has(.game-shell),
 .cc-stats-empty { text-align: center; color: var(--cc-ink-dim); }
 
 /* ── Action gem buttons ────────────────────────────────────── */
-.cc-actions { display: flex; gap: 12px; }
+.cc-actions {
+  display: flex;
+  gap: 16px;
+  padding: 2px clamp(6px, 3vw, 28px);
+}
 
 .cc-gem-btn {
   flex: 1;
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 10px 18px;
   border-radius: 12px;
   border: 1px solid rgb(201 162 74 / 40%);
   color: #fdf3d8;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 1.02rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 70%);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%), 0 6px 16px rgb(8 6 3 / 40%);
   transition: transform 150ms, filter 150ms;
 }
@@ -22850,10 +22858,13 @@ html:has(.game-shell),
 .cc-gem-green { background: linear-gradient(160deg, rgb(58 110 70 / 92%), rgb(34 74 46 / 92%)); }
 .cc-gem-purple { background: linear-gradient(160deg, rgb(96 66 140 / 92%), rgb(62 42 96 / 92%)); }
 
+/* Authored banner art keeps its aspect (centred, no stretch); the label rides
+   on top with a strong shadow. */
 .cc-gem-btn.has-art {
+  min-height: 64px;
   border: none;
-  background: var(--cc-btn) center / 100% 100% no-repeat;
-  box-shadow: 0 6px 16px rgb(8 6 3 / 40%);
+  background: var(--cc-btn) center / contain no-repeat;
+  box-shadow: none;
 }
 
 /* ── Prestige footer ───────────────────────────────────────── */

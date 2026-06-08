@@ -442,27 +442,6 @@ export function CharacterPanel({
         </button>
       </div>
 
-      {/* ── Prestige footer ───────────────────────────────── */}
-      {prestigeInfo && (
-        <div className="cc-prestige-footer">
-          <span className="cc-prestige-rank">Prestige · Rank {prestigeInfo.currentRank} / {prestigeInfo.maxRank}</span>
-          <div className="cc-prestige-bar">
-            <span
-              className="cc-prestige-fill"
-              style={{
-                width: `${prestigeInfo.nextRankCost && prestigeInfo.nextRankCost > 0
-                  ? Math.min(100, (prestigeInfo.availableXp / prestigeInfo.nextRankCost) * 100)
-                  : 0}%`,
-              }}
-            />
-          </div>
-          <span className="cc-prestige-points">
-            {prestigeInfo.availableXp.toLocaleString()}
-            {prestigeInfo.nextRankCost ? ` / ${prestigeInfo.nextRankCost.toLocaleString()}` : ""} pts
-          </span>
-        </div>
-      )}
-
       {/* ── Describe pop-out ──────────────────────────────── */}
       {showScribe && (
         <div className="cc-overlay" role="dialog" aria-label="Inscribe your tale" onClick={() => setShowScribe(false)}>
