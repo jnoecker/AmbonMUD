@@ -2204,6 +2204,25 @@ class GmcpEmitter(
         emitRaw(sessionId, "Puzzle.Close", "{}", supportCheck = "Puzzle")
     }
 
+    /**
+     * Result of a riddle answer attempt. The web client uses this to play the
+     * inscribe → puff-of-flame beat (gold flare on [correct], ash scatter
+     * otherwise) and surface [message] on the page.
+     */
+    suspend fun sendPuzzleResult(
+        sessionId: SessionId,
+        id: String,
+        correct: Boolean,
+        message: String,
+    ) {
+        emit(
+            sessionId,
+            "Puzzle.Result",
+            PuzzleResultPayload(id = id, correct = correct, message = message),
+            supportCheck = "Puzzle",
+        )
+    }
+
     // ---------- look target ----------
 
     suspend fun sendLookTarget(
@@ -3353,6 +3372,15 @@ class GmcpEmitter(
         val currentStep: Int?,
         /** True if the player has already solved this puzzle. */
         val solved: Boolean,
+        /** Optional parchment/grimoire backdrop art (resolved URL), or null. */
+        val backgroundImage: String? = null,
+    )
+
+    /** Result of a riddle answer attempt — drives the client's inscribe/flame beat. */
+    private data class PuzzleResultPayload(
+        val id: String,
+        val correct: Boolean,
+        val message: String,
     )
 
     internal companion object {

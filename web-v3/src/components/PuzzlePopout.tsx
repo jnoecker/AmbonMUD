@@ -1,132 +1,152 @@
-import { useState } from "react";
-import type { PuzzleItem, PuzzleState } from "../types";
+import { useEffect, useRef, useState } from "react";
+import type { PuzzleItem, PuzzleResult, PuzzleState } from "../types";
 
 interface PuzzlePopoutProps {
   puzzle: PuzzleState;
+  puzzleResult: PuzzleResult | null;
+  serverAssets: Record<string, string>;
   onCommand: (command: string) => void;
 }
 
 function SequenceDots({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
   return (
-    <div className="puzzle-sequence-dots" aria-label={`Step ${currentStep} of ${totalSteps}`}>
+    <div className="puzzle-seq-dots" aria-label={`Step ${currentStep} of ${totalSteps}`}>
       {Array.from({ length: totalSteps }, (_, i) => (
         <span
           key={i}
-          className={`puzzle-sequence-dot${i < currentStep ? " puzzle-sequence-dot-done" : ""}${i === currentStep ? " puzzle-sequence-dot-next" : ""}`}
+          className={`puzzle-seq-dot${i < currentStep ? " is-done" : ""}${i === currentStep ? " is-next" : ""}`}
         />
       ))}
     </div>
   );
 }
 
-function RiddleCard({ puzzle }: { puzzle: PuzzleItem }) {
+function RiddleBlock({ puzzle }: { puzzle: PuzzleItem }) {
   return (
-    <article className={`puzzle-card puzzle-card-riddle${puzzle.solved ? " puzzle-card-solved" : ""}`}>
-      <div className="puzzle-card-icon">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path d="M9 21h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M10 17v4M14 17v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className="puzzle-card-body">
-        <div className="puzzle-card-top">
-          <span className="puzzle-card-label">Riddle</span>
-          {puzzle.solved && <span className="puzzle-card-badge">Solved</span>}
-        </div>
-        <p className="puzzle-card-question">
-          {puzzle.question ?? "An ancient riddle awaits your answer."}
-        </p>
-      </div>
-    </article>
+    <div className={`puzzle-riddle${puzzle.solved ? " is-solved" : ""}`}>
+      <span className="puzzle-eyebrow">A Riddle</span>
+      <p className="puzzle-riddle-text">
+        {puzzle.question ?? "An ancient riddle awaits your answer."}
+      </p>
+      {puzzle.solved && <span className="puzzle-seal">Solved</span>}
+    </div>
   );
 }
 
-function SequenceCard({ puzzle }: { puzzle: PuzzleItem }) {
+function SequenceBlock({ puzzle }: { puzzle: PuzzleItem }) {
   return (
-    <article className={`puzzle-card puzzle-card-sequence${puzzle.solved ? " puzzle-card-solved" : ""}`}>
-      <div className="puzzle-card-icon puzzle-card-icon-sequence">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="5" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" />
-          <circle cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" />
-          <circle cx="19" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M7 12h3M14 12h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className="puzzle-card-body">
-        <div className="puzzle-card-top">
-          <span className="puzzle-card-label">Sequence</span>
-          {puzzle.solved && <span className="puzzle-card-badge">Solved</span>}
-        </div>
-        <p className="puzzle-card-hint">
-          Interact with features in the correct order.
-        </p>
-        {puzzle.totalSteps != null && puzzle.currentStep != null && (
-          <SequenceDots currentStep={puzzle.currentStep} totalSteps={puzzle.totalSteps} />
-        )}
-      </div>
-    </article>
+    <div className={`puzzle-riddle${puzzle.solved ? " is-solved" : ""}`}>
+      <span className="puzzle-eyebrow">A Sequence</span>
+      <p className="puzzle-riddle-text">Work the room's features in the right order.</p>
+      {puzzle.totalSteps != null && puzzle.currentStep != null && (
+        <SequenceDots currentStep={puzzle.currentStep} totalSteps={puzzle.totalSteps} />
+      )}
+      {puzzle.solved && <span className="puzzle-seal">Solved</span>}
+    </div>
   );
 }
 
-export function PuzzlePopout({ puzzle, onCommand }: PuzzlePopoutProps) {
+export function PuzzlePopout({ puzzle, puzzleResult, serverAssets, onCommand }: PuzzlePopoutProps) {
   const [answer, setAnswer] = useState("");
+  const [burn, setBurn] = useState<{ correct: boolean; text: string; message: string } | null>(null);
+  const [seenResult, setSeenResult] = useState<PuzzleResult | null>(puzzleResult);
+  const [pendingText, setPendingText] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const hasArt =
+    (puzzle.puzzles.find((p) => p.backgroundImage)?.backgroundImage ?? serverAssets["puzzle_bg"]) != null;
+  const hasUnsolvedRiddle = puzzle.puzzles.some((p) => p.type === "riddle" && !p.solved);
+
+  // A fresh Puzzle.Result ignites the ink: gold flare if correct, ash scatter if
+  // not. Derived during render (the blessed "adjust state on prop change" form)
+  // so we react the instant the result lands, showing what was just inscribed.
+  if (puzzleResult !== seenResult) {
+    setSeenResult(puzzleResult);
+    if (puzzleResult) {
+      setBurn({
+        correct: puzzleResult.correct,
+        text: pendingText,
+        message: puzzleResult.message,
+      });
+      setAnswer("");
+    }
+  }
 
   const submit = () => {
     const trimmed = answer.trim();
-    if (trimmed.length === 0) return;
+    if (trimmed.length === 0 || burn) return;
+    setPendingText(trimmed);
     onCommand(`answer ${trimmed}`);
-    setAnswer("");
   };
 
-  const hasUnsolvedRiddle = puzzle.puzzles.some((p) => p.type === "riddle" && !p.solved);
+  // Clear the flame once it's burned out; re-arm the page for another attempt
+  // when the answer was wrong.
+  useEffect(() => {
+    if (!burn) return;
+    const wasWrong = !burn.correct;
+    const timer = setTimeout(() => {
+      setBurn(null);
+      if (wasWrong) inputRef.current?.focus();
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [burn]);
 
   return (
-    <div className="puzzle-popout">
-      {puzzle.puzzles.map((p) =>
-        p.type === "riddle" ? (
-          <RiddleCard key={p.id} puzzle={p} />
-        ) : (
-          <SequenceCard key={p.id} puzzle={p} />
-        ),
-      )}
+    <div className="puzzle-tome">
+      <div className={`puzzle-page${hasArt ? " on-art" : " on-css"}`}>
+        {puzzle.puzzles.map((p) =>
+          p.type === "riddle" ? (
+            <RiddleBlock key={p.id} puzzle={p} />
+          ) : (
+            <SequenceBlock key={p.id} puzzle={p} />
+          ),
+        )}
 
-      {hasUnsolvedRiddle && (
-        <form
-          className="puzzle-answer-bar"
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit();
-          }}
-        >
-          <label htmlFor="puzzle-answer-input" className="sr-only">
-            Your answer
-          </label>
-          <input
-            id="puzzle-answer-input"
-            type="text"
-            className="puzzle-answer-input"
-            placeholder="Speak your answer..."
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-          />
-          <button
-            type="submit"
-            className="puzzle-answer-submit"
-            disabled={answer.trim().length === 0}
+        {(hasUnsolvedRiddle || burn) && (
+          <form
+            className="puzzle-inscribe"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
           >
-            Answer
-          </button>
-        </form>
-      )}
+            <div className={`puzzle-inscribe-field${burn ? (burn.correct ? " is-success" : " is-fail") : ""}`}>
+              <input
+                ref={inputRef}
+                id="puzzle-answer-input"
+                type="text"
+                className="puzzle-inscribe-input"
+                placeholder="Inscribe your answer…"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+                disabled={burn != null}
+                aria-label="Your answer"
+              />
+              {burn && (
+                <div className={`puzzle-burn${burn.correct ? " is-success" : " is-fail"}`} aria-hidden="true">
+                  <span className="puzzle-burn-text">{burn.text}</span>
+                  <span className="puzzle-flame" />
+                  <span className="puzzle-flame puzzle-flame-2" />
+                </div>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="puzzle-inscribe-submit"
+              disabled={answer.trim().length === 0 || burn != null}
+            >
+              Inscribe
+            </button>
+            {burn && (
+              <p className={`puzzle-verdict${burn.correct ? " is-success" : " is-fail"}`} role="status">
+                {burn.message}
+              </p>
+            )}
+          </form>
+        )}
+      </div>
     </div>
   );
 }

@@ -331,10 +331,19 @@ export interface PuzzleItem {
   currentStep: number | null;
   /** True if the player has already solved this puzzle. */
   solved: boolean;
+  /** Fully-resolved parchment/grimoire backdrop art URL, or null. */
+  backgroundImage: string | null;
 }
 
 export interface PuzzleState {
   puzzles: PuzzleItem[];
+}
+
+/** Result of a riddle answer attempt — drives the inscribe → puff-of-flame beat. */
+export interface PuzzleResult {
+  id: string;
+  correct: boolean;
+  message: string;
 }
 
 export interface RoomItem {

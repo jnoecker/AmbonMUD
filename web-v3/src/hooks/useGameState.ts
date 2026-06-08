@@ -79,6 +79,7 @@ import type {
   RoomPlayer,
   RoomState,
   PuzzleState,
+  PuzzleResult,
   ServerFeatures,
   ShopState,
   SkillSummary,
@@ -269,6 +270,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   // ── Economy ───────────────────────────────────────
   const [shop, setShop] = useState<ShopState | null>(null);
   const [puzzle, setPuzzle] = useState<PuzzleState | null>(null);
+  const [puzzleResult, setPuzzleResult] = useState<PuzzleResult | null>(null);
   const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]);
   const [currencies, setCurrencies] = useState<CurrencyBalance[]>([]);
   const [bankState, setBankState] = useState<BankState | null>(null);
@@ -572,8 +574,12 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         },
         setPuzzle: (value) => {
           setPuzzle(value);
-          if (!value) setActivePopout((prev) => prev === "puzzle" ? null : prev);
+          if (!value) {
+            setPuzzleResult(null);
+            setActivePopout((prev) => prev === "puzzle" ? null : prev);
+          }
         },
+        setPuzzleResult,
         setFriends,
         pushFriendNotification,
         setChatByChannel,
@@ -702,6 +708,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setContainerContents(null);
     setShop(null);
     setPuzzle(null);
+    setPuzzleResult(null);
     setQuestNotifications([]);
     setCombatVictoryNotifications([]);
     setFleeNotifications([]);
@@ -774,7 +781,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     quests, questsAvailable, questNotifications, setQuestNotifications,
     dailyQuests, weeklyQuests, autoQuest, globalQuest,
     // Economy
-    shop, puzzle, auctionListings, currencies, currencyActivity, bankState, stylistState, recallState, lotteryInfo, diceResult,
+    shop, puzzle, puzzleResult, auctionListings, currencies, currencyActivity, bankState, stylistState, recallState, lotteryInfo, diceResult,
     // Crafting
     craftingSkills, craftingRecipes, craftingNodes, gatherCooldownUntilMs,
     // World

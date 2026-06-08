@@ -958,6 +958,7 @@ object WorldLoader {
                         successMessage = puzzleFile.successMessage,
                         cooldownMs = puzzleFile.cooldownMs,
                         resetOnFail = puzzleFile.resetOnFail,
+                        backgroundImage = puzzleFile.backgroundImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
                     ),
                 )
             }

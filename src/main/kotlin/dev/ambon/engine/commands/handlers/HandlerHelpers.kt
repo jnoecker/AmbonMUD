@@ -234,6 +234,7 @@ internal suspend fun EngineContext.emitPuzzleGmcp(sessionId: SessionId) {
             totalSteps = if (isRiddle) null else p.steps.size,
             currentStep = if (isRiddle) null else system.sequenceStep(sessionId, p.id),
             solved = system.isSolved(sessionId, p.id),
+            backgroundImage = p.backgroundImage,
         )
     }
     emitter.sendPuzzleList(sessionId, payloads)
