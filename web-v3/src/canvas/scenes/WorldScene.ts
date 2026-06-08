@@ -1730,10 +1730,19 @@ export class WorldScene {
       // Pulse targetable entities
       const isEnemy = pending.targetType === "ENEMY";
       const isAlly = pending.targetType === "ALLY";
+      // Hostile casts can only hit true combatants — vendors, quest givers,
+      // dialog NPCs, and props stay at rest with no crosshair so the overlay
+      // doesn't suggest they're valid targets (#1232). Absent info defaults
+      // to targetable (legacy mobs are COMBAT).
+      const mobInfo = gameStateRef.current.mobInfo;
+      const isTargetable = (ids: string[]): boolean => {
+        const info = mobInfo.find((m) => m.id === ids[0]);
+        return info ? info.combatant : true;
+      };
       if (!this.targetingActive) {
         // Set cursor once on targeting start
-        for (const { hitArea } of this.mobSprites.values()) {
-          if (isEnemy) hitArea.cursor = "crosshair";
+        for (const { hitArea, ids } of this.mobSprites.values()) {
+          if (isEnemy && isTargetable(ids)) hitArea.cursor = "crosshair";
         }
         for (const { hitArea } of this.playerSprites.values()) {
           if (isAlly) hitArea.cursor = "crosshair";
@@ -1741,8 +1750,8 @@ export class WorldScene {
         this.targetingActive = true;
       }
       // Animate alpha every frame
-      for (const { sprite } of this.mobSprites.values()) {
-        if (isEnemy) sprite.alpha = pulse;
+      for (const { sprite, ids } of this.mobSprites.values()) {
+        if (isEnemy && isTargetable(ids)) sprite.alpha = pulse;
       }
       for (const { sprite } of this.playerSprites.values()) {
         if (isAlly) sprite.alpha = pulse;
@@ -1848,7 +1857,14 @@ export class WorldScene {
 
       const mobData = mob;
       hitArea.on("pointerdown", () => {
-        if (pendingCastRef.current) {
+        const pendingCast = pendingCastRef.current;
+        if (pendingCast) {
+          // Hostile casts cannot target non-combat NPCs — the server refuses
+          // them too (#1232); don't consume the click as a target selection.
+          if (pendingCast.targetType === "ENEMY") {
+            const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
+            if (info && !info.combatant) return;
+          }
           canvasCallbacks.onTargetSelected?.(mobData.name);
           return;
         }

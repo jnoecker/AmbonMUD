@@ -171,6 +171,11 @@ class AbilitySystem(
                     ?: return "Cast ${ability.displayName} on whom?"
             }
 
+        // Non-combat NPCs refuse spells exactly like they refuse `kill` —
+        // without this gate a targeted cast could destroy quest givers,
+        // vendors, and props without ever entering combat (#1232).
+        combat.nonCombatantRefusal(mob)?.let { return it }
+
         if (effects.any { it is AbilityEffect.AreaDamage } && mobs == null) {
             return "Area damage is not available."
         }

@@ -238,15 +238,7 @@ class CombatSystem(
         if (matches.isEmpty()) return "You don't see '$keyword' here."
 
         val mob = matches.first()
-        if (!mob.role.isCombatant) {
-            return when (mob.role) {
-                dev.ambon.domain.mob.MobRole.VENDOR -> "${mob.name} isn't interested in fighting — try the shop instead."
-                dev.ambon.domain.mob.MobRole.QUEST_GIVER -> "${mob.name} has no quarrel with you. Maybe they have work to offer?"
-                dev.ambon.domain.mob.MobRole.DIALOG -> "${mob.name} has no interest in fighting you."
-                dev.ambon.domain.mob.MobRole.PROP -> "${mob.name} is not something you can attack."
-                dev.ambon.domain.mob.MobRole.COMBAT -> error("unreachable")
-            }
-        }
+        nonCombatantRefusal(mob)?.let { return it }
 
         val now = clock.millis()
         registerCombatant(sessionId, mob.id, player, now)
@@ -256,6 +248,20 @@ class CombatSystem(
         broadcastToRoom(players, outbound, roomId, "${player.name} attacks ${mob.name}.", exclude = sessionId)
 
         return null
+    }
+
+    /**
+     * Player-facing refusal for attempting to fight [mob], or null when the mob
+     * is a combatant. Shared by the kill command and hostile ability casts so
+     * non-combat NPCs (vendors, quest givers, dialogue NPCs, props) refuse the
+     * spell exactly like they refuse the sword (#1232).
+     */
+    fun nonCombatantRefusal(mob: MobState): String? = when (mob.role) {
+        dev.ambon.domain.mob.MobRole.COMBAT -> null
+        dev.ambon.domain.mob.MobRole.VENDOR -> "${mob.name} isn't interested in fighting — try the shop instead."
+        dev.ambon.domain.mob.MobRole.QUEST_GIVER -> "${mob.name} has no quarrel with you. Maybe they have work to offer?"
+        dev.ambon.domain.mob.MobRole.DIALOG -> "${mob.name} has no interest in fighting you."
+        dev.ambon.domain.mob.MobRole.PROP -> "${mob.name} is not something you can attack."
     }
 
     /**
