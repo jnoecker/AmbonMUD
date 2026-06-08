@@ -3680,6 +3680,9 @@ body {
   width: min(500px, 67vw);
   aspect-ratio: 3 / 4;
   perspective: 1100px;
+  /* Lift the door art up so its base meets the wall/floor seam of door_bg
+     (the two are independent layers). Tune this single value to taste. */
+  transform: translateY(clamp(-72px, -8vh, -40px));
 }
 
 /* Holds the destination peek label, centred in the doorway. Transparent — the
