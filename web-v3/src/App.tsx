@@ -567,8 +567,17 @@ function App() {
   // Audio for room music/ambient
   useEffect(() => { audio.playMusic(state.room.music ?? null); }, [state.room.music]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { audio.playAmbient(state.room.ambient ?? null); }, [state.room.ambient]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Dialogue voice-over: play the current node's clip, stop when dialogue clears
-  useEffect(() => { audio.playVoice(state.dialogue?.voiceUrl ?? null); }, [state.dialogue?.voiceUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Dialogue voice-over: play the current node's clip as a one-shot. Deliberately
+  // does NOT stop when the dialogue clears — a short voice line should finish even
+  // when the overlay closes (conversation ended, dismissed, walked away). Otherwise
+  // ending a single-exchange conversation (e.g. clicking a terminal choice, which
+  // makes the server send Dialogue.End) cuts the clip after only its first few
+  // words. A new node's clip still supersedes the previous one via playVoice's
+  // internal stop, so mid-conversation node changes interrupt as expected.
+  useEffect(() => {
+    const url = state.dialogue?.voiceUrl ?? null;
+    if (url) audio.playVoice(url);
+  }, [state.dialogue?.voiceUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Combat audio
   const hpPercent = state.vitals.maxHp > 0 ? state.vitals.hp / state.vitals.maxHp : 1;
