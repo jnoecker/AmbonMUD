@@ -207,7 +207,12 @@ class WorldFeaturesHandler(
         val state = worldState?.getLeverState(feature.id) ?: feature.initialState
         val newState = if (state == LeverState.UP) LeverState.DOWN else LeverState.UP
         worldState?.setLeverState(feature.id, newState)
-        outbound.send(OutboundEvent.SendInfo(sessionId, "You pull ${the(feature.displayName)}. It moves ${newState.name.lowercase()}."))
+        val pullMessage = "You pull ${the(feature.displayName)}. It moves ${newState.name.lowercase()}."
+        outbound.send(OutboundEvent.SendInfo(sessionId, pullMessage))
+        // Web clients drop plain text — surface the result via UI.Feedback so the
+        // pull isn't just a silent state flip on the canvas (telnet still gets the
+        // SendInfo above).
+        gmcpEmitter?.sendUiFeedback(sessionId, "success", pullMessage, scope = "features", command = "pull")
         broadcastToRoomExcept(me.roomId, sessionId, "${me.name} pulls ${the(feature.displayName)}.", players, outbound)
         emitRoomFeatures(room)
         // Notify puzzle system of the lever interaction

@@ -1723,6 +1723,11 @@ export function applyGmcpPackage(
       if (packet.code === "DEMO_CHARACTER" && packet.message) {
         ctx.setToast(packet.message);
       }
+      // Room-feature actions (e.g. pulling a lever) have no dedicated panel feed,
+      // so toast their result — otherwise a pull is just a silent state flip.
+      if (packet.scope === "features" && packet.message) {
+        ctx.setToast(packet.message);
+      }
       break;
     }
 
