@@ -22308,6 +22308,29 @@ html:has(.game-shell),
   padding: 0;
 }
 
+/* Brass-themed scrollbar to match the cabinet (instead of the default one). */
+.drawer-sheet-cabinet .drawer-body,
+.cc-modal-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(201 162 74 / 65%) transparent;
+}
+
+.drawer-sheet-cabinet .drawer-body::-webkit-scrollbar,
+.cc-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.drawer-sheet-cabinet .drawer-body::-webkit-scrollbar-thumb,
+.cc-modal-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(201 162 74 / 70%), rgb(140 104 52 / 65%));
+}
+
+.drawer-sheet-cabinet .drawer-body::-webkit-scrollbar-track,
+.cc-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 /* ── Carved frame / plaque surfaces ─────────────────────────── */
 .cc-frame,
 .cc-plaque {
@@ -22844,9 +22867,9 @@ html:has(.game-shell),
   border: 1px solid rgb(201 162 74 / 40%);
   color: #fdf3d8;
   font-family: var(--font-display);
-  font-size: 1.02rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   text-shadow: 0 1px 3px rgb(0 0 0 / 70%);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%), 0 6px 16px rgb(8 6 3 / 40%);
@@ -22859,9 +22882,9 @@ html:has(.game-shell),
 .cc-gem-purple { background: linear-gradient(160deg, rgb(96 66 140 / 92%), rgb(62 42 96 / 92%)); }
 
 /* Authored banner art keeps its aspect (centred, no stretch); the label rides
-   on top with a strong shadow. */
+   on top with a strong shadow. Taller so the longer labels sit on the plaque. */
 .cc-gem-btn.has-art {
-  min-height: 64px;
+  min-height: 82px;
   border: none;
   background: var(--cc-btn) center / contain no-repeat;
   box-shadow: none;
