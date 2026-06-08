@@ -1441,6 +1441,14 @@ export function applyGmcpPackage(
                 : null,
             upAngle: typeof e.upAngle === "number" ? e.upAngle : null,
             downAngle: typeof e.downAngle === "number" ? e.downAngle : null,
+            frameImage: typeof e.frameImage === "string" ? e.frameImage : null,
+            leafImage: typeof e.leafImage === "string" ? e.leafImage : null,
+            hinge: e.hinge === "left" || e.hinge === "right" ? e.hinge : null,
+            openAngle: typeof e.openAngle === "number" ? e.openAngle : null,
+            leafScale: typeof e.leafScale === "number" ? e.leafScale : null,
+            leafOffsetY: typeof e.leafOffsetY === "number" ? e.leafOffsetY : null,
+            keyImage: typeof e.keyImage === "string" ? e.keyImage : null,
+            keyName: typeof e.keyName === "string" ? e.keyName : null,
           })),
       );
       break;

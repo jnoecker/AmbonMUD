@@ -160,7 +160,7 @@ internal class TimedRespawnHandler(
     private suspend fun emitRoomFeatures(roomId: RoomId) {
         val emitter = gmcpEmitter ?: return
         val room = world.rooms[roomId] ?: return
-        val payloads = room.features.map { buildFeaturePayload(it, worldState) }
+        val payloads = room.features.map { buildFeaturePayload(it, worldState, items) }
         for (p in players.playersInRoom(roomId)) {
             emitter.sendRoomFeatures(p.sessionId, payloads)
         }

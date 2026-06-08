@@ -3161,6 +3161,17 @@ class GmcpEmitter(
         val leverPivot: LeverPivotPayload? = null,
         val upAngle: Double? = null,
         val downAngle: Double? = null,
+        // Optional custom door art (DOOR only): a static frame + a swinging leaf
+        // that pivots on `hinge` between 0° (closed) and `openAngle` (open).
+        val frameImage: String? = null,
+        val leafImage: String? = null,
+        val hinge: String? = null,
+        val openAngle: Double? = null,
+        val leafScale: Double? = null,
+        val leafOffsetY: Double? = null,
+        // The key that locks/unlocks this door (DOOR only), for the lock UI.
+        val keyImage: String? = null,
+        val keyName: String? = null,
     )
 
     data class LeverPivotPayload(

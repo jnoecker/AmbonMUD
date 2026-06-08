@@ -36,6 +36,13 @@ class WorldLoaderFeaturesTest {
         assertFalse(door.keyConsumed)
         assertTrue(door.resetWithZone)
         assertEquals(RoomId("ok_features:entrance"), door.roomId)
+        // Custom door art: frame + leaf image refs resolve against the image base.
+        assertTrue(door.frameImage!!.endsWith("doorframe.webp"), "got=${door.frameImage}")
+        assertTrue(door.leafImage!!.endsWith("doorleaf.webp"), "got=${door.leafImage}")
+        assertEquals("right", door.hinge)
+        assertEquals(95.0, door.openAngle)
+        assertEquals(0.8, door.leafScale)
+        assertEquals(0.06, door.leafOffsetY)
     }
 
     @Test

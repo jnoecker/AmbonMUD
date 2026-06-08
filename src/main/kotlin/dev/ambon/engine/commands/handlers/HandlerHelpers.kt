@@ -552,7 +552,7 @@ internal suspend fun sendLook(
     gmcpEmitter?.sendRoomFeatures(
         sessionId,
         room.features.map { feature ->
-            buildFeaturePayload(feature, worldState)
+            buildFeaturePayload(feature, worldState, items)
         },
     )
 }
@@ -560,9 +560,11 @@ internal suspend fun sendLook(
 internal fun buildFeaturePayload(
     feature: RoomFeature,
     worldState: WorldStateRegistry?,
+    items: ItemRegistry? = null,
 ): GmcpEmitter.RoomFeaturePayload = when (feature) {
     is RoomFeature.Door -> {
         val state = worldState?.getDoorState(feature.id) ?: feature.initialState
+        val keyTemplate = feature.keyItemId?.let { items?.getTemplate(it) }
         GmcpEmitter.RoomFeaturePayload(
             id = feature.id,
             name = feature.displayName,
@@ -572,6 +574,14 @@ internal fun buildFeaturePayload(
             direction = feature.direction.name.lowercase(),
             locked = state == LockableState.LOCKED,
             keyRequired = feature.keyItemId != null,
+            frameImage = feature.frameImage,
+            leafImage = feature.leafImage,
+            hinge = feature.hinge,
+            openAngle = feature.openAngle,
+            leafScale = feature.leafScale,
+            leafOffsetY = feature.leafOffsetY,
+            keyImage = keyTemplate?.image,
+            keyName = keyTemplate?.displayName,
         )
     }
     is RoomFeature.Container -> {

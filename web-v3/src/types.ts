@@ -712,6 +712,23 @@ export interface RoomFeature {
   leverPivot: { x: number; y: number } | null;
   upAngle: number | null;
   downAngle: number | null;
+  /**
+   * Optional custom door art (DOOR only): a static {@link frameImage} and a
+   * swinging {@link leafImage} that pivots on {@link hinge} ("left"/"right")
+   * between 0° (closed) and {@link openAngle} (open). Fully-resolved URLs;
+   * absent → the `door_frame`/`door_leaf` defaults, then a built-in CSS door.
+   */
+  frameImage: string | null;
+  leafImage: string | null;
+  hinge: "left" | "right" | null;
+  openAngle: number | null;
+  /** Leaf size as a fraction of the frame box (fits it inside the opening). Default 0.72. */
+  leafScale: number | null;
+  /** Vertical placement of the leaf within the frame (fraction; + = down). Default 0.04. */
+  leafOffsetY: number | null;
+  /** The key that locks/unlocks this door (DOOR only) — image + name for the lock UI. */
+  keyImage: string | null;
+  keyName: string | null;
 }
 
 export interface ContainerContents {
