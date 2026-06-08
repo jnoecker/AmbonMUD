@@ -3055,6 +3055,9 @@ data class ImagesConfig(
             "door_leaf" to "global_assets/door_leaf.png",
             "door_lock" to "global_assets/door_lock.png",
             "door_bg" to "global_assets/door_bg.png",
+            // Swirling portal shown in the doorway behind the leaf (revealed when
+            // the door opens). Global only; falls back to a CSS vortex.
+            "door_portal" to "global_assets/door_portal.png",
             // Server-wide default backdrop for the puzzle (grimoire/parchment) panel.
             // Used when a puzzle doesn't author its own backgroundImage; falls back
             // further to a CSS tome treatment when this isn't present either.

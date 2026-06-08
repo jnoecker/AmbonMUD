@@ -3669,49 +3669,62 @@ body {
 .feat-door {
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: clamp(20px, 4vh, 36px) 16px;
+  /* Anchor the door near the top (the info floats absolutely at the bottom). */
+  justify-content: flex-start;
+  gap: 10px;
+  padding: clamp(6px, 1.2vh, 14px) 16px;
 }
 
 .feat-door-stage {
   position: relative;
-  width: min(300px, 56vw);
+  width: min(500px, 67vw);
   aspect-ratio: 3 / 4;
-  perspective: 1000px;
+  perspective: 1100px;
+  /* Lift the door art up so its base meets the wall/floor seam of door_bg
+     (the two are independent layers). Tune this single value to taste. */
+  transform: translateY(clamp(-40px, -4vh, -22px));
 }
 
-/* Holds the destination peek label, centred in the doorway. Transparent — the
-   frame art paints its own opening, so no recess fill (that read as a black box). */
+/* The doorway portal — a swirling vortex in the opening box (same box as the
+   leaf), revealed when the leaf swings open. Sits behind the frame + leaf, so
+   it stays confined to the opening (no black box around the frame). */
+/* A circular portal art spins in place — no clip mask, no scale (which would
+   inflate it past the box and clip on rotation). */
 .feat-door-portal {
   position: absolute;
-  inset: 0;
   z-index: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.feat-door-peek {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  opacity: 0;
-  color: rgb(206 224 246 / 92%);
-  font-size: 0.86rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-shadow: 0 0 10px rgb(120 160 220 / 70%), 0 1px 3px rgb(0 0 0 / 70%);
-  transition: opacity 300ms var(--ease-out-soft) 250ms;
+.feat-door-portal-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: door-portal-spin 26s linear infinite;
 }
 
-.feat-door-peek-icon {
-  width: 18px;
-  height: 18px;
+/* CSS fallback — a circular vortex, so rotating it has no corners to clip. */
+.feat-door-portal-css {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(190 226 255 / 42%), transparent 58%),
+    conic-gradient(
+      from 0deg,
+      rgb(40 86 160 / 78%),
+      rgb(118 80 200 / 78%),
+      rgb(44 132 188 / 78%),
+      rgb(84 60 184 / 78%),
+      rgb(40 86 160 / 78%)
+    );
+  filter: blur(1px);
+  animation: door-portal-spin 22s linear infinite;
 }
 
-.feat-door-stage.is-open .feat-door-peek {
-  opacity: 1;
+@keyframes door-portal-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* The swinging leaf — pivots on its hinge edge between 0° and the open angle. */
@@ -3845,13 +3858,26 @@ body {
   100% { opacity: 0; filter: blur(3px) brightness(1.3); transform: translate(-50%, -50%) scale(1.55) rotate(9deg); }
 }
 
-/* Info + actions below the door */
+/* Info + actions float over the bottom of the door (rather than stacking below
+   it and pushing the panel into a scroll). A soft scrim keeps them legible. */
 .feat-door-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(10px, 2.5vh, 24px);
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  padding-top: 36px;
   text-align: center;
+  pointer-events: none;
+  background: linear-gradient(to top, rgb(8 6 4 / 46%) 0%, rgb(8 6 4 / 22%) 45%, transparent 100%);
+}
+
+.feat-door-info > * {
+  pointer-events: auto;
 }
 
 .feat-door-line {
@@ -3900,11 +3926,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .feat-door-leaf,
-  .feat-door-peek {
+  .feat-door-leaf {
     transition: none;
   }
 
+  .feat-door-portal-art,
+  .feat-door-portal-css,
   .feat-door-seal.is-locked,
   .feat-door-seal.is-shatter,
   .feat-door-keyhole,

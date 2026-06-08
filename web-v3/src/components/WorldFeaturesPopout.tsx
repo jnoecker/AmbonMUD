@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import type { ContainerContents, FeaturePopoutFocus, RoomFeature } from "../types";
-import { DirectionIcon } from "./Icons";
 import { featureArt, pickFocusedFeature } from "./worldFeatures";
 
 interface WorldFeaturesPopoutProps {
@@ -246,6 +245,7 @@ function DoorPanel({
   const frameSrc = feature.frameImage ?? serverAssets["door_frame"] ?? null;
   const leafSrc = feature.leafImage ?? serverAssets["door_leaf"] ?? null;
   const lockSrc = serverAssets["door_lock"] ?? null;
+  const portalSrc = serverAssets["door_portal"] ?? null;
   const hinge = feature.hinge === "left" ? "left" : "right";
   const openAngle = feature.openAngle ?? 60;
   // Door opens toward the viewer; swing direction comes from the hinge, not the
@@ -264,6 +264,20 @@ function DoorPanel({
     height: `${leafScale * 100}%`,
     transformOrigin: hinge === "right" ? "right center" : "left center",
     transform: `rotateY(${leafAngle}deg)`,
+  };
+  // The portal sits behind the leaf, revealed when it swings open. Keep it a bit
+  // smaller than the leaf box and centred on it, so the (arch-shaped, transparent-
+  // edged) leaf fully covers it when closed instead of bleeding past the edges.
+  // PORTAL_SHRINK is the single tuning dial.
+  const PORTAL_SHRINK = 0.62;
+  const portalW = leafScale * PORTAL_SHRINK;
+  const leafCx = leafInset + leafScale / 2;
+  const leafCy = leafInset + leafOffsetY + leafScale / 2;
+  const portalStyle = {
+    left: `${(leafCx - portalW / 2) * 100}%`,
+    top: `${(leafCy - portalW / 2) * 100}%`,
+    width: `${portalW * 100}%`,
+    height: `${portalW * 100}%`,
   };
   const actions = featureActions(feature);
 
@@ -287,12 +301,11 @@ function DoorPanel({
   return (
     <div className="feat-panel feat-door">
       <div className={`feat-door-stage hinge-${hinge}${isOpen ? " is-open" : ""}`}>
-        <div className="feat-door-portal" aria-hidden="true">
-          {dir && (
-            <span className="feat-door-peek">
-              <DirectionIcon direction={dir} className="feat-door-peek-icon" />
-              {titleCase(dir)}
-            </span>
+        <div className="feat-door-portal" style={portalStyle} aria-hidden="true">
+          {portalSrc ? (
+            <img className="feat-door-portal-art" src={portalSrc} alt="" draggable={false} />
+          ) : (
+            <span className="feat-door-portal-css" />
           )}
         </div>
         {frameSrc ? (
