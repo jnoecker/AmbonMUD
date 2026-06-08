@@ -3846,13 +3846,26 @@ body {
   100% { opacity: 0; filter: blur(3px) brightness(1.3); transform: translate(-50%, -50%) scale(1.55) rotate(9deg); }
 }
 
-/* Info + actions below the door */
+/* Info + actions float over the bottom of the door (rather than stacking below
+   it and pushing the panel into a scroll). A soft scrim keeps them legible. */
 .feat-door-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(10px, 2.5vh, 24px);
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  padding-top: 36px;
   text-align: center;
+  pointer-events: none;
+  background: linear-gradient(to top, rgb(8 6 4 / 46%) 0%, rgb(8 6 4 / 22%) 45%, transparent 100%);
+}
+
+.feat-door-info > * {
+  pointer-events: auto;
 }
 
 .feat-door-line {
