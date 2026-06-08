@@ -23885,8 +23885,8 @@ html:has(.game-shell),
 
 .guildboard-state-a {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(8px, 1.6vw, 18px);
+  grid-template-columns: 1fr;
+  gap: clamp(8px, 1.6vh, 16px);
   align-content: start;
 }
 
