@@ -597,7 +597,15 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         pushLevelUp,
         pushQuestNotification,
         setMobInfo,
-        setRoomFeatures,
+        setRoomFeatures: (value) => {
+          setRoomFeatures(value);
+          // Auto-close the World Features panel when the room has nothing to show
+          // (e.g. after walking through a door into a featureless room) so it
+          // doesn't linger on the empty "no interactive features" state.
+          if (Array.isArray(value) && value.length === 0) {
+            setActivePopout((prev) => (prev === "features" ? null : prev));
+          }
+        },
         setContainerContents,
         setLoginPrompt,
         setLoginError,

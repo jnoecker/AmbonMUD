@@ -856,7 +856,7 @@ function App() {
       case "crafting": return "Crafting";
       case "housing": return "Housing";
       case "leaderboard": return "Leaderboard";
-      case "bank": return "Bank";
+      case "bank": return "The Vault";
       case "stylist": return "Stylist";
       case "inn": return state.room.title !== "-" ? state.room.title : "Inn";
       case "auction": return "Auction House";
@@ -927,6 +927,8 @@ function App() {
         variant={
           drawerPanel === "puzzle"
             ? "tome"
+            : drawerPanel === "bank"
+            ? "vault"
             : drawerPanel === "features"
             ? "feature"
             : drawerPanel === "inventory"
@@ -953,6 +955,8 @@ function App() {
           drawerPanel === "puzzle"
             ? (state.puzzle?.puzzles.find((p) => p.backgroundImage)?.backgroundImage
                 ?? state.serverAssets["puzzle_bg"])
+            : drawerPanel === "bank"
+            ? state.serverAssets["bank_bg"]
             : drawerPanel === "features"
             ? (featurePanelFeature && featurePanelFeature.type !== "lever"
                 ? (featureArt(featurePanelFeature, state.serverAssets) ?? undefined)
@@ -1233,7 +1237,7 @@ function App() {
         )}
 
         {drawerPanel === "bank" && (
-          <BankPanel bankState={state.bankState} onCommand={sendCommand} />
+          <BankPanel bankState={state.bankState} serverAssets={state.serverAssets} onCommand={sendCommand} />
         )}
 
         {drawerPanel === "stylist" && (

@@ -3059,6 +3059,9 @@ data class ImagesConfig(
             // Used when a puzzle doesn't author its own backgroundImage; falls back
             // further to a CSS tome treatment when this isn't present either.
             "puzzle_bg" to "global_assets/puzzle_bg.png",
+            // Server-wide vault interior backdrop for the bank ("The Vault") panel.
+            // Global only — banks share one look; the bank_vault icon is the emblem.
+            "bank_bg" to "global_assets/bank_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

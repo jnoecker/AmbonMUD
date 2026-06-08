@@ -1,24 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { BankState } from "../../types";
 
 interface BankPanelProps {
   bankState: BankState | null;
+  serverAssets: Record<string, string>;
   onCommand: (cmd: string) => void;
 }
 
-export function BankPanel({ bankState, onCommand }: BankPanelProps) {
+export function BankPanel({ bankState, serverAssets, onCommand }: BankPanelProps) {
   const [goldAmount, setGoldAmount] = useState("");
   const [itemKeyword, setItemKeyword] = useState("");
+  const emblem = serverAssets["bank_vault"] ?? null;
+
+  // Coin glint whenever the deposited gold goes up.
+  const gold = bankState?.gold ?? 0;
+  const [seenGold, setSeenGold] = useState(gold);
+  const [glint, setGlint] = useState(false);
+  if (gold !== seenGold) {
+    const increased = gold > seenGold;
+    setSeenGold(gold);
+    if (increased) setGlint(true);
+  }
+  useEffect(() => {
+    if (!glint) return;
+    const timer = setTimeout(() => setGlint(false), 900);
+    return () => clearTimeout(timer);
+  }, [glint]);
 
   if (!bankState) {
     return (
-      <div className="bank-panel">
-        <div className="panel-header">
-          <span className="panel-title">Bank</span>
-        </div>
+      <div className="bank-panel bank-vault">
         <div className="bank-empty-state">
-          <span className="bank-empty-icon">{"\u{1F3E6}"}</span>
-          <p className="empty-note">No bank data available.</p>
+          {emblem ? (
+            <img className="bank-empty-emblem" src={emblem} alt="" />
+          ) : (
+            <span className="bank-empty-icon">{"\u{1F3E6}"}</span>
+          )}
+          <p className="empty-note">The vault is quiet.</p>
           <p className="bank-hint">
             Visit a bank room and use the <code>bank balance</code> command.
           </p>
@@ -32,16 +50,15 @@ export function BankPanel({ bankState, onCommand }: BankPanelProps) {
     : 0;
 
   return (
-    <div className="bank-panel">
-      <div className="panel-header">
-        <span className="panel-title">Bank</span>
-      </div>
-
+    <div className="bank-panel bank-vault">
       <div className="bank-content">
         {/* Gold balance */}
         <div className="bank-gold-section">
-          <div className="bank-gold-label">Gold on Deposit</div>
-          <div className="bank-gold-value">{bankState.gold.toLocaleString()}</div>
+          <div className="bank-gold-heading">
+            {emblem && <img className="bank-emblem" src={emblem} alt="" />}
+            <span className="bank-gold-label">Gold on Deposit</span>
+          </div>
+          <div className={`bank-gold-value${glint ? " is-glint" : ""}`}>{gold.toLocaleString()}</div>
         </div>
 
         {/* Gold deposit/withdraw */}
