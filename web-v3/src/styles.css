@@ -22893,6 +22893,14 @@ html:has(.game-shell),
   box-shadow: none;
 }
 
+/* The Prestige banner art is pale, so its label wants dark ink (and sits a hair
+   low on the plaque). Scoped to the art case — the CSS fallback keeps light text. */
+.cc-gem-purple.has-art .cc-gem-label {
+  color: #2a2030;
+  text-shadow: 0 1px 1px rgb(250 244 226 / 55%);
+  transform: translateY(3px);
+}
+
 /* ── Prestige footer ───────────────────────────────────────── */
 .cc-prestige-footer {
   display: grid;

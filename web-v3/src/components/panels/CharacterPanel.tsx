@@ -430,7 +430,7 @@ export function CharacterPanel({
           style={preBtn ? { ["--cc-btn" as string]: `url("${preBtn}")` } : undefined}
           onClick={() => setShowPrestige(true)}
         >
-          Prestige
+          <span className="cc-gem-label">Prestige</span>
         </button>
         <button
           type="button"
@@ -438,7 +438,7 @@ export function CharacterPanel({
           style={achBtn ? { ["--cc-btn" as string]: `url("${achBtn}")` } : undefined}
           onClick={() => setShowAchievements(true)}
         >
-          Achievements
+          <span className="cc-gem-label">Achievements</span>
         </button>
       </div>
 
