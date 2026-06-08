@@ -3041,6 +3041,12 @@ data class ImagesConfig(
             // the built-in vector lever when these aren't present either.
             "lever_plate" to "global_assets/lever_plate.png",
             "lever_handle" to "global_assets/lever_handle.png",
+            // Server-wide default backdrops for the World Features modal. Used when a
+            // feature doesn't author its own backgroundImage; the client falls back
+            // further to a polished CSS treatment when these aren't present either.
+            "container_bg" to "global_assets/container_bg.png",
+            "sign_bg" to "global_assets/sign_bg.png",
+            "lever_bg" to "global_assets/lever_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

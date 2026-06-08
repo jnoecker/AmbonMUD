@@ -3133,6 +3133,9 @@ class GmcpEmitter(
         val locked: Boolean? = null,
         val keyRequired: Boolean? = null,
         val text: String? = null,
+        // Optional per-feature backdrop art for the World Features modal.
+        // CONTAINER → chest, SIGN → board, LEVER → the box the lever sits inside.
+        val backgroundImage: String? = null,
         // Optional custom lever art (static per-lever; rides along with the feature).
         val plateImage: String? = null,
         val handleImage: String? = null,

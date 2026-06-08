@@ -687,6 +687,13 @@ export interface RoomFeature {
   keyRequired: boolean | null;
   text: string | null;
   /**
+   * Optional per-feature backdrop art (fully-resolved URL) for the World
+   * Features modal. CONTAINER → open chest, SIGN → sign board, LEVER → the box
+   * the lever sits inside. Absent → the `<type>_bg` server default, then a
+   * built-in CSS treatment.
+   */
+  backgroundImage: string | null;
+  /**
    * Optional custom lever art (LEVER only): a static plate plus a handle that
    * rotates around {@link leverPivot} between {@link upAngle}/{@link downAngle}.
    * Image fields are fully-resolved URLs. Absent → the built-in vector lever.

@@ -30,11 +30,13 @@ rooms:
         displayName: "a notice board"
         keyword: board
         text: "Welcome to the test zone."
+        backgroundImage: "signbg789.webp"
       brass_lever:
         type: LEVER
         displayName: "an ostentatious brass lever"
         keyword: brass
         initialState: down
+        backgroundImage: "leverbox222.webp"
         plateImage: "plate123.webp"
         handleImage: "handle456.webp"
         leverPivot: { x: 0.4, y: 0.9 }
@@ -68,5 +70,6 @@ rooms:
         keyItemId: null
         keyConsumed: false
         resetWithZone: true
+        backgroundImage: "chestbg111.webp"
         items:
           - silver_coin

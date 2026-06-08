@@ -1579,6 +1579,7 @@ object WorldLoader {
                     resetWithZone = ff.resetWithZone,
                     initialItems = initialItems,
                     respawnSeconds = respawnSeconds,
+                    backgroundImage = ff.backgroundImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
                 )
             }
             "LEVER" -> {
@@ -1598,6 +1599,7 @@ object WorldLoader {
                     leverPivot = ff.leverPivot?.let { RoomFeature.LeverPivot(it.x, it.y) },
                     upAngle = ff.upAngle,
                     downAngle = ff.downAngle,
+                    backgroundImage = ff.backgroundImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
                 )
             }
             "SIGN" -> {
@@ -1611,6 +1613,7 @@ object WorldLoader {
                     displayName = displayName,
                     keyword = keyword,
                     text = text,
+                    backgroundImage = ff.backgroundImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
                 )
             }
             else -> throw WorldLoadException(

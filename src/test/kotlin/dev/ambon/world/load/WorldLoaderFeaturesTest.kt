@@ -52,6 +52,8 @@ class WorldLoaderFeaturesTest {
         assertTrue(container.resetWithZone)
         assertEquals(listOf(ItemId("ok_features:silver_coin")), container.initialItems)
         assertEquals(RoomId("ok_features:storeroom"), container.roomId)
+        // Backdrop art is a content-addressed filename resolved against the image base.
+        assertTrue(container.backgroundImage!!.endsWith("chestbg111.webp"), "got=${container.backgroundImage}")
     }
 
     @Test
@@ -71,6 +73,7 @@ class WorldLoaderFeaturesTest {
         assertNull(lever.leverPivot)
         assertNull(lever.upAngle)
         assertNull(lever.downAngle)
+        assertNull(lever.backgroundImage)
     }
 
     @Test
@@ -87,6 +90,7 @@ class WorldLoaderFeaturesTest {
         assertEquals(RoomFeature.LeverPivot(0.4, 0.9), lever.leverPivot)
         assertEquals(-30.0, lever.upAngle)
         assertEquals(35.0, lever.downAngle)
+        assertTrue(lever.backgroundImage!!.endsWith("leverbox222.webp"), "got=${lever.backgroundImage}")
     }
 
     @Test
@@ -98,6 +102,7 @@ class WorldLoaderFeaturesTest {
         assertEquals("a notice board", sign.displayName)
         assertEquals("board", sign.keyword)
         assertEquals("Welcome to the test zone.", sign.text)
+        assertTrue(sign.backgroundImage!!.endsWith("signbg789.webp"), "got=${sign.backgroundImage}")
     }
 
     @Test

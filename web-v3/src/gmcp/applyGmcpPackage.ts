@@ -1427,6 +1427,7 @@ export function applyGmcpPackage(
             locked: typeof e.locked === "boolean" ? e.locked : null,
             keyRequired: typeof e.keyRequired === "boolean" ? e.keyRequired : null,
             text: typeof e.text === "string" ? e.text : null,
+            backgroundImage: typeof e.backgroundImage === "string" ? e.backgroundImage : null,
             plateImage: typeof e.plateImage === "string" ? e.plateImage : null,
             handleImage: typeof e.handleImage === "string" ? e.handleImage : null,
             leverPivot:
