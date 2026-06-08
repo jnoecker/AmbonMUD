@@ -898,6 +898,9 @@ ambonmud:
       # Multiplier applied to regen amount while the player is in combat
       # (0.5 = half regen, 0.0 = no regen while fighting).
       inCombatMultiplier: 0.5
+      # Multiplier applied to HP + mana regen while resting in an inn room
+      # (2.0 = double regen). Stacks with inCombatMultiplier.
+      innMultiplier: 2.0
       mana:
         baseIntervalMillis: 4500
         minIntervalMillis: 1000

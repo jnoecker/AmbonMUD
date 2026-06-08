@@ -227,6 +227,9 @@ data class AppConfig(
         require(engine.regen.inCombatMultiplier in 0.0..1.0) {
             "ambonMUD.engine.regen.inCombatMultiplier must be in [0.0, 1.0]"
         }
+        require(engine.regen.innMultiplier >= 1.0) {
+            "ambonMUD.engine.regen.innMultiplier must be >= 1.0"
+        }
         engine.regen.mana.baseIntervalMillis.requirePositive("ambonMUD.engine.regen.mana.baseIntervalMillis")
         engine.regen.mana.minIntervalMillis.requirePositive("ambonMUD.engine.regen.mana.minIntervalMillis")
         require(engine.regen.mana.regenPercent > 0.0 && engine.regen.mana.regenPercent <= 1.0) {
@@ -2547,6 +2550,8 @@ data class RegenEngineConfig(
     val minIntervalMillis: Long = 1_000L,
     val regenPercent: Double = 0.05,
     val inCombatMultiplier: Double = 0.5,
+    /** Regen multiplier while resting in a room flagged as an inn (HP + mana). */
+    val innMultiplier: Double = 2.0,
     val mana: ManaRegenConfig = ManaRegenConfig(),
 )
 

@@ -26,6 +26,8 @@ class RegenSystemTest {
         manaRegenPercent: Double = 0.05,
         inCombatMultiplier: Double = 0.5,
         inCombat: (dev.ambon.domain.ids.SessionId) -> Boolean = { false },
+        innMultiplier: Double = 2.0,
+        inInn: (dev.ambon.domain.ids.SessionId) -> Boolean = { false },
     ): RegenSystem =
         RegenSystem(
             players = players,
@@ -38,6 +40,8 @@ class RegenSystemTest {
             manaRegenPercent = manaRegenPercent,
             inCombatMultiplier = inCombatMultiplier,
             inCombat = inCombat,
+            innMultiplier = innMultiplier,
+            inInn = inInn,
         )
 
     private fun makeRegistry(): PlayerRegistry =
@@ -72,6 +76,34 @@ class RegenSystemTest {
             regen.tick()
 
             assertEquals(player.maxHp - 2, player.hp, "Expected one regen tick (+1 HP)")
+        }
+
+    @Test
+    fun `inn room doubles hp and mana regen`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val regen = makeRegen(players, clock, inInn = { true })
+
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Inny")
+            regen.tick() // record trackers while full
+
+            val player = players.get(sid)!!
+            val baseHp = (player.maxHp * 0.10).toInt().coerceAtLeast(1)
+            val expectedHp = (player.maxHp * 0.10 * 2.0).toInt().coerceAtLeast(1)
+            val expectedMana = (player.maxMana * 0.05 * 2.0).toInt().coerceAtLeast(1)
+            player.hp = player.maxHp - expectedHp - 5
+            player.mana = player.maxMana - expectedMana - 5
+            val hp0 = player.hp
+            val mana0 = player.mana
+
+            clock.advance(5_000L)
+            regen.tick()
+
+            assertEquals(hp0 + expectedHp, player.hp, "Inn HP regen should be the 2x amount")
+            assertEquals(mana0 + expectedMana, player.mana, "Inn mana regen should be the 2x amount")
+            assertTrue(expectedHp > baseHp, "2x inn regen should exceed the base regen amount")
         }
 
     @Test
