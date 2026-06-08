@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ContainerContents, FeaturePopoutFocus, RoomFeature } from "../types";
 import { DirectionIcon } from "./Icons";
 import { featureArt, pickFocusedFeature } from "./worldFeatures";
@@ -124,7 +124,6 @@ function ContainerPanel({
     <div className={`feat-panel feat-container${hasArt ? " has-art" : ""}`}>
       {!hasArt && <div className="feat-fallback feat-fallback-container" aria-hidden="true"><ChestGlyph /></div>}
       <div className="feat-container-inner">
-        <h3 className="feat-container-title">{feature.name}</h3>
         {feature.state === "locked" && (
           <p className="feat-container-note">
             {feature.keyRequired ? "Locked — a key is required." : "Locked tight."}
@@ -234,32 +233,92 @@ function LeverPanel({
 
 function DoorPanel({
   feature,
+  serverAssets,
   onCommand,
 }: {
   feature: RoomFeature;
+  serverAssets: Record<string, string>;
   onCommand: (cmd: string) => void;
 }) {
+  const isOpen = feature.state === "open";
+  const isLocked = feature.state === "locked";
+  const dir = feature.direction as "north" | "east" | "south" | "west" | "up" | "down" | null;
+  const frameSrc = feature.frameImage ?? serverAssets["door_frame"] ?? null;
+  const leafSrc = feature.leafImage ?? serverAssets["door_leaf"] ?? null;
+  const lockSrc = serverAssets["door_lock"] ?? null;
+  const hinge = feature.hinge === "right" ? "right" : "left";
+  const openAngle = feature.openAngle ?? 100;
+  const leafAngle = isOpen ? (hinge === "right" ? openAngle : -openAngle) : 0;
   const actions = featureActions(feature);
+
+  // Track the door's state so the warded seal can shatter the instant it unlocks.
+  const [seenState, setSeenState] = useState<string | null>(feature.state);
+  const [shatter, setShatter] = useState(false);
+  if (feature.state !== seenState) {
+    const wasLocked = seenState === "locked";
+    setSeenState(feature.state);
+    if (wasLocked && feature.state !== "locked") setShatter(true);
+  }
+  useEffect(() => {
+    if (!shatter) return;
+    const timer = setTimeout(() => setShatter(false), 850);
+    return () => clearTimeout(timer);
+  }, [shatter]);
+
+  const showLock = isLocked || shatter;
+  const showKey = Boolean(feature.keyRequired && feature.keyImage && (isLocked || shatter));
+
   return (
     <div className="feat-panel feat-door">
-      <div className="feat-door-card">
-        <h3 className="feat-door-title">{feature.name}</h3>
-        <div className="feat-door-meta">
-          {feature.direction && (
-            <span className="feat-door-direction">
-              <DirectionIcon
-                direction={feature.direction as "north" | "east" | "south" | "west" | "up" | "down"}
-                className="feat-door-direction-icon"
-              />
-              Leads {titleCase(feature.direction)}
-            </span>
-          )}
-          {feature.state === "locked" && (
-            <span className="feat-door-chip">
-              {feature.keyRequired ? "Locked — key required" : "Locked"}
+      <div className={`feat-door-stage hinge-${hinge}${isOpen ? " is-open" : ""}`}>
+        <div className="feat-door-portal" aria-hidden="true">
+          {dir && (
+            <span className="feat-door-peek">
+              <DirectionIcon direction={dir} className="feat-door-peek-icon" />
+              {titleCase(dir)}
             </span>
           )}
         </div>
+        {leafSrc ? (
+          <img
+            className="feat-door-leaf"
+            src={leafSrc}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            style={{ transform: `rotateY(${leafAngle}deg)` }}
+          />
+        ) : (
+          <div className="feat-door-leaf feat-door-leaf-css" style={{ transform: `rotateY(${leafAngle}deg)` }} aria-hidden="true" />
+        )}
+        {frameSrc ? (
+          <img className="feat-door-frame" src={frameSrc} alt="" aria-hidden="true" draggable={false} />
+        ) : (
+          <div className="feat-door-frame feat-door-frame-css" aria-hidden="true" />
+        )}
+        {showLock && (
+          <div className={`feat-door-seal${isLocked ? " is-locked" : ""}${shatter ? " is-shatter" : ""}`} aria-hidden="true">
+            {lockSrc ? (
+              <img className="feat-door-seal-img" src={lockSrc} alt="" draggable={false} />
+            ) : (
+              <span className="feat-door-seal-css" />
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="feat-door-info">
+        <p className="feat-door-line">
+          {dir ? <>Leads <strong>{titleCase(dir)}</strong></> : "A doorway."}
+          {isLocked && (feature.keyRequired ? " · sealed" : " · barred")}
+          {isOpen && " · open"}
+        </p>
+        {showKey && (
+          <div className={`feat-door-key${shatter ? " is-using" : ""}`}>
+            <img className="feat-door-key-img" src={feature.keyImage ?? ""} alt={feature.keyName ?? "key"} draggable={false} />
+            <span className="feat-door-key-name">{feature.keyName ?? "a key"}</span>
+          </div>
+        )}
         {actions.length > 0 && (
           <div className="feat-actions">
             {actions.map((action) => (
@@ -330,6 +389,6 @@ export function WorldFeaturesPopout({
         />
       );
     default:
-      return <DoorPanel feature={feature} onCommand={onCommand} />;
+      return <DoorPanel feature={feature} serverAssets={serverAssets} onCommand={onCommand} />;
   }
 }

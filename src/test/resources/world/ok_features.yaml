@@ -23,6 +23,10 @@ rooms:
           keyItemId: brass_key
           keyConsumed: false
           resetWithZone: true
+          frameImage: "doorframe.webp"
+          leafImage: "doorleaf.webp"
+          hinge: right
+          openAngle: 95
       east: storeroom
     features:
       notice_board:

@@ -28,6 +28,16 @@ sealed class RoomFeature {
         val resetWithZone: Boolean,
         /** Seconds out of [initialState] before the door reverts on its own. Null = zone reset only. */
         val respawnSeconds: Long? = null,
+        /**
+         * Optional custom door art (resolved URLs): a static [frameImage] and a
+         * swinging [leafImage] that pivots on [hinge] ("left"/"right") between 0°
+         * (closed) and [openAngle] (open). Absent → the `door_frame`/`door_leaf`
+         * global defaults, then a built-in CSS door.
+         */
+        val frameImage: String? = null,
+        val leafImage: String? = null,
+        val hinge: String? = null,
+        val openAngle: Double? = null,
     ) : RoomFeature()
 
     data class Container(

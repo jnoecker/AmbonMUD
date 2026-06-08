@@ -848,7 +848,9 @@ function App() {
       case "chat": return "Social";
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
-      case "features": return featurePanelFeature ? featurePanelFeature.name : "Interactive Feature";
+      case "features": return featurePanelFeature
+        ? (featurePanelFeature.type === "container" ? "" : featurePanelFeature.name)
+        : "Interactive Feature";
       case "trainer": return "Trainer";
       case "mail": return "Mail";
       case "crafting": return "Crafting";

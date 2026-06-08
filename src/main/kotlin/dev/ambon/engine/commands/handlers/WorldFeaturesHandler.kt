@@ -266,7 +266,7 @@ class WorldFeaturesHandler(
 
     private suspend fun emitRoomFeatures(room: Room) {
         val emitter = gmcpEmitter ?: return
-        val payloads = room.features.map { feature -> buildFeaturePayload(feature, worldState) }
+        val payloads = room.features.map { feature -> buildFeaturePayload(feature, worldState, items) }
         for (p in players.playersInRoom(room.id)) {
             emitter.sendRoomFeatures(p.sessionId, payloads)
         }

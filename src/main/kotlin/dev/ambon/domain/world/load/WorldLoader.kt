@@ -311,6 +311,10 @@ object WorldLoader {
                                         keyConsumed = doorFile.keyConsumed,
                                         resetWithZone = doorFile.resetWithZone,
                                         respawnSeconds = doorRespawn,
+                                        frameImage = doorFile.frameImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
+                                        leafImage = doorFile.leafImage?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
+                                        hinge = doorFile.hinge?.trim()?.lowercase()?.takeIf { it == "left" || it == "right" },
+                                        openAngle = doorFile.openAngle,
                                     ),
                                 )
                             }

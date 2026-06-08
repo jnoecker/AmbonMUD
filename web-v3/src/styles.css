@@ -3411,43 +3411,32 @@ body {
 
 /* ── Container ────────────────────────────────────────────── */
 .feat-container {
-  align-items: stretch;
-  justify-content: flex-end;
-  min-height: 44vh;
+  align-items: center;
+  justify-content: center;
+  min-height: 46vh;
 }
 
-/* Soft bottom scrim so loot reads over the bright chest interior. */
-.feat-container.has-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    to top,
-    rgb(6 7 13 / 86%) 0%,
-    rgb(6 7 13 / 55%) 26%,
-    rgb(6 7 13 / 12%) 52%,
-    transparent 72%
-  );
-}
-
+/* The controls live in the chest's dark central cavity — constrain + centre them
+   there (rather than spanning the ornate frame), with a soft scrim behind so the
+   loot reads over whatever interior art is shipped. */
 .feat-container-inner {
   position: relative;
   z-index: 1;
-  width: 100%;
+  width: min(560px, 62%);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: clamp(16px, 4vw, 28px) clamp(18px, 4vw, 32px) clamp(16px, 3vw, 24px);
+  gap: 6px;
+  padding: clamp(12px, 2.5vw, 22px) clamp(14px, 3vw, 26px);
 }
 
-.feat-container-title {
-  margin: 0 0 2px;
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  color: var(--text-bright);
-  text-shadow: 0 1px 2px rgb(0 0 0 / 72%), 0 1px 14px rgb(0 0 0 / 55%);
+.feat-container.has-art .feat-container-inner::before {
+  content: "";
+  position: absolute;
+  inset: -10% -8%;
+  z-index: -1;
+  border-radius: 18px;
+  background: radial-gradient(ellipse at center, rgb(6 7 13 / 64%), rgb(6 7 13 / 0%) 76%);
+  filter: blur(10px);
 }
 
 .feat-container-note {
@@ -3676,54 +3665,244 @@ body {
   pointer-events: none;
 }
 
-/* ── Door (no art — a tidy centred card) ──────────────────── */
+/* ── Door — a frame with a swinging leaf + warded seal ─────── */
 .feat-door {
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: clamp(24px, 5vw, 44px);
+  gap: 14px;
+  padding: clamp(20px, 4vh, 36px) 16px;
 }
 
-.feat-door-card {
-  width: min(440px, 100%);
+.feat-door-stage {
+  position: relative;
+  width: min(300px, 56vw);
+  aspect-ratio: 3 / 4;
+  perspective: 1000px;
+}
+
+/* The doorway behind the leaf — revealed when the leaf swings open. */
+.feat-door-portal {
+  position: absolute;
+  inset: 8%;
+  z-index: 0;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 22px 24px;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgb(146 184 223 / 26%);
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
   background:
-    radial-gradient(circle at 50% 0%, rgb(146 184 223 / 16%), transparent 60%),
-    linear-gradient(160deg, rgb(62 73 108 / 94%), rgb(45 56 86 / 92%));
+    radial-gradient(ellipse at 50% 42%, rgb(120 150 210 / 35%), transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgb(40 50 82 / 60%), rgb(6 8 16 / 94%) 78%);
+  box-shadow: inset 0 0 36px rgb(0 0 0 / 70%);
 }
 
-.feat-door-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.18rem;
-  color: var(--text-bright);
-}
-
-.feat-door-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.feat-door-direction,
-.feat-door-chip {
+.feat-door-peek {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: rgb(10 12 22 / 38%);
-  color: var(--text-primary);
-  font-size: 0.82rem;
+  opacity: 0;
+  color: rgb(206 224 246 / 92%);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 10px rgb(120 160 220 / 70%), 0 1px 3px rgb(0 0 0 / 70%);
+  transition: opacity 300ms var(--ease-out-soft) 250ms;
 }
 
-.feat-door-direction-icon {
-  width: 16px;
-  height: 16px;
+.feat-door-peek-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.feat-door-stage.is-open .feat-door-peek {
+  opacity: 1;
+}
+
+/* The swinging leaf — pivots on its hinge edge between 0° and the open angle. */
+.feat-door-leaf {
+  position: absolute;
+  inset: 8%;
+  z-index: 1;
+  width: 84%;
+  height: 84%;
+  object-fit: fill;
+  backface-visibility: hidden;
+  transition: transform 0.6s cubic-bezier(0.45, 0.05, 0.3, 1);
+  pointer-events: none;
+  user-select: none;
+}
+
+.feat-door-stage.hinge-left .feat-door-leaf {
+  transform-origin: left center;
+}
+
+.feat-door-stage.hinge-right .feat-door-leaf {
+  transform-origin: right center;
+}
+
+.feat-door-leaf-css {
+  border-radius: 6px;
+  background:
+    linear-gradient(100deg, rgb(96 70 44 / 96%), rgb(72 50 30 / 96%)),
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 10%) 0 2px, transparent 2px 28px);
+  box-shadow: inset 0 0 0 2px rgb(40 28 16 / 80%), inset 0 2px 10px rgb(0 0 0 / 40%);
+}
+
+.feat-door-leaf-css::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 12%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f0d98a, #9a6b1e);
+  box-shadow: 0 0 6px rgb(240 217 138 / 50%);
+  transform: translateY(-50%);
+}
+
+/* Static frame, on top of the leaf (authored art has a transparent opening). */
+.feat-door-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.feat-door-frame-css {
+  inset: 0;
+  border: 7px solid;
+  border-image: linear-gradient(160deg, rgb(150 120 80), rgb(96 74 46)) 1;
+  border-bottom-width: 10px;
+  border-radius: 12px 12px 4px 4px;
+  background: transparent;
+  box-shadow: inset 0 0 0 2px rgb(30 22 12 / 60%);
+}
+
+/* The warded seal — glows while locked, shatters on unlock. */
+.feat-door-seal {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  z-index: 3;
+  width: 44%;
+  transform: translate(-50%, -50%);
+}
+
+.feat-door-seal-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.feat-door-seal-css {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(255 226 150 / 20%), transparent 62%),
+    conic-gradient(from 0deg, #caa24a, #8a5a1e, #caa24a, #8a5a1e, #caa24a);
+  box-shadow: inset 0 0 0 2px rgb(60 40 12 / 70%), 0 0 12px rgb(226 180 90 / 50%);
+}
+
+.feat-door-seal-css::after {
+  content: "";
+  position: absolute;
+  inset: 26%;
+  border-radius: 50%;
+  border: 2px solid rgb(255 234 170 / 70%);
+  box-shadow: 0 0 8px rgb(255 220 140 / 60%);
+}
+
+.feat-door-seal.is-locked {
+  animation: door-seal-pulse 2.4s var(--ease-in-out-smooth) infinite;
+}
+
+.feat-door-seal.is-shatter {
+  animation: door-seal-shatter 0.85s ease-out forwards;
+}
+
+@keyframes door-seal-pulse {
+  0%, 100% { filter: drop-shadow(0 0 5px rgb(226 180 90 / 55%)); transform: translate(-50%, -50%) scale(1); }
+  50% { filter: drop-shadow(0 0 16px rgb(255 210 120 / 85%)); transform: translate(-50%, -50%) scale(1.04); }
+}
+
+@keyframes door-seal-shatter {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  28% { opacity: 1; filter: brightness(1.7) drop-shadow(0 0 22px rgb(255 220 140 / 90%)); transform: translate(-50%, -50%) scale(1.16); }
+  100% { opacity: 0; filter: blur(3px) brightness(1.3); transform: translate(-50%, -50%) scale(1.55) rotate(9deg); }
+}
+
+/* Info + actions below the door */
+.feat-door-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.feat-door-line {
+  margin: 0;
+  color: var(--text-bright);
+  font-size: 0.95rem;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 60%), 0 1px 10px rgb(0 0 0 / 45%);
+}
+
+.feat-door-line strong {
+  font-weight: 700;
+}
+
+/* The key that locks/unlocks this door — surfaced during the locked/unlock beat. */
+.feat-door-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 999px;
+  border: 1px solid rgb(226 198 134 / 36%);
+  background: rgb(10 12 22 / 50%);
+  backdrop-filter: blur(2px);
+}
+
+.feat-door-key-img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgb(226 198 134 / 45%));
+}
+
+.feat-door-key-name {
+  font-size: 0.8rem;
+  color: #ecd6a0;
+}
+
+.feat-door-key.is-using .feat-door-key-img {
+  animation: door-key-use 0.85s var(--ease-out-soft);
+}
+
+@keyframes door-key-use {
+  0% { transform: rotate(0) scale(1); }
+  40% { transform: rotate(-16deg) scale(1.15); filter: drop-shadow(0 0 10px rgb(255 220 140 / 90%)); }
+  100% { transform: rotate(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feat-door-leaf,
+  .feat-door-peek {
+    transition: none;
+  }
+
+  .feat-door-seal.is-locked,
+  .feat-door-seal.is-shatter,
+  .feat-door-key.is-using .feat-door-key-img {
+    animation: none;
+  }
 }
 
 .feat-empty-panel {

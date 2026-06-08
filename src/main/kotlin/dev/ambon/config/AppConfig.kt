@@ -3047,6 +3047,14 @@ data class ImagesConfig(
             "container_bg" to "global_assets/container_bg.png",
             "sign_bg" to "global_assets/sign_bg.png",
             "lever_bg" to "global_assets/lever_bg.png",
+            // Server-wide default door art: a static frame + a swinging leaf (mirrors
+            // the lever plate/handle), the warded-seal lock overlay (glows when locked,
+            // shatters on unlock), and the card backdrop. Doors that don't author their
+            // own frameImage/leafImage use these; everything degrades to a CSS door.
+            "door_frame" to "global_assets/door_frame.png",
+            "door_leaf" to "global_assets/door_leaf.png",
+            "door_lock" to "global_assets/door_lock.png",
+            "door_bg" to "global_assets/door_bg.png",
             // Server-wide default backdrop for the puzzle (grimoire/parchment) panel.
             // Used when a puzzle doesn't author its own backgroundImage; falls back
             // further to a CSS tome treatment when this isn't present either.
