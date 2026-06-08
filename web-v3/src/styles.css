@@ -22278,8 +22278,8 @@ html:has(.game-shell),
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: clamp(12px, 2.5vw, 22px);
+  gap: 10px;
+  padding: 4px clamp(12px, 2.5vw, 22px) clamp(12px, 2.5vw, 20px);
   color: var(--cc-ink);
 }
 
@@ -22293,15 +22293,17 @@ html:has(.game-shell),
   background-repeat: no-repeat, no-repeat;
 }
 
+/* The cabinet carries its own carved header in the art, so hide the drawer
+   title (kept as the dialog's aria-label) and shrink the header to just the
+   close button — lifts all the content up so it fits on shorter screens. */
 .drawer-sheet-cabinet .drawer-title {
-  color: var(--cc-brass-soft);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 80%), 0 1px 12px rgb(0 0 0 / 55%);
+  display: none;
 }
 
 .drawer-sheet-cabinet .drawer-header {
   border-bottom: none;
+  padding: 6px 12px 0;
+  min-height: 0;
 }
 
 .drawer-sheet-cabinet .drawer-body {

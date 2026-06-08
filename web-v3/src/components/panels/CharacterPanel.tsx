@@ -426,19 +426,19 @@ export function CharacterPanel({
       <div className="cc-actions">
         <button
           type="button"
-          className={`cc-gem-btn cc-gem-green${achBtn ? " has-art" : ""}`}
-          style={achBtn ? { ["--cc-btn" as string]: `url("${achBtn}")` } : undefined}
-          onClick={() => setShowAchievements(true)}
-        >
-          Achievements
-        </button>
-        <button
-          type="button"
           className={`cc-gem-btn cc-gem-purple${preBtn ? " has-art" : ""}`}
           style={preBtn ? { ["--cc-btn" as string]: `url("${preBtn}")` } : undefined}
           onClick={() => setShowPrestige(true)}
         >
           Prestige
+        </button>
+        <button
+          type="button"
+          className={`cc-gem-btn cc-gem-green${achBtn ? " has-art" : ""}`}
+          style={achBtn ? { ["--cc-btn" as string]: `url("${achBtn}")` } : undefined}
+          onClick={() => setShowAchievements(true)}
+        >
+          Achievements
         </button>
       </div>
 
