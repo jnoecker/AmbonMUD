@@ -704,6 +704,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setZoneCinematic(null);
     setCombatTarget(null);
     setConsiderResult(null);
+    setLookTarget(null);
     setCharStats(null);
     setQuests([]);
     setQuestsAvailable([]);
