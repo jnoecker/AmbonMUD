@@ -2,7 +2,7 @@ import type { ItemSummary, Vitals } from "../types";
 import type { AudioEngine } from "../hooks/useAudioEngine";
 import { AudioControls } from "./AudioControls";
 import { selectQuickPotion } from "../combat/quickPotion";
-import { percent } from "../utils";
+import { formatCompact, percent } from "../utils";
 
 interface CanvasVitalsHudProps {
   vitals: Vitals;
@@ -50,9 +50,9 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
           <div className="vskin-slot vskin-slot-mp" title={`MP: ${vitals.mana}/${vitals.maxMana}`}>
             <span className="vskin-drain" style={{ left: `${mpPct}%` }} />
           </div>
-          <span className="vskin-num vskin-num-hp">{vitals.hp}/{vitals.maxHp}</span>
-          <span className="vskin-num vskin-num-mp">{vitals.mana}/{vitals.maxMana}</span>
-          <span className="vskin-num vskin-num-gold">{vitals.gold.toLocaleString()}</span>
+          <span className="vskin-num vskin-num-hp" title={`HP: ${vitals.hp}/${vitals.maxHp}`}>{formatCompact(vitals.hp)}/{formatCompact(vitals.maxHp)}</span>
+          <span className="vskin-num vskin-num-mp" title={`MP: ${vitals.mana}/${vitals.maxMana}`}>{formatCompact(vitals.mana)}/{formatCompact(vitals.maxMana)}</span>
+          <span className="vskin-num vskin-num-gold" title={`Gold: ${vitals.gold.toLocaleString()}`}>{formatCompact(vitals.gold)}</span>
           <button
             type="button"
             className="vskin-hotspot vskin-heal"
@@ -98,7 +98,7 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
         <div className="vbar-vital-track">
           <span className="vbar-vital-fill vbar-vital-hp" style={{ width: `${percent(vitals.hp, vitals.maxHp)}%` }} />
         </div>
-        <span className="vbar-vital-text">{vitals.hp}/{vitals.maxHp}</span>
+        <span className="vbar-vital-text">{formatCompact(vitals.hp)}/{formatCompact(vitals.maxHp)}</span>
       </div>
       <button
         type="button"
@@ -116,7 +116,7 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
         <div className="vbar-vital-track">
           <span className="vbar-vital-fill vbar-vital-mp" style={{ width: `${percent(vitals.mana, vitals.maxMana)}%` }} />
         </div>
-        <span className="vbar-vital-text">{vitals.mana}/{vitals.maxMana}</span>
+        <span className="vbar-vital-text">{formatCompact(vitals.mana)}/{formatCompact(vitals.maxMana)}</span>
       </div>
       <button
         type="button"
@@ -129,9 +129,9 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
         <span className="vbar-quick-potion-icon" aria-hidden="true">+</span>
         <span className="vbar-quick-potion-label">Mana</span>
       </button>
-      <div className="vbar-gold">
+      <div className="vbar-gold" title={`Gold: ${vitals.gold.toLocaleString()}`}>
         <span className="vbar-gold-coin" />
-        <span className="vbar-gold-text">{vitals.gold.toLocaleString()}</span>
+        <span className="vbar-gold-text">{formatCompact(vitals.gold)}</span>
       </div>
       <AudioControls audio={audio} />
     </div>
