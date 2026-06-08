@@ -50,105 +50,68 @@ function LeverWidget({
   const isUp = feature.state === "up";
   const label = isUp ? "Ready" : "Pulled";
 
-  // Custom art (authored in Arcanum): a static plate plus a handle sprite that
-  // rotates around its pivot between the up/down angles. Per-lever art wins;
-  // otherwise the server-wide default plate/handle; otherwise the hand-drawn
-  // vector lever.
+  // Composed art: an optional backdrop "box" with the plate + rotating handle on
+  // top. Per-feature art wins, then the server-wide default, then a vector lever.
+  // We show only the lever itself — the whole tile is the click target.
   const px = feature.leverPivot?.x ?? 0.5;
   const py = feature.leverPivot?.y ?? 0.85;
   const angle = isUp ? (feature.upAngle ?? -28) : (feature.downAngle ?? 28);
   const handleSrc = feature.handleImage ?? serverAssets["lever_handle"] ?? null;
   const plateSrc = feature.plateImage ?? serverAssets["lever_plate"] ?? null;
-  // Optional backdrop "box" the lever sits inside; the plate + handle ride on
-  // top. Per-feature art wins, then the server-wide default, then a CSS frame.
   const boxSrc = feature.backgroundImage ?? serverAssets["lever_bg"] ?? null;
+  const hasArt = Boolean(boxSrc || handleSrc);
 
   return (
-    <div
-      className={`lever-widget${boxSrc ? " lever-widget-boxed" : ""}`}
+    <button
+      type="button"
+      className={`lever-tile${hasArt ? " has-art" : ""}${boxSrc ? " has-box" : ""}`}
       onClick={() => onCommand(`pull ${feature.keyword}`)}
+      aria-label={`Pull ${feature.name} (${label})`}
+      title={`Pull ${feature.name}`}
     >
-      {boxSrc && (
-        <img className="lever-widget-box" src={boxSrc} alt="" aria-hidden="true" draggable={false} />
-      )}
-      {handleSrc ? (
-        <div className="lever-widget-art" aria-label={`${feature.name}: ${label}`} role="img">
-          {plateSrc && (
-            <img className="lever-widget-art-plate" src={plateSrc} alt="" aria-hidden="true" draggable={false} />
-          )}
-          <img
-            className="lever-widget-art-handle"
-            src={handleSrc}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            style={{
-              transformOrigin: `${px * 100}% ${py * 100}%`,
-              transform: `translate(${(0.5 - px) * 100}%, ${(0.5 - py) * 100}%) rotate(${angle}deg)`,
-            }}
-          />
-        </div>
-      ) : (
-        <div className="lever-widget-plate">
-          <svg
-            className="lever-widget-svg"
-            viewBox="0 0 64 96"
-            aria-label={`${feature.name}: ${label}`}
-          >
-            {/* Base plate arc */}
-            <path
-              d="M12 78 Q32 86 52 78"
-              fill="none"
-              stroke="rgb(180 150 210 / 40%)"
-              strokeWidth="2"
-              strokeLinecap="round"
+      <span className="lever-tile-stage">
+        {boxSrc && (
+          <img className="lever-tile-box" src={boxSrc} alt="" aria-hidden="true" draggable={false} />
+        )}
+        {handleSrc ? (
+          <span className="lever-tile-lever">
+            {plateSrc && (
+              <img className="lever-tile-plate" src={plateSrc} alt="" aria-hidden="true" draggable={false} />
+            )}
+            <img
+              className="lever-tile-handle"
+              src={handleSrc}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              style={{
+                transformOrigin: `${px * 100}% ${py * 100}%`,
+                transform: `translate(${(0.5 - px) * 100}%, ${(0.5 - py) * 100}%) rotate(${angle}deg)`,
+              }}
             />
-            {/* Pivot point */}
-            <circle cx="32" cy="72" r="6" className="lever-widget-pivot" />
-            {/* Handle shaft */}
-            <line
-              x1="32"
-              y1="72"
-              x2={isUp ? "32" : "46"}
-              y2={isUp ? "22" : "32"}
-              className="lever-widget-shaft"
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-            {/* Handle grip */}
-            <circle
-              cx={isUp ? "32" : "46"}
-              cy={isUp ? "18" : "28"}
-              r="7"
-              className="lever-widget-grip"
-            />
-            {/* Glow on grip */}
-            <circle
-              cx={isUp ? "32" : "46"}
-              cy={isUp ? "18" : "28"}
-              r="4"
-              className="lever-widget-glow"
-            />
-          </svg>
-        </div>
-      )}
-      <div className="lever-widget-info">
-        <span className="lever-widget-name">{feature.name}</span>
-        <span className={`lever-widget-state lever-widget-state-${isUp ? "up" : "down"}`}>
-          {label}
-        </span>
-      </div>
-      <button
-        type="button"
-        className="lever-widget-pull"
-        onClick={(e) => {
-          e.stopPropagation();
-          onCommand(`pull ${feature.keyword}`);
-        }}
-      >
-        Pull
-      </button>
-    </div>
+          </span>
+        ) : (
+          <span className="lever-tile-lever">
+            <svg className="lever-tile-svg" viewBox="0 0 64 96" aria-hidden="true">
+              {/* Base plate arc */}
+              <path d="M12 78 Q32 86 52 78" fill="none" stroke="rgb(180 150 210 / 40%)" strokeWidth="2" strokeLinecap="round" />
+              {/* Pivot point */}
+              <circle cx="32" cy="72" r="6" className="lever-tile-pivot" />
+              {/* Handle shaft */}
+              <line x1="32" y1="72" x2={isUp ? "32" : "46"} y2={isUp ? "22" : "32"} className="lever-tile-shaft" strokeWidth="4" strokeLinecap="round" />
+              {/* Handle grip */}
+              <circle cx={isUp ? "32" : "46"} cy={isUp ? "18" : "28"} r="7" className="lever-tile-grip" />
+              {/* Glow on grip */}
+              <circle cx={isUp ? "32" : "46"} cy={isUp ? "18" : "28"} r="4" className="lever-tile-glow" />
+            </svg>
+          </span>
+        )}
+      </span>
+      <span className="lever-tile-caption">
+        <span className="lever-tile-name">{feature.name}</span>
+        <span className={`lever-tile-state lever-tile-state-${isUp ? "up" : "down"}`}>{label}</span>
+      </span>
+    </button>
   );
 }
 
@@ -240,19 +203,7 @@ function ContainerCard({
     >
       <div className="fcard-bg" aria-hidden="true">{!bgSrc && <ChestGlyph />}</div>
       <div className="fcard-body">
-        <header className="fcard-head">
-          <span className="fcard-eyebrow fcard-eyebrow-container">Container</span>
-          <h4 className="fcard-title">{feature.name}</h4>
-          <p className="fcard-sub">
-            {feature.state === "locked"
-              ? feature.keyRequired
-                ? "Locked — a key is required."
-                : "Locked tight."
-              : isOpen
-                ? "Open"
-                : "Closed"}
-          </p>
-        </header>
+        <h4 className="fcard-title">{feature.name}</h4>
 
         <div className="fcard-foot">
           {isOpen && items !== null && (
@@ -298,11 +249,9 @@ function ContainerCard({
 function SignCard({
   feature,
   serverAssets,
-  onCommand,
 }: {
   feature: RoomFeature;
   serverAssets: Record<string, string>;
-  onCommand: (cmd: string) => void;
 }) {
   const bgSrc = feature.backgroundImage ?? serverAssets["sign_bg"] ?? null;
 
@@ -310,18 +259,11 @@ function SignCard({
     <article
       className={`fcard fcard-sign${bgSrc ? " has-art" : ""}`}
       style={bgSrc ? { ["--fcard-art" as string]: `url("${bgSrc}")` } : undefined}
+      aria-label={feature.name}
     >
       <div className="fcard-bg" aria-hidden="true">{!bgSrc && <SignGlyph />}</div>
       <div className="fcard-body fcard-sign-body">
-        <span className="fcard-eyebrow fcard-eyebrow-sign">{feature.name}</span>
         {feature.text && <p className="fcard-sign-text">{feature.text}</p>}
-        <button
-          type="button"
-          className="fcard-sign-read"
-          onClick={() => onCommand(`read ${feature.keyword}`)}
-        >
-          Read aloud
-        </button>
       </div>
     </article>
   );
@@ -450,13 +392,6 @@ function LockedDoorHero({
   );
 }
 
-function featureSummary(features: RoomFeature[], type: RoomFeatureType): string {
-  const count = features.filter((feature) => feature.type === type).length;
-  if (count === 0) return `No ${FEATURE_LABELS[type].plural.toLowerCase()}`;
-  if (count === 1) return `1 ${FEATURE_LABELS[type].singular.toLowerCase()}`;
-  return `${count} ${FEATURE_LABELS[type].plural.toLowerCase()}`;
-}
-
 function featureActions(feature: RoomFeature): Array<{ label: string; command: string }> {
   if (feature.type === "door") {
     const actions: Array<{ label: string; command: string }> = [];
@@ -579,38 +514,23 @@ export function WorldFeaturesPopout({
 
   return (
     <div className="feature-popout">
-      <header className="feature-popout-hero">
-        <div className="feature-popout-hero-copy">
-          <h3>{roomTitle}</h3>
+      {availableTabs.length > 1 && (
+        <div className="feature-popout-tabs" role="tablist" aria-label="Feature categories">
+          {availableTabs.map((type) => (
+            <button
+              key={type}
+              type="button"
+              role="tab"
+              className={`feature-popout-tab feature-popout-tab-${type}${activeTab === type ? " feature-popout-tab-active" : ""}`}
+              aria-selected={activeTab === type}
+              onClick={() => setManualTab(type)}
+            >
+              {FEATURE_LABELS[type].plural}
+              <span className="feature-popout-tab-count">{groupedFeatures[type].length}</span>
+            </button>
+          ))}
         </div>
-        <div className="feature-popout-summary" aria-label="Feature summary">
-          <span className="feature-popout-summary-pill feature-popout-summary-door">
-            {featureSummary(roomFeatures, "door")}
-          </span>
-          <span className="feature-popout-summary-pill feature-popout-summary-container">
-            {featureSummary(roomFeatures, "container")}
-          </span>
-          <span className="feature-popout-summary-pill feature-popout-summary-lever">
-            {featureSummary(roomFeatures, "lever")}
-          </span>
-        </div>
-      </header>
-
-      <div className="feature-popout-tabs" role="tablist" aria-label="Feature categories">
-        {availableTabs.map((type) => (
-          <button
-            key={type}
-            type="button"
-            role="tab"
-            className={`feature-popout-tab feature-popout-tab-${type}${activeTab === type ? " feature-popout-tab-active" : ""}`}
-            aria-selected={activeTab === type}
-            onClick={() => setManualTab(type)}
-          >
-            {FEATURE_LABELS[type].plural}
-            <span className="feature-popout-tab-count">{groupedFeatures[type].length}</span>
-          </button>
-        ))}
-      </div>
+      )}
 
       <div className={`feature-popout-grid${activeTab === "lever" ? " feature-popout-grid-levers" : ""}`}>
         {visibleFeatures.map((feature) => {
@@ -635,7 +555,7 @@ export function WorldFeaturesPopout({
           }
 
           if (feature.type === "sign") {
-            return <SignCard key={feature.id} feature={feature} serverAssets={serverAssets} onCommand={onCommand} />;
+            return <SignCard key={feature.id} feature={feature} serverAssets={serverAssets} />;
           }
 
           // Doors — generic card.
