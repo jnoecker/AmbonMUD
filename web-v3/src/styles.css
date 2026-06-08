@@ -17257,6 +17257,103 @@ body {
   overflow-y: auto;
 }
 
+/* ── The Vault — bank panel over the vault-interior skin ─────── */
+.drawer-sheet.drawer-sheet-vault {
+  background-image:
+    var(--skin-bg, none),
+    linear-gradient(180deg, rgb(43 53 79 / 98%), rgb(34 41 64 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.drawer-sheet-vault .drawer-title {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 72%), 0 1px 12px rgb(0 0 0 / 55%);
+}
+
+.drawer-sheet-vault .drawer-header {
+  border-bottom: none;
+}
+
+.drawer-sheet-vault .drawer-body {
+  padding: 0;
+}
+
+.bank-panel.bank-vault {
+  padding: clamp(14px, 3vw, 24px);
+}
+
+/* The content floats over the vault art — give each block a dark glass backing
+   so the gold + items stay legible on any interior. */
+.bank-vault .bank-gold-section {
+  background: linear-gradient(135deg, rgb(20 18 28 / 64%), rgb(12 13 22 / 58%));
+  border-color: rgb(212 178 110 / 34%);
+  backdrop-filter: blur(2px);
+}
+
+.bank-vault .bank-gold-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bank-emblem {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgb(226 198 134 / 45%));
+}
+
+.bank-vault .bank-gold-value {
+  text-shadow: 0 1px 8px rgb(0 0 0 / 55%);
+}
+
+.bank-vault .bank-item-row {
+  background: rgb(12 13 22 / 52%);
+  border-color: rgb(255 255 255 / 10%);
+  backdrop-filter: blur(2px);
+  /* Drawer slide — items glide in (on open, and as each is stored). */
+  animation: bank-drawer-slide 0.34s var(--ease-out-soft) both;
+}
+
+.bank-vault .bank-item-row:hover {
+  background: rgb(22 24 36 / 64%);
+}
+
+.bank-empty-emblem {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgb(226 198 134 / 40%));
+}
+
+/* Coin glint when gold is deposited. */
+.bank-gold-value.is-glint {
+  animation: bank-coin-glint 0.9s ease-out;
+}
+
+@keyframes bank-coin-glint {
+  0% { transform: scale(1); text-shadow: 0 1px 8px rgb(0 0 0 / 55%); }
+  35% {
+    transform: scale(1.12);
+    color: #ffe6a3;
+    text-shadow: 0 0 12px rgb(255 214 120 / 90%), 0 0 24px rgb(255 190 90 / 60%);
+  }
+  100% { transform: scale(1); text-shadow: 0 1px 8px rgb(0 0 0 / 55%); }
+}
+
+@keyframes bank-drawer-slide {
+  from { opacity: 0; transform: translateX(-14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bank-gold-value.is-glint,
+  .bank-vault .bank-item-row {
+    animation: none;
+  }
+}
+
 /* ===== Inn modal — a brass key on a hook ============================== */
 .inn-backdrop {
   position: fixed;
