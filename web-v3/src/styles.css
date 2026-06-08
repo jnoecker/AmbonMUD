@@ -3208,100 +3208,67 @@ body {
 }
 
 
-.feature-popout-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.feature-popout-summary-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / 10%);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  background: rgb(18 22 34 / 42%);
-}
-
-.feature-popout-summary-door {
-  color: #bdd8ee;
-}
-
-.feature-popout-summary-container {
-  color: #e1c17c;
-}
-
-.feature-popout-summary-lever {
-  color: #d3abdf;
-}
-
+/* Quiet text tabs — only shown when a room has more than one feature type.
+   No pill boxes; the active category brightens with a soft underline. */
 .feature-popout-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px;
+  margin: -2px 0 2px;
 }
 
 .feature-popout-tab {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgb(72 83 117 / 76%), rgb(57 69 101 / 72%));
-  color: var(--text-secondary);
+  gap: 6px;
+  padding: 6px 4px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition:
-    transform 160ms var(--ease-out-soft),
-    border-color 160ms var(--ease-out-soft),
     color 160ms var(--ease-out-soft),
-    background 160ms var(--ease-out-soft);
+    border-color 160ms var(--ease-out-soft);
+}
+
+.feature-popout-tab + .feature-popout-tab {
+  margin-left: 12px;
 }
 
 .feature-popout-tab:hover {
-  transform: translateY(-1px);
   color: var(--text-primary);
-  border-color: rgb(216 197 232 / 34%);
 }
 
 .feature-popout-tab-active {
   color: var(--text-bright);
-  border-color: rgb(216 197 232 / 44%);
-  background: linear-gradient(135deg, rgb(96 82 120 / 84%), rgb(73 95 131 / 78%));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 10px 20px rgb(10 12 22 / 18%);
+  border-bottom-color: rgb(216 197 232 / 70%);
 }
 
 .feature-popout-tab-door.feature-popout-tab-active {
-  border-color: rgb(156 190 228 / 42%);
+  border-bottom-color: rgb(156 190 228 / 75%);
 }
 
 .feature-popout-tab-container.feature-popout-tab-active {
-  border-color: rgb(223 191 116 / 42%);
+  border-bottom-color: rgb(223 191 116 / 78%);
 }
 
 .feature-popout-tab-lever.feature-popout-tab-active {
-  border-color: rgb(211 171 223 / 42%);
+  border-bottom-color: rgb(211 171 223 / 78%);
+}
+
+.feature-popout-tab-sign.feature-popout-tab-active {
+  border-bottom-color: rgb(168 204 178 / 78%);
 }
 
 .feature-popout-tab-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  min-height: 22px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: rgb(15 18 29 / 45%);
-  color: currentColor;
   font-size: 0.74rem;
+  font-weight: 700;
+  opacity: 0.7;
 }
 
 .feature-popout-grid {
@@ -3331,81 +3298,72 @@ body {
     linear-gradient(145deg, rgb(73 64 102 / 92%), rgb(55 49 81 / 88%));
 }
 
-/* Lever grid lays out widgets in a compact row-wrap */
+/* Lever tiles lay out in a compact row-wrap, each a fixed-ish width so a lone
+   lever stays small rather than stretching across the modal. */
 .feature-popout-grid-levers {
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 180px));
+  justify-content: start;
 }
 
-/* ── Graphical lever widget ─────────────────────────────── */
-.lever-widget {
-  position: relative;
-  isolation: isolate;
+/* ── Lever tile — just the lever art, click to pull ───────── */
+.lever-tile {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
-  padding: 14px 12px 12px;
-  border: 1px solid rgb(211 171 223 / 18%);
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 50% 20%, rgb(204 154 216 / 12%), transparent 60%),
-    linear-gradient(160deg, rgb(66 58 94 / 92%), rgb(50 44 74 / 90%));
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
   cursor: pointer;
-  transition:
-    border-color 200ms var(--ease-out-soft),
-    transform 200ms var(--ease-out-soft),
-    box-shadow 200ms var(--ease-out-soft);
 }
 
-/* Optional backdrop "box" art (lever_bg / per-feature). Fills the card; the
-   plate + handle render on top. When present we drop the CSS frame so only the
-   authored art shows. */
-.lever-widget-box {
+.lever-tile:focus-visible {
+  outline: 2px solid rgb(216 197 232 / 70%);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
+}
+
+/* The art stage holds the box (decorative frame) filling it, with the lever
+   (plate + pivoting handle, or vector fallback) riding on top. No card chrome. */
+.lever-tile-stage {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  transition:
+    transform 200ms var(--ease-out-soft),
+    filter 200ms var(--ease-out-soft);
+}
+
+.lever-tile-box {
   position: absolute;
   inset: 0;
-  z-index: -1;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   pointer-events: none;
   user-select: none;
 }
 
-.lever-widget-boxed {
-  border-color: transparent;
-  background: none;
+/* The lever itself. With a box it sits in the box's socket (upper-centre, about
+   half width); without a box it fills the stage. The plate + handle share this
+   frame so the handle pivots correctly. */
+.lever-tile-lever {
+  position: absolute;
+  inset: 0;
 }
 
-.lever-widget:hover {
-  border-color: rgb(211 171 223 / 38%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgb(10 8 18 / 30%);
+.lever-tile.has-box .lever-tile-lever {
+  inset: 8% 27% auto 27%;
+  aspect-ratio: 1;
 }
 
-.lever-widget-plate {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 96px;
-}
-
-.lever-widget-svg {
-  width: 64px;
-  height: 96px;
-  overflow: visible;
-}
-
-/* Custom lever art — a square box; the plate + pivoting handle overlay it. */
-.lever-widget-art {
-  position: relative;
-  width: 88px;
-  height: 88px;
-}
-
-.lever-widget-art-plate,
-.lever-widget-art-handle {
+.lever-tile-plate,
+.lever-tile-handle,
+.lever-tile-svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -3413,14 +3371,25 @@ body {
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+  overflow: visible;
 }
 
-.lever-widget-art-handle {
+.lever-tile-handle {
   transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.lever-widget-svg line,
-.lever-widget-svg circle {
+.lever-tile:hover .lever-tile-stage {
+  transform: translateY(-3px) scale(1.03);
+  filter: drop-shadow(0 10px 22px rgb(10 8 18 / 45%));
+}
+
+.lever-tile:active .lever-tile-stage {
+  transform: translateY(-1px) scale(1.01);
+}
+
+/* Vector fallback colors (no art shipped) */
+.lever-tile-svg line,
+.lever-tile-svg circle {
   transition:
     cx 400ms var(--ease-in-out-smooth),
     cy 400ms var(--ease-in-out-smooth),
@@ -3430,101 +3399,66 @@ body {
     y2 400ms var(--ease-in-out-smooth);
 }
 
-.lever-widget-pivot {
+.lever-tile-pivot {
   fill: rgb(80 70 110);
   stroke: rgb(160 140 190 / 50%);
   stroke-width: 1.5;
 }
 
-.lever-widget-shaft {
+.lever-tile-shaft {
   stroke: rgb(190 165 220);
   filter: drop-shadow(0 0 3px rgb(190 165 220 / 30%));
 }
 
-.lever-widget-grip {
+.lever-tile-grip {
   fill: rgb(100 85 135);
   stroke: rgb(210 185 240 / 60%);
   stroke-width: 1.5;
 }
 
-.lever-widget-glow {
+.lever-tile-glow {
   fill: rgb(220 195 250 / 50%);
   filter: blur(2px);
   pointer-events: none;
 }
 
-/* Info below lever */
-.lever-widget-info {
+/* Readable caption beneath the art (never overlaid on it) */
+.lever-tile-caption {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   text-align: center;
 }
 
-.lever-widget-name {
+.lever-tile-name {
   font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
 }
 
-.lever-widget-state {
-  font-size: 0.72rem;
+.lever-tile-state {
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
-}
-
-.lever-widget-state-up {
-  color: rgb(180 210 160);
-}
-
-.lever-widget-state-down {
-  color: rgb(220 180 130);
-}
-
-/* Pull button */
-.lever-widget-pull {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 6px 0;
-  border: 1px solid rgb(211 171 223 / 22%);
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgb(100 85 140 / 60%), rgb(80 68 118 / 56%));
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
+  letter-spacing: 0.07em;
   font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 150ms var(--ease-out-soft),
-    border-color 150ms var(--ease-out-soft),
-    transform 150ms var(--ease-out-soft);
 }
 
-.lever-widget-pull:hover {
-  background: linear-gradient(135deg, rgb(120 100 165 / 72%), rgb(95 82 140 / 68%));
-  border-color: rgb(211 171 223 / 40%);
-  transform: translateY(-1px);
+.lever-tile-state-up {
+  color: rgb(150 200 130);
 }
 
-.lever-widget-pull:active {
-  transform: translateY(0);
+.lever-tile-state-down {
+  color: rgb(220 175 120);
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .lever-widget-svg line,
-  .lever-widget-svg circle {
-    transition: none;
-  }
-
-  .lever-widget,
-  .lever-widget-pull,
-  .lever-widget-art-handle {
+  .lever-tile-svg line,
+  .lever-tile-svg circle,
+  .lever-tile-art,
+  .lever-tile-handle {
     transition: none;
   }
 
@@ -3684,7 +3618,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgb(12 14 24 / 20%) 0%, rgb(12 14 24 / 18%) 42%, rgb(10 12 20 / 78%) 100%);
+  background: linear-gradient(180deg, rgb(10 12 20 / 26%) 0%, rgb(10 12 20 / 12%) 45%, rgb(10 12 20 / 46%) 100%);
 }
 
 /* Stylized SVG fallback glyph (no art shipped yet). */
@@ -3703,35 +3637,14 @@ body {
   padding: 16px 18px;
 }
 
-.fcard-head {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.fcard-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.fcard-eyebrow-container {
-  color: #e1c17c;
-}
-
 .fcard-title {
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.16rem;
-  color: var(--text-heading);
-  text-shadow: 0 1px 8px rgb(8 10 18 / 55%);
-}
-
-.fcard-sub {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
+  color: var(--text-bright);
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 70%),
+    0 1px 14px rgb(0 0 0 / 55%);
 }
 
 /* Container contents + actions sit in the lower half (the open chest's cavity). */
@@ -3756,8 +3669,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  padding: 7px 4px 7px 2px;
-  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  padding: 8px 0;
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
 }
 
 .fcard-loot-row:last-child {
@@ -3765,21 +3678,23 @@ body {
 }
 
 .fcard-loot-name {
-  color: var(--text-primary);
-  font-size: 0.88rem;
+  color: var(--text-bright);
+  font-size: 0.9rem;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 65%);
 }
 
 .fcard-take {
   flex-shrink: 0;
-  padding: 4px 12px;
-  border: 1px solid rgb(226 198 134 / 28%);
+  padding: 5px 14px;
+  border: 1px solid rgb(240 214 150 / 50%);
   border-radius: 999px;
-  background: rgb(226 198 134 / 12%);
-  color: #ecd6a0;
+  background: rgb(60 48 24 / 62%);
+  color: #f4e2b2;
   font-family: var(--font-body);
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
+  backdrop-filter: blur(2px);
   transition:
     background 150ms var(--ease-out-soft),
     border-color 150ms var(--ease-out-soft),
@@ -3787,8 +3702,8 @@ body {
 }
 
 .fcard-take:hover {
-  background: rgb(226 198 134 / 22%);
-  border-color: rgb(240 214 150 / 55%);
+  background: rgb(86 68 32 / 78%);
+  border-color: rgb(248 226 168 / 80%);
   transform: translateY(-1px);
 }
 
@@ -3842,9 +3757,18 @@ body {
   background: linear-gradient(135deg, rgb(188 158 100 / 76%), rgb(142 118 74 / 68%));
 }
 
+/* Art bleeds — only a whisper of an edge so the card reads as the art, not a box. */
+.fcard.has-art {
+  border-color: rgb(255 255 255 / 7%);
+}
+
 /* Container card tinting */
 .fcard-container {
   border-color: rgb(212 178 110 / 24%);
+}
+
+.fcard-container .fcard-body {
+  min-height: 210px;
 }
 
 .fcard-container .fcard-bg {
@@ -3852,6 +3776,22 @@ body {
   background:
     radial-gradient(ellipse at 50% 8%, rgb(226 198 134 / 16%), transparent 58%),
     linear-gradient(165deg, rgb(74 66 86 / 96%), rgb(50 46 66 / 94%));
+}
+
+/* The open chest's interior is bright — a soft gradient (not a panel) sits behind
+   the title + loot so light text stays legible. */
+.fcard-container.has-art .fcard-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to top,
+    rgb(6 7 13 / 82%) 0%,
+    rgb(6 7 13 / 58%) 26%,
+    rgb(6 7 13 / 16%) 54%,
+    transparent 76%
+  );
 }
 
 .fcard-container.is-closed .fcard-glyph,
@@ -3874,47 +3814,21 @@ body {
 .fcard-sign-body {
   align-items: center;
   justify-content: center;
-  gap: 12px;
   text-align: center;
-}
-
-.fcard-eyebrow-sign {
-  color: #b9d6be;
 }
 
 .fcard-sign-text {
   margin: 0;
-  max-width: 62ch;
+  max-width: 58ch;
   color: var(--text-bright);
   font-family: var(--font-display);
-  font-size: 1.04rem;
+  font-size: 1.06rem;
   font-style: italic;
-  line-height: 1.55;
+  line-height: 1.6;
   white-space: pre-wrap;
-  text-shadow: 0 1px 10px rgb(8 10 18 / 60%);
-}
-
-.fcard-sign-read {
-  padding: 6px 16px;
-  border: 1px solid rgb(185 214 190 / 30%);
-  border-radius: 999px;
-  background: rgb(185 214 190 / 10%);
-  color: #cfe6d4;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition:
-    background 150ms var(--ease-out-soft),
-    border-color 150ms var(--ease-out-soft),
-    transform 150ms var(--ease-out-soft);
-}
-
-.fcard-sign-read:hover {
-  background: rgb(185 214 190 / 20%);
-  border-color: rgb(205 230 212 / 55%);
-  transform: translateY(-1px);
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 60%),
+    0 1px 12px rgb(0 0 0 / 50%);
 }
 
 /* Hero treatment for a single locked feature (container or door) — bigger,
