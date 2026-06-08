@@ -265,13 +265,19 @@ function DoorPanel({
     transformOrigin: hinge === "right" ? "right center" : "left center",
     transform: `rotateY(${leafAngle}deg)`,
   };
-  // The portal sits in the same opening box as the leaf (behind it), so it's
-  // revealed when the leaf swings open.
+  // The portal sits behind the leaf, revealed when it swings open. Keep it a bit
+  // smaller than the leaf box and centred on it, so the (arch-shaped, transparent-
+  // edged) leaf fully covers it when closed instead of bleeding past the edges.
+  // PORTAL_SHRINK is the single tuning dial.
+  const PORTAL_SHRINK = 0.78;
+  const portalW = leafScale * PORTAL_SHRINK;
+  const leafCx = leafInset + leafScale / 2;
+  const leafCy = leafInset + leafOffsetY + leafScale / 2;
   const portalStyle = {
-    left: leafStyle.left,
-    top: leafStyle.top,
-    width: leafStyle.width,
-    height: leafStyle.height,
+    left: `${(leafCx - portalW / 2) * 100}%`,
+    top: `${(leafCy - portalW / 2) * 100}%`,
+    width: `${portalW * 100}%`,
+    height: `${portalW * 100}%`,
   };
   const actions = featureActions(feature);
 

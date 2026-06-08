@@ -3692,7 +3692,8 @@ body {
   position: absolute;
   z-index: 0;
   overflow: hidden;
-  border-radius: 8px 8px 4px 4px;
+  /* Arch-domed top so the swirl reads as a doorway rather than a rectangle. */
+  border-radius: 46% 46% 14px 14px / 34% 34% 14px 14px;
 }
 
 .feat-door-portal-art,
