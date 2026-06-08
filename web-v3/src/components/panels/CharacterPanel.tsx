@@ -1,24 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, CurrencyBalance, FactionStanding, GroupInfo, GuildInfo, LeaderboardData, PetState, PrestigeInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
-import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, FactionsTabIcon, GlobeIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
-import { LeaderboardPanel } from "./LeaderboardPanel";
-
-type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score" | "factions" | "leaderboard";
-
-function factionTierClass(tier: string): "positive" | "neutral" | "negative" {
-  switch (tier) {
-    case "Friendly":
-    case "Honored":
-    case "Revered":
-      return "positive";
-    case "Unfriendly":
-    case "Hostile":
-    case "Hated":
-      return "negative";
-    default:
-      return "neutral";
-  }
-}
+import { useMemo, useState } from "react";
+import type {
+  AchievementData,
+  CharacterInfo,
+  CharStats,
+  CurrencyBalance,
+  FactionStanding,
+  GroupInfo,
+  GuildInfo,
+  LeaderboardData,
+  PetState,
+  PrestigeInfo,
+  QuestEntry,
+  QuestNotification,
+  SpriteEntry,
+  SpriteList,
+  StatusEffect,
+  StatusVarLabels,
+  Vitals,
+} from "../../types";
 
 interface CharacterPanelProps {
   connected: boolean;
@@ -48,6 +47,7 @@ interface CharacterPanelProps {
   petState: PetState | null;
   prestigeInfo: PrestigeInfo | null;
   leaderboard: Record<string, LeaderboardData>;
+  serverAssets: Record<string, string>;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -56,10 +56,60 @@ interface CharacterPanelProps {
   onLogout: () => void;
 }
 
+const GENDERS: Array<{ value: string; label: string }> = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "enby", label: "Other" },
+];
+
+/** Effect type → charm accent colour. */
+function effectAccent(type: string): string {
+  const t = type.toLowerCase();
+  if (t.includes("heal") || t.includes("regen")) return "#7bbf6a";
+  if (t.includes("buff") || t.includes("bless") || t.includes("haste") || t.includes("swift")) return "#6fae9a";
+  if (t.includes("shield") || t.includes("protect") || t.includes("ward")) return "#c9a24a";
+  if (t.includes("dot") || t.includes("burn") || t.includes("fire") || t.includes("poison") || t.includes("debuff")) return "#a86bd0";
+  return "#8fa9c8";
+}
+
+function formatDuration(ms: number): string {
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s >= 3600) return `${Math.floor(s / 3600)}h`;
+  if (s >= 60) return `${Math.floor(s / 60)}m`;
+  return `${s}s`;
+}
+
+function CharBar({
+  kind,
+  label,
+  value,
+  max,
+  text,
+  pct,
+}: {
+  kind: "hp" | "mana" | "xp";
+  label: string;
+  value?: number;
+  max?: number;
+  text?: string;
+  pct: number;
+}) {
+  const clamped = Math.max(0, Math.min(100, pct));
+  return (
+    <div className={`cc-bar cc-bar-${kind}`}>
+      <span className="cc-bar-icon" aria-hidden="true" />
+      <span className="cc-bar-label">{label}</span>
+      <span className="cc-bar-track">
+        <span className="cc-bar-fill" style={{ width: `${clamped}%` }} />
+      </span>
+      <span className="cc-bar-value">{text ?? (value != null && max != null ? `${value} / ${max}` : "")}</span>
+    </div>
+  );
+}
+
 export function CharacterPanel({
   connected,
   hasCharacterProfile,
-  canOpenEquipment,
   character,
   displayRace,
   displayClassName,
@@ -68,946 +118,431 @@ export function CharacterPanel({
   xpValue,
   xpMax,
   xpText,
-  effects,
   visibleEffects,
   hiddenEffectsCount,
   achievements,
-  quests,
-  questNotifications,
   charStats,
-  guildInfo,
-  groupInfo,
   activeTitle,
   spriteList,
-  currencies,
-  factions,
-  petState,
   prestigeInfo,
-  leaderboard,
-  onDismissQuestNotification,
-  onAbandonQuest,
-  onOpenInventory,
-  onOpenEquipment,
+  serverAssets,
   onCommand,
   onLogout,
 }: CharacterPanelProps) {
-  const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
-  const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
-  const [showSpriteSelector, setShowSpriteSelector] = useState(false);
-  const [showDescriptionEditor, setShowDescriptionEditor] = useState(false);
-  const [descriptionDraft, setDescriptionDraft] = useState("");
-  const [petNameDraft, setPetNameDraft] = useState(petState?.name ?? "");
-  const [prevPetName, setPrevPetName] = useState(petState?.name ?? "");
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [showPrestige, setShowPrestige] = useState(false);
+  const [showScribe, setShowScribe] = useState(false);
+  const [scribeDraft, setScribeDraft] = useState("");
+  const [wimpyDraft, setWimpyDraft] = useState<number | null>(null);
 
-  const totalAchievements = achievements.completed.length + achievements.inProgress.length;
+  const a = (key: string): string | null => serverAssets[key] ?? null;
+
   const unlockedTitles = useMemo(
-    () => achievements.completed.filter((a) => a.title !== null).map((a) => a.title as string),
+    () => achievements.completed.filter((x) => x.title !== null).map((x) => x.title as string),
     [achievements.completed],
   );
+
+  // Sprite carousel: default (auto) + the player's unlocked sprites.
+  const spriteOrder = useMemo<Array<{ id: string | null; name: string; image: string | null }>>(
+    () => [
+      { id: null, name: "Default (Auto)", image: character.sprite },
+      ...spriteList.sprites.map((s: SpriteEntry) => ({ id: s.imageId, name: s.displayName, image: s.imagePath })),
+    ],
+    [spriteList.sprites, character.sprite],
+  );
+  const activeSpriteIdx = Math.max(
+    0,
+    spriteOrder.findIndex((s) => s.id === spriteList.active),
+  );
+  const cycleSprite = (dir: 1 | -1) => {
+    if (spriteOrder.length <= 1) return;
+    const next = (activeSpriteIdx + dir + spriteOrder.length) % spriteOrder.length;
+    const target = spriteOrder[next];
+    onCommand(target.id === null ? "sprite default" : `sprite set ${target.id}`);
+  };
+  const currentSpriteName = spriteOrder[activeSpriteIdx]?.name ?? character.name;
+
   const autolootEnabled = character.autolootEnabled;
   const autopeekEnabled = character.autopeekEnabled;
-  const wimpyPct = character.wimpyThresholdPct ?? 0;
-  const WIMPY_PRESETS = [0, 10, 25, 50, 75] as const;
-  const wimpyOptions = WIMPY_PRESETS.includes(wimpyPct as (typeof WIMPY_PRESETS)[number])
-    ? [...WIMPY_PRESETS]
-    : [...WIMPY_PRESETS, wimpyPct].sort((a, b) => a - b);
+  const wimpyPct = wimpyDraft ?? character.wimpyThresholdPct ?? 0;
 
-  const CATEGORY_LABELS: Record<string, string> = { general: "Sprites", tier: "Tier Sprites", achievement: "Achievement Sprites", staff: "Staff Sprites" };
-  const CATEGORY_ORDER = ["general", "tier", "achievement", "staff"];
-  const spritesByCategory = useMemo(() => {
-    const grouped = new Map<string, SpriteEntry[]>();
-    for (const sprite of spriteList.sprites) {
-      const cat = sprite.category || "other";
-      const list = grouped.get(cat);
-      if (list) list.push(sprite);
-      else grouped.set(cat, [sprite]);
-    }
-    return grouped;
-  }, [spriteList.sprites]);
+  const commitWimpy = (n: number) => {
+    const clamped = Math.max(0, Math.min(100, Math.round(n)));
+    setWimpyDraft(clamped);
+    onCommand(`wimpy ${clamped}`);
+  };
 
-  const currentPetName = petState?.name ?? "";
-  if (currentPetName !== prevPetName) {
-    setPrevPetName(currentPetName);
-    setPetNameDraft(currentPetName);
-  }
-
-  // Auto-dismiss quest notifications after 6 seconds
-  useEffect(() => {
-    if (questNotifications.length === 0) return;
-    const timer = window.setTimeout(() => {
-      onDismissQuestNotification(questNotifications[0].id);
-    }, 6000);
-    return () => window.clearTimeout(timer);
-  }, [questNotifications, onDismissQuestNotification]);
-
-  return (
-    <section className="panel panel-character" aria-label="Character status">
-      <header className="panel-header panel-header-with-actions">
-        <div>
-          <h2 className="panel-header-icon-title" title="Identity, progression, and active effects.">
-            <CharacterAvatarIcon className="panel-header-avatar-icon" />
-            <span className="panel-header-inline-label">Character</span>
-          </h2>
-        </div>
-        <div className="panel-action-row">
-          <button
-            type="button"
-            className="panel-action-button panel-action-button-icon"
-            onClick={onOpenInventory}
-            disabled={!canOpenEquipment}
-            title={canOpenEquipment ? "Inventory" : "Inventory unavailable before login"}
-            aria-label={canOpenEquipment ? "Open inventory" : "Inventory unavailable before login"}
-          >
-            <EquipmentIcon className="panel-action-icon" />
-            <span className="sr-only">Inventory</span>
-          </button>
-          <button
-            type="button"
-            className="panel-action-button panel-action-button-icon"
-            onClick={onOpenEquipment}
-            disabled={!canOpenEquipment}
-            title={canOpenEquipment ? "Equipment" : "Equipment unavailable before login"}
-            aria-label={canOpenEquipment ? "Open equipment" : "Equipment unavailable before login"}
-          >
-            <WearingIcon className="panel-action-icon" />
-            <span className="sr-only">Equipment</span>
-          </button>
-        </div>
-      </header>
-
-      <div className="character-stack">
-        <article className="subpanel character-identity-subpanel">
-          {hasCharacterProfile ? (
-            <>
-              <div className="identity-row">
-                {character.sprite && (
-                  <button
-                    type="button"
-                    className={`character-sprite-button ${showSpriteSelector ? "character-sprite-button-active" : ""}`}
-                    onClick={() => setShowSpriteSelector((prev) => !prev)}
-                    title={spriteList.sprites.length > 0 ? "Change sprite" : character.name}
-                    disabled={spriteList.sprites.length === 0}
-                  >
-                    <img
-                      src={character.sprite}
-                      alt={`${character.name} sprite`}
-                      className="character-sprite-img"
-                    />
-                  </button>
-                )}
-                <div className="identity-text">
-                  <p className="identity-name">{character.name}</p>
-                  <p className="identity-detail">
-                    {[displayRace, displayClassName].filter((part) => part.length > 0).join(" ") || "-"}
-                  </p>
-                </div>
-              </div>
-              {showSpriteSelector && spriteList.sprites.length > 0 && (
-                <div className="sprite-selector">
-                  <div className="sprite-selector-header">
-                    <span className="sprite-selector-title">Choose Sprite</span>
-                    <button
-                      type="button"
-                      className="sprite-selector-close"
-                      onClick={() => setShowSpriteSelector(false)}
-                      aria-label="Close sprite selector"
-                    >
-                      &times;
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className={`sprite-option sprite-option-default ${spriteList.active === null ? "sprite-option-active" : ""}`}
-                    onClick={() => { onCommand("sprite default"); setShowSpriteSelector(false); }}
-                  >
-                    <span className="sprite-option-auto-label">Auto</span>
-                    <span className="sprite-option-name">Default (Auto)</span>
-                  </button>
-                  {CATEGORY_ORDER.filter((cat) => spritesByCategory.has(cat)).map((cat) => (
-                    <div key={cat} className="sprite-category">
-                      <p className="sprite-category-label">{CATEGORY_LABELS[cat] ?? cat}</p>
-                      <div className="sprite-grid">
-                        {spritesByCategory.get(cat)!.map((sprite) => (
-                          <button
-                            key={sprite.imageId}
-                            type="button"
-                            className={`sprite-option ${spriteList.active === sprite.imageId ? "sprite-option-active" : ""}`}
-                            onClick={() => { onCommand(`sprite set ${sprite.imageId}`); setShowSpriteSelector(false); }}
-                            title={sprite.displayName}
-                          >
-                            <img
-                              src={sprite.imagePath}
-                              alt={sprite.displayName}
-                              className="sprite-option-img"
-                            />
-                            <span className="sprite-option-name">{sprite.displayName}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="identity-controls">
-                <label className="identity-select-group">
-                  <span className="identity-select-label">Title</span>
-                  <select
-                    className="identity-select"
-                    value={activeTitle ?? ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      onCommand(val ? `title ${val}` : "title clear");
-                    }}
-                  >
-                    <option value="">None</option>
-                    {unlockedTitles.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="identity-select-group">
-                  <span className="identity-select-label">Gender</span>
-                  <select
-                    className="identity-select"
-                    value={character.gender}
-                    onChange={(e) => onCommand(`gender ${e.target.value}`)}
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="enby">Enby</option>
-                  </select>
-                </label>
-              </div>
-              <div className="character-utility-strip" role="group" aria-label="Auto-loot setting">
-                <span
-                  className="character-utility-label"
-                  title={
-                    autolootEnabled
-                      ? "Mob drops go straight into your pack after a kill."
-                      : "Drops stay in the room until you pick them up."
-                  }
-                >
-                  Auto-Loot
-                </span>
-                <button
-                  type="button"
-                  className={`character-utility-toggle ${autolootEnabled ? "character-utility-toggle-active" : ""}`}
-                  aria-pressed={autolootEnabled}
-                  aria-label={autolootEnabled ? "Disable auto-loot" : "Enable auto-loot"}
-                  title={
-                    autolootEnabled
-                      ? "Mob drops go straight into your pack after a kill. Click to disable."
-                      : "Drops stay in the room until you pick them up. Click to enable."
-                  }
-                  disabled={!connected}
-                  onClick={() => onCommand(autolootEnabled ? "autoloot off" : "autoloot on")}
-                >
-                  <span className="character-utility-toggle-track" aria-hidden="true">
-                    <span className="character-utility-toggle-thumb" />
-                  </span>
-                  <span className="character-utility-toggle-label">{autolootEnabled ? "On" : "Off"}</span>
-                </button>
-              </div>
-              <div className="character-utility-strip" role="group" aria-label="Auto-peek setting">
-                <span
-                  className="character-utility-label"
-                  title={
-                    autopeekEnabled
-                      ? "Room descriptions name what lies through each open exit."
-                      : "Room descriptions show only the room itself."
-                  }
-                >
-                  Auto-Peek
-                </span>
-                <button
-                  type="button"
-                  className={`character-utility-toggle ${autopeekEnabled ? "character-utility-toggle-active" : ""}`}
-                  aria-pressed={autopeekEnabled}
-                  aria-label={autopeekEnabled ? "Disable auto-peek" : "Enable auto-peek"}
-                  title={
-                    autopeekEnabled
-                      ? "Room descriptions name what lies through each open exit. Click to disable."
-                      : "Room descriptions show only the room itself. Click to enable."
-                  }
-                  disabled={!connected}
-                  onClick={() => onCommand(autopeekEnabled ? "autopeek off" : "autopeek on")}
-                >
-                  <span className="character-utility-toggle-track" aria-hidden="true">
-                    <span className="character-utility-toggle-thumb" />
-                  </span>
-                  <span className="character-utility-toggle-label">{autopeekEnabled ? "On" : "Off"}</span>
-                </button>
-              </div>
-              <div className="character-utility-strip" role="group" aria-label="Wimpy auto-flee setting">
-                <span
-                  className="character-utility-label"
-                  title={
-                    wimpyPct > 0
-                      ? `Auto-flee combat when HP drops to ${wimpyPct}%.`
-                      : "Wimpy disabled — combat will continue until you flee manually."
-                  }
-                >
-                  Wimpy
-                </span>
-                <select
-                  className="character-utility-select"
-                  aria-label="Wimpy HP threshold"
-                  title="Auto-flee combat when HP drops below this threshold."
-                  disabled={!connected}
-                  value={String(wimpyPct)}
-                  onChange={(e) => onCommand(`wimpy ${e.target.value}`)}
-                >
-                  {wimpyOptions.map((pct) => (
-                    <option key={pct} value={pct}>
-                      {pct === 0 ? "Off" : `${pct}%`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="description-editor-section">
-                <button
-                  type="button"
-                  className="description-editor-toggle"
-                  onClick={() => setShowDescriptionEditor((prev) => !prev)}
-                  aria-expanded={showDescriptionEditor}
-                >
-                  <span className="description-editor-toggle-label">Edit Description</span>
-                  <span className={`description-editor-toggle-chevron ${showDescriptionEditor ? "description-editor-toggle-chevron-open" : ""}`} aria-hidden="true">&rsaquo;</span>
-                </button>
-                {showDescriptionEditor && (
-                  <div className="description-editor-body">
-                    <textarea
-                      className="description-editor-textarea"
-                      maxLength={500}
-                      rows={4}
-                      placeholder="Describe your character's appearance..."
-                      value={descriptionDraft}
-                      onChange={(e) => setDescriptionDraft(e.target.value)}
-                    />
-                    <div className="description-editor-footer">
-                      <span className={`description-editor-counter ${descriptionDraft.length >= 450 ? "description-editor-counter-warn" : ""} ${descriptionDraft.length >= 500 ? "description-editor-counter-limit" : ""}`}>
-                        {descriptionDraft.length} / 500
-                      </span>
-                      <div className="description-editor-actions">
-                        <button
-                          type="button"
-                          className="description-editor-btn description-editor-clear-btn"
-                          onClick={() => { onCommand("describe clear"); setDescriptionDraft(""); }}
-                        >
-                          Clear
-                        </button>
-                        <button
-                          type="button"
-                          className="description-editor-btn description-editor-save-btn"
-                          disabled={descriptionDraft.trim().length === 0}
-                          onClick={() => { onCommand(`describe ${descriptionDraft.trim()}`); setShowDescriptionEditor(false); }}
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <dl className="stat-grid identity-stat-grid">
-                <div><dt>Level</dt><dd>{vitals.level ?? character.level ?? "-"}</dd></div>
-                <div><dt>Total XP</dt><dd>{vitals.xp.toLocaleString()}</dd></div>
-                <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
-                {currencies.map((c) => (
-                  <div key={c.id}><dt title={c.name}>{c.abbreviation}</dt><dd>{c.balance.toLocaleString()}</dd></div>
-                ))}
-              </dl>
-            </>
-          ) : (
-            <div className="prelogin-card">
-              <p className="prelogin-card-title">{connected ? "Awaiting login" : "No active character"}</p>
-              <p className="room-description">
-                {connected
-                  ? "Your name, class, race, and level will appear here after login."
-                  : "Reconnect and log in to load your character profile."}
-              </p>
-            </div>
-          )}
-        </article>
-
-        <article className="subpanel character-detail-subpanel">
-          <div className="character-detail-tabs" role="tablist" aria-label="Character detail sections">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeDetailTab === "vitals"}
-              aria-label="Vitals"
-              title="Vitals"
-              className={`character-detail-tab ${activeDetailTab === "vitals" ? "character-detail-tab-active" : ""}`}
-              onClick={() => setActiveDetailTab("vitals")}
-            >
-              <VitalsTabIcon className="detail-tab-icon" />
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeDetailTab === "effects"}
-              aria-label="Effects"
-              title="Effects"
-              className={`character-detail-tab ${activeDetailTab === "effects" ? "character-detail-tab-active" : ""}`}
-              onClick={() => setActiveDetailTab("effects")}
-            >
-              <EffectsTabIcon className="detail-tab-icon" />
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeDetailTab === "achievements"}
-              aria-label="Achievements"
-              title="Achievements"
-              className={`character-detail-tab ${activeDetailTab === "achievements" ? "character-detail-tab-active" : ""}`}
-              onClick={() => setActiveDetailTab("achievements")}
-            >
-              <AchievementsTabIcon className="detail-tab-icon" />
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeDetailTab === "quests"}
-              aria-label="Quests"
-              title="Quests"
-              className={`character-detail-tab ${activeDetailTab === "quests" ? "character-detail-tab-active" : ""}`}
-              onClick={() => setActiveDetailTab("quests")}
-            >
-              <QuestsTabIcon className="detail-tab-icon" />
-              {quests.length > 0 && <span className="quest-tab-badge">{quests.length}</span>}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeDetailTab === "stats"}
-              aria-label="Stats"
-              title="Stats"
-              className={`character-detail-tab ${activeDetailTab === "stats" ? "character-detail-tab-active" : ""}`}
-              onClick={() => setActiveDetailTab("stats")}
-            >
-              <StatsTabIcon className="detail-tab-icon" />
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeDetailTab === "score"}
-              aria-label="Score"
-              title="Score"
-              className={`character-detail-tab ${activeDetailTab === "score" ? "character-detail-tab-active" : ""}`}
-              onClick={() => setActiveDetailTab("score")}
-            >
-              <ScoreTabIcon className="detail-tab-icon" />
-            </button>
-            {factions.length > 0 && (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeDetailTab === "factions"}
-                aria-label="Factions"
-                title="Factions"
-                className={`character-detail-tab ${activeDetailTab === "factions" ? "character-detail-tab-active" : ""}`}
-                onClick={() => setActiveDetailTab("factions")}
-              >
-                <FactionsTabIcon className="detail-tab-icon" />
-              </button>
-            )}
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeDetailTab === "leaderboard"}
-              aria-label="Leaderboard"
-              title="Leaderboard"
-              className={`character-detail-tab ${activeDetailTab === "leaderboard" ? "character-detail-tab-active" : ""}`}
-              onClick={() => setActiveDetailTab("leaderboard")}
-            >
-              <GlobeIcon className="detail-tab-icon" />
-            </button>
-          </div>
-
-          <div className="character-detail-body">
-            {activeDetailTab === "vitals" && (
-              <section
-                key="vitals"
-                className="character-detail-panel character-detail-panel-flip meter-stack"
-                role="tabpanel"
-                aria-label="Vitals"
-              >
-                {hasCharacterProfile ? (
-                  <>
-                    <Bar label={statusVarLabels.hp} tone="hp" value={vitals.hp} max={Math.max(1, vitals.maxHp)} text={`${vitals.hp} / ${vitals.maxHp}`} />
-                    <Bar label={statusVarLabels.mana} tone="mana" value={vitals.mana} max={Math.max(1, vitals.maxMana)} text={`${vitals.mana} / ${vitals.maxMana}`} />
-                    <Bar label={statusVarLabels.xp} tone="xp" value={xpValue} max={xpMax} text={xpText} />
-                  </>
-                ) : (
-                  <div className="meter-placeholder-stack">
-                    <div className="meter-placeholder-row"><span>{statusVarLabels.hp}</span><span>- / -</span></div>
-                    <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
-                    <div className="meter-placeholder-row"><span>{statusVarLabels.mana}</span><span>- / -</span></div>
-                    <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
-                    <div className="meter-placeholder-row"><span>{statusVarLabels.xp}</span><span>- / -</span></div>
-                    <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
-                  </div>
-                )}
-              </section>
-            )}
-
-            {activeDetailTab === "effects" && (
-              <section
-                key="effects"
-                className="character-detail-panel character-detail-panel-flip character-effects"
-                role="tabpanel"
-                aria-label="Effects"
-              >
-                {effects.length === 0 ? <p className="empty-note">{hasCharacterProfile ? "No active effects. Cast a spell or use a potion to gain buffs." : "Effects will appear here during gameplay."}</p> : (
-                  <>
-                    <ul className="effects-list">
-                      {visibleEffects.map((effect, index) => {
-                        const seconds = Math.max(1, Math.ceil(effect.remainingMs / 1000));
-                        const stack = effect.stacks > 1 ? ` x${effect.stacks}` : "";
-                        return (
-                          <li key={`${effect.name}-${index}`} className="effect-item">
-                            <span className="effect-name">{effect.name}{stack}</span>
-                            <span className="effect-type">{effect.type}</span>
-                            <span className="effect-time">{seconds}s</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    {hiddenEffectsCount > 0 && <p className="empty-note">+{hiddenEffectsCount} more effects</p>}
-                  </>
-                )}
-              </section>
-            )}
-
-            {activeDetailTab === "achievements" && (
-              <section
-                key="achievements"
-                className="character-detail-panel character-detail-panel-flip character-achievements"
-                role="tabpanel"
-                aria-label="Achievements"
-              >
-                {totalAchievements === 0 ? (
-                  <p className="empty-note">{hasCharacterProfile ? "No achievements yet. Explore the world and complete challenges to earn them." : "Achievements will appear here during gameplay."}</p>
-                ) : (
-                  <ul className="achievements-list">
-                    {achievements.completed.map((a) => (
-                      <li key={a.id} className="achievement-item achievement-item-completed">
-                        <span className="achievement-name">{a.name}</span>
-                        {a.title && <span className="achievement-title">{a.title}</span>}
-                      </li>
-                    ))}
-                    {achievements.inProgress.map((a) => (
-                      <li key={a.id} className="achievement-item achievement-item-progress">
-                        <div className="achievement-progress-header">
-                          <span className="achievement-name">{a.name}</span>
-                          <span className="achievement-progress-text">{a.current} / {a.required}</span>
-                        </div>
-                        <div className="meter-track achievement-progress-track">
-                          <span
-                            className="meter-fill meter-fill-xp"
-                            style={{ width: `${Math.min(100, (a.current / Math.max(1, a.required)) * 100)}%` }}
-                          />
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            )}
-
-            {activeDetailTab === "quests" && (
-              <section
-                key="quests"
-                className="character-detail-panel character-detail-panel-flip character-quests"
-                role="tabpanel"
-                aria-label="Quests"
-              >
-                {questNotifications.length > 0 && (
-                  <div className="quest-notifications">
-                    {questNotifications.map((n) => (
-                      <div
-                        key={n.id}
-                        className={`quest-notification quest-notification-${n.event}`}
-                        role="status"
-                      >
-                        <span className="quest-notification-text">
-                          {n.event === "complete" ? "Completed: " : "Updated: "}
-                          <strong>{n.questName}</strong>
-                        </span>
-                        <button
-                          type="button"
-                          className="quest-notification-dismiss"
-                          onClick={() => onDismissQuestNotification(n.id)}
-                          aria-label="Dismiss notification"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {quests.length === 0 ? (
-                  <p className="empty-note">{hasCharacterProfile ? "No active quests. Talk to NPCs to discover available quests." : "Quests will appear here during gameplay."}</p>
-                ) : (
-                  <ul className="quest-list">
-                    {quests.map((quest) => {
-                      const isExpanded = expandedQuestId === quest.id;
-                      const totalObjectives = quest.objectives.length;
-                      const completedObjectives = quest.objectives.filter((o) => o.current >= o.required).length;
-                      return (
-                        <li key={quest.id} className={`quest-item ${isExpanded ? "quest-item-expanded" : ""}`}>
-                          <button
-                            type="button"
-                            className="quest-item-header"
-                            onClick={() => setExpandedQuestId(isExpanded ? null : quest.id)}
-                            aria-expanded={isExpanded}
-                          >
-                            <span className="quest-item-name">{quest.name}</span>
-                            <span className="quest-item-progress-badge">
-                              {completedObjectives}/{totalObjectives}
-                            </span>
-                          </button>
-                          {isExpanded && (
-                            <div className="quest-item-details">
-                              <p className="quest-item-description">{quest.description}</p>
-                              <ul className="quest-objectives">
-                                {quest.objectives.map((obj, idx) => {
-                                  const done = obj.current >= obj.required;
-                                  return (
-                                    <li key={idx} className={`quest-objective ${done ? "quest-objective-done" : ""}`}>
-                                      <div className="quest-objective-header">
-                                        <span className="quest-objective-check">{done ? "✓" : "○"}</span>
-                                        <span className="quest-objective-text">{obj.description}</span>
-                                        <span className="quest-objective-count">{obj.current}/{obj.required}</span>
-                                      </div>
-                                      {!done && (
-                                        <div className="meter-track quest-objective-track">
-                                          <span
-                                            className="meter-fill meter-fill-quest"
-                                            style={{ width: `${Math.min(100, (obj.current / Math.max(1, obj.required)) * 100)}%` }}
-                                          />
-                                        </div>
-                                      )}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                              <div className="quest-item-actions">
-                                <button
-                                  type="button"
-                                  className="quest-abandon-button"
-                                  onClick={() => onAbandonQuest(quest.name)}
-                                >
-                                  Abandon
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
-            )}
-
-            {activeDetailTab === "stats" && (
-              <section
-                key="stats"
-                className="character-detail-panel character-detail-panel-flip character-stats"
-                role="tabpanel"
-                aria-label="Stats"
-              >
-                {!hasCharacterProfile ? (
-                  <p className="empty-note">Stats will appear here after login.</p>
-                ) : !charStats ? (
-                  <p className="empty-note">Awaiting stat data from server.</p>
-                ) : (
-                  <div className="stats-content">
-                    <table className="stats-attribute-table">
-                      <thead>
-                        <tr>
-                          <th className="stats-th">Attribute</th>
-                          <th className="stats-th stats-th-num">Base</th>
-                          <th className="stats-th stats-th-num">Eff.</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {charStats.stats.map((stat) => {
-                          const diff = stat.effective - stat.base;
-                          return (
-                            <tr key={stat.id} className="stats-row">
-                              <td className="stats-td stats-td-name" title={stat.name}>{stat.abbrev}</td>
-                              <td className="stats-td stats-td-num">{stat.base}</td>
-                              <td className={`stats-td stats-td-num ${diff > 0 ? "stats-buff" : diff < 0 ? "stats-debuff" : ""}`}>
-                                {stat.effective}
-                                {diff !== 0 && <span className="stats-diff">({diff > 0 ? "+" : ""}{diff})</span>}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                    <div className="stats-derived">
-                      <div className="stats-derived-row">
-                        <span className="stats-derived-label">Damage</span>
-                        <span className="stats-derived-value">{charStats.baseDamageMin}&ndash;{charStats.baseDamageMax}</span>
-                      </div>
-                      <div className="stats-derived-row">
-                        <span className="stats-derived-label">Armor</span>
-                        <span className="stats-derived-value">{charStats.armor}</span>
-                      </div>
-                      <div className="stats-derived-row">
-                        <span className="stats-derived-label">Dodge</span>
-                        <span className="stats-derived-value">{charStats.dodgePercent}%</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </section>
-            )}
-
-            {activeDetailTab === "score" && (
-              <section
-                key="score"
-                className="character-detail-panel character-detail-panel-flip character-score"
-                role="tabpanel"
-                aria-label="Score"
-              >
-                {!hasCharacterProfile ? (
-                  <p className="empty-note">Character summary will appear here after login.</p>
-                ) : (
-                  <div className="score-content">
-                    <div className="score-identity">
-                      <span className="score-name">{character.name}</span>
-                      {activeTitle && <span className="score-title">{activeTitle}</span>}
-                    </div>
-                    <dl className="score-grid">
-                      <div><dt>Race</dt><dd>{displayRace}</dd></div>
-                      <div><dt>Class</dt><dd>{displayClassName}</dd></div>
-                      <div><dt>Level</dt><dd>{vitals.level ?? character.level ?? "-"}</dd></div>
-                      <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
-                    </dl>
-                    <div className="score-vitals">
-                      <div className="score-vital-row">
-                        <span className="score-vital-label">{statusVarLabels.hp}</span>
-                        <span className="score-vital-value">{vitals.hp} / {vitals.maxHp}</span>
-                      </div>
-                      <div className="score-vital-row">
-                        <span className="score-vital-label">{statusVarLabels.mana}</span>
-                        <span className="score-vital-value">{vitals.mana} / {vitals.maxMana}</span>
-                      </div>
-                      <div className="score-vital-row">
-                        <span className="score-vital-label">{statusVarLabels.xp}</span>
-                        <span className="score-vital-value">{xpText}</span>
-                      </div>
-                    </div>
-                    {charStats && charStats.stats.length > 0 && (
-                      <div className="score-stats-row">
-                        {charStats.stats.map((stat) => (
-                          <span key={stat.id} className="score-stat-chip" title={stat.name}>
-                            <span className="score-stat-abbrev">{stat.abbrev}</span>
-                            <span className="score-stat-val">{stat.effective}</span>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {charStats && (
-                      <dl className="score-grid score-grid-combat">
-                        <div><dt>Damage</dt><dd>{charStats.baseDamageMin}&ndash;{charStats.baseDamageMax}</dd></div>
-                        <div><dt>Armor</dt><dd>{charStats.armor}</dd></div>
-                        <div><dt>Dodge</dt><dd>{charStats.dodgePercent}%</dd></div>
-                      </dl>
-                    )}
-                    <div className="score-social">
-                      {guildInfo.name && (
-                        <div className="score-social-row">
-                          <span className="score-social-label">Guild</span>
-                          <span className="score-social-value">{guildInfo.name}{guildInfo.tag ? ` [${guildInfo.tag}]` : ""}</span>
-                        </div>
-                      )}
-                      {groupInfo.members.length > 0 && (
-                        <div className="score-social-row">
-                          <span className="score-social-label">Group</span>
-                          <span className="score-social-value">{groupInfo.members.length} member{groupInfo.members.length !== 1 ? "s" : ""}</span>
-                        </div>
-                      )}
-                    </div>
-                    {((vitals.prestigeLevel ?? 0) > 0 || vitals.prestigeNextCost != null) && (
-                      <div className="score-prestige">
-                        <p className="score-prestige-label">Prestige</p>
-                        <dl className="score-prestige-grid">
-                          <div>
-                            <dt>Rank</dt>
-                            <dd>{vitals.prestigeLevel ?? 0}</dd>
-                          </div>
-                          {vitals.prestigeXpAvailable != null && (
-                            <div>
-                              <dt>Available XP</dt>
-                              <dd>{vitals.prestigeXpAvailable.toLocaleString()}</dd>
-                            </div>
-                          )}
-                          {vitals.prestigeNextCost != null && (
-                            <div>
-                              <dt>Next Rank Cost</dt>
-                              <dd>{vitals.prestigeNextCost.toLocaleString()}</dd>
-                            </div>
-                          )}
-                        </dl>
-                        <div className="score-prestige-actions">
-                          <button
-                            type="button"
-                            className="soft-button score-prestige-btn"
-                            disabled={vitals.prestigeXpAvailable == null || vitals.prestigeNextCost == null || vitals.prestigeXpAvailable < vitals.prestigeNextCost}
-                            onClick={() => onCommand("prestige")}
-                            title={
-                              vitals.prestigeXpAvailable != null && vitals.prestigeNextCost != null && vitals.prestigeXpAvailable >= vitals.prestigeNextCost
-                                ? "Advance to next prestige rank"
-                                : "Not enough XP to prestige"
-                            }
-                          >
-                            Prestige Up
-                          </button>
-                        </div>
-                        {prestigeInfo && prestigeInfo.perks.length > 0 && (
-                          <ul className="prestige-perk-list">
-                            {prestigeInfo.perks.map((perk) => (
-                              <li key={perk.rank} className={`prestige-perk-item ${perk.earned ? "prestige-perk-earned" : "prestige-perk-locked"}`}>
-                                <span className="prestige-perk-rank">{perk.earned ? "\u2713" : perk.rank}</span>
-                                <span className="prestige-perk-desc">{perk.description}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {activeDetailTab === "factions" && (
-              <section
-                key="factions"
-                className="character-detail-panel character-detail-panel-flip character-factions"
-                role="tabpanel"
-                aria-label="Factions"
-              >
-                {factions.length === 0 ? (
-                  <p className="empty-note">No faction standings yet.</p>
-                ) : (
-                  <>
-                    <div className="score-section-header score-section-header-spaced">
-                      <p className="score-section-label">Faction Journal</p>
-                    </div>
-                    <ul className="factions-list">
-                      {factions.map((f) => (
-                        <li key={f.id} className="faction-item">
-                          <div className="faction-header">
-                            <span className="faction-name">{f.name}</span>
-                            <span className={`faction-tier faction-tier-${factionTierClass(f.tier)}`}>{f.tier}</span>
-                          </div>
-                          <div className="faction-rep-row">
-                            <div className="meter-track faction-rep-track">
-                              <span
-                                className={`meter-fill faction-rep-fill faction-rep-fill-${factionTierClass(f.tier)}`}
-                                style={{ width: `${Math.min(100, Math.max(0, ((f.reputation + 1000) / 2000) * 100))}%` }}
-                              />
-                            </div>
-                            <span className="faction-rep-value">{f.reputation}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </section>
-            )}
-
-            {activeDetailTab === "leaderboard" && (
-              <section
-                key="leaderboard"
-                className="character-detail-panel character-detail-panel-flip character-leaderboard"
-                role="tabpanel"
-                aria-label="Leaderboard"
-              >
-                <LeaderboardPanel leaderboard={leaderboard} onCommand={onCommand} />
-              </section>
-            )}
-          </div>
-        </article>
-
-        {hasCharacterProfile && petState?.active && (
-          <article className="subpanel character-pet-subpanel">
-            <div className="pet-header-row">
-              {petState.image && (
-                <img
-                  src={petState.image}
-                  alt={petState.name ?? "Pet"}
-                  className="pet-thumbnail"
-                />
-              )}
-              <div className="pet-header-text">
-                <p className="pet-name">{petState.name ?? "Pet"}</p>
-                {petState.hp != null && petState.maxHp != null && (
-                  <Bar
-                    label="HP"
-                    tone="hp"
-                    value={petState.hp}
-                    max={Math.max(1, petState.maxHp)}
-                    text={`${petState.hp} / ${petState.maxHp}`}
-                  />
-                )}
-              </div>
-            </div>
-            <dl className="stat-grid pet-stat-grid">
-              {petState.minDamage != null && petState.maxDamage != null && (
-                <div><dt>Damage</dt><dd>{petState.minDamage}&ndash;{petState.maxDamage}</dd></div>
-              )}
-              {petState.armor != null && (
-                <div><dt>Armor</dt><dd>{petState.armor}</dd></div>
-              )}
-            </dl>
-            <div className="pet-actions">
-              <div className="pet-rename-row">
-                <input
-                  type="text"
-                  className="pet-rename-input"
-                  value={petNameDraft}
-                  onChange={(e) => setPetNameDraft(e.target.value)}
-                  placeholder="New name"
-                  maxLength={24}
-                />
-                <button
-                  type="button"
-                  className="soft-button"
-                  disabled={petNameDraft.trim().length === 0 || petNameDraft.trim() === petState.name}
-                  onClick={() => onCommand(`pet name ${petNameDraft.trim()}`)}
-                >
-                  Rename
-                </button>
-              </div>
-              <button
-                type="button"
-                className="soft-button pet-dismiss-btn"
-                onClick={() => onCommand("pet dismiss")}
-              >
-                Dismiss
-              </button>
-            </div>
-          </article>
-        )}
-
-        {hasCharacterProfile && (
-          <div className="character-logout-row">
-            <button type="button" className="soft-button character-logout-btn" onClick={onLogout}>
+  if (!hasCharacterProfile) {
+    return (
+      <div className="char-cabinet char-cabinet-empty">
+        <div className="cc-empty-card">
+          <p className="cc-empty-title">{connected ? "Awaiting login" : "No active character"}</p>
+          <p className="cc-empty-note">
+            Your character sheet appears here once you step into the world.
+          </p>
+          {connected && (
+            <button type="button" className="cc-empty-logout" onClick={onLogout}>
               Log out
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </section>
+    );
+  }
+
+  const hpPct = vitals.maxHp > 0 ? (vitals.hp / vitals.maxHp) * 100 : 0;
+  const manaPct = vitals.maxMana > 0 ? (vitals.mana / vitals.maxMana) * 100 : 0;
+  const xpPct = xpMax > 0 ? (xpValue / xpMax) * 100 : 0;
+
+  const niche = a("character_niche");
+  const achBtn = a("char_btn_achievements");
+  const preBtn = a("char_btn_prestige");
+  const charmArt = a("character_charm");
+
+  return (
+    <div className="char-cabinet">
+      <div className="cc-grid">
+        {/* ── Showcase: sprite niche + carousel ─────────────── */}
+        <section className="cc-showcase">
+          <div
+            className={`cc-niche${niche ? " has-art" : ""}`}
+            style={niche ? { ["--cc-niche" as string]: `url("${niche}")` } : undefined}
+          >
+            {character.sprite ? (
+              <img className="cc-sprite" src={character.sprite} alt={`${character.name} sprite`} draggable={false} />
+            ) : (
+              <div className="cc-sprite-empty" aria-hidden="true" />
+            )}
+          </div>
+          <div className="cc-carousel">
+            <button
+              type="button"
+              className="cc-carousel-arrow"
+              aria-label="Previous sprite"
+              disabled={spriteOrder.length <= 1}
+              onClick={() => cycleSprite(-1)}
+            >
+              ‹
+            </button>
+            <span className="cc-carousel-name" title={currentSpriteName}>{currentSpriteName}</span>
+            <button
+              type="button"
+              className="cc-carousel-arrow"
+              aria-label="Next sprite"
+              disabled={spriteOrder.length <= 1}
+              onClick={() => cycleSprite(1)}
+            >
+              ›
+            </button>
+          </div>
+        </section>
+
+        {/* ── Identity card ─────────────────────────────────── */}
+        <section className="cc-frame cc-identity">
+          <div className="cc-id-row">
+            <span className="cc-id-label">Name</span>
+            <span className="cc-id-value cc-id-name">
+              {character.name}
+              <button
+                type="button"
+                className="cc-scribe-btn"
+                aria-label="Edit your description"
+                title="Inscribe your tale"
+                onClick={() => setShowScribe(true)}
+              >
+                ✒
+              </button>
+            </span>
+          </div>
+          <div className="cc-id-row cc-id-row-split">
+            <span className="cc-id-label">Race</span>
+            <span className="cc-id-value">{displayRace}</span>
+            <span className="cc-id-label">Class</span>
+            <span className="cc-id-value">{displayClassName}</span>
+          </div>
+          <div className="cc-id-row">
+            <span className="cc-id-label">Title</span>
+            <select
+              className="cc-select"
+              value={activeTitle ?? ""}
+              onChange={(e) => onCommand(e.target.value ? `title ${e.target.value}` : "title clear")}
+            >
+              <option value="">None</option>
+              {unlockedTitles.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div className="cc-id-row">
+            <span className="cc-id-label">Gender</span>
+            <div className="cc-segmented" role="group" aria-label="Gender">
+              {GENDERS.map((g) => (
+                <button
+                  key={g.value}
+                  type="button"
+                  className={`cc-seg${character.gender === g.value ? " is-active" : ""}`}
+                  aria-pressed={character.gender === g.value}
+                  onClick={() => onCommand(`gender ${g.value}`)}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="cc-toggle-row">
+            <span className="cc-toggle-label">Auto Loot</span>
+            <button
+              type="button"
+              className={`cc-toggle${autolootEnabled ? " is-on" : ""}`}
+              role="switch"
+              aria-checked={autolootEnabled}
+              aria-label="Auto loot"
+              disabled={!connected}
+              onClick={() => onCommand(autolootEnabled ? "autoloot off" : "autoloot on")}
+            >
+              <span className="cc-toggle-track"><span className="cc-toggle-thumb" /></span>
+              <span className="cc-toggle-state">{autolootEnabled ? "ON" : "OFF"}</span>
+            </button>
+          </div>
+          <div className="cc-toggle-row">
+            <span className="cc-toggle-label">Auto Peek</span>
+            <button
+              type="button"
+              className={`cc-toggle${autopeekEnabled ? " is-on" : ""}`}
+              role="switch"
+              aria-checked={autopeekEnabled}
+              aria-label="Auto peek"
+              disabled={!connected}
+              onClick={() => onCommand(autopeekEnabled ? "autopeek off" : "autopeek on")}
+            >
+              <span className="cc-toggle-track"><span className="cc-toggle-thumb" /></span>
+              <span className="cc-toggle-state">{autopeekEnabled ? "ON" : "OFF"}</span>
+            </button>
+          </div>
+          <div className="cc-wimpy">
+            <span className="cc-toggle-label">Wimpy %</span>
+            <input
+              type="range"
+              className="cc-wimpy-slider"
+              min={0}
+              max={100}
+              step={5}
+              value={wimpyPct}
+              disabled={!connected}
+              onChange={(e) => setWimpyDraft(Number(e.target.value))}
+              onPointerUp={(e) => commitWimpy(Number((e.target as HTMLInputElement).value))}
+            />
+            <span className="cc-wimpy-value">{wimpyPct}</span>
+            <button
+              type="button"
+              className="cc-wimpy-step"
+              aria-label="Increase wimpy threshold"
+              disabled={!connected || wimpyPct >= 100}
+              onClick={() => commitWimpy(wimpyPct + 5)}
+            >
+              +
+            </button>
+          </div>
+        </section>
+
+        {/* ── Readouts: progression, bars, effects, derived ──── */}
+        <section className="cc-frame cc-readouts">
+          <div className="cc-topline">
+            <span className="cc-topline-item"><b className="cc-chip">Level</b> {vitals.level ?? "—"}</span>
+            <span className="cc-topline-item">Total XP: {vitals.xp.toLocaleString()}</span>
+            <span className="cc-topline-item">Gold: {vitals.gold.toLocaleString()}</span>
+          </div>
+
+          <div className="cc-bars">
+            <CharBar kind="hp" label={statusVarLabels.hp} value={vitals.hp} max={vitals.maxHp} pct={hpPct} />
+            <CharBar kind="mana" label={statusVarLabels.mana} value={vitals.mana} max={vitals.maxMana} pct={manaPct} />
+            <CharBar kind="xp" label={statusVarLabels.xp} text={xpText} pct={xpPct} />
+          </div>
+
+          <div className="cc-effects">
+            <h4 className="cc-section-title">Active Effects</h4>
+            {visibleEffects.length === 0 ? (
+              <p className="cc-effects-empty">No active effects.</p>
+            ) : (
+              <div className="cc-charms">
+                {visibleEffects.map((effect, i) => (
+                  <div
+                    key={`${effect.name}-${i}`}
+                    className={`cc-charm${charmArt ? " has-art" : ""}`}
+                    style={{
+                      ["--cc-charm-accent" as string]: effectAccent(effect.type),
+                      ...(charmArt ? { ["--cc-charm" as string]: `url("${charmArt}")` } : {}),
+                    }}
+                    title={`${effect.name}${effect.stacks > 1 ? ` ×${effect.stacks}` : ""}`}
+                  >
+                    <span className="cc-charm-glyph" aria-hidden="true" />
+                    <span className="cc-charm-name">{effect.name}</span>
+                    <span className="cc-charm-time">{formatDuration(effect.remainingMs)}</span>
+                  </div>
+                ))}
+                {hiddenEffectsCount > 0 && <div className="cc-charm cc-charm-more">+{hiddenEffectsCount}</div>}
+              </div>
+            )}
+          </div>
+
+          <div className="cc-derived">
+            <div className="cc-plaque cc-derived-item">
+              <span className="cc-derived-label">Damage</span>
+              <span className="cc-derived-value">
+                {charStats ? `${charStats.baseDamageMin} – ${charStats.baseDamageMax}` : "—"}
+              </span>
+            </div>
+            <div className="cc-plaque cc-derived-item">
+              <span className="cc-derived-label">Armor</span>
+              <span className="cc-derived-value">{charStats ? charStats.armor : "—"}</span>
+            </div>
+            <div className="cc-plaque cc-derived-item">
+              <span className="cc-derived-label">Dodge</span>
+              <span className="cc-derived-value">{charStats ? `${charStats.dodgePercent}%` : "—"}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Stats plaque column ───────────────────────────── */}
+        <aside className="cc-plaque cc-stats">
+          <h4 className="cc-stats-title">Stats</h4>
+          {charStats && charStats.stats.length > 0 ? (
+            <ul className="cc-stats-list">
+              {charStats.stats.map((s) => (
+                <li key={s.id} className="cc-stat-row" title={s.name}>
+                  <span className="cc-stat-abbrev">{s.abbrev}</span>
+                  <span className="cc-stat-value">{s.effective}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="cc-stats-empty">—</p>
+          )}
+        </aside>
+      </div>
+
+      {/* ── Action buttons ─────────────────────────────────── */}
+      <div className="cc-actions">
+        <button
+          type="button"
+          className={`cc-gem-btn cc-gem-purple${preBtn ? " has-art" : ""}`}
+          style={preBtn ? { ["--cc-btn" as string]: `url("${preBtn}")` } : undefined}
+          onClick={() => setShowPrestige(true)}
+        >
+          <span className="cc-gem-label">Prestige</span>
+        </button>
+        <button
+          type="button"
+          className={`cc-gem-btn cc-gem-green${achBtn ? " has-art" : ""}`}
+          style={achBtn ? { ["--cc-btn" as string]: `url("${achBtn}")` } : undefined}
+          onClick={() => setShowAchievements(true)}
+        >
+          <span className="cc-gem-label">Achievements</span>
+        </button>
+      </div>
+
+      {/* ── Describe pop-out ──────────────────────────────── */}
+      {showScribe && (
+        <div className="cc-overlay" role="dialog" aria-label="Inscribe your tale" onClick={() => setShowScribe(false)}>
+          <div
+            className={`cc-scribe${a("character_scribe_bg") ? " has-art" : ""}`}
+            style={a("character_scribe_bg") ? { ["--cc-scribe" as string]: `url("${a("character_scribe_bg")}")` } : undefined}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="cc-scribe-title">Inscribe Your Tale</h4>
+            <textarea
+              className="cc-scribe-text"
+              placeholder="Describe your character…"
+              value={scribeDraft}
+              onChange={(e) => setScribeDraft(e.target.value)}
+              autoFocus
+            />
+            <div className="cc-scribe-actions">
+              <button type="button" className="cc-scribe-cancel" onClick={() => setShowScribe(false)}>Cancel</button>
+              <button
+                type="button"
+                className="cc-scribe-clear"
+                onClick={() => { onCommand("describe clear"); setScribeDraft(""); setShowScribe(false); }}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                className="cc-scribe-save"
+                disabled={!scribeDraft.trim()}
+                onClick={() => { onCommand(`describe ${scribeDraft.trim()}`); setShowScribe(false); }}
+              >
+                Inscribe
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Achievements modal ────────────────────────────── */}
+      {showAchievements && (
+        <div className="cc-overlay" role="dialog" aria-label="Achievements" onClick={() => setShowAchievements(false)}>
+          <div className="cc-frame cc-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cc-modal-head">
+              <h4 className="cc-modal-title">Achievements</h4>
+              <button type="button" className="cc-modal-close" aria-label="Close" onClick={() => setShowAchievements(false)}>✕</button>
+            </div>
+            <div className="cc-modal-body">
+              {achievements.inProgress.length > 0 && (
+                <>
+                  <p className="cc-section-title">In Progress</p>
+                  <ul className="cc-ach-list">
+                    {achievements.inProgress.map((ach) => (
+                      <li key={ach.id} className="cc-ach-row">
+                        <span className="cc-ach-name">{ach.name}</span>
+                        <span className="cc-ach-bar">
+                          <span className="cc-ach-fill" style={{ width: `${ach.required > 0 ? Math.min(100, (ach.current / ach.required) * 100) : 0}%` }} />
+                        </span>
+                        <span className="cc-ach-count">{ach.current}/{ach.required}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <p className="cc-section-title">Earned ({achievements.completed.length})</p>
+              {achievements.completed.length === 0 ? (
+                <p className="cc-effects-empty">No achievements earned yet.</p>
+              ) : (
+                <ul className="cc-ach-list">
+                  {achievements.completed.map((ach) => (
+                    <li key={ach.id} className="cc-ach-row cc-ach-done">
+                      <span className="cc-ach-name">{ach.name}</span>
+                      {ach.title && <span className="cc-ach-title">“{ach.title}”</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Prestige placeholder ──────────────────────────── */}
+      {showPrestige && (
+        <div className="cc-overlay" role="dialog" aria-label="Prestige" onClick={() => setShowPrestige(false)}>
+          <div className="cc-frame cc-modal cc-modal-prestige" onClick={(e) => e.stopPropagation()}>
+            <div className="cc-modal-head">
+              <h4 className="cc-modal-title">Prestige</h4>
+              <button type="button" className="cc-modal-close" aria-label="Close" onClick={() => setShowPrestige(false)}>✕</button>
+            </div>
+            <div className="cc-modal-body cc-prestige-tbd">
+              <p className="cc-prestige-glyph" aria-hidden="true">✦</p>
+              <p className="cc-prestige-soon">The path of rebirth is being charted.</p>
+              {prestigeInfo && (
+                <p className="cc-prestige-meta">
+                  Rank {prestigeInfo.currentRank} / {prestigeInfo.maxRank} · {prestigeInfo.availableXp.toLocaleString()} prestige points
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
-

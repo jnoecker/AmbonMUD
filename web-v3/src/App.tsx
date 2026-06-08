@@ -927,6 +927,8 @@ function App() {
         variant={
           drawerPanel === "puzzle"
             ? "tome"
+            : drawerPanel === "character"
+            ? "cabinet"
             : drawerPanel === "bank"
             ? "vault"
             : drawerPanel === "features"
@@ -955,6 +957,8 @@ function App() {
           drawerPanel === "puzzle"
             ? (state.puzzle?.puzzles.find((p) => p.backgroundImage)?.backgroundImage
                 ?? state.serverAssets["puzzle_bg"])
+            : drawerPanel === "character"
+            ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
             ? state.serverAssets["bank_bg"]
             : drawerPanel === "features"
@@ -1011,6 +1015,7 @@ function App() {
             petState={state.petState}
             prestigeInfo={state.prestigeInfo}
             leaderboard={state.leaderboard}
+            serverAssets={state.serverAssets}
             onDismissQuestNotification={(id) => state.setQuestNotifications((prev) => prev.filter((n) => n.id !== id))}
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
             onOpenInventory={() => openPanel("inventory")}
