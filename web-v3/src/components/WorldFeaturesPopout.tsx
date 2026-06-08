@@ -269,7 +269,7 @@ function DoorPanel({
   // smaller than the leaf box and centred on it, so the (arch-shaped, transparent-
   // edged) leaf fully covers it when closed instead of bleeding past the edges.
   // PORTAL_SHRINK is the single tuning dial.
-  const PORTAL_SHRINK = 0.78;
+  const PORTAL_SHRINK = 0.62;
   const portalW = leafScale * PORTAL_SHRINK;
   const leafCx = leafInset + leafScale / 2;
   const leafCy = leafInset + leafOffsetY + leafScale / 2;
