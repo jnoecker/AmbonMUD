@@ -41,6 +41,12 @@ const EMOTE_RECT: Rect = { left: 70.5, top: 80.0, width: 5.2, height: 6.0 };
 const CLEAR_RECT: Rect = { left: 69.8, top: 87.0, width: 6.6, height: 6.8 };
 const SEND_RECT: Rect = { left: 77.0, top: 80.5, width: 16.8, height: 13.5 };
 
+// Global nudge applied to every hotspot — corrects a uniform offset between
+// where the painted frame renders and the hotspot coordinate box. Positive X
+// moves right, negative Y moves up. Tune these two to shift everything at once.
+const OFFSET_X = 2.5;
+const OFFSET_Y = -3.0;
+
 const CHANNEL_ACCENTS: Record<string, string> = {
   say: "var(--chat-accent-say)",
   tell: "var(--chat-accent-tell)",
@@ -50,7 +56,12 @@ const CHANNEL_ACCENTS: Record<string, string> = {
 };
 
 function rectStyle(r: Rect): CSSProperties {
-  return { left: `${r.left}%`, top: `${r.top}%`, width: `${r.width}%`, height: `${r.height}%` };
+  return {
+    left: `${r.left + OFFSET_X}%`,
+    top: `${r.top + OFFSET_Y}%`,
+    width: `${r.width}%`,
+    height: `${r.height}%`,
+  };
 }
 
 function createEmptyDrafts(): Record<ChatChannel, string> {
