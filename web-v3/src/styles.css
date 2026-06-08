@@ -3671,12 +3671,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: clamp(8px, 1.5vh, 16px) 16px;
+  /* Heavier top padding biases the door downward toward the floor. */
+  padding: clamp(28px, 7vh, 72px) 16px clamp(6px, 1vh, 12px);
 }
 
 .feat-door-stage {
   position: relative;
-  width: min(460px, 64vw);
+  width: min(500px, 67vw);
   aspect-ratio: 3 / 4;
   perspective: 1100px;
 }
