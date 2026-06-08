@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { CHAT_CHANNELS } from "../../constants";
 import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, EmotePreset, FriendEntry, FriendNotification, GroupInfo, GuildHallInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab, WhoPlayer } from "../../types";
+import type { ChatChannel, ChatMessage, FriendEntry, FriendNotification, GroupInfo, GuildHallInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab, WhoPlayer } from "../../types";
 
 type WhoSortField = "name" | "level" | "race" | "class" | "idle";
 type SortDir = "asc" | "desc";
@@ -11,9 +10,7 @@ interface ChatPanelProps {
   connected: boolean;
   canChat: boolean;
   playerName: string;
-  activeChannel: ChatChannel;
   chatByChannel: Record<ChatChannel, ChatMessage[]>;
-  emotePresets: EmotePreset[];
   whoPlayers: WhoPlayer[];
   groupInfo: GroupInfo;
   pendingGroupInvite: PendingGroupInvite | null;
@@ -23,28 +20,10 @@ interface ChatPanelProps {
   guildHall: GuildHallInfo | null;
   friends: FriendEntry[];
   friendNotifications: FriendNotification[];
-  onChannelChange: (channel: ChatChannel) => void;
   onRequestWho: () => void;
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
+  onTellPlayer: (target: string) => void;
   onCommand: (command: string) => void;
-}
-
-function createEmptyDrafts(): Record<ChatChannel, string> {
-  return {
-    say: "",
-    tell: "",
-    gossip: "",
-    shout: "",
-    ooc: "",
-    gtell: "",
-    gchat: "",
-  };
-}
-
-function createEmptyTargets(): Record<"tell", string> {
-  return {
-    tell: "",
-  };
 }
 
 function formatIdleTime(seconds: number): string {
@@ -54,7 +33,6 @@ function formatIdleTime(seconds: number): string {
 }
 
 const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
-  { id: "chat", label: "Chat" },
   { id: "friends", label: "Friends" },
   { id: "guild", label: "Guild" },
   { id: "group", label: "Group" },
@@ -65,9 +43,7 @@ export function ChatPanel({
   connected,
   canChat,
   playerName,
-  activeChannel,
   chatByChannel,
-  emotePresets,
   whoPlayers,
   groupInfo,
   pendingGroupInvite,
@@ -77,20 +53,17 @@ export function ChatPanel({
   guildHall,
   friends,
   friendNotifications,
-  onChannelChange,
   onRequestWho,
   onSendMessage,
+  onTellPlayer,
   onCommand,
 }: ChatPanelProps) {
   const feedRef = useRef<HTMLDivElement | null>(null);
   const guildFeedRef = useRef<HTMLDivElement | null>(null);
   const groupFeedRef = useRef<HTMLDivElement | null>(null);
-  const messageInputRef = useRef<HTMLInputElement | null>(null);
-  const [draftByChannel, setDraftByChannel] = useState<Record<ChatChannel, string>>(createEmptyDrafts);
-  const [targets, setTargets] = useState<Record<"tell", string>>(createEmptyTargets);
   const [guildDraft, setGuildDraft] = useState("");
   const [groupDraft, setGroupDraft] = useState("");
-  const [activeSocialTab, setActiveSocialTab] = useState<SocialTab>("chat");
+  const [activeSocialTab, setActiveSocialTab] = useState<SocialTab>("friends");
   const [whoFilter, setWhoFilter] = useState("");
   const [whoSort, setWhoSort] = useState<WhoSortField>("name");
   const [whoSortDir, setWhoSortDir] = useState<SortDir>("asc");
@@ -105,12 +78,8 @@ export function ChatPanel({
   const [groupInviteTarget, setGroupInviteTarget] = useState("");
   // Friends action state
   const [friendAddTarget, setFriendAddTarget] = useState("");
-  // Emote picker state
-  const [emotePickerOpen, setEmotePickerOpen] = useState(false);
-  const [customEmote, setCustomEmote] = useState("");
   const [friendConfirmRemove, setFriendConfirmRemove] = useState<string | null>(null);
 
-  const messages = chatByChannel[activeChannel];
   const gchatMessages = chatByChannel.gchat;
   const gtellMessages = chatByChannel.gtell;
 
@@ -148,7 +117,7 @@ export function ChatPanel({
     const feed = feedRef.current;
     if (!feed) return;
     feed.scrollTop = feed.scrollHeight;
-  }, [activeSocialTab, activeChannel, messages.length, whoPlayers.length]);
+  }, [activeSocialTab, whoPlayers.length]);
 
   useEffect(() => {
     const feed = guildFeedRef.current;
@@ -162,32 +131,13 @@ export function ChatPanel({
     feed.scrollTop = feed.scrollHeight;
   }, [activeSocialTab, gtellMessages.length]);
 
-  const activeMeta = useMemo(
-    () => CHAT_CHANNELS.find((channel) => channel.id === activeChannel) ?? CHAT_CHANNELS[0],
-    [activeChannel],
-  );
-  const draft = draftByChannel[activeChannel];
-  const isTargetedChannel = activeMeta.requiresTarget;
-  const targetValue = activeChannel === "tell" ? targets.tell : "";
-
-  const submitMessage = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const target = activeMeta.requiresTarget ? targetValue : null;
-    const sent = onSendMessage(activeChannel, draft, target);
-    if (!sent) return;
-    setDraftByChannel((prev) => ({ ...prev, [activeChannel]: "" }));
-  };
-
   const handleSocialTabChange = (tab: SocialTab) => {
     setActiveSocialTab(tab);
     if (tab === "who" && canChat) onRequestWho();
   };
 
   const handleTellFromWho = (target: string) => {
-    setTargets((prev) => ({ ...prev, tell: target }));
-    setActiveSocialTab("chat");
-    onChannelChange("tell");
-    window.requestAnimationFrame(() => messageInputRef.current?.focus());
+    onTellPlayer(target);
   };
 
   const inGroup = groupInfo.members.length > 0;
@@ -251,154 +201,6 @@ export function ChatPanel({
       </div>
 
       <div className="chat-shell">
-        {activeSocialTab === "chat" && (
-          <>
-            <div className="chat-channel-tabs" role="tablist" aria-label="Chat channels">
-              {CHAT_CHANNELS.map((channel) => (
-                <button
-                  key={channel.id}
-                  type="button"
-                  role="tab"
-                  className={`chat-channel-tab ${activeChannel === channel.id ? "chat-channel-tab-active" : ""}`}
-                  onClick={() => onChannelChange(channel.id)}
-                  aria-selected={activeChannel === channel.id}
-                >
-                  {channel.label}
-                </button>
-              ))}
-            </div>
-
-            <div ref={feedRef} className="chat-feed" role="log" aria-live="polite" aria-label={`${activeMeta.label} messages`}>
-              <section key={activeChannel} className="chat-feed-panel chat-feed-panel-flip" aria-label={`${activeMeta.label} subwindow`}>
-                {messages.length === 0 ? (
-                  <p className="empty-note">
-                    {canChat
-                      ? `No ${activeMeta.label.toLowerCase()} messages yet.`
-                      : connected
-                        ? "Log in to unlock chat."
-                        : "Reconnect to resume chat."}
-                  </p>
-                ) : (
-                  <ul className="chat-message-list">
-                    {messages.map((entry) => {
-                      const isSelf = entry.sender.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0;
-                      const time = new Date(entry.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-                      return (
-                        <li
-                          key={entry.id}
-                          className={`chat-message-item ${isSelf ? "chat-message-item-self" : ""}${entry.isWhisper ? " chat-message-item-whisper" : ""}`}
-                        >
-                          <div className="chat-message-meta">
-                            <span className="chat-message-sender">
-                              {entry.isWhisper && <span className="chat-whisper-tag">whisper</span>}
-                              {isSelf ? "You" : entry.sender}
-                            </span>
-                            <span className="chat-message-time">{time}</span>
-                          </div>
-                          <p className="chat-message-body">{entry.message}</p>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
-            </div>
-
-            {emotePickerOpen && canChat && (
-              <div className="emote-picker">
-                <div className="emote-presets">
-                  {emotePresets.map((preset) => (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      className="emote-preset-btn"
-                      title={`${playerName} ${preset.action}`}
-                      aria-label={preset.label}
-                      onClick={() => { onCommand(`emote ${preset.action}`); }}
-                    >
-                      <span className="emote-preset-emoji">{preset.emoji}</span>
-                      <span className="emote-preset-label">{preset.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <form className="emote-custom-form" onSubmit={(e) => {
-                  e.preventDefault();
-                  const msg = customEmote.trim();
-                  if (!msg) return;
-                  // If text contains the player's name, send as pose (freeform); otherwise emote (third-person)
-                  const cmd = msg.toLowerCase().includes(playerName.toLowerCase()) ? "pose" : "emote";
-                  onCommand(`${cmd} ${msg}`);
-                  setCustomEmote("");
-                }}>
-                  <input
-                    type="text"
-                    className="social-action-input"
-                    placeholder={`${playerName} does what\u2026`}
-                    value={customEmote}
-                    onChange={(e) => setCustomEmote(e.target.value)}
-                    aria-label="Custom emote"
-                  />
-                  <button
-                    type="button"
-                    className="emote-name-btn"
-                    title="Insert your name for freeform pose"
-                    aria-label="Insert your character name"
-                    onClick={() => setCustomEmote((prev) => prev + playerName + " ")}
-                  >
-                    @me
-                  </button>
-                  <button type="submit" className="social-action-btn" disabled={!customEmote.trim()}>Emote</button>
-                </form>
-              </div>
-            )}
-
-            <form
-              className={`chat-form ${isTargetedChannel ? "chat-form-targeted" : ""}`}
-              onSubmit={submitMessage}
-            >
-              {isTargetedChannel && (
-                <input
-                  className="chat-target-input"
-                  type="text"
-                  value={targetValue}
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    if (activeChannel !== "tell") return;
-                    setTargets((prev) => ({ ...prev, tell: next }));
-                  }}
-                  placeholder={activeMeta.targetPlaceholder ?? "Target"}
-                  aria-label={`${activeMeta.label} target`}
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              )}
-              <input
-                ref={messageInputRef}
-                className="chat-input"
-                type="text"
-                value={draft}
-                onChange={(event) => setDraftByChannel((prev) => ({ ...prev, [activeChannel]: event.target.value }))}
-                placeholder={canChat ? activeMeta.messagePlaceholder : "Chat unavailable"}
-                aria-label={`${activeMeta.label} message`}
-                autoComplete="off"
-                spellCheck={false}
-                disabled={!canChat}
-              />
-              <button type="submit" className="soft-button" disabled={!canChat}>Send</button>
-              <button
-                type="button"
-                className={`emote-toggle-btn${emotePickerOpen ? " emote-toggle-btn-active" : ""}`}
-                title="Emotes"
-                aria-label="Toggle emote picker"
-                aria-expanded={emotePickerOpen}
-                onClick={() => setEmotePickerOpen((v) => !v)}
-                disabled={!canChat}
-              >
-                &#9786;
-              </button>
-            </form>
-          </>
-        )}
 
         {activeSocialTab === "friends" && (
           <>

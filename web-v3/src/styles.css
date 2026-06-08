@@ -23298,3 +23298,188 @@ html:has(.game-shell),
     transition: none;
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+   Social Board — standalone painted chat (drawerPanel "chatboard")
+   The whole frame — banner, channel plaques, side notes, parchment input,
+   Send/Clear buttons, footer — is painted into the `chat_bg` art. The board
+   is an aspect-locked canvas carrying that image; transparent hotspots and
+   the live feed/input are pixel-mapped on top (see *_RECT in the panel).
+   ════════════════════════════════════════════════════════════ */
+.drawer-sheet.drawer-sheet-board {
+  background:
+    linear-gradient(165deg, rgb(34 24 14 / 96%), rgb(20 14 8 / 97%));
+}
+
+/* The painted board carries its own banner, so drop the title and the drag
+   handle, and float the close button over the art. */
+.drawer-sheet-board .drawer-title {
+  display: none;
+}
+
+.drawer-sheet-board .drawer-handle-zone {
+  display: none;
+}
+
+.drawer-sheet-board .drawer-header {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  z-index: 6;
+  padding: 0;
+  min-height: 0;
+  border-bottom: none;
+}
+
+.drawer-sheet-board .drawer-body {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Desktop: size the sheet to the painted frame's 4:3 ratio so it scales up
+   whole and dominates the viewport. height is pre-clamped against width so
+   the derived width never exceeds 96vw. */
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-board {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 1447 / 1087;
+  }
+}
+
+/* The board canvas: the painted frame stretched to a 4:3 box (it is 4:3, so
+   no distortion), with hotspots positioned as percentages of this box. */
+.chatboard {
+  --chat-accent-say: #79c46b;
+  --chat-accent-tell: #b08be0;
+  --chat-accent-gossip: #e0b24f;
+  --chat-accent-shout: #e08a46;
+  --chat-accent-ooc: #5fb0e0;
+  --chat-ink: #f3e7cf;
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1447 / 1087;
+  margin: auto;
+  background-image: var(--chat-bg, none);
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Shared transparent hotspot — the painted control shows through. */
+.cb-hotspot {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: box-shadow 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
+}
+
+.cb-hotspot:hover:not(:disabled) {
+  background: rgb(255 255 255 / 8%);
+}
+
+.cb-hotspot:disabled {
+  cursor: default;
+}
+
+.cb-hotspot:focus-visible {
+  outline: 2px solid rgb(230 205 146 / 80%);
+  outline-offset: 1px;
+}
+
+/* Active channel: glow ring in the channel's accent over the painted plaque. */
+.cb-channel.is-active {
+  box-shadow: inset 0 0 0 2px var(--chat-accent), 0 0 14px rgb(201 162 74 / 35%);
+  border-radius: 12px;
+}
+
+.cb-emote.is-active {
+  box-shadow: inset 0 0 0 2px var(--chat-accent-gossip);
+}
+
+/* Live message feed over the painted chalkboard. */
+.cb-feed {
+  position: absolute;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(6px, 1.2vh, 12px) clamp(8px, 1.4vw, 14px);
+  color: var(--chat-ink);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(201 162 74 / 50%) transparent;
+}
+
+.cb-feed::-webkit-scrollbar {
+  width: 7px;
+}
+
+.cb-feed::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(201 162 74 / 65%), rgb(140 104 52 / 60%));
+}
+
+.cb-feed::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cb-empty {
+  margin: auto;
+  text-align: center;
+  font-style: italic;
+  color: rgb(243 231 207 / 50%);
+}
+
+/* Composer is a layout-less wrapper; its inputs/buttons are absolutely placed. */
+.cb-compose {
+  display: contents;
+}
+
+/* Text inputs over the painted parchment — transparent so the parchment
+   texture shows; dark ink for legibility. */
+.cb-input {
+  position: absolute;
+  border: none;
+  background: transparent;
+  color: #2a2113;
+  font-size: clamp(0.78rem, 1.5vw, 1rem);
+  padding: 0 clamp(6px, 1vw, 14px);
+  border-radius: 8px;
+}
+
+.cb-input::placeholder {
+  color: rgb(42 33 19 / 50%);
+  font-style: italic;
+}
+
+.cb-input:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgb(201 162 74 / 45%);
+}
+
+.cb-target {
+  border-right: 1px solid rgb(120 96 52 / 35%);
+}
+
+/* Emote picker floats over the lower feed when toggled. */
+.cb-emote-picker {
+  position: absolute;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  overflow-y: auto;
+  border-radius: 10px;
+  border: 1px solid rgb(201 162 74 / 35%);
+  background: linear-gradient(160deg, rgb(40 31 20 / 96%), rgb(26 20 13 / 97%));
+  box-shadow: 0 6px 20px rgb(0 0 0 / 55%);
+}
+
