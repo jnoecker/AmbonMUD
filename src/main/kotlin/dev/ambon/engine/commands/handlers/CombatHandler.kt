@@ -27,6 +27,7 @@ class CombatHandler(
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val metrics = ctx.metrics
     private val world: World = ctx.world
 
     override fun register(router: CommandRouter) {
@@ -158,6 +159,8 @@ class CombatHandler(
         outbound.sendIfError(sessionId, error)
         if (error != null) {
             gmcpEmitter?.sendUiFeedback(sessionId, "error", error, scope = "combat", command = "cast")
+        } else {
+            metrics.onGameEvent("ability", "cast")
         }
     }
 

@@ -62,6 +62,7 @@ class PuzzleHandler(
             val result = system.attemptRiddleAnswer(sessionId, puzzle, answerText)
             when (result) {
                 is PuzzleResult.Success -> {
+                    ctx.metrics.onGameEvent("puzzle", "solved")
                     outbound.send(OutboundEvent.SendInfo(sessionId, result.message))
                     grantReward(sessionId, result.reward)
                     // Refresh room state so newly-unlocked exits, minimap, and Puzzle.List
@@ -109,6 +110,7 @@ class PuzzleHandler(
 
         when (result) {
             is PuzzleResult.Success -> {
+                ctx.metrics.onGameEvent("puzzle", "solved")
                 outbound.send(OutboundEvent.SendInfo(sessionId, result.message))
                 grantReward(sessionId, result.reward)
                 // Refresh room state so newly-unlocked exits and Puzzle.List reach the client.

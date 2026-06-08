@@ -34,6 +34,12 @@ class QuestSystem(
     /** Invoked after a quest is successfully completed; used by AchievementSystem. */
     var onQuestCompleted: (suspend (SessionId, String) -> Unit)? = null
 
+    /** Invoked after a quest is accepted; used for metrics. */
+    var onQuestAccepted: (suspend (SessionId, String) -> Unit)? = null
+
+    /** Invoked after a quest is abandoned; used for metrics. */
+    var onQuestAbandoned: (suspend (SessionId, String) -> Unit)? = null
+
     /** Invoked to emit quest GMCP; set by GameEngine during wiring. */
     var onQuestListChanged: (suspend (SessionId) -> Unit)? = null
     var onQuestObjectiveUpdated: (suspend (SessionId, String, Int, Int, Int, Boolean) -> Unit)? = null
@@ -286,6 +292,7 @@ class QuestSystem(
             )
         ps.activeQuests = ps.activeQuests + (questId to state)
         players.persistPlayer(ps.sessionId)
+        onQuestAccepted?.invoke(sessionId, questId)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest accepted: ${quest.name}"))
         val acceptHandler = completionHandlers.get(quest.completionType)
@@ -408,6 +415,7 @@ class QuestSystem(
         val quest = registry.get(questId)
         ps.activeQuests = ps.activeQuests - questId
         players.persistPlayer(ps.sessionId)
+        onQuestAbandoned?.invoke(sessionId, questId)
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest abandoned: ${quest?.name ?: questId}"))
         onQuestListChanged?.invoke(sessionId)
         return null

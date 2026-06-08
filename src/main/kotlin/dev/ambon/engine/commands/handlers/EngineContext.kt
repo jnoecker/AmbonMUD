@@ -22,6 +22,7 @@ import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.metrics.GameMetrics
 
 /**
  * Shared registries and services passed to every command handler.
@@ -55,4 +56,6 @@ data class EngineContext(
     val puzzleSystem: PuzzleSystem? = null,
     val bankConfig: BankConfig = BankConfig(),
     val stylistConfig: StylistConfig = StylistConfig(),
+    /** Gameplay metrics. Defaults to a no-op registry so tests need no wiring. */
+    val metrics: GameMetrics = GameMetrics.noop(),
 )

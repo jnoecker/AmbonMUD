@@ -290,4 +290,50 @@ class GameMetricsTest {
         val timer = registry.get("outbound_event_queue_age_seconds").timer()
         assertEquals(2L, timer.count())
     }
+
+    @Test
+    fun `onGameEvent increments the tagged counter`() {
+        metrics.onGameEvent("demo", "created")
+        metrics.onGameEvent("demo", "created")
+        metrics.onGameEvent("demo", "claimed")
+        metrics.onGameEvent("tavern", "lottery_ticket", count = 5L)
+
+        assertEquals(2.0, registry.counter("game_events_total", "system", "demo", "event", "created").count())
+        assertEquals(1.0, registry.counter("game_events_total", "system", "demo", "event", "claimed").count())
+        assertEquals(5.0, registry.counter("game_events_total", "system", "tavern", "event", "lottery_ticket").count())
+    }
+
+    @Test
+    fun `onGameEvent drops unknown pairs to bound cardinality`() {
+        metrics.onGameEvent("demo", "nonsense")
+        metrics.onGameEvent("nonsense", "created")
+
+        // No counter is created for unknown pairs — only the pre-registered
+        // whitelist exists, all still at zero except what tests above touched.
+        val unknown = registry.find("game_events_total").tag("system", "nonsense").counter()
+        assertEquals(null, unknown)
+    }
+
+    @Test
+    fun `every whitelisted game event pair is pre-registered`() {
+        for ((system, events) in GameMetrics.KNOWN_GAME_EVENTS) {
+            for (event in events) {
+                metrics.onGameEvent(system, event)
+                assertEquals(
+                    1.0,
+                    registry.counter("game_events_total", "system", system, "event", event).count(),
+                    "expected pre-registered counter for $system/$event",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `demo players gauge reflects supplier`() {
+        var demoCount = 3
+        metrics.bindDemoPlayersOnline { demoCount }
+        assertEquals(3.0, registry.get("demo_players_online").gauge().value())
+        demoCount = 1
+        assertEquals(1.0, registry.get("demo_players_online").gauge().value())
+    }
 }

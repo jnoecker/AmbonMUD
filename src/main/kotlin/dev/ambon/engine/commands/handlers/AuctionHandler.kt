@@ -118,6 +118,7 @@ class AuctionHandler(
                 return
             }
 
+            ctx.metrics.onGameEvent("auction", "listed")
             val message = "Listed ${listing.item.item.displayName} for ${listing.price} gold (listing #${listing.id})."
             outbound.send(
                 OutboundEvent.SendInfo(
@@ -220,6 +221,7 @@ class AuctionHandler(
                 creditOfflineSellerGold(purchased.sellerName, purchased.price)
             }
 
+            ctx.metrics.onGameEvent("auction", "sold")
             val message = "You purchased ${purchased.item.item.displayName} for ${purchased.price} gold."
             outbound.send(OutboundEvent.SendInfo(sessionId, message))
             sendScopedFeedback(sessionId, gmcpEmitter, "success", message, "auction", code = "PURCHASE_COMPLETE", command = "buy")
@@ -260,6 +262,7 @@ class AuctionHandler(
             return
         }
 
+        ctx.metrics.onGameEvent("auction", "cancelled")
         val message = "Cancelled listing #${cancelled.id}. ${cancelled.item.item.displayName} returned to your inventory."
         outbound.send(
             OutboundEvent.SendInfo(

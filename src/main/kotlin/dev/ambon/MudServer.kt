@@ -454,6 +454,8 @@ class MudServer(
 
     private fun bindWorldStateGauges() {
         gameMetrics.bindPlayerRegistry { players.allPlayers().size }
+        // Unclaimed demo characters have no playerId until `claim` (#1226).
+        gameMetrics.bindDemoPlayersOnline { players.allPlayers().count { it.playerId == null } }
         gameMetrics.bindMobRegistry { mobs.all().size }
         gameMetrics.bindRoomsOccupied {
             players

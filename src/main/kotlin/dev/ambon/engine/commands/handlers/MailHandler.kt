@@ -19,6 +19,7 @@ class MailHandler(
     private val players = ctx.players
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val metrics = ctx.metrics
 
     override fun register(router: CommandRouter) {
         router.on<Command.Mail.List> { sid, _ -> handleList(sid) }
@@ -165,6 +166,7 @@ class MailHandler(
         if (recipientOnline != null) {
             recipientOnline.inbox.add(message)
             players.persistPlayer(recipientOnline.sessionId)
+            metrics.onGameEvent("mail", "sent")
             outbound.send(OutboundEvent.SendInfo(sessionId, "Mail delivered to ${recipientOnline.name}."))
             if (recipientOnline.sessionId != sessionId) {
                 outbound.send(
@@ -189,6 +191,7 @@ class MailHandler(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
                 return
             }
+            metrics.onGameEvent("mail", "sent")
             outbound.send(OutboundEvent.SendInfo(sessionId, "Mail delivered to ${compose.recipientName}."))
         }
         outbound.send(OutboundEvent.SendPrompt(sessionId))

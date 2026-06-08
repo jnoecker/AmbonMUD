@@ -162,6 +162,7 @@ class DungeonHandler(
                 partyLevel = partyLevel,
                 returnRoom = returnRoom,
             )
+            ctx.metrics.onGameEvent("dungeon", "entered")
 
             // Teleport all members to the entrance
             val entrance = dm.entranceRoom(instance)

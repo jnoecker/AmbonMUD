@@ -27,6 +27,7 @@ class StylistHandler(
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
     private val raceRegistry = ctx.raceRegistry
+    private val metrics = ctx.metrics
 
     override fun register(router: CommandRouter) {
         router.on<Command.Stylist.List> { sid, _ -> handleList(sid) }
@@ -120,6 +121,7 @@ class StylistHandler(
         markVitalsDirty?.invoke(sessionId)
         markStatsDirty?.invoke(sessionId)
 
+        metrics.onGameEvent("stylist", "race_change")
         outbound.send(
             OutboundEvent.SendInfo(
                 sessionId,

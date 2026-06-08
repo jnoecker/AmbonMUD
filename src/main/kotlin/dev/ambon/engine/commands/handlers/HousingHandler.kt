@@ -93,6 +93,7 @@ class HousingHandler(
             outbound.send(OutboundEvent.SendError(sessionId, err))
             gmcpEmitter?.sendUiFeedback(sessionId, "error", err, scope = "housing", command = "buy")
         } else {
+            ctx.metrics.onGameEvent("housing", "purchased")
             val msg = "Congratulations! You are now a homeowner."
             outbound.send(OutboundEvent.SendInfo(sessionId, msg))
             outbound.send(OutboundEvent.SendInfo(sessionId, "Use 'recall' to visit your house, or 'house status' to see your rooms."))
@@ -109,6 +110,7 @@ class HousingHandler(
             outbound.send(OutboundEvent.SendError(sessionId, err))
             gmcpEmitter?.sendUiFeedback(sessionId, "error", err, scope = "housing", command = "expand")
         } else {
+            ctx.metrics.onGameEvent("housing", "expanded")
             val name = template?.title ?: cmd.templateId
             val msg = "You've added a $name to the ${cmd.direction.name.lowercase()}."
             outbound.send(OutboundEvent.SendInfo(sessionId, msg))

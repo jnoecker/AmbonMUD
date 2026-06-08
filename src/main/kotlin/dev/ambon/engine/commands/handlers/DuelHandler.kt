@@ -129,6 +129,7 @@ class DuelHandler(
             return
         }
 
+        ctx.metrics.onGameEvent("duel", "started")
         outbound.send(
             OutboundEvent.SendInfo(duel.player1, "** ${me.name} accepts your duel challenge! Fight! **"),
         )

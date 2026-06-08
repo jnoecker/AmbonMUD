@@ -17,6 +17,7 @@ class PrestigeHandler(
     private val players = ctx.players
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val metrics = ctx.metrics
 
     override fun register(router: CommandRouter) {
         router.on<Command.Prestige> { sid, _ -> handlePrestige(sid) }
@@ -83,6 +84,7 @@ class PrestigeHandler(
             }
 
             val result = prestigeSystem.prestige(me, maxLevel) ?: return
+            metrics.onGameEvent("prestige", "prestiged")
             val perkDesc = result.perk?.description ?: "No perk"
             val message = "You have achieved Prestige Rank ${result.newRank}! Perk: $perkDesc"
             outbound.send(
