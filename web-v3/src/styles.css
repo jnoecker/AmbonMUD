@@ -3681,19 +3681,15 @@ body {
   perspective: 1000px;
 }
 
-/* The doorway behind the leaf — revealed when the leaf swings open. */
+/* Holds the destination peek label, centred in the doorway. Transparent — the
+   frame art paints its own opening, so no recess fill (that read as a black box). */
 .feat-door-portal {
   position: absolute;
-  inset: 8%;
+  inset: 0;
   z-index: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background:
-    radial-gradient(ellipse at 50% 42%, rgb(120 150 210 / 35%), transparent 60%),
-    radial-gradient(ellipse at 50% 100%, rgb(40 50 82 / 60%), rgb(6 8 16 / 94%) 78%);
-  box-shadow: inset 0 0 36px rgb(0 0 0 / 70%);
 }
 
 .feat-door-peek {
