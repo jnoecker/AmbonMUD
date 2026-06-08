@@ -8,6 +8,7 @@ import { ShopPopout } from "./components/ShopPopout";
 import { TrainerPanel } from "./components/TrainerPanel";
 import { TradePanel } from "./components/TradePanel";
 import { WorldFeaturesPopout } from "./components/WorldFeaturesPopout";
+import { featureArt, pickFocusedFeature } from "./components/worldFeatures";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
@@ -827,6 +828,13 @@ function App() {
     return () => canvas.removeEventListener("wheel", stop);
   }, [drawerPanel]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The single feature a freshly-opened features panel shows — drives the Drawer
+  // title and skin background so the chrome matches what WorldFeaturesPopout renders.
+  const featurePanelFeature = useMemo(
+    () => (drawerPanel === "features" ? pickFocusedFeature(state.roomFeatures, featureFocus) : null),
+    [drawerPanel, state.roomFeatures, featureFocus],
+  );
+
   const drawerTitle = useMemo(() => {
     switch (drawerPanel) {
       case "character": return "Character";
@@ -838,7 +846,7 @@ function App() {
       case "chat": return "Social";
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
-      case "features": return "World Features";
+      case "features": return featurePanelFeature ? featurePanelFeature.name : "Interactive Feature";
       case "trainer": return "Trainer";
       case "mail": return "Mail";
       case "crafting": return "Crafting";
@@ -858,7 +866,7 @@ function App() {
       case "map": return "World Map";
       default: return "";
     }
-  }, [drawerPanel, state.shop?.name, state.room.title]);
+  }, [drawerPanel, state.shop?.name, state.room.title, featurePanelFeature]);
 
   const sortedExits = useMemo(() => sortExits(state.room.exits), [state.room.exits]);
   const questMarkerCount = useMemo(
@@ -913,7 +921,9 @@ function App() {
         title={drawerTitle}
         onClose={closeDrawer}
         variant={
-          drawerPanel === "inventory"
+          drawerPanel === "features"
+            ? "feature"
+            : drawerPanel === "inventory"
             ? "satchel"
             : drawerPanel === "equipment"
               ? "equipment"
@@ -934,7 +944,11 @@ function App() {
                             : "default"
         }
         skinBg={
-          drawerPanel === "inventory"
+          drawerPanel === "features"
+            ? (featurePanelFeature && featurePanelFeature.type !== "lever"
+                ? (featureArt(featurePanelFeature, state.serverAssets) ?? undefined)
+                : undefined)
+            : drawerPanel === "inventory"
             ? state.serverAssets["inventory_satchel_bg"]
             : drawerPanel === "equipment"
               ? state.serverAssets["equipment_bg"]
@@ -1094,7 +1108,6 @@ function App() {
 
         {drawerPanel === "features" && (
           <WorldFeaturesPopout
-            roomTitle={state.room.title !== "-" ? state.room.title : "Current Room"}
             roomFeatures={state.roomFeatures}
             containerContents={state.containerContents}
             preferredType={featureFocus}
