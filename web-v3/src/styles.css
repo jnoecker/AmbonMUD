@@ -3386,12 +3386,12 @@ body {
 }
 
 /* ── Sign ─────────────────────────────────────────────────── */
-/* The placard art sits in the upper-centre of the spread, so we bias the text
-   upward (heavier bottom padding) to land it on the board rather than the grass. */
+/* The placard art sits a touch above centre, so we bias the text upward (heavier
+   bottom padding) to land it on the board rather than the grass. */
 .feat-sign {
   align-items: center;
   justify-content: center;
-  padding: clamp(20px, 4vh, 44px) clamp(32px, 9vw, 120px) clamp(80px, 22vh, 220px);
+  padding: clamp(20px, 4vh, 44px) clamp(32px, 9vw, 120px) clamp(44px, 13vh, 150px);
   min-height: 46vh;
 }
 
