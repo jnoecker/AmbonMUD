@@ -1672,8 +1672,15 @@ export function applyGmcpPackage(
     case "Session.AuthResult": {
       const packet = data as { success?: boolean; message?: string };
       if (packet.success) {
-        // Auth succeeded — server will send full state sync
+        // Auth succeeded — server will send full state sync. Clear the stale
+        // "name" login prompt left over from the initial Login.Prompt (it set
+        // both the character picker and loginPrompt). Otherwise, the instant we
+        // drop `reconnecting`, the modal gate (loginPrompt && !reconnecting &&
+        // no saved characters) briefly flashes the "Enter your name" screen
+        // until Char.Name arrives and clears it.
         ctx.setReconnecting(false);
+        ctx.setLoginPrompt(null);
+        ctx.setLoginError(null);
         ctx.pendingAuthCharRef.current = null;
       } else {
         // Auth failed — remove the stale token. The server will follow up with
