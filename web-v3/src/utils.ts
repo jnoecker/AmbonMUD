@@ -9,6 +9,35 @@ export function percent(current: number, max: number): number {
   return Math.max(0, Math.min(100, Math.round((current / max) * 100)));
 }
 
+/**
+ * Abbreviate a large number for compact, decorative display: 850 → "850",
+ * 1800 → "1.8K", 1_825_461 → "1.8M", 1_000_000 → "1M", 3_100_000_000 → "3.1B".
+ * One decimal is kept only when the scaled value is under 10 (so "1.8M" but
+ * "601K"), and a trailing ".0" is dropped ("1M", not "1.0M"). Exact values are
+ * still surfaced elsewhere (combat bar, score, character panel) and on hover.
+ */
+export function formatCompact(value: number): string {
+  if (!Number.isFinite(value)) return "0";
+  const abs = Math.abs(value);
+  if (abs < 1000) return String(Math.round(value));
+  const units: Array<[number, string]> = [
+    [1e9, "B"],
+    [1e6, "M"],
+    [1e3, "K"],
+  ];
+  for (const [factor, suffix] of units) {
+    if (abs >= factor) {
+      const scaled = value / factor;
+      const text =
+        Math.abs(scaled) < 10
+          ? scaled.toFixed(1).replace(/\.0$/, "")
+          : String(Math.round(scaled));
+      return text + suffix;
+    }
+  }
+  return String(Math.round(value));
+}
+
 export function titleCaseWords(value: string): string {
   return value
     .split(/[\s_-]+/)
