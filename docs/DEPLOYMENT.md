@@ -543,12 +543,39 @@ Trigger it manually from the Actions tab. After it finishes, run a staff
 new data to the running engine.
 
 
+### Public Grafana dashboards
+
+`/grafana/` is **deliberately un-gated**: Grafana serves anonymous read-only
+(Viewer role) access so visitors can browse the monitoring dashboards without
+credentials. The exposure is bounded:
+
+- Anonymous users are Viewers — no editing, no admin pages, sign-up disabled.
+- `GF_EXPLORE_ENABLED=false` — anonymous visitors can only read the
+  provisioned dashboards, not run ad-hoc PromQL against the datasource.
+- The Grafana **admin** login password is the SSM admin token (written to
+  `/etc/ambonmud/grafana.env` by `generate-grafana-env` at service start —
+  never the old hardcoded `admin`).
+- `/prometheus/` and `/admin/` remain behind nginx basic-auth.
+
+To apply this to an already-running instance without replacing it (user data
+only runs at first boot), via SSM shell:
+
+```bash
+sudo sed -i '/location \/grafana\/ {/,/}/ { /auth_basic/d }' /etc/nginx/conf.d/ambonmud.conf
+sudo nginx -t && sudo systemctl reload nginx
+# then update /etc/systemd/system/grafana.service to match infra/lib/ec2-stack.ts
+# (generate-grafana-env ExecStartPre + --env-file + the GF_* hardening vars),
+# write /usr/local/bin/generate-grafana-env, and:
+sudo systemctl daemon-reload && sudo systemctl restart grafana
+```
+
 ### Admin token (SSM Parameter Store)
 
-The admin API token used for nginx basic-auth on `/grafana/`, `/prometheus/`,
-and `/admin/` (and for the admin API itself) is stored in AWS SSM Parameter
-Store as a `SecureString`, NOT in the publicly-fetched lore overlay.
-This keeps the secret out of any file that's served over public HTTP.
+The admin API token used for nginx basic-auth on `/prometheus/` and
+`/admin/`, for the admin API itself, and as the Grafana admin login password
+is stored in AWS SSM Parameter Store as a `SecureString`, NOT in the
+publicly-fetched lore overlay. This keeps the secret out of any file that's
+served over public HTTP.
 
 **One-time setup:**
 

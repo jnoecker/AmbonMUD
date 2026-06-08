@@ -424,7 +424,38 @@ export class Ec2Stack extends Stack {
       'WantedBy=multi-user.target',
       'PROM_SVC_END',
       '',
+      // ---- Grafana admin-password env helper -----------------------------------
+      // Grafana is PUBLIC (anonymous Viewer) — the nginx /grafana/ location has
+      // no basic-auth so resume visitors can browse the dashboards. That makes
+      // the old hardcoded GF_SECURITY_ADMIN_PASSWORD=admin a real login, so the
+      // admin password now comes from the same SSM admin token nginx uses.
+      // secrets.env is written by fetch-admin-token (an ambonmud.service
+      // ExecStartPre), which may not have run yet on first boot — so this
+      // helper re-runs the fetch itself when available and falls back to
+      // 'admin' only when no SSM token is configured (dev installs without
+      // a public hostname, where nginx isn't fronting Grafana anyway).
+      `cat > /usr/local/bin/generate-grafana-env << 'GRAF_ENV_END'`,
+      '#!/bin/bash',
+      'set -euo pipefail',
+      'if [ -x /usr/local/bin/fetch-admin-token ]; then',
+      '  /usr/local/bin/fetch-admin-token || true',
+      'fi',
+      'TOKEN=""',
+      'if [ -f /etc/ambonmud/secrets.env ]; then',
+      '  # shellcheck source=/dev/null',
+      '  . /etc/ambonmud/secrets.env',
+      '  TOKEN="${AMBONMUD_ADMIN_TOKEN:-}"',
+      'fi',
+      'umask 077',
+      'mkdir -p /etc/ambonmud',
+      'printf "GF_SECURITY_ADMIN_PASSWORD=%s\\n" "${TOKEN:-admin}" > /etc/ambonmud/grafana.env',
+      'GRAF_ENV_END',
+      'chmod +x /usr/local/bin/generate-grafana-env',
+      '',
       // ---- Grafana systemd service --------------------------------------------
+      // Anonymous access is read-only: Viewer role, sign-up disabled, and
+      // Explore off so anonymous visitors can only read the provisioned
+      // dashboards, not run ad-hoc PromQL against the datasource.
       `cat > /etc/systemd/system/grafana.service << 'GRAF_SVC_END'`,
       '[Unit]',
       'Description=Grafana',
@@ -434,15 +465,20 @@ export class Ec2Stack extends Stack {
       '[Service]',
       'Restart=always',
       'RestartSec=10',
+      'ExecStartPre=/usr/local/bin/generate-grafana-env',
       'ExecStartPre=-/usr/bin/docker rm -f grafana',
       'ExecStart=/usr/bin/docker run --name grafana \\',
       '  --network ambonmud-net \\',
       '  -p 3000:3000 \\',
-      '  -e GF_SECURITY_ADMIN_PASSWORD=admin \\',
+      '  --env-file /etc/ambonmud/grafana.env \\',
       `  -e GF_SERVER_ROOT_URL=https://${hostname || 'localhost'}/grafana/ \\`,
       '  -e GF_SERVER_SERVE_FROM_SUB_PATH=true \\',
       '  -e GF_AUTH_ANONYMOUS_ENABLED=true \\',
       '  -e GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer \\',
+      '  -e GF_USERS_ALLOW_SIGN_UP=false \\',
+      '  -e GF_EXPLORE_ENABLED=false \\',
+      '  -e GF_SECURITY_DISABLE_GRAVATAR=true \\',
+      '  -e GF_ANALYTICS_REPORTING_ENABLED=false \\',
       '  -v /app/grafana/provisioning:/etc/grafana/provisioning:ro \\',
       '  grafana/grafana:10.4.2',
       'ExecStop=/usr/bin/docker stop grafana',
@@ -773,9 +809,11 @@ export class Ec2Stack extends Stack {
         '        proxy_read_timeout 3600;',
         '    }',
         '',
+        '    # Deliberately un-gated: Grafana serves anonymous read-only Viewer',
+        '    # dashboards so visitors can see how the monitoring is set up.',
+        '    # Editing/admin still requires the Grafana admin login (SSM token),',
+        '    # and /prometheus/ + /admin/ below remain behind basic-auth.',
         '    location /grafana/ {',
-        '        auth_basic "AmbonMUD Admin";',
-        '        auth_basic_user_file /etc/nginx/.htpasswd;',
         '        proxy_pass http://localhost:3000/grafana/;',
         '        proxy_set_header Host $host;',
         '        proxy_set_header X-Real-IP $remote_addr;',
