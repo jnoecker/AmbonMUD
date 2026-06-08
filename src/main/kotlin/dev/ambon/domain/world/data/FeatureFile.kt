@@ -23,6 +23,14 @@ data class FeatureFile(
     val items: List<String> = emptyList(),
     /** Text content. Only applies to SIGN type. */
     val text: String? = null,
+    /**
+     * Optional backdrop art (content-addressed filename) for the World Features
+     * modal, resolved against the world image base like room/mob/item art.
+     * CONTAINER → open-chest backdrop; SIGN → sign-board backdrop; LEVER → the
+     * box the lever sits inside. Absent → the server-wide `<type>_bg` default,
+     * then a built-in CSS treatment. Valid for CONTAINER, SIGN, and LEVER.
+     */
+    val backgroundImage: String? = null,
     /** Static base-plate art (content-addressed filename), drawn behind the handle. LEVER only. */
     val plateImage: String? = null,
     /** Rotating handle art (content-addressed filename), neutral upright pose. LEVER only. */

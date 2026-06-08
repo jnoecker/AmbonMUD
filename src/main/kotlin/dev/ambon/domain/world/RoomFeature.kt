@@ -45,6 +45,12 @@ sealed class RoomFeature {
          * container reverts and refills [initialItems]. Null = zone reset only.
          */
         val respawnSeconds: Long? = null,
+        /**
+         * Optional open-chest backdrop art (resolved URL) for the web client's
+         * World Features modal. Absent → the `container_bg` global default, then
+         * a built-in CSS treatment.
+         */
+        val backgroundImage: String? = null,
     ) : RoomFeature()
 
     data class Lever(
@@ -68,6 +74,12 @@ sealed class RoomFeature {
         val leverPivot: LeverPivot? = null,
         val upAngle: Double? = null,
         val downAngle: Double? = null,
+        /**
+         * Optional backdrop "box" art (resolved URL) the lever sits inside;
+         * the plate + handle render on top. Absent → the `lever_bg` global
+         * default, then a built-in CSS treatment.
+         */
+        val backgroundImage: String? = null,
     ) : RoomFeature()
 
     /** Handle pivot as fractions (0..1) of the handle sprite box. */
@@ -82,5 +94,11 @@ sealed class RoomFeature {
         override val displayName: String,
         override val keyword: String,
         val text: String,
+        /**
+         * Optional sign-board backdrop art (resolved URL) for the web client's
+         * World Features modal. Absent → the `sign_bg` global default, then a
+         * built-in CSS treatment.
+         */
+        val backgroundImage: String? = null,
     ) : RoomFeature()
 }

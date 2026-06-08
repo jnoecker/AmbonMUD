@@ -583,6 +583,7 @@ internal fun buildFeaturePayload(
             state = state.name.lowercase(),
             locked = state == LockableState.LOCKED,
             keyRequired = feature.keyItemId != null,
+            backgroundImage = feature.backgroundImage,
         )
     }
     is RoomFeature.Lever -> {
@@ -593,6 +594,7 @@ internal fun buildFeaturePayload(
             keyword = feature.keyword,
             type = "lever",
             state = state.name.lowercase(),
+            backgroundImage = feature.backgroundImage,
             plateImage = feature.plateImage,
             handleImage = feature.handleImage,
             leverPivot = feature.leverPivot?.let { GmcpEmitter.LeverPivotPayload(it.x, it.y) },
@@ -606,6 +608,7 @@ internal fun buildFeaturePayload(
         keyword = feature.keyword,
         type = "sign",
         text = feature.text,
+        backgroundImage = feature.backgroundImage,
     )
 }
 

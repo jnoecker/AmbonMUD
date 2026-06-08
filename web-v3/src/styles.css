@@ -3325,12 +3325,6 @@ body {
     linear-gradient(145deg, rgb(62 73 108 / 92%), rgb(47 58 87 / 88%));
 }
 
-.feature-card-container {
-  background:
-    radial-gradient(circle at top right, rgb(212 178 110 / 14%), transparent 28%),
-    linear-gradient(145deg, rgb(72 68 92 / 92%), rgb(57 55 78 / 88%));
-}
-
 .feature-card-lever {
   background:
     radial-gradient(circle at top right, rgb(204 154 216 / 14%), transparent 28%),
@@ -3344,6 +3338,8 @@ body {
 
 /* ── Graphical lever widget ─────────────────────────────── */
 .lever-widget {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3359,6 +3355,26 @@ body {
     border-color 200ms var(--ease-out-soft),
     transform 200ms var(--ease-out-soft),
     box-shadow 200ms var(--ease-out-soft);
+}
+
+/* Optional backdrop "box" art (lever_bg / per-feature). Fills the card; the
+   plate + handle render on top. When present we drop the CSS frame so only the
+   authored art shows. */
+.lever-widget-box {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
+  user-select: none;
+}
+
+.lever-widget-boxed {
+  border-color: transparent;
+  background: none;
 }
 
 .lever-widget:hover {
@@ -3517,12 +3533,6 @@ body {
   }
 }
 
-.feature-card-sign {
-  background:
-    radial-gradient(circle at top right, rgb(148 188 160 / 12%), transparent 28%),
-    linear-gradient(145deg, rgb(61 74 95 / 92%), rgb(49 62 82 / 88%));
-}
-
 .feature-card-header {
   display: flex;
   justify-content: space-between;
@@ -3606,30 +3616,13 @@ body {
   gap: 8px;
 }
 
-.feature-card-sign-text,
-.feature-card-empty {
-  margin: 0;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.feature-card-sign-text {
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  background: rgb(10 12 22 / 22%);
-  color: var(--text-primary);
-  font-style: italic;
-  white-space: pre-wrap;
-}
-
 .feature-card-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.feature-card-action,
-.feature-card-inline-action {
+.feature-card-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3648,51 +3641,280 @@ body {
     background 150ms var(--ease-out-soft);
 }
 
-.feature-card-inline-action {
-  padding: 6px 10px;
-  font-size: 0.78rem;
-}
-
-.feature-card-action:hover,
-.feature-card-inline-action:hover {
+.feature-card-action:hover {
   transform: translateY(-1px);
   border-color: rgb(216 197 232 / 34%);
   background: linear-gradient(135deg, rgb(102 117 162 / 72%), rgb(76 91 132 / 68%));
 }
 
-.feature-card-contents {
-  display: grid;
-  gap: 8px;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  background: rgb(9 12 22 / 24%);
-  border: 1px solid rgb(255 255 255 / 8%);
+/* ───────────────────────────────────────────────────────────────────────
+   Container & Sign cards (fcard) — art-forward, no boxy chrome.
+   A full-bleed backdrop layer (authored art via --fcard-art, or a stylized
+   CSS/SVG fallback) sits behind a body that floats its content over the art.
+   ─────────────────────────────────────────────────────────────────────── */
+.fcard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-soft);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 8%),
+    0 10px 26px rgb(8 10 20 / 26%);
 }
 
-.feature-card-contents-header {
+.fcard-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   display: flex;
-  justify-content: space-between;
-  gap: var(--space-2);
-  color: var(--text-primary);
-  font-size: 0.84rem;
-  font-weight: 700;
+  align-items: center;
+  justify-content: center;
 }
 
-.feature-card-item-list {
+/* Authored art fills the card; a scrim keeps overlaid text legible. */
+.fcard.has-art .fcard-bg {
+  background-image: var(--fcard-art);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.fcard.has-art .fcard-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(12 14 24 / 20%) 0%, rgb(12 14 24 / 18%) 42%, rgb(10 12 20 / 78%) 100%);
+}
+
+/* Stylized SVG fallback glyph (no art shipped yet). */
+.fcard-glyph {
+  width: min(58%, 320px);
+  height: auto;
+  opacity: 0.9;
+}
+
+.fcard-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 168px;
+  padding: 16px 18px;
+}
+
+.fcard-head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fcard-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.fcard-eyebrow-container {
+  color: #e1c17c;
+}
+
+.fcard-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.16rem;
+  color: var(--text-heading);
+  text-shadow: 0 1px 8px rgb(8 10 18 / 55%);
+}
+
+.fcard-sub {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+/* Container contents + actions sit in the lower half (the open chest's cavity). */
+.fcard-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fcard-loot {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.feature-card-item {
+.fcard-loot-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  padding: 7px 4px 7px 2px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+
+.fcard-loot-row:last-child {
+  border-bottom: none;
+}
+
+.fcard-loot-name {
   color: var(--text-primary);
+  font-size: 0.88rem;
+}
+
+.fcard-take {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border: 1px solid rgb(226 198 134 / 28%);
+  border-radius: 999px;
+  background: rgb(226 198 134 / 12%);
+  color: #ecd6a0;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft),
+    transform 150ms var(--ease-out-soft);
+}
+
+.fcard-take:hover {
+  background: rgb(226 198 134 / 22%);
+  border-color: rgb(240 214 150 / 55%);
+  transform: translateY(-1px);
+}
+
+.fcard-empty {
+  margin: 0;
+  color: var(--text-muted);
   font-size: 0.84rem;
+  font-style: italic;
+}
+
+.fcard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fcard-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: var(--radius-md);
+  background: rgb(18 22 34 / 52%);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  transition:
+    transform 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft),
+    background 150ms var(--ease-out-soft);
+}
+
+.fcard-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgb(216 197 232 / 38%);
+  background: rgb(28 34 50 / 62%);
+}
+
+.fcard-btn-primary {
+  border-color: rgb(226 198 134 / 46%);
+  background: linear-gradient(135deg, rgb(164 136 82 / 64%), rgb(124 102 62 / 58%));
+  color: #f3e4bf;
+}
+
+.fcard-btn-primary:hover {
+  border-color: rgb(240 214 150 / 70%);
+  background: linear-gradient(135deg, rgb(188 158 100 / 76%), rgb(142 118 74 / 68%));
+}
+
+/* Container card tinting */
+.fcard-container {
+  border-color: rgb(212 178 110 / 24%);
+}
+
+.fcard-container .fcard-bg {
+  color: #e6c587;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgb(226 198 134 / 16%), transparent 58%),
+    linear-gradient(165deg, rgb(74 66 86 / 96%), rgb(50 46 66 / 94%));
+}
+
+.fcard-container.is-closed .fcard-glyph,
+.fcard-container.is-locked .fcard-glyph {
+  opacity: 0.6;
+}
+
+/* Sign card */
+.fcard-sign {
+  border-color: rgb(148 188 160 / 24%);
+}
+
+.fcard-sign .fcard-bg {
+  color: #bcdcc4;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(168 204 178 / 14%), transparent 60%),
+    linear-gradient(165deg, rgb(60 74 92 / 96%), rgb(47 60 78 / 94%));
+}
+
+.fcard-sign-body {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.fcard-eyebrow-sign {
+  color: #b9d6be;
+}
+
+.fcard-sign-text {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text-bright);
+  font-family: var(--font-display);
+  font-size: 1.04rem;
+  font-style: italic;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  text-shadow: 0 1px 10px rgb(8 10 18 / 60%);
+}
+
+.fcard-sign-read {
+  padding: 6px 16px;
+  border: 1px solid rgb(185 214 190 / 30%);
+  border-radius: 999px;
+  background: rgb(185 214 190 / 10%);
+  color: #cfe6d4;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft),
+    transform 150ms var(--ease-out-soft);
+}
+
+.fcard-sign-read:hover {
+  background: rgb(185 214 190 / 20%);
+  border-color: rgb(205 230 212 / 55%);
+  transform: translateY(-1px);
 }
 
 /* Hero treatment for a single locked feature (container or door) — bigger,

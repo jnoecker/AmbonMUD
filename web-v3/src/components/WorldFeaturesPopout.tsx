@@ -59,9 +59,18 @@ function LeverWidget({
   const angle = isUp ? (feature.upAngle ?? -28) : (feature.downAngle ?? 28);
   const handleSrc = feature.handleImage ?? serverAssets["lever_handle"] ?? null;
   const plateSrc = feature.plateImage ?? serverAssets["lever_plate"] ?? null;
+  // Optional backdrop "box" the lever sits inside; the plate + handle ride on
+  // top. Per-feature art wins, then the server-wide default, then a CSS frame.
+  const boxSrc = feature.backgroundImage ?? serverAssets["lever_bg"] ?? null;
 
   return (
-    <div className="lever-widget" onClick={() => onCommand(`pull ${feature.keyword}`)}>
+    <div
+      className={`lever-widget${boxSrc ? " lever-widget-boxed" : ""}`}
+      onClick={() => onCommand(`pull ${feature.keyword}`)}
+    >
+      {boxSrc && (
+        <img className="lever-widget-box" src={boxSrc} alt="" aria-hidden="true" draggable={false} />
+      )}
       {handleSrc ? (
         <div className="lever-widget-art" aria-label={`${feature.name}: ${label}`} role="img">
           {plateSrc && (
@@ -140,6 +149,181 @@ function LeverWidget({
         Pull
       </button>
     </div>
+  );
+}
+
+/** Stylized open-chest used as the container backdrop when no art is shipped. */
+function ChestGlyph() {
+  return (
+    <svg className="fcard-glyph fcard-glyph-chest" viewBox="0 0 160 120" aria-hidden="true">
+      {/* open lid, tilted back */}
+      <path
+        d="M30 52 Q80 6 130 52 L130 60 Q80 22 30 60 Z"
+        fill="currentColor"
+        opacity="0.22"
+      />
+      <path
+        d="M30 52 Q80 6 130 52"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
+      {/* chest body */}
+      <path d="M26 58 H134 V104 a8 8 0 0 1-8 8 H34 a8 8 0 0 1-8-8 Z" fill="currentColor" opacity="0.16" />
+      <path
+        d="M26 58 H134 V104 a8 8 0 0 1-8 8 H34 a8 8 0 0 1-8-8 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        opacity="0.45"
+      />
+      {/* horizontal band + lock */}
+      <line x1="26" y1="78" x2="134" y2="78" stroke="currentColor" strokeWidth="3" opacity="0.4" />
+      <rect x="72" y="72" width="16" height="16" rx="3" fill="currentColor" opacity="0.55" />
+      <circle cx="80" cy="80" r="2.4" fill="rgb(20 22 34)" opacity="0.7" />
+    </svg>
+  );
+}
+
+/** Stylized hanging placard used as the sign backdrop when no art is shipped. */
+function SignGlyph() {
+  return (
+    <svg className="fcard-glyph fcard-glyph-sign" viewBox="0 0 160 120" aria-hidden="true">
+      {/* top rail + ropes */}
+      <line x1="40" y1="16" x2="120" y2="16" stroke="currentColor" strokeWidth="3" opacity="0.4" />
+      <line x1="52" y1="16" x2="46" y2="34" stroke="currentColor" strokeWidth="2.5" opacity="0.4" />
+      <line x1="108" y1="16" x2="114" y2="34" stroke="currentColor" strokeWidth="2.5" opacity="0.4" />
+      {/* board */}
+      <rect x="30" y="32" width="100" height="60" rx="9" fill="currentColor" opacity="0.16" />
+      <rect
+        x="30"
+        y="32"
+        width="100"
+        height="60"
+        rx="9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        opacity="0.45"
+      />
+      {/* inked lines */}
+      <line x1="46" y1="52" x2="114" y2="52" stroke="currentColor" strokeWidth="3" opacity="0.32" />
+      <line x1="46" y1="64" x2="114" y2="64" stroke="currentColor" strokeWidth="3" opacity="0.32" />
+      <line x1="46" y1="76" x2="94" y2="76" stroke="currentColor" strokeWidth="3" opacity="0.32" />
+    </svg>
+  );
+}
+
+function ContainerCard({
+  feature,
+  contents,
+  serverAssets,
+  onCommand,
+}: {
+  feature: RoomFeature;
+  contents: ContainerContents | null;
+  serverAssets: Record<string, string>;
+  onCommand: (cmd: string) => void;
+}) {
+  const bgSrc = feature.backgroundImage ?? serverAssets["container_bg"] ?? null;
+  const isOpen = feature.state === "open";
+  const stateClass = isOpen ? "is-open" : feature.state === "locked" ? "is-locked" : "is-closed";
+  const actions = featureActions(feature);
+  const items = isOpen && contents?.featureId === feature.id ? contents.items : null;
+
+  return (
+    <article
+      className={`fcard fcard-container ${stateClass}${bgSrc ? " has-art" : ""}`}
+      style={bgSrc ? { ["--fcard-art" as string]: `url("${bgSrc}")` } : undefined}
+    >
+      <div className="fcard-bg" aria-hidden="true">{!bgSrc && <ChestGlyph />}</div>
+      <div className="fcard-body">
+        <header className="fcard-head">
+          <span className="fcard-eyebrow fcard-eyebrow-container">Container</span>
+          <h4 className="fcard-title">{feature.name}</h4>
+          <p className="fcard-sub">
+            {feature.state === "locked"
+              ? feature.keyRequired
+                ? "Locked — a key is required."
+                : "Locked tight."
+              : isOpen
+                ? "Open"
+                : "Closed"}
+          </p>
+        </header>
+
+        <div className="fcard-foot">
+          {isOpen && items !== null && (
+            items.length === 0 ? (
+              <p className="fcard-empty">Nothing inside.</p>
+            ) : (
+              <ul className="fcard-loot" role="list">
+                {items.map((item, index) => (
+                  <li key={`${item.keyword}-${index}`} className="fcard-loot-row">
+                    <span className="fcard-loot-name">{item.name}</span>
+                    <button
+                      type="button"
+                      className="fcard-take"
+                      onClick={() => onCommand(`get ${item.keyword} from ${feature.keyword}`)}
+                    >
+                      Take
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )
+          )}
+          {actions.length > 0 && (
+            <div className="fcard-actions">
+              {actions.map((action) => (
+                <button
+                  key={`${feature.id}-${action.command}`}
+                  type="button"
+                  className={`fcard-btn${action.label === "Open" || action.label === "Unlock" ? " fcard-btn-primary" : ""}`}
+                  onClick={() => onCommand(action.command)}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SignCard({
+  feature,
+  serverAssets,
+  onCommand,
+}: {
+  feature: RoomFeature;
+  serverAssets: Record<string, string>;
+  onCommand: (cmd: string) => void;
+}) {
+  const bgSrc = feature.backgroundImage ?? serverAssets["sign_bg"] ?? null;
+
+  return (
+    <article
+      className={`fcard fcard-sign${bgSrc ? " has-art" : ""}`}
+      style={bgSrc ? { ["--fcard-art" as string]: `url("${bgSrc}")` } : undefined}
+    >
+      <div className="fcard-bg" aria-hidden="true">{!bgSrc && <SignGlyph />}</div>
+      <div className="fcard-body fcard-sign-body">
+        <span className="fcard-eyebrow fcard-eyebrow-sign">{feature.name}</span>
+        {feature.text && <p className="fcard-sign-text">{feature.text}</p>}
+        <button
+          type="button"
+          className="fcard-sign-read"
+          onClick={() => onCommand(`read ${feature.keyword}`)}
+        >
+          Read aloud
+        </button>
+      </div>
+    </article>
   );
 }
 
@@ -434,25 +618,31 @@ export function WorldFeaturesPopout({
             return <LeverWidget key={feature.id} feature={feature} serverAssets={serverAssets} onCommand={onCommand} />;
           }
 
-          if (
-            feature.type === "container" &&
-            feature.state === "locked" &&
-            visibleFeatures.length === 1
-          ) {
-            return <LockedContainerHero key={feature.id} feature={feature} onCommand={onCommand} />;
+          if (feature.type === "container") {
+            if (feature.state === "locked" && visibleFeatures.length === 1) {
+              return <LockedContainerHero key={feature.id} feature={feature} onCommand={onCommand} />;
+            }
+            const contents = containerContents?.featureId === feature.id ? containerContents : null;
+            return (
+              <ContainerCard
+                key={feature.id}
+                feature={feature}
+                contents={contents}
+                serverAssets={serverAssets}
+                onCommand={onCommand}
+              />
+            );
           }
 
-          if (
-            feature.type === "door" &&
-            feature.state === "locked" &&
-            visibleFeatures.length === 1
-          ) {
+          if (feature.type === "sign") {
+            return <SignCard key={feature.id} feature={feature} serverAssets={serverAssets} onCommand={onCommand} />;
+          }
+
+          // Doors — generic card.
+          if (feature.state === "locked" && visibleFeatures.length === 1) {
             return <LockedDoorHero key={feature.id} feature={feature} onCommand={onCommand} />;
           }
 
-          const contents = feature.type === "container" && containerContents?.featureId === feature.id
-            ? containerContents
-            : null;
           const actions = featureActions(feature);
           const label = stateLabel(feature);
 
@@ -486,10 +676,6 @@ export function WorldFeaturesPopout({
                 <span className="feature-card-detail-chip">Keyword: {feature.keyword}</span>
               </div>
 
-              {feature.type === "sign" && feature.text && (
-                <p className="feature-card-sign-text">{feature.text}</p>
-              )}
-
               {actions.length > 0 && (
                 <div className="feature-card-actions">
                   {actions.map((action) => (
@@ -502,33 +688,6 @@ export function WorldFeaturesPopout({
                       {action.label}
                     </button>
                   ))}
-                </div>
-              )}
-
-              {feature.type === "container" && contents && (
-                <div className="feature-card-contents">
-                  <div className="feature-card-contents-header">
-                    <span>Inside {contents.name}</span>
-                    <span>{contents.items.length} item{contents.items.length === 1 ? "" : "s"}</span>
-                  </div>
-                  {contents.items.length === 0 ? (
-                    <p className="feature-card-empty">Nothing is inside right now.</p>
-                  ) : (
-                    <ul className="feature-card-item-list" role="list">
-                      {contents.items.map((item, index) => (
-                        <li key={`${item.keyword}-${index}`} className="feature-card-item">
-                          <span>{item.name}</span>
-                          <button
-                            type="button"
-                            className="feature-card-inline-action"
-                            onClick={() => onCommand(`get ${item.keyword} from ${contents.keyword}`)}
-                          >
-                            Take
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
               )}
             </article>
