@@ -519,6 +519,7 @@ internal class LoginFlowHandler(
                 )
                 when (createResult) {
                     dev.ambon.engine.CreateResult.Ok -> {
+                        metrics.onGameEvent("demo", "created")
                         outbound.send(
                             OutboundEvent.SendInfo(
                                 sid,

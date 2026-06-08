@@ -847,6 +847,7 @@ class GameEngine(
             onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
             onSummonPet = { sid, templateKey, durationMs ->
                 val player = players.get(sid) ?: return@AbilitySystem
+                metrics.onGameEvent("pet", "summoned")
                 // Snapshot existing pets before summon so we can broadcast their removal —
                 // summon() replaces the old pet internally but clients don't hear about it,
                 // leaving a ghost sprite until the owner moves rooms. See issue #1093.
@@ -1019,6 +1020,7 @@ class GameEngine(
         }
         // Single assignment: a second `onPvpKill =` would silently overwrite the first.
         combatSystem.onPvpKill = { killerSid ->
+            metrics.onGameEvent("duel", "completed")
             notifyDailyQuest(killerSid, "pvpKill")
             val killer = players.get(killerSid)
             if (killer != null &&
@@ -1036,7 +1038,10 @@ class GameEngine(
         }
         statusEffectSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
 
+        questSystem.onQuestAccepted = { _, _ -> metrics.onGameEvent("quest", "accepted") }
+        questSystem.onQuestAbandoned = { _, _ -> metrics.onGameEvent("quest", "abandoned") }
         questSystem.onQuestCompleted = { sid, questId ->
+            metrics.onGameEvent("quest", "completed")
             achievementSystem.onQuestCompleted(sid, questId)
             val player = players.get(sid)
             if (player != null) {
@@ -1107,7 +1112,10 @@ class GameEngine(
             gmcpEmitter.sendCharItemsAdd(sid, item)
             questSystem.onItemCollected(sid, item)
         }
-        guildSystem?.onGuildCreated = { sid -> achievementSystem.onGuildCreated(sid) }
+        guildSystem?.onGuildCreated = { sid ->
+            metrics.onGameEvent("guild", "created")
+            achievementSystem.onGuildCreated(sid)
+        }
     }
 
     private val behaviorTreeSystem: BehaviorTreeSystem =
@@ -1224,6 +1232,7 @@ class GameEngine(
             puzzleSystem = puzzleSystem,
             bankConfig = engineConfig.bank,
             stylistConfig = engineConfig.stylist,
+            metrics = metrics,
         )
 
         // Push a fresh room look when a dead player respawns, so the web client
@@ -1361,6 +1370,7 @@ class GameEngine(
                 gatheringRegistry = gatheringRegistry,
                 markVitalsDirty = ::markVitalsDirty,
                 onItemCrafted = { sid ->
+                    metrics.onGameEvent("crafting", "craft")
                     achievementSystem.onItemCrafted(sid)
                     notifyDailyQuest(sid, "craft")
                     globalQuestSystem?.onEvent(sid, GlobalQuestObjectiveType.CRAFT)
@@ -1380,6 +1390,7 @@ class GameEngine(
                     }
                 },
                 onItemGathered = { sid, skill ->
+                    metrics.onGameEvent("crafting", "gather")
                     achievementSystem.onItemGathered(sid, skill)
                     notifyDailyQuest(sid, "gather")
                     globalQuestSystem?.onEvent(sid, GlobalQuestObjectiveType.GATHER)
@@ -1434,7 +1445,10 @@ class GameEngine(
             ClaimHandler(
                 ctx = ctx,
                 getEngineScope = { engineScope },
-                onClaimed = { sid -> issueAuthToken(sid) },
+                onClaimed = { sid ->
+                    metrics.onGameEvent("demo", "claimed")
+                    issueAuthToken(sid)
+                },
             ),
             HousingHandler(
                 ctx = ctx,
@@ -2807,6 +2821,7 @@ class GameEngine(
         val inst = dungeonManager.findInstanceByBossMob(mobId)
         if (inst == null || inst.completed) return
         dungeonManager.markComplete(inst)
+        metrics.onGameEvent("dungeon", "completed")
         val completionHeadline =
             "** The dungeon boss has been defeated! The ${inst.template.name} is complete! **"
         for (sid in inst.members) {

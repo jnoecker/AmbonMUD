@@ -92,6 +92,7 @@ class LotteryHandler(
 
             when (result) {
                 is LotteryBuyResult.Success -> {
+                    ctx.metrics.onGameEvent("tavern", "lottery_ticket", count = result.count.toLong())
                     val message =
                         "You purchased ${result.count} lottery ticket(s) for ${result.totalCost} gold. " +
                             "You now have ${result.totalTickets} ticket(s)."
@@ -191,6 +192,8 @@ class LotteryHandler(
 
             when (result) {
                 is GambleResult.Win -> {
+                    ctx.metrics.onGameEvent("tavern", "gamble")
+                    ctx.metrics.onGameEvent("tavern", "gamble_win")
                     me.gold = me.gold - result.bet + result.payout
                     outbound.send(
                         OutboundEvent.SendInfo(
@@ -216,6 +219,7 @@ class LotteryHandler(
                 }
 
                 is GambleResult.Lose -> {
+                    ctx.metrics.onGameEvent("tavern", "gamble")
                     me.gold -= result.bet
                     outbound.send(
                         OutboundEvent.SendInfo(

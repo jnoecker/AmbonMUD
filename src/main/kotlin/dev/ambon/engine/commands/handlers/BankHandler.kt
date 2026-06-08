@@ -18,6 +18,7 @@ class BankHandler(
     private val items = ctx.items
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val metrics = ctx.metrics
 
     override fun register(router: CommandRouter) {
         router.on<Command.Bank.DepositGold> { sid, cmd -> handleDepositGold(sid, cmd) }
@@ -52,6 +53,7 @@ class BankHandler(
         me.gold -= amount
         me.bankGold += amount
         markVitalsDirty?.invoke(sessionId)
+        metrics.onGameEvent("bank", "deposit_gold")
         outbound.send(OutboundEvent.SendInfo(sessionId, "You deposit $amount gold. Bank balance: ${me.bankGold} gold."))
         emitBankState(sessionId, me)
     }
@@ -72,6 +74,7 @@ class BankHandler(
         me.bankGold -= amount
         me.gold += amount
         markVitalsDirty?.invoke(sessionId)
+        metrics.onGameEvent("bank", "withdraw_gold")
         outbound.send(OutboundEvent.SendInfo(sessionId, "You withdraw $amount gold. Bank balance: ${me.bankGold} gold."))
         emitBankState(sessionId, me)
     }
@@ -92,6 +95,7 @@ class BankHandler(
         }
 
         me.bankItems.add(removed)
+        metrics.onGameEvent("bank", "deposit_item")
         outbound.send(OutboundEvent.SendInfo(sessionId, "You deposit ${removed.item.displayName} into your bank vault."))
         syncItemsGmcp(sessionId, items, gmcpEmitter)
         emitBankState(sessionId, me)
@@ -112,6 +116,7 @@ class BankHandler(
 
         val withdrawn = me.bankItems.removeAt(idx)
         items.addToInventory(sessionId, withdrawn)
+        metrics.onGameEvent("bank", "withdraw_item")
         outbound.send(OutboundEvent.SendInfo(sessionId, "You withdraw ${withdrawn.item.displayName} from your bank vault."))
         syncItemsGmcp(sessionId, items, gmcpEmitter)
         emitBankState(sessionId, me)

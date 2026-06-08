@@ -17,6 +17,7 @@ class EnchantHandler(
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
     private val items = ctx.items
+    private val metrics = ctx.metrics
 
     override fun register(router: CommandRouter) {
         router.on<Command.Enchant> { sid, cmd -> handleEnchant(sid, cmd) }
@@ -28,6 +29,7 @@ class EnchantHandler(
 
         when (val result = enchantSystem.enchant(sessionId, cmd.itemKeyword, cmd.enchantmentId, player.craftingSkills)) {
             is EnchantResult.Success -> {
+                metrics.onGameEvent("crafting", "enchant")
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,

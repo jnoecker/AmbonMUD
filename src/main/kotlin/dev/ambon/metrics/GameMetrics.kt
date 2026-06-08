@@ -231,6 +231,23 @@ class GameMetrics(
     private val schedulerActionsDroppedCounter =
         Counter.builder("scheduler_actions_dropped_total").register(registry)
 
+    /**
+     * Pre-registered gameplay event counters — bounded cardinality, one per
+     * (system, event) pair in [KNOWN_GAME_EVENTS]. Covers the systems added
+     * after the original dashboard setup (auction, tavern, bank, trade, duel,
+     * crafting, dungeons, housing, pets, prestige, puzzles, demo accounts).
+     */
+    private val gameEventCounters: Map<Pair<String, String>, Counter> =
+        KNOWN_GAME_EVENTS
+            .flatMap { (system, events) -> events.map { system to it } }
+            .associateWith { (system, event) ->
+                Counter
+                    .builder("game_events_total")
+                    .tag("system", system)
+                    .tag("event", event)
+                    .register(registry)
+            }
+
     private val xpAwardedKillCounter =
         Counter.builder("xp_awarded_total").tag("source", "kill").register(registry)
     private val xpAwardedQuestCounter =
@@ -378,6 +395,25 @@ class GameMetrics(
 
     fun onLevelUp() = levelUpsCounter.increment()
 
+    /**
+     * Increments `game_events_total{system, event}`. Only pairs declared in
+     * [KNOWN_GAME_EVENTS] are accepted — unknown pairs are logged and dropped
+     * to prevent metric cardinality explosion (same contract as
+     * [recordTickPhase]).
+     */
+    fun onGameEvent(
+        system: String,
+        event: String,
+        count: Long = 1L,
+    ) {
+        val counter = gameEventCounters[system to event]
+        if (counter == null) {
+            log.warn { "Unknown game event '$system/$event' — dropping metric to prevent cardinality explosion" }
+            return
+        }
+        counter.increment(count.toDouble())
+    }
+
     fun onPlayerDeath() = playerDeathsCounter.increment()
 
     fun onPlayerSave() = playerSavesCounter.increment()
@@ -451,6 +487,14 @@ class GameMetrics(
         Gauge.builder("players_online") { supplier().toDouble() }.register(registry)
     }
 
+    /**
+     * Online players still on an unclaimed demo character (#1226). Together
+     * with `players_online` this splits traffic into demo vs registered.
+     */
+    fun bindDemoPlayersOnline(supplier: () -> Int) {
+        Gauge.builder("demo_players_online") { supplier().toDouble() }.register(registry)
+    }
+
     fun bindMobRegistry(supplier: () -> Int) {
         Gauge.builder("mobs_alive") { supplier().toDouble() }.register(registry)
     }
@@ -512,6 +556,30 @@ class GameMetrics(
             "simulation",
             "gmcp_flush",
             "outbound_flush",
+        )
+
+        /**
+         * Pre-registered (system → events) pairs accepted by [onGameEvent].
+         * Add new systems/events here — anything else is dropped at runtime.
+         */
+        val KNOWN_GAME_EVENTS: Map<String, Set<String>> = mapOf(
+            "demo" to setOf("created", "claimed"),
+            "quest" to setOf("accepted", "completed", "abandoned"),
+            "crafting" to setOf("craft", "gather", "enchant"),
+            "auction" to setOf("listed", "sold", "cancelled"),
+            "tavern" to setOf("lottery_ticket", "gamble", "gamble_win"),
+            "bank" to setOf("deposit_gold", "withdraw_gold", "deposit_item", "withdraw_item"),
+            "trade" to setOf("completed"),
+            "duel" to setOf("started", "completed"),
+            "dungeon" to setOf("entered", "completed"),
+            "puzzle" to setOf("solved"),
+            "housing" to setOf("purchased", "expanded"),
+            "stylist" to setOf("race_change"),
+            "prestige" to setOf("prestiged"),
+            "pet" to setOf("summoned"),
+            "guild" to setOf("created"),
+            "mail" to setOf("sent"),
+            "ability" to setOf("cast"),
         )
 
         fun noop(): GameMetrics = GameMetrics(SimpleMeterRegistry(), bindJvmMetrics = false)

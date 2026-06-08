@@ -14,6 +14,10 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Mirror production: dashboards are anonymously viewable (read-only).
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:

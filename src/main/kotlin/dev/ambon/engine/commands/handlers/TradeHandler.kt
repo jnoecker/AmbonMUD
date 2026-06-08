@@ -21,6 +21,7 @@ class TradeHandler(
     private val items = ctx.items
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val metrics = ctx.metrics
 
     override fun register(router: CommandRouter) {
         router.on<Command.TradeRequest> { sid, cmd -> handleTradeRequest(sid, cmd) }
@@ -224,6 +225,8 @@ class TradeHandler(
             }
             is TradeResult.Success -> { /* fall through to summary */ }
         }
+
+        metrics.onGameEvent("trade", "completed")
 
         // Build summary
         val initItemNames = session.initiatorItems.joinToString(", ") { it.item.displayName }.ifEmpty { "nothing" }
