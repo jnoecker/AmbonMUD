@@ -2043,6 +2043,8 @@ class GmcpEmitterTest {
                 guild = "KoR",
                 groupSize = 3,
                 idleSeconds = 120,
+                sprite = "/img/alice.png",
+                description = "A weathered sellsword.",
             ),
             WhoEntry(
                 name = "Bob",
@@ -2067,6 +2069,8 @@ class GmcpEmitterTest {
         assertTrue(json.contains("\"Champion\""), "Should contain title")
         assertTrue(json.contains("\"KoR\""), "Should contain guild tag")
         assertTrue(json.contains("\"WARRIOR\""), "Should contain class as 'class' JSON key")
+        assertTrue(json.contains("\"/img/alice.png\""), "Should contain the resolved sprite URL")
+        assertTrue(json.contains("\"A weathered sellsword.\""), "Should contain the RP description")
     }
 
     @Test

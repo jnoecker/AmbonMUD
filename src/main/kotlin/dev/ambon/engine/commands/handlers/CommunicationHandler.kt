@@ -276,6 +276,8 @@ class CommunicationHandler(
             guild = p.guildTag,
             groupSize = group?.members?.size ?: 0,
             idleSeconds = if (p.lastActivityEpochMs > 0) (nowMs - p.lastActivityEpochMs) / 1000 else 0,
+            sprite = gmcpEmitter?.resolveSprite(p) ?: "",
+            description = p.description,
         )
     }
 

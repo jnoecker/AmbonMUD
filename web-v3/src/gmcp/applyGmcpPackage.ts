@@ -1620,6 +1620,8 @@ export function applyGmcpPackage(
           guild: typeof p.guild === "string" ? p.guild : null,
           groupSize: safeNumber(p.groupSize),
           idle: safeNumber(p.idle),
+          sprite: typeof p.sprite === "string" && p.sprite.length > 0 ? p.sprite : null,
+          description: typeof p.description === "string" && p.description.length > 0 ? p.description : null,
         }));
       ctx.setWhoPlayers(players);
       break;

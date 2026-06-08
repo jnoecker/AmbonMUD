@@ -11,6 +11,8 @@ import { WorldFeaturesPopout } from "./components/WorldFeaturesPopout";
 import { featureArt, pickFocusedFeature } from "./components/worldFeatures";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { ChatBoardPanel } from "./components/panels/ChatBoardPanel";
+import { WhoBoardPanel } from "./components/panels/WhoBoardPanel";
+import { PlayerExaminePanel } from "./components/panels/PlayerExaminePanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
 import { QuestPanel } from "./components/panels/QuestPanel";
@@ -58,6 +60,7 @@ import type {
   LookTargetInfo,
   MonsterEntry,
   PopoutPanel,
+  WhoPlayer,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
@@ -175,6 +178,8 @@ function App() {
 
   // Monster-manual / bestiary panel (clicked mob or pet)
   const [monster, setMonster] = useState<MonsterEntry | null>(null);
+  // Player examine card (Examine from the Who board) — reuses the manual style.
+  const [examinePlayer, setExaminePlayer] = useState<WhoPlayer | null>(null);
   // Item card (clicked room item)
   const [item, setItem] = useState<ItemEntry | null>(null);
   // When Examine is clicked we `look` the item and route the resulting
@@ -848,6 +853,7 @@ function App() {
       case "questOffers": return "Quest Offers";
       case "chat": return "Social";
       case "chatboard": return "Social Board";
+      case "whoboard": return "Who";
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
       case "features": return featurePanelFeature
@@ -931,6 +937,8 @@ function App() {
             ? "tome"
             : drawerPanel === "chatboard"
             ? "board"
+            : drawerPanel === "whoboard"
+            ? "starframe"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -961,6 +969,8 @@ function App() {
           drawerPanel === "puzzle"
             ? (state.puzzle?.puzzles.find((p) => p.backgroundImage)?.backgroundImage
                 ?? state.serverAssets["puzzle_bg"])
+            : drawerPanel === "whoboard"
+            ? state.serverAssets["who_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -989,7 +999,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
@@ -1095,13 +1105,29 @@ function App() {
           />
         )}
 
+        {drawerPanel === "whoboard" && (
+          <WhoBoardPanel
+            connected={connected}
+            canChat={connected && hasCharacterProfile}
+            playerName={state.character.name}
+            whoPlayers={state.whoPlayers}
+            serverAssets={state.serverAssets}
+            onRequestWho={() => sendCommand("who")}
+            onExamine={(p) => setExaminePlayer(p)}
+            onTellPlayer={(name) => {
+              state.setActiveChatChannel("tell");
+              state.setTellTarget(name);
+              openPanel("chatboard");
+            }}
+          />
+        )}
+
         {drawerPanel === "chat" && (
           <ChatPanel
             connected={connected}
             canChat={connected && hasCharacterProfile}
             playerName={state.character.name}
             chatByChannel={state.chatByChannel}
-            whoPlayers={state.whoPlayers}
             groupInfo={state.groupInfo}
             pendingGroupInvite={state.pendingGroupInvite}
             guildInfo={state.guildInfo}
@@ -1110,7 +1136,6 @@ function App() {
             guildHall={state.guildHall}
             friends={state.friends}
             friendNotifications={state.friendNotifications}
-            onRequestWho={() => sendCommand("who")}
             onSendMessage={sendChatMessage}
             onTellPlayer={(name) => {
               state.setActiveChatChannel("tell");
@@ -1869,6 +1894,22 @@ function App() {
           onDialogueEnd={() => state.setDialogue(null)}
           onShop={() => { sendCommand("list"); openPanel("shop"); }}
           onVideo={(url) => setVideoUrl(url)}
+        />
+      )}
+
+      {/* Player examine — Who-board "Examine" opens the player in the manual style. */}
+      {examinePlayer && (
+        <PlayerExaminePanel
+          key={examinePlayer.name}
+          player={examinePlayer}
+          selfName={state.character.name}
+          bg={state.serverAssets["monster_manual_bg"]}
+          onClose={() => setExaminePlayer(null)}
+          onTellPlayer={(name) => {
+            state.setActiveChatChannel("tell");
+            state.setTellTarget(name);
+            openPanel("chatboard");
+          }}
         />
       )}
 
