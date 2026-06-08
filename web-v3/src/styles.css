@@ -22821,7 +22821,7 @@ html:has(.game-shell),
 }
 
 .cc-derived-label { font-size: 0.74rem; font-weight: 700; color: var(--cc-ink-dim); text-transform: uppercase; letter-spacing: 0.05em; }
-.cc-derived-value { font-size: 1.02rem; font-weight: 800; color: var(--cc-brass-soft); }
+.cc-derived-value { font-size: 0.98rem; font-weight: 800; color: var(--cc-brass-soft); white-space: nowrap; }
 
 /* ── Stats plaque ──────────────────────────────────────────── */
 .cc-stats { padding: 12px 10px; }

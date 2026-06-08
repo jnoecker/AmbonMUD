@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { formatCompact } from "../../utils";
 import type {
   AchievementData,
   CharacterInfo,
@@ -85,6 +86,7 @@ function CharBar({
   value,
   max,
   text,
+  title,
   pct,
 }: {
   kind: "hp" | "mana" | "xp";
@@ -92,9 +94,11 @@ function CharBar({
   value?: number;
   max?: number;
   text?: string;
+  title?: string;
   pct: number;
 }) {
   const clamped = Math.max(0, Math.min(100, pct));
+  const display = text ?? (value != null && max != null ? `${formatCompact(value)} / ${formatCompact(max)}` : "");
   return (
     <div className={`cc-bar cc-bar-${kind}`}>
       <span className="cc-bar-icon" aria-hidden="true" />
@@ -102,7 +106,7 @@ function CharBar({
       <span className="cc-bar-track">
         <span className="cc-bar-fill" style={{ width: `${clamped}%` }} />
       </span>
-      <span className="cc-bar-value">{text ?? (value != null && max != null ? `${value} / ${max}` : "")}</span>
+      <span className="cc-bar-value" title={title ?? (value != null && max != null ? `${value} / ${max}` : undefined)}>{display}</span>
     </div>
   );
 }
@@ -389,8 +393,11 @@ export function CharacterPanel({
           <div className="cc-derived">
             <div className="cc-plaque cc-derived-item">
               <span className="cc-derived-label">Damage</span>
-              <span className="cc-derived-value">
-                {charStats ? `${charStats.baseDamageMin} – ${charStats.baseDamageMax}` : "—"}
+              <span
+                className="cc-derived-value"
+                title={charStats ? `${charStats.baseDamageMin.toLocaleString()} – ${charStats.baseDamageMax.toLocaleString()}` : undefined}
+              >
+                {charStats ? `${formatCompact(charStats.baseDamageMin)} – ${formatCompact(charStats.baseDamageMax)}` : "—"}
               </span>
             </div>
             <div className="cc-plaque cc-derived-item">
