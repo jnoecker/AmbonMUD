@@ -3133,6 +3133,17 @@ class GmcpEmitter(
         val locked: Boolean? = null,
         val keyRequired: Boolean? = null,
         val text: String? = null,
+        // Optional custom lever art (static per-lever; rides along with the feature).
+        val plateImage: String? = null,
+        val handleImage: String? = null,
+        val leverPivot: LeverPivotPayload? = null,
+        val upAngle: Double? = null,
+        val downAngle: Double? = null,
+    )
+
+    data class LeverPivotPayload(
+        val x: Double,
+        val y: Double,
     )
 
     data class ContainerItemPayload(

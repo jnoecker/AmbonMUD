@@ -1098,6 +1098,7 @@ function App() {
             roomFeatures={state.roomFeatures}
             containerContents={state.containerContents}
             preferredType={featureFocus}
+            serverAssets={state.serverAssets}
             onCommand={sendCommand}
           />
         )}

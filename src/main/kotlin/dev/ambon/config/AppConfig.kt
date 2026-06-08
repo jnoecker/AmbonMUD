@@ -3036,6 +3036,11 @@ data class ImagesConfig(
             "feature_door" to "global_assets/feature_door.png",
             "feature_container" to "global_assets/feature_container.png",
             "feature_lever" to "global_assets/feature_lever.png",
+            // Server-wide default lever art (plate + rotating handle). Used for levers
+            // that don't author their own plateImage/handleImage; falls back further to
+            // the built-in vector lever when these aren't present either.
+            "lever_plate" to "global_assets/lever_plate.png",
+            "lever_handle" to "global_assets/lever_handle.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

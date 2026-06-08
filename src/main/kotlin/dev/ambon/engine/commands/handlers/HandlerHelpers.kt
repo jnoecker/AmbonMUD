@@ -593,6 +593,11 @@ internal fun buildFeaturePayload(
             keyword = feature.keyword,
             type = "lever",
             state = state.name.lowercase(),
+            plateImage = feature.plateImage,
+            handleImage = feature.handleImage,
+            leverPivot = feature.leverPivot?.let { GmcpEmitter.LeverPivotPayload(it.x, it.y) },
+            upAngle = feature.upAngle,
+            downAngle = feature.downAngle,
         )
     }
     is RoomFeature.Sign -> GmcpEmitter.RoomFeaturePayload(

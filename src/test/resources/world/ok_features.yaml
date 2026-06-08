@@ -30,6 +30,16 @@ rooms:
         displayName: "a notice board"
         keyword: board
         text: "Welcome to the test zone."
+      brass_lever:
+        type: LEVER
+        displayName: "an ostentatious brass lever"
+        keyword: brass
+        initialState: down
+        plateImage: "plate123.webp"
+        handleImage: "handle456.webp"
+        leverPivot: { x: 0.4, y: 0.9 }
+        upAngle: -30
+        downAngle: 35
 
   vault:
     title: "Vault"

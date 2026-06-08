@@ -1427,6 +1427,17 @@ export function applyGmcpPackage(
             locked: typeof e.locked === "boolean" ? e.locked : null,
             keyRequired: typeof e.keyRequired === "boolean" ? e.keyRequired : null,
             text: typeof e.text === "string" ? e.text : null,
+            plateImage: typeof e.plateImage === "string" ? e.plateImage : null,
+            handleImage: typeof e.handleImage === "string" ? e.handleImage : null,
+            leverPivot:
+              e.leverPivot && typeof e.leverPivot === "object"
+                ? {
+                    x: typeof (e.leverPivot as Record<string, unknown>).x === "number" ? (e.leverPivot as Record<string, number>).x : 0.5,
+                    y: typeof (e.leverPivot as Record<string, unknown>).y === "number" ? (e.leverPivot as Record<string, number>).y : 0.85,
+                  }
+                : null,
+            upAngle: typeof e.upAngle === "number" ? e.upAngle : null,
+            downAngle: typeof e.downAngle === "number" ? e.downAngle : null,
           })),
       );
       break;

@@ -680,6 +680,16 @@ export interface RoomFeature {
   locked: boolean | null;
   keyRequired: boolean | null;
   text: string | null;
+  /**
+   * Optional custom lever art (LEVER only): a static plate plus a handle that
+   * rotates around {@link leverPivot} between {@link upAngle}/{@link downAngle}.
+   * Image fields are fully-resolved URLs. Absent → the built-in vector lever.
+   */
+  plateImage: string | null;
+  handleImage: string | null;
+  leverPivot: { x: number; y: number } | null;
+  upAngle: number | null;
+  downAngle: number | null;
 }
 
 export interface ContainerContents {

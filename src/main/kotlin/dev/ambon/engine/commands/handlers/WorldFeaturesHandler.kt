@@ -57,7 +57,9 @@ class WorldFeaturesHandler(
             LockableState.OPEN -> outbound.send(OutboundEvent.SendError(sessionId, "${theCap(lockable.displayName)} is already open."))
             LockableState.CLOSED -> {
                 lockable.applyState(LockableState.OPEN)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You open ${the(lockable.displayName)}."))
+                val msg = "You open ${the(lockable.displayName)}."
+                outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+                gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "features", command = "open")
                 broadcastToRoomExcept(me.roomId, sessionId, "${me.name} opens ${the(lockable.displayName)}.", players, outbound)
                 world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
             }
@@ -71,7 +73,9 @@ class WorldFeaturesHandler(
         when (lockable.state) {
             LockableState.OPEN -> {
                 lockable.applyState(LockableState.CLOSED)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You close ${the(lockable.displayName)}."))
+                val msg = "You close ${the(lockable.displayName)}."
+                outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+                gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "features", command = "close")
                 broadcastToRoomExcept(me.roomId, sessionId, "${me.name} closes ${the(lockable.displayName)}.", players, outbound)
                 world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
             }
@@ -229,6 +233,7 @@ class WorldFeaturesHandler(
             return
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, feature.text))
+        gmcpEmitter?.sendUiFeedback(sessionId, "info", feature.text, scope = "features", command = "read")
     }
 
     private suspend fun applyKeyAction(
@@ -245,7 +250,9 @@ class WorldFeaturesHandler(
         } else {
             lockable.applyState(newState)
             if (lockable.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You $verb ${the(lockable.displayName)}."))
+            val msg = "You $verb ${the(lockable.displayName)}."
+            outbound.send(OutboundEvent.SendInfo(sessionId, msg))
+            gmcpEmitter?.sendUiFeedback(sessionId, "success", msg, scope = "features", command = verb)
             broadcastToRoomExcept(
                 me.roomId,
                 sessionId,
