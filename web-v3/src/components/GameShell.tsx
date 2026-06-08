@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { PixiCanvas } from "../canvas/PixiCanvas";
 import { CombatLog } from "./CombatLog";
 import { RoomPanel } from "./RoomPanel";
@@ -75,6 +75,43 @@ export function GameShell({
 }: GameShellProps) {
   const loggedIn = connected && hasCharacterProfile;
   const [signZoom, setSignZoom] = useState(false);
+
+  // Services stack (Help / Social / Mail) auto-collapses to a slim handle at
+  // the right edge so it doesn't sit over the minimap. Tapping the handle
+  // reveals the icons; they tuck away again after a few seconds of no use.
+  // (Desktop gets hover-to-peek via CSS, independent of this state.)
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const servicesCollapseTimer = useRef<number | null>(null);
+
+  const scheduleServicesCollapse = useCallback(() => {
+    if (servicesCollapseTimer.current !== null) window.clearTimeout(servicesCollapseTimer.current);
+    servicesCollapseTimer.current = window.setTimeout(() => setServicesOpen(false), 3500);
+  }, []);
+
+  const openServices = useCallback(() => {
+    setServicesOpen(true);
+    scheduleServicesCollapse();
+  }, [scheduleServicesCollapse]);
+
+  const closeServices = useCallback(() => {
+    if (servicesCollapseTimer.current !== null) window.clearTimeout(servicesCollapseTimer.current);
+    setServicesOpen(false);
+  }, []);
+
+  const openServicePanel = useCallback(
+    (panel: PopoutPanel) => {
+      onOpenPanel(panel);
+      closeServices();
+    },
+    [onOpenPanel, closeServices],
+  );
+
+  useEffect(
+    () => () => {
+      if (servicesCollapseTimer.current !== null) window.clearTimeout(servicesCollapseTimer.current);
+    },
+    [],
+  );
 
   // Dismiss the enlarged sign on Escape.
   useEffect(() => {
@@ -181,42 +218,53 @@ export function GameShell({
             />
 
             {/* Services stack — Help / Social / Mail, top-right under the minimap.
-                Tiny round widget buttons; the corner overlaps the minimap's
-                decorative torn margin only. */}
-            <nav className="canvas-hud-stack" aria-label="Services">
+                Auto-collapses to a slim handle so it doesn't crowd the minimap;
+                tap the handle (or hover on desktop) to reveal the widgets. */}
+            <nav className={`canvas-hud-stack${servicesOpen ? " is-open" : ""}`} aria-label="Services">
               <button
                 type="button"
-                className="hud-stack-btn"
-                onClick={() => onOpenPanel("help")}
-                title="Help"
-                aria-label="Help"
+                className="hud-stack-toggle"
+                aria-label={servicesOpen ? "Hide services" : "Show services"}
+                aria-expanded={servicesOpen}
+                onClick={() => (servicesOpen ? closeServices() : openServices())}
               >
-                {serverAssets["help_widget"]
-                  ? <img className="hud-stack-img" src={serverAssets["help_widget"]} alt="" />
-                  : <span className="hud-stack-glyph">?</span>}
+                <span className="hud-stack-toggle-glyph" aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                className="hud-stack-btn"
-                onClick={() => onOpenPanel("chat")}
-                title="Social"
-                aria-label="Social"
-              >
-                {serverAssets["social_widget"]
-                  ? <img className="hud-stack-img" src={serverAssets["social_widget"]} alt="" />
-                  : <span className="hud-stack-glyph">☺</span>}
-              </button>
-              <button
-                type="button"
-                className="hud-stack-btn"
-                onClick={() => onOpenPanel("mail")}
-                title="Mail"
-                aria-label="Mail"
-              >
-                {serverAssets["mail_widget"]
-                  ? <img className="hud-stack-img" src={serverAssets["mail_widget"]} alt="" />
-                  : <span className="hud-stack-glyph">✉</span>}
-              </button>
+              <div className="hud-stack-items" onPointerDown={scheduleServicesCollapse}>
+                <button
+                  type="button"
+                  className="hud-stack-btn"
+                  onClick={() => openServicePanel("help")}
+                  title="Help"
+                  aria-label="Help"
+                >
+                  {serverAssets["help_widget"]
+                    ? <img className="hud-stack-img" src={serverAssets["help_widget"]} alt="" />
+                    : <span className="hud-stack-glyph">?</span>}
+                </button>
+                <button
+                  type="button"
+                  className="hud-stack-btn"
+                  onClick={() => openServicePanel("chat")}
+                  title="Social"
+                  aria-label="Social"
+                >
+                  {serverAssets["social_widget"]
+                    ? <img className="hud-stack-img" src={serverAssets["social_widget"]} alt="" />
+                    : <span className="hud-stack-glyph">☺</span>}
+                </button>
+                <button
+                  type="button"
+                  className="hud-stack-btn"
+                  onClick={() => openServicePanel("mail")}
+                  title="Mail"
+                  aria-label="Mail"
+                >
+                  {serverAssets["mail_widget"]
+                    ? <img className="hud-stack-img" src={serverAssets["mail_widget"]} alt="" />
+                    : <span className="hud-stack-glyph">✉</span>}
+                </button>
+              </div>
             </nav>
 
             {/* Flee — only during combat */}
