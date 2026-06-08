@@ -294,59 +294,56 @@ export function CharacterPanel({
             </div>
           </div>
 
-          <div className="cc-toggle-row">
-            <span className="cc-toggle-label">Auto Loot</span>
+          <div className="cc-controls">
             <button
               type="button"
-              className={`cc-toggle${autolootEnabled ? " is-on" : ""}`}
+              className={`cc-ctl cc-ctl-toggle${autolootEnabled ? " is-on" : ""}`}
               role="switch"
               aria-checked={autolootEnabled}
-              aria-label="Auto loot"
               disabled={!connected}
+              title="Mob drops go straight into your pack after a kill."
               onClick={() => onCommand(autolootEnabled ? "autoloot off" : "autoloot on")}
             >
-              <span className="cc-toggle-track"><span className="cc-toggle-thumb" /></span>
-              <span className="cc-toggle-state">{autolootEnabled ? "ON" : "OFF"}</span>
+              <span className="cc-ctl-leaf" aria-hidden="true" />
+              <span className="cc-ctl-name">Auto Loot</span>
+              <span className="cc-switch"><span className="cc-switch-thumb" /></span>
             </button>
-          </div>
-          <div className="cc-toggle-row">
-            <span className="cc-toggle-label">Auto Peek</span>
             <button
               type="button"
-              className={`cc-toggle${autopeekEnabled ? " is-on" : ""}`}
+              className={`cc-ctl cc-ctl-toggle${autopeekEnabled ? " is-on" : ""}`}
               role="switch"
               aria-checked={autopeekEnabled}
-              aria-label="Auto peek"
               disabled={!connected}
+              title="Room descriptions name what lies through each open exit."
               onClick={() => onCommand(autopeekEnabled ? "autopeek off" : "autopeek on")}
             >
-              <span className="cc-toggle-track"><span className="cc-toggle-thumb" /></span>
-              <span className="cc-toggle-state">{autopeekEnabled ? "ON" : "OFF"}</span>
+              <span className="cc-ctl-leaf" aria-hidden="true" />
+              <span className="cc-ctl-name">Auto Peek</span>
+              <span className="cc-switch"><span className="cc-switch-thumb" /></span>
             </button>
-          </div>
-          <div className="cc-wimpy">
-            <span className="cc-toggle-label">Wimpy %</span>
-            <input
-              type="range"
-              className="cc-wimpy-slider"
-              min={0}
-              max={100}
-              step={5}
-              value={wimpyPct}
-              disabled={!connected}
-              onChange={(e) => setWimpyDraft(Number(e.target.value))}
-              onPointerUp={(e) => commitWimpy(Number((e.target as HTMLInputElement).value))}
-            />
-            <span className="cc-wimpy-value">{wimpyPct}</span>
-            <button
-              type="button"
-              className="cc-wimpy-step"
-              aria-label="Increase wimpy threshold"
-              disabled={!connected || wimpyPct >= 100}
-              onClick={() => commitWimpy(wimpyPct + 5)}
-            >
-              +
-            </button>
+            <div className="cc-ctl cc-ctl-wimpy" title="Auto-flee combat when HP drops to this %.">
+              <span className="cc-ctl-leaf" aria-hidden="true" />
+              <span className="cc-ctl-name">Wimpy</span>
+              <button
+                type="button"
+                className="cc-step"
+                aria-label="Lower wimpy threshold"
+                disabled={!connected || wimpyPct <= 0}
+                onClick={() => commitWimpy(wimpyPct - 5)}
+              >
+                −
+              </button>
+              <span className="cc-step-val">{wimpyPct}%</span>
+              <button
+                type="button"
+                className="cc-step"
+                aria-label="Raise wimpy threshold"
+                disabled={!connected || wimpyPct >= 100}
+                onClick={() => commitWimpy(wimpyPct + 5)}
+              >
+                +
+              </button>
+            </div>
           </div>
         </section>
 

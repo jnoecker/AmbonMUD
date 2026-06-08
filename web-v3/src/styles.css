@@ -22663,6 +22663,101 @@ html:has(.game-shell),
 .cc-wimpy-step:hover:not(:disabled) { background: rgb(82 62 34 / 85%); }
 .cc-wimpy-step:disabled { opacity: 0.4; cursor: default; }
 
+/* ── Compact single-line controls (auto-loot / peek / wimpy) ─── */
+.cc-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 2px;
+}
+
+.cc-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.cc-ctl-toggle {
+  border: none;
+  background: none;
+  padding: 4px 2px;
+  cursor: pointer;
+}
+
+.cc-ctl-toggle:disabled { opacity: 0.5; cursor: default; }
+
+.cc-ctl-leaf {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  border-radius: 3px 8px 3px 8px;
+  background: var(--cc-leaf);
+  opacity: 0.7;
+}
+
+.cc-ctl-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--cc-ink);
+  white-space: nowrap;
+}
+
+.cc-switch {
+  position: relative;
+  width: 38px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: rgb(20 15 9 / 85%);
+  border: 1px solid rgb(201 162 74 / 30%);
+  transition: background 180ms;
+}
+
+.cc-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #efe1bd, #b08a3c);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
+  transition: transform 180ms var(--ease-out-soft);
+}
+
+.cc-ctl-toggle.is-on .cc-switch {
+  background: linear-gradient(160deg, rgb(123 191 106 / 72%), rgb(90 150 80 / 72%));
+  border-color: rgb(123 191 106 / 55%);
+}
+
+.cc-ctl-toggle.is-on .cc-switch-thumb { transform: translateX(18px); }
+
+.cc-ctl-wimpy { gap: 5px; margin-left: auto; }
+
+.cc-step {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgb(201 162 74 / 36%);
+  background: rgb(60 46 26 / 65%);
+  color: var(--cc-brass-soft);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cc-step:hover:not(:disabled) { background: rgb(82 62 34 / 85%); }
+.cc-step:disabled { opacity: 0.4; cursor: default; }
+
+.cc-step-val {
+  min-width: 36px;
+  text-align: center;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--cc-ink);
+}
+
 /* ── Readouts ──────────────────────────────────────────────── */
 .cc-readouts {
   display: flex;
