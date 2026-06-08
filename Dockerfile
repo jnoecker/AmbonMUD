@@ -25,10 +25,15 @@ COPY src/main/proto/ src/main/proto/
 # Resolve dependencies (cached layer if build files unchanged)
 RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon -q
 
-# Copy source, inject the built frontend, then build the fat JAR
+# Copy source, inject the built frontend, then build the fat JAR.
+# Cap the Gradle launcher JVM and the in-process Kotlin compiler at 4g: the
+# repo's gradle.properties requests 6g (a local-dev default) which OOMs the
+# ~16 GB CI runner during compilation. GRADLE_OPTS overrides those values for
+# the container build only, leaving local builds untouched.
 COPY src/ src/
 COPY --from=frontend /build/src/main/resources/web-v3/ src/main/resources/web-v3/
-RUN ./gradlew shadowJar --no-daemon -x test
+RUN GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.daemon.jvmargs=-Xmx4g" \
+    ./gradlew shadowJar --no-daemon -x test
 
 # Stage 3: minimal JRE runtime
 FROM eclipse-temurin:21-jre AS runtime

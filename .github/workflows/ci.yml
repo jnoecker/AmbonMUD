@@ -61,12 +61,13 @@ jobs:
     # Build and push to ECR on every push to main after tests pass.
     # Runs on a native ARM64 runner to match the t4g.nano demo instance —
     # avoids slow QEMU emulation while producing a correct linux/arm64 image.
-    # Uses the 8-core (~32 GB) larger runner: the in-process Kotlin compiler
-    # requests a 6g heap (gradle.properties) which OOMs the standard 16 GB
-    # ubuntu-24.04-arm runner during `shadowJar`. Revisit if the heap is lowered.
+    # The Docker build caps the Kotlin/Gradle heap (see Dockerfile) so the
+    # in-process compiler fits this standard ~16 GB runner during `shadowJar`.
+    # Larger hosted runners aren't available on this personal account, so the
+    # heap is sized down rather than the runner sized up.
     needs: [test, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-24.04-arm-8core
+    runs-on: ubuntu-24.04-arm
     outputs:
       image-tag: ${{ steps.meta.outputs.tag }}
     steps:
