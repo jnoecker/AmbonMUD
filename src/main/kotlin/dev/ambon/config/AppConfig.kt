@@ -3087,6 +3087,7 @@ data class ImagesConfig(
             "who_bg" to "global_assets/who_bg.png",
             "who_examine_btn" to "global_assets/who_examine_btn.png",
             "who_tell_btn" to "global_assets/who_tell_btn.png",
+            "guild_bg" to "global_assets/guild_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

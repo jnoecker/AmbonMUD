@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, FriendEntry, FriendNotification, GroupInfo, GuildHallInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab } from "../../types";
+import type { ChatChannel, ChatMessage, FriendEntry, FriendNotification, GroupInfo, PendingGroupInvite, SocialTab } from "../../types";
 
 interface ChatPanelProps {
   connected: boolean;
@@ -10,10 +10,6 @@ interface ChatPanelProps {
   chatByChannel: Record<ChatChannel, ChatMessage[]>;
   groupInfo: GroupInfo;
   pendingGroupInvite: PendingGroupInvite | null;
-  guildInfo: GuildInfo;
-  pendingGuildInvite: PendingGuildInvite | null;
-  guildMembers: GuildMemberEntry[];
-  guildHall: GuildHallInfo | null;
   friends: FriendEntry[];
   friendNotifications: FriendNotification[];
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
@@ -23,7 +19,6 @@ interface ChatPanelProps {
 
 const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
   { id: "friends", label: "Friends" },
-  { id: "guild", label: "Guild" },
   { id: "group", label: "Group" },
 ];
 
@@ -34,10 +29,6 @@ export function ChatPanel({
   chatByChannel,
   groupInfo,
   pendingGroupInvite,
-  guildInfo,
-  pendingGuildInvite,
-  guildMembers,
-  guildHall,
   friends,
   friendNotifications,
   onSendMessage,
@@ -45,25 +36,15 @@ export function ChatPanel({
   onCommand,
 }: ChatPanelProps) {
   const feedRef = useRef<HTMLDivElement | null>(null);
-  const guildFeedRef = useRef<HTMLDivElement | null>(null);
   const groupFeedRef = useRef<HTMLDivElement | null>(null);
-  const [guildDraft, setGuildDraft] = useState("");
   const [groupDraft, setGroupDraft] = useState("");
   const [activeSocialTab, setActiveSocialTab] = useState<SocialTab>("friends");
-  // Guild action state
-  const [guildCreateName, setGuildCreateName] = useState("");
-  const [guildCreateTag, setGuildCreateTag] = useState("");
-  const [guildInviteTarget, setGuildInviteTarget] = useState("");
-  const [guildMotdDraft, setGuildMotdDraft] = useState("");
-  const [guildEditingMotd, setGuildEditingMotd] = useState(false);
-  const [guildConfirmAction, setGuildConfirmAction] = useState<"leave" | "disband" | null>(null);
   // Group action state
   const [groupInviteTarget, setGroupInviteTarget] = useState("");
   // Friends action state
   const [friendAddTarget, setFriendAddTarget] = useState("");
   const [friendConfirmRemove, setFriendConfirmRemove] = useState<string | null>(null);
 
-  const gchatMessages = chatByChannel.gchat;
   const gtellMessages = chatByChannel.gtell;
 
   useEffect(() => {
@@ -71,12 +52,6 @@ export function ChatPanel({
     if (!feed) return;
     feed.scrollTop = feed.scrollHeight;
   }, [activeSocialTab]);
-
-  useEffect(() => {
-    const feed = guildFeedRef.current;
-    if (!feed) return;
-    feed.scrollTop = feed.scrollHeight;
-  }, [activeSocialTab, gchatMessages.length]);
 
   useEffect(() => {
     const feed = groupFeedRef.current;
@@ -93,26 +68,6 @@ export function ChatPanel({
   };
 
   const inGroup = groupInfo.members.length > 0;
-  const inGuild = guildInfo.name !== null;
-
-  const rankLabel = (rank: string) => {
-    switch (rank) {
-      case "LEADER": return "Leader";
-      case "OFFICER": return "Officer";
-      default: return "Member";
-    }
-  };
-
-  const sortedGuildMembers = useMemo(() => {
-    const rankOrder: Record<string, number> = { LEADER: 0, OFFICER: 1, MEMBER: 2 };
-    return [...guildMembers].sort((a, b) => {
-      const onlineDiff = (a.online ? 0 : 1) - (b.online ? 0 : 1);
-      if (onlineDiff !== 0) return onlineDiff;
-      const rankDiff = (rankOrder[a.rank] ?? 2) - (rankOrder[b.rank] ?? 2);
-      if (rankDiff !== 0) return rankDiff;
-      return a.name.localeCompare(b.name);
-    });
-  }, [guildMembers]);
 
   const sortedFriends = useMemo(() => {
     return [...friends].sort((a, b) => {
@@ -239,220 +194,6 @@ export function ChatPanel({
             </div>
             <div aria-hidden="true" />
           </>
-        )}
-
-        {activeSocialTab === "guild" && (
-          !canChat ? (
-            <>
-              <div aria-hidden="true" />
-              <div className="chat-feed" role="region" aria-label="Guild info">
-                <section className="chat-feed-panel" aria-label="Guild subwindow">
-                  <p className="empty-note">
-                    {connected ? "Log in to unlock social features." : "Reconnect to load social data."}
-                  </p>
-                </section>
-              </div>
-              <div aria-hidden="true" />
-            </>
-          ) : !inGuild ? (
-            <>
-              <div aria-hidden="true" />
-              <div className="chat-feed" role="region" aria-label="Guild info">
-                <section className="chat-feed-panel" aria-label="Guild subwindow">
-                  <div className="social-empty-action">
-                    <p className="empty-note">You are not in a guild.</p>
-                    {pendingGuildInvite ? (
-                      <div className="invite-card">
-                        <p className="invite-card-text"><strong>{pendingGuildInvite.inviterName}</strong> invites you to join <strong>{pendingGuildInvite.guildName}</strong> [{pendingGuildInvite.guildTag}].</p>
-                        <div className="invite-card-actions">
-                          <button type="button" className="social-action-btn social-accept-btn" onClick={() => { onCommand("guild accept"); }}>Accept</button>
-                          <button type="button" className="social-action-btn social-decline-btn" onClick={() => onCommand("guild decline")}>Decline</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button type="button" className="social-action-btn social-accept-btn" onClick={() => onCommand("guild accept")}>Accept Invite</button>
-                    )}
-                    <form className="guild-create-form" onSubmit={(e) => { e.preventDefault(); const n = guildCreateName.trim(); const t = guildCreateTag.trim(); if (n && t) { onCommand(`guild create ${n} ${t}`); setGuildCreateName(""); setGuildCreateTag(""); } }}>
-                      <input type="text" className="social-action-input" placeholder="Guild name" value={guildCreateName} onChange={(e) => setGuildCreateName(e.target.value)} aria-label="Guild name" />
-                      <input type="text" className="social-action-input guild-tag-input" placeholder="Tag" value={guildCreateTag} onChange={(e) => setGuildCreateTag(e.target.value)} aria-label="Guild tag" maxLength={5} />
-                      <button type="submit" className="social-action-btn" disabled={!guildCreateName.trim() || !guildCreateTag.trim()}>Create</button>
-                    </form>
-                  </div>
-                </section>
-              </div>
-              <div aria-hidden="true" />
-            </>
-          ) : (
-            <div className="guild-tab-layout">
-              <div className="guild-tab-info">
-                <div className="guild-compact-header">
-                  <span className="guild-name">{guildInfo.name}</span>
-                  {guildInfo.tag && <span className="guild-tag">[{guildInfo.tag}]</span>}
-                  {guildInfo.rank && <span className="guild-compact-rank">{rankLabel(guildInfo.rank)}</span>}
-                </div>
-                <div className="guild-motd">
-                  <span className="guild-motd-label">MOTD</span>
-                  {guildEditingMotd ? (
-                    <form className="guild-motd-edit" onSubmit={(e) => { e.preventDefault(); onCommand(`guild motd ${guildMotdDraft}`); setGuildEditingMotd(false); }}>
-                      <input type="text" className="social-action-input" value={guildMotdDraft} onChange={(e) => setGuildMotdDraft(e.target.value)} aria-label="Guild MOTD" autoFocus />
-                      <button type="submit" className="social-action-btn">Save</button>
-                      <button type="button" className="social-action-btn social-cancel-btn" onClick={() => setGuildEditingMotd(false)}>Cancel</button>
-                    </form>
-                  ) : (
-                    <div className="guild-motd-display">
-                      <p className="guild-motd-text">{guildInfo.motd || "No message set."}</p>
-                      {(guildInfo.rank === "LEADER" || guildInfo.rank === "OFFICER") && (
-                        <button type="button" className="social-edit-btn" onClick={() => { setGuildMotdDraft(guildInfo.motd ?? ""); setGuildEditingMotd(true); }} title="Edit MOTD">&#9998;</button>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <form className="social-action-bar guild-invite-bar" onSubmit={(e) => { e.preventDefault(); const t = guildInviteTarget.trim(); if (t) { onCommand(`guild invite ${t}`); setGuildInviteTarget(""); } }}>
-                  <input type="text" className="social-action-input" placeholder="Invite player\u2026" value={guildInviteTarget} onChange={(e) => setGuildInviteTarget(e.target.value)} aria-label="Player to invite" disabled={!canChat} />
-                  <button type="submit" className="social-action-btn" disabled={!canChat || !guildInviteTarget.trim()}>Invite</button>
-                </form>
-                <div className="guild-roster-header">
-                  Roster ({guildInfo.memberCount} / {guildInfo.maxSize})
-                </div>
-                <div className="guild-roster-scroll">
-                  {sortedGuildMembers.length === 0 ? (
-                    <p className="empty-note">No roster data yet.</p>
-                  ) : (
-                    <ul className="guild-member-list">
-                      {sortedGuildMembers.map((member) => {
-                        const isMe = member.name.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0;
-                        const canManage = guildInfo.rank === "LEADER" || guildInfo.rank === "OFFICER";
-                        const isLeader = guildInfo.rank === "LEADER";
-                        const showActions = canManage && !isMe && member.rank !== "LEADER";
-                        return (
-                          <li key={member.name} className={`guild-member-item ${member.online ? "" : "guild-member-offline"}`}>
-                            <span className="guild-member-name">{member.name}</span>
-                            <span className="guild-member-details">
-                              <span className={`guild-member-status ${member.online ? "guild-member-status-online" : "guild-member-status-offline"}`} />
-                              <span className="guild-member-rank">{rankLabel(member.rank)}</span>
-                              {member.level !== null && <span className="guild-member-level">Lv {member.level}</span>}
-                              {showActions && (
-                                <span className="guild-member-actions">
-                                  {isLeader && member.rank === "MEMBER" && (
-                                    <button type="button" className="social-inline-btn" onClick={() => onCommand(`guild promote ${member.name}`)} title="Promote">&#9650;</button>
-                                  )}
-                                  {isLeader && member.rank === "OFFICER" && (
-                                    <button type="button" className="social-inline-btn" onClick={() => onCommand(`guild demote ${member.name}`)} title="Demote">&#9660;</button>
-                                  )}
-                                  <button type="button" className="social-inline-btn social-inline-btn-danger" onClick={() => onCommand(`guild kick ${member.name}`)} title="Kick">&times;</button>
-                                </span>
-                              )}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-                {guildHall && (
-                  <div className="guild-hall-section">
-                    <div className="guild-hall-header">
-                      <span className="guild-hall-label">Guild Hall</span>
-                      <span className="guild-hall-meta">{guildHall.rooms.length} / {guildHall.maxRooms} rooms &middot; {guildHall.membersInHall} inside</span>
-                    </div>
-                    {guildHall.rooms.length > 0 && (
-                      <ul className="guild-hall-room-list">
-                        {guildHall.rooms.map((room) => (
-                          <li key={room.id} className="guild-hall-room-item">
-                            <span className="guild-hall-room-title">{room.title}</span>
-                            <span className="guild-hall-room-template">{room.template}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <div className="guild-hall-actions">
-                      <button type="button" className="social-action-btn" onClick={() => onCommand("guild hallenter")}>Enter Hall</button>
-                      {(guildInfo.rank === "LEADER" || guildInfo.rank === "OFFICER") && (
-                        <button type="button" className="social-action-btn" onClick={() => onCommand("guild hallexpand")}>Expand</button>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {!guildHall && (guildInfo.rank === "LEADER" || guildInfo.rank === "OFFICER") && (
-                  <div className="guild-hall-section">
-                    <div className="guild-hall-header">
-                      <span className="guild-hall-label">Guild Hall</span>
-                    </div>
-                    <p className="empty-note">No guild hall yet.</p>
-                    <div className="guild-hall-actions">
-                      <button type="button" className="social-action-btn" onClick={() => onCommand("guild hallbuy")}>Purchase Hall</button>
-                    </div>
-                  </div>
-                )}
-                <div className="guild-footer-actions">
-                  {guildConfirmAction === "leave" ? (
-                    <span className="social-confirm-inline">
-                      <span>Leave guild?</span>
-                      <button type="button" className="social-confirm-yes" onClick={() => { onCommand("guild leave"); setGuildConfirmAction(null); }}>Yes</button>
-                      <button type="button" className="social-confirm-no" onClick={() => setGuildConfirmAction(null)}>No</button>
-                    </span>
-                  ) : guildConfirmAction === "disband" ? (
-                    <span className="social-confirm-inline">
-                      <span>Disband guild?</span>
-                      <button type="button" className="social-confirm-yes" onClick={() => { onCommand("guild disband"); setGuildConfirmAction(null); }}>Yes</button>
-                      <button type="button" className="social-confirm-no" onClick={() => setGuildConfirmAction(null)}>No</button>
-                    </span>
-                  ) : (
-                    <>
-                      <button type="button" className="social-action-btn social-danger-btn" onClick={() => setGuildConfirmAction("leave")}>Leave</button>
-                      {guildInfo.rank === "LEADER" && (
-                        <button type="button" className="social-action-btn social-danger-btn" onClick={() => setGuildConfirmAction("disband")}>Disband</button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div ref={guildFeedRef} className="embedded-chat-feed" role="log" aria-live="polite" aria-label="Guild chat messages">
-                {gchatMessages.length === 0 ? (
-                  <p className="empty-note">No guild messages yet.</p>
-                ) : (
-                  <ul className="chat-message-list">
-                    {gchatMessages.map((entry) => {
-                      const isSelf = entry.sender.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0;
-                      const time = new Date(entry.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-                      return (
-                        <li key={entry.id} className={`chat-message-item ${isSelf ? "chat-message-item-self" : ""}`}>
-                          <div className="chat-message-meta">
-                            <span className="chat-message-sender">{isSelf ? "You" : entry.sender}</span>
-                            <span className="chat-message-time">{time}</span>
-                          </div>
-                          <p className="chat-message-body">{entry.message}</p>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-
-              <form
-                className="chat-form"
-                onSubmit={(event: FormEvent<HTMLFormElement>) => {
-                  event.preventDefault();
-                  const sent = onSendMessage("gchat", guildDraft, null);
-                  if (sent) setGuildDraft("");
-                }}
-              >
-                <input
-                  className="chat-input"
-                  type="text"
-                  value={guildDraft}
-                  onChange={(event) => setGuildDraft(event.target.value)}
-                  placeholder="Message your guild"
-                  aria-label="Guild chat message"
-                  autoComplete="off"
-                  spellCheck={false}
-                  disabled={!canChat}
-                />
-                <button type="submit" className="soft-button" disabled={!canChat}>Send</button>
-              </form>
-            </div>
-          )
         )}
 
         {activeSocialTab === "group" && (

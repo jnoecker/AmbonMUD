@@ -12,6 +12,7 @@ import { featureArt, pickFocusedFeature } from "./components/worldFeatures";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { ChatBoardPanel } from "./components/panels/ChatBoardPanel";
 import { WhoBoardPanel } from "./components/panels/WhoBoardPanel";
+import { GuildBoardPanel } from "./components/panels/GuildBoardPanel";
 import { PlayerExaminePanel } from "./components/panels/PlayerExaminePanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
@@ -854,6 +855,7 @@ function App() {
       case "chat": return "Social";
       case "chatboard": return "Social Board";
       case "whoboard": return "Who";
+      case "guildboard": return "Guild";
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
       case "features": return featurePanelFeature
@@ -939,6 +941,8 @@ function App() {
             ? "board"
             : drawerPanel === "whoboard"
             ? "starframe"
+            : drawerPanel === "guildboard"
+            ? "archive"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -971,6 +975,8 @@ function App() {
                 ?? state.serverAssets["puzzle_bg"])
             : drawerPanel === "whoboard"
             ? state.serverAssets["who_bg"]
+            : drawerPanel === "guildboard"
+            ? state.serverAssets["guild_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -999,7 +1005,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
@@ -1122,6 +1128,21 @@ function App() {
           />
         )}
 
+        {drawerPanel === "guildboard" && (
+          <GuildBoardPanel
+            connected={connected}
+            canChat={connected && hasCharacterProfile}
+            playerName={state.character.name}
+            guildInfo={state.guildInfo}
+            pendingGuildInvite={state.pendingGuildInvite}
+            guildMembers={state.guildMembers}
+            guildHall={state.guildHall}
+            gchatMessages={state.chatByChannel.gchat}
+            onSendMessage={sendChatMessage}
+            onCommand={sendCommand}
+          />
+        )}
+
         {drawerPanel === "chat" && (
           <ChatPanel
             connected={connected}
@@ -1130,10 +1151,6 @@ function App() {
             chatByChannel={state.chatByChannel}
             groupInfo={state.groupInfo}
             pendingGroupInvite={state.pendingGroupInvite}
-            guildInfo={state.guildInfo}
-            pendingGuildInvite={state.pendingGuildInvite}
-            guildMembers={state.guildMembers}
-            guildHall={state.guildHall}
             friends={state.friends}
             friendNotifications={state.friendNotifications}
             onSendMessage={sendChatMessage}
