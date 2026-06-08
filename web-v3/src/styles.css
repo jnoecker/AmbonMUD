@@ -18968,11 +18968,80 @@ html:has(.game-shell),
   z-index: 10;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  /* Only the buttons capture touch — the empty column stays transparent to
+     pointers so the minimap underneath remains usable. */
+  pointer-events: none;
+}
+
+/* Slim always-visible handle that toggles the stack open/closed. */
+.hud-stack-toggle {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgb(20 24 40 / 84%), rgb(14 17 28 / 90%));
+  color: var(--text-secondary);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.hud-stack-toggle:hover {
+  border-color: rgb(176 193 255 / 50%);
+  color: var(--text-bright);
+}
+
+/* Chevron drawn from borders: points down when collapsed, up when open. */
+.hud-stack-toggle-glyph {
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 200ms var(--ease-out-soft);
+}
+
+.canvas-hud-stack.is-open .hud-stack-toggle-glyph {
+  transform: translateY(1px) rotate(225deg);
+}
+
+/* The revealable widgets. Collapsed: tucked toward the right edge, faded,
+   and non-interactive. Open (via .is-open) or hover (desktop) slides them in. */
+.hud-stack-items {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 8px;
+  opacity: 0;
+  transform: translateX(14px);
+  pointer-events: none;
+  transition: opacity 200ms var(--ease-out-soft), transform 200ms var(--ease-out-soft);
+}
+
+.canvas-hud-stack.is-open .hud-stack-items {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+@media (hover: hover) {
+  .canvas-hud-stack:hover .hud-stack-items {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
 }
 
 .hud-stack-btn {
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
