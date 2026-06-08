@@ -1118,6 +1118,7 @@ function App() {
             playerName={state.character.name}
             whoPlayers={state.whoPlayers}
             serverAssets={state.serverAssets}
+            friendNames={state.friends.map((f) => f.name)}
             onRequestWho={() => sendCommand("who")}
             onExamine={(p) => setExaminePlayer(p)}
             onTellPlayer={(name) => {
@@ -1125,6 +1126,7 @@ function App() {
               state.setTellTarget(name);
               openPanel("chatboard");
             }}
+            onAddFriend={(name) => sendCommand(`friend add ${name}`)}
           />
         )}
 

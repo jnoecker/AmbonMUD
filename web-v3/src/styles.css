@@ -23560,7 +23560,7 @@ html:has(.game-shell),
 .whoboard-head,
 .whoboard-row {
   display: grid;
-  grid-template-columns: clamp(40px, 6%, 70px) 1.7fr 1fr 1fr 0.6fr clamp(78px, 12%, 124px);
+  grid-template-columns: clamp(40px, 6%, 70px) 1.7fr 1fr 1fr 0.6fr clamp(108px, 16%, 172px);
   align-items: center;
   gap: clamp(4px, 1vw, 12px);
   padding: 0 clamp(4px, 1vw, 14px);
