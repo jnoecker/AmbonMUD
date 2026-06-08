@@ -487,6 +487,12 @@ export interface MonsterEntry {
   isStaff: boolean;
   /** Whether an Attack button + threat assessment apply (false for pets). */
   canAttack: boolean;
+  /**
+   * Deep-link the manual straight to a subpanel when opened from one of the
+   * creature's floating indicators: "talk" → dialogue view, "quest" → quest
+   * view. Undefined (a plain click) opens the info page.
+   */
+  intent?: "talk" | "quest";
 }
 
 /** A clicked room item, surfaced in the parchment item card (analogous to the

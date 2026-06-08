@@ -134,6 +134,10 @@ export class WorldScene {
   private questAvailableIcons: Map<string, Sprite> = new Map();
   private questCompleteTexture: Texture | null = null;
   private questCompleteIcons: Map<string, Sprite> = new Map();
+  // Representative mob data (rep id → fields needed to open the field manual),
+  // so a click on a floating dialogue/quest indicator can build the same panel
+  // entry as a click on the mob sprite. Rebuilt alongside the mob sprites.
+  private mobDataById = new Map<string, { id: string; name: string; description?: string; image?: string | null; video?: string | null }>();
 
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
@@ -1809,6 +1813,7 @@ export class WorldScene {
     }
     this.questCompleteIcons.clear();
     this.mobSprites.clear();
+    this.mobDataById.clear();
 
     // Group mobs by templateKey — every spawn of the same template renders
     // as a single sprite with a "(N)" count suffix. Two mobs that share a
@@ -1868,25 +1873,7 @@ export class WorldScene {
           canvasCallbacks.onTargetSelected?.(mobData.name);
           return;
         }
-        const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
-        const isStaff = gameStateRef.current.character.isStaff;
-        // Attackable only for true combatants (role COMBAT). Vendors, quest-givers,
-        // dialog NPCs and props are not — props get neither Attack nor a threat
-        // line. Absent info defaults to attackable (legacy mobs are COMBAT).
-        const canAttack = info ? info.combatant : true;
-        canvasCallbacks.openMonsterManual?.({
-          id: mobData.id,
-          name: mobData.name,
-          description: mobData.description ?? null,
-          image: mobData.image ?? null,
-          video: mobData.video ?? null,
-          level: info?.level ?? null,
-          info,
-          isStaff,
-          canAttack,
-        });
-        // Auto-fetch the threat assessment so the manual fills in its stats.
-        if (canAttack) canvasCallbacks.sendCommand?.(`consider ${mobData.name}`);
+        this.openMobManual(mobData.id);
       });
 
       this.container.addChild(sprite);
@@ -1894,6 +1881,7 @@ export class WorldScene {
       this.container.addChild(label);
       this.container.addChild(hitArea);
       this.mobSprites.set(groupKey, { sprite, label, labelBg, hitArea, name: mob.name, count, ids });
+      this.mobDataById.set(mob.id, mob);
     }
   }
 
@@ -2548,7 +2536,13 @@ export class WorldScene {
     if (!icon) {
       icon = new Sprite(this.dialogueTexture);
       icon.anchor.set(0.5);
-      icon.eventMode = "none";
+      // Clickable: jump straight to the dialogue subpanel of the field manual.
+      icon.eventMode = "static";
+      icon.cursor = "pointer";
+      icon.on("pointerdown", (e) => {
+        e.stopPropagation();
+        this.openMobManual(mobId, "talk");
+      });
       this.dialogueIcons.set(mobId, icon);
       this.container.addChild(icon);
     }
@@ -2601,7 +2595,13 @@ export class WorldScene {
     if (!icon) {
       icon = new Sprite(texture);
       icon.anchor.set(0.5);
-      icon.eventMode = "none";
+      // Clickable: jump straight to the quest subpanel of the field manual.
+      icon.eventMode = "static";
+      icon.cursor = "pointer";
+      icon.on("pointerdown", (e) => {
+        e.stopPropagation();
+        this.openMobManual(mobId, "quest");
+      });
       map.set(mobId, icon);
       this.container.addChild(icon);
     }
@@ -2610,6 +2610,36 @@ export class WorldScene {
     icon.height = size;
     icon.x = cx;
     icon.y = cy - mobSize / 2 - size / 2 - 4;
+  }
+
+  /**
+   * Open the field manual for a mob, optionally deep-linking to a subpanel.
+   * Shared by the mob sprite (plain info view) and its floating dialogue/quest
+   * indicators ("talk"/"quest" intents), so all three build an identical entry.
+   */
+  private openMobManual(repId: string, intent?: "talk" | "quest") {
+    const mob = this.mobDataById.get(repId);
+    if (!mob) return;
+    const info = gameStateRef.current.mobInfo.find((m) => m.id === repId) ?? null;
+    const isStaff = gameStateRef.current.character.isStaff;
+    // Attackable only for true combatants (role COMBAT). Vendors, quest-givers,
+    // dialog NPCs and props are not. Absent info defaults to attackable
+    // (legacy mobs are COMBAT).
+    const canAttack = info ? info.combatant : true;
+    canvasCallbacks.openMonsterManual?.({
+      id: mob.id,
+      name: mob.name,
+      description: mob.description ?? null,
+      image: mob.image ?? null,
+      video: mob.video ?? null,
+      level: info?.level ?? null,
+      info,
+      isStaff,
+      canAttack,
+      intent,
+    });
+    // Auto-fetch the threat assessment so the manual fills in its stats.
+    if (canAttack) canvasCallbacks.sendCommand?.(`consider ${mob.name}`);
   }
 
   private pruneIcons(map: Map<string, Sprite>, active: Set<string>) {

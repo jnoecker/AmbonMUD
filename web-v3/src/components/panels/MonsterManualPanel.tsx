@@ -77,10 +77,31 @@ export function MonsterManualPanel({
   onShop,
   onVideo,
 }: MonsterManualPanelProps) {
-  const [view, setView] = useState<ManualView>("info");
+  // Deep-link: clicking a creature's floating indicator opens the manual
+  // straight to the matching subpanel (dialogue → Talk, quest → Quest). The
+  // panel is keyed by creature id in App, so this lazy initializer runs fresh
+  // per creature and there's no flash of the info page first.
+  const [view, setView] = useState<ManualView>(() =>
+    monster.intent === "talk" ? "dialog" : monster.intent === "quest" ? "quest" : "info",
+  );
   // Tracks whether the current conversation has produced any node yet, so the
   // initial "…" wait isn't mistaken for the conversation having ended.
   const dialogueSeenRef = useRef(false);
+
+  // Fire the matching fetch when deep-linked from an indicator. The initial
+  // `view` (above) already shows the right subpanel; the setView calls here
+  // also cover the rare case where the same creature's intent changes without
+  // a remount.
+  useEffect(() => {
+    if (monster.intent === "talk") {
+      onCommand(`talk ${monster.name}`);
+      setView("dialog");
+    } else if (monster.intent === "quest") {
+      onQuest(monster.name);
+      setView("quest");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monster.id, monster.intent]);
 
   // Closing mid-conversation should also end the dialogue (so the in-canvas
   // overlay doesn't resurface once the manual is gone).
