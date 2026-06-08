@@ -371,12 +371,14 @@ class DialogueQuestHandler(
             )
         } else {
             players.setDisplayTitle(sessionId, match.second)
+            players.get(sessionId)?.let { gmcpEmitter?.sendCharName(sessionId, it) }
             outbound.send(OutboundEvent.SendInfo(sessionId, "Title set to: ${match.second}"))
         }
     }
 
     private suspend fun handleTitleClear(sessionId: SessionId) {
         players.setDisplayTitle(sessionId, null)
+        players.get(sessionId)?.let { gmcpEmitter?.sendCharName(sessionId, it) }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Title cleared."))
     }
 }

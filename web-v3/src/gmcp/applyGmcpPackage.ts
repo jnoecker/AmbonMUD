@@ -376,6 +376,7 @@ export function applyGmcpPackage(
         level: typeof packet.level === "number" ? packet.level : null,
         sprite: typeof packet.sprite === "string" ? packet.sprite : null,
         isStaff: packet.isStaff === true,
+        title: typeof packet.title === "string" ? packet.title : null,
         autolootEnabled: packet.autolootEnabled === true,
         autopeekEnabled: packet.autopeekEnabled === true,
         wimpyThresholdPct: typeof packet.wimpyThresholdPct === "number" ? packet.wimpyThresholdPct : 10,

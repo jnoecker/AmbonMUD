@@ -203,6 +203,8 @@ export interface CharacterInfo {
   level: number | null;
   sprite: string | null;
   isStaff: boolean;
+  /** The player's currently-equipped achievement title, or null when none is set. */
+  title: string | null;
   autolootEnabled: boolean;
   /** When true, room descriptions gain a peek paragraph naming adjacent rooms. */
   autopeekEnabled: boolean;
