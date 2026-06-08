@@ -22336,18 +22336,19 @@ html:has(.game-shell),
 .cc-plaque {
   position: relative;
   border-radius: 12px;
-  border: 1px solid rgb(201 162 74 / 34%);
-  background:
-    linear-gradient(165deg, rgb(40 31 20 / 86%), rgb(26 20 13 / 82%));
+  border: 1px solid rgb(201 162 74 / 44%);
+  /* Warm, translucent tinted glass so the floral/parchment backdrop reads
+     through softly — not a heavy black box — while keeping the light text legible. */
+  background: linear-gradient(165deg, rgb(54 39 22 / 72%), rgb(38 27 15 / 68%));
+  backdrop-filter: blur(2px);
   box-shadow:
-    inset 0 1px 0 rgb(230 205 146 / 14%),
-    inset 0 0 24px rgb(0 0 0 / 35%),
-    0 8px 22px rgb(8 6 3 / 40%);
+    inset 0 1px 0 rgb(240 215 156 / 16%),
+    0 6px 18px rgb(20 12 4 / 26%);
 }
 
 .cc-plaque {
   border-radius: 10px;
-  background: linear-gradient(165deg, rgb(30 23 14 / 90%), rgb(20 15 9 / 88%));
+  background: linear-gradient(165deg, rgb(46 33 18 / 74%), rgb(32 23 12 / 70%));
 }
 
 /* When the 9-slice art ships, it replaces the CSS border/background. */
