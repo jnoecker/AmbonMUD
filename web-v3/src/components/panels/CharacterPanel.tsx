@@ -435,6 +435,14 @@ export function CharacterPanel({
         </button>
         <button
           type="button"
+          className={`cc-plaque-btn${profBtn ? " has-art" : ""}`}
+          style={profBtn ? { ["--cc-plaque" as string]: `url("${profBtn}")` } : undefined}
+          onClick={onOpenProfessions}
+        >
+          <span className="cc-plaque-label">Professions</span>
+        </button>
+        <button
+          type="button"
           className={`cc-gem-btn cc-gem-green${achBtn ? " has-art" : ""}`}
           style={achBtn ? { ["--cc-btn" as string]: `url("${achBtn}")` } : undefined}
           onClick={() => setShowAchievements(true)}
@@ -442,14 +450,6 @@ export function CharacterPanel({
           <span className="cc-gem-label">Achievements</span>
         </button>
       </div>
-      <button
-        type="button"
-        className={`cc-plaque-btn${profBtn ? " has-art" : ""}`}
-        style={profBtn ? { ["--cc-plaque" as string]: `url("${profBtn}")` } : undefined}
-        onClick={onOpenProfessions}
-      >
-        <span className="cc-plaque-label">Professions</span>
-      </button>
 
       {/* ── Describe pop-out ──────────────────────────────── */}
       {showScribe && (

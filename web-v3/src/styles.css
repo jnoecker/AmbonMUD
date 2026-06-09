@@ -25348,9 +25348,9 @@ html:has(.game-shell),
 /* ───────── Your inventory (mid) ───────── */
 .ah-inventory {
   position: absolute;
-  left: 44.5%;
+  left: 45.8%;
   top: 30%;
-  width: 17.5%;
+  width: 16.8%;
   height: 31.5%;
   padding: 0.6% 0.6% 0.6% 1%;
 }
@@ -25390,11 +25390,11 @@ html:has(.game-shell),
 /* ───────── Selected item (right) ───────── */
 .ah-selected {
   position: absolute;
-  left: 63%;
+  left: 64.5%;
   top: 30%;
-  width: 33.8%;
+  width: 32%;
   height: 24%;
-  padding: 0.8% 1.4%;
+  padding: 0.8% 2%;
   overflow-y: auto;
 }
 .ah-detail { display: flex; gap: clamp(8px, 1.2vw, 18px); height: 100%; }
@@ -25442,21 +25442,14 @@ html:has(.game-shell),
 /* ───────── List action (below selected) ───────── */
 .ah-list-action {
   position: absolute;
-  left: 63%;
+  left: 64.5%;
   top: 56%;
-  width: 33.8%;
+  width: 32%;
   height: 6.5%;
   display: flex;
   align-items: center;
   gap: clamp(6px, 1vw, 14px);
-  padding: 0 1.4%;
-}
-.ah-price-label {
-  font-size: clamp(0.52rem, 1vw, 0.72rem);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgb(170 188 235 / 80%);
-  white-space: nowrap;
+  padding: 0 2%;
 }
 .ah-price-row { display: flex; gap: clamp(5px, 0.8vw, 11px); flex: 1; }
 .ah-price-input {
@@ -25581,9 +25574,9 @@ html:has(.game-shell),
 .cr-recipes {
   position: absolute;
   left: 12.5%;
-  top: 18%;
+  top: 21%;
   width: 28%;
-  height: 70%;
+  height: 66%;
   display: flex;
   flex-direction: column;
   gap: clamp(4px, 0.9vh, 10px);
@@ -25673,9 +25666,9 @@ html:has(.game-shell),
 .cr-detail {
   position: absolute;
   left: 44.5%;
-  top: 19%;
+  top: 21%;
   width: 47%;
-  height: 56%;
+  height: 54%;
   display: flex;
   flex-direction: column;
   gap: clamp(6px, 1.4vh, 16px);
@@ -25758,10 +25751,10 @@ html:has(.game-shell),
 /* Hotspot over the painted CRAFT button. */
 .cr-craft-hotspot {
   position: absolute;
-  left: 49%;
-  top: 78%;
-  width: 30%;
-  height: 9%;
+  left: 51%;
+  top: 73.5%;
+  width: 31%;
+  height: 9.5%;
   border: none;
   border-radius: 12px;
   background: transparent;
@@ -25769,8 +25762,9 @@ html:has(.game-shell),
   transition: box-shadow 150ms var(--ease-out-soft), background 150ms var(--ease-out-soft);
 }
 .cr-craft-hotspot:hover { box-shadow: 0 0 22px rgb(240 150 50 / 55%); background: rgb(240 150 50 / 10%); }
-.cr-craft-disabled { cursor: not-allowed; background: rgb(10 8 6 / 45%); }
-.cr-craft-disabled:hover { box-shadow: none; }
+/* Missing level/ingredients — clearly dim the painted CRAFT button. */
+.cr-craft-disabled { cursor: not-allowed; background: rgb(8 5 3 / 62%); }
+.cr-craft-disabled:hover { box-shadow: none; background: rgb(8 5 3 / 62%); }
 
 /* ============================================================
    Professions — painted `professions_bg` book. One row per
@@ -25812,7 +25806,7 @@ html:has(.game-shell),
   position: absolute;
   left: 14%;
   top: 20%;
-  width: 77%;
+  width: 73%;
   height: 71%;
   display: flex;
   flex-direction: column;
@@ -25908,11 +25902,10 @@ html:has(.game-shell),
 
 /* ── Character popout: Professions plaque button ── */
 .cc-plaque-btn {
+  flex: 1.7;
   display: grid;
   place-items: center;
-  width: 100%;
-  min-height: clamp(40px, 7vh, 62px);
-  margin-top: var(--space-2, 8px);
+  min-height: 56px;
   border: none;
   border-radius: 12px;
   background: linear-gradient(165deg, #6a4a22, #3e2a12);
