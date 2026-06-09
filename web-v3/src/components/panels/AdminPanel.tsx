@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { RoomMob, StaffMobZone, StaffWorldZone, UiFeedbackEntry, WhoPlayer } from "../../types";
 import {
-  ADMIN_ACTION_SECTIONS,
   ADMIN_ACTIONS,
   ADMIN_RELOAD_SCOPES,
   buildAdminCommand,
@@ -24,6 +23,8 @@ interface AdminPanelProps {
   possessing: string | null;
   invisible: boolean;
   feedbackFeed: UiFeedbackEntry[];
+  /** Global painted assets; used here for the optional stained-glass command button. */
+  serverAssets?: Record<string, string>;
 }
 
 function TeleportBrowser({
@@ -359,6 +360,7 @@ export function AdminPanel({
   possessing,
   invisible,
   feedbackFeed,
+  serverAssets = {},
 }: AdminPanelProps) {
   const [activeAction, setActiveAction] = useState<AdminAction | null>(null);
   const [inputA, setInputA] = useState("");
@@ -436,6 +438,18 @@ export function AdminPanel({
     return adminFeedback[0];
   }, [adminFeedback, activeAction]);
 
+  // Auto-dismiss the feedback banner a few seconds after each new message so it
+  // doesn't stick across the panel (e.g. the "You are now visible" green bar).
+  // Track the dismissed id rather than a boolean so a fresh message reappears.
+  const [dismissedFeedbackId, setDismissedFeedbackId] = useState<string | null>(null);
+  const activeFeedbackId = activeFeedback?.id;
+  useEffect(() => {
+    if (!activeFeedbackId) return;
+    const timer = setTimeout(() => setDismissedFeedbackId(activeFeedbackId), 4000);
+    return () => clearTimeout(timer);
+  }, [activeFeedbackId]);
+  const feedbackVisible = activeFeedback != null && activeFeedback.id !== dismissedFeedbackId;
+
   const activeDefinition = activeAction ? getAdminActionDefinition(activeAction) : null;
   const pendingCommand = activeAction ? buildAdminCommand(activeAction, inputA, inputB) : null;
   const pendingConfirmKey =
@@ -471,11 +485,34 @@ export function AdminPanel({
     executeAction(activeAction, pendingCommand);
   };
 
+  const closeForm = () => {
+    setActiveAction(null);
+    resetForm();
+  };
+
+  // Painted-frame CSS variables. The command tiles fall back to a gilded-glass
+  // gradient (see styles.css) and pick up a real stained-glass asset if the
+  // server advertises `staff_action_btn` / `staff_action_btn_active`.
+  const skinVars: Record<string, string> = {};
+  if (backgroundImage) skinVars["--admin-bg"] = `url("${backgroundImage}")`;
+  if (serverAssets.staff_action_btn) {
+    skinVars["--admin-action-btn"] = `url("${serverAssets.staff_action_btn}")`;
+    // The asset carries its own gold frame on transparent margins, so suppress
+    // the CSS edge, rounding, and box-shadow the gradient fallback uses — they'd
+    // otherwise show as a rectangle behind the plaque's transparent corners.
+    skinVars["--admin-action-edge"] = "transparent";
+    skinVars["--admin-action-radius"] = "0px";
+    skinVars["--admin-action-shadow"] = "none";
+  }
+  if (serverAssets.staff_action_btn_active) {
+    skinVars["--admin-action-btn-active"] = `url("${serverAssets.staff_action_btn_active}")`;
+  }
+
   return (
     <div className="popout-backdrop" onClick={onClose}>
       <section
         className={`popout-dialog admin-dialog${backgroundImage ? " admin-dialog-skinned" : ""}`}
-        style={backgroundImage ? { ["--admin-bg" as string]: `url("${backgroundImage}")` } : undefined}
+        style={Object.keys(skinVars).length > 0 ? skinVars : undefined}
         role="dialog"
         aria-modal="true"
         aria-label="Staff Administration"
@@ -510,40 +547,41 @@ export function AdminPanel({
             </div>
           </div>
 
-          {activeFeedback && (
+          <div className="admin-main-pane">
+          {activeFeedback && feedbackVisible && (
             <p className={`admin-feedback-banner admin-feedback-banner-${activeFeedback.type}`}>
               {activeFeedback.message}
             </p>
           )}
 
-          <div className="admin-workspace">
-          <div className="admin-section-grid">
-            {ADMIN_ACTION_SECTIONS.map((section) => {
-              const sectionActions = ADMIN_ACTIONS.filter((entry) => entry.section === section.id);
-              return (
-                <section key={section.id} className="admin-action-section">
-                  <h3 className="admin-section-title">{section.title}</h3>
-                  <div className="admin-action-grid">
-                    {sectionActions.map((action) => (
-                      <button
-                        key={action.id}
-                        type="button"
-                        className={`admin-action-tile ${activeAction === action.id ? "admin-action-tile-active" : ""} admin-action-tile-${action.tone}`}
-                        onClick={() => selectAction(action.id)}
-                        aria-pressed={activeAction === action.id}
-                      >
-                        <span className="admin-action-label">{action.label}</span>
-                        <span className="admin-action-desc">{action.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
+          <div className="admin-board">
+            {ADMIN_ACTIONS.filter((action) => {
+              // Possession is binary — show only the relevant verb (Possess when
+              // free, Return when in a mob).
+              if (action.id === "possess") return possessing == null;
+              if (action.id === "return") return possessing != null;
+              return true;
+            }).map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                className={`admin-action-tile ${activeAction === action.id ? "admin-action-tile-active" : ""} admin-action-tile-${action.tone}`}
+                onClick={() => selectAction(action.id)}
+                aria-pressed={activeAction === action.id}
+              >
+                <span className="admin-action-label">{action.label}</span>
+                <span className="admin-action-desc">{action.description}</span>
+              </button>
+            ))}
+          </div>
           </div>
 
-          <div className="admin-form-pane">
-          {activeAction && activeDefinition ? (
+          {activeAction && activeDefinition && (
+            <div className="admin-modal-backdrop" onClick={closeForm}>
+              <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
+                <button type="button" className="admin-modal-close" onClick={closeForm} aria-label="Close">
+                  ✕
+                </button>
             <form className="admin-form" onSubmit={submit}>
               <h3 className="admin-form-title">{activeDefinition.label}</h3>
 
@@ -1171,11 +1209,9 @@ export function AdminPanel({
                 </button>
               </div>
             </form>
-          ) : (
-            <p className="admin-form-hint">Select an action from the left to configure and run it.</p>
+              </div>
+            </div>
           )}
-          </div>
-          </div>
         </div>
       </section>
     </div>

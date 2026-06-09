@@ -12286,6 +12286,13 @@ body {
   gap: var(--space-4);
 }
 
+.admin-main-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 0;
+}
+
 .admin-section-title,
 .admin-form-title {
   margin: 0;
@@ -25913,7 +25920,10 @@ html:has(.game-shell),
   transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
 }
 .cc-plaque-btn.has-art {
-  background: var(--cc-plaque) center / 100% 100% no-repeat;
+  min-height: 82px;
+  /* Keep the banner's aspect (contain) — 100% 100% stretched it across the
+     wider middle slot. Matches the gem buttons' has-art treatment. */
+  background: var(--cc-plaque) center / contain no-repeat;
 }
 .cc-plaque-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 .cc-plaque-btn:active { transform: scale(0.98); }
@@ -25925,7 +25935,7 @@ html:has(.game-shell),
   color: #f4e2c0;
   text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
 }
-.cc-plaque-btn.has-art .cc-plaque-label { color: #3a2410; text-shadow: 0 1px 0 rgb(255 230 180 / 50%); }
+.cc-plaque-btn.has-art .cc-plaque-label { color: #fff6e2; text-shadow: 0 1px 2px rgb(0 0 0 / 85%), 0 0 6px rgb(0 0 0 / 55%); }
 
 /* ── Spellbook: open-crafting button ── */
 .spellbook-craft-btn {
@@ -25980,134 +25990,223 @@ html:has(.game-shell),
 }
 .admin-dialog-skinned .admin-skin-close:hover { filter: brightness(1.2); }
 
-/* Live content sits in the painted inner panel (below the title strip). */
+/* The painted frame defines three inset boxes. We anchor live content into each
+   with absolute insets measured against the `admin_bg` art (stretched to fill,
+   so image-percentages map straight to the dialog):
+     · top band  (x 16.4–77%, y 18.8–36.8%) — the three status boxes
+     · main box  (x 3–97%,   y 39–88.5%)    — command list (left) + form (right)
+   The left winged emblem and right compass rose flank the top band, so the
+   status strip must NOT run full width. */
 .admin-dialog-skinned .admin-content {
   position: absolute;
-  inset: 17% 4% 11% 4%;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(5px, 1vh, 12px);
+  inset: 0;
+  display: block;
   overflow: hidden;
-  padding: 0 1%;
+  padding: 0;
   color: #d6def4;
 }
-.admin-dialog-skinned .admin-content::-webkit-scrollbar { width: 8px; }
-.admin-dialog-skinned .admin-content::-webkit-scrollbar-thumb { background: rgb(150 170 230 / 40%); border-radius: 4px; }
 
-/* Target/status strip — moonlit cards. */
+/* Status strip — three moonlit cards seated in the painted top boxes. */
 .admin-dialog-skinned .admin-status-strip {
+  position: absolute;
+  inset: 18.8% 23% 63.2% 16.4%;
   display: flex;
-  gap: clamp(6px, 1vw, 14px);
-  margin-bottom: clamp(6px, 1.2vh, 14px);
+  gap: clamp(6px, 0.8vw, 14px);
+  margin: 0;
 }
+/* No chrome — the painted frame already draws the three boxes, so the label and
+   value just float in the empty painted space. */
 .admin-dialog-skinned .admin-status-card {
   flex: 1;
-  padding: clamp(5px, 1vh, 11px) clamp(8px, 1.2vw, 16px);
-  border: 1px solid rgb(150 170 230 / 35%);
-  border-radius: 10px;
-  background: rgb(16 22 52 / 65%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(2px, 0.5vh, 5px);
+  padding: clamp(5px, 1vh, 11px) clamp(10px, 1.4vw, 22px);
+  border: none;
+  background: none;
+  border-radius: 0;
+}
+
+/* Main pane — feedback banner + the command workspace, seated in the big box. */
+.admin-dialog-skinned .admin-main-pane {
+  position: absolute;
+  inset: 39% 3% 11.5% 3%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vh, 10px);
+  min-height: 0;
 }
 .admin-dialog-skinned .admin-status-label {
-  font-size: clamp(0.52rem, 1vw, 0.72rem);
-  letter-spacing: 0.1em;
+  font-size: clamp(0.5rem, 0.95vw, 0.7rem);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgb(180 196 240 / 75%);
+  color: rgb(176 192 236 / 65%);
 }
-.admin-dialog-skinned .admin-status-card strong { color: #e8c878; }
+.admin-dialog-skinned .admin-status-card strong {
+  color: #e8c878;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 1.8vw, 1.4rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 8px rgb(180 140 60 / 30%);
+}
 
-/* Workspace — action menu (left) + the selected action's form (right). Each
-   pane scrolls within the painted content panel so nothing spills past it. */
-.admin-dialog-skinned .admin-workspace {
+/* Board — the whole blue box is a panel of command plaques in two columns
+   (Movement + Presence left, Intervention + World Ops right). The selected
+   action opens as a modal on top, not an inline pane. */
+.admin-dialog-skinned .admin-board {
   flex: 1;
   min-height: 0;
-  display: flex;
-  gap: clamp(8px, 1.2vw, 18px);
-}
-.admin-dialog-skinned .admin-form-pane {
-  flex: 1;
-  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-content: center;
+  justify-items: center;
+  /* Tight — the plaque art has transparent margins, so near-zero gap still reads
+     as breathing room; on small screens the cells may touch, which is fine. */
+  gap: clamp(0px, 0.35vh, 5px) clamp(0px, 0.6vw, 11px);
   overflow-y: auto;
-  border-left: 1px solid rgb(150 170 230 / 22%);
-  padding-left: clamp(8px, 1.2vw, 16px);
+  padding: clamp(1px, 0.3vh, 4px) 2px;
   scrollbar-width: thin;
   scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
-.admin-dialog-skinned .admin-form-hint {
-  margin: 20% auto 0;
-  max-width: 80%;
-  text-align: center;
-  font-style: italic;
-  color: rgb(190 200 235 / 60%);
-  font-size: clamp(0.66rem, 1.2vw, 0.92rem);
+.admin-dialog-skinned .admin-board::-webkit-scrollbar { width: 7px; }
+.admin-dialog-skinned .admin-board::-webkit-scrollbar-thumb { background: rgb(150 170 230 / 40%); border-radius: 4px; }
+.admin-dialog-skinned .admin-board-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 1vh, 13px);
+  min-width: 0;
 }
 .admin-dialog-skinned .admin-form { margin-top: 0; border: none; background: none; padding: 0; }
 
-/* Action menu — a compact single-column nav grouped by section (master), with
-   all four groups visible/scrollable; the form (detail) sits in the wider pane. */
-.admin-dialog-skinned .admin-section-grid {
-  flex: 0 0 32%;
-  min-width: 0;
+/* Action modal — the selected command's form, floated over the board. */
+.admin-dialog-skinned .admin-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  padding: 4%;
+  background: rgb(6 9 22 / 58%);
+  backdrop-filter: blur(3px);
+  animation: backdropFadeIn 180ms var(--ease-out-soft);
+}
+.admin-dialog-skinned .admin-modal {
+  position: relative;
+  width: min(72%, 520px);
+  max-height: 88%;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(8px, 1.3vh, 16px);
-  padding-right: 5px;
+  padding: clamp(18px, 2.2vw, 32px) clamp(16px, 2.2vw, 32px);
+  border: 1px solid rgb(200 176 96 / 45%);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 0%) 30%),
+    linear-gradient(160deg, rgb(26 30 70 / 96%), rgb(14 18 44 / 97%));
+  box-shadow: 0 24px 60px rgb(3 5 16 / 70%), inset 0 1px 0 rgb(255 255 255 / 8%);
   scrollbar-width: thin;
   scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
-.admin-dialog-skinned .admin-section-grid::-webkit-scrollbar { width: 7px; }
-.admin-dialog-skinned .admin-section-grid::-webkit-scrollbar-thumb { background: rgb(150 170 230 / 40%); border-radius: 4px; }
+.admin-dialog-skinned .admin-modal-close {
+  position: absolute;
+  top: clamp(6px, 1vw, 12px);
+  right: clamp(8px, 1.1vw, 14px);
+  width: clamp(24px, 2.4vw, 32px);
+  height: clamp(24px, 2.4vw, 32px);
+  border-radius: 50%;
+  border: 1px solid rgb(190 150 90 / 45%);
+  background: rgb(40 24 50 / 70%);
+  color: #e8c878;
+  cursor: pointer;
+  transition: filter 140ms var(--ease-out-soft);
+}
+.admin-dialog-skinned .admin-modal-close:hover { filter: brightness(1.2); }
 .admin-dialog-skinned .admin-action-section {
   border: none;
   padding: 0;
   background: none;
 }
 .admin-dialog-skinned .admin-section-title {
-  margin: 0 0 clamp(3px, 0.6vh, 7px);
-  padding-left: 2px;
-  text-align: left;
+  margin: 0 0 clamp(1px, 0.35vh, 4px);
+  padding-left: 0;
+  text-align: center;
   font-family: var(--font-display);
-  font-size: clamp(0.58rem, 1.1vw, 0.82rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: clamp(0.72rem, 1.4vw, 1.02rem);
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #c9b06a;
+  color: #d8bd72;
+  text-shadow: 0 1px 10px rgb(180 140 60 / 35%);
 }
 .admin-dialog-skinned .admin-action-grid {
+  display: grid;
+  /* Auto-fill keeps every plaque the same small size (~3 per board column),
+     so the whole panel reads as a dense ~5-6 across, ~4 down button board. */
+  grid-template-columns: repeat(auto-fill, minmax(min(148px, 100%), 1fr));
+  gap: clamp(4px, 0.6vw, 9px);
+}
+/* Gilded-glass command buttons. Falls back to a jewel-toned gradient with a
+   gold edge and glass sheen; swaps to a real stained-glass asset when the
+   server advertises `staff_action_btn` (and `_active`). */
+.admin-dialog-skinned .admin-action-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: clamp(2px, 0.4vh, 5px);
-}
-.admin-dialog-skinned .admin-action-tile {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5em;
-  padding: clamp(4px, 0.7vh, 8px) clamp(7px, 1vw, 12px);
-  border: 1px solid rgb(150 170 230 / 22%);
-  border-radius: 8px;
-  background: rgb(22 28 58 / 60%);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1px, 0.3vh, 3px);
+  /* Match the plaque art's 3:2 shape so it fills without distortion; text sits in
+     the hollow center via percentage padding (clears the ornate frame). */
+  aspect-ratio: 3 / 2;
+  width: 100%;
+  max-width: clamp(108px, 12vw, 138px);
+  min-width: 0;
+  padding: 13% 18%;
+  border: 1px solid var(--admin-action-edge, rgb(190 168 96 / 30%));
+  border-radius: var(--admin-action-radius, 9px);
+  /* Fills the (now matching-ratio) box edge-to-edge with no stretch. */
+  background-image: var(--admin-action-btn,
+    linear-gradient(180deg, rgb(255 255 255 / 7%), rgb(255 255 255 / 0%) 42%),
+    linear-gradient(135deg, rgb(66 46 124 / 78%) 0%, rgb(34 32 92 / 78%) 52%, rgb(24 50 104 / 78%) 100%));
+  background-size: 100% 100%;
+  background-position: center;
   color: #dce4fa;
   font-family: var(--font-display);
-  text-align: left;
+  text-align: center;
   cursor: pointer;
-  transition: border-color 140ms var(--ease-out-soft), background 140ms var(--ease-out-soft), box-shadow 140ms var(--ease-out-soft);
+  box-shadow: var(--admin-action-shadow, inset 0 1px 0 rgb(255 255 255 / 7%), 0 2px 9px rgb(4 6 20 / 38%));
+  transition: border-color 140ms var(--ease-out-soft), box-shadow 140ms var(--ease-out-soft), filter 140ms var(--ease-out-soft), transform 140ms var(--ease-out-soft);
 }
-.admin-dialog-skinned .admin-action-tile:hover { background: rgb(40 50 96 / 70%); }
-.admin-dialog-skinned .admin-action-tile .admin-action-label { flex: 0 0 auto; font-size: clamp(0.66rem, 1.2vw, 0.9rem); }
+.admin-dialog-skinned .admin-action-tile:hover {
+  border-color: var(--admin-action-edge, rgb(224 196 110 / 60%));
+  filter: brightness(1.12) saturate(1.05);
+  box-shadow: var(--admin-action-shadow, inset 0 1px 0 rgb(255 255 255 / 10%), 0 4px 14px rgb(4 6 20 / 45%));
+  transform: translateY(-1px);
+}
+.admin-dialog-skinned .admin-action-tile .admin-action-label {
+  flex: 0 0 auto;
+  font-size: clamp(0.58rem, 1vw, 0.82rem);
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.05;
+}
+/* Just the command title on each plaque — the description is dropped. */
 .admin-dialog-skinned .admin-action-tile .admin-action-desc {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: clamp(0.5rem, 0.92vw, 0.68rem);
+  display: none;
 }
-.admin-dialog-skinned .admin-action-tile:hover { border-color: rgb(180 160 240 / 55%); }
 .admin-dialog-skinned .admin-action-tile-active {
-  border-color: rgb(200 175 90 / 75%);
-  box-shadow: 0 0 12px rgb(200 175 90 / 35%), inset 0 0 8px rgb(200 175 90 / 12%);
+  border-color: var(--admin-action-edge, rgb(224 192 100 / 80%));
+  background-image: var(--admin-action-btn-active, var(--admin-action-btn,
+    linear-gradient(180deg, rgb(255 255 255 / 12%), rgb(255 255 255 / 0%) 42%),
+    linear-gradient(135deg, rgb(120 92 184 / 86%) 0%, rgb(74 62 156 / 86%) 52%, rgb(48 84 158 / 86%) 100%)));
+  /* With the plaque asset the shadow var is none, so the active state glows via a
+     drop-shadow that follows the plaque silhouette instead of a rectangle; the
+     gradient fallback keeps the boxed glow. */
+  box-shadow: var(--admin-action-shadow, 0 0 16px rgb(214 182 96 / 42%), inset 0 0 12px rgb(214 182 96 / 16%));
+  filter: drop-shadow(0 0 9px rgb(214 182 96 / 70%));
 }
-.admin-dialog-skinned .admin-action-tile-danger { border-color: rgb(210 120 130 / 40%); }
-.admin-dialog-skinned .admin-action-tile-utility { border-color: rgb(150 200 230 / 40%); }
+.admin-dialog-skinned .admin-action-tile-danger { border-color: var(--admin-action-edge, rgb(210 120 130 / 40%)); }
+.admin-dialog-skinned .admin-action-tile-utility { border-color: var(--admin-action-edge, rgb(150 200 230 / 40%)); }
 .admin-dialog-skinned .admin-action-label {
   font-size: clamp(0.66rem, 1.2vw, 0.92rem);
   font-weight: 700;

@@ -1905,6 +1905,7 @@ function App() {
           possessing={state.possessing}
           invisible={staffInvisible}
           feedbackFeed={state.uiFeedbackFeed}
+          serverAssets={state.serverAssets}
         />
       )}
 
