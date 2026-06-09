@@ -541,7 +541,14 @@ export function AdminPanel({
           <div className="admin-workspace">
           <div className="admin-section-grid">
             {ADMIN_ACTION_SECTIONS.map((section) => {
-              const sectionActions = ADMIN_ACTIONS.filter((entry) => entry.section === section.id);
+              const sectionActions = ADMIN_ACTIONS.filter((entry) => entry.section === section.id)
+                .filter((entry) => {
+                  // Possession is binary — show only the relevant verb (Possess
+                  // when free, Return when in a mob). Also evens out the grid.
+                  if (entry.id === "possess") return possessing == null;
+                  if (entry.id === "return") return possessing != null;
+                  return true;
+                });
               return (
                 <section key={section.id} className="admin-action-section">
                   <h3 className="admin-section-title">{section.title}</h3>
