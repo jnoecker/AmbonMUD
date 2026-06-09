@@ -13,14 +13,17 @@ interface DicePanelProps {
 
 /**
  * Per-die cadence. Each child wobbles in the velvet — its face shuffling
- * through random numbers — then LANDS on its real value and holds a beat before
- * dropping into the green felt. Six dice ≈ 5.6s of building suspense.
+ * through random numbers — then LANDS on its real value and holds, drops into
+ * the green felt, and the velvet sits empty for a beat so the player can take
+ * in the new running total before the next child rolls. Six dice ≈ 14s.
  */
-const WOBBLE_MS = 600; // shuffling/wobbling before it lands
-const LAND_HOLD_MS = 340; // landed value held in the velvet before it drops
-const PER_DIE_MS = WOBBLE_MS + LAND_HOLD_MS;
-const WOBBLE_TICK_MS = 70; // how fast the shuffling face cycles
-const COIN_FLIP_MS = 1100;
+const WOBBLE_MS = 1200; // shuffling/wobbling before it lands
+const LAND_HOLD_MS = 700; // landed value held in the velvet before it drops
+const GAP_MS = 500; // empty-velvet pause to register the new total
+const DROP_AT_MS = WOBBLE_MS + LAND_HOLD_MS; // when the die falls to the tray
+const PER_DIE_MS = DROP_AT_MS + GAP_MS; // full slot, next die starts after this
+const WOBBLE_TICK_MS = 90; // how fast the shuffling face cycles
+const COIN_FLIP_MS = 2000;
 
 type Phase = "idle" | "rolling" | "done";
 type CoinState = "none" | "flipping" | "won" | "lost";
@@ -164,8 +167,9 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
       });
       // Land on the real value (and reveal the crowned max face if any).
       at(base + WOBBLE_MS, () => setActiveLanded(true));
-      // Drop into the green tray; the running total ticks up.
-      at(base + PER_DIE_MS, () => {
+      // Drop into the green tray; the running total ticks up. The velvet then
+      // sits empty for GAP_MS before the next child appears.
+      at(base + DROP_AT_MS, () => {
         setActiveDie(null);
         setSettled((prev) => [...prev, die]);
         setRunningTotal((prev) => prev + die.value);
@@ -174,11 +178,11 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
 
     const afterDice = diceResult.dice.length * PER_DIE_MS;
     if (diceResult.coinFired) {
-      at(afterDice + 150, () => setCoinState("flipping"));
-      at(afterDice + 150 + COIN_FLIP_MS, () => setCoinState(diceResult.coinWon ? "won" : "lost"));
-      at(afterDice + 150 + COIN_FLIP_MS + 550, () => finish(diceResult));
+      at(afterDice + 400, () => setCoinState("flipping"));
+      at(afterDice + 400 + COIN_FLIP_MS, () => setCoinState(diceResult.coinWon ? "won" : "lost"));
+      at(afterDice + 400 + COIN_FLIP_MS + 900, () => finish(diceResult));
     } else {
-      at(afterDice + 250, () => finish(diceResult));
+      at(afterDice + 500, () => finish(diceResult));
     }
 
     return () => timers.forEach((t) => window.clearTimeout(t));
