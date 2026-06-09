@@ -289,13 +289,13 @@ export function GameShell({
                 <button
                   type="button"
                   className="hud-stack-btn"
-                  onClick={() => openServicePanel("chat")}
-                  title="Social"
-                  aria-label="Social"
+                  onClick={() => openServicePanel("groupboard")}
+                  title="Group"
+                  aria-label="Group"
                 >
-                  {serverAssets["social_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["social_widget"]} alt="" />
-                    : <span className="hud-stack-glyph">☺</span>}
+                  {serverAssets["group_widget"]
+                    ? <img className="hud-stack-img" src={serverAssets["group_widget"]} alt="" />
+                    : <span className="hud-stack-glyph">&#10022;</span>}
                 </button>
                 <button
                   type="button"
