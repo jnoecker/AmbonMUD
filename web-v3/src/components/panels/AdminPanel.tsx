@@ -24,6 +24,8 @@ interface AdminPanelProps {
   possessing: string | null;
   invisible: boolean;
   feedbackFeed: UiFeedbackEntry[];
+  /** Global painted assets; used here for the optional stained-glass command button. */
+  serverAssets?: Record<string, string>;
 }
 
 function TeleportBrowser({
@@ -359,6 +361,7 @@ export function AdminPanel({
   possessing,
   invisible,
   feedbackFeed,
+  serverAssets = {},
 }: AdminPanelProps) {
   const [activeAction, setActiveAction] = useState<AdminAction | null>(null);
   const [inputA, setInputA] = useState("");
@@ -471,11 +474,23 @@ export function AdminPanel({
     executeAction(activeAction, pendingCommand);
   };
 
+  // Painted-frame CSS variables. The command tiles fall back to a gilded-glass
+  // gradient (see styles.css) and pick up a real stained-glass asset if the
+  // server advertises `staff_action_btn` / `staff_action_btn_active`.
+  const skinVars: Record<string, string> = {};
+  if (backgroundImage) skinVars["--admin-bg"] = `url("${backgroundImage}")`;
+  if (serverAssets.staff_action_btn) {
+    skinVars["--admin-action-btn"] = `url("${serverAssets.staff_action_btn}")`;
+  }
+  if (serverAssets.staff_action_btn_active) {
+    skinVars["--admin-action-btn-active"] = `url("${serverAssets.staff_action_btn_active}")`;
+  }
+
   return (
     <div className="popout-backdrop" onClick={onClose}>
       <section
         className={`popout-dialog admin-dialog${backgroundImage ? " admin-dialog-skinned" : ""}`}
-        style={backgroundImage ? { ["--admin-bg" as string]: `url("${backgroundImage}")` } : undefined}
+        style={Object.keys(skinVars).length > 0 ? skinVars : undefined}
         role="dialog"
         aria-modal="true"
         aria-label="Staff Administration"
