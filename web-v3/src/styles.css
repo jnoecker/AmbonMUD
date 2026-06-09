@@ -26169,8 +26169,8 @@ html:has(.game-shell),
   box-shadow: var(--admin-action-shadow, 0 0 16px rgb(214 182 96 / 42%), inset 0 0 12px rgb(214 182 96 / 16%));
   filter: drop-shadow(0 0 9px rgb(214 182 96 / 70%));
 }
-.admin-dialog-skinned .admin-action-tile-danger { border-color: rgb(210 120 130 / 40%); }
-.admin-dialog-skinned .admin-action-tile-utility { border-color: rgb(150 200 230 / 40%); }
+.admin-dialog-skinned .admin-action-tile-danger { border-color: var(--admin-action-edge, rgb(210 120 130 / 40%)); }
+.admin-dialog-skinned .admin-action-tile-utility { border-color: var(--admin-action-edge, rgb(150 200 230 / 40%)); }
 .admin-dialog-skinned .admin-action-label {
   font-size: clamp(0.66rem, 1.2vw, 0.92rem);
   font-weight: 700;
