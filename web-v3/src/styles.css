@@ -24810,11 +24810,13 @@ html:has(.game-shell),
   left: 30%;
   right: 28.5%;
   top: 18.5%;
-  bottom: 19%;
+  bottom: 21.5%;
   display: flex;
   flex-direction: column;
   gap: clamp(6px, 1.2vh, 12px);
-  color: #3a2c18;
+  color: #2e2110;
+  /* Subtle light "engraving" lifts the ink off the busy parchment texture. */
+  text-shadow: 0 1px 1px rgb(255 248 228 / 65%);
 }
 
 .cr-search-wrap {
@@ -24879,7 +24881,7 @@ html:has(.game-shell),
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(0.84rem, 1.5vw, 1.04rem);
-  color: #2f2410;
+  color: #241a08;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -24887,12 +24889,13 @@ html:has(.game-shell),
 .cr-col-usage {
   font-family: "JetBrains Mono", "Cascadia Mono", monospace;
   font-size: clamp(0.68rem, 1.2vw, 0.84rem);
-  color: #5a4426;
+  color: #463418;
+  font-weight: 600;
   word-break: break-word;
 }
 .cr-col-desc {
   font-size: clamp(0.72rem, 1.3vw, 0.9rem);
-  color: #3a2c18;
+  color: #2a1f0e;
   line-height: 1.35;
 }
 
