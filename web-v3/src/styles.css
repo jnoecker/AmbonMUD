@@ -25935,7 +25935,7 @@ html:has(.game-shell),
   color: #f4e2c0;
   text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
 }
-.cc-plaque-btn.has-art .cc-plaque-label { color: #3a2410; text-shadow: 0 1px 0 rgb(255 230 180 / 50%); }
+.cc-plaque-btn.has-art .cc-plaque-label { color: #fdf3d8; text-shadow: 0 1px 3px rgb(0 0 0 / 70%); }
 
 /* ── Spellbook: open-crafting button ── */
 .spellbook-craft-btn {
@@ -26064,9 +26064,9 @@ html:has(.game-shell),
   justify-items: center;
   /* Tight — the plaque art has transparent margins, so near-zero gap still reads
      as breathing room; on small screens the cells may touch, which is fine. */
-  gap: clamp(0px, 0.5vh, 8px) clamp(0px, 0.6vw, 11px);
+  gap: clamp(0px, 0.35vh, 5px) clamp(0px, 0.6vw, 11px);
   overflow-y: auto;
-  padding: clamp(2px, 0.5vh, 7px) 2px;
+  padding: clamp(1px, 0.3vh, 4px) 2px;
   scrollbar-width: thin;
   scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
@@ -26159,7 +26159,7 @@ html:has(.game-shell),
      the hollow center via percentage padding (clears the ornate frame). */
   aspect-ratio: 3 / 2;
   width: 100%;
-  max-width: clamp(112px, 13vw, 150px);
+  max-width: clamp(108px, 12vw, 138px);
   min-width: 0;
   padding: 13% 18%;
   border: 1px solid var(--admin-action-edge, rgb(190 168 96 / 30%));
