@@ -928,8 +928,13 @@ class CommandParserTest {
     }
 
     @Test
-    fun `gamble rejects missing or invalid amount`() {
-        assertTrue(CommandParser.parse("gamble") is Command.Invalid)
+    fun `bare gamble or dice shows the rules`() {
+        assertEquals(Command.DiceRules, CommandParser.parse("gamble"))
+        assertEquals(Command.DiceRules, CommandParser.parse("dice"))
+    }
+
+    @Test
+    fun `gamble rejects invalid amount`() {
         assertTrue(CommandParser.parse("gamble abc") is Command.Invalid)
         assertTrue(CommandParser.parse("gamble 0") is Command.Invalid)
         assertTrue(CommandParser.parse("gamble -5") is Command.Invalid)

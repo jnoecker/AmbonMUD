@@ -29,7 +29,7 @@ const COIN_FLIP_MS = 2000;
 type Phase = "idle" | "rolling" | "done";
 type CoinState = "none" | "flipping" | "won" | "lost";
 
-/** Display name for one of Aineroira's children. */
+/** Display name for one of Aineroia's children. */
 function childName(kind: string): string {
   return kind ? kind.charAt(0).toUpperCase() + kind.slice(1) : "";
 }
@@ -100,7 +100,7 @@ function Die({
 }
 
 /**
- * Aineroira's Dice — reskinned onto the painted `dice_bg` frame. The six
+ * Aineroia's Dice — reskinned onto the painted `dice_bg` frame. The six
  * children tumble big → small in the purple velvet, settling one by one into
  * the green felt as the running total climbs; the Luneqrae coin flips last when
  * three or more crown their max face. Values, the bet controls, and the result
@@ -304,7 +304,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
 
       {/* How to Play */}
       <div className="dice-howto">
-        <p>Six dice — the children of Aineroira — roll big to small.</p>
+        <p>Six dice — the children of Aineroia — roll big to small.</p>
         <p>Sum <strong>{target}</strong> or less and win <strong>{winMult}×</strong> your bet.</p>
         <p>Land <strong>3+</strong> max faces and the Luneqrae coin flips: <strong>{coinMult}×</strong> on a bust, <strong>{jackpotMult}×</strong> if your sum also held.</p>
       </div>

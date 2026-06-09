@@ -1204,7 +1204,7 @@ export interface LotteryInfo {
   diceMaxBet: number;
   /** Base payout multiplier when the summed roll lands at or below the target. */
   diceWinMultiplier: number;
-  /** Aineroira's Dice: a summed roll at or below this wins the base payout. */
+  /** Aineroia's Dice: a summed roll at or below this wins the base payout. */
   diceWinTarget: number;
   /** This many dice (or more) on their max face summon the Luneqrae coin flip. */
   coinMaxThreshold: number;
@@ -1225,7 +1225,7 @@ export interface DiceRoll {
   isMax: boolean;
 }
 
-/** One resolved game of Aineroira's Dice, from the Lottery.Gamble GMCP package. */
+/** One resolved game of Aineroia's Dice, from the Lottery.Gamble GMCP package. */
 export interface DiceGambleResult {
   /** "win" (base), "lose", "coin" (Luneqrae rescue), or "jackpot" (coin + held sum). */
   outcome: "win" | "lose" | "coin" | "jackpot";

@@ -126,6 +126,7 @@ class WebClientParityTest {
         "LotteryInfo" to "lottery",
         "LotteryBuy" to "lottery",
         "Gamble" to "gamble",
+        "DiceRules" to "gamble",
         // Quests
         "QuestLog" to "quest_log",
         "QuestInfo" to "quest_info",

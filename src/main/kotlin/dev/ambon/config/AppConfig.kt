@@ -908,7 +908,7 @@ data class GamblingConfig(
     val diceMinBet: Long = 10L,
     val diceMaxBet: Long = 10_000L,
     /**
-     * Aineroira's Dice. Six dice — the goddess's children — are rolled in
+     * Aineroia's Dice. Six dice — the goddess's children — are rolled in
      * descending size: the large pair (Ophirae/Mycorae, d20), the medium pair
      * (Pyrae/Aetherae, d16), the small pair (Lustriae/Aureliae, d8). Their sum
      * decides the base wager; the Luneqrae coin decides the miracle.
@@ -3113,7 +3113,7 @@ data class ImagesConfig(
             "housing_bg" to "global_assets/housing_bg.png",
             "lottery_bg" to "global_assets/lottery_bg.png",
             "dice_bg" to "global_assets/dice_bg.png",
-            // Aineroira's Dice — the six children, each with a themed die sprite
+            // Aineroia's Dice — the six children, each with a themed die sprite
             // and an illustrated max face, plus the Luneqrae coin's two sides.
             // All optional; each die falls back to a themed CSS render.
             "dice_ophirae" to "global_assets/dice_ophirae.png",

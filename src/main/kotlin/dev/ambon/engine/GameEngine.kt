@@ -1486,6 +1486,7 @@ class GameEngine(
                 ctx = ctx,
                 lotterySystem = lotterySystem,
                 markVitalsDirty = ::markVitalsDirty,
+                getEngineScope = { engineScope },
             ),
             ReputationHandler(
                 ctx = ctx,
