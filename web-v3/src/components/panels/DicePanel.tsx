@@ -1,33 +1,97 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { DiceGambleResult, LotteryInfo, UiFeedbackEntry } from "../../types";
+import type { DiceGambleResult, DiceRoll, LotteryInfo, UiFeedbackEntry } from "../../types";
 
 interface DicePanelProps {
   diceResult: DiceGambleResult | null;
   lotteryInfo: LotteryInfo | null;
   uiFeedbackFeed: UiFeedbackEntry[];
   gold: number;
+  /** Resolved global-asset URLs (dice sprites, max faces, coin sides). */
+  assets: Record<string, string>;
   onCommand: (command: string) => void;
 }
 
-/** How long the die tumbles before settling on the real roll. */
-const ROLL_DURATION_MS = 1100;
-/** Number-shuffle cadence while tumbling. */
-const ROLL_TICK_MS = 70;
+/** Per-die tumble cadence; the active die spins in the velvet, then drops to the green. */
+const PER_DIE_MS = 520;
+const TUMBLE_MS = 360;
+const COIN_FLIP_MS = 900;
 
-type DiePhase = "idle" | "rolling" | "won" | "lost";
+type Phase = "idle" | "rolling" | "done";
+type CoinState = "none" | "flipping" | "won" | "lost";
 
-export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, onCommand }: DicePanelProps) {
+/** Display name for one of Aineroira's children. */
+function childName(kind: string): string {
+  return kind ? kind.charAt(0).toUpperCase() + kind.slice(1) : "";
+}
+
+/** Large d20, medium d16, small d8 — a CSS hint that mirrors the roll order. */
+function sizeClass(sides: number): string {
+  if (sides >= 20) return "dice-die-lg";
+  if (sides >= 16) return "dice-die-md";
+  return "dice-die-sm";
+}
+
+function formatGold(n: number): string {
+  return Math.round(n).toLocaleString();
+}
+
+/**
+ * Renders one die: the Arcanum sprite (and illustrated max face on a crowned
+ * roll) when the art has shipped, otherwise a themed CSS render. The value and
+ * d-size tag overlay either way.
+ */
+function Die({
+  die,
+  extraClass,
+  assets,
+}: {
+  die: DiceRoll;
+  extraClass: string;
+  assets: Record<string, string>;
+}) {
+  const sprite = assets[`dice_${die.kind}`];
+  const maxArt = assets[`dice_${die.kind}_max`];
+  const faceArt = die.isMax ? (maxArt ?? sprite) : sprite;
+  const className =
+    `dice-die dice-die-${die.kind} ${sizeClass(die.sides)} ${extraClass}` +
+    (die.isMax ? " dice-die-max" : "") +
+    (faceArt ? " dice-die-art" : "");
+  return (
+    <div
+      className={className}
+      title={`${childName(die.kind)} (d${die.sides}): ${die.value}${die.isMax ? " — max!" : ""}`}
+      style={faceArt ? { backgroundImage: `url("${faceArt}")` } : undefined}
+    >
+      <span className="dice-die-value">{die.value}</span>
+      <span className="dice-die-tag">d{die.sides}</span>
+    </div>
+  );
+}
+
+/**
+ * Aineroira's Dice — reskinned onto the painted `dice_bg` frame. The six
+ * children tumble big → small in the purple velvet, settling one by one into
+ * the green felt as the running total climbs; the Luneqrae coin flips last when
+ * three or more crown their max face. Values, the bet controls, and the result
+ * banner overlay their painted slots.
+ */
+export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, assets, onCommand }: DicePanelProps) {
   const minBet = lotteryInfo?.diceMinBet ?? 10;
   const maxBet = lotteryInfo?.diceMaxBet ?? 1000;
-  const multiplier = lotteryInfo?.diceWinMultiplier ?? 2;
-  const threshold = lotteryInfo?.diceWinThreshold ?? 45;
+  const winMult = lotteryInfo?.diceWinMultiplier ?? 2;
+  const target = lotteryInfo?.diceWinTarget ?? 45;
+  const coinMult = lotteryInfo?.coinWinMultiplier ?? 10;
+  const jackpotMult = lotteryInfo?.coinJackpotMultiplier ?? 12;
 
   const [betDraft, setBetDraft] = useState(`${minBet}`);
-  const [phase, setPhase] = useState<DiePhase>("idle");
-  const [displayRoll, setDisplayRoll] = useState<number | null>(null);
-  const [settled, setSettled] = useState<DiceGambleResult | null>(null);
-  const [cooldownLeft, setCooldownLeft] = useState(0);
+  const [phase, setPhase] = useState<Phase>("idle");
   const [animatedSeq, setAnimatedSeq] = useState(0);
+  const [activeDie, setActiveDie] = useState<DiceRoll | null>(null);
+  const [settled, setSettled] = useState<DiceRoll[]>([]);
+  const [runningTotal, setRunningTotal] = useState(0);
+  const [coinState, setCoinState] = useState<CoinState>("none");
+  const [finalResult, setFinalResult] = useState<DiceGambleResult | null>(null);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
   const cooldownUntilRef = useRef(0);
 
   const activeFeedback = useMemo(
@@ -35,37 +99,63 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, onCom
     [uiFeedbackFeed],
   );
 
-  // A fresh result arrived: kick the die into its tumble (state adjusted
-  // during render, per the React "you might not need an effect" pattern).
+  // A fresh result arrived: reset and kick off the tumble (state set during
+  // render, per the React "you might not need an effect" pattern).
   if (diceResult && diceResult.seq !== animatedSeq) {
     setAnimatedSeq(diceResult.seq);
     setPhase("rolling");
-    setSettled(null);
+    setActiveDie(null);
+    setSettled([]);
+    setRunningTotal(0);
+    setCoinState("none");
+    setFinalResult(null);
   }
 
-  // While tumbling, shuffle the shown number, then settle on the real roll.
+  // Drive the sequenced reveal: each die tumbles in the velvet, then drops into
+  // the green tray as the total grows; the coin flips last if it fired.
   useEffect(() => {
     if (phase !== "rolling" || !diceResult) return;
-
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const settle = () => {
-      setDisplayRoll(diceResult.roll);
-      setSettled(diceResult);
-      setPhase(diceResult.outcome === "win" ? "won" : "lost");
-      cooldownUntilRef.current = Date.now() + diceResult.cooldownMs;
-      setCooldownLeft(diceResult.cooldownMs);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timers: number[] = [];
+    const at = (delay: number, fn: () => void) => {
+      timers.push(window.setTimeout(fn, delay));
+    };
+    const finish = (r: DiceGambleResult) => {
+      setPhase("done");
+      setFinalResult(r);
+      cooldownUntilRef.current = Date.now() + r.cooldownMs;
+      setCooldownLeft(r.cooldownMs);
     };
 
-    const shuffle = reducedMotion
-      ? null
-      : window.setInterval(() => {
-          setDisplayRoll(1 + Math.floor(Math.random() * 100));
-        }, ROLL_TICK_MS);
-    const stop = window.setTimeout(settle, reducedMotion ? 0 : ROLL_DURATION_MS);
-    return () => {
-      if (shuffle !== null) window.clearInterval(shuffle);
-      window.clearTimeout(stop);
-    };
+    if (reduced) {
+      at(0, () => {
+        setSettled(diceResult.dice);
+        setRunningTotal(diceResult.sum);
+        setCoinState(diceResult.coinFired ? (diceResult.coinWon ? "won" : "lost") : "none");
+        finish(diceResult);
+      });
+      return () => timers.forEach((t) => window.clearTimeout(t));
+    }
+
+    diceResult.dice.forEach((die, i) => {
+      at(i * PER_DIE_MS, () => setActiveDie(die));
+      at(i * PER_DIE_MS + TUMBLE_MS, () => {
+        setActiveDie(null);
+        setSettled((prev) => [...prev, die]);
+        setRunningTotal((prev) => prev + die.value);
+      });
+    });
+
+    const afterDice = diceResult.dice.length * PER_DIE_MS;
+    if (diceResult.coinFired) {
+      at(afterDice + 150, () => setCoinState("flipping"));
+      at(afterDice + 150 + COIN_FLIP_MS, () => setCoinState(diceResult.coinWon ? "won" : "lost"));
+      at(afterDice + 150 + COIN_FLIP_MS + 550, () => finish(diceResult));
+    } else {
+      at(afterDice + 250, () => finish(diceResult));
+    }
+
+    return () => timers.forEach((t) => window.clearTimeout(t));
   }, [phase, diceResult]);
 
   // Tick the post-roll cooldown down so the Roll button re-enables itself.
@@ -79,115 +169,136 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, onCom
 
   const rolling = phase === "rolling";
   const coolingDown = cooldownLeft > 0;
+  const bet = Math.min(maxBet, Math.max(minBet, Math.floor(Number(betDraft) || minBet)));
 
-  const placeBet = (amount: number) => {
-    if (rolling) return;
-    const bet = Math.min(maxBet, Math.max(minBet, Math.floor(amount)));
-    setBetDraft(`${bet}`);
-    onCommand(`gamble ${bet}`);
-  };
+  const clampBet = (n: number) => Math.max(minBet, Math.min(maxBet, Math.floor(n)));
+  const nudge = (delta: number) => setBetDraft(`${clampBet(bet + delta)}`);
 
   const quickBets = useMemo(() => {
-    const steps = [minBet, minBet * 5, minBet * 10, maxBet];
-    return [...new Set(steps.filter((b) => b >= minBet && b <= maxBet))];
+    const candidates = [minBet, 50, 100, 250, 500, 1000, 5000, maxBet];
+    return [...new Set(candidates.filter((b) => b >= minBet && b <= maxBet))].slice(0, 6);
   }, [minBet, maxBet]);
 
+  const roll = () => {
+    if (rolling || coolingDown) return;
+    const b = clampBet(bet);
+    setBetDraft(`${b}`);
+    onCommand(`gamble ${b}`);
+  };
+
+  const totalOver = runningTotal > target;
+  const showTotal = rolling || phase === "done";
+
+  // Outcome banner copy for the green felt band.
+  const banner = (() => {
+    if (rolling) return { cls: "rolling", text: "The children tumble across the velvet…" };
+    if (phase === "done" && finalResult) {
+      const net = finalResult.payout - finalResult.bet;
+      switch (finalResult.outcome) {
+        case "jackpot":
+          return { cls: "jackpot", text: `LUNEQRAE'S BLESSING — ${jackpotMult}× — you win ${formatGold(finalResult.payout)} gold! (+${formatGold(net)})` };
+        case "coin":
+          return { cls: "coin", text: `The coin rescues you — ${coinMult}× — ${formatGold(finalResult.payout)} gold! (+${formatGold(net)})` };
+        case "win":
+          return { cls: "win", text: `You WIN — ${formatGold(finalResult.payout)} gold! (+${formatGold(net)})` };
+        default:
+          return { cls: "lose", text: `Busted at ${finalResult.sum}. The house keeps your ${formatGold(finalResult.bet)} gold.` };
+      }
+    }
+    return { cls: "idle", text: `Sum ${target} or less wins ${winMult}× your bet.` };
+  })();
+
   return (
-    <div className="dice-panel">
-      <div className="panel-header">
-        <span className="panel-title">Dice Table</span>
+    <div className="dice-board">
+      {/* Your Gold */}
+      <div className="dice-gold">{formatGold(gold)}</div>
+
+      {/* How to Play */}
+      <div className="dice-howto">
+        <p>Six dice — the children of Aineroira — roll big to small.</p>
+        <p>Sum <strong>{target}</strong> or less and win <strong>{winMult}×</strong> your bet.</p>
+        <p>Land <strong>3+</strong> max faces and the Luneqrae coin flips: <strong>{coinMult}×</strong> on a bust, <strong>{jackpotMult}×</strong> if your sum also held.</p>
       </div>
 
-      {activeFeedback && (
-        <p className={`systems-local-message systems-local-message-${activeFeedback.type}`}>
-          {activeFeedback.message}
-        </p>
+      {/* Stat slots */}
+      <div className="dice-stat dice-stat-target">{target}<span className="dice-stat-sub">or less</span></div>
+      <div className="dice-stat dice-stat-payout">{formatGold(bet * winMult)}</div>
+      <div className="dice-stat dice-stat-bet">{formatGold(bet)}</div>
+
+      {/* Velvet roll stage */}
+      <div className="dice-velvet" aria-live="polite">
+        {activeDie && <Die die={activeDie} extraClass="dice-die-tumbling" assets={assets} />}
+        {coinState !== "none" && (() => {
+          // Moon side = the Luneqrae's blessing (win); dark-wind side = the loss.
+          const coinArt = coinState === "lost" ? assets["coin_luneqrae_wind"] : assets["coin_luneqrae_moon"];
+          return (
+            <div
+              className={`dice-coin dice-coin-${coinState}${coinArt ? " dice-coin-art" : ""}`}
+              style={coinArt ? { backgroundImage: `url("${coinArt}")` } : undefined}
+            >
+              {!coinArt && (
+                <span className="dice-coin-face">{coinState === "lost" ? "✦" : "☾"}</span>
+              )}
+            </div>
+          );
+        })()}
+        {!activeDie && coinState === "none" && !rolling && phase !== "done" && (
+          <p className="dice-velvet-hint">Place your bet and roll the dice.</p>
+        )}
+      </div>
+      {showTotal && (
+        <div className={`dice-total${totalOver ? " dice-total-over" : ""}`}>{runningTotal}</div>
       )}
 
-      <article className="systems-card">
-        <div className="systems-card-header">
-          <div>
-            <p className="systems-card-label">High-Stakes d100</p>
-            <h4>Roll {threshold} or less to win {multiplier}× your bet</h4>
-          </div>
-          <span className="systems-pill">{gold.toLocaleString()} gold</span>
+      {/* Place your bet (parchment) */}
+      <div className="dice-bet">
+        <div className="dice-bet-title">Place Your Bet</div>
+        <input
+          type="number"
+          min={minBet}
+          max={maxBet}
+          step={1}
+          inputMode="numeric"
+          className="dice-bet-input"
+          value={betDraft}
+          onChange={(e) => setBetDraft(e.target.value)}
+          aria-label="Bet amount"
+        />
+        <div className="dice-bet-steppers">
+          <button type="button" onClick={() => nudge(-10)} aria-label="Minus ten">−10</button>
+          <button type="button" onClick={() => nudge(-1)} aria-label="Minus one">−1</button>
+          <button type="button" onClick={() => nudge(1)} aria-label="Plus one">+1</button>
+          <button type="button" onClick={() => nudge(10)} aria-label="Plus ten">+10</button>
         </div>
-
-        <div className="dice-stage">
-          <div className={`dice-die dice-die-${phase}`} aria-hidden="true">
-            {displayRoll !== null ? (
-              <span className="dice-die-number">{displayRoll}</span>
-            ) : (
-              <span className="dice-die-mystery">?</span>
-            )}
-            <span className="dice-die-pip dice-die-pip-tl" />
-            <span className="dice-die-pip dice-die-pip-tr" />
-            <span className="dice-die-pip dice-die-pip-bl" />
-            <span className="dice-die-pip dice-die-pip-br" />
-          </div>
-          <p className="dice-outcome" aria-live="polite">
-            {rolling && "The die clatters across the table…"}
-            {(phase === "won" || phase === "lost") && settled && (
-              <span className="sr-only">Rolled {settled.roll}, needed {settled.needed} or less. </span>
-            )}
-            {phase === "won" && settled && (
-              <span className="dice-outcome-win">
-                You win {settled.payout.toLocaleString()} gold! (net +{(settled.payout - settled.bet).toLocaleString()})
-              </span>
-            )}
-            {phase === "lost" && settled && (
-              <span className="dice-outcome-lose">
-                Lost {settled.bet.toLocaleString()} gold. The house grins.
-              </span>
-            )}
-            {phase === "idle" && `Place a bet between ${minBet.toLocaleString()} and ${maxBet.toLocaleString()} gold.`}
-          </p>
-        </div>
-
-        <div className="systems-choice-list systems-choice-list-compact">
+        <div className="dice-bet-quick">
           {quickBets.map((amount) => (
             <button
               key={amount}
               type="button"
-              className="systems-choice-card"
-              disabled={rolling || coolingDown}
-              onClick={() => placeBet(amount)}
+              className={`dice-bet-chip${bet === amount ? " is-active" : ""}`}
+              onClick={() => setBetDraft(`${amount}`)}
             >
-              <span className="systems-choice-title">{amount.toLocaleString()} gold</span>
-              <span className="systems-choice-copy">wins {Math.floor(amount * multiplier).toLocaleString()}</span>
+              {amount >= 1000 ? `${amount / 1000}K` : amount}
             </button>
           ))}
         </div>
+        <button type="button" className="dice-roll-btn" disabled={rolling || coolingDown} onClick={roll}>
+          {rolling ? "Rolling…" : coolingDown ? `Wait ${Math.ceil(cooldownLeft / 1000)}s` : "ROLL"}
+        </button>
+        {activeFeedback && (
+          <p className={`dice-feedback dice-feedback-${activeFeedback.type}`}>{activeFeedback.message}</p>
+        )}
+      </div>
 
-        <div className="systems-action-row">
-          <input
-            type="number"
-            min={minBet}
-            max={maxBet}
-            step={1}
-            inputMode="numeric"
-            className="systems-number-input"
-            value={betDraft}
-            onChange={(event) => setBetDraft(event.target.value)}
-          />
-          <button
-            type="button"
-            className="systems-primary-btn"
-            disabled={rolling || coolingDown}
-            onClick={() => {
-              const bet = Number(betDraft);
-              if (!Number.isSafeInteger(bet) || bet < 1) return;
-              placeBet(bet);
-            }}
-          >
-            {rolling
-              ? "Rolling…"
-              : coolingDown
-                ? `Catch your breath (${Math.ceil(cooldownLeft / 1000)}s)`
-                : "Roll the Dice"}
-          </button>
+      {/* Green felt — settled dice + result banner */}
+      <div className="dice-felt">
+        <div className="dice-tray">
+          {settled.map((die, i) => (
+            <Die key={`${die.kind}-${i}`} die={die} extraClass="dice-die-settled" assets={assets} />
+          ))}
         </div>
-      </article>
+        <p className={`dice-banner dice-banner-${banner.cls}`}>{banner.text}</p>
+      </div>
     </div>
   );
 }

@@ -1489,7 +1489,10 @@ class GmcpEmitter(
         val diceMinBet: Long,
         val diceMaxBet: Long,
         val diceWinMultiplier: Double,
-        val diceWinThreshold: Int,
+        val diceWinTarget: Int,
+        val coinMaxThreshold: Int,
+        val coinWinMultiplier: Double,
+        val coinJackpotMultiplier: Double,
         val diceCooldownMs: Long,
     )
 
@@ -1510,18 +1513,36 @@ class GmcpEmitter(
                 diceMinBet = info.diceMinBet,
                 diceMaxBet = info.diceMaxBet,
                 diceWinMultiplier = info.diceWinMultiplier,
-                diceWinThreshold = info.diceWinThreshold,
+                diceWinTarget = info.diceWinTarget,
+                coinMaxThreshold = info.coinMaxThreshold,
+                coinWinMultiplier = info.coinWinMultiplier,
+                coinJackpotMultiplier = info.coinJackpotMultiplier,
                 diceCooldownMs = info.diceCooldownMs,
             ),
         )
     }
 
+    /** One die within a resolved roll, in tumble order. */
+    data class GambleDiePayload(
+        val kind: String,
+        val sides: Int,
+        val value: Int,
+        val isMax: Boolean,
+    )
+
     data class GambleResultPayload(
+        /** "win" (base), "lose", "coin" (Luneqrae rescue), or "jackpot" (coin + base). */
         val outcome: String,
         val bet: Long,
         val payout: Long,
-        val roll: Int,
-        val needed: Int,
+        val multiplier: Double,
+        /** The six children in roll order, big → small. */
+        val dice: List<GambleDiePayload>,
+        val sum: Int,
+        val target: Int,
+        val maxCount: Int,
+        val coinFired: Boolean,
+        val coinWon: Boolean,
         val cooldownMs: Long,
     )
 

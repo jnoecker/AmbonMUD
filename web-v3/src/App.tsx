@@ -971,6 +971,8 @@ function App() {
             ? "estate"
             : drawerPanel === "lottery"
             ? "fortune"
+            : drawerPanel === "dice"
+            ? "dicetable"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -1017,6 +1019,8 @@ function App() {
             ? state.serverAssets["housing_bg"]
             : drawerPanel === "lottery"
             ? state.serverAssets["lottery_bg"]
+            : drawerPanel === "dice"
+            ? state.serverAssets["dice_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1045,7 +1049,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
@@ -1405,6 +1409,7 @@ function App() {
             lotteryInfo={state.lotteryInfo}
             uiFeedbackFeed={state.uiFeedbackFeed}
             gold={state.vitals.gold}
+            assets={state.serverAssets}
             onCommand={sendCommand}
           />
         )}

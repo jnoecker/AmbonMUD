@@ -1,10 +1,12 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.DieKind
 import dev.ambon.engine.GambleResult
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.LotteryBuyResult
 import dev.ambon.engine.LotterySystem
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -191,58 +193,7 @@ class LotteryHandler(
             )
 
             when (result) {
-                is GambleResult.Win -> {
-                    ctx.metrics.onGameEvent("tavern", "gamble")
-                    ctx.metrics.onGameEvent("tavern", "gamble_win")
-                    me.gold = me.gold - result.bet + result.payout
-                    outbound.send(
-                        OutboundEvent.SendInfo(
-                            sessionId,
-                            "You roll the dice... ${result.roll} (need ${result.needed} or less). You WIN!",
-                        ),
-                    )
-                    outbound.send(
-                        OutboundEvent.SendInfo(
-                            sessionId,
-                            "You collect ${result.payout} gold! (Net gain: ${result.payout - result.bet} gold)",
-                        ),
-                    )
-                    markVitalsDirty(sessionId)
-                    emitGambleGmcp(sessionId, system, "win", result.bet, result.payout, result.roll, result.needed)
-                    broadcastToRoomExcept(
-                        me.roomId,
-                        sessionId,
-                        "${me.name} rolls the dice and wins ${result.payout} gold!",
-                        players,
-                        outbound,
-                    )
-                }
-
-                is GambleResult.Lose -> {
-                    ctx.metrics.onGameEvent("tavern", "gamble")
-                    me.gold -= result.bet
-                    outbound.send(
-                        OutboundEvent.SendInfo(
-                            sessionId,
-                            "You roll the dice... ${result.roll} (need ${result.needed} or less). You lose.",
-                        ),
-                    )
-                    outbound.send(
-                        OutboundEvent.SendInfo(
-                            sessionId,
-                            "You lose ${result.bet} gold.",
-                        ),
-                    )
-                    markVitalsDirty(sessionId)
-                    emitGambleGmcp(sessionId, system, "lose", result.bet, 0L, result.roll, result.needed)
-                    broadcastToRoomExcept(
-                        me.roomId,
-                        sessionId,
-                        "${me.name} rolls the dice and loses.",
-                        players,
-                        outbound,
-                    )
-                }
+                is GambleResult.Resolved -> handleGambleResolved(sessionId, me, system, result)
 
                 is GambleResult.InsufficientGold -> {
                     sendErrorWithFeedback(
@@ -328,23 +279,109 @@ class LotteryHandler(
         gmcpEmitter?.sendLotteryInfo(sessionId, info)
     }
 
+    private suspend fun handleGambleResolved(
+        sessionId: SessionId,
+        me: PlayerState,
+        system: LotterySystem,
+        result: GambleResult.Resolved,
+    ) {
+        ctx.metrics.onGameEvent("tavern", "gamble")
+        if (result.won) ctx.metrics.onGameEvent("tavern", "gamble_win")
+        if (result.coinFired) ctx.metrics.onGameEvent("tavern", "gamble_coin")
+
+        me.gold = me.gold - result.bet + result.payout
+
+        val rollLine = result.dice.joinToString(", ") { "${dieName(it.kind)} ${it.value}" }
+        outbound.send(OutboundEvent.SendInfo(sessionId, "The children tumble across the velvet: $rollLine."))
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Total ${result.sum} (target ${result.target} or less)."))
+
+        val net = result.payout - result.bet
+        val outcome = outcomeOf(result)
+        when (outcome) {
+            "jackpot" -> outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "The Luneqrae coin spins skyward and lands true — and your sum held! " +
+                        "You collect ${result.payout} gold! (Net +$net)",
+                ),
+            )
+
+            "coin" -> outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "Your sum overran, but the Luneqrae coin flips in your favour! " +
+                        "You collect ${result.payout} gold! (Net +$net)",
+                ),
+            )
+
+            "win" -> outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "Fate smiles — you WIN! You collect ${result.payout} gold! (Net +$net)",
+                ),
+            )
+
+            else -> {
+                val coinNote = if (result.coinFired) " The Luneqrae coin falls dark." else ""
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "The sum overruns the target.$coinNote You lose ${result.bet} gold.",
+                    ),
+                )
+            }
+        }
+
+        markVitalsDirty(sessionId)
+        emitGambleGmcp(sessionId, system, outcome, result)
+
+        val broadcast = when (outcome) {
+            "jackpot", "coin" ->
+                "${me.name} rolls Aineroira's Dice and the Luneqrae coin blesses them with ${result.payout} gold!"
+
+            "win" -> "${me.name} rolls Aineroira's Dice and wins ${result.payout} gold!"
+            else -> "${me.name} rolls Aineroira's Dice and busts."
+        }
+        broadcastToRoomExcept(me.roomId, sessionId, broadcast, players, outbound)
+    }
+
+    private fun dieName(kind: DieKind): String =
+        kind.name.lowercase().replaceFirstChar { it.uppercase() }
+
+    private fun outcomeOf(result: GambleResult.Resolved): String =
+        when {
+            result.coinFired && result.coinWon && result.baseWin -> "jackpot"
+            result.coinFired && result.coinWon -> "coin"
+            result.baseWin -> "win"
+            else -> "lose"
+        }
+
     private suspend fun emitGambleGmcp(
         sessionId: SessionId,
         system: LotterySystem,
         outcome: String,
-        bet: Long,
-        payout: Long,
-        roll: Int,
-        needed: Int,
+        result: GambleResult.Resolved,
     ) {
         gmcpEmitter?.sendGambleResult(
             sessionId,
             GmcpEmitter.GambleResultPayload(
                 outcome = outcome,
-                bet = bet,
-                payout = payout,
-                roll = roll,
-                needed = needed,
+                bet = result.bet,
+                payout = result.payout,
+                multiplier = result.multiplier,
+                dice = result.dice.map {
+                    GmcpEmitter.GambleDiePayload(
+                        kind = it.kind.name.lowercase(),
+                        sides = it.kind.sides,
+                        value = it.value,
+                        isMax = it.isMax,
+                    )
+                },
+                sum = result.sum,
+                target = result.target,
+                maxCount = result.maxCount,
+                coinFired = result.coinFired,
+                coinWon = result.coinWon,
                 cooldownMs = system.diceCooldownMs,
             ),
         )

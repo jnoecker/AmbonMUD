@@ -567,7 +567,12 @@ data class AppConfig(
             "ambonMUD.engine.gambling.diceMaxBet must be >= diceMinBet"
         }
         require(engine.gambling.diceWinMultiplier > 0.0) { "ambonMUD.engine.gambling.diceWinMultiplier must be > 0" }
-        require(engine.gambling.diceWinChance in 0.0..1.0) { "ambonMUD.engine.gambling.diceWinChance must be in 0.0..1.0" }
+        require(engine.gambling.diceWinTarget in 6..52) { "ambonMUD.engine.gambling.diceWinTarget must be in 6..52" }
+        require(engine.gambling.coinMaxThreshold in 1..6) { "ambonMUD.engine.gambling.coinMaxThreshold must be in 1..6" }
+        require(engine.gambling.coinWinMultiplier > 0.0) { "ambonMUD.engine.gambling.coinWinMultiplier must be > 0" }
+        require(engine.gambling.coinJackpotMultiplier > 0.0) {
+            "ambonMUD.engine.gambling.coinJackpotMultiplier must be > 0"
+        }
         require(engine.gambling.cooldownMs >= 0) { "ambonMUD.engine.gambling.cooldownMs must be >= 0" }
     }
 
@@ -902,9 +907,21 @@ data class GamblingConfig(
     val enabled: Boolean = true,
     val diceMinBet: Long = 10L,
     val diceMaxBet: Long = 10_000L,
+    /**
+     * Aineroira's Dice. Six dice — the goddess's children — are rolled in
+     * descending size: the large pair (Ophirae/Mycorae, d20), the medium pair
+     * (Pyrae/Aetherae, d16), the small pair (Lustriae/Aureliae, d8). Their sum
+     * decides the base wager; the Luneqrae coin decides the miracle.
+     */
     val diceWinMultiplier: Double = 2.0,
-    /** Probability of winning a dice roll (0.0–1.0). */
-    val diceWinChance: Double = 0.45,
+    /** A summed roll at or below this target wins the base payout (mean roll ≈ 47). */
+    val diceWinTarget: Int = 45,
+    /** This many dice (or more) landing on their max face summons the Luneqrae coin flip. */
+    val coinMaxThreshold: Int = 3,
+    /** Payout multiplier when the Luneqrae coin flip wins (and the sum busted). */
+    val coinWinMultiplier: Double = 10.0,
+    /** Payout multiplier when the coin flip wins AND the sum was at or below the target. */
+    val coinJackpotMultiplier: Double = 12.0,
     /** Cooldown between gamble attempts in milliseconds. */
     val cooldownMs: Long = 5_000L,
 )
@@ -3095,6 +3112,24 @@ data class ImagesConfig(
             "stylist_bg" to "global_assets/stylist_bg.png",
             "housing_bg" to "global_assets/housing_bg.png",
             "lottery_bg" to "global_assets/lottery_bg.png",
+            "dice_bg" to "global_assets/dice_bg.png",
+            // Aineroira's Dice — the six children, each with a themed die sprite
+            // and an illustrated max face, plus the Luneqrae coin's two sides.
+            // All optional; each die falls back to a themed CSS render.
+            "dice_ophirae" to "global_assets/dice_ophirae.png",
+            "dice_ophirae_max" to "global_assets/dice_ophirae_max.png",
+            "dice_mycorae" to "global_assets/dice_mycorae.png",
+            "dice_mycorae_max" to "global_assets/dice_mycorae_max.png",
+            "dice_pyrae" to "global_assets/dice_pyrae.png",
+            "dice_pyrae_max" to "global_assets/dice_pyrae_max.png",
+            "dice_aetherae" to "global_assets/dice_aetherae.png",
+            "dice_aetherae_max" to "global_assets/dice_aetherae_max.png",
+            "dice_lustriae" to "global_assets/dice_lustriae.png",
+            "dice_lustriae_max" to "global_assets/dice_lustriae_max.png",
+            "dice_aureliae" to "global_assets/dice_aureliae.png",
+            "dice_aureliae_max" to "global_assets/dice_aureliae_max.png",
+            "coin_luneqrae_moon" to "global_assets/coin_luneqrae_moon.png",
+            "coin_luneqrae_wind" to "global_assets/coin_luneqrae_wind.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

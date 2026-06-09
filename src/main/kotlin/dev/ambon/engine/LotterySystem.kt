@@ -26,9 +26,48 @@ data class LotteryInfo(
     val diceMinBet: Long,
     val diceMaxBet: Long,
     val diceWinMultiplier: Double,
-    /** Roll this value or less on a d100 to win. */
-    val diceWinThreshold: Int,
+    /** Aineroira's Dice: a summed roll at or below this target wins the base payout. */
+    val diceWinTarget: Int,
+    /** This many dice (or more) on their max face summon the Luneqrae coin flip. */
+    val coinMaxThreshold: Int,
+    /** Payout multiplier when the coin flip wins after a busted sum. */
+    val coinWinMultiplier: Double,
+    /** Payout multiplier when the coin flip wins and the sum stayed at or below target. */
+    val coinJackpotMultiplier: Double,
     val diceCooldownMs: Long,
+)
+
+/**
+ * The six children of Aineroira, rolled in descending size. Each pair shares a
+ * die size; the order here is the order they tumble onto the table.
+ */
+enum class DieKind(
+    val sides: Int,
+) {
+    /** Large pair — whalebone eastern dragon. */
+    OPHIRAE(20),
+
+    /** Large pair — moss-green fungal bloom. */
+    MYCORAE(20),
+
+    /** Medium pair — ember-red phoenix. */
+    PYRAE(16),
+
+    /** Medium pair — obsidian shadow-glass cloak (born of her shadow, not her children). */
+    AETHERAE(16),
+
+    /** Small pair — carved-wood forest faerie. */
+    LUSTRIAE(8),
+
+    /** Small pair — carved-coral jellyfish. */
+    AURELIAE(8),
+}
+
+/** One settled die: which child, what it showed, and whether it crowned its max face. */
+data class DieRoll(
+    val kind: DieKind,
+    val value: Int,
+    val isMax: Boolean,
 )
 
 /** Result of a lottery ticket purchase attempt. */
@@ -64,18 +103,30 @@ data class LotteryDrawingResult(
 
 /** Result of a gamble attempt. */
 sealed interface GambleResult {
-    data class Win(
+    /**
+     * A full resolution of Aineroira's Dice: the six dice in roll order, their
+     * sum against the target, and the optional Luneqrae coin flip.
+     *
+     * @param payout total gold returned (0 on a clean loss); net = payout - bet.
+     * @param multiplier the multiplier applied (0, base, coin, or jackpot).
+     */
+    data class Resolved(
         val bet: Long,
         val payout: Long,
-        val roll: Int,
-        val needed: Int,
-    ) : GambleResult
+        val multiplier: Double,
+        val dice: List<DieRoll>,
+        val sum: Int,
+        val target: Int,
+        val maxCount: Int,
+        val coinFired: Boolean,
+        val coinWon: Boolean,
+    ) : GambleResult {
+        /** Whether the player came out ahead (any payout). */
+        val won: Boolean get() = payout > 0L
 
-    data class Lose(
-        val bet: Long,
-        val roll: Int,
-        val needed: Int,
-    ) : GambleResult
+        /** Whether the summed roll itself landed at or below the target. */
+        val baseWin: Boolean get() = sum <= target
+    }
 
     data class InsufficientGold(
         val have: Long,
@@ -130,8 +181,8 @@ class LotterySystem(
     /** Session id -> last gamble timestamp. */
     private val lastGambleTime = mutableMapOf<SessionId, Long>()
 
-    /** Roll this value or less on a d100 to win. */
-    private val diceWinThreshold = (gamblingConfig.diceWinChance * 100).toInt()
+    /** The six children, in the order they tumble onto the table (big → small). */
+    private val rollOrder = DieKind.entries
 
     /** Cooldown between dice rolls; exposed for GMCP gamble payloads. */
     val diceCooldownMs: Long get() = gamblingConfig.cooldownMs
@@ -150,7 +201,10 @@ class LotterySystem(
             diceMinBet = gamblingConfig.diceMinBet,
             diceMaxBet = gamblingConfig.diceMaxBet,
             diceWinMultiplier = gamblingConfig.diceWinMultiplier,
-            diceWinThreshold = diceWinThreshold,
+            diceWinTarget = gamblingConfig.diceWinTarget,
+            coinMaxThreshold = gamblingConfig.coinMaxThreshold,
+            coinWinMultiplier = gamblingConfig.coinWinMultiplier,
+            coinJackpotMultiplier = gamblingConfig.coinJackpotMultiplier,
             diceCooldownMs = gamblingConfig.cooldownMs,
         )
     }
@@ -281,16 +335,44 @@ class LotterySystem(
 
         lastGambleTime[sessionId] = now
 
-        // Roll 1-100; win threshold based on configured chance
-        val needed = diceWinThreshold
-        val roll = random.nextInt(100) + 1
-
-        return if (roll <= needed) {
-            val payout = (amount * gamblingConfig.diceWinMultiplier).toLong()
-            GambleResult.Win(bet = amount, payout = payout, roll = roll, needed = needed)
-        } else {
-            GambleResult.Lose(bet = amount, roll = roll, needed = needed)
+        // Roll the six children in order, big → small. Each die crowns its max
+        // face if it shows its highest pip.
+        val dice = rollOrder.map { kind ->
+            val value = random.nextInt(kind.sides) + 1
+            DieRoll(kind = kind, value = value, isMax = value == kind.sides)
         }
+        val sum = dice.sumOf { it.value }
+        val target = gamblingConfig.diceWinTarget
+        val baseWin = sum <= target
+        val maxCount = dice.count { it.isMax }
+
+        // The Luneqrae coin flips whenever enough children crown their max face —
+        // win or bust, fate decides. A winning flip rescues a bust into a 10×, or
+        // gilds an already-winning sum into a 12×. A losing flip leaves the base
+        // result untouched.
+        val coinFired = maxCount >= gamblingConfig.coinMaxThreshold
+        val coinWon = coinFired && random.nextInt(2) == 0
+
+        val multiplier: Double =
+            when {
+                coinFired && coinWon && baseWin -> gamblingConfig.coinJackpotMultiplier
+                coinFired && coinWon -> gamblingConfig.coinWinMultiplier
+                baseWin -> gamblingConfig.diceWinMultiplier
+                else -> 0.0
+            }
+        val payout = (amount * multiplier).toLong()
+
+        return GambleResult.Resolved(
+            bet = amount,
+            payout = payout,
+            multiplier = multiplier,
+            dice = dice,
+            sum = sum,
+            target = target,
+            maxCount = maxCount,
+            coinFired = coinFired,
+            coinWon = coinWon,
+        )
     }
 
     /** Clears gamble cooldown for a disconnected player. */

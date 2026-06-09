@@ -35,7 +35,10 @@ class LotterySystemTest {
         diceMinBet = 10L,
         diceMaxBet = 1000L,
         diceWinMultiplier = 2.0,
-        diceWinChance = 0.45,
+        diceWinTarget = 45,
+        coinMaxThreshold = 3,
+        coinWinMultiplier = 10.0,
+        coinJackpotMultiplier = 12.0,
         cooldownMs = 5_000L,
     )
 
@@ -218,50 +221,111 @@ class LotterySystemTest {
         }
     }
 
+    /**
+     * A [Random] that hands back a scripted sequence of `nextInt` results,
+     * letting each dice roll (and the coin flip) be pinned exactly. Values are
+     * reduced modulo `until` so the same script works across die sizes.
+     */
+    private class ScriptedRandom(
+        private val values: IntArray,
+    ) : Random() {
+        private var index = 0
+
+        override fun nextBits(bitCount: Int): Int = 0
+
+        override fun nextInt(until: Int): Int {
+            val v = values[index % values.size]
+            index++
+            return ((v % until) + until) % until
+        }
+    }
+
+    private fun systemWith(random: Random): LotterySystem =
+        LotterySystem(
+            lotteryConfig = lotteryConfig,
+            gamblingConfig = gamblingConfig,
+            clock = clock,
+            random = random,
+        )
+
     @Nested
     inner class DiceGambling {
-        @Test
-        fun `winning gamble returns Win with correct payout`() {
-            // Use random that always wins (roll 1 out of 100, needs <= 45)
-            val alwaysWinRandom = object : Random() {
-                override fun nextBits(bitCount: Int): Int = 0
+        // Roll order: Ophirae(d20), Mycorae(d20), Pyrae(d16), Aetherae(d16),
+        // Lustriae(d8), Aureliae(d8). A nextInt return of N yields a face of N+1.
 
-                override fun nextInt(until: Int): Int = 0 // roll = 0+1 = 1, which is <= 45
-            }
-            val winSystem = LotterySystem(
-                lotteryConfig = lotteryConfig,
-                gamblingConfig = gamblingConfig,
-                clock = clock,
-                random = alwaysWinRandom,
-            )
-            val result = winSystem.gamble(sid1, 100L, 1000L, inTavern = true)
-            assertTrue(result is GambleResult.Win)
-            val win = result as GambleResult.Win
-            assertEquals(100L, win.bet)
-            assertEquals(200L, win.payout) // 2x multiplier
-            assertEquals(1, win.roll)
-            assertEquals(45, win.needed)
+        @Test
+        fun `low sum with no coin wins the base multiplier`() {
+            // All dice show 1 → sum 6, no max faces, no coin.
+            val result = systemWith(ScriptedRandom(intArrayOf(0))).gamble(sid1, 100L, 1000L, inTavern = true)
+            assertTrue(result is GambleResult.Resolved)
+            val r = result as GambleResult.Resolved
+            assertEquals(6, r.sum)
+            assertEquals(6, r.dice.size)
+            assertTrue(r.baseWin)
+            assertTrue(!r.coinFired)
+            assertEquals(2.0, r.multiplier)
+            assertEquals(200L, r.payout)
+            assertTrue(r.won)
         }
 
         @Test
-        fun `losing gamble returns Lose`() {
-            // Use random that always loses (roll 99 out of 100, needs <= 45)
-            val alwaysLoseRandom = object : Random() {
-                override fun nextBits(bitCount: Int): Int = 0
+        fun `high sum with no coin loses`() {
+            // 15,15,12,12,2,2 → sum 58, no die at its max face.
+            val result = systemWith(ScriptedRandom(intArrayOf(14, 14, 11, 11, 1, 1)))
+                .gamble(sid1, 100L, 1000L, inTavern = true)
+            assertTrue(result is GambleResult.Resolved)
+            val r = result as GambleResult.Resolved
+            assertEquals(58, r.sum)
+            assertEquals(0, r.maxCount)
+            assertTrue(!r.coinFired)
+            assertEquals(0.0, r.multiplier)
+            assertEquals(0L, r.payout)
+            assertTrue(!r.won)
+        }
 
-                override fun nextInt(until: Int): Int = until - 1 // roll = 99+1 = 100, which is > 45
-            }
-            val loseSystem = LotterySystem(
-                lotteryConfig = lotteryConfig,
-                gamblingConfig = gamblingConfig,
-                clock = clock,
-                random = alwaysLoseRandom,
-            )
-            val result = loseSystem.gamble(sid1, 100L, 1000L, inTavern = true)
-            assertTrue(result is GambleResult.Lose)
-            val lose = result as GambleResult.Lose
-            assertEquals(100L, lose.bet)
-            assertEquals(100, lose.roll)
+        @Test
+        fun `three max faces on a bust fire a winning coin for the coin multiplier`() {
+            // 20,20,16 (three maxes), 10,4,4 → sum 74 (bust); coin flip wins (0).
+            val result = systemWith(ScriptedRandom(intArrayOf(19, 19, 15, 9, 3, 3, 0)))
+                .gamble(sid1, 100L, 1000L, inTavern = true)
+            assertTrue(result is GambleResult.Resolved)
+            val r = result as GambleResult.Resolved
+            assertEquals(3, r.maxCount)
+            assertTrue(r.coinFired)
+            assertTrue(r.coinWon)
+            assertTrue(!r.baseWin)
+            assertEquals(10.0, r.multiplier)
+            assertEquals(1000L, r.payout)
+        }
+
+        @Test
+        fun `coin win on a held sum pays the jackpot multiplier`() {
+            // 1,1,16,1,8,8 → sum 35 (held), three maxes (Pyrae/Lustriae/Aureliae); coin wins (0).
+            val result = systemWith(ScriptedRandom(intArrayOf(0, 0, 15, 0, 7, 7, 0)))
+                .gamble(sid1, 100L, 1000L, inTavern = true)
+            assertTrue(result is GambleResult.Resolved)
+            val r = result as GambleResult.Resolved
+            assertEquals(35, r.sum)
+            assertEquals(3, r.maxCount)
+            assertTrue(r.coinFired)
+            assertTrue(r.coinWon)
+            assertTrue(r.baseWin)
+            assertEquals(12.0, r.multiplier)
+            assertEquals(1200L, r.payout)
+        }
+
+        @Test
+        fun `coin fires but a losing flip keeps the base bust`() {
+            // 20,20,16,10,4,4 → sum 74 (bust), three maxes; coin flip loses (1).
+            val result = systemWith(ScriptedRandom(intArrayOf(19, 19, 15, 9, 3, 3, 1)))
+                .gamble(sid1, 100L, 1000L, inTavern = true)
+            assertTrue(result is GambleResult.Resolved)
+            val r = result as GambleResult.Resolved
+            assertTrue(r.coinFired)
+            assertTrue(!r.coinWon)
+            assertEquals(0.0, r.multiplier)
+            assertEquals(0L, r.payout)
+            assertTrue(!r.won)
         }
 
         @Test
@@ -305,7 +369,7 @@ class LotterySystemTest {
             system.gamble(sid1, 10L, 1000L, inTavern = true)
             clock.advance(5_000L)
             val result = system.gamble(sid1, 10L, 1000L, inTavern = true)
-            assertTrue(result is GambleResult.Win || result is GambleResult.Lose)
+            assertTrue(result is GambleResult.Resolved)
         }
 
         @Test
@@ -324,7 +388,7 @@ class LotterySystemTest {
             system.gamble(sid1, 10L, 1000L, inTavern = true)
             system.onDisconnect(sid1)
             val result = system.gamble(sid1, 10L, 1000L, inTavern = true)
-            assertTrue(result is GambleResult.Win || result is GambleResult.Lose)
+            assertTrue(result is GambleResult.Resolved)
         }
     }
 
