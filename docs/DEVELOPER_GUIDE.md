@@ -2,7 +2,7 @@
 
 Welcome. This document takes you from a clean checkout to making meaningful changes. If you only read one file besides this one, read [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
-**What is AmbonMUD?** A Kotlin MUD server with a 100 ms tick engine, telnet + WebSocket transports, YAML world content, config-driven abilities and status effects, class-based progression with skill-point training, 36 command handler subsystems, and three deployment modes (`STANDALONE` / `ENGINE` / `GATEWAY`) that scale from a single process to a Redis-sharded Fargate split.
+**What is AmbonMUD?** A Kotlin MUD server with a 100 ms tick engine, telnet + WebSocket transports, YAML world content, config-driven abilities and status effects, class-based progression with skill-point training, 37 command handler subsystems, and three deployment modes (`STANDALONE` / `ENGINE` / `GATEWAY`) that scale from a single process to a Redis-sharded Fargate split.
 
 ---
 
@@ -99,7 +99,7 @@ src/main/kotlin/dev/ambon/
 │   ├── commands/
 │   │   ├── CommandParser.kt     # sealed Command hierarchy (~200 variants)
 │   │   ├── CommandRouter.kt     # thin dispatch
-│   │   └── handlers/            # 36 handler files + EngineContext + HandlerHelpers
+│   │   └── handlers/            # 37 handler files + EngineContext + HandlerHelpers
 │   ├── abilities/               # AbilitySystem, ability registry loader
 │   ├── status/                  # StatusEffectSystem
 │   ├── crafting/                # CraftingSystem, recipes, gathering, quality
@@ -108,7 +108,7 @@ src/main/kotlin/dev/ambon/
 │   ├── housing/, dungeon/, auction/, trade/, duel/, faction/, pet/, prestige/, lottery/, puzzle/, weather/, worldtime/, worldevent/, leaderboard/, stylist/, bank/, currency/, quest/
 │   ├── scheduler/               # Scheduler.kt — delayed/recurring callbacks
 │   ├── PlayerRegistry.kt        # session ↔ player, login FSM
-│   ├── GmcpEmitter.kt           # GMCP package emissions (~3500 lines)
+│   ├── GmcpEmitter.kt           # GMCP package emissions (~4000 lines)
 │   └── ...
 ├── transport/                   # Network I/O
 │   ├── BlockingSocketTransport.kt     # Telnet server (virtual threads)
@@ -142,7 +142,7 @@ src/main/kotlin/dev/ambon/
 
 src/main/resources/
 ├── application.yaml             # Runtime config (~2000 lines)
-├── db/migration/                # Flyway migrations V1–V38
+├── db/migration/                # Flyway migrations V1–V42
 ├── world/                       # Academy tutorial zone + achievements.yaml + sprites.yaml
 │   ├── academy.yaml
 │   ├── achievements.yaml
@@ -212,11 +212,11 @@ Inbound handling:
 
 **File:** `engine/commands/CommandRouter.kt` — thin dispatch (~110 lines). Every variant routes to one of the handlers under `engine/commands/handlers/`. Each handler implements the `CommandHandler` interface and receives an `EngineContext` carrying the required subsystem references.
 
-### Handler catalog (36 handlers + 2 support files)
+### Handler catalog (37 handlers + 2 support files)
 
 | Handler | Commands |
 |---------|----------|
-| `NavigationHandler` | `n/s/e/w/u/d`, `look`, `exits`, `recall` |
+| `NavigationHandler` | `n/s/e/w/u/d`, `look`, `exits`, `recall`, `rest` (inn rooms set the recall point and grant 2× regen) |
 | `CombatHandler` | `kill`, `flee`, `cast` |
 | `CommunicationHandler` | `say`, `tell`, `whisper`, `gossip`, `shout`, `ooc`, `pose`, `emote` |
 | `ItemHandler` | `inventory`, `equipment`, `get`, `drop`, `wear`, `remove`, `use`, `give`, `put`, `examine` |
@@ -229,7 +229,8 @@ Inbound handling:
 | `CraftingHandler` | `gather`, `craft`, `recipes`, `craftskills`, `specialize` |
 | `EnchantHandler` | `enchant`, `enchantments` |
 | `FriendsHandler` | `friend list`/`add`/`remove` |
-| `MailHandler` | `mail list`/`read`/`send`/`delete`, compose mode |
+| `MailHandler` | `mail list`/`read`/`send`/`delete`/`claim`, compose mode; letters can carry gold + one item attachment |
+| `ClaimHandler` | `claim` — convert a guest session into a permanent account (BCrypt + DB write dispatched off the tick loop) |
 | `SpriteHandler` | `sprite list`/`set`/`default` |
 | `TrainerHandler` | `train list`/`learn`/`unlock` (multi-classing) |
 | `PetHandler` | `pet`, `pet dismiss`, `pet name` |
@@ -239,7 +240,7 @@ Inbound handling:
 | `TradeHandler` | `trade <player>`, `trade offer`/`accept`/`cancel` |
 | `DuelHandler` | `duel`, `duel accept`/`decline` |
 | `PrestigeHandler` | `prestige`, `prestige info` |
-| `LotteryHandler` | `lottery`, `lottery buy` |
+| `LotteryHandler` | `lottery`, `lottery buy`, `gamble`/`dice` (Aineroia's Dice — tavern rooms only) |
 | `ReputationHandler` | `reputation` |
 | `LeaderboardHandler` | `leaderboard`, `halloffame` |
 | `DungeonHandler` | `dungeon enter`/`leave` |
@@ -312,6 +313,7 @@ This is a working index, not an exhaustive spec. Each subsystem follows the patt
 | **GuildSystem** | `engine/GuildSystem.kt` | Permission-based ranks (data-driven), MOTD, roster, `gchat` |
 | **GuildHallSystem** | `engine/GuildHallSystem.kt` | Guild hall rooms (Flyway V33) |
 | **FriendsSystem** | `engine/FriendsSystem.kt` | Friend list, online/offline notifications |
+| **MailSystem** | `commands/handlers/MailHandler.kt` | Offline mail with optional gold + item attachments; recipients `mail claim` rewards |
 | **CraftingSystem** | `engine/crafting/CraftingSystem.kt` | Gathering, recipes, quality tiers (Normal → Masterwork), recipe discovery, specialization |
 | **EnchantingSystem** | `engine/crafting/EnchantingSystem.kt` | `enchant` command, enchanting station, stat/damage bonuses |
 | **HousingSystem** | `engine/housing/HousingSystem.kt` | Personal rooms, furniture, vaults, access control |
@@ -324,7 +326,7 @@ This is a working index, not an exhaustive spec. Each subsystem follows the patt
 | **BankSystem** | `engine/bank/BankSystem.kt` | Bank rooms (`bank: true` flag); gold + item vault |
 | **CurrencySystem** | `engine/CurrencySystem.kt` | Secondary currencies defined in `engine.currencies.definitions`; quest rewards can include currency grants |
 | **PrestigeSystem** | `engine/prestige/PrestigeSystem.kt` | Ranks, perks, XP cost (Flyway V28) |
-| **LotterySystem** | `engine/lottery/LotterySystem.kt` | Tickets, drawings, jackpot, atomic-write JSON persistence |
+| **LotterySystem** | `engine/lottery/LotterySystem.kt` | Tickets, drawings, jackpot, atomic-write JSON persistence; includes Aineroia's Dice (six themed dice + the Luneqrae coin, tavern rooms) |
 | **LeaderboardSystem** | `engine/leaderboard/LeaderboardSystem.kt` | 7 categories, top-N, hall of fame |
 | **WeatherSystem** | `engine/weather/WeatherSystem.kt` | Per-zone weather transitions, config-driven types, `World.Weather` GMCP |
 | **WorldTimeSystem** | `engine/worldtime/WorldTimeSystem.kt` | 24-hour clock, four periods (NIGHT/DAWN/DAY/DUSK), `World.Time` GMCP |
@@ -343,7 +345,7 @@ This is a working index, not an exhaustive spec. Each subsystem follows the patt
 
 **YAML (default):** One file per player under `data/players/`, atomic writes. Zero dependencies — this is what `./gradlew run` uses and what the EC2 demo ships with.
 
-**PostgreSQL:** Schema managed by Flyway migrations (`src/main/resources/db/migration/`, **V1 through V38**). Connection defaults match `docker-compose.yml` (`localhost:5432/ambonmud`, user `ambon`). Switching backends is one flag: `-Pconfig.ambonmud.persistence.backend=POSTGRES`.
+**PostgreSQL:** Schema managed by Flyway migrations (`src/main/resources/db/migration/`, **V1 through V42**). Connection defaults match `docker-compose.yml` (`localhost:5432/ambonmud`, user `ambon`). Switching backends is one flag: `-Pconfig.ambonmud.persistence.backend=POSTGRES`.
 
 ### The stack
 
@@ -619,8 +621,18 @@ Reference it from an ability via `effect.type: APPLY_STATUS` + `effect.statusEff
 
 1. Emit the package from `engine/GmcpEmitter.kt`.
 2. Handle it on the client at `web-v3/src/gmcp/applyGmcpPackage.ts`.
-3. **If it's a new package family**, register the prefix in `KtorWebSocketTransport.kt` (around line 208, `Core.Supports.Set`). Without this, GMCP is silently dropped. Prefix matching: `"Quest 1"` covers `Quest.List`, `Quest.Update`, etc.
+3. **If it's a new package family**, register the prefix in `KtorWebSocketTransport.kt` (around line 265, `Core.Supports.Set`). Without this, GMCP is silently dropped. Prefix matching: `"Quest 1"` covers `Quest.List`, `Quest.Update`, etc.
 4. Telnet clients negotiate via standard `WILL`/`DO`; the WebSocket client auto-opts-in to the full package set.
+
+### Reskin a web panel with painted art
+
+The full contract — asset naming, registry, `Server.Assets` GMCP delivery, the skinned-class CSS
+pattern, inset measuring, and fallbacks — lives in [`ART_CONTRACT.md`](./ART_CONTRACT.md). In
+brief: register a `<panel>_bg` key in `ImagesConfig.DEFAULT_GLOBAL_ASSETS` (`AppConfig.kt`),
+thread `backgroundImage: string | null` into the component, toggle a `-skinned` CSS variant that
+locks `aspect-ratio` to the art's pixel dimensions and seats content with percentage insets, and
+keep the unskinned fallback working. Staff Control (`AdminPanel.tsx`) is the reference
+implementation.
 
 ### Add a new bus / gRPC event variant
 
