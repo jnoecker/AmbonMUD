@@ -9,11 +9,11 @@ import { TrainerPanel } from "./components/TrainerPanel";
 import { TradePanel } from "./components/TradePanel";
 import { WorldFeaturesPopout } from "./components/WorldFeaturesPopout";
 import { featureArt, pickFocusedFeature } from "./components/worldFeatures";
-import { ChatPanel } from "./components/panels/ChatPanel";
 import { ChatBoardPanel } from "./components/panels/ChatBoardPanel";
 import { WhoBoardPanel } from "./components/panels/WhoBoardPanel";
 import { GuildBoardPanel } from "./components/panels/GuildBoardPanel";
 import { FriendsBoardPanel } from "./components/panels/FriendsBoardPanel";
+import { GroupBoardPanel } from "./components/panels/GroupBoardPanel";
 import { PlayerExaminePanel } from "./components/panels/PlayerExaminePanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
@@ -853,11 +853,11 @@ function App() {
       case "spellbook": return "Spellbook";
       case "quests": return "Quests";
       case "questOffers": return "Quest Offers";
-      case "chat": return "Social";
       case "chatboard": return "Social Board";
       case "whoboard": return "Who";
       case "guildboard": return "Guild";
       case "friendsboard": return "Friends";
+      case "groupboard": return "Group";
       case "shop": return state.shop?.name ?? "Shop";
       case "puzzle": return "Puzzle";
       case "features": return featurePanelFeature
@@ -947,6 +947,8 @@ function App() {
             ? "archive"
             : drawerPanel === "friendsboard"
             ? "starframe"
+            : drawerPanel === "groupboard"
+            ? "stainedglass"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -983,6 +985,8 @@ function App() {
             ? state.serverAssets["guild_bg"]
             : drawerPanel === "friendsboard"
             ? state.serverAssets["friends_bg"]
+            : drawerPanel === "groupboard"
+            ? state.serverAssets["group_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1011,7 +1015,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
@@ -1171,14 +1175,14 @@ function App() {
           />
         )}
 
-        {drawerPanel === "chat" && (
-          <ChatPanel
+        {drawerPanel === "groupboard" && (
+          <GroupBoardPanel
             connected={connected}
             canChat={connected && hasCharacterProfile}
             playerName={state.character.name}
-            chatByChannel={state.chatByChannel}
             groupInfo={state.groupInfo}
             pendingGroupInvite={state.pendingGroupInvite}
+            gtellMessages={state.chatByChannel.gtell}
             onSendMessage={sendChatMessage}
             onCommand={sendCommand}
           />
