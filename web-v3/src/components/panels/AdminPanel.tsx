@@ -510,6 +510,7 @@ export function AdminPanel({
             </div>
           </div>
 
+          <div className="admin-main-pane">
           {activeFeedback && (
             <p className={`admin-feedback-banner admin-feedback-banner-${activeFeedback.type}`}>
               {activeFeedback.message}
@@ -1174,6 +1175,7 @@ export function AdminPanel({
           ) : (
             <p className="admin-form-hint">Select an action from the left to configure and run it.</p>
           )}
+          </div>
           </div>
           </div>
         </div>

@@ -12286,6 +12286,13 @@ body {
   gap: var(--space-4);
 }
 
+.admin-main-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 0;
+}
+
 .admin-section-title,
 .admin-form-title {
   margin: 0;
@@ -25980,32 +25987,50 @@ html:has(.game-shell),
 }
 .admin-dialog-skinned .admin-skin-close:hover { filter: brightness(1.2); }
 
-/* Live content sits in the painted inner panel (below the title strip). */
+/* The painted frame defines three inset boxes. We anchor live content into each
+   with absolute insets measured against the `admin_bg` art (stretched to fill,
+   so image-percentages map straight to the dialog):
+     · top band  (x 16.4–77%, y 18.8–36.8%) — the three status boxes
+     · main box  (x 3–97%,   y 39–88.5%)    — command list (left) + form (right)
+   The left winged emblem and right compass rose flank the top band, so the
+   status strip must NOT run full width. */
 .admin-dialog-skinned .admin-content {
   position: absolute;
-  inset: 17% 4% 11% 4%;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(5px, 1vh, 12px);
+  inset: 0;
+  display: block;
   overflow: hidden;
-  padding: 0 1%;
+  padding: 0;
   color: #d6def4;
 }
-.admin-dialog-skinned .admin-content::-webkit-scrollbar { width: 8px; }
-.admin-dialog-skinned .admin-content::-webkit-scrollbar-thumb { background: rgb(150 170 230 / 40%); border-radius: 4px; }
 
-/* Target/status strip — moonlit cards. */
+/* Status strip — three moonlit cards seated in the painted top boxes. */
 .admin-dialog-skinned .admin-status-strip {
+  position: absolute;
+  inset: 18.8% 23% 63.2% 16.4%;
   display: flex;
-  gap: clamp(6px, 1vw, 14px);
-  margin-bottom: clamp(6px, 1.2vh, 14px);
+  gap: clamp(6px, 0.8vw, 14px);
+  margin: 0;
 }
 .admin-dialog-skinned .admin-status-card {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
   padding: clamp(5px, 1vh, 11px) clamp(8px, 1.2vw, 16px);
   border: 1px solid rgb(150 170 230 / 35%);
   border-radius: 10px;
   background: rgb(16 22 52 / 65%);
+}
+
+/* Main pane — feedback banner + the command workspace, seated in the big box. */
+.admin-dialog-skinned .admin-main-pane {
+  position: absolute;
+  inset: 39% 3% 11.5% 3%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vh, 10px);
+  min-height: 0;
 }
 .admin-dialog-skinned .admin-status-label {
   font-size: clamp(0.52rem, 1vw, 0.72rem);
