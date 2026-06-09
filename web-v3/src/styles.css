@@ -25935,7 +25935,7 @@ html:has(.game-shell),
   color: #f4e2c0;
   text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
 }
-.cc-plaque-btn.has-art .cc-plaque-label { color: #fdf3d8; text-shadow: 0 1px 3px rgb(0 0 0 / 70%); }
+.cc-plaque-btn.has-art .cc-plaque-label { color: #fff6e2; text-shadow: 0 1px 2px rgb(0 0 0 / 85%), 0 0 6px rgb(0 0 0 / 55%); }
 
 /* ── Spellbook: open-crafting button ── */
 .spellbook-craft-btn {
