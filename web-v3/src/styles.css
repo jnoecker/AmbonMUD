@@ -24146,6 +24146,10 @@ html:has(.game-shell),
 }
 
 .fb-add-card {
+  /* Span only the left portion so the painted flowers/book on the right
+     of the frame stay visible. */
+  align-self: flex-start;
+  width: 70%;
   border: 1px solid rgb(150 180 255 / 30%);
   border-radius: 12px;
   background: rgb(16 24 50 / 55%);
