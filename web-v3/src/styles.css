@@ -24906,3 +24906,206 @@ html:has(.game-shell),
   color: rgb(90 72 44 / 70%);
   padding: clamp(16px, 5vh, 40px) 12px;
 }
+
+/* ════════════════════════════════════════════════════════════
+   Stylist — race-change parlour (drawerPanel "stylist")
+   Painted `stylist_bg` frame (skin). Content inset into the painted slots:
+   the price banner, a 3x2 grid of selectable race cards, the current-race
+   card, gold, and an invisible hotspot over the painted CHANGE RACE button.
+   ════════════════════════════════════════════════════════════ */
+.drawer-sheet.drawer-sheet-boudoir {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(ellipse at 50% 30%, rgb(40 24 56 / 96%), rgb(16 10 26 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.drawer-sheet-boudoir .drawer-title { display: none; }
+.drawer-sheet-boudoir .drawer-handle-zone { display: none; }
+
+.drawer-sheet-boudoir .drawer-header {
+  position: absolute;
+  top: 3.5%;
+  right: 3%;
+  left: auto;
+  z-index: 6;
+  padding: 0;
+  min-height: 0;
+  border-bottom: none;
+}
+.drawer-sheet-boudoir .drawer-close {
+  background: transparent;
+  border-color: transparent;
+  color: #e0c074;
+}
+
+.drawer-sheet-boudoir .drawer-body {
+  padding: 0;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-boudoir {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 1456 / 1093;
+  }
+}
+
+.stylist-board { position: absolute; inset: 0; }
+.stylist-board-empty { display: grid; place-items: center; }
+.sty-empty { color: #d9c089; text-align: center; max-width: 60%; }
+
+/* Price banner slot under the title. */
+.sty-cost {
+  position: absolute;
+  top: 19.5%;
+  left: 33%;
+  width: 34%;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(0.78rem, 1.6vw, 1.08rem);
+  letter-spacing: 0.05em;
+  color: #e6c878;
+}
+.sty-cost strong { color: #f4dc9a; }
+
+/* 3x2 race-card grid. */
+.sty-grid {
+  position: absolute;
+  left: 11%;
+  right: 11%;
+  top: 24%;
+  bottom: 26%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: clamp(8px, 1.3vw, 18px);
+}
+
+.sty-card {
+  display: flex;
+  gap: clamp(6px, 0.8vw, 12px);
+  padding: clamp(6px, 1vh, 12px);
+  border: 1px solid rgb(200 170 90 / 35%);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgb(30 20 44 / 72%), rgb(18 12 28 / 78%));
+  color: #e8e0f0;
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  transition: border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+.sty-card:hover { transform: translateY(-2px); border-color: rgb(230 200 115 / 60%); }
+.sty-card.is-selected {
+  border-color: #e6c878;
+  box-shadow: 0 0 16px rgb(200 170 90 / 45%), inset 0 0 10px rgb(200 170 90 / 12%);
+}
+.sty-card.is-current { border-color: rgb(120 200 140 / 55%); }
+
+.sty-card-portrait {
+  width: clamp(40px, 26%, 86px);
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  border: 1px solid rgb(200 170 90 / 30%);
+}
+.sty-card-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sty-card-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(0.82rem, 1.5vw, 1.12rem);
+  font-weight: 700;
+  color: #f0d89a;
+}
+.sty-card-tag {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8fd6a0;
+  border: 1px solid rgb(120 200 140 / 50%);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+.sty-card-desc {
+  font-size: clamp(0.6rem, 1vw, 0.76rem);
+  font-style: italic;
+  color: rgb(220 210 235 / 78%);
+  line-height: 1.2;
+  /* Clamp long lore to 2 lines so the stat mods always fit on the card. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sty-card-mods { display: flex; flex-direction: column; gap: 0; margin-top: 2px; }
+.sty-mod { font-size: clamp(0.6rem, 1.05vw, 0.78rem); font-weight: 600; line-height: 1.3; }
+.sty-mod-gold { color: #e6c878; }
+.sty-mod-red { color: #e08a8a; }
+.sty-mod-blue { color: #7fb6e6; }
+.sty-mod-green { color: #8fd6a0; }
+
+/* Invisible hotspot over the painted CHANGE RACE button. */
+.sty-change-hit {
+  position: absolute;
+  left: 38.5%;
+  top: 78%;
+  width: 26%;
+  height: 9.5%;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: box-shadow 150ms var(--ease-out-soft);
+}
+.sty-change-hit:disabled { cursor: default; }
+.sty-change-hit:hover:not(:disabled) { box-shadow: 0 0 18px rgb(230 200 115 / 45%); }
+.sty-change-hit:focus-visible { outline: 2px solid rgb(230 200 115 / 80%); outline-offset: 2px; }
+
+/* Current race, inset into the painted "Your Current Race" card. */
+.sty-current {
+  position: absolute;
+  left: 67.5%;
+  top: 80.8%;
+  width: 21%;
+  height: 9%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sty-current-portrait {
+  width: clamp(28px, 28%, 46px);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid rgb(200 170 90 / 50%);
+  flex-shrink: 0;
+}
+.sty-current-text { display: flex; flex-direction: column; min-width: 0; }
+.sty-current-name { font-family: var(--font-display); font-size: clamp(0.84rem, 1.5vw, 1.08rem); font-weight: 700; color: #f0e0f8; }
+.sty-current-bonuses { font-size: 0.72rem; color: #8fd6a0; }
+
+/* Gold at the bottom. */
+.sty-gold {
+  position: absolute;
+  left: 50%;
+  right: 11%;
+  bottom: 1.3%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(0.76rem, 1.4vw, 1rem);
+  color: #d9c089;
+}
+.sty-gold strong { color: #f4dc9a; }
+.sty-gold-icon { color: #e6c878; display: inline-flex; }
+.sty-gold-icon img { width: 1.1em; height: 1.1em; object-fit: contain; }
