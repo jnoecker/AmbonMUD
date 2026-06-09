@@ -25920,7 +25920,10 @@ html:has(.game-shell),
   transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
 }
 .cc-plaque-btn.has-art {
-  background: var(--cc-plaque) center / 100% 100% no-repeat;
+  min-height: 82px;
+  /* Keep the banner's aspect (contain) — 100% 100% stretched it across the
+     wider middle slot. Matches the gem buttons' has-art treatment. */
+  background: var(--cc-plaque) center / contain no-repeat;
 }
 .cc-plaque-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 .cc-plaque-btn:active { transform: scale(0.98); }
