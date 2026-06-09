@@ -64,8 +64,25 @@ export function AuctionPanel({ listings, inventory, playerName, isDemo, feedback
     () => [...feedbackFeed].reverse().find((e) => e.scope === "auction") ?? null,
     [feedbackFeed],
   );
-  const message = activeFeedback?.message ?? localMessage;
-  const messageKind = activeFeedback?.type ?? "info";
+
+  // Auto-dismiss both server feedback and local notices after a few seconds so
+  // the toast doesn't stick across the panel.
+  const [dismissedFeedbackId, setDismissedFeedbackId] = useState<string | null>(null);
+  const activeFeedbackId = activeFeedback?.id;
+  useEffect(() => {
+    if (!activeFeedbackId) return;
+    const timer = setTimeout(() => setDismissedFeedbackId(activeFeedbackId), 4000);
+    return () => clearTimeout(timer);
+  }, [activeFeedbackId]);
+  useEffect(() => {
+    if (!localMessage) return;
+    const timer = setTimeout(() => setLocalMessage(null), 4000);
+    return () => clearTimeout(timer);
+  }, [localMessage]);
+
+  const liveFeedback = activeFeedback != null && activeFeedback.id !== dismissedFeedbackId ? activeFeedback : null;
+  const message = liveFeedback?.message ?? localMessage;
+  const messageKind = liveFeedback?.type ?? "info";
 
   const listSelected = () => {
     if (isDemo) {
