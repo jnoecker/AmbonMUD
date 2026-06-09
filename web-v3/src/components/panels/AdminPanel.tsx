@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { RoomMob, StaffMobZone, StaffWorldZone, UiFeedbackEntry, WhoPlayer } from "../../types";
 import {
@@ -9,7 +9,7 @@ import {
   getAdminActionDefinition,
   requiresAdminConfirmation,
 } from "./AdminPanel.logic";
-import type { AdminAction } from "./AdminPanel.logic";
+import type { AdminAction, AdminActionSection } from "./AdminPanel.logic";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
@@ -439,6 +439,18 @@ export function AdminPanel({
     return adminFeedback[0];
   }, [adminFeedback, activeAction]);
 
+  // Auto-dismiss the feedback banner a few seconds after each new message so it
+  // doesn't stick across the panel (e.g. the "You are now visible" green bar).
+  // Track the dismissed id rather than a boolean so a fresh message reappears.
+  const [dismissedFeedbackId, setDismissedFeedbackId] = useState<string | null>(null);
+  const activeFeedbackId = activeFeedback?.id;
+  useEffect(() => {
+    if (!activeFeedbackId) return;
+    const timer = setTimeout(() => setDismissedFeedbackId(activeFeedbackId), 4000);
+    return () => clearTimeout(timer);
+  }, [activeFeedbackId]);
+  const feedbackVisible = activeFeedback != null && activeFeedback.id !== dismissedFeedbackId;
+
   const activeDefinition = activeAction ? getAdminActionDefinition(activeAction) : null;
   const pendingCommand = activeAction ? buildAdminCommand(activeAction, inputA, inputB) : null;
   const pendingConfirmKey =
@@ -472,6 +484,43 @@ export function AdminPanel({
     event.preventDefault();
     if (!activeAction || !pendingCommand) return;
     executeAction(activeAction, pendingCommand);
+  };
+
+  const closeForm = () => {
+    setActiveAction(null);
+    resetForm();
+  };
+
+  // One category block: a centered title over its grid of plaque buttons.
+  const renderSection = (section: AdminActionSection) => {
+    const sectionActions = ADMIN_ACTIONS.filter((entry) => entry.section === section.id)
+      .filter((entry) => {
+        // Possession is binary — show only the relevant verb (Possess when free,
+        // Return when in a mob). Also evens out the grid.
+        if (entry.id === "possess") return possessing == null;
+        if (entry.id === "return") return possessing != null;
+        return true;
+      });
+    if (sectionActions.length === 0) return null;
+    return (
+      <section key={section.id} className="admin-action-section">
+        <h3 className="admin-section-title">{section.title}</h3>
+        <div className="admin-action-grid">
+          {sectionActions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              className={`admin-action-tile ${activeAction === action.id ? "admin-action-tile-active" : ""} admin-action-tile-${action.tone}`}
+              onClick={() => selectAction(action.id)}
+              aria-pressed={activeAction === action.id}
+            >
+              <span className="admin-action-label">{action.label}</span>
+              <span className="admin-action-desc">{action.description}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    );
   };
 
   // Painted-frame CSS variables. The command tiles fall back to a gilded-glass
@@ -532,47 +581,28 @@ export function AdminPanel({
           </div>
 
           <div className="admin-main-pane">
-          {activeFeedback && (
+          {activeFeedback && feedbackVisible && (
             <p className={`admin-feedback-banner admin-feedback-banner-${activeFeedback.type}`}>
               {activeFeedback.message}
             </p>
           )}
 
-          <div className="admin-workspace">
-          <div className="admin-section-grid">
-            {ADMIN_ACTION_SECTIONS.map((section) => {
-              const sectionActions = ADMIN_ACTIONS.filter((entry) => entry.section === section.id)
-                .filter((entry) => {
-                  // Possession is binary — show only the relevant verb (Possess
-                  // when free, Return when in a mob). Also evens out the grid.
-                  if (entry.id === "possess") return possessing == null;
-                  if (entry.id === "return") return possessing != null;
-                  return true;
-                });
-              return (
-                <section key={section.id} className="admin-action-section">
-                  <h3 className="admin-section-title">{section.title}</h3>
-                  <div className="admin-action-grid">
-                    {sectionActions.map((action) => (
-                      <button
-                        key={action.id}
-                        type="button"
-                        className={`admin-action-tile ${activeAction === action.id ? "admin-action-tile-active" : ""} admin-action-tile-${action.tone}`}
-                        onClick={() => selectAction(action.id)}
-                        aria-pressed={activeAction === action.id}
-                      >
-                        <span className="admin-action-label">{action.label}</span>
-                        <span className="admin-action-desc">{action.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
+          <div className="admin-board">
+            <div className="admin-board-col">
+              {ADMIN_ACTION_SECTIONS.filter((section) => section.id === "mobility" || section.id === "presence").map(renderSection)}
+            </div>
+            <div className="admin-board-col">
+              {ADMIN_ACTION_SECTIONS.filter((section) => section.id === "intervention" || section.id === "world").map(renderSection)}
+            </div>
+          </div>
           </div>
 
-          <div className="admin-form-pane">
-          {activeAction && activeDefinition ? (
+          {activeAction && activeDefinition && (
+            <div className="admin-modal-backdrop" onClick={closeForm}>
+              <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
+                <button type="button" className="admin-modal-close" onClick={closeForm} aria-label="Close">
+                  ✕
+                </button>
             <form className="admin-form" onSubmit={submit}>
               <h3 className="admin-form-title">{activeDefinition.label}</h3>
 
@@ -1200,12 +1230,9 @@ export function AdminPanel({
                 </button>
               </div>
             </form>
-          ) : (
-            <p className="admin-form-hint">Select an action from the left to configure and run it.</p>
+              </div>
+            </div>
           )}
-          </div>
-          </div>
-          </div>
         </div>
       </section>
     </div>

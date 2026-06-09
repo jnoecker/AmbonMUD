@@ -26049,55 +26049,79 @@ html:has(.game-shell),
   text-shadow: 0 1px 8px rgb(180 140 60 / 30%);
 }
 
-/* Workspace — action menu (left) + the selected action's form (right). Each
-   pane scrolls within the painted content panel so nothing spills past it. */
-.admin-dialog-skinned .admin-workspace {
+/* Board — the whole blue box is a panel of command plaques in two columns
+   (Movement + Presence left, Intervention + World Ops right). The selected
+   action opens as a modal on top, not an inline pane. */
+.admin-dialog-skinned .admin-board {
   flex: 1;
   min-height: 0;
-  display: flex;
-  gap: clamp(8px, 1.2vw, 18px);
-}
-.admin-dialog-skinned .admin-form-pane {
-  flex: 1;
-  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: clamp(10px, 1.8vw, 30px);
   overflow-y: auto;
-  border-left: 1px solid rgb(150 170 230 / 22%);
-  padding-left: clamp(8px, 1.2vw, 16px);
+  padding-right: 4px;
   scrollbar-width: thin;
   scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
-.admin-dialog-skinned .admin-form-hint {
-  margin: 20% auto 0;
-  max-width: 80%;
-  text-align: center;
-  font-style: italic;
-  color: rgb(190 200 235 / 60%);
-  font-size: clamp(0.66rem, 1.2vw, 0.92rem);
+.admin-dialog-skinned .admin-board::-webkit-scrollbar { width: 7px; }
+.admin-dialog-skinned .admin-board::-webkit-scrollbar-thumb { background: rgb(150 170 230 / 40%); border-radius: 4px; }
+.admin-dialog-skinned .admin-board-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vh, 22px);
+  min-width: 0;
 }
 .admin-dialog-skinned .admin-form { margin-top: 0; border: none; background: none; padding: 0; }
 
-/* Action menu — a compact single-column nav grouped by section (master), with
-   all four groups visible/scrollable; the form (detail) sits in the wider pane. */
-.admin-dialog-skinned .admin-section-grid {
-  flex: 0 0 32%;
-  min-width: 0;
+/* Action modal — the selected command's form, floated over the board. */
+.admin-dialog-skinned .admin-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  padding: 4%;
+  background: rgb(6 9 22 / 58%);
+  backdrop-filter: blur(3px);
+  animation: backdropFadeIn 180ms var(--ease-out-soft);
+}
+.admin-dialog-skinned .admin-modal {
+  position: relative;
+  width: min(72%, 520px);
+  max-height: 88%;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(8px, 1.3vh, 16px);
-  padding-right: 5px;
+  padding: clamp(18px, 2.2vw, 32px) clamp(16px, 2.2vw, 32px);
+  border: 1px solid rgb(200 176 96 / 45%);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 0%) 30%),
+    linear-gradient(160deg, rgb(26 30 70 / 96%), rgb(14 18 44 / 97%));
+  box-shadow: 0 24px 60px rgb(3 5 16 / 70%), inset 0 1px 0 rgb(255 255 255 / 8%);
   scrollbar-width: thin;
   scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
-.admin-dialog-skinned .admin-section-grid::-webkit-scrollbar { width: 7px; }
-.admin-dialog-skinned .admin-section-grid::-webkit-scrollbar-thumb { background: rgb(150 170 230 / 40%); border-radius: 4px; }
+.admin-dialog-skinned .admin-modal-close {
+  position: absolute;
+  top: clamp(6px, 1vw, 12px);
+  right: clamp(8px, 1.1vw, 14px);
+  width: clamp(24px, 2.4vw, 32px);
+  height: clamp(24px, 2.4vw, 32px);
+  border-radius: 50%;
+  border: 1px solid rgb(190 150 90 / 45%);
+  background: rgb(40 24 50 / 70%);
+  color: #e8c878;
+  cursor: pointer;
+  transition: filter 140ms var(--ease-out-soft);
+}
+.admin-dialog-skinned .admin-modal-close:hover { filter: brightness(1.2); }
 .admin-dialog-skinned .admin-action-section {
   border: none;
   padding: 0;
   background: none;
 }
 .admin-dialog-skinned .admin-section-title {
-  margin: 0 0 clamp(5px, 0.9vh, 11px);
+  margin: 0 0 clamp(1px, 0.4vh, 5px);
   padding-left: 0;
   text-align: center;
   font-family: var(--font-display);
