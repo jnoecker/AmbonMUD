@@ -35,6 +35,10 @@ class FriendsHandler(
             is Command.Friend.Add -> fs.addFriend(sessionId, cmd.target)
             is Command.Friend.Remove -> fs.removeFriend(sessionId, cmd.target)
         }
-        outbound.sendIfError(sessionId, err)
+        if (err != null) {
+            // Scope to "friends" so the web panel can surface the rejection
+            // (e.g. "already on your list") instead of swallowing it.
+            sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, err, scope = "friends", command = "friend")
+        }
     }
 }

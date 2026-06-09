@@ -1765,6 +1765,12 @@ export function applyGmcpPackage(
       if (packet.scope === "features" && packet.message) {
         ctx.setToast(packet.message);
       }
+      // The Friends panel's add/remove form has no inline result area, so toast
+      // the outcome — otherwise a rejection (e.g. "already on your list" or an
+      // unknown name) looks like the action silently did nothing.
+      if (packet.scope === "friends" && packet.message) {
+        ctx.setToast(packet.message);
+      }
       break;
     }
 
