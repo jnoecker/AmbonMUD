@@ -39,11 +39,16 @@ class AutoQuestSystemTest {
         xpReward = 30L,
     )
 
-    private val testMobSpawn = MobSpawn(
-        id = MobId(mobTemplateId),
-        templateId = MobId(mobTemplateId),
-        roomId = testRoomId,
-    )
+    // A common mob with several placements, so kill-count capping (#1097) does
+    // not constrain quests built from it.
+    private val testMobSpawns = (0 until 8).map { i ->
+        MobSpawn(
+            id = MobId("$mobTemplateId#$i"),
+            templateId = MobId(mobTemplateId),
+            roomId = testRoomId,
+            instanceIndex = i,
+        )
+    }
 
     private val defaultConfig = AutoQuestsConfig(
         enabled = true,
@@ -66,7 +71,7 @@ class AutoQuestSystemTest {
             rooms = mapOf(testRoomId to Room(testRoomId, "Town Square", "A busy square.", emptyMap())),
             startRoom = testRoomId,
             mobTemplates = mapOf(testMobTemplate.id to testMobTemplate),
-            mobSpawns = listOf(testMobSpawn),
+            mobSpawns = testMobSpawns,
         )
         val system = AutoQuestSystem(
             config = config,
@@ -345,6 +350,72 @@ class AutoQuestSystemTest {
         val result = system.requestQuest(sid)
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull()?.message?.contains("No suitable targets") == true)
+    }
+
+    @Test
+    fun `killsRequired is capped to spawn count for unique mobs`() = runTest {
+        // A unique mob has a single placement, so a bounty must never ask for
+        // more than 1 kill regardless of the configured kill-count range. See #1097.
+        val c = SystemTestComponents(roomId = testRoomId, clockInitialMs = 1_000L)
+        val uniqueId = MobId("$testZone:el_steckley")
+        val uniqueTemplate = MobTemplateDef(
+            id = uniqueId,
+            name = "El Steckley",
+            maxHp = 200,
+            damage = DamageRange(5, 10),
+            xpReward = 500L,
+        )
+        val uniqueSpawn = MobSpawn(uniqueId, uniqueId, testRoomId)
+        val world = World(
+            rooms = mapOf(testRoomId to Room(testRoomId, "Town Square", "A busy square.", emptyMap())),
+            startRoom = testRoomId,
+            mobTemplates = mapOf(uniqueId to uniqueTemplate),
+            mobSpawns = listOf(uniqueSpawn),
+        )
+        val system = AutoQuestSystem(
+            config = defaultConfig.copy(killCountMin = 8, killCountMax = 8),
+            world = world,
+            players = c.players,
+            clock = c.clock,
+            random = Random(42),
+        )
+        c.players.loginOrFail(sid, "Hero")
+
+        val result = system.requestQuest(sid)
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrThrow().killsRequired)
+    }
+
+    @Test
+    fun `killsRequired is capped to spawn count for limited mobs`() = runTest {
+        // A mob with two placements should never demand more than two kills.
+        val c = SystemTestComponents(roomId = testRoomId, clockInitialMs = 1_000L)
+        val secondRoomId = RoomId("$testZone:alley")
+        val twoSpawns = listOf(
+            MobSpawn(MobId(mobTemplateId), MobId(mobTemplateId), testRoomId, instanceIndex = 0),
+            MobSpawn(MobId(mobTemplateId), MobId(mobTemplateId), secondRoomId, instanceIndex = 1),
+        )
+        val world = World(
+            rooms = mapOf(
+                testRoomId to Room(testRoomId, "Town Square", "A busy square.", emptyMap()),
+                secondRoomId to Room(secondRoomId, "Alley", "A dark alley.", emptyMap()),
+            ),
+            startRoom = testRoomId,
+            mobTemplates = mapOf(testMobTemplate.id to testMobTemplate),
+            mobSpawns = twoSpawns,
+        )
+        val system = AutoQuestSystem(
+            config = defaultConfig.copy(killCountMin = 8, killCountMax = 8),
+            world = world,
+            players = c.players,
+            clock = c.clock,
+            random = Random(42),
+        )
+        c.players.loginOrFail(sid, "Hero")
+
+        val result = system.requestQuest(sid)
+        assertTrue(result.isSuccess)
+        assertEquals(2, result.getOrThrow().killsRequired)
     }
 
     @Test

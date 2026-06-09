@@ -66,6 +66,10 @@ class AutoQuestSystem(
             ?: return Result.failure(AutoQuestError("Player not found."))
 
         val playerZone = player.roomId.zone
+        // How many placements each template has in the world. Used to cap the
+        // requested kill count so we never ask players to kill a unique mob
+        // (a single placement) more times than it can ever appear. See #1097.
+        val spawnCounts = world.mobSpawns.groupingBy { it.templateId }.eachCount()
         val candidates = world.mobSpawns
             .asSequence()
             .filter { idZone(it.id.value) == playerZone }
@@ -79,7 +83,9 @@ class AutoQuestSystem(
         }
 
         val mob = candidates[random.nextInt(candidates.size)]
+        val spawnCount = spawnCounts[mob.id] ?: 1
         val killCount = random.nextInt(config.killCountMin, config.killCountMax + 1)
+            .coerceAtMost(spawnCount.coerceAtLeast(1))
         val rewardGold = config.rewardGoldBase + config.rewardGoldPerLevel * player.level
         val rewardXp = config.rewardXpBase + config.rewardXpPerLevel * player.level
 
