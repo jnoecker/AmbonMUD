@@ -946,6 +946,31 @@ function App() {
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
         audio={audio}
+        canvasOverlay={
+          state.character.isStaff ? (
+            <div className="staff-fab">
+              <button
+                type="button"
+                className="staff-fab-btn"
+                onClick={() => setShowAdminPanel(true)}
+                title="Open staff admin panel"
+                aria-label="Open staff admin panel"
+              >
+                Staff
+              </button>
+              <button
+                type="button"
+                className={`staff-fab-btn staff-fab-invis${staffInvisible ? " staff-fab-invis-active" : ""}`}
+                onClick={() => { sendCommand("invis"); setStaffInvisible((v) => !v); }}
+                title={staffInvisible ? "You are invisible — click to reappear" : "Become invisible"}
+                aria-label="Toggle staff invisibility"
+                aria-pressed={staffInvisible}
+              >
+                {staffInvisible ? "👁‍🗨" : "👁"}
+              </button>
+            </div>
+          ) : null
+        }
       />
 
       <Drawer
@@ -1884,49 +1909,24 @@ function App() {
         </div>
       )}
 
-      {/* Staff-only floating controls + admin panel */}
-      {state.character.isStaff && (
-        <>
-          <div className="staff-fab">
-            <button
-              type="button"
-              className="staff-fab-btn"
-              onClick={() => setShowAdminPanel(true)}
-              title="Open staff admin panel"
-              aria-label="Open staff admin panel"
-            >
-              Staff
-            </button>
-            <button
-              type="button"
-              className={`staff-fab-btn staff-fab-invis${staffInvisible ? " staff-fab-invis-active" : ""}`}
-              onClick={() => { sendCommand("invis"); setStaffInvisible((v) => !v); }}
-              title={staffInvisible ? "You are invisible — click to reappear" : "Become invisible"}
-              aria-label="Toggle staff invisibility"
-              aria-pressed={staffInvisible}
-            >
-              {staffInvisible ? "\uD83D\uDC41\u200D\uD83D\uDDE8" : "\uD83D\uDC41"}
-            </button>
-          </div>
-
-          {showAdminPanel && (
-            <AdminPanel
-              onCommand={(command) => {
-                sendCommand(command);
-                if (command === "invis") setStaffInvisible((value) => !value);
-              }}
-              onClose={() => setShowAdminPanel(false)}
-              worldInfo={state.staffWorldInfo}
-              mobTemplates={state.staffMobTemplates}
-              whoPlayers={state.whoPlayers}
-              roomMobs={state.mobs}
-              currentPlayerName={state.character.name}
-              possessing={state.possessing}
-              invisible={staffInvisible}
-              feedbackFeed={state.uiFeedbackFeed}
-            />
-          )}
-        </>
+      {/* Staff admin panel (the STAFF pill lives on the canvas, in GameShell). */}
+      {state.character.isStaff && showAdminPanel && (
+        <AdminPanel
+          onCommand={(command) => {
+            sendCommand(command);
+            if (command === "invis") setStaffInvisible((value) => !value);
+          }}
+          onClose={() => setShowAdminPanel(false)}
+          backgroundImage={state.serverAssets["admin_bg"] ?? null}
+          worldInfo={state.staffWorldInfo}
+          mobTemplates={state.staffMobTemplates}
+          whoPlayers={state.whoPlayers}
+          roomMobs={state.mobs}
+          currentPlayerName={state.character.name}
+          possessing={state.possessing}
+          invisible={staffInvisible}
+          feedbackFeed={state.uiFeedbackFeed}
+        />
       )}
 
       {/* Toast */}

@@ -3134,6 +3134,7 @@ data class ImagesConfig(
             "auction_bg" to "global_assets/auction_bg.png",
             "crafting_bg" to "global_assets/crafting_bg.png",
             "professions_bg" to "global_assets/professions_bg.png",
+            "admin_bg" to "global_assets/admin_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

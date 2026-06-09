@@ -35,6 +35,8 @@ interface GameShellProps {
   onOpenPanel: (panel: PopoutPanel) => void;
   audio: AudioEngine;
   children?: ReactNode;
+  /** Overlay rendered inside the canvas layer (e.g. staff pills near Recall). */
+  canvasOverlay?: ReactNode;
 }
 
 /** Font-size multiplier so longer room names shrink to fit the sign plaque. */
@@ -72,6 +74,7 @@ export function GameShell({
   onOpenPanel,
   audio,
   children,
+  canvasOverlay,
 }: GameShellProps) {
   const loggedIn = connected && hasCharacterProfile;
   const [signZoom, setSignZoom] = useState(false);
@@ -128,6 +131,7 @@ export function GameShell({
       {/* Canvas fills the shell; all HUD elements are overlays on top of it */}
       <div className="game-canvas-layer">
         <PixiCanvas />
+        {canvasOverlay}
 
         {loggedIn && (
           <>
