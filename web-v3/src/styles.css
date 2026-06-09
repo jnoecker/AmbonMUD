@@ -25983,11 +25983,12 @@ html:has(.game-shell),
 /* Live content sits in the painted inner panel (below the title strip). */
 .admin-dialog-skinned .admin-content {
   position: absolute;
-  inset: 16% 3.5% 6% 3.5%;
-  overflow-y: auto;
-  padding: 0 1% 1%;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(150 170 230 / 45%) transparent;
+  inset: 17% 4% 11% 4%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 1vh, 12px);
+  overflow: hidden;
+  padding: 0 1%;
   color: #d6def4;
 }
 .admin-dialog-skinned .admin-content::-webkit-scrollbar { width: 8px; }
@@ -26014,11 +26015,45 @@ html:has(.game-shell),
 }
 .admin-dialog-skinned .admin-status-card strong { color: #e8c878; }
 
-/* Section grid → 3 moonlit columns (Movement / Intervention / World Ops / Presence). */
-.admin-dialog-skinned .admin-section-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(160px, 22%, 280px), 1fr));
+/* Workspace — action menu (left) + the selected action's form (right). Each
+   pane scrolls within the painted content panel so nothing spills past it. */
+.admin-dialog-skinned .admin-workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
   gap: clamp(8px, 1.2vw, 18px);
+}
+.admin-dialog-skinned .admin-form-pane {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  border-left: 1px solid rgb(150 170 230 / 22%);
+  padding-left: clamp(8px, 1.2vw, 16px);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(150 170 230 / 45%) transparent;
+}
+.admin-dialog-skinned .admin-form-hint {
+  margin: 20% auto 0;
+  max-width: 80%;
+  text-align: center;
+  font-style: italic;
+  color: rgb(190 200 235 / 60%);
+  font-size: clamp(0.66rem, 1.2vw, 0.92rem);
+}
+.admin-dialog-skinned .admin-form { margin-top: 0; border: none; background: none; padding: 0; }
+
+/* Section grid → 4 moonlit columns (Movement / Intervention / World Ops / Presence). */
+.admin-dialog-skinned .admin-section-grid {
+  flex: 1.6;
+  min-width: 0;
+  overflow-y: auto;
+  align-content: start;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(6px, 0.9vw, 14px);
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
 .admin-dialog-skinned .admin-action-section {
   border: 1px solid rgb(150 170 230 / 30%);
@@ -26097,10 +26132,21 @@ html:has(.game-shell),
 .staff-fab {
   position: absolute;
   top: auto;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
-  left: calc(env(safe-area-inset-left, 0px) + 96px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  left: calc(env(safe-area-inset-left, 0px) + 104px);
   z-index: 12;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+/* Match the Recall button's height/baseline so the three read as one row. */
+.staff-fab .staff-fab-btn {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+}
+.staff-fab .staff-fab-invis {
+  padding: 0 11px;
+  font-size: 1rem;
 }

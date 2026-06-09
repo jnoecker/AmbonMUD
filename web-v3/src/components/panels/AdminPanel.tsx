@@ -516,6 +516,7 @@ export function AdminPanel({
             </p>
           )}
 
+          <div className="admin-workspace">
           <div className="admin-section-grid">
             {ADMIN_ACTION_SECTIONS.map((section) => {
               const sectionActions = ADMIN_ACTIONS.filter((entry) => entry.section === section.id);
@@ -541,7 +542,8 @@ export function AdminPanel({
             })}
           </div>
 
-          {activeAction && activeDefinition && (
+          <div className="admin-form-pane">
+          {activeAction && activeDefinition ? (
             <form className="admin-form" onSubmit={submit}>
               <h3 className="admin-form-title">{activeDefinition.label}</h3>
 
@@ -1169,7 +1171,11 @@ export function AdminPanel({
                 </button>
               </div>
             </form>
+          ) : (
+            <p className="admin-form-hint">Select an action from the left to configure and run it.</p>
           )}
+          </div>
+          </div>
         </div>
       </section>
     </div>
