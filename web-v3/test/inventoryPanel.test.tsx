@@ -42,6 +42,7 @@ const baseProps: ComponentProps<typeof InventoryPanel> = {
     },
   ],
   containerContents: null,
+  serverAssets: {},
   onWearItem: () => {},
   onDropItem: () => {},
   onGiveItem: () => {},
@@ -64,7 +65,8 @@ describe("inventory panel", () => {
     );
 
     expect(html).toContain("Storing in");
-    expect(html).toContain(">Store<");
+    expect(html).toContain("inventory-action-put");
+    expect(html).toContain('aria-label="Store a dreamweave cowl in a shimmering welcome chest"');
     expect(html).not.toContain("Put in a shimmering welcome chest");
     expect(html).toContain("container-entry-active");
   });
@@ -72,7 +74,16 @@ describe("inventory panel", () => {
   test("renders an explicit Equip action for wearable items", () => {
     const html = renderToStaticMarkup(<InventoryPanel {...baseProps} />);
 
-    expect(html).toContain(">Equip<");
+    expect(html).toContain("inventory-action-equip");
     expect(html).toContain('aria-label="Equip a dreamweave cowl"');
+  });
+
+  test("give action honors a registered action_give server asset", () => {
+    const html = renderToStaticMarkup(
+      <InventoryPanel {...baseProps} serverAssets={{ action_give: "https://cdn/give.png" }} />,
+    );
+
+    // The give button renders the server-supplied image rather than the inline SVG fallback.
+    expect(html).toContain('class="inventory-action-img" src="https://cdn/give.png"');
   });
 });

@@ -257,7 +257,7 @@ export function InventoryPanel({
                 disabled={!canManageItems}
                 onClick={() => setGivePickerStackKey(givePickerStackKey === stack.key ? null : stack.key)}
               >
-                <GiveItemIcon className="inventory-action-icon" />
+                {actionAsset("action_give") ?? <GiveItemIcon className="inventory-action-icon" />}
               </button>
             )}
             {!isQuest && (
