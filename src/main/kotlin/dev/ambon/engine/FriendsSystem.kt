@@ -46,7 +46,9 @@ class FriendsSystem(
         ps.friendsList.add(key)
         markPlayerDirty(sessionId)
 
-        outbound.send(OutboundEvent.SendInfo(sessionId, "$displayName has been added to your friends list."))
+        val message = "$displayName has been added to your friends list."
+        outbound.send(OutboundEvent.SendInfo(sessionId, message))
+        gmcpEmitter?.sendUiFeedback(sessionId = sessionId, type = "success", message = message, scope = "friends")
         gmcpEmitter?.sendFriendsList(sessionId, buildFriendsInfo(ps))
         return null
     }
@@ -66,7 +68,9 @@ class FriendsSystem(
 
         markPlayerDirty(sessionId)
 
-        outbound.send(OutboundEvent.SendInfo(sessionId, "$targetName has been removed from your friends list."))
+        val message = "$targetName has been removed from your friends list."
+        outbound.send(OutboundEvent.SendInfo(sessionId, message))
+        gmcpEmitter?.sendUiFeedback(sessionId = sessionId, type = "success", message = message, scope = "friends")
         gmcpEmitter?.sendFriendsList(sessionId, buildFriendsInfo(ps))
         return null
     }
@@ -109,6 +113,11 @@ class FriendsSystem(
     suspend fun onPlayerLogin(sessionId: SessionId) {
         val ps = players.get(sessionId) ?: return
         val lowerName = ps.name.lowercase()
+
+        // Push the player their own roster so the Friends panel populates on
+        // login — otherwise it stays empty until the next add/remove or
+        // explicit `friend list`, making existing friends appear to vanish.
+        gmcpEmitter?.sendFriendsList(sessionId, buildFriendsInfo(ps))
 
         for (other in players.allPlayers()) {
             if (other.sessionId == sessionId) continue

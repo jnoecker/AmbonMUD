@@ -22,6 +22,22 @@ class FriendsSystemTest {
         return TestHarness(c, friends)
     }
 
+    private fun setupWithGmcp(maxFriends: Int = 50): TestHarness {
+        val c = SystemTestComponents()
+        val gmcpEmitter = GmcpEmitter(
+            outbound = c.outbound,
+            supportsPackage = { _, _ -> true },
+            progression = PlayerProgression(),
+        )
+        val friends = FriendsSystem(
+            players = c.players,
+            outbound = c.outbound,
+            gmcpEmitter = gmcpEmitter,
+            maxFriends = maxFriends,
+        )
+        return TestHarness(c, friends)
+    }
+
     private data class TestHarness(
         private val c: SystemTestComponents,
         val friends: FriendsSystem,
@@ -292,6 +308,45 @@ class FriendsSystemTest {
         val bobNotifications = events.filterIsInstance<OutboundEvent.SendInfo>()
             .filter { it.sessionId == sid2 }
         assertTrue(bobNotifications.isEmpty())
+    }
+
+    @Test
+    fun `onPlayerLogin pushes own friends list so the panel populates`() = runTest {
+        val h = setupWithGmcp()
+        val sid1 = SessionId(1L)
+        val sid2 = SessionId(2L)
+        h.players.loginOrFail(sid1, "Alice")
+        h.players.loginOrFail(sid2, "Bob")
+        assertNull(h.friends.addFriend(sid1, "Bob"))
+        h.outbound.drainAll()
+
+        // Re-login Alice: she should be pushed her own roster (containing Bob)
+        // without needing to run `friend list` first.
+        h.friends.onPlayerLogin(sid1)
+
+        val events = h.outbound.drainAll()
+        val listPush = events.filterIsInstance<OutboundEvent.GmcpData>()
+            .filter { it.sessionId == sid1 && it.gmcpPackage == "Friends.List" }
+        assertTrue(listPush.any { it.jsonData.contains("Bob") })
+    }
+
+    @Test
+    fun `add friend error emits scoped friends feedback`() = runTest {
+        val h = setupWithGmcp()
+        val sid = SessionId(1L)
+        h.players.loginOrFail(sid, "Alice")
+        h.outbound.drainAll()
+
+        // Adding a nonexistent player should not silently fail — the system
+        // returns the error string (the handler scopes it), and a successful
+        // add pushes scoped success feedback for the panel to surface.
+        h.players.loginOrFail(SessionId(2L), "Bob")
+        assertNull(h.friends.addFriend(sid, "Bob"))
+
+        val events = h.outbound.drainAll()
+        val feedback = events.filterIsInstance<OutboundEvent.GmcpData>()
+            .filter { it.gmcpPackage == "UI.Feedback" }
+        assertTrue(feedback.any { it.jsonData.contains("\"friends\"") && it.jsonData.contains("added") })
     }
 
     @Test
