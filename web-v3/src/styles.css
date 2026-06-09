@@ -24962,7 +24962,7 @@ html:has(.game-shell),
 /* Price banner slot under the title. */
 .sty-cost {
   position: absolute;
-  top: 20.2%;
+  top: 19.5%;
   left: 33%;
   width: 34%;
   text-align: center;
@@ -25055,8 +25055,8 @@ html:has(.game-shell),
 /* Invisible hotspot over the painted CHANGE RACE button. */
 .sty-change-hit {
   position: absolute;
-  left: 37%;
-  top: 79.5%;
+  left: 38.5%;
+  top: 78%;
   width: 26%;
   height: 9.5%;
   border: none;
@@ -25073,7 +25073,7 @@ html:has(.game-shell),
 .sty-current {
   position: absolute;
   left: 67.5%;
-  top: 82.3%;
+  top: 80.8%;
   width: 21%;
   height: 9%;
   display: flex;
