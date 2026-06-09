@@ -25897,13 +25897,22 @@ html:has(.game-shell),
   text-shadow: 0 0 8px rgb(247 217 106 / 70%);
 }
 
-.dice-die-tumbling { animation: dice-tumble 360ms var(--ease-out-soft); }
+.dice-die-wobbling { animation: dice-wobble 0.42s ease-in-out infinite; }
+.dice-die-landing { animation: dice-land 0.4s var(--ease-out-soft); }
 .dice-die-settled { animation: dice-drop 320ms var(--ease-out-soft); }
 
-@keyframes dice-tumble {
-  0% { transform: scale(0.5) rotate(-180deg); opacity: 0; }
-  55% { transform: scale(1.18) rotate(22deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+@keyframes dice-wobble {
+  0% { transform: rotate(-8deg) scale(0.97); }
+  25% { transform: rotate(6deg) scale(1.05); }
+  50% { transform: rotate(-4deg) scale(1); }
+  75% { transform: rotate(8deg) scale(1.05); }
+  100% { transform: rotate(-8deg) scale(0.97); }
+}
+@keyframes dice-land {
+  0% { transform: scale(1.32) rotate(-6deg); }
+  40% { transform: scale(0.88) rotate(4deg); }
+  70% { transform: scale(1.09) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 @keyframes dice-drop {
   0% { transform: translateY(-46px) scale(1.1); opacity: 0; }
@@ -25924,7 +25933,7 @@ html:has(.game-shell),
   color: #2a2a4e;
 }
 .dice-coin-face { font-size: clamp(1.1rem, 2.6vw, 2rem); line-height: 1; }
-.dice-coin-flipping { animation: dice-coin-flip 900ms linear; }
+.dice-coin-flipping { animation: dice-coin-flip 1100ms linear; }
 .dice-coin-won {
   background: radial-gradient(circle at 38% 32%, #fff3c4, #f0c25a 55%, #9a6a1e);
   border-color: #f7d96a;
@@ -25939,7 +25948,8 @@ html:has(.game-shell),
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dice-die-tumbling,
+  .dice-die-wobbling,
+  .dice-die-landing,
   .dice-die-settled,
   .dice-coin-flipping,
   .dice-banner-jackpot { animation: none; }

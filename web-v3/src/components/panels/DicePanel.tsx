@@ -11,10 +11,16 @@ interface DicePanelProps {
   onCommand: (command: string) => void;
 }
 
-/** Per-die tumble cadence; the active die spins in the velvet, then drops to the green. */
-const PER_DIE_MS = 520;
-const TUMBLE_MS = 360;
-const COIN_FLIP_MS = 900;
+/**
+ * Per-die cadence. Each child wobbles in the velvet — its face shuffling
+ * through random numbers — then LANDS on its real value and holds a beat before
+ * dropping into the green felt. Six dice ≈ 5.6s of building suspense.
+ */
+const WOBBLE_MS = 600; // shuffling/wobbling before it lands
+const LAND_HOLD_MS = 340; // landed value held in the velvet before it drops
+const PER_DIE_MS = WOBBLE_MS + LAND_HOLD_MS;
+const WOBBLE_TICK_MS = 70; // how fast the shuffling face cycles
+const COIN_FLIP_MS = 1100;
 
 type Phase = "idle" | "rolling" | "done";
 type CoinState = "none" | "flipping" | "won" | "lost";
@@ -44,17 +50,25 @@ function Die({
   die,
   extraClass,
   assets,
+  displayValue,
+  suppressMax,
 }: {
   die: DiceRoll;
   extraClass: string;
   assets: Record<string, string>;
+  /** Override the shown number (the shuffling face while wobbling). */
+  displayValue?: number;
+  /** Hold back the crowned max face/glow until the die has landed. */
+  suppressMax?: boolean;
 }) {
+  const showMax = die.isMax && !suppressMax;
   const sprite = assets[`dice_${die.kind}`];
   const maxArt = assets[`dice_${die.kind}_max`];
-  const faceArt = die.isMax ? (maxArt ?? sprite) : sprite;
+  const faceArt = showMax ? (maxArt ?? sprite) : sprite;
+  const value = displayValue ?? die.value;
   const className =
     `dice-die dice-die-${die.kind} ${sizeClass(die.sides)} ${extraClass}` +
-    (die.isMax ? " dice-die-max" : "") +
+    (showMax ? " dice-die-max" : "") +
     (faceArt ? " dice-die-art" : "");
   return (
     <div
@@ -62,7 +76,7 @@ function Die({
       title={`${childName(die.kind)} (d${die.sides}): ${die.value}${die.isMax ? " — max!" : ""}`}
       style={faceArt ? { backgroundImage: `url("${faceArt}")` } : undefined}
     >
-      <span className="dice-die-value">{die.value}</span>
+      <span className="dice-die-value">{value}</span>
       <span className="dice-die-tag">d{die.sides}</span>
     </div>
   );
@@ -87,6 +101,8 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
   const [phase, setPhase] = useState<Phase>("idle");
   const [animatedSeq, setAnimatedSeq] = useState(0);
   const [activeDie, setActiveDie] = useState<DiceRoll | null>(null);
+  const [activeLanded, setActiveLanded] = useState(false);
+  const [wobbleValue, setWobbleValue] = useState(1);
   const [settled, setSettled] = useState<DiceRoll[]>([]);
   const [runningTotal, setRunningTotal] = useState(0);
   const [coinState, setCoinState] = useState<CoinState>("none");
@@ -105,6 +121,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
     setAnimatedSeq(diceResult.seq);
     setPhase("rolling");
     setActiveDie(null);
+    setActiveLanded(false);
     setSettled([]);
     setRunningTotal(0);
     setCoinState("none");
@@ -138,8 +155,17 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
     }
 
     diceResult.dice.forEach((die, i) => {
-      at(i * PER_DIE_MS, () => setActiveDie(die));
-      at(i * PER_DIE_MS + TUMBLE_MS, () => {
+      const base = i * PER_DIE_MS;
+      // Appear and start wobbling (face shuffles via the interval below).
+      at(base, () => {
+        setActiveDie(die);
+        setActiveLanded(false);
+        setWobbleValue(1 + Math.floor(Math.random() * die.sides));
+      });
+      // Land on the real value (and reveal the crowned max face if any).
+      at(base + WOBBLE_MS, () => setActiveLanded(true));
+      // Drop into the green tray; the running total ticks up.
+      at(base + PER_DIE_MS, () => {
         setActiveDie(null);
         setSettled((prev) => [...prev, die]);
         setRunningTotal((prev) => prev + die.value);
@@ -157,6 +183,18 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
 
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [phase, diceResult]);
+
+  // While a die wobbles, cycle its shown face through random numbers so it
+  // looks like it's tumbling to a stop. Stops the moment it lands.
+  useEffect(() => {
+    if (!activeDie || activeLanded) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const sides = activeDie.sides;
+    const id = window.setInterval(() => {
+      setWobbleValue(1 + Math.floor(Math.random() * sides));
+    }, WOBBLE_TICK_MS);
+    return () => window.clearInterval(id);
+  }, [activeDie, activeLanded]);
 
   // Tick the post-roll cooldown down so the Roll button re-enables itself.
   useEffect(() => {
@@ -227,7 +265,15 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
 
       {/* Velvet roll stage */}
       <div className="dice-velvet" aria-live="polite">
-        {activeDie && <Die die={activeDie} extraClass="dice-die-tumbling" assets={assets} />}
+        {activeDie && (
+          <Die
+            die={activeDie}
+            extraClass={activeLanded ? "dice-die-landing" : "dice-die-wobbling"}
+            assets={assets}
+            displayValue={activeLanded ? undefined : wobbleValue}
+            suppressMax={!activeLanded}
+          />
+        )}
         {coinState !== "none" && (() => {
           // Moon side = the Luneqrae's blessing (win); dark-wind side = the loss.
           const coinArt = coinState === "lost" ? assets["coin_luneqrae_wind"] : assets["coin_luneqrae_moon"];
