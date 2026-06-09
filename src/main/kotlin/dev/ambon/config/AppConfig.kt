@@ -3092,6 +3092,7 @@ data class ImagesConfig(
             "friends_bg" to "global_assets/friends_bg.png",
             "group_bg" to "global_assets/group_bg.png",
             "command_reference_bg" to "global_assets/command_reference_bg.png",
+            "stylist_bg" to "global_assets/stylist_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

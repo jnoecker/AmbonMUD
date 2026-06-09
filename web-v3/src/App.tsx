@@ -965,6 +965,8 @@ function App() {
             ? "stainedglass"
             : drawerPanel === "help"
             ? "codex"
+            : drawerPanel === "stylist"
+            ? "boudoir"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -1005,6 +1007,8 @@ function App() {
             ? state.serverAssets["group_bg"]
             : drawerPanel === "help"
             ? state.serverAssets["command_reference_bg"]
+            : drawerPanel === "stylist"
+            ? state.serverAssets["stylist_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1033,7 +1037,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
@@ -1355,7 +1359,7 @@ function App() {
         )}
 
         {drawerPanel === "stylist" && (
-          <StylistPanel stylistState={state.stylistState} onCommand={sendCommand} />
+          <StylistPanel stylistState={state.stylistState} serverAssets={state.serverAssets} onCommand={sendCommand} />
         )}
 
         {drawerPanel === "auction" && (
