@@ -267,6 +267,17 @@ export function GameShell({
                 <button
                   type="button"
                   className="hud-stack-btn"
+                  onClick={() => openServicePanel("friendsboard")}
+                  title="Friends"
+                  aria-label="Friends"
+                >
+                  {serverAssets["friends_widget"]
+                    ? <img className="hud-stack-img" src={serverAssets["friends_widget"]} alt="" />
+                    : <span className="hud-stack-glyph">&#9829;</span>}
+                </button>
+                <button
+                  type="button"
+                  className="hud-stack-btn"
                   onClick={() => openServicePanel("guildboard")}
                   title="Guild"
                   aria-label="Guild"

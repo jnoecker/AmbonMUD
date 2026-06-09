@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, FriendEntry, FriendNotification, GroupInfo, PendingGroupInvite, SocialTab } from "../../types";
+import type { ChatChannel, ChatMessage, GroupInfo, PendingGroupInvite } from "../../types";
 
 interface ChatPanelProps {
   connected: boolean;
@@ -10,17 +9,9 @@ interface ChatPanelProps {
   chatByChannel: Record<ChatChannel, ChatMessage[]>;
   groupInfo: GroupInfo;
   pendingGroupInvite: PendingGroupInvite | null;
-  friends: FriendEntry[];
-  friendNotifications: FriendNotification[];
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
-  onTellPlayer: (target: string) => void;
   onCommand: (command: string) => void;
 }
-
-const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
-  { id: "friends", label: "Friends" },
-  { id: "group", label: "Group" },
-];
 
 export function ChatPanel({
   connected,
@@ -29,174 +20,28 @@ export function ChatPanel({
   chatByChannel,
   groupInfo,
   pendingGroupInvite,
-  friends,
-  friendNotifications,
   onSendMessage,
-  onTellPlayer,
   onCommand,
 }: ChatPanelProps) {
-  const feedRef = useRef<HTMLDivElement | null>(null);
   const groupFeedRef = useRef<HTMLDivElement | null>(null);
   const [groupDraft, setGroupDraft] = useState("");
-  const [activeSocialTab, setActiveSocialTab] = useState<SocialTab>("friends");
-  // Group action state
   const [groupInviteTarget, setGroupInviteTarget] = useState("");
-  // Friends action state
-  const [friendAddTarget, setFriendAddTarget] = useState("");
-  const [friendConfirmRemove, setFriendConfirmRemove] = useState<string | null>(null);
 
   const gtellMessages = chatByChannel.gtell;
-
-  useEffect(() => {
-    const feed = feedRef.current;
-    if (!feed) return;
-    feed.scrollTop = feed.scrollHeight;
-  }, [activeSocialTab]);
 
   useEffect(() => {
     const feed = groupFeedRef.current;
     if (!feed) return;
     feed.scrollTop = feed.scrollHeight;
-  }, [activeSocialTab, gtellMessages.length]);
-
-  const handleSocialTabChange = (tab: SocialTab) => {
-    setActiveSocialTab(tab);
-  };
-
-  const handleTellFromWho = (target: string) => {
-    onTellPlayer(target);
-  };
+  }, [gtellMessages.length]);
 
   const inGroup = groupInfo.members.length > 0;
 
-  const sortedFriends = useMemo(() => {
-    return [...friends].sort((a, b) => {
-      const onlineDiff = (a.online ? 0 : 1) - (b.online ? 0 : 1);
-      if (onlineDiff !== 0) return onlineDiff;
-      return a.name.localeCompare(b.name);
-    });
-  }, [friends]);
-
-  const [friendsNow, setFriendsNow] = useState(() => Date.now());
-  const hasFriendNotifications = friendNotifications.length > 0;
-
-  useEffect(() => {
-    if (!hasFriendNotifications || activeSocialTab !== "friends") return;
-    const interval = window.setInterval(() => setFriendsNow(Date.now()), 5_000);
-    return () => window.clearInterval(interval);
-  }, [hasFriendNotifications, activeSocialTab]);
-
-  const recentNotifications = useMemo(() => {
-    return friendNotifications.filter((n) => friendsNow - n.receivedAt < 30_000);
-  }, [friendNotifications, friendsNow]);
-
   return (
-    <section className="panel panel-chat" aria-label="Social channels">
-      <div className="social-tabs" role="tablist" aria-label="Social sections">
-        {SOCIAL_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            className={`social-tab ${activeSocialTab === tab.id ? "social-tab-active" : ""}`}
-            onClick={() => handleSocialTabChange(tab.id)}
-            aria-selected={activeSocialTab === tab.id}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
+    <section className="panel panel-chat" aria-label="Group">
       <div className="chat-shell">
 
-        {activeSocialTab === "friends" && (
-          <>
-            <form className="social-action-bar" onSubmit={(e) => { e.preventDefault(); const t = friendAddTarget.trim(); if (t) { onCommand(`friend add ${t}`); setFriendAddTarget(""); } }}>
-              <input
-                type="text"
-                className="social-action-input"
-                placeholder="Add friend\u2026"
-                value={friendAddTarget}
-                onChange={(e) => setFriendAddTarget(e.target.value)}
-                aria-label="Friend name to add"
-                disabled={!canChat}
-              />
-              <button type="submit" className="social-action-btn" disabled={!canChat || !friendAddTarget.trim()}>Add</button>
-            </form>
-            <div ref={feedRef} className="chat-feed" role="region" aria-label="Friends list">
-              <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Friends subwindow">
-                {!canChat ? (
-                  <p className="empty-note">
-                    {connected ? "Log in to unlock social features." : "Reconnect to load social data."}
-                  </p>
-                ) : sortedFriends.length === 0 && recentNotifications.length === 0 ? (
-                  <p className="empty-note">No friends yet. Add someone above to get started.</p>
-                ) : (
-                  <div className="friends-panel-content">
-                    {recentNotifications.length > 0 && (
-                      <ul className="friend-notifications">
-                        {recentNotifications.map((n) => (
-                          <li key={n.id} className={`friend-notification friend-notification-${n.event}`}>
-                            <span className={`friend-status-dot friend-status-dot-${n.event === "online" ? "online" : "offline"}`} />
-                            <span className="friend-notification-text">
-                              {n.name} {n.event === "online" ? "came online" : "went offline"}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {sortedFriends.length > 0 && (
-                      <ul className="friend-list">
-                        {sortedFriends.map((friend) => (
-                          <li key={friend.name} className={`friend-item ${friend.online ? "" : "friend-item-offline"}`}>
-                            <div className="friend-item-left">
-                              <span className={`friend-status-dot friend-status-dot-${friend.online ? "online" : "offline"}`} />
-                              <span className="friend-item-name">{friend.name}</span>
-                            </div>
-                            <div className="friend-item-right">
-                              {friend.online && friend.zone && <span className="friend-item-zone">{friend.zone}</span>}
-                              {friend.level !== null && <span className="friend-item-level">Lv {friend.level}</span>}
-                              {friend.online && (
-                                <button
-                                  type="button"
-                                  className="who-tell-button"
-                                  title={`Tell ${friend.name}`}
-                                  aria-label={`Tell ${friend.name}`}
-                                  onClick={() => handleTellFromWho(friend.name)}
-                                >
-                                  <TellIcon className="who-tell-icon" />
-                                </button>
-                              )}
-                              {friendConfirmRemove === friend.name ? (
-                                <span className="social-confirm-inline">
-                                  <button type="button" className="social-confirm-yes" aria-label="Confirm removal" onClick={() => { onCommand(`friend remove ${friend.name}`); setFriendConfirmRemove(null); }}>Remove?</button>
-                                  <button type="button" className="social-confirm-no" aria-label="Cancel removal" onClick={() => setFriendConfirmRemove(null)}>&times;</button>
-                                </span>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="social-remove-btn"
-                                  title={`Remove ${friend.name}`}
-                                  aria-label={`Remove ${friend.name}`}
-                                  onClick={() => setFriendConfirmRemove(friend.name)}
-                                >
-                                  &times;
-                                </button>
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </section>
-            </div>
-            <div aria-hidden="true" />
-          </>
-        )}
-
-        {activeSocialTab === "group" && (
+        {(
           !canChat ? (
             <>
               <div aria-hidden="true" />
