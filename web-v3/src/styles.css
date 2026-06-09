@@ -18784,11 +18784,6 @@ html:has(.game-shell),
   transition: opacity 150ms var(--ease-out-soft);
 }
 
-.entity-menu-open .canvas-room-sign {
-  opacity: 0;
-  pointer-events: none;
-}
-
 /* ── Action dock (below the room panel; swaps kiosks <-> skill bar) ───── */
 .action-dock {
   position: relative;
