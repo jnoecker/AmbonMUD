@@ -25109,3 +25109,247 @@ html:has(.game-shell),
 .sty-gold strong { color: #f4dc9a; }
 .sty-gold-icon { color: #e6c878; display: inline-flex; }
 .sty-gold-icon img { width: 1.1em; height: 1.1em; object-fit: contain; }
+
+/* ════════════════════════════════════════════════════════════
+   Housing Broker — estate shop (drawerPanel "housing")
+   Painted `housing_bg` frame (skin). Owned rooms inset into the left "Your
+   Estate" card, templates into the central "Browse Room Templates" card, and
+   a single Buy bar at the bottom.
+   ════════════════════════════════════════════════════════════ */
+.drawer-sheet.drawer-sheet-estate {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(ellipse at 50% 35%, rgb(28 36 30 / 96%), rgb(14 18 14 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.drawer-sheet-estate .drawer-title { display: none; }
+.drawer-sheet-estate .drawer-handle-zone { display: none; }
+
+.drawer-sheet-estate .drawer-header {
+  position: absolute;
+  top: 1.5%;
+  right: 1.5%;
+  left: auto;
+  z-index: 6;
+  padding: 0;
+  min-height: 0;
+  border-bottom: none;
+}
+
+.drawer-sheet-estate .drawer-body {
+  padding: 0;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-estate {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 1456 / 1093;
+  }
+}
+
+.housing-broker { position: absolute; inset: 0; }
+.housing-broker-empty { display: grid; place-items: center; }
+.hb-empty { color: #5a4a2e; text-align: center; font-style: italic; padding: 10px; }
+
+/* ── Your Estate (left card) ──────────────────────────────── */
+.hb-estate {
+  position: absolute;
+  left: 12.8%;
+  top: 29%;
+  width: 13.8%;
+  bottom: 24%;
+  display: flex;
+  flex-direction: column;
+  color: #3a2c18;
+}
+
+.hb-owned-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(120 96 52 / 50%) transparent;
+}
+
+.hb-owned {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(4px, 0.8vh, 7px) 4px;
+  border-bottom: 1px solid rgb(120 96 52 / 20%);
+}
+.hb-owned-name { font-family: var(--font-display); font-weight: 600; font-size: clamp(0.74rem, 1.3vw, 0.94rem); color: #2f2410; }
+.hb-owned-type { font-size: 0.66rem; color: rgb(90 72 44 / 70%); }
+
+.hb-owned-total {
+  flex-shrink: 0;
+  padding-top: 6px;
+  margin-top: 4px;
+  border-top: 1px solid rgb(120 96 52 / 35%);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(0.7rem, 1.2vw, 0.84rem);
+  color: #5a4426;
+}
+
+/* ── Browse Room Templates (center card) ──────────────────── */
+.hb-templates {
+  position: absolute;
+  left: 31.5%;
+  right: 11.5%;
+  top: 31.5%;
+  bottom: 19%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(150 120 70 / 55%) transparent;
+}
+.hb-templates::-webkit-scrollbar { width: 8px; }
+.hb-templates::-webkit-scrollbar-thumb { border-radius: 999px; background: rgb(150 120 70 / 55%); }
+.hb-templates::-webkit-scrollbar-track { background: transparent; }
+
+.hb-template-list { list-style: none; margin: 0; padding: 2px; display: flex; flex-direction: column; gap: clamp(4px, 0.8vh, 8px); }
+
+.hb-template {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: clamp(6px, 1vh, 11px) clamp(8px, 1.2vw, 14px);
+  border: 1px solid rgb(120 96 52 / 28%);
+  border-radius: 10px;
+  background: rgb(250 244 228 / 32%);
+  color: #3a2c18;
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+}
+.hb-template:hover { background: rgb(180 150 90 / 20%); border-color: rgb(150 120 70 / 50%); }
+.hb-template.is-selected {
+  border-color: #9a7a3a;
+  box-shadow: 0 0 10px rgb(150 120 70 / 35%);
+  background: rgb(200 170 100 / 24%);
+}
+.hb-template.is-owned { opacity: 0.68; }
+
+.hb-template-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hb-template-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(0.84rem, 1.5vw, 1.08rem);
+  color: #2a1f0e;
+}
+.hb-template-desc { font-size: clamp(0.64rem, 1.1vw, 0.82rem); color: rgb(74 60 40 / 88%); line-height: 1.25; }
+.hb-tag {
+  font-size: 0.54rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid rgb(120 96 52 / 50%);
+  color: #6a5026;
+}
+.hb-tag-entry { border-color: rgb(90 130 80 / 60%); color: #4a7a3a; }
+
+.hb-template-cost {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(0.78rem, 1.4vw, 1rem);
+  color: #8a6a2a;
+}
+.hb-coin { color: #c8a24a; }
+
+/* ── Buy bar (bottom dark band) ───────────────────────────── */
+.hb-buybar {
+  position: absolute;
+  left: 17%;
+  right: 17%;
+  top: 85.5%;
+  bottom: 5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 24px);
+}
+
+.hb-buy-btn {
+  padding: clamp(7px, 1.3vh, 13px) clamp(20px, 4vw, 50px);
+  border: 1px solid rgb(200 170 90 / 50%);
+  border-radius: 10px;
+  background: linear-gradient(165deg, #4a3a78, #2e2454);
+  color: #f0e0c0;
+  font-family: var(--font-display);
+  font-size: clamp(0.88rem, 1.7vw, 1.18rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+.hb-buy-btn:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+.hb-buy-btn:disabled { opacity: 0.45; cursor: default; }
+
+.hb-funds {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-size: clamp(0.76rem, 1.4vw, 1rem);
+  color: #d9c089;
+}
+.hb-funds strong { color: #f4dc9a; }
+
+.hb-feedback { position: absolute; left: 0; max-width: 32%; font-size: 0.78rem; line-height: 1.2; }
+.hb-feedback-error { color: #e08a8a; }
+.hb-feedback-success { color: #8fd6a0; }
+.hb-feedback-info { color: #cfe0ff; }
+
+.hb-dir-picker { display: flex; align-items: center; gap: 6px; }
+.hb-dir-label { color: #d9c089; font-family: var(--font-display); font-size: clamp(0.74rem, 1.3vw, 0.92rem); }
+.hb-dir-btn {
+  padding: clamp(5px, 0.9vh, 9px) clamp(9px, 1.2vw, 15px);
+  border: 1px solid rgb(200 170 90 / 40%);
+  border-radius: 8px;
+  background: rgb(60 46 90 / 75%);
+  color: #f0e0c0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 150ms var(--ease-out-soft);
+}
+.hb-dir-btn:hover { filter: brightness(1.18); }
+.hb-dir-cancel {
+  border: 1px solid rgb(200 120 120 / 40%);
+  border-radius: 8px;
+  background: rgb(90 40 44 / 70%);
+  color: #ffd6d6;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.hb-visiting {
+  position: absolute;
+  top: 24%;
+  left: 31.5%;
+  right: 11.5%;
+  text-align: center;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #c8b48a;
+}

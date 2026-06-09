@@ -967,6 +967,8 @@ function App() {
             ? "codex"
             : drawerPanel === "stylist"
             ? "boudoir"
+            : drawerPanel === "housing"
+            ? "estate"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -1009,6 +1011,8 @@ function App() {
             ? state.serverAssets["command_reference_bg"]
             : drawerPanel === "stylist"
             ? state.serverAssets["stylist_bg"]
+            : drawerPanel === "housing"
+            ? state.serverAssets["housing_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1037,7 +1041,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
@@ -1350,6 +1354,7 @@ function App() {
             templates={state.housingTemplates}
             room={state.room}
             uiFeedbackFeed={state.uiFeedbackFeed}
+            gold={state.vitals.gold}
             onSendCommand={sendCommand}
           />
         )}
