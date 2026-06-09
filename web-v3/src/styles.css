@@ -24146,15 +24146,14 @@ html:has(.game-shell),
 }
 
 .fb-add-card {
-  /* Span only the left portion so the painted flowers/book on the right
-     of the frame stay visible. */
+  /* No card chrome — just the label + input + button. Span only the left
+     portion so the painted flowers/book on the right stay visible. */
   align-self: flex-start;
   width: 70%;
-  border: 1px solid rgb(150 180 255 / 30%);
-  border-radius: 12px;
-  background: rgb(16 24 50 / 55%);
-  padding: clamp(8px, 1.4vh, 14px) clamp(10px, 1.6vw, 18px);
-  box-shadow: inset 0 0 18px rgb(0 0 0 / 35%);
+  border: none;
+  background: transparent;
+  padding: clamp(4px, 1vh, 10px) 0 0;
+  box-shadow: none;
 }
 
 .fb-add-title {
