@@ -26059,9 +26059,11 @@ html:has(.game-shell),
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-content: center;
   justify-items: center;
-  gap: clamp(6px, 1.4vh, 16px) clamp(8px, 1.2vw, 20px);
+  /* Tight — the plaque art has transparent margins, so near-zero gap still reads
+     as breathing room; on small screens the cells may touch, which is fine. */
+  gap: clamp(0px, 0.5vh, 8px) clamp(0px, 0.6vw, 11px);
   overflow-y: auto;
-  padding: clamp(4px, 1vh, 12px) 4px;
+  padding: clamp(2px, 0.5vh, 7px) 2px;
   scrollbar-width: thin;
   scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
