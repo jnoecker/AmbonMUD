@@ -350,10 +350,7 @@ class LotterySystem(
         // win or bust, fate decides. A winning flip rescues a bust into a 10×, or
         // gilds an already-winning sum into a 12×. A losing flip leaves the base
         // result untouched.
-        // TEMP(dice-verify): force the Luneqrae coin to fire on EVERY roll so the
-        // flip animation, coin art, and 10×/12× payouts can be verified visually.
-        // REVERT before merge — restore: maxCount >= gamblingConfig.coinMaxThreshold
-        val coinFired = true
+        val coinFired = maxCount >= gamblingConfig.coinMaxThreshold
         val coinWon = coinFired && random.nextInt(2) == 0
 
         val multiplier: Double =
