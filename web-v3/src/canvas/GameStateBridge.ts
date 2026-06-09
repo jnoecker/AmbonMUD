@@ -100,11 +100,14 @@ export const canvasCallbacks: {
   onEntityMenu: ((open: boolean) => void) | null;
   /** Open the monster-manual / bestiary panel for a clicked creature. */
   openMonsterManual: ((entry: MonsterEntry) => void) | null;
+  /** Open the player field-manual card for a clicked player in the room. */
+  openPlayerCard: ((player: RoomPlayer) => void) | null;
   /** Open the parchment item card for a clicked room item. */
   openItemManual: ((entry: ItemEntry) => void) | null;
 } = {
   sendCommand: null,
   prefillCommand: null,
+  openPlayerCard: null,
   openShop: null,
   openAuction: null,
   openPuzzle: null,

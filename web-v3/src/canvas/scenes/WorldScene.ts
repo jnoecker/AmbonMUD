@@ -2101,8 +2101,7 @@ export class WorldScene {
           canvasCallbacks.onTargetSelected?.(playerData.name);
           return;
         }
-        this.entityPopout.showPlayer(playerData.name, playerData.level);
-        this.showPopout();
+        canvasCallbacks.openPlayerCard?.(playerData);
       });
 
       this.container.addChild(sprite);
@@ -2764,13 +2763,6 @@ export class WorldScene {
     btn.on("pointerdown", onClick);
 
     return btn;
-  }
-
-  private showPopout() {
-    // Re-add backdrop and popout so they render on top of dynamically added sprites
-    this.container.addChild(this.backdropHit);
-    this.container.addChild(this.entityPopout.container);
-    this.backdropHit.visible = true;
   }
 
   destroy() {
