@@ -963,6 +963,8 @@ function App() {
             ? "starframe"
             : drawerPanel === "groupboard"
             ? "stainedglass"
+            : drawerPanel === "help"
+            ? "codex"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -1001,6 +1003,8 @@ function App() {
             ? state.serverAssets["friends_bg"]
             : drawerPanel === "groupboard"
             ? state.serverAssets["group_bg"]
+            : drawerPanel === "help"
+            ? state.serverAssets["command_reference_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1029,7 +1033,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel

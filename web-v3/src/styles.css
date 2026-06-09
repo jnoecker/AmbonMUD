@@ -24715,3 +24715,194 @@ html:has(.game-shell),
 .gp-chat-form .gp-input { flex: 1; }
 
 .gp-footer { display: flex; justify-content: center; margin-top: clamp(6px, 1.4vh, 12px); }
+
+/* ════════════════════════════════════════════════════════════
+   Command Reference — the painted open-book Arcanum (drawerPanel "help")
+   `command_reference_bg` skin: a dark Categories panel on the left page and a
+   searchable command table (command / usage / description) across the two
+   parchment pages. Content is inset into the painted regions.
+   ════════════════════════════════════════════════════════════ */
+.drawer-sheet.drawer-sheet-codex {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(ellipse at 50% 35%, rgb(20 26 56 / 96%), rgb(8 10 28 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.drawer-sheet-codex .drawer-title { display: none; }
+.drawer-sheet-codex .drawer-handle-zone { display: none; }
+
+.drawer-sheet-codex .drawer-header {
+  position: absolute;
+  top: 2.2%;
+  right: 2.4%;
+  left: auto;
+  z-index: 6;
+  padding: 0;
+  min-height: 0;
+  border-bottom: none;
+}
+
+.drawer-sheet-codex .drawer-body {
+  padding: 0;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-codex {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 1456 / 1093;
+  }
+}
+
+.command-reference { position: absolute; inset: 0; }
+.command-reference-loading { display: grid; place-items: center; }
+
+/* ── Categories (left page, dark panel) ───────────────────── */
+.cr-categories {
+  position: absolute;
+  left: 14%;
+  top: 25%;
+  width: 12.5%;
+  bottom: 24%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.6vh, 6px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(210 180 110 / 50%) transparent;
+}
+
+.cr-cat {
+  display: flex;
+  align-items: center;
+  gap: clamp(5px, 0.6vw, 9px);
+  padding: clamp(4px, 0.9vh, 8px) clamp(5px, 0.7vw, 10px);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: #d9c089;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: clamp(0.68rem, 1.2vw, 0.9rem);
+  text-align: left;
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.cr-cat:hover { background: rgb(210 180 110 / 12%); color: #f0d89a; }
+.cr-cat.is-active {
+  border-color: rgb(210 180 110 / 60%);
+  background: rgb(210 180 110 / 16%);
+  box-shadow: 0 0 12px rgb(210 180 110 / 28%), inset 0 0 8px rgb(210 180 110 / 12%);
+  color: #f4dca0;
+}
+
+.cr-cat-glyph { flex-shrink: 0; color: #e6c878; font-size: 1.1em; }
+.cr-cat-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Search + table (center parchment pages) ──────────────── */
+.cr-main {
+  position: absolute;
+  left: 30%;
+  right: 28.5%;
+  top: 18.5%;
+  bottom: 21.5%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.2vh, 12px);
+  color: #2e2110;
+  /* Subtle light "engraving" lifts the ink off the busy parchment texture. */
+  text-shadow: 0 1px 1px rgb(255 248 228 / 65%);
+}
+
+.cr-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgb(120 96 52 / 45%);
+  border-radius: 999px;
+  background: rgb(255 250 235 / 35%);
+  padding: clamp(5px, 1vh, 9px) 14px;
+}
+.cr-search-icon { color: rgb(120 96 52 / 80%); font-size: 1rem; }
+.cr-search {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: #3a2c18;
+  font-size: 0.92rem;
+}
+.cr-search:focus { outline: none; }
+.cr-search::placeholder { color: rgb(90 72 44 / 60%); font-style: italic; }
+
+.cr-table-head,
+.cr-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr 2.4fr;
+  gap: clamp(6px, 1.1vw, 18px);
+  align-items: baseline;
+}
+
+.cr-table-head {
+  font-family: var(--font-display);
+  font-size: clamp(0.62rem, 1.1vw, 0.78rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(90 66 38 / 80%);
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgb(120 96 52 / 38%);
+}
+
+.cr-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(150 120 70 / 55%) transparent;
+}
+.cr-rows::-webkit-scrollbar { width: 7px; }
+.cr-rows::-webkit-scrollbar-thumb { border-radius: 999px; background: rgb(150 120 70 / 55%); }
+.cr-rows::-webkit-scrollbar-track { background: transparent; }
+
+.cr-row {
+  padding: clamp(5px, 1vh, 9px) 0;
+  border-bottom: 1px solid rgb(120 96 52 / 18%);
+}
+
+.cr-col-cmd { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.cr-row-glyph { flex-shrink: 0; color: #8a6a3a; font-size: 1.05em; }
+.cr-cmd-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(0.84rem, 1.5vw, 1.04rem);
+  color: #241a08;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cr-col-usage {
+  font-family: "JetBrains Mono", "Cascadia Mono", monospace;
+  font-size: clamp(0.68rem, 1.2vw, 0.84rem);
+  color: #463418;
+  font-weight: 600;
+  word-break: break-word;
+}
+.cr-col-desc {
+  font-size: clamp(0.72rem, 1.3vw, 0.9rem);
+  color: #2a1f0e;
+  line-height: 1.35;
+}
+
+.cr-empty {
+  margin: auto;
+  text-align: center;
+  font-style: italic;
+  color: rgb(90 72 44 / 70%);
+  padding: clamp(16px, 5vh, 40px) 12px;
+}
