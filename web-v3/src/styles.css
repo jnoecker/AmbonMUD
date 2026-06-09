@@ -24643,11 +24643,9 @@ html:has(.game-shell),
 .gp-kick:hover { filter: brightness(1.12); }
 
 /* Group chat. */
-.gp-chat { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; }
+.gp-chat { display: flex; flex-direction: column; gap: 8px; }
 .gp-chat-feed {
-  flex: 1 1 auto;
-  min-height: clamp(70px, 14vh, 160px);
-  max-height: 26vh;
+  height: clamp(90px, 16vh, 190px);
   overflow-y: auto;
   border-radius: 8px;
   border: 1px solid rgb(150 180 255 / 22%);
@@ -24662,4 +24660,4 @@ html:has(.game-shell),
 .gp-chat-form { display: flex; gap: 6px; }
 .gp-chat-form .gp-input { flex: 1; }
 
-.gp-footer { display: flex; justify-content: center; padding-top: 2px; }
+.gp-footer { display: flex; justify-content: center; margin-top: clamp(6px, 1.4vh, 12px); }
