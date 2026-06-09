@@ -25353,3 +25353,215 @@ html:has(.game-shell),
   font-style: italic;
   color: #c8b48a;
 }
+
+/* ════════════════════════════════════════════════════════════
+   Lottery — fortune hall (drawerPanel "lottery")
+   Painted `lottery_bg` frame (skin). The labels are painted; this overlays the
+   live values into their slots, plus the quantity selector + Buy button.
+   ════════════════════════════════════════════════════════════ */
+.drawer-sheet.drawer-sheet-fortune {
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(ellipse at 50% 30%, rgb(24 22 56 / 96%), rgb(10 10 28 / 98%));
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.drawer-sheet-fortune .drawer-title { display: none; }
+.drawer-sheet-fortune .drawer-handle-zone { display: none; }
+
+.drawer-sheet-fortune .drawer-header {
+  position: absolute;
+  top: 1.5%;
+  right: 1.5%;
+  left: auto;
+  z-index: 6;
+  padding: 0;
+  min-height: 0;
+  border-bottom: none;
+}
+
+.drawer-sheet-fortune .drawer-body {
+  padding: 0;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-fortune {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 1456 / 1093;
+  }
+}
+
+.lottery-board { position: absolute; inset: 0; font-family: var(--font-display); }
+.lottery-board-empty { display: grid; place-items: center; }
+.lot-empty { color: #c8b48a; text-align: center; font-style: italic; }
+
+/* Each value sits in its painted slot. */
+.lot-jackpot {
+  position: absolute;
+  left: 41%;
+  top: 33.5%;
+  width: 36%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.lot-jackpot-value {
+  font-size: clamp(1.6rem, 4.6vw, 3.4rem);
+  font-weight: 700;
+  color: #f3d271;
+  text-shadow: 0 0 14px rgb(240 200 90 / 45%), 0 2px 3px rgb(0 0 0 / 60%);
+  line-height: 1;
+}
+.lot-jackpot-unit {
+  font-size: clamp(0.6rem, 1.2vw, 0.82rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(240 210 130 / 70%);
+  margin-top: 4px;
+}
+
+.lot-countdown {
+  position: absolute;
+  left: 31%;
+  top: 55.5%;
+  width: 20%;
+  text-align: center;
+  font-size: clamp(1.1rem, 2.6vw, 1.9rem);
+  font-weight: 700;
+  color: #74d4e6;
+  text-shadow: 0 0 12px rgb(116 212 230 / 45%);
+}
+
+.lot-owned {
+  position: absolute;
+  left: 63%;
+  top: 54.5%;
+  width: 14%;
+  text-align: center;
+  font-size: clamp(1.1rem, 2.6vw, 1.9rem);
+  font-weight: 700;
+  color: #9fc0ff;
+}
+
+.lot-total {
+  position: absolute;
+  left: 27%;
+  top: 66.5%;
+  width: 11%;
+  text-align: center;
+  font-size: clamp(1rem, 2.2vw, 1.6rem);
+  font-weight: 700;
+  color: #8fd6a0;
+}
+
+.lot-cost {
+  position: absolute;
+  left: 44%;
+  top: 65.5%;
+  width: 10%;
+  text-align: center;
+  font-size: clamp(1rem, 2.2vw, 1.6rem);
+  font-weight: 700;
+  color: #f3d271;
+}
+
+.lot-limit {
+  position: absolute;
+  left: 63%;
+  top: 65%;
+  width: 12%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: clamp(1rem, 2.2vw, 1.6rem);
+  font-weight: 700;
+  color: #c89ae0;
+}
+.lot-limit-unit {
+  font-size: clamp(0.52rem, 1vw, 0.68rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(200 154 224 / 70%);
+}
+
+/* Buy section (bottom panel). */
+.lot-buy {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 79%;
+  bottom: 3%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 0.9vh, 9px);
+}
+
+.lot-buy-sub {
+  font-size: clamp(0.62rem, 1.2vw, 0.84rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(214 200 240 / 75%);
+}
+
+.lot-qty {
+  display: flex;
+  gap: clamp(3px, 0.5vw, 7px);
+  flex-wrap: nowrap;
+}
+.lot-qty-step,
+.lot-qty-num {
+  min-width: clamp(22px, 3vw, 38px);
+  padding: clamp(4px, 0.8vh, 8px) clamp(3px, 0.5vw, 8px);
+  border: 1px solid rgb(200 170 90 / 45%);
+  border-radius: 7px;
+  background: rgb(28 26 60 / 70%);
+  color: #e8dcc0;
+  font-family: var(--font-display);
+  font-size: clamp(0.7rem, 1.3vw, 0.92rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+}
+.lot-qty-step:hover,
+.lot-qty-num:hover { background: rgb(48 44 96 / 80%); border-color: rgb(230 200 115 / 60%); }
+.lot-qty-num.is-active {
+  border-color: #74d4e6;
+  color: #bfeefa;
+  box-shadow: 0 0 12px rgb(116 212 230 / 45%), inset 0 0 8px rgb(116 212 230 / 18%);
+}
+
+.lot-summary {
+  margin: 0;
+  font-size: clamp(0.68rem, 1.3vw, 0.92rem);
+  color: rgb(224 214 244 / 90%);
+}
+.lot-summary strong { color: #f3d271; }
+
+.lot-feedback { margin: 0; font-size: 0.78rem; }
+.lot-feedback-error { color: #e08a8a; }
+.lot-feedback-success { color: #8fd6a0; }
+.lot-feedback-info { color: #9fc0ff; }
+
+.lot-buy-btn {
+  margin-top: 2px;
+  padding: clamp(7px, 1.3vh, 13px) clamp(28px, 6vw, 80px);
+  border: 1px solid rgb(200 170 90 / 55%);
+  border-radius: 10px;
+  background: linear-gradient(165deg, #6a3f9e, #3e2470);
+  color: #f4e6c8;
+  font-family: var(--font-display);
+  font-size: clamp(0.92rem, 1.9vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%), 0 3px 12px rgb(0 0 0 / 45%);
+  transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+.lot-buy-btn:hover { filter: brightness(1.14); transform: translateY(-1px); }

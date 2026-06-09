@@ -7,21 +7,24 @@ interface LotteryPanelProps {
   onCommand: (command: string) => void;
 }
 
-function formatCountdown(ms: number): string {
-  if (ms <= 0) return "Drawing soon";
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
+function pad(n: number): string { return n.toString().padStart(2, "0"); }
+
+function formatHMS(ms: number): string {
+  if (ms <= 0) return "00:00:00";
+  const t = Math.floor(ms / 1000);
+  return `${pad(Math.floor(t / 3600))}:${pad(Math.floor((t % 3600) / 60))}:${pad(t % 60)}`;
 }
 
+/**
+ * Lottery — reskinned onto the painted `lottery_bg` frame. The labels (Current
+ * Jackpot, Time Remaining, Owned Tickets, etc.) are painted; this overlays the
+ * live values into their slots, plus the quantity selector, purchase summary,
+ * and Buy Tickets button in the bottom panel.
+ */
 export function LotteryPanel({ lotteryInfo, uiFeedbackFeed, onCommand }: LotteryPanelProps) {
-  const [ticketDraft, setTicketDraft] = useState("1");
-  // nextDrawingMs is an absolute epoch timestamp; tick so the pill counts down.
   const [now, setNow] = useState(() => Date.now());
+  const [qty, setQty] = useState(1);
+
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
@@ -32,80 +35,54 @@ export function LotteryPanel({ lotteryInfo, uiFeedbackFeed, onCommand }: Lottery
     [uiFeedbackFeed],
   );
 
+  if (!lotteryInfo) {
+    return (
+      <div className="lottery-board lottery-board-empty">
+        <p className="lot-empty">Fortune is quiet. Lottery information is not available right now.</p>
+      </div>
+    );
+  }
+
+  const { jackpot, totalTickets, playerTickets, nextDrawingMs, ticketCost, maxTicketsPerPlayer } = lotteryInfo;
+  const cap = Math.min(10, maxTicketsPerPlayer || 10);
+  const clamp = (n: number) => Math.max(1, Math.min(cap, n));
+  const total = qty * ticketCost;
+
   return (
-    <div className="lottery-panel">
-      <div className="panel-header">
-        <span className="panel-title">Lottery</span>
+    <div className="lottery-board">
+      <div className="lot-jackpot">
+        <span className="lot-jackpot-value">{jackpot.toLocaleString()}</span>
+        <span className="lot-jackpot-unit">Gold Pieces</span>
       </div>
 
-      {activeFeedback && (
-        <p className={`systems-local-message systems-local-message-${activeFeedback.type}`}>
-          {activeFeedback.message}
-        </p>
-      )}
+      <div className="lot-countdown">{formatHMS(nextDrawingMs - now)}</div>
+      <div className="lot-owned">{playerTickets}</div>
+      <div className="lot-total">{totalTickets.toLocaleString()}</div>
+      <div className="lot-cost">{ticketCost.toLocaleString()}</div>
+      <div className="lot-limit">{maxTicketsPerPlayer}<span className="lot-limit-unit">Tickets Max</span></div>
 
-      {lotteryInfo ? (
-        <article className="systems-card">
-          <div className="systems-card-header">
-            <div>
-              <p className="systems-card-label">Current Drawing</p>
-              <h4>{lotteryInfo.jackpot.toLocaleString()} gold jackpot</h4>
-            </div>
-            <span className="systems-pill">{formatCountdown(lotteryInfo.nextDrawingMs - now)}</span>
-          </div>
-          <dl className="systems-stat-grid">
-            <div><dt>Your Tickets</dt><dd>{lotteryInfo.playerTickets}</dd></div>
-            <div><dt>Total Tickets</dt><dd>{lotteryInfo.totalTickets}</dd></div>
-            <div><dt>Ticket Cost</dt><dd>{lotteryInfo.ticketCost} gold</dd></div>
-            <div><dt>Per-Player Limit</dt><dd>{lotteryInfo.maxTicketsPerPlayer}</dd></div>
-          </dl>
-          <div className="systems-choice-list systems-choice-list-compact">
-            {[1, 3, 5].map((count) => (
-              <button
-                key={count}
-                type="button"
-                className="systems-choice-card"
-                onClick={() => onCommand(`lottery buy ${count}`)}
-              >
-                <span className="systems-choice-title">{count} ticket{count === 1 ? "" : "s"}</span>
-                <span className="systems-choice-copy">{(count * lotteryInfo.ticketCost).toLocaleString()} gold</span>
-              </button>
-            ))}
-          </div>
-          <div className="systems-action-row">
-            <input
-              type="number"
-              min={1}
-              max={lotteryInfo.maxTicketsPerPlayer}
-              step={1}
-              inputMode="numeric"
-              className="systems-number-input"
-              value={ticketDraft}
-              onChange={(event) => setTicketDraft(event.target.value)}
-            />
-            <button
-              type="button"
-              className="systems-primary-btn"
-              onClick={() => {
-                const count = Number(ticketDraft);
-                if (!Number.isSafeInteger(count) || count < 1) return;
-                onCommand(`lottery buy ${count}`);
-              }}
-            >
-              Buy Custom Quantity
-            </button>
-            <button
-              type="button"
-              className="systems-secondary-btn"
-              onClick={() => onCommand("lottery")}
-            >
-              Refresh Info
-            </button>
-          </div>
-        </article>
-      ) : (
-        <p className="empty-note">Lottery information is not available right now.</p>
-      )}
+      <div className="lot-buy">
+        <div className="lot-buy-sub">Select Quantity (1–{cap})</div>
+        <div className="lot-qty" role="group" aria-label="Ticket quantity">
+          <button type="button" className="lot-qty-step" onClick={() => setQty((q) => clamp(q - 10))} aria-label="Minus ten">−10</button>
+          <button type="button" className="lot-qty-step" onClick={() => setQty((q) => clamp(q - 1))} aria-label="Minus one">−</button>
+          {Array.from({ length: cap }, (_, i) => i + 1).map((n) => (
+            <button key={n} type="button" className={`lot-qty-num${qty === n ? " is-active" : ""}`} onClick={() => setQty(n)}>{n}</button>
+          ))}
+          <button type="button" className="lot-qty-step" onClick={() => setQty((q) => clamp(q + 1))} aria-label="Plus one">+</button>
+          <button type="button" className="lot-qty-step" onClick={() => setQty((q) => clamp(q + 10))} aria-label="Plus ten">+10</button>
+        </div>
+
+        <p className="lot-summary">
+          You will purchase <strong>{qty}</strong> ticket{qty === 1 ? "" : "s"} for <strong>{total.toLocaleString()}</strong> gold pieces.
+        </p>
+
+        {activeFeedback && (
+          <p className={`lot-feedback lot-feedback-${activeFeedback.type}`}>{activeFeedback.message}</p>
+        )}
+
+        <button type="button" className="lot-buy-btn" onClick={() => onCommand(`lottery buy ${qty}`)}>Buy Tickets</button>
+      </div>
     </div>
   );
 }
