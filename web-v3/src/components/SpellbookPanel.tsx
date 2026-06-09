@@ -22,6 +22,8 @@ interface SpellbookPanelProps {
   playerClass: string;
   playerLevel: number;
   availableSkillPoints?: number;
+  /** Opens the crafting recipes panel (a forge-free way to browse recipes). */
+  onOpenCrafting?: () => void;
 }
 
 function cooldownLabel(ms: number): string {
@@ -152,6 +154,7 @@ export function SpellbookPanel({
   playerClass,
   playerLevel,
   availableSkillPoints,
+  onOpenCrafting,
 }: SpellbookPanelProps) {
   const [activeCategory, setActiveCategory] = useState<Category>("ALL");
   const [activeClass, setActiveClass] = useState<string>("ALL");
@@ -216,6 +219,11 @@ export function SpellbookPanel({
           >
             {availableSkillPoints} SP
           </span>
+        )}
+        {onOpenCrafting && (
+          <button type="button" className="spellbook-craft-btn" onClick={onOpenCrafting} title="Open crafting recipes">
+            {"⚒"} Crafting
+          </button>
         )}
       </div>
       <p className="spellbook-hint">Click a spell for info. Press + to assign to quickbar (keys 1-9).</p>

@@ -3097,6 +3097,7 @@ data class ImagesConfig(
             "character_charm" to "global_assets/character_charm.png",
             "char_btn_achievements" to "global_assets/char_btn_achievements.png",
             "char_btn_prestige" to "global_assets/char_btn_prestige.png",
+            "char_btn_professions" to "global_assets/char_btn_professions.png",
             // Parchment backdrop for the pop-out describe editor.
             "character_scribe_bg" to "global_assets/character_scribe_bg.png",
             "chat_bg" to "global_assets/chat_bg.png",
@@ -3131,6 +3132,8 @@ data class ImagesConfig(
             "coin_luneqrae_moon" to "global_assets/coin_luneqrae_moon.png",
             "coin_luneqrae_wind" to "global_assets/coin_luneqrae_wind.png",
             "auction_bg" to "global_assets/auction_bg.png",
+            "crafting_bg" to "global_assets/crafting_bg.png",
+            "professions_bg" to "global_assets/professions_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",
