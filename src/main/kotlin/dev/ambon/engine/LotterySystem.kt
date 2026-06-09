@@ -26,7 +26,7 @@ data class LotteryInfo(
     val diceMinBet: Long,
     val diceMaxBet: Long,
     val diceWinMultiplier: Double,
-    /** Aineroira's Dice: a summed roll at or below this target wins the base payout. */
+    /** Aineroia's Dice: a summed roll at or below this target wins the base payout. */
     val diceWinTarget: Int,
     /** This many dice (or more) on their max face summon the Luneqrae coin flip. */
     val coinMaxThreshold: Int,
@@ -38,7 +38,7 @@ data class LotteryInfo(
 )
 
 /**
- * The six children of Aineroira, rolled in descending size. Each pair shares a
+ * The six children of Aineroia, rolled in descending size. Each pair shares a
  * die size; the order here is the order they tumble onto the table.
  */
 enum class DieKind(
@@ -104,7 +104,7 @@ data class LotteryDrawingResult(
 /** Result of a gamble attempt. */
 sealed interface GambleResult {
     /**
-     * A full resolution of Aineroira's Dice: the six dice in roll order, their
+     * A full resolution of Aineroia's Dice: the six dice in roll order, their
      * sum against the target, and the optional Luneqrae coin flip.
      *
      * @param payout total gold returned (0 on a clean loss); net = payout - bet.

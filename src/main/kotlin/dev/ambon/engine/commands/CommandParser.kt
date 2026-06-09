@@ -222,6 +222,9 @@ sealed interface Command {
         val amount: Long,
     ) : Command
 
+    /** Bare `gamble`/`dice` with no amount — print the rules of Aineroia's Dice. */
+    data object DiceRules : Command
+
     // ---- Bank commands ----
 
     sealed interface Bank : Command {
@@ -1089,7 +1092,8 @@ object CommandParser {
         matchPrefix(line, listOf("gamble", "dice")) { rest ->
             val trimmed = rest.trim()
             if (trimmed.isEmpty()) {
-                Command.Invalid(line, "gamble <amount>")
+                // No amount — show the rules of Aineroia's Dice rather than an error.
+                Command.DiceRules
             } else {
                 val amount = trimmed.toLongOrNull()
                 if (amount == null || amount < 1) {

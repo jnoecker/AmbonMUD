@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.DieKind
 import dev.ambon.engine.GambleResult
@@ -12,11 +13,16 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class LotteryHandler(
     private val ctx: EngineContext,
     private val lotterySystem: LotterySystem? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    /** Engine scope for pacing the dice reveal off-tick; null skips the suspense. */
+    private val getEngineScope: (() -> CoroutineScope)? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
@@ -26,6 +32,7 @@ class LotteryHandler(
         router.on<Command.LotteryInfo> { sid, _ -> handleLotteryInfo(sid) }
         router.on<Command.LotteryBuy> { sid, cmd -> handleLotteryBuy(sid, cmd) }
         router.on<Command.Gamble> { sid, cmd -> handleGamble(sid, cmd) }
+        router.on<Command.DiceRules> { sid, _ -> handleDiceRules(sid) }
     }
 
     private suspend fun handleLotteryInfo(sessionId: SessionId) {
@@ -289,60 +296,138 @@ class LotteryHandler(
         if (result.won) ctx.metrics.onGameEvent("tavern", "gamble_win")
         if (result.coinFired) ctx.metrics.onGameEvent("tavern", "gamble_coin")
 
+        // Settle gold and the web animation immediately; the GMCP payload drives
+        // the client's own sequenced reveal. The text feed is paced separately so
+        // the telnet crowd feels the dice climb too.
         me.gold = me.gold - result.bet + result.payout
+        markVitalsDirty(sessionId)
 
-        val rollLine = result.dice.joinToString(", ") { "${dieName(it.kind)} ${it.value}" }
-        outbound.send(OutboundEvent.SendInfo(sessionId, "The children tumble across the velvet: $rollLine."))
-        outbound.send(OutboundEvent.SendInfo(sessionId, "Total ${result.sum} (target ${result.target} or less)."))
+        val outcome = outcomeOf(result)
+        emitGambleGmcp(sessionId, system, outcome, result)
 
         val net = result.payout - result.bet
-        val outcome = outcomeOf(result)
-        when (outcome) {
-            "jackpot" -> outbound.send(
-                OutboundEvent.SendInfo(
-                    sessionId,
-                    "The Luneqrae coin spins skyward and lands true — and your sum held! " +
-                        "You collect ${result.payout} gold! (Net +$net)",
-                ),
-            )
+        val name = me.name
+        val roomId = me.roomId
+        val scope = getEngineScope?.invoke()
+        if (scope != null) {
+            scope.launch { revealDice(sessionId, result, outcome, net, name, roomId, paced = true) }
+        } else {
+            revealDice(sessionId, result, outcome, net, name, roomId, paced = false)
+        }
+    }
 
-            "coin" -> outbound.send(
-                OutboundEvent.SendInfo(
-                    sessionId,
-                    "Your sum overran, but the Luneqrae coin flips in your favour! " +
-                        "You collect ${result.payout} gold! (Net +$net)",
-                ),
-            )
-
-            "win" -> outbound.send(
-                OutboundEvent.SendInfo(
-                    sessionId,
-                    "Fate smiles — you WIN! You collect ${result.payout} gold! (Net +$net)",
-                ),
-            )
-
-            else -> {
-                val coinNote = if (result.coinFired) " The Luneqrae coin falls dark." else ""
-                outbound.send(
-                    OutboundEvent.SendInfo(
-                        sessionId,
-                        "The sum overruns the target.$coinNote You lose ${result.bet} gold.",
-                    ),
-                )
-            }
+    /**
+     * Streams the roll to the text feed one child at a time, the running total
+     * climbing with each, then the Luneqrae coin and the verdict. When [paced]
+     * the lines are spaced a beat apart for suspense (run off-tick on the engine
+     * scope); otherwise they flush instantly (no scope, e.g. tests).
+     */
+    private suspend fun revealDice(
+        sessionId: SessionId,
+        result: GambleResult.Resolved,
+        outcome: String,
+        net: Long,
+        name: String,
+        roomId: RoomId,
+        paced: Boolean,
+    ) {
+        suspend fun beat() {
+            if (paced) delay(REVEAL_BEAT_MS)
         }
 
-        markVitalsDirty(sessionId)
-        emitGambleGmcp(sessionId, system, outcome, result)
+        outbound.send(OutboundEvent.SendInfo(sessionId, "You cast Aineroia's six children across the velvet..."))
+
+        var running = 0
+        for (die in result.dice) {
+            beat()
+            running += die.value
+            val crown = if (die.isMax) " — its crown blazes!" else ""
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "  ${dieName(die.kind)} (d${die.kind.sides}) settles on ${die.value}$crown   (total: $running)",
+                ),
+            )
+        }
+
+        beat()
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                "  The dice lie still. Total ${result.sum} — you needed ${result.target} or less.",
+            ),
+        )
+
+        if (result.coinFired) {
+            beat()
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "  ${result.maxCount} children wear their crowns — the Luneqrae coin leaps skyward...",
+                ),
+            )
+        }
+
+        beat()
+        val outcomeLine = when (outcome) {
+            "jackpot" ->
+                "The Luneqrae coin lands true — and your sum held! You collect ${result.payout} gold! (Net +$net)"
+
+            "coin" ->
+                "Your sum overran, but the Luneqrae coin lands in your favour! " +
+                    "You collect ${result.payout} gold! (Net +$net)"
+
+            "win" -> "Fate smiles — you WIN! You collect ${result.payout} gold! (Net +$net)"
+            else -> {
+                val coinNote = if (result.coinFired) " The coin falls dark." else ""
+                "The sum overruns the target.$coinNote You lose ${result.bet} gold."
+            }
+        }
+        outbound.send(OutboundEvent.SendInfo(sessionId, outcomeLine))
 
         val broadcast = when (outcome) {
             "jackpot", "coin" ->
-                "${me.name} rolls Aineroira's Dice and the Luneqrae coin blesses them with ${result.payout} gold!"
+                "$name rolls Aineroia's Dice and the Luneqrae coin blesses them with ${result.payout} gold!"
 
-            "win" -> "${me.name} rolls Aineroira's Dice and wins ${result.payout} gold!"
-            else -> "${me.name} rolls Aineroira's Dice and busts."
+            "win" -> "$name rolls Aineroia's Dice and wins ${result.payout} gold!"
+            else -> "$name rolls Aineroia's Dice and busts."
         }
-        broadcastToRoomExcept(me.roomId, sessionId, broadcast, players, outbound)
+        broadcastToRoomExcept(roomId, sessionId, broadcast, players, outbound)
+    }
+
+    private suspend fun handleDiceRules(sessionId: SessionId) {
+        val system =
+            lotterySystem
+                ?: return sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    "Gambling is not available on this server.",
+                    "lottery",
+                    code = "UNAVAILABLE",
+                )
+
+        players.withPlayer(sessionId) { me ->
+            val info = system.getInfo(me.name)
+            val lines = listOf(
+                "[ Aineroia's Dice ]",
+                "  Six dice — the children of the goddess Aineroia — are cast big to small:",
+                "    Ophirae & Mycorae (d20), Pyrae & Aetherae (d16), Lustriae & Aureliae (d8).",
+                "  Roll a total of ${info.diceWinTarget} or less to win ${formatMult(info.diceWinMultiplier)} your bet.",
+                "  If ${info.coinMaxThreshold}+ dice land on their highest face, the Luneqrae coin flips:",
+                "    a win pays ${formatMult(info.coinWinMultiplier)} on a bust, " +
+                    "or ${formatMult(info.coinJackpotMultiplier)} if your total also held.",
+                "  Bets: ${info.diceMinBet}–${info.diceMaxBet} gold. Play with 'dice <amount>' in a tavern.",
+            )
+            for (line in lines) {
+                outbound.send(OutboundEvent.SendInfo(sessionId, line))
+            }
+        }
+    }
+
+    private fun formatMult(value: Double): String {
+        val whole = value.toLong()
+        return if (value == whole.toDouble()) "$whole×" else "$value×"
     }
 
     private fun dieName(kind: DieKind): String =
@@ -385,5 +470,11 @@ class LotteryHandler(
                 cooldownMs = system.diceCooldownMs,
             ),
         )
+    }
+
+    private companion object {
+        /** Beat between revealed dice/lines in the paced text feed. Six dice +
+         *  coin + verdict stays under the default 5s gamble cooldown. */
+        const val REVEAL_BEAT_MS = 480L
     }
 }
