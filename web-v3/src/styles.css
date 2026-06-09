@@ -25717,11 +25717,16 @@ html:has(.game-shell),
   padding: 0;
 }
 .dice-bet-title {
-  font-size: clamp(0.5rem, 1vw, 0.72rem);
-  letter-spacing: 0.14em;
+  font-size: clamp(0.64rem, 1.25vw, 0.92rem);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #6a3c1a;
-  font-weight: 700;
+  color: #4a2710;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgb(255 246 224 / 55%);
+  padding-bottom: clamp(2px, 0.5vh, 5px);
+  border-bottom: 1px solid rgb(120 84 44 / 38%);
+  width: 100%;
+  text-align: center;
 }
 .dice-bet-input {
   width: 100%;
@@ -25744,13 +25749,13 @@ html:has(.game-shell),
 }
 .dice-bet-steppers button {
   padding: clamp(3px, 0.7vh, 7px) 0;
-  border: 1px solid rgb(120 84 44 / 45%);
+  border: 1px solid rgb(120 84 44 / 55%);
   border-radius: 6px;
-  background: rgb(74 48 24 / 28%);
-  color: #4a2f17;
+  background: rgb(74 48 24 / 34%);
+  color: #34200d;
   font-family: var(--font-display);
-  font-size: clamp(0.52rem, 1.05vw, 0.74rem);
-  font-weight: 700;
+  font-size: clamp(0.56rem, 1.1vw, 0.8rem);
+  font-weight: 800;
   cursor: pointer;
   transition: background 140ms var(--ease-out-soft), border-color 140ms var(--ease-out-soft);
 }
@@ -25763,13 +25768,13 @@ html:has(.game-shell),
 }
 .dice-bet-chip {
   padding: clamp(3px, 0.6vh, 6px) 0;
-  border: 1px solid rgb(120 84 44 / 40%);
+  border: 1px solid rgb(120 84 44 / 50%);
   border-radius: 6px;
-  background: rgb(247 238 214 / 35%);
-  color: #4a2f17;
+  background: rgb(247 238 214 / 48%);
+  color: #34200d;
   font-family: var(--font-display);
-  font-size: clamp(0.5rem, 1vw, 0.72rem);
-  font-weight: 700;
+  font-size: clamp(0.54rem, 1.05vw, 0.76rem);
+  font-weight: 800;
   cursor: pointer;
   transition: background 140ms var(--ease-out-soft), border-color 140ms var(--ease-out-soft), box-shadow 140ms var(--ease-out-soft);
 }
@@ -25990,3 +25995,98 @@ html:has(.game-shell),
   border-color: rgb(185 188 224 / 70%);
 }
 .dice-coin-art.dice-coin-won { border-color: #f7d96a; }
+
+/* ---- win celebration: brief fireworks burst + toast ---- */
+.dice-celebrate {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+.dice-fireworks {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 0;
+  height: 0;
+}
+.dice-spark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: clamp(6px, 0.9vw, 11px);
+  height: clamp(6px, 0.9vw, 11px);
+  border-radius: 50%;
+  background: hsl(var(--hue, 48) 92% 62%);
+  box-shadow: 0 0 10px hsl(var(--hue, 48) 95% 66%), 0 0 18px hsl(var(--hue, 48) 90% 60% / 60%);
+  opacity: 0;
+  animation: dice-spark-burst 1.5s ease-out forwards;
+}
+@keyframes dice-spark-burst {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  12% { opacity: 1; }
+  65% { opacity: 1; }
+  100% { transform: translate(var(--tx, 0), var(--ty, 0)) scale(0.85); opacity: 0; }
+}
+
+.dice-celebrate-toast {
+  position: relative;
+  margin-top: -6%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(2px, 0.6vh, 6px);
+  padding: clamp(8px, 1.5vh, 17px) clamp(20px, 3.4vw, 46px);
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgb(42 32 72 / 92%), rgb(18 14 38 / 95%));
+  border: 2px solid rgb(247 217 106 / 70%);
+  box-shadow: 0 0 32px rgb(247 217 106 / 45%), 0 10px 26px rgb(0 0 0 / 55%);
+  animation: dice-toast-pop 2.7s var(--ease-out-soft) forwards;
+}
+.dice-celebrate-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.9vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  color: #f7e08a;
+  text-shadow: 0 0 16px rgb(247 224 138 / 70%), 0 2px 4px rgb(0 0 0 / 50%);
+}
+.dice-celebrate-amount {
+  font-family: var(--font-display);
+  font-size: clamp(0.82rem, 1.8vw, 1.3rem);
+  font-weight: 700;
+  color: #ffeebb;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 50%);
+}
+
+/* Coin tier — moonlit blue/silver. */
+.dice-celebrate-coin .dice-celebrate-toast { border-color: rgb(150 200 240 / 75%); box-shadow: 0 0 32px rgb(140 200 240 / 50%), 0 10px 26px rgb(0 0 0 / 55%); }
+.dice-celebrate-coin .dice-celebrate-title { color: #cfe9fb; text-shadow: 0 0 16px rgb(150 200 240 / 75%), 0 2px 4px rgb(0 0 0 / 50%); }
+.dice-celebrate-coin .dice-celebrate-amount { color: #e6f3ff; }
+
+/* Plain win — verdant green/gold. */
+.dice-celebrate-win .dice-celebrate-toast { border-color: rgb(160 220 150 / 70%); box-shadow: 0 0 28px rgb(143 214 160 / 45%), 0 10px 26px rgb(0 0 0 / 55%); }
+.dice-celebrate-win .dice-celebrate-title { color: #c6f3cf; text-shadow: 0 0 14px rgb(143 214 160 / 65%), 0 2px 4px rgb(0 0 0 / 50%); }
+.dice-celebrate-win .dice-celebrate-amount { color: #e6ffe9; }
+
+@keyframes dice-toast-pop {
+  0% { transform: scale(0.4) translateY(12px); opacity: 0; }
+  10% { transform: scale(1.14); opacity: 1; }
+  18% { transform: scale(1); }
+  80% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.05); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-spark { display: none; }
+  .dice-celebrate-toast { animation: dice-toast-fade 2.7s ease-out forwards; }
+}
+@keyframes dice-toast-fade {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}

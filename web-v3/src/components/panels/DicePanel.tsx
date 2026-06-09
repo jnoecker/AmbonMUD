@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import type { DiceGambleResult, DiceRoll, LotteryInfo, UiFeedbackEntry } from "../../types";
 
 interface DicePanelProps {
@@ -42,6 +43,19 @@ function sizeClass(sides: number): string {
 
 function formatGold(n: number): string {
   return Math.round(n).toLocaleString();
+}
+
+/** Stable pseudo-random in [0,1) so firework bursts vary but never re-shuffle on re-render. */
+function jitter(i: number, salt: number): number {
+  const x = Math.sin((i + 1) * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/** Headline for the win toast, by payout tier. */
+function celebrateTitle(tier: string): string {
+  if (tier === "jackpot") return "LUNEQRAE'S BLESSING!";
+  if (tier === "coin") return "MOONLIT FORTUNE!";
+  return "YOU WIN!";
 }
 
 /**
@@ -110,6 +124,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
   const [runningTotal, setRunningTotal] = useState(0);
   const [coinState, setCoinState] = useState<CoinState>("none");
   const [finalResult, setFinalResult] = useState<DiceGambleResult | null>(null);
+  const [celebrate, setCelebrate] = useState<{ seq: number; tier: string; payout: number } | null>(null);
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const cooldownUntilRef = useRef(0);
 
@@ -129,6 +144,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
     setRunningTotal(0);
     setCoinState("none");
     setFinalResult(null);
+    setCelebrate(null);
   }
 
   // Drive the sequenced reveal: each die tumbles in the velvet, then drops into
@@ -145,6 +161,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
       setFinalResult(r);
       cooldownUntilRef.current = Date.now() + r.cooldownMs;
       setCooldownLeft(r.cooldownMs);
+      if (r.payout > 0) setCelebrate({ seq: r.seq, tier: r.outcome, payout: r.payout });
     };
 
     if (reduced) {
@@ -199,6 +216,36 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
     }, WOBBLE_TICK_MS);
     return () => window.clearInterval(id);
   }, [activeDie, activeLanded]);
+
+  // Clear the win celebration once its burst has played out.
+  useEffect(() => {
+    if (!celebrate) return;
+    const t = window.setTimeout(() => setCelebrate(null), 2800);
+    return () => window.clearTimeout(t);
+  }, [celebrate]);
+
+  // Firework spark vectors — deterministic per win so they don't reshuffle on
+  // re-render; richer bursts for the coin/jackpot tiers.
+  const sparks = useMemo<CSSProperties[]>(() => {
+    if (!celebrate) return [];
+    const n = celebrate.tier === "jackpot" ? 30 : celebrate.tier === "coin" ? 24 : 16;
+    const palette =
+      celebrate.tier === "jackpot"
+        ? [48, 0, 130, 280, 200, 340]
+        : celebrate.tier === "coin"
+          ? [205, 230, 280, 48]
+          : [120, 90, 48, 160];
+    return Array.from({ length: n }, (_, i) => {
+      const angle = ((i / n) * 360 + jitter(i, 1) * 44) * (Math.PI / 180);
+      const dist = 56 + jitter(i, 2) * 130;
+      return {
+        ["--tx" as string]: `${Math.cos(angle) * dist}px`,
+        ["--ty" as string]: `${Math.sin(angle) * dist}px`,
+        ["--hue" as string]: `${palette[i % palette.length]}`,
+        animationDelay: `${jitter(i, 3) * 0.5}s`,
+      } as CSSProperties;
+    });
+  }, [celebrate]);
 
   // Tick the post-roll cooldown down so the Roll button re-enables itself.
   useEffect(() => {
@@ -349,6 +396,21 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
         </div>
         <p className={`dice-banner dice-banner-${banner.cls}`}>{banner.text}</p>
       </div>
+
+      {/* Win celebration — a brief fireworks burst + toast. */}
+      {celebrate && (
+        <div className={`dice-celebrate dice-celebrate-${celebrate.tier}`} key={celebrate.seq} aria-hidden="true">
+          <div className="dice-fireworks">
+            {sparks.map((s, i) => (
+              <span key={i} className="dice-spark" style={s} />
+            ))}
+          </div>
+          <div className="dice-celebrate-toast">
+            <span className="dice-celebrate-title">{celebrateTitle(celebrate.tier)}</span>
+            <span className="dice-celebrate-amount">{formatGold(celebrate.payout)} gold</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
