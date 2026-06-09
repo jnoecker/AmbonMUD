@@ -25428,7 +25428,7 @@ html:has(.game-shell),
 .lot-countdown {
   position: absolute;
   left: 31%;
-  top: 55.5%;
+  top: 50%;
   width: 20%;
   text-align: center;
   font-size: clamp(1.1rem, 2.6vw, 1.9rem);
@@ -25440,7 +25440,7 @@ html:has(.game-shell),
 .lot-owned {
   position: absolute;
   left: 63%;
-  top: 54.5%;
+  top: 50.5%;
   width: 14%;
   text-align: center;
   font-size: clamp(1.1rem, 2.6vw, 1.9rem);
@@ -25451,7 +25451,7 @@ html:has(.game-shell),
 .lot-total {
   position: absolute;
   left: 27%;
-  top: 66.5%;
+  top: 64.5%;
   width: 11%;
   text-align: center;
   font-size: clamp(1rem, 2.2vw, 1.6rem);
@@ -25462,7 +25462,7 @@ html:has(.game-shell),
 .lot-cost {
   position: absolute;
   left: 44%;
-  top: 65.5%;
+  top: 63.5%;
   width: 10%;
   text-align: center;
   font-size: clamp(1rem, 2.2vw, 1.6rem);
@@ -25473,7 +25473,7 @@ html:has(.game-shell),
 .lot-limit {
   position: absolute;
   left: 63%;
-  top: 65%;
+  top: 63%;
   width: 12%;
   display: flex;
   flex-direction: column;
