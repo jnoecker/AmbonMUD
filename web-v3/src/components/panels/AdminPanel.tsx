@@ -589,10 +589,10 @@ export function AdminPanel({
 
           <div className="admin-board">
             <div className="admin-board-col">
-              {ADMIN_ACTION_SECTIONS.filter((section) => section.id === "mobility" || section.id === "presence").map(renderSection)}
+              {ADMIN_ACTION_SECTIONS.filter((section) => section.id === "mobility" || section.id === "presence" || section.id === "world").map(renderSection)}
             </div>
             <div className="admin-board-col">
-              {ADMIN_ACTION_SECTIONS.filter((section) => section.id === "intervention" || section.id === "world").map(renderSection)}
+              {ADMIN_ACTION_SECTIONS.filter((section) => section.id === "intervention").map(renderSection)}
             </div>
           </div>
           </div>

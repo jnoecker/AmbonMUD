@@ -26058,7 +26058,7 @@ html:has(.game-shell),
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: start;
-  gap: clamp(10px, 1.8vw, 30px);
+  gap: clamp(8px, 1.2vw, 20px);
   overflow-y: auto;
   padding-right: 4px;
   scrollbar-width: thin;
@@ -26069,7 +26069,7 @@ html:has(.game-shell),
 .admin-dialog-skinned .admin-board-col {
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.6vh, 22px);
+  gap: clamp(5px, 1vh, 13px);
   min-width: 0;
 }
 .admin-dialog-skinned .admin-form { margin-top: 0; border: none; background: none; padding: 0; }
@@ -26121,11 +26121,11 @@ html:has(.game-shell),
   background: none;
 }
 .admin-dialog-skinned .admin-section-title {
-  margin: 0 0 clamp(1px, 0.4vh, 5px);
+  margin: 0 0 clamp(1px, 0.35vh, 4px);
   padding-left: 0;
   text-align: center;
   font-family: var(--font-display);
-  font-size: clamp(0.95rem, 1.9vw, 1.35rem);
+  font-size: clamp(0.72rem, 1.4vw, 1.02rem);
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -26134,8 +26134,10 @@ html:has(.game-shell),
 }
 .admin-dialog-skinned .admin-action-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(4px, 0.7vw, 9px);
+  /* Auto-fill keeps every plaque the same small size (~3 per board column),
+     so the whole panel reads as a dense ~5-6 across, ~4 down button board. */
+  grid-template-columns: repeat(auto-fill, minmax(min(148px, 100%), 1fr));
+  gap: clamp(4px, 0.6vw, 9px);
 }
 /* Gilded-glass command buttons. Falls back to a jewel-toned gradient with a
    gold edge and glass sheen; swaps to a real stained-glass asset when the
@@ -26175,9 +26177,10 @@ html:has(.game-shell),
 }
 .admin-dialog-skinned .admin-action-tile .admin-action-label {
   flex: 0 0 auto;
-  font-size: clamp(0.74rem, 1.35vw, 1rem);
+  font-size: clamp(0.58rem, 1vw, 0.82rem);
   font-weight: 700;
   text-align: center;
+  line-height: 1.05;
 }
 /* Just the command title on each plaque — the description is dropped. */
 .admin-dialog-skinned .admin-action-tile .admin-action-desc {
