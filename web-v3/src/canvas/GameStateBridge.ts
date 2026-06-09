@@ -95,16 +95,16 @@ export const canvasCallbacks: {
   loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
   openMobDetail: ((detail: { name: string; description: string; image: string | null }) => void) | null;
   openImagePreview: ((url: string) => void) | null;
-  /** Fired when the in-canvas entity menu opens/closes so DOM overlays (the
-   *  room sign) can yield — Pixi can't paint above them. */
-  onEntityMenu: ((open: boolean) => void) | null;
   /** Open the monster-manual / bestiary panel for a clicked creature. */
   openMonsterManual: ((entry: MonsterEntry) => void) | null;
+  /** Open the player field-manual card for a clicked player in the room. */
+  openPlayerCard: ((player: RoomPlayer) => void) | null;
   /** Open the parchment item card for a clicked room item. */
   openItemManual: ((entry: ItemEntry) => void) | null;
 } = {
   sendCommand: null,
   prefillCommand: null,
+  openPlayerCard: null,
   openShop: null,
   openAuction: null,
   openPuzzle: null,
@@ -130,7 +130,6 @@ export const canvasCallbacks: {
   loadZoneMap: null,
   openMobDetail: null,
   openImagePreview: null,
-  onEntityMenu: null,
   openMonsterManual: null,
   openItemManual: null,
 };

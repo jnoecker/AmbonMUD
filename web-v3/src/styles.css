@@ -18784,11 +18784,6 @@ html:has(.game-shell),
   transition: opacity 150ms var(--ease-out-soft);
 }
 
-.entity-menu-open .canvas-room-sign {
-  opacity: 0;
-  pointer-events: none;
-}
-
 /* ── Action dock (below the room panel; swaps kiosks <-> skill bar) ───── */
 .action-dock {
   position: relative;
@@ -21786,12 +21781,15 @@ html:has(.game-shell),
   flex-wrap: wrap;
   justify-content: center;
   align-items: flex-start;
-  gap: 18px;
+  gap: clamp(8px, 1.4vw, 16px);
   padding-top: 8px;
 }
 
+/* Fixed-width actions so many of them wrap into even, centred rows instead of
+   leaving a stray icon (e.g. Possess) dangling on its own line. */
 .mm-action {
   flex: 0 0 auto;
+  width: clamp(60px, 13%, 82px);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -21806,8 +21804,9 @@ html:has(.game-shell),
 .mm-action:hover { transform: translateY(-2px); }
 
 .mm-action-icon {
-  width: 88px;
-  height: 88px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
   object-fit: contain;
   filter: drop-shadow(0 2px 5px rgb(40 28 14 / 45%));
   transition: filter 150ms var(--ease-out-soft);
@@ -21819,9 +21818,9 @@ html:has(.game-shell),
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 88px;
-  height: 88px;
-  font-size: 3.4rem;
+  width: 100%;
+  aspect-ratio: 1;
+  font-size: clamp(1.7rem, 5vw, 2.7rem);
   line-height: 1;
   color: #5a4226;
   filter: drop-shadow(0 1px 2px rgb(40 28 14 / 35%));
@@ -21837,6 +21836,61 @@ html:has(.game-shell),
   color: #f0e6cf;
   background: rgb(58 44 26 / 85%);
 }
+
+/* Inline composer (Tell / Whisper) + Give picker on the player field-manual card. */
+.mm-compose {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+.mm-compose-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgb(120 96 52 / 45%);
+  border-radius: 8px;
+  background: rgb(250 244 228 / 92%);
+  color: #3a2f1c;
+  padding: 8px 12px;
+  font-size: 0.92rem;
+}
+.mm-compose-input:focus { outline: none; border-color: rgb(180 140 70 / 90%); box-shadow: 0 0 0 2px rgb(180 140 70 / 30%); }
+.mm-compose-send {
+  flex: 0 0 auto;
+  border: 1px solid rgb(120 96 52 / 50%);
+  border-radius: 8px;
+  background: linear-gradient(165deg, #6b8f5a, #4a6a3d);
+  color: #f3ecd8;
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 0 18px;
+  cursor: pointer;
+}
+.mm-compose-send:disabled { opacity: 0.45; cursor: default; }
+
+.mm-give {
+  margin: 4px 0 10px;
+  max-height: 30vh;
+  overflow-y: auto;
+  border: 1px solid rgb(120 96 52 / 35%);
+  border-radius: 8px;
+  background: rgb(250 244 228 / 70%);
+  padding: 6px;
+}
+.mm-give-empty { margin: 6px; font-style: italic; color: rgb(90 66 38 / 75%); text-align: center; }
+.mm-give-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.mm-give-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: #3a2f1c;
+  padding: 7px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft);
+}
+.mm-give-item:hover { background: rgb(180 140 70 / 22%); border-color: rgb(180 140 70 / 45%); }
 
 /* Skinned: lay content onto the monster_manual_bg frame's painted regions
    (arched art frame left, ribbon top-right, parchment text area right). The

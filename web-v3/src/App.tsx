@@ -182,6 +182,8 @@ function App() {
   const [monster, setMonster] = useState<MonsterEntry | null>(null);
   // Player examine card (Examine from the Who board) — reuses the manual style.
   const [examinePlayer, setExaminePlayer] = useState<WhoPlayer | null>(null);
+  // Player field-manual card for a player clicked in the room (full context menu).
+  const [roomPlayer, setRoomPlayer] = useState<WhoPlayer | null>(null);
   // Item card (clicked room item)
   const [item, setItem] = useState<ItemEntry | null>(null);
   // When Examine is clicked we `look` the item and route the resulting
@@ -473,11 +475,24 @@ function App() {
       setMonster(entry);
     };
     canvasCallbacks.openItemManual = (entry) => setItem(entry);
+    canvasCallbacks.openPlayerCard = (rp) => {
+      // Enrich the sparse RoomPlayer with live Who data (title/description/class)
+      // when available, so the card reads fully; otherwise show what we have.
+      const wp = state.whoPlayers.find((p) => p.name.toLowerCase() === rp.name.toLowerCase());
+      setRoomPlayer(wp ?? {
+        name: rp.name,
+        level: rp.level,
+        race: "",
+        playerClass: "",
+        title: null,
+        guild: null,
+        groupSize: 0,
+        idle: 0,
+        sprite: rp.sprite ?? null,
+        description: null,
+      });
+    };
     canvasCallbacks.openImagePreview = (url: string) => setImagePreviewUrl(url);
-    // In-canvas entity menu (Pixi) can't paint above DOM overlays, so flag the
-    // root while it's open and let CSS fade the room sign out of the way.
-    canvasCallbacks.onEntityMenu = (open: boolean) =>
-      document.documentElement.classList.toggle("entity-menu-open", open);
     canvasCallbacks.prefillCommand = (text: string) => prefillInput(text);
     return () => {
       canvasCallbacks.sendCommand = null;
@@ -503,10 +518,9 @@ function App() {
       canvasCallbacks.openVideo = null;
       canvasCallbacks.openMobDetail = null;
       canvasCallbacks.openMonsterManual = null;
+      canvasCallbacks.openPlayerCard = null;
       canvasCallbacks.openItemManual = null;
       canvasCallbacks.openImagePreview = null;
-      canvasCallbacks.onEntityMenu = null;
-      document.documentElement.classList.remove("entity-menu-open");
       canvasCallbacks.prefillCommand = null;
     };
   }, [sendCommand]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1952,6 +1966,23 @@ function App() {
             state.setTellTarget(name);
             openPanel("chatboard");
           }}
+        />
+      )}
+
+      {/* Player field-manual card for a player clicked in the room (full context menu). */}
+      {roomPlayer && (
+        <PlayerExaminePanel
+          key={roomPlayer.name}
+          player={roomPlayer}
+          selfName={state.character.name}
+          context="room"
+          isStaff={state.character.isStaff}
+          inventory={state.inventory}
+          serverAssets={state.serverAssets}
+          bg={state.serverAssets["monster_manual_bg"]}
+          onClose={() => setRoomPlayer(null)}
+          onCommand={sendCommand}
+          onTellPlayer={() => { /* room context uses the inline composer */ }}
         />
       )}
 

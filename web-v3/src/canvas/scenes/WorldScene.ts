@@ -2,7 +2,6 @@ import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
 import { gameStateRef, canvasCallbacks, pendingCastRef } from "../GameStateBridge";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { Minimap } from "../systems/Minimap";
-import { EntityPopout } from "../systems/EntityPopout";
 import { AmbientMotes } from "../systems/AmbientMotes";
 import { RoomTransition } from "../systems/RoomTransition";
 import { SkyRenderer } from "../systems/SkyRenderer";
@@ -118,7 +117,6 @@ export class WorldScene {
   private roleGraphics = new Graphics();
   private statusEffects = new StatusEffectDisplay();
   private minimap = new Minimap();
-  private entityPopout = new EntityPopout();
   private ambientMotes = new AmbientMotes();
   private roomTransition = new RoomTransition();
   private skyRenderer = new SkyRenderer();
@@ -302,23 +300,12 @@ export class WorldScene {
 
   // Room transition handled by RoomTransition system
 
-  // Click-away to dismiss popout
-  private backdropHit = new Graphics();
-
   constructor() {
     this.playerLabel = new Text({
       text: "",
       style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
     });
     this.playerLabel.anchor.set(0.5, 0);
-
-    // Backdrop for dismissing popout
-    this.backdropHit.eventMode = "static";
-    this.backdropHit.visible = false;
-    this.backdropHit.on("pointerdown", () => {
-      this.entityPopout.hide();
-      this.backdropHit.visible = false;
-    });
 
     // Shop badge — floating kiosk icon when a shop is available
     this.shopBadge = new Container();
@@ -882,8 +869,6 @@ export class WorldScene {
     this.container.addChild(this.signBadge!);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.departBtn);
-    this.container.addChild(this.backdropHit);
-    this.container.addChild(this.entityPopout.container);
     // Weather lives in the overlay so it stays visible during room-transition
     // fades (container.alpha → 0) and reliably renders above room art/sky.
     this.overlayContainer.addChild(this.weatherParticles.graphics);
@@ -893,16 +878,10 @@ export class WorldScene {
   resize(width: number, height: number) {
     this.width = width;
     this.height = height;
-    this.entityPopout.resize(width, height);
     this.ambientMotes.resize(width, height);
     this.roomTransition.resize(width, height);
     this.skyRenderer.resize(width, height);
     this.weatherParticles.resize(width, height);
-
-    // Update backdrop size
-    this.backdropHit.clear();
-    this.backdropHit.rect(0, 0, width, height);
-    this.backdropHit.fill({ color: 0x000000, alpha: 0.001 });
 
     this.layoutAll();
   }
@@ -977,9 +956,6 @@ export class WorldScene {
         this.roomTransition.start();
       }
       this.lastRoomId = room.id;
-      // Dismiss popout on room change
-      this.entityPopout.hide();
-      this.backdropHit.visible = false;
     }
 
     // Apply the room-transition fade *after* start() above, so the new room
@@ -2101,8 +2077,7 @@ export class WorldScene {
           canvasCallbacks.onTargetSelected?.(playerData.name);
           return;
         }
-        this.entityPopout.showPlayer(playerData.name, playerData.level);
-        this.showPopout();
+        canvasCallbacks.openPlayerCard?.(playerData);
       });
 
       this.container.addChild(sprite);
@@ -2766,16 +2741,8 @@ export class WorldScene {
     return btn;
   }
 
-  private showPopout() {
-    // Re-add backdrop and popout so they render on top of dynamically added sprites
-    this.container.addChild(this.backdropHit);
-    this.container.addChild(this.entityPopout.container);
-    this.backdropHit.visible = true;
-  }
-
   destroy() {
     this.minimap.destroy();
-    this.entityPopout.destroy();
     this.container.destroy({ children: true });
     this.overlayContainer.destroy({ children: true });
   }
