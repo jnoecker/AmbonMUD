@@ -32,6 +32,7 @@ const baseProps = {
     gold: 55,
   },
   statusVarLabels: DEFAULT_STATUS_VAR_LABELS,
+  serverAssets: {},
   xpValue: 20,
   xpMax: 100,
   xpText: "20 / 100",
@@ -62,10 +63,11 @@ describe("character auto-loot UI", () => {
   test("renders the auto-loot control in the off state", () => {
     const html = renderToStaticMarkup(<CharacterPanel {...baseProps} />);
 
-    expect(html).toContain("Auto-Loot");
-    expect(html).toContain("Drops stay in the room until you pick them up.");
-    expect(html).toContain('aria-pressed="false"');
-    expect(html).toContain(">Off<");
+    expect(html).toContain("Auto Loot");
+    expect(html).toContain("Mob drops go straight into your pack after a kill.");
+    // Off state: the switch is unchecked and carries no "is-on" modifier.
+    expect(html).toContain('aria-checked="false"');
+    expect(html).not.toContain("cc-ctl-toggle is-on");
   });
 
   test("renders the auto-loot control in the on state", () => {
@@ -76,9 +78,11 @@ describe("character auto-loot UI", () => {
       />,
     );
 
-    expect(html).toContain("Mob drops go straight into your pack after a kill.");
-    expect(html).toContain('aria-pressed="true"');
-    expect(html).toContain(">On<");
+    // Only auto-loot is enabled here, so the checked switch + "is-on" modifier
+    // uniquely identify the auto-loot control.
+    expect(html).toContain("Auto Loot");
+    expect(html).toContain('aria-checked="true"');
+    expect(html).toContain("cc-ctl-toggle is-on");
   });
 });
 
