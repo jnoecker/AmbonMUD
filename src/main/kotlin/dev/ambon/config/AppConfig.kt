@@ -3094,6 +3094,7 @@ data class ImagesConfig(
             "command_reference_bg" to "global_assets/command_reference_bg.png",
             "stylist_bg" to "global_assets/stylist_bg.png",
             "housing_bg" to "global_assets/housing_bg.png",
+            "lottery_bg" to "global_assets/lottery_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",
