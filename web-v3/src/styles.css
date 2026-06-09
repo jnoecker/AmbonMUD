@@ -26042,53 +26042,64 @@ html:has(.game-shell),
 }
 .admin-dialog-skinned .admin-form { margin-top: 0; border: none; background: none; padding: 0; }
 
-/* Section grid → 4 moonlit columns (Movement / Intervention / World Ops / Presence). */
+/* Action menu — a compact single-column nav grouped by section (master), with
+   all four groups visible/scrollable; the form (detail) sits in the wider pane. */
 .admin-dialog-skinned .admin-section-grid {
-  flex: 1.6;
+  flex: 0 0 32%;
   min-width: 0;
   overflow-y: auto;
-  align-content: start;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(6px, 0.9vw, 14px);
-  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.3vh, 16px);
+  padding-right: 5px;
   scrollbar-width: thin;
   scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
+.admin-dialog-skinned .admin-section-grid::-webkit-scrollbar { width: 7px; }
+.admin-dialog-skinned .admin-section-grid::-webkit-scrollbar-thumb { background: rgb(150 170 230 / 40%); border-radius: 4px; }
 .admin-dialog-skinned .admin-action-section {
-  border: 1px solid rgb(150 170 230 / 30%);
-  border-radius: 12px;
-  background: rgb(14 20 46 / 55%);
-  padding: clamp(6px, 1vh, 12px);
+  border: none;
+  padding: 0;
+  background: none;
 }
 .admin-dialog-skinned .admin-section-title {
-  margin: 0 0 clamp(4px, 0.8vh, 9px);
-  text-align: center;
+  margin: 0 0 clamp(3px, 0.6vh, 7px);
+  padding-left: 2px;
+  text-align: left;
   font-family: var(--font-display);
-  font-size: clamp(0.7rem, 1.4vw, 1.05rem);
+  font-size: clamp(0.58rem, 1.1vw, 0.82rem);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #c9b06a;
 }
 .admin-dialog-skinned .admin-action-grid {
   display: flex;
   flex-direction: column;
-  gap: clamp(4px, 0.7vh, 8px);
+  gap: clamp(2px, 0.4vh, 5px);
 }
 .admin-dialog-skinned .admin-action-tile {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: clamp(5px, 0.9vh, 10px) clamp(7px, 1vw, 13px);
-  border: 1px solid rgb(150 170 230 / 30%);
-  border-radius: 9px;
-  background: linear-gradient(160deg, rgb(34 28 66 / 75%), rgb(18 16 40 / 80%));
+  align-items: baseline;
+  gap: 0.5em;
+  padding: clamp(4px, 0.7vh, 8px) clamp(7px, 1vw, 12px);
+  border: 1px solid rgb(150 170 230 / 22%);
+  border-radius: 8px;
+  background: rgb(22 28 58 / 60%);
   color: #dce4fa;
   font-family: var(--font-display);
   text-align: left;
   cursor: pointer;
-  transition: border-color 140ms var(--ease-out-soft), box-shadow 140ms var(--ease-out-soft);
+  transition: border-color 140ms var(--ease-out-soft), background 140ms var(--ease-out-soft), box-shadow 140ms var(--ease-out-soft);
+}
+.admin-dialog-skinned .admin-action-tile:hover { background: rgb(40 50 96 / 70%); }
+.admin-dialog-skinned .admin-action-tile .admin-action-label { flex: 0 0 auto; font-size: clamp(0.66rem, 1.2vw, 0.9rem); }
+.admin-dialog-skinned .admin-action-tile .admin-action-desc {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(0.5rem, 0.92vw, 0.68rem);
 }
 .admin-dialog-skinned .admin-action-tile:hover { border-color: rgb(180 160 240 / 55%); }
 .admin-dialog-skinned .admin-action-tile-active {

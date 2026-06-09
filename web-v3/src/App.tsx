@@ -452,6 +452,8 @@ function App() {
     canvasCallbacks.openDice = () => openPanel("dice");
     canvasCallbacks.openHousing = () => openPanel("housing");
     canvasCallbacks.openInn = () => setShowInn(true);
+    canvasCallbacks.openAdminPanel = () => setShowAdminPanel(true);
+    canvasCallbacks.toggleInvis = () => { sendCommand("invis"); setStaffInvisible((v) => !v); };
     canvasCallbacks.openMail = () => openPanel("mail");
     canvasCallbacks.openMap = () => openPanel("map");
     canvasCallbacks.openRoom = () => openPanel("room");
@@ -509,6 +511,8 @@ function App() {
       canvasCallbacks.openLottery = null;
       canvasCallbacks.openHousing = null;
       canvasCallbacks.openInn = null;
+      canvasCallbacks.openAdminPanel = null;
+      canvasCallbacks.toggleInvis = null;
       canvasCallbacks.openMail = null;
       canvasCallbacks.openMap = null;
       canvasCallbacks.openRoom = null;
@@ -946,31 +950,6 @@ function App() {
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
         audio={audio}
-        canvasOverlay={
-          state.character.isStaff ? (
-            <div className="staff-fab">
-              <button
-                type="button"
-                className="staff-fab-btn"
-                onClick={() => setShowAdminPanel(true)}
-                title="Open staff admin panel"
-                aria-label="Open staff admin panel"
-              >
-                Staff
-              </button>
-              <button
-                type="button"
-                className={`staff-fab-btn staff-fab-invis${staffInvisible ? " staff-fab-invis-active" : ""}`}
-                onClick={() => { sendCommand("invis"); setStaffInvisible((v) => !v); }}
-                title={staffInvisible ? "You are invisible — click to reappear" : "Become invisible"}
-                aria-label="Toggle staff invisibility"
-                aria-pressed={staffInvisible}
-              >
-                {staffInvisible ? "👁‍🗨" : "👁"}
-              </button>
-            </div>
-          ) : null
-        }
       />
 
       <Drawer
