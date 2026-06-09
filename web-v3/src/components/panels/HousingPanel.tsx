@@ -8,34 +8,22 @@ interface HousingPanelProps {
   templates: HousingTemplate[];
   room: RoomState;
   uiFeedbackFeed: UiFeedbackEntry[];
+  gold: number;
   onSendCommand: (cmd: string) => void;
 }
 
-function TemplateList({ templates }: { templates: HousingTemplate[] }) {
-  if (templates.length === 0) return null;
-  return (
-    <div className="housing-templates-section">
-      <p className="housing-section-label">Available Templates</p>
-      <ul className="housing-room-list">
-        {templates.map((t) => (
-          <li key={t.id} className="housing-room-item">
-            <div className="housing-room-header">
-              <span className="housing-room-title">{t.title}</span>
-              <span className="housing-template-cost">{t.cost > 0 ? `${t.cost} gold` : "Free"}</span>
-            </div>
-            <p className="housing-room-desc">{t.description}</p>
-            <div className="housing-template-meta">
-              <span className="housing-room-template">{t.id}</span>
-              {t.owned && <span className="housing-template-badge">Owned</span>}
-              {t.isEntry && <span className="housing-template-badge housing-template-badge-entry">Entry</span>}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+const DIRECTIONS: Array<{ key: string; label: string }> = [
+  { key: "n", label: "N" }, { key: "s", label: "S" }, { key: "e", label: "E" },
+  { key: "w", label: "W" }, { key: "u", label: "Up" }, { key: "d", label: "Down" },
+];
 
+/**
+ * Housing Broker — reskinned onto the painted `housing_bg` frame. Your owned
+ * rooms inset into the left "Your Estate" card, the room templates into the
+ * central "Browse Room Templates" card, and a single Buy bar at the bottom.
+ * The entry buys via `house buy`; rooms need a direction, so selecting a room
+ * and buying reveals a compact direction picker (`house expand <id> <dir>`).
+ */
 export function HousingPanel({
   connected,
   hasCharacterProfile,
@@ -43,182 +31,125 @@ export function HousingPanel({
   templates,
   room,
   uiFeedbackFeed,
+  gold,
   onSendCommand,
 }: HousingPanelProps) {
-  const [editField, setEditField] = useState<"title" | "desc" | null>(null);
-  const [editValue, setEditValue] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [choosingDir, setChoosingDir] = useState(false);
 
   const activeFeedback = useMemo(
     () => [...uiFeedbackFeed].reverse().find((e) => e.scope === "housing") ?? null,
     [uiFeedbackFeed],
   );
 
-  if (!connected) return <p className="empty-note">Connect to view housing.</p>;
-  if (!hasCharacterProfile) return <p className="empty-note">Log in to view housing.</p>;
+  if (!connected) return <div className="housing-broker housing-broker-empty"><p className="hb-empty">Connect to view housing.</p></div>;
+  if (!hasCharacterProfile) return <div className="housing-broker housing-broker-empty"><p className="hb-empty">Log in to view housing.</p></div>;
 
-  const inOwnHouse = room.housing === true && room.housingOwner === housing?.ownerName;
-  const inAnyHouse = room.housing === true;
+  const rooms = housing?.rooms ?? [];
+  const hasHouse = housing?.hasHouse ?? false;
+  const selectedTemplate = templates.find((t) => t.id === selected) ?? null;
+  const isEntryBuy = !!selectedTemplate && (selectedTemplate.isEntry || !hasHouse);
+  const affordable = !!selectedTemplate && gold >= selectedTemplate.cost;
+  const canBuy = !!selectedTemplate && !selectedTemplate.owned && affordable;
 
-  if (!housing?.hasHouse) {
-    return (
-      <div className="housing-panel">
-        {inAnyHouse && (
-          <div className="housing-visiting-banner">
-            Visiting {room.housingOwner ?? "someone"}&apos;s house
-          </div>
-        )}
-        <div className="housing-empty-state">
-          <span className="housing-empty-icon">{"\u{1F3E0}"}</span>
-          <p className="empty-note">You don't own a house yet.</p>
-          {room.housingBroker && housing?.available !== false ? (
-            <div className="housing-actions">
-              <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house buy")}>
-                Purchase a House
-              </button>
-              <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house list")}>
-                Browse Templates
-              </button>
-            </div>
-          ) : housing?.available === false ? (
-            <p className="housing-hint">Housing is not available on this server.</p>
-          ) : (
-            <p className="housing-hint">Visit a housing broker to purchase one.</p>
-          )}
-          {activeFeedback && (
-            <p className={`systems-local-message systems-local-message-${activeFeedback.type}`}>
-              {activeFeedback.message}
-            </p>
-          )}
-        </div>
-        <TemplateList templates={templates} />
-      </div>
-    );
-  }
+  const buyLabel = !selectedTemplate
+    ? "Select a Room"
+    : selectedTemplate.owned
+      ? "Already Owned"
+      : selectedTemplate.isEntry
+        ? "Purchase Entry"
+        : "Buy Selected Room";
 
-  const startEdit = (field: "title" | "desc") => {
-    setEditField(field);
-    setEditValue("");
-  };
-
-  const submitEdit = () => {
-    if (!editField || !editValue.trim()) return;
-    if (editField === "title") {
-      onSendCommand(`house describe title ${editValue.trim()}`);
+  const onBuy = () => {
+    if (!selectedTemplate || !canBuy) return;
+    if (isEntryBuy) {
+      onSendCommand("house buy");
     } else {
-      onSendCommand(`house describe desc ${editValue.trim()}`);
+      setChoosingDir(true);
     }
-    setEditField(null);
-    setEditValue("");
   };
 
-  const cancelEdit = () => {
-    setEditField(null);
-    setEditValue("");
+  const expand = (dir: string) => {
+    if (selectedTemplate) onSendCommand(`house expand ${selectedTemplate.id} ${dir}`);
+    setChoosingDir(false);
   };
 
   return (
-    <div className="housing-panel">
-      <div className="housing-owner-header">
-        <span className="housing-owner-name">{housing.ownerName}&apos;s House</span>
-        <span className="housing-room-count">{housing.rooms.length} room{housing.rooms.length !== 1 ? "s" : ""}</span>
+    <div className="housing-broker">
+      {/* ── Your Estate (left card) ──────────────────────────── */}
+      <div className="hb-estate">
+        {rooms.length === 0 ? (
+          <p className="hb-empty">No rooms yet. Secure a Carriage House to begin your legacy.</p>
+        ) : (
+          <ul className="hb-owned-list">
+            {rooms.map((r, i) => (
+              <li key={`${r.templateId}-${i}`} className="hb-owned">
+                <span className="hb-owned-name">{r.title}</span>
+                <span className="hb-owned-type">{r.templateId}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="hb-owned-total">Total Owned Rooms: {rooms.length}</div>
       </div>
-      {activeFeedback && (
-        <p className={`systems-local-message systems-local-message-${activeFeedback.type}`}>
-          {activeFeedback.message}
-        </p>
-      )}
 
-      {inOwnHouse && (
-        <div className="housing-actions">
-          <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house guests")}>
-            Guests
-          </button>
-          <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house list")}>
-            Templates
-          </button>
-        </div>
-      )}
+      {/* ── Browse Room Templates (center card) ──────────────── */}
+      <div className="hb-templates">
+        {templates.length === 0 ? (
+          <p className="hb-empty">No templates available here.</p>
+        ) : (
+          <ul className="hb-template-list">
+            {templates.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  className={`hb-template${selected === t.id ? " is-selected" : ""}${t.owned ? " is-owned" : ""}`}
+                  onClick={() => { setSelected(t.id); setChoosingDir(false); }}
+                  aria-pressed={selected === t.id}
+                >
+                  <span className="hb-template-main">
+                    <span className="hb-template-name">
+                      {t.title}
+                      {t.owned && <span className="hb-tag">Owned</span>}
+                      {t.isEntry && <span className="hb-tag hb-tag-entry">Entry</span>}
+                    </span>
+                    {t.description && <span className="hb-template-desc">{t.description}</span>}
+                  </span>
+                  <span className="hb-template-cost">
+                    <span className="hb-coin" aria-hidden="true">◉</span>
+                    {t.cost > 0 ? t.cost.toLocaleString() : "Free"}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      {!inOwnHouse && (
-        <div className="housing-actions">
-          <button type="button" className="housing-action-btn" onClick={() => onSendCommand("recall")}>
-            Recall Home
-          </button>
-          {room.housingBroker && (
-            <button type="button" className="housing-action-btn" onClick={() => onSendCommand("house list")}>
-              Browse Templates
-            </button>
-          )}
-        </div>
-      )}
-
-      {inAnyHouse && !inOwnHouse && (
-        <div className="housing-visiting-banner">
-          Visiting {room.housingOwner ?? "someone"}&apos;s house
-        </div>
-      )}
-
-      <ul className="housing-room-list">
-        {housing.rooms.map((r, i) => (
-          <li key={`${r.templateId}-${i}`} className="housing-room-item">
-            <div className="housing-room-header">
-              <span className="housing-room-title">{r.title}</span>
-              <span className="housing-room-template">{r.templateId}</span>
-            </div>
-            <p className="housing-room-desc">{r.description}</p>
-          </li>
-        ))}
-      </ul>
-
-      <TemplateList templates={templates} />
-
-      {inOwnHouse && (
-        <div className="housing-customize-section">
-          <p className="housing-section-label">Customize This Room</p>
-          {editField === null ? (
-            <div className="housing-edit-buttons">
-              <button type="button" className="housing-action-btn" onClick={() => startEdit("title")}>
-                Edit Title
-              </button>
-              <button type="button" className="housing-action-btn" onClick={() => startEdit("desc")}>
-                Edit Description
-              </button>
-            </div>
-          ) : (
-            <div className="housing-edit-form">
-              <label className="housing-edit-label">
-                {editField === "title" ? "New Title" : "New Description"}
-              </label>
-              {editField === "title" ? (
-                <input
-                  type="text"
-                  className="housing-edit-input"
-                  maxLength={60}
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") submitEdit(); if (e.key === "Escape") cancelEdit(); }}
-                  autoFocus
-                  placeholder="Enter new title..."
-                />
-              ) : (
-                <textarea
-                  className="housing-edit-textarea"
-                  maxLength={500}
-                  rows={3}
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Escape") cancelEdit(); }}
-                  autoFocus
-                  placeholder="Enter new description..."
-                />
-              )}
-              <div className="housing-edit-actions">
-                <button type="button" className="housing-action-btn housing-save-btn" onClick={submitEdit}>Save</button>
-                <button type="button" className="housing-action-btn" onClick={cancelEdit}>Cancel</button>
-              </div>
-            </div>
-          )}
-        </div>
+      {/* ── Buy bar (bottom) ─────────────────────────────────── */}
+      <div className="hb-buybar">
+        {activeFeedback && (
+          <span className={`hb-feedback hb-feedback-${activeFeedback.type}`}>{activeFeedback.message}</span>
+        )}
+        {choosingDir ? (
+          <div className="hb-dir-picker">
+            <span className="hb-dir-label">Attach where?</span>
+            {DIRECTIONS.map((d) => (
+              <button key={d.key} type="button" className="hb-dir-btn" onClick={() => expand(d.key)}>{d.label}</button>
+            ))}
+            <button type="button" className="hb-dir-cancel" onClick={() => setChoosingDir(false)}>✕</button>
+          </div>
+        ) : (
+          <button type="button" className="hb-buy-btn" disabled={!canBuy} onClick={onBuy}>{buyLabel}</button>
+        )}
+        <span className="hb-funds">
+          <span className="hb-coin" aria-hidden="true">◉</span>
+          Funds: <strong>{gold.toLocaleString()}</strong>
+        </span>
+      </div>
+      {/* room state is read above; reference kept so visiting context stays available */}
+      {room.housing === true && room.housingOwner && room.housingOwner !== housing?.ownerName && (
+        <div className="hb-visiting">Visiting {room.housingOwner}&apos;s estate</div>
       )}
     </div>
   );
