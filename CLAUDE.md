@@ -64,14 +64,14 @@ Bus implementations: `Local*` (single-process), `Redis*` (multi-process), `Grpc*
 | Entry/wiring | `Main.kt`, `MudServer.kt` (composition root), `GatewayServer.kt` |
 | Config | `AppConfig.kt` (schema + `validated()`), `application.yaml` |
 | Engine | `GameEngine.kt` (tick loop), `PlayerState.kt`, `PlayerRegistry.kt` |
-| Commands | `CommandParser.kt` (~200 variants, sealed hierarchy), `CommandRouter.kt` (~110-line dispatch), `handlers/` subpackage (36 handler files + `EngineContext.kt` + `HandlerHelpers.kt`) |
+| Commands | `CommandParser.kt` (~200 variants, sealed hierarchy), `CommandRouter.kt` (~110-line dispatch), `handlers/` subpackage (37 handler files + `EngineContext.kt` + `HandlerHelpers.kt`) |
 | Events | `InboundEvent.kt`, `OutboundEvent.kt` |
 | Persistence | `PlayerRecord.kt` (DTO), `PlayerRepository.kt` (interface), `PlayersTable.kt`, `GuildRepository.kt` |
 | Transport | `KtorWebSocketTransport.kt`, `NetworkSession.kt`, `OutboundRouter.kt`, `TelnetLineDecoder.kt` |
 | GMCP | `GmcpEmitter.kt` (server→client), `web-v3/src/gmcp/applyGmcpPackage.ts` (client) |
 | World | `WorldLoader.kt`, zone YAMLs in `src/main/resources/world/` |
 | Web client | `web-v3/` (React + PixiJS), built to `src/main/resources/web-v3/` |
-| Migrations | `src/main/resources/db/migration/` (V1–V38) |
+| Migrations | `src/main/resources/db/migration/` (V1–V42) |
 | Proto | `src/main/proto/ambonmud/v1/` |
 
 ### Test Utilities
@@ -115,6 +115,9 @@ Update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict
 ### World content only
 Edit YAML in `src/main/resources/world/`. See `docs/WORLD_YAML_SPEC.md`.
 
+### Panel reskin (painted art)
+See `docs/ART_CONTRACT.md` (the canonical spec; Staff Control / `AdminPanel.tsx` is the reference implementation). Register a `<panel>_bg` key in `ImagesConfig.DEFAULT_GLOBAL_ASSETS` (`AppConfig.kt`) → URL arrives at the client via the `Server.Assets` GMCP map → component injects it as a CSS variable and toggles a `-skinned` class that locks `aspect-ratio` to the art's pixel size and seats content with percentage insets. The unskinned CSS fallback must keep working (null/404 art). NPC dialogue audio has an analogous contract: `docs/VOICE_OVER_CONTRACT.md`.
+
 ## Kotlin Style (ktlint)
 
 ktlint 1.5.0, `kotlin.code.style=official`. Overrides in `.editorconfig`.
@@ -148,11 +151,12 @@ ktlint 1.5.0, `kotlin.code.style=official`. Overrides in `.editorconfig`.
 
 - Never hardcode colors — use CSS variables. Dark-first. WCAG AA minimum.
 - `web-v3/src/canvas/` for PixiJS rendering. Built assets are gitignored.
+- Painted panel frames / window reskins follow `docs/ART_CONTRACT.md`.
 - Validate: `bun run lint` + `./gradlew demo`.
 
 ## Known Quirks
 
-- **Largest files:** `GmcpEmitter.kt` (~3490 lines), `GameEngine.kt` (~2820 lines), `AppConfig.kt` (~2660 lines), `WorldLoader.kt` (~1875 lines), `AdminHttpServer.kt` (~1475 lines). `CommandRouter.kt` is thin dispatch (~110 lines); all gameplay lives in the 36 handler files under `handlers/` plus the `EngineContext`/`HandlerHelpers` support files.
+- **Largest files:** `GmcpEmitter.kt` (~3960 lines), `GameEngine.kt` (~3000 lines), `AppConfig.kt` (~3240 lines), `WorldLoader.kt` (~1950 lines), `AdminHttpServer.kt` (~1475 lines). `CommandRouter.kt` is thin dispatch (~110 lines); all gameplay lives in the 37 handler files under `handlers/` plus the `EngineContext`/`HandlerHelpers` support files.
 - **Generated sources:** Protobuf under `build/generated/`, ktlint-suppressed via child `.editorconfig`.
 - **Staff access:** Set `isStaff: true` in player YAML or `is_staff` in Postgres — no in-game command.
 - **Metrics:** Uses `io.micrometer.prometheusmetrics` (not deprecated `io.micrometer.prometheus`).

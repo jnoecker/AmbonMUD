@@ -39,7 +39,7 @@ See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full feature inventory and [`do
 | Build | Gradle wrapper, ktlint, JaCoCo, Shadow (fat JAR) |
 | Server | Ktor 3 (WebSocket), blocking socket transport (telnet), Netty |
 | Config | Hoplite (YAML + env var overrides) |
-| Persistence | YAML files (default), PostgreSQL via Exposed + Flyway (V1–V38), optional Redis L2 cache |
+| Persistence | YAML files (default), PostgreSQL via Exposed + Flyway (V1–V42), optional Redis L2 cache |
 | Bus / RPC | Lettuce (Redis), gRPC 1.80 + Protobuf for ENGINE↔GATEWAY |
 | Metrics | Micrometer → Prometheus |
 | Web client | React 19, Vite, TypeScript, PixiJS 8, xterm.js (popout) — built with Bun |
@@ -79,7 +79,7 @@ src/main/kotlin/dev/ambon/
   Main.kt, MudServer.kt, GatewayServer.kt   # bootstrap
   config/                                   # AppConfig.kt schema + validated()
   engine/                                   # tick loop, systems, commands
-    commands/handlers/                      # 36 handler files + EngineContext/HandlerHelpers support
+    commands/handlers/                      # 37 handler files + EngineContext/HandlerHelpers support
     abilities/ status/ crafting/ dialogue/ ...
   transport/                                # telnet + Ktor WebSocket
   bus/                                      # Local/Redis/gRPC bus implementations
@@ -131,8 +131,10 @@ PostgreSQL tests use H2 in PostgreSQL-compatibility mode — no Docker required.
 - [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — full GMCP reference for client developers
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — zone file format
 
-**Web client**
+**Web client & media**
 - [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md) — React + PixiJS architecture and visual progression
+- [docs/ART_CONTRACT.md](docs/ART_CONTRACT.md) — painted UI art pipeline and the panel-reskin pattern
+- [docs/VOICE_OVER_CONTRACT.md](docs/VOICE_OVER_CONTRACT.md) — NPC dialogue voice-over pipeline
 - [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — Surreal Gentle Magic design system
 - [`.impeccable.md`](.impeccable.md) — brand personality and design principles
 

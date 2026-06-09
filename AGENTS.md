@@ -10,6 +10,8 @@ This file is the entry point for AI coding agents (Claude Code, etc.) working in
 - **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)** — Docker, CDK, env-var reference, CI/CD, EC2 demo, R2 lore overlay.
 - **[`docs/GMCP_PROTOCOL.md`](docs/GMCP_PROTOCOL.md)** — GMCP wire format and per-package payload reference (covers the stable subset; see the doc's coverage notice for the complete emitted-package inventory).
 - **[`docs/WORLD_YAML_SPEC.md`](docs/WORLD_YAML_SPEC.md)** — zone YAML contract.
+- **[`docs/ART_CONTRACT.md`](docs/ART_CONTRACT.md)** — painted UI art: asset registry, `Server.Assets` GMCP delivery, and the panel-reskin pattern.
+- **[`docs/VOICE_OVER_CONTRACT.md`](docs/VOICE_OVER_CONTRACT.md)** — NPC dialogue voice-over pipeline (R2 paths, hash spec, `voiceUrl`).
 - **[`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md)** + **[`.impeccable.md`](.impeccable.md)** — design system.
 
 If you're starting a code change, the relevant change playbook is in `DEVELOPER_GUIDE.md § 13 Common Tasks`. Don't reinvent the steps; read them.
@@ -71,7 +73,7 @@ Full test patterns and utilities: `DEVELOPER_GUIDE.md § 12 Testing`.
 
 - Keep gameplay/state in `engine`; keep protocol/I/O in `transport`. Wire bus/Redis only in `MudServer.kt`.
 - Gameplay features follow the pattern `*System.kt` (logic) + `*Handler.kt` (commands) + config in `application.yaml` or world YAML + `*SystemTest`.
-- `CommandRouter.kt` is thin dispatch (~110 lines); the work happens in the 36 handler files under `src/main/kotlin/dev/ambon/engine/commands/handlers/`.
+- `CommandRouter.kt` is thin dispatch (~110 lines); the work happens in the 37 handler files under `src/main/kotlin/dev/ambon/engine/commands/handlers/`.
 - The single biggest files are `GmcpEmitter.kt`, `GameEngine.kt`, `AppConfig.kt`, `AdminHttpServer.kt`, and `WorldLoader.kt`. Check helper systems and handlers before assuming behavior lives in a top-level file.
 - Generated protobuf/gRPC sources live under `build/generated/`; ktlint is suppressed there via a child `.editorconfig`.
 - Do not commit anything under `data/players/` — runtime state, gitignored.

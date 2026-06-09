@@ -163,7 +163,7 @@ The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPla
 Each 100 ms tick runs, in order:
 
 1. **Drain inbound** — up to `maxInboundEventsPerTick` from `InboundBus`
-2. **Dispatch commands** — `CommandRouter` → handler modules (36 handler files)
+2. **Dispatch commands** — `CommandRouter` → handler modules (37 handler files)
 3. **MobSystem.tick()** — NPC wandering and behavior trees
 4. **CombatSystem.tick()** — active fight resolution
 5. **RegenSystem.tick()** — HP / mana regen
@@ -210,7 +210,7 @@ Every write layer is transparent to the caller. Guild persistence mirrors this p
 
 ### Commands: Sealed Hierarchy + Thin Router
 
-`CommandParser.parse()` is a pure function that returns one of ~200 sealed `Command` variants. `CommandRouter` is thin dispatch (~110 lines) that routes each variant to one of 36 handler files. This separates parsing from execution and makes both independently testable.
+`CommandParser.parse()` is a pure function that returns one of ~200 sealed `Command` variants. `CommandRouter` is thin dispatch (~110 lines) that routes each variant to one of 37 handler files. This separates parsing from execution and makes both independently testable.
 
 ### Config-Driven Game Content
 
@@ -226,7 +226,11 @@ All time-dependent logic uses an injected `Clock`, enabling `MutableClock` in te
 
 ### GMCP as the Client Protocol
 
-All structured data between server and client flows through GMCP packages (~50 families). Telnet clients negotiate GMCP opt-in; WebSocket clients auto-subscribe. This means the web client never scrapes text output — it reacts to typed JSON payloads. See [GMCP_PROTOCOL.md](./GMCP_PROTOCOL.md) for the full reference.
+All structured data between server and client flows through GMCP packages (~50 families, ~100 emitted packages). Telnet clients negotiate GMCP opt-in; WebSocket clients auto-subscribe. This means the web client never scrapes text output — it reacts to typed JSON payloads. See [GMCP_PROTOCOL.md](./GMCP_PROTOCOL.md) for the full reference.
+
+### Server-Resolved Media URLs
+
+All media the web client displays — painted panel art, sprites, voice-over clips, videos — is referenced by **fully-resolved URLs that the engine computes and sends over GMCP** (`Server.Assets`, `image` fields, `voiceUrl`). The client never concatenates paths, and every asset degrades to a CSS-only or text-only fallback when absent. The asset contracts live in [ART_CONTRACT.md](./ART_CONTRACT.md) (painted art / panel reskins) and [VOICE_OVER_CONTRACT.md](./VOICE_OVER_CONTRACT.md) (NPC dialogue audio).
 
 ### Zone-Based Sharding
 

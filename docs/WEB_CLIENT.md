@@ -35,10 +35,15 @@ Full redesign: dark glassmorphism panels, banner artwork, tabbed Play/Character/
 
 ![v3 web client](screenshots/v3-web-client.jpg)
 
-### v4 — PixiJS Canvas (Current)
+### v4 — PixiJS Canvas
 PixiJS canvas replaces the xterm terminal as the primary game view. Terminal moved to popout (available on command input focus). JRPG-style world and battle scenes with sprite-based rendering. Side panels preserved.
 
 ![v4 web client](screenshots/webclient-v4.jpeg)
+
+### v5 — Painted Panels (Current)
+Subsystem windows reskinned onto full-bleed painted art frames (Staff Control, Crafting, Auction House, Lottery, Housing, Stylist, Dice, and more), with the social panels split into standalone illustrated "boards" (Social Board, Who, Guild, Friends, Group). Server-resolved art URLs arrive via the `Server.Assets` GMCP package; every panel degrades to CSS-only styling when art is absent. See [`ART_CONTRACT.md`](./ART_CONTRACT.md) for the asset pipeline and reskin pattern.
+
+![v5 web client](screenshots/webclient-v5.png)
 
 ---
 
@@ -109,6 +114,25 @@ For push events (combat events, gain popups), `CanvasEventBus.ts` provides a rin
 5. Outbound GMCP is serialized as JSON envelope: `{"gmcp":"<Package>","data":<json>}`
 6. Frontend routes by package in `applyGmcpPackage.ts`
 
+### Painted Panels & Boards (v5)
+
+Most subsystem windows are now **skinned onto painted art frames** rather than styled as plain
+glass dialogs. The pattern (full spec in [`ART_CONTRACT.md`](./ART_CONTRACT.md)):
+
+- The engine sends a map of logical asset keys → fully-resolved URLs in the `Server.Assets`
+  GMCP package; the client stores it as `state.serverAssets`.
+- A panel component takes `backgroundImage: string | null`, injects it as a CSS custom property,
+  and toggles a `-skinned` class variant. The skinned CSS locks `aspect-ratio` to the art's
+  pixel dimensions, stretches the PNG full-bleed, and absolutely positions content into the
+  painted boxes with percentage insets.
+- When the asset is null or missing, the panel renders its original CSS-only variant — no art
+  pipeline is required for local development.
+
+The former monolithic Chat/Social sidebar content was split into standalone illustrated
+**boards**: Social Board (`ChatBoardPanel`), Who (`WhoBoardPanel`), Guild (`GuildBoardPanel`),
+Friends (`FriendsBoardPanel`), and Group (`GroupBoardPanel`), each seated in its own painted
+frame. Staff Control (`AdminPanel`) is the reference implementation of the reskin pattern.
+
 ---
 
 ## File Structure
@@ -132,9 +156,18 @@ web-v3/src/
 │       ├── DialogueOverlay.ts       # NPC dialogue on canvas
 │       └── EntityPopout.ts          # Click-to-interact on sprites
 ├── App.tsx                          # Composition root, state management
-├── gmcp/applyGmcpPackage.ts        # GMCP package → state updates
+├── gmcp/applyGmcpPackage.ts        # GMCP package → state updates (~100 packages)
 ├── components/
-│   ├── panels/                      # PlayPanel, WorldPanel, ChatPanel, CharacterPanel
+│   ├── panels/                      # 31 panel components:
+│   │   #  Core HUD:    PlayPanel, CombatPanel, CombatLogPanel, CharacterPanel,
+│   │   #               InventoryPanel, EquipmentPanel, QuestPanel, QuestOfferPanel
+│   │   #  Boards:      ChatBoardPanel (Social), WhoBoardPanel, GuildBoardPanel,
+│   │   #               FriendsBoardPanel, GroupBoardPanel
+│   │   #  Subsystems:  AuctionPanel, BankPanel, CraftingPanel, ProfessionsPanel,
+│   │   #               DungeonPanel, HousingPanel, InnPanel, LotteryPanel, DicePanel,
+│   │   #               MailPanel, StylistPanel, LeaderboardPanel, SystemsPanel
+│   │   #  Reference:   MonsterManualPanel, ItemManualPanel, PlayerExaminePanel
+│   │   #  Staff:       AdminPanel (+ AdminPanel.logic.ts) — painted-frame reference impl
 │   ├── PopoutLayer.tsx              # Overlay panels (map, equipment, terminal, spellbook)
 │   ├── SpellbookPanel.tsx           # Ability grid with target type filtering
 │   └── ...

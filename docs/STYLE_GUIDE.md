@@ -1,7 +1,7 @@
 # AmbonMUD Design System: Surreal Gentle Magic
 
 **Version:** surreal_softmagic_v1
-**Last Updated:** March 25, 2026
+**Last Updated:** June 9, 2026
 **Scope:** Unified aesthetic for UI components, world rendering, and interactive experiences
 **Implementation:** Dark-mode theme implemented in `web-v3/src/styles.css` (design tokens + component styles). PixiJS canvas scenes (world, battle, particles) are live. Light mode is planned.
 **Design Context:** See [`.impeccable.md`](../.impeccable.md) for brand personality, user audiences, and high-level design principles.
@@ -542,9 +542,17 @@ web-v3/
 - [x] Spell targeting system (auto-target, targeting mode, Escape cancel)
 - [x] Login modal with race/class selection
 
+### Painted Panel Frames ✅
+- [x] Subsystem windows reskinned onto painted art frames (Staff Control, Crafting, Auction, Lottery, Housing, Stylist, Dice, Bank, Character cabinet, social boards)
+- [x] Server-resolved asset delivery via `Server.Assets` GMCP; CSS-only fallback when art is absent
+
+The asset pipeline, naming conventions, and the reskin pattern (aspect-ratio lock + percentage
+insets) are specified in [`ART_CONTRACT.md`](./ART_CONTRACT.md). Painted frames *extend* this
+design system — content seated inside a frame still uses the tokens, typography, and motion
+rules in this guide, and the CSS fallback variant must remain on-system.
+
 ### Outstanding
 - [ ] Light mode theme (preserve magical warmth — don't just invert)
-- [ ] Admin console redesign using design tokens
 - [ ] Visual regression test templates
 - [ ] Style variants (e.g., `surreal_softmagic_night_v1`)
 
@@ -637,4 +645,4 @@ When creating new variants, document the differences from v1 and update this sec
 
 ---
 
-**Last Updated:** April 2026
+**Last Updated:** June 2026

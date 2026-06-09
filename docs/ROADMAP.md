@@ -2,7 +2,7 @@
 
 What's built. This is a living inventory of shipped systems, not a forward-looking roadmap.
 
-## Current State (May 2026)
+## Current State (June 2026)
 
 AmbonMUD has a **mature infrastructure** and **complete gameplay foundation**:
 
@@ -37,7 +37,10 @@ AmbonMUD has a **mature infrastructure** and **complete gameplay foundation**:
 ✅ Quest system (objectives, rewards, tracking)
 ✅ Achievement system + titles
 ✅ Guilds with ranks, guild chat, roster management
-✅ Friends list + offline mail
+✅ Friends list + offline mail (letters can attach gold and an item; recipients `mail claim`)
+✅ Aineroia's Dice — six-die tavern gambling game with the Luneqrae coin
+✅ Inn rooms — `rest` sets the recall point and grants 2× HP/mana regen
+✅ Guest sessions upgradeable to permanent accounts via `claim`
 ✅ Crafting & gathering with specialization, recipe discovery, quality tiers, rare yields
 ✅ Player housing (personal rooms, furniture, vaults, access control)
 ✅ Procedural dungeons (template-driven, instanced, 4 difficulty tiers, boss encounters)
@@ -47,6 +50,8 @@ AmbonMUD has a **mature infrastructure** and **complete gameplay foundation**:
 ✅ Leaderboard system and hall of fame
 ✅ Web-based admin dashboard
 ✅ Remember-me auth tokens for persistent login
+✅ Painted-art panel reskins (Staff Control, Crafting, Auction, Lottery, Housing, Stylist, Dice, social boards) with server-resolved assets via `Server.Assets` GMCP — see `docs/ART_CONTRACT.md`
+✅ NPC dialogue voice-overs (ElevenLabs clips over GMCP) — see `docs/VOICE_OVER_CONTRACT.md`
 
 ---
 
@@ -57,4 +62,4 @@ publishing, and format-preserving YAML round-trip editing
 
 ---
 
-**Last updated:** May 11, 2026
+**Last updated:** June 9, 2026
