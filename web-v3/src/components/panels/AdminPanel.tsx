@@ -481,10 +481,12 @@ export function AdminPanel({
   if (backgroundImage) skinVars["--admin-bg"] = `url("${backgroundImage}")`;
   if (serverAssets.staff_action_btn) {
     skinVars["--admin-action-btn"] = `url("${serverAssets.staff_action_btn}")`;
-    // The asset carries its own gold frame, so suppress the CSS edge/rounding
-    // that the gradient fallback uses (avoids a double border and clipped corners).
+    // The asset carries its own gold frame on transparent margins, so suppress
+    // the CSS edge, rounding, and box-shadow the gradient fallback uses — they'd
+    // otherwise show as a rectangle behind the plaque's transparent corners.
     skinVars["--admin-action-edge"] = "transparent";
     skinVars["--admin-action-radius"] = "0px";
+    skinVars["--admin-action-shadow"] = "none";
   }
   if (serverAssets.staff_action_btn_active) {
     skinVars["--admin-action-btn-active"] = `url("${serverAssets.staff_action_btn_active}")`;
