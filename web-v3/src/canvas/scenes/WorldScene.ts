@@ -167,6 +167,13 @@ export class WorldScene {
   private recallBtn: Container;
   private lastLoggedIn = false;
 
+  // Staff buttons (visible when the logged-in player is staff) — drawn next to
+  // Recall so they always line up with it regardless of canvas size.
+  private staffBtn: Container;
+  private invisBtn: Container;
+  private invisActive = false;
+  private lastStaff = false;
+
   // Depart button (visible at the death sanctum when there's a place to return to)
   private departBtn: Container;
   private lastCanDepart = false;
@@ -841,6 +848,18 @@ export class WorldScene {
     });
     this.departBtn.visible = false;
 
+    // Staff buttons — STAFF opens the admin console; the eye toggles invisibility.
+    this.staffBtn = this.buildActionButton("STAFF", 0xe6c878, 0x4a3a12, () => {
+      canvasCallbacks.openAdminPanel?.();
+    });
+    this.staffBtn.visible = false;
+    this.invisBtn = this.buildActionButton("\u{1F441}", 0xe6c878, 0x3a2e50, () => {
+      this.invisActive = !this.invisActive;
+      this.invisBtn.alpha = this.invisActive ? 0.6 : 1;
+      canvasCallbacks.toggleInvis?.();
+    });
+    this.invisBtn.visible = false;
+
     this.container.addChildAt(this.skyRenderer.graphics, 0);
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
@@ -869,6 +888,8 @@ export class WorldScene {
     this.container.addChild(this.signBadge!);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.departBtn);
+    this.container.addChild(this.staffBtn);
+    this.container.addChild(this.invisBtn);
     // Weather lives in the overlay so it stays visible during room-transition
     // fades (container.alpha → 0) and reliably renders above room art/sky.
     this.overlayContainer.addChild(this.weatherParticles.graphics);
@@ -1196,6 +1217,14 @@ export class WorldScene {
       this.recallBtn.visible = showRecall;
     }
 
+    // Staff buttons — visible whenever a staff player is logged in.
+    const showStaff = loggedIn && state.character.isStaff;
+    if (showStaff !== this.lastStaff) {
+      this.lastStaff = showStaff;
+      this.staffBtn.visible = showStaff;
+      this.invisBtn.visible = showStaff;
+    }
+
     // Hide the minimap until logged in — otherwise its parchment flashes on the
     // pre-login screen (the minimap is drawn in-scene, not a gated DOM overlay).
     this.minimap.container.visible = loggedIn;
@@ -1272,6 +1301,8 @@ export class WorldScene {
     if (this.signBadge) this.signBadge.visible = this.signVisible && !stripMode;
     this.recallBtn.visible = this.recallBtn.visible && !stripMode;
     this.departBtn.visible = this.departBtn.visible && !stripMode;
+    this.staffBtn.visible = this.staffBtn.visible && !stripMode;
+    this.invisBtn.visible = this.invisBtn.visible && !stripMode;
 
     // Dynamic entity sizing
     const scale = Math.min(w / REF_WIDTH, h / REF_HEIGHT);
@@ -1676,6 +1707,17 @@ export class WorldScene {
       // Offset to the right of Recall (button width 80 + 8px gap), or take Recall's slot if hidden
       this.departBtn.x = this.recallBtn.visible ? 16 + 40 + 88 : 16 + 40;
       this.departBtn.y = h - 24;
+    }
+
+    // Staff + invis buttons — line up after Recall/Depart on the same row.
+    if (this.staffBtn.visible) {
+      let slot = 0;
+      if (this.recallBtn.visible) slot++;
+      if (this.departBtn.visible) slot++;
+      this.staffBtn.x = 16 + 40 + slot * 88;
+      this.staffBtn.y = h - 24;
+      this.invisBtn.x = this.staffBtn.x + 88;
+      this.invisBtn.y = h - 24;
     }
 
     // Video button: bottom-center

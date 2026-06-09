@@ -101,8 +101,14 @@ export const canvasCallbacks: {
   openPlayerCard: ((player: RoomPlayer) => void) | null;
   /** Open the parchment item card for a clicked room item. */
   openItemManual: ((entry: ItemEntry) => void) | null;
+  /** Staff: open the admin console (the canvas STAFF button). */
+  openAdminPanel: (() => void) | null;
+  /** Staff: toggle invisibility (the canvas eye button). */
+  toggleInvis: (() => void) | null;
 } = {
   sendCommand: null,
+  openAdminPanel: null,
+  toggleInvis: null,
   prefillCommand: null,
   openPlayerCard: null,
   openShop: null,

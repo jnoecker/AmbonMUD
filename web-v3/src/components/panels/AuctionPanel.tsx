@@ -210,7 +210,6 @@ export function AuctionPanel({ listings, inventory, playerName, isDemo, feedback
 
       {/* ───────── List action (below selected) ───────── */}
       <div className="ah-list-action">
-        <label className="ah-price-label" htmlFor="ah-price">Set Price</label>
         <div className="ah-price-row">
           <input
             id="ah-price"

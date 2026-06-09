@@ -533,11 +533,26 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     const item = result.itemName ? ` ${result.itemName}${result.quantity && result.quantity > 1 ? ` x${result.quantity}` : ""}` : "";
     const xp = result.xpAwarded > 0 ? ` (+${result.xpAwarded} ${result.skill} XP)` : "";
     const levelUp = result.leveledUp ? ` \u2014 Level up! ${result.skill} \u2192 Lv ${result.newLevel}` : "";
+    const text = `${verb}${item}${xp}${levelUp}`;
     pushCombatLogMessage({
       id: ++combatLogIdCounter,
-      text: `${verb}${item}${xp}${levelUp}`,
+      text,
       style: result.leveledUp ? "xp" : "heal",
       receivedAt: Date.now(),
+    });
+    // Also surface it as crafting-scoped feedback so the Crafting panel confirms
+    // in-place that the item was actually made (appended directly to avoid a
+    // duplicate combat-log line from pushUiFeedback).
+    setUiFeedbackFeed((prev) => {
+      const entry: UiFeedbackEntry = {
+        type: "success",
+        message: text,
+        scope: "crafting",
+        id: `ui-feedback-${Date.now()}-${++systemActivityIdCounter}`,
+        receivedAt: Date.now(),
+      };
+      const next = [...prev, entry];
+      return next.length > MAX_UI_FEEDBACK_FEED ? next.slice(-MAX_UI_FEEDBACK_FEED) : next;
     });
   }, [pushCombatLogMessage]);
 
