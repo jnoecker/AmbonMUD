@@ -2167,6 +2167,10 @@ export function applyGmcpPackage(
             date: safeNumber(e.date, 0),
             read: e.read === true,
             preview: typeof e.preview === "string" ? e.preview : "",
+            gold: safeNumber(e.gold, 0),
+            itemName: typeof e.itemName === "string" ? e.itemName : null,
+            itemImage: typeof e.itemImage === "string" ? e.itemImage : null,
+            claimed: e.claimed === true,
           })),
       );
       break;
@@ -2181,6 +2185,10 @@ export function applyGmcpPackage(
         body: typeof packet.body === "string" ? packet.body : "",
         date: safeNumber(packet.date, 0),
         read: packet.read === true,
+        gold: safeNumber(packet.gold, 0),
+        itemName: typeof packet.itemName === "string" ? packet.itemName : null,
+        itemImage: typeof packet.itemImage === "string" ? packet.itemImage : null,
+        claimed: packet.claimed === true,
       });
       break;
     }

@@ -151,6 +151,10 @@ data class PlayerState(
     data class MailComposeState(
         val recipientName: String,
         val lines: MutableList<String> = mutableListOf(),
+        /** Gold to attach to the letter, consumed from the sender when sent. */
+        val attachGold: Long = 0L,
+        /** Inventory keyword of an item to attach, resolved/removed when sent. */
+        val attachItemKeyword: String? = null,
     )
 
     companion object {

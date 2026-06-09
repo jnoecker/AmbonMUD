@@ -744,7 +744,19 @@ export interface ContainerContents {
   items: Array<{ name: string; keyword: string }>;
 }
 
-export interface MailEntry {
+/** Gold/item attachment fields shared by mail list entries and opened messages. */
+export interface MailAttachment {
+  /** Attached gold (0 when none). */
+  gold: number;
+  /** Attached item's display name, or null when none. */
+  itemName: string | null;
+  /** Attached item's image hash for the icon, or null. */
+  itemImage: string | null;
+  /** Whether the recipient has already claimed the gold/item. */
+  claimed: boolean;
+}
+
+export interface MailEntry extends MailAttachment {
   index: number;
   id: string;
   from: string;
@@ -753,7 +765,7 @@ export interface MailEntry {
   preview: string;
 }
 
-export interface MailMessage {
+export interface MailMessage extends MailAttachment {
   index: number;
   id: string;
   from: string;

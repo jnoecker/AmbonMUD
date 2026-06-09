@@ -1298,13 +1298,19 @@ function App() {
             hasCharacterProfile={hasCharacterProfile}
             inbox={state.mailInbox}
             openMessage={state.mailMessage}
+            inventory={state.inventory}
+            gold={state.vitals.gold}
             onReadMessage={(index) => sendCommand(`mail read ${index}`)}
             onDeleteMessage={(index) => sendCommand(`mail delete ${index}`)}
-            onCompose={(recipient, body) => {
-              sendCommand(`mail send ${recipient}`);
+            onCompose={(recipient, body, goldAmount, itemKeyword) => {
+              let cmd = `mail send ${recipient}`;
+              if (goldAmount > 0) cmd += ` gold ${goldAmount}`;
+              if (itemKeyword) cmd += ` item ${itemKeyword}`;
+              sendCommand(cmd);
               for (const line of body.split("\n")) sendCommand(line);
               sendCommand(".");
             }}
+            onClaim={(index) => sendCommand(`mail claim ${index}`)}
             onClearMessage={() => state.setMailMessage(null)}
             onCommand={sendCommand}
           />

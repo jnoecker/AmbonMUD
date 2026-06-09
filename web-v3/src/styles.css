@@ -6104,6 +6104,104 @@ body {
   border-color: var(--text-secondary);
 }
 
+/* Compose attachments — gold + item, side by side. */
+.mail-compose-attach {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.mail-compose-attach-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 140px;
+}
+
+.mail-compose-hint {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* Read-view attachment strip + claim. */
+.mail-attachments {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.mail-attach-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.mail-attach-items {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.mail-attach-chip {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.mail-attach-gold {
+  background: color-mix(in srgb, var(--color-gold-bright) 22%, transparent);
+  color: var(--color-gold-bright);
+}
+
+.mail-attach-item {
+  background: color-mix(in srgb, var(--color-primary-lavender) 20%, transparent);
+  color: var(--text-primary);
+}
+
+.mail-attach-claimed {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mail-claim-button {
+  padding: var(--space-1) var(--space-4);
+  min-height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-gold-bright);
+  color: var(--bg-deep);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 150ms var(--ease-out-soft), transform 150ms var(--ease-out-soft);
+}
+
+.mail-claim-button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.mail-claim-button:active {
+  transform: scale(0.97);
+}
+
+.mail-inbox-gift {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
 /* ── Quest panel ── */
 
 .quest-panel {
