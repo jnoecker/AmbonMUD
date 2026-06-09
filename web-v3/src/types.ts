@@ -1202,19 +1202,43 @@ export interface LotteryInfo {
   maxTicketsPerPlayer: number;
   diceMinBet: number;
   diceMaxBet: number;
+  /** Base payout multiplier when the summed roll lands at or below the target. */
   diceWinMultiplier: number;
-  /** Roll this value or less on a d100 to win. */
-  diceWinThreshold: number;
+  /** Aineroira's Dice: a summed roll at or below this wins the base payout. */
+  diceWinTarget: number;
+  /** This many dice (or more) on their max face summon the Luneqrae coin flip. */
+  coinMaxThreshold: number;
+  /** Payout multiplier when the coin flip wins after a busted sum. */
+  coinWinMultiplier: number;
+  /** Payout multiplier when the coin flip wins and the sum stayed at or below target. */
+  coinJackpotMultiplier: number;
   diceCooldownMs: number;
 }
 
-/** One resolved tavern dice roll, from the Lottery.Gamble GMCP package. */
+/** One settled die within a resolved roll, in tumble order (big → small). */
+export interface DiceRoll {
+  /** Which child: ophirae/mycorae/pyrae/aetherae/lustriae/aureliae. */
+  kind: string;
+  sides: number;
+  value: number;
+  /** Whether the die crowned its highest face. */
+  isMax: boolean;
+}
+
+/** One resolved game of Aineroira's Dice, from the Lottery.Gamble GMCP package. */
 export interface DiceGambleResult {
-  outcome: "win" | "lose";
+  /** "win" (base), "lose", "coin" (Luneqrae rescue), or "jackpot" (coin + held sum). */
+  outcome: "win" | "lose" | "coin" | "jackpot";
   bet: number;
   payout: number;
-  roll: number;
-  needed: number;
+  multiplier: number;
+  /** The six children in roll order, big → small. */
+  dice: DiceRoll[];
+  sum: number;
+  target: number;
+  maxCount: number;
+  coinFired: boolean;
+  coinWon: boolean;
   cooldownMs: number;
   /** Client-side monotonic id so the panel can animate each new roll. */
   seq: number;

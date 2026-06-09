@@ -96,6 +96,7 @@ import type {
   GlobalQuestLeaderboardEntry,
   LotteryInfo,
   DiceGambleResult,
+  DiceRoll,
   GuildHallInfo,
   GuildHallRoom,
   DuelState,
@@ -2348,7 +2349,10 @@ export function applyGmcpPackage(
         diceMinBet: safeNumber(packet.diceMinBet, 10),
         diceMaxBet: safeNumber(packet.diceMaxBet, 1000),
         diceWinMultiplier: safeNumber(packet.diceWinMultiplier, 2),
-        diceWinThreshold: safeNumber(packet.diceWinThreshold, 45),
+        diceWinTarget: safeNumber(packet.diceWinTarget, 45),
+        coinMaxThreshold: safeNumber(packet.coinMaxThreshold, 3),
+        coinWinMultiplier: safeNumber(packet.coinWinMultiplier, 10),
+        coinJackpotMultiplier: safeNumber(packet.coinJackpotMultiplier, 12),
         diceCooldownMs: safeNumber(packet.diceCooldownMs, 5000),
       });
       break;
@@ -2356,12 +2360,34 @@ export function applyGmcpPackage(
 
     case "Lottery.Gamble": {
       const packet = data as Partial<Record<string, unknown>>;
+      const outcome =
+        packet.outcome === "win" ||
+        packet.outcome === "coin" ||
+        packet.outcome === "jackpot"
+          ? packet.outcome
+          : "lose";
+      const dice: DiceRoll[] = Array.isArray(packet.dice)
+        ? (packet.dice as unknown[]).map((d) => {
+            const entry = d as Partial<Record<string, unknown>>;
+            return {
+              kind: typeof entry.kind === "string" ? entry.kind : "",
+              sides: safeNumber(entry.sides, 6),
+              value: safeNumber(entry.value, 1),
+              isMax: entry.isMax === true,
+            };
+          })
+        : [];
       ctx.setDiceResult((prev) => ({
-        outcome: packet.outcome === "win" ? "win" : "lose",
+        outcome,
         bet: safeNumber(packet.bet, 0),
         payout: safeNumber(packet.payout, 0),
-        roll: safeNumber(packet.roll, 0),
-        needed: safeNumber(packet.needed, 45),
+        multiplier: safeNumber(packet.multiplier, 0),
+        dice,
+        sum: safeNumber(packet.sum, 0),
+        target: safeNumber(packet.target, 45),
+        maxCount: safeNumber(packet.maxCount, 0),
+        coinFired: packet.coinFired === true,
+        coinWon: packet.coinWon === true,
         cooldownMs: safeNumber(packet.cooldownMs, 5000),
         seq: (prev?.seq ?? 0) + 1,
       }));
