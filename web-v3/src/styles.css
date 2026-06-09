@@ -25428,7 +25428,7 @@ html:has(.game-shell),
 .lot-countdown {
   position: absolute;
   left: 31%;
-  top: 50%;
+  top: 52%;
   width: 20%;
   text-align: center;
   font-size: clamp(1.1rem, 2.6vw, 1.9rem);
@@ -25472,7 +25472,7 @@ html:has(.game-shell),
 
 .lot-limit {
   position: absolute;
-  left: 63%;
+  left: 65.5%;
   top: 63%;
   width: 12%;
   display: flex;
