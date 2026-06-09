@@ -2,14 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { RoomMob, StaffMobZone, StaffWorldZone, UiFeedbackEntry, WhoPlayer } from "../../types";
 import {
-  ADMIN_ACTION_SECTIONS,
   ADMIN_ACTIONS,
   ADMIN_RELOAD_SCOPES,
   buildAdminCommand,
   getAdminActionDefinition,
   requiresAdminConfirmation,
 } from "./AdminPanel.logic";
-import type { AdminAction, AdminActionSection } from "./AdminPanel.logic";
+import type { AdminAction } from "./AdminPanel.logic";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
@@ -491,38 +490,6 @@ export function AdminPanel({
     resetForm();
   };
 
-  // One category block: a centered title over its grid of plaque buttons.
-  const renderSection = (section: AdminActionSection) => {
-    const sectionActions = ADMIN_ACTIONS.filter((entry) => entry.section === section.id)
-      .filter((entry) => {
-        // Possession is binary — show only the relevant verb (Possess when free,
-        // Return when in a mob). Also evens out the grid.
-        if (entry.id === "possess") return possessing == null;
-        if (entry.id === "return") return possessing != null;
-        return true;
-      });
-    if (sectionActions.length === 0) return null;
-    return (
-      <section key={section.id} className="admin-action-section">
-        <h3 className="admin-section-title">{section.title}</h3>
-        <div className="admin-action-grid">
-          {sectionActions.map((action) => (
-            <button
-              key={action.id}
-              type="button"
-              className={`admin-action-tile ${activeAction === action.id ? "admin-action-tile-active" : ""} admin-action-tile-${action.tone}`}
-              onClick={() => selectAction(action.id)}
-              aria-pressed={activeAction === action.id}
-            >
-              <span className="admin-action-label">{action.label}</span>
-              <span className="admin-action-desc">{action.description}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-    );
-  };
-
   // Painted-frame CSS variables. The command tiles fall back to a gilded-glass
   // gradient (see styles.css) and pick up a real stained-glass asset if the
   // server advertises `staff_action_btn` / `staff_action_btn_active`.
@@ -588,12 +555,24 @@ export function AdminPanel({
           )}
 
           <div className="admin-board">
-            <div className="admin-board-col">
-              {ADMIN_ACTION_SECTIONS.filter((section) => section.id === "mobility" || section.id === "presence" || section.id === "world").map(renderSection)}
-            </div>
-            <div className="admin-board-col">
-              {ADMIN_ACTION_SECTIONS.filter((section) => section.id === "intervention").map(renderSection)}
-            </div>
+            {ADMIN_ACTIONS.filter((action) => {
+              // Possession is binary — show only the relevant verb (Possess when
+              // free, Return when in a mob).
+              if (action.id === "possess") return possessing == null;
+              if (action.id === "return") return possessing != null;
+              return true;
+            }).map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                className={`admin-action-tile ${activeAction === action.id ? "admin-action-tile-active" : ""} admin-action-tile-${action.tone}`}
+                onClick={() => selectAction(action.id)}
+                aria-pressed={activeAction === action.id}
+              >
+                <span className="admin-action-label">{action.label}</span>
+                <span className="admin-action-desc">{action.description}</span>
+              </button>
+            ))}
           </div>
           </div>
 

@@ -26056,11 +26056,12 @@ html:has(.game-shell),
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: start;
-  gap: clamp(8px, 1.2vw, 20px);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-content: center;
+  justify-items: center;
+  gap: clamp(6px, 1.4vh, 16px) clamp(8px, 1.2vw, 20px);
   overflow-y: auto;
-  padding-right: 4px;
+  padding: clamp(4px, 1vh, 12px) 4px;
   scrollbar-width: thin;
   scrollbar-color: rgb(150 170 230 / 45%) transparent;
 }
@@ -26152,6 +26153,8 @@ html:has(.game-shell),
   /* Match the plaque art's 3:2 shape so it fills without distortion; text sits in
      the hollow center via percentage padding (clears the ornate frame). */
   aspect-ratio: 3 / 2;
+  width: 100%;
+  max-width: clamp(112px, 13vw, 150px);
   min-width: 0;
   padding: 13% 18%;
   border: 1px solid var(--admin-action-edge, rgb(190 168 96 / 30%));
