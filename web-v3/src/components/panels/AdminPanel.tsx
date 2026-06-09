@@ -14,6 +14,8 @@ import type { AdminAction } from "./AdminPanel.logic";
 interface AdminPanelProps {
   onCommand: (command: string) => void;
   onClose: () => void;
+  /** Painted `admin_bg` frame URL; null falls back to the plain dialog skin. */
+  backgroundImage: string | null;
   worldInfo: StaffWorldZone[];
   mobTemplates: StaffMobZone[];
   whoPlayers: WhoPlayer[];
@@ -348,6 +350,7 @@ function TargetBrowser({
 export function AdminPanel({
   onCommand,
   onClose,
+  backgroundImage,
   worldInfo,
   mobTemplates,
   whoPlayers,
@@ -471,18 +474,25 @@ export function AdminPanel({
   return (
     <div className="popout-backdrop" onClick={onClose}>
       <section
-        className="popout-dialog admin-dialog"
+        className={`popout-dialog admin-dialog${backgroundImage ? " admin-dialog-skinned" : ""}`}
+        style={backgroundImage ? { ["--admin-bg" as string]: `url("${backgroundImage}")` } : undefined}
         role="dialog"
         aria-modal="true"
         aria-label="Staff Administration"
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="popout-header">
-          <h2>Admin Console</h2>
-          <button type="button" className="soft-button popout-close" onClick={onClose}>
-            Close
+        {backgroundImage ? (
+          <button type="button" className="admin-skin-close" onClick={onClose} aria-label="Close">
+            ✕
           </button>
-        </header>
+        ) : (
+          <header className="popout-header">
+            <h2>Admin Console</h2>
+            <button type="button" className="soft-button popout-close" onClick={onClose}>
+              Close
+            </button>
+          </header>
+        )}
 
         <div className="popout-content admin-content">
           <div className="admin-status-strip">
