@@ -3130,6 +3130,7 @@ data class ImagesConfig(
             "dice_aureliae_max" to "global_assets/dice_aureliae_max.png",
             "coin_luneqrae_moon" to "global_assets/coin_luneqrae_moon.png",
             "coin_luneqrae_wind" to "global_assets/coin_luneqrae_wind.png",
+            "auction_bg" to "global_assets/auction_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

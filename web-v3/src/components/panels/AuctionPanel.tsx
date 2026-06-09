@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AuctionListing, ItemSummary, UiFeedbackEntry } from "../../types";
-
-type AuctionView = "browse" | "sell" | "mine";
+import { resolveItemImage } from "../../imageDefaults";
 
 interface Props {
   listings: AuctionListing[];
@@ -13,17 +12,24 @@ interface Props {
   onCommand: (cmd: string) => void;
 }
 
+function gold(n: number): string {
+  return n.toLocaleString();
+}
+
+/**
+ * Auction House — reskinned onto the painted `auction_bg` frame. A single
+ * unified board: live listings to buy on the left, your inventory + the
+ * selected item's details + the set-price/list control on the upper right, and
+ * your active listings along the bottom right. Fixed price, buy now, instant
+ * delivery — no bidding.
+ */
 export function AuctionPanel({ listings, inventory, playerName, isDemo, feedbackFeed, onCommand }: Props) {
-  const [view, setView] = useState<AuctionView>("browse");
   const [filter, setFilter] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [priceDraft, setPriceDraft] = useState("");
   const [localMessage, setLocalMessage] = useState<string | null>(null);
 
-  // Fetch the current listings when the panel opens. The panel is only mounted
-  // while open (see App.tsx), so an effect guarded by a ref fires exactly once
-  // per open — otherwise the panel would show stale/empty data until the user
-  // hit Refresh. Mirrors the shop panel's load-on-open behaviour.
+  // Fetch listings once per open (panel only mounts while open).
   const fetched = useRef(false);
   useEffect(() => {
     if (!fetched.current) {
@@ -32,17 +38,19 @@ export function AuctionPanel({ listings, inventory, playerName, isDemo, feedback
     }
   }, [onCommand]);
 
+  const isMine = (seller: string) =>
+    seller.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0;
+
   const filtered = useMemo(() => {
     const lowered = filter.trim().toLowerCase();
     if (!lowered) return listings;
-    return listings.filter((listing) =>
-      listing.itemName.toLowerCase().includes(lowered) ||
-      listing.seller.toLowerCase().includes(lowered),
+    return listings.filter(
+      (l) => l.itemName.toLowerCase().includes(lowered) || l.seller.toLowerCase().includes(lowered),
     );
   }, [filter, listings]);
 
   const mine = useMemo(
-    () => listings.filter((listing) => listing.seller.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0),
+    () => listings.filter((l) => l.seller.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0),
     [listings, playerName],
   );
 
@@ -50,265 +58,205 @@ export function AuctionPanel({ listings, inventory, playerName, isDemo, feedback
     () => [...inventory].sort((a, b) => a.name.localeCompare(b.name)),
     [inventory],
   );
+  const selectedItem = sortedInventory.find((it) => it.id === selectedItemId) ?? null;
 
-  const selectedItem = sortedInventory.find((item) => item.id === selectedItemId) ?? null;
   const activeFeedback = useMemo(
-    () => [...feedbackFeed].reverse().find((entry) => entry.scope === "auction") ?? null,
+    () => [...feedbackFeed].reverse().find((e) => e.scope === "auction") ?? null,
     [feedbackFeed],
   );
+  const message = activeFeedback?.message ?? localMessage;
+  const messageKind = activeFeedback?.type ?? "info";
 
-  const createListing = () => {
+  const listSelected = () => {
     if (isDemo) {
-      setLocalMessage("Demo characters can't post auction listings. Claim your character first.");
+      setLocalMessage("Demo characters can't post listings. Claim your character first.");
       return;
     }
     if (!selectedItem) {
-      setLocalMessage("Choose an inventory item to list.");
+      setLocalMessage("Pick an inventory item to list.");
       return;
     }
-
-    if (!/^\d+$/.test(priceDraft.trim())) {
-      setLocalMessage("Enter a whole-number gold price.");
-      return;
-    }
-
     const price = Number(priceDraft);
-    if (!Number.isSafeInteger(price) || price <= 0) {
-      setLocalMessage("Listing price must be greater than zero.");
+    if (!/^\d+$/.test(priceDraft.trim()) || !Number.isSafeInteger(price) || price <= 0) {
+      setLocalMessage("Enter a whole-number gold price above zero.");
       return;
     }
-
     onCommand(`auction sell ${selectedItem.keyword} ${price}`);
-    setLocalMessage(`Listing ${selectedItem.name} for ${price.toLocaleString()} gold.`);
+    setLocalMessage(`Listing ${selectedItem.name} for ${gold(price)} gold.`);
     setPriceDraft("");
     setSelectedItemId("");
-    setView("mine");
   };
 
+  const selectedImage = selectedItem ? resolveItemImage(selectedItem) : null;
+
   return (
-    <div className="auction-panel">
-      <div className="panel-header">
-        <span className="panel-title">Auction House</span>
-      </div>
+    <div className="ah-board">
+      {message && <p className={`ah-toast ah-toast-${messageKind}`}>{message}</p>}
 
-      <div className="auction-view-tabs" role="tablist" aria-label="Auction views">
-        {[
-          { id: "browse", label: "Browse" },
-          { id: "sell", label: "Create Listing" },
-          { id: "mine", label: "My Listings" },
-        ].map((tab) => (
+      {/* ───────── Browse (left) ───────── */}
+      <div className="ah-browse">
+        <div className="ah-browse-head">
+          <input
+            type="text"
+            className="ah-search"
+            placeholder="Search items or sellers…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
           <button
-            key={tab.id}
             type="button"
-            role="tab"
-            aria-selected={view === tab.id}
-            className={`auction-view-tab ${view === tab.id ? "auction-view-tab-active" : ""}`}
-            onClick={() => setView(tab.id as AuctionView)}
+            className="ah-refresh"
+            onClick={() => {
+              onCommand(filter.trim().length > 0 ? `auction ${filter.trim()}` : "auction list");
+            }}
           >
-            {tab.label}
+            Refresh
           </button>
-        ))}
-      </div>
-
-      <div className="auction-toolbar">
-        <input
-          type="text"
-          className="auction-filter-input"
-          placeholder={view === "browse" ? "Filter listings by item or seller..." : "Search current listings..."}
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
-        <button
-          type="button"
-          className="auction-refresh-btn"
-          onClick={() => {
-            onCommand(filter.trim().length > 0 ? `auction ${filter.trim()}` : "auction list");
-            setLocalMessage("Refreshing auction listings.");
-          }}
-        >
-          Refresh
-        </button>
-      </div>
-
-      {isDemo && (
-        <p className="auction-local-message auction-local-message-error">
-          Demo characters can browse the auction house but can&rsquo;t buy or sell.
-          Use &ldquo;Save Progress&rdquo; in the top bar to claim your character first.
-        </p>
-      )}
-      {localMessage && <p className="auction-local-message">{localMessage}</p>}
-      {activeFeedback && (
-        <p className={`auction-local-message auction-local-message-${activeFeedback.type}`}>
-          {activeFeedback.message}
-        </p>
-      )}
-
-      {view === "browse" && (
-        filtered.length === 0 ? (
-          <div className="auction-empty">
-            <p>No auction listings match your filter.</p>
-            <p>Try refreshing or create a listing from your inventory.</p>
-          </div>
-        ) : (
-          <div className="auction-content">
-            <table className="auction-table">
-              <thead>
-                <tr className="auction-header-row">
-                  <th className="auction-col-item">Item</th>
-                  <th className="auction-col-price">Price</th>
-                  <th className="auction-col-seller">Seller</th>
-                  <th className="auction-col-action" />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((listing) => {
-                  const mineListing = listing.seller.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0;
-                  return (
-                    <tr key={listing.id} className={`auction-row${mineListing ? " auction-row-owned" : ""}`}>
-                      <td className="auction-cell-item">
-                        <div className="auction-item-main">
-                          <span>{listing.itemName}</span>
-                          {mineListing && <span className="auction-owned-badge">Yours</span>}
-                        </div>
-                      </td>
-                      <td className="auction-cell-price">
-                        <span className="auction-gold-coin" />
-                        {listing.price.toLocaleString()}
-                      </td>
-                      <td className="auction-cell-seller">{mineListing ? "You" : listing.seller}</td>
-                      <td className="auction-cell-action">
-                        {mineListing ? (
-                          <button
-                            type="button"
-                            className="auction-buy-btn auction-buy-btn-secondary"
-                            onClick={() => {
-                              onCommand(`auction cancel ${listing.id}`);
-                              setLocalMessage(`Cancelling listing #${listing.id}.`);
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="auction-buy-btn"
-                            disabled={isDemo}
-                            title={isDemo ? "Claim your character to buy from the auction house." : undefined}
-                            onClick={() => {
-                              onCommand(`auction buy ${listing.id}`);
-                              setLocalMessage(`Purchasing ${listing.itemName}.`);
-                            }}
-                          >
-                            Buy
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )
-      )}
-
-      {view === "sell" && (
-        <div className="auction-create">
-          <section className="auction-create-card">
-            <h3 className="auction-create-title">Create a Listing</h3>
-
-            {sortedInventory.length === 0 ? (
-              <div className="auction-empty">
-                <p>You do not have any inventory items available to list right now.</p>
-              </div>
-            ) : (
-              <>
-                <div className="auction-create-field">
-                  <span className="auction-create-label">Inventory Item</span>
-                  <div className="auction-create-grid">
-                    {sortedInventory.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`auction-item-picker ${selectedItemId === item.id ? "auction-item-picker-active" : ""}`}
-                        onClick={() => setSelectedItemId(item.id)}
-                      >
-                        <span className="auction-item-picker-name">{item.name}</span>
-                        <span className="auction-item-picker-meta">
-                          {item.slot ? `${item.slot} item` : "Inventory item"}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <label className="auction-create-field" htmlFor="auction-price-input">
-                  <span className="auction-create-label">Sale Price</span>
-                  <div className="auction-price-row">
-                    <input
-                      id="auction-price-input"
-                      type="number"
-                      min={1}
-                      step={1}
-                      inputMode="numeric"
-                      className="auction-price-input"
-                      placeholder="Enter price in gold"
-                      value={priceDraft}
-                      onChange={(event) => setPriceDraft(event.target.value)}
-                    />
+        </div>
+        <div className="ah-browse-cols">
+          <span className="ah-col-item">Item</span>
+          <span className="ah-col-price">Price</span>
+          <span className="ah-col-seller">Seller</span>
+          <span className="ah-col-buy" />
+        </div>
+        <div className="ah-browse-list">
+          {filtered.length === 0 ? (
+            <p className="ah-empty">No listings match. Try refreshing or list something of your own.</p>
+          ) : (
+            filtered.map((l) => (
+              <div key={l.id} className={`ah-row${isMine(l.seller) ? " ah-row-mine" : ""}`}>
+                <span className="ah-col-item">{l.itemName}</span>
+                <span className="ah-col-price"><span className="ah-coin" />{gold(l.price)}</span>
+                <span className="ah-col-seller">{isMine(l.seller) ? "You" : l.seller}</span>
+                <span className="ah-col-buy">
+                  {isMine(l.seller) ? (
                     <button
                       type="button"
-                      className="auction-create-submit"
-                      disabled={isDemo}
-                      title={isDemo ? "Claim your character to post auction listings." : undefined}
-                      onClick={createListing}
+                      className="ah-btn ah-btn-cancel"
+                      onClick={() => { onCommand(`auction cancel ${l.id}`); setLocalMessage(`Cancelling #${l.id}.`); }}
                     >
-                      Post Listing
+                      Cancel
                     </button>
-                  </div>
-                </label>
-
-                {selectedItem && (
-                  <div className="auction-create-summary">
-                    <span className="auction-create-summary-label">Ready to list</span>
-                    <strong>{selectedItem.name}</strong>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ah-btn ah-btn-buy"
+                      disabled={isDemo}
+                      title={isDemo ? "Claim your character to buy." : undefined}
+                      onClick={() => { onCommand(`auction buy ${l.id}`); setLocalMessage(`Buying ${l.itemName}.`); }}
+                    >
+                      Buy Now
+                    </button>
+                  )}
+                </span>
+              </div>
+            ))
+          )}
         </div>
-      )}
+      </div>
 
-      {view === "mine" && (
-        mine.length === 0 ? (
-          <div className="auction-empty">
-            <p>You do not have any active listings.</p>
-            <p>Open the create-listing view to post something from your inventory.</p>
+      {/* ───────── Your inventory (mid) ───────── */}
+      <div className="ah-inventory">
+        <div className="ah-inv-list">
+          {sortedInventory.length === 0 ? (
+            <p className="ah-empty">No items to list.</p>
+          ) : (
+            sortedInventory.map((it) => {
+              const img = resolveItemImage(it);
+              return (
+                <button
+                  key={it.id}
+                  type="button"
+                  className={`ah-inv-row${selectedItemId === it.id ? " ah-inv-row-active" : ""}`}
+                  onClick={() => setSelectedItemId(it.id)}
+                >
+                  <span className="ah-inv-icon">{img && <img src={img} alt="" />}</span>
+                  <span className="ah-inv-name">{it.name}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* ───────── Selected item (right) ───────── */}
+      <div className="ah-selected">
+        {selectedItem ? (
+          <div className="ah-detail">
+            <div className="ah-detail-icon">{selectedImage && <img src={selectedImage} alt="" />}</div>
+            <div className="ah-detail-body">
+              <h3 className="ah-detail-name">{selectedItem.name}</h3>
+              <p className="ah-detail-sub">{selectedItem.itemType ?? selectedItem.slot ?? "Item"}</p>
+              <dl className="ah-detail-stats">
+                {selectedItem.damage ? (
+                  <div><dt>Weapon Damage</dt><dd>{selectedItem.damage}</dd></div>
+                ) : null}
+                {selectedItem.armor ? (
+                  <div><dt>Armor</dt><dd>+{selectedItem.armor}</dd></div>
+                ) : null}
+                {Object.entries(selectedItem.stats ?? {}).map(([k, v]) => (
+                  <div key={k}><dt>{k}</dt><dd>{v > 0 ? `+${v}` : v}</dd></div>
+                ))}
+              </dl>
+              {selectedItem.enchantments && selectedItem.enchantments.length > 0 && (
+                <p className="ah-detail-ench">{selectedItem.enchantments.join(", ")}</p>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="auction-my-listings">
-            {mine.map((listing) => (
-              <article key={listing.id} className="auction-owned-card">
-                <div className="auction-owned-copy">
-                  <p className="auction-owned-item">{listing.itemName}</p>
-                  <p className="auction-owned-price">{listing.price.toLocaleString()} gold</p>
-                </div>
+          <p className="ah-empty ah-detail-empty">Select an item from your inventory to list it.</p>
+        )}
+      </div>
+
+      {/* ───────── List action (below selected) ───────── */}
+      <div className="ah-list-action">
+        <label className="ah-price-label" htmlFor="ah-price">Set Price</label>
+        <div className="ah-price-row">
+          <input
+            id="ah-price"
+            type="number"
+            min={1}
+            step={1}
+            inputMode="numeric"
+            className="ah-price-input"
+            placeholder="Gold"
+            value={priceDraft}
+            onChange={(e) => setPriceDraft(e.target.value)}
+          />
+          <button
+            type="button"
+            className="ah-list-btn"
+            disabled={isDemo || !selectedItem}
+            title={isDemo ? "Claim your character to list items." : undefined}
+            onClick={listSelected}
+          >
+            List Instantly
+          </button>
+        </div>
+      </div>
+
+      {/* ───────── My listings (bottom-right) ───────── */}
+      <div className="ah-mine">
+        <div className="ah-mine-list">
+          {mine.length === 0 ? (
+            <p className="ah-empty">You have no active listings.</p>
+          ) : (
+            mine.map((l) => (
+              <div key={l.id} className="ah-mine-row">
+                <span className="ah-mine-name">{l.itemName}</span>
+                <span className="ah-mine-price"><span className="ah-coin" />{gold(l.price)}</span>
                 <button
                   type="button"
-                  className="auction-buy-btn auction-buy-btn-secondary"
-                  onClick={() => {
-                    onCommand(`auction cancel ${listing.id}`);
-                    setLocalMessage(`Cancelling listing #${listing.id}.`);
-                  }}
+                  className="ah-btn ah-btn-cancel"
+                  onClick={() => { onCommand(`auction cancel ${l.id}`); setLocalMessage(`Cancelling #${l.id}.`); }}
                 >
-                  Cancel Listing
+                  Cancel
                 </button>
-              </article>
-            ))}
-          </div>
-        )
-      )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
