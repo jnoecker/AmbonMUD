@@ -1,7 +1,13 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mail.MailMessage
+import dev.ambon.engine.commands.handlers.EngineContext
+import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.CommandRouterHarness
@@ -375,5 +381,139 @@ class MailHandlerTest {
 
             val errors = h.drain().filterIsInstance<OutboundEvent.SendError>()
             assertTrue(errors.isNotEmpty(), "Expected error when starting compose while already composing")
+        }
+
+    // -------------------------------------------------------------------------
+    // Attachments — gold + item
+    // -------------------------------------------------------------------------
+
+    /** A standalone handler over the harness's state, for driving compose lines. */
+    private fun composeHandler(h: CommandRouterHarness): MailHandler =
+        MailHandler(
+            ctx = EngineContext(
+                players = h.players,
+                mobs = h.mobs,
+                world = h.world,
+                items = h.items,
+                outbound = h.outbound,
+                combat = h.combat,
+                gmcpEmitter = null,
+                worldState = null,
+            ),
+        )
+
+    private fun sword() = ItemInstance(
+        id = ItemId("sword_1"),
+        item = Item(keyword = "sword", displayName = "a copper sword", slot = ItemSlot.WEAPON, damage = 4),
+    )
+
+    @Test
+    fun `mail send with gold and item consumes from sender and attaches to recipient`() =
+        runTest {
+            val h = harness()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(alice)!!.gold = 1000L
+            h.items.addToInventory(alice, sword())
+            h.drain()
+
+            h.router.handle(alice, Command.Mail.Send("Bob", gold = 100L, itemKeyword = "sword"))
+            h.drain()
+            composeHandler(h).run {
+                handleComposeLine(alice, "A gift for you")
+                handleComposeLine(alice, ".")
+            }
+
+            assertEquals(900L, h.players.get(alice)!!.gold, "sender's gold should be consumed")
+            assertTrue(h.items.inventory(alice).isEmpty(), "sender's item should be consumed")
+            val msg = h.players.get(bob)!!.inbox[0]
+            assertEquals(100L, msg.gold)
+            assertNotNull(msg.item)
+            assertFalse(msg.claimed, "attachment should start unclaimed")
+        }
+
+    @Test
+    fun `claim grants gold and item to recipient and marks claimed`() =
+        runTest {
+            val h = harness()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(alice)!!.gold = 1000L
+            h.items.addToInventory(alice, sword())
+            h.drain()
+            h.router.handle(alice, Command.Mail.Send("Bob", gold = 100L, itemKeyword = "sword"))
+            h.drain()
+            composeHandler(h).run {
+                handleComposeLine(alice, "Gift")
+                handleComposeLine(alice, ".")
+            }
+            val bobGoldBefore = h.players.get(bob)!!.gold
+            h.drain()
+
+            h.router.handle(bob, Command.Mail.Claim(1))
+
+            assertEquals(bobGoldBefore + 100L, h.players.get(bob)!!.gold, "recipient should gain the gold")
+            assertEquals(1, h.items.inventory(bob).size, "recipient should gain the item")
+            assertTrue(h.players.get(bob)!!.inbox[0].claimed, "message should be marked claimed")
+
+            // A second claim finds nothing.
+            h.drain()
+            h.router.handle(bob, Command.Mail.Claim(1))
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>()
+            assertTrue(errors.any { it.text.contains("nothing to claim", ignoreCase = true) }, "got=$errors")
+        }
+
+    @Test
+    fun `cannot delete a message with an unclaimed gift but can after claiming`() =
+        runTest {
+            val h = harness()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(alice)!!.gold = 1000L
+            h.drain()
+            h.router.handle(alice, Command.Mail.Send("Bob", gold = 50L))
+            h.drain()
+            composeHandler(h).run {
+                handleComposeLine(alice, "Coins")
+                handleComposeLine(alice, ".")
+            }
+            h.drain()
+
+            // Delete is refused while the gift is unclaimed.
+            h.router.handle(bob, Command.Mail.Delete(1))
+            assertEquals(1, h.players.get(bob)!!.inbox.size, "message should survive a blocked delete")
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>()
+            assertTrue(errors.any { it.text.contains("claim", ignoreCase = true) }, "got=$errors")
+
+            // After claiming, delete works.
+            h.router.handle(bob, Command.Mail.Claim(1))
+            h.drain()
+            h.router.handle(bob, Command.Mail.Delete(1))
+            assertEquals(0, h.players.get(bob)!!.inbox.size, "message should be deletable after claim")
+        }
+
+    @Test
+    fun `attaching more gold than held is rejected before composing`() =
+        runTest {
+            val h = harness()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(alice)!!.gold = 30L
+            h.drain()
+
+            h.router.handle(alice, Command.Mail.Send("Bob", gold = 100L))
+
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>()
+            assertTrue(errors.any { it.text.contains("only have", ignoreCase = true) }, "got=$errors")
+            assertEquals(null, h.players.get(alice)!!.mailCompose, "compose should not start")
+            assertEquals(30L, h.players.get(alice)!!.gold, "gold should be untouched")
         }
 }

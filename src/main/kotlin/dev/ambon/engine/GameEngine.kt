@@ -1537,7 +1537,7 @@ class GameEngine(
             ),
         ).forEach { it.register(router) }
 
-        mailHandler = MailHandler(ctx = ctx, clock = clock)
+        mailHandler = MailHandler(ctx = ctx, clock = clock, markVitalsDirty = ::markVitalsDirty)
         mailHandler.register(router)
 
         autoQuestHandler = AutoQuestHandler(

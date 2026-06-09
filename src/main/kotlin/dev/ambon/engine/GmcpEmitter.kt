@@ -1849,6 +1849,10 @@ class GmcpEmitter(
                     date = msg.sentAtEpochMs,
                     read = msg.read,
                     preview = msg.body.lineSequence().firstOrNull()?.take(80) ?: "",
+                    gold = msg.gold,
+                    itemName = msg.item?.item?.displayName,
+                    itemImage = msg.item?.item?.image,
+                    claimed = msg.claimed,
                 )
             },
             supportCheck = "Mail",
@@ -1870,6 +1874,10 @@ class GmcpEmitter(
                 body = msg.body,
                 date = msg.sentAtEpochMs,
                 read = msg.read,
+                gold = msg.gold,
+                itemName = msg.item?.item?.displayName,
+                itemImage = msg.item?.item?.image,
+                claimed = msg.claimed,
             ),
             supportCheck = "Mail",
         )
@@ -3230,6 +3238,10 @@ class GmcpEmitter(
         val date: Long,
         val read: Boolean,
         val preview: String,
+        val gold: Long,
+        val itemName: String?,
+        val itemImage: String?,
+        val claimed: Boolean,
     )
 
     private data class MailMessagePayload(
@@ -3239,6 +3251,10 @@ class GmcpEmitter(
         val body: String,
         val date: Long,
         val read: Boolean,
+        val gold: Long,
+        val itemName: String?,
+        val itemImage: String?,
+        val claimed: Boolean,
     )
 
     private data class MailNotificationPayload(

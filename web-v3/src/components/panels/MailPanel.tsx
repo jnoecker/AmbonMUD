@@ -1,16 +1,25 @@
 import { useEffect, useRef, useState } from "react";
-import type { MailEntry, MailMessage } from "../../types";
+import type { ItemSummary, MailEntry, MailMessage } from "../../types";
 
 interface MailPanelProps {
   connected: boolean;
   hasCharacterProfile: boolean;
   inbox: MailEntry[] | null;
   openMessage: MailMessage | null;
+  /** The player's carried items, for the attach-item picker. */
+  inventory: ItemSummary[];
+  /** The player's gold, to cap the attach-gold field. */
+  gold: number;
   onReadMessage: (index: number) => void;
   onDeleteMessage: (index: number) => void;
-  onCompose: (recipient: string, body: string) => void;
+  onCompose: (recipient: string, body: string, gold: number, itemKeyword: string | null) => void;
+  onClaim: (index: number) => void;
   onClearMessage: () => void;
   onCommand: (cmd: string) => void;
+}
+
+function hasUnclaimed(m: { gold: number; itemName: string | null; claimed: boolean }): boolean {
+  return !m.claimed && (m.gold > 0 || m.itemName !== null);
 }
 
 function formatDate(epochMs: number): string {
@@ -24,14 +33,19 @@ export function MailPanel({
   hasCharacterProfile,
   inbox,
   openMessage,
+  inventory,
+  gold,
   onReadMessage,
   onDeleteMessage,
   onCompose,
+  onClaim,
   onClearMessage,
   onCommand,
 }: MailPanelProps) {
   const [composeTarget, setComposeTarget] = useState("");
   const [composeBody, setComposeBody] = useState("");
+  const [composeGold, setComposeGold] = useState("");
+  const [composeItem, setComposeItem] = useState("");
   const [showCompose, setShowCompose] = useState(false);
   const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<number | null>(null);
   const autoLoaded = useRef(false);
@@ -76,6 +90,26 @@ export function MailPanel({
             <span className="mail-message-date">{formatDate(openMessage.date)}</span>
           </div>
           <pre className="mail-message-body">{openMessage.body}</pre>
+          {(openMessage.gold > 0 || openMessage.itemName) && (
+            <div className="mail-attachments">
+              <span className="mail-attach-label">Attached</span>
+              <div className="mail-attach-items">
+                {openMessage.gold > 0 && (
+                  <span className="mail-attach-chip mail-attach-gold">{openMessage.gold.toLocaleString()} gold</span>
+                )}
+                {openMessage.itemName && (
+                  <span className="mail-attach-chip mail-attach-item">{openMessage.itemName}</span>
+                )}
+              </div>
+              {openMessage.claimed ? (
+                <span className="mail-attach-claimed">{"✓"} Claimed</span>
+              ) : (
+                <button className="mail-claim-button" onClick={() => onClaim(openMessage.index)}>
+                  Claim
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -83,25 +117,28 @@ export function MailPanel({
 
   // Compose form
   if (showCompose) {
-    const canSend = composeTarget.trim().length > 0 && composeBody.trim().length > 0;
+    const goldValue = Math.max(0, Math.min(gold, Math.floor(Number(composeGold) || 0)));
+    const canSend = composeTarget.trim().length > 0 && composeBody.trim().length > 0 && goldValue <= gold;
+
+    const resetCompose = () => {
+      setShowCompose(false);
+      setComposeTarget("");
+      setComposeBody("");
+      setComposeGold("");
+      setComposeItem("");
+    };
 
     const handleSend = () => {
       if (!canSend) return;
-      onCompose(composeTarget.trim(), composeBody);
-      setComposeTarget("");
-      setComposeBody("");
-      setShowCompose(false);
+      onCompose(composeTarget.trim(), composeBody, goldValue, composeItem || null);
+      resetCompose();
     };
 
     return (
       <div className="mail-panel" aria-label="Mail">
         <div className="mail-compose">
           <div className="mail-message-header">
-            <button
-              className="mail-back-button"
-              aria-label="Back to inbox"
-              onClick={() => { setShowCompose(false); setComposeTarget(""); setComposeBody(""); }}
-            >
+            <button className="mail-back-button" aria-label="Back to inbox" onClick={resetCompose}>
               &larr; Back
             </button>
             <span className="mail-message-title">New Message</span>
@@ -126,18 +163,43 @@ export function MailPanel({
               value={composeBody}
               onChange={(e) => setComposeBody(e.target.value)}
             />
+            <div className="mail-compose-attach">
+              <div className="mail-compose-attach-field">
+                <label className="mail-compose-label" htmlFor="mail-compose-gold">Attach gold</label>
+                <input
+                  id="mail-compose-gold"
+                  type="number"
+                  min={0}
+                  max={gold}
+                  step={1}
+                  inputMode="numeric"
+                  className="mail-compose-input"
+                  placeholder="0"
+                  value={composeGold}
+                  onChange={(e) => setComposeGold(e.target.value)}
+                />
+                <span className="mail-compose-hint">You have {gold.toLocaleString()} gold</span>
+              </div>
+              <div className="mail-compose-attach-field">
+                <label className="mail-compose-label" htmlFor="mail-compose-item">Attach item</label>
+                <select
+                  id="mail-compose-item"
+                  className="mail-compose-input"
+                  value={composeItem}
+                  onChange={(e) => setComposeItem(e.target.value)}
+                >
+                  <option value="">None</option>
+                  {inventory.map((it) => (
+                    <option key={it.id} value={it.keyword}>{it.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
             <div className="mail-compose-actions">
-              <button
-                className="mail-compose-send"
-                disabled={!canSend}
-                onClick={handleSend}
-              >
+              <button className="mail-compose-send" disabled={!canSend} onClick={handleSend}>
                 Send
               </button>
-              <button
-                className="mail-compose-abort"
-                onClick={() => { setShowCompose(false); setComposeTarget(""); setComposeBody(""); }}
-              >
+              <button className="mail-compose-abort" onClick={resetCompose}>
                 Cancel
               </button>
             </div>
@@ -171,6 +233,9 @@ export function MailPanel({
                 <span className="mail-inbox-marker" aria-hidden="true">{entry.read ? "" : "\u2022"}</span>
                 <span className="mail-inbox-from">{entry.from}</span>
                 <span className="mail-inbox-preview">{entry.preview}</span>
+                {hasUnclaimed(entry) && (
+                  <span className="mail-inbox-gift" title="Has an unclaimed gift" aria-label="Has an unclaimed gift">{"\u{1F381}"}</span>
+                )}
                 <span className="mail-inbox-date">{formatDate(entry.date)}</span>
               </button>
               {confirmDeleteIndex === entry.index ? (

@@ -745,9 +745,19 @@ sealed interface Command {
             val index: Int,
         ) : Mail
 
-        /** `mail send <player>` — begin composing a message to [recipientName]. */
+        /**
+         * `mail send <player> [gold <n>] [item <name>]` — begin composing a
+         * message, optionally attaching gold and/or a single carried item.
+         */
         data class Send(
             val recipientName: String,
+            val gold: Long = 0L,
+            val itemKeyword: String? = null,
+        ) : Mail
+
+        /** `mail claim <n>` — claim the gold/item attached to a received message. */
+        data class Claim(
+            val index: Int,
         ) : Mail
 
         /** `mail abort` — cancel an in-progress compose. */
@@ -1589,12 +1599,18 @@ object CommandParser {
                         ?: return@matchPrefix Command.Invalid(line, "mail delete <number>")
                     Command.Mail.Delete(n)
                 }
-                "send" -> {
-                    val name = parts.getOrNull(1)?.trim() ?: ""
-                    if (name.isEmpty()) Command.Invalid(line, "mail send <player>") else Command.Mail.Send(name)
+                "claim" -> {
+                    val n = parts.getOrNull(1)?.trim()?.toIntOrNull()
+                        ?: return@matchPrefix Command.Invalid(line, "mail claim <number>")
+                    Command.Mail.Claim(n)
                 }
+                "send" -> parseMailSend(line, parts.getOrNull(1)?.trim() ?: "")
                 "abort" -> Command.Mail.Abort
-                else -> Command.Invalid(line, "mail list | mail read <n> | mail delete <n> | mail send <player>")
+                else -> Command.Invalid(
+                    line,
+                    "mail list | mail read <n> | mail delete <n> | mail claim <n> | " +
+                        "mail send <player> [gold <n>] [item <name>]",
+                )
             }
         }?.let { return it }
 
@@ -1922,5 +1938,39 @@ object CommandParser {
             lower == "withdraw" -> Command.Invalid("bank withdraw", "bank withdraw <amount> | bank withdraw <item>")
             else -> Command.Invalid("bank", "bank [balance] | bank deposit ... | bank withdraw ...")
         }
+    }
+
+    /**
+     * Parses `mail send` arguments: `<recipient> [gold <n>] [item <name...>]`.
+     * The recipient is the first token; `gold <n>` and `item <name>` are optional
+     * and may appear in either order, but `item` slurps the remainder so it must
+     * come last.
+     */
+    private fun parseMailSend(line: String, args: String): Command {
+        val usage = "mail send <player> [gold <n>] [item <name>]"
+        if (args.isEmpty()) return Command.Invalid(line, usage)
+        val tokens = args.split(Regex("\\s+"))
+        val recipient = tokens[0]
+        var gold = 0L
+        var itemKeyword: String? = null
+        var i = 1
+        while (i < tokens.size) {
+            when (tokens[i].lowercase()) {
+                "gold" -> {
+                    val amount = tokens.getOrNull(i + 1)?.toLongOrNull()
+                    if (amount == null || amount <= 0L) return Command.Invalid(line, usage)
+                    gold = amount
+                    i += 2
+                }
+                "item" -> {
+                    val keyword = tokens.drop(i + 1).joinToString(" ").trim()
+                    if (keyword.isEmpty()) return Command.Invalid(line, usage)
+                    itemKeyword = keyword
+                    i = tokens.size
+                }
+                else -> return Command.Invalid(line, usage)
+            }
+        }
+        return Command.Mail.Send(recipientName = recipient, gold = gold, itemKeyword = itemKeyword)
     }
 }

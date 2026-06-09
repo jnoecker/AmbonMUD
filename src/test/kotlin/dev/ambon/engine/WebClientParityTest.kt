@@ -243,6 +243,7 @@ class WebClientParityTest {
         "Mail.Read" to "mail",
         "Mail.Delete" to "mail",
         "Mail.Send" to "mail",
+        "Mail.Claim" to "mail",
         "Mail.Abort" to "mail",
         "House.Status" to "house",
         "House.ListTemplates" to "house_list",

@@ -941,6 +941,39 @@ class CommandParserTest {
     }
 
     @Test
+    fun `mail send parses recipient with no attachments`() {
+        assertEquals(Command.Mail.Send("Bob"), CommandParser.parse("mail send Bob"))
+    }
+
+    @Test
+    fun `mail send parses gold and item attachments`() {
+        assertEquals(
+            Command.Mail.Send("Bob", gold = 100L, itemKeyword = null),
+            CommandParser.parse("mail send Bob gold 100"),
+        )
+        assertEquals(
+            Command.Mail.Send("Bob", gold = 0L, itemKeyword = "rusty sword"),
+            CommandParser.parse("mail send Bob item rusty sword"),
+        )
+        assertEquals(
+            Command.Mail.Send("Bob", gold = 50L, itemKeyword = "shield"),
+            CommandParser.parse("mail send Bob gold 50 item shield"),
+        )
+    }
+
+    @Test
+    fun `mail send rejects invalid gold`() {
+        assertTrue(CommandParser.parse("mail send Bob gold abc") is Command.Invalid)
+        assertTrue(CommandParser.parse("mail send Bob gold 0") is Command.Invalid)
+    }
+
+    @Test
+    fun `mail claim parses index`() {
+        assertEquals(Command.Mail.Claim(2), CommandParser.parse("mail claim 2"))
+        assertTrue(CommandParser.parse("mail claim") is Command.Invalid)
+    }
+
+    @Test
     fun `petition parses keyword`() {
         assertEquals(Command.Petition("peanut"), CommandParser.parse("petition peanut"))
         assertEquals(Command.Petition("noecker"), CommandParser.parse("petition Noecker"))
