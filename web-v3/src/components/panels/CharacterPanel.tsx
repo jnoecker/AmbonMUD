@@ -53,6 +53,7 @@ interface CharacterPanelProps {
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
   onOpenEquipment: () => void;
+  onOpenProfessions: () => void;
   onCommand: (command: string) => void;
   onLogout: () => void;
 }
@@ -130,6 +131,7 @@ export function CharacterPanel({
   spriteList,
   prestigeInfo,
   serverAssets,
+  onOpenProfessions,
   onCommand,
   onLogout,
 }: CharacterPanelProps) {
@@ -197,6 +199,7 @@ export function CharacterPanel({
   const niche = a("character_niche");
   const achBtn = a("char_btn_achievements");
   const preBtn = a("char_btn_prestige");
+  const profBtn = a("char_btn_professions");
   const charmArt = a("character_charm");
 
   return (
@@ -439,6 +442,14 @@ export function CharacterPanel({
           <span className="cc-gem-label">Achievements</span>
         </button>
       </div>
+      <button
+        type="button"
+        className={`cc-plaque-btn${profBtn ? " has-art" : ""}`}
+        style={profBtn ? { ["--cc-plaque" as string]: `url("${profBtn}")` } : undefined}
+        onClick={onOpenProfessions}
+      >
+        <span className="cc-plaque-label">Professions</span>
+      </button>
 
       {/* ── Describe pop-out ──────────────────────────────── */}
       {showScribe && (

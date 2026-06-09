@@ -25,6 +25,7 @@ import { MailPanel } from "./components/panels/MailPanel";
 import { MonsterManualPanel } from "./components/panels/MonsterManualPanel";
 import { ItemManualPanel } from "./components/panels/ItemManualPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
+import { ProfessionsPanel } from "./components/panels/ProfessionsPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
 import { BankPanel } from "./components/panels/BankPanel";
 import { StylistPanel } from "./components/panels/StylistPanel";
@@ -880,6 +881,7 @@ function App() {
       case "trainer": return "Trainer";
       case "mail": return "Mail";
       case "crafting": return "Crafting";
+      case "professions": return "Professions";
       case "housing": return "Housing";
       case "leaderboard": return "Leaderboard";
       case "bank": return "The Vault";
@@ -975,6 +977,10 @@ function App() {
             ? "dicetable"
             : drawerPanel === "auction"
             ? "auctionhouse"
+            : drawerPanel === "crafting"
+            ? "forge"
+            : drawerPanel === "professions"
+            ? "professions"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -1025,6 +1031,10 @@ function App() {
             ? state.serverAssets["dice_bg"]
             : drawerPanel === "auction"
             ? state.serverAssets["auction_bg"]
+            : drawerPanel === "crafting"
+            ? state.serverAssets["crafting_bg"]
+            : drawerPanel === "professions"
+            ? state.serverAssets["professions_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1053,7 +1063,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "auction" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
@@ -1089,6 +1099,7 @@ function App() {
             onAbandonQuest={(name) => sendCommand(`quest abandon ${name}`)}
             onOpenInventory={() => openPanel("inventory")}
             onOpenEquipment={() => openPanel("equipment")}
+            onOpenProfessions={() => openPanel("professions")}
             onCommand={sendCommand}
             onLogout={() => {
               try {
@@ -1293,6 +1304,7 @@ function App() {
               state.setToast(`${skill.name} — ${skill.manaCost} MP, ${cd}`);
             }}
             onAssignSlot={quickbar.assign}
+            onOpenCrafting={() => openPanel("crafting")}
           />
         )}
 
@@ -1324,14 +1336,21 @@ function App() {
           <CraftingPanel
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
-            skills={state.craftingSkills}
             recipes={state.craftingRecipes}
-            nodes={state.craftingNodes}
-            gatherCooldownUntilMs={state.gatherCooldownUntilMs}
+            skills={state.craftingSkills}
+            inventory={state.inventory}
             uiFeedbackFeed={state.uiFeedbackFeed}
-            onGather={(keyword) => sendCommand(`gather ${keyword}`)}
             onCraft={(recipeKeyword) => sendCommand(`craft ${recipeKeyword}`)}
             onRequestRecipes={() => sendCommand("recipes")}
+            onLoadSkills={() => sendCommand("craftskills")}
+          />
+        )}
+
+        {drawerPanel === "professions" && (
+          <ProfessionsPanel
+            connected={connected}
+            hasCharacterProfile={hasCharacterProfile}
+            skills={state.craftingSkills}
             onLoadSkills={() => sendCommand("craftskills")}
           />
         )}

@@ -1,269 +1,219 @@
-import { useEffect, useRef, useState } from "react";
-import type { CraftingSkill, CraftingRecipe, CraftingNode, UiFeedbackEntry } from "../../types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CraftingRecipe, CraftingSkill, ItemSummary, UiFeedbackEntry } from "../../types";
 
 interface CraftingPanelProps {
   connected: boolean;
   hasCharacterProfile: boolean;
-  skills: CraftingSkill[];
   recipes: CraftingRecipe[];
-  nodes: CraftingNode[];
-  gatherCooldownUntilMs: number;
+  skills: CraftingSkill[];
+  inventory: ItemSummary[];
   uiFeedbackFeed: UiFeedbackEntry[];
-  onGather: (keyword: string) => void;
-  onCraft: (recipeKeyword: string) => void;
+  onCraft: (recipeName: string) => void;
   onRequestRecipes: () => void;
   onLoadSkills: () => void;
 }
 
+type Category = "all" | "smithing" | "alchemy" | "misc";
+
+const TABS: { key: Category; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "smithing", label: "Smithing" },
+  { key: "alchemy", label: "Alchemy" },
+  { key: "misc", label: "Misc" },
+];
+
+function categoryOf(skill: string): Category {
+  const s = skill.toLowerCase();
+  if (s === "smithing") return "smithing";
+  if (s === "alchemy") return "alchemy";
+  return "misc";
+}
+
+function glyph(skill: string): string {
+  switch (categoryOf(skill)) {
+    case "smithing": return "⚒";
+    case "alchemy": return "⚗";
+    default: return "▣";
+  }
+}
+
+/**
+ * Crafting Recipes — reskinned onto the painted `crafting_bg` forge frame. The
+ * left page lists known recipes (filterable by profession); the right page
+ * shows the selected recipe with its required ingredients (have / need) and a
+ * CRAFT control overlaid on the painted button.
+ */
 export function CraftingPanel({
   connected,
   hasCharacterProfile,
-  skills,
   recipes,
-  nodes,
-  gatherCooldownUntilMs,
+  skills,
+  inventory,
   uiFeedbackFeed,
-  onGather,
   onCraft,
   onRequestRecipes,
   onLoadSkills,
 }: CraftingPanelProps) {
-  const [activeTab, setActiveTab] = useState<"skills" | "recipes" | "nodes">("skills");
-  const skillsRequestedRef = useRef(false);
-  const recipesRequestedRef = useRef(false);
   const ready = connected && hasCharacterProfile;
-
-  const [now, setNow] = useState(() => Date.now());
-  const gatherRemainingMs = Math.max(0, gatherCooldownUntilMs - now);
-  const gatherOnCooldown = gatherRemainingMs > 0;
-
-  useEffect(() => {
-    if (!gatherOnCooldown) return;
-    const id = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(id);
-  }, [gatherOnCooldown]);
-
-  const gatherCountdownLabel = gatherOnCooldown
-    ? `Ready in ${Math.ceil(gatherRemainingMs / 1000)}s`
-    : "Gather";
-
-  const latestCraftingFeedback = uiFeedbackFeed
-    .filter((entry) => entry.scope === "crafting")
-    .slice(-1)[0];
+  const [tab, setTab] = useState<Category>("all");
+  const [selectedId, setSelectedId] = useState<string>("");
+  const recipesRequested = useRef(false);
+  const skillsRequested = useRef(false);
 
   useEffect(() => {
     if (!ready) return;
-    if (skills.length === 0 && !skillsRequestedRef.current) {
-      skillsRequestedRef.current = true;
-      onLoadSkills();
-    }
-  }, [ready, skills.length, onLoadSkills]);
-
-  useEffect(() => {
-    if (!ready || activeTab !== "recipes") return;
-    if (recipes.length === 0 && !recipesRequestedRef.current) {
-      recipesRequestedRef.current = true;
+    if (recipes.length === 0 && !recipesRequested.current) {
+      recipesRequested.current = true;
       onRequestRecipes();
     }
-  }, [ready, activeTab, recipes.length, onRequestRecipes]);
+    if (skills.length === 0 && !skillsRequested.current) {
+      skillsRequested.current = true;
+      onLoadSkills();
+    }
+  }, [ready, recipes.length, skills.length, onRequestRecipes, onLoadSkills]);
 
-  if (!connected) return <p className="empty-note">Connect to view crafting.</p>;
-  if (!hasCharacterProfile) return <p className="empty-note">Log in to view crafting.</p>;
+  const feedback = useMemo(
+    () => uiFeedbackFeed.filter((e) => e.scope === "crafting").slice(-1)[0] ?? null,
+    [uiFeedbackFeed],
+  );
 
-  const skillLevels = new Map(skills.map((s) => [s.name, s.level]));
-  const skillTypesByName = new Map(skills.map((s) => [s.name, s.type]));
+  // Inventory counts by item name, for ingredient have / need.
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const it of inventory) {
+      const k = it.name.toLowerCase();
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return m;
+  }, [inventory]);
+  const have = (name: string) => counts.get(name.toLowerCase()) ?? 0;
+
+  const skillLevels = useMemo(() => new Map(skills.map((s) => [s.name.toLowerCase(), s.level])), [skills]);
+
+  const filtered = useMemo(
+    () => (tab === "all" ? recipes : recipes.filter((r) => categoryOf(r.skill) === tab)),
+    [recipes, tab],
+  );
+
+  const selected = filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null;
+
+  const recipeStatus = (r: CraftingRecipe) => {
+    const levelOk = (skillLevels.get(r.skill.toLowerCase()) ?? 0) >= r.skillRequired;
+    const materialsOk = r.materials.every((m) => have(m.name) >= m.quantity);
+    return { levelOk, materialsOk, canCraft: levelOk && materialsOk };
+  };
+
+  if (!connected) return <div className="cr-board"><p className="cr-empty">Connect to view crafting.</p></div>;
+  if (!hasCharacterProfile) return <div className="cr-board"><p className="cr-empty">Log in to view crafting.</p></div>;
 
   return (
-    <div className="crafting-panel">
-      {latestCraftingFeedback && (
-        <div
-          key={latestCraftingFeedback.id}
-          className={`crafting-feedback crafting-feedback-${latestCraftingFeedback.type}`}
-          role="status"
-          aria-live="polite"
-        >
-          {latestCraftingFeedback.message}
-        </div>
+    <div className="cr-board">
+      {feedback && (
+        <p key={feedback.id} className={`cr-toast cr-toast-${feedback.type}`} role="status" aria-live="polite">
+          {feedback.message}
+        </p>
       )}
-      <div className="crafting-tab-bar" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          className={`crafting-tab ${activeTab === "skills" ? "crafting-tab-active" : ""}`}
-          aria-selected={activeTab === "skills"}
-          onClick={() => setActiveTab("skills")}
-        >
-          Professions
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className={`crafting-tab ${activeTab === "recipes" ? "crafting-tab-active" : ""}`}
-          aria-selected={activeTab === "recipes"}
-          onClick={() => setActiveTab("recipes")}
-        >
-          Recipes
-        </button>
-        {nodes.length > 0 && (
-          <button
-            type="button"
-            role="tab"
-            className={`crafting-tab ${activeTab === "nodes" ? "crafting-tab-active" : ""}`}
-            aria-selected={activeTab === "nodes"}
-            onClick={() => setActiveTab("nodes")}
-          >
-            Nodes
-            <span className="crafting-tab-badge">{nodes.length}</span>
-          </button>
+
+      {/* ───────── Recipe list (left page) ───────── */}
+      <div className="cr-recipes">
+        <div className="cr-tabs" role="tablist" aria-label="Recipe categories">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.key}
+              className={`cr-tab${tab === t.key ? " cr-tab-active" : ""}`}
+              onClick={() => { setTab(t.key); setSelectedId(""); }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="cr-recipe-list">
+          {filtered.length === 0 ? (
+            <p className="cr-empty">No recipes known in this craft.</p>
+          ) : (
+            filtered.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                className={`cr-recipe${selected?.id === r.id ? " cr-recipe-active" : ""}`}
+                onClick={() => setSelectedId(r.id)}
+              >
+                <span className="cr-recipe-icon" aria-hidden="true">{glyph(r.skill)}</span>
+                <span className="cr-recipe-text">
+                  <span className="cr-recipe-name">{r.name}</span>
+                  <span className="cr-recipe-skill">{r.skill}</span>
+                </span>
+                <span className="cr-recipe-mark" aria-hidden="true">{glyph(r.skill)}</span>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* ───────── Selected recipe (right page) ───────── */}
+      <div className="cr-detail">
+        {selected ? (
+          <>
+            <div className="cr-detail-head">
+              <div className="cr-detail-icon" aria-hidden="true">{glyph(selected.skill)}</div>
+              <div className="cr-detail-titles">
+                <h3 className="cr-detail-name">{selected.name}</h3>
+                <p className="cr-detail-skill"><span className="cr-detail-skill-mark" aria-hidden="true">{glyph(selected.skill)}</span>{selected.skill}</p>
+                <p className="cr-detail-desc">
+                  Crafts {selected.outputName}
+                  {selected.outputQuantity > 1 ? ` ×${selected.outputQuantity}` : ""}
+                  {selected.skillRequired > 1 ? ` — requires ${selected.skill} Lv ${selected.skillRequired}` : ""}.
+                </p>
+              </div>
+            </div>
+
+            <div className="cr-ingredients">
+              <div className="cr-ingredients-title">Required Ingredients</div>
+              <div className="cr-ingredient-list">
+                {selected.materials.map((m, i) => {
+                  const has = have(m.name);
+                  const ok = has >= m.quantity;
+                  return (
+                    <div key={i} className="cr-ingredient">
+                      <span className="cr-ing-icon" aria-hidden="true">◈</span>
+                      <span className="cr-ing-name">{m.name}</span>
+                      <span className={`cr-ing-count${ok ? " cr-ing-ok" : " cr-ing-short"}`}>
+                        {has} / {m.quantity}
+                      </span>
+                      <span className={`cr-ing-mark${ok ? " cr-ing-ok" : " cr-ing-short"}`} aria-hidden="true">
+                        {ok ? "✓" : "✗"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="cr-empty cr-detail-empty">Select a recipe to see its details.</p>
         )}
       </div>
 
-      {activeTab === "skills" && (
-        <div className="crafting-section" role="tabpanel" aria-label="Professions">
-          {skills.length === 0 ? (
-            <div className="crafting-empty-state">
-              <span className="crafting-empty-icon">{"\u2692"}</span>
-              <p className="empty-note">The workshop is quiet&hellip;</p>
-            </div>
-          ) : (
-            <ul className="crafting-skill-list">
-              {skills.map((s) => {
-                const isMax = s.level >= s.maxLevel;
-                const pct = isMax ? 100 : s.xpToNext > 0 ? Math.round((s.xp / s.xpToNext) * 100) : 0;
-                const typeClass = `crafting-skill-item-${s.type}`;
-                const maxClass = isMax ? "crafting-skill-item-max" : "";
-                return (
-                  <li key={s.id} className={`crafting-skill-item ${typeClass} ${maxClass}`.trim()}>
-                    <div className="crafting-skill-header">
-                      <span className="crafting-skill-name">{s.name}</span>
-                      <span className={`crafting-skill-chip crafting-skill-chip-${s.type}`}>
-                        {s.type === "gathering" ? "Gathering" : "Crafting"}
-                      </span>
-                    </div>
-                    <div className="crafting-skill-level">
-                      <span className="crafting-skill-level-label">Level</span>
-                      <span className="crafting-skill-level-value">
-                        {s.level}
-                        <span className="crafting-skill-level-max"> / {s.maxLevel}</span>
-                      </span>
-                      {isMax && <span className="crafting-skill-max-badge">Mastered</span>}
-                    </div>
-                    <div
-                      className={`crafting-xp-bar-track crafting-xp-bar-track-${s.type}`}
-                      role="progressbar"
-                      aria-valuenow={pct}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`${s.name} XP progress`}
-                    >
-                      <div className={`crafting-xp-bar-fill crafting-xp-bar-fill-${s.type}`} style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="crafting-xp-label">
-                      {isMax ? "\u2726 Mastered" : `${s.xp.toLocaleString()} / ${s.xpToNext.toLocaleString()} XP`}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
-
-      {activeTab === "recipes" && (
-        <div className="crafting-section" role="tabpanel" aria-label="Recipes">
-          {recipes.length === 0 ? (
-            <div className="crafting-empty-state">
-              <span className="crafting-empty-icon">{"\u2726"}</span>
-              <p className="empty-note">No recipes known yet.</p>
-            </div>
-          ) : (
-            <ul className="crafting-recipe-list">
-              {recipes.map((r) => {
-                const playerLevel = skillLevels.get(r.skill) ?? 0;
-                const canCraft = playerLevel >= r.skillRequired;
-                const recipeType = skillTypesByName.get(r.skill) ?? "crafting";
-                const typeClass = `crafting-recipe-item-${recipeType}`;
-                const lockedClass = !canCraft ? "crafting-recipe-item-locked" : "";
-                return (
-                  <li key={r.id} className={`crafting-recipe-item ${typeClass} ${lockedClass}`.trim()}>
-                    <div className="crafting-recipe-header">
-                      <span className="crafting-recipe-name">{r.name}</span>
-                      <button
-                        type="button"
-                        className="crafting-craft-button"
-                        disabled={!canCraft}
-                        onClick={() => onCraft(r.name)}
-                      >
-                        Craft
-                      </button>
-                    </div>
-                    <div className="crafting-recipe-meta">
-                      <span className={`crafting-recipe-req ${!canCraft ? "crafting-req-unmet" : ""}`}>
-                        {r.skill} Lv {r.skillRequired}
-                      </span>
-                      {r.levelRequired > 1 && (
-                        <span className="crafting-recipe-req">Char Lv {r.levelRequired}</span>
-                      )}
-                    </div>
-                    <div className="crafting-recipe-materials">
-                      {r.materials.map((m, i) => (
-                        <span key={i} className="crafting-material">
-                          <span className="crafting-material-name">{m.name}</span>
-                          <span className="crafting-material-qty">&times;{m.quantity}</span>
-                        </span>
-                      ))}
-                      <span className="crafting-recipe-arrow" aria-hidden="true">{"\u276f"}</span>
-                      <span className="crafting-recipe-output">
-                        {r.outputName}
-                        {r.outputQuantity > 1 && (
-                          <span className="crafting-recipe-output-qty">&times;{r.outputQuantity}</span>
-                        )}
-                      </span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
-
-      {activeTab === "nodes" && (
-        <div className="crafting-section" role="tabpanel" aria-label="Gathering Nodes">
-          {nodes.length === 0 ? (
-            <div className="crafting-empty-state">
-              <span className="crafting-empty-icon">{"\u2698"}</span>
-              <p className="empty-note">Nothing to gather here.</p>
-            </div>
-          ) : (
-            <ul className="crafting-node-list">
-              {nodes.map((n) => {
-                const playerLevel = skillLevels.get(n.skill) ?? 0;
-                const canGather = playerLevel >= n.skillRequired;
-                const lockedClass = !canGather ? "crafting-node-item-locked" : "";
-                return (
-                  <li key={n.id} className={`crafting-node-item ${lockedClass}`.trim()}>
-                    <div className="crafting-node-info">
-                      <span className="crafting-node-name">{n.name}</span>
-                      <span className={`crafting-node-skill ${!canGather ? "crafting-req-unmet" : ""}`}>
-                        {n.skill} Lv {n.skillRequired}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      className={`crafting-gather-button${gatherOnCooldown ? " crafting-gather-button-cooldown" : ""}`}
-                      disabled={!canGather || gatherOnCooldown}
-                      onClick={() => onGather(n.name)}
-                      title={gatherOnCooldown ? gatherCountdownLabel : undefined}
-                    >
-                      {gatherOnCooldown ? gatherCountdownLabel : "Gather"}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+      {/* Hotspot over the painted CRAFT button (board-level so it lands on the art). */}
+      {selected && (
+        <button
+          type="button"
+          className={`cr-craft-hotspot${recipeStatus(selected).canCraft ? "" : " cr-craft-disabled"}`}
+          disabled={!recipeStatus(selected).canCraft}
+          title={
+            !recipeStatus(selected).levelOk
+              ? `Requires ${selected.skill} Lv ${selected.skillRequired}`
+              : !recipeStatus(selected).materialsOk
+                ? "You are missing ingredients."
+                : `Craft ${selected.name}`
+          }
+          onClick={() => onCraft(selected.name)}
+        >
+          <span className="sr-only">Craft {selected.name}</span>
+        </button>
       )}
     </div>
   );
