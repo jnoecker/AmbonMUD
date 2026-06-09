@@ -973,6 +973,8 @@ function App() {
             ? "fortune"
             : drawerPanel === "dice"
             ? "dicetable"
+            : drawerPanel === "auction"
+            ? "auctionhouse"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -1021,6 +1023,8 @@ function App() {
             ? state.serverAssets["lottery_bg"]
             : drawerPanel === "dice"
             ? state.serverAssets["dice_bg"]
+            : drawerPanel === "auction"
+            ? state.serverAssets["auction_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1049,7 +1053,7 @@ function App() {
                             ? state.serverAssets["mail_bg"]
                             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "auction" ? 0.94 : undefined}
       >
         {drawerPanel === "character" && (
           <CharacterPanel
