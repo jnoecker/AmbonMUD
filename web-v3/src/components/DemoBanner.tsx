@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { ArtScene } from "../canvas/ArtScene";
+import { ART_FIT_LANDSCAPE, useMediaFits } from "../canvas/loginArtFit";
 
 interface DemoBannerProps {
   /**
@@ -7,25 +9,41 @@ interface DemoBannerProps {
    * Driven by App.tsx when the demo character first hits level 2.
    */
   autoOpen?: boolean;
+  /**
+   * External open requests (the canvas Claim button). Each increment opens
+   * the modal, even after the auto-open was dismissed.
+   */
+  openRequestId?: number;
+  /** Painted Save Your Character scene (`login_claim_bg`); null → CSS dialog. */
+  backgroundImage: string | null;
   /** Submits `claim [name] <password>` over the line interface. */
   onClaim: (line: string) => void;
 }
 
 /**
  * Persistent topbar banner shown while the character is an unclaimed demo.
- * Click "Save Progress" to open a small modal collecting an optional new
- * name and a required password, then sends a `claim` command.
+ * Click "Save Progress" to open a modal collecting an optional new name and
+ * a required password, then sends a `claim` command. When the painted claim
+ * scene is available the modal renders as a full-screen art window.
  */
-export function DemoBanner({ autoOpen = false, onClaim }: DemoBannerProps) {
+export function DemoBanner({ autoOpen = false, openRequestId = 0, backgroundImage, onClaim }: DemoBannerProps) {
   const [manualOpen, setManualOpen] = useState(false);
   const [dismissedAuto, setDismissedAuto] = useState(false);
+  const [handledRequestId, setHandledRequestId] = useState(0);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const artFits = useMediaFits(ART_FIT_LANDSCAPE);
 
   // Render-time derivation: auto-opens once when autoOpen flips true, and stays
-  // closed if the user dismisses it. Manual reopening is independent.
+  // closed if the user dismisses it. Manual reopening (banner button or the
+  // canvas Claim button) is independent.
+  if (openRequestId > handledRequestId) {
+    setHandledRequestId(openRequestId);
+    setManualOpen(true);
+  }
   const open = manualOpen || (autoOpen && !dismissedAuto);
 
   const close = useCallback(() => {
@@ -54,6 +72,8 @@ export function DemoBanner({ autoOpen = false, onClaim }: DemoBannerProps) {
     setDismissedAuto(true);
   }, [name, password, onClaim]);
 
+  const artOpen = open && backgroundImage && artFits;
+
   return (
     <>
       <div className="demo-banner" role="status">
@@ -70,7 +90,58 @@ export function DemoBanner({ autoOpen = false, onClaim }: DemoBannerProps) {
         </button>
       </div>
 
-      {open && (
+      {artOpen && backgroundImage && (
+        <ArtScene
+          url={backgroundImage}
+          stageClass="login-art-stage--book login-art-stage--claim"
+          label="Save your demo character"
+        >
+          <h1 className="sr-only">Save your character — pick a password, optionally rename</h1>
+          <form onSubmit={handleSubmit} className="login-art-form">
+            <input
+              ref={inputRef}
+              className="login-art-input-dark lcm-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Leave blank to keep current name"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={16}
+              aria-label="New name (optional)"
+            />
+            <input
+              className="login-art-input-dark lcm-password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Choose a password"
+              autoComplete="new-password"
+              required
+              aria-label="Password"
+            />
+            <button
+              type="button"
+              className="login-art-hotspot login-art-wand lcm-toggle"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-pressed={showPassword}
+              title={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            />
+            <button type="submit" className="login-art-hotspot lcm-save" title="Save Character" aria-label="Save character" />
+            <button
+              type="button"
+              className="login-art-hotspot lcm-notnow"
+              onClick={close}
+              title="Not now"
+              aria-label="Not now"
+            />
+          </form>
+          {error && <p className="login-art-error-chip login-art-error-chip--dark lcm-error" role="alert">{error}</p>}
+        </ArtScene>
+      )}
+
+      {open && !artOpen && (
         <div className="login-modal-backdrop" onClick={close}>
           <div
             className="login-modal demo-claim-modal"

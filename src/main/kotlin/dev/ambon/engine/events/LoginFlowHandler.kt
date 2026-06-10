@@ -415,6 +415,14 @@ internal class LoginFlowHandler(
     }
 
     internal suspend fun promptForName(sessionId: SessionId) {
+        // Pre-auth asset delivery: the painted login screen needs Server.Assets before
+        // authentication (the post-login session bundle is too late). Sent raw like
+        // Login.Prompt below — the emitter's gated path would drop it because the
+        // client's Core.Supports.Set may not have registered yet at connect time.
+        // Harmless for telnet: transports drop GMCP for clients that never negotiated.
+        gmcpEmitter.serverAssetsJson()?.let { assetsJson ->
+            outbound.send(OutboundEvent.GmcpData(sessionId, "Server.Assets", assetsJson))
+        }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Enter your name:"))
         if (demoEnabled) {
             outbound.send(

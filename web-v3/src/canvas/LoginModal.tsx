@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { CSSProperties, FormEvent } from "react";
 import type { LoginClassOption, LoginErrorState, LoginPromptState, LoginRaceOption } from "../types";
+import { ArtScene } from "./ArtScene";
+import { ART_FIT_LANDSCAPE, ART_FIT_PORTRAIT, useMediaFits } from "./loginArtFit";
 
 interface LoginModalProps {
   loginPrompt: LoginPromptState;
   loginError: LoginErrorState | null;
+  /** Painted login scene art (`login_*_bg` from Server.Assets); missing keys → CSS UI. */
+  serverAssets: Record<string, string>;
   onSubmit: (value: string) => void;
 }
 
-export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProps) {
+export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: LoginModalProps) {
   const [inputValue, setInputValue] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [prevState, setPrevState] = useState(loginPrompt.state);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -17,6 +22,7 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
   if (loginPrompt.state !== prevState) {
     setPrevState(loginPrompt.state);
     setInputValue("");
+    setShowPassword(false);
   }
 
   useEffect(() => {
@@ -35,9 +41,22 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
     onSubmit(value);
   }, [onSubmit]);
 
+  const artFitsLandscape = useMediaFits(ART_FIT_LANDSCAPE);
+  const artFitsPortrait = useMediaFits(ART_FIT_PORTRAIT);
+
   const errorForState = loginError?.state === loginPrompt.state ? loginError.message : null;
 
   const isWide = loginPrompt.state === "raceSelection" || loginPrompt.state === "classSelection";
+
+  const landscapeArt = (key: string): string | null =>
+    artFitsLandscape ? (serverAssets[key] ?? null) : null;
+  const portraitArt = (key: string): string | null =>
+    artFitsPortrait ? (serverAssets[key] ?? null) : null;
+
+  const backgroundImage = serverAssets["login_bg"] ?? null;
+  const artVars = backgroundImage
+    ? ({ "--login-art": `url("${backgroundImage}")` } as CSSProperties)
+    : undefined;
 
   const stepDialogLabel: Record<string, string> = {
     password: "Sign in",
@@ -48,6 +67,47 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
   };
 
   if (loginPrompt.state === "name") {
+    const art = landscapeArt("login_bg");
+    if (art) {
+      return (
+        <ArtScene url={art} stageClass="login-art-stage--wide" label="Welcome to AmbonMUD">
+          <h1 className="sr-only">AmbonMUD — enter a character name to log in or create, or start a demo</h1>
+          {errorForState && (
+            <p className="login-art-error" id="login-art-error" role="alert">{errorForState}</p>
+          )}
+          <form onSubmit={handleSubmit} className="login-art-form">
+            <input
+              ref={inputRef}
+              className="login-art-input"
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Character name"
+              autoComplete="off"
+              spellCheck={false}
+              aria-label="Character name"
+              aria-invalid={errorForState ? true : undefined}
+              aria-describedby={errorForState ? "login-art-error" : undefined}
+            />
+            <button
+              type="submit"
+              className="login-art-hotspot login-art-submit"
+              title="Create / Login"
+              aria-label="Create or log in"
+            />
+          </form>
+          {loginPrompt.demoEnabled && (
+            <button
+              type="button"
+              className="login-art-hotspot login-art-demo"
+              onClick={() => onSubmit("demo")}
+              title="Start Demo"
+              aria-label="Start demo — play instantly as a guest"
+            />
+          )}
+        </ArtScene>
+      );
+    }
     return (
       <div className="login-scene-root" role="dialog" aria-modal="true" aria-label="Welcome to AmbonMUD">
         <LoginSceneBackground />
@@ -117,8 +177,150 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
     );
   }
 
+  if (loginPrompt.state === "password") {
+    const art = landscapeArt("login_password_bg");
+    if (art) {
+      return (
+        <ArtScene url={art} stageClass="login-art-stage--book login-art-stage--password" label="Welcome back — enter your password">
+          <h1 className="sr-only">Welcome back, {loginPrompt.name} — enter your password</h1>
+          <span className="login-art-chip lpw-chip" aria-hidden="true">{loginPrompt.name}</span>
+          <form onSubmit={handleSubmit} className="login-art-form">
+            <input
+              ref={inputRef}
+              className="login-art-input login-art-input--password lpw-input"
+              type={showPassword ? "text" : "password"}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Password"
+              autoComplete="off"
+              aria-label="Password"
+              aria-invalid={errorForState ? true : undefined}
+              aria-describedby={errorForState ? "login-art-error" : undefined}
+            />
+            <button
+              type="button"
+              className="login-art-hotspot login-art-wand lpw-wand"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-pressed={showPassword}
+              title={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            />
+            <button type="submit" className="login-art-hotspot lpw-submit" title="Login" aria-label="Log in" />
+          </form>
+          {errorForState && <p className="login-art-error-chip lpw-error" id="login-art-error" role="alert">{errorForState}</p>}
+        </ArtScene>
+      );
+    }
+  }
+
+  if (loginPrompt.state === "newPassword") {
+    const art = landscapeArt("login_set_password_bg");
+    if (art) {
+      return (
+        <ArtScene url={art} stageClass="login-art-stage--wide login-art-stage--setpw" label="Choose a password">
+          <h1 className="sr-only">Choose a password for {loginPrompt.name}</h1>
+          <span className="login-art-chip lsp-chip" aria-hidden="true">{loginPrompt.name}</span>
+          <form onSubmit={handleSubmit} className="login-art-form">
+            <input
+              ref={inputRef}
+              className="login-art-input login-art-input--password lsp-input"
+              type={showPassword ? "text" : "password"}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="New password"
+              autoComplete="new-password"
+              aria-label="New password"
+              aria-invalid={errorForState ? true : undefined}
+              aria-describedby={errorForState ? "login-art-error" : undefined}
+            />
+            <button
+              type="button"
+              className="login-art-hotspot login-art-wand lsp-wand"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-pressed={showPassword}
+              title={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            />
+            <button type="submit" className="login-art-hotspot lsp-submit" title="Set Password" aria-label="Set password" />
+          </form>
+          {errorForState && <p className="login-art-error-chip lsp-error" id="login-art-error" role="alert">{errorForState}</p>}
+        </ArtScene>
+      );
+    }
+  }
+
+  if (loginPrompt.state === "confirmCreate") {
+    const art = landscapeArt("login_confirm_bg");
+    if (art) {
+      return (
+        <ArtScene url={art} stageClass="login-art-stage--book login-art-stage--confirm" label="Create a new character?">
+          <h1 className="sr-only">No character named {loginPrompt.name} was found. Create a new character?</h1>
+          <span className="login-art-chip lcf-chip" aria-hidden="true">{loginPrompt.name}</span>
+          <button
+            type="button"
+            className="login-art-hotspot lcf-yes"
+            onClick={() => handleChoice("yes")}
+            title="Yes, create"
+            aria-label="Yes, create this character"
+          />
+          <button
+            type="button"
+            className="login-art-hotspot lcf-no"
+            onClick={() => handleChoice("no")}
+            title="No, go back"
+            aria-label="No, go back"
+          />
+          {errorForState && <p className="login-art-error-chip lcf-error" role="alert">{errorForState}</p>}
+        </ArtScene>
+      );
+    }
+  }
+
+  if (loginPrompt.state === "raceSelection") {
+    const art = portraitArt("login_race_bg");
+    if (art) {
+      return (
+        <SlotArtScene
+          art={art}
+          stageClass="login-art-stage--tall login-art-stage--race"
+          label="Choose your race"
+          cellPrefix="lrc"
+          detailClass="lrc-detail"
+          chooseClass="lrc-choose"
+          errorClass="lrc-error"
+          options={loginPrompt.races}
+          error={errorForState}
+          onSelect={(index) => handleChoice(String(index + 1))}
+        />
+      );
+    }
+  }
+
+  if (loginPrompt.state === "classSelection") {
+    const art = portraitArt("login_class_bg");
+    if (art) {
+      return (
+        <SlotArtScene
+          art={art}
+          stageClass="login-art-stage--tall login-art-stage--class"
+          label="Choose your class"
+          cellPrefix="lcl"
+          detailClass="lcl-detail"
+          chooseClass="lcl-choose"
+          errorClass="lcl-error"
+          options={loginPrompt.classes}
+          error={errorForState}
+          onSelect={(index) => handleChoice(String(index + 1))}
+        />
+      );
+    }
+  }
+
   return (
-    <div className="login-modal-backdrop">
+    <div
+      className={`login-modal-backdrop${backgroundImage ? " login-modal-backdrop--art" : ""}`}
+      style={artVars}
+    >
       <div
         className={`login-modal${isWide ? " login-modal--wide" : ""}`}
         role="dialog"
@@ -352,6 +554,74 @@ function ClassCardGrid({ classes, error, onSelect }: ClassCardGridProps) {
         Choose {cls.name}
       </button>
     </div>
+  );
+}
+
+/* ── Painted slot-grid scene (race & class selection) ─────────────────── */
+
+interface SlotArtSceneProps {
+  art: string;
+  stageClass: string;
+  label: string;
+  /** CSS class prefix for the painted slots (e.g. "lrc" → .lrc-c1 … .lrc-c9). */
+  cellPrefix: string;
+  detailClass: string;
+  chooseClass: string;
+  errorClass: string;
+  options: Array<LoginRaceOption | LoginClassOption>;
+  error: string | null;
+  onSelect: (index: number) => void;
+}
+
+function SlotArtScene({
+  art, stageClass, label, cellPrefix, detailClass, chooseClass, errorClass, options, error, onSelect,
+}: SlotArtSceneProps) {
+  const [selected, setSelected] = useState(0);
+  const current = options[selected];
+  if (!current) return null;
+
+  const traits = "traits" in current ? current.traits : undefined;
+
+  return (
+    <ArtScene url={art} stageClass={stageClass} label={label}>
+      <h1 className="sr-only">{label}</h1>
+      {error && <p className={`login-art-error-chip ${errorClass}`} role="alert">{error}</p>}
+      {options.map((opt, i) => (
+        <button
+          key={opt.id}
+          type="button"
+          className={`login-art-cell ${cellPrefix}-c${i + 1}${i === selected ? " selected" : ""}`}
+          onClick={() => setSelected(i)}
+          onDoubleClick={() => onSelect(i)}
+          aria-label={opt.name}
+          aria-pressed={i === selected}
+        >
+          {opt.image ? (
+            <img src={opt.image} alt="" className="login-art-cell-img" draggable={false} />
+          ) : (
+            <span className="login-art-cell-glyph" aria-hidden="true">✦</span>
+          )}
+          <span className="login-art-cell-label">{opt.name}</span>
+        </button>
+      ))}
+      <div className={`login-art-detail ${detailClass}`} key={current.id}>
+        <h3 className="login-art-detail-name">{current.name}</h3>
+        {current.stats && <p className="login-art-detail-stats">{current.stats}</p>}
+        {current.description && <p className="login-art-detail-desc">{current.description}</p>}
+        {traits && traits.length > 0 && (
+          <p className="login-art-detail-traits">
+            {traits.map((t) => t.split(":", 1)[0].trim()).join(" · ")}
+          </p>
+        )}
+      </div>
+      <button
+        type="button"
+        className={`login-art-hotspot ${chooseClass}`}
+        onClick={() => onSelect(selected)}
+        title={`Choose ${current.name}`}
+        aria-label={`Choose ${current.name}`}
+      />
+    </ArtScene>
   );
 }
 

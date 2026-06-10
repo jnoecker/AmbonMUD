@@ -166,6 +166,8 @@ export class WorldScene {
   // Recall button (visible when logged in and not in combat)
   private recallBtn: Container;
   private lastLoggedIn = false;
+  private claimBtn: Container;
+  private lastDemoClaim = false;
 
   // Staff buttons (visible when the logged-in player is staff) — drawn next to
   // Recall so they always line up with it regardless of canvas size.
@@ -848,6 +850,13 @@ export class WorldScene {
     });
     this.departBtn.visible = false;
 
+    // Claim button — demo characters only; opens the Save Your Character window
+    // so guests can claim their progress any time, not just at the level-2 nudge.
+    this.claimBtn = this.buildActionButton("Claim", 0xf0d8a0, 0x3a2e50, () => {
+      canvasCallbacks.openClaim?.();
+    });
+    this.claimBtn.visible = false;
+
     // Staff buttons — STAFF opens the admin console; the eye toggles invisibility.
     this.staffBtn = this.buildActionButton("STAFF", 0xe6c878, 0x4a3a12, () => {
       canvasCallbacks.openAdminPanel?.();
@@ -888,6 +897,7 @@ export class WorldScene {
     this.container.addChild(this.signBadge!);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.departBtn);
+    this.container.addChild(this.claimBtn);
     this.container.addChild(this.staffBtn);
     this.container.addChild(this.invisBtn);
     // Weather lives in the overlay so it stays visible during room-transition
@@ -1215,6 +1225,13 @@ export class WorldScene {
     if (showRecall !== this.lastLoggedIn) {
       this.lastLoggedIn = showRecall;
       this.recallBtn.visible = showRecall;
+    }
+
+    // Claim button — demo characters only, alongside Recall
+    const showClaim = showRecall && state.character.isDemo;
+    if (showClaim !== this.lastDemoClaim) {
+      this.lastDemoClaim = showClaim;
+      this.claimBtn.visible = showClaim;
     }
 
     // Staff buttons — visible whenever a staff player is logged in.
@@ -1709,11 +1726,21 @@ export class WorldScene {
       this.departBtn.y = h - 24;
     }
 
-    // Staff + invis buttons — line up after Recall/Depart on the same row.
+    // Claim button — next slot after Recall/Depart (demo characters only)
+    if (this.claimBtn.visible) {
+      let slot = 0;
+      if (this.recallBtn.visible) slot++;
+      if (this.departBtn.visible) slot++;
+      this.claimBtn.x = 16 + 40 + slot * 88;
+      this.claimBtn.y = h - 24;
+    }
+
+    // Staff + invis buttons — line up after Recall/Depart/Claim on the same row.
     if (this.staffBtn.visible) {
       let slot = 0;
       if (this.recallBtn.visible) slot++;
       if (this.departBtn.visible) slot++;
+      if (this.claimBtn.visible) slot++;
       this.staffBtn.x = 16 + 40 + slot * 88;
       this.staffBtn.y = h - 24;
       this.invisBtn.x = this.staffBtn.x + 88;

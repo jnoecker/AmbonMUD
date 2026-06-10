@@ -105,10 +105,13 @@ export const canvasCallbacks: {
   openAdminPanel: (() => void) | null;
   /** Staff: toggle invisibility (the canvas eye button). */
   toggleInvis: (() => void) | null;
+  /** Demo characters: open the Save Your Character (claim) window. */
+  openClaim: (() => void) | null;
 } = {
   sendCommand: null,
   openAdminPanel: null,
   toggleInvis: null,
+  openClaim: null,
   prefillCommand: null,
   openPlayerCard: null,
   openShop: null,

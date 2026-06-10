@@ -2591,7 +2591,17 @@ ambonmud:
       sharedSecret: ""
   images:
     baseUrl: /images/
-    globalAssets: {}
+    globalAssets:
+      # Painted login flow scenes; bundled art so the painted login works out
+      # of the box. Deployments may remap these to Arcanum-hashed CDN files.
+      login_bg: global_assets/login_bg.png
+      login_password_bg: global_assets/login_password_bg.png
+      login_set_password_bg: global_assets/login_set_password_bg.png
+      login_confirm_bg: global_assets/login_confirm_bg.png
+      login_picker_bg: global_assets/login_picker_bg.png
+      login_race_bg: global_assets/login_race_bg.png
+      login_class_bg: global_assets/login_class_bg.png
+      login_claim_bg: global_assets/login_claim_bg.png
     defaultAssets: {}
   videos:
     baseUrl: /videos/
