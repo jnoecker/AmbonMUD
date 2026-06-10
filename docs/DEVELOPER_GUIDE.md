@@ -232,6 +232,7 @@ Inbound handling:
 | `MailHandler` | `mail list`/`read`/`send`/`delete`/`claim`, compose mode; letters can carry gold + one item attachment |
 | `ClaimHandler` | `claim` — convert a guest session into a permanent account (BCrypt + DB write dispatched off the tick loop) |
 | `SpriteHandler` | `sprite list`/`set`/`default` |
+| `AkathavaeHandler` | `pledge`, `renounce [confirm]`, `illuminate <creature>`, `arcanum [rooms\|mobs\|items]`, `wardrobe [item]` |
 | `TrainerHandler` | `train list`/`learn`/`unlock` (multi-classing) |
 | `PetHandler` | `pet`, `pet dismiss`, `pet name` |
 | `AuctionHandler` | `auction`, `auction sell`/`buy`/`cancel` |
@@ -333,6 +334,7 @@ This is a working index, not an exhaustive spec. Each subsystem follows the patt
 | **WorldEventSystem** | `engine/worldevent/WorldEventSystem.kt` | Date-triggered seasonal events with flag system, `World.Events` GMCP |
 | **PuzzleSystem** | `engine/puzzle/PuzzleSystem.kt` | Riddle + sequence puzzles with rewards |
 | **StylistSystem** | `engine/stylist/StylistSystem.kt` | In-game race change via stylist NPC, preserves progression |
+| **AkathavaeSystem** | `engine/AkathavaeSystem.kt` | Pacifist explorer path: `pledge` at a shrine (`akathavaeShrine: true` room flag) forswears combat; `illuminate` records creatures stat-driven (kill-equivalent on success: drops, gold, quest credit, XP), rooms/items discovered passively, permanent world-firsts ("First illuminated by …") in the world-state snapshot, conjured `wardrobe` equipment, `Arcanum.*` GMCP |
 | **SpriteSystem** | `engine/SpriteRegistry.kt` + `domain/sprites/` | Player sprite registry with flexible unlock criteria |
 | **ScreenReaderFilter** | `transport/ScreenReaderFilter.kt` | ANSI stripping + box-drawing replacement for assistive tech |
 | **GmcpEmitter** | `engine/GmcpEmitter.kt` | ~50 GMCP package families (Char / Room / Comm / Quest / Crafting / Housing / Guild / etc.) — see [`GMCP_PROTOCOL.md`](./GMCP_PROTOCOL.md) |
