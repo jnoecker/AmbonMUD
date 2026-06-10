@@ -224,6 +224,7 @@ class CombatSystem(
         keywordRaw: String,
     ): String? {
         val player = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        if (player.isAkathavae) return ERR_AKATHAVAE_PLEDGE
         val keyword = keywordRaw.trim()
         if (keyword.isEmpty()) return "Kill what?"
 
@@ -478,8 +479,10 @@ class CombatSystem(
         val attacker = players.get(attackerSid) ?: return ERR_NOT_CONNECTED
         val target = players.get(targetSid) ?: return "That player is not available."
 
+        if (attacker.isAkathavae) return ERR_AKATHAVAE_PLEDGE
         if (attackerSid == targetSid) return "You cannot attack yourself."
         if (target.isStaff) return "You cannot attack staff members."
+        if (target.isAkathavae) return "${target.name} is an Akathavae — their pledge of peace protects them from duels and bloodshed."
         if (attacker.roomId != target.roomId) return "${'$'}{target.name} is not here."
         if (pvpTarget[attackerSid] != null) return "You are already in PvP combat."
         if (playerTarget[attackerSid] != null) return "You are already in combat."
@@ -837,9 +840,11 @@ class CombatSystem(
                 continue
             }
 
-            // STUN check
+            // STUN check. Akathavae never swing back: a mob can force them into
+            // combat (aggro, a failed illumination) but their pledge holds — they
+            // dodge, flee, or fall, and never deal damage.
             val stunned = statusEffects?.hasPlayerEffect(sessionId, "stun") == true
-            if (!stunned) {
+            if (!stunned && !player.isAkathavae) {
                 val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val swing = rollPlayerMeleeSwing(player, playerStats, playerBonuses, mob.armor)
                 val effectivePlayerDamage = swing.final

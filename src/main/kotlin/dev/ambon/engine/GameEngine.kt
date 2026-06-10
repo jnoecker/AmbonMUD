@@ -23,6 +23,7 @@ import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.handlers.AdminHandler
+import dev.ambon.engine.commands.handlers.AkathavaeHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
 import dev.ambon.engine.commands.handlers.AutoQuestHandler
 import dev.ambon.engine.commands.handlers.BankHandler
@@ -1415,6 +1416,12 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 markStatsDirty = ::markStatsDirty,
                 spriteRegistry = spriteRegistry,
+            ),
+            AkathavaeHandler(
+                ctx = ctx,
+                config = engineConfig.akathavae,
+                clock = clock,
+                markVitalsDirty = ::markVitalsDirty,
             ),
             WorldInfoHandler(
                 ctx = ctx,

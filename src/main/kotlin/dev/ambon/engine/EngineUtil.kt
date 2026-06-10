@@ -26,6 +26,10 @@ internal fun applyHeal(
 /** Standard error when `players.get(sessionId)` returns null in a system method returning `String?`. */
 internal const val ERR_NOT_CONNECTED = "You are not connected."
 
+/** Standard refusal when a player under the Akathavae pledge attempts any act of violence. */
+internal const val ERR_AKATHAVAE_PLEDGE =
+    "Your Akathavae pledge stays your hand — violence is no longer your craft. (Renounce your vow at a shrine to fight again.)"
+
 /** Converts milliseconds to whole seconds, rounding up, with a minimum of 1. */
 internal fun Long.ceilSeconds(): Long = ((this + 999) / 1000).coerceAtLeast(1)
 

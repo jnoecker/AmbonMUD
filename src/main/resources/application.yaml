@@ -1596,6 +1596,16 @@ ambonmud:
           description: "View race-change options and fee (requires a stylist)"
           category: "progression"
           staff: false
+        pledge:
+          usage: "pledge"
+          description: "Take the Akathavae pledge at a shrine — forsake combat, level through illumination"
+          category: "progression"
+          staff: false
+        renounce:
+          usage: "renounce [confirm]"
+          description: "Renounce the Akathavae pledge at a shrine (costs gold)"
+          category: "progression"
+          staff: false
         changerace:
           usage: "changerace <race>"
           description: "Pay the stylist to change your race"
@@ -2398,6 +2408,10 @@ ambonmud:
       cooldownMs: 5000
     stylist:
       feeGold: 500
+    akathavae:
+      enabled: true
+      renounceCostGold: 2500
+      repledgeCooldownMs: 86400000
     respec:
       enabled: true
       goldCost: 100

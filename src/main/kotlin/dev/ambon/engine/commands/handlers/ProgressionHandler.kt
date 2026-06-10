@@ -77,6 +77,9 @@ class ProgressionHandler(
             val className = classRegistry?.get(me.playerClass)?.displayName ?: me.playerClass
 
             outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} $raceName $className ]"))
+            if (me.isAkathavae) {
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  Akathavae — pledged to the Arcanum; combat forsworn"))
+            }
             outbound.send(OutboundEvent.SendInfo(sessionId, "  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine"))
             outbound.send(OutboundEvent.SendInfo(sessionId, "  Mana: ${me.mana} / ${me.maxMana}"))
             val statDefs: List<StatDefinition> = statRegistry?.all() ?: listOf(

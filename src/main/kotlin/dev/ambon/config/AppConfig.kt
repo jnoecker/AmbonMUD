@@ -139,6 +139,7 @@ data class AppConfig(
         validateEnginePets()
         validateEngineBank()
         validateEngineStylist()
+        validateEngineAkathavae()
         validateEngineWorldTime()
         validateEngineWeather()
         validateEngineEnchanting()
@@ -438,6 +439,11 @@ data class AppConfig(
 
     private fun validateEngineStylist() {
         require(engine.stylist.feeGold >= 0) { "ambonMUD.engine.stylist.feeGold must be >= 0" }
+    }
+
+    private fun validateEngineAkathavae() {
+        require(engine.akathavae.renounceCostGold >= 0) { "ambonMUD.engine.akathavae.renounceCostGold must be >= 0" }
+        require(engine.akathavae.repledgeCooldownMs >= 0) { "ambonMUD.engine.akathavae.repledgeCooldownMs must be >= 0" }
     }
 
     private fun validateEngineWorldTime() {
@@ -1047,6 +1053,20 @@ data class StylistConfig(
     val feeGold: Long = 500,
 )
 
+/**
+ * Tuning for the Akathavae pledge — the pacifist explorer path. Pledging is free at
+ * any Akathavae shrine; renouncing the vow at a shrine costs gold, and re-pledging
+ * after a renunciation is gated behind a cooldown so players can't flip between the
+ * paths to double-dip rewards.
+ */
+data class AkathavaeConfig(
+    val enabled: Boolean = true,
+    /** Gold cost to renounce the pledge at a shrine. */
+    val renounceCostGold: Long = 2_500,
+    /** Real-time cooldown before an ex-Akathavae may pledge again (ms). Default 24h. */
+    val repledgeCooldownMs: Long = 86_400_000,
+)
+
 data class LeaderboardConfig(
     /** How often to refresh the leaderboard cache from player data (ms). Default: 5 minutes. */
     val refreshIntervalMs: Long = 300_000L,
@@ -1653,6 +1673,7 @@ data class EngineConfig(
     val enchanting: EnchantingConfig = EnchantingConfig(),
     val bank: BankConfig = BankConfig(),
     val stylist: StylistConfig = StylistConfig(),
+    val akathavae: AkathavaeConfig = AkathavaeConfig(),
     val worldTime: WorldTimeConfig = WorldTimeConfig(),
     val weather: WeatherConfig = WeatherConfig(),
     val worldEvents: WorldEventsConfig = WorldEventsConfig(),
@@ -2032,6 +2053,16 @@ data class CommandsConfig(
             "prestige" to CommandMetadata("prestige | prestige info", "Reset at max level for permanent prestige perks", "progression"),
             "leaderboard" to CommandMetadata("leaderboard/top [category]", "View player leaderboards", "progression"),
             "stylist" to CommandMetadata("stylist", "View race-change options and fee (requires a stylist)", "progression"),
+            "pledge" to CommandMetadata(
+                usage = "pledge",
+                description = "Take the Akathavae pledge at a shrine — forsake combat, level through illumination",
+                category = "progression",
+            ),
+            "renounce" to CommandMetadata(
+                usage = "renounce [confirm]",
+                description = "Renounce the Akathavae pledge at a shrine (costs gold)",
+                category = "progression",
+            ),
             "changerace" to CommandMetadata(
                 usage = "changerace <race>",
                 description = "Pay the stylist to change your race",

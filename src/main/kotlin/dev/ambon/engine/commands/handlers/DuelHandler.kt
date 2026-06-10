@@ -3,6 +3,7 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
+import dev.ambon.engine.ERR_AKATHAVAE_PLEDGE
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -32,6 +33,19 @@ class DuelHandler(
                 ?: return sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, "Dueling is not available.", "duel", code = "UNAVAILABLE")
 
         players.withPlayer(sessionId) { me ->
+            if (me.isAkathavae) {
+                sendErrorWithFeedback(
+                    sessionId,
+                    outbound,
+                    gmcpEmitter,
+                    ERR_AKATHAVAE_PLEDGE,
+                    "duel",
+                    code = "AKATHAVAE_PLEDGE",
+                    command = "duel",
+                )
+                return
+            }
+
             // Can't duel while in mob combat
             if (combatSystem?.isInCombat(sessionId) == true) {
                 val message = "You cannot duel while in combat."
@@ -56,6 +70,12 @@ class DuelHandler(
                 if (combatSystem?.isInCombat(targetSid) == true) {
                     val message = "${target.name} is in combat."
                     sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "TARGET_IN_COMBAT", command = "duel")
+                    return
+                }
+
+                if (target.isAkathavae) {
+                    val message = "${target.name} is an Akathavae — their pledge of peace forbids dueling."
+                    sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "TARGET_AKATHAVAE", command = "duel")
                     return
                 }
 
@@ -106,6 +126,19 @@ class DuelHandler(
             ds.decline(sessionId)
             val message = "The challenger is no longer available."
             sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "duel", code = "CHALLENGER_UNAVAILABLE", command = "accept")
+            return
+        }
+        if (me.isAkathavae) {
+            ds.decline(sessionId)
+            sendErrorWithFeedback(
+                sessionId,
+                outbound,
+                gmcpEmitter,
+                ERR_AKATHAVAE_PLEDGE,
+                "duel",
+                code = "AKATHAVAE_PLEDGE",
+                command = "accept",
+            )
             return
         }
         if (me.roomId != challenger.roomId) {

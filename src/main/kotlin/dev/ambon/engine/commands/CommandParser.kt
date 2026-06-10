@@ -296,6 +296,14 @@ sealed interface Command {
     /** Leaves the sanctum after death, returning to the zone where the player last died. */
     data object Depart : Command
 
+    /** Take the Akathavae pledge at a shrine — forsake combat, level through illumination. */
+    data object Pledge : Command
+
+    /** Renounce the Akathavae pledge at a shrine. [confirm] guards against accidental renouncing. */
+    data class Renounce(
+        val confirm: Boolean,
+    ) : Command
+
     data class Petition(
         val keyword: String,
     ) : Command
@@ -1789,6 +1797,9 @@ object CommandParser {
             "recall" -> Command.Recall
             "rest" -> Command.Rest
             "depart" -> Command.Depart
+            "pledge" -> Command.Pledge
+            "renounce" -> Command.Renounce(confirm = false)
+            "renounce confirm" -> Command.Renounce(confirm = true)
             "score", "sc" -> Command.Score
             "spells", "abilities", "skills" -> Command.Spells
             "effects", "buffs", "debuffs" -> Command.Effects

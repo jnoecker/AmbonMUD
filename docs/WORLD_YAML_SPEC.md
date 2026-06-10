@@ -77,6 +77,7 @@ stylist: <boolean, optional, default false>
 tavern: <boolean, optional, default false>
 dungeon: <boolean, optional, default false>
 inn: <boolean, optional, default false>
+akathavaeShrine: <boolean, optional, default false>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown as clickable cinematic>
 music: <string, optional - overrides zone audio.music>
@@ -105,6 +106,11 @@ ambient: <string, optional - overrides zone audio.ambient>
 - When `true`, enables the `rest` command in this room. Resting sets the player's recall point to this room.
 - Shows an Inn badge on the web client canvas; the popout displays the player's current recall point and offers a "Rest & Set Recall Here" button.
 - The recall point is the destination of the `recall` command. Rest is blocked while in combat.
+
+`akathavaeShrine` notes:
+- When `true`, enables the `pledge` and `renounce` commands in this room.
+- Pledging is free and marks the player as an Akathavae: combat is forbidden and the player levels by illuminating the world (recording rooms, creatures, and items in their Arcanum journal).
+- Renouncing at a shrine costs gold (`ambonMUD.engine.akathavae.renounceCostGold`, default 2500) and starts a re-pledge cooldown (`repledgeCooldownMs`, default 24h).
 
 `station` notes:
 - Designates the room as a crafting station of the given type.

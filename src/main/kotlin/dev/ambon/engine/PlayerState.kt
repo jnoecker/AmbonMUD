@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.arcanum.ArcanumJournal
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -159,6 +160,18 @@ data class PlayerState(
      */
     var lastEmittedMusicUrl: String? = null,
     var lastEmittedAmbientUrl: String? = null,
+    /**
+     * True while the player is under the Akathavae pledge: combat is forbidden and the
+     * world is leveled through illumination (recording rooms, creatures, and items in
+     * the Arcanum journal) instead of killing.
+     */
+    var isAkathavae: Boolean = false,
+    /** Epoch-ms the current Akathavae pledge was taken. 0 = never pledged. */
+    var akathavaePledgedAtMs: Long = 0L,
+    /** Epoch-ms the pledge was last renounced — re-pledging is gated behind a cooldown. */
+    var akathavaeRenouncedAtMs: Long = 0L,
+    /** The player's Arcanum journal. Persisted as a JSON blob (see [dev.ambon.persistence.PlayerRecord.arcanumData]). */
+    var arcanum: ArcanumJournal = ArcanumJournal(),
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -302,6 +315,12 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         dailyQuestState = runCatching {
             jsonMapper.readValue(dailyQuestData, DailyQuestState::class.java)
         }.getOrDefault(DailyQuestState()),
+        isAkathavae = isAkathavae,
+        akathavaePledgedAtMs = akathavaePledgedAtMs,
+        akathavaeRenouncedAtMs = akathavaeRenouncedAtMs,
+        arcanum = runCatching {
+            jsonMapper.readValue(arcanumData, ArcanumJournal::class.java)
+        }.getOrDefault(ArcanumJournal()),
         screenReaderEnabled = screenReaderEnabled,
         audioLinksEnabled = audioLinksEnabled,
         description = description,
@@ -365,6 +384,10 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
         dailyQuestData = jsonMapper.writeValueAsString(dailyQuestState),
+        isAkathavae = isAkathavae,
+        akathavaePledgedAtMs = akathavaePledgedAtMs,
+        akathavaeRenouncedAtMs = akathavaeRenouncedAtMs,
+        arcanumData = jsonMapper.writeValueAsString(arcanum),
         screenReaderEnabled = screenReaderEnabled,
         audioLinksEnabled = audioLinksEnabled,
         description = description,

@@ -91,6 +91,10 @@ object PlayersTable : Table("players") {
     val lastRespecAtMs = long("last_respec_at_ms").default(0L)
     val dialogueFlags = text("dialogue_flags").default("[]")
     val seenZoneCinematics = text("seen_zone_cinematics").default("[]")
+    val isAkathavae = bool("is_akathavae").default(false)
+    val akathavaePledgedAtMs = long("akathavae_pledged_at_ms").default(0L)
+    val akathavaeRenouncedAtMs = long("akathavae_renounced_at_ms").default(0L)
+    val arcanumData = text("arcanum_data").default("{}")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -156,6 +160,10 @@ object PlayersTable : Table("players") {
             lastRespecAtMs = row[lastRespecAtMs],
             dialogueFlags = safeReadJson(row[dialogueFlags], dialogueFlagsType, emptySet()),
             seenZoneCinematics = safeReadJson(row[seenZoneCinematics], seenZoneCinematicsType, emptySet()),
+            isAkathavae = row[isAkathavae],
+            akathavaePledgedAtMs = row[akathavaePledgedAtMs],
+            akathavaeRenouncedAtMs = row[akathavaeRenouncedAtMs],
+            arcanumData = row[arcanumData],
         ).migrateDefaults()
 
     /**
@@ -226,5 +234,9 @@ object PlayersTable : Table("players") {
         statement[lastRespecAtMs] = record.lastRespecAtMs
         statement[dialogueFlags] = jsonMapper.writeValueAsString(record.dialogueFlags)
         statement[seenZoneCinematics] = jsonMapper.writeValueAsString(record.seenZoneCinematics)
+        statement[isAkathavae] = record.isAkathavae
+        statement[akathavaePledgedAtMs] = record.akathavaePledgedAtMs
+        statement[akathavaeRenouncedAtMs] = record.akathavaeRenouncedAtMs
+        statement[arcanumData] = record.arcanumData
     }
 }
