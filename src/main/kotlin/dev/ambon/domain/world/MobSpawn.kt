@@ -63,6 +63,8 @@ data class MobTemplateDef(
     val tier: MobTierConfig? = null,
     /** Which stats the author explicitly set. Overrides stay fixed even when scaling shifts level. */
     val overrides: MobStatOverrides = MobStatOverrides(),
+    /** Whether the server may spawn rare cosmetic variants of this mob. */
+    val variantEligible: Boolean = true,
 ) : MobTemplate
 
 /**

@@ -43,4 +43,10 @@ data class MobFile(
     val spells: Map<String, MobSpellFile> = emptyMap(),
     /** If set, this spell replaces the mob's default melee attack. Must reference a key in [spells]. */
     val defaultAttack: String? = null,
+    /**
+     * Whether the server may spawn rare cosmetic variants of this mob. Defaults
+     * to true for combat mobs; set false to opt a mob out of auto-generated
+     * variants (e.g. unique named bosses or strictly-themed creatures).
+     */
+    val rareVariants: Boolean = true,
 )

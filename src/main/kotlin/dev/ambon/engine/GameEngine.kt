@@ -499,6 +499,8 @@ class GameEngine(
         )
     }
 
+    private val mobVariantRoller = MobVariantRoller(config = engineConfig.mobVariants)
+
     private val zoneResetHandler by lazy {
         ZoneResetHandler(
             world = world,
@@ -512,6 +514,7 @@ class GameEngine(
             behaviorTreeSystem = behaviorTreeSystem,
             gmcpEmitter = gmcpEmitter,
             clock = clock,
+            variantRoller = mobVariantRoller,
             isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
         )
     }
@@ -2422,7 +2425,8 @@ class GameEngine(
                 if (mobs.get(spawn.id) != null) return@scheduleIn
                 if (world.rooms[spawn.roomId] == null) return@scheduleIn
                 val referenceLevel = highestPlayerLevelInZone(players, spawn.roomId.zone)
-                val respawned = spawnToMobState(spawn, world, referenceLevel)
+                val variant = world.mobTemplate(spawn.templateId)?.let { mobVariantRoller.roll(it) }
+                val respawned = spawnToMobState(spawn, world, referenceLevel, variant)
                 mobs.upsert(respawned)
                 mobSystem.onMobSpawned(spawn.id)
                 behaviorTreeSystem.onMobSpawned(spawn.id)
@@ -2430,6 +2434,7 @@ class GameEngine(
                     outbound.send(OutboundEvent.SendText(p.sessionId, "${respawned.name} appears."))
                     gmcpEmitter.sendRoomAddMob(p.sessionId, respawned)
                 }
+                if (variant != null) announceMobVariant(outbound, players, respawned, variant.def)
             }
         }
     }

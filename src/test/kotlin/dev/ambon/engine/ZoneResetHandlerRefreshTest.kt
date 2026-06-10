@@ -86,6 +86,7 @@ class ZoneResetHandlerRefreshTest {
             behaviorTreeSystem = behaviorTreeSystem,
             gmcpEmitter = gmcpEmitter,
             clock = clock,
+            variantRoller = MobVariantRoller(dev.ambon.config.MobVariantsConfig(enabled = false)),
         )
     }
 

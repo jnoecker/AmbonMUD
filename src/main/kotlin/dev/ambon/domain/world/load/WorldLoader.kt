@@ -473,6 +473,7 @@ object WorldLoader {
                         },
                         tier = tier,
                         overrides = overrides,
+                        variantEligible = mf.rareVariants,
                     )
 
                 expandPlacements(mobId, placementSources, zone, mergedSpawns)
