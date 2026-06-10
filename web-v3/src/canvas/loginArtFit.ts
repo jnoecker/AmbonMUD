@@ -18,3 +18,32 @@ export function useMediaFits(query: string): boolean {
   }, [query]);
   return fits;
 }
+
+/** Module-level result cache: each art URL is probed at most once per session. */
+const artImageStatus = new Map<string, "ready" | "failed">();
+
+/**
+ * Gate a painted-scene URL on the image actually loading. For full-scene art
+ * the background is load-bearing — rendering the painted variant against a URL
+ * that 404s, is blocked by an extension, or whose CDN is unreachable produces
+ * a black screen with floating controls. Returns the URL only once the image
+ * has decoded; on failure (or while loading) returns null so callers keep the
+ * CSS fallback. Required by ART_CONTRACT.md's degradation rules.
+ */
+export function useArtImage(url: string | null): string | null {
+  const [, setProbedCount] = useState(0);
+  useEffect(() => {
+    if (!url || artImageStatus.has(url)) return;
+    let cancelled = false;
+    const img = new Image();
+    const settle = (status: "ready" | "failed") => {
+      artImageStatus.set(url, status);
+      if (!cancelled) setProbedCount((n) => n + 1);
+    };
+    img.onload = () => settle("ready");
+    img.onerror = () => settle("failed");
+    img.src = url;
+    return () => { cancelled = true; };
+  }, [url]);
+  return url && artImageStatus.get(url) === "ready" ? url : null;
+}

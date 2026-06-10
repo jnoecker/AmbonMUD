@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { ArtScene } from "../canvas/ArtScene";
-import { ART_FIT_LANDSCAPE, useMediaFits } from "../canvas/loginArtFit";
+import { ART_FIT_LANDSCAPE, useArtImage, useMediaFits } from "../canvas/loginArtFit";
 
 interface CharacterPickerProps {
   characters: string[];
@@ -14,6 +14,8 @@ interface CharacterPickerProps {
 export function CharacterPicker({ characters, backgroundImage, onSelect, onRemoveCharacter, onNewCharacter }: CharacterPickerProps) {
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const artFits = useMediaFits(ART_FIT_LANDSCAPE);
+  // Gated on the image actually loading — failed art falls back to the CSS dialog.
+  const art = useArtImage(artFits ? backgroundImage : null);
 
   const handleRemove = useCallback((name: string, e: React.MouseEvent | React.PointerEvent | React.KeyboardEvent) => {
     e.stopPropagation();
@@ -52,10 +54,10 @@ export function CharacterPicker({ characters, backgroundImage, onSelect, onRemov
     </div>
   ));
 
-  if (backgroundImage && artFits) {
+  if (art) {
     return (
       <ArtScene
-        url={backgroundImage}
+        url={art}
         stageClass="login-art-stage--book login-art-stage--picker"
         label="Welcome back — choose a character"
       >

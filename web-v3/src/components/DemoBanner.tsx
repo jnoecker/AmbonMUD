@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { ArtScene } from "../canvas/ArtScene";
-import { ART_FIT_LANDSCAPE, useMediaFits } from "../canvas/loginArtFit";
+import { ART_FIT_LANDSCAPE, useArtImage, useMediaFits } from "../canvas/loginArtFit";
 
 interface DemoBannerProps {
   /**
@@ -36,6 +36,8 @@ export function DemoBanner({ autoOpen = false, openRequestId = 0, backgroundImag
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const artFits = useMediaFits(ART_FIT_LANDSCAPE);
+  // Gated on the image actually loading — failed art falls back to the CSS dialog.
+  const art = useArtImage(artFits ? backgroundImage : null);
 
   // Render-time derivation: auto-opens once when autoOpen flips true, and stays
   // closed if the user dismisses it. Manual reopening (banner button or the
@@ -72,7 +74,7 @@ export function DemoBanner({ autoOpen = false, openRequestId = 0, backgroundImag
     setDismissedAuto(true);
   }, [name, password, onClaim]);
 
-  const artOpen = open && backgroundImage && artFits;
+  const artOpen = open && art !== null;
 
   return (
     <>
@@ -90,9 +92,9 @@ export function DemoBanner({ autoOpen = false, openRequestId = 0, backgroundImag
         </button>
       </div>
 
-      {artOpen && backgroundImage && (
+      {artOpen && art && (
         <ArtScene
-          url={backgroundImage}
+          url={art}
           stageClass="login-art-stage--book login-art-stage--claim"
           label="Save your demo character"
         >
