@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.domain.arcanum.ArcanumSource
 import dev.ambon.domain.crafting.CraftingQuality
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.crafting.RecipeDef
@@ -19,7 +20,7 @@ import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
 
 class CraftingHandler(
-    ctx: EngineContext,
+    private val ctx: EngineContext,
     private val craftingSystem: CraftingSystem? = null,
     private val craftingSkillRegistry: CraftingSkillRegistry? = null,
     private val gatheringRegistry: GatheringRegistry? = null,
@@ -115,6 +116,10 @@ class CraftingHandler(
                     )
                     gmcpEmitter?.sendCraftingCooldown(sessionId, "gather", me.gatherCooldownUntilMs)
                     onItemGathered?.invoke(sessionId, r.node.skill)
+                    // Gathered yields count as discoveries for an Akathavae's Arcanum.
+                    for (gatheredId in r.itemsGathered.keys + r.rareItemsGathered.keys) {
+                        ctx.akathavaeSystem?.recordItemDiscovery(sessionId, gatheredId, ArcanumSource.GATHERED)
+                    }
                     notifyNewDiscoveries(sessionId, me, cs)
                     emitCraftingSkills(sessionId, me)
                 }
@@ -210,6 +215,8 @@ class CraftingHandler(
                         quality = r.quality.name.lowercase(),
                     )
                     onItemCrafted?.invoke(sessionId)
+                    // A newly crafted item counts as a discovery for an Akathavae's Arcanum.
+                    ctx.akathavaeSystem?.recordItemDiscovery(sessionId, r.recipe.outputItemId, ArcanumSource.CRAFTED)
                     notifyNewDiscoveries(sessionId, me, cs)
                     emitCraftingSkills(sessionId, me)
                 }

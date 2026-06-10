@@ -43,6 +43,7 @@ class WebClientParityTest {
         "Renounce" to "renounce",
         "Illuminate" to "illuminate",
         "Arcanum" to "arcanum",
+        "Wardrobe" to "wardrobe",
         // Communication
         "Say" to "say",
         "Tell" to "tell",

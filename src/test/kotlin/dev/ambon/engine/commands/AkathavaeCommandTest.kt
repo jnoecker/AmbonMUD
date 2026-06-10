@@ -1,9 +1,14 @@
 package dev.ambon.engine.commands
 
 import dev.ambon.config.AkathavaeConfig
+import dev.ambon.domain.arcanum.ArcanumEntry
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
@@ -13,6 +18,7 @@ import dev.ambon.test.CombatTestFixture
 import dev.ambon.test.CommandRouterHarness
 import dev.ambon.test.MutableClock
 import dev.ambon.test.buildTestPlayerRegistry
+import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -62,6 +68,12 @@ class AkathavaeCommandTest {
             assertEquals(Command.Arcanum(null), CommandParser.parse("arcanum"))
             assertEquals(Command.Arcanum("mobs"), CommandParser.parse("arcanum mobs"))
             assertEquals(Command.Arcanum(null), CommandParser.parse("journal"))
+        }
+
+        @Test
+        fun `wardrobe parses with and without keyword`() {
+            assertEquals(Command.Wardrobe(null), CommandParser.parse("wardrobe"))
+            assertEquals(Command.Wardrobe("hood"), CommandParser.parse("wardrobe hood"))
         }
     }
 
@@ -271,6 +283,121 @@ class AkathavaeCommandTest {
             val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
             assertTrue(errors.any { it.contains("pledge stays your hand") }, "got=$errors")
             assertFalse(h.combat.isInCombat(sid), "Pledged player must not enter combat")
+        }
+    }
+
+    // ── Wardrobe tests ───────────────────────────────────────────────────
+
+    @Nested
+    inner class Wardrobe {
+        private fun hoodTemplate() = ItemInstance(
+            ItemId("test:hood"),
+            Item(keyword = "hood", displayName = "a leather hood", slot = ItemSlot.HEAD, armor = 2),
+        )
+
+        private suspend fun pledgedWithRecordedHood(h: CommandRouterHarness, sid: SessionId): dev.ambon.engine.PlayerState {
+            h.loginPlayer(sid, "Thalen")
+            h.items.loadSpawns(listOf(dev.ambon.domain.world.ItemSpawn(instance = hoodTemplate())))
+            val me = h.players.get(sid)!!
+            me.isAkathavae = true
+            me.arcanum.items["test:hood"] = ArcanumEntry(firstRecordedAtMs = 1L)
+            h.drain()
+            return me
+        }
+
+        @Test
+        fun `wardrobe conjures a recorded item into its slot`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithRecordedHood(h, sid)
+
+            h.router.handle(sid, Command.Wardrobe("hood"))
+
+            val equipped = h.items.equipment(sid)[ItemSlot.HEAD]
+            assertNotNull(equipped, "hood should be equipped")
+            assertTrue(equipped!!.item.conjured, "wardrobe items are conjured")
+            assertTrue(h.items.inventory(sid).isEmpty(), "conjured items never touch the inventory")
+        }
+
+        @Test
+        fun `removing a conjured item dissolves it instead of entering the inventory`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithRecordedHood(h, sid)
+            h.router.handle(sid, Command.Wardrobe("hood"))
+            h.drain()
+
+            h.router.handle(sid, Command.Remove("head"))
+
+            assertNull(h.items.equipment(sid)[ItemSlot.HEAD])
+            assertTrue(h.items.inventory(sid).isEmpty(), "dissolved items must not reach the inventory")
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("dissolves") }, "got=$infos")
+        }
+
+        @Test
+        fun `wardrobe refuses the unpledged`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Bruiser")
+            h.drain()
+
+            h.router.handle(sid, Command.Wardrobe(null))
+
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("pledged") }, "got=$errors")
+        }
+
+        @Test
+        fun `renouncing dissolves all conjured equipment`() = runTest {
+            val h = harness(config = AkathavaeConfig(renounceCostGold = 0))
+            val sid = SessionId(1)
+            val me = pledgedWithRecordedHood(h, sid)
+            h.router.handle(sid, Command.Wardrobe("hood"))
+            h.drain()
+
+            h.router.handle(sid, Command.Renounce(confirm = true))
+
+            assertFalse(me.isAkathavae)
+            assertNull(h.items.equipment(sid)[ItemSlot.HEAD], "conjured gear cannot outlive the pledge")
+            assertTrue(h.items.inventory(sid).isEmpty())
+        }
+    }
+
+    // ── Discovery hooks ──────────────────────────────────────────────────
+
+    @Nested
+    inner class Discovery {
+        @Test
+        fun `buying from a shop records the item in the Arcanum`() = runTest {
+            val world = dev.ambon.domain.world.load.WorldLoader.loadFromResource("world/ok_shop.yaml")
+            val items = dev.ambon.engine.items.ItemRegistry()
+            items.loadSpawns(world.itemSpawns)
+            val players = buildTestPlayerRegistry(world.startRoom, items = items)
+            val mobs = dev.ambon.engine.MobRegistry()
+            val outbound = dev.ambon.bus.LocalOutboundBus()
+            val shopRegistry = dev.ambon.engine.ShopRegistry(items)
+            shopRegistry.register(world.shopDefinitions)
+            val combat = dev.ambon.engine.CombatSystem(players, mobs, items, outbound)
+            val router = buildTestRouter(
+                world = world,
+                players = players,
+                mobs = mobs,
+                items = items,
+                combat = combat,
+                outbound = outbound,
+                shopRegistry = shopRegistry,
+            )
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Thalen")
+            val me = players.get(sid)!!
+            me.isAkathavae = true
+            me.gold = 10_000L
+            outbound.drainAll()
+
+            router.handle(sid, Command.Buy("sword"))
+
+            assertTrue(me.arcanum.items.isNotEmpty(), "purchase should record the item; journal=${me.arcanum.items.keys}")
         }
     }
 

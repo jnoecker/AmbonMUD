@@ -1255,6 +1255,7 @@ class GameEngine(
             puzzleSystem = puzzleSystem,
             bankConfig = engineConfig.bank,
             stylistConfig = engineConfig.stylist,
+            akathavaeSystem = akathavaeSystem,
             metrics = metrics,
         )
 
@@ -1445,6 +1446,7 @@ class GameEngine(
                 config = engineConfig.akathavae,
                 clock = clock,
                 markVitalsDirty = ::markVitalsDirty,
+                markStatsDirty = ::markStatsDirty,
                 akathavaeSystem = akathavaeSystem,
             ),
             WorldInfoHandler(

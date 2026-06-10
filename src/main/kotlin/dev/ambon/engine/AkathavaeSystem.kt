@@ -270,6 +270,20 @@ class AkathavaeSystem(
     }
 
     /**
+     * Records an item discovery by template id — the entry point for shop
+     * purchases, crafting outputs, and gathering yields, where only the
+     * template id is at hand.
+     */
+    suspend fun recordItemDiscovery(
+        sessionId: SessionId,
+        itemId: dev.ambon.domain.ids.ItemId,
+        source: String,
+    ) {
+        val template = items.getTemplate(itemId) ?: return
+        recordItemDiscovery(sessionId, ItemInstance(id = itemId, item = template), source)
+    }
+
+    /**
      * Records [item] in the player's Arcanum (first time only awards XP). Called
      * for illumination captures now; shop purchases, crafting, and gathering hook
      * in via the same entry point.

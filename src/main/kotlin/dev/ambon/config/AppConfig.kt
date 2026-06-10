@@ -2128,6 +2128,11 @@ data class CommandsConfig(
                 description = "Leaf through your Arcanum journal of recorded places, creatures, and items",
                 category = "progression",
             ),
+            "wardrobe" to CommandMetadata(
+                usage = "wardrobe [item]",
+                description = "Conjure and wear equipment recorded in your Arcanum (Akathavae only)",
+                category = "progression",
+            ),
             "changerace" to CommandMetadata(
                 usage = "changerace <race>",
                 description = "Pay the stylist to change your race",

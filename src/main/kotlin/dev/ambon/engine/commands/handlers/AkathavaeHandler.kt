@@ -1,7 +1,10 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.config.AkathavaeConfig
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.engine.AkathavaeSystem
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.commands.Command
@@ -9,6 +12,7 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import java.time.Clock
 
 /**
@@ -25,12 +29,15 @@ class AkathavaeHandler(
     private val config: AkathavaeConfig = AkathavaeConfig(),
     private val clock: Clock = Clock.systemUTC(),
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
+    private val markStatsDirty: ((SessionId) -> Unit)? = null,
     private val akathavaeSystem: AkathavaeSystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val world = ctx.world
     private val outbound = ctx.outbound
     private val combat = ctx.combat
+    private val items = ctx.items
+    private val gmcpEmitter = ctx.gmcpEmitter
     private val metrics = ctx.metrics
 
     override fun register(router: CommandRouter) {
@@ -38,6 +45,86 @@ class AkathavaeHandler(
         router.on<Command.Renounce> { sid, cmd -> handleRenounce(sid, cmd) }
         router.on<Command.Illuminate> { sid, cmd -> handleIlluminate(sid, cmd) }
         router.on<Command.Arcanum> { sid, cmd -> handleArcanum(sid, cmd) }
+        router.on<Command.Wardrobe> { sid, cmd -> handleWardrobe(sid, cmd) }
+    }
+
+    /** Recorded items whose templates still exist and can be worn, as (templateId, template) pairs. */
+    private fun wardrobeEntries(me: PlayerState): List<Pair<ItemId, Item>> =
+        me.arcanum.items.keys
+            .sorted()
+            .mapNotNull { key -> items.getTemplate(ItemId(key))?.let { ItemId(key) to it } }
+            .filter { (_, template) -> template.slot != null }
+
+    private suspend fun handleWardrobe(sessionId: SessionId, cmd: Command.Wardrobe) {
+        val me = players.get(sessionId) ?: return
+        if (!me.isAkathavae) {
+            outbound.send(
+                OutboundEvent.SendError(
+                    sessionId,
+                    "Only the pledged may draw from an Arcanum wardrobe. Seek a shrine.",
+                ),
+            )
+            return
+        }
+        val entries = wardrobeEntries(me)
+        if (cmd.keyword == null) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "[ Arcanum Wardrobe (${entries.size}) ]"))
+            if (entries.isEmpty()) {
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  No wearable items recorded yet — illuminate and discover more."))
+                return
+            }
+            entries.chunked(3).forEach { row ->
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "  " + row.joinToString(", ") { (_, t) -> "${t.displayName} (${t.slot!!.label()})" },
+                    ),
+                )
+            }
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Use 'wardrobe <item>' to conjure and wear a recorded item."))
+            return
+        }
+
+        val lower = cmd.keyword.lowercase()
+        val match = entries.firstOrNull { (_, t) ->
+            t.keyword.lowercase() == lower || t.displayName.lowercase().contains(lower)
+        }
+        if (match == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Your Arcanum holds no wearable page matching '${cmd.keyword}'."))
+            return
+        }
+        val (templateId, template) = match
+        val conjured = ItemInstance(id = templateId, item = template.copy(conjured = true))
+        when (val result = items.equipConjured(sessionId, conjured)) {
+            is ItemRegistry.EquipResult.Equipped -> {
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "${template.displayName} lifts from the pages of your Arcanum and settles onto your ${result.slot.label()}.",
+                    ),
+                )
+            }
+            is ItemRegistry.EquipResult.Swapped -> {
+                val previousNote =
+                    if (result.previousDissolved) {
+                        "${result.previousItem.item.displayName} dissolves back into the pages"
+                    } else {
+                        "You stow ${result.previousItem.item.displayName}"
+                    }
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "$previousNote as ${template.displayName} settles onto your ${result.slot.label()}.",
+                    ),
+                )
+            }
+            is ItemRegistry.EquipResult.NotWearable, ItemRegistry.EquipResult.NotFound -> {
+                outbound.send(OutboundEvent.SendError(sessionId, "${template.displayName} cannot be worn."))
+                return
+            }
+        }
+        metrics.onGameEvent("akathavae", "wardrobe_wear")
+        afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
     }
 
     private suspend fun handleIlluminate(sessionId: SessionId, cmd: Command.Illuminate) {
@@ -240,6 +327,18 @@ class AkathavaeHandler(
         me.isAkathavae = false
         me.akathavaeRenouncedAtMs = clock.millis()
         metrics.onGameEvent("akathavae", "renounce")
+        val dissolved = items.dissolveConjuredEquipment(sessionId)
+        if (dissolved.isNotEmpty()) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "${dissolved.joinToString(", ") {
+                        it.item.displayName
+                    }} dissolve${if (dissolved.size == 1) "s" else ""} back into the pages of your Arcanum.",
+                ),
+            )
+            afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+        }
         outbound.send(
             OutboundEvent.SendInfo(
                 sessionId,

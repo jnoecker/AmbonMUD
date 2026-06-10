@@ -314,6 +314,11 @@ sealed interface Command {
         val section: String?,
     ) : Command
 
+    /** Arcanum wardrobe: null keyword lists conjurable items, otherwise conjure-and-wear the match. */
+    data class Wardrobe(
+        val keyword: String?,
+    ) : Command
+
     data class Petition(
         val keyword: String,
     ) : Command
@@ -1402,6 +1407,11 @@ object CommandParser {
         // arcanum [rooms|mobs|items] — the Akathavae journal
         matchPrefix(line, listOf("arcanum", "journal")) { rest ->
             Command.Arcanum(rest.trim().lowercase().takeIf { it.isNotBlank() })
+        }?.let { return it }
+
+        // wardrobe [item] — conjure recorded equipment from the Arcanum
+        matchPrefix(line, listOf("wardrobe")) { rest ->
+            Command.Wardrobe(rest.trim().takeIf { it.isNotBlank() })
         }?.let { return it }
 
         // consider — assess a mob's threat without attacking

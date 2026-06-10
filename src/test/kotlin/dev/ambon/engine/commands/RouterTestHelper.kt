@@ -122,6 +122,19 @@ internal fun buildTestRouter(
     playerRepo: PlayerRepository? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
+    val resolvedAkathavaeSystem = akathavaeSystem ?: AkathavaeSystem(
+        players = players,
+        items = items,
+        world = world,
+        outbound = outbound,
+        combat = combat,
+        worldState = worldState,
+        progression = progression,
+        classRegistry = classRegistry,
+        clock = clock,
+        config = akathavaeConfig ?: AkathavaeConfig(),
+        markVitalsDirty = markVitalsDirty,
+    )
     val ctx = EngineContext(
         players = players,
         mobs = mobs,
@@ -139,6 +152,7 @@ internal fun buildTestRouter(
         genderRegistry = genderRegistry,
         bankConfig = bankConfig ?: BankConfig(),
         stylistConfig = stylistConfig ?: StylistConfig(),
+        akathavaeSystem = resolvedAkathavaeSystem,
         puzzleSystem = puzzleSystem,
     )
     val puzzleHandler = puzzleSystem?.let { PuzzleHandler(ctx = ctx, puzzleSystem = it) }
@@ -186,19 +200,7 @@ internal fun buildTestRouter(
             config = akathavaeConfig ?: AkathavaeConfig(),
             clock = clock,
             markVitalsDirty = markVitalsDirty,
-            akathavaeSystem = akathavaeSystem ?: AkathavaeSystem(
-                players = players,
-                items = items,
-                world = world,
-                outbound = outbound,
-                combat = combat,
-                worldState = worldState,
-                progression = progression,
-                classRegistry = classRegistry,
-                clock = clock,
-                config = akathavaeConfig ?: AkathavaeConfig(),
-                markVitalsDirty = markVitalsDirty,
-            ),
+            akathavaeSystem = resolvedAkathavaeSystem,
         ),
         DuelHandler(ctx = ctx, duelSystem = duelSystem, combatSystem = combat),
         tradeSystem?.let { TradeHandler(ctx = ctx, tradeSystem = it) },

@@ -29,12 +29,14 @@ class ItemRegistry {
          * Returned when the target slot was already filled and the registry
          * automatically unequipped [previousItem] to make room for [item].
          * The previous item is moved back into the inventory as part of the
-         * same atomic operation.
+         * same atomic operation — unless it was conjured from an Arcanum
+         * wardrobe, in which case it dissolves ([previousDissolved]).
          */
         data class Swapped(
             val item: ItemInstance,
             val previousItem: ItemInstance,
             val slot: ItemSlot,
+            val previousDissolved: Boolean = false,
         ) : EquipResult
 
         data object NotFound : EquipResult
@@ -46,6 +48,12 @@ class ItemRegistry {
 
     sealed interface UnequipResult {
         data class Unequipped(
+            val item: ItemInstance,
+            val slot: ItemSlot,
+        ) : UnequipResult
+
+        /** The removed item was conjured from an Arcanum wardrobe and dissolved instead of entering the inventory. */
+        data class Dissolved(
             val item: ItemInstance,
             val slot: ItemSlot,
         ) : UnequipResult
@@ -381,9 +389,17 @@ class ItemRegistry {
 
             inv.removeAt(firstOccupiedIdx)
             equipped[slot] = instance
-            inventoryItems.getOrPut(sessionId) { mutableListOf() }.add(previous)
+            // Conjured wardrobe items dissolve instead of entering the inventory.
+            if (!previous.item.conjured) {
+                inventoryItems.getOrPut(sessionId) { mutableListOf() }.add(previous)
+            }
 
-            return EquipResult.Swapped(item = instance, previousItem = previous, slot = slot)
+            return EquipResult.Swapped(
+                item = instance,
+                previousItem = previous,
+                slot = slot,
+                previousDissolved = previous.item.conjured,
+            )
         }
 
         firstNonWearable?.let { return EquipResult.NotWearable(it) }
@@ -401,8 +417,48 @@ class ItemRegistry {
         val instance = equipped.remove(slot) ?: return UnequipResult.SlotEmpty(slot)
         if (equipped.isEmpty()) equippedItems.remove(sessionId)
 
+        // Conjured wardrobe items dissolve back into the Arcanum on removal.
+        if (instance.item.conjured) return UnequipResult.Dissolved(instance, slot)
+
         inventoryItems.getOrPut(sessionId) { mutableListOf() }.add(instance)
         return UnequipResult.Unequipped(instance, slot)
+    }
+
+    /**
+     * Equips a conjured Arcanum-wardrobe [instance] directly into its slot,
+     * bypassing the inventory entirely. A previously equipped item swaps back
+     * to the inventory (or dissolves if it was itself conjured).
+     */
+    fun equipConjured(
+        sessionId: SessionId,
+        instance: ItemInstance,
+    ): EquipResult {
+        val slot = instance.item.slot ?: return EquipResult.NotWearable(instance)
+        val equipped = equippedItems.getOrPut(sessionId) { mutableMapOf() }
+        val previous = equipped[slot]
+        equipped[slot] = instance
+        if (previous == null) return EquipResult.Equipped(instance, slot)
+        if (!previous.item.conjured) {
+            inventoryItems.getOrPut(sessionId) { mutableListOf() }.add(previous)
+        }
+        return EquipResult.Swapped(
+            item = instance,
+            previousItem = previous,
+            slot = slot,
+            previousDissolved = previous.item.conjured,
+        )
+    }
+
+    /**
+     * Removes every equipped conjured wardrobe item for [sessionId], returning
+     * what dissolved. Used when the Akathavae pledge is renounced.
+     */
+    fun dissolveConjuredEquipment(sessionId: SessionId): List<ItemInstance> {
+        val equipped = equippedItems[sessionId] ?: return emptyList()
+        val conjured = equipped.filterValues { it.item.conjured }
+        for (slot in conjured.keys) equipped.remove(slot)
+        if (equipped.isEmpty()) equippedItems.remove(sessionId)
+        return conjured.values.toList()
     }
 
     /**
