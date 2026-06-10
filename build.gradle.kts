@@ -1,4 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
+import java.io.IOException
+import java.net.ServerSocket
 import java.time.Duration
 
 plugins {
@@ -161,13 +163,51 @@ tasks.named<JavaExec>("run") {
 
 tasks.register<JavaExec>("demo") {
     group = "application"
-    description = "Runs AmbonMUD and opens the browser demo client."
+    description = "Runs AmbonMUD and opens the browser demo client (worktree-stable ports)."
     mainClass.set(application.mainClass)
     classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
     standardInput = System.`in`
     systemProperty("config.override.ambonMUD.demo.autoLaunchBrowser", "true")
     applyConfigOverrides()
     jvmArgs("-Djava.net.preferIPv4Stack=true")
+
+    // Parallel-worktree support: derive stable telnet/web ports from the
+    // checkout directory name so several clones can run demo servers side by
+    // side without fighting over :4000/:8080. The same worktree always gets
+    // the same ports (restarts stay predictable; stale processes are easy to
+    // attribute), probing upward if a port is genuinely taken. Explicit
+    // -Pconfig.ambonMUD.server.telnetPort/webPort overrides win outright, and
+    // AMBONMUD_PORT_OFFSET=<0-999> pins the offset. `run` keeps the fixed
+    // defaults. The in-app browser auto-launch reads the final config, so the
+    // demo client always opens at the right URL.
+    val explicitTelnet = project.hasProperty("config.ambonMUD.server.telnetPort")
+    val explicitWeb = project.hasProperty("config.ambonMUD.server.webPort")
+    val worktreeName = rootDir.name
+    val portOffsetEnv = providers.environmentVariable("AMBONMUD_PORT_OFFSET")
+    doFirst {
+        val offset = portOffsetEnv.orNull?.toIntOrNull()?.let { Math.floorMod(it, 1000) }
+            ?: Math.floorMod(worktreeName.hashCode(), 1000)
+        fun freePortFrom(start: Int): Int {
+            var candidate = start
+            repeat(50) {
+                try {
+                    ServerSocket(candidate).use { return candidate }
+                } catch (_: IOException) {
+                    candidate += 1
+                }
+            }
+            throw GradleException("No free port found in $start..${start + 49}")
+        }
+        val exec = this as JavaExec
+        val telnetPort = if (explicitTelnet) null else freePortFrom(14000 + offset)
+        val webPort = if (explicitWeb) null else freePortFrom(18000 + offset)
+        telnetPort?.let { exec.systemProperty("config.override.ambonMUD.server.telnetPort", it) }
+        webPort?.let { exec.systemProperty("config.override.ambonMUD.server.webPort", it) }
+        println(
+            "AmbonMUD demo [$worktreeName] — telnet :${telnetPort ?: "(explicit override)"}, " +
+                "web http://localhost:${webPort ?: "(explicit override)"}",
+        )
+    }
 }
 
 // ---------------------------------------------------------------------------

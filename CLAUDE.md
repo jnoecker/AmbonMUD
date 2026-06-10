@@ -11,8 +11,8 @@
 ## Commands
 
 ```bash
-./gradlew run            # Start server (telnet :4000, web :8080)
-./gradlew demo           # Start server + auto-launch browser demo
+./gradlew run            # Start server (fixed ports: telnet :4000, web :8080)
+./gradlew demo           # Start server + auto-launch browser demo (worktree-stable ports)
 ./gradlew ktlintCheck    # Lint — run before every PR
 ./gradlew test           # Full test suite — run before committing
 ./gradlew buildWeb       # Build web client (requires bun) — auto-runs with run/demo
@@ -24,6 +24,8 @@
 ```
 
 Override config: `-Pconfig.<key>=<value>` (e.g. `-Pconfig.ambonmud.persistence.backend=POSTGRES`).
+
+**Parallel worktrees:** `demo` derives its ports from the checkout directory name (telnet `14000 + hash%1000`, web `18000 + hash%1000`, probing upward if busy) and prints them in a startup banner, so agents in different worktrees can each run a test server without colliding on :4000/:8080. Pin the offset with `AMBONMUD_PORT_OFFSET=<0-999>`, or override outright with `-Pconfig.ambonMUD.server.telnetPort=/webPort=`. Prefer `demo` over `run` for test servers in worktrees.
 
 Multi-instance: `runEngine1`/`runEngine2` (gRPC :9091/:9092), `runGateway1`/`runGateway2` (telnet :4000/:4001).
 
