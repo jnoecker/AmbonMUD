@@ -384,13 +384,15 @@ export function GameShell({
           {/* Desktop only — focusing this summons the terminal overlay, which
               carries the session-long server log. CSS hides it on small
               screens, where the services stack hosts the terminal instead.
-              Styled as a parchment slip with the quill resting on it. */}
-          <div className="terminal-dock">
-            <span className="terminal-dock-glyph" aria-hidden="true">
-              {serverAssets["desk_quill"]
-                ? <img src={serverAssets["desk_quill"]} alt="" className="terminal-dock-quill-img" />
-                : "✒"}
-            </span>
+              Styled as a parchment slip with the quill resting on its right
+              edge — the same parchment art and quill placement as the
+              terminal it summons. */}
+          <div
+            className={`terminal-dock${serverAssets["terminal_parchment_bg"] ? " terminal-dock-skinned" : ""}`}
+            style={serverAssets["terminal_parchment_bg"]
+              ? { ["--terminal-parchment" as string]: `url("${serverAssets["terminal_parchment_bg"]}")` }
+              : undefined}
+          >
             <input
               type="text"
               className="terminal-dock-input"
@@ -401,6 +403,11 @@ export function GameShell({
               onFocus={onOpenTerminal}
               onChange={() => undefined}
             />
+            <span className="terminal-dock-glyph" aria-hidden="true">
+              {serverAssets["desk_quill"]
+                ? <img src={serverAssets["desk_quill"]} alt="" className="terminal-dock-quill-img" />
+                : "✒"}
+            </span>
           </div>
         </div>
       )}

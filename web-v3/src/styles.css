@@ -26313,6 +26313,16 @@ html:has(.game-shell),
   font-style: italic;
 }
 
+/* With the parchment art authored, the dock slip is cut from the same
+   sheet as the terminal scroll it summons (ART_CONTRACT: the procedural
+   gradient slip is the fallback). */
+.terminal-dock-skinned {
+  background-color: #efe5c8;
+  background-image: var(--terminal-parchment, none);
+  background-size: cover;
+  background-position: center;
+}
+
 /* Pressed-flower parchment scroll: the art IS the terminal window (xterm
    cells are transparent and the ANSI palette swaps to dark inks via
    useTerminal's INK_THEME). Absent art (no key / 404) keeps the dark
