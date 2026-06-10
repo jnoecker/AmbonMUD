@@ -1,21 +1,23 @@
 import { useCallback, useState } from "react";
 import { ArtScene } from "../canvas/ArtScene";
-import { ART_FIT_LANDSCAPE, useArtImage, useMediaFits } from "../canvas/loginArtFit";
+import { useOrientedArt } from "../canvas/loginArtFit";
 
 interface CharacterPickerProps {
   characters: string[];
   /** Painted welcome-back scene (`login_picker_bg` from Server.Assets); null → CSS dialog. */
   backgroundImage: string | null;
+  /** Phone-portrait companion (`login_picker_bg_portrait`); preferred on portrait viewports. */
+  backgroundImagePortrait: string | null;
   onSelect: (name: string) => void;
   onRemoveCharacter: (name: string) => void;
   onNewCharacter: () => void;
 }
 
-export function CharacterPicker({ characters, backgroundImage, onSelect, onRemoveCharacter, onNewCharacter }: CharacterPickerProps) {
+export function CharacterPicker({ characters, backgroundImage, backgroundImagePortrait, onSelect, onRemoveCharacter, onNewCharacter }: CharacterPickerProps) {
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
-  const artFits = useMediaFits(ART_FIT_LANDSCAPE);
-  // Gated on the image actually loading — failed art falls back to the CSS dialog.
-  const art = useArtImage(artFits ? backgroundImage : null);
+  // Orientation-aware art pick, gated on the image actually loading —
+  // failed art falls back to the CSS dialog.
+  const { url: art, phone } = useOrientedArt(backgroundImage, backgroundImagePortrait);
 
   const handleRemove = useCallback((name: string, e: React.MouseEvent | React.PointerEvent | React.KeyboardEvent) => {
     e.stopPropagation();
@@ -58,7 +60,7 @@ export function CharacterPicker({ characters, backgroundImage, onSelect, onRemov
     return (
       <ArtScene
         url={art}
-        stageClass="login-art-stage--book login-art-stage--picker"
+        stageClass={`${phone ? "login-art-stage--phone" : "login-art-stage--book"} login-art-stage--picker`}
         label="Welcome back — choose a character"
       >
         <h1 className="sr-only">Welcome back — choose one of your saved characters or create a new one</h1>

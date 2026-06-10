@@ -3056,6 +3056,15 @@ data class ImagesConfig(
             "login_race_bg" to "global_assets/login_race_bg.png", // race selection, 9 slots (1122×1402 portrait)
             "login_class_bg" to "global_assets/login_class_bg.png", // class selection, 6 slots (1122×1402 portrait)
             "login_claim_bg" to "global_assets/login_claim_bg.png", // demo claim / Save Your Character (1448×1086)
+            // Phone-portrait companions (941×1672) for the landscape scenes above.
+            // The client prefers these on portrait viewports; race/class are
+            // already portrait and have no companion.
+            "login_bg_portrait" to "global_assets/login_bg_portrait.png",
+            "login_password_bg_portrait" to "global_assets/login_password_bg_portrait.png",
+            "login_set_password_bg_portrait" to "global_assets/login_set_password_bg_portrait.png",
+            "login_confirm_bg_portrait" to "global_assets/login_confirm_bg_portrait.png",
+            "login_picker_bg_portrait" to "global_assets/login_picker_bg_portrait.png",
+            "login_claim_bg_portrait" to "global_assets/login_claim_bg_portrait.png",
             "video_available_indicator" to "global_assets/video_available_indicator.png",
             "shop_kiosk" to "global_assets/shop_kiosk.png",
             "crafting_station" to "global_assets/crafting_station.png",

@@ -14959,6 +14959,11 @@ body {
   aspect-ratio: 1122 / 1402;
 }
 
+.login-art-stage--phone {
+  width: min(100vw, 56.28vh);   /* 941×1672, phone-portrait companions */
+  aspect-ratio: 941 / 1672;
+}
+
 .login-art-form {
   display: contents; /* children position against the stage */
 }
@@ -15336,6 +15341,74 @@ body {
   background: rgb(58 28 40 / 92%);
   border-color: rgb(220 120 120 / 40%);
 }
+
+/* ── Phone-portrait companions (941×1672) ──────────────────────────────
+   Measured element bounds in art space (see the landscape comment block
+   above for the convention):
+   login_bg_portrait: input (163,1102)-(352,1162) · create/login (165,1180)-(415,1262)
+     · start demo (525,1180)-(805,1262) · error (150,1035)-(365,…)
+   login_password_bg_portrait: chip (260,800)-(680,935) · input (190,1005)-(645,1070)
+     · wand (650,1008)-(715,1068) · login (225,1165)-(720,1265) · error (190,1095)-(720,…)
+   login_set_password_bg_portrait: chip (305,725)-(638,820) · input (190,903)-(645,963)
+     · wand (650,905)-(715,960) · set (240,1045)-(700,1165) · error (190,985)-(700,…)
+   login_confirm_bg_portrait: chip (265,695)-(665,795) · yes (280,1105)-(660,1230)
+     · no (280,1295)-(655,1425) · error (265,1030)-(665,…)
+   login_picker_bg_portrait: list (195,665)-(760,1160) · create (285,1320)-(660,1400)
+   login_claim_bg_portrait: name (140,1118)-(800,1182) · password (140,1250)-(730,1322)
+     · toggle (735,1255)-(805,1320) · save (195,1405)-(745,1485)
+     · not now (195,1505)-(745,1580) · error (200,1340)-(741,…)
+
+   The element classes are shared with the landscape scenes; insets and type
+   sizes are re-scoped under the phone stage. Scene-specific selectors
+   (.lpw-*, .lsp-*, …) must come after the generic .login-art-input override
+   so the cascade resolves the name scene vs the password scenes. */
+
+.login-art-stage--phone .login-art-input {
+  inset: 65.91% 62.59% 30.50% 17.32%;
+  font-size: 1.9cqh;
+}
+
+.login-art-stage--phone .login-art-submit { inset: 70.57% 55.90% 24.52% 17.53%; }
+.login-art-stage--phone .login-art-demo { inset: 70.57% 14.45% 24.52% 55.79%; }
+
+.login-art-stage--phone .login-art-error {
+  top: 61.90%;
+  right: 61.21%;
+  left: 15.94%;
+  font-size: 1.5cqh;
+}
+
+.login-art-stage--phone .login-art-chip { font-size: 2.2cqh; }
+.login-art-stage--phone .login-art-error-chip { font-size: 1.5cqh; }
+
+.login-art-stage--phone .lpw-chip { inset: 47.85% 27.74% 44.08% 27.63%; }
+.login-art-stage--phone .lpw-input { inset: 60.11% 31.46% 36.00% 20.19%; font-size: 2cqh; }
+.login-art-stage--phone .lpw-wand { inset: 60.29% 24.02% 36.12% 69.08%; }
+.login-art-stage--phone .lpw-submit { inset: 69.68% 23.49% 24.34% 23.91%; }
+.login-art-stage--phone .lpw-error { inset: 65.49% 23.49% auto 20.19%; }
+
+.login-art-stage--phone .lsp-chip { inset: 43.36% 32.20% 50.96% 32.41%; }
+.login-art-stage--phone .lsp-input { inset: 54.01% 31.46% 42.40% 20.19%; font-size: 2cqh; }
+.login-art-stage--phone .lsp-wand { inset: 54.13% 24.02% 42.58% 69.08%; }
+.login-art-stage--phone .lsp-submit { inset: 62.50% 25.61% 30.32% 25.50%; }
+.login-art-stage--phone .lsp-error { inset: 58.91% 25.61% auto 20.19%; }
+
+.login-art-stage--phone .lcf-chip { inset: 41.57% 29.33% 52.45% 28.16%; }
+.login-art-stage--phone .lcf-yes { inset: 66.09% 29.86% 26.44% 29.76%; }
+.login-art-stage--phone .lcf-no { inset: 77.45% 30.39% 14.77% 29.76%; }
+.login-art-stage--phone .lcf-error { inset: 61.60% 29.33% auto 28.16%; }
+
+.login-art-stage--phone .lpk-list { inset: 39.77% 19.23% 30.62% 20.72%; }
+.login-art-stage--phone .lpk-create { inset: 78.95% 29.86% 16.27% 30.29%; }
+.login-art-stage--phone .login-art-picker-list .character-picker-btn { font-size: 2cqh; }
+
+.login-art-stage--phone .login-art-input-dark { font-size: 1.9cqh; }
+.login-art-stage--phone .lcm-name { inset: 66.87% 14.98% 29.31% 14.88%; }
+.login-art-stage--phone .lcm-password { inset: 74.76% 22.42% 20.93% 14.88%; }
+.login-art-stage--phone .lcm-toggle { inset: 75.06% 14.45% 21.05% 78.11%; }
+.login-art-stage--phone .lcm-save { inset: 84.03% 20.83% 11.18% 20.72%; }
+.login-art-stage--phone .lcm-notnow { inset: 90.01% 20.83% 5.50% 20.72%; }
+.login-art-stage--phone .lcm-error { inset: 80.14% 21.25% auto 21.25%; }
 
 /* Later login steps (password / create / race / class) keep their modal but
    borrow the painted scene as a softened backdrop for continuity. */

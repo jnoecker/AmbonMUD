@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import type { LoginClassOption, LoginErrorState, LoginPromptState, LoginRaceOption } from "../types";
 import { ArtScene } from "./ArtScene";
-import { ART_FIT_LANDSCAPE, ART_FIT_PORTRAIT, useArtImage, useMediaFits } from "./loginArtFit";
+import { ART_FIT_PORTRAIT, useArtImage, useMediaFits, useOrientedArt } from "./loginArtFit";
 
 interface LoginModalProps {
   loginPrompt: LoginPromptState;
@@ -41,27 +41,35 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
     onSubmit(value);
   }, [onSubmit]);
 
-  const artFitsLandscape = useMediaFits(ART_FIT_LANDSCAPE);
   const artFitsPortrait = useMediaFits(ART_FIT_PORTRAIT);
 
   const errorForState = loginError?.state === loginPrompt.state ? loginError.message : null;
 
   const isWide = loginPrompt.state === "raceSelection" || loginPrompt.state === "classSelection";
 
-  // One painted scene per login step; the portrait scenes use the looser gate.
-  const SCENE_ART: Record<string, { key: string; portrait?: boolean }> = {
-    name: { key: "login_bg" },
-    password: { key: "login_password_bg" },
-    newPassword: { key: "login_set_password_bg" },
-    confirmCreate: { key: "login_confirm_bg" },
-    raceSelection: { key: "login_race_bg", portrait: true },
-    classSelection: { key: "login_class_bg", portrait: true },
+  // One painted scene per login step. The landscape scenes carry a
+  // phone-portrait companion (chosen by viewport orientation); race/class are
+  // slot grids that are already portrait and use their own stage.
+  const SCENE_ART: Record<string, { key: string; portraitKey?: string; slots?: boolean }> = {
+    name: { key: "login_bg", portraitKey: "login_bg_portrait" },
+    password: { key: "login_password_bg", portraitKey: "login_password_bg_portrait" },
+    newPassword: { key: "login_set_password_bg", portraitKey: "login_set_password_bg_portrait" },
+    confirmCreate: { key: "login_confirm_bg", portraitKey: "login_confirm_bg_portrait" },
+    raceSelection: { key: "login_race_bg", slots: true },
+    classSelection: { key: "login_class_bg", slots: true },
   };
   const scene = SCENE_ART[loginPrompt.state];
-  const sceneFits = scene?.portrait ? artFitsPortrait : artFitsLandscape;
+  const isSlotScene = scene?.slots === true;
   // Gated on the image actually loading: a URL that 404s or is blocked
   // client-side must fall back to the CSS UI, not render a black scene.
-  const sceneArt = useArtImage(scene && sceneFits ? serverAssets[scene.key] ?? null : null);
+  const slotArt = useArtImage(scene && isSlotScene && artFitsPortrait ? serverAssets[scene.key] ?? null : null);
+  const oriented = useOrientedArt(
+    scene && !isSlotScene ? serverAssets[scene.key] ?? null : null,
+    scene && !isSlotScene && scene.portraitKey ? serverAssets[scene.portraitKey] ?? null : null,
+  );
+  const sceneArt = isSlotScene ? slotArt : oriented.url;
+  /** True when the phone-portrait companion (941×1672 stage) is active. */
+  const phoneScene = !isSlotScene && oriented.phone;
 
   // Decorative blurred backdrop behind the fallback modal steps.
   const backdropArt = useArtImage(serverAssets["login_bg"] ?? null);
@@ -81,7 +89,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
     const art = sceneArt;
     if (art) {
       return (
-        <ArtScene url={art} stageClass="login-art-stage--wide" label="Welcome to AmbonMUD">
+        <ArtScene url={art} stageClass={phoneScene ? "login-art-stage--phone" : "login-art-stage--wide"} label="Welcome to AmbonMUD">
           <h1 className="sr-only">AmbonMUD — enter a character name to log in or create, or start a demo</h1>
           {errorForState && (
             <p className="login-art-error" id="login-art-error" role="alert">{errorForState}</p>
@@ -192,7 +200,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
     const art = sceneArt;
     if (art) {
       return (
-        <ArtScene url={art} stageClass="login-art-stage--book login-art-stage--password" label="Welcome back — enter your password">
+        <ArtScene url={art} stageClass={`${phoneScene ? "login-art-stage--phone" : "login-art-stage--book"} login-art-stage--password`} label="Welcome back — enter your password">
           <h1 className="sr-only">Welcome back, {loginPrompt.name} — enter your password</h1>
           <span className="login-art-chip lpw-chip" aria-hidden="true">{loginPrompt.name}</span>
           <form onSubmit={handleSubmit} className="login-art-form">
@@ -228,7 +236,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
     const art = sceneArt;
     if (art) {
       return (
-        <ArtScene url={art} stageClass="login-art-stage--wide login-art-stage--setpw" label="Choose a password">
+        <ArtScene url={art} stageClass={`${phoneScene ? "login-art-stage--phone" : "login-art-stage--wide"} login-art-stage--setpw`} label="Choose a password">
           <h1 className="sr-only">Choose a password for {loginPrompt.name}</h1>
           <span className="login-art-chip lsp-chip" aria-hidden="true">{loginPrompt.name}</span>
           <form onSubmit={handleSubmit} className="login-art-form">
@@ -264,7 +272,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
     const art = sceneArt;
     if (art) {
       return (
-        <ArtScene url={art} stageClass="login-art-stage--book login-art-stage--confirm" label="Create a new character?">
+        <ArtScene url={art} stageClass={`${phoneScene ? "login-art-stage--phone" : "login-art-stage--book"} login-art-stage--confirm`} label="Create a new character?">
           <h1 className="sr-only">No character named {loginPrompt.name} was found. Create a new character?</h1>
           <span className="login-art-chip lcf-chip" aria-hidden="true">{loginPrompt.name}</span>
           <button
