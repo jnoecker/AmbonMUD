@@ -519,6 +519,26 @@ class GameEngine(
         )
     }
 
+    private val conditionalSpawnHandler by lazy {
+        ConditionalSpawnHandler(
+            world = world,
+            mobs = mobs,
+            players = players,
+            outbound = outbound,
+            gmcpEmitter = gmcpEmitter,
+            mobSystem = mobSystem,
+            behaviorTreeSystem = behaviorTreeSystem,
+            mobRemovalCoordinator = mobRemovalCoordinator,
+            variantRoller = mobVariantRoller,
+            period = { worldTimeSystem.period() },
+            season = { seasonSystem.season() },
+            weatherForZone = { zone -> weatherSystem.weatherForZone(zone) },
+            activeEventFlags = { worldEventSystem.activeFlags() },
+            isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
+            clock = clock,
+        )
+    }
+
     /**
      * GMCP packages each session has opted into (e.g. "Char.Vitals", "Room.Info").
      *
@@ -1202,6 +1222,7 @@ class GameEngine(
                 onZoneScheduleRefresh = {
                     zoneResetHandler.refreshSchedule()
                     timedRespawnHandler.refresh()
+                    conditionalSpawnHandler.refresh()
                 },
             )
         } else {
@@ -1588,7 +1609,9 @@ class GameEngine(
     private lateinit var engineScope: CoroutineScope
 
     init {
-        world.mobSpawns.forEach { spawn ->
+        // Condition-gated spawns (night-only, storm-only, …) are owned entirely
+        // by ConditionalSpawnHandler; they are not present at cold start.
+        world.mobSpawns.filterNot { it.isConditional(world) }.forEach { spawn ->
             mobs.upsert(spawnToMobState(spawn, world))
         }
         items.loadSpawns(world.itemSpawns)
@@ -1917,6 +1940,9 @@ class GameEngine(
 
                     // Reset zones when their lifespan elapses.
                     zoneResetHandler.tick()
+
+                    // Spawn/fade condition-gated mobs (night/storm/season/random).
+                    conditionalSpawnHandler.tick()
 
                     // Restore item spawns / features that declare their own respawnSeconds.
                     timedRespawnHandler.tick()
@@ -2420,6 +2446,9 @@ class GameEngine(
         val spawn = world.mobSpawns.find { it.id == mobId }
         val template = spawn?.let { world.mobTemplate(it.templateId) }
         val respawnMs = template?.respawnSeconds?.let { it * 1_000L }
+        // Conditional mobs respawn through ConditionalSpawnHandler when their
+        // gates next hold, not via the unconditional post-death timer.
+        if (spawn != null && spawn.isConditional(world)) return
         if (spawn != null && template != null && respawnMs != null) {
             scheduler.scheduleIn(respawnMs) {
                 if (mobs.get(spawn.id) != null) return@scheduleIn

@@ -266,14 +266,22 @@ internal class ZoneResetHandler(
             world.rooms.keys
                 .filterTo(linkedSetOf()) { roomId -> roomId.zone == zone }
 
+        // Conditional spawns are owned by ConditionalSpawnHandler; the reset
+        // neither removes nor repopulates their slots (only their gates do).
         val zoneMobSpawns =
             world.mobSpawns
-                .filter { spawn -> idZone(spawn.id.value) == zone }
+                .filter { spawn -> idZone(spawn.id.value) == zone && !spawn.isConditional(world) }
+        // Ids of conditional spawns in this zone — excluded from removal so a live
+        // night/storm/season mob survives the reset and stays handler-owned.
+        val conditionalIds =
+            world.mobSpawns
+                .filter { spawn -> idZone(spawn.id.value) == zone && spawn.isConditional(world) }
+                .mapTo(hashSetOf()) { spawn -> spawn.id }
         val activeZoneMobIds =
             mobs
                 .all()
                 .map { mob -> mob.id }
-                .filter { mobId -> idZone(mobId.value) == zone }
+                .filter { mobId -> idZone(mobId.value) == zone && mobId !in conditionalIds }
 
         val zoneMobIds =
             (zoneMobSpawns.map { spawn -> spawn.id } + activeZoneMobIds)

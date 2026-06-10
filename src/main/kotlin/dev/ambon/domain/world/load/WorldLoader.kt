@@ -474,6 +474,7 @@ object WorldLoader {
                         tier = tier,
                         overrides = overrides,
                         variantEligible = mf.rareVariants,
+                        spawnCondition = parseSpawnCondition(mf.condition, mobId.value),
                     )
 
                 expandPlacements(mobId, placementSources, zone, mergedSpawns)
@@ -1742,6 +1743,45 @@ object WorldLoader {
                 "$context has invalid category '$category'; valid values: $VALID_MOB_CATEGORIES",
             )
         }
+    }
+
+    private fun parseSpawnCondition(
+        file: dev.ambon.domain.world.data.SpawnConditionFile?,
+        mobId: String,
+    ): dev.ambon.domain.world.SpawnCondition? {
+        if (file == null) return null
+        require(file.chance in 0.0..1.0) {
+            "Mob '$mobId' condition.chance must be in 0.0..1.0, got ${file.chance}"
+        }
+        val periods = file.time.map { raw ->
+            try {
+                dev.ambon.engine.TimePeriod.valueOf(raw.trim().uppercase())
+            } catch (e: IllegalArgumentException) {
+                throw WorldLoadException(
+                    "Mob '$mobId' condition.time has invalid value '$raw'; valid: ${dev.ambon.engine.TimePeriod.entries.joinToString {
+                        it.name
+                    }}",
+                )
+            }
+        }.toSet()
+        val seasons = file.seasons.map { raw ->
+            try {
+                dev.ambon.engine.Season.valueOf(raw.trim().uppercase())
+            } catch (e: IllegalArgumentException) {
+                throw WorldLoadException(
+                    "Mob '$mobId' condition.seasons has invalid value '$raw'; valid: ${dev.ambon.engine.Season.entries.joinToString {
+                        it.name
+                    }}",
+                )
+            }
+        }.toSet()
+        return dev.ambon.domain.world.SpawnCondition(
+            timePeriods = periods,
+            weather = file.weather.map { it.trim().uppercase() }.filter { it.isNotEmpty() }.toSet(),
+            seasons = seasons,
+            eventFlags = file.events.map { it.trim() }.filter { it.isNotEmpty() }.toSet(),
+            chance = file.chance,
+        )
     }
 
     private fun parseCraftingStationType(

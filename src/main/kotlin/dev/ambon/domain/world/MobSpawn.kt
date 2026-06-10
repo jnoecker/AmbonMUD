@@ -65,6 +65,12 @@ data class MobTemplateDef(
     val overrides: MobStatOverrides = MobStatOverrides(),
     /** Whether the server may spawn rare cosmetic variants of this mob. */
     val variantEligible: Boolean = true,
+    /**
+     * When non-null, gates this mob's appearance on world conditions (time,
+     * weather, season, events, random chance). A condition where
+     * [SpawnCondition.isUnconditional] is true behaves like no condition at all.
+     */
+    val spawnCondition: SpawnCondition? = null,
 ) : MobTemplate
 
 /**
