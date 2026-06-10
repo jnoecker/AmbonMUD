@@ -187,6 +187,7 @@ tasks.register<JavaExec>("demo") {
     doFirst {
         val offset = portOffsetEnv.orNull?.toIntOrNull()?.let { Math.floorMod(it, 1000) }
             ?: Math.floorMod(worktreeName.hashCode(), 1000)
+
         fun freePortFrom(start: Int): Int {
             var candidate = start
             repeat(50) {
