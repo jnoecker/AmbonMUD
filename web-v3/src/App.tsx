@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { GameShell } from "./components/GameShell";
 import { Drawer } from "./components/Drawer";
@@ -9,33 +9,38 @@ import { TrainerPanel } from "./components/TrainerPanel";
 import { TradePanel } from "./components/TradePanel";
 import { WorldFeaturesPopout } from "./components/WorldFeaturesPopout";
 import { featureArt, pickFocusedFeature } from "./components/worldFeatures";
-import { ChatBoardPanel } from "./components/panels/ChatBoardPanel";
-import { WhoBoardPanel } from "./components/panels/WhoBoardPanel";
-import { GuildBoardPanel } from "./components/panels/GuildBoardPanel";
-import { FriendsBoardPanel } from "./components/panels/FriendsBoardPanel";
-import { GroupBoardPanel } from "./components/panels/GroupBoardPanel";
-import { PlayerExaminePanel } from "./components/panels/PlayerExaminePanel";
-import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
-import { QuestPanel } from "./components/panels/QuestPanel";
-import { QuestOfferPanel } from "./components/panels/QuestOfferPanel";
-import { InventoryPanel } from "./components/panels/InventoryPanel";
-import { EquipmentPanel } from "./components/panels/EquipmentPanel";
-import { MailPanel } from "./components/panels/MailPanel";
-import { MonsterManualPanel } from "./components/panels/MonsterManualPanel";
-import { ItemManualPanel } from "./components/panels/ItemManualPanel";
-import { CraftingPanel } from "./components/panels/CraftingPanel";
-import { ProfessionsPanel } from "./components/panels/ProfessionsPanel";
-import { HousingPanel } from "./components/panels/HousingPanel";
-import { BankPanel } from "./components/panels/BankPanel";
-import { StylistPanel } from "./components/panels/StylistPanel";
-import { InnPanel } from "./components/panels/InnPanel";
-import { AuctionPanel } from "./components/panels/AuctionPanel";
-import { DungeonPanel } from "./components/panels/DungeonPanel";
-import { LotteryPanel } from "./components/panels/LotteryPanel";
-import { DicePanel } from "./components/panels/DicePanel";
-import { AdminPanel } from "./components/panels/AdminPanel";
-import { CombatLogPanel } from "./components/panels/CombatLogPanel";
+
+// Drawer panels and field-manual overlays are only reachable after login, so
+// they load on demand (React.lazy) instead of riding in the entry chunk.
+// vite.config.ts groups them into a shared "panels" chunk (one fetch on first
+// drawer open) with the staff-only AdminPanel split out separately.
+const ChatBoardPanel = lazy(() => import("./components/panels/ChatBoardPanel").then((m) => ({ default: m.ChatBoardPanel })));
+const WhoBoardPanel = lazy(() => import("./components/panels/WhoBoardPanel").then((m) => ({ default: m.WhoBoardPanel })));
+const GuildBoardPanel = lazy(() => import("./components/panels/GuildBoardPanel").then((m) => ({ default: m.GuildBoardPanel })));
+const FriendsBoardPanel = lazy(() => import("./components/panels/FriendsBoardPanel").then((m) => ({ default: m.FriendsBoardPanel })));
+const GroupBoardPanel = lazy(() => import("./components/panels/GroupBoardPanel").then((m) => ({ default: m.GroupBoardPanel })));
+const PlayerExaminePanel = lazy(() => import("./components/panels/PlayerExaminePanel").then((m) => ({ default: m.PlayerExaminePanel })));
+const CharacterPanel = lazy(() => import("./components/panels/CharacterPanel").then((m) => ({ default: m.CharacterPanel })));
+const QuestPanel = lazy(() => import("./components/panels/QuestPanel").then((m) => ({ default: m.QuestPanel })));
+const QuestOfferPanel = lazy(() => import("./components/panels/QuestOfferPanel").then((m) => ({ default: m.QuestOfferPanel })));
+const InventoryPanel = lazy(() => import("./components/panels/InventoryPanel").then((m) => ({ default: m.InventoryPanel })));
+const EquipmentPanel = lazy(() => import("./components/panels/EquipmentPanel").then((m) => ({ default: m.EquipmentPanel })));
+const MailPanel = lazy(() => import("./components/panels/MailPanel").then((m) => ({ default: m.MailPanel })));
+const MonsterManualPanel = lazy(() => import("./components/panels/MonsterManualPanel").then((m) => ({ default: m.MonsterManualPanel })));
+const ItemManualPanel = lazy(() => import("./components/panels/ItemManualPanel").then((m) => ({ default: m.ItemManualPanel })));
+const CraftingPanel = lazy(() => import("./components/panels/CraftingPanel").then((m) => ({ default: m.CraftingPanel })));
+const ProfessionsPanel = lazy(() => import("./components/panels/ProfessionsPanel").then((m) => ({ default: m.ProfessionsPanel })));
+const HousingPanel = lazy(() => import("./components/panels/HousingPanel").then((m) => ({ default: m.HousingPanel })));
+const BankPanel = lazy(() => import("./components/panels/BankPanel").then((m) => ({ default: m.BankPanel })));
+const StylistPanel = lazy(() => import("./components/panels/StylistPanel").then((m) => ({ default: m.StylistPanel })));
+const InnPanel = lazy(() => import("./components/panels/InnPanel").then((m) => ({ default: m.InnPanel })));
+const AuctionPanel = lazy(() => import("./components/panels/AuctionPanel").then((m) => ({ default: m.AuctionPanel })));
+const DungeonPanel = lazy(() => import("./components/panels/DungeonPanel").then((m) => ({ default: m.DungeonPanel })));
+const LotteryPanel = lazy(() => import("./components/panels/LotteryPanel").then((m) => ({ default: m.LotteryPanel })));
+const DicePanel = lazy(() => import("./components/panels/DicePanel").then((m) => ({ default: m.DicePanel })));
+const AdminPanel = lazy(() => import("./components/panels/AdminPanel").then((m) => ({ default: m.AdminPanel })));
+const CombatLogPanel = lazy(() => import("./components/panels/CombatLogPanel").then((m) => ({ default: m.CombatLogPanel })));
 import { HelpContent } from "./components/HelpContent";
 import { TerminalOverlay } from "./components/TerminalOverlay";
 import { Atlas } from "./components/Atlas";
@@ -1151,6 +1156,8 @@ function App() {
         }
         initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
       >
+        {/* Panels are lazy chunks; the drawer chrome shows while one loads. */}
+        <Suspense fallback={null}>
         {drawerPanel === "character" && (
           <CharacterPanel
             connected={connected}
@@ -1760,6 +1767,7 @@ function App() {
             )}
           </article>
         )}
+        </Suspense>
       </Drawer>
 
       {/* Trade is its own modal-like overlay */}
@@ -1936,6 +1944,7 @@ function App() {
 
       {/* Staff admin panel (the STAFF pill lives on the canvas, in GameShell). */}
       {state.character.isStaff && showAdminPanel && (
+        <Suspense fallback={null}>
         <AdminPanel
           onCommand={(command) => {
             sendCommand(command);
@@ -1953,6 +1962,7 @@ function App() {
           feedbackFeed={state.uiFeedbackFeed}
           serverAssets={state.serverAssets}
         />
+        </Suspense>
       )}
 
       {/* Toast */}
@@ -2009,6 +2019,7 @@ function App() {
       {/* Monster manual — bestiary page for a clicked creature (consolidates the
           old look + consider + attack popouts). */}
       {monster && (
+        <Suspense fallback={null}>
         <MonsterManualPanel
           key={monster.id ?? monster.name}
           monster={monster}
@@ -2030,10 +2041,12 @@ function App() {
           onShop={() => { sendCommand("list"); openPanel("shop"); }}
           onVideo={(url) => setVideoUrl(url)}
         />
+        </Suspense>
       )}
 
       {/* Player examine — Who-board "Examine" opens the player in the manual style. */}
       {examinePlayer && (
+        <Suspense fallback={null}>
         <PlayerExaminePanel
           key={examinePlayer.name}
           player={examinePlayer}
@@ -2046,10 +2059,12 @@ function App() {
             openPanel("chatboard");
           }}
         />
+        </Suspense>
       )}
 
       {/* Player field-manual card for a player clicked in the room (full context menu). */}
       {roomPlayer && (
+        <Suspense fallback={null}>
         <PlayerExaminePanel
           key={roomPlayer.name}
           player={roomPlayer}
@@ -2063,10 +2078,12 @@ function App() {
           onCommand={sendCommand}
           onTellPlayer={() => { /* room context uses the inline composer */ }}
         />
+        </Suspense>
       )}
 
       {/* Item card — parchment "field manual" page for a clicked room item. */}
       {item && (
+        <Suspense fallback={null}>
         <ItemManualPanel
           key={item.id ?? item.name}
           item={item}
@@ -2077,10 +2094,12 @@ function App() {
           onZoomImage={(url) => setImagePreviewUrl(url)}
           onVideo={(url) => setVideoUrl(url)}
         />
+        </Suspense>
       )}
 
       {/* Inn — key-on-a-hook recall modal (click away to dismiss). */}
       {showInn && (
+        <Suspense fallback={null}>
         <InnPanel
           roomTitle={state.room.title}
           recall={state.recallState}
@@ -2088,6 +2107,7 @@ function App() {
           onSetRecall={() => { sendCommand("rest"); setShowInn(false); }}
           onClose={() => setShowInn(false)}
         />
+        </Suspense>
       )}
 
       {/* Consider — verbal threat assessment for a mob (typed `consider`). Hidden

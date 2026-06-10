@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# ANALYZE=1 bun run build output (rollup-plugin-visualizer)
+stats.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

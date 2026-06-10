@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { Application } from "pixi.js";
 import { SceneManager } from "./SceneManager";
 
-export function PixiCanvas() {
+// memo: props-less component under GameShell, which re-renders on every
+// vitals/room/combat update — the canvas itself never needs to.
+export const PixiCanvas = memo(function PixiCanvas() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
   const sceneRef = useRef<SceneManager | null>(null);
@@ -76,4 +78,4 @@ export function PixiCanvas() {
       style={{ width: "100%", height: "100%", minHeight: 200 }}
     />
   );
-}
+});
