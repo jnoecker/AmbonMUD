@@ -9,12 +9,14 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
+import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.origin
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -31,7 +33,9 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 private val log = KotlinLogging.logger {}
@@ -89,6 +93,43 @@ internal suspend fun writeCoalescedOutboundFrames(
     }
 }
 
+/**
+ * Bounds concurrent WebSocket connections globally and per source IP. Unauthenticated `/ws`
+ * upgrades each allocate a session, channel, and coroutines, so without a cap a single host could
+ * exhaust memory / file descriptors. [tryAcquire] reserves a slot atomically (or returns false to
+ * reject) and [release] frees it on disconnect.
+ */
+internal class WsConnectionLimiter(
+    private val maxTotal: Int,
+    private val maxPerIp: Int,
+) {
+    private val total = AtomicInteger(0)
+    private val perIp = ConcurrentHashMap<String, AtomicInteger>()
+
+    fun tryAcquire(ip: String): Boolean {
+        if (total.incrementAndGet() > maxTotal) {
+            total.decrementAndGet()
+            return false
+        }
+        if (maxPerIp <= 0) return true
+        val counter = perIp.computeIfAbsent(ip) { AtomicInteger(0) }
+        if (counter.incrementAndGet() > maxPerIp) {
+            counter.decrementAndGet()
+            total.decrementAndGet()
+            return false
+        }
+        return true
+    }
+
+    fun release(ip: String) {
+        total.decrementAndGet()
+        if (maxPerIp <= 0) return
+        perIp.computeIfPresent(ip) { _, counter ->
+            if (counter.decrementAndGet() <= 0) null else counter
+        }
+    }
+}
+
 class KtorWebSocketTransport(
     private val port: Int,
     private val inbound: InboundBus,
@@ -101,6 +142,11 @@ class KtorWebSocketTransport(
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
+    private val maxConnections: Int = 5000,
+    private val maxConnectionsPerIp: Int = 30,
+    private val pingPeriodMillis: Long = 15_000L,
+    private val pongTimeoutMillis: Long = 30_000L,
+    private val maxFrameBytes: Long = 65_536L,
     private val prometheusRegistry: PrometheusMeterRegistry? = null,
     private val metricsEndpoint: String = "/metrics",
     private val metrics: GameMetrics = GameMetrics.noop(),
@@ -118,6 +164,11 @@ class KtorWebSocketTransport(
                     maxLineLen = maxLineLen,
                     maxNonPrintablePerLine = maxNonPrintablePerLine,
                     maxInboundBackpressureFailures = maxInboundBackpressureFailures,
+                    maxConnections = maxConnections,
+                    maxConnectionsPerIp = maxConnectionsPerIp,
+                    pingPeriodMillis = pingPeriodMillis,
+                    pongTimeoutMillis = pongTimeoutMillis,
+                    maxFrameBytes = maxFrameBytes,
                     prometheusRegistry = prometheusRegistry,
                     metricsEndpoint = metricsEndpoint,
                     metrics = metrics,
@@ -139,11 +190,28 @@ internal fun Application.ambonMUDWebModule(
     maxLineLen: Int = 1024,
     maxNonPrintablePerLine: Int = 32,
     maxInboundBackpressureFailures: Int = 3,
+    maxConnections: Int = 5000,
+    maxConnectionsPerIp: Int = 30,
+    pingPeriodMillis: Long = 15_000L,
+    pongTimeoutMillis: Long = 30_000L,
+    maxFrameBytes: Long = 65_536L,
     prometheusRegistry: PrometheusMeterRegistry? = null,
     metricsEndpoint: String = "/metrics",
     metrics: GameMetrics = GameMetrics.noop(),
 ) {
-    install(WebSockets)
+    install(WebSockets) {
+        // Server-driven pings detect dead/slow-loris peers that hold a connection open without
+        // sending data, so they are reaped instead of consuming a slot indefinitely.
+        if (pingPeriodMillis > 0) this.pingPeriodMillis = pingPeriodMillis
+        if (pongTimeoutMillis > 0) this.timeoutMillis = pongTimeoutMillis
+        // Cap inbound frame size at the protocol layer as defence-in-depth alongside the per-frame
+        // check in bridgeWebSocketSession.
+        maxFrameSize = maxFrameBytes
+    }
+
+    install(securityHeadersPlugin())
+
+    val connectionLimiter = WsConnectionLimiter(maxConnections, maxConnectionsPerIp)
 
     routing {
         if (prometheusRegistry != null) {
@@ -165,16 +233,26 @@ internal fun Application.ambonMUDWebModule(
                     return@webSocket
                 }
             }
-            bridgeWebSocketSession(
-                inbound = inbound,
-                outboundRouter = outboundRouter,
-                sessionIdFactory = sessionIdFactory,
-                sessionOutboundQueueCapacity = sessionOutboundQueueCapacity,
-                maxLineLen = maxLineLen,
-                maxNonPrintablePerLine = maxNonPrintablePerLine,
-                maxInboundBackpressureFailures = maxInboundBackpressureFailures,
-                metrics = metrics,
-            )
+            val remoteIp = call.request.origin.remoteHost
+            if (!connectionLimiter.tryAcquire(remoteIp)) {
+                log.warn { "WebSocket rejected: connection limit reached for remoteIp=$remoteIp" }
+                close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "Connection limit reached"))
+                return@webSocket
+            }
+            try {
+                bridgeWebSocketSession(
+                    inbound = inbound,
+                    outboundRouter = outboundRouter,
+                    sessionIdFactory = sessionIdFactory,
+                    sessionOutboundQueueCapacity = sessionOutboundQueueCapacity,
+                    maxLineLen = maxLineLen,
+                    maxNonPrintablePerLine = maxNonPrintablePerLine,
+                    maxInboundBackpressureFailures = maxInboundBackpressureFailures,
+                    metrics = metrics,
+                )
+            } finally {
+                connectionLimiter.release(remoteIp)
+            }
         }
 
         get("/v3") {
@@ -431,6 +509,46 @@ internal fun tryParseGmcpEnvelope(text: String): Pair<String, String>? {
 
 private const val MAX_CLOSE_REASON_LENGTH = 123
 private const val MAX_WS_FRAME_SIZE = 65_536
+
+/**
+ * Content-Security-Policy for the served web client. `frame-ancestors 'none'` blocks clickjacking,
+ * `object-src 'none'` / `base-uri 'self'` close common injection vectors, and `img/media/connect`
+ * are constrained to self + HTTPS so painted-art and audio assets (Cloudflare R2) keep working while
+ * arbitrary exfiltration origins are disallowed. `script-src`/`style-src` retain `'unsafe-inline'`
+ * because the Vite bundle inlines a module-preload polyfill and the React UI uses inline style
+ * attributes; tightening these to nonces/hashes is a follow-up. The client itself performs no HTML
+ * interpolation of untrusted text (all rendering goes through React escaping / the xterm canvas).
+ */
+private val WEB_CONTENT_SECURITY_POLICY =
+    listOf(
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'none'",
+        "script-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
+        "img-src 'self' https: data: blob:",
+        "media-src 'self' https: data: blob:",
+        "connect-src 'self' ws: wss: https:",
+        "worker-src 'self' blob:",
+        "manifest-src 'self'",
+    ).joinToString("; ")
+
+/**
+ * Adds defence-in-depth security response headers (CSP, nosniff, frame/referrer policy) to every
+ * HTTP response served by the web module.
+ */
+internal fun securityHeadersPlugin() =
+    createApplicationPlugin(name = "AmbonSecurityHeaders") {
+        onCall { call ->
+            val headers = call.response.headers
+            headers.append("Content-Security-Policy", WEB_CONTENT_SECURITY_POLICY)
+            headers.append("X-Content-Type-Options", "nosniff")
+            headers.append("X-Frame-Options", "DENY")
+            headers.append("Referrer-Policy", "no-referrer")
+        }
+    }
 
 /**
  * Validates that an Origin header is consistent with the request Host.

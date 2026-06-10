@@ -934,7 +934,10 @@ class PlayerRegistry(
 
     private fun isValidPassword(password: String): Boolean {
         if (password.isBlank()) return false
-        if (password.length > 72) return false
+        // BCrypt silently truncates the input at 72 *bytes*. Validating in UTF-8 bytes (not UTF-16
+        // chars) prevents two passwords that share a 72-byte prefix — easy to hit with multi-byte
+        // characters — from being accepted as interchangeable.
+        if (password.toByteArray(Charsets.UTF_8).size > 72) return false
         return true
     }
 

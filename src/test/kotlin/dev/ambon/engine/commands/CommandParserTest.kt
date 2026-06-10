@@ -16,6 +16,15 @@ class CommandParserTest {
     }
 
     @Test
+    fun `trade offer gold parses valid amounts and rejects overflow without throwing`() {
+        assertEquals(Command.TradeOfferGold(100L), CommandParser.parse("trade offer 100 gold"))
+        // A digit string larger than Long.MAX_VALUE must yield Invalid, not throw NumberFormatException
+        // up into the engine tick loop (which would abort the tick for every player).
+        val huge = CommandParser.parse("trade offer 99999999999999999999999999 gold")
+        assertTrue(huge is Command.Invalid, "expected Invalid for overflowing gold amount, got $huge")
+    }
+
+    @Test
     fun `parses core commands and ignores whitespace`() {
         assertEquals(Command.Help, CommandParser.parse("help"))
         assertEquals(Command.Help, CommandParser.parse("  ?  "))

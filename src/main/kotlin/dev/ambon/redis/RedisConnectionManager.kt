@@ -11,6 +11,23 @@ import io.lettuce.core.pubsub.StatefulRedisPubSubConnection
 
 private val log = KotlinLogging.logger {}
 
+/**
+ * Strips any `user:password@` userinfo from a Redis URI so the AUTH password is never written to
+ * logs. Production Redis credentials are commonly supplied inline as `redis://:secret@host:6379`.
+ * Returns the input unchanged if it carries no userinfo or cannot be parsed.
+ */
+internal fun redactRedisUri(uri: String): String {
+    val schemeIdx = uri.indexOf("://")
+    if (schemeIdx < 0) return uri
+    val afterScheme = schemeIdx + 3
+    // Userinfo lives in the authority component (between "://" and the next '/'). Split on the LAST
+    // '@' inside it so an unencoded '@' in the password is redacted too.
+    val authorityEnd = uri.indexOf('/', afterScheme).let { if (it < 0) uri.length else it }
+    val atIdx = uri.lastIndexOf('@', authorityEnd - 1)
+    if (atIdx < afterScheme) return uri
+    return uri.substring(0, afterScheme) + "***@" + uri.substring(atIdx + 1)
+}
+
 class RedisConnectionManager(
     private val config: RedisConfig,
 ) : AutoCloseable,
@@ -34,9 +51,9 @@ class RedisConnectionManager(
             connection = conn
             commands = conn.sync()
             asyncCommands = conn.async()
-            log.info { "Redis connection established (uri=${config.uri})" }
+            log.info { "Redis connection established (uri=${redactRedisUri(config.uri)})" }
         } catch (e: Exception) {
-            log.warn(e) { "Redis connection failed - operating without Redis cache (uri=${config.uri})" }
+            log.warn(e) { "Redis connection failed - operating without Redis cache (uri=${redactRedisUri(config.uri)})" }
             commands = null
             asyncCommands = null
         }
