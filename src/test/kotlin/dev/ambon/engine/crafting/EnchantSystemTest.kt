@@ -147,6 +147,30 @@ class EnchantSystemTest {
         }
 
         @Test
+        fun `enchant succeeds with no prior enchanting skill state`() {
+            // A player who has never enchanted has no "enchanting" entry in craftingSkills.
+            // Missing state must default to a fresh level-1 state (as CraftingSystem does),
+            // or skillRequired-1 enchantments can never be learned at all.
+            items.addToInventory(sid, sword())
+            items.addToInventory(sid, essence())
+
+            val result = enchantSystem.enchant(sid, "sword", "keen_edge", mutableMapOf())
+
+            assertTrue(result is EnchantResult.Success)
+        }
+
+        @Test
+        fun `auto-select finds a skillRequired-1 enchantment with no prior skill state`() {
+            items.addToInventory(sid, sword())
+            items.addToInventory(sid, essence())
+
+            val result = enchantSystem.enchant(sid, "sword", null, mutableMapOf())
+
+            assertTrue(result is EnchantResult.Success)
+            assertEquals("Keen Edge", (result as EnchantResult.Success).enchantmentName)
+        }
+
+        @Test
         fun `enchant adds stat bonuses`() {
             items.addToInventory(sid, sword())
             items.addToInventory(sid, essence())
