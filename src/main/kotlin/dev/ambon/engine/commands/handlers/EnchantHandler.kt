@@ -106,7 +106,7 @@ class EnchantHandler(
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "[ Available Enchantments ]"))
         for ((id, def) in definitions) {
-            val skillLevel = player.craftingSkills[def.skill]?.level ?: 0
+            val skillLevel = player.craftingSkills.getOrDefault(def.skill, dev.ambon.domain.crafting.CraftingSkillState()).level
             val meetsSkill = skillLevel >= def.skillRequired
             val skillTag = if (meetsSkill) "" else " [skill too low]"
             val slots = if (def.targetSlots.isEmpty()) "any" else def.targetSlots.joinToString("/")
