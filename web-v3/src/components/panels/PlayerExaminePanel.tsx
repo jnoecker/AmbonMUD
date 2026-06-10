@@ -146,7 +146,7 @@ export function PlayerExaminePanel({
 
           {/* Inline inventory picker for Give. */}
           {giveOpen && (
-            <div className="mm-give">
+            <div className="mm-give" role="group" aria-label="Give an item">
               {inventory.length === 0 ? (
                 <p className="mm-give-empty">Your pack is empty.</p>
               ) : (

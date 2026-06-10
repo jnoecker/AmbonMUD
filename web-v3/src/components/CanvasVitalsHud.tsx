@@ -44,15 +44,34 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
       <div className="canvas-vitals-skin">
         <img className="vskin-art" src={barBg} alt="" aria-hidden="true" />
         <div className="vskin-overlay">
-          <div className="vskin-slot vskin-slot-hp" title={`HP: ${vitals.hp}/${vitals.maxHp}`}>
+          <div
+            className="vskin-slot vskin-slot-hp"
+            title={`HP: ${vitals.hp}/${vitals.maxHp}`}
+            role="progressbar"
+            aria-label="Health"
+            aria-valuenow={vitals.hp}
+            aria-valuemin={0}
+            aria-valuemax={vitals.maxHp}
+          >
             <span className="vskin-drain" style={{ left: `${hpPct}%` }} />
           </div>
-          <div className="vskin-slot vskin-slot-mp" title={`MP: ${vitals.mana}/${vitals.maxMana}`}>
+          <div
+            className="vskin-slot vskin-slot-mp"
+            title={`MP: ${vitals.mana}/${vitals.maxMana}`}
+            role="progressbar"
+            aria-label="Mana"
+            aria-valuenow={vitals.mana}
+            aria-valuemin={0}
+            aria-valuemax={vitals.maxMana}
+          >
             <span className="vskin-drain" style={{ left: `${mpPct}%` }} />
           </div>
           <span className="vskin-num vskin-num-hp" title={`HP: ${vitals.hp}/${vitals.maxHp}`}>{formatCompact(vitals.hp)}/{formatCompact(vitals.maxHp)}</span>
           <span className="vskin-num vskin-num-mp" title={`MP: ${vitals.mana}/${vitals.maxMana}`}>{formatCompact(vitals.mana)}/{formatCompact(vitals.maxMana)}</span>
-          <span className="vskin-num vskin-num-gold" title={`Gold: ${vitals.gold.toLocaleString()}`}>{formatCompact(vitals.gold)}</span>
+          <span className="vskin-num vskin-num-gold" title={`Gold: ${vitals.gold.toLocaleString()}`}>
+            <span aria-hidden="true">{formatCompact(vitals.gold)}</span>
+            <span className="sr-only">{`Gold: ${vitals.gold.toLocaleString()}`}</span>
+          </span>
           <button
             type="button"
             className="vskin-hotspot vskin-heal"
@@ -93,7 +112,15 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
           <circle cx="0" cy="0" r="2.3" fill="#f0cf72" />
         </g>
       </svg>
-      <div className="vbar-vital" title={`HP: ${vitals.hp}/${vitals.maxHp}`}>
+      <div
+        className="vbar-vital"
+        title={`HP: ${vitals.hp}/${vitals.maxHp}`}
+        role="progressbar"
+        aria-label="Health"
+        aria-valuenow={vitals.hp}
+        aria-valuemin={0}
+        aria-valuemax={vitals.maxHp}
+      >
         <span className="vbar-vital-label">HP</span>
         <div className="vbar-vital-track">
           <span className="vbar-vital-fill vbar-vital-hp" style={{ width: `${percent(vitals.hp, vitals.maxHp)}%` }} />
@@ -111,7 +138,15 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
         <span className="vbar-quick-potion-icon" aria-hidden="true">+</span>
         <span className="vbar-quick-potion-label">Heal</span>
       </button>
-      <div className="vbar-vital" title={`MP: ${vitals.mana}/${vitals.maxMana}`}>
+      <div
+        className="vbar-vital"
+        title={`MP: ${vitals.mana}/${vitals.maxMana}`}
+        role="progressbar"
+        aria-label="Mana"
+        aria-valuenow={vitals.mana}
+        aria-valuemin={0}
+        aria-valuemax={vitals.maxMana}
+      >
         <span className="vbar-vital-label">MP</span>
         <div className="vbar-vital-track">
           <span className="vbar-vital-fill vbar-vital-mp" style={{ width: `${percent(vitals.mana, vitals.maxMana)}%` }} />
@@ -130,8 +165,11 @@ export function CanvasVitalsHud({ vitals, inventory, serverAssets, onCommand, au
         <span className="vbar-quick-potion-label">Mana</span>
       </button>
       <div className="vbar-gold" title={`Gold: ${vitals.gold.toLocaleString()}`}>
-        <span className="vbar-gold-coin" />
-        <span className="vbar-gold-text">{formatCompact(vitals.gold)}</span>
+        <span className="vbar-gold-coin" aria-hidden="true" />
+        <span className="vbar-gold-text">
+          <span aria-hidden="true">{formatCompact(vitals.gold)}</span>
+          <span className="sr-only">{`Gold: ${vitals.gold.toLocaleString()}`}</span>
+        </span>
       </div>
       <AudioControls audio={audio} />
     </div>

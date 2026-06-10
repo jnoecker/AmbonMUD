@@ -183,6 +183,12 @@ export function CommandPalette({
               onChange={(e) => setQuery(e.target.value)}
               autoComplete="off"
               spellCheck={false}
+              aria-label="Search commands"
+              role="combobox"
+              aria-expanded={flatItems.length > 0}
+              aria-controls="cmd-palette-listbox"
+              aria-autocomplete="list"
+              aria-activedescendant={flatItems.length > 0 ? `cmd-palette-item-${selectedIndex}` : undefined}
             />
             <kbd className="cmd-palette-kbd">Esc</kbd>
           </div>
@@ -192,19 +198,23 @@ export function CommandPalette({
           {query.trim().length > 0 ? `${flatItems.length} commands found` : ""}
         </div>
 
-        <div className="cmd-palette-list" ref={listRef}>
+        <div className="cmd-palette-list" ref={listRef} id="cmd-palette-listbox" role="listbox" aria-label="Commands">
           {flatItems.length === 0 && (
             <div className="cmd-palette-empty">No commands match your search.</div>
           )}
           {grouped.map(([category, items]) => (
-            <div key={category} className="cmd-palette-group">
-              <div className="cmd-palette-group-label">{categoryLabel(category)}</div>
+            <div key={category} className="cmd-palette-group" role="group" aria-label={categoryLabel(category)}>
+              <div className="cmd-palette-group-label" aria-hidden="true">{categoryLabel(category)}</div>
               {items.map((cmd) => {
                 const idx = flatIndex++;
                 return (
                   <button
                     key={cmd.name}
                     type="button"
+                    id={`cmd-palette-item-${idx}`}
+                    role="option"
+                    aria-selected={idx === selectedIndex}
+                    tabIndex={-1}
                     className={`cmd-palette-item${idx === selectedIndex ? " cmd-palette-item-selected" : ""}${cmd.staff ? " cmd-palette-item-staff" : ""}`}
                     data-palette-index={idx}
                     onClick={() => handleSelect(cmd)}

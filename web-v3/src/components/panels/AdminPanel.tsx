@@ -70,6 +70,7 @@ function TeleportBrowser({
         type="text"
         className="admin-input teleport-filter"
         placeholder="Filter zones, rooms, players..."
+        aria-label="Filter zones, rooms, players"
         value={filter}
         onChange={(e) => onSetFilter(e.target.value)}
         autoFocus
@@ -108,9 +109,10 @@ function TeleportBrowser({
             <button
               type="button"
               className={`teleport-zone-header ${isExpanded ? "teleport-zone-header-expanded" : ""}`}
+              aria-expanded={isExpanded}
               onClick={() => setExpandedZone(expandedZone === z.zone ? null : z.zone)}
             >
-              <span className="teleport-zone-arrow">{isExpanded ? "\u25BE" : "\u25B8"}</span>
+              <span className="teleport-zone-arrow" aria-hidden="true">{isExpanded ? "\u25BE" : "\u25B8"}</span>
               <span className="teleport-zone-name">{z.zone}</span>
               <span className="teleport-zone-count">{roomCount} rooms</span>
             </button>
@@ -180,6 +182,7 @@ function MobTemplateBrowser({
         type="text"
         className="admin-input teleport-filter"
         placeholder="Filter mob templates..."
+        aria-label="Filter mob templates"
         value={filter}
         onChange={(e) => onSetFilter(e.target.value)}
       />
@@ -190,9 +193,10 @@ function MobTemplateBrowser({
             <button
               type="button"
               className={`teleport-zone-header ${isExpanded ? "teleport-zone-header-expanded" : ""}`}
+              aria-expanded={isExpanded}
               onClick={() => setExpandedZone(expandedZone === z.zone ? null : z.zone)}
             >
-              <span className="teleport-zone-arrow">{isExpanded ? "\u25BE" : "\u25B8"}</span>
+              <span className="teleport-zone-arrow" aria-hidden="true">{isExpanded ? "\u25BE" : "\u25B8"}</span>
               <span className="teleport-zone-name">{z.zone}</span>
               <span className="teleport-zone-count">{z.mobs.length} mobs</span>
             </button>
@@ -281,6 +285,7 @@ function TargetBrowser({
         type="text"
         className="admin-input teleport-filter"
         placeholder="Filter live targets..."
+        aria-label="Filter live targets"
         value={filter}
         onChange={(e) => onSetFilter(e.target.value)}
       />
@@ -549,7 +554,7 @@ export function AdminPanel({
 
           <div className="admin-main-pane">
           {activeFeedback && feedbackVisible && (
-            <p className={`admin-feedback-banner admin-feedback-banner-${activeFeedback.type}`}>
+            <p className={`admin-feedback-banner admin-feedback-banner-${activeFeedback.type}`} role="status" aria-live="polite">
               {activeFeedback.message}
             </p>
           )}

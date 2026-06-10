@@ -146,6 +146,7 @@ export function ChatBoardPanel({
             style={{ ...rectStyle(CHANNEL_RECTS[channel.id] ?? FEED_RECT), ["--chat-accent" as string]: CHANNEL_ACCENTS[channel.id] ?? "var(--chat-accent-say)" }}
             onClick={() => onChannelChange(channel.id)}
             aria-selected={isActive}
+            aria-controls="cb-channel-feed"
             aria-label={channel.label}
             title={channel.label}
           />
@@ -155,6 +156,7 @@ export function ChatBoardPanel({
       {/* ── Message feed (over the painted chalkboard) ────────── */}
       <div
         ref={feedRef}
+        id="cb-channel-feed"
         className="cb-feed"
         style={rectStyle(FEED_RECT)}
         role="log"

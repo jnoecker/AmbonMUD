@@ -29,7 +29,11 @@ export function PixiCanvas() {
         return;
       }
 
-      container.appendChild(app.canvas as HTMLCanvasElement);
+      const canvasEl = app.canvas as HTMLCanvasElement;
+      // The host div carries role="img" + label; the raw canvas adds nothing
+      // for assistive tech and should not be probed separately.
+      canvasEl.setAttribute("aria-hidden", "true");
+      container.appendChild(canvasEl);
       const scene = new SceneManager(app);
       sceneRef.current = scene;
 

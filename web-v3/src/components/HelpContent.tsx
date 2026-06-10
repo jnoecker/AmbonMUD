@@ -150,6 +150,10 @@ export function HelpContent({ isStaff, serverCommands }: HelpContentProps) {
           />
         </div>
 
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {query.length > 0 ? `${rows.length} commands found` : ""}
+        </div>
+
         <div className="cr-table-head" aria-hidden="true">
           <span className="cr-col-cmd">Command</span>
           <span className="cr-col-usage">Usage</span>

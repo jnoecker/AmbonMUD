@@ -199,9 +199,9 @@ export function SystemsPanel({
         ))}
       </div>
 
-      {localMessage && <p className="systems-local-message">{localMessage}</p>}
+      {localMessage && <p className="systems-local-message" role="status" aria-live="polite">{localMessage}</p>}
       {activeFeedback && (
-        <p className={`systems-local-message systems-local-message-${activeFeedback.type}`}>
+        <p className={`systems-local-message systems-local-message-${activeFeedback.type}`} role="status" aria-live="polite">
           {activeFeedback.message}
         </p>
       )}

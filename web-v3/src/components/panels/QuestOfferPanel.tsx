@@ -19,7 +19,7 @@ export function QuestOfferPanel({
   if (questsAvailable.length === 0) {
     return (
       <div className="quest-offer-empty">
-        <span className="quest-empty-icon">{"✦"}</span>
+        <span className="quest-empty-icon" aria-hidden="true">{"✦"}</span>
         <p className="empty-note">No quests on offer here.</p>
       </div>
     );
@@ -94,7 +94,7 @@ function QuestOfferCard({
       <ul className="quest-available-objectives">
         {quest.objectives.map((obj, idx) => (
           <li key={idx} className="quest-available-objective">
-            <span className="quest-available-obj-icon">{"○"}</span>
+            <span className="quest-available-obj-icon" aria-hidden="true">{"○"}</span>
             <span>{obj.description}</span>
             <span className="quest-available-obj-count">
               {obj.current}/{obj.count}
@@ -137,7 +137,7 @@ function QuestOfferCard({
         </div>
       )}
       {locked && (
-        <p className="quest-offer-locked">{quest.lockedReason}</p>
+        <p className="quest-offer-locked" id={`quest-offer-locked-${quest.id}`}>{quest.lockedReason}</p>
       )}
       {quest.readyToTurnIn ? (
         <button
@@ -153,6 +153,7 @@ function QuestOfferCard({
           className="quest-accept-button"
           onClick={() => onAccept(quest.id)}
           disabled={locked}
+          aria-describedby={locked ? `quest-offer-locked-${quest.id}` : undefined}
         >
           Accept Quest
         </button>

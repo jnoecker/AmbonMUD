@@ -315,7 +315,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
       <div className="dice-stat dice-stat-bet">{formatGold(bet)}</div>
 
       {/* Velvet roll stage */}
-      <div className="dice-velvet" aria-live="polite">
+      <div className="dice-velvet" role="status" aria-live="polite">
         {activeDie && (
           <Die
             die={activeDie}
@@ -373,6 +373,8 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
               key={amount}
               type="button"
               className={`dice-bet-chip${bet === amount ? " is-active" : ""}`}
+              aria-pressed={bet === amount}
+              aria-label={`Bet ${amount.toLocaleString()} gold`}
               onClick={() => setBetDraft(`${amount}`)}
             >
               {amount >= 1000 ? `${amount / 1000}K` : amount}
@@ -383,7 +385,7 @@ export function DicePanel({ diceResult, lotteryInfo, uiFeedbackFeed, gold, asset
           {rolling ? "Rolling…" : coolingDown ? `Wait ${Math.ceil(cooldownLeft / 1000)}s` : "ROLL"}
         </button>
         {activeFeedback && (
-          <p className={`dice-feedback dice-feedback-${activeFeedback.type}`}>{activeFeedback.message}</p>
+          <p className={`dice-feedback dice-feedback-${activeFeedback.type}`} role="status" aria-live="polite">{activeFeedback.message}</p>
         )}
       </div>
 

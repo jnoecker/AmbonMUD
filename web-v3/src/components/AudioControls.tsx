@@ -143,6 +143,7 @@ export function AudioControls({ audio, skinned = false }: AudioControlsProps) {
         onClick={toggleAudio}
         title={audio.enabled ? "Mute audio" : "Enable audio"}
         aria-label={audio.enabled ? "Mute audio" : "Enable audio"}
+        aria-pressed={audio.enabled}
       >
         {audio.enabled
           ? <VolumeOnIcon className="audio-toggle-icon" />
@@ -156,7 +157,7 @@ export function AudioControls({ audio, skinned = false }: AudioControlsProps) {
           className="soft-button audio-expand-btn"
           onClick={toggleExpanded}
           title="Volume settings"
-          aria-label="Toggle volume sliders"
+          aria-label={expanded ? "Hide volume sliders" : "Show volume sliders"}
           aria-expanded={expanded}
         >
           ▾

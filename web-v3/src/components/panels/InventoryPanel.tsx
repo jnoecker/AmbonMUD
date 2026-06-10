@@ -353,7 +353,7 @@ export function InventoryPanel({
                   </button>
                 </div>
                 {containerContents && containerContents.keyword === container.keyword && containerContents.items.length > 0 && (
-                  <ul className="container-items">
+                  <ul className="container-items" aria-label={`Contents of ${container.name}`}>
                     {containerContents.items.map((ci, idx) => (
                       <li key={`${ci.keyword}-${idx}`} className="container-item">
                         <span className="container-item-name">{ci.name}</span>

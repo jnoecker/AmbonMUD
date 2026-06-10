@@ -22,8 +22,12 @@
   --text-disabled: #7f89a8;
   --text-heading: #d4ddf5;
   --text-bright: #dde6ff;
-  --text-placeholder: #8f9cbe;
+  --text-placeholder: #98a5c6; /* ≥4.5:1 on input surfaces (was #8f9cbe at ~4.2:1) */
   --text-white: #fff;
+  /* Aliases referenced throughout the sheet; previously undefined, which
+     made muted text and focus borders fall back to inherited colors. */
+  --text-muted: var(--text-tertiary);
+  --accent-primary: var(--color-primary-pale-blue);
 
   /* ── Semantic / gameplay ─────────────────────────────── */
   --color-hp-light: #c5d8a8;
@@ -14197,7 +14201,7 @@ body {
 }
 
 .login-demo-divider {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted, rgb(168 151 210 / 60%));
@@ -14217,7 +14221,7 @@ body {
 
 .login-demo-hint {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
   color: var(--text-muted, rgb(168 151 210 / 65%));
   line-height: 1.4;
@@ -14922,7 +14926,7 @@ body {
   border-radius: 999px;
   background: rgb(168 210 178 / 30%);
   color: rgb(232 248 232);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 600;
@@ -14966,7 +14970,7 @@ body {
 }
 
 .demo-claim-field-label {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted, rgb(168 151 210 / 70%));
@@ -20115,7 +20119,7 @@ html:has(.game-shell),
 }
 
 .quest-complete-toast-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: color-mix(in srgb, var(--c-soft-gold, #f0c674) 70%, var(--c-text-secondary, #8890b0));
@@ -20167,7 +20171,7 @@ html:has(.game-shell),
 }
 
 .quest-complete-toast-reward-label {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--c-text-secondary, #8890b0);
@@ -20194,7 +20198,7 @@ html:has(.game-shell),
 }
 
 .quest-complete-toast-reward-icon {
-  font-size: 10px;
+  font-size: 12px;
   opacity: 0.85;
 }
 
@@ -20279,7 +20283,7 @@ html:has(.game-shell),
 }
 
 .combat-victory-toast-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: color-mix(in srgb, var(--c-dusty-rose, #c97f7f) 75%, var(--c-text-secondary, #8890b0));
@@ -20320,7 +20324,7 @@ html:has(.game-shell),
 }
 
 .combat-victory-toast-reward-label {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--c-text-secondary, #8890b0);
@@ -20357,7 +20361,7 @@ html:has(.game-shell),
 
 .combat-victory-toast-loot-bullet {
   color: color-mix(in srgb, var(--c-moss-green, #b5bd68) 80%, var(--c-text-primary, #d8dcef));
-  font-size: 10px;
+  font-size: 12px;
   flex: 0 0 auto;
 }
 
@@ -20466,7 +20470,7 @@ html:has(.game-shell),
 }
 
 .flee-toast-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: color-mix(in srgb, var(--c-pale-blue, #81a2be) 80%, var(--c-text-secondary, #8890b0));
@@ -26391,5 +26395,60 @@ html:has(.game-shell),
 @media (prefers-reduced-motion: reduce) {
   .canvas-command-send-img {
     transition: none;
+  }
+}
+
+/* ════ Accessibility ══════════════════════════════════════════
+   Cross-cutting WCAG 2.1 AA affordances. Kept at the end of the
+   sheet so equal-specificity rules here win by cascade order. */
+
+/* Focus visibility (2.4.7) — inputs and controls that removed the
+   native outline without providing a replacement indicator. Cool
+   ring for glass-morphism surfaces, warm ring for parchment art. */
+.audio-slider:focus-visible,
+.video-modal-player:focus-visible,
+.cmd-palette-input:focus-visible,
+.canvas-command-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(184 216 232 / 60%);
+}
+
+.cr-search:focus-visible,
+.terminal-dock-input:focus-visible,
+.puzzle-inscribe-input:focus-visible,
+.terminal-screen-skinned .canvas-command-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(150 104 38 / 65%);
+}
+
+.cc-select:focus-visible,
+.cc-scribe-text:focus-visible {
+  box-shadow: 0 0 0 2px rgb(201 162 74 / 55%);
+}
+
+/* Equipment paperdoll rows became keyboard-focusable (role=button). */
+.paperdoll-list-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(184 216 232 / 60%);
+}
+
+/* Text selection (1.4.1 / legibility) — browser default inverts the
+   jewel-tone palette unpredictably; keep selection on-theme. */
+::selection {
+  background-color: rgb(168 151 210 / 55%);
+  color: var(--text-bright);
+}
+
+/* Reduced motion (2.3.3) — global kill switch backing up the
+   per-component guards. Durations collapse to near-zero so
+   animationend/transitionend handlers still fire. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -179,6 +179,7 @@ export function GuildBoardPanel({
                       className={`gb-member${selected === m.name ? " is-selected" : ""}${m.online ? "" : " is-offline"}`}
                       onClick={() => setSelected(selected === m.name ? null : m.name)}
                       aria-pressed={selected === m.name}
+                      aria-label={`${m.name}${m.level !== null ? `, level ${m.level}` : ""}, ${rankLabel(m.rank)}, ${m.online ? "online" : "offline"}`}
                     >
                       <span className="gb-member-num">{i + 1}.</span>
                       <span className={`gb-member-dot ${m.online ? "is-online" : "is-offline"}`} aria-hidden="true" />

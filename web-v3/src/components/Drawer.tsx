@@ -137,6 +137,16 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
+  // Move focus into the sheet on open so Tab continues inside the dialog
+  // rather than looping the controls underneath, and hand it back to the
+  // opener (e.g. the kiosk button) when the drawer closes (WCAG 2.4.3).
+  useEffect(() => {
+    if (!open) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    sheetRef.current?.focus();
+    return () => opener?.focus();
+  }, [open]);
+
   if (renderPhase === "hidden") return null;
 
   const transition = dragging ? "none" : `height ${ANIMATION_MS}ms var(--ease-out-soft)`;
@@ -154,6 +164,7 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
         style={{
           ["--drawer-height" as string]: `${height * 100}vh`,
           ["--drawer-transition" as string]: transition,
@@ -169,7 +180,7 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
         >
           <div className="drawer-handle" aria-hidden="true" />
         </div>
-        <div className="drawer-header">
+        <header className="drawer-header">
           <h2 className="drawer-title">{title}</h2>
           <button
             type="button"
@@ -179,7 +190,7 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
           >
             &#x2715;
           </button>
-        </div>
+        </header>
         <div className="drawer-body">
           {children}
         </div>

@@ -12,9 +12,9 @@ interface HousingPanelProps {
   onSendCommand: (cmd: string) => void;
 }
 
-const DIRECTIONS: Array<{ key: string; label: string }> = [
-  { key: "n", label: "N" }, { key: "s", label: "S" }, { key: "e", label: "E" },
-  { key: "w", label: "W" }, { key: "u", label: "Up" }, { key: "d", label: "Down" },
+const DIRECTIONS: Array<{ key: string; label: string; name: string }> = [
+  { key: "n", label: "N", name: "North" }, { key: "s", label: "S", name: "South" }, { key: "e", label: "E", name: "East" },
+  { key: "w", label: "W", name: "West" }, { key: "u", label: "Up", name: "Up" }, { key: "d", label: "Down", name: "Down" },
 ];
 
 /**
@@ -129,15 +129,15 @@ export function HousingPanel({
       {/* ── Buy bar (bottom) ─────────────────────────────────── */}
       <div className="hb-buybar">
         {activeFeedback && (
-          <span className={`hb-feedback hb-feedback-${activeFeedback.type}`}>{activeFeedback.message}</span>
+          <span className={`hb-feedback hb-feedback-${activeFeedback.type}`} role="status" aria-live="polite">{activeFeedback.message}</span>
         )}
         {choosingDir ? (
           <div className="hb-dir-picker">
             <span className="hb-dir-label">Attach where?</span>
             {DIRECTIONS.map((d) => (
-              <button key={d.key} type="button" className="hb-dir-btn" onClick={() => expand(d.key)}>{d.label}</button>
+              <button key={d.key} type="button" className="hb-dir-btn" aria-label={d.name} onClick={() => expand(d.key)}>{d.label}</button>
             ))}
-            <button type="button" className="hb-dir-cancel" onClick={() => setChoosingDir(false)}>✕</button>
+            <button type="button" className="hb-dir-cancel" aria-label="Cancel" onClick={() => setChoosingDir(false)}>✕</button>
           </div>
         ) : (
           <button type="button" className="hb-buy-btn" disabled={!canBuy} onClick={onBuy}>{buyLabel}</button>

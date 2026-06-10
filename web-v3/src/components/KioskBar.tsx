@@ -50,9 +50,10 @@ export function KioskBar({ serverAssets, activePopout, onOpenPanel }: KioskBarPr
             onClick={() => onOpenPanel(def.panel)}
             title={def.label}
             aria-label={def.label}
+            aria-pressed={activePopout === def.panel}
           >
             <span className="kiosk-icon">
-              {art ? <img src={art} alt="" className="kiosk-img" /> : def.fallback}
+              {art ? <img src={art} alt="" aria-hidden="true" className="kiosk-img" /> : def.fallback}
             </span>
             <span className="kiosk-label">{def.label}</span>
           </button>
