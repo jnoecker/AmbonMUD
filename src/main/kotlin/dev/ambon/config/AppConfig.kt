@@ -838,6 +838,17 @@ data class AppConfig(
                         "when server.productionMode=true and admin.enabled=true"
                 }
             }
+            if (mode == DeploymentMode.ENGINE || mode == DeploymentMode.GATEWAY) {
+                val forbiddenSecrets = setOf("change_me", "changeme", "secret", "")
+                require(grpc.sharedSecret.lowercase() !in forbiddenSecrets) {
+                    "ambonMUD.grpc.sharedSecret must not be a placeholder value " +
+                        "when server.productionMode=true in ENGINE/GATEWAY mode"
+                }
+                require(grpc.sharedSecret.length >= 16) {
+                    "ambonMUD.grpc.sharedSecret must be at least 16 characters when server.productionMode=true " +
+                        "in ENGINE/GATEWAY mode (gRPC auth HMAC strength)"
+                }
+            }
         }
     }
 }
@@ -2851,6 +2862,16 @@ data class WebSocketTransportConfig(
     val host: String = "0.0.0.0",
     val stopGraceMillis: Long = 1_000L,
     val stopTimeoutMillis: Long = 2_000L,
+    /** Maximum number of concurrent WebSocket connections before new connections are rejected. */
+    val maxConnections: Int = 5000,
+    /** Maximum concurrent WebSocket connections from a single remote IP (0 disables the per-IP cap). */
+    val maxConnectionsPerIp: Int = 30,
+    /** Server→client ping interval in ms; also drives dead-peer detection (0 disables pings). */
+    val pingPeriodMillis: Long = 15_000L,
+    /** Time to wait for a pong before closing the connection, in ms. Defends against slow-loris holds. */
+    val pongTimeoutMillis: Long = 30_000L,
+    /** Maximum inbound WebSocket frame size in bytes. Frames larger than this are rejected. */
+    val maxFrameBytes: Long = 65_536L,
 )
 
 data class DemoConfig(
@@ -2871,6 +2892,12 @@ data class ObservabilityConfig(
 data class AdminConfig(
     /** Enable the admin HTTP dashboard. Requires a non-blank [token]. */
     val enabled: Boolean = false,
+    /**
+     * Bind address for the admin dashboard. Defaults to loopback so the privileged API (grant/revoke
+     * staff, broadcast, hot-reload, full player PII) is not reachable from the network unless an
+     * operator deliberately exposes it. Use a reverse proxy or set to `0.0.0.0` to expose it.
+     */
+    val host: String = "127.0.0.1",
     /** Port the admin dashboard listens on. */
     val port: Int = 9091,
     /** Bearer/Basic-auth password required for every admin request. */

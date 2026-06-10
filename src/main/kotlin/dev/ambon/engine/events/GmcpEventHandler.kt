@@ -19,6 +19,9 @@ import dev.ambon.engine.toGmcpPeek
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KLogger
 
+/** Upper bound on the number of GMCP package names a single session may advertise via Supports.Set. */
+private const val MAX_GMCP_PACKAGE_ENTRIES = 256
+
 class GmcpEventHandler(
     private val gmcpSessions: MutableMap<SessionId, MutableSet<String>>,
     private val players: PlayerRegistry,
@@ -39,7 +42,20 @@ class GmcpEventHandler(
     private val logger: KLogger,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
-    private val gmcpJson = jacksonObjectMapper()
+    // GMCP envelopes arrive from untrusted clients and are parsed on the single-threaded engine
+    // dispatcher, so a maliciously deep / huge document could steal tick time. Clamp the parser's
+    // structural limits well below anything a legitimate client sends.
+    private val gmcpJson =
+        jacksonObjectMapper().apply {
+            factory.setStreamReadConstraints(
+                com.fasterxml.jackson.core.StreamReadConstraints
+                    .builder()
+                    .maxNestingDepth(32)
+                    .maxStringLength(16_384)
+                    .maxNumberLength(100)
+                    .build(),
+            )
+        }
 
     suspend fun onGmcpReceived(ev: InboundEvent.GmcpReceived) {
         metrics.onGmcpHandlerEvent()
@@ -137,7 +153,14 @@ class GmcpEventHandler(
     private fun parseGmcpPackageList(jsonData: String): List<String> =
         try {
             val entries: List<String> = gmcpJson.readValue(jsonData)
-            entries.map { it.trim().substringBefore(' ') }.filter { it.isNotBlank() }
+            entries
+                .asSequence()
+                .map { it.trim().substringBefore(' ') }
+                .filter { it.isNotBlank() }
+                // Cap the supported-package list so a client cannot force the engine to track an
+                // unbounded set of package names per session.
+                .take(MAX_GMCP_PACKAGE_ENTRIES)
+                .toList()
         } catch (e: Exception) {
             logger.warn { "Failed to parse GMCP package list as JSON array, ignoring: ${e.message}" }
             emptyList()

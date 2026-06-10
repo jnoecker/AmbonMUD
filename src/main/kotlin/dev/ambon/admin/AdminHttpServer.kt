@@ -77,7 +77,7 @@ class AdminHttpServer(
 
     fun start() {
         engine =
-            embeddedServer(Netty, port = config.port) {
+            embeddedServer(Netty, host = config.host, port = config.port) {
                 adminModule(
                     token = config.token,
                     players = players,
@@ -1165,6 +1165,17 @@ internal fun Application.adminModule(
 
 // --- Auth helper ---
 
+/**
+ * Length-independent constant-time string comparison: both inputs are reduced to fixed-length
+ * SHA-256 digests before [MessageDigest.isEqual], so neither the value nor the length of [token]
+ * leaks through comparison timing.
+ */
+private fun constantTimeStringEquals(a: String, b: String): Boolean {
+    val da = MessageDigest.getInstance("SHA-256").digest(a.toByteArray(Charsets.UTF_8))
+    val db = MessageDigest.getInstance("SHA-256").digest(b.toByteArray(Charsets.UTF_8))
+    return MessageDigest.isEqual(da, db)
+}
+
 private suspend fun ApplicationCall.requireBasicAuth(token: String): Boolean {
     val header = request.headers[HttpHeaders.Authorization]
     if (header != null && header.startsWith("Basic ")) {
@@ -1176,7 +1187,9 @@ private suspend fun ApplicationCall.requireBasicAuth(token: String): Boolean {
             }
         val colonIdx = decoded.indexOf(':')
         val password = if (colonIdx >= 0) decoded.substring(colonIdx + 1) else decoded
-        if (MessageDigest.isEqual(password.toByteArray(), token.toByteArray())) return true
+        // Compare fixed-length SHA-256 digests so the timing/early-exit of MessageDigest.isEqual on a
+        // length mismatch cannot leak the admin token's length.
+        if (constantTimeStringEquals(password, token)) return true
     }
     response.headers.append(HttpHeaders.WWWAuthenticate, "Basic realm=\"AmbonMUD Admin\", charset=\"UTF-8\"")
     respond(HttpStatusCode.Unauthorized)

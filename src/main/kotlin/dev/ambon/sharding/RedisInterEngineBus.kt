@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.bus.BusPublisher
 import dev.ambon.bus.BusSubscriberSetup
+import dev.ambon.hmacSha256
+import dev.ambon.isValidHmac
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -13,6 +15,10 @@ private val log = KotlinLogging.logger {}
 /**
  * Redis pub/sub envelope. Carries the inter-engine message, the sender's
  * engine ID, and an optional target engine ID (null = broadcast).
+ *
+ * [signature] is an HMAC-SHA256 over [senderEngineId], [targetEngineId], and [payload] under the
+ * cluster shared secret. Receivers drop any envelope whose signature does not verify, so a third
+ * party with Redis pub/sub access cannot forge handoffs, kicks, broadcasts, or shutdowns.
  */
 data class InterEngineEnvelope(
     val senderEngineId: String = "",
@@ -20,6 +26,7 @@ data class InterEngineEnvelope(
     val targetEngineId: String? = null,
     // JSON-serialized InterEngineMessage
     val payload: String = "",
+    val signature: String = "",
 )
 
 /**
@@ -35,6 +42,7 @@ class RedisInterEngineBus(
     private val publisher: BusPublisher,
     private val subscriberSetup: BusSubscriberSetup,
     private val mapper: ObjectMapper,
+    private val sharedSecret: String,
     private val channelPrefix: String = "ambon:engine",
     capacity: Int = 1_000,
 ) : InterEngineBus {
@@ -58,14 +66,22 @@ class RedisInterEngineBus(
         targetEngineId: String?,
         message: InterEngineMessage,
     ) {
+        val payload = mapper.writeValueAsString(message)
         val envelope =
             InterEngineEnvelope(
                 senderEngineId = engineId,
                 targetEngineId = targetEngineId,
-                payload = mapper.writeValueAsString(message),
+                payload = payload,
+                signature = hmacSha256(sharedSecret, signingPayload(engineId, targetEngineId, payload)),
             )
         publisher.publish(channel, mapper.writeValueAsString(envelope))
     }
+
+    private fun signingPayload(
+        senderEngineId: String,
+        targetEngineId: String?,
+        payload: String,
+    ): String = "$senderEngineId\n${targetEngineId ?: ""}\n$payload"
 
     override fun incoming(): ReceiveChannel<InterEngineMessage> = channel
 
@@ -84,6 +100,12 @@ class RedisInterEngineBus(
             // Skip our own broadcast messages (but not targeted messages — those
             // shouldn't be self-sent in practice, but handle gracefully).
             if (envelope.targetEngineId == null && envelope.senderEngineId == engineId) return
+
+            val signingPayload = signingPayload(envelope.senderEngineId, envelope.targetEngineId, envelope.payload)
+            if (!isValidHmac(sharedSecret, signingPayload, envelope.signature)) {
+                log.warn { "Dropping inter-engine message with invalid signature (sender=${envelope.senderEngineId})" }
+                return
+            }
 
             val message = mapper.readValue<InterEngineMessage>(envelope.payload)
             val sent = channel.trySend(message)

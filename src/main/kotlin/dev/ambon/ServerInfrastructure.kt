@@ -122,6 +122,11 @@ object ServerInfrastructure {
             maxLineLen = config.transport.telnet.maxLineLen,
             maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
             maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
+            maxConnections = config.transport.websocket.maxConnections,
+            maxConnectionsPerIp = config.transport.websocket.maxConnectionsPerIp,
+            pingPeriodMillis = config.transport.websocket.pingPeriodMillis,
+            pongTimeoutMillis = config.transport.websocket.pongTimeoutMillis,
+            maxFrameBytes = config.transport.websocket.maxFrameBytes,
             prometheusRegistry = prometheusRegistry,
             metricsEndpoint = config.observability.metricsEndpoint,
             metrics = metrics,
@@ -304,6 +309,7 @@ object ServerInfrastructure {
                 publisher = redisBusPublisher(redisManager),
                 subscriberSetup = redisBusSubscriberSetup(redisManager),
                 mapper = redisObjectMapper,
+                sharedSecret = config.redis.bus.sharedSecret,
             )
         } else {
             LocalInterEngineBus()

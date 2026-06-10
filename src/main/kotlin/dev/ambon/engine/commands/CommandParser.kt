@@ -939,7 +939,11 @@ object CommandParser {
             } else {
                 val goldMatch = Regex("^(\\d+)\\s+gold$", RegexOption.IGNORE_CASE).matchEntire(trimmed)
                 if (goldMatch != null) {
-                    Command.TradeOfferGold(goldMatch.groupValues[1].toLong())
+                    // toLongOrNull guards against overflow on huge digit strings; an unguarded toLong()
+                    // here throws NumberFormatException up into the engine tick loop, aborting the tick
+                    // for every player.
+                    val amount = goldMatch.groupValues[1].toLongOrNull()
+                    if (amount == null) Command.Invalid(line, "trade offer <amount> gold") else Command.TradeOfferGold(amount)
                 } else {
                     Command.TradeOffer(trimmed)
                 }
