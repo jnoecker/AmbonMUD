@@ -37,7 +37,7 @@ import { DicePanel } from "./components/panels/DicePanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { CombatLogPanel } from "./components/panels/CombatLogPanel";
 import { HelpContent } from "./components/HelpContent";
-import { CommandInput } from "./components/CommandInput";
+import { TerminalOverlay } from "./components/TerminalOverlay";
 import { Atlas } from "./components/Atlas";
 import { DemoBanner } from "./components/DemoBanner";
 import { LevelUpBanner } from "./components/LevelUpBanner";
@@ -49,6 +49,7 @@ import { CharacterPicker } from "./components/CharacterPicker";
 import { CommandPalette } from "./components/CommandPalette";
 import { useGameState } from "./hooks/useGameState";
 import { useMudSocket } from "./hooks/useMudSocket";
+import { useTerminal } from "./hooks/useTerminal";
 import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
@@ -212,6 +213,11 @@ function App() {
     setInputValue(text);
   };
 
+  // Terminal host elements — refs stay in App (attached to JSX below) so the
+  // useTerminal return value carries no refs (react-hooks/refs rule).
+  const terminalHiddenRef = useRef<HTMLDivElement | null>(null);
+  const terminalOverlayRef = useRef<HTMLDivElement | null>(null);
+
   // Minimap canvas + drawing helpers (owns its own ref, kept out of useGameState)
   const {
     mapCanvasRef,
@@ -249,13 +255,31 @@ function App() {
     resetComposerCompletion,
   } = useCommandHistory(state.serverCommands);
 
+  // Session-long telnet-style log; the GUI stays primary and the overlay
+  // summons this accumulated stream on demand.
+  const {
+    open: terminalOpen,
+    opaque: terminalOpaque,
+    setOpaque: setTerminalOpaque,
+    openTerminal,
+    closeTerminal,
+    write: writeTerminal,
+    echoCommand,
+    writeSystem,
+    hasSelection: terminalHasSelection,
+    setInkTheme,
+  } = useTerminal({ hiddenHostRef: terminalHiddenRef, overlayHostRef: terminalOverlayRef });
+
+  // Parchment scroll art → dark ink palette; absent art → light-on-dark.
+  const terminalParchmentBg = state.serverAssets["terminal_parchment_bg"] ?? null;
+  useEffect(() => {
+    setInkTheme(terminalParchmentBg !== null);
+  }, [terminalParchmentBg, setInkTheme]);
+
   // Wire up the WebSocket
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine, sendGmcp } = useMudSocket({
     onOpen: () => {},
-    onTextMessage: () => {
-      // Terminal removed — server text other than GMCP is silently ignored.
-      // The login modal handles the auth flow via Login.* GMCP packages.
-    },
+    onTextMessage: writeTerminal,
     onGmcpMessage: state.handleGmcp,
     onClose: () => {
       if (intentionalDisconnectRef.current) {
@@ -264,10 +288,12 @@ function App() {
       }
       if (resumeTokenRef.current) {
         state.setReconnecting(true);
+        writeSystem("Connection lost — reconnecting...");
         window.setTimeout(() => reconnect(), 500);
       } else {
         state.resetHud();
         audio.stopAll();
+        writeSystem("Connection closed.");
       }
     },
     onError: () => {},
@@ -315,7 +341,14 @@ function App() {
     const command = raw.trim();
     if (command.length === 0) return;
     if (!sendLine(command)) return;
-    pushHistory(command);
+    // `claim [newname] <password>` carries the user's password — mask it in
+    // the terminal echo (like a telnet server suppressing echo at a password
+    // prompt) and keep it out of the persisted command history.
+    const carriesSecret = /^claim\s/i.test(command);
+    // Local echo into the background log, like a telnet client — GUI-driven
+    // commands show up there too, so the log reads as a faithful session.
+    echoCommand(carriesSecret ? "claim ********" : command);
+    if (!carriesSecret) pushHistory(command);
     resetComposerTraversal();
   };
 
@@ -897,7 +930,6 @@ function App() {
       case "dice": return "Dice Table";
       case "combatlog": return "Battle Journal";
       case "help": return "Command Reference";
-      case "terminal": return "Terminal";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
       default: return "";
@@ -949,6 +981,7 @@ function App() {
         activePopout={state.activePopout}
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
+        onOpenTerminal={openTerminal}
         audio={audio}
       />
 
@@ -1005,11 +1038,9 @@ function App() {
                       ? "questboard"
                       : drawerPanel === "spellbook"
                         ? "grimoire"
-                        : drawerPanel === "terminal"
-                          ? "desk"
-                          : drawerPanel === "mail"
-                            ? "mail"
-                            : "default"
+                        : drawerPanel === "mail"
+                          ? "mail"
+                          : "default"
         }
         skinBg={
           drawerPanel === "puzzle"
@@ -1061,11 +1092,9 @@ function App() {
                       ? state.serverAssets["quest_board_bg"]
                       : drawerPanel === "spellbook"
                         ? state.serverAssets["spellbook_bg"]
-                        : drawerPanel === "terminal"
-                          ? state.serverAssets["terminal_bg"]
-                          : drawerPanel === "mail"
-                            ? state.serverAssets["mail_bg"]
-                            : undefined
+                        : drawerPanel === "mail"
+                          ? state.serverAssets["mail_bg"]
+                          : undefined
         }
         initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
       >
@@ -1459,30 +1488,6 @@ function App() {
             serverCommands={state.serverCommands}
             isStaff={state.character.isStaff}
           />
-        )}
-
-        {drawerPanel === "terminal" && (
-          <div className="terminal-overlay-body terminal-desk">
-            <div className="terminal-desk-slip">
-              <span className="terminal-desk-quill" aria-hidden="true">
-                {state.serverAssets["desk_quill"]
-                  ? <img src={state.serverAssets["desk_quill"]} alt="" className="terminal-desk-quill-img" />
-                  : "✒"}
-              </span>
-              <p className="terminal-overlay-note">
-                Pen a command and dispatch it to the world.
-              </p>
-              <CommandInput
-                inputValue={inputValue}
-                onInputChange={(value) => {
-                  setInputValue(value);
-                  resetComposerCompletion();
-                }}
-                onInputKeyDown={handleInputKeyDown}
-                onCommand={sendCommand}
-              />
-            </div>
-          </div>
         )}
 
         {drawerPanel === "map" && (
@@ -2170,6 +2175,30 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Full-screen terminal — the session-long server log, summoned from the
+          dock input (desktop) or the services stack (small screens). */}
+      <TerminalOverlay
+        open={terminalOpen}
+        opaque={terminalOpaque}
+        hostRef={terminalOverlayRef}
+        hasSelection={terminalHasSelection}
+        parchmentBg={terminalParchmentBg}
+        quillUrl={state.serverAssets["desk_quill"] ?? null}
+        inputValue={inputValue}
+        onInputChange={(value) => {
+          setInputValue(value);
+          resetComposerCompletion();
+          if (value.length > 0) setTerminalOpaque(true);
+        }}
+        onInputKeyDown={handleInputKeyDown}
+        onCommand={sendCommand}
+        onClose={closeTerminal}
+      />
+
+      {/* Hidden terminal container — keeps xterm alive (and accumulating
+          server text) off-screen while the GUI is in charge. */}
+      <div ref={terminalHiddenRef} className="terminal-hidden" aria-hidden="true" />
 
       <p className="sr-only" aria-live="polite">{liveMessage}</p>
     </>

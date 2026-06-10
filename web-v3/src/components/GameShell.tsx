@@ -33,6 +33,7 @@ interface GameShellProps {
   activePopout: PopoutPanel;
   onCommand: (cmd: string) => void;
   onOpenPanel: (panel: PopoutPanel) => void;
+  onOpenTerminal: () => void;
   audio: AudioEngine;
   children?: ReactNode;
   /** Overlay rendered inside the canvas layer (e.g. staff pills near Recall). */
@@ -72,6 +73,7 @@ export function GameShell({
   activePopout,
   onCommand,
   onOpenPanel,
+  onOpenTerminal,
   audio,
   children,
   canvasOverlay,
@@ -312,6 +314,19 @@ export function GameShell({
                     ? <img className="hud-stack-img" src={serverAssets["mail_widget"]} alt="" />
                     : <span className="hud-stack-glyph">✉</span>}
                 </button>
+                {/* Small screens only — desktop reaches the terminal via the
+                    dock input under the kiosk row instead. */}
+                <button
+                  type="button"
+                  className="hud-stack-btn hud-stack-btn-terminal"
+                  onClick={() => { onOpenTerminal(); closeServices(); }}
+                  title="Terminal"
+                  aria-label="Terminal"
+                >
+                  {serverAssets["terminal_widget"]
+                    ? <img className="hud-stack-img" src={serverAssets["terminal_widget"]} alt="" />
+                    : <span className="hud-stack-glyph">&gt;_</span>}
+                </button>
               </div>
             </nav>
 
@@ -364,6 +379,35 @@ export function GameShell({
                 onOpenPanel={onOpenPanel}
               />
             )}
+          </div>
+
+          {/* Desktop only — focusing this summons the terminal overlay, which
+              carries the session-long server log. CSS hides it on small
+              screens, where the services stack hosts the terminal instead.
+              Styled as a parchment slip with the quill resting on its right
+              edge — the same parchment art and quill placement as the
+              terminal it summons. */}
+          <div
+            className={`terminal-dock${serverAssets["terminal_parchment_bg"] ? " terminal-dock-skinned" : ""}`}
+            style={serverAssets["terminal_parchment_bg"]
+              ? { ["--terminal-parchment" as string]: `url("${serverAssets["terminal_parchment_bg"]}")` }
+              : undefined}
+          >
+            <input
+              type="text"
+              className="terminal-dock-input"
+              value=""
+              readOnly
+              placeholder="Inscribe a command…"
+              aria-label="Open terminal"
+              onFocus={onOpenTerminal}
+              onChange={() => undefined}
+            />
+            <span className="terminal-dock-glyph" aria-hidden="true">
+              {serverAssets["desk_quill"]
+                ? <img src={serverAssets["desk_quill"]} alt="" className="terminal-dock-quill-img" />
+                : "✒"}
+            </span>
           </div>
         </div>
       )}
