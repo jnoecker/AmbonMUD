@@ -26426,6 +26426,12 @@ html:has(.game-shell),
   box-shadow: 0 0 0 2px rgb(201 162 74 / 55%);
 }
 
+/* Equipment paperdoll rows became keyboard-focusable (role=button). */
+.paperdoll-list-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(184 216 232 / 60%);
+}
+
 /* Text selection (1.4.1 / legibility) — browser default inverts the
    jewel-tone palette unpredictably; keep selection on-theme. */
 ::selection {

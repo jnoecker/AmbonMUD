@@ -231,7 +231,10 @@ function RaceCardGrid({ races, error, onSelect }: RaceCardGridProps) {
 
   return (
     <div className="login-step char-picker">
-      <p className="login-step-label">Choose your race</p>
+      <p className="login-step-label">
+        Choose your race
+        <span className="sr-only"> — select a card to preview it, then activate the Choose button to confirm.</span>
+      </p>
       {error && <p className="login-error" role="alert">{error}</p>}
 
       <div className="char-card-grid">
@@ -307,7 +310,10 @@ function ClassCardGrid({ classes, error, onSelect }: ClassCardGridProps) {
 
   return (
     <div className="login-step char-picker">
-      <p className="login-step-label">Choose your class</p>
+      <p className="login-step-label">
+        Choose your class
+        <span className="sr-only"> — select a card to preview it, then activate the Choose button to confirm.</span>
+      </p>
       {error && <p className="login-error" role="alert">{error}</p>}
 
       <div className="char-card-grid">

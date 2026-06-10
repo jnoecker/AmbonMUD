@@ -176,6 +176,11 @@ function App() {
   // zone-cinematic autoplay, and the map's replay button all route through it)
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoClosing, setVideoClosing] = useState(false);
+  // Close-button refs for the canvas modals — focused on open so the opener
+  // can be restored on dismiss (see the modal focus effects below).
+  const videoCloseRef = useRef<HTMLButtonElement | null>(null);
+  const mobDetailCloseRef = useRef<HTMLButtonElement | null>(null);
+  const imagePreviewCloseRef = useRef<HTMLButtonElement | null>(null);
 
   // Expanded mob detail card — opened from canvas Look button
   const [mobDetail, setMobDetail] = useState<{ name: string; description: string; image: string | null } | null>(null);
@@ -706,6 +711,54 @@ function App() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [state.considerResult]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Canvas modals (mob detail / image preview / video): move focus to the
+  // close button while open, restore it to the opener on dismiss, and close
+  // on Escape regardless of where focus currently sits (WCAG 2.4.3 / 2.1.2).
+  useEffect(() => {
+    if (!mobDetail) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    mobDetailCloseRef.current?.focus();
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") setMobDetail(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      opener?.focus();
+    };
+  }, [mobDetail]);
+
+  useEffect(() => {
+    if (!imagePreviewUrl) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    imagePreviewCloseRef.current?.focus();
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") setImagePreviewUrl(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      opener?.focus();
+    };
+  }, [imagePreviewUrl]);
+
+  useEffect(() => {
+    if (!videoUrl) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    videoCloseRef.current?.focus();
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setVideoClosing(true);
+        setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      opener?.focus();
+    };
+  }, [videoUrl]);
 
   // Close NPC dialogue / quest offers on Escape — but only when the
   // conversation has reached a state with no further choices (mirrors the
@@ -1761,7 +1814,7 @@ function App() {
       )}
 
       {state.reconnecting && (
-        <div className="reconnect-banner" role="status" aria-live="polite">
+        <div className="reconnect-banner" role="status" aria-live="polite" aria-busy="true">
           <span className="reconnect-spinner" aria-hidden="true" />
           Reconnecting...
         </div>
@@ -1789,21 +1842,15 @@ function App() {
             setVideoClosing(true);
             setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
           }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setVideoClosing(true);
-              setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
-            }
-          }}
           onAnimationEnd={(e) => {
             if (e.animationName === "videoFadeOut") { setVideoUrl(null); setVideoClosing(false); }
           }}
         >
           <div className="video-modal" onClick={(e) => e.stopPropagation()}>
             <button
+              ref={videoCloseRef}
               className="video-modal-close"
               aria-label="Close video"
-              autoFocus
               onClick={() => {
                 setVideoClosing(true);
                 setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
@@ -1831,15 +1878,12 @@ function App() {
           aria-modal="true"
           aria-label={`${mobDetail.name} details`}
           onClick={() => setMobDetail(null)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setMobDetail(null);
-          }}
         >
           <div className="entity-detail-card" onClick={(e) => e.stopPropagation()}>
             <button
+              ref={mobDetailCloseRef}
               className="entity-detail-close"
               aria-label="Close"
-              autoFocus
               onClick={() => setMobDetail(null)}
             >
               {"✕"}
@@ -1872,14 +1916,11 @@ function App() {
           aria-modal="true"
           aria-label="Image preview"
           onClick={() => setImagePreviewUrl(null)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setImagePreviewUrl(null);
-          }}
         >
           <button
+            ref={imagePreviewCloseRef}
             className="image-preview-close"
             aria-label="Close image"
-            autoFocus
             onClick={() => setImagePreviewUrl(null)}
           >
             {"✕"}
