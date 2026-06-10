@@ -48,6 +48,7 @@ interface SkillSlotProps {
 
 function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave, onDrop, onClear }: SkillSlotProps) {
   const { onCooldown, fraction } = useSkillCooldown(skill);
+  const cooldownSeconds = Math.ceil((fraction * skill.cooldownMs) / 1000);
 
   return (
     <button
@@ -62,7 +63,7 @@ function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave,
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={(e) => onDrop(e, index)}
-      aria-label={`${skill.name} — key ${index + 1}`}
+      aria-label={`${skill.name}, ${skill.manaCost} mana, key ${index + 1}${onCooldown ? `, on cooldown, ${cooldownSeconds} seconds remaining` : ""}`}
     >
       {skill.image
         ? <img src={skill.image} alt="" className="vbar-skill-img" draggable={false} />
@@ -76,6 +77,7 @@ function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave,
 
 function PetSkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: number; onCast: (id: string, cd: number) => void }) {
   const { onCooldown, fraction } = useSkillCooldown(skill);
+  const cooldownSeconds = Math.ceil((fraction * skill.cooldownMs) / 1000);
 
   return (
     <button
@@ -84,7 +86,7 @@ function PetSkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: nu
       disabled={onCooldown}
       title={`${skill.name} (pet) — Shift+${index + 1}`}
       onClick={() => onCast(skill.id, skill.cooldownMs)}
-      aria-label={`${skill.name} pet skill — Shift+${index + 1}`}
+      aria-label={`${skill.name} pet skill, Shift+${index + 1}${onCooldown ? `, on cooldown, ${cooldownSeconds} seconds remaining` : ""}`}
     >
       {skill.image
         ? <img src={skill.image} alt="" className="vbar-skill-img" draggable={false} />
