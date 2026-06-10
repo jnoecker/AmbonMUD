@@ -30,6 +30,7 @@ const EquipmentPanel = lazy(() => import("./components/panels/EquipmentPanel").t
 const MailPanel = lazy(() => import("./components/panels/MailPanel").then((m) => ({ default: m.MailPanel })));
 const MonsterManualPanel = lazy(() => import("./components/panels/MonsterManualPanel").then((m) => ({ default: m.MonsterManualPanel })));
 const ItemManualPanel = lazy(() => import("./components/panels/ItemManualPanel").then((m) => ({ default: m.ItemManualPanel })));
+const ArcanumPanel = lazy(() => import("./components/panels/ArcanumPanel").then((m) => ({ default: m.ArcanumPanel })));
 const CraftingPanel = lazy(() => import("./components/panels/CraftingPanel").then((m) => ({ default: m.CraftingPanel })));
 const ProfessionsPanel = lazy(() => import("./components/panels/ProfessionsPanel").then((m) => ({ default: m.ProfessionsPanel })));
 const HousingPanel = lazy(() => import("./components/panels/HousingPanel").then((m) => ({ default: m.HousingPanel })));
@@ -996,6 +997,7 @@ function App() {
       case "lottery": return "Lottery";
       case "dice": return "Dice Table";
       case "combatlog": return "Battle Journal";
+      case "arcanum": return "The Arcanum";
       case "help": return "Command Reference";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
@@ -1049,6 +1051,7 @@ function App() {
         onQuickbarAssign={quickbar.assign}
         onQuickbarClear={quickbar.clear}
         activePopout={state.activePopout}
+        arcanumPledged={state.arcanumStatus?.pledged ?? false}
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
         onOpenTerminal={openTerminal}
@@ -1559,6 +1562,16 @@ function App() {
           />
         )}
 
+        {drawerPanel === "arcanum" && (
+          <ArcanumPanel
+            journal={state.arcanumJournal}
+            status={state.arcanumStatus}
+            playerName={state.character.name}
+            connected={connected}
+            onCommand={sendCommand}
+          />
+        )}
+
         {drawerPanel === "help" && (
           <HelpContent
             serverCommands={state.serverCommands}
@@ -2046,6 +2059,7 @@ function App() {
           bg={state.serverAssets["monster_manual_bg"]}
           serverAssets={state.serverAssets}
           connected={connected}
+          akathavaePledged={state.arcanumStatus?.pledged ?? false}
           questsAvailable={state.questsAvailable}
           dialogue={state.dialogue}
           onClose={() => { setMonster(null); state.setConsiderResult(null); }}

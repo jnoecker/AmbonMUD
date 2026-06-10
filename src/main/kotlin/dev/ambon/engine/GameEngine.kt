@@ -777,6 +777,7 @@ class GameEngine(
             metrics = metrics,
             markVitalsDirty = ::markVitalsDirty,
             onLevelUp = ::onCombatLevelUp,
+            gmcpEmitter = gmcpEmitter,
         )
 
     private val regenSystem =

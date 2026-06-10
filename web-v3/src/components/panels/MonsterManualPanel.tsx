@@ -20,6 +20,8 @@ interface MonsterManualPanelProps {
   /** Resolved server assets, for the optional action-button icons. */
   serverAssets: Record<string, string>;
   connected: boolean;
+  /** True when the player is a pledged Akathavae — Attack becomes Illuminate. */
+  akathavaePledged?: boolean;
   /** Quest offers + dialogue render inside the manual (right column). */
   questsAvailable: QuestAvailable[];
   dialogue: DialogueState | null;
@@ -63,6 +65,7 @@ export function MonsterManualPanel({
   bg,
   serverAssets,
   connected,
+  akathavaePledged = false,
   questsAvailable,
   dialogue,
   onClose,
@@ -162,7 +165,10 @@ export function MonsterManualPanel({
   else if (info?.questAvailable) actions.push({ key: "quest", label: "Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => { onQuest(name); setView("quest"); } });
   if (info?.dialogue) actions.push({ key: "talk", label: "Talk", glyph: "❝", assetKey: "action_talk", variant: "primary", run: () => { onCommand(`talk ${name}`); setView("dialog"); } });
   if (info?.shopKeeper) actions.push({ key: "shop", label: "Shop", glyph: "❖", assetKey: "action_shop", variant: "primary", run: onShop });
-  if (monster.canAttack) actions.push({ key: "attack", label: "Attack", glyph: "⚔", assetKey: "action_attack", variant: "primary", run: () => { onCommand(`kill ${name}`); close(); } });
+  // The Akathavae pledge replaces violence with illumination — same slot, same
+  // creatures, but the action records the subject into the Arcanum instead.
+  if (monster.canAttack && akathavaePledged) actions.push({ key: "illuminate", label: "Illuminate", glyph: "✒", assetKey: "action_illuminate", variant: "primary", run: () => { onCommand(`illuminate ${name}`); close(); } });
+  else if (monster.canAttack) actions.push({ key: "attack", label: "Attack", glyph: "⚔", assetKey: "action_attack", variant: "primary", run: () => { onCommand(`kill ${name}`); close(); } });
   if (monster.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(monster.video!) });
   if (monster.isStaff) actions.push({ key: "possess", label: "Possess", glyph: "✦", assetKey: "action_possess", variant: "ghost", run: () => { onCommand(`possess ${name}`); close(); } });
 

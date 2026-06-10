@@ -12,6 +12,8 @@ import {
 } from "../constants";
 import type {
   AchievementData,
+  ArcanumJournal,
+  ArcanumStatus,
   AuctionListing,
   AutoQuest,
   BankState,
@@ -313,6 +315,10 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
 
   // ── Leaderboard ───────────────────────────────────
   const [leaderboard, setLeaderboard] = useState<Record<string, LeaderboardData>>({});
+
+  // ── Arcanum (Akathavae explorer path) ─────────────
+  const [arcanumStatus, setArcanumStatus] = useState<ArcanumStatus | null>(null);
+  const [arcanumJournal, setArcanumJournal] = useState<ArcanumJournal | null>(null);
 
   // ── Trainer ───────────────────────────────────────
   const [trainer, setTrainer] = useState<TrainerData | null>(null);
@@ -659,6 +665,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setTradeState,
         setAuctionListings,
         setLeaderboard,
+        setArcanumStatus,
+        setArcanumJournal,
         setCurrencies: applyCurrencies,
         setTrainer,
         setUnlockedClasses,
@@ -820,6 +828,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     mailInbox, mailMessage, setMailMessage,
     // Leaderboard
     leaderboard,
+    // Arcanum
+    arcanumStatus, arcanumJournal,
     // Trainer
     trainer,
     // Login / connection

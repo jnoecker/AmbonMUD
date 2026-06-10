@@ -153,6 +153,9 @@ class AkathavaeHandler(
             return
         }
 
+        // Push the full journal to GMCP clients — the Arcanum panel renders from this.
+        system.emitJournal(sessionId)
+
         when (cmd.section) {
             null -> renderArcanumSummary(sessionId, me, system)
             "rooms", "places" -> renderArcanumSection(sessionId, "Places", me.arcanum.rooms.keys) { key ->
@@ -291,6 +294,7 @@ class AkathavaeHandler(
         )
         // The shrine itself becomes the Arcanum's first page.
         akathavaeSystem?.onRoomVisited(sessionId)
+        akathavaeSystem?.emitStatus(sessionId)
         markVitalsDirty?.invoke(sessionId)
     }
 
@@ -353,6 +357,7 @@ class AkathavaeHandler(
             players = players,
             outbound = outbound,
         )
+        akathavaeSystem?.emitStatus(sessionId)
         markVitalsDirty?.invoke(sessionId)
     }
 

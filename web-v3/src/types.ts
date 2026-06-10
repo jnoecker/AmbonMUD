@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "dice" | "puzzle" | "features" | "combatlog" | "inn" | null;
+export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "dice" | "puzzle" | "features" | "combatlog" | "inn" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -1327,4 +1327,63 @@ export interface PrestigeInfo {
   availableXp: number;
   nextRankCost: number | null;
   perks: PrestigePerk[];
+}
+
+// ── Arcanum (Akathavae explorer path) ───────────────────────────────────────
+
+/** Lightweight pledge + journal-count sync (Arcanum.Status). */
+export interface ArcanumStatus {
+  pledged: boolean;
+  rooms: number;
+  mobs: number;
+  items: number;
+}
+
+export interface ArcanumZoneCompletion {
+  zone: string;
+  roomsRecorded: number;
+  roomsTotal: number;
+  mobsRecorded: number;
+  mobsTotal: number;
+}
+
+export interface ArcanumMobEntry {
+  key: string;
+  name: string;
+  image: string | null;
+  timesRecorded: number;
+  firstRecordedAtMs: number;
+  source: string;
+  /** Permanent world-first credit — "First illuminated by <firstBy>". */
+  firstBy: string | null;
+  firstAtMs: number | null;
+}
+
+export interface ArcanumItemEntry {
+  key: string;
+  name: string;
+  image: string | null;
+  slot: string | null;
+  wearable: boolean;
+  timesRecorded: number;
+  firstRecordedAtMs: number;
+  source: string;
+  firstBy: string | null;
+}
+
+export interface ArcanumRoomEntry {
+  key: string;
+  title: string;
+  zone: string;
+  firstRecordedAtMs: number;
+  firstBy: string | null;
+}
+
+/** Full journal payload for the Arcanum panel (Arcanum.Journal). */
+export interface ArcanumJournal {
+  pledged: boolean;
+  zones: ArcanumZoneCompletion[];
+  mobs: ArcanumMobEntry[];
+  items: ArcanumItemEntry[];
+  rooms: ArcanumRoomEntry[];
 }

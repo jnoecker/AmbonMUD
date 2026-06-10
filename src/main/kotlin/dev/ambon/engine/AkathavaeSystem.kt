@@ -49,6 +49,7 @@ class AkathavaeSystem(
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
     private val onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null,
+    private val gmcpEmitter: GmcpEmitter? = null,
 ) {
     /** Per-session, per-subject retry locks after a failed illumination. Runtime-only. */
     private val failCooldowns = mutableMapOf<SessionId, MutableMap<String, Long>>()
@@ -188,6 +189,7 @@ class AkathavaeSystem(
             recordItemDiscovery(sessionId, item, ArcanumSource.ILLUMINATED)
         }
         markVitalsDirty?.invoke(sessionId)
+        emitStatus(sessionId)
     }
 
     private suspend fun resolveFailure(
@@ -245,6 +247,7 @@ class AkathavaeSystem(
             announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
             awardDiscoveryXp(sessionId, me, config.observeNpcXp, "observation", now)
             markVitalsDirty?.invoke(sessionId)
+            emitStatus(sessionId)
         } else {
             outbound.send(OutboundEvent.SendText(sessionId, "Your Arcanum already holds a page on ${mob.name}."))
         }
@@ -267,6 +270,7 @@ class AkathavaeSystem(
         announceWorldFirst(sessionId, me, "room:$key", title, now)
         awardDiscoveryXp(sessionId, me, config.roomDiscoveryXp, "discovery", now)
         markVitalsDirty?.invoke(sessionId)
+        emitStatus(sessionId)
     }
 
     /**
@@ -306,6 +310,7 @@ class AkathavaeSystem(
         announceWorldFirst(sessionId, me, "item:$key", item.item.displayName, now)
         awardDiscoveryXp(sessionId, me, config.itemDiscoveryXp, "discovery", now)
         markVitalsDirty?.invoke(sessionId)
+        emitStatus(sessionId)
     }
 
     // ── Journal stats (for the arcanum command and, later, GMCP) ─────────
@@ -330,6 +335,75 @@ class AkathavaeSystem(
     /** Returns the permanent world-first credit line for a subject, or null. */
     fun worldFirstCredit(kind: String, subjectKey: String): Pair<String, Long>? =
         worldState?.getArcanumFirst("$kind:$subjectKey")
+
+    /** Pushes the lightweight pledge + counts sync to the client. */
+    suspend fun emitStatus(sessionId: SessionId) {
+        val me = players.get(sessionId) ?: return
+        gmcpEmitter?.sendArcanumStatus(
+            sessionId,
+            pledged = me.isAkathavae,
+            rooms = me.arcanum.rooms.size,
+            mobs = me.arcanum.mobs.size,
+            items = me.arcanum.items.size,
+        )
+    }
+
+    /** Builds and pushes the full journal payload for the Arcanum panel. */
+    suspend fun emitJournal(sessionId: SessionId) {
+        val emitter = gmcpEmitter ?: return
+        val me = players.get(sessionId) ?: return
+        val zones = (
+            me.arcanum.rooms.keys.map { it.substringBefore(':') } +
+                me.arcanum.mobs.keys.map { it.substringBefore(':') }
+        ).toSortedSet().map { zoneCompletion(me, it) }
+        val payload = GmcpEmitter.ArcanumJournalPayload(
+            pledged = me.isAkathavae,
+            zones = zones.map {
+                GmcpEmitter.ArcanumZonePayload(it.zone, it.roomsRecorded, it.roomsTotal, it.mobsRecorded, it.mobsTotal)
+            },
+            mobs = me.arcanum.mobs.entries.sortedBy { it.key }.map { (key, entry) ->
+                val template = world.mobTemplate(dev.ambon.domain.ids.MobId(key))
+                val first = worldFirstCredit("mob", key)
+                GmcpEmitter.ArcanumMobPayload(
+                    key = key,
+                    name = template?.name ?: key.substringAfter(':').replace('_', ' '),
+                    image = template?.image,
+                    timesRecorded = entry.timesRecorded,
+                    firstRecordedAtMs = entry.firstRecordedAtMs,
+                    source = entry.source,
+                    firstBy = first?.first,
+                    firstAtMs = first?.second,
+                )
+            },
+            items = me.arcanum.items.entries.sortedBy { it.key }.map { (key, entry) ->
+                val template = items.getTemplate(dev.ambon.domain.ids.ItemId(key))
+                val first = worldFirstCredit("item", key)
+                GmcpEmitter.ArcanumItemPayload(
+                    key = key,
+                    name = template?.displayName ?: key.substringAfter(':').replace('_', ' '),
+                    image = template?.image,
+                    slot = template?.slot?.label(),
+                    wearable = template?.slot != null,
+                    timesRecorded = entry.timesRecorded,
+                    firstRecordedAtMs = entry.firstRecordedAtMs,
+                    source = entry.source,
+                    firstBy = first?.first,
+                )
+            },
+            rooms = me.arcanum.rooms.entries.sortedBy { it.key }.map { (key, entry) ->
+                val roomId = RoomId(key)
+                val first = worldFirstCredit("room", key)
+                GmcpEmitter.ArcanumRoomPayload(
+                    key = key,
+                    title = world.rooms[roomId]?.title ?: key,
+                    zone = roomId.zone,
+                    firstRecordedAtMs = entry.firstRecordedAtMs,
+                    firstBy = first?.first,
+                )
+            },
+        )
+        emitter.sendArcanumJournal(sessionId, payload)
+    }
 
     // ── Internals ────────────────────────────────────────────────────────
 

@@ -27043,3 +27043,190 @@ html:has(.game-shell),
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Arcanum panel (Akathavae explorer journal) ───────────────────────────── */
+
+.arcanum-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  gap: var(--space-3);
+}
+
+.arcanum-pledge-line {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.arcanum-empty {
+  padding: var(--space-4);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.arcanum-zones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-2);
+}
+
+.arcanum-zone {
+  padding: var(--space-2);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 4%);
+}
+
+.arcanum-zone-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--text-primary);
+}
+
+.arcanum-zone-pct {
+  color: var(--accent-gold);
+}
+
+.arcanum-zone-bar {
+  height: 6px;
+  margin: var(--space-1) 0;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 8%);
+  overflow: hidden;
+}
+
+.arcanum-zone-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-lavender), var(--accent-gold));
+}
+
+.arcanum-zone-detail {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.arcanum-tabs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.arcanum-tab {
+  padding: 4px 12px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 5%);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.arcanum-tab:hover {
+  background: var(--primary-glass);
+  color: var(--text-primary);
+}
+
+.arcanum-tab-active {
+  background: var(--primary-glass);
+  color: var(--text-primary);
+  border-color: var(--primary-dim);
+}
+
+.arcanum-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+
+.arcanum-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 4%);
+  overflow: hidden;
+}
+
+.arcanum-card-art {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.arcanum-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+}
+
+.arcanum-card-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.arcanum-card-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.arcanum-first {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.arcanum-first-mine {
+  color: var(--accent-gold);
+}
+
+.arcanum-conjure-btn {
+  margin-top: var(--space-1);
+  padding: 3px 8px;
+  align-self: flex-start;
+  border: 1px solid var(--primary-dim);
+  border-radius: var(--radius-sm);
+  background: var(--primary-glass);
+  color: var(--text-primary);
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.arcanum-conjure-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.arcanum-rooms {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.arcanum-room-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--line-faint);
+  font-size: 0.82rem;
+}
+
+.arcanum-room-title {
+  color: var(--text-primary);
+}
+
+.arcanum-room-zone {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
