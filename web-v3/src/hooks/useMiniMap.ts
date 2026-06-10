@@ -3,8 +3,9 @@ import { MAP_OFFSETS } from "../constants";
 import { canvasCallbacks, gameStateRef } from "../canvas/GameStateBridge";
 import type { MapRoom } from "../types";
 
-// Parchment / ink palette — matches the in-scene minimap.
-const BG_COLOR = "#241c14"; // dark fallback when the scroll image hasn't loaded
+// Parchment / ink palette — matches the in-scene minimap. The canvas itself is
+// transparent: the parchment scroll (`map_background`) is the map drawer's
+// full-sheet skin (.drawer-sheet-chart), so the ink draws straight onto it.
 const LINE_COLOR = "rgba(74, 55, 34, 0.92)"; // dark sepia route line (reads on light parchment)
 const TICK_COLOR = "rgba(74, 55, 34, 0.85)";
 const INK = "#4a3a28"; // dark sepia pen ink
@@ -38,15 +39,13 @@ const A_QUEST = "minimap_quest";
 const terrainKey = (t: string) => `minimap_room_${t}`;
 
 // Inset fractions reserving an edge margin around the plotted rooms. The
-// reworked full-bleed background needs none, so rooms use the entire canvas.
+// full-bleed parchment sheet needs none, so rooms use the entire canvas.
 const SCROLL_INSET_LEFT = 0;
 const SCROLL_INSET_RIGHT = 0;
 const SCROLL_INSET_TOP = 0;
 const SCROLL_INSET_BOTTOM = 0;
 // Extra margin (px) keeping a node's centre off the very edge. 0 = full canvas.
 const EDGE_PAD = 0;
-// How much to zoom the background image (1.0 = fill canvas, >1 = zoom in)
-const BG_ZOOM = 1.15;
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -174,7 +173,6 @@ function renderMap(
   canvas: HTMLCanvasElement,
   visited: Map<string, MapRoom>,
   currentId: string | null,
-  bgImage: HTMLImageElement | null,
   questTargetRoomIds: Set<string>,
   serverAssets: Record<string, string>,
   view: View,
@@ -194,20 +192,9 @@ function renderMap(
   }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Transparent canvas — the drawer sheet's parchment skin shows through, so
+  // the scroll reads as one continuous surface behind toolbar and map alike.
   ctx.clearRect(0, 0, width, height);
-
-  // Background: custom map scroll image (zoomed in) or dark fallback. Fixed —
-  // it does not pan/zoom with the plotted rooms.
-  if (bgImage && bgImage.complete) {
-    const zw = width * BG_ZOOM;
-    const zh = height * BG_ZOOM;
-    const zx = (width - zw) / 2;
-    const zy = (height - zh) / 2;
-    ctx.drawImage(bgImage, zx, zy, zw, zh);
-  } else {
-    ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(0, 0, width, height);
-  }
 
   if (!currentId) return;
 
@@ -450,7 +437,6 @@ export function useMiniMap() {
   const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const visitedRef = useRef<Map<string, MapRoom>>(new Map());
   const currentRoomIdRef = useRef<string | null>(null);
-  const bgImageRef = useRef<HTMLImageElement | null>(null);
   // Glyph textures keyed by asset key (loaded once; global, not per-zone).
   const glyphCacheRef = useRef<Map<string, GlyphEntry>>(new Map());
   const pulseRafRef = useRef<number | null>(null);
@@ -469,15 +455,6 @@ export function useMiniMap() {
     if (!canvas) return;
 
     const assets = gameStateRef.current.serverAssets;
-
-    // Custom scroll background — draw-only, so no crossOrigin needed.
-    if (bgImageRef.current == null && assets["map_background"]) {
-      const img = new Image();
-      img.onload = () => drawMapRef.current();
-      img.src = assets["map_background"];
-      bgImageRef.current = img;
-    }
-    const bg = bgImageRef.current?.complete ? bgImageRef.current : null;
 
     // Resolve the zoom/pan view from the canvas size + zone bounds.
     const rect = canvas.getBoundingClientRect();
@@ -570,7 +547,6 @@ export function useMiniMap() {
       canvas,
       visited,
       currentRoomIdRef.current,
-      bg,
       gameStateRef.current.questTargetRoomIds,
       assets,
       { cell: zoomRef.current, panGx: panRef.current.gx, panGy: panRef.current.gy },
@@ -578,7 +554,7 @@ export function useMiniMap() {
     );
   }, []);
 
-  // Keep a stable handle to the latest drawMap for async (glyph/bg) reloads.
+  // Keep a stable handle to the latest drawMap for async glyph reloads.
   useEffect(() => {
     drawMapRef.current = drawMap;
   }, [drawMap]);
