@@ -1022,6 +1022,7 @@ function App() {
           autoOpen={(state.character.level ?? 1) >= 2}
           openRequestId={claimRequestId}
           backgroundImage={state.serverAssets["login_claim_bg"] ?? null}
+          backgroundImagePortrait={state.serverAssets["login_claim_bg_portrait"] ?? null}
           // sendLine (not sendCommand) — claim contains the user's new password,
           // so we must NOT push it into command history / localStorage.
           onClaim={(line) => { sendLine(line); }}
@@ -1796,6 +1797,7 @@ function App() {
         <CharacterPicker
           characters={state.savedCharacters}
           backgroundImage={state.serverAssets["login_picker_bg"] ?? null}
+          backgroundImagePortrait={state.serverAssets["login_picker_bg_portrait"] ?? null}
           onSelect={(name) => {
             try {
               const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;

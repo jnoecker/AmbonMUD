@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { ArtScene } from "../canvas/ArtScene";
-import { ART_FIT_LANDSCAPE, useArtImage, useMediaFits } from "../canvas/loginArtFit";
+import { useOrientedArt } from "../canvas/loginArtFit";
 
 interface DemoBannerProps {
   /**
@@ -16,6 +16,8 @@ interface DemoBannerProps {
   openRequestId?: number;
   /** Painted Save Your Character scene (`login_claim_bg`); null → CSS dialog. */
   backgroundImage: string | null;
+  /** Phone-portrait companion (`login_claim_bg_portrait`); preferred on portrait viewports. */
+  backgroundImagePortrait: string | null;
   /** Submits `claim [name] <password>` over the line interface. */
   onClaim: (line: string) => void;
 }
@@ -26,7 +28,7 @@ interface DemoBannerProps {
  * a required password, then sends a `claim` command. When the painted claim
  * scene is available the modal renders as a full-screen art window.
  */
-export function DemoBanner({ autoOpen = false, openRequestId = 0, backgroundImage, onClaim }: DemoBannerProps) {
+export function DemoBanner({ autoOpen = false, openRequestId = 0, backgroundImage, backgroundImagePortrait, onClaim }: DemoBannerProps) {
   const [manualOpen, setManualOpen] = useState(false);
   const [dismissedAuto, setDismissedAuto] = useState(false);
   const [handledRequestId, setHandledRequestId] = useState(0);
@@ -35,9 +37,9 @@ export function DemoBanner({ autoOpen = false, openRequestId = 0, backgroundImag
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const artFits = useMediaFits(ART_FIT_LANDSCAPE);
-  // Gated on the image actually loading — failed art falls back to the CSS dialog.
-  const art = useArtImage(artFits ? backgroundImage : null);
+  // Orientation-aware art pick, gated on the image actually loading —
+  // failed art falls back to the CSS dialog.
+  const { url: art, phone } = useOrientedArt(backgroundImage, backgroundImagePortrait);
 
   // Render-time derivation: auto-opens once when autoOpen flips true, and stays
   // closed if the user dismisses it. Manual reopening (banner button or the
@@ -95,7 +97,7 @@ export function DemoBanner({ autoOpen = false, openRequestId = 0, backgroundImag
       {artOpen && art && (
         <ArtScene
           url={art}
-          stageClass="login-art-stage--book login-art-stage--claim"
+          stageClass={`${phone ? "login-art-stage--phone" : "login-art-stage--book"} login-art-stage--claim`}
           label="Save your demo character"
         >
           <h1 className="sr-only">Save your character — pick a password, optionally rename</h1>

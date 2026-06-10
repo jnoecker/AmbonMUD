@@ -19,6 +19,28 @@ export function useMediaFits(query: string): boolean {
   return fits;
 }
 
+const ORIENTATION_PORTRAIT = "(orientation: portrait)";
+
+/**
+ * Pick between a landscape scene and its phone-portrait companion by viewport
+ * orientation, falling back to whichever fits when the preferred one is
+ * absent, and gating the winner on the image actually loading. `phone` is
+ * true when the portrait companion (941×1672 stage) was selected.
+ */
+export function useOrientedArt(
+  landscapeUrl: string | null,
+  portraitUrl: string | null,
+): { url: string | null; phone: boolean } {
+  const fitsLandscape = useMediaFits(ART_FIT_LANDSCAPE);
+  const fitsPortrait = useMediaFits(ART_FIT_PORTRAIT);
+  const portraitViewport = useMediaFits(ORIENTATION_PORTRAIT);
+  const landscape = fitsLandscape ? landscapeUrl : null;
+  const portrait = fitsPortrait ? portraitUrl : null;
+  const wanted = portraitViewport ? (portrait ?? landscape) : (landscape ?? portrait);
+  const url = useArtImage(wanted);
+  return { url, phone: url !== null && wanted === portrait };
+}
+
 /** Module-level result cache: each art URL is probed at most once per session. */
 const artImageStatus = new Map<string, "ready" | "failed">();
 
