@@ -195,8 +195,10 @@ Independently of `condition`, the server may spawn any COMBAT mob as a rare
 cosmetic **variant** — a tinted/overlaid version with a flavor name prefix
 (e.g. *Shadow-touched giant rat*) and a modest HP/XP/loot bump. This guarantees
 explorers always have richer sightings to find even when no rare mob was
-hand-authored. Variants roll on live spawns (zone reset, post-death respawn,
-conditional spawn), not at cold start, and announce with reach scaled by rarity.
+hand-authored. Variants roll on every spawn — cold start (so a freshly-booted
+world is already seeded with a few to discover), zone reset, post-death respawn,
+and conditional spawn. Spawns into an occupied world announce with reach scaled
+by rarity; cold-start variants spawn silently, since nobody is connected yet.
 
 Set `rareVariants: false` to opt a mob out — appropriate for unique named bosses
 or strictly-themed creatures whose appearance should never be altered. The

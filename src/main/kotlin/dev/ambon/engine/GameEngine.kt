@@ -1611,8 +1611,13 @@ class GameEngine(
     init {
         // Condition-gated spawns (night-only, storm-only, …) are owned entirely
         // by ConditionalSpawnHandler; they are not present at cold start.
+        //
+        // Ordinary spawns roll for a rare variant here too, so the freshly-booted
+        // world is already seeded with a few sightings to discover — no fanfare,
+        // since nobody is connected yet; explorers simply stumble onto them.
         world.mobSpawns.filterNot { it.isConditional(world) }.forEach { spawn ->
-            mobs.upsert(spawnToMobState(spawn, world))
+            val variant = world.mobTemplate(spawn.templateId)?.let { mobVariantRoller.roll(it) }
+            mobs.upsert(spawnToMobState(spawn, world, variant = variant))
         }
         items.loadSpawns(world.itemSpawns)
         shopRegistry.register(world.shopDefinitions)

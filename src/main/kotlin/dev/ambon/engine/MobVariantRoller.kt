@@ -14,12 +14,10 @@ data class RolledMobVariant(
 
 /**
  * Decides whether a freshly-spawned mob should become a server-generated rare
- * cosmetic variant, and which archetype. Used at every *dynamic* spawn site
- * (zone reset, post-death respawn, conditional spawn) so explorers keep finding
- * rich variations even when content authors don't hand-author rare mobs.
- *
- * Cold-start spawns are intentionally never rolled here — variants are meant to
- * be live sightings, not a server that boots pre-stocked with rares.
+ * cosmetic variant, and which archetype. Used at every spawn site — cold start,
+ * zone reset, post-death respawn, and conditional spawn — so explorers keep
+ * finding rich variations even when content authors don't hand-author rare mobs,
+ * and a freshly-booted world already holds a few sightings to discover.
  */
 class MobVariantRoller(
     private val config: MobVariantsConfig,

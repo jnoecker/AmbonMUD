@@ -1171,8 +1171,9 @@ data class MobVariantsConfig(
     val enabled: Boolean = true,
     /**
      * Base probability that an eligible mob rolls as a rare variant on each
-     * dynamic spawn opportunity (zone reset, post-death respawn, conditional
-     * spawn). Cold-start spawns are never rolled — variants are live sightings.
+     * spawn opportunity — cold start, zone reset, post-death respawn, and
+     * conditional spawn — so a freshly-booted world is already seeded with a
+     * few sightings to discover. Raise it for a denser initial population.
      */
     val chance: Double = 0.04,
     /** Variant archetypes keyed by ID, selected by [MobVariantDefinition.weight]. */
