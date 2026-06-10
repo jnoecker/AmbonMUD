@@ -131,7 +131,7 @@ export function FriendsBoardPanel({
           <span className="fb-col-actions" role="columnheader">Actions</span>
         </div>
 
-        <div className="fb-body">
+        <div className="fb-body" role="rowgroup">
           {!canChat ? (
             <p className="fb-empty">{connected ? "Log in to see your friends." : "Reconnect to load social data."}</p>
           ) : sortedFriends.length === 0 && recentNotes.length === 0 ? (
@@ -152,7 +152,7 @@ export function FriendsBoardPanel({
                 const wp = whoByName.get(f.name.toLowerCase());
                 return (
                   <div key={f.name} className={`fb-row${f.online ? "" : " is-offline"}`} role="row">
-                    <span className="fb-col-portrait">
+                    <span className="fb-col-portrait" role="cell">
                       <span className="fb-portrait">
                         <span className={`fb-dot fb-portrait-dot ${f.online ? "is-online" : "is-offline"}`} aria-hidden="true" />
                         {wp?.sprite
@@ -160,13 +160,13 @@ export function FriendsBoardPanel({
                           : <span className="fb-sprite-empty" aria-hidden="true" />}
                       </span>
                     </span>
-                    <span className="fb-col-name">
+                    <span className="fb-col-name" role="cell">
                       <span className="fb-name">{f.name}</span>
                       {wp?.title && <span className="fb-title">{wp.title}</span>}
                     </span>
-                    <span className="fb-col-loc">{f.online ? (f.zone ?? "—") : "Offline"}</span>
-                    <span className="fb-col-level">{f.level ?? wp?.level ?? "—"}</span>
-                    <span className="fb-col-actions">
+                    <span className="fb-col-loc" role="cell">{f.online ? (f.zone ?? "—") : "Offline"}</span>
+                    <span className="fb-col-level" role="cell">{f.level ?? wp?.level ?? "—"}</span>
+                    <span className="fb-col-actions" role="cell">
                       <button type="button" className="whoboard-action" title={`Examine ${f.name}`} aria-label={`Examine ${f.name}`} onClick={() => examineFriend(f)}>
                         {examineArt ? <img src={examineArt} alt="" aria-hidden="true" /> : <span className="whoboard-action-glyph" aria-hidden="true">❦</span>}
                       </button>

@@ -57,7 +57,7 @@ export function WorldAtmosphereHud({ worldTime, worldWeather, worldEvents }: Pro
   if (!hasTime && !hasWeather && !hasEvents) return null;
 
   return (
-    <div className="atmosphere-hud" aria-label="World atmosphere">
+    <div className="atmosphere-hud" role="group" aria-label="World atmosphere">
       {hasTime && (
         <span className="atmosphere-hud-chip" title={`${periodLabel(worldTime.period)} — ${String(worldTime.hour).padStart(2, "0")}:${String(worldTime.minute).padStart(2, "0")}`}>
           <span className="atmosphere-hud-icon" aria-hidden="true">{periodIcon(worldTime.period)}</span>

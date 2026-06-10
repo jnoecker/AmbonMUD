@@ -58,7 +58,7 @@ export function StylistPanel({ stylistState, serverAssets, onCommand }: StylistP
             >
               {race.image && <img className="sty-card-portrait" src={race.image} alt="" loading="lazy" />}
               <div className="sty-card-text">
-                <span className="sty-card-name">{race.displayName}{isCurrent && <span className="sty-card-tag">current</span>}</span>
+                <span className="sty-card-name">{race.displayName}{isCurrent && <span className="sty-card-tag">current<span className="sr-only"> race</span></span>}</span>
                 {race.description && <span className="sty-card-desc">{race.description}</span>}
                 {mods.length > 0 && (
                   <span className="sty-card-mods">

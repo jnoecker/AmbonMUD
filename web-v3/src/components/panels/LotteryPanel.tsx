@@ -67,7 +67,7 @@ export function LotteryPanel({ lotteryInfo, uiFeedbackFeed, onCommand }: Lottery
           <button type="button" className="lot-qty-step" onClick={() => setQty((q) => clamp(q - 10))} aria-label="Minus ten">−10</button>
           <button type="button" className="lot-qty-step" onClick={() => setQty((q) => clamp(q - 1))} aria-label="Minus one">−</button>
           {Array.from({ length: cap }, (_, i) => i + 1).map((n) => (
-            <button key={n} type="button" className={`lot-qty-num${qty === n ? " is-active" : ""}`} onClick={() => setQty(n)}>{n}</button>
+            <button key={n} type="button" className={`lot-qty-num${qty === n ? " is-active" : ""}`} aria-pressed={qty === n} onClick={() => setQty(n)}>{n}</button>
           ))}
           <button type="button" className="lot-qty-step" onClick={() => setQty((q) => clamp(q + 1))} aria-label="Plus one">+</button>
           <button type="button" className="lot-qty-step" onClick={() => setQty((q) => clamp(q + 10))} aria-label="Plus ten">+10</button>

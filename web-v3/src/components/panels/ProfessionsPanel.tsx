@@ -69,7 +69,14 @@ export function ProfessionsPanel({ connected, hasCharacterProfile, skills, onLoa
                   <span className="prof-xp-text">
                     {isMax ? "Mastered" : `XP: ${s.xp.toLocaleString()} / ${s.xpToNext.toLocaleString()}`}
                   </span>
-                  <span className={`prof-bar prof-bar-${s.type}`}>
+                  <span
+                    className={`prof-bar prof-bar-${s.type}`}
+                    role="progressbar"
+                    aria-label={`${s.name} experience`}
+                    aria-valuenow={pct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
                     <span className="prof-bar-fill" style={{ width: `${pct}%` }} />
                   </span>
                 </span>

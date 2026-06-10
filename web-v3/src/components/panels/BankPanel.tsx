@@ -67,6 +67,7 @@ export function BankPanel({ bankState, serverAssets, onCommand }: BankPanelProps
             type="number"
             className="bank-gold-input"
             placeholder="Amount"
+            aria-label="Gold amount"
             min={1}
             value={goldAmount}
             onChange={(e) => setGoldAmount(e.target.value)}
@@ -128,6 +129,7 @@ export function BankPanel({ bankState, serverAssets, onCommand }: BankPanelProps
             type="text"
             className="bank-item-input"
             placeholder="Item keyword"
+            aria-label="Item keyword"
             value={itemKeyword}
             onChange={(e) => setItemKeyword(e.target.value)}
             onKeyDown={(e) => {

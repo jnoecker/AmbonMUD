@@ -63,6 +63,9 @@ export function LeaderboardPanel({ leaderboard, onCommand }: Props) {
                 <p className="leaderboard-empty-note">No entries yet — be the first to rank!</p>
               ) : (
                 <table className="leaderboard-table">
+                  <caption className="sr-only">
+                    {data.label} rankings — columns: rank, player, score
+                  </caption>
                   <tbody>
                     {data.entries.map((e) => (
                       <tr key={e.rank} className="leaderboard-row">

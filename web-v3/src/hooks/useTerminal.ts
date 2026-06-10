@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
-import { FitAddon } from "@xterm/addon-fit";
-import { Terminal } from "@xterm/xterm";
-import "@xterm/xterm/css/xterm.css";
+import type { FitAddon } from "@xterm/addon-fit";
+import type { Terminal } from "@xterm/xterm";
 
 interface TerminalHosts {
   /** Off-screen stash the xterm element lives in while the GUI is in charge. */
@@ -60,6 +59,14 @@ const INK_THEME = {
 export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  // Server bytes that arrive before the lazy-loaded xterm module is ready.
+  // xterm (~330 kB) is the entry chunk's second-largest dependency, so it is
+  // fetched with a dynamic import the moment the hook mounts; the buffer
+  // bridges the sub-second gap so no output is lost.
+  const pendingWritesRef = useRef<string[]>([]);
+  // Theme requested before the instance exists (parchment art can arrive
+  // via Server.Assets while xterm is still downloading).
+  const inkThemeRef = useRef(false);
   const [open, setOpen] = useState(false);
   // Translucent when first summoned (game stays visible behind the log);
   // turns opaque once the user starts typing and commits to terminal mode.
@@ -85,27 +92,44 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
   useEffect(() => {
     if (!hiddenHostRef.current) return;
 
-    const term = new Terminal({
-      cursorBlink: false,
-      disableStdin: true,
-      fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
-      fontSize: 14,
-      rows: 30,
-      scrollback: 5000,
-      convertEol: false,
-      allowTransparency: true,
-      theme: DARK_THEME,
-    });
+    let disposed = false;
+    let term: Terminal | null = null;
 
-    const fitAddon = new FitAddon();
-    term.loadAddon(fitAddon);
-    term.open(hiddenHostRef.current);
+    (async () => {
+      const [{ Terminal: XTerminal }, { FitAddon: XFitAddon }] = await Promise.all([
+        import("@xterm/xterm"),
+        import("@xterm/addon-fit"),
+        import("@xterm/xterm/css/xterm.css"),
+      ]);
+      if (disposed || !hiddenHostRef.current) return;
 
-    terminalRef.current = term;
-    fitAddonRef.current = fitAddon;
+      term = new XTerminal({
+        cursorBlink: false,
+        disableStdin: true,
+        fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
+        fontSize: 14,
+        rows: 30,
+        scrollback: 5000,
+        convertEol: false,
+        allowTransparency: true,
+        theme: inkThemeRef.current ? INK_THEME : DARK_THEME,
+      });
+
+      const fitAddon = new XFitAddon();
+      term.loadAddon(fitAddon);
+      term.open(hiddenHostRef.current);
+
+      terminalRef.current = term;
+      fitAddonRef.current = fitAddon;
+
+      const pending = pendingWritesRef.current;
+      pendingWritesRef.current = [];
+      for (const chunk of pending) term.write(chunk);
+    })();
 
     return () => {
-      term.dispose();
+      disposed = true;
+      term?.dispose();
       fitAddonRef.current = null;
       terminalRef.current = null;
     };
@@ -152,26 +176,37 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
     }
   }, [open, fit, hiddenHostRef, overlayHostRef]);
 
+  /** Queue output until the lazily-imported xterm instance exists. */
+  const writeOrBuffer = useCallback((text: string) => {
+    const term = terminalRef.current;
+    if (term) {
+      term.write(text);
+    } else if (pendingWritesRef.current.length < 5000) {
+      pendingWritesRef.current.push(text);
+    }
+  }, []);
+
   /** Raw server output — ANSI escapes pass straight through to xterm. */
   const write = useCallback((text: string) => {
-    terminalRef.current?.write(text);
-  }, []);
+    writeOrBuffer(text);
+  }, [writeOrBuffer]);
 
   /** Local echo of a command the player sent, like a telnet client shows. */
   const echoCommand = useCallback((command: string) => {
-    terminalRef.current?.write(`${command}\r\n`);
-  }, []);
+    writeOrBuffer(`${command}\r\n`);
+  }, [writeOrBuffer]);
 
   /** Dim client-side status line (connection lost, reconnecting, ...). */
   const writeSystem = useCallback((message: string) => {
-    terminalRef.current?.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
-  }, []);
+    writeOrBuffer(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
+  }, [writeOrBuffer]);
 
   /** xterm tracks its own selection (not window.getSelection). */
   const hasSelection = useCallback(() => terminalRef.current?.hasSelection() ?? false, []);
 
   /** Dark ink on parchment when the scroll art is present; light-on-dark otherwise. */
   const setInkTheme = useCallback((enabled: boolean) => {
+    inkThemeRef.current = enabled;
     const term = terminalRef.current;
     if (term) term.options.theme = enabled ? INK_THEME : DARK_THEME;
   }, []);

@@ -80,6 +80,8 @@ export function GameShell({
 }: GameShellProps) {
   const loggedIn = connected && hasCharacterProfile;
   const [signZoom, setSignZoom] = useState(false);
+  const signButtonRef = useRef<HTMLButtonElement | null>(null);
+  const signZoomRef = useRef<HTMLDivElement | null>(null);
 
   // Services stack (Help / Social / Mail) auto-collapses to a slim handle at
   // the right edge so it doesn't sit over the minimap. Tapping the handle
@@ -128,6 +130,15 @@ export function GameShell({
     return () => window.removeEventListener("keydown", onKey);
   }, [signZoom]);
 
+  // Move focus into the sign-zoom dialog while it is open, and hand it back
+  // to the sign button on dismiss so keyboard users don't lose their place.
+  useEffect(() => {
+    if (!signZoom) return;
+    signZoomRef.current?.focus();
+    const opener = signButtonRef.current;
+    return () => opener?.focus();
+  }, [signZoom]);
+
   return (
     <main className="game-shell">
       {/* Canvas fills the shell; all HUD elements are overlays on top of it */}
@@ -151,6 +162,7 @@ export function GameShell({
                 just crop it and center the title in the blank plaque. */}
             {room.title !== "-" && serverAssets["room_sign_bg"] && (
               <button
+                ref={signButtonRef}
                 type="button"
                 className="canvas-room-sign canvas-room-sign-skinned"
                 onClick={() => setSignZoom(true)}
@@ -206,7 +218,14 @@ export function GameShell({
               <div className="game-target-hud">
                 <span className="game-target-name">{combatTarget.targetName}</span>
                 {combatTarget.targetMaxHp != null && combatTarget.targetHp != null && (
-                  <div className="game-target-hp-track">
+                  <div
+                    className="game-target-hp-track"
+                    role="progressbar"
+                    aria-label={`${combatTarget.targetName} health`}
+                    aria-valuenow={combatTarget.targetHp}
+                    aria-valuemin={0}
+                    aria-valuemax={combatTarget.targetMaxHp}
+                  >
                     <span
                       className="game-target-hp-fill"
                       style={{ width: `${Math.max(0, Math.min(100, (combatTarget.targetHp / combatTarget.targetMaxHp) * 100))}%` }}
@@ -245,7 +264,7 @@ export function GameShell({
                   aria-label="Help"
                 >
                   {serverAssets["help_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["help_widget"]} alt="" />
+                    ? <img aria-hidden="true" className="hud-stack-img" src={serverAssets["help_widget"]} alt="" />
                     : <span className="hud-stack-glyph">?</span>}
                 </button>
                 <button
@@ -256,7 +275,7 @@ export function GameShell({
                   aria-label="Chat"
                 >
                   {serverAssets["chat_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["chat_widget"]} alt="" />
+                    ? <img aria-hidden="true" className="hud-stack-img" src={serverAssets["chat_widget"]} alt="" />
                     : <span className="hud-stack-glyph">&#9998;</span>}
                 </button>
                 <button
@@ -267,7 +286,7 @@ export function GameShell({
                   aria-label="Who's online"
                 >
                   {serverAssets["who_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["who_widget"]} alt="" />
+                    ? <img aria-hidden="true" className="hud-stack-img" src={serverAssets["who_widget"]} alt="" />
                     : <span className="hud-stack-glyph">&#9776;</span>}
                 </button>
                 <button
@@ -278,7 +297,7 @@ export function GameShell({
                   aria-label="Friends"
                 >
                   {serverAssets["friends_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["friends_widget"]} alt="" />
+                    ? <img aria-hidden="true" className="hud-stack-img" src={serverAssets["friends_widget"]} alt="" />
                     : <span className="hud-stack-glyph">&#9829;</span>}
                 </button>
                 <button
@@ -289,7 +308,7 @@ export function GameShell({
                   aria-label="Guild"
                 >
                   {serverAssets["guild_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["guild_widget"]} alt="" />
+                    ? <img aria-hidden="true" className="hud-stack-img" src={serverAssets["guild_widget"]} alt="" />
                     : <span className="hud-stack-glyph">&#9884;</span>}
                 </button>
                 <button
@@ -300,7 +319,7 @@ export function GameShell({
                   aria-label="Group"
                 >
                   {serverAssets["group_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["group_widget"]} alt="" />
+                    ? <img aria-hidden="true" className="hud-stack-img" src={serverAssets["group_widget"]} alt="" />
                     : <span className="hud-stack-glyph">&#10022;</span>}
                 </button>
                 <button
@@ -311,7 +330,7 @@ export function GameShell({
                   aria-label="Mail"
                 >
                   {serverAssets["mail_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["mail_widget"]} alt="" />
+                    ? <img aria-hidden="true" className="hud-stack-img" src={serverAssets["mail_widget"]} alt="" />
                     : <span className="hud-stack-glyph">✉</span>}
                 </button>
                 {/* Small screens only — desktop reaches the terminal via the
@@ -324,7 +343,7 @@ export function GameShell({
                   aria-label="Terminal"
                 >
                   {serverAssets["terminal_widget"]
-                    ? <img className="hud-stack-img" src={serverAssets["terminal_widget"]} alt="" />
+                    ? <img aria-hidden="true" className="hud-stack-img" src={serverAssets["terminal_widget"]} alt="" />
                     : <span className="hud-stack-glyph">&gt;_</span>}
                 </button>
               </div>
@@ -415,10 +434,12 @@ export function GameShell({
       {/* Enlarged, static view of the room sign — click anywhere / Esc to close. */}
       {signZoom && room.title !== "-" && serverAssets["room_sign_bg"] && (
         <div
+          ref={signZoomRef}
           className="sign-zoom-backdrop"
           role="dialog"
           aria-modal="true"
           aria-label={`Room: ${room.title}`}
+          tabIndex={-1}
           onClick={() => setSignZoom(false)}
         >
           <div className="sign-zoom">

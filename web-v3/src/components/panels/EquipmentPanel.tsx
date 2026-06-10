@@ -113,7 +113,16 @@ export function EquipmentPanel({
                 <li
                   key={def.id}
                   className={`paperdoll-list-item ${item ? "paperdoll-list-item-filled" : "paperdoll-list-item-empty"}`}
+                  role={item ? "button" : undefined}
+                  tabIndex={item ? 0 : undefined}
+                  aria-label={item ? `${def.displayName}: ${item.name} — examine` : undefined}
                   onClick={() => { if (item) onExamineItem(item, thumb, def.id); }}
+                  onKeyDown={(e) => {
+                    if (item && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      onExamineItem(item, thumb, def.id);
+                    }
+                  }}
                 >
                   <div className="paperdoll-card-thumb">
                     {thumb ? (

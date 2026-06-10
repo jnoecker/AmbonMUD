@@ -102,9 +102,10 @@ export function TerminalOverlay({
     <div
       className={`terminal-screen${open ? " terminal-screen-open" : ""}${opaque ? " terminal-screen-opaque" : ""}${parchmentBg ? " terminal-screen-skinned" : ""}`}
       role="dialog"
-      aria-modal={open}
+      aria-modal="true"
       aria-label="Terminal"
       aria-hidden={!open}
+      inert={!open}
       style={Object.keys(skinVars).length > 0 ? skinVars : undefined}
       onBlur={handleFocusOut}
       onPointerDown={handlePointerDown}

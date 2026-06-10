@@ -106,7 +106,7 @@ export function QuestPanel({
               className={`quest-notification quest-notification-${n.event}`}
               role="status"
             >
-              <span className="quest-notification-icon">
+              <span className="quest-notification-icon" aria-hidden="true">
                 {n.event === "complete" ? "\u2726" : "\u25B2"}
               </span>
               <span className="quest-notification-text">
@@ -117,7 +117,7 @@ export function QuestPanel({
                 type="button"
                 className="quest-notification-dismiss"
                 onClick={() => onDismissQuestNotification(n.id)}
-                aria-label="Dismiss notification"
+                aria-label={`Dismiss ${n.questName} notification`}
               >
                 {"\u00D7"}
               </button>
@@ -156,7 +156,7 @@ export function QuestPanel({
         >
           {quests.length === 0 ? (
             <div className="quest-empty-state">
-              <span className="quest-empty-icon">{"\u2726"}</span>
+              <span className="quest-empty-icon" aria-hidden="true">{"\u2726"}</span>
               <p className="empty-note">
                 {hasCharacterProfile
                   ? "No active quests. Talk to NPCs to discover available quests."
@@ -188,7 +188,7 @@ export function QuestPanel({
                       onClick={() => setExpandedQuestId(isExpanded ? null : quest.id)}
                       aria-expanded={isExpanded}
                     >
-                      <span className="quest-item-icon">{allDone ? "\u2713" : "\u2726"}</span>
+                      <span className="quest-item-icon" aria-hidden="true">{allDone ? "\u2713" : "\u2726"}</span>
                       <span className="quest-item-name">{quest.name}</span>
                       {readyToTurnIn && (
                         <span className="quest-item-ready-badge">Ready to turn in</span>
@@ -201,7 +201,14 @@ export function QuestPanel({
                     {/* Mini progress bar visible when collapsed */}
                     {!isExpanded && (
                       <div className="quest-item-mini-progress">
-                        <div className="meter-track quest-mini-track">
+                        <div
+                          className="meter-track quest-mini-track"
+                          role="progressbar"
+                          aria-label={`${quest.name} progress`}
+                          aria-valuenow={Math.round(Math.min(100, overallProgress * 100))}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                        >
                           <span
                             className={`meter-fill ${allDone ? "meter-fill-quest-done" : "meter-fill-quest"}`}
                             style={{ width: `${Math.min(100, overallProgress * 100)}%` }}
@@ -225,7 +232,7 @@ export function QuestPanel({
                                 className={`quest-objective ${done ? "quest-objective-done" : ""}`}
                               >
                                 <div className="quest-objective-header">
-                                  <span className="quest-objective-check">
+                                  <span className="quest-objective-check" aria-hidden="true">
                                     {done ? "\u2713" : "\u25CB"}
                                   </span>
                                   <span className="quest-objective-text">{obj.description}</span>
@@ -234,7 +241,14 @@ export function QuestPanel({
                                   </span>
                                 </div>
                                 {!done && (
-                                  <div className="meter-track quest-objective-track">
+                                  <div
+                                    className="meter-track quest-objective-track"
+                                    role="progressbar"
+                                    aria-label={`${obj.description} progress`}
+                                    aria-valuenow={obj.current}
+                                    aria-valuemin={0}
+                                    aria-valuemax={obj.required}
+                                  >
                                     <span
                                       className="meter-fill meter-fill-quest"
                                       style={{ width: `${progress}%` }}
@@ -284,14 +298,14 @@ export function QuestPanel({
             {questsAvailable.map((quest) => (
               <li key={quest.id} className="quest-available-card">
                 <div className="quest-available-header">
-                  <span className="quest-available-icon">{"\u2726"}</span>
+                  <span className="quest-available-icon" aria-hidden="true">{"\u2726"}</span>
                   <span className="quest-available-name">{quest.name}</span>
                 </div>
                 <p className="quest-available-description">{quest.description}</p>
                 <ul className="quest-available-objectives">
                   {quest.objectives.map((obj, idx) => (
                     <li key={idx} className="quest-available-objective">
-                      <span className="quest-available-obj-icon">{"\u25CB"}</span>
+                      <span className="quest-available-obj-icon" aria-hidden="true">{"\u25CB"}</span>
                       <span>{obj.description}</span>
                       <span className="quest-available-obj-count">0/{obj.count}</span>
                     </li>
@@ -332,7 +346,7 @@ export function QuestPanel({
             <div className="quest-timed-board">
               {dailyQuests.streakDays > 0 && (
                 <div className="quest-streak-banner">
-                  <span className="quest-streak-icon">{"\u2605"}</span>
+                  <span className="quest-streak-icon" aria-hidden="true">{"\u2605"}</span>
                   <span className="quest-streak-text">{dailyQuests.streakDays}-day streak!</span>
                 </div>
               )}
@@ -344,7 +358,7 @@ export function QuestPanel({
             </div>
           ) : (
             <div className="quest-empty-state">
-              <span className="quest-empty-icon">{"\u2726"}</span>
+              <span className="quest-empty-icon" aria-hidden="true">{"\u2726"}</span>
               <p className="empty-note">No daily quests are available right now.</p>
             </div>
           )}
@@ -366,7 +380,7 @@ export function QuestPanel({
             </ul>
           ) : (
             <div className="quest-empty-state">
-              <span className="quest-empty-icon">{"\u2726"}</span>
+              <span className="quest-empty-icon" aria-hidden="true">{"\u2726"}</span>
               <p className="empty-note">No weekly quests are available right now.</p>
             </div>
           )}
@@ -383,7 +397,7 @@ export function QuestPanel({
           {autoQuest && autoQuest.active ? (
             <div className="quest-bounty-card">
               <div className="quest-bounty-header">
-                <span className="quest-bounty-icon">{"\u2694"}</span>
+                <span className="quest-bounty-icon" aria-hidden="true">{"\u2694"}</span>
                 <span className="quest-bounty-title">
                   Hunt: {autoQuest.targetMobName ?? "Unknown"}
                 </span>
@@ -398,7 +412,14 @@ export function QuestPanel({
                       {autoQuest.killsCompleted ?? 0}/{autoQuest.killsRequired}
                     </span>
                   </div>
-                  <div className="meter-track">
+                  <div
+                    className="meter-track"
+                    role="progressbar"
+                    aria-label={`Defeat ${autoQuest.targetMobName} progress`}
+                    aria-valuenow={autoQuest.killsCompleted ?? 0}
+                    aria-valuemin={0}
+                    aria-valuemax={autoQuest.killsRequired}
+                  >
                     <span
                       className={`meter-fill ${(autoQuest.killsCompleted ?? 0) >= autoQuest.killsRequired ? "meter-fill-quest-done" : "meter-fill-quest"}`}
                       style={{ width: `${Math.min(100, ((autoQuest.killsCompleted ?? 0) / autoQuest.killsRequired) * 100)}%` }}
@@ -422,7 +443,7 @@ export function QuestPanel({
             </div>
           ) : (
             <div className="quest-empty-state">
-              <span className="quest-empty-icon">{"\u2694"}</span>
+              <span className="quest-empty-icon" aria-hidden="true">{"\u2694"}</span>
               <p className="empty-note">
                 {autoQuest && !autoQuest.active
                   ? "No active bounty. Request one to get started."
@@ -450,7 +471,7 @@ export function QuestPanel({
           {globalQuest && globalQuest.active ? (
             <div className="quest-global-card">
               <div className="quest-global-header">
-                <span className="quest-global-icon">{"\u2604"}</span>
+                <span className="quest-global-icon" aria-hidden="true">{"\u2604"}</span>
                 <span className="quest-global-title">
                   {globalQuest.objective ?? "Global Quest"}
                 </span>
@@ -466,7 +487,14 @@ export function QuestPanel({
                       {globalQuest.playerProgress ?? 0}/{globalQuest.targetCount}
                     </span>
                   </div>
-                  <div className="meter-track">
+                  <div
+                    className="meter-track"
+                    role="progressbar"
+                    aria-label="Global quest progress"
+                    aria-valuenow={globalQuest.playerProgress ?? 0}
+                    aria-valuemin={0}
+                    aria-valuemax={globalQuest.targetCount}
+                  >
                     <span
                       className={`meter-fill ${globalQuest.completed ? "meter-fill-quest-done" : "meter-fill-quest"}`}
                       style={{ width: `${Math.min(100, ((globalQuest.playerProgress ?? 0) / globalQuest.targetCount) * 100)}%` }}
@@ -496,7 +524,7 @@ export function QuestPanel({
             </div>
           ) : (
             <div className="quest-empty-state">
-              <span className="quest-empty-icon">{"\u2604"}</span>
+              <span className="quest-empty-icon" aria-hidden="true">{"\u2604"}</span>
               <p className="empty-note">No global quest is active right now.</p>
             </div>
           )}
@@ -522,7 +550,14 @@ function DailyQuestRow({ quest }: { quest: DailyQuestEntry }) {
         </span>
       </div>
       {!quest.completed && (
-        <div className="meter-track quest-timed-track">
+        <div
+          className="meter-track quest-timed-track"
+          role="progressbar"
+          aria-label={`${quest.description} progress`}
+          aria-valuenow={quest.current}
+          aria-valuemin={0}
+          aria-valuemax={quest.required}
+        >
           <span
             className="meter-fill meter-fill-quest"
             style={{ width: `${progress}%` }}

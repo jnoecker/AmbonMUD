@@ -210,8 +210,16 @@ export function MailPanel({
   }
 
   // Inbox list
+  const confirmDeleteFrom = confirmDeleteIndex !== null
+    ? inbox.find((m) => m.index === confirmDeleteIndex)?.from ?? null
+    : null;
   return (
     <div className="mail-panel" aria-label="Mail">
+      <span className="sr-only" role="status" aria-live="polite">
+        {confirmDeleteFrom
+          ? `Activate again to confirm deleting the message from ${confirmDeleteFrom}.`
+          : ""}
+      </span>
       <div className="mail-toolbar">
         <span className="mail-inbox-label">
           Inbox ({inbox.length}){unreadCount > 0 && <span className="mail-unread-badge">{unreadCount} new</span>}

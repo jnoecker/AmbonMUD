@@ -139,6 +139,7 @@ function ContainerPanel({
                   <button
                     type="button"
                     className="feat-take"
+                    aria-label={`Take ${item.name}`}
                     onClick={() => onCommand(`get ${item.keyword} from ${feature.keyword}`)}
                   >
                     Take

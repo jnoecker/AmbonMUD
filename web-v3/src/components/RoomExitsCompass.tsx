@@ -30,7 +30,7 @@ export function RoomExitsCompass({ exits, serverAssets, onCommand }: RoomExitsCo
   const padStyle = bg ? { ["--compass-bg" as string]: `url("${bg}")` } : undefined;
 
   return (
-    <div className="room-compass" aria-label="Exits">
+    <div className="room-compass" role="navigation" aria-label="Room exits">
       <div className="room-compass-pad" style={padStyle}>
         {DIRECTIONS.map(({ dir, cls, label, asset }) => {
           const active = present.has(dir);
@@ -45,7 +45,7 @@ export function RoomExitsCompass({ exits, serverAssets, onCommand }: RoomExitsCo
               aria-label={active ? `Go ${dir}` : `No ${dir} exit`}
               onClick={active ? go(dir) : undefined}
             >
-              {art ? <img src={art} alt={label} className="compass-btn-img" /> : label}
+              {art ? <img src={art} alt="" aria-hidden="true" className="compass-btn-img" /> : label}
             </button>
           );
         })}

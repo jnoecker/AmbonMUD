@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import type { SkillSummary } from "../types";
 import { SkillCastIcon } from "./Icons";
@@ -35,6 +35,30 @@ function useSkillCooldown(skill: SkillSummary): { onCooldown: boolean; fraction:
   return { onCooldown, fraction };
 }
 
+/**
+ * Announces "ready" to screen readers when a skill leaves cooldown, so
+ * keyboard players get the same cue the visual sweep provides. Returns true
+ * for a short window after the cooldown ends.
+ */
+function useReadyAnnouncement(onCooldown: boolean): boolean {
+  const wasOnCooldown = useRef(onCooldown);
+  const [justReady, setJustReady] = useState(false);
+
+  useEffect(() => {
+    const was = wasOnCooldown.current;
+    wasOnCooldown.current = onCooldown;
+    if (!was || onCooldown) return;
+    const showTimer = window.setTimeout(() => setJustReady(true), 0);
+    const hideTimer = window.setTimeout(() => setJustReady(false), 2000);
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [onCooldown]);
+
+  return justReady;
+}
+
 interface SkillSlotProps {
   skill: SkillSummary;
   index: number;
@@ -48,8 +72,11 @@ interface SkillSlotProps {
 
 function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave, onDrop, onClear }: SkillSlotProps) {
   const { onCooldown, fraction } = useSkillCooldown(skill);
+  const cooldownSeconds = Math.ceil((fraction * skill.cooldownMs) / 1000);
+  const justReady = useReadyAnnouncement(onCooldown);
 
   return (
+    <>
     <button
       type="button"
       className={`vbar-skill ${skillCategory(skill)}${onCooldown ? " vbar-skill-cd" : ""}`}
@@ -62,7 +89,7 @@ function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave,
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={(e) => onDrop(e, index)}
-      aria-label={`${skill.name} — key ${index + 1}`}
+      aria-label={`${skill.name}, ${skill.manaCost} mana, key ${index + 1}${onCooldown ? `, on cooldown, ${cooldownSeconds} seconds remaining` : ""}`}
     >
       {skill.image
         ? <img src={skill.image} alt="" className="vbar-skill-img" draggable={false} />
@@ -71,20 +98,27 @@ function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave,
       {onCooldown && <span className="vbar-skill-sweep" style={{ height: `${fraction * 100}%` }} />}
       <span className="vbar-skill-key">{index + 1}</span>
     </button>
+    <span className="sr-only" role="status" aria-live="polite">
+      {justReady ? `${skill.name} ready` : ""}
+    </span>
+    </>
   );
 }
 
 function PetSkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: number; onCast: (id: string, cd: number) => void }) {
   const { onCooldown, fraction } = useSkillCooldown(skill);
+  const cooldownSeconds = Math.ceil((fraction * skill.cooldownMs) / 1000);
+  const justReady = useReadyAnnouncement(onCooldown);
 
   return (
+    <>
     <button
       type="button"
       className={`vbar-skill vbar-pet-skill${onCooldown ? " vbar-skill-cd" : ""}`}
       disabled={onCooldown}
       title={`${skill.name} (pet) — Shift+${index + 1}`}
       onClick={() => onCast(skill.id, skill.cooldownMs)}
-      aria-label={`${skill.name} pet skill — Shift+${index + 1}`}
+      aria-label={`${skill.name} pet skill, Shift+${index + 1}${onCooldown ? `, on cooldown, ${cooldownSeconds} seconds remaining` : ""}`}
     >
       {skill.image
         ? <img src={skill.image} alt="" className="vbar-skill-img" draggable={false} />
@@ -93,6 +127,10 @@ function PetSkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: nu
       {onCooldown && <span className="vbar-skill-sweep" style={{ height: `${fraction * 100}%` }} />}
       <span className="vbar-skill-key">{`⇧${index + 1}`}</span>
     </button>
+    <span className="sr-only" role="status" aria-live="polite">
+      {justReady ? `${skill.name} ready` : ""}
+    </span>
+    </>
   );
 }
 

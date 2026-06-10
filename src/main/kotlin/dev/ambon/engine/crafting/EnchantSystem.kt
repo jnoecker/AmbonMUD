@@ -68,9 +68,10 @@ class EnchantSystem(
             return EnchantResult.WrongSlot(definition.displayName, definition.targetSlots)
         }
 
-        // Check skill level
-        val skillState = playerSkills[definition.skill]
-        val skillLevel = skillState?.level ?: 0
+        // Check skill level. Missing state defaults to a fresh CraftingSkillState (level 1),
+        // matching CraftingSystem — otherwise skillRequired-1 enchantments are unreachable
+        // for players who have never enchanted before.
+        val skillLevel = playerSkills.getOrDefault(definition.skill, dev.ambon.domain.crafting.CraftingSkillState()).level
         if (skillLevel < definition.skillRequired) {
             return EnchantResult.SkillTooLow(definition.skill, definition.skillRequired, skillLevel)
         }
@@ -147,8 +148,8 @@ class EnchantSystem(
             .filter { (_, def) ->
                 // Slot matches
                 (def.targetSlots.isEmpty() || slot.name in def.targetSlots) &&
-                    // Skill sufficient
-                    (playerSkills[def.skill]?.level ?: 0) >= def.skillRequired &&
+                    // Skill sufficient (missing state = fresh level-1 state, as in CraftingSystem)
+                    playerSkills.getOrDefault(def.skill, dev.ambon.domain.crafting.CraftingSkillState()).level >= def.skillRequired &&
                     // Materials available
                     def.materials.all { mat ->
                         val matItemId = ItemId(mat.itemId)

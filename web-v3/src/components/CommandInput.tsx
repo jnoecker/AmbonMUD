@@ -44,6 +44,10 @@ export function CommandInput({
         type="text"
         className="canvas-command-input"
         placeholder={placeholder}
+        aria-label="Game command"
+        autoComplete="off"
+        autoCapitalize="off"
+        spellCheck={false}
         value={inputValue}
         onChange={(e) => onInputChange(e.target.value)}
         onKeyDown={onInputKeyDown}
@@ -54,9 +58,9 @@ export function CommandInput({
         aria-label="Send"
       >
         {sendIconUrl ? (
-          <img src={sendIconUrl} alt="" className="canvas-command-send-img" />
+          <img src={sendIconUrl} alt="" aria-hidden="true" className="canvas-command-send-img" />
         ) : (
-          <svg viewBox="0 0 24 24" className="canvas-command-send-icon" fill="currentColor">
+          <svg viewBox="0 0 24 24" className="canvas-command-send-icon" fill="currentColor" aria-hidden="true">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
           </svg>
         )}

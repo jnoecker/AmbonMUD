@@ -58,6 +58,14 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
     ? ({ "--login-art": `url("${backgroundImage}")` } as CSSProperties)
     : undefined;
 
+  const stepDialogLabel: Record<string, string> = {
+    password: "Sign in",
+    confirmCreate: "Create a new character?",
+    newPassword: "Choose a password",
+    raceSelection: "Choose your race",
+    classSelection: "Choose your class",
+  };
+
   if (loginPrompt.state === "name") {
     const art = landscapeArt("login_bg");
     if (art) {
@@ -65,7 +73,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
         <ArtScene url={art} stageClass="login-art-stage--wide" label="Welcome to AmbonMUD">
           <h1 className="sr-only">AmbonMUD — enter a character name to log in or create, or start a demo</h1>
           {errorForState && (
-            <p className="login-art-error" role="alert">{errorForState}</p>
+            <p className="login-art-error" id="login-art-error" role="alert">{errorForState}</p>
           )}
           <form onSubmit={handleSubmit} className="login-art-form">
             <input
@@ -78,6 +86,8 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
               autoComplete="off"
               spellCheck={false}
               aria-label="Character name"
+              aria-invalid={errorForState ? true : undefined}
+              aria-describedby={errorForState ? "login-art-error" : undefined}
             />
             <button
               type="submit"
@@ -184,6 +194,8 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
               placeholder="Password"
               autoComplete="off"
               aria-label="Password"
+              aria-invalid={errorForState ? true : undefined}
+              aria-describedby={errorForState ? "login-art-error" : undefined}
             />
             <button
               type="button"
@@ -195,7 +207,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
             />
             <button type="submit" className="login-art-hotspot lpw-submit" title="Login" aria-label="Log in" />
           </form>
-          {errorForState && <p className="login-art-error-chip lpw-error" role="alert">{errorForState}</p>}
+          {errorForState && <p className="login-art-error-chip lpw-error" id="login-art-error" role="alert">{errorForState}</p>}
         </ArtScene>
       );
     }
@@ -216,8 +228,10 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="New password"
-              autoComplete="off"
+              autoComplete="new-password"
               aria-label="New password"
+              aria-invalid={errorForState ? true : undefined}
+              aria-describedby={errorForState ? "login-art-error" : undefined}
             />
             <button
               type="button"
@@ -229,7 +243,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
             />
             <button type="submit" className="login-art-hotspot lsp-submit" title="Set Password" aria-label="Set password" />
           </form>
-          {errorForState && <p className="login-art-error-chip lsp-error" role="alert">{errorForState}</p>}
+          {errorForState && <p className="login-art-error-chip lsp-error" id="login-art-error" role="alert">{errorForState}</p>}
         </ArtScene>
       );
     }
@@ -311,7 +325,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
         className={`login-modal${isWide ? " login-modal--wide" : ""}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Login"
+        aria-label={stepDialogLabel[loginPrompt.state] ?? "Login"}
       >
         <h2 className="login-modal-title">AmbonMUD</h2>
 
@@ -320,7 +334,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
             <p className="login-step-label">
               Welcome back, <strong>{loginPrompt.name}</strong>
             </p>
-            {errorForState && <p className="login-error">{errorForState}</p>}
+            {errorForState && <p className="login-error" id="login-error" role="alert">{errorForState}</p>}
             <form onSubmit={handleSubmit} className="login-form">
               <input
                 ref={inputRef}
@@ -329,6 +343,9 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Password"
+                aria-label="Password"
+                aria-invalid={errorForState ? true : undefined}
+                aria-describedby={errorForState ? "login-error" : undefined}
                 autoComplete="off"
                 autoFocus
               />
@@ -343,7 +360,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
               No character named <strong>{loginPrompt.name}</strong> was found.
             </p>
             <p className="login-step-sub">Create a new character?</p>
-            {errorForState && <p className="login-error">{errorForState}</p>}
+            {errorForState && <p className="login-error" role="alert">{errorForState}</p>}
             <div className="login-choice-row">
               <button type="button" className="login-button" onClick={() => handleChoice("yes")}>
                 Yes, create
@@ -360,7 +377,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
             <p className="login-step-label">
               Choose a password for <strong>{loginPrompt.name}</strong>
             </p>
-            {errorForState && <p className="login-error">{errorForState}</p>}
+            {errorForState && <p className="login-error" id="login-error" role="alert">{errorForState}</p>}
             <form onSubmit={handleSubmit} className="login-form">
               <input
                 ref={inputRef}
@@ -369,7 +386,10 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="New password"
-                autoComplete="off"
+                aria-label="New password"
+                aria-invalid={errorForState ? true : undefined}
+                aria-describedby={errorForState ? "login-error" : undefined}
+                autoComplete="new-password"
                 autoFocus
               />
               <button type="submit" className="login-button">Set Password</button>
@@ -413,8 +433,11 @@ function RaceCardGrid({ races, error, onSelect }: RaceCardGridProps) {
 
   return (
     <div className="login-step char-picker">
-      <p className="login-step-label">Choose your race</p>
-      {error && <p className="login-error">{error}</p>}
+      <p className="login-step-label">
+        Choose your race
+        <span className="sr-only"> — select a card to preview it, then activate the Choose button to confirm.</span>
+      </p>
+      {error && <p className="login-error" role="alert">{error}</p>}
 
       <div className="char-card-grid">
         {races.map((r, i) => (
@@ -425,9 +448,10 @@ function RaceCardGrid({ races, error, onSelect }: RaceCardGridProps) {
             onClick={() => setSelected(i)}
             onDoubleClick={() => onSelect(i)}
             aria-label={r.name}
+            aria-pressed={i === selected}
           >
             {r.image ? (
-              <img src={r.image} alt={r.name} className="char-card-img" draggable={false} />
+              <img src={r.image} alt="" aria-hidden="true" className="char-card-img" draggable={false} />
             ) : (
               <div className="char-card-placeholder" />
             )}
@@ -488,8 +512,11 @@ function ClassCardGrid({ classes, error, onSelect }: ClassCardGridProps) {
 
   return (
     <div className="login-step char-picker">
-      <p className="login-step-label">Choose your class</p>
-      {error && <p className="login-error">{error}</p>}
+      <p className="login-step-label">
+        Choose your class
+        <span className="sr-only"> — select a card to preview it, then activate the Choose button to confirm.</span>
+      </p>
+      {error && <p className="login-error" role="alert">{error}</p>}
 
       <div className="char-card-grid">
         {classes.map((c, i) => (
@@ -500,9 +527,10 @@ function ClassCardGrid({ classes, error, onSelect }: ClassCardGridProps) {
             onClick={() => setSelected(i)}
             onDoubleClick={() => onSelect(i)}
             aria-label={c.name}
+            aria-pressed={i === selected}
           >
             {c.image ? (
-              <img src={c.image} alt={c.name} className="char-card-img" draggable={false} />
+              <img src={c.image} alt="" aria-hidden="true" className="char-card-img" draggable={false} />
             ) : (
               <div className="char-card-placeholder" />
             )}

@@ -15,7 +15,7 @@ export function CharacterPicker({ characters, backgroundImage, onSelect, onRemov
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const artFits = useMediaFits(ART_FIT_LANDSCAPE);
 
-  const handleRemove = useCallback((name: string, e: React.MouseEvent | React.PointerEvent) => {
+  const handleRemove = useCallback((name: string, e: React.MouseEvent | React.PointerEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     e.preventDefault();
     if (confirmRemove === name) {
@@ -40,6 +40,9 @@ export function CharacterPicker({ characters, backgroundImage, onSelect, onRemov
         type="button"
         className={`character-picker-remove${confirmRemove === name ? " character-picker-remove--confirm" : ""}`}
         onPointerDown={(e) => handleRemove(name, e)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") handleRemove(name, e);
+        }}
         onBlur={() => setConfirmRemove(null)}
         title={confirmRemove === name ? "Click again to forget" : `Forget ${name}`}
         aria-label={confirmRemove === name ? `Confirm forget ${name}` : `Forget ${name}`}

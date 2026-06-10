@@ -84,6 +84,8 @@ export function WhoBoardPanel({
     else { setSort(field); setSortDir("asc"); }
   };
   const sortMark = (field: WhoSortField) => (sort === field ? (sortDir === "asc" ? " ▴" : " ▾") : "");
+  const ariaSort = (field: WhoSortField): "ascending" | "descending" | undefined =>
+    sort === field ? (sortDir === "asc" ? "ascending" : "descending") : undefined;
 
   const examineArt = serverAssets["who_examine_btn"];
   const tellArt = serverAssets["who_tell_btn"];
@@ -95,10 +97,10 @@ export function WhoBoardPanel({
       <div className="whoboard-grid" role="table" aria-label="Players online">
         <div className="whoboard-head" role="row">
           <span className="whoboard-col-portrait" role="columnheader" aria-label="Sprite" />
-          <button type="button" role="columnheader" className="whoboard-th whoboard-col-name" onClick={() => toggleSort("name")}>Name{sortMark("name")}</button>
-          <button type="button" role="columnheader" className="whoboard-th whoboard-col-class" onClick={() => toggleSort("class")}>Class{sortMark("class")}</button>
-          <button type="button" role="columnheader" className="whoboard-th whoboard-col-race" onClick={() => toggleSort("race")}>Race{sortMark("race")}</button>
-          <button type="button" role="columnheader" className="whoboard-th whoboard-col-level" onClick={() => toggleSort("level")}>Level{sortMark("level")}</button>
+          <button type="button" role="columnheader" aria-sort={ariaSort("name")} className="whoboard-th whoboard-col-name" onClick={() => toggleSort("name")}>Name<span aria-hidden="true">{sortMark("name")}</span></button>
+          <button type="button" role="columnheader" aria-sort={ariaSort("class")} className="whoboard-th whoboard-col-class" onClick={() => toggleSort("class")}>Class<span aria-hidden="true">{sortMark("class")}</span></button>
+          <button type="button" role="columnheader" aria-sort={ariaSort("race")} className="whoboard-th whoboard-col-race" onClick={() => toggleSort("race")}>Race<span aria-hidden="true">{sortMark("race")}</span></button>
+          <button type="button" role="columnheader" aria-sort={ariaSort("level")} className="whoboard-th whoboard-col-level" onClick={() => toggleSort("level")}>Level<span aria-hidden="true">{sortMark("level")}</span></button>
           <span className="whoboard-col-actions" role="columnheader">Actions</span>
         </div>
 
@@ -185,7 +187,7 @@ export function WhoBoardPanel({
           <option value="">All Classes</option>
           {classes.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
-        <button type="button" className="whoboard-refresh" onClick={onRequestWho} disabled={!canChat} title="Refresh">⟳</button>
+        <button type="button" className="whoboard-refresh" onClick={onRequestWho} disabled={!canChat} title="Refresh" aria-label="Refresh roster">⟳</button>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { SkillSummary } from "../types";
 
 type Category = "ALL" | "DAMAGE" | "HEAL" | "BUFF" | "DEBUFF" | "UTILITY";
@@ -71,6 +71,7 @@ function SkillCard({
   onAssignSlot: (slotIndex: number, skillId: string) => void;
 }) {
   const [showSlotPicker, setShowSlotPicker] = useState(false);
+  const assignBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const isPet = skill.source === "pet";
   return (
@@ -83,7 +84,7 @@ function SkillCard({
       >
         <div className="spellbook-card-icon">
           {skill.image ? (
-            <img src={skill.image} alt="" className="spellbook-card-image" />
+            <img src={skill.image} alt="" aria-hidden="true" className="spellbook-card-image" />
           ) : (
             <div className="spellbook-card-placeholder" />
           )}
@@ -111,9 +112,14 @@ function SkillCard({
         </div>
       </button>
       <button
+        ref={assignBtnRef}
         type="button"
         className={`spellbook-assign-btn${showSlotPicker ? " spellbook-assign-btn-active" : ""}`}
         title={slotNumber !== null ? `Quickbar slot ${slotNumber}` : "Assign to quickbar"}
+        aria-label={slotNumber !== null
+          ? `${skill.name} — assigned to quickbar slot ${slotNumber}, change slot`
+          : `Assign ${skill.name} to a quickbar slot`}
+        aria-expanded={showSlotPicker}
         onClick={() => setShowSlotPicker(!showSlotPicker)}
       >
         {slotNumber !== null ? slotNumber : "+"}
@@ -121,16 +127,22 @@ function SkillCard({
       {showSlotPicker && (
         <div
           className="spellbook-slot-picker"
-          role="menu"
+          role="group"
           aria-label="Assign to quickbar slot"
-          onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowSlotPicker(false); } }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.stopPropagation();
+              setShowSlotPicker(false);
+              assignBtnRef.current?.focus();
+            }
+          }}
         >
           {Array.from({ length: SLOT_COUNT }, (_, i) => (
             <button
               key={i}
               type="button"
-              role="menuitem"
               className="spellbook-slot-pick"
+              aria-label={`Slot ${i + 1}`}
               autoFocus={i === 0}
               onClick={() => {
                 onAssignSlot(i, skill.id);
@@ -241,14 +253,13 @@ export function SpellbookPanel({
         </span>
       </div>
       {availableCategories.length > 2 && (
-        <div className="spellbook-tabs" role="tablist" aria-label="Filter by ability type">
+        <div className="spellbook-tabs" role="group" aria-label="Filter by ability type">
           {availableCategories.map((cat) => (
             <button
               key={cat.key}
               type="button"
-              role="tab"
               className={`spellbook-tab${activeCategory === cat.key ? " spellbook-tab-active" : ""}`}
-              aria-selected={activeCategory === cat.key}
+              aria-pressed={activeCategory === cat.key}
               onClick={() => setActiveCategory(cat.key)}
             >
               {cat.label}
@@ -257,12 +268,11 @@ export function SpellbookPanel({
         </div>
       )}
       {availableClasses.length > 1 && (
-        <div className="spellbook-class-pills" role="tablist" aria-label="Filter by source class">
+        <div className="spellbook-class-pills" role="group" aria-label="Filter by source class">
           <button
             type="button"
-            role="tab"
             className={`spellbook-class-pill${activeClass === "ALL" ? " spellbook-class-pill-active" : ""}`}
-            aria-selected={activeClass === "ALL"}
+            aria-pressed={activeClass === "ALL"}
             onClick={() => setActiveClass("ALL")}
           >
             All classes
@@ -271,9 +281,8 @@ export function SpellbookPanel({
             <button
               key={cls}
               type="button"
-              role="tab"
               className={`spellbook-class-pill${activeClass === cls ? " spellbook-class-pill-active" : ""}`}
-              aria-selected={activeClass === cls}
+              aria-pressed={activeClass === cls}
               onClick={() => setActiveClass(cls)}
             >
               {prettyClass(cls)}
