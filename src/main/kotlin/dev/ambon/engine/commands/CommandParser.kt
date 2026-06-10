@@ -304,6 +304,16 @@ sealed interface Command {
         val confirm: Boolean,
     ) : Command
 
+    /** Illuminate a creature — the Akathavae's stat-driven replacement for attacking. */
+    data class Illuminate(
+        val target: String,
+    ) : Command
+
+    /** View the Arcanum journal. [section] filters to rooms/mobs/items; null = summary. */
+    data class Arcanum(
+        val section: String?,
+    ) : Command
+
     data class Petition(
         val keyword: String,
     ) : Command
@@ -1385,6 +1395,14 @@ object CommandParser {
 
         // kill
         requiredArg(line, listOf("kill"), "kill <mob>", { Command.Kill(it) })?.let { return it }
+
+        // illuminate — the Akathavae's replacement for attacking
+        requiredArg(line, listOf("illuminate", "illum"), "illuminate <creature>", { Command.Illuminate(it) })?.let { return it }
+
+        // arcanum [rooms|mobs|items] — the Akathavae journal
+        matchPrefix(line, listOf("arcanum", "journal")) { rest ->
+            Command.Arcanum(rest.trim().lowercase().takeIf { it.isNotBlank() })
+        }?.let { return it }
 
         // consider — assess a mob's threat without attacking
         requiredArg(

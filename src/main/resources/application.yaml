@@ -1606,6 +1606,17 @@ ambonmud:
           description: "Renounce the Akathavae pledge at a shrine (costs gold)"
           category: "progression"
           staff: false
+        illuminate:
+          usage: "illuminate <creature>"
+          description: "Record a creature in your Arcanum — the Akathavae's replacement for attacking"
+          category: "progression"
+          staff: false
+          requiresTarget: true
+        arcanum:
+          usage: "arcanum [rooms|mobs|items]"
+          description: "Leaf through your Arcanum journal of recorded places, creatures, and items"
+          category: "progression"
+          staff: false
         changerace:
           usage: "changerace <race>"
           description: "Pay the stylist to change your race"
@@ -2412,6 +2423,25 @@ ambonmud:
       enabled: true
       renounceCostGold: 2500
       repledgeCooldownMs: 86400000
+      illuminateBaseSuccessPct: 70
+      successStat: "INT"
+      successPerStatPoint: 2.0
+      levelGapPenaltyPct: 8.0
+      gapReliefStat: "STR"
+      gapReliefPerStatPoint: 0.5
+      minSuccessPct: 5
+      maxSuccessPct: 95
+      failRetryCooldownMs: 30000
+      escapeStat: "CHA"
+      escapePerStatPoint: 3.0
+      xpStat: "WIS"
+      xpBonusPerStatPoint: 0.02
+      repeatXpFraction: 0.2
+      repeatXpCooldownMs: 300000
+      roomDiscoveryXp: 15
+      itemDiscoveryXp: 25
+      observeNpcXp: 10
+      discoveryXpThrottleMs: 1500
     respec:
       enabled: true
       goldCost: 100

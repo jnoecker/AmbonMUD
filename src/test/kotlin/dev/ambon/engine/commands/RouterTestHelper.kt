@@ -9,6 +9,7 @@ import dev.ambon.config.StylistConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
+import dev.ambon.engine.AkathavaeSystem
 import dev.ambon.engine.AuctionSystem
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
@@ -101,6 +102,7 @@ internal fun buildTestRouter(
     bankConfig: BankConfig? = null,
     stylistConfig: StylistConfig? = null,
     akathavaeConfig: AkathavaeConfig? = null,
+    akathavaeSystem: AkathavaeSystem? = null,
     raceRegistry: RaceRegistry? = null,
     classRegistry: PlayerClassRegistry? = null,
     genderRegistry: GenderRegistry? = null,
@@ -184,6 +186,19 @@ internal fun buildTestRouter(
             config = akathavaeConfig ?: AkathavaeConfig(),
             clock = clock,
             markVitalsDirty = markVitalsDirty,
+            akathavaeSystem = akathavaeSystem ?: AkathavaeSystem(
+                players = players,
+                items = items,
+                world = world,
+                outbound = outbound,
+                combat = combat,
+                worldState = worldState,
+                progression = progression,
+                classRegistry = classRegistry,
+                clock = clock,
+                config = akathavaeConfig ?: AkathavaeConfig(),
+                markVitalsDirty = markVitalsDirty,
+            ),
         ),
         DuelHandler(ctx = ctx, duelSystem = duelSystem, combatSystem = combat),
         tradeSystem?.let { TradeHandler(ctx = ctx, tradeSystem = it) },

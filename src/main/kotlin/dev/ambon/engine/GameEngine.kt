@@ -315,6 +315,7 @@ class GameEngine(
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
                 puzzleSystem.removeSession(sid)
+                akathavaeSystem.onSessionRemoved(sid)
                 for (dismissed in petSystem.onOwnerDisconnect(sid)) {
                     broadcastPetRemoved(dismissed)
                 }
@@ -759,6 +760,25 @@ class GameEngine(
             classRegistry = classRegistry,
             petSystem = petSystem,
         )
+
+    private val akathavaeSystem =
+        AkathavaeSystem(
+            players = players,
+            items = items,
+            world = world,
+            outbound = outbound,
+            combat = combatSystem,
+            worldState = worldState,
+            progression = progression,
+            classRegistry = classRegistry,
+            statusEffects = statusEffectSystem,
+            clock = clock,
+            config = engineConfig.akathavae,
+            metrics = metrics,
+            markVitalsDirty = ::markVitalsDirty,
+            onLevelUp = ::onCombatLevelUp,
+        )
+
     private val regenSystem =
         RegenSystem(
             players = players,
@@ -1326,7 +1346,10 @@ class GameEngine(
                 deathConfig = engineConfig.death,
                 housingSystem = housingSystem,
                 guildHallSystem = guildHallSystem,
-                onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },
+                onPlayerMoved = { sid, roomId ->
+                    petSystem.followOwner(sid, roomId)
+                    akathavaeSystem.onRoomVisited(sid)
+                },
                 puzzleSystem = puzzleSystem,
             ),
             communicationHandler,
@@ -1422,6 +1445,7 @@ class GameEngine(
                 config = engineConfig.akathavae,
                 clock = clock,
                 markVitalsDirty = ::markVitalsDirty,
+                akathavaeSystem = akathavaeSystem,
             ),
             WorldInfoHandler(
                 ctx = ctx,

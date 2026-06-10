@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.config.AkathavaeConfig
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.AkathavaeSystem
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -24,6 +25,7 @@ class AkathavaeHandler(
     private val config: AkathavaeConfig = AkathavaeConfig(),
     private val clock: Clock = Clock.systemUTC(),
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
+    private val akathavaeSystem: AkathavaeSystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val world = ctx.world
@@ -34,6 +36,99 @@ class AkathavaeHandler(
     override fun register(router: CommandRouter) {
         router.on<Command.Pledge> { sid, _ -> handlePledge(sid) }
         router.on<Command.Renounce> { sid, cmd -> handleRenounce(sid, cmd) }
+        router.on<Command.Illuminate> { sid, cmd -> handleIlluminate(sid, cmd) }
+        router.on<Command.Arcanum> { sid, cmd -> handleArcanum(sid, cmd) }
+    }
+
+    private suspend fun handleIlluminate(sessionId: SessionId, cmd: Command.Illuminate) {
+        val system = akathavaeSystem
+        if (system == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Illumination is not available."))
+            return
+        }
+        system.illuminate(sessionId, cmd.target)
+    }
+
+    private suspend fun handleArcanum(sessionId: SessionId, cmd: Command.Arcanum) {
+        val me = players.get(sessionId) ?: return
+        val system = akathavaeSystem
+        if (system == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "The Arcanum is not available."))
+            return
+        }
+        if (!me.isAkathavae && me.arcanum.rooms.isEmpty() && me.arcanum.mobs.isEmpty() && me.arcanum.items.isEmpty()) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "Your Arcanum is unwritten. Take the Akathavae pledge at a shrine to begin recording the world.",
+                ),
+            )
+            return
+        }
+
+        when (cmd.section) {
+            null -> renderArcanumSummary(sessionId, me, system)
+            "rooms", "places" -> renderArcanumSection(sessionId, "Places", me.arcanum.rooms.keys) { key ->
+                world.rooms[dev.ambon.domain.ids.RoomId(key)]?.title ?: key
+            }
+            "mobs", "creatures", "beasts" -> renderArcanumSection(sessionId, "Creatures", me.arcanum.mobs.keys) { key ->
+                val credit = system.worldFirstCredit("mob", key)
+                val name = key.substringAfter(':').replace('_', ' ')
+                if (credit?.first == me.name) "$name ★" else name
+            }
+            "items", "things" -> renderArcanumSection(sessionId, "Items", me.arcanum.items.keys) { key ->
+                key.substringAfter(':').replace('_', ' ')
+            }
+            else -> outbound.send(OutboundEvent.SendError(sessionId, "Usage: arcanum [rooms|mobs|items]"))
+        }
+    }
+
+    private suspend fun renderArcanumSummary(sessionId: SessionId, me: PlayerState, system: AkathavaeSystem) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "[ The Arcanum of ${me.name} ]"))
+        if (me.isAkathavae) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "  Pledged to the Akathavae — the world is your subject."))
+        }
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                "  Recorded: ${me.arcanum.rooms.size} places, ${me.arcanum.mobs.size} creatures, ${me.arcanum.items.size} items.",
+            ),
+        )
+        val zones = (
+            me.arcanum.rooms.keys.map { it.substringBefore(':') } +
+                me.arcanum.mobs.keys.map { it.substringBefore(':') }
+        ).toSortedSet()
+        for (zone in zones) {
+            val c = system.zoneCompletion(me, zone)
+            if (c.roomsTotal == 0 && c.mobsTotal == 0) continue
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "  $zone: ${c.roomsRecorded}/${c.roomsTotal} places, ${c.mobsRecorded}/${c.mobsTotal} creatures.",
+                ),
+            )
+        }
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Use 'arcanum rooms|mobs|items' to leaf through the pages."))
+    }
+
+    private suspend fun renderArcanumSection(
+        sessionId: SessionId,
+        title: String,
+        keys: Set<String>,
+        displayName: (String) -> String,
+    ) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "[ Arcanum — $title (${keys.size}) ]"))
+        if (keys.isEmpty()) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "  These pages are still blank."))
+            return
+        }
+        keys.sorted().chunked(4).take(MAX_SECTION_ROWS).forEach { row ->
+            outbound.send(OutboundEvent.SendInfo(sessionId, "  " + row.joinToString(", ") { displayName(it) }))
+        }
+        val shown = minOf(keys.size, MAX_SECTION_ROWS * 4)
+        if (keys.size > shown) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "  …and ${keys.size - shown} more."))
+        }
     }
 
     private suspend fun requireShrine(sessionId: SessionId, me: PlayerState): Boolean {
@@ -107,6 +202,8 @@ class AkathavaeHandler(
             players = players,
             outbound = outbound,
         )
+        // The shrine itself becomes the Arcanum's first page.
+        akathavaeSystem?.onRoomVisited(sessionId)
         markVitalsDirty?.invoke(sessionId)
     }
 
@@ -162,5 +259,6 @@ class AkathavaeHandler(
 
     companion object {
         private const val HOUR_MS = 3_600_000L
+        private const val MAX_SECTION_ROWS = 25
     }
 }

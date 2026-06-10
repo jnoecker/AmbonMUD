@@ -41,6 +41,8 @@ class WebClientParityTest {
         // Akathavae (explorer path)
         "Pledge" to "pledge",
         "Renounce" to "renounce",
+        "Illuminate" to "illuminate",
+        "Arcanum" to "arcanum",
         // Communication
         "Say" to "say",
         "Tell" to "tell",

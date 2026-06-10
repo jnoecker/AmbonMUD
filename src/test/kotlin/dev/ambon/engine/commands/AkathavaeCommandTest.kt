@@ -45,6 +45,24 @@ class AkathavaeCommandTest {
         fun `renounce confirm parses to confirmed Renounce`() {
             assertEquals(Command.Renounce(confirm = true), CommandParser.parse("renounce confirm"))
         }
+
+        @Test
+        fun `illuminate parses with target`() {
+            assertEquals(Command.Illuminate("wisp"), CommandParser.parse("illuminate wisp"))
+            assertEquals(Command.Illuminate("wisp"), CommandParser.parse("illum wisp"))
+        }
+
+        @Test
+        fun `illuminate without target is invalid`() {
+            assertTrue(CommandParser.parse("illuminate") is Command.Invalid)
+        }
+
+        @Test
+        fun `arcanum parses with and without section`() {
+            assertEquals(Command.Arcanum(null), CommandParser.parse("arcanum"))
+            assertEquals(Command.Arcanum("mobs"), CommandParser.parse("arcanum mobs"))
+            assertEquals(Command.Arcanum(null), CommandParser.parse("journal"))
+        }
     }
 
     // ── Router tests ─────────────────────────────────────────────────────
