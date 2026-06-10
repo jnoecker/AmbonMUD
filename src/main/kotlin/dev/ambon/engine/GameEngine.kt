@@ -257,6 +257,9 @@ class GameEngine(
                 // until the first relog. See issue #1045.
                 emitDungeonCatalog(sid)
                 players.get(sid)?.let { p -> emitLotteryInfo(sid, p.name) }
+                // Seed the client's time-of-day + season immediately; otherwise it
+                // wouldn't learn the season until the next quarter-year rollover.
+                gmcpEmitter.sendWorldTime(sid, worldTimePayload())
                 // Push daily/weekly/global quest state so the client doesn't
                 // need a manual refresh button. See issue #1091.
                 dailyQuestSystem?.let { dqs ->
@@ -792,6 +795,11 @@ class GameEngine(
         clock = clock,
     )
 
+    private val seasonSystem = SeasonSystem(
+        config = engineConfig.season,
+        clock = clock,
+    )
+
     private val weatherSystem = WeatherSystem(
         config = engineConfig.weather,
         clock = clock,
@@ -829,6 +837,7 @@ class GameEngine(
         }
 
     private var lastTimePeriod: TimePeriod = worldTimeSystem.period()
+    private var lastSeason: Season = seasonSystem.season()
 
     private val abilitySystem: AbilitySystem =
         AbilitySystem(
@@ -1753,18 +1762,18 @@ class GameEngine(
                         )
                     }
 
-                    // Tick world time — broadcast on period change
+                    // Tick world time + season — broadcast on either change
                     val newPeriod = worldTimeSystem.tick(lastTimePeriod)
-                    if (newPeriod != null) {
-                        lastTimePeriod = newPeriod
-                        gmcpEmitter.broadcastWorldTime(
-                            GmcpEmitter.WorldTimePayload(
-                                period = newPeriod.name,
-                                hour = worldTimeSystem.gameHour(),
-                                minute = worldTimeSystem.gameMinute(),
-                            ),
-                            players,
-                        )
+                    val newSeason = seasonSystem.tick(lastSeason)
+                    if (newPeriod != null) lastTimePeriod = newPeriod
+                    if (newSeason != null) {
+                        lastSeason = newSeason
+                        for (p in players.allPlayers()) {
+                            outbound.send(OutboundEvent.SendInfo(p.sessionId, "[Season] ${newSeason.description}"))
+                        }
+                    }
+                    if (newPeriod != null || newSeason != null) {
+                        gmcpEmitter.broadcastWorldTime(worldTimePayload(), players)
                     }
 
                     // Snapshot all players once for the remainder of this tick to avoid
@@ -2084,6 +2093,18 @@ class GameEngine(
 
         // Issue a new resume token for the next potential disconnect
         issueResumeToken(newSessionId)
+    }
+
+    /** Builds the current `World.Time` payload, including the active season. */
+    private fun worldTimePayload(): GmcpEmitter.WorldTimePayload {
+        val season = seasonSystem.season()
+        return GmcpEmitter.WorldTimePayload(
+            period = worldTimeSystem.period().name,
+            hour = worldTimeSystem.gameHour(),
+            minute = worldTimeSystem.gameMinute(),
+            season = season.name,
+            seasonDescription = season.description,
+        )
     }
 
     /** Issue a resume token to the client after successful login/resume. */

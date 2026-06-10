@@ -2215,6 +2215,9 @@ ambonmud:
       dayHour: 7
       duskHour: 18
       nightHour: 20
+    season:
+      # One full game year (all four seasons). 2 hours = 30 min per season.
+      cycleLengthMs: 7200000
     weather:
       minTransitionMs: 180000
       maxTransitionMs: 600000
@@ -2249,6 +2252,12 @@ ambonmud:
           weight: 1
           particleHint: wind
           icon: 💨
+    # Server-generated rare cosmetic variants. The archetype set (albino, ember,
+    # shadow-touched, spectral, …) is defined in code; override `variants` here to
+    # replace it wholesale. Leaving it unset keeps the built-in palette.
+    mobVariants:
+      enabled: true
+      chance: 0.04
     environment:
       defaultTheme:
         moteColors:

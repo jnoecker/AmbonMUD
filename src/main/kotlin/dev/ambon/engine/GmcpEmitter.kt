@@ -1687,6 +1687,8 @@ class GmcpEmitter(
         val period: String,
         val hour: Int,
         val minute: Int,
+        val season: String = "",
+        val seasonDescription: String = "",
     )
 
     data class WorldWeatherPayload(
