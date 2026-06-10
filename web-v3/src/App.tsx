@@ -9,6 +9,7 @@ import { TrainerPanel } from "./components/TrainerPanel";
 import { TradePanel } from "./components/TradePanel";
 import { WorldFeaturesPopout } from "./components/WorldFeaturesPopout";
 import { featureArt, pickFocusedFeature } from "./components/worldFeatures";
+import { GameNarrator } from "./components/GameNarrator";
 import { SpellbookPanel } from "./components/SpellbookPanel";
 
 // Drawer panels and field-manual overlays are only reachable after login, so
@@ -280,7 +281,11 @@ function App() {
     writeSystem,
     hasSelection: terminalHasSelection,
     setInkTheme,
-  } = useTerminal({ hiddenHostRef: terminalHiddenRef, overlayHostRef: terminalOverlayRef });
+  } = useTerminal({
+    hiddenHostRef: terminalHiddenRef,
+    overlayHostRef: terminalOverlayRef,
+    screenReaderMode: state.character.screenReaderEnabled,
+  });
 
   // Parchment scroll art → dark ink palette; absent art → light-on-dark.
   const terminalParchmentBg = state.serverAssets["terminal_parchment_bg"] ?? null;
@@ -2272,6 +2277,16 @@ function App() {
       <div ref={terminalHiddenRef} className="terminal-hidden" aria-hidden="true" />
 
       <p className="sr-only" aria-live="polite">{liveMessage}</p>
+
+      {/* Spoken narration (rooms, low HP, tells) for screen-reader mode. */}
+      <GameNarrator
+        enabled={state.character.screenReaderEnabled}
+        room={state.room}
+        exits={sortedExits}
+        vitals={state.vitals}
+        tells={state.chatByChannel.tell}
+        chatBoardOpen={state.activePopout === "chatboard"}
+      />
     </>
   );
 }

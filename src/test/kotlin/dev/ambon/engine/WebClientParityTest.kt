@@ -166,6 +166,7 @@ class WebClientParityTest {
         "AnsiOff" to "ansi",
         "ScreenReaderOn" to "screenreader",
         "ScreenReaderOff" to "screenreader",
+        "ScreenReaderToggle" to "screenreader",
         "AutolootOn" to "autoloot",
         "AutolootOff" to "autoloot",
         "AutolootStatus" to "autoloot",

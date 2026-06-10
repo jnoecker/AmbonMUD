@@ -32,6 +32,8 @@ sealed interface Command {
 
     data object ScreenReaderOff : Command
 
+    data object ScreenReaderToggle : Command
+
     data object AutolootOn : Command
 
     data object AutolootOff : Command
@@ -1752,7 +1754,7 @@ object CommandParser {
             "ansi off" -> Command.AnsiOff
             "screenreader on" -> Command.ScreenReaderOn
             "screenreader off" -> Command.ScreenReaderOff
-            "screenreader" -> Command.ScreenReaderOn // toggle handled by router
+            "screenreader" -> Command.ScreenReaderToggle
             "autoloot on" -> Command.AutolootOn
             "autoloot off" -> Command.AutolootOff
             "autoloot status", "autoloot" -> Command.AutolootStatus

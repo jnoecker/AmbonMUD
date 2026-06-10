@@ -166,6 +166,7 @@ export function CharacterPanel({
 
   const autolootEnabled = character.autolootEnabled;
   const autopeekEnabled = character.autopeekEnabled;
+  const screenReaderEnabled = character.screenReaderEnabled;
   const wimpyPct = wimpyDraft ?? character.wimpyThresholdPct ?? 0;
 
   const commitWimpy = (n: number) => {
@@ -316,6 +317,19 @@ export function CharacterPanel({
             >
               <span className="cc-ctl-leaf" aria-hidden="true" />
               <span className="cc-ctl-name">Auto Peek</span>
+              <span className="cc-switch"><span className="cc-switch-thumb" /></span>
+            </button>
+            <button
+              type="button"
+              className={`cc-ctl cc-ctl-toggle${screenReaderEnabled ? " is-on" : ""}`}
+              role="switch"
+              aria-checked={screenReaderEnabled}
+              disabled={!connected}
+              title="Spoken room, combat, and message updates; plain-text server output; accessible terminal log."
+              onClick={() => onCommand(screenReaderEnabled ? "screenreader off" : "screenreader on")}
+            >
+              <span className="cc-ctl-leaf" aria-hidden="true" />
+              <span className="cc-ctl-name">Screen Reader</span>
               <span className="cc-switch"><span className="cc-switch-thumb" /></span>
             </button>
             <div className="cc-ctl cc-ctl-wimpy" role="group" aria-label="Wimpy threshold" title="Auto-flee combat when HP drops to this %.">

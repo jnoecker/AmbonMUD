@@ -95,7 +95,7 @@ export const DEFAULT_STATUS_VAR_LABELS: StatusVarLabels = {
   xp: "XP",
 };
 
-export const EMPTY_CHAR: CharacterInfo = { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false, title: null, autolootEnabled: false, autopeekEnabled: false, wimpyThresholdPct: 10, isDemo: false };
+export const EMPTY_CHAR: CharacterInfo = { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false, title: null, autolootEnabled: false, autopeekEnabled: false, screenReaderEnabled: false, wimpyThresholdPct: 10, isDemo: false };
 export const DEFAULT_SERVER_FEATURES: ServerFeatures = {
   dailyQuests: false,
   weeklyQuests: false,

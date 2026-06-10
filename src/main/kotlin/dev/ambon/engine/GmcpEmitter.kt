@@ -539,6 +539,7 @@ class GmcpEmitter(
                 autolootEnabled = player.autolootEnabled,
                 autopeekEnabled = player.autopeekEnabled,
                 wimpyThresholdPct = player.wimpyThresholdPct,
+                screenReaderEnabled = player.screenReaderEnabled,
                 title = player.activeTitle,
                 isDemo = player.playerId == null,
             ),
@@ -2835,6 +2836,8 @@ class GmcpEmitter(
         val autolootEnabled: Boolean,
         val autopeekEnabled: Boolean,
         val wimpyThresholdPct: Int,
+        /** Screen-reader mode: strips decorative output server-side; web client mirrors it in the UI. */
+        val screenReaderEnabled: Boolean,
         /** The player's currently-equipped achievement title, or null when none is set. */
         val title: String?,
         /**

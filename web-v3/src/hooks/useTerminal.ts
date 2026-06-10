@@ -8,6 +8,13 @@ interface TerminalHosts {
   hiddenHostRef: RefObject<HTMLDivElement | null>;
   /** Overlay host the element reparents into while the overlay is open. */
   overlayHostRef: RefObject<HTMLDivElement | null>;
+  /**
+   * Mirrors the server-persisted screen-reader setting. Enables xterm's
+   * accessibility buffer — without it the canvas-rendered terminal exposes
+   * NOTHING to assistive tech, so the log would be unreadable to the very
+   * players it is meant to serve.
+   */
+  screenReaderMode?: boolean;
 }
 
 // Both themes keep the cell background transparent (allowTransparency) so the
@@ -56,7 +63,7 @@ const INK_THEME = {
  * return value carries no refs — the react-hooks/refs lint rule forbids
  * accessing hook-returned ref carriers during render.
  */
-export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
+export function useTerminal({ hiddenHostRef, overlayHostRef, screenReaderMode = false }: TerminalHosts) {
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   // Server bytes that arrive before the lazy-loaded xterm module is ready.
@@ -67,6 +74,9 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
   // Theme requested before the instance exists (parchment art can arrive
   // via Server.Assets while xterm is still downloading).
   const inkThemeRef = useRef(false);
+  // Same deferred pattern for screen-reader mode (Char.Name GMCP can land
+  // before the lazy xterm module finishes loading).
+  const srModeRef = useRef(screenReaderMode);
   const [open, setOpen] = useState(false);
   // Translucent when first summoned (game stays visible behind the log);
   // turns opaque once the user starts typing and commits to terminal mode.
@@ -113,6 +123,7 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
         convertEol: false,
         allowTransparency: true,
         theme: inkThemeRef.current ? INK_THEME : DARK_THEME,
+        screenReaderMode: srModeRef.current,
       });
 
       const fitAddon = new XFitAddon();
@@ -134,6 +145,16 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
       terminalRef.current = null;
     };
   }, [hiddenHostRef]);
+
+  // Follow the server-persisted screen-reader flag at runtime (xterm builds or
+  // tears down its accessibility tree when the option flips).
+  useEffect(() => {
+    srModeRef.current = screenReaderMode;
+    const term = terminalRef.current;
+    if (term && term.options.screenReaderMode !== screenReaderMode) {
+      term.options.screenReaderMode = screenReaderMode;
+    }
+  }, [screenReaderMode]);
 
   // Refit on window resize and once fonts settle (mono metrics change cols).
   useEffect(() => {

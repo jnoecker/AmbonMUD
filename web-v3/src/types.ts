@@ -212,6 +212,12 @@ export interface CharacterInfo {
   autolootEnabled: boolean;
   /** When true, room descriptions gain a peek paragraph naming adjacent rooms. */
   autopeekEnabled: boolean;
+  /**
+   * Screen-reader mode (server-persisted). The server strips decorative box
+   * art from the text stream; the client enables xterm's accessibility buffer
+   * and the spoken game narrator.
+   */
+  screenReaderEnabled: boolean;
   /** Wimpy auto-flee threshold (HP%). 0 = disabled. */
   wimpyThresholdPct: number;
   /**

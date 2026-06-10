@@ -49,8 +49,9 @@ class UiHandler(
         router.on<Command.Quit> { sid, _ -> outbound.send(OutboundEvent.Close(sid, "Goodbye!")) }
         router.on<Command.AnsiOn> { sid, _ -> handleAnsiOn(sid) }
         router.on<Command.AnsiOff> { sid, _ -> handleAnsiOff(sid) }
-        router.on<Command.ScreenReaderOn> { sid, _ -> handleScreenReaderToggle(sid, true) }
-        router.on<Command.ScreenReaderOff> { sid, _ -> handleScreenReaderToggle(sid, false) }
+        router.on<Command.ScreenReaderOn> { sid, _ -> handleScreenReader(sid) { true } }
+        router.on<Command.ScreenReaderOff> { sid, _ -> handleScreenReader(sid) { false } }
+        router.on<Command.ScreenReaderToggle> { sid, _ -> handleScreenReader(sid) { current -> !current } }
         router.on<Command.AutolootOn> { sid, _ -> handleAutoloot(sid, ToggleAction.ON) }
         router.on<Command.AutolootOff> { sid, _ -> handleAutoloot(sid, ToggleAction.OFF) }
         router.on<Command.AutolootStatus> { sid, _ -> handleAutoloot(sid, ToggleAction.STATUS) }
@@ -178,12 +179,20 @@ class UiHandler(
         outbound.send(OutboundEvent.SendInfo(sessionId, msg))
     }
 
-    private suspend fun handleScreenReaderToggle(sessionId: SessionId, requestedOn: Boolean) {
+    /**
+     * `screenreader on`/`off` set the mode idempotently (so UI switches can
+     * drive it deterministically); bare `screenreader` toggles. The new state
+     * rides the Char.Name GMCP packet so the web client mirrors it.
+     */
+    private suspend fun handleScreenReader(
+        sessionId: SessionId,
+        resolve: (current: Boolean) -> Boolean,
+    ) {
         val me = players.get(sessionId) ?: return
-        // "screenreader" (bare) maps to ScreenReaderOn; if already on, toggle off
-        val enabled = if (requestedOn) !me.screenReaderEnabled else false
+        val enabled = resolve(me.screenReaderEnabled)
         outbound.send(OutboundEvent.SetScreenReader(sessionId, enabled))
         players.setScreenReaderEnabled(sessionId, enabled)
+        gmcpEmitter?.sendCharName(sessionId, me)
         val status = if (enabled) "enabled" else "disabled"
         outbound.send(OutboundEvent.SendInfo(sessionId, "Screen reader mode $status."))
     }
