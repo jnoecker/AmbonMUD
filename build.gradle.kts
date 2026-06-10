@@ -4,7 +4,7 @@ import java.net.ServerSocket
 import java.time.Duration
 
 plugins {
-    kotlin("jvm") version "2.3.21"
+    kotlin("jvm") version "2.4.0"
     application
     jacoco
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
