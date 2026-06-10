@@ -117,6 +117,13 @@ fun testClassEngineConfig(): ClassEngineConfig =
                 manaScalingRate = 1.15,
                 selectable = false,
             ),
+            "AKATHAVAE" to ClassDefinitionConfig(
+                displayName = "Akathavae",
+                hpScalingRate = 1.30,
+                manaScalingRate = 1.70,
+                primaryStat = "INT",
+                selectable = false,
+            ),
         ),
     )
 
@@ -246,6 +253,7 @@ class CommandRouterHarness private constructor(
             enchantSystem: EnchantSystem? = null,
             bankConfig: BankConfig? = null,
             stylistConfig: dev.ambon.config.StylistConfig? = null,
+            akathavaeConfig: dev.ambon.config.AkathavaeConfig? = null,
             raceRegistry: dev.ambon.engine.RaceRegistry? = null,
             classRegistry: dev.ambon.engine.PlayerClassRegistry? = null,
             genderRegistry: dev.ambon.engine.GenderRegistry? = null,
@@ -285,6 +293,7 @@ class CommandRouterHarness private constructor(
                     enchantSystem = enchantSystem,
                     bankConfig = bankConfig,
                     stylistConfig = stylistConfig,
+                    akathavaeConfig = akathavaeConfig,
                     raceRegistry = raceRegistry,
                     classRegistry = classRegistry,
                     genderRegistry = genderRegistry,

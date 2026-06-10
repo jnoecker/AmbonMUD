@@ -112,6 +112,16 @@ data class PlayerRecord(
     val dialogueFlags: Set<String> = emptySet(),
     /** Zones whose intro cinematic this player has already watched (auto-plays once per zone). */
     val seenZoneCinematics: Set<String> = emptySet(),
+    /** True while the player is under the Akathavae pledge (combat forbidden, illumination enabled). */
+    val isAkathavae: Boolean = false,
+    /** Epoch-ms the current Akathavae pledge was taken. 0 = never pledged. */
+    val akathavaePledgedAtMs: Long = 0L,
+    /** Epoch-ms the pledge was last renounced — gates re-pledging behind a cooldown. */
+    val akathavaeRenouncedAtMs: Long = 0L,
+    /** The class held before pledging as an Akathavae; restored on renounce. Null when not pledged. */
+    val preAkathavaeClass: String? = null,
+    /** JSON blob holding the player's Arcanum journal (rooms/mobs/items recorded). */
+    val arcanumData: String = "{}",
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

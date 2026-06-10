@@ -139,6 +139,7 @@ data class AppConfig(
         validateEnginePets()
         validateEngineBank()
         validateEngineStylist()
+        validateEngineAkathavae()
         validateEngineWorldTime()
         validateEngineWeather()
         validateEngineEnchanting()
@@ -447,6 +448,23 @@ data class AppConfig(
 
     private fun validateEngineStylist() {
         require(engine.stylist.feeGold >= 0) { "ambonMUD.engine.stylist.feeGold must be >= 0" }
+    }
+
+    private fun validateEngineAkathavae() {
+        val a = engine.akathavae
+        require(a.renounceCostGold >= 0) { "ambonMUD.engine.akathavae.renounceCostGold must be >= 0" }
+        require(a.repledgeCooldownMs >= 0) { "ambonMUD.engine.akathavae.repledgeCooldownMs must be >= 0" }
+        require(a.illuminateBaseSuccessPct in 0..100) { "ambonMUD.engine.akathavae.illuminateBaseSuccessPct must be 0..100" }
+        require(a.minSuccessPct in 0..100 && a.maxSuccessPct in 0..100 && a.minSuccessPct <= a.maxSuccessPct) {
+            "ambonMUD.engine.akathavae.minSuccessPct/maxSuccessPct must be 0..100 with min <= max"
+        }
+        require(a.repeatXpFraction in 0.0..1.0) { "ambonMUD.engine.akathavae.repeatXpFraction must be 0..1" }
+        require(a.failRetryCooldownMs >= 0) { "ambonMUD.engine.akathavae.failRetryCooldownMs must be >= 0" }
+        require(a.repeatXpCooldownMs >= 0) { "ambonMUD.engine.akathavae.repeatXpCooldownMs must be >= 0" }
+        require(a.discoveryXpThrottleMs >= 0) { "ambonMUD.engine.akathavae.discoveryXpThrottleMs must be >= 0" }
+        require(a.roomDiscoveryXp >= 0 && a.itemDiscoveryXp >= 0 && a.observeNpcXp >= 0) {
+            "ambonMUD.engine.akathavae discovery XP values must be >= 0"
+        }
     }
 
     private fun validateEngineWorldTime() {
@@ -1054,6 +1072,62 @@ data class BankConfig(
 data class StylistConfig(
     /** Gold fee charged to change race at a stylist NPC. */
     val feeGold: Long = 500,
+)
+
+/**
+ * Tuning for the Akathavae pledge — the pacifist explorer path. Pledging is free at
+ * any Akathavae shrine; renouncing the vow at a shrine costs gold, and re-pledging
+ * after a renunciation is gated behind a cooldown so players can't flip between the
+ * paths to double-dip rewards.
+ *
+ * Illumination is the pledged player's replacement for combat: a stat-driven attempt
+ * to record a creature in their Arcanum. Success is a kill-equivalent (drops, gold,
+ * quest credit, XP); failure turns the subject hostile unless the player talks their
+ * way out. The stat bindings mirror the combat system's configurable stat keys.
+ */
+data class AkathavaeConfig(
+    val enabled: Boolean = true,
+    /** Gold cost to renounce the pledge at a shrine. */
+    val renounceCostGold: Long = 2_500,
+    /** Real-time cooldown before an ex-Akathavae may pledge again (ms). Default 24h. */
+    val repledgeCooldownMs: Long = 86_400_000,
+    /** [Illumination resolution] Base chance (percent) that a success roll passes before stat/level adjustments. */
+    val illuminateBaseSuccessPct: Int = 70,
+    /** Stat that improves illumination success chance. */
+    val successStat: String = "INT",
+    /** Success-chance percent gained per [successStat] point above base (10). */
+    val successPerStatPoint: Double = 2.0,
+    /** Success-chance percent lost per level the subject is above the player. */
+    val levelGapPenaltyPct: Double = 8.0,
+    /** Stat that shrinks the level-gap penalty (a steady hand up close). */
+    val gapReliefStat: String = "STR",
+    /** Gap-penalty percent (per subject level) removed per [gapReliefStat] point above base. */
+    val gapReliefPerStatPoint: Double = 0.5,
+    /** Success chance is clamped into [minSuccessPct]..[maxSuccessPct]. */
+    val minSuccessPct: Int = 5,
+    val maxSuccessPct: Int = 95,
+    /** Per-subject retry cooldown after a failed illumination (ms). */
+    val failRetryCooldownMs: Long = 30_000,
+    /** Stat that lets a failed illuminator talk their way out of being attacked. */
+    val escapeStat: String = "CHA",
+    /** Escape-chance percent per [escapeStat] point above base on a failed illumination. */
+    val escapePerStatPoint: Double = 3.0,
+    /** [Discovery XP] Stat that scales all illumination/discovery XP yields. */
+    val xpStat: String = "WIS",
+    /** Fractional XP bonus per [xpStat] point above base (0.02 = +2% per point). */
+    val xpBonusPerStatPoint: Double = 0.02,
+    /** Fraction of the first-time XP awarded for re-illuminating a known subject. */
+    val repeatXpFraction: Double = 0.2,
+    /** Per-subject cooldown before a repeat illumination yields XP again (ms). */
+    val repeatXpCooldownMs: Long = 300_000,
+    /** XP for recording a never-before-visited room. */
+    val roomDiscoveryXp: Long = 15,
+    /** XP for recording a never-before-seen item. */
+    val itemDiscoveryXp: Long = 25,
+    /** XP for observing a non-combat NPC (vendors, quest givers — recorded, never removed). */
+    val observeNpcXp: Long = 10,
+    /** Minimum gap between discovery XP awards (ms) — anti-speedrun throttle. Entries still record. */
+    val discoveryXpThrottleMs: Long = 1_500,
 )
 
 data class LeaderboardConfig(
@@ -1811,6 +1885,7 @@ data class EngineConfig(
     val enchanting: EnchantingConfig = EnchantingConfig(),
     val bank: BankConfig = BankConfig(),
     val stylist: StylistConfig = StylistConfig(),
+    val akathavae: AkathavaeConfig = AkathavaeConfig(),
     val worldTime: WorldTimeConfig = WorldTimeConfig(),
     val season: SeasonConfig = SeasonConfig(),
     val weather: WeatherConfig = WeatherConfig(),
@@ -2192,6 +2267,32 @@ data class CommandsConfig(
             "prestige" to CommandMetadata("prestige | prestige info", "Reset at max level for permanent prestige perks", "progression"),
             "leaderboard" to CommandMetadata("leaderboard/top [category]", "View player leaderboards", "progression"),
             "stylist" to CommandMetadata("stylist", "View race-change options and fee (requires a stylist)", "progression"),
+            "pledge" to CommandMetadata(
+                usage = "pledge",
+                description = "Take the Akathavae pledge at a shrine — forsake combat, level through illumination",
+                category = "progression",
+            ),
+            "renounce" to CommandMetadata(
+                usage = "renounce [confirm]",
+                description = "Renounce the Akathavae pledge at a shrine (costs gold)",
+                category = "progression",
+            ),
+            "illuminate" to CommandMetadata(
+                usage = "illuminate <creature>",
+                description = "Record a creature in your Arcanum — the Akathavae's replacement for attacking",
+                category = "progression",
+                requiresTarget = true,
+            ),
+            "arcanum" to CommandMetadata(
+                usage = "arcanum [rooms|mobs|items]",
+                description = "Leaf through your Arcanum journal of recorded places, creatures, and items",
+                category = "progression",
+            ),
+            "wardrobe" to CommandMetadata(
+                usage = "wardrobe [item]",
+                description = "Conjure and wear equipment recorded in your Arcanum (Akathavae only)",
+                category = "progression",
+            ),
             "changerace" to CommandMetadata(
                 usage = "changerace <race>",
                 description = "Pay the stylist to change your race",

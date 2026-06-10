@@ -872,6 +872,82 @@ class GmcpEmitter(
         )
     }
 
+    // ---- Arcanum (Akathavae explorer path) ----
+
+    data class ArcanumStatusPayload(
+        val pledged: Boolean,
+        val rooms: Int,
+        val mobs: Int,
+        val items: Int,
+    )
+
+    data class ArcanumZonePayload(
+        val zone: String,
+        val roomsRecorded: Int,
+        val roomsTotal: Int,
+        val mobsRecorded: Int,
+        val mobsTotal: Int,
+    )
+
+    data class ArcanumMobPayload(
+        val key: String,
+        val name: String,
+        val image: String?,
+        val timesRecorded: Int,
+        val firstRecordedAtMs: Long,
+        val source: String,
+        /** Permanent world-first credit — "First illuminated by <firstBy>". */
+        val firstBy: String?,
+        val firstAtMs: Long?,
+    )
+
+    data class ArcanumItemPayload(
+        val key: String,
+        val name: String,
+        val image: String?,
+        val slot: String?,
+        val wearable: Boolean,
+        val timesRecorded: Int,
+        val firstRecordedAtMs: Long,
+        val source: String,
+        val firstBy: String?,
+    )
+
+    data class ArcanumRoomPayload(
+        val key: String,
+        val title: String,
+        val zone: String,
+        val firstRecordedAtMs: Long,
+        val firstBy: String?,
+    )
+
+    data class ArcanumJournalPayload(
+        val pledged: Boolean,
+        val zones: List<ArcanumZonePayload>,
+        val mobs: List<ArcanumMobPayload>,
+        val items: List<ArcanumItemPayload>,
+        val rooms: List<ArcanumRoomPayload>,
+    )
+
+    /** Lightweight pledge + journal-count sync; emitted on login, pledge changes, and new recordings. */
+    suspend fun sendArcanumStatus(
+        sessionId: SessionId,
+        pledged: Boolean,
+        rooms: Int,
+        mobs: Int,
+        items: Int,
+    ) {
+        emit(sessionId, "Arcanum.Status", ArcanumStatusPayload(pledged, rooms, mobs, items), supportCheck = "Arcanum")
+    }
+
+    /** Full journal for the Arcanum panel; emitted when the player runs `arcanum`. */
+    suspend fun sendArcanumJournal(
+        sessionId: SessionId,
+        payload: ArcanumJournalPayload,
+    ) {
+        emit(sessionId, "Arcanum.Journal", payload, supportCheck = "Arcanum")
+    }
+
     /**
      * Sends the full character GMCP state: status vars, vitals, name, items,
      * skills, status effects, achievements, and group info. Called on login
@@ -917,6 +993,13 @@ class GmcpEmitter(
         }
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
+        sendArcanumStatus(
+            sessionId,
+            pledged = player.isAkathavae,
+            rooms = player.arcanum.rooms.size,
+            mobs = player.arcanum.mobs.size,
+            items = player.arcanum.items.size,
+        )
     }
 
     /**

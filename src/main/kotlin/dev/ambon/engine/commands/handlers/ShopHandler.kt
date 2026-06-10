@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.config.EconomyConfig
+import dev.ambon.domain.arcanum.ArcanumSource
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.ReputationRequirement
 import dev.ambon.domain.world.ShopDefinition
@@ -153,6 +154,8 @@ class ShopHandler(
             items.addToInventory(sessionId, newItem)
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You buy ${item.displayName} for $buyPrice gold."))
+            // Buying an item counts as discovering it for an Akathavae's Arcanum.
+            ctx.akathavaeSystem?.recordItemDiscovery(sessionId, newItem, ArcanumSource.PURCHASED)
             syncItemsGmcp(sessionId, items, gmcpEmitter)
             ctx.emitShopGmcp(sessionId)
         }

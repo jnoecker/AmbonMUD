@@ -1,6 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
 import type {
   AchievementData,
+  ArcanumJournal,
+  ArcanumStatus,
   AuctionListing,
   CharStats,
   FactionStanding,
@@ -212,6 +214,8 @@ interface GmcpContext {
   setTradeState: Dispatch<SetStateAction<TradeState | null>>;
   setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
+  setArcanumStatus: Dispatch<SetStateAction<ArcanumStatus | null>>;
+  setArcanumJournal: Dispatch<SetStateAction<ArcanumJournal | null>>;
   setCurrencies: Dispatch<SetStateAction<CurrencyBalance[]>>;
   setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
   setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
@@ -2138,6 +2142,64 @@ export function applyGmcpPackage(
         : [];
       const leaderboardData: LeaderboardData = { category, label, scoreLabel, entries };
       ctx.setLeaderboard((prev) => ({ ...prev, [category]: leaderboardData }));
+      break;
+    }
+
+    case "Arcanum.Status": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setArcanumStatus({
+        pledged: packet.pledged === true,
+        rooms: safeNumber(packet.rooms, 0),
+        mobs: safeNumber(packet.mobs, 0),
+        items: safeNumber(packet.items, 0),
+      });
+      break;
+    }
+
+    case "Arcanum.Journal": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const asRecords = (arr: unknown): Record<string, unknown>[] =>
+        Array.isArray(arr)
+          ? arr.filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          : [];
+      ctx.setArcanumJournal({
+        pledged: packet.pledged === true,
+        zones: asRecords(packet.zones).map((z) => ({
+          zone: typeof z.zone === "string" ? z.zone : "",
+          roomsRecorded: safeNumber(z.roomsRecorded, 0),
+          roomsTotal: safeNumber(z.roomsTotal, 0),
+          mobsRecorded: safeNumber(z.mobsRecorded, 0),
+          mobsTotal: safeNumber(z.mobsTotal, 0),
+        })),
+        mobs: asRecords(packet.mobs).map((m) => ({
+          key: typeof m.key === "string" ? m.key : "",
+          name: typeof m.name === "string" ? m.name : "",
+          image: typeof m.image === "string" ? m.image : null,
+          timesRecorded: safeNumber(m.timesRecorded, 1),
+          firstRecordedAtMs: safeNumber(m.firstRecordedAtMs, 0),
+          source: typeof m.source === "string" ? m.source : "illuminated",
+          firstBy: typeof m.firstBy === "string" ? m.firstBy : null,
+          firstAtMs: typeof m.firstAtMs === "number" ? m.firstAtMs : null,
+        })),
+        items: asRecords(packet.items).map((i) => ({
+          key: typeof i.key === "string" ? i.key : "",
+          name: typeof i.name === "string" ? i.name : "",
+          image: typeof i.image === "string" ? i.image : null,
+          slot: typeof i.slot === "string" ? i.slot : null,
+          wearable: i.wearable === true,
+          timesRecorded: safeNumber(i.timesRecorded, 1),
+          firstRecordedAtMs: safeNumber(i.firstRecordedAtMs, 0),
+          source: typeof i.source === "string" ? i.source : "illuminated",
+          firstBy: typeof i.firstBy === "string" ? i.firstBy : null,
+        })),
+        rooms: asRecords(packet.rooms).map((r) => ({
+          key: typeof r.key === "string" ? r.key : "",
+          title: typeof r.title === "string" ? r.title : "",
+          zone: typeof r.zone === "string" ? r.zone : "",
+          firstRecordedAtMs: safeNumber(r.firstRecordedAtMs, 0),
+          firstBy: typeof r.firstBy === "string" ? r.firstBy : null,
+        })),
+      });
       break;
     }
 

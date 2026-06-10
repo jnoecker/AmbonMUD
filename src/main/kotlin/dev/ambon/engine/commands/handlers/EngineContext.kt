@@ -56,6 +56,8 @@ data class EngineContext(
     val puzzleSystem: PuzzleSystem? = null,
     val bankConfig: BankConfig = BankConfig(),
     val stylistConfig: StylistConfig = StylistConfig(),
+    /** Records shop/craft/gather item discoveries into Akathavae journals when present. */
+    val akathavaeSystem: dev.ambon.engine.AkathavaeSystem? = null,
     /** Gameplay metrics. Defaults to a no-op registry so tests need no wiring. */
     val metrics: GameMetrics = GameMetrics.noop(),
 )

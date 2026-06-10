@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.AkathavaeConfig
 import dev.ambon.config.BankConfig
 import dev.ambon.config.EconomyConfig
 import dev.ambon.config.PrestigeConfig
@@ -8,6 +9,7 @@ import dev.ambon.config.StylistConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
+import dev.ambon.engine.AkathavaeSystem
 import dev.ambon.engine.AuctionSystem
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
@@ -31,6 +33,7 @@ import dev.ambon.engine.SpriteRegistry
 import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.commands.handlers.AdminHandler
+import dev.ambon.engine.commands.handlers.AkathavaeHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
 import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
@@ -98,6 +101,8 @@ internal fun buildTestRouter(
     enchantSystem: EnchantSystem? = null,
     bankConfig: BankConfig? = null,
     stylistConfig: StylistConfig? = null,
+    akathavaeConfig: AkathavaeConfig? = null,
+    akathavaeSystem: AkathavaeSystem? = null,
     raceRegistry: RaceRegistry? = null,
     classRegistry: PlayerClassRegistry? = null,
     genderRegistry: GenderRegistry? = null,
@@ -117,6 +122,19 @@ internal fun buildTestRouter(
     playerRepo: PlayerRepository? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
+    val resolvedAkathavaeSystem = akathavaeSystem ?: AkathavaeSystem(
+        players = players,
+        items = items,
+        world = world,
+        outbound = outbound,
+        combat = combat,
+        worldState = worldState,
+        progression = progression,
+        classRegistry = classRegistry,
+        clock = clock,
+        config = akathavaeConfig ?: AkathavaeConfig(),
+        markVitalsDirty = markVitalsDirty,
+    )
     val ctx = EngineContext(
         players = players,
         mobs = mobs,
@@ -134,6 +152,7 @@ internal fun buildTestRouter(
         genderRegistry = genderRegistry,
         bankConfig = bankConfig ?: BankConfig(),
         stylistConfig = stylistConfig ?: StylistConfig(),
+        akathavaeSystem = resolvedAkathavaeSystem,
         puzzleSystem = puzzleSystem,
     )
     val puzzleHandler = puzzleSystem?.let { PuzzleHandler(ctx = ctx, puzzleSystem = it) }
@@ -176,6 +195,15 @@ internal fun buildTestRouter(
                 spriteRegistry = spriteRegistry,
             )
         },
+        AkathavaeHandler(
+            ctx = ctx,
+            config = akathavaeConfig ?: AkathavaeConfig(),
+            clock = clock,
+            markVitalsDirty = markVitalsDirty,
+            akathavaeSystem = resolvedAkathavaeSystem,
+            progression = progression,
+            abilitySystem = abilitySystem,
+        ),
         DuelHandler(ctx = ctx, duelSystem = duelSystem, combatSystem = combat),
         tradeSystem?.let { TradeHandler(ctx = ctx, tradeSystem = it) },
         DungeonHandler(ctx = ctx, dungeonManager = dungeonManager, dungeonRegistry = dungeonRegistry, groupSystem = groupSystem),

@@ -1596,6 +1596,32 @@ ambonmud:
           description: "View race-change options and fee (requires a stylist)"
           category: "progression"
           staff: false
+        pledge:
+          usage: "pledge"
+          description: "Take the Akathavae pledge at a shrine — forsake combat, level through illumination"
+          category: "progression"
+          staff: false
+        renounce:
+          usage: "renounce [confirm]"
+          description: "Renounce the Akathavae pledge at a shrine (costs gold)"
+          category: "progression"
+          staff: false
+        illuminate:
+          usage: "illuminate <creature>"
+          description: "Record a creature in your Arcanum — the Akathavae's replacement for attacking"
+          category: "progression"
+          staff: false
+          requiresTarget: true
+        arcanum:
+          usage: "arcanum [rooms|mobs|items]"
+          description: "Leaf through your Arcanum journal of recorded places, creatures, and items"
+          category: "progression"
+          staff: false
+        wardrobe:
+          usage: "wardrobe [item]"
+          description: "Conjure and wear equipment recorded in your Arcanum (Akathavae only)"
+          category: "progression"
+          staff: false
         changerace:
           usage: "changerace <race>"
           description: "Pay the stylist to change your race"
@@ -2008,6 +2034,37 @@ ambonmud:
               equip: false
             - itemId: academy:hearty_ration
               equip: false
+        AKATHAVAE:
+          displayName: Akathavae
+          # Not selectable at character creation — this class is entered only by
+          # taking the Akathavae pledge at a shrine, and left only by renouncing it.
+          selectable: false
+          # Scholars, not soldiers: modest HP growth (they flee, not fight) and
+          # strong mana growth for the illumination arts to come.
+          hpScalingRate: 1.288
+          manaScalingRate: 1.108
+          description: A keeper of the Arcanum who has forsworn violence, leveling through illumination — recording the
+            world's creatures, places, and treasures in a personal journal rather than conquering them.
+          backstory: >-
+            The Akathavae serve the Naraxian Akathavae, the keeper of stories who writes the Arcanum — the great record
+            of all that is and all that has been. Their name is older than the colleges: it means "those who give
+            voice," for an Akathavae's calling is to speak for the things the world would otherwise forget. A windswept
+            ruin, a beast glimpsed once at dusk, a door nobody opens anymore — each is a story going silent, and each
+            silence is a small death the Akathavae refuse to permit.
+
+
+            There is no academy for the pledge. Any soul may kneel at a shrine of the open book and unsay their
+            violence, and the hush that follows is the only ordination there is. What the pledge takes — the sword, the
+            spell hurled in anger, the glory of the kill — it repays in sight. The pledged learn to still their breath
+            and illuminate what they witness, line by line, until the subject lives more vividly on the page than it
+            ever did in fear of them.
+
+
+            Akathavae wander every road the fighters do, and some no fighter would survive, armed with nothing but ink,
+            patience, and a well-practiced soothing word. The Arcanum remembers its firsts forever, and among the
+            pledged there is no higher honor than the line beneath a creature no one had ever recorded: first
+            illuminated by your hand.
+          primaryStat: INT
     races:
       definitions:
         HUMAN:
@@ -2407,6 +2464,29 @@ ambonmud:
       cooldownMs: 5000
     stylist:
       feeGold: 500
+    akathavae:
+      enabled: true
+      renounceCostGold: 2500
+      repledgeCooldownMs: 86400000
+      illuminateBaseSuccessPct: 70
+      successStat: "INT"
+      successPerStatPoint: 2.0
+      levelGapPenaltyPct: 8.0
+      gapReliefStat: "STR"
+      gapReliefPerStatPoint: 0.5
+      minSuccessPct: 5
+      maxSuccessPct: 95
+      failRetryCooldownMs: 30000
+      escapeStat: "CHA"
+      escapePerStatPoint: 3.0
+      xpStat: "WIS"
+      xpBonusPerStatPoint: 0.02
+      repeatXpFraction: 0.2
+      repeatXpCooldownMs: 300000
+      roomDiscoveryXp: 15
+      itemDiscoveryXp: 25
+      observeNpcXp: 10
+      discoveryXpThrottleMs: 1500
     respec:
       enabled: true
       goldCost: 100

@@ -67,11 +67,31 @@ rooms:
       some just have something interesting to say."
 
 
-      The Grand Hall is to the west, and the Training Yard lies to the south.
+      The Grand Hall is to the west, and the Training Yard lies to the south. A quiet alcove opens to the east, where
+      candlelight flickers against gilded shelves.
     exits:
       w: grand_hall
       s: training_yard
+      e: akathavae_alcove
     image: 8f6e95312493937bdb5d43391a9db948336450c4d3173731b4950b3dfaf0ac64.jpg
+  akathavae_alcove:
+    title: Alcove of the Akathavae
+    description: >-
+      A hushed alcove tucked behind the study's tallest shelves, lit by a single ring of candles that never seem to
+      burn down. At its heart stands a modest shrine of pale stone: an open book carved so finely that its pages appear
+      to turn when watched too long. This is a shrine to the Naraxian Akathavae — the keeper of stories, whose faithful
+      give voice to all that would otherwise be forgotten. Pilgrims who forswear violence kneel here and pledge
+      themselves as Akathavae, recording the world in their own Arcanum rather than conquering it.
+
+
+      A small bronze plate at the shrine's base reads: "Speak 'pledge' to give your voice to the Arcanum. What is
+      written remains."
+
+
+      The Scholar's Study lies back to the west.
+    akathavaeShrine: true
+    exits:
+      w: scholars_study
   common_room:
     title: The Common Room
     description: >-

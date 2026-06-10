@@ -144,6 +144,14 @@ class PersistenceFieldCoverageTest {
                 authTokenIssuedAt = 1_700_000_000_000L,
                 autolootEnabled = true,
                 dialogueFlags = setOf("scholar_research", "innkeeper_intro"),
+                isAkathavae = true,
+                akathavaePledgedAtMs = 1_700_000_111_000L,
+                akathavaeRenouncedAtMs = 1_700_000_222_000L,
+                preAkathavaeClass = "WARRIOR",
+                arcanumData =
+                    """{"mobs":{"academy:wandering_wisp":{"firstRecordedAtMs":1700000333000,""" +
+                        """"timesRecorded":2,"lastXpAtMs":1700000334000,"source":"illuminated"}},""" +
+                        """"items":{},"rooms":{}}""",
             )
 
         @BeforeAll

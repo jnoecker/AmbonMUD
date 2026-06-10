@@ -38,6 +38,12 @@ class WebClientParityTest {
         "Recall" to "recall",
         "Rest" to "rest",
         "Depart" to "depart",
+        // Akathavae (explorer path)
+        "Pledge" to "pledge",
+        "Renounce" to "renounce",
+        "Illuminate" to "illuminate",
+        "Arcanum" to "arcanum",
+        "Wardrobe" to "wardrobe",
         // Communication
         "Say" to "say",
         "Tell" to "tell",

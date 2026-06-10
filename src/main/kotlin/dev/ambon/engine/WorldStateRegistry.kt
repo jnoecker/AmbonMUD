@@ -125,6 +125,36 @@ class WorldStateRegistry(
         isDirty = true
     }
 
+    // ---- Arcanum world-firsts ----
+
+    /** `<kind>:<subjectKey>` → `<playerName>|<epochMs>`. Immutable once written. */
+    private val arcanumFirsts = mutableMapOf<String, String>()
+
+    /**
+     * Records [playerName] as the permanent first illuminator of [key] (e.g.
+     * `mob:academy:wandering_wisp`). Returns `true` only when this call set the
+     * record — an existing entry is never overwritten.
+     */
+    fun recordArcanumFirst(
+        key: String,
+        playerName: String,
+        atEpochMs: Long,
+    ): Boolean {
+        if (arcanumFirsts.containsKey(key)) return false
+        arcanumFirsts[key] = "$playerName|$atEpochMs"
+        isDirty = true
+        return true
+    }
+
+    /** Returns the (playerName, epochMs) world-first credit for [key], or null if unclaimed. */
+    fun getArcanumFirst(key: String): Pair<String, Long>? {
+        val raw = arcanumFirsts[key] ?: return null
+        val sep = raw.lastIndexOf('|')
+        if (sep <= 0) return null
+        val ts = raw.substring(sep + 1).toLongOrNull() ?: return null
+        return raw.substring(0, sep) to ts
+    }
+
     // ---- Lever operations ----
 
     fun getLeverState(featureId: String): LeverState {
@@ -210,6 +240,7 @@ class WorldStateRegistry(
             containerStates = containers,
             leverStates = leverStates.mapValues { (_, s) -> s.name },
             containerItems = containerItemsMap,
+            arcanumFirsts = arcanumFirsts.toMap(),
         )
     }
 
@@ -238,6 +269,7 @@ class WorldStateRegistry(
             val state = LeverState.entries.firstOrNull { it.name == stateName } ?: continue
             leverStates[id] = state
         }
+        arcanumFirsts.putAll(snapshot.arcanumFirsts)
         for ((featureId, itemIds) in snapshot.containerItems) {
             val instances =
                 itemIds.mapNotNull { rawId ->

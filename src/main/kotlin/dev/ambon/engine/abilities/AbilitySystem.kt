@@ -8,6 +8,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
+import dev.ambon.engine.ERR_AKATHAVAE_PLEDGE
 import dev.ambon.engine.ERR_NOT_CONNECTED
 import dev.ambon.engine.GameSystem
 import dev.ambon.engine.GroupSystem
@@ -122,12 +123,20 @@ class AbilitySystem(
             return "${ability.displayName} is on cooldown (${remainingSec}s remaining)."
         }
 
-        // 4. Resolve target and apply
+        // 4. Resolve target and apply. Hostile casts are refused under the
+        //    Akathavae pledge exactly like `kill` — self/ally/pet utility stays.
         return when (ability.targetType) {
-            "enemy" -> handleEnemyCast(sessionId, player, ability, resolvedTarget, now)
+            "enemy", "all_enemies" -> {
+                if (player.isAkathavae) {
+                    ERR_AKATHAVAE_PLEDGE
+                } else if (ability.targetType == "enemy") {
+                    handleEnemyCast(sessionId, player, ability, resolvedTarget, now)
+                } else {
+                    handleAllEnemiesCast(sessionId, player, ability, now)
+                }
+            }
             "self" -> handleSelfCast(sessionId, player, ability, now)
             "ally" -> handleAllyCast(sessionId, player, ability, resolvedTarget, now)
-            "all_enemies" -> handleAllEnemiesCast(sessionId, player, ability, now)
             "all_allies" -> handleAllAlliesCast(sessionId, player, ability, now)
             "pet" -> handlePetCast(sessionId, player, ability, now)
             else -> "Unknown target type '${ability.targetType}'."

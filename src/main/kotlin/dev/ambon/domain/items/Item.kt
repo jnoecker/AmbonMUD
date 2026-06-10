@@ -41,6 +41,13 @@ data class Item(
     val itemType: ItemType? = null,
     val questItem: Boolean = false,
     val takeable: Boolean = true,
+    /**
+     * True for items conjured from an Akathavae's Arcanum wardrobe. Conjured
+     * items exist only while equipped — on unequip (or swap) they dissolve back
+     * into the journal instead of entering the inventory, so they can never
+     * reach trades, shops, banks, or the floor.
+     */
+    val conjured: Boolean = false,
 ) {
     /**
      * Effective item type for categorization. Uses [itemType] when set,

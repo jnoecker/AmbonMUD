@@ -13,4 +13,10 @@ data class WorldStateSnapshot(
     val leverStates: Map<String, String> = emptyMap(),
     /** Container contents: featureId → list of ItemId values currently inside. */
     val containerItems: Map<String, List<String>> = emptyMap(),
+    /**
+     * Permanent Arcanum world-firsts: `<kind>:<subjectKey>` (e.g. `mob:academy:wandering_wisp`)
+     * → `<playerName>|<epochMs>` of the first player ever to illuminate that subject.
+     * Immutable once written — "First illuminated by Thalen" is forever.
+     */
+    val arcanumFirsts: Map<String, String> = emptyMap(),
 )

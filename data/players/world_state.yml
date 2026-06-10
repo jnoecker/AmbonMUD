@@ -1,9 +1,20 @@
 ---
-doorStates:
-  demo_ruins:hidden_vault_door/d: "LOCKED"
-containerStates:
-  demo_ruins:reading_nook/reading_chest: "LOCKED"
+doorStates: {}
+containerStates: {}
 leverStates:
   demo_ruins:ledger_room/ledger_lever: "UP"
 containerItems:
+  academy:academy_gates/welcome_chest:
+  - "academy:leather_hood"
+  - "academy:healing_potion"
+  academy:secret_library/ancient_bookcase:
+  - "academy:elixir_of_clarity"
+  - "academy:enchanted_cloth"
+  academy:throne_room/treasure_chest:
+  - "academy:academy_banner"
+  - "academy:hearty_ration"
   demo_ruins:reading_nook/reading_chest: []
+arcanumFirsts:
+  room:academy:akathavae_alcove: "Smoketest|1781131613753"
+  room:academy:scholars_study: "Smoketest|1781131618648"
+  room:academy:grand_hall: "Smoketest|1781131703365"

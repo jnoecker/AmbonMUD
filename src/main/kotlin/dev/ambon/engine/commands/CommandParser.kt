@@ -296,6 +296,29 @@ sealed interface Command {
     /** Leaves the sanctum after death, returning to the zone where the player last died. */
     data object Depart : Command
 
+    /** Take the Akathavae pledge at a shrine — forsake combat, level through illumination. */
+    data object Pledge : Command
+
+    /** Renounce the Akathavae pledge at a shrine. [confirm] guards against accidental renouncing. */
+    data class Renounce(
+        val confirm: Boolean,
+    ) : Command
+
+    /** Illuminate a creature — the Akathavae's stat-driven replacement for attacking. */
+    data class Illuminate(
+        val target: String,
+    ) : Command
+
+    /** View the Arcanum journal. [section] filters to rooms/mobs/items; null = summary. */
+    data class Arcanum(
+        val section: String?,
+    ) : Command
+
+    /** Arcanum wardrobe: null keyword lists conjurable items, otherwise conjure-and-wear the match. */
+    data class Wardrobe(
+        val keyword: String?,
+    ) : Command
+
     data class Petition(
         val keyword: String,
     ) : Command
@@ -1378,6 +1401,19 @@ object CommandParser {
         // kill
         requiredArg(line, listOf("kill"), "kill <mob>", { Command.Kill(it) })?.let { return it }
 
+        // illuminate — the Akathavae's replacement for attacking
+        requiredArg(line, listOf("illuminate", "illum"), "illuminate <creature>", { Command.Illuminate(it) })?.let { return it }
+
+        // arcanum [rooms|mobs|items] — the Akathavae journal
+        matchPrefix(line, listOf("arcanum", "journal")) { rest ->
+            Command.Arcanum(rest.trim().lowercase().takeIf { it.isNotBlank() })
+        }?.let { return it }
+
+        // wardrobe [item] — conjure recorded equipment from the Arcanum
+        matchPrefix(line, listOf("wardrobe")) { rest ->
+            Command.Wardrobe(rest.trim().takeIf { it.isNotBlank() })
+        }?.let { return it }
+
         // consider — assess a mob's threat without attacking
         requiredArg(
             line,
@@ -1789,6 +1825,9 @@ object CommandParser {
             "recall" -> Command.Recall
             "rest" -> Command.Rest
             "depart" -> Command.Depart
+            "pledge" -> Command.Pledge
+            "renounce" -> Command.Renounce(confirm = false)
+            "renounce confirm" -> Command.Renounce(confirm = true)
             "score", "sc" -> Command.Score
             "spells", "abilities", "skills" -> Command.Spells
             "effects", "buffs", "debuffs" -> Command.Effects

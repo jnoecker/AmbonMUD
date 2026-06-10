@@ -224,6 +224,7 @@ class CombatSystem(
         keywordRaw: String,
     ): String? {
         val player = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        if (player.isAkathavae) return ERR_AKATHAVAE_PLEDGE
         val keyword = keywordRaw.trim()
         if (keyword.isEmpty()) return "Kill what?"
 
@@ -478,8 +479,10 @@ class CombatSystem(
         val attacker = players.get(attackerSid) ?: return ERR_NOT_CONNECTED
         val target = players.get(targetSid) ?: return "That player is not available."
 
+        if (attacker.isAkathavae) return ERR_AKATHAVAE_PLEDGE
         if (attackerSid == targetSid) return "You cannot attack yourself."
         if (target.isStaff) return "You cannot attack staff members."
+        if (target.isAkathavae) return "${target.name} is an Akathavae — their pledge of peace protects them from duels and bloodshed."
         if (attacker.roomId != target.roomId) return "${'$'}{target.name} is not here."
         if (pvpTarget[attackerSid] != null) return "You are already in PvP combat."
         if (playerTarget[attackerSid] != null) return "You are already in combat."
@@ -837,9 +840,11 @@ class CombatSystem(
                 continue
             }
 
-            // STUN check
+            // STUN check. Akathavae never swing back: a mob can force them into
+            // combat (aggro, a failed illumination) but their pledge holds — they
+            // dodge, flee, or fall, and never deal damage.
             val stunned = statusEffects?.hasPlayerEffect(sessionId, "stun") == true
-            if (!stunned) {
+            if (!stunned && !player.isAkathavae) {
                 val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val swing = rollPlayerMeleeSwing(player, playerStats, playerBonuses, mob.armor)
                 val effectivePlayerDamage = swing.final
@@ -1866,6 +1871,64 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendInfo(killerSessionId, "You loot ${names.joinToString(", ")}."))
         callbacks.onRoomItemsChanged(roomId)
         return names
+    }
+
+    /**
+     * Resolves a *successful illumination* by an Akathavae as a kill-equivalent:
+     * the subject is removed from the world (normal respawn machinery applies),
+     * its drops go straight into the illuminator's inventory, gold is found, and
+     * quest/achievement kill credit fires — a recorded creature counts as a slain
+     * one for objectives. XP is NOT granted here; the Akathavae system applies
+     * its own WIS-scaled award.
+     *
+     * Returns the item instances captured into the player's inventory.
+     */
+    suspend fun resolveIlluminationCapture(
+        sessionId: SessionId,
+        mob: MobState,
+    ): List<dev.ambon.domain.items.ItemInstance> {
+        val player = players.get(sessionId) ?: return emptyList()
+
+        removeMobFromCombat(mob.id)
+        mobs.remove(mob.id)
+        callbacks.onMobRemoved(mob.id, mob.roomId)
+        statusEffects?.onMobRemoved(mob.id)
+
+        // Carried + rolled drops land in the room first (reusing the normal drop
+        // path), then transfer to the illuminator regardless of autoloot settings.
+        val candidates = items.dropMobItemsToRoom(mob.id, mob.roomId) + rollDrops(mob)
+        val captured = mutableListOf<dev.ambon.domain.items.ItemInstance>()
+        for (candidate in candidates) {
+            if (!candidate.item.takeable) continue
+            val taken = items.takeFromRoomByInstance(sessionId, mob.roomId, candidate) ?: continue
+            captured += taken
+            onItemAutoLooted(sessionId, taken)
+        }
+        callbacks.onRoomItemsChanged(mob.roomId)
+
+        broadcastToRoom(
+            players,
+            outbound,
+            mob.roomId,
+            "${mob.name} stills under ${player.name}'s gaze, then slips away as if into the pages of a book.",
+            exclude = sessionId,
+        )
+        if (captured.isNotEmpty()) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "Among what ${mob.name} leaves behind you find ${captured.joinToString(", ") { it.item.displayName }}.",
+                ),
+            )
+        }
+        grantKillGold(sessionId, mob)
+
+        // A recorded creature counts as a slain one for quests and achievements.
+        if (mob.templateKey.isNotEmpty()) {
+            callbacks.onMobKilledByPlayer(sessionId, mob.templateKey)
+        }
+        metrics.onGameEvent("akathavae", "illuminate_capture")
+        return captured
     }
 }
 

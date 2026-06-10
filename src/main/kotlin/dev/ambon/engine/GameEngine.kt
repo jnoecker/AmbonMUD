@@ -23,6 +23,7 @@ import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.handlers.AdminHandler
+import dev.ambon.engine.commands.handlers.AkathavaeHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
 import dev.ambon.engine.commands.handlers.AutoQuestHandler
 import dev.ambon.engine.commands.handlers.BankHandler
@@ -317,6 +318,7 @@ class GameEngine(
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
                 puzzleSystem.removeSession(sid)
+                akathavaeSystem.onSessionRemoved(sid)
                 for (dismissed in petSystem.onOwnerDisconnect(sid)) {
                     broadcastPetRemoved(dismissed)
                 }
@@ -784,6 +786,26 @@ class GameEngine(
             classRegistry = classRegistry,
             petSystem = petSystem,
         )
+
+    private val akathavaeSystem =
+        AkathavaeSystem(
+            players = players,
+            items = items,
+            world = world,
+            outbound = outbound,
+            combat = combatSystem,
+            worldState = worldState,
+            progression = progression,
+            classRegistry = classRegistry,
+            statusEffects = statusEffectSystem,
+            clock = clock,
+            config = engineConfig.akathavae,
+            metrics = metrics,
+            markVitalsDirty = ::markVitalsDirty,
+            onLevelUp = ::onCombatLevelUp,
+            gmcpEmitter = gmcpEmitter,
+        )
+
     private val regenSystem =
         RegenSystem(
             players = players,
@@ -1267,6 +1289,7 @@ class GameEngine(
             puzzleSystem = puzzleSystem,
             bankConfig = engineConfig.bank,
             stylistConfig = engineConfig.stylist,
+            akathavaeSystem = akathavaeSystem,
             metrics = metrics,
         )
 
@@ -1358,7 +1381,10 @@ class GameEngine(
                 deathConfig = engineConfig.death,
                 housingSystem = housingSystem,
                 guildHallSystem = guildHallSystem,
-                onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },
+                onPlayerMoved = { sid, roomId ->
+                    petSystem.followOwner(sid, roomId)
+                    akathavaeSystem.onRoomVisited(sid)
+                },
                 puzzleSystem = puzzleSystem,
             ),
             communicationHandler,
@@ -1448,6 +1474,16 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 markStatsDirty = ::markStatsDirty,
                 spriteRegistry = spriteRegistry,
+            ),
+            AkathavaeHandler(
+                ctx = ctx,
+                config = engineConfig.akathavae,
+                clock = clock,
+                markVitalsDirty = ::markVitalsDirty,
+                markStatsDirty = ::markStatsDirty,
+                akathavaeSystem = akathavaeSystem,
+                progression = progression,
+                abilitySystem = abilitySystem,
             ),
             WorldInfoHandler(
                 ctx = ctx,

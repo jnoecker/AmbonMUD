@@ -181,11 +181,16 @@ class ItemHandler(
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
                 }
                 is ItemRegistry.EquipResult.Swapped -> {
+                    val previousNote =
+                        if (result.previousDissolved) {
+                            "${result.previousItem.item.displayName} dissolves back into your Arcanum and you wear"
+                        } else {
+                            "You remove ${result.previousItem.item.displayName} and wear"
+                        }
                     outbound.send(
                         OutboundEvent.SendInfo(
                             sessionId,
-                            "You remove ${result.previousItem.item.displayName} and wear " +
-                                "${result.item.item.displayName} on your ${result.slot.label()}.",
+                            "$previousNote ${result.item.item.displayName} on your ${result.slot.label()}.",
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
@@ -216,6 +221,15 @@ class ItemHandler(
                         OutboundEvent.SendInfo(
                             sessionId,
                             "You remove ${result.item.item.displayName} from your ${result.slot.label()}.",
+                        ),
+                    )
+                    afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                }
+                is ItemRegistry.UnequipResult.Dissolved -> {
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            sessionId,
+                            "${result.item.item.displayName} dissolves back into the pages of your Arcanum.",
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
