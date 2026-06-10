@@ -1,5 +1,11 @@
 import { memo, useEffect, useRef } from "react";
 import { Application } from "pixi.js";
+// Side-effect import: swaps Pixi's eval/new-Function-based shader & uniform sync
+// for polyfills and stubs the unsafe-eval check. Required because the served
+// web client runs under a hardened CSP (script-src lacks 'unsafe-eval', see
+// KtorWebSocketTransport.WEB_CONTENT_SECURITY_POLICY); without this Pixi's
+// renderer init throws and the canvas never comes up.
+import "pixi.js/unsafe-eval";
 import { SceneManager } from "./SceneManager";
 
 // memo: props-less component under GameShell, which re-renders on every
