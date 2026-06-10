@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import type { LoginClassOption, LoginErrorState, LoginPromptState, LoginRaceOption } from "../types";
 import { ArtScene } from "./ArtScene";
-import { ART_FIT_LANDSCAPE, ART_FIT_PORTRAIT, useMediaFits } from "./loginArtFit";
+import { ART_FIT_LANDSCAPE, ART_FIT_PORTRAIT, useArtImage, useMediaFits } from "./loginArtFit";
 
 interface LoginModalProps {
   loginPrompt: LoginPromptState;
@@ -48,14 +48,25 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
 
   const isWide = loginPrompt.state === "raceSelection" || loginPrompt.state === "classSelection";
 
-  const landscapeArt = (key: string): string | null =>
-    artFitsLandscape ? (serverAssets[key] ?? null) : null;
-  const portraitArt = (key: string): string | null =>
-    artFitsPortrait ? (serverAssets[key] ?? null) : null;
+  // One painted scene per login step; the portrait scenes use the looser gate.
+  const SCENE_ART: Record<string, { key: string; portrait?: boolean }> = {
+    name: { key: "login_bg" },
+    password: { key: "login_password_bg" },
+    newPassword: { key: "login_set_password_bg" },
+    confirmCreate: { key: "login_confirm_bg" },
+    raceSelection: { key: "login_race_bg", portrait: true },
+    classSelection: { key: "login_class_bg", portrait: true },
+  };
+  const scene = SCENE_ART[loginPrompt.state];
+  const sceneFits = scene?.portrait ? artFitsPortrait : artFitsLandscape;
+  // Gated on the image actually loading: a URL that 404s or is blocked
+  // client-side must fall back to the CSS UI, not render a black scene.
+  const sceneArt = useArtImage(scene && sceneFits ? serverAssets[scene.key] ?? null : null);
 
-  const backgroundImage = serverAssets["login_bg"] ?? null;
-  const artVars = backgroundImage
-    ? ({ "--login-art": `url("${backgroundImage}")` } as CSSProperties)
+  // Decorative blurred backdrop behind the fallback modal steps.
+  const backdropArt = useArtImage(serverAssets["login_bg"] ?? null);
+  const artVars = backdropArt
+    ? ({ "--login-art": `url("${backdropArt}")` } as CSSProperties)
     : undefined;
 
   const stepDialogLabel: Record<string, string> = {
@@ -67,7 +78,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
   };
 
   if (loginPrompt.state === "name") {
-    const art = landscapeArt("login_bg");
+    const art = sceneArt;
     if (art) {
       return (
         <ArtScene url={art} stageClass="login-art-stage--wide" label="Welcome to AmbonMUD">
@@ -178,7 +189,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
   }
 
   if (loginPrompt.state === "password") {
-    const art = landscapeArt("login_password_bg");
+    const art = sceneArt;
     if (art) {
       return (
         <ArtScene url={art} stageClass="login-art-stage--book login-art-stage--password" label="Welcome back — enter your password">
@@ -214,7 +225,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
   }
 
   if (loginPrompt.state === "newPassword") {
-    const art = landscapeArt("login_set_password_bg");
+    const art = sceneArt;
     if (art) {
       return (
         <ArtScene url={art} stageClass="login-art-stage--wide login-art-stage--setpw" label="Choose a password">
@@ -250,7 +261,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
   }
 
   if (loginPrompt.state === "confirmCreate") {
-    const art = landscapeArt("login_confirm_bg");
+    const art = sceneArt;
     if (art) {
       return (
         <ArtScene url={art} stageClass="login-art-stage--book login-art-stage--confirm" label="Create a new character?">
@@ -277,7 +288,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
   }
 
   if (loginPrompt.state === "raceSelection") {
-    const art = portraitArt("login_race_bg");
+    const art = sceneArt;
     if (art) {
       return (
         <SlotArtScene
@@ -297,7 +308,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
   }
 
   if (loginPrompt.state === "classSelection") {
-    const art = portraitArt("login_class_bg");
+    const art = sceneArt;
     if (art) {
       return (
         <SlotArtScene
@@ -318,7 +329,7 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
 
   return (
     <div
-      className={`login-modal-backdrop${backgroundImage ? " login-modal-backdrop--art" : ""}`}
+      className={`login-modal-backdrop${backdropArt ? " login-modal-backdrop--art" : ""}`}
       style={artVars}
     >
       <div
