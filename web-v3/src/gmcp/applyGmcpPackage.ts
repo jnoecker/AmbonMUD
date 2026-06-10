@@ -380,6 +380,7 @@ export function applyGmcpPackage(
         title: typeof packet.title === "string" ? packet.title : null,
         autolootEnabled: packet.autolootEnabled === true,
         autopeekEnabled: packet.autopeekEnabled === true,
+        screenReaderEnabled: packet.screenReaderEnabled === true,
         wimpyThresholdPct: typeof packet.wimpyThresholdPct === "number" ? packet.wimpyThresholdPct : 10,
         isDemo: packet.isDemo === true,
       });

@@ -16,13 +16,13 @@ class ScreenReaderCommandParserTest {
 
     @Test
     fun `parses bare screenreader as toggle`() {
-        assertEquals(Command.ScreenReaderOn, CommandParser.parse("screenreader"))
+        assertEquals(Command.ScreenReaderToggle, CommandParser.parse("screenreader"))
     }
 
     @Test
     fun `screenreader is case insensitive`() {
         assertEquals(Command.ScreenReaderOn, CommandParser.parse("SCREENREADER ON"))
         assertEquals(Command.ScreenReaderOff, CommandParser.parse("SCREENREADER OFF"))
-        assertEquals(Command.ScreenReaderOn, CommandParser.parse("Screenreader"))
+        assertEquals(Command.ScreenReaderToggle, CommandParser.parse("Screenreader"))
     }
 }

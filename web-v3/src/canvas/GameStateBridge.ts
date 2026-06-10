@@ -159,7 +159,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     combatTarget: null,
     inCombat: false,
     effects: [],
-    character: { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false, title: null, autolootEnabled: false, autopeekEnabled: false, wimpyThresholdPct: 10, isDemo: false },
+    character: { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false, title: null, autolootEnabled: false, autopeekEnabled: false, screenReaderEnabled: false, wimpyThresholdPct: 10, isDemo: false },
     mobInfo: [],
     groupInfo: { leader: null, members: [] },
     dialogue: null,
