@@ -56,9 +56,6 @@ internal class ConditionalSpawnHandler(
     private var conditionalSpawns: List<MobSpawn> = computeConditionalSpawns()
     private var nextCheckMs: Long = clock.millis()
 
-    /** The spawn ids this handler owns — used to filter them out of the unconditional spawn paths. */
-    fun ownedSpawnIds(): Set<MobId> = conditionalSpawns.mapTo(hashSetOf()) { it.id }
-
     /** Re-scans the world for conditional spawns. Call after a hot reload. */
     fun refresh() {
         conditionalSpawns = computeConditionalSpawns()

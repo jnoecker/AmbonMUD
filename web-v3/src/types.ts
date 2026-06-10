@@ -9,6 +9,10 @@ export interface WorldTime {
   period: string;
   hour: number;
   minute: number;
+  /** Current season (SPRING|SUMMER|AUTUMN|WINTER), or "" if the server didn't send one. */
+  season?: string;
+  /** Flavor description of the season, shown as a tooltip. */
+  seasonDescription?: string;
 }
 
 export interface WorldWeather {

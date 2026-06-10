@@ -2014,6 +2014,8 @@ export function applyGmcpPackage(
         period: typeof packet.period === "string" ? packet.period : "DAY",
         hour: safeNumber(packet.hour),
         minute: safeNumber(packet.minute),
+        season: typeof packet.season === "string" ? packet.season : "",
+        seasonDescription: typeof packet.seasonDescription === "string" ? packet.seasonDescription : "",
       });
       break;
     }

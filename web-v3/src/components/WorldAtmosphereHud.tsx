@@ -26,6 +26,26 @@ function periodLabel(period: string): string {
   }
 }
 
+function seasonIcon(season: string): string {
+  switch (season) {
+    case "SPRING": return "\u{1F338}";
+    case "SUMMER": return "\u{1F31E}";
+    case "AUTUMN": return "\u{1F342}";
+    case "WINTER": return "⛄";
+    default: return "";
+  }
+}
+
+function seasonLabel(season: string): string {
+  switch (season) {
+    case "SPRING": return "Spring";
+    case "SUMMER": return "Summer";
+    case "AUTUMN": return "Autumn";
+    case "WINTER": return "Winter";
+    default: return season;
+  }
+}
+
 function weatherIcon(weather: string): string {
   switch (weather) {
     case "RAIN": return "\u2602";
@@ -51,6 +71,7 @@ function weatherLabel(weather: string): string {
 
 export function WorldAtmosphereHud({ worldTime, worldWeather, worldEvents }: Props) {
   const hasTime = worldTime !== null;
+  const hasSeason = worldTime !== null && !!worldTime.season && seasonIcon(worldTime.season) !== "";
   const hasWeather = worldWeather !== null && worldWeather.weather !== "CLEAR";
   const hasEvents = worldEvents.length > 0;
 
@@ -62,6 +83,12 @@ export function WorldAtmosphereHud({ worldTime, worldWeather, worldEvents }: Pro
         <span className="atmosphere-hud-chip" title={`${periodLabel(worldTime.period)} — ${String(worldTime.hour).padStart(2, "0")}:${String(worldTime.minute).padStart(2, "0")}`}>
           <span className="atmosphere-hud-icon" aria-hidden="true">{periodIcon(worldTime.period)}</span>
           <span className="atmosphere-hud-label">{String(worldTime.hour).padStart(2, "0")}:{String(worldTime.minute).padStart(2, "0")}</span>
+        </span>
+      )}
+      {hasSeason && worldTime && (
+        <span className="atmosphere-hud-chip" title={worldTime.seasonDescription || seasonLabel(worldTime.season ?? "")}>
+          <span className="atmosphere-hud-icon" aria-hidden="true">{seasonIcon(worldTime.season ?? "")}</span>
+          <span className="atmosphere-hud-label">{seasonLabel(worldTime.season ?? "")}</span>
         </span>
       )}
       {hasWeather && (
