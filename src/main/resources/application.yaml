@@ -2608,6 +2608,9 @@ ambonmud:
       login_confirm_bg_portrait: global_assets/login_confirm_bg_portrait.png
       login_picker_bg_portrait: global_assets/login_picker_bg_portrait.png
       login_claim_bg_portrait: global_assets/login_claim_bg_portrait.png
+      # Painted parchment scroll that skins the whole world-map/atlas drawer
+      # (and is the surface the map ink draws onto).
+      map_background: global_assets/map_background.png
     defaultAssets: {}
   videos:
     baseUrl: /videos/

@@ -1080,6 +1080,8 @@ function App() {
             ? "estate"
             : drawerPanel === "lottery"
             ? "fortune"
+            : drawerPanel === "map"
+            ? "chart"
             : drawerPanel === "dice"
             ? "dicetable"
             : drawerPanel === "auction"
@@ -1132,6 +1134,8 @@ function App() {
             ? state.serverAssets["housing_bg"]
             : drawerPanel === "lottery"
             ? state.serverAssets["lottery_bg"]
+            : drawerPanel === "map"
+            ? state.serverAssets["map_background"]
             : drawerPanel === "dice"
             ? state.serverAssets["dice_bg"]
             : drawerPanel === "auction"
