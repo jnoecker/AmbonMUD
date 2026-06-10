@@ -21149,6 +21149,23 @@ html:has(.game-shell),
   min-height: 220px;
 }
 
+/* Rare-variant colorize for the portrait. Desaturating the art and multiplying
+   a colored wash over it reproduces the canvas luminance-colorize: a pale tint
+   (albino) leaves the creature pale, a saturated tint (verdant) recolors it.
+   A plain multiply over full-colour art would only darken and lose albino. */
+.mm-figure-variant .mm-image {
+  filter: grayscale(0.9) brightness(1.08);
+}
+
+.mm-variant-wash {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: var(--mm-variant-tint, transparent);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
 .mm-zoom {
   position: absolute;
   right: 8px;
@@ -21200,6 +21217,19 @@ html:has(.game-shell),
   font-weight: 700;
   line-height: 1.1;
   color: #2e2212;
+}
+
+/* Rare-variant label beside the creature name (e.g. "✦ Albino"). Colored to the
+   variant's tint via inline style, with a shadow so pale tints stay legible. */
+.mm-variant-name {
+  display: inline-block;
+  margin-left: 8px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 55%);
 }
 
 .mm-meta {

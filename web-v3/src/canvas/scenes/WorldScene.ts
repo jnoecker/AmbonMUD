@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
+import { Container, Graphics, Sprite, Text, Texture, Assets, ColorMatrixFilter } from "pixi.js";
 import { gameStateRef, canvasCallbacks, pendingCastRef } from "../GameStateBridge";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { Minimap } from "../systems/Minimap";
@@ -8,6 +8,7 @@ import { SkyRenderer } from "../systems/SkyRenderer";
 import { WeatherParticles } from "../systems/WeatherParticles";
 import type { MobInfo } from "../../types";
 import { ROOM_SURFACE_WIDGETS } from "../../featureMetadata";
+import { loadTexture } from "../textureLoader";
 
 /** Resolves a global asset key to its server-provided URL, with a hardcoded fallback. */
 function assetUrl(key: string, fallbackFilename: string): string {
@@ -88,6 +89,38 @@ function parseHexTint(tint: string | null | undefined): number | null {
   return parseInt(hex, 16);
 }
 
+/**
+ * Builds a luminance-colorize ColorMatrixFilter for a rare-variant tint.
+ *
+ * PixiJS's `sprite.tint` is a *multiply*, which can only darken toward the tint
+ * — so a pale tint like albino's `#f5f0ff` leaves the sprite essentially
+ * unchanged. Colorizing instead (desaturate to luminance, then scale by the
+ * tint) makes a near-white tint read as a pale/ghostly creature and a saturated
+ * tint as a richly recolored one. A small gain/lift keeps pale variants from
+ * coming out muddy, and `alpha` leaves a touch of the original texture so the
+ * creature still reads through the wash.
+ */
+function makeVariantColorize(tint: number): ColorMatrixFilter {
+  const tr = ((tint >> 16) & 0xff) / 255;
+  const tg = ((tint >> 8) & 0xff) / 255;
+  const tb = (tint & 0xff) / 255;
+  // Rec. 601 luma weights.
+  const lr = 0.299;
+  const lg = 0.587;
+  const lb = 0.114;
+  const gain = 1.15;
+  const lift = 0.1;
+  const filter = new ColorMatrixFilter();
+  filter.matrix = [
+    lr * tr * gain, lg * tr * gain, lb * tr * gain, 0, tr * lift,
+    lr * tg * gain, lg * tg * gain, lb * tg * gain, 0, tg * lift,
+    lr * tb * gain, lg * tb * gain, lb * tb * gain, 0, tb * lift,
+    0, 0, 0, 1, 0,
+  ];
+  filter.alpha = 0.92;
+  return filter;
+}
+
 function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo, spriteSize: number) {
   const icons: number[] = [];
   // quest indicators are handled by sprites now
@@ -143,7 +176,7 @@ export class WorldScene {
   // Representative mob data (rep id → fields needed to open the field manual),
   // so a click on a floating dialogue/quest indicator can build the same panel
   // entry as a click on the mob sprite. Rebuilt alongside the mob sprites.
-  private mobDataById = new Map<string, { id: string; name: string; description?: string; image?: string | null; video?: string | null }>();
+  private mobDataById = new Map<string, { id: string; name: string; description?: string; image?: string | null; video?: string | null; variantName?: string | null; tint?: string | null }>();
 
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
@@ -1890,7 +1923,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildMobs(mobs: Array<{ id: string; templateKey: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null; category?: string; variant?: string | null; tint?: string | null; overlay?: string | null }>) {
+  private rebuildMobs(mobs: Array<{ id: string; templateKey: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null; category?: string; variant?: string | null; variantName?: string | null; tint?: string | null; overlay?: string | null }>) {
     for (const { sprite, label, labelBg, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(labelBg);
@@ -1946,14 +1979,23 @@ export class WorldScene {
       sprite.width = BASE_SPRITE_SIZE;
       sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
-      // Rare variants carry a cosmetic tint the server multiplies onto the
-      // sprite; ordinary mobs keep the default placeholder gold.
+      // Rare variants carry a cosmetic tint. A multiply `sprite.tint` can't
+      // express pale variants (it only darkens), so we colorize via a filter
+      // instead and leave the sprite tint white. Ordinary mobs keep the default
+      // placeholder gold until their texture loads. The filter also colorizes
+      // the white placeholder, so a variant reads correctly even before (or if)
+      // its art loads.
       const variantTint = parseHexTint(mob.tint);
-      sprite.tint = variantTint ?? 0xf0c674;
+      if (variantTint != null) {
+        sprite.filters = [makeVariantColorize(variantTint)];
+        sprite.tint = 0xffffff;
+      } else {
+        sprite.tint = 0xf0c674;
+      }
 
       const mobImage = mob.image ?? gameStateRef.current.serverAssets[`default_mob_${mob.category ?? "humanoid"}`] ?? null;
       if (mobImage) {
-        this.loadSpriteTexture(sprite, mobImage, variantTint ?? 0xffffff);
+        this.loadSpriteTexture(sprite, mobImage);
       }
 
       const label = new Text({
@@ -2245,7 +2287,7 @@ export class WorldScene {
     if (!imagePath) return;
 
     try {
-      const texture = await Assets.load(imagePath);
+      const texture = await loadTexture(imagePath);
       if (token !== this.bgLoadToken) return;
       const sprite = new Sprite(texture);
       sprite.width = this.width;
@@ -2323,7 +2365,7 @@ export class WorldScene {
     }
 
     try {
-      const texture = await Assets.load(resolvedPath);
+      const texture = await loadTexture(resolvedPath);
       const sprite = new Sprite(texture);
       sprite.width = BASE_SPRITE_SIZE;
       sprite.height = BASE_SPRITE_SIZE;
@@ -2345,7 +2387,10 @@ export class WorldScene {
 
   private async loadSpriteTexture(sprite: Sprite, imagePath: string, tintOnLoad = 0xffffff) {
     try {
-      const texture = await Assets.load(imagePath);
+      const texture = await loadTexture(imagePath);
+      // A rebuild (room change, mob list update) can destroy this sprite while
+      // the texture is still decoding; don't write to a freed object.
+      if (sprite.destroyed) return;
       sprite.texture = texture;
       sprite.tint = tintOnLoad;
     } catch {
@@ -2764,6 +2809,8 @@ export class WorldScene {
       isStaff,
       canAttack,
       intent,
+      variantName: mob.variantName ?? null,
+      tint: mob.tint ?? null,
     });
     // Auto-fetch the threat assessment so the manual fills in its stats.
     if (canAttack) canvasCallbacks.sendCommand?.(`consider ${mob.name}`);

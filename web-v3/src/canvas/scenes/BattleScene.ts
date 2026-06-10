@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
+import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { gameStateRef, canvasCallbacks } from "../GameStateBridge";
 import { canvasEvents } from "../CanvasEventBus";
 import { AbilityVisualSystem } from "../systems/AbilityVisualSystem";
@@ -6,6 +6,7 @@ import { CombatAnimator } from "../systems/CombatAnimator";
 import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { SpellProjectileSystem } from "../systems/SpellProjectile";
+import { loadTexture } from "../textureLoader";
 
 const BASE_SPRITE_SIZE = 248;
 const MIN_SPRITE_SIZE = 184;
@@ -704,7 +705,7 @@ export class BattleScene {
 
       const petImage = pet.image ?? gameStateRef.current.serverAssets[`default_mob_${pet.category ?? "humanoid"}`] ?? null;
       if (petImage) {
-        Assets.load(petImage).then((tex: unknown) => {
+        loadTexture(petImage).then((tex: unknown) => {
           if (tex && typeof tex === "object" && "baseTexture" in (tex as Record<string, unknown>)) {
             sprite.texture = tex as Texture;
           } else if (tex instanceof Texture) {
@@ -739,7 +740,7 @@ export class BattleScene {
     }
     if (!imagePath) return;
     try {
-      const texture = await Assets.load(imagePath);
+      const texture = await loadTexture(imagePath);
       if (token !== this.bgLoadToken) return;
       const sprite = new Sprite(texture);
       sprite.width = this.width;
@@ -769,7 +770,7 @@ export class BattleScene {
 
     if (spritePath) {
       try {
-        const texture = await Assets.load(spritePath);
+        const texture = await loadTexture(spritePath);
         sprite.texture = texture;
         sprite.width = BASE_SPRITE_SIZE;
         sprite.height = BASE_SPRITE_SIZE;
@@ -797,7 +798,7 @@ export class BattleScene {
 
     if (imagePath) {
       try {
-        const texture = await Assets.load(imagePath);
+        const texture = await loadTexture(imagePath);
         sprite.texture = texture;
         sprite.width = BASE_SPRITE_SIZE;
         sprite.height = BASE_SPRITE_SIZE;
