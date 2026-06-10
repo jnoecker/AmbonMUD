@@ -107,6 +107,7 @@ class ZoneResetCombatExemptionTest {
             behaviorTreeSystem = behaviorTreeSystem,
             gmcpEmitter = gmcpEmitter,
             clock = clock,
+            variantRoller = MobVariantRoller(dev.ambon.config.MobVariantsConfig(enabled = false)),
             isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
         )
         // Populate the world's initial mob spawns (GameEngine does this at boot).

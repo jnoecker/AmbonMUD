@@ -702,6 +702,10 @@ export function applyGmcpPackage(
             category: typeof entry.category === "string" ? entry.category : "humanoid",
             effects: parseMobEffects(entry.effects),
             ownerName: typeof entry.ownerName === "string" ? entry.ownerName : null,
+            variant: typeof entry.variant === "string" ? entry.variant : null,
+            variantName: typeof entry.variantName === "string" ? entry.variantName : null,
+            tint: typeof entry.tint === "string" ? entry.tint : null,
+            overlay: typeof entry.overlay === "string" ? entry.overlay : null,
           })),
       );
       break;
@@ -725,6 +729,10 @@ export function applyGmcpPackage(
           category: typeof packet.category === "string" ? packet.category : "humanoid",
           effects: parseMobEffects(packet.effects),
           ownerName: typeof packet.ownerName === "string" ? packet.ownerName : null,
+          variant: typeof packet.variant === "string" ? packet.variant : null,
+          variantName: typeof packet.variantName === "string" ? packet.variantName : null,
+          tint: typeof packet.tint === "string" ? packet.tint : null,
+          overlay: typeof packet.overlay === "string" ? packet.overlay : null,
         },
       ]);
       break;
@@ -2006,6 +2014,8 @@ export function applyGmcpPackage(
         period: typeof packet.period === "string" ? packet.period : "DAY",
         hour: safeNumber(packet.hour),
         minute: safeNumber(packet.minute),
+        season: typeof packet.season === "string" ? packet.season : "",
+        seasonDescription: typeof packet.seasonDescription === "string" ? packet.seasonDescription : "",
       });
       break;
     }

@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.MobVariantDefinition
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.idZone
@@ -51,6 +52,7 @@ internal fun spawnToMobState(
     spawn: MobSpawn,
     world: World,
     referencePlayerLevel: Int? = null,
+    variant: RolledMobVariant? = null,
 ): MobState {
     val template = world.mobTemplate(spawn.templateId)
         ?: error("No template '${spawn.templateId.value}' for spawn '${spawn.id.value}'")
@@ -67,16 +69,31 @@ internal fun spawnToMobState(
             null
         }
 
-    val maxHp = resolved?.hp ?: template.maxHp
+    val baseHp = resolved?.hp ?: template.maxHp
     val damage = resolved?.damage ?: template.damage
     val armor = resolved?.armor ?: template.armor
-    val xpReward = resolved?.xpReward ?: template.xpReward
-    val goldMin = resolved?.goldMin ?: template.goldMin
-    val goldMax = resolved?.goldMax ?: template.goldMax
+    val baseXp = resolved?.xpReward ?: template.xpReward
+    val baseGoldMin = resolved?.goldMin ?: template.goldMin
+    val baseGoldMax = resolved?.goldMax ?: template.goldMax
+
+    // Apply the rare-variant overlay: a name prefix, cosmetic tint/overlay, and
+    // a modest HP/XP/loot bump. Ordinary mobs (variant == null) are unchanged.
+    val def = variant?.def
+    val name = (def?.namePrefix ?: "") + template.name
+    val maxHp = scaleStat(baseHp, def?.hpMultiplier)
+    val xpReward = scaleStat(baseXp, def?.xpMultiplier)
+    val goldMin = scaleStat(baseGoldMin, def?.lootMultiplier)
+    val goldMax = scaleStat(baseGoldMax, def?.lootMultiplier)
+    val drops =
+        if (def == null || def.lootMultiplier == 1.0) {
+            template.drops
+        } else {
+            template.drops.map { it.copy(chance = (it.chance * def.lootMultiplier).coerceAtMost(1.0)) }
+        }
 
     return MobState(
         id = spawn.id,
-        name = template.name,
+        name = name,
         description = template.description,
         roomId = spawn.roomId,
         hp = maxHp,
@@ -84,7 +101,7 @@ internal fun spawnToMobState(
         damage = damage,
         armor = armor,
         xpReward = xpReward,
-        drops = template.drops,
+        drops = drops,
         goldMin = goldMin,
         goldMax = goldMax,
         dialogue = template.dialogue,
@@ -101,7 +118,44 @@ internal fun spawnToMobState(
         defaultAttack = template.defaultAttack,
         level = effectiveLevel,
         role = template.role,
+        variantId = variant?.id,
+        variantName = def?.displayName?.takeIf { it.isNotEmpty() },
+        tint = def?.tint?.takeIf { it.isNotEmpty() },
+        overlay = def?.overlay?.takeIf { it.isNotEmpty() },
     )
+}
+
+private fun scaleStat(base: Int, multiplier: Double?): Int =
+    if (multiplier == null || multiplier == 1.0) base else Math.round(base * multiplier).toInt()
+
+private fun scaleStat(base: Long, multiplier: Double?): Long =
+    if (multiplier == null || multiplier == 1.0) base else Math.round(base * multiplier)
+
+/**
+ * Broadcasts the arrival of a rare variant [mob], with reach scaled by the
+ * variant's configured [MobVariantDefinition.announce] loudness (ROOM/ZONE/SERVER).
+ */
+internal suspend fun announceMobVariant(
+    outbound: OutboundBus,
+    players: PlayerRegistry,
+    mob: MobState,
+    def: MobVariantDefinition,
+) {
+    val zone = mob.roomId.zone
+    when (def.announce) {
+        "SERVER" -> {
+            val msg = "[Legendary] A ${mob.name} has appeared somewhere in $zone — a sighting for the ages!"
+            for (p in players.allPlayers()) outbound.send(OutboundEvent.SendInfo(p.sessionId, msg))
+        }
+        "ZONE" -> {
+            val msg = "A rare creature stirs nearby — ${mob.name} has appeared!"
+            for (p in players.playersInZone(zone)) outbound.send(OutboundEvent.SendInfo(p.sessionId, msg))
+        }
+        else -> {
+            val msg = "${mob.name} shimmers into view, unmistakably rare."
+            for (p in players.playersInRoom(mob.roomId)) outbound.send(OutboundEvent.SendInfo(p.sessionId, msg))
+        }
+    }
 }
 
 /**
@@ -130,6 +184,7 @@ internal class ZoneResetHandler(
     private val behaviorTreeSystem: BehaviorTreeSystem,
     private val gmcpEmitter: GmcpEmitter,
     private val clock: Clock,
+    private val variantRoller: MobVariantRoller,
     /**
      * Whether a mob is currently fighting a player. Mobs in combat survive
      * zone resets (#1222); wired to [CombatSystem.isMobInCombat] by GameEngine.
@@ -211,14 +266,22 @@ internal class ZoneResetHandler(
             world.rooms.keys
                 .filterTo(linkedSetOf()) { roomId -> roomId.zone == zone }
 
+        // Conditional spawns are owned by ConditionalSpawnHandler; the reset
+        // neither removes nor repopulates their slots (only their gates do).
         val zoneMobSpawns =
             world.mobSpawns
-                .filter { spawn -> idZone(spawn.id.value) == zone }
+                .filter { spawn -> idZone(spawn.id.value) == zone && !spawn.isConditional(world) }
+        // Ids of conditional spawns in this zone — excluded from removal so a live
+        // night/storm/season mob survives the reset and stays handler-owned.
+        val conditionalIds =
+            world.mobSpawns
+                .filter { spawn -> idZone(spawn.id.value) == zone && spawn.isConditional(world) }
+                .mapTo(hashSetOf()) { spawn -> spawn.id }
         val activeZoneMobIds =
             mobs
                 .all()
                 .map { mob -> mob.id }
-                .filter { mobId -> idZone(mobId.value) == zone }
+                .filter { mobId -> idZone(mobId.value) == zone && mobId !in conditionalIds }
 
         val zoneMobIds =
             (zoneMobSpawns.map { spawn -> spawn.id } + activeZoneMobIds)
@@ -236,11 +299,16 @@ internal class ZoneResetHandler(
         }
 
         val referenceLevel = highestPlayerLevelInZone(players, zone)
+        val freshVariants = mutableListOf<Pair<MobState, MobVariantDefinition>>()
         for (spawn in zoneMobSpawns) {
             if (spawn.id in survivingMobIds) continue
-            mobs.upsert(spawnToMobState(spawn, world, referenceLevel))
+            val template = world.mobTemplate(spawn.templateId)
+            val variant = template?.let { variantRoller.roll(it) }
+            val mob = spawnToMobState(spawn, world, referenceLevel, variant)
+            mobs.upsert(mob)
             mobSystem.onMobSpawned(spawn.id)
             behaviorTreeSystem.onMobSpawned(spawn.id)
+            if (variant != null) freshVariants.add(mob to variant.def)
         }
 
         val zoneItemSpawns =
@@ -269,6 +337,11 @@ internal class ZoneResetHandler(
         for (player in playersInZone) {
             gmcpEmitter.sendRoomMobs(player.sessionId, mobs.mobsInRoom(player.roomId))
             gmcpEmitter.sendRoomItems(player.sessionId, items.itemsInRoom(player.roomId))
+        }
+
+        // Announce any rare variants the reset rolled into existence.
+        for ((mob, def) in freshVariants) {
+            announceMobVariant(outbound, players, mob, def)
         }
     }
 }

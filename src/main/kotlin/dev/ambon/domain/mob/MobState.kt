@@ -41,6 +41,17 @@ data class MobState(
     val threatMultiplier: Double = 0.0,
     override val level: Int = 1,
     override val role: MobRole = MobRole.COMBAT,
+    /** Server-generated rare variant id (e.g. "shadow"), or null for an ordinary mob. */
+    val variantId: String? = null,
+    /** Variant display label (e.g. "Shadow-touched") for UI; null when not a variant. */
+    val variantName: String? = null,
+    /** CSS hex tint the client multiplies onto the sprite; null/empty = none. */
+    val tint: String? = null,
+    /** Client particle/overlay hint: swirl|embers|sparkle|frost|mist; null/empty = none. */
+    val overlay: String? = null,
 ) : MobTemplate {
     val isPet: Boolean get() = ownerSessionId != null
+
+    /** True when this mob is a server-generated rare variant. */
+    val isVariant: Boolean get() = variantId != null
 }

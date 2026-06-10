@@ -257,6 +257,9 @@ class GameEngine(
                 // until the first relog. See issue #1045.
                 emitDungeonCatalog(sid)
                 players.get(sid)?.let { p -> emitLotteryInfo(sid, p.name) }
+                // Seed the client's time-of-day + season immediately; otherwise it
+                // wouldn't learn the season until the next quarter-year rollover.
+                gmcpEmitter.sendWorldTime(sid, worldTimePayload())
                 // Push daily/weekly/global quest state so the client doesn't
                 // need a manual refresh button. See issue #1091.
                 dailyQuestSystem?.let { dqs ->
@@ -496,6 +499,8 @@ class GameEngine(
         )
     }
 
+    private val mobVariantRoller = MobVariantRoller(config = engineConfig.mobVariants)
+
     private val zoneResetHandler by lazy {
         ZoneResetHandler(
             world = world,
@@ -509,7 +514,28 @@ class GameEngine(
             behaviorTreeSystem = behaviorTreeSystem,
             gmcpEmitter = gmcpEmitter,
             clock = clock,
+            variantRoller = mobVariantRoller,
             isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
+        )
+    }
+
+    private val conditionalSpawnHandler by lazy {
+        ConditionalSpawnHandler(
+            world = world,
+            mobs = mobs,
+            players = players,
+            outbound = outbound,
+            gmcpEmitter = gmcpEmitter,
+            mobSystem = mobSystem,
+            behaviorTreeSystem = behaviorTreeSystem,
+            mobRemovalCoordinator = mobRemovalCoordinator,
+            variantRoller = mobVariantRoller,
+            period = { worldTimeSystem.period() },
+            season = { seasonSystem.season() },
+            weatherForZone = { zone -> weatherSystem.weatherForZone(zone) },
+            activeEventFlags = { worldEventSystem.activeFlags() },
+            isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
+            clock = clock,
         )
     }
 
@@ -792,6 +818,11 @@ class GameEngine(
         clock = clock,
     )
 
+    private val seasonSystem = SeasonSystem(
+        config = engineConfig.season,
+        clock = clock,
+    )
+
     private val weatherSystem = WeatherSystem(
         config = engineConfig.weather,
         clock = clock,
@@ -829,6 +860,7 @@ class GameEngine(
         }
 
     private var lastTimePeriod: TimePeriod = worldTimeSystem.period()
+    private var lastSeason: Season = seasonSystem.season()
 
     private val abilitySystem: AbilitySystem =
         AbilitySystem(
@@ -1190,6 +1222,7 @@ class GameEngine(
                 onZoneScheduleRefresh = {
                     zoneResetHandler.refreshSchedule()
                     timedRespawnHandler.refresh()
+                    conditionalSpawnHandler.refresh()
                 },
             )
         } else {
@@ -1576,8 +1609,15 @@ class GameEngine(
     private lateinit var engineScope: CoroutineScope
 
     init {
-        world.mobSpawns.forEach { spawn ->
-            mobs.upsert(spawnToMobState(spawn, world))
+        // Condition-gated spawns (night-only, storm-only, …) are owned entirely
+        // by ConditionalSpawnHandler; they are not present at cold start.
+        //
+        // Ordinary spawns roll for a rare variant here too, so the freshly-booted
+        // world is already seeded with a few sightings to discover — no fanfare,
+        // since nobody is connected yet; explorers simply stumble onto them.
+        world.mobSpawns.filterNot { it.isConditional(world) }.forEach { spawn ->
+            val variant = world.mobTemplate(spawn.templateId)?.let { mobVariantRoller.roll(it) }
+            mobs.upsert(spawnToMobState(spawn, world, variant = variant))
         }
         items.loadSpawns(world.itemSpawns)
         shopRegistry.register(world.shopDefinitions)
@@ -1753,18 +1793,18 @@ class GameEngine(
                         )
                     }
 
-                    // Tick world time — broadcast on period change
+                    // Tick world time + season — broadcast on either change
                     val newPeriod = worldTimeSystem.tick(lastTimePeriod)
-                    if (newPeriod != null) {
-                        lastTimePeriod = newPeriod
-                        gmcpEmitter.broadcastWorldTime(
-                            GmcpEmitter.WorldTimePayload(
-                                period = newPeriod.name,
-                                hour = worldTimeSystem.gameHour(),
-                                minute = worldTimeSystem.gameMinute(),
-                            ),
-                            players,
-                        )
+                    val newSeason = seasonSystem.tick(lastSeason)
+                    if (newPeriod != null) lastTimePeriod = newPeriod
+                    if (newSeason != null) {
+                        lastSeason = newSeason
+                        for (p in players.allPlayers()) {
+                            outbound.send(OutboundEvent.SendInfo(p.sessionId, "[Season] ${newSeason.description}"))
+                        }
+                    }
+                    if (newPeriod != null || newSeason != null) {
+                        gmcpEmitter.broadcastWorldTime(worldTimePayload(), players)
                     }
 
                     // Snapshot all players once for the remainder of this tick to avoid
@@ -1905,6 +1945,9 @@ class GameEngine(
 
                     // Reset zones when their lifespan elapses.
                     zoneResetHandler.tick()
+
+                    // Spawn/fade condition-gated mobs (night/storm/season/random).
+                    conditionalSpawnHandler.tick()
 
                     // Restore item spawns / features that declare their own respawnSeconds.
                     timedRespawnHandler.tick()
@@ -2084,6 +2127,18 @@ class GameEngine(
 
         // Issue a new resume token for the next potential disconnect
         issueResumeToken(newSessionId)
+    }
+
+    /** Builds the current `World.Time` payload, including the active season. */
+    private fun worldTimePayload(): GmcpEmitter.WorldTimePayload {
+        val season = seasonSystem.season()
+        return GmcpEmitter.WorldTimePayload(
+            period = worldTimeSystem.period().name,
+            hour = worldTimeSystem.gameHour(),
+            minute = worldTimeSystem.gameMinute(),
+            season = season.name,
+            seasonDescription = season.description,
+        )
     }
 
     /** Issue a resume token to the client after successful login/resume. */
@@ -2396,12 +2451,16 @@ class GameEngine(
         val spawn = world.mobSpawns.find { it.id == mobId }
         val template = spawn?.let { world.mobTemplate(it.templateId) }
         val respawnMs = template?.respawnSeconds?.let { it * 1_000L }
+        // Conditional mobs respawn through ConditionalSpawnHandler when their
+        // gates next hold, not via the unconditional post-death timer.
+        if (spawn != null && spawn.isConditional(world)) return
         if (spawn != null && template != null && respawnMs != null) {
             scheduler.scheduleIn(respawnMs) {
                 if (mobs.get(spawn.id) != null) return@scheduleIn
                 if (world.rooms[spawn.roomId] == null) return@scheduleIn
                 val referenceLevel = highestPlayerLevelInZone(players, spawn.roomId.zone)
-                val respawned = spawnToMobState(spawn, world, referenceLevel)
+                val variant = world.mobTemplate(spawn.templateId)?.let { mobVariantRoller.roll(it) }
+                val respawned = spawnToMobState(spawn, world, referenceLevel, variant)
                 mobs.upsert(respawned)
                 mobSystem.onMobSpawned(spawn.id)
                 behaviorTreeSystem.onMobSpawned(spawn.id)
@@ -2409,6 +2468,7 @@ class GameEngine(
                     outbound.send(OutboundEvent.SendText(p.sessionId, "${respawned.name} appears."))
                     gmcpEmitter.sendRoomAddMob(p.sessionId, respawned)
                 }
+                if (variant != null) announceMobVariant(outbound, players, respawned, variant.def)
             }
         }
     }

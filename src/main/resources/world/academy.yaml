@@ -997,6 +997,26 @@ mobs:
       - itemId: elixir_of_clarity
         chance: 0.8
     image: d52cfe6cecc852edbd03d7b0862021db49872a7fb953f1d034bbe205fcd33769.png
+  midnight_moth:
+    name: a luminous midnight moth
+    spawns:
+      - room: proving_grounds
+    tier: weak
+    level: 2
+    category: elemental
+    # A fleeting nocturnal sighting: only ever appears at night, and even then
+    # only some of the time. When dawn breaks it fades from view. Showcases the
+    # conditional spawn system (see docs/WORLD_YAML_SPEC.md).
+    condition:
+      time: [NIGHT, DUSK]
+      chance: 0.5
+    behavior:
+      template: wander
+    drops:
+      - itemId: arcane_fragment
+        chance: 0.6
+      - itemId: spider_silk
+        chance: 0.4
 items:
   leather_hood:
     displayName: a leather hood

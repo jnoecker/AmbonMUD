@@ -80,6 +80,14 @@ function statusIconSize(mobSize: number): number {
   return clamp(mobSize * STATUS_ICON_RATIO, STATUS_ICON_MIN, STATUS_ICON_MAX);
 }
 
+/** Parses a server "#rrggbb" tint into a PixiJS numeric color, or null if absent/invalid. */
+function parseHexTint(tint: string | null | undefined): number | null {
+  if (!tint) return null;
+  const hex = tint.replace("#", "").trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return null;
+  return parseInt(hex, 16);
+}
+
 function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo, spriteSize: number) {
   const icons: number[] = [];
   // quest indicators are handled by sprites now
@@ -1882,7 +1890,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildMobs(mobs: Array<{ id: string; templateKey: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null; category?: string }>) {
+  private rebuildMobs(mobs: Array<{ id: string; templateKey: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null; category?: string; variant?: string | null; tint?: string | null; overlay?: string | null }>) {
     for (const { sprite, label, labelBg, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(labelBg);
@@ -1938,16 +1946,19 @@ export class WorldScene {
       sprite.width = BASE_SPRITE_SIZE;
       sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
-      sprite.tint = 0xf0c674;
+      // Rare variants carry a cosmetic tint the server multiplies onto the
+      // sprite; ordinary mobs keep the default placeholder gold.
+      const variantTint = parseHexTint(mob.tint);
+      sprite.tint = variantTint ?? 0xf0c674;
 
       const mobImage = mob.image ?? gameStateRef.current.serverAssets[`default_mob_${mob.category ?? "humanoid"}`] ?? null;
       if (mobImage) {
-        this.loadSpriteTexture(sprite, mobImage);
+        this.loadSpriteTexture(sprite, mobImage, variantTint ?? 0xffffff);
       }
 
       const label = new Text({
-        text: mob.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
+        text: mob.variant ? `✦ ${mob.name}` : mob.name,
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: variantTint ?? MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
@@ -2332,11 +2343,11 @@ export class WorldScene {
     }
   }
 
-  private async loadSpriteTexture(sprite: Sprite, imagePath: string) {
+  private async loadSpriteTexture(sprite: Sprite, imagePath: string, tintOnLoad = 0xffffff) {
     try {
       const texture = await Assets.load(imagePath);
       sprite.texture = texture;
-      sprite.tint = 0xffffff;
+      sprite.tint = tintOnLoad;
     } catch {
       // Keep placeholder tint
     }

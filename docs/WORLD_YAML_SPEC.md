@@ -143,6 +143,8 @@ respawnSeconds: <long > 0, optional - seconds after death before this mob respaw
                 omit to rely on zone-wide reset only>
 image:          <string, optional - relative path under /images/>
 video:          <string, optional - relative path under /videos/, shown in context menu>
+rareVariants:   <bool, optional, default true - whether the server may spawn rare cosmetic variants of this mob>
+condition:      <SpawnCondition, optional - gates when this mob appears; see "Conditional spawning" below>
 ```
 
 `respawnSeconds` notes:
@@ -150,6 +152,7 @@ video:          <string, optional - relative path under /videos/, shown in conte
 - The respawn is silently cancelled if the zone resets first (the mob is already back in the registry).
 - If the origin room no longer exists at respawn time the respawn is silently skipped.
 - Players in the origin room see an arrival message when the mob reappears.
+- Ignored for condition-gated mobs (see below): their respawn is governed entirely by their condition.
 
 `Drop` entry:
 
@@ -157,6 +160,50 @@ video:          <string, optional - relative path under /videos/, shown in conte
 itemId: <item-id string, required>
 chance: <double in [0.0, 1.0], required>
 ```
+
+#### Conditional spawning (`condition`)
+
+A mob may be gated to only appear under specific world conditions — the classic
+"only seen at night", "only during a storm", or "only in winter" creature. When
+`condition` is present (and gates anything), the mob is **not** placed at world
+start; instead its entire lifecycle is owned by the conditional spawn handler:
+
+```yaml
+condition:
+  time:    [NIGHT]            # any of DAWN, DAY, DUSK, NIGHT; omit for any time
+  weather: [STORM, RAIN]      # any of the configured weather ids; omit for any weather
+  seasons: [WINTER]           # any of SPRING, SUMMER, AUTUMN, WINTER; omit for any season
+  events:  [blood_moon]       # any one of these world-event flags must be active; omit for none
+  chance:  0.25               # per-opportunity appearance probability (0.0–1.0); default 1.0
+```
+
+Semantics:
+- **Facets are AND-ed; values within a facet are OR-ed.** The example means
+  "at night, during a storm or rain, in winter".
+- An omitted facet means "any". A `condition` whose facets are all empty and
+  whose `chance` is `1.0` behaves like no condition at all.
+- While the gates hold, the handler rolls `chance` periodically; on success the
+  mob appears (with an arrival message, and a zone-wide shout for the sighting).
+- When any gate stops holding, the mob **fades out** at the next check — but
+  never while it is fighting a player.
+- Weather-gated mobs naturally only appear where players are present, because
+  per-zone weather only advances in zones that have occupants.
+
+#### Rare cosmetic variants (`rareVariants`)
+
+Independently of `condition`, the server may spawn any COMBAT mob as a rare
+cosmetic **variant** — a tinted/overlaid version with a flavor name prefix
+(e.g. *Shadow-touched giant rat*) and a modest HP/XP/loot bump. This guarantees
+explorers always have richer sightings to find even when no rare mob was
+hand-authored. Variants roll on every spawn — cold start (so a freshly-booted
+world is already seeded with a few to discover), zone reset, post-death respawn,
+and conditional spawn. Spawns into an occupied world announce with reach scaled
+by rarity; cold-start variants spawn silently, since nobody is connected yet.
+
+Set `rareVariants: false` to opt a mob out — appropriate for unique named bosses
+or strictly-themed creatures whose appearance should never be altered. The
+archetype palette and base chance are operator-configurable under
+`ambonmud.engine.mobVariants` in `application.yaml`.
 
 `Behavior` entry:
 

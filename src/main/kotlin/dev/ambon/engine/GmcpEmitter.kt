@@ -1687,6 +1687,8 @@ class GmcpEmitter(
         val period: String,
         val hour: Int,
         val minute: Int,
+        val season: String = "",
+        val seasonDescription: String = "",
     )
 
     data class WorldWeatherPayload(
@@ -2556,6 +2558,10 @@ class GmcpEmitter(
                 }
             },
             ownerName = mob.ownerName,
+            variant = mob.variantId,
+            variantName = mob.variantName,
+            tint = mob.tint,
+            overlay = mob.overlay,
         )
     }
 
@@ -2723,6 +2729,14 @@ class GmcpEmitter(
         val category: String = "humanoid",
         val effects: List<MobEffectPayload>? = null,
         val ownerName: String? = null,
+        /** Server-generated rare variant id (e.g. "shadow"), or null for ordinary mobs. */
+        val variant: String? = null,
+        /** Variant display label (e.g. "Shadow-touched"). */
+        val variantName: String? = null,
+        /** CSS hex tint the client multiplies onto the sprite. */
+        val tint: String? = null,
+        /** Client particle/overlay hint: swirl|embers|sparkle|frost|mist. */
+        val overlay: String? = null,
     )
 
     private data class MobEffectPayload(

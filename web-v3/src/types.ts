@@ -9,6 +9,10 @@ export interface WorldTime {
   period: string;
   hour: number;
   minute: number;
+  /** Current season (SPRING|SUMMER|AUTUMN|WINTER), or "" if the server didn't send one. */
+  season?: string;
+  /** Flavor description of the season, shown as a tooltip. */
+  seasonDescription?: string;
 }
 
 export interface WorldWeather {
@@ -393,6 +397,14 @@ export interface RoomMob {
   effects?: StatusEffect[];
   /** Character name of the pet's owner, or undefined for regular mobs. */
   ownerName?: string | null;
+  /** Server-generated rare variant id (e.g. "shadow"), or null for ordinary mobs. */
+  variant?: string | null;
+  /** Variant display label (e.g. "Shadow-touched"), for tooltips/labels. */
+  variantName?: string | null;
+  /** CSS hex tint multiplied onto the sprite (e.g. "#6a4aa0"); null = none. */
+  tint?: string | null;
+  /** Particle/overlay hint: swirl|embers|sparkle|frost|mist; null = none. */
+  overlay?: string | null;
 }
 
 export interface StatusEffect {

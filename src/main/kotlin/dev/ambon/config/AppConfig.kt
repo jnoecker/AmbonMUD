@@ -183,6 +183,15 @@ data class AppConfig(
         validateMobTier("standard", engine.mob.tiers.standard)
         validateMobTier("elite", engine.mob.tiers.elite)
         validateMobTier("boss", engine.mob.tiers.boss)
+
+        require(engine.season.cycleLengthMs > 0L) { "ambonMUD.engine.season.cycleLengthMs must be > 0" }
+        require(engine.mobVariants.chance in 0.0..1.0) { "ambonMUD.engine.mobVariants.chance must be in 0.0..1.0" }
+        engine.mobVariants.variants.forEach { (id, v) ->
+            require(v.weight >= 0.0) { "ambonMUD.engine.mobVariants.variants.$id.weight must be >= 0" }
+            require(v.announce in setOf("ROOM", "ZONE", "SERVER")) {
+                "ambonMUD.engine.mobVariants.variants.$id.announce must be ROOM, ZONE, or SERVER"
+            }
+        }
     }
 
     private fun validateEngineCombat() {
@@ -1142,6 +1151,155 @@ data class WorldTimeConfig(
     val nightHour: Int = 21,
 )
 
+data class SeasonConfig(
+    /**
+     * Real-time milliseconds for one full game year (all four seasons). Each
+     * season lasts a quarter of this. Default: 4 hours (1 hour per season).
+     */
+    val cycleLengthMs: Long = 14_400_000L,
+)
+
+/**
+ * Server-generated rare cosmetic variants. Every COMBAT-role mob can spawn as a
+ * rare variant (unless an author opts it out) so explorers always have richer
+ * sightings to find, even when content authors don't hand-author rare mobs.
+ *
+ * Variants are purely cosmetic plus a modest stat bump — a tint/overlay, a name
+ * prefix, and small HP/XP/loot multipliers.
+ */
+data class MobVariantsConfig(
+    val enabled: Boolean = true,
+    /**
+     * Base probability that an eligible mob rolls as a rare variant on each
+     * spawn opportunity — cold start, zone reset, post-death respawn, and
+     * conditional spawn — so a freshly-booted world is already seeded with a
+     * few sightings to discover. Raise it for a denser initial population.
+     */
+    val chance: Double = 0.04,
+    /** Variant archetypes keyed by ID, selected by [MobVariantDefinition.weight]. */
+    val variants: Map<String, MobVariantDefinition> = DEFAULT_VARIANTS,
+) {
+    companion object {
+        val DEFAULT_VARIANTS: Map<String, MobVariantDefinition> = mapOf(
+            "albino" to MobVariantDefinition(
+                displayName = "Albino",
+                namePrefix = "Albino ",
+                tint = "#f5f0ff",
+                rarity = "uncommon",
+                weight = 3.0,
+                hpMultiplier = 1.2,
+                xpMultiplier = 1.3,
+                lootMultiplier = 1.2,
+                announce = "ZONE",
+            ),
+            "verdant" to MobVariantDefinition(
+                displayName = "Verdant",
+                namePrefix = "Verdant ",
+                tint = "#5fd17a",
+                rarity = "uncommon",
+                weight = 2.5,
+                hpMultiplier = 1.2,
+                xpMultiplier = 1.3,
+                lootMultiplier = 1.2,
+                announce = "ZONE",
+            ),
+            "shadow" to MobVariantDefinition(
+                displayName = "Shadow-touched",
+                namePrefix = "Shadow-touched ",
+                tint = "#6a4aa0",
+                overlay = "swirl",
+                rarity = "uncommon",
+                weight = 2.5,
+                hpMultiplier = 1.25,
+                xpMultiplier = 1.4,
+                lootMultiplier = 1.25,
+                announce = "ZONE",
+            ),
+            "ember" to MobVariantDefinition(
+                displayName = "Ember",
+                namePrefix = "Ember ",
+                tint = "#ff6a3c",
+                overlay = "embers",
+                rarity = "rare",
+                weight = 1.4,
+                hpMultiplier = 1.5,
+                xpMultiplier = 1.7,
+                lootMultiplier = 1.5,
+                announce = "ZONE",
+            ),
+            "glimmering" to MobVariantDefinition(
+                displayName = "Glimmering",
+                namePrefix = "Glimmering ",
+                tint = "#ffe8a3",
+                overlay = "sparkle",
+                rarity = "rare",
+                weight = 1.2,
+                hpMultiplier = 1.5,
+                xpMultiplier = 1.8,
+                lootMultiplier = 1.6,
+                announce = "ZONE",
+            ),
+            "frostbound" to MobVariantDefinition(
+                displayName = "Frostbound",
+                namePrefix = "Frostbound ",
+                tint = "#a3e4ff",
+                overlay = "frost",
+                rarity = "rare",
+                weight = 1.2,
+                hpMultiplier = 1.5,
+                xpMultiplier = 1.7,
+                lootMultiplier = 1.5,
+                announce = "ZONE",
+            ),
+            "spectral" to MobVariantDefinition(
+                displayName = "Spectral",
+                namePrefix = "Spectral ",
+                tint = "#bfeaff",
+                overlay = "mist",
+                rarity = "legendary",
+                weight = 0.4,
+                hpMultiplier = 2.0,
+                xpMultiplier = 2.5,
+                lootMultiplier = 2.0,
+                announce = "SERVER",
+            ),
+            "ancient" to MobVariantDefinition(
+                displayName = "Ancient",
+                namePrefix = "Ancient ",
+                tint = "#caa86a",
+                overlay = "swirl",
+                rarity = "legendary",
+                weight = 0.3,
+                hpMultiplier = 2.2,
+                xpMultiplier = 2.6,
+                lootMultiplier = 2.2,
+                announce = "SERVER",
+            ),
+        )
+    }
+}
+
+/** A single server-generated rare variant archetype. */
+data class MobVariantDefinition(
+    val displayName: String = "",
+    /** Prepended to the base mob name, e.g. "Shadow-touched ". */
+    val namePrefix: String = "",
+    /** CSS hex tint applied to the client sprite (multiply). Empty = no tint. */
+    val tint: String = "",
+    /** Client particle/overlay hint: swirl|embers|sparkle|frost|mist. Empty = none. */
+    val overlay: String = "",
+    /** uncommon|rare|legendary — flavor + default announce loudness. */
+    val rarity: String = "uncommon",
+    /** Relative selection weight among all variants. Higher = more common. */
+    val weight: Double = 1.0,
+    val hpMultiplier: Double = 1.0,
+    val xpMultiplier: Double = 1.0,
+    /** Multiplies drop chances (and gold) for this variant. */
+    val lootMultiplier: Double = 1.0,
+    /** Announcement scope on appearance: ROOM|ZONE|SERVER. */
+    val announce: String = "ZONE",
+)
+
 data class WeatherConfig(
     /** Minimum real-time ms between weather transitions per zone. */
     val minTransitionMs: Long = 300_000L,
@@ -1654,8 +1812,10 @@ data class EngineConfig(
     val bank: BankConfig = BankConfig(),
     val stylist: StylistConfig = StylistConfig(),
     val worldTime: WorldTimeConfig = WorldTimeConfig(),
+    val season: SeasonConfig = SeasonConfig(),
     val weather: WeatherConfig = WeatherConfig(),
     val worldEvents: WorldEventsConfig = WorldEventsConfig(),
+    val mobVariants: MobVariantsConfig = MobVariantsConfig(),
     val environment: EnvironmentConfig = EnvironmentConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),

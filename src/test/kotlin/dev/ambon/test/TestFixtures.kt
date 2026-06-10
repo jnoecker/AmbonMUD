@@ -6,6 +6,7 @@ import dev.ambon.config.BankConfig
 import dev.ambon.config.ClassDefinitionConfig
 import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.EconomyConfig
+import dev.ambon.config.EngineConfig
 import dev.ambon.config.RaceDefinitionConfig
 import dev.ambon.config.RaceEngineConfig
 import dev.ambon.domain.ids.RoomId
@@ -368,6 +369,7 @@ class GameEngineHarness private constructor(
             tickMillis: Long = 10L,
             progression: PlayerProgression = PlayerProgression(),
             metrics: GameMetrics = GameMetrics.noop(),
+            engineConfig: EngineConfig = EngineConfig(),
         ): GameEngineHarness {
             val classRegistry =
                 PlayerClassRegistry().also { reg ->
@@ -401,6 +403,7 @@ class GameEngineHarness private constructor(
                     mobs = mobs,
                     items = items,
                     metrics = metrics,
+                    engineConfig = engineConfig,
                     classRegistryOverride = classRegistry,
                     raceRegistryOverride = raceRegistry,
                 )
