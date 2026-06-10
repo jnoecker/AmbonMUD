@@ -123,6 +123,7 @@ export function CraftingPanel({
               type="button"
               role="tab"
               aria-selected={tab === t.key}
+              aria-controls="cr-recipe-list"
               className={`cr-tab${tab === t.key ? " cr-tab-active" : ""}`}
               onClick={() => { setTab(t.key); setSelectedId(""); }}
             >
@@ -130,7 +131,7 @@ export function CraftingPanel({
             </button>
           ))}
         </div>
-        <div className="cr-recipe-list">
+        <div id="cr-recipe-list" className="cr-recipe-list">
           {filtered.length === 0 ? (
             <p className="cr-empty">No recipes known in this craft.</p>
           ) : (

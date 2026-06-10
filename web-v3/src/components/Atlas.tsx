@@ -77,6 +77,11 @@ export function Atlas({ areas, currentZone }: AtlasProps) {
     return sort.dir === "asc" ? " ▲" : " ▼";
   }
 
+  function ariaSort(key: SortState["key"]): "ascending" | "descending" | undefined {
+    if (sort.key !== key) return undefined;
+    return sort.dir === "asc" ? "ascending" : "descending";
+  }
+
   if (areas.length === 0) {
     return (
       <div className="atlas-empty">
@@ -130,7 +135,7 @@ export function Atlas({ areas, currentZone }: AtlasProps) {
           />
           <span>Unlisted ranges</span>
         </label>
-        <span className="atlas-count" aria-live="polite">
+        <span className="atlas-count" role="status" aria-live="polite">
           {sorted.length} of {areas.length}
         </span>
       </div>
@@ -139,14 +144,14 @@ export function Atlas({ areas, currentZone }: AtlasProps) {
         <table className="atlas-table">
           <thead>
             <tr>
-              <th scope="col">
+              <th scope="col" aria-sort={ariaSort("zone")}>
                 <button type="button" className="atlas-sort" onClick={() => toggleSort("zone")}>
-                  Area{sortIndicator("zone")}
+                  Area<span aria-hidden="true">{sortIndicator("zone")}</span>
                 </button>
               </th>
-              <th scope="col" className="atlas-col-level">
+              <th scope="col" className="atlas-col-level" aria-sort={ariaSort("level")}>
                 <button type="button" className="atlas-sort" onClick={() => toggleSort("level")}>
-                  Level{sortIndicator("level")}
+                  Level<span aria-hidden="true">{sortIndicator("level")}</span>
                 </button>
               </th>
             </tr>

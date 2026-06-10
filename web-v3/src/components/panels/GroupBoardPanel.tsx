@@ -118,11 +118,11 @@ export function GroupBoardPanel({
                 <div className="gp-member-bars">
                   <div className="gp-bar">
                     <span className="gp-bar-key">HP</span>
-                    <div className="gp-bar-track"><span className="gp-bar-fill gp-bar-hp" style={{ width: `${hpPct}%` }} /><span className="gp-bar-text">{m.hp} / {m.maxHp}</span></div>
+                    <div className="gp-bar-track" role="progressbar" aria-label={`${m.name} health`} aria-valuenow={m.hp} aria-valuemin={0} aria-valuemax={m.maxHp}><span className="gp-bar-fill gp-bar-hp" style={{ width: `${hpPct}%` }} /><span className="gp-bar-text">{m.hp} / {m.maxHp}</span></div>
                   </div>
                   <div className="gp-bar">
                     <span className="gp-bar-key">MP</span>
-                    <div className="gp-bar-track"><span className="gp-bar-fill gp-bar-mana" style={{ width: `${manaPct}%` }} /><span className="gp-bar-text">{m.mana} / {m.maxMana}</span></div>
+                    <div className="gp-bar-track" role="progressbar" aria-label={`${m.name} mana`} aria-valuenow={m.mana} aria-valuemin={0} aria-valuemax={m.maxMana}><span className="gp-bar-fill gp-bar-mana" style={{ width: `${manaPct}%` }} /><span className="gp-bar-text">{m.mana} / {m.maxMana}</span></div>
                   </div>
                 </div>
                 {iAmLeader && !isMe && (

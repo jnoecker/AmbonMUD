@@ -36,7 +36,7 @@ export function PlayPanel({ preLogin, terminalOverlayRef, terminalVisible, termi
             <CombatLog messages={combatLogMessages} />
           </div>
           <div className="terminal-card terminal-card-text-mode">
-            <div ref={terminalOverlayRef} className={overlayClass} aria-hidden={false} />
+            <div ref={terminalOverlayRef} className={overlayClass} />
           </div>
         </>
       ) : (

@@ -73,7 +73,7 @@ export function TradePanel({ trade, inventory, playerGold, onCommand }: TradePan
         <div className="trade-column trade-column-manage">
           <div className="trade-column-topline">
             <h4 className="trade-column-label">Your Offer</h4>
-            <span className={`trade-status ${trade.myAccepted ? "trade-accepted" : ""}`}>
+            <span className={`trade-status ${trade.myAccepted ? "trade-accepted" : ""}`} role="status" aria-live="polite">
               {statusCopy(trade.myAccepted, trade.myItems.length, trade.myGold)}
             </span>
           </div>
@@ -173,7 +173,7 @@ export function TradePanel({ trade, inventory, playerGold, onCommand }: TradePan
         <div className="trade-column">
           <div className="trade-column-topline">
             <h4 className="trade-column-label">{trade.partner}&apos;s Offer</h4>
-            <span className={`trade-status ${trade.theirAccepted ? "trade-accepted" : ""}`}>
+            <span className={`trade-status ${trade.theirAccepted ? "trade-accepted" : ""}`} role="status" aria-live="polite">
               {statusCopy(trade.theirAccepted, trade.theirItems.length, trade.theirGold)}
             </span>
           </div>
@@ -198,7 +198,7 @@ export function TradePanel({ trade, inventory, playerGold, onCommand }: TradePan
           ) : (
             <p className="trade-reset-note">Offer updates appear live for both players.</p>
           )}
-          {localMessage && <p className="trade-local-message">{localMessage}</p>}
+          {localMessage && <p className="trade-local-message" role="status" aria-live="polite">{localMessage}</p>}
         </div>
         <div className="trade-action-buttons">
           <button

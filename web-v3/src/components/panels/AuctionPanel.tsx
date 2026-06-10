@@ -108,7 +108,7 @@ export function AuctionPanel({ listings, inventory, playerName, isDemo, feedback
 
   return (
     <div className="ah-board">
-      {message && <p className={`ah-toast ah-toast-${messageKind}`}>{message}</p>}
+      {message && <p className={`ah-toast ah-toast-${messageKind}`} role="status" aria-live="polite">{message}</p>}
 
       {/* ───────── Browse (left) ───────── */}
       <div className="ah-browse">
@@ -117,6 +117,7 @@ export function AuctionPanel({ listings, inventory, playerName, isDemo, feedback
             type="text"
             className="ah-search"
             placeholder="Search items or sellers…"
+            aria-label="Search items or sellers"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
@@ -236,6 +237,7 @@ export function AuctionPanel({ listings, inventory, playerName, isDemo, feedback
             inputMode="numeric"
             className="ah-price-input"
             placeholder="Gold"
+            aria-label="Listing price in gold"
             value={priceDraft}
             onChange={(e) => setPriceDraft(e.target.value)}
           />

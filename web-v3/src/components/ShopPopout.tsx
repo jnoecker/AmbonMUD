@@ -37,8 +37,9 @@ function StatChip({
   delta: number | null;
 }) {
   const deltaClass = delta === null ? "" : delta > 0 ? " shop-stat-delta-up" : delta < 0 ? " shop-stat-delta-down" : " shop-stat-delta-same";
+  const title = `${label}: ${value}${delta !== null ? ` (${formatDelta(delta)} vs equipped)` : ""}`;
   return (
-    <span className="shop-stat-chip" title={`${label}: ${value}${delta !== null ? ` (${formatDelta(delta)} vs equipped)` : ""}`}>
+    <span className="shop-stat-chip" title={title} aria-label={title}>
       <span className="shop-stat-chip-label">{label}</span>
       <span className="shop-stat-chip-value">{value}</span>
       {delta !== null && (

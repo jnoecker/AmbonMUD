@@ -152,6 +152,7 @@ export function CombatPanel({
                               ? `${skill.name} — not enough mana (${skill.manaCost})`
                               : `Cast ${skill.name} (${skill.manaCost} mana)`
                         }
+                        aria-label={`${skill.name}, ${skill.manaCost} mana${!isReady ? `, on cooldown (${cooldownSeconds}s)` : !hasEnoughMana ? ", not enough mana" : ""}`}
                         disabled={isDisabled}
                         onClick={() => onCastSkill(skill.id, skill.cooldownMs)}
                       >

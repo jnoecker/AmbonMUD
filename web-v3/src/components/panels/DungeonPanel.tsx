@@ -28,7 +28,7 @@ export function DungeonPanel({ dungeonInfo, dungeonCatalog, uiFeedbackFeed, onCo
       </div>
 
       {activeFeedback && (
-        <p className={`systems-local-message systems-local-message-${activeFeedback.type}`}>
+        <p className={`systems-local-message systems-local-message-${activeFeedback.type}`} role="status" aria-live="polite">
           {activeFeedback.message}
         </p>
       )}
@@ -94,6 +94,7 @@ export function DungeonPanel({ dungeonInfo, dungeonCatalog, uiFeedbackFeed, onCo
                       key={difficulty.id}
                       type="button"
                       className={`systems-choice-card ${chosenDifficulty === difficulty.id ? "systems-choice-card-active" : ""}`}
+                      aria-pressed={chosenDifficulty === difficulty.id}
                       onClick={() => setSelectedDifficulty(difficulty.id)}
                     >
                       <span className="systems-choice-title">{difficulty.label}</span>

@@ -87,6 +87,11 @@ export function MonsterManualPanel({
   // Tracks whether the current conversation has produced any node yet, so the
   // initial "…" wait isn't mistaken for the conversation having ended.
   const dialogueSeenRef = useRef(false);
+  // Move keyboard focus into the dialog when it opens.
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    cardRef.current?.focus();
+  }, []);
 
   // Fire the matching fetch when deep-linked from an indicator. The initial
   // `view` (above) already shows the right subpanel; the setView calls here
@@ -185,6 +190,8 @@ export function MonsterManualPanel({
       onClick={close}
     >
       <div
+        ref={cardRef}
+        tabIndex={-1}
         className={`mm-card${skinned ? " mm-card-skinned" : ""} ${c ? TIER_CLASS[c.rating] ?? "" : ""}`}
         style={bg ? { ["--mm-bg" as string]: `url("${bg}")` } : undefined}
         onClick={(e) => e.stopPropagation()}
@@ -238,7 +245,7 @@ export function MonsterManualPanel({
                 <div className="mm-assess">
                   <div className="mm-winbar" aria-label="Estimated win chance">
                     <span className="mm-winbar-label">Win chance</span>
-                    <div className="mm-winbar-track" role="progressbar" aria-valuenow={c.winChancePct} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="mm-winbar-track" role="progressbar" aria-label="Win chance" aria-valuenow={c.winChancePct} aria-valuemin={0} aria-valuemax={100}>
                       <span className="mm-winbar-fill" style={{ width: `${c.winChancePct}%` }} />
                     </div>
                     <span className="mm-winbar-pct">{c.winChancePct}%</span>

@@ -318,7 +318,7 @@ export function CharacterPanel({
               <span className="cc-ctl-name">Auto Peek</span>
               <span className="cc-switch"><span className="cc-switch-thumb" /></span>
             </button>
-            <div className="cc-ctl cc-ctl-wimpy" title="Auto-flee combat when HP drops to this %.">
+            <div className="cc-ctl cc-ctl-wimpy" role="group" aria-label="Wimpy threshold" title="Auto-flee combat when HP drops to this %.">
               <span className="cc-ctl-leaf" aria-hidden="true" />
               <span className="cc-ctl-name">Wimpy</span>
               <button
