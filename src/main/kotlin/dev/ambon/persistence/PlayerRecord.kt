@@ -96,6 +96,8 @@ data class PlayerRecord(
     val dailyQuestData: String = "{}",
     /** Whether screen-reader accessibility mode is enabled. */
     val screenReaderEnabled: Boolean = false,
+    /** When true, room music/ambient and dialogue voice URLs are printed inline for non-web clients. */
+    val audioLinksEnabled: Boolean = false,
     /** Player-written custom description visible when others look at them. */
     val description: String = "",
     /** When true, items dropped by mobs the player kills are auto-looted into inventory. */

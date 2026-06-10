@@ -516,6 +516,19 @@ internal suspend fun sendLook(
         lastDeathZone = me.lastDeathZone,
         peek = peekExits.toGmcpPeek(),
     )
+    // Inline audio links for non-web clients (see PlayerState.audioLinksEnabled). Music/ambient
+    // ride GMCP to the web client; here we also print the URLs as plain text so other clients can
+    // play them. Emitted only on change so walking a same-music zone doesn't reprint every step.
+    if (me.audioLinksEnabled) {
+        if (room.music != me.lastEmittedMusicUrl) {
+            me.lastEmittedMusicUrl = room.music
+            room.music?.let { outbound.send(OutboundEvent.SendInfo(sessionId, "[music] $it")) }
+        }
+        if (room.ambient != me.lastEmittedAmbientUrl) {
+            me.lastEmittedAmbientUrl = room.ambient
+            room.ambient?.let { outbound.send(OutboundEvent.SendInfo(sessionId, "[ambient] $it")) }
+        }
+    }
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
     gmcpEmitter?.sendRoomMobInfo(

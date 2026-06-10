@@ -83,6 +83,7 @@ object PlayersTable : Table("players") {
     val pvpDeaths = integer("pvp_deaths").default(0)
     val dailyQuestData = text("daily_quest_data").default("{}")
     val screenReaderEnabled = bool("screen_reader_enabled").default(false)
+    val audioLinksEnabled = bool("audio_links_enabled").default(false)
     val description = text("description").default("")
     val autolootEnabled = bool("autoloot_enabled").default(false)
     val autopeekEnabled = bool("autopeek_enabled").default(false)
@@ -147,6 +148,7 @@ object PlayersTable : Table("players") {
             pvpDeaths = row[pvpDeaths],
             dailyQuestData = row[dailyQuestData],
             screenReaderEnabled = row[screenReaderEnabled],
+            audioLinksEnabled = row[audioLinksEnabled],
             description = row[description],
             autolootEnabled = row[autolootEnabled],
             autopeekEnabled = row[autopeekEnabled],
@@ -216,6 +218,7 @@ object PlayersTable : Table("players") {
         statement[pvpDeaths] = record.pvpDeaths
         statement[dailyQuestData] = record.dailyQuestData
         statement[screenReaderEnabled] = record.screenReaderEnabled
+        statement[audioLinksEnabled] = record.audioLinksEnabled
         statement[description] = record.description
         statement[autolootEnabled] = record.autolootEnabled
         statement[autopeekEnabled] = record.autopeekEnabled

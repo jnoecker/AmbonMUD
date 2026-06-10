@@ -159,6 +159,15 @@ class DialogueSystem(
     ) {
         outbound.send(OutboundEvent.SendText(sessionId, "${state.mobName} says: ${node.text}"))
 
+        // Inline voice-over link for non-web clients (see PlayerState.audioLinksEnabled). The web
+        // client plays voiceUrl from the Dialogue.Node GMCP packet; here we print the same URL as
+        // plain text. Naturally silent when voices are disabled or the line is unvoiced (null URL).
+        if (players.get(sessionId)?.audioLinksEnabled == true) {
+            gmcpEmitter
+                ?.resolveDialogueVoiceUrl(state.zone, state.templateKey, state.currentNodeId, node.text)
+                ?.let { outbound.send(OutboundEvent.SendInfo(sessionId, "[voice] $it")) }
+        }
+
         val visibleChoices = filterChoices(node.choices, playerLevel, playerClass)
 
         // Always send Dialogue.Node so the canvas overlay can display NPC text and quest cards

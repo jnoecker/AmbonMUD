@@ -18,8 +18,12 @@ must agree on is the **R2 path template** (and, if used, the hash algorithm).
 | AmbonMUD engine | Resolve the clip URL (base + path) and send it in the `Dialogue.Node` GMCP package. No synthesis, no key, no network calls in the engine. |
 | Web client | On `Dialogue.Node`, play `voiceUrl` through the audio engine; stop on `Dialogue.End`. Mute/skip toggle. |
 
-Voice is a **web-client-only** feature, like canvas rendering. Telnet clients receive the same
-text they do today and simply have no audio.
+Voice *playback* is a **web-client-only** feature, like canvas rendering. Telnet clients receive
+the same text they do today and, by default, no audio. Players on non-web clients can opt into the
+`audio` command (`audio on`), which additionally prints the resolved voice URL inline as plain text
+(`[voice] <url>`) — alongside room `[music]`/`[ambient]` URLs — so they can play the clip in their
+own client. This is a player-facing convenience and does not change the GMCP contract above; the
+same `resolveDialogueVoiceUrl` resolution feeds both paths.
 
 ## R2 path shape
 

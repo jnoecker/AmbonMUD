@@ -52,6 +52,9 @@ class UiHandler(
         router.on<Command.ScreenReaderOn> { sid, _ -> handleScreenReader(sid) { true } }
         router.on<Command.ScreenReaderOff> { sid, _ -> handleScreenReader(sid) { false } }
         router.on<Command.ScreenReaderToggle> { sid, _ -> handleScreenReader(sid) { current -> !current } }
+        router.on<Command.AudioLinksOn> { sid, _ -> handleAudioLinks(sid) { true } }
+        router.on<Command.AudioLinksOff> { sid, _ -> handleAudioLinks(sid) { false } }
+        router.on<Command.AudioLinksToggle> { sid, _ -> handleAudioLinks(sid) { current -> !current } }
         router.on<Command.AutolootOn> { sid, _ -> handleAutoloot(sid, ToggleAction.ON) }
         router.on<Command.AutolootOff> { sid, _ -> handleAutoloot(sid, ToggleAction.OFF) }
         router.on<Command.AutolootStatus> { sid, _ -> handleAutoloot(sid, ToggleAction.STATUS) }
@@ -195,6 +198,27 @@ class UiHandler(
         gmcpEmitter?.sendCharName(sessionId, me)
         val status = if (enabled) "enabled" else "disabled"
         outbound.send(OutboundEvent.SendInfo(sessionId, "Screen reader mode $status."))
+    }
+
+    /**
+     * `audio on`/`off` set the inline-audio-links mode idempotently; bare `audio` toggles.
+     * When on, room music/ambient and NPC dialogue voice URLs print inline as plain text so
+     * players on non-web clients can play the audio themselves. Web clients leave it off.
+     */
+    private suspend fun handleAudioLinks(
+        sessionId: SessionId,
+        resolve: (current: Boolean) -> Boolean,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val enabled = resolve(me.audioLinksEnabled)
+        players.setAudioLinksEnabled(sessionId, enabled)
+        val msg =
+            if (enabled) {
+                "Audio links enabled — music, ambient, and NPC voice URLs will print inline."
+            } else {
+                "Audio links disabled."
+            }
+        outbound.send(OutboundEvent.SendInfo(sessionId, msg))
     }
 
     private suspend fun handlePhase(

@@ -2053,7 +2053,7 @@ class GmcpEmitter(
             DialogueNodePayload(
                 mobName = mobName,
                 text = text,
-                voiceUrl = dialogueVoiceUrl(zone, templateKey, nodeId, text),
+                voiceUrl = resolveDialogueVoiceUrl(zone, templateKey, nodeId, text),
                 choices = choices.map { (index, choiceText) -> DialogueChoicePayload(index = index, text = choiceText) },
             ),
         )
@@ -2071,7 +2071,7 @@ class GmcpEmitter(
      * unqualified key in its own segment (`headmaster_aldric`, not `academy:headmaster_aldric`),
      * and `zone` is already a separate segment. Unqualified keys pass through unchanged.
      */
-    private fun dialogueVoiceUrl(
+    fun resolveDialogueVoiceUrl(
         zone: String,
         templateKey: String,
         nodeId: String,

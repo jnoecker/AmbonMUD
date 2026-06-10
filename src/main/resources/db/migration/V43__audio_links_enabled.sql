@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN audio_links_enabled BOOLEAN NOT NULL DEFAULT FALSE;

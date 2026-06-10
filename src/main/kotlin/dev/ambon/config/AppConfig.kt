@@ -2042,6 +2042,11 @@ data class CommandsConfig(
             "gamble" to CommandMetadata("gamble/dice <amount>", "Roll d100 against the house (requires a tavern)", "social"),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),
             "screenreader" to CommandMetadata("screenreader [on/off]", "Toggle screen reader mode", "utility"),
+            "audio" to CommandMetadata(
+                usage = "audio [on/off]",
+                description = "Print music, ambient, and NPC voice URLs inline (for non-web clients)",
+                category = "utility",
+            ),
             "autoloot" to CommandMetadata(
                 usage = "autoloot on/off/status",
                 description = "Auto-loot mob corpses when enabled",

@@ -120,6 +120,11 @@ data class PlayerState(
     var dailyQuestState: DailyQuestState = DailyQuestState(),
     /** Whether screen-reader accessibility mode is enabled. */
     var screenReaderEnabled: Boolean = false,
+    /**
+     * When true, room music/ambient and NPC dialogue voice clip URLs are printed inline as plain
+     * text (`[music] <url>` etc.) so players on non-web clients can play the audio themselves.
+     */
+    var audioLinksEnabled: Boolean = false,
     /** Player-written custom description visible when others look at them. */
     var description: String = "",
     /** When true, items dropped by mobs the player kills are auto-looted into inventory. */
@@ -147,6 +152,13 @@ data class PlayerState(
      * Used by flee to prefer retreating back the way they came. Runtime-only; not persisted.
      */
     var lastEnterDirection: Direction? = null,
+    /**
+     * Last room music/ambient URL emitted inline to this session (see [audioLinksEnabled]).
+     * Runtime-only dedup memory so the same track isn't reprinted on every room move — only on
+     * change. Not persisted.
+     */
+    var lastEmittedMusicUrl: String? = null,
+    var lastEmittedAmbientUrl: String? = null,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -291,6 +303,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
             jsonMapper.readValue(dailyQuestData, DailyQuestState::class.java)
         }.getOrDefault(DailyQuestState()),
         screenReaderEnabled = screenReaderEnabled,
+        audioLinksEnabled = audioLinksEnabled,
         description = description,
         authTokenHash = authTokenHash,
         authTokenIssuedAt = authTokenIssuedAt,
@@ -353,6 +366,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         pvpDeaths = pvpDeaths,
         dailyQuestData = jsonMapper.writeValueAsString(dailyQuestState),
         screenReaderEnabled = screenReaderEnabled,
+        audioLinksEnabled = audioLinksEnabled,
         description = description,
         authTokenHash = authTokenHash,
         authTokenIssuedAt = authTokenIssuedAt,
