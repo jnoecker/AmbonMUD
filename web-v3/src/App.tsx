@@ -204,6 +204,8 @@ function App() {
   // Staff admin panel + invisibility toggle
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [staffInvisible, setStaffInvisible] = useState(false);
+  // Bumped by the canvas Claim button (demo characters); opens the claim modal.
+  const [claimRequestId, setClaimRequestId] = useState(0);
   const [mapTab, setMapTab] = useState<"map" | "atlas">("map");
 
   // Lifted command-input state — VitalsBar renders it controlled, palette/canvas can prefill
@@ -487,6 +489,7 @@ function App() {
     canvasCallbacks.openInn = () => setShowInn(true);
     canvasCallbacks.openAdminPanel = () => setShowAdminPanel(true);
     canvasCallbacks.toggleInvis = () => { sendCommand("invis"); setStaffInvisible((v) => !v); };
+    canvasCallbacks.openClaim = () => setClaimRequestId((n) => n + 1);
     canvasCallbacks.openMail = () => openPanel("mail");
     canvasCallbacks.openMap = () => openPanel("map");
     canvasCallbacks.openRoom = () => openPanel("room");
@@ -546,6 +549,7 @@ function App() {
       canvasCallbacks.openInn = null;
       canvasCallbacks.openAdminPanel = null;
       canvasCallbacks.toggleInvis = null;
+      canvasCallbacks.openClaim = null;
       canvasCallbacks.openMail = null;
       canvasCallbacks.openMap = null;
       canvasCallbacks.openRoom = null;
@@ -953,6 +957,8 @@ function App() {
       {state.character.isDemo && (
         <DemoBanner
           autoOpen={(state.character.level ?? 1) >= 2}
+          openRequestId={claimRequestId}
+          backgroundImage={state.serverAssets["login_claim_bg"] ?? null}
           // sendLine (not sendCommand) — claim contains the user's new password,
           // so we must NOT push it into command history / localStorage.
           onClaim={(line) => { sendLine(line); }}
@@ -1723,6 +1729,7 @@ function App() {
       {state.savedCharacters.length >= 1 && !state.reconnecting && (
         <CharacterPicker
           characters={state.savedCharacters}
+          backgroundImage={state.serverAssets["login_picker_bg"] ?? null}
           onSelect={(name) => {
             try {
               const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
@@ -1756,6 +1763,7 @@ function App() {
         <LoginModal
           loginPrompt={state.loginPrompt}
           loginError={state.loginError}
+          serverAssets={state.serverAssets}
           onSubmit={(value) => sendLine(value)}
         />
       )}

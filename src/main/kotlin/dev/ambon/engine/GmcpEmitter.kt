@@ -679,6 +679,15 @@ class GmcpEmitter(
     }
 
     /**
+     * Resolved global-asset map as JSON, or null when empty. For pre-negotiation
+     * emission alongside `Login.Prompt` — at connect time the session's
+     * `Core.Supports.Set` may not have registered yet, so the gated [emit] path
+     * would silently drop the package the painted login screen depends on.
+     */
+    fun serverAssetsJson(): String? =
+        if (resolvedAssets.isEmpty()) null else json.writeValueAsString(resolvedAssets)
+
+    /**
      * Sends the command manifest as `Server.Commands`.
      * Staff players receive all commands; non-staff players receive only non-staff commands.
      */

@@ -14895,6 +14895,466 @@ body {
   }
 }
 
+/* ── Painted login scene (login_bg, 1536×1024) ───────────────────────────
+   The concept art IS the screen: the stage is aspect-locked to the art and
+   the live controls are seated over the painted ones with percentage insets
+   (image-space px ÷ art dimensions — see ART_CONTRACT.md).
+
+   Measured element bounds in art space:
+     name input interior   x 460–744,  y 627–688
+     Create/Login button   x 473–731,  y 706–772
+     Start Demo button     x 1167–1351, y 651–721
+
+   The input's parchment fill deliberately masks the "Character name"
+   placeholder painted into the art; the real <input> placeholder replaces it.
+   Falls back to the CSS hero when the asset is absent or the viewport is
+   too small for the mapped controls (ART_FIT_QUERY in LoginModal.tsx). */
+
+.login-art-root {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgb(14 18 12);
+}
+
+/* Cinematic letterbox: the same art, blurred and dimmed, fills the gaps the
+   aspect-locked stage leaves at off-ratio viewports. */
+.login-art-underlay {
+  position: absolute;
+  inset: 0;
+  background: var(--login-art) center / cover no-repeat;
+  filter: blur(18px) brightness(0.62) saturate(1.05);
+  transform: scale(1.06);
+}
+
+.login-art-stage {
+  position: relative;
+  background: var(--login-art) center / 100% 100% no-repeat;
+  container-type: size;     /* cqh/cqw type scales with the stage, not the viewport */
+  border-radius: 6px;
+  box-shadow: 0 18px 60px rgb(0 0 0 / 55%);
+}
+
+/* Stage aspect variants — width is capped on both axes so the art never crops. */
+.login-art-stage--wide {
+  width: min(100vw, 150vh);     /* 1536×1024 */
+  aspect-ratio: 1536 / 1024;
+}
+
+.login-art-stage--book {
+  width: min(100vw, 133.3vh);   /* 1448×1086 */
+  aspect-ratio: 1448 / 1086;
+}
+
+.login-art-stage--tall {
+  width: min(100vw, 80vh);      /* 1122×1402, phone-friendly portrait */
+  aspect-ratio: 1122 / 1402;
+}
+
+.login-art-form {
+  display: contents; /* children position against the stage */
+}
+
+/* The real name field, seated inside the painted box's border. Its parchment
+   fill hides the placeholder text baked into the art. */
+.login-art-input {
+  position: absolute;
+  inset: 61.23% 51.56% 32.81% 29.95%;
+  border: none;
+  border-radius: 0.5em;
+  padding: 0 0.85em;
+  background: linear-gradient(180deg, #f2d9a2 0%, #ecca8b 55%, #e2b878 100%);
+  box-shadow: inset 0 2px 7px rgb(73 47 12 / 30%);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 3.1cqh;
+  color: #45300f;
+  caret-color: #6b4a16;
+}
+
+.login-art-input::placeholder {
+  color: rgb(106 78 38 / 75%);
+  font-weight: 500;
+}
+
+.login-art-input:focus-visible {
+  outline: 2px solid rgb(214 168 76 / 95%);
+  outline-offset: 2px;
+}
+
+/* Invisible hotspots over the painted buttons. Hover/active feedback comes
+   from backdrop-filter, which re-lights the painted button underneath. */
+.login-art-hotspot {
+  position: absolute;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0.9em;
+  transition: backdrop-filter 120ms ease;
+}
+
+.login-art-hotspot:hover {
+  backdrop-filter: brightness(1.14) saturate(1.08);
+}
+
+.login-art-hotspot:active {
+  backdrop-filter: brightness(0.92);
+}
+
+.login-art-hotspot:focus-visible {
+  outline: 3px solid rgb(255 226 150 / 90%);
+  outline-offset: 3px;
+}
+
+.login-art-submit {
+  inset: 68.95% 52.41% 24.61% 30.79%;
+}
+
+.login-art-demo {
+  inset: 63.57% 12.04% 29.59% 75.98%;
+}
+
+/* Login errors float as a parchment chip just above the name field. */
+.login-art-error {
+  position: absolute;
+  top: 55.5%;
+  right: 47.9%;
+  left: 29.95%;
+  margin: 0;
+  padding: 0.3em 0.7em;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.2cqh;
+  color: #7a1f1f;
+  background: rgb(244 228 188 / 94%);
+  border: 1px solid rgb(122 31 31 / 35%);
+  border-radius: 0.5em;
+  box-shadow: 0 2px 8px rgb(40 24 6 / 30%);
+}
+
+/* ── Per-scene element maps ─────────────────────────────────────────────
+   Image-space bounds for every painted control, measured off each PNG and
+   expressed as percentage insets (top right bottom left = bounds ÷ art size).
+
+   login_password_bg 1448×1086: chip (700,470)-(972,545) · input (300,612)-(810,704)
+     · wand (815,615)-(885,700) · login (932,600)-(1158,705) · error (290,735)-(1160,792)
+   login_set_password_bg 1536×1024: chip (860,488)-(1077,543) · input (318,590)-(835,694)
+     · wand (840,592)-(930,700) · set (955,592)-(1255,692) · error (300,725)-(1240,782)
+   login_confirm_bg 1448×1086: chip (650,505)-(910,580) · yes (372,750)-(668,845)
+     · no (776,750)-(1080,845) · error (350,868)-(1100,925)
+   login_picker_bg 1448×1086: list (425,555)-(1030,760) · create (525,835)-(930,897)
+   login_race_bg 1122×1402: 3×3 cells, cols x 240-408/469-657/718-906,
+     rows y 328-493/502-695/728-898 · detail (235,985)-(905,1160)
+     · choose (390,1240)-(735,1315) · error (300,200)-(820,252)
+   login_class_bg 1122×1402: 2×3 cells, cols x 250-517/605-874,
+     rows y 334-495/550-714/770-933 · detail (235,1030)-(900,1215)
+     · choose (355,1290)-(770,1365) · error (300,215)-(820,267) */
+
+/* Dynamic character name seated onto the painted parchment chips. */
+.login-art-chip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 3cqh;
+  color: #45300f;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 0.5em;
+}
+
+.lpw-chip { inset: 43.28% 32.87% 49.82% 48.34%; }
+.lsp-chip { inset: 47.66% 29.88% 46.97% 55.99%; }
+.lcf-chip { inset: 46.50% 37.15% 46.59% 44.89%; font-size: 2.6cqh; }
+
+/* Password inputs mask the placeholder painted into each scene's box; the
+   painted quill-wand at the box's right end becomes the show/hide toggle. */
+.login-art-input--password.lpw-input {
+  inset: 56.35% 44.06% 35.17% 20.72%;
+  background: linear-gradient(180deg, #f4ca94 0%, #ecc08d 55%, #e6b785 100%);
+}
+
+.login-art-input--password.lsp-input {
+  inset: 57.62% 45.64% 32.23% 20.70%;
+  background: linear-gradient(180deg, #f0c898 0%, #ebc194 55%, #e5ba8c 100%);
+}
+
+.login-art-wand { border-radius: 50%; }
+.lpw-wand { inset: 56.63% 38.88% 35.54% 56.28%; }
+.lsp-wand { inset: 57.81% 39.45% 31.64% 54.69%; }
+.login-art-wand[aria-pressed="true"] { backdrop-filter: brightness(1.22) saturate(1.25); }
+
+.lpw-submit { inset: 55.25% 20.03% 35.08% 64.36%; }
+.lsp-submit { inset: 57.81% 18.29% 32.42% 62.17%; }
+.lcf-yes { inset: 69.06% 53.87% 22.19% 25.69%; }
+.lcf-no { inset: 69.06% 25.41% 22.19% 53.59%; }
+
+/* Error chips share the name-scene styling but are positioned per scene. */
+.login-art-error-chip {
+  position: absolute;
+  margin: 0;
+  padding: 0.3em 0.7em;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.2cqh;
+  color: #7a1f1f;
+  background: rgb(244 228 188 / 94%);
+  border: 1px solid rgb(122 31 31 / 35%);
+  border-radius: 0.5em;
+  box-shadow: 0 2px 8px rgb(40 24 6 / 30%);
+  height: fit-content;
+}
+
+.lpw-error { inset: 67.68% 19.89% auto 20.03%; }
+.lsp-error { inset: 70.80% 19.27% auto 19.53%; }
+.lcf-error { inset: 79.93% 24.03% auto 24.17%; }
+.lrc-error { inset: 14.27% 26.92% auto 26.74%; }
+.lcl-error { inset: 15.34% 26.92% auto 26.74%; }
+
+/* ── Saved-character picker (welcome-back scene) ── */
+.login-art-picker-list {
+  position: absolute;
+  /* Neutralize the base .character-picker-list box sizing — with explicit
+     width/max-height set, absolute positioning ignores inset-right/bottom
+     and the rows spill past the painted panel. */
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqh;
+  padding: 1.6cqh 2cqw;
+  overflow-y: auto;
+}
+
+.lpk-list { inset: 51.10% 28.87% 30.02% 29.35%; }
+.lpk-create { inset: 76.89% 35.77% 17.40% 36.26%; }
+
+/* Re-tint the glass entry rows for parchment. */
+.login-art-picker-list .character-picker-btn {
+  background: rgb(122 84 38 / 14%);
+  background-image: none;
+  border: 1px solid rgb(122 84 38 / 38%);
+  border-radius: 0.5em;
+  box-shadow: none;
+  backdrop-filter: none;
+  color: #45300f;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.6cqh;
+}
+
+.login-art-picker-list .character-picker-btn:hover {
+  background: rgb(122 84 38 / 22%);
+  border-color: rgb(122 84 38 / 60%);
+}
+
+.login-art-picker-list .character-picker-btn-name { color: #45300f; }
+.login-art-picker-list .character-picker-btn-arrow { color: rgb(106 78 38 / 75%); }
+
+.login-art-picker-list .character-picker-remove {
+  background: rgb(122 84 38 / 10%);
+  border: 1px solid rgb(122 84 38 / 32%);
+  color: #6a4e26;
+}
+
+.login-art-picker-list .character-picker-remove--confirm {
+  background: rgb(122 31 31 / 16%);
+  border-color: rgb(122 31 31 / 50%);
+  color: #7a1f1f;
+}
+
+/* ── Race / class slot grids (portrait scenes) ── */
+.login-art-cell {
+  position: absolute;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8%;
+  padding: 0;
+  overflow: hidden;
+  transition: backdrop-filter 120ms ease;
+}
+
+.login-art-cell:hover { backdrop-filter: brightness(1.1); }
+
+.login-art-cell:focus-visible {
+  outline: 3px solid rgb(255 226 150 / 90%);
+  outline-offset: 2px;
+}
+
+.login-art-cell.selected {
+  box-shadow:
+    inset 0 0 0 3px rgb(214 168 76 / 95%),
+    0 0 14px rgb(255 214 120 / 65%);
+}
+
+.login-art-cell-img {
+  position: absolute;
+  inset: 4%;
+  width: 92%;
+  height: 92%;
+  object-fit: cover;
+  border-radius: 7%;
+}
+
+.login-art-cell-glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 4cqh;
+  color: rgb(122 84 38 / 55%);
+}
+
+.login-art-cell-label {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 3%;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7cqh;
+  color: #f6e7c4;
+  background: rgb(58 38 14 / 72%);
+  border-radius: 0.6em;
+  padding: 0.1em 0.3em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lrc-c1 { inset: 23.40% 63.64% 64.84% 21.39%; }
+.lrc-c2 { inset: 23.40% 41.44% 64.84% 41.80%; }
+.lrc-c3 { inset: 23.40% 19.25% 64.84% 63.99%; }
+.lrc-c4 { inset: 35.81% 63.64% 50.43% 21.39%; }
+.lrc-c5 { inset: 35.81% 41.44% 50.43% 41.80%; }
+.lrc-c6 { inset: 35.81% 19.25% 50.43% 63.99%; }
+.lrc-c7 { inset: 51.93% 63.64% 35.95% 21.39%; }
+.lrc-c8 { inset: 51.93% 41.44% 35.95% 41.80%; }
+.lrc-c9 { inset: 51.93% 19.25% 35.95% 63.99%; }
+.lrc-detail { inset: 70.26% 19.34% 17.26% 20.94%; }
+.lrc-choose { inset: 88.45% 34.49% 6.21% 34.76%; }
+
+.lcl-c1 { inset: 23.82% 53.92% 64.69% 22.28%; }
+.lcl-c2 { inset: 23.82% 22.10% 64.69% 53.92%; }
+.lcl-c3 { inset: 39.23% 53.92% 49.07% 22.28%; }
+.lcl-c4 { inset: 39.23% 22.10% 49.07% 53.92%; }
+.lcl-c5 { inset: 54.92% 53.92% 33.45% 22.28%; }
+.lcl-c6 { inset: 54.92% 22.10% 33.45% 53.92%; }
+.lcl-detail { inset: 73.47% 19.79% 13.34% 20.94%; }
+.lcl-choose { inset: 92.01% 31.37% 2.64% 31.64%; }
+
+/* Selected race/class details, seated onto the painted parchment panel. */
+.login-art-detail {
+  position: absolute;
+  overflow-y: auto;
+  padding: 1.4cqh 1.6cqw;
+  font-family: var(--font-display);
+  color: #45300f;
+  text-align: center;
+}
+
+.login-art-detail-name {
+  margin: 0 0 0.5cqh;
+  font-size: 3cqh;
+  font-weight: 700;
+}
+
+.login-art-detail-stats {
+  margin: 0 0 0.8cqh;
+  font-size: 1.9cqh;
+  font-style: italic;
+  color: #6a4e26;
+}
+
+.login-art-detail-desc {
+  margin: 0 0 0.8cqh;
+  font-size: 1.9cqh;
+  line-height: 1.45;
+}
+
+.login-art-detail-traits {
+  margin: 0;
+  font-size: 1.7cqh;
+  font-weight: 600;
+  color: #6a4e26;
+}
+
+/* ── Demo claim scene (login_claim_bg 1448×1086, dark twilight panel) ──
+   name input (603,487)-(1260,550) · password (603,656)-(1222,719)
+   · toggle (1226,662)-(1266,713) · save (668,777)-(982,869)
+   · not-now (1014,777)-(1236,869) · error below buttons */
+.login-art-input-dark {
+  position: absolute;
+  border: none;
+  border-radius: 0.4em;
+  padding: 0 0.85em;
+  background: linear-gradient(180deg, #1d1832 0%, #171326 100%);
+  box-shadow: inset 0 2px 6px rgb(0 0 0 / 45%);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.8cqh;
+  color: #e7ddf6;
+  caret-color: #cbb8f0;
+}
+
+.login-art-input-dark::placeholder {
+  color: rgb(168 152 208 / 62%);
+  font-weight: 500;
+}
+
+.login-art-input-dark:focus-visible {
+  outline: 2px solid rgb(178 150 235 / 90%);
+  outline-offset: 2px;
+}
+
+.lcm-name { inset: 44.84% 12.98% 49.36% 41.64%; }
+.lcm-password { inset: 60.41% 15.61% 33.79% 41.64%; }
+.lcm-toggle { inset: 60.96% 12.57% 34.35% 84.67%; }
+.lcm-save { inset: 71.55% 32.18% 19.98% 46.13%; }
+.lcm-notnow { inset: 71.55% 14.64% 19.98% 70.03%; }
+.lcm-error { inset: 82.41% 14.36% auto 42.13%; }
+
+.login-art-error-chip--dark {
+  color: #f3bcbc;
+  background: rgb(58 28 40 / 92%);
+  border-color: rgb(220 120 120 / 40%);
+}
+
+/* Later login steps (password / create / race / class) keep their modal but
+   borrow the painted scene as a softened backdrop for continuity. */
+.login-modal-backdrop--art {
+  background: rgb(18 22 34 / 45%);
+}
+
+.login-modal-backdrop--art::before {
+  content: "";
+  position: absolute;
+  inset: -24px;
+  z-index: -1;
+  background: var(--login-art) center / cover no-repeat;
+  filter: blur(14px) brightness(0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-art-hotspot,
+  .login-art-cell {
+    transition: none;
+  }
+}
+
 .demo-banner {
   display: flex;
   align-items: center;

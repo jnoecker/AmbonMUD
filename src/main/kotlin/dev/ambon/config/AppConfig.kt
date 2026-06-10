@@ -3043,6 +3043,19 @@ data class ImagesConfig(
 ) {
     companion object {
         val DEFAULT_GLOBAL_ASSETS: Map<String, String> = linkedMapOf(
+            // Painted full-screen login flow scenes. The web client maps the live
+            // controls (inputs, buttons, name chips, list/detail regions) onto the
+            // painted elements; absent/404 → the CSS-only login UI renders instead.
+            // Emitted pre-auth from LoginFlowHandler.promptForName so the login
+            // screen can use them before authentication.
+            "login_bg" to "global_assets/login_bg.png", // name entry + start demo (1536×1024)
+            "login_password_bg" to "global_assets/login_password_bg.png", // returning-user password (1448×1086)
+            "login_set_password_bg" to "global_assets/login_set_password_bg.png", // new password (1536×1024)
+            "login_confirm_bg" to "global_assets/login_confirm_bg.png", // create-character confirm (1448×1086)
+            "login_picker_bg" to "global_assets/login_picker_bg.png", // saved-character picker (1448×1086)
+            "login_race_bg" to "global_assets/login_race_bg.png", // race selection, 9 slots (1122×1402 portrait)
+            "login_class_bg" to "global_assets/login_class_bg.png", // class selection, 6 slots (1122×1402 portrait)
+            "login_claim_bg" to "global_assets/login_claim_bg.png", // demo claim / Save Your Character (1448×1086)
             "video_available_indicator" to "global_assets/video_available_indicator.png",
             "shop_kiosk" to "global_assets/shop_kiosk.png",
             "crafting_station" to "global_assets/crafting_station.png",

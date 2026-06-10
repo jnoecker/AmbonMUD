@@ -1,14 +1,19 @@
 import { useCallback, useState } from "react";
+import { ArtScene } from "../canvas/ArtScene";
+import { ART_FIT_LANDSCAPE, useMediaFits } from "../canvas/loginArtFit";
 
 interface CharacterPickerProps {
   characters: string[];
+  /** Painted welcome-back scene (`login_picker_bg` from Server.Assets); null → CSS dialog. */
+  backgroundImage: string | null;
   onSelect: (name: string) => void;
   onRemoveCharacter: (name: string) => void;
   onNewCharacter: () => void;
 }
 
-export function CharacterPicker({ characters, onSelect, onRemoveCharacter, onNewCharacter }: CharacterPickerProps) {
+export function CharacterPicker({ characters, backgroundImage, onSelect, onRemoveCharacter, onNewCharacter }: CharacterPickerProps) {
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const artFits = useMediaFits(ART_FIT_LANDSCAPE);
 
   const handleRemove = useCallback((name: string, e: React.MouseEvent | React.PointerEvent) => {
     e.stopPropagation();
@@ -21,6 +26,51 @@ export function CharacterPicker({ characters, onSelect, onRemoveCharacter, onNew
     }
   }, [confirmRemove, onRemoveCharacter]);
 
+  const entries = characters.map((name) => (
+    <div key={name} className="character-picker-entry">
+      <button
+        type="button"
+        className="character-picker-btn"
+        onClick={() => onSelect(name)}
+      >
+        <span className="character-picker-btn-name">{name}</span>
+        <span className="character-picker-btn-arrow" aria-hidden="true">&#x203A;</span>
+      </button>
+      <button
+        type="button"
+        className={`character-picker-remove${confirmRemove === name ? " character-picker-remove--confirm" : ""}`}
+        onPointerDown={(e) => handleRemove(name, e)}
+        onBlur={() => setConfirmRemove(null)}
+        title={confirmRemove === name ? "Click again to forget" : `Forget ${name}`}
+        aria-label={confirmRemove === name ? `Confirm forget ${name}` : `Forget ${name}`}
+      >
+        {confirmRemove === name ? "Forget?" : "×"}
+      </button>
+    </div>
+  ));
+
+  if (backgroundImage && artFits) {
+    return (
+      <ArtScene
+        url={backgroundImage}
+        stageClass="login-art-stage--book login-art-stage--picker"
+        label="Welcome back — choose a character"
+      >
+        <h1 className="sr-only">Welcome back — choose one of your saved characters or create a new one</h1>
+        <div className="character-picker-list login-art-picker-list lpk-list">
+          {entries}
+        </div>
+        <button
+          type="button"
+          className="login-art-hotspot lpk-create"
+          onClick={onNewCharacter}
+          title="Create a New Character"
+          aria-label="Create a new character"
+        />
+      </ArtScene>
+    );
+  }
+
   return (
     <div className="character-picker-overlay" role="dialog" aria-modal="true" aria-label="Choose a character">
       <div className="character-picker">
@@ -28,28 +78,7 @@ export function CharacterPicker({ characters, onSelect, onRemoveCharacter, onNew
         <p className="character-picker-subtitle">Choose a character or create a new one</p>
 
         <div className="character-picker-list">
-          {characters.map((name) => (
-            <div key={name} className="character-picker-entry">
-              <button
-                type="button"
-                className="character-picker-btn"
-                onClick={() => onSelect(name)}
-              >
-                <span className="character-picker-btn-name">{name}</span>
-                <span className="character-picker-btn-arrow" aria-hidden="true">&#x203A;</span>
-              </button>
-              <button
-                type="button"
-                className={`character-picker-remove${confirmRemove === name ? " character-picker-remove--confirm" : ""}`}
-                onPointerDown={(e) => handleRemove(name, e)}
-                onBlur={() => setConfirmRemove(null)}
-                title={confirmRemove === name ? "Click again to forget" : `Forget ${name}`}
-                aria-label={confirmRemove === name ? `Confirm forget ${name}` : `Forget ${name}`}
-              >
-                {confirmRemove === name ? "Forget?" : "\u00D7"}
-              </button>
-            </div>
-          ))}
+          {entries}
         </div>
 
         <div className="character-picker-divider">
