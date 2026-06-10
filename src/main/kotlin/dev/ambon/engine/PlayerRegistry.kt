@@ -806,6 +806,16 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
+    suspend fun setAudioLinksEnabled(
+        sessionId: SessionId,
+        enabled: Boolean,
+    ) {
+        val ps = players[sessionId] ?: return
+        if (ps.audioLinksEnabled == enabled) return
+        ps.audioLinksEnabled = enabled
+        persistIfClaimed(ps)
+    }
+
     suspend fun setAutolootEnabled(
         sessionId: SessionId,
         enabled: Boolean,

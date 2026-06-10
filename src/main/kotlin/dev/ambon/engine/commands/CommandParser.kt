@@ -34,6 +34,12 @@ sealed interface Command {
 
     data object ScreenReaderToggle : Command
 
+    data object AudioLinksOn : Command
+
+    data object AudioLinksOff : Command
+
+    data object AudioLinksToggle : Command
+
     data object AutolootOn : Command
 
     data object AutolootOff : Command
@@ -1755,6 +1761,9 @@ object CommandParser {
             "screenreader on" -> Command.ScreenReaderOn
             "screenreader off" -> Command.ScreenReaderOff
             "screenreader" -> Command.ScreenReaderToggle
+            "audio on", "audiolinks on" -> Command.AudioLinksOn
+            "audio off", "audiolinks off" -> Command.AudioLinksOff
+            "audio", "audiolinks" -> Command.AudioLinksToggle
             "autoloot on" -> Command.AutolootOn
             "autoloot off" -> Command.AutolootOff
             "autoloot status", "autoloot" -> Command.AutolootStatus

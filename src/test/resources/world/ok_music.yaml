@@ -1,0 +1,27 @@
+# Test world for inline audio-link emission (see AudioLinksRoomEmissionTest).
+# hub has both music + ambient; north reuses the same music (dedup) ; far has a
+# different music track (re-emit on change).
+zone: music_zone
+lifespan: 30
+startRoom: hub
+rooms:
+  hub:
+    title: "Concert Hall"
+    description: "Music fills the air."
+    music: "music/hall.mp3"
+    ambient: "ambient/crowd.mp3"
+    exits:
+      north: north
+      east: far
+  north:
+    title: "Echo Chamber"
+    description: "The same tune carries here."
+    music: "music/hall.mp3"
+    exits:
+      south: hub
+  far:
+    title: "Distant Grove"
+    description: "A different melody."
+    music: "music/grove.mp3"
+    exits:
+      west: hub

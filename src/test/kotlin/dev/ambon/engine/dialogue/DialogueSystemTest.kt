@@ -246,6 +246,59 @@ class DialogueSystemTest {
         }
 
     @Test
+    fun `prints inline voice link when audio links enabled`() =
+        runTest {
+            val env = createEnv(withGmcp = true, voicesEnabled = true)
+            val sid = env.loginPlayer()
+            env.players.get(sid)!!.audioLinksEnabled = true
+            env.addDialogueMob(templateKey = "wise_sage")
+
+            assertNull(env.system.startConversation(sid, "sage"))
+
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.text == "[voice] /voices/test/wise_sage/root.89b8b8e4.mp3"
+                },
+                "Expected inline voice link, got=$outs",
+            )
+        }
+
+    @Test
+    fun `no inline voice link when audio links disabled`() =
+        runTest {
+            val env = createEnv(withGmcp = true, voicesEnabled = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob(templateKey = "wise_sage")
+
+            assertNull(env.system.startConversation(sid, "sage"))
+
+            val outs = env.outbound.drainAll()
+            assertFalse(
+                outs.any { it is OutboundEvent.SendInfo && it.text.startsWith("[voice]") },
+                "Expected no inline voice link when audio links off, got=$outs",
+            )
+        }
+
+    @Test
+    fun `no inline voice link when voices disabled even if audio links on`() =
+        runTest {
+            val env = createEnv(withGmcp = true, voicesEnabled = false)
+            val sid = env.loginPlayer()
+            env.players.get(sid)!!.audioLinksEnabled = true
+            env.addDialogueMob(templateKey = "wise_sage")
+
+            assertNull(env.system.startConversation(sid, "sage"))
+
+            val outs = env.outbound.drainAll()
+            assertFalse(
+                outs.any { it is OutboundEvent.SendInfo && it.text.startsWith("[voice]") },
+                "Expected no inline voice link when voices disabled, got=$outs",
+            )
+        }
+
+    @Test
     fun `start conversation with no mob returns error`() =
         runTest {
             val env = createEnv()

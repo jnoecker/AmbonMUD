@@ -1637,6 +1637,11 @@ ambonmud:
           description: "Toggle screen reader mode"
           category: "utility"
           staff: false
+        audio:
+          usage: "audio [on/off]"
+          description: "Print music, ambient, and NPC voice URLs inline (for non-web clients)"
+          category: "utility"
+          staff: false
         autoloot:
           usage: "autoloot on/off/status"
           description: "Auto-loot mob corpses when enabled"
