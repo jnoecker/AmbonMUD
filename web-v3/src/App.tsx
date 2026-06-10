@@ -267,7 +267,14 @@ function App() {
     echoCommand,
     writeSystem,
     hasSelection: terminalHasSelection,
+    setInkTheme,
   } = useTerminal({ hiddenHostRef: terminalHiddenRef, overlayHostRef: terminalOverlayRef });
+
+  // Parchment scroll art → dark ink palette; absent art → light-on-dark.
+  const terminalParchmentBg = state.serverAssets["terminal_parchment_bg"] ?? null;
+  useEffect(() => {
+    setInkTheme(terminalParchmentBg !== null);
+  }, [terminalParchmentBg, setInkTheme]);
 
   // Wire up the WebSocket
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine, sendGmcp } = useMudSocket({
@@ -2176,7 +2183,7 @@ function App() {
         opaque={terminalOpaque}
         hostRef={terminalOverlayRef}
         hasSelection={terminalHasSelection}
-        parchmentBg={state.serverAssets["terminal_parchment_bg"] ?? null}
+        parchmentBg={terminalParchmentBg}
         quillUrl={state.serverAssets["desk_quill"] ?? null}
         inputValue={inputValue}
         onInputChange={(value) => {

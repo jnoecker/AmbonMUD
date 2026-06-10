@@ -110,28 +110,32 @@ export function TerminalOverlay({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
     >
-      <div className="terminal-screen-bar">
-        <span className="terminal-screen-title">Terminal</span>
-        <button
-          type="button"
-          className="terminal-screen-close"
-          onClick={onClose}
-          aria-label="Close terminal"
-          tabIndex={open ? 0 : -1}
-        >
-          ×
-        </button>
+      {/* The scroll — a narrow column matching the dock input that unrolls
+          upward. With parchment art it IS the parchment; otherwise dark glass. */}
+      <div className="terminal-scroll">
+        <div className="terminal-screen-bar">
+          <span className="terminal-screen-title">Terminal</span>
+          <button
+            type="button"
+            className="terminal-screen-close"
+            onClick={onClose}
+            aria-label="Close terminal"
+            tabIndex={open ? 0 : -1}
+          >
+            ×
+          </button>
+        </div>
+        <div ref={hostRef} className="terminal-screen-host" />
+        <CommandInput
+          inputRef={inputRef}
+          inputValue={inputValue}
+          onInputChange={onInputChange}
+          onInputKeyDown={onInputKeyDown}
+          onCommand={onCommand}
+          placeholder="Inscribe a command..."
+          sendIconUrl={quillUrl}
+        />
       </div>
-      <div ref={hostRef} className="terminal-screen-host" />
-      <CommandInput
-        inputRef={inputRef}
-        inputValue={inputValue}
-        onInputChange={onInputChange}
-        onInputKeyDown={onInputKeyDown}
-        onCommand={onCommand}
-        placeholder="Inscribe a command..."
-        sendIconUrl={quillUrl}
-      />
     </div>
   );
 }

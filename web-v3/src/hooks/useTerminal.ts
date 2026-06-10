@@ -11,6 +11,41 @@ interface TerminalHosts {
   overlayHostRef: RefObject<HTMLDivElement | null>;
 }
 
+// Both themes keep the cell background transparent (allowTransparency) so the
+// scroll's CSS background — dark glass or the parchment art — shows through.
+const DARK_THEME = {
+  background: "rgba(0, 0, 0, 0)",
+  foreground: "#d8dcef",
+  cursor: "#b9aed8",
+  selectionBackground: "rgba(185, 174, 216, 0.34)",
+};
+
+/** Ink-on-parchment: dark foreground + the 16 ANSI colors remapped to inks
+ *  that stay legible on light paper (server text assumes a dark terminal). */
+const INK_THEME = {
+  background: "rgba(0, 0, 0, 0)",
+  foreground: "#2e2212",
+  cursor: "#2e2212",
+  cursorAccent: "#f3ead2",
+  selectionBackground: "rgba(106, 74, 36, 0.3)",
+  black: "#2e2212",
+  red: "#8c2f28",
+  green: "#3f6d2e",
+  yellow: "#8a6414",
+  blue: "#2f4d8a",
+  magenta: "#7a3a78",
+  cyan: "#1f6b6b",
+  white: "#5a4a30",
+  brightBlack: "#6a5a40",
+  brightRed: "#a83a30",
+  brightGreen: "#4d8438",
+  brightYellow: "#a07818",
+  brightBlue: "#3a5fa8",
+  brightMagenta: "#94508f",
+  brightCyan: "#287f7f",
+  brightWhite: "#2e2212",
+};
+
 /**
  * Owns a single xterm.js instance that lives for the whole session and
  * accumulates every non-GMCP byte the server sends — the same ANSI stream a
@@ -58,12 +93,8 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
       rows: 30,
       scrollback: 5000,
       convertEol: false,
-      theme: {
-        background: "#2f3446",
-        foreground: "#d8dcef",
-        cursor: "#b9aed8",
-        selectionBackground: "rgba(185, 174, 216, 0.34)",
-      },
+      allowTransparency: true,
+      theme: DARK_THEME,
     });
 
     const fitAddon = new FitAddon();
@@ -139,6 +170,12 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
   /** xterm tracks its own selection (not window.getSelection). */
   const hasSelection = useCallback(() => terminalRef.current?.hasSelection() ?? false, []);
 
+  /** Dark ink on parchment when the scroll art is present; light-on-dark otherwise. */
+  const setInkTheme = useCallback((enabled: boolean) => {
+    const term = terminalRef.current;
+    if (term) term.options.theme = enabled ? INK_THEME : DARK_THEME;
+  }, []);
+
   const openTerminal = useCallback(() => setOpen(true), []);
 
   const closeTerminal = useCallback(() => {
@@ -156,5 +193,6 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
     echoCommand,
     writeSystem,
     hasSelection,
+    setInkTheme,
   };
 }
