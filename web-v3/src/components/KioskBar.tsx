@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import type { PopoutPanel } from "../types";
 import {
+  CharacterAvatarIcon,
   EquipmentIcon,
   WearingIcon,
   SpellbookIcon,
   QuestsTabIcon,
   AttackIcon,
-  TerminalIcon,
 } from "./Icons";
 
 interface KioskDef {
@@ -18,12 +18,12 @@ interface KioskDef {
 }
 
 const KIOSKS: KioskDef[] = [
+  { panel: "character", label: "Character", assetKey: "character_widget", fallback: <CharacterAvatarIcon className="kiosk-icon-svg" /> },
   { panel: "inventory", label: "Inventory", assetKey: "inventory_widget", fallback: <EquipmentIcon className="kiosk-icon-svg" /> },
   { panel: "equipment", label: "Equipment", assetKey: "equipment_widget", fallback: <WearingIcon className="kiosk-icon-svg" /> },
   { panel: "spellbook", label: "Spellbook", assetKey: "spellbook_widget", fallback: <SpellbookIcon className="kiosk-icon-svg" /> },
   { panel: "quests", label: "Quests", assetKey: "quests_widget", fallback: <QuestsTabIcon className="kiosk-icon-svg" /> },
   { panel: "combatlog", label: "Combat Log", assetKey: "combat_log_widget", fallback: <AttackIcon className="kiosk-icon-svg" /> },
-  { panel: "terminal", label: "Terminal", assetKey: "terminal_widget", fallback: <TerminalIcon className="kiosk-icon-svg" /> },
 ];
 
 interface KioskBarProps {

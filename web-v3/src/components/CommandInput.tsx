@@ -1,19 +1,22 @@
 import { useRef } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type { FormEvent, KeyboardEvent, RefObject } from "react";
 
 interface CommandInputProps {
   inputValue: string;
   onInputChange: (value: string) => void;
   onInputKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   onCommand: (cmd: string) => void;
+  /** Lets the parent focus the input (e.g. when the terminal overlay opens). */
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
 /**
  * Slim command input overlaid on the bottom of the canvas. Replaces the input
  * that lived in the now-removed bottom action bar.
  */
-export function CommandInput({ inputValue, onInputChange, onInputKeyDown, onCommand }: CommandInputProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
+export function CommandInput({ inputValue, onInputChange, onInputKeyDown, onCommand, inputRef: externalRef }: CommandInputProps) {
+  const internalRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = externalRef ?? internalRef;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();

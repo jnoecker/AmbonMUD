@@ -106,6 +106,8 @@
   --z-popout: 100;
   /* Mobile drawer sheet and its backdrop. */
   --z-drawer: 120;
+  /* Full-screen terminal overlay — above drawers, below inspect/auth. */
+  --z-terminal: 160;
   /* Examine / inspect modals — above drawers but below broadcast/auth. */
   --z-inspect: 1000;
   /* Critical system overlays: broadcasts, login, command palette. */
@@ -17950,20 +17952,6 @@ html:has(.game-shell),
   border-radius: var(--radius-md);
 }
 
-/* ── Terminal overlay (placeholder) ───────────────────── */
-.terminal-overlay-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-2) 0;
-}
-
-.terminal-overlay-note {
-  margin: 0;
-  color: var(--text-tertiary);
-  font-size: 0.92rem;
-}
-
 .canvas-command-input {
   flex: 1;
   min-width: 0;
@@ -19938,115 +19926,6 @@ html:has(.game-shell),
   }
 }
 
-/* Writing-desk drawer (terminal): a dark wood desk; you pen commands on a
-   parchment slip with a quill at hand. */
-.drawer-sheet.drawer-sheet-desk {
-  background-image:
-    var(--skin-bg, none),
-    repeating-linear-gradient(92deg, rgb(0 0 0 / 0%) 0 46px, rgb(20 12 4 / 16%) 46px 48px),
-    linear-gradient(168deg, #5a3f22, #402c16 62%, #311f0e);
-  background-size: cover, auto, auto;
-  background-position: center;
-  border: 8px solid #2e1f10;
-  border-top: 8px solid #2e1f10;
-  box-shadow: 0 -16px 48px rgb(8 10 18 / 60%), inset 0 0 28px rgb(20 12 4 / 45%);
-}
-
-@media (min-width: 768px) {
-  .drawer-sheet.drawer-sheet-desk {
-    border: 8px solid #2e1f10;
-    box-shadow: 0 24px 60px rgb(8 10 18 / 62%), 0 8px 24px rgb(8 10 18 / 42%), inset 0 0 28px rgb(20 12 4 / 45%);
-  }
-}
-
-.drawer-sheet-desk .drawer-header { border-bottom: 1px solid rgb(240 225 190 / 18%); }
-.drawer-sheet-desk .drawer-title { color: #f4e6c6; text-shadow: 0 1px 3px rgb(16 8 2 / 70%); }
-.drawer-sheet-desk .drawer-close { border-color: rgb(240 225 190 / 38%); background: rgb(24 14 6 / 50%); color: #f0e3c4; }
-.drawer-sheet-desk .drawer-close:hover { background: rgb(48 30 14 / 70%); color: #fff; }
-.drawer-sheet-desk .drawer-handle { background: rgb(240 225 190 / 38%); }
-
-/* The desk surface centers a parchment slip. */
-.terminal-desk {
-  align-items: center;
-  justify-content: center;
-  padding: 24px 8px;
-}
-
-.terminal-desk-slip {
-  position: relative;
-  width: min(560px, 100%);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 26px 26px 22px;
-  border-radius: 4px;
-  background: linear-gradient(160deg, #f3ead2, #e6d8b4);
-  border: 1px solid rgb(106 74 36 / 40%);
-  box-shadow: 0 10px 26px rgb(8 6 2 / 50%), inset 0 1px 0 rgb(255 252 244 / 55%);
-  /* A faint baseline ruling so it reads as writing paper. */
-  background-image:
-    linear-gradient(160deg, #f3ead2, #e6d8b4),
-    repeating-linear-gradient(0deg, transparent 0 31px, rgb(106 74 36 / 12%) 31px 32px);
-  transform: rotate(-0.6deg);
-}
-
-.terminal-desk .terminal-overlay-note {
-  margin: 0;
-  color: #5a4226;
-  font-style: italic;
-  font-size: 0.96rem;
-}
-
-/* The command line reads as an ink line on the slip. */
-.terminal-desk .canvas-command {
-  background: rgb(255 252 244 / 35%);
-  border: none;
-  border-bottom: 2px solid rgb(106 74 36 / 50%);
-  border-radius: 4px 4px 0 0;
-  padding: 6px 8px 8px 4px;
-}
-
-.terminal-desk .canvas-command-input {
-  color: #2e2212;
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-}
-
-.terminal-desk .canvas-command-input::placeholder { color: rgb(106 74 36 / 55%); }
-
-.terminal-desk .canvas-command-send {
-  width: 34px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #6a4e28, #4c3617);
-  border: 1px solid #c8a24a;
-  color: #f6e8c2;
-}
-
-.terminal-desk .canvas-command-send:hover { filter: brightness(1.08); }
-
-/* The quill, resting over the slip's corner. */
-.terminal-desk-quill {
-  position: absolute;
-  top: -22px;
-  right: 8px;
-  font-size: 3.4rem;
-  line-height: 1;
-  color: #3a2c1a;
-  transform: rotate(28deg);
-  text-shadow: 0 2px 4px rgb(8 6 2 / 45%);
-  pointer-events: none;
-}
-
-.terminal-desk-quill-img {
-  display: block;
-  width: 96px;
-  height: auto;
-  /* Cancel the container tilt so a supplied quill asset shows as drawn. */
-  transform: rotate(-28deg);
-  filter: drop-shadow(0 3px 6px rgb(8 6 2 / 50%));
-}
-
 /* Letters drawer (mail): warm parchment correspondence with wax-seal accents. */
 .drawer-sheet.drawer-sheet-mail {
   background-image:
@@ -20145,11 +20024,11 @@ html:has(.game-shell),
 }
 .drawer-sheet-mail .mail-compose-abort:hover { color: #2e2212; border-color: #8a6a2e; }
 
-/* Hide legacy desktop chrome that no longer renders */
+/* Hide legacy desktop chrome that no longer renders. (.terminal-hidden is
+   live again — it stashes the always-running xterm log off-screen.) */
 .app-shell,
 .top-banner,
 .dashboard,
-.terminal-hidden,
 .terminal-card,
 .panel-play,
 .terminal-overlay,
@@ -26259,4 +26138,143 @@ html:has(.game-shell),
 .staff-fab .staff-fab-invis {
   padding: 0 11px;
   font-size: 1rem;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Terminal screen — full-viewport overlay carrying the session-long
+ * xterm log (everything a telnet user would see). Summoned by the
+ * desktop dock input or the services-stack button on small screens;
+ * translucent over the game until the player types, then opaque.
+ * ───────────────────────────────────────────────────────────── */
+.terminal-screen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-terminal);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding:
+    calc(8px + env(safe-area-inset-top, 0px))
+    calc(12px + env(safe-area-inset-right, 0px))
+    calc(10px + env(safe-area-inset-bottom, 0px))
+    calc(12px + env(safe-area-inset-left, 0px));
+  background: rgb(18 22 34 / 55%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s var(--ease-in-out-smooth), background-color 0.2s var(--ease-in-out-smooth);
+}
+
+.terminal-screen-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.terminal-screen-opaque {
+  background: rgb(18 22 34 / 93%);
+}
+
+.terminal-screen-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.terminal-screen-title {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.terminal-screen-close {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-soft);
+  background: rgb(18 22 34 / 65%);
+  color: var(--text-secondary);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.terminal-screen-close:hover {
+  color: var(--text-primary);
+  background: rgb(34 41 64 / 80%);
+}
+
+.terminal-screen-host {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.terminal-screen-host .xterm,
+.terminal-screen-host .xterm-screen,
+.terminal-screen-host .xterm-viewport {
+  height: 100% !important;
+}
+
+.terminal-screen-host .xterm-viewport {
+  background: transparent !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-screen {
+    transition: none;
+  }
+}
+
+/* Terminal dock — desktop-only command line under the kiosk row; focusing
+   it summons the terminal screen. Hidden on small screens, where the
+   services stack hosts the terminal button instead. */
+.terminal-dock {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .terminal-dock {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: min(560px, 92%);
+    margin: 0 auto calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 7px 12px;
+    background: var(--surface-input);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-md);
+  }
+
+  .terminal-dock:focus-within {
+    border-color: var(--color-accent-violet);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .hud-stack-btn-terminal {
+    display: none;
+  }
+}
+
+.terminal-dock-glyph {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+
+.terminal-dock-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  outline: none;
+  cursor: text;
+}
+
+.terminal-dock-input::placeholder {
+  color: var(--text-placeholder);
 }
