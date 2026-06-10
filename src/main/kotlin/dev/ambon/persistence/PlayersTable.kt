@@ -94,6 +94,7 @@ object PlayersTable : Table("players") {
     val isAkathavae = bool("is_akathavae").default(false)
     val akathavaePledgedAtMs = long("akathavae_pledged_at_ms").default(0L)
     val akathavaeRenouncedAtMs = long("akathavae_renounced_at_ms").default(0L)
+    val preAkathavaeClass = varchar("pre_akathavae_class", 32).nullable()
     val arcanumData = text("arcanum_data").default("{}")
 
     override val primaryKey = PrimaryKey(id)
@@ -163,6 +164,7 @@ object PlayersTable : Table("players") {
             isAkathavae = row[isAkathavae],
             akathavaePledgedAtMs = row[akathavaePledgedAtMs],
             akathavaeRenouncedAtMs = row[akathavaeRenouncedAtMs],
+            preAkathavaeClass = row[preAkathavaeClass],
             arcanumData = row[arcanumData],
         ).migrateDefaults()
 
@@ -237,6 +239,7 @@ object PlayersTable : Table("players") {
         statement[isAkathavae] = record.isAkathavae
         statement[akathavaePledgedAtMs] = record.akathavaePledgedAtMs
         statement[akathavaeRenouncedAtMs] = record.akathavaeRenouncedAtMs
+        statement[preAkathavaeClass] = record.preAkathavaeClass
         statement[arcanumData] = record.arcanumData
     }
 }

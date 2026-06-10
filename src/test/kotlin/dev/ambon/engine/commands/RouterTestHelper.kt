@@ -201,6 +201,8 @@ internal fun buildTestRouter(
             clock = clock,
             markVitalsDirty = markVitalsDirty,
             akathavaeSystem = resolvedAkathavaeSystem,
+            progression = progression,
+            abilitySystem = abilitySystem,
         ),
         DuelHandler(ctx = ctx, duelSystem = duelSystem, combatSystem = combat),
         tradeSystem?.let { TradeHandler(ctx = ctx, tradeSystem = it) },

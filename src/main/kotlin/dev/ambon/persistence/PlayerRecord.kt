@@ -118,6 +118,8 @@ data class PlayerRecord(
     val akathavaePledgedAtMs: Long = 0L,
     /** Epoch-ms the pledge was last renounced — gates re-pledging behind a cooldown. */
     val akathavaeRenouncedAtMs: Long = 0L,
+    /** The class held before pledging as an Akathavae; restored on renounce. Null when not pledged. */
+    val preAkathavaeClass: String? = null,
     /** JSON blob holding the player's Arcanum journal (rooms/mobs/items recorded). */
     val arcanumData: String = "{}",
 ) {

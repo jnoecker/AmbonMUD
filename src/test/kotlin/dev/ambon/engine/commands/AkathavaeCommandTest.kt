@@ -286,6 +286,164 @@ class AkathavaeCommandTest {
         }
     }
 
+    // ── Class switch tests ───────────────────────────────────────────────
+
+    @Nested
+    inner class ClassSwitch {
+        /** Harness whose progression resolves real class scaling, so vitals visibly rescale. */
+        private fun classHarness(config: AkathavaeConfig = AkathavaeConfig()): CommandRouterHarness {
+            val classRegistry = dev.ambon.engine.PlayerClassRegistry().also { reg ->
+                dev.ambon.engine.PlayerClassRegistryLoader.load(dev.ambon.test.testClassEngineConfig(), reg)
+            }
+            val progression = dev.ambon.engine.PlayerProgression(classRegistry = classRegistry)
+            val world = shrineWorld()
+            val players = buildTestPlayerRegistry(
+                world.startRoom,
+                progression = progression,
+                classRegistry = classRegistry,
+            )
+            return CommandRouterHarness.create(
+                world = world,
+                players = players,
+                progression = progression,
+                classRegistry = classRegistry,
+                akathavaeConfig = config,
+            )
+        }
+
+        @Test
+        fun `pledging switches the class to Akathavae and rescales vitals`() = runTest {
+            val h = classHarness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            val me = h.players.get(sid)!!
+            h.players.setLevel(sid, 10)
+            val warriorMaxHp = me.maxHp
+            h.drain()
+
+            h.router.handle(sid, Command.Pledge)
+
+            assertEquals("AKATHAVAE", me.playerClass)
+            assertEquals("WARRIOR", me.preAkathavaeClass)
+            assertTrue(me.unlockedClasses.contains("AKATHAVAE"))
+            // Test config: Akathavae HP curve (1.30) is gentler than Warrior (1.80).
+            assertTrue(me.maxHp < warriorMaxHp, "expected vitals rescaled, was $warriorMaxHp now ${me.maxHp}")
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("set aside the ways of the Warrior") }, "got=$infos")
+        }
+
+        @Test
+        fun `renouncing restores the former class and vitals`() = runTest {
+            val h = classHarness(config = AkathavaeConfig(renounceCostGold = 0))
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            val me = h.players.get(sid)!!
+            h.players.setLevel(sid, 10)
+            val warriorMaxHp = me.maxHp
+            h.router.handle(sid, Command.Pledge)
+            h.drain()
+
+            h.router.handle(sid, Command.Renounce(confirm = true))
+
+            assertEquals("WARRIOR", me.playerClass)
+            assertNull(me.preAkathavaeClass)
+            assertFalse(me.unlockedClasses.contains("AKATHAVAE"))
+            assertEquals(warriorMaxHp, me.maxHp, "vitals should rescale back to the Warrior curve")
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("ways of the Warrior once more") }, "got=$infos")
+        }
+
+        @Test
+        fun `a multiclassed player keeps other unlocks and returns to the pre-pledge class`() = runTest {
+            val h = classHarness(config = AkathavaeConfig(renounceCostGold = 0))
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            val me = h.players.get(sid)!!
+            me.unlockedClasses.add("MAGE")
+            h.drain()
+
+            h.router.handle(sid, Command.Pledge)
+            assertEquals(setOf("WARRIOR", "MAGE", "AKATHAVAE"), me.unlockedClasses)
+            h.router.handle(sid, Command.Renounce(confirm = true))
+
+            assertEquals("WARRIOR", me.playerClass)
+            assertEquals(setOf("WARRIOR", "MAGE"), me.unlockedClasses)
+        }
+    }
+
+    // ── Multiclass lockout ───────────────────────────────────────────────
+
+    @Nested
+    inner class MulticlassLockout {
+        @Test
+        fun `train unlock is refused while pledged`() = runTest {
+            val trainerRoom = RoomId("test:trainer")
+            val world = dev.ambon.domain.world.World(
+                rooms = mapOf(
+                    trainerRoom to Room(id = trainerRoom, title = "Hall of Mentors", description = "Trainers.", exits = emptyMap()),
+                ),
+                startRoom = trainerRoom,
+            )
+            val items = dev.ambon.engine.items.ItemRegistry()
+            val players = buildTestPlayerRegistry(trainerRoom, items = items)
+            val mobs = dev.ambon.engine.MobRegistry()
+            val outbound = dev.ambon.bus.LocalOutboundBus()
+            val combat = dev.ambon.engine.CombatSystem(players, mobs, items, outbound)
+            val abilitySystem = dev.ambon.engine.abilities.AbilitySystem(
+                players = players,
+                registry = dev.ambon.engine.abilities.AbilityRegistry(),
+                outbound = outbound,
+                combat = combat,
+                clock = MutableClock(0L),
+            )
+            val trainerRegistry = dev.ambon.engine.TrainerRegistry()
+            trainerRegistry.register(
+                listOf(
+                    dev.ambon.domain.world.TrainerDefinition(
+                        id = "polyglot",
+                        name = "Master Polyglot",
+                        classNames = listOf("MAGE", "ROGUE"),
+                        roomId = trainerRoom,
+                    ),
+                ),
+            )
+            val ctx = dev.ambon.engine.commands.handlers.EngineContext(
+                players = players,
+                mobs = mobs,
+                world = world,
+                items = items,
+                outbound = outbound,
+                combat = combat,
+                gmcpEmitter = null,
+                worldState = null,
+            )
+            val router = CommandRouter(outbound = outbound, players = players)
+            dev.ambon.engine.commands.handlers.TrainerHandler(
+                ctx = ctx,
+                abilitySystem = abilitySystem,
+                trainerRegistry = trainerRegistry,
+                multiclassConfig = dev.ambon.config.MulticlassConfig(minLevel = 1, goldCost = 0),
+            ).register(router)
+
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Thalen")
+            val me = players.get(sid)!!
+            me.level = 20
+            me.gold = 10_000L
+            me.isAkathavae = true
+            outbound.drainAll()
+
+            router.handle(sid, Command.Train.Unlock(className = "mage"))
+
+            val errors = outbound.drainAll().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(
+                errors.any { it.contains("pledged yourself to knowledge, not combat and glory") },
+                "got=$errors",
+            )
+            assertFalse(me.unlockedClasses.contains("MAGE"))
+        }
+    }
+
     // ── Wardrobe tests ───────────────────────────────────────────────────
 
     @Nested

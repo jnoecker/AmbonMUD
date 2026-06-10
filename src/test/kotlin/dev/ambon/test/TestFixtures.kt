@@ -116,6 +116,13 @@ fun testClassEngineConfig(): ClassEngineConfig =
                 manaScalingRate = 1.15,
                 selectable = false,
             ),
+            "AKATHAVAE" to ClassDefinitionConfig(
+                displayName = "Akathavae",
+                hpScalingRate = 1.30,
+                manaScalingRate = 1.70,
+                primaryStat = "INT",
+                selectable = false,
+            ),
         ),
     )
 

@@ -109,8 +109,8 @@ ambient: <string, optional - overrides zone audio.ambient>
 
 `akathavaeShrine` notes:
 - When `true`, enables the `pledge` and `renounce` commands in this room.
-- Pledging is free and marks the player as an Akathavae: combat is forbidden and the player levels by illuminating the world (recording rooms, creatures, and items in their Arcanum journal).
-- Renouncing at a shrine costs gold (`ambonMUD.engine.akathavae.renounceCostGold`, default 2500) and starts a re-pledge cooldown (`repledgeCooldownMs`, default 24h).
+- Pledging is free and converts the player into the AKATHAVAE class (their former class is stashed and restored on renounce): combat and multiclassing are forbidden, vitals rescale to the Akathavae curve, and the player levels by illuminating the world (recording rooms, creatures, and items in their Arcanum journal).
+- Renouncing at a shrine costs gold (`ambonMUD.engine.akathavae.renounceCostGold`, default 2500), restores the former class, and starts a re-pledge cooldown (`repledgeCooldownMs`, default 24h).
 
 `station` notes:
 - Designates the room as a crafting station of the given type.

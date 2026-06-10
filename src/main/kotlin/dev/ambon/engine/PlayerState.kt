@@ -170,6 +170,8 @@ data class PlayerState(
     var akathavaePledgedAtMs: Long = 0L,
     /** Epoch-ms the pledge was last renounced — re-pledging is gated behind a cooldown. */
     var akathavaeRenouncedAtMs: Long = 0L,
+    /** The class held before pledging as an Akathavae; restored on renounce. Null when not pledged. */
+    var preAkathavaeClass: String? = null,
     /** The player's Arcanum journal. Persisted as a JSON blob (see [dev.ambon.persistence.PlayerRecord.arcanumData]). */
     var arcanum: ArcanumJournal = ArcanumJournal(),
 ) {
@@ -318,6 +320,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         isAkathavae = isAkathavae,
         akathavaePledgedAtMs = akathavaePledgedAtMs,
         akathavaeRenouncedAtMs = akathavaeRenouncedAtMs,
+        preAkathavaeClass = preAkathavaeClass,
         arcanum = runCatching {
             jsonMapper.readValue(arcanumData, ArcanumJournal::class.java)
         }.getOrDefault(ArcanumJournal()),
@@ -387,6 +390,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         isAkathavae = isAkathavae,
         akathavaePledgedAtMs = akathavaePledgedAtMs,
         akathavaeRenouncedAtMs = akathavaeRenouncedAtMs,
+        preAkathavaeClass = preAkathavaeClass,
         arcanumData = jsonMapper.writeValueAsString(arcanum),
         screenReaderEnabled = screenReaderEnabled,
         audioLinksEnabled = audioLinksEnabled,

@@ -6,7 +6,9 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.engine.AkathavaeSystem
+import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -31,6 +33,8 @@ class AkathavaeHandler(
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
     private val markStatsDirty: ((SessionId) -> Unit)? = null,
     private val akathavaeSystem: AkathavaeSystem? = null,
+    private val progression: PlayerProgression? = null,
+    private val abilitySystem: AbilitySystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val world = ctx.world
@@ -38,6 +42,7 @@ class AkathavaeHandler(
     private val combat = ctx.combat
     private val items = ctx.items
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val classRegistry = ctx.classRegistry
     private val metrics = ctx.metrics
 
     override fun register(router: CommandRouter) {
@@ -269,7 +274,21 @@ class AkathavaeHandler(
 
         me.isAkathavae = true
         me.akathavaePledgedAtMs = now
+        // The pledge claims the class itself: stash the old class for renounce,
+        // become an Akathavae, and rescale vitals to the new class curve.
+        val formerClass = me.playerClass
+        me.preAkathavaeClass = formerClass
+        me.playerClass = AKATHAVAE_CLASS
+        me.unlockedClasses.add(AKATHAVAE_CLASS)
+        applyClassChange(sessionId, me)
         metrics.onGameEvent("akathavae", "pledge")
+        val formerName = classRegistry?.get(formerClass)?.displayName ?: formerClass
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                "You set aside the ways of the $formerName — you are an Akathavae now.",
+            ),
+        )
         outbound.send(
             OutboundEvent.SendInfo(
                 sessionId,
@@ -330,6 +349,19 @@ class AkathavaeHandler(
         me.gold -= config.renounceCostGold
         me.isAkathavae = false
         me.akathavaeRenouncedAtMs = clock.millis()
+        // Restore the class held before the pledge. Legacy pledges (taken before
+        // the class switch existed) have no stash — fall back to the first
+        // non-Akathavae unlocked class, or leave the class untouched.
+        val restored = me.preAkathavaeClass
+            ?: me.unlockedClasses.firstOrNull { !it.equals(AKATHAVAE_CLASS, ignoreCase = true) }
+        me.preAkathavaeClass = null
+        me.unlockedClasses.removeIf { it.equals(AKATHAVAE_CLASS, ignoreCase = true) }
+        if (restored != null && me.playerClass.equals(AKATHAVAE_CLASS, ignoreCase = true)) {
+            me.playerClass = restored
+            applyClassChange(sessionId, me)
+            val restoredName = classRegistry?.get(restored)?.displayName ?: restored
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You take up the ways of the $restoredName once more."))
+        }
         metrics.onGameEvent("akathavae", "renounce")
         val dissolved = items.dissolveConjuredEquipment(sessionId)
         if (dissolved.isNotEmpty()) {
@@ -361,7 +393,31 @@ class AkathavaeHandler(
         markVitalsDirty?.invoke(sessionId)
     }
 
+    /**
+     * Applies the side effects of an active-class change: vitals rescale to the
+     * new class curve (preserving prestige/effect bonuses), known abilities
+     * recompute against the updated class set, and the client resyncs.
+     */
+    private suspend fun applyClassChange(sessionId: SessionId, me: PlayerState) {
+        progression?.recomputeVitalCaps(me)
+        abilitySystem?.recomputeKnownAbilities(sessionId, me.level, me.unlockedClasses)
+        gmcpEmitter?.sendCharName(sessionId, me)
+        gmcpEmitter?.sendCharClasses(sessionId, me.unlockedClasses.ifEmpty { setOf(me.playerClass) }, me.playerClass)
+        abilitySystem?.let { abilities ->
+            gmcpEmitter?.sendCharSkills(
+                sessionId,
+                abilities.knownAbilities(sessionId),
+                cooldownRemainingMs = { abilityId -> abilities.cooldownRemainingMs(sessionId, abilityId) },
+                manaCostFor = { ability -> abilities.computeManaCost(me, ability) },
+            )
+        }
+        markVitalsDirty?.invoke(sessionId)
+        markStatsDirty?.invoke(sessionId)
+    }
+
     companion object {
+        /** Class id entered by pledging; must match the AKATHAVAE definition in `engine.classes`. */
+        const val AKATHAVAE_CLASS = "AKATHAVAE"
         private const val HOUR_MS = 3_600_000L
         private const val MAX_SECTION_ROWS = 25
     }

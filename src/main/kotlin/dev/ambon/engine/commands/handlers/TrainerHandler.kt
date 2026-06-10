@@ -309,6 +309,17 @@ class TrainerHandler(
 
     private suspend fun handleTrainUnlock(sessionId: SessionId, classArg: String?) {
         players.withPlayer(sessionId) { me ->
+            // The Akathavae pledge claims the class slot itself — no multiclassing
+            // until the vow is renounced at a shrine.
+            if (me.isAkathavae) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "You have pledged yourself to knowledge, not combat and glory.",
+                    ),
+                )
+                return
+            }
             val trainer = findTrainer(sessionId, me) ?: return
 
             // Decide which class to unlock

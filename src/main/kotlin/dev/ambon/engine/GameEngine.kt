@@ -1449,6 +1449,8 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 markStatsDirty = ::markStatsDirty,
                 akathavaeSystem = akathavaeSystem,
+                progression = progression,
+                abilitySystem = abilitySystem,
             ),
             WorldInfoHandler(
                 ctx = ctx,
