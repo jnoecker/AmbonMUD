@@ -3135,6 +3135,10 @@ data class ImagesConfig(
             "crafting_bg" to "global_assets/crafting_bg.png",
             "professions_bg" to "global_assets/professions_bg.png",
             "admin_bg" to "global_assets/admin_bg.png",
+            // Pressed-flower parchment layered behind the full-screen terminal
+            // overlay (under a dark legibility scrim) once the player commits to
+            // typing. Falls back to the flat translucent CSS panel when absent.
+            "terminal_parchment_bg" to "global_assets/terminal_parchment_bg.png",
             "dialog_indicator" to "global_assets/dialog_indicator.png",
             "aggro_indicator" to "global_assets/aggro_indicator.png",
             "quest_available_indicator" to "global_assets/quest_available_indicator.png",

@@ -136,6 +136,9 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
     terminalRef.current?.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
   }, []);
 
+  /** xterm tracks its own selection (not window.getSelection). */
+  const hasSelection = useCallback(() => terminalRef.current?.hasSelection() ?? false, []);
+
   const openTerminal = useCallback(() => setOpen(true), []);
 
   const closeTerminal = useCallback(() => {
@@ -152,5 +155,6 @@ export function useTerminal({ hiddenHostRef, overlayHostRef }: TerminalHosts) {
     write,
     echoCommand,
     writeSystem,
+    hasSelection,
   };
 }

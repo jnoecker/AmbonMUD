@@ -266,6 +266,7 @@ function App() {
     write: writeTerminal,
     echoCommand,
     writeSystem,
+    hasSelection: terminalHasSelection,
   } = useTerminal({ hiddenHostRef: terminalHiddenRef, overlayHostRef: terminalOverlayRef });
 
   // Wire up the WebSocket
@@ -2174,6 +2175,9 @@ function App() {
         open={terminalOpen}
         opaque={terminalOpaque}
         hostRef={terminalOverlayRef}
+        hasSelection={terminalHasSelection}
+        parchmentBg={state.serverAssets["terminal_parchment_bg"] ?? null}
+        quillUrl={state.serverAssets["desk_quill"] ?? null}
         inputValue={inputValue}
         onInputChange={(value) => {
           setInputValue(value);

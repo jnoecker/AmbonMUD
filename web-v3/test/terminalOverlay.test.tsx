@@ -18,6 +18,7 @@ describe("terminal overlay", () => {
   const baseProps = {
     opaque: false,
     hostRef: { current: null },
+    hasSelection: () => false,
     inputValue: "",
     onInputChange: () => {},
     onInputKeyDown: () => {},
@@ -31,6 +32,25 @@ describe("terminal overlay", () => {
     expect(html).not.toContain("terminal-screen-open");
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain("terminal-screen-host");
+  });
+
+  test("applies the parchment skin and quill only when the art is present", () => {
+    const unskinned = renderToStaticMarkup(<TerminalOverlay {...baseProps} open={true} />);
+    expect(unskinned).not.toContain("terminal-screen-skinned");
+    expect(unskinned).not.toContain("canvas-command-send-skinned");
+
+    const skinned = renderToStaticMarkup(
+      <TerminalOverlay
+        {...baseProps}
+        open={true}
+        parchmentBg="https://art.example/parchment.png"
+        quillUrl="https://art.example/quill.png"
+      />,
+    );
+    expect(skinned).toContain("terminal-screen-skinned");
+    expect(skinned).toContain("--terminal-parchment");
+    expect(skinned).toContain("canvas-command-send-skinned");
+    expect(skinned).toContain("Inscribe a command");
   });
 
   test("opens translucent first, then opaque once the player types", () => {

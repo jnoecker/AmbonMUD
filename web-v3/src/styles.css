@@ -26227,9 +26227,10 @@ html:has(.game-shell),
   }
 }
 
-/* Terminal dock — desktop-only command line under the kiosk row; focusing
+/* Terminal dock — desktop-only parchment slip under the kiosk row; focusing
    it summons the terminal screen. Hidden on small screens, where the
-   services stack hosts the terminal button instead. */
+   services stack hosts the terminal button instead. Palette matches the
+   parchment family used by the skinned drawers (mail, puzzle). */
 .terminal-dock {
   display: none;
 }
@@ -26238,18 +26239,22 @@ html:has(.game-shell),
   .terminal-dock {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     width: min(560px, 92%);
     margin: 0 auto calc(10px + env(safe-area-inset-bottom, 0px));
-    padding: 7px 12px;
-    background: var(--surface-input);
-    border: 1px solid var(--line-soft);
-    border-radius: var(--radius-md);
+    padding: 6px 14px 7px;
+    border-radius: 4px;
+    border: 1px solid rgb(106 74 36 / 40%);
+    background-image:
+      linear-gradient(160deg, #f3ead2, #e6d8b4),
+      repeating-linear-gradient(0deg, transparent 0 26px, rgb(106 74 36 / 12%) 26px 27px);
+    box-shadow: 0 4px 12px rgb(8 6 2 / 35%), inset 0 1px 0 rgb(255 252 244 / 55%);
+    transform: rotate(-0.4deg);
   }
 
   .terminal-dock:focus-within {
-    border-color: var(--color-accent-violet);
-    box-shadow: var(--shadow-glow);
+    border-color: #c8a24a;
+    box-shadow: 0 4px 14px rgb(8 6 2 / 45%), 0 0 14px rgb(200 162 74 / 35%);
   }
 
   .hud-stack-btn-terminal {
@@ -26258,23 +26263,72 @@ html:has(.game-shell),
 }
 
 .terminal-dock-glyph {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text-tertiary);
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #3a2c1a;
+}
+
+.terminal-dock-quill-img {
+  display: block;
+  width: 30px;
+  height: auto;
+  transform: rotate(8deg);
+  filter: drop-shadow(0 2px 3px rgb(8 6 2 / 40%));
 }
 
 .terminal-dock-input {
   flex: 1;
   min-width: 0;
   border: none;
+  border-bottom: 2px solid rgb(106 74 36 / 45%);
   background: transparent;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 0.92rem;
+  color: #2e2212;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
   outline: none;
   cursor: text;
 }
 
 .terminal-dock-input::placeholder {
-  color: var(--text-placeholder);
+  color: rgb(106 74 36 / 60%);
+  font-style: italic;
+}
+
+/* Pressed-flower parchment behind the committed (opaque) terminal — the
+   scrim gradient sits on top of the art for log legibility. Absent art
+   (no key / 404) leaves the flat fallback panel untouched. */
+.terminal-screen-skinned.terminal-screen-opaque {
+  background-color: rgb(16 18 30);
+  background-image:
+    linear-gradient(rgb(16 18 30 / 74%), rgb(16 18 30 / 82%)),
+    var(--terminal-parchment, none);
+  background-size: auto, cover;
+  background-position: center;
+}
+
+/* Quill send button inside the terminal — the painted art replaces the
+   gradient chrome entirely (ART_CONTRACT: neutralize fallback styling). */
+.canvas-command-send-skinned {
+  background: none;
+  border-radius: 0;
+}
+
+.canvas-command-send-img {
+  display: block;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  transform: rotate(8deg);
+  filter: drop-shadow(0 2px 3px rgb(8 6 2 / 45%));
+  transition: transform 0.15s var(--ease-out-soft);
+}
+
+.canvas-command-send-skinned:hover .canvas-command-send-img {
+  transform: rotate(-4deg) scale(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-command-send-img {
+    transition: none;
+  }
 }

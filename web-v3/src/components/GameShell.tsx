@@ -383,15 +383,20 @@ export function GameShell({
 
           {/* Desktop only — focusing this summons the terminal overlay, which
               carries the session-long server log. CSS hides it on small
-              screens, where the services stack hosts the terminal instead. */}
+              screens, where the services stack hosts the terminal instead.
+              Styled as a parchment slip with the quill resting on it. */}
           <div className="terminal-dock">
-            <span className="terminal-dock-glyph" aria-hidden="true">&gt;_</span>
+            <span className="terminal-dock-glyph" aria-hidden="true">
+              {serverAssets["desk_quill"]
+                ? <img src={serverAssets["desk_quill"]} alt="" className="terminal-dock-quill-img" />
+                : "✒"}
+            </span>
             <input
               type="text"
               className="terminal-dock-input"
               value=""
               readOnly
-              placeholder="Type a command…"
+              placeholder="Inscribe a command…"
               aria-label="Open terminal"
               onFocus={onOpenTerminal}
               onChange={() => undefined}
