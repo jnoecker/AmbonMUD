@@ -1887,7 +1887,7 @@ function App() {
           <img
             className="image-preview-img"
             src={imagePreviewUrl}
-            alt=""
+            alt="Enlarged portrait"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
@@ -1954,7 +1954,9 @@ function App() {
                 <span className="look-target-slot">{formatItemSlot(state.lookTarget.slot)}</span>
               )}
             </div>
-            {state.lookTarget.image && <img src={state.lookTarget.image} alt="" className="look-target-image" />}
+            {state.lookTarget.image && (
+              <img src={state.lookTarget.image} alt={`Illustration of ${state.lookTarget.name}`} className="look-target-image" />
+            )}
             {state.lookTarget.description && (
               <p className="look-target-desc">{state.lookTarget.description}</p>
             )}

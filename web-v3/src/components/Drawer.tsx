@@ -169,7 +169,7 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
         >
           <div className="drawer-handle" aria-hidden="true" />
         </div>
-        <div className="drawer-header">
+        <header className="drawer-header">
           <h2 className="drawer-title">{title}</h2>
           <button
             type="button"
@@ -179,7 +179,7 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
           >
             &#x2715;
           </button>
-        </div>
+        </header>
         <div className="drawer-body">
           {children}
         </div>
