@@ -25,8 +25,11 @@ import java.util.Random
  * above the player lowers it, the gap-relief stat softens that penalty) and pays
  * first-time-big / repeat-small XP scaled by the XP stat. The subject's possible
  * drops are catalogued into the Arcanum as templates — feeding the wardrobe —
- * without anything being taken from it. Failure puts the subject on a retry
- * cooldown and turns it hostile unless the escape stat talks the player out of it.
+ * without anything being taken from it. A recorded creature still counts as a
+ * defeated one for quest/achievement credit (once per living instance), so the
+ * pledged complete the same objectives as everyone else. Failure puts the subject
+ * on a retry cooldown and turns it hostile unless the escape stat talks the player
+ * out of it.
  *
  * The system also records passive discoveries: rooms visited and items first
  * seen, each worth XP behind an anti-speedrun throttle. Non-combat NPCs can be
@@ -59,9 +62,18 @@ class AkathavaeSystem(
     /** Per-session anti-speedrun throttle on discovery XP awards. Runtime-only. */
     private val nextDiscoveryXpAt = mutableMapOf<SessionId, Long>()
 
+    /**
+     * Per-session set of mob *instance* ids already credited as illumination
+     * kills. Mirrors the old capture path, where the subject was consumed: a given
+     * living creature grants quest/achievement credit once, so a persistent
+     * subject can't be re-illuminated to farm kill objectives. Runtime-only.
+     */
+    private val creditedIlluminations = mutableMapOf<SessionId, MutableSet<String>>()
+
     fun onSessionRemoved(sessionId: SessionId) {
         failCooldowns.remove(sessionId)
         nextDiscoveryXpAt.remove(sessionId)
+        creditedIlluminations.remove(sessionId)
     }
 
     // ── Illumination ─────────────────────────────────────────────────────
@@ -197,6 +209,13 @@ class AkathavaeSystem(
         // wardrobe — but take nothing: the subject is unharmed and stays put.
         for (drop in mob.drops) {
             recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED)
+        }
+
+        // A recorded creature counts as a defeated one for quests and achievements,
+        // so the pledged complete the same objectives as everyone else — but only
+        // once per living instance, since illumination no longer consumes it.
+        if (creditedIlluminations.getOrPut(sessionId) { mutableSetOf() }.add(mob.id.value)) {
+            combat.creditIlluminationKill(sessionId, mob)
         }
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)

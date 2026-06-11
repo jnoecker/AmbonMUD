@@ -164,7 +164,7 @@ class AkathavaeIlluminateTest {
     }
 
     @Test
-    fun `illumination does not fire kill credit — the subject lives`() = runTest {
+    fun `illumination fires quest kill credit so the pledged complete the same quests`() = runTest {
         val credited = mutableListOf<String>()
         val s = setup(rng = ScriptedRandom(0), onMobKilledByPlayer = { _, templateKey -> credited += templateKey })
         val sid = SessionId(1L)
@@ -173,7 +173,22 @@ class AkathavaeIlluminateTest {
 
         s.system.illuminate(sid, "wisp")
 
-        assertTrue(credited.isEmpty(), "a recorded creature is unharmed and must not count as slain")
+        assertEquals(listOf("test:wisp"), credited, "a recorded creature counts as a defeated one")
+    }
+
+    @Test
+    fun `re-illuminating the same living instance does not double-credit the kill`() = runTest {
+        val credited = mutableListOf<String>()
+        val s = setup(rng = ScriptedRandom(0, 0), onMobKilledByPlayer = { _, templateKey -> credited += templateKey })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+        // The subject is unharmed and stays — illuminate it again immediately.
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(listOf("test:wisp"), credited, "a persistent subject grants kill credit only once")
     }
 
     @Test

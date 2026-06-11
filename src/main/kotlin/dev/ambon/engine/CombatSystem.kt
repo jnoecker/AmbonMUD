@@ -1764,6 +1764,21 @@ class CombatSystem(
         return goldDrop
     }
 
+    /**
+     * Fires quest/achievement/faction kill credit for [mob] without combat — the
+     * hook the Akathavae illumination path uses so a recorded creature counts as a
+     * defeated one for objectives, letting the pledged complete the same quests as
+     * everyone else. No XP, gold, or loot here; illumination grants its own awards.
+     */
+    suspend fun creditIlluminationKill(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        if (mob.templateKey.isNotEmpty()) {
+            callbacks.onMobKilledByPlayer(sessionId, mob.templateKey)
+        }
+    }
+
     private suspend fun grantGroupKillXp(
         killerSessionId: SessionId,
         mob: MobState,
