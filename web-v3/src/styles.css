@@ -14942,21 +14942,36 @@ body {
 }
 
 /* Cinematic letterbox: the same art, blurred and dimmed, fills the gaps the
-   aspect-locked stage leaves at off-ratio viewports. */
+   aspect-locked stage leaves at off-ratio viewports. Painted via an <img>
+   (not a CSS background) so the scene's pixels load through the same path the
+   art probe gates on — see ArtScene.tsx. */
 .login-art-underlay {
   position: absolute;
   inset: 0;
-  background: var(--login-art) center / cover no-repeat;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   filter: blur(18px) brightness(0.62) saturate(1.05);
   transform: scale(1.06);
 }
 
 .login-art-stage {
   position: relative;
-  background: var(--login-art) center / 100% 100% no-repeat;
   container-type: size;     /* cqh/cqw type scales with the stage, not the viewport */
   border-radius: 6px;
   box-shadow: 0 18px 60px rgb(0 0 0 / 55%);
+}
+
+/* The sharp scene art, filling the aspect-locked stage behind the seated
+   controls. The stage is locked to the art's ratio, so object-fit: fill
+   (the old `background-size: 100% 100%`) shows it undistorted. */
+.login-art-stage-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: inherit;
 }
 
 /* Stage aspect variants — width is capped on both axes so the art never crops. */
