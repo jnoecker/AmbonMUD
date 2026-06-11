@@ -172,6 +172,10 @@ function TrainerAutoLoad({ onCommand }: { onCommand: (cmd: string) => void }) {
   return <p className="empty-note">Loading trainer data&hellip;</p>;
 }
 
+// URLs already handed to the browser for prefetching, so the preload effect
+// never recreates an Image for art it has seen this session.
+const preloadedArt = new Set<string>();
+
 function App() {
   const resumeTokenRef = useRef<string | null>(null);
   const pendingAuthCharRef = useRef<string | null>(null);
@@ -354,6 +358,23 @@ function App() {
       disconnect();
     };
   }, [connect, disconnect, reconnect]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Warm the browser cache for painted panel art the moment Server.Assets lands.
+  // Skins are applied as CSS background-images, so a panel only starts fetching
+  // its PNG when it first paints — until the bytes arrive the element shows its
+  // fallback (the purple jewel-tone gradient for drawers/admin/etc.), which reads
+  // as a flash. Server.Assets arrives at login, well before any in-game panel
+  // opens, so a fire-and-forget preload here means those panels paint warm. Skip
+  // inline data: URIs (already resolved, nothing to fetch).
+  useEffect(() => {
+    for (const url of Object.values(state.serverAssets)) {
+      if (typeof url !== "string" || url.startsWith("data:") || preloadedArt.has(url)) continue;
+      preloadedArt.add(url);
+      const img = new Image();
+      img.decoding = "async";
+      img.src = url;
+    }
+  }, [state.serverAssets]);
 
   const sendCommand = (raw: string) => {
     const command = raw.trim();
