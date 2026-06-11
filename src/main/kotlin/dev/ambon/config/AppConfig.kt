@@ -142,6 +142,7 @@ data class AppConfig(
         validateEngineAkathavae()
         validateEngineWorldTime()
         validateEngineWeather()
+        validateEngineWorldEvents()
         validateEngineEnchanting()
         validateEngineFactions()
         validateEngineDailyQuests()
@@ -495,6 +496,28 @@ data class AppConfig(
         engine.weather.types.forEach { (id, def) ->
             require(def.weight > 0) {
                 "ambonMUD.engine.weather.types[$id].weight must be positive"
+            }
+        }
+    }
+
+    private fun validateEngineWorldEvents() {
+        engine.worldEvents.definitions.forEach { (id, def) ->
+            val path = "ambonMUD.engine.worldEvents.definitions[$id]"
+            for ((field, value) in listOf("startDate" to def.startDate, "endDate" to def.endDate)) {
+                if (value.isNotEmpty()) {
+                    require(runCatching { java.time.LocalDate.parse(value) }.isSuccess) {
+                        "$path.$field must be an ISO date (yyyy-MM-dd), got '$value'"
+                    }
+                }
+            }
+            def.recurrence?.let { rec ->
+                rec.periodMs.requirePositive("$path.recurrence.periodMs")
+                require(rec.durationMs in 1 until rec.periodMs) {
+                    "$path.recurrence.durationMs must be in 1..${rec.periodMs - 1} (less than periodMs), got ${rec.durationMs}"
+                }
+                require(rec.offsetMs >= 0) {
+                    "$path.recurrence.offsetMs must be >= 0, got ${rec.offsetMs}"
+                }
             }
         }
     }
@@ -1406,6 +1429,23 @@ data class WeatherTypeDefinition(
     val icon: String = "",
 )
 
+/**
+ * Optional repeating window for a world event. When present, the event is
+ * active only during the first [durationMs] of every [periodMs] cycle
+ * (cycles are anchored to the Unix epoch, shifted by [offsetMs]), further
+ * bounded by the definition's date range. This is what makes an event
+ * observable during normal play — e.g. ten minutes out of every hour —
+ * rather than a one-shot calendar window.
+ */
+data class WorldEventRecurrence(
+    /** Full cycle length in milliseconds (e.g. 3600000 = hourly). */
+    val periodMs: Long = 0,
+    /** Active window at the start of each cycle. Must be < periodMs. */
+    val durationMs: Long = 0,
+    /** Shifts the cycle anchor, e.g. to stagger multiple events. */
+    val offsetMs: Long = 0,
+)
+
 data class WorldEventDefinition(
     val displayName: String = "",
     val description: String = "",
@@ -1419,6 +1459,8 @@ data class WorldEventDefinition(
     val startMessage: String = "",
     /** Announcement broadcast when event ends. */
     val endMessage: String = "",
+    /** Repeating active window within the date range; null = active for the whole range. */
+    val recurrence: WorldEventRecurrence? = null,
 )
 
 data class WorldEventsConfig(

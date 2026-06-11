@@ -194,6 +194,11 @@ Semantics:
   never while it is fighting a player.
 - Weather-gated mobs naturally only appear where players are present, because
   per-zone weather only advances in zones that have occupants.
+- Event flags come from `ambonMUD.engine.worldEvents` definitions (config, not
+  zone YAML). An event may be bounded by real-world dates and/or carry a
+  `recurrence` window (e.g. ten minutes of every hour) so gated mobs appear
+  during normal play; activations broadcast the event's start/end messages and
+  update the `world` command + `World.Events` GMCP.
 
 #### Rare cosmetic variants (`rareVariants`)
 

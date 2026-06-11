@@ -261,6 +261,15 @@ class GameEngine(
                 // Seed the client's time-of-day + season immediately; otherwise it
                 // wouldn't learn the season until the next quarter-year rollover.
                 gmcpEmitter.sendWorldTime(sid, worldTimePayload())
+                // Seed active world events too — World.Events is otherwise only
+                // broadcast on activation edges, so a login mid-event would show
+                // nothing until the event ends or the next one begins.
+                gmcpEmitter.sendWorldEvents(
+                    sid,
+                    worldEventSystem.activeEvents().map { (id, def) ->
+                        GmcpEmitter.WorldEventPayload(id, def.displayName, def.description)
+                    },
+                )
                 // Push daily/weekly/global quest state so the client doesn't
                 // need a manual refresh button. See issue #1091.
                 dailyQuestSystem?.let { dqs ->
