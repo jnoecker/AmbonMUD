@@ -54,6 +54,17 @@ const artImageStatus = new Map<string, "ready" | "failed">();
  */
 export function useArtImage(url: string | null): string | null {
   const [, setProbedCount] = useState(0);
+  // Synchronous HTTP-cache seed: when the art is already cached (warmed by the
+  // preloads in main.tsx / App.tsx), a freshly-constructed Image reports
+  // `complete` with a non-zero natural size the instant we assign src. Marking
+  // it ready here — before the first paint — lets a warm scene render painted
+  // immediately instead of flashing the CSS fallback for the frame it takes the
+  // async onload below to settle. Cold art falls through to that async probe.
+  if (url && !artImageStatus.has(url)) {
+    const probe = new Image();
+    probe.src = url;
+    if (probe.complete && probe.naturalWidth > 0) artImageStatus.set(url, "ready");
+  }
   useEffect(() => {
     if (!url || artImageStatus.has(url)) return;
     let cancelled = false;
