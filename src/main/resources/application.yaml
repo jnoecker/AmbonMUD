@@ -2486,6 +2486,9 @@ ambonmud:
       diceWinChance: 0.45
       diceWinMultiplier: 2
       cooldownMs: 5000
+    jukebox:
+      enabled: true
+      maxSongDurationSeconds: 600
     stylist:
       feeGold: 500
     akathavae:

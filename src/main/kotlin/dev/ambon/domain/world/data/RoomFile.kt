@@ -39,6 +39,23 @@ data class RoomFile(
     val music: String? = null,
     /** Ambient sound loop for this room (overrides zone default). */
     val ambient: String? = null,
+    /** Jukebox playlist for this room. Non-empty enables the jukebox command + badge. */
+    val jukebox: List<JukeboxSongFile> = emptyList(),
     /** Terrain type for this room (overrides zone default). Affects weather display and default background. */
     val terrain: String? = null,
+)
+
+/**
+ * One authored jukebox track. [file] is an audio filename resolved against the
+ * zone audio base (like room `music`/`ambient`). [durationSeconds] is the play
+ * length the jukebox locks the room for; [cost] (gold) defaults to the configured
+ * jukebox cost when omitted. [description] is optional lore flavour.
+ */
+data class JukeboxSongFile(
+    val title: String,
+    val file: String,
+    val durationSeconds: Int,
+    val cost: Long? = null,
+    val artist: String? = null,
+    val description: String? = null,
 )

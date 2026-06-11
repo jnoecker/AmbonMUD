@@ -40,6 +40,7 @@ import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.world.AchievementGate
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
+import dev.ambon.domain.world.JukeboxSong
 import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.MobDrop
@@ -57,6 +58,7 @@ import dev.ambon.domain.world.ZoneScaling
 import dev.ambon.domain.world.data.ExitValue
 import dev.ambon.domain.world.data.ExitValueDeserializer
 import dev.ambon.domain.world.data.FeatureFile
+import dev.ambon.domain.world.data.JukeboxSongFile
 import dev.ambon.domain.world.data.MobFile
 import dev.ambon.domain.world.data.MobSpawnFile
 import dev.ambon.domain.world.data.ReputationRequirementFile
@@ -257,6 +259,7 @@ object WorldLoader {
                         video = rf.video?.let { "$videosBase$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
                         ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "$audioBase$it" },
+                        jukebox = parseJukebox(rf.jukebox, audioBase, id),
                         graphical = zoneGraphical,
                         terrain = (rf.terrain ?: zoneTerrain ?: "outside").also {
                             validateTerrain(it, "room '${id.value}'")
@@ -1702,6 +1705,9 @@ object WorldLoader {
         return ReputationRequirement(faction = faction, min = raw.min, max = raw.max)
     }
 
+    /** Gold cost applied to a jukebox song whose YAML omits an explicit `cost`. */
+    private const val DEFAULT_JUKEBOX_COST = 5L
+
     private val VALID_TERRAINS = setOf(
         "inside",
         "outside",
@@ -1745,6 +1751,38 @@ object WorldLoader {
             )
         }
     }
+
+    /**
+     * Resolves an authored jukebox playlist into [JukeboxSong]s: each track's
+     * audio [file] is prefixed with the zone [audioBase] (like room music), an
+     * omitted cost falls back to [DEFAULT_JUKEBOX_COST], and durations/costs are
+     * validated. An empty list (the common case) means the room has no jukebox.
+     */
+    private fun parseJukebox(
+        songs: List<JukeboxSongFile>,
+        audioBase: String,
+        roomId: RoomId,
+    ): List<JukeboxSong> =
+        songs.mapIndexed { index, song ->
+            val where = "room '${roomId.value}' jukebox song #${index + 1}"
+            if (song.title.isBlank()) throw WorldLoadException("$where has a blank title")
+            if (song.file.isBlank()) throw WorldLoadException("$where ('${song.title}') has a blank file")
+            if (song.durationSeconds <= 0) {
+                throw WorldLoadException(
+                    "$where ('${song.title}') has durationSeconds=${song.durationSeconds}; must be > 0",
+                )
+            }
+            val cost = song.cost ?: DEFAULT_JUKEBOX_COST
+            if (cost < 0) throw WorldLoadException("$where ('${song.title}') has a negative cost ($cost)")
+            JukeboxSong(
+                title = song.title,
+                url = "$audioBase${song.file}",
+                durationSeconds = song.durationSeconds,
+                cost = cost,
+                artist = song.artist,
+                description = song.description,
+            )
+        }
 
     private fun parseSpawnCondition(
         file: dev.ambon.domain.world.data.SpawnConditionFile?,

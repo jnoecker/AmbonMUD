@@ -213,6 +213,7 @@ internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     emitBankGmcp(sessionId)
     emitPuzzleGmcp(sessionId)
     emitStylistGmcp(sessionId)
+    emitJukeboxGmcp(sessionId)
 }
 
 /** Emits `Puzzle.List` with the puzzles in the player's current room, or `Puzzle.Close` otherwise. */
@@ -292,6 +293,22 @@ internal suspend fun EngineContext.emitStylistGmcp(sessionId: SessionId) {
     } else {
         emitter.sendStylistClose(sessionId)
     }
+}
+
+/**
+ * Emits `Jukebox.Info` for the player's current room: its playlist plus whatever
+ * track is playing right now (so someone entering mid-song hears it). Sent on
+ * every room look/entry; rooms without a jukebox send an empty playlist so the
+ * client clears any stale state from the previous room.
+ */
+internal suspend fun EngineContext.emitJukeboxGmcp(sessionId: SessionId) {
+    val emitter = gmcpEmitter ?: return
+    val system = jukeboxSystem ?: return
+    val me = players.get(sessionId) ?: return
+    val room = world.rooms[me.roomId] ?: return
+    val nowPlaying = system.nowPlaying(room.id)
+    val remaining = nowPlaying?.let { system.secondsRemaining(it) } ?: 0
+    emitter.sendJukeboxInfo(sessionId, emitter.buildJukeboxInfo(room.jukebox, nowPlaying, remaining))
 }
 
 /**
