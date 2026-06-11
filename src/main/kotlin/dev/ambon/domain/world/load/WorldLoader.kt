@@ -1856,29 +1856,40 @@ object WorldLoader {
         Direction.SOUTH to (0 to 1),
         Direction.EAST to (1 to 0),
         Direction.WEST to (-1 to 0),
-        Direction.UP to (1 to -1),
-        Direction.DOWN to (-1 to 1),
+    )
+
+    /** A room's resolved minimap cell: (x, y) within floor z of its zone. */
+    private data class MapCell(
+        val x: Int,
+        val y: Int,
+        val z: Int,
     )
 
     /**
-     * Assigns 2D minimap coordinates to every room via per-zone BFS.
+     * Assigns minimap coordinates (x, y, floor z) to every room via per-zone BFS.
      *
-     * Each zone is laid out independently, starting from the zone's declared start room at (0,0).
-     * Only horizontal exits (N/S/E/W) are traversed during BFS — up/down exits are treated as
-     * portals rather than spatial moves, so they don't scatter rooms diagonally or cause grid
-     * collisions with unrelated branches. Rooms reachable only via up/down are placed in a
-     * second pass relative to their horizontal neighbors.
+     * Each zone is laid out independently. Rooms split into *floors*: the connected
+     * components of the horizontal (N/S/E/W) exit graph. The floor containing the
+     * zone's start room is laid out first, from (0,0) on z=0. Up/down exits are
+     * treated as stairs between floors rather than spatial moves: each floor that
+     * connects to an already-placed floor through a vertical exit is anchored at
+     * its stair partner's (x, y) on z±1 and then BFS-laid-out on its own layer, so
+     * upstairs/downstairs areas keep their internal shape without scattering
+     * diagonally into the ground floor. Floors with no vertical link to anything
+     * placed (authoring oddities) fall back to z=0 near the origin, with a warning.
      *
-     * When two rooms would occupy the same grid cell (non-euclidean exit topology), the later
-     * arrival is placed at the nearest unoccupied cell via a spiral search.
+     * When two rooms would occupy the same cell of the same floor (non-euclidean
+     * exit topology), the later arrival is placed at the nearest unoccupied cell
+     * via a spiral search — and a warning names both rooms, since the resulting
+     * map draws that exit as a diagonal. Zone authors can keep maps clean by
+     * laying out each floor so its horizontal exits are euclidean-consistent.
      */
     private fun assignMapCoordinates(
         rooms: Map<RoomId, Room>,
         zoneStartRooms: Map<String, RoomId>,
     ): Map<RoomId, Room> {
-        // Group rooms by zone
         val roomsByZone = rooms.keys.groupBy { it.zone }
-        val coords = HashMap<RoomId, Pair<Int, Int>>(rooms.size)
+        val coords = HashMap<RoomId, MapCell>(rooms.size)
 
         data class Pending(
             val roomId: RoomId,
@@ -1890,72 +1901,127 @@ object WorldLoader {
 
         for ((zone, roomIds) in roomsByZone) {
             val zoneRoomSet = roomIds.toHashSet()
-            val occupied = HashMap<Pair<Int, Int>, RoomId>()
+            // Occupancy is tracked per floor: floor z → (x, y) → room.
+            val occupied = HashMap<Int, HashMap<Pair<Int, Int>, RoomId>>()
+
+            fun layer(z: Int) = occupied.getOrPut(z) { HashMap() }
+
             val startId = zoneStartRooms[zone] ?: roomIds.first()
 
-            // Phase 1: BFS using only horizontal exits (N/S/E/W).
-            val queue = ArrayDeque<Pending>()
-            queue.addLast(Pending(startId, 0, 0))
+            // Lays out one floor (horizontal connected component) by BFS from an
+            // anchor room at the given cell, warning on any collision-displacement.
+            fun layoutFloor(
+                anchorId: RoomId,
+                anchorX: Int,
+                anchorY: Int,
+                z: Int,
+            ) {
+                val grid = layer(z)
+                val queue = ArrayDeque<Pending>()
+                queue.addLast(Pending(anchorId, anchorX, anchorY))
+                while (queue.isNotEmpty()) {
+                    val (roomId, desiredX, desiredY) = queue.removeFirst()
+                    if (coords.containsKey(roomId)) continue
 
-            while (queue.isNotEmpty()) {
-                val (roomId, desiredX, desiredY) = queue.removeFirst()
-                if (coords.containsKey(roomId)) continue
+                    val pos = findFreePosition(desiredX, desiredY, grid)
+                    if (pos != (desiredX to desiredY)) {
+                        logger.warn(
+                            "Minimap layout: zone '{}' room '{}' displaced from ({},{}) to ({},{}) on floor {} — " +
+                                "cell occupied by '{}'; this exit will draw diagonally on the map",
+                            zone,
+                            roomId.value,
+                            desiredX,
+                            desiredY,
+                            pos.first,
+                            pos.second,
+                            z,
+                            grid[desiredX to desiredY]?.value,
+                        )
+                    }
+                    coords[roomId] = MapCell(pos.first, pos.second, z)
+                    grid[pos] = roomId
 
-                val pos = findFreePosition(desiredX, desiredY, occupied)
-                coords[roomId] = pos
-                occupied[pos] = roomId
-
-                val room = rooms[roomId] ?: continue
-                for ((dir, targetId) in room.exits) {
-                    if (dir !in horizontalDirs) continue
-                    if (coords.containsKey(targetId)) continue
-                    if (targetId !in zoneRoomSet) continue
-                    val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
-                    queue.addLast(Pending(targetId, pos.first + dx, pos.second + dy))
+                    val room = rooms[roomId] ?: continue
+                    for ((dir, targetId) in room.exits) {
+                        if (dir !in horizontalDirs) continue
+                        if (coords.containsKey(targetId)) continue
+                        if (targetId !in zoneRoomSet) continue
+                        val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
+                        queue.addLast(Pending(targetId, pos.first + dx, pos.second + dy))
+                    }
                 }
             }
 
-            // Phase 2: Place rooms not reached by horizontal BFS (reachable only via up/down,
-            // or completely unreachable dead-ends). Try to position relative to an already-placed
-            // horizontal neighbor; fall back to placing near any connected neighbor.
+            // Phase 1: the start room's floor is the zone's ground floor (z=0).
+            layoutFloor(startId, 0, 0, 0)
+
+            // Phase 2: repeatedly anchor unplaced floors through their stairs.
+            // A placed room with an up/down exit to an unplaced room seeds that
+            // room's whole floor at the partner's (x, y) one layer up/down.
+            var progressed = true
+            while (progressed) {
+                progressed = false
+                for (placedId in roomIds) {
+                    val cell = coords[placedId] ?: continue
+                    val room = rooms[placedId] ?: continue
+                    for ((dir, targetId) in room.exits) {
+                        val dz = when (dir) {
+                            Direction.UP -> 1
+                            Direction.DOWN -> -1
+                            else -> continue
+                        }
+                        if (targetId in coords || targetId !in zoneRoomSet) continue
+                        layoutFloor(targetId, cell.x, cell.y, cell.z + dz)
+                        progressed = true
+                    }
+                }
+            }
+
+            // Phase 3: rooms with no static inbound path — typically hidden behind
+            // puzzle-revealed exits. Anchor each through its own outgoing exits back
+            // to a placed neighbor (reversing the offset, or sitting a floor away
+            // from a stair partner), repeating until stable.
+            var anchoredSome = true
+            while (anchoredSome) {
+                anchoredSome = false
+                for (unreachedId in roomIds) {
+                    if (coords.containsKey(unreachedId)) continue
+                    val room = rooms[unreachedId] ?: continue
+                    for ((dir, neighborId) in room.exits) {
+                        val n = coords[neighborId] ?: continue
+                        when (dir) {
+                            in horizontalDirs -> {
+                                val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
+                                layoutFloor(unreachedId, n.x - dx, n.y - dy, n.z)
+                            }
+                            Direction.UP -> layoutFloor(unreachedId, n.x, n.y, n.z - 1)
+                            Direction.DOWN -> layoutFloor(unreachedId, n.x, n.y, n.z + 1)
+                            else -> continue
+                        }
+                        anchoredSome = true
+                        break
+                    }
+                }
+            }
+
+            // Phase 4: truly disconnected rooms. Park them on z=0 near the origin
+            // so they at least render somewhere, and say so.
             for (unreachedId in roomIds) {
                 if (coords.containsKey(unreachedId)) continue
-                val room = rooms[unreachedId] ?: continue
-                var placed = false
-                // Prefer horizontal neighbors for placement (they have reliable offsets)
-                for ((dir, neighborId) in room.exits) {
-                    val neighborPos = coords[neighborId] ?: continue
-                    if (dir in horizontalDirs) {
-                        val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
-                        val desiredPos = findFreePosition(neighborPos.first - dx, neighborPos.second - dy, occupied)
-                        coords[unreachedId] = desiredPos
-                        occupied[desiredPos] = unreachedId
-                        placed = true
-                        break
-                    }
-                }
-                // Fall back to placing near any connected neighbor
-                if (!placed) {
-                    for ((_, neighborId) in room.exits) {
-                        val neighborPos = coords[neighborId] ?: continue
-                        val desiredPos = findFreePosition(neighborPos.first, neighborPos.second, occupied)
-                        coords[unreachedId] = desiredPos
-                        occupied[desiredPos] = unreachedId
-                        placed = true
-                        break
-                    }
-                }
-                if (!placed) {
-                    val pos = findFreePosition(0, 0, occupied)
-                    coords[unreachedId] = pos
-                    occupied[pos] = unreachedId
-                }
+                logger.warn(
+                    "Minimap layout: zone '{}' room '{}' is not connected to the start room by any " +
+                        "horizontal or vertical path — parking its floor at the origin of floor 0",
+                    zone,
+                    unreachedId.value,
+                )
+                val pos = findFreePosition(0, 0, layer(0))
+                layoutFloor(unreachedId, pos.first, pos.second, 0)
             }
         }
 
         return rooms.mapValues { (id, room) ->
-            val (x, y) = coords[id] ?: (0 to 0)
-            room.copy(mapX = x, mapY = y)
+            val cell = coords[id] ?: MapCell(0, 0, 0)
+            room.copy(mapX = cell.x, mapY = cell.y, mapZ = cell.z)
         }
     }
 

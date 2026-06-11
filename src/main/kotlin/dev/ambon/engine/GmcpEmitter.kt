@@ -12,7 +12,6 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
-import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.abilities.AbilityDefinition
@@ -273,6 +272,7 @@ class GmcpEmitter(
                 station = room.station,
                 mapX = room.mapX,
                 mapY = room.mapY,
+                mapZ = room.mapZ,
                 housing = isHousing,
                 housingOwner = housingOwner,
                 graphical = room.graphical,
@@ -294,15 +294,15 @@ class GmcpEmitter(
 
     /**
      * Send the full room layout for a zone so the client can render a fog-of-war
-     * map with cloud-reveal as the player explores. Only horizontal exits (N/S/E/W)
-     * are included — vertical transitions are handled by floor buttons.
+     * map with cloud-reveal as the player explores. Each room carries its floor
+     * (`z`); clients draw one floor at a time. Up/down exits are included so the
+     * map can badge stairs, but clients must not treat them as positional edges.
      */
     suspend fun sendZoneMap(
         sessionId: SessionId,
         zone: String,
         rooms: Collection<Room>,
     ) {
-        val horizontalDirs = setOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
         emit(
             sessionId,
             "Zone.Map",
@@ -313,8 +313,9 @@ class GmcpEmitter(
                         id = r.id.value,
                         x = r.mapX,
                         y = r.mapY,
+                        z = r.mapZ,
                         exits = r.exits.entries
-                            .filter { (dir, target) -> dir in horizontalDirs && target.zone == zone }
+                            .filter { (_, target) -> target.zone == zone }
                             .associate { (dir, target) -> dir.name.lowercase() to target.value },
                     )
                 },
@@ -2715,6 +2716,7 @@ class GmcpEmitter(
         val id: String,
         val x: Int,
         val y: Int,
+        val z: Int,
         val exits: Map<String, String>,
     )
 
@@ -2731,6 +2733,7 @@ class GmcpEmitter(
         val station: String? = null,
         val mapX: Int = 0,
         val mapY: Int = 0,
+        val mapZ: Int = 0,
         val housing: Boolean = false,
         val housingOwner: String? = null,
         val graphical: Boolean = false,

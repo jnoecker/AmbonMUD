@@ -49,6 +49,13 @@ data class Room(
     val mapX: Int = 0,
     /** Precomputed minimap Y coordinate (assigned by WorldLoader BFS). */
     val mapY: Int = 0,
+    /**
+     * Precomputed minimap floor (z layer). Rooms horizontally connected to the
+     * zone start room are floor 0; areas reachable only through up/down exits
+     * sit one floor above/below their stair partner. Clients render one floor
+     * at a time, following the player.
+     */
+    val mapZ: Int = 0,
     /** Whether this room's zone has custom graphical assets (non-placeholder images). */
     val graphical: Boolean = false,
     /** Terrain type — drives default background and weather suppression. */

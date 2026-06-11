@@ -149,6 +149,43 @@ function drawProceduralRoom(
   }
 }
 
+/** Small ▲/▼ stair chevrons beside a room's right edge. `highlight` > 0 swaps
+ *  the ink for pulsing quest-gold (the trail's "take these stairs" cue). */
+function drawStairBadges(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  half: number,
+  hasUp: boolean,
+  hasDown: boolean,
+  highlight: number,
+) {
+  const bx = cx + half + 5;
+  const s = Math.max(3, Math.min(6, half * 0.45));
+  ctx.save();
+  ctx.fillStyle = highlight > 0 ? QUEST_MARKER : INK;
+  ctx.globalAlpha = highlight > 0 ? highlight : 0.9;
+  if (hasUp) {
+    const y0 = hasDown ? cy - s - 1 : cy;
+    ctx.beginPath();
+    ctx.moveTo(bx, y0 - s);
+    ctx.lineTo(bx - s, y0 + s * 0.7);
+    ctx.lineTo(bx + s, y0 + s * 0.7);
+    ctx.closePath();
+    ctx.fill();
+  }
+  if (hasDown) {
+    const y0 = hasUp ? cy + s + 1 : cy;
+    ctx.beginPath();
+    ctx.moveTo(bx, y0 + s);
+    ctx.lineTo(bx - s, y0 - s * 0.7);
+    ctx.lineTo(bx + s, y0 - s * 0.7);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 /** Procedural quest marker (fallback when no minimap_quest asset). */
 function drawProceduralQuest(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: number, pulse: number) {
   ctx.save();
@@ -198,6 +235,17 @@ function renderMap(
 
   if (!currentId) return;
 
+  // One floor at a time, following the player. Rooms on other floors stay off
+  // the chart; stairs between floors render as ▲/▼ badges instead of edges.
+  const floor = visited.get(currentId)?.z ?? 0;
+  let multiFloor = false;
+  for (const node of visited.values()) {
+    if (node.z !== floor) {
+      multiFloor = true;
+      break;
+    }
+  }
+
   // Scroll parchment bounds — nodes must stay within these
   const scrollLeft = width * SCROLL_INSET_LEFT;
   const scrollRight = width * (1 - SCROLL_INSET_RIGHT);
@@ -230,6 +278,7 @@ function renderMap(
 
   // Connecting lines — only between two visible rooms; off-map exits get a tick.
   for (const node of visited.values()) {
+    if (node.z !== floor) continue;
     const sx = nodeX(node);
     const sy = nodeY(node);
     const sIn = inScrollBounds(sx, sy);
@@ -237,6 +286,7 @@ function renderMap(
       if (dir === "up" || dir === "down") continue;
       const target = visited.get(targetId);
       const offset = MAP_OFFSETS[dir];
+      if (target && target.z !== floor) continue;
       if (target) {
         const tx = nodeX(target);
         const ty = nodeY(target);
@@ -260,7 +310,10 @@ function renderMap(
     }
   }
 
-  // Quest path trail — BFS from current room to nearest quest target
+  // Quest path trail — BFS from current room to nearest quest target. The path
+  // may climb or descend stairs; segments on other floors aren't drawn, and the
+  // stair room where the trail leaves this floor gets a pulsing gold badge.
+  const stairHops = new Set<string>();
   if (currentId && questTargetRoomIds.size > 0 && !questTargetRoomIds.has(currentId)) {
     const pathEdges = bfsQuestPath(currentId, questTargetRoomIds, visited);
     if (pathEdges.length > 0) {
@@ -273,6 +326,8 @@ function renderMap(
         const fromNode = visited.get(fromId);
         const toNode = visited.get(toId);
         if (!fromNode || !toNode) continue;
+        if (fromNode.z === floor && toNode.z !== floor) stairHops.add(fromId);
+        if (fromNode.z !== floor || toNode.z !== floor) continue;
         const sx = nodeX(fromNode);
         const sy = nodeY(fromNode);
         const tx = nodeX(toNode);
@@ -300,7 +355,12 @@ function renderMap(
   }
 
   // Nodes — terrain-aware glyph stamps (with procedural inked-rect fallback)
+  const reducedMotionPulse = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const stairPulse = reducedMotionPulse
+    ? 0.8
+    : 0.45 + 0.4 * (0.5 + 0.5 * Math.sin(Date.now() / PATH_SHIMMER_PERIOD * Math.PI * 2));
   for (const [id, node] of visited.entries()) {
+    if (node.z !== floor) continue;
     const x = nodeX(node);
     const y = nodeY(node);
     if (!inScrollBounds(x, y)) continue;
@@ -319,6 +379,14 @@ function renderMap(
 
     const drew = drawGlyph(ctx, key, x, y, size, 1);
     if (!drew) drawProceduralRoom(ctx, x, y, size / 2, isCurrent, isVisited, isHousing);
+
+    // Stair badges — ▲/▼ beside rooms with vertical exits; gold-pulsing when
+    // the quest trail wants the player to take these stairs.
+    const hasUp = "up" in node.exits;
+    const hasDown = "down" in node.exits;
+    if (hasUp || hasDown) {
+      drawStairBadges(ctx, x, y, size / 2, hasUp, hasDown, stairHops.has(id) ? stairPulse : 0);
+    }
 
     // Quest objective marker
     if (!isCurrent && questTargetRoomIds.has(id)) {
@@ -354,6 +422,7 @@ function renderMap(
   for (const targetId of questTargetRoomIds) {
     const targetNode = visited.get(targetId);
     if (!targetNode) continue;
+    if (targetNode.z !== floor) continue; // off-floor targets are routed via the stair badge
     const tx = nodeX(targetNode);
     const ty = nodeY(targetNode);
     if (inScrollBounds(tx, ty)) continue; // already visible
@@ -390,11 +459,25 @@ function renderMap(
     ctx.restore();
   }
 
+  // Floor tag — only when the zone actually has more than one floor.
+  if (multiFloor) {
+    const label = floor === 0 ? "ground floor" : floor > 0 ? `floor +${floor}` : `floor ${floor}`;
+    ctx.font = "bold 11px 'JetBrains Mono', 'Cascadia Mono', monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = LABEL_OUTLINE;
+    ctx.strokeText(label, scrollLeft + 10, scrollTop + 8);
+    ctx.fillStyle = LABEL_VISITED;
+    ctx.fillText(label, scrollLeft + 10, scrollTop + 8);
+  }
+
   // Restore from scroll-bounds clip
   ctx.restore();
 }
 
-/** BFS from currentId to the nearest quest target. Returns edge pairs [from, to]. */
+/** BFS from currentId to the nearest quest target, stairs included.
+ *  Returns edge pairs [from, to]. */
 function bfsQuestPath(
   currentId: string,
   targets: Set<string>,
@@ -410,8 +493,7 @@ function bfsQuestPath(
     const id = queue.shift()!;
     const node = visited.get(id);
     if (!node) continue;
-    for (const [dir, neighborId] of Object.entries(node.exits)) {
-      if (dir === "up" || dir === "down") continue;
+    for (const neighborId of Object.values(node.exits)) {
       if (seen.has(neighborId) || !visited.has(neighborId)) continue;
       seen.add(neighborId);
       parent.set(neighborId, id);
@@ -463,11 +545,15 @@ export function useMiniMap() {
     const visited = visitedRef.current;
     const current = currentRoomIdRef.current ? visited.get(currentRoomIdRef.current) : undefined;
 
+    // Fit and pan bounds consider only the player's current floor — rooms on
+    // other floors aren't drawn, so they shouldn't stretch the zoom either.
+    const floor = current?.z ?? 0;
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
     for (const node of visited.values()) {
+      if (node.z !== floor) continue;
       if (node.x < minX) minX = node.x;
       if (node.x > maxX) maxX = node.x;
       if (node.y < minY) minY = node.y;
@@ -630,12 +716,12 @@ export function useMiniMap() {
   }, [drawMap]);
 
   const updateMap = useCallback(
-    (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean, terrain?: string | null) => {
+    (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, mapZ: number, housing?: boolean, terrain?: string | null) => {
       currentRoomIdRef.current = roomId;
       const rooms = visitedRef.current;
 
       if (!rooms.has(roomId)) {
-        rooms.set(roomId, { x: mapX, y: mapY, exits, title, image, housing, terrain: terrain ?? undefined });
+        rooms.set(roomId, { x: mapX, y: mapY, z: mapZ, exits, title, image, housing, terrain: terrain ?? undefined });
       } else {
         const node = rooms.get(roomId)!;
         node.exits = exits;
@@ -645,15 +731,16 @@ export function useMiniMap() {
         if (terrain) node.terrain = terrain;
         node.x = mapX;
         node.y = mapY;
+        node.z = mapZ;
       }
 
-      // Pre-place unvisited horizontal neighbors (N/S/E/W only).
+      // Pre-place unvisited horizontal neighbors (N/S/E/W only) on the same floor.
       for (const [dir, targetId] of Object.entries(exits)) {
         if (dir === "up" || dir === "down") continue;
         if (rooms.has(targetId)) continue;
         const offset = MAP_OFFSETS[dir];
         if (!offset) continue;
-        rooms.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, exits: {}, title: "", image: null });
+        rooms.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, z: mapZ, exits: {}, title: "", image: null });
       }
 
       drawMap();
@@ -663,7 +750,7 @@ export function useMiniMap() {
 
   /** Pre-populate the map with all rooms in a zone as fog nodes. */
   const loadZoneMap = useCallback(
-    (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => {
+    (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>) => {
       const map = visitedRef.current;
       map.clear();
       currentRoomIdRef.current = null;
@@ -673,7 +760,7 @@ export function useMiniMap() {
       zoomRef.current = 0;
 
       for (const r of rooms) {
-        map.set(r.id, { x: r.x, y: r.y, exits: r.exits, title: "", image: null });
+        map.set(r.id, { x: r.x, y: r.y, z: r.z, exits: r.exits, title: "", image: null });
       }
       drawMap();
 

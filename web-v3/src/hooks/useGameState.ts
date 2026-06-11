@@ -187,10 +187,11 @@ export interface MiniMapBridge {
     image: string | null,
     mapX: number,
     mapY: number,
+    mapZ: number,
     housing?: boolean,
     terrain?: string | null,
   ) => void;
-  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
+  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>) => void;
   resetMap: () => void;
 }
 

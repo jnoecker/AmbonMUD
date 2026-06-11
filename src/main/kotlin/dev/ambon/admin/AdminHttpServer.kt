@@ -909,6 +909,7 @@ internal fun Application.adminModule(
                 "ambient" to room.ambient,
                 "mapX" to room.mapX,
                 "mapY" to room.mapY,
+                "mapZ" to room.mapZ,
             )
             call.respondText(json.writeValueAsString(dto), ContentType.Application.Json)
         }
