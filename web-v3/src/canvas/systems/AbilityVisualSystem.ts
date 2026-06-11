@@ -1,5 +1,6 @@
-import { Container, Graphics, Sprite, Texture, Assets } from "pixi.js";
+import { Container, Graphics, Sprite, Texture } from "pixi.js";
 import type { AbilityVisualArchetype, CombatEventData, SkillVisual } from "../../types";
+import { loadTexture } from "../textureLoader";
 
 /**
  * Per-archetype combat visual renderer. Driven by the skill's `visual.archetype`
@@ -214,7 +215,7 @@ export class AbilityVisualSystem {
       if (cached) {
         proj.sprite = this.attachSprite(cached, color);
       } else if (cached !== null) {
-        Assets.load(imagePath).then((tex: unknown) => {
+        loadTexture(imagePath).then((tex: unknown) => {
           const texture = tex instanceof Texture ? tex : null;
           this.textureCache.set(imagePath, texture);
           if (texture && this.projectiles.includes(proj)) {
@@ -245,7 +246,7 @@ export class AbilityVisualSystem {
     if (cached) {
       pulse.sprite = this.attachSprite(cached, 0xffffff);
     } else if (cached !== null) {
-      Assets.load(imagePath).then((tex: unknown) => {
+      loadTexture(imagePath).then((tex: unknown) => {
         const texture = tex instanceof Texture ? tex : null;
         this.textureCache.set(imagePath, texture);
         if (texture && this.iconPulses.includes(pulse)) {

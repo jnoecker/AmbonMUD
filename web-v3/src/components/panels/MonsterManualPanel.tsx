@@ -155,6 +155,10 @@ export function MonsterManualPanel({
 
   const { info, name } = monster;
   const skinned = !!bg; // a monster_manual_bg frame is registered
+  // Rare-variant colorize: a valid "#rrggbb" tint washes the portrait the same
+  // way the canvas sprite is colorized, so albino/verdant/etc. read consistently
+  // in the field manual. Invalid/absent tints leave the portrait untouched.
+  const variantTint = monster.tint && /^#[0-9a-fA-F]{6}$/.test(monster.tint) ? monster.tint : null;
   // Only show stats once the consider result is for *this* creature.
   const c = consider && (consider.mobId === monster.id || consider.mobName === name) ? consider : null;
   const level = c?.mobLevel ?? monster.level;
@@ -210,10 +214,16 @@ export function MonsterManualPanel({
         {c && <span className="mm-badge">{c.ratingLabel}</span>}
 
         {/* Framed art (left) */}
-        <figure className="mm-figure">
+        <figure
+          className={`mm-figure${variantTint ? " mm-figure-variant" : ""}`}
+          style={variantTint ? { ["--mm-variant-tint" as string]: variantTint } : undefined}
+        >
           {monster.image ? (
             <>
               <img className="mm-image" src={monster.image} alt={name} />
+              {/* Colorize wash: grayscale (on .mm-image) × tint (multiply) mirrors
+                  the canvas luminance-colorize, so pale variants stay pale. */}
+              {variantTint && <span className="mm-variant-wash" aria-hidden="true" />}
               <button
                 type="button"
                 className="mm-zoom"
@@ -233,7 +243,14 @@ export function MonsterManualPanel({
         <div className="mm-content">
           <header className="mm-head">
             <div className="mm-titles">
-              <h2 className="mm-name">{name}</h2>
+              <h2 className="mm-name">
+                {name}
+                {monster.variantName && (
+                  <span className="mm-variant-name" style={variantTint ? { color: variantTint } : undefined}>
+                    ✦ {monster.variantName}
+                  </span>
+                )}
+              </h2>
               {/* Level/category only matters for things you can fight. */}
               {monster.canAttack && (level != null || category) && (
                 <span className="mm-meta">

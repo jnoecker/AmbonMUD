@@ -520,6 +520,10 @@ export interface MonsterEntry {
   isStaff: boolean;
   /** Whether an Attack button + threat assessment apply (false for pets). */
   canAttack: boolean;
+  /** Rare-variant display label (e.g. "Albino"), shown as a badge; null = ordinary. */
+  variantName?: string | null;
+  /** CSS hex tint (e.g. "#5fd17a") used to colorize the manual portrait; null = none. */
+  tint?: string | null;
   /**
    * Deep-link the manual straight to a subpanel when opened from one of the
    * creature's floating indicators: "talk" → dialogue view, "quest" → quest

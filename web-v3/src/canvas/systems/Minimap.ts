@@ -1,4 +1,5 @@
-import { Assets, Container, Graphics, Rectangle, Sprite, Texture } from "pixi.js";
+import { Container, Graphics, Rectangle, Sprite, Texture } from "pixi.js";
+import { loadTexture } from "../textureLoader";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 import { MAP_OFFSETS } from "../../constants";
 
@@ -807,7 +808,7 @@ export class Minimap {
         const url = sa[k];
         if (!url) return;
         try {
-          const tex = await Assets.load(url);
+          const tex = await loadTexture(url);
           if (this.destroyed) return;
           // Auto-trim the transparent margin off room/quest glyphs so the
           // artwork fills the node; the parchment scrap is left untouched.
