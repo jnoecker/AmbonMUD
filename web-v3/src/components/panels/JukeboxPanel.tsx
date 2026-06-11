@@ -56,6 +56,7 @@ export function JukeboxPanel({ jukebox, gold, uiFeedbackFeed, assets, onCommand 
             <div className="jukebox-np-sub">
               Queued by {nowPlaying.buyer} · {busy ? `${formatDuration(remaining)} left` : "ending…"}
             </div>
+            {nowPlaying.description ? <div className="jukebox-np-desc">{nowPlaying.description}</div> : null}
           </div>
         </div>
       )}

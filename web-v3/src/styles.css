@@ -27358,6 +27358,7 @@ html:has(.game-shell),
 .jukebox-np-title { color: var(--text-primary); font-weight: 600; }
 .jukebox-np-artist { color: var(--text-muted); font-weight: 400; }
 .jukebox-np-sub { font-size: 0.78rem; color: var(--text-muted); }
+.jukebox-np-desc { margin-top: 2px; font-size: 0.78rem; font-style: italic; color: var(--text-muted); }
 
 .jukebox-list {
   list-style: none;
