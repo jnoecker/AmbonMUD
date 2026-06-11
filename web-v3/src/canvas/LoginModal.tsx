@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import type { LoginClassOption, LoginErrorState, LoginPromptState, LoginRaceOption } from "../types";
 import { ArtScene } from "./ArtScene";
-import { ART_FIT_PORTRAIT, useArtImage, useMediaFits, useOrientedArt } from "./loginArtFit";
+import { ART_FIT_PORTRAIT, useArtImage, useArtImageState, useMediaFits, useOrientedArt } from "./loginArtFit";
 
 interface LoginModalProps {
   loginPrompt: LoginPromptState;
@@ -24,10 +24,6 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
     setInputValue("");
     setShowPassword(false);
   }
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, [loginPrompt.state]);
 
   const handleSubmit = useCallback((e: FormEvent) => {
     e.preventDefault();
@@ -62,14 +58,23 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
   const isSlotScene = scene?.slots === true;
   // Gated on the image actually loading: a URL that 404s or is blocked
   // client-side must fall back to the CSS UI, not render a black scene.
-  const slotArt = useArtImage(scene && isSlotScene && artFitsPortrait ? serverAssets[scene.key] ?? null : null);
+  const slotArtState = useArtImageState(scene && isSlotScene && artFitsPortrait ? serverAssets[scene.key] ?? null : null);
   const oriented = useOrientedArt(
     scene && !isSlotScene ? serverAssets[scene.key] ?? null : null,
     scene && !isSlotScene && scene.portraitKey ? serverAssets[scene.portraitKey] ?? null : null,
   );
-  const sceneArt = isSlotScene ? slotArt : oriented.url;
+  const sceneArt = isSlotScene ? slotArtState.url : oriented.url;
+  /** True while the step's art is still loading — hold a dark frame, don't flash the CSS dialog. */
+  const scenePending = isSlotScene ? slotArtState.pending : oriented.pending;
   /** True when the phone-portrait companion (941×1672 stage) is active. */
   const phoneScene = !isSlotScene && oriented.phone;
+
+  // Refocus when the step changes, and again when the art settles — while the
+  // holding frame (or a late-arriving painted scene swap) is up, the input the
+  // step-change pass tried to focus doesn't exist yet.
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [loginPrompt.state, sceneArt, scenePending]);
 
   // Decorative blurred backdrop behind the fallback modal steps.
   const backdropArt = useArtImage(serverAssets["login_bg"] ?? null);
@@ -84,6 +89,13 @@ export function LoginModal({ loginPrompt, loginError, serverAssets, onSubmit }: 
     raceSelection: "Choose your race",
     classSelection: "Choose your class",
   };
+
+  // The step's painted scene is still loading (typically one or two frames
+  // from the service-worker cache): hold a dark frame instead of flashing the
+  // CSS dialog before the art swaps in.
+  if (!sceneArt && scenePending) {
+    return <div className="login-art-root" aria-hidden="true" />;
+  }
 
   if (loginPrompt.state === "name") {
     const art = sceneArt;

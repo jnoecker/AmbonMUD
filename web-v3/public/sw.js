@@ -1,5 +1,9 @@
-// AmbonMUD Service Worker — cache static assets for offline splash + faster loads
-const CACHE_NAME = "ambonmud-v1";
+// AmbonMUD Service Worker — cache static assets for offline splash + faster loads.
+// Bump CACHE_NAME whenever caching behavior changes: activate purges older
+// versions, which also self-heals clients whose v1 cache captured error
+// responses (the old fetch handler cached 404s/opaque bodies, permanently
+// breaking styling for that browser).
+const CACHE_NAME = "ambonmud-v2";
 const STATIC_ASSETS = ["/", "/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -18,35 +22,68 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Only complete, successful, same-origin responses may enter the cache.
+// Caching anything else (404 during a server restart, an opaque error) pins
+// the failure: cache-first would then serve the broken response forever.
+const cacheable = (response) => Boolean(response && response.ok && response.type === "basic");
+
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
 
-  // Never cache WebSocket or GMCP traffic
-  if (url.protocol === "ws:" || url.protocol === "wss:") return;
-
-  // Network-first for HTML (always get latest app shell)
+  // Network-first for HTML, and re-cache the shell on every successful
+  // navigation. A shell frozen at install time references hashed bundles that
+  // stop existing after a redeploy, so a stale offline fallback renders an
+  // unstyled page.
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match("/"))
+      fetch(event.request)
+        .then((response) => {
+          if (cacheable(response)) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put("/", clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match("/"))
     );
     return;
   }
 
-  // Cache-first for static assets (JS, CSS, images, fonts)
-  if (
-    url.pathname.startsWith("/assets/") ||
-    url.pathname.startsWith("/icons/") ||
-    url.pathname.startsWith("/images/")
-  ) {
+  // Content-hashed bundles are immutable: cache-first.
+  if (url.pathname.startsWith("/assets/")) {
     event.respondWith(
-      caches.match(event.request).then((cached) =>
-        cached || fetch(event.request).then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
+      caches.match(event.request).then(
+        (cached) =>
+          cached ||
+          fetch(event.request).then((response) => {
+            if (cacheable(response)) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            }
+            return response;
+          })
       )
     );
     return;
+  }
+
+  // Art and icons are mutable (R2 art can change under a stable URL):
+  // stale-while-revalidate paints warm from cache and refreshes in the
+  // background so updated art lands on the next load.
+  if (url.pathname.startsWith("/icons/") || url.pathname.startsWith("/images/")) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) =>
+        cache.match(event.request).then((cached) => {
+          const refresh = fetch(event.request)
+            .then((response) => {
+              if (cacheable(response)) cache.put(event.request, response.clone());
+              return response;
+            })
+            .catch(() => cached);
+          return cached || refresh;
+        })
+      )
+    );
   }
 });

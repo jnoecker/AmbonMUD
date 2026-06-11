@@ -17,7 +17,7 @@ export function CharacterPicker({ characters, backgroundImage, backgroundImagePo
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   // Orientation-aware art pick, gated on the image actually loading —
   // failed art falls back to the CSS dialog.
-  const { url: art, phone } = useOrientedArt(backgroundImage, backgroundImagePortrait);
+  const { url: art, phone, pending } = useOrientedArt(backgroundImage, backgroundImagePortrait);
 
   const handleRemove = useCallback((name: string, e: React.MouseEvent | React.PointerEvent | React.KeyboardEvent) => {
     e.stopPropagation();
@@ -55,6 +55,12 @@ export function CharacterPicker({ characters, backgroundImage, backgroundImagePo
       </button>
     </div>
   ));
+
+  // Art is still loading (typically one or two frames from the service-worker
+  // cache): hold a dark frame instead of flashing the CSS dialog.
+  if (!art && pending) {
+    return <div className="login-art-root" aria-hidden="true" />;
+  }
 
   if (art) {
     return (
