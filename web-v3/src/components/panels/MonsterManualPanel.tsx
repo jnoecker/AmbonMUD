@@ -155,14 +155,15 @@ export function MonsterManualPanel({
 
   const { info, name } = monster;
   const skinned = !!bg; // a monster_manual_bg frame is registered
-  // Optional painted portrait frame. Overlaid on the figure, its opaque border
-  // masks the rectangular rare-variant colorize seam (and frames every portrait
-  // when registered). Absent → the plain bordered portrait shows through.
-  const portraitFrame = serverAssets["monster_manual_portrait_frame"];
   // Rare-variant colorize: a valid "#rrggbb" tint washes the portrait the same
   // way the canvas sprite is colorized, so albino/verdant/etc. read consistently
   // in the field manual. Invalid/absent tints leave the portrait untouched.
   const variantTint = monster.tint && /^#[0-9a-fA-F]{6}$/.test(monster.tint) ? monster.tint : null;
+  // Optional painted portrait frame, shown *only* for variants: its opaque border
+  // masks the rectangular colorize seam and makes a rare creature feel special,
+  // while ordinary mobs keep the painted card's own alcove. Absent asset → the
+  // plain bordered portrait shows through.
+  const portraitFrame = variantTint ? serverAssets["monster_manual_portrait_frame"] : undefined;
   // Only show stats once the consider result is for *this* creature.
   const c = consider && (consider.mobId === monster.id || consider.mobName === name) ? consider : null;
   const level = c?.mobLevel ?? monster.level;
