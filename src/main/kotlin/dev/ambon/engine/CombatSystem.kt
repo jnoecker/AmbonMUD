@@ -1764,6 +1764,21 @@ class CombatSystem(
         return goldDrop
     }
 
+    /**
+     * Fires quest/achievement/faction kill credit for [mob] without combat — the
+     * hook the Akathavae illumination path uses so a recorded creature counts as a
+     * defeated one for objectives, letting the pledged complete the same quests as
+     * everyone else. No XP, gold, or loot here; illumination grants its own awards.
+     */
+    suspend fun creditIlluminationKill(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        if (mob.templateKey.isNotEmpty()) {
+            callbacks.onMobKilledByPlayer(sessionId, mob.templateKey)
+        }
+    }
+
     private suspend fun grantGroupKillXp(
         killerSessionId: SessionId,
         mob: MobState,
@@ -1871,64 +1886,6 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendInfo(killerSessionId, "You loot ${names.joinToString(", ")}."))
         callbacks.onRoomItemsChanged(roomId)
         return names
-    }
-
-    /**
-     * Resolves a *successful illumination* by an Akathavae as a kill-equivalent:
-     * the subject is removed from the world (normal respawn machinery applies),
-     * its drops go straight into the illuminator's inventory, gold is found, and
-     * quest/achievement kill credit fires — a recorded creature counts as a slain
-     * one for objectives. XP is NOT granted here; the Akathavae system applies
-     * its own WIS-scaled award.
-     *
-     * Returns the item instances captured into the player's inventory.
-     */
-    suspend fun resolveIlluminationCapture(
-        sessionId: SessionId,
-        mob: MobState,
-    ): List<dev.ambon.domain.items.ItemInstance> {
-        val player = players.get(sessionId) ?: return emptyList()
-
-        removeMobFromCombat(mob.id)
-        mobs.remove(mob.id)
-        callbacks.onMobRemoved(mob.id, mob.roomId)
-        statusEffects?.onMobRemoved(mob.id)
-
-        // Carried + rolled drops land in the room first (reusing the normal drop
-        // path), then transfer to the illuminator regardless of autoloot settings.
-        val candidates = items.dropMobItemsToRoom(mob.id, mob.roomId) + rollDrops(mob)
-        val captured = mutableListOf<dev.ambon.domain.items.ItemInstance>()
-        for (candidate in candidates) {
-            if (!candidate.item.takeable) continue
-            val taken = items.takeFromRoomByInstance(sessionId, mob.roomId, candidate) ?: continue
-            captured += taken
-            onItemAutoLooted(sessionId, taken)
-        }
-        callbacks.onRoomItemsChanged(mob.roomId)
-
-        broadcastToRoom(
-            players,
-            outbound,
-            mob.roomId,
-            "${mob.name} stills under ${player.name}'s gaze, then slips away as if into the pages of a book.",
-            exclude = sessionId,
-        )
-        if (captured.isNotEmpty()) {
-            outbound.send(
-                OutboundEvent.SendInfo(
-                    sessionId,
-                    "Among what ${mob.name} leaves behind you find ${captured.joinToString(", ") { it.item.displayName }}.",
-                ),
-            )
-        }
-        grantKillGold(sessionId, mob)
-
-        // A recorded creature counts as a slain one for quests and achievements.
-        if (mob.templateKey.isNotEmpty()) {
-            callbacks.onMobKilledByPlayer(sessionId, mob.templateKey)
-        }
-        metrics.onGameEvent("akathavae", "illuminate_capture")
-        return captured
     }
 }
 

@@ -284,6 +284,21 @@ class AkathavaeCommandTest {
             assertTrue(errors.any { it.contains("pledge stays your hand") }, "got=$errors")
             assertFalse(h.combat.isInCombat(sid), "Pledged player must not enter combat")
         }
+
+        @Test
+        fun `spells leafs through the Arcanum for an Akathavae`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.router.handle(sid, Command.Pledge)
+            h.drain()
+
+            h.router.handle(sid, Command.Spells)
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("Arcanum") }, "got=$infos")
+            assertFalse(infos.any { it.contains("don't know any spells") }, "got=$infos")
+        }
     }
 
     // ── Class switch tests ───────────────────────────────────────────────
@@ -351,6 +366,76 @@ class AkathavaeCommandTest {
             assertEquals(warriorMaxHp, me.maxHp, "vitals should rescale back to the Warrior curve")
             val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
             assertTrue(infos.any { it.contains("ways of the Warrior once more") }, "got=$infos")
+        }
+
+        @Test
+        fun `pledging sets aside the former class's abilities`() = runTest {
+            val classRegistry = dev.ambon.engine.PlayerClassRegistry().also { reg ->
+                dev.ambon.engine.PlayerClassRegistryLoader.load(dev.ambon.test.testClassEngineConfig(), reg)
+            }
+            val progression = dev.ambon.engine.PlayerProgression(classRegistry = classRegistry)
+            val world = shrineWorld()
+            val outbound = dev.ambon.bus.LocalOutboundBus()
+            val items = dev.ambon.engine.items.ItemRegistry()
+            val mobs = dev.ambon.engine.MobRegistry()
+            val players = buildTestPlayerRegistry(
+                world.startRoom,
+                items = items,
+                progression = progression,
+                classRegistry = classRegistry,
+            )
+            val combat = dev.ambon.engine.CombatSystem(players, mobs, items, outbound)
+            val registry = dev.ambon.engine.abilities.AbilityRegistry()
+            registry.register(
+                dev.ambon.engine.abilities.AbilityDefinition(
+                    id = dev.ambon.engine.abilities.AbilityId("cleave"),
+                    displayName = "Cleave",
+                    description = "A mighty swing.",
+                    manaCostPct = 10.0,
+                    cooldownMs = 0,
+                    levelRequired = 1,
+                    skillPointCost = 0,
+                    requiredClass = "WARRIOR",
+                    targetType = "enemy",
+                    effect = dev.ambon.engine.abilities.AbilityEffect.DirectDamage(dev.ambon.domain.DamageRange(5, 5)),
+                ),
+            )
+            val abilitySystem = dev.ambon.engine.abilities.AbilitySystem(
+                players = players,
+                registry = registry,
+                outbound = outbound,
+                combat = combat,
+                clock = MutableClock(0L),
+            )
+            val h = CommandRouterHarness.create(
+                world = world,
+                players = players,
+                items = items,
+                mobs = mobs,
+                outbound = outbound,
+                progression = progression,
+                classRegistry = classRegistry,
+                abilitySystem = abilitySystem,
+                akathavaeConfig = AkathavaeConfig(),
+            )
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            val me = h.players.get(sid)!!
+            // A Warrior auto-learns the zero-cost class ability.
+            abilitySystem.refreshKnownAbilities(sid)
+            assertTrue(
+                abilitySystem.knownAbilities(sid).any { it.id.value == "cleave" },
+                "warrior should know cleave before pledging",
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Pledge)
+
+            assertTrue(me.isAkathavae)
+            assertFalse(
+                abilitySystem.knownAbilities(sid).any { it.id.value == "cleave" },
+                "the former class's abilities are set aside under the pledge",
+            )
         }
 
         @Test

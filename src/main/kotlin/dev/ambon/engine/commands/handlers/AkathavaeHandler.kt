@@ -280,6 +280,11 @@ class AkathavaeHandler(
         me.preAkathavaeClass = formerClass
         me.playerClass = AKATHAVAE_CLASS
         me.unlockedClasses.add(AKATHAVAE_CLASS)
+        // Setting aside the old class means setting aside its arts: drop every
+        // learned ability so no former-class spell lingers under the vow. Clearing
+        // the persisted set too keeps them gone across a relog.
+        me.learnedAbilityIds.clear()
+        abilitySystem?.clearLearnedAbilities(sessionId)
         applyClassChange(sessionId, me)
         metrics.onGameEvent("akathavae", "pledge")
         val formerName = classRegistry?.get(formerClass)?.displayName ?: formerClass
@@ -400,7 +405,11 @@ class AkathavaeHandler(
      */
     private suspend fun applyClassChange(sessionId: SessionId, me: PlayerState) {
         progression?.recomputeVitalCaps(me)
-        abilitySystem?.recomputeKnownAbilities(sessionId, me.level, me.unlockedClasses)
+        // While pledged, recompute abilities against the Akathavae class alone so
+        // no former-class spells resolve from a still-unlocked old class. On
+        // renounce (no longer pledged) the full unlocked set restores them.
+        val abilityClasses = if (me.isAkathavae) setOf(AKATHAVAE_CLASS) else me.unlockedClasses
+        abilitySystem?.recomputeKnownAbilities(sessionId, me.level, abilityClasses)
         gmcpEmitter?.sendCharName(sessionId, me)
         gmcpEmitter?.sendCharClasses(sessionId, me.unlockedClasses.ifEmpty { setOf(me.playerClass) }, me.playerClass)
         abilitySystem?.let { abilities ->
