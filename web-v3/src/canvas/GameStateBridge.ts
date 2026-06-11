@@ -92,7 +92,7 @@ export const canvasCallbacks: {
   openVideo: ((videoUrl: string) => void) | null;
   dismissDialogue: (() => void) | null;
   openQuestOffers: ((mobKeyword: string) => void) | null;
-  loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
+  loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>) => void) | null;
   openMobDetail: ((detail: { name: string; description: string; image: string | null }) => void) | null;
   openImagePreview: ((url: string) => void) | null;
   /** Open the monster-manual / bestiary panel for a clicked creature. */

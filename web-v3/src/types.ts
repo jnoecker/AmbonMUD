@@ -244,6 +244,8 @@ export interface RoomState {
   trainer?: string | null;
   mapX: number;
   mapY: number;
+  /** Minimap floor (z layer) — 0 unless the server says otherwise. */
+  mapZ?: number;
   housing?: boolean;
   housingOwner?: string | null;
   /** Whether the current zone has custom graphical assets. */
@@ -417,6 +419,8 @@ export interface StatusEffect {
 export interface MapRoom {
   x: number;
   y: number;
+  /** Floor (z layer) — the expanded chart renders one floor at a time. */
+  z: number;
   exits: Record<string, string>;
   title: string;
   image: string | null;

@@ -163,8 +163,8 @@ interface GmcpContext {
   setPuzzle: Dispatch<SetStateAction<PuzzleState | null>>;
   setPuzzleResult: Dispatch<SetStateAction<PuzzleResult | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
-  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean, terrain?: string | null) => void;
-  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
+  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, mapZ: number, housing?: boolean, terrain?: string | null) => void;
+  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>) => void;
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
@@ -418,6 +418,7 @@ export function applyGmcpPackage(
 
       const mapX = typeof packet.mapX === "number" ? packet.mapX : 0;
       const mapY = typeof packet.mapY === "number" ? packet.mapY : 0;
+      const mapZ = typeof packet.mapZ === "number" ? packet.mapZ : 0;
 
       const title = typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "-";
       const description = typeof packet.description === "string" ? packet.description : "";
@@ -459,11 +460,11 @@ export function applyGmcpPackage(
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, canDepart, peek };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, canDepart, peek };
       });
 
       if (id) {
-        ctx.updateMap(id, exits, title === "-" ? "" : title, image, mapX, mapY, housing, terrain);
+        ctx.updateMap(id, exits, title === "-" ? "" : title, image, mapX, mapY, mapZ, housing, terrain);
       }
       break;
     }
@@ -478,6 +479,7 @@ export function applyGmcpPackage(
               id: typeof r.id === "string" ? r.id : "",
               x: typeof r.x === "number" ? r.x : 0,
               y: typeof r.y === "number" ? r.y : 0,
+              z: typeof r.z === "number" ? r.z : 0,
               exits: r.exits && typeof r.exits === "object" ? (r.exits as Record<string, string>) : {},
             }))
         : [];

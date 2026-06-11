@@ -1,0 +1,36 @@
+zone: ok_floors
+startRoom: hall
+rooms:
+  hall:
+    title: "Hall"
+    description: "A ground-floor hall with a stair going up."
+    exits:
+      n: study
+      u: attic_landing
+  study:
+    title: "Study"
+    description: "A ground-floor study with a trapdoor."
+    exits:
+      s: hall
+      d: cellar
+  attic_landing:
+    title: "Attic Landing"
+    description: "The top of the stair."
+    exits:
+      d: hall
+      e: attic_store
+  attic_store:
+    title: "Attic Store"
+    description: "Boxes under the eaves."
+    exits:
+      w: attic_landing
+  cellar:
+    title: "Cellar"
+    description: "Cool and dark beneath the study."
+    exits:
+      u: study
+  hidden_nook:
+    title: "Hidden Nook"
+    description: "A room with no static way in — revealed by a puzzle at runtime."
+    exits:
+      w: study

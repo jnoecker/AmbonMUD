@@ -1962,6 +1962,7 @@ class GmcpEmitterTest {
         exits: Map<Direction, RoomId> = emptyMap(),
         mapX: Int = 0,
         mapY: Int = 0,
+        mapZ: Int = 0,
     ) = Room(
         id = RoomId(id),
         title = "Room",
@@ -1969,10 +1970,11 @@ class GmcpEmitterTest {
         exits = exits,
         mapX = mapX,
         mapY = mapY,
+        mapZ = mapZ,
     )
 
     @Test
-    fun `sendZoneMap emits rooms with horizontal exits only`() =
+    fun `sendZoneMap emits same-zone exits with floor coordinates`() =
         runTest {
             val e = emitter("Zone.Map")
             val rooms = listOf(
@@ -1987,6 +1989,7 @@ class GmcpEmitterTest {
                     mapY = 0,
                 ),
                 zoneRoom("z:b", mapX = 0, mapY = -1),
+                zoneRoom("z:c", mapX = 0, mapY = 0, mapZ = 1),
             )
             e.sendZoneMap(sid, "z", rooms)
             val data = drainGmcp()
@@ -1995,13 +1998,14 @@ class GmcpEmitterTest {
             val json = data[0].jsonData
             // North exit to same zone should be present
             assertTrue(json.contains("\"north\":\"z:b\""), "Expected north exit. got=$json")
-            // Up exit should be filtered out
-            assertTrue(!json.contains("\"up\""), "Up exit should be excluded. got=$json")
+            // Up exit to same zone should be present (clients badge stairs from it)
+            assertTrue(json.contains("\"up\":\"z:c\""), "Expected up exit. got=$json")
             // Cross-zone exit should be filtered out
             assertTrue(!json.contains("other:x"), "Cross-zone exit should be excluded. got=$json")
-            // Coordinates should be present
+            // Coordinates should be present, including the floor
             assertTrue(json.contains("\"x\":0"), "Expected x coordinate. got=$json")
             assertTrue(json.contains("\"y\":-1"), "Expected y=-1 coordinate. got=$json")
+            assertTrue(json.contains("\"z\":1"), "Expected z=1 floor on the attic room. got=$json")
         }
 
     @Test

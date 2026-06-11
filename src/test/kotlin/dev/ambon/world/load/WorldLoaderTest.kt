@@ -65,19 +65,58 @@ class WorldLoaderTest {
         val rooms = world.rooms
 
         // The test_world has a hub with rooms in multiple directions.
-        // Verify no two rooms in the same zone share coordinates.
+        // Verify no two rooms in the same zone share a cell of the same floor.
         val coordsByZone = rooms.values.groupBy { it.id.zone }
         for ((zone, zoneRooms) in coordsByZone) {
-            val seen = mutableSetOf<Pair<Int, Int>>()
+            val seen = mutableSetOf<Triple<Int, Int, Int>>()
             for (room in zoneRooms) {
-                val coord = room.mapX to room.mapY
+                val coord = Triple(room.mapX, room.mapY, room.mapZ)
                 assertTrue(
                     seen.add(coord),
-                    "Zone '$zone' has coordinate collision at (${ room.mapX }, ${ room.mapY }) " +
+                    "Zone '$zone' has coordinate collision at (${ room.mapX }, ${ room.mapY }, floor ${room.mapZ}) " +
                         "for room '${room.id.value}' — another room already occupies this position",
                 )
             }
         }
+    }
+
+    @Test
+    fun `assigns floors through up and down stairs`() {
+        val world = dev.ambon.test.TestWorlds.okFloors
+
+        fun room(id: String) = world.rooms.getValue(RoomId("ok_floors:$id"))
+        val hall = room("hall")
+        val study = room("study")
+        val atticLanding = room("attic_landing")
+        val atticStore = room("attic_store")
+        val cellar = room("cellar")
+
+        // Ground floor: the start room's horizontal component sits on z=0.
+        assertEquals(0, hall.mapZ, "hall floor")
+        assertEquals(0, study.mapZ, "study floor")
+
+        // The attic floor anchors directly above its stair partner...
+        assertEquals(1, atticLanding.mapZ, "attic landing floor")
+        assertEquals(hall.mapX, atticLanding.mapX, "attic landing x")
+        assertEquals(hall.mapY, atticLanding.mapY, "attic landing y")
+
+        // ...and lays out its own rooms on its own layer.
+        assertEquals(1, atticStore.mapZ, "attic store floor")
+        assertEquals(atticLanding.mapX + 1, atticStore.mapX, "attic store east of landing")
+        assertEquals(atticLanding.mapY, atticStore.mapY, "attic store y")
+
+        // The cellar hangs below its stair partner.
+        assertEquals(-1, cellar.mapZ, "cellar floor")
+        assertEquals(study.mapX, cellar.mapX, "cellar x")
+        assertEquals(study.mapY, cellar.mapY, "cellar y")
+
+        // A room with no static inbound exit (revealed by a puzzle at runtime)
+        // anchors through its own outgoing exit — its west exit to the study
+        // places it one cell east of the study on the same floor.
+        val nook = room("hidden_nook")
+        assertEquals(0, nook.mapZ, "hidden nook floor")
+        assertEquals(study.mapX + 1, nook.mapX, "hidden nook x")
+        assertEquals(study.mapY, nook.mapY, "hidden nook y")
     }
 
     @Test
@@ -802,14 +841,14 @@ class WorldLoaderTest {
             val world = WorldFactory.demoWorld(resources = productionZones)
             val coordsByZone = world.rooms.values.groupBy { it.id.zone }
             for ((zone, zoneRooms) in coordsByZone) {
-                val seen = mutableMapOf<Pair<Int, Int>, String>()
+                val seen = mutableMapOf<Triple<Int, Int, Int>, String>()
                 for (room in zoneRooms) {
-                    val coord = room.mapX to room.mapY
+                    val coord = Triple(room.mapX, room.mapY, room.mapZ)
                     val existing = seen.put(coord, room.id.value)
                     assertNull(
                         existing,
                     ) {
-                        "Zone '$zone' coordinate collision at (${room.mapX}, ${room.mapY}): " +
+                        "Zone '$zone' coordinate collision at (${room.mapX}, ${room.mapY}, floor ${room.mapZ}): " +
                             "'${room.id.value}' collides with '$existing'"
                     }
                 }
