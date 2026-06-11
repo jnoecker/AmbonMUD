@@ -475,6 +475,10 @@ export interface CombatTarget {
   targetMaxHp: number | null;
   targetImage: string | null;
   targetCategory: string | null;
+  /** CSS hex tint for a rare variant (e.g. "#f5f0ff"); null = ordinary mob. */
+  targetTint: string | null;
+  /** Variant display label (e.g. "Albino"); null = ordinary mob. */
+  targetVariant: string | null;
 }
 
 export type ConsiderRating =

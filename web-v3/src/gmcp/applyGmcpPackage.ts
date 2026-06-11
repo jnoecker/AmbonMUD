@@ -340,6 +340,8 @@ export function applyGmcpPackage(
           targetMaxHp: typeof packet.targetMaxHp === "number" ? packet.targetMaxHp : null,
           targetImage: typeof packet.targetImage === "string" ? packet.targetImage : null,
           targetCategory: typeof packet.targetCategory === "string" ? packet.targetCategory : null,
+          targetTint: typeof packet.targetTint === "string" ? packet.targetTint : null,
+          targetVariant: typeof packet.targetVariant === "string" ? packet.targetVariant : null,
         });
       }
       break;
