@@ -1,4 +1,4 @@
-export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "dice" | "puzzle" | "features" | "combatlog" | "inn" | null;
+export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "puzzle" | "features" | "combatlog" | "inn" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -259,6 +259,8 @@ export interface RoomState {
   auction?: boolean;
   housingBroker?: boolean;
   inn?: boolean;
+  /** True when this room has a jukebox playlist (drives the in-world badge + panel). */
+  jukebox?: boolean;
   /** True when this is the death sanctum and the player has somewhere to depart back to. */
   canDepart?: boolean;
   /** Auto-peek entries: open exits paired with destination room titles. Empty when autopeek is off. */
@@ -1284,6 +1286,38 @@ export interface DiceGambleResult {
   cooldownMs: number;
   /** Client-side monotonic id so the panel can animate each new roll. */
   seq: number;
+}
+
+/** One selectable track in a room's jukebox (Jukebox.Info). */
+export interface JukeboxSong {
+  /** 1-based song number used by `jukebox play <n>`. */
+  number: number;
+  title: string;
+  artist: string | null;
+  /** Lore flavour, e.g. "Raucous Pub Song About Aineroia's Ascension". */
+  description: string | null;
+  durationSeconds: number;
+  cost: number;
+}
+
+/** The track a room's jukebox is currently playing (Jukebox.Info.nowPlaying). */
+export interface JukeboxNowPlaying {
+  number: number;
+  title: string;
+  artist: string | null;
+  description: string | null;
+  /** Audio URL the client plays in place of the room's default music. */
+  url: string;
+  buyer: string;
+  secondsRemaining: number;
+  /** Client clock (ms) when this packet arrived — drives the live countdown. */
+  receivedAt: number;
+}
+
+/** Room jukebox state from the Jukebox.Info GMCP package. */
+export interface JukeboxState {
+  songs: JukeboxSong[];
+  nowPlaying: JukeboxNowPlaying | null;
 }
 
 export interface GuildHallRoom {

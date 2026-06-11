@@ -63,7 +63,7 @@ export const CURRENCY_METADATA: Record<string, { description: string; gainHints:
   },
 };
 
-export type RoomSurfaceWidgetId = "auction" | "dungeon" | "duel" | "lottery" | "dice";
+export type RoomSurfaceWidgetId = "auction" | "dungeon" | "duel" | "lottery" | "dice" | "jukebox";
 
 export const ROOM_SURFACE_WIDGETS: Record<
   RoomSurfaceWidgetId,
@@ -103,6 +103,14 @@ export const ROOM_SURFACE_WIDGETS: Record<
     assetKey: "dice_table_widget",
     fallbackFilename: "dice_table_widget.png",
     roomIds: ["thornhaven_city:tarnished_flagon_inn"],
+  },
+  // Jukebox visibility is driven by the per-room `jukebox` flag (Room.Info),
+  // not a hardcoded room list, so roomIds stays empty.
+  jukebox: {
+    label: "Jukebox",
+    assetKey: "jukebox_widget",
+    fallbackFilename: "jukebox_widget.png",
+    roomIds: [],
   },
 };
 

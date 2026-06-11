@@ -99,6 +99,8 @@ import type {
   LotteryInfo,
   DiceGambleResult,
   DiceRoll,
+  JukeboxState,
+  JukeboxSong,
   GuildHallInfo,
   GuildHallRoom,
   DuelState,
@@ -233,6 +235,7 @@ interface GmcpContext {
   setRecallState: Dispatch<SetStateAction<RecallState | null>>;
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
   setDiceResult: Dispatch<SetStateAction<DiceGambleResult | null>>;
+  setJukebox: Dispatch<SetStateAction<JukeboxState | null>>;
   setGuildHall: Dispatch<SetStateAction<GuildHallInfo | null>>;
   setDuelState: Dispatch<SetStateAction<DuelState | null>>;
   setDuelChallenge: Dispatch<SetStateAction<DuelChallenge | null>>;
@@ -441,6 +444,7 @@ export function applyGmcpPackage(
       const auction = packet.auction === true;
       const housingBroker = packet.housingBroker === true;
       const inn = packet.inn === true;
+      const jukebox = packet.jukebox === true;
       const canDepart = packet.canDepart === true;
       const rawPeek = Array.isArray(packet.peek) ? packet.peek : [];
       const peek = rawPeek
@@ -462,7 +466,7 @@ export function applyGmcpPackage(
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, canDepart, peek };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, jukebox, canDepart, peek };
       });
 
       if (id) {
@@ -2446,6 +2450,39 @@ export function applyGmcpPackage(
         coinJackpotMultiplier: safeNumber(packet.coinJackpotMultiplier, 12),
         diceCooldownMs: safeNumber(packet.diceCooldownMs, 5000),
       });
+      break;
+    }
+
+    case "Jukebox.Info": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const songs: JukeboxSong[] = Array.isArray(packet.songs)
+        ? (packet.songs as unknown[]).map((s) => {
+            const entry = s as Partial<Record<string, unknown>>;
+            return {
+              number: safeNumber(entry.number, 0),
+              title: typeof entry.title === "string" ? entry.title : "",
+              artist: typeof entry.artist === "string" ? entry.artist : null,
+              description: typeof entry.description === "string" ? entry.description : null,
+              durationSeconds: safeNumber(entry.durationSeconds, 0),
+              cost: safeNumber(entry.cost, 0),
+            };
+          })
+        : [];
+      const np = packet.nowPlaying as Partial<Record<string, unknown>> | null | undefined;
+      const nowPlaying =
+        np && typeof np.url === "string"
+          ? {
+              number: safeNumber(np.number, 0),
+              title: typeof np.title === "string" ? np.title : "",
+              artist: typeof np.artist === "string" ? np.artist : null,
+              description: typeof np.description === "string" ? np.description : null,
+              url: np.url,
+              buyer: typeof np.buyer === "string" ? np.buyer : "",
+              secondsRemaining: safeNumber(np.secondsRemaining, 0),
+              receivedAt: Date.now(),
+            }
+          : null;
+      ctx.setJukebox({ songs, nowPlaying });
       break;
     }
 
