@@ -670,9 +670,21 @@ function App() {
   }, [completeCast]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Audio for room music/ambient. A jukebox track (paid by anyone in the room)
-  // overrides the room's default music for everyone until it ends.
-  const jukeboxMusic = state.jukebox?.nowPlaying?.url ?? null;
-  useEffect(() => { audio.playMusic(jukeboxMusic ?? state.room.music ?? null); }, [jukeboxMusic, state.room.music]); // eslint-disable-line react-hooks/exhaustive-deps
+  // overrides the room's default music for everyone until it ends. Its start
+  // anchor (derived from the playlist duration + countdown snapshot) position-
+  // syncs late joiners to the part of the song the room is already hearing.
+  const jukeboxNow = state.jukebox?.nowPlaying ?? null;
+  const jukeboxMusic = jukeboxNow?.url ?? null;
+  const jukeboxDuration = jukeboxNow
+    ? state.jukebox?.songs.find((s) => s.number === jukeboxNow.number)?.durationSeconds ?? 0
+    : 0;
+  const jukeboxStartedAtMs = jukeboxNow && jukeboxDuration > 0
+    ? jukeboxNow.receivedAt - Math.max(0, jukeboxDuration - jukeboxNow.secondsRemaining) * 1000
+    : null;
+  // Deps stay URL-keyed on purpose: Jukebox.Info re-emissions for the same
+  // playing song refresh the anchor by a rounding second or two, and reseeking
+  // an already-synced track for that would be an audible glitch.
+  useEffect(() => { audio.playMusic(jukeboxMusic ?? state.room.music ?? null, jukeboxMusic ? jukeboxStartedAtMs : null); }, [jukeboxMusic, state.room.music]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { audio.playAmbient(state.room.ambient ?? null); }, [state.room.ambient]); // eslint-disable-line react-hooks/exhaustive-deps
   // Dialogue voice-over: play the current node's clip when it changes (a new node
   // supersedes the previous one via playVoice's internal stop).
