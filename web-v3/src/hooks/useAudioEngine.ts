@@ -93,7 +93,13 @@ export interface AudioEngine {
   setMusicVolume: (v: number) => void;
   setAmbientVolume: (v: number) => void;
   setVoiceVolume: (v: number) => void;
-  playMusic: (url: string | null) => void;
+  /**
+   * Crossfade the music track to [url]. [startedAtMs] is the client-clock
+   * instant the track began playing in-world (e.g. a jukebox song's start);
+   * when set, playback seeks to the elapsed position so late joiners hear
+   * the same part of the song as everyone else in the room.
+   */
+  playMusic: (url: string | null, startedAtMs?: number | null) => void;
   playAmbient: (url: string | null) => void;
   /** Play a one-shot dialogue voice-over clip (or stop the current one when null). */
   playVoice: (url: string | null) => void;
@@ -157,6 +163,7 @@ export function useAudioEngine(): AudioEngine {
     url: string | null,
     volume: number,
     isMusic: boolean,
+    startedAtMs: number | null = null,
   ) => {
     const track = trackRef.current;
     if (!track) return;
@@ -224,7 +231,14 @@ export function useAudioEngine(): AudioEngine {
       source.playbackRate.setValueAtTime(COMBAT_RATE, ctx.currentTime);
     }
     source.connect(filter);
-    source.start(0);
+    // Seek to the in-world elapsed position, computed here (after the buffer
+    // fetch) so download latency doesn't desync us. Wrapped into the loop
+    // window because the source loop-trims its tail.
+    const loopWindow = source.loopEnd > 0 ? source.loopEnd : buffer.duration;
+    const offsetSeconds = startedAtMs !== null && loopWindow > 0
+      ? (Math.max(0, Date.now() - startedAtMs) / 1000) % loopWindow
+      : 0;
+    source.start(0, offsetSeconds);
 
     const targetVolume = prefsRef.current.enabled ? volume : 0;
     fadeGain(gainNode, 0, targetVolume, CROSSFADE_MS);
@@ -273,8 +287,8 @@ export function useAudioEngine(): AudioEngine {
     }
   }, [prefs.enabled, prefs.musicVolume, prefs.ambientVolume, prefs.voiceVolume]);
 
-  const playMusic = useCallback((url: string | null) => {
-    startTrack(musicRef, url, prefsRef.current.musicVolume, true);
+  const playMusic = useCallback((url: string | null, startedAtMs: number | null = null) => {
+    startTrack(musicRef, url, prefsRef.current.musicVolume, true, startedAtMs);
   }, [startTrack]);
 
   const playAmbient = useCallback((url: string | null) => {

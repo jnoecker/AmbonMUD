@@ -12,6 +12,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.world.JukeboxSong
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.abilities.AbilityDefinition
@@ -286,6 +287,7 @@ class GmcpEmitter(
                 auction = room.auction,
                 housingBroker = room.housingBroker,
                 inn = room.inn,
+                jukebox = room.jukebox.isNotEmpty(),
                 canDepart = canDepart,
                 peek = peek,
             ),
@@ -1654,6 +1656,88 @@ class GmcpEmitter(
         emit(sessionId, "Lottery.Gamble", payload)
     }
 
+    // ---------- jukebox ----------
+
+    /** One selectable track in a room's jukebox playlist. */
+    data class JukeboxSongPayload(
+        /** 1-based song number used by `jukebox play <n>`. */
+        val number: Int,
+        val title: String,
+        val artist: String? = null,
+        val description: String? = null,
+        val durationSeconds: Int,
+        val cost: Long,
+    )
+
+    /** The track a room's jukebox is currently playing. */
+    data class JukeboxNowPlayingPayload(
+        val number: Int,
+        val title: String,
+        val artist: String? = null,
+        val description: String? = null,
+        /** Resolved audio URL the web client plays in place of the room's default music. */
+        val url: String,
+        val buyer: String,
+        val secondsRemaining: Int,
+    )
+
+    data class JukeboxInfoPayload(
+        val songs: List<JukeboxSongPayload>,
+        /** Null when nothing is playing; the room then uses its default music. */
+        val nowPlaying: JukeboxNowPlayingPayload? = null,
+    )
+
+    /**
+     * Builds a `Jukebox.Info` payload from a room's [playlist] and the optionally
+     * playing [nowPlaying] track ([remainingSeconds] is the caller's clock-derived
+     * countdown). A null [nowPlaying] means the room is on its default music.
+     */
+    fun buildJukeboxInfo(
+        playlist: List<JukeboxSong>,
+        nowPlaying: JukeboxNowPlaying?,
+        remainingSeconds: Int,
+    ): JukeboxInfoPayload =
+        JukeboxInfoPayload(
+            songs = playlist.mapIndexed { index, song ->
+                JukeboxSongPayload(
+                    number = index + 1,
+                    title = song.title,
+                    artist = song.artist,
+                    description = song.description,
+                    durationSeconds = song.durationSeconds,
+                    cost = song.cost,
+                )
+            },
+            nowPlaying = nowPlaying?.let { np ->
+                JukeboxNowPlayingPayload(
+                    number = np.songIndex + 1,
+                    title = np.song.title,
+                    artist = np.song.artist,
+                    description = np.song.description,
+                    url = np.song.url,
+                    buyer = np.buyerName,
+                    secondsRemaining = remainingSeconds,
+                )
+            },
+        )
+
+    /** Sends one player the room's playlist + what's currently playing. */
+    suspend fun sendJukeboxInfo(
+        sessionId: SessionId,
+        payload: JukeboxInfoPayload,
+    ) {
+        emit(sessionId, "Jukebox.Info", payload, supportCheck = "Jukebox")
+    }
+
+    /** Pushes the room's jukebox state to every player in [roomId] (e.g. on a song change or revert). */
+    suspend fun broadcastJukeboxInfo(
+        roomId: RoomId,
+        payload: JukeboxInfoPayload,
+        players: PlayerRegistry,
+    ) {
+        broadcastSerialized(players.playersInRoom(roomId), "Jukebox.Info", payload, supportCheck = "Jukebox")
+    }
+
     // ---------- pets ----------
 
     data class PetStatePayload(
@@ -2747,6 +2831,8 @@ class GmcpEmitter(
         val auction: Boolean = false,
         val housingBroker: Boolean = false,
         val inn: Boolean = false,
+        /** True when this room has a jukebox playlist (drives the in-world badge). */
+        val jukebox: Boolean = false,
         val canDepart: Boolean = false,
         /** Auto-peek entries: open exits paired with destination room titles. Empty when the player has autopeek off. */
         val peek: List<RoomPeekEntry> = emptyList(),

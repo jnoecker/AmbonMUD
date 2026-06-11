@@ -233,6 +233,16 @@ sealed interface Command {
     /** Bare `gamble`/`dice` with no amount — print the rules of Aineroia's Dice. */
     data object DiceRules : Command
 
+    // ---- Jukebox commands ----
+
+    /** Bare `jukebox`/`jb` — list this room's playlist and what's playing. */
+    data object Jukebox : Command
+
+    /** `jukebox play <n>`/`jb play <n>` — pay to play the n-th song (1-based) for the room. */
+    data class JukeboxPlay(
+        val song: Int,
+    ) : Command
+
     // ---- Bank commands ----
 
     sealed interface Bank : Command {
@@ -1146,6 +1156,25 @@ object CommandParser {
                 } else {
                     Command.Gamble(amount)
                 }
+            }
+        }?.let { return it }
+
+        // jukebox: "jukebox play <n>" then bare "jukebox" (alias jb). Play must match first.
+        matchPrefix(line, listOf("jukebox play", "jb play")) { rest ->
+            val n = rest.trim().toIntOrNull()
+            if (n == null || n < 1) {
+                Command.Invalid(line, "jukebox play <number>")
+            } else {
+                Command.JukeboxPlay(n)
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("jukebox", "jb")) { rest ->
+            val sub = rest.trim().lowercase()
+            if (sub.isEmpty() || sub == "list" || sub == "info") {
+                Command.Jukebox
+            } else {
+                Command.Invalid(line, "jukebox [list] | jukebox play <number>")
             }
         }?.let { return it }
 

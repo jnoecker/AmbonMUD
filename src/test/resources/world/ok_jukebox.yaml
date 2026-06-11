@@ -1,0 +1,32 @@
+zone: ok_jukebox
+startRoom: tavern
+
+rooms:
+  tavern:
+    title: "The Singing Flagon"
+    description: "A cozy tavern with a battered jukebox in the corner."
+    music: tavern/ambient_loop.mp3
+    jukebox:
+      - title: "Tavern Reel"
+        file: jukebox/tavern_reel.mp3
+        durationSeconds: 90
+        cost: 5
+        artist: "The Wandering Bards"
+        description: "A foot-stomping reel about a barkeep's lost cat."
+        lyrics:
+          - "Oh the barkeep's cat ran out the door"
+          - "She chased a rat across the floor"
+          - "The fiddler played, the dancers spun"
+          - "And the cat came back when the song was done"
+      - title: "Aineroia's Ascension"
+        file: jukebox/ascension.mp3
+        durationSeconds: 180
+        description: "Raucous Pub Song About Aineroia's Ascension."
+    exits:
+      north: cellar
+
+  cellar:
+    title: "Wine Cellar"
+    description: "Dusty barrels line the walls."
+    exits:
+      south: tavern

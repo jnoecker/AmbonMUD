@@ -1122,6 +1122,55 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `jukebox playlist resolves audio urls, defaults cost, and keeps order`() {
+        val world = WorldLoader.loadFromResource("world/ok_jukebox.yaml")
+
+        val tavern = world.rooms.getValue(RoomId("ok_jukebox:tavern"))
+        assertEquals(2, tavern.jukebox.size)
+
+        val first = tavern.jukebox[0]
+        assertEquals("Tavern Reel", first.title)
+        assertEquals("/audio/jukebox/tavern_reel.mp3", first.url)
+        assertEquals(90, first.durationSeconds)
+        assertEquals(5L, first.cost)
+        assertEquals("The Wandering Bards", first.artist)
+        assertEquals(4, first.lyrics.size)
+        assertEquals("Oh the barkeep's cat ran out the door", first.lyrics.first())
+
+        // Second song omits cost/artist/lyrics — cost falls back to the loader default.
+        val second = tavern.jukebox[1]
+        assertEquals("Aineroia's Ascension", second.title)
+        assertEquals("/audio/jukebox/ascension.mp3", second.url)
+        assertEquals(5L, second.cost)
+        assertNull(second.artist)
+        assertEquals("Raucous Pub Song About Aineroia's Ascension.", second.description)
+        assertTrue(second.lyrics.isEmpty())
+
+        // A room without a jukebox block has an empty playlist.
+        val cellar = world.rooms.getValue(RoomId("ok_jukebox:cellar"))
+        assertTrue(cellar.jukebox.isEmpty())
+    }
+
+    @Test
+    fun `jukebox song with a blank lyrics line fails to load`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_jukebox_blank_lyric.yaml")
+            }
+        assertTrue(ex.message!!.contains("blank lyrics line"), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `jukebox song with more lyrics lines than the duration allows fails to load`() {
+        // 4 lines over 9 seconds is under the 3s-per-line floor.
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_jukebox_too_many_lyrics.yaml")
+            }
+        assertTrue(ex.message!!.contains("lyrics lines"), "Got: ${ex.message}")
+    }
+
+    @Test
     fun `image paths are prefixed with images`() {
         val world = WorldLoader.loadFromResource("world/ok_images.yaml")
 

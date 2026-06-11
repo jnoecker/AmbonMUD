@@ -150,6 +150,7 @@ data class AppConfig(
         validateEngineGlobalQuests()
         validateEngineLottery()
         validateEngineGambling()
+        validateEngineJukebox()
     }
 
     private fun validateEngineDailyQuests() {
@@ -626,6 +627,13 @@ data class AppConfig(
         require(engine.gambling.cooldownMs >= 0) { "ambonMUD.engine.gambling.cooldownMs must be >= 0" }
     }
 
+    private fun validateEngineJukebox() {
+        if (!engine.jukebox.enabled) return
+        require(engine.jukebox.maxSongDurationSeconds > 0) {
+            "ambonMUD.engine.jukebox.maxSongDurationSeconds must be > 0"
+        }
+    }
+
     private fun validateProgression() {
         progression.maxLevel.requirePositive("ambonMUD.progression.maxLevel")
         progression.xp.baseXp.requirePositive("ambonMUD.progression.xp.baseXp")
@@ -985,6 +993,17 @@ data class GamblingConfig(
     val coinJackpotMultiplier: Double = 12.0,
     /** Cooldown between gamble attempts in milliseconds. */
     val cooldownMs: Long = 5_000L,
+)
+
+/**
+ * Room jukebox: players pay an authored per-song gold cost to play a track for
+ * everyone in the room. [maxSongDurationSeconds] caps how long any one paid track
+ * can lock a room (validated against each song at world load is left to authors;
+ * this is a sanity bound surfaced via [AppConfig.validated]).
+ */
+data class JukeboxConfig(
+    val enabled: Boolean = true,
+    val maxSongDurationSeconds: Int = 600,
 )
 
 data class CraftingConfig(
@@ -1970,6 +1989,7 @@ data class EngineConfig(
     val globalQuests: GlobalQuestsConfig = GlobalQuestsConfig(),
     val lottery: LotteryConfig = LotteryConfig(),
     val gambling: GamblingConfig = GamblingConfig(),
+    val jukebox: JukeboxConfig = JukeboxConfig(),
     val death: DeathConfig = DeathConfig(),
 )
 
@@ -2354,6 +2374,11 @@ data class CommandsConfig(
                 category = "social",
             ),
             "gamble" to CommandMetadata("gamble/dice <amount>", "Roll d100 against the house (requires a tavern)", "social"),
+            "jukebox" to CommandMetadata(
+                usage = "jukebox [list] | jukebox play <number>",
+                description = "List the room's jukebox songs or pay to play one for everyone",
+                category = "social",
+            ),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),
             "screenreader" to CommandMetadata("screenreader [on/off]", "Toggle screen reader mode", "utility"),
             "audio" to CommandMetadata(
@@ -3411,6 +3436,8 @@ data class ImagesConfig(
             "dungeon_portal_widget" to "global_assets/dungeon_portal_widget.png",
             "auction_hall_widget" to "global_assets/auction_hall_widget.png",
             "duel_arena_widget" to "global_assets/duel_arena_widget.png",
+            "jukebox_widget" to "global_assets/jukebox_widget.png",
+            "jukebox_bg" to "global_assets/jukebox_bg.png",
             "puzzle_kiosk" to "global_assets/puzzle_kiosk.png",
             "feature_door" to "global_assets/feature_door.png",
             "feature_container" to "global_assets/feature_container.png",

@@ -226,6 +226,13 @@ export class WorldScene {
   private diceHitArea = new Graphics();
   private diceVisible = false;
 
+  private jukeboxBadge: Container | null = null;
+  private jukeboxSprite: Sprite | null = null;
+  private jukeboxLabel: Text | null = null;
+  private jukeboxLabelBg = new Graphics();
+  private jukeboxHitArea = new Graphics();
+  private jukeboxVisible = false;
+
   private dungeonBadge: Container | null = null;
   private dungeonSprite: Sprite | null = null;
   private dungeonLabel: Text | null = null;
@@ -551,6 +558,34 @@ export class WorldScene {
     this.diceLabelBg.eventMode = "none";
     this.diceBadge.addChild(this.diceLabelBg);
     this.diceBadge.addChild(this.diceLabel);
+
+    this.jukeboxBadge = new Container();
+    this.jukeboxBadge.visible = false;
+    this.jukeboxBadge.eventMode = "static";
+    this.jukeboxBadge.cursor = "pointer";
+    this.jukeboxBadge.on("pointerdown", () => {
+      canvasCallbacks.openJukebox?.();
+    });
+    this.jukeboxBadge.on("pointerover", () => {
+      if (this.jukeboxSprite) this.jukeboxSprite.alpha = 1;
+    });
+    this.jukeboxBadge.on("pointerout", () => {
+      if (this.jukeboxSprite) this.jukeboxSprite.alpha = 0.85;
+    });
+    this.jukeboxHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.jukeboxHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.jukeboxHitArea.eventMode = "auto";
+    this.jukeboxBadge.addChild(this.jukeboxHitArea);
+    this.jukeboxLabel = new Text({
+      text: ROOM_SURFACE_WIDGETS.jukebox.label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#c7a0dd", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.jukeboxLabel.anchor.set(0.5, 0);
+    this.jukeboxLabel.y = hs / 2 + 2;
+    this.jukeboxLabel.eventMode = "none";
+    this.jukeboxLabelBg.eventMode = "none";
+    this.jukeboxBadge.addChild(this.jukeboxLabelBg);
+    this.jukeboxBadge.addChild(this.jukeboxLabel);
 
     this.dungeonBadge = new Container();
     this.dungeonBadge.visible = false;
@@ -887,6 +922,7 @@ export class WorldScene {
     this.container.addChild(this.bankBadge!);
     this.container.addChild(this.lotteryBadge!);
     this.container.addChild(this.diceBadge!);
+    this.container.addChild(this.jukeboxBadge!);
     this.container.addChild(this.dungeonBadge!);
     this.container.addChild(this.housingBadge!);
     this.container.addChild(this.innBadge!);
@@ -934,6 +970,7 @@ export class WorldScene {
       this.loadBankIcon();
       this.loadLotteryIcon();
       this.loadDiceIcon();
+      this.loadJukeboxIcon();
       this.loadDungeonIcon();
       this.loadHousingBrokerIcon();
       this.loadInnIcon();
@@ -1146,6 +1183,12 @@ export class WorldScene {
       if (this.diceBadge) this.diceBadge.visible = hasDice;
     }
 
+    const hasJukebox = !!state.room.jukebox;
+    if (hasJukebox !== this.jukeboxVisible) {
+      this.jukeboxVisible = hasJukebox;
+      if (this.jukeboxBadge) this.jukeboxBadge.visible = hasJukebox;
+    }
+
     const hasDungeon = !!state.room.dungeon;
     if (hasDungeon !== this.dungeonVisible) {
       this.dungeonVisible = hasDungeon;
@@ -1308,6 +1351,7 @@ export class WorldScene {
     if (this.bankBadge) this.bankBadge.visible = this.bankVisible && !stripMode;
     if (this.lotteryBadge) this.lotteryBadge.visible = this.lotteryVisible && !stripMode;
     if (this.diceBadge) this.diceBadge.visible = this.diceVisible && !stripMode;
+    if (this.jukeboxBadge) this.jukeboxBadge.visible = this.jukeboxVisible && !stripMode;
     if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
     if (this.housingBadge) this.housingBadge.visible = this.housingVisible && !stripMode;
     if (this.innBadge) this.innBadge.visible = this.innVisible && !stripMode;
@@ -1642,6 +1686,13 @@ export class WorldScene {
       this.diceBadge.x = badgeX;
       this.diceBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.diceLabelBg, this.diceLabel!);
+      badgeSlot++;
+    }
+
+    if (this.jukeboxBadge?.visible) {
+      this.jukeboxBadge.x = badgeX;
+      this.jukeboxBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.jukeboxLabelBg, this.jukeboxLabel!);
       badgeSlot++;
     }
 
@@ -2466,6 +2517,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.lotterySprite = sprite;
       this.lotteryBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadJukeboxIcon() {
+    try {
+      const texture = await Assets.load(assetUrl(ROOM_SURFACE_WIDGETS.jukebox.assetKey, ROOM_SURFACE_WIDGETS.jukebox.fallbackFilename));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.jukeboxSprite = sprite;
+      this.jukeboxBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

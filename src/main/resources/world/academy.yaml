@@ -106,12 +106,14 @@ rooms:
       panel shows how you rank against other students across various categories."
 
 
-      The Grand Hall is to the east, the Treasury is to the south, and the Stylist's Parlor lies to the north.
+      The Grand Hall is to the east, the Treasury is to the south, the Stylist's Parlor lies to the north, and a
+      velvet-curtained doorway to the west breathes faint clockwork music from the Parlor of Borrowed Songs.
     tavern: true
     exits:
       e: grand_hall
       s: treasury
       n: stylist_parlor
+      w: song_parlor
     image: 877842311c0643d0e2eb5c616ec94fdfb95e9c73e040e571a6322088fef8897a.jpg
   treasury:
     title: The Treasury
@@ -368,6 +370,327 @@ rooms:
     exits:
       s: common_room
     image: fe897d386ee1ff382d9b4a5d268504b10a5c9cc765c4addc3f6c0d47212b3342.jpg
+  song_parlor:
+    title: The Parlor of Borrowed Songs
+    description: >-
+      A velvet-hushed listening room off the Common Room, its walls quilted in tapestry so that no note escapes to
+      trouble the hearth. Filling half the parlor stands a giant music-box of walnut, brass, and dreamglass — an
+      invention of Tessikar the Springwright — its pinned brass cylinder turning behind a crystal pane above a tiny
+      stage of shuttered doors. Fed a coin, the doors swing open on cuckoo-clock hinges and a troupe of clockwork
+      musicians glides out on rails: fiddlers no taller than a teacup, a bellows-chested singer with a painted
+      porcelain face, a drummer whose sticks are wound springs. Together they perform the great ballads of Ambon — the
+      faerie-song of Aineroia, the mother goddess; the footprint-ballad of Kvarcgagap, the shining quartz void; the
+      music-box ballad of Tessikar the Springwright; and a call-and-response shanty begging fair passage of Maelsang,
+      the tide between worlds. A few alcoves on the little stage still wait dark and empty, freshly chalked for songs
+      not yet pressed. A hand-lettered placard is bolted to the cabinet ('read placard').
+
+
+      The Common Room is back to the east.
+    exits:
+      e: common_room
+    features:
+      jukebox_placard:
+        type: SIGN
+        displayName: a hand-lettered placard bolted to the cabinet
+        keyword: placard
+        text: THE BORROWED SONG. Feed the jukebox a few coins and it plays your chosen song for EVERYONE in the parlor,
+          not just you. Type 'jukebox' (or 'jb') to read the songbook, then 'jukebox play <number>' to pay for a track.
+          While a song plays the jukebox is busy — it won't take another coin until the tune ends, after which the
+          parlor drifts back to its usual quiet. Web players can click the Jukebox badge to browse and watch the
+          countdown. The clockwork singer mouths every verse as the cylinder turns, so even visitors who keep their
+          sound off can follow the song in the room text. Tonight's songbook holds four pressed cylinders — Aineroia
+          the mother goddess, Kvarcgagap the shining quartz void, Tessikar the Springwright, and Maelsang of the tides
+          — and the songbook grows as new cylinders are pressed. The saddest verses are about real people, some of
+          whom still visit.
+    jukebox:
+      - title: Aineroia, Faerie Queen
+        file: 3ccdaf5a030d0eb17791755e4903645e0bfb63283140ac72335b5440823c1228.mp3
+        durationSeconds: 288
+        cost: 1
+        artist: TRADITIONAL
+        description: Airy Irish faerie folk song about Aineroia the Mother Goddess
+        lyrics:
+          - Aineroia lived alone
+          - By pine and river stone
+          - Her hands knew bark and fever
+          - And the names of every root
+          - Malkuth came down in iron
+          - With a crown on his hungry brow
+          - He smelled her in the cedar
+          - And made her kneel to now
+          - She bore the storm in silence
+          - Each child a bright-tongued spark
+          - Alive beneath her heartbeat
+          - Gone out inside the dark
+          - Aineroia, mother of ash and gold
+          - Aineroia, hear what the graves have told
+          - Phoenix, dragon, faerie light
+          - Carry them home through the night
+          - Aineroia, grief turned holy flame
+          - Aineroia, the dead learned names
+          - She painted stone with wonder
+          - On a hill of moss and rain
+          - Aureliae for the water
+          - Mycorae in the plain
+          - Pyrae burned on the headstones
+          - Lustriae with silver wings
+          - Ophirae in salt and thunder
+          - Luneqrae on moonlit strings
+          - Each night she walked the graveyard
+          - And sang the small ones true
+          - Told them of a forest cottage
+          - And a sky that held them blue
+          - Aineroia, mother of ash and gold
+          - Aineroia, hear what the graves have told
+          - Phoenix, dragon, faerie light
+          - Carry them home through the night
+          - Aineroia, grief turned holy flame
+          - Aineroia, the dead learned names
+          - Then she found him at the altar
+          - With their stolen breath around him
+          - A storm of little voices
+          - And a dagger poised to crown him
+          - The floor split like winter ice
+          - The dark went thin and white
+          - His kingdom came apart in glass
+          - At the center of her cry
+          - Aineroia, mother of ash and gold
+          - Aineroia, hear what the graves have told
+          - Phoenix, dragon, faerie light
+          - Carry them home through the night
+          - Aineroia, grief turned holy flame
+          - Aineroia, the dead learned names
+          - From shadow she made Aetherae
+          - From his black soul, Malukae
+          - And when death became the moon
+          - She lifted night into a place they could stay
+      - title: Kvarcgagap - Footprints in Emberfell
+        file: a22985f846a93ff62f6acf9925959dd4c7784899200152084cd9fbe9645bd33c.mp3
+        durationSeconds: 202
+        cost: 1
+        artist: TRADITIONAL
+        description: Up-tempo Fantasy Bard Song about Kvarcgagap, the Shining Quartz Void
+        lyrics:
+          - Kvarcgagap came first
+          - When Ambon was young
+          - He moved like quicksilver
+          - Through bedrock and lung
+          - He wore no fixed face
+          - Just opal and shine
+          - He carved out the deep
+          - And seeded the mines
+          - Then Malkuth came smiling
+          - With a question, sweet and cold
+          - “From what kind of seed
+          - Did the world unfold?”
+          - Footprints in the dark
+          - Footprints in the stone
+          - Footprints in the dark
+          - Footprints in the stone
+          - He brought the roots up home
+          - Footprints in the dark
+          - Then the dagger drank
+          - Footprints in the dark
+          - And the world grew fangs
+          - He fetched the black slabs
+          - From the Creator’s ground
+          - By the bare feet of God
+          - Where the first steps were found
+          - Malkuth made his blade
+          - From the holy black stone
+          - And used that gift
+          - To turn friend into bone
+          - In the clockwork woods
+          - Near Kaerinlith’s ring
+          - The shining quartz void
+          - Fell without a warning
+          - But dying, Kvarcgagap
+          - Still gave one final sign
+          - A breath of warning
+          - To the Springwright’s mind
+          - Footprints in the dark
+          - Footprints in the stone
+          - Footprints in the stone
+          - He brought the roots up home
+          - Footprints in the dark
+          - Then the dagger drank
+          - Footprints in the dark
+          - And the world grew fangs
+          - So the Springwright ran
+          - To the crystal heights
+          - Built a forge of grief
+          - On the Emberfell night
+          - He melted the shards
+          - Of the sacred black
+          - Threw the molten sky
+          - And did not look back
+          - Footprints in the dark
+          - Footprints in the stone
+          - (Footprints in the dark)
+          - The dead still make us strong
+          - Footprints in the dark
+          - The sparks fell wide
+          - And the Lithae opened their eyes
+          - Aineroia was born
+          - Where the fire came down
+          - And the sleeping children woke
+          - Under Kaerinlith’s crown
+      - title: Tessikar of Kaerinlith
+        file: 52347048fdeae3029d6d216d559863b6cc7bc43097a1bb71661bb98d6059b8e5.mp3
+        durationSeconds: 243
+        cost: 1
+        artist: TRADITIONAL
+        description: Lyrical Music-Box Style Ballad about Tessikar the Springwright
+        lyrics:
+          - Born beyond the veil
+          - Where brass sang slow
+          - Copper rivers down below
+          - He came to Ambon
+          - Through his own door
+          - Wheels and crystal
+          - Spun the floor
+          - One amber eye
+          - One arm of brass
+          - Broad-shouldered, quiet
+          - Built to last
+          - Not to rule, not to reign
+          - Just a bench, and a flame
+          - Kaerinlith rose
+          - Under the peaks
+          - Walls with hidden breath
+          - Windows on tracks
+          - Metal flowers rang
+          - On the roof at night
+          - And Tessikar Kept the light
+          - Tessikar, Tessikar, Hammer the sky
+          - Tessikar, Tessikar, Make the world fly
+          - Kvarcgagap Shined in the deep
+          - Tessikar, Tessikar, Kept the dream
+          - Thumb-sized birds with prayer-wheel wings
+          - Fish that swam through the air like things
+          - Brass trees spoke in a copper shade
+          - Crystal fruit held thunder made
+          - Below the mountain, his truest friend
+          - Quartz and ore, would never bend
+          - Kvarcgagap, gave all it knew
+          - And every wonder, came through
+          - Then the Obsidian Dagger
+          - Found the bone
+          - Malkuth came
+          - For a throne of stone
+          - But a warning ran
+          - Through the dark and cold
+          - And Tessikar stood
+          - Grit and gold
+          - Tessikar, Tessikar
+          - Hammer the sky (Tessikar)
+          - Tessikar, Tessikar
+          - Make the world fly
+          - Kvarcgagap
+          - Shined in the deep
+          - Tessikar, Tessikar
+          - Kept the dream
+          - At Emberfell
+          - He took the shards
+          - Creator’s Footprints
+          - In his hands
+          - Melted them down
+          - In a furnace bright
+          - Then struck the slag
+          - Through the night
+          - Sparks fell wide
+          - Across the land
+          - Into the blood
+          - Of every clan
+          - And what was lost
+          - Became a flame
+          - In every road
+          - In every name
+          - Tessikar, Tessikar
+          - Hammer the sky (Tessikar)
+          - Tessikar, Tessikar
+          - Make the world fly
+          - Father of hands
+          - And the fearless and free
+          - Tessikar, Tessikar
+          - Lives in the trees
+          - Clockwork wonders
+          - Born from grace
+          - In the mountain hush
+          - He still makes space
+      - title: Maelsang Tide
+        file: 9d03cdc3ec70ee29aafdf2b14481b5924f2ec4bc8fb3bc26897b79c11148ce70.mp3
+        durationSeconds: 252
+        cost: 1
+        artist: TRADITIONAL
+        description: Call-and-response sea shanty about Maelsang, The Tide Between Worlds
+        lyrics:
+          - Maelsang, hear us now
+          - Keep our keel from stone
+          - Bless the rope and canvas
+          - Guide us safely home
+          - We leave the ashore at dawn
+          - With lanterns low and dim
+          - If the deep should call our names
+          - Turn the tide from him
+          - Wind above us
+          - Dark below
+          - Hold the line
+          - And do not let go
+          - Ho, Maelsang, take the wheel!
+          - Ho, Maelsang, take the wheel!
+          - (Ho, Maelsang, take the wheel!)
+          - Let the foam be soft as wool
+          - (Ho, let it be soft!)
+          - Ho, Maelsang, hear our plea!
+          - (Ho, let it be soft!)
+          - Ho, Maelsang, hear our plea!
+          - (Ho, let it be soft!)
+          - Ho, Maelsang, hear our plea!
+          - (Ho, Maelsang, hear our plea!)
+          - Carry us across the sea
+          - (Carry us across!)
+          - First the sky went silver
+          - Then the black clouds came
+          - Lightning split the distance
+          - And the waves spoke your name
+          - Mast bowed like a prayer stick
+          - Sail tore with a cry
+          - We kept both hands on the line
+          - And watched the night run by
+          - Wind above us
+          - Drum and roar
+          - Hold us fast
+          - Till we find the shore
+          - Ho, Maelsang, take the wheel!
+          - Let the foam be soft as wool
+          - Ho, Maelsang, hear our plea!
+          - Ho, Maelsang, hear our plea!
+          - Carry us across the sea
+          - Carry us across the sea
+          - Then the storm began to tire
+          - Like a beast with no more bite
+          - Gray dawn rose from the water
+          - And the gulls called back the light
+          - We saw the port ahead
+          - With its smoke and painted masts
+          - Every man stood wordless
+          - Counting breath and holding fast
+          - Ho, Maelsang, take the wheel!
+          - Let the foam be soft as wool
+          - Ho, Maelsang, hear our plea!
+          - Ho, Maelsang, hear our plea!
+          - Carry us across the sea
+          - (Ho, Maelsang, hear our plea!)
+          - Carry us across the sea
+          - Now the rope is coiled
+          - And the harbor bells ring clear
+          - Bless the hands that steer us
+          - Bless the home we’ve found near
+          - Maelsang, mighty wonder
+          - Salt and thunder wide
+          - Thanks for every living soul
+          - You brought in on the tide
   sanctum:
     title: The Sanctum
     description: >-

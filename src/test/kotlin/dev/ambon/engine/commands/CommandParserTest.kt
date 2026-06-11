@@ -48,6 +48,18 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parser parses jukebox commands and aliases`() {
+        assertEquals(Command.Jukebox, CommandParser.parse("jukebox"))
+        assertEquals(Command.Jukebox, CommandParser.parse("jb"))
+        assertEquals(Command.Jukebox, CommandParser.parse("jukebox list"))
+        assertEquals(Command.JukeboxPlay(3), CommandParser.parse("jukebox play 3"))
+        assertEquals(Command.JukeboxPlay(1), CommandParser.parse("jb play 1"))
+        // Non-numeric or non-positive song number is Invalid, not a play.
+        assertTrue(CommandParser.parse("jukebox play abc") is Command.Invalid)
+        assertTrue(CommandParser.parse("jukebox play 0") is Command.Invalid)
+    }
+
+    @Test
     fun `parser parses tell and t aliases`() {
         assertEquals(Command.Tell("Bob", "hi there"), CommandParser.parse("tell Bob hi there"))
         assertEquals(Command.Tell("Bob", "hi there"), CommandParser.parse("t Bob hi there"))

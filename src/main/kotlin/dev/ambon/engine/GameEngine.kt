@@ -44,6 +44,7 @@ import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.HousingHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
+import dev.ambon.engine.commands.handlers.JukeboxHandler
 import dev.ambon.engine.commands.handlers.LeaderboardHandler
 import dev.ambon.engine.commands.handlers.LotteryHandler
 import dev.ambon.engine.commands.handlers.MailHandler
@@ -1009,6 +1010,11 @@ class GameEngine(
         persistPath = java.nio.file.Path.of("data", "lottery_state.json"),
     ).also { it.loadPersistedState() }
 
+    private val jukeboxSystem = JukeboxSystem(
+        clock = clock,
+        enabled = engineConfig.jukebox.enabled,
+    )
+
     private val dialogueSystem =
         DialogueSystem(
             mobs = mobs,
@@ -1298,6 +1304,7 @@ class GameEngine(
             leaderboardSystem = leaderboardSystem,
             trainerRegistry = trainerRegistry,
             puzzleSystem = puzzleSystem,
+            jukeboxSystem = jukeboxSystem,
             bankConfig = engineConfig.bank,
             stylistConfig = engineConfig.stylist,
             akathavaeSystem = akathavaeSystem,
@@ -1569,6 +1576,11 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 getEngineScope = { engineScope },
             ),
+            JukeboxHandler(
+                ctx = ctx,
+                jukeboxSystem = jukeboxSystem,
+                markVitalsDirty = ::markVitalsDirty,
+            ),
             ReputationHandler(
                 ctx = ctx,
                 reputationSystem = reputationSystem,
@@ -1820,6 +1832,9 @@ class GameEngine(
                         lastThreatCleanupMs = tickStart
                         combatSystem.cleanupStaleThreatEntries()
                     }
+
+                    // Revert rooms whose jukebox track has ended back to their default music
+                    tickJukebox()
 
                     // Tick duel combat
                     tickDuels()
@@ -2978,6 +2993,43 @@ class GameEngine(
                 scope = "dungeon",
                 command = "complete",
             )
+        }
+    }
+
+    /**
+     * Drives playing jukebox tracks: broadcasts lyric lines as they come due
+     * (spread across each track's duration — flavour for players without audio),
+     * then announces tracks that just ended and reverts their rooms to default
+     * music via a cleared `Jukebox.Info`. Cheap when nothing is playing (the
+     * common case): both polls return empty.
+     */
+    private suspend fun tickJukebox() {
+        for ((roomId, lines) in jukeboxSystem.pollDueLyrics()) {
+            for (line in lines) {
+                broadcastToRoom(players, outbound, roomId, "♪ $line ♪")
+            }
+        }
+        for ((roomId, ended) in jukeboxSystem.pollExpired()) {
+            broadcastToRoom(
+                players,
+                outbound,
+                roomId,
+                "The jukebox winds down as \"${ended.song.title}\" comes to an end.",
+            )
+            gmcpEmitter?.let { emitter ->
+                val playlist = world.rooms[roomId]?.jukebox ?: emptyList()
+                val payload = emitter.buildJukeboxInfo(playlist, nowPlaying = null, remainingSeconds = 0)
+                emitter.broadcastJukeboxInfo(roomId, payload, players)
+            }
+            // Inline music links for non-web clients revert to the room's default
+            // (see PlayerState.audioLinksEnabled), mirroring the GMCP revert above.
+            val defaultMusic = world.rooms[roomId]?.music
+            for (occupant in players.playersInRoom(roomId)) {
+                if (occupant.audioLinksEnabled) {
+                    occupant.lastEmittedMusicUrl = defaultMusic
+                    defaultMusic?.let { outbound.send(OutboundEvent.SendInfo(occupant.sessionId, "[music] $it")) }
+                }
+            }
         }
     }
 
