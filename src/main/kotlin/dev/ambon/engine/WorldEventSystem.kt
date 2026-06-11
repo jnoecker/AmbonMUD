@@ -44,12 +44,13 @@ class WorldEventSystem(
      * that just activated or deactivated.
      */
     fun tick(): EventTickResult {
-        val today = LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC)
+        val now = clock.instant()
+        val today = LocalDate.ofInstant(now, ZoneOffset.UTC)
         val activated = mutableListOf<String>()
         val deactivated = mutableListOf<String>()
 
         for ((id, def) in config.definitions) {
-            val shouldBeActive = isActiveOn(def, today)
+            val shouldBeActive = isActiveOn(def, today) && isInRecurrenceWindow(def, now.toEpochMilli())
             val wasActive = id in currentlyActive
 
             if (shouldBeActive && !wasActive) {
@@ -71,6 +72,16 @@ class WorldEventSystem(
         val start = if (def.startDate.isNotEmpty()) LocalDate.parse(def.startDate) else LocalDate.MIN
         val end = if (def.endDate.isNotEmpty()) LocalDate.parse(def.endDate) else LocalDate.MAX
         return !date.isBefore(start) && !date.isAfter(end)
+    }
+
+    /**
+     * A recurring event is active only during the first `durationMs` of each
+     * `periodMs` cycle (epoch-anchored, shifted by `offsetMs`); without a
+     * recurrence the date range alone governs activation.
+     */
+    private fun isInRecurrenceWindow(def: WorldEventDefinition, nowMs: Long): Boolean {
+        val rec = def.recurrence ?: return true
+        return Math.floorMod(nowMs - rec.offsetMs, rec.periodMs) < rec.durationMs
     }
 
     data class EventTickResult(

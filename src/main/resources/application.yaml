@@ -2309,6 +2309,30 @@ ambonmud:
           weight: 1
           particleHint: wind
           icon: 💨
+    # World events: named happenings that broadcast start/end messages, surface
+    # in the `world` command + World.Events GMCP, and set flags that gate
+    # conditional mob spawns (`condition.events` in zone YAML) and quests.
+    # Each definition supports:
+    #   startDate/endDate  — ISO dates (yyyy-MM-dd) bounding the event; both empty = unbounded.
+    #   recurrence         — optional repeating window WITHIN the date range, for events
+    #                        players can encounter during normal play:
+    #                          periodMs:   full cycle length (e.g. 3600000 = hourly)
+    #                          durationMs: active window at the start of each cycle (< periodMs)
+    #                          offsetMs:   shifts the cycle anchor (stagger multiple events)
+    #   flags              — flag ids matched by spawn conditions / quest gates.
+    #   startMessage/endMessage — broadcast to all players on activation edges.
+    # No events ship by default; world overlays (e.g. the Auringold config) define them.
+    # worldEvents:
+    #   definitions:
+    #     wandering_star:
+    #       displayName: The Wandering Star
+    #       description: A vagrant star drifts low; strange things glimmer beneath it.
+    #       flags: [wandering_star]
+    #       recurrence:
+    #         periodMs: 3600000
+    #         durationMs: 600000
+    #       startMessage: A wandering star slips loose and drifts low over the world.
+    #       endMessage: The wandering star climbs back into the firmament.
     # Server-generated rare cosmetic variants. The archetype set (albino, ember,
     # shadow-touched, spectral, …) is defined in code; override `variants` here to
     # replace it wholesale. Leaving it unset keeps the built-in palette.

@@ -66,6 +66,57 @@ class AppConfigLoaderTest {
     }
 
     @Test
+    fun `validation rejects world event recurrence with duration not less than period`() {
+        val invalid = AppConfig(
+            engine = EngineConfig(
+                worldEvents = WorldEventsConfig(
+                    definitions = mapOf(
+                        "star" to WorldEventDefinition(
+                            displayName = "Star",
+                            recurrence = WorldEventRecurrence(periodMs = 1000L, durationMs = 1000L),
+                        ),
+                    ),
+                ),
+            ),
+            world = validWorld,
+        )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects world event with malformed date`() {
+        val invalid = AppConfig(
+            engine = EngineConfig(
+                worldEvents = WorldEventsConfig(
+                    definitions = mapOf("star" to WorldEventDefinition(startDate = "April 1")),
+                ),
+            ),
+            world = validWorld,
+        )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation accepts dated world event with recurrence`() {
+        val valid = AppConfig(
+            engine = EngineConfig(
+                worldEvents = WorldEventsConfig(
+                    definitions = mapOf(
+                        "star" to WorldEventDefinition(
+                            displayName = "Star",
+                            startDate = "2026-04-01",
+                            endDate = "2026-05-01",
+                            recurrence = WorldEventRecurrence(periodMs = 3_600_000L, durationMs = 600_000L),
+                        ),
+                    ),
+                ),
+            ),
+            world = validWorld,
+        )
+        valid.validated() // should not throw
+    }
+
+    @Test
     fun `validated rejects combat room feedback when feedback is disabled`() {
         val invalid =
             AppConfig(
