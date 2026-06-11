@@ -1047,6 +1047,22 @@ class GameEngineLoginFlowTest {
                 "demo character must not be persisted to the repository",
             )
 
+            // Demo characters get a random race and a random *selectable* class,
+            // not the hardcoded HUMAN/WARRIOR defaults.
+            val validRaces = testRaceEngineConfig().definitions.keys
+            val selectableClasses =
+                testClassEngineConfig().definitions
+                    .filterValues { it.selectable }
+                    .keys
+            assertTrue(
+                player.race in validRaces,
+                "demo race ${player.race} should be one of $validRaces",
+            )
+            assertTrue(
+                player.playerClass in selectableClasses,
+                "demo class ${player.playerClass} should be a selectable class in $selectableClasses",
+            )
+
             h.close()
         }
 

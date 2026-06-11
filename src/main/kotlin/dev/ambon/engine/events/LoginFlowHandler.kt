@@ -30,6 +30,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
+import kotlin.random.Random
 
 private val log = KotlinLogging.logger {}
 
@@ -150,6 +151,7 @@ internal class LoginFlowHandler(
     private val demoDefaultRace: String = "HUMAN",
     private val demoDefaultClass: String = "WARRIOR",
     private val demoNameGenerator: dev.ambon.engine.DemoNameGenerator = dev.ambon.engine.DemoNameGenerator(),
+    private val random: Random = Random.Default,
     internal val onAfterLogin: suspend (SessionId) -> Unit = {},
     /**
      * Called on the paths where the client just authenticated with a password
@@ -522,8 +524,8 @@ internal class LoginFlowHandler(
                     sessionId = sid,
                     name = result.name,
                     defaultAnsiEnabled = result.defaultAnsiEnabled,
-                    race = demoDefaultRace,
-                    playerClass = demoDefaultClass,
+                    race = raceRegistry.all().randomOrNull(random)?.id ?: demoDefaultRace,
+                    playerClass = availableClasses.randomOrNull(random)?.id ?: demoDefaultClass,
                 )
                 when (createResult) {
                     dev.ambon.engine.CreateResult.Ok -> {
