@@ -25,7 +25,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.util.Random
@@ -132,7 +131,7 @@ class AkathavaeIlluminateTest {
     // ── Illumination outcomes ────────────────────────────────────────────
 
     @Test
-    fun `successful illumination records the mob and grants kill-equivalent XP`() = runTest {
+    fun `successful illumination records the mob without removing it`() = runTest {
         val s = setup(rng = ScriptedRandom(0))
         val sid = SessionId(1L)
         val me = loginAkathavae(s, sid, "Thalen")
@@ -141,14 +140,14 @@ class AkathavaeIlluminateTest {
         s.system.illuminate(sid, "wisp")
 
         assertTrue(me.arcanum.mobs.containsKey("test:wisp"), "journal should hold the wisp")
-        assertNull(s.fixture.mobs.get(MobId("test:w1")), "subject should be removed like a kill")
-        assertEquals(100L, me.xpTotal, "first illumination pays the full kill XP")
+        assertNotNull(s.fixture.mobs.get(MobId("test:w1")), "illumination must never remove the subject")
+        assertEquals(100L, me.xpTotal, "first illumination pays the full discovery XP")
         val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
         assertTrue(texts.any { it.contains("illuminate") }, "got=$texts")
     }
 
     @Test
-    fun `successful illumination captures drops into inventory and records them`() = runTest {
+    fun `successful illumination catalogues the subject's drops without taking them`() = runTest {
         val s = setup(rng = ScriptedRandom(0, 0))
         val sid = SessionId(1L)
         val me = loginAkathavae(s, sid, "Thalen")
@@ -159,15 +158,13 @@ class AkathavaeIlluminateTest {
 
         s.system.illuminate(sid, "wisp")
 
-        assertTrue(
-            s.fixture.items.inventory(sid).any { it.id.value == "test:dust" },
-            "drop should land in inventory, not the room",
-        )
-        assertTrue(me.arcanum.items.containsKey("test:dust"), "captured drop should be recorded")
+        assertTrue(me.arcanum.items.containsKey("test:dust"), "the creature's drop should be recorded as a page")
+        assertTrue(s.fixture.items.inventory(sid).isEmpty(), "nothing is taken from a living subject")
+        assertNotNull(s.fixture.mobs.get(MobId("test:w1")), "the subject is unharmed and remains")
     }
 
     @Test
-    fun `illumination success fires quest kill credit`() = runTest {
+    fun `illumination does not fire kill credit — the subject lives`() = runTest {
         val credited = mutableListOf<String>()
         val s = setup(rng = ScriptedRandom(0), onMobKilledByPlayer = { _, templateKey -> credited += templateKey })
         val sid = SessionId(1L)
@@ -176,7 +173,7 @@ class AkathavaeIlluminateTest {
 
         s.system.illuminate(sid, "wisp")
 
-        assertEquals(listOf("test:wisp"), credited, "a recorded creature counts as a slain one")
+        assertTrue(credited.isEmpty(), "a recorded creature is unharmed and must not count as slain")
     }
 
     @Test

@@ -1405,6 +1405,7 @@ class GameEngine(
                 statusEffects = statusEffectSystem,
                 groupSystem = groupSystem,
                 currencySystem = currencySystem,
+                akathavaeSystem = akathavaeSystem,
             ),
             ItemHandler(
                 ctx = ctx,

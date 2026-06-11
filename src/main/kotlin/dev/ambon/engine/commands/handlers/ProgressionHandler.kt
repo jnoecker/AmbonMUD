@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.StatDefinition
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.AkathavaeSystem
 import dev.ambon.engine.CurrencySystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
@@ -22,6 +23,7 @@ class ProgressionHandler(
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
     private val currencySystem: CurrencySystem? = null,
+    private val akathavaeSystem: AkathavaeSystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
@@ -131,6 +133,21 @@ class ProgressionHandler(
     }
 
     private suspend fun handleSpells(sessionId: SessionId) {
+        // For the Akathavae the Arcanum *is* the spellbook: they wield no spells,
+        // so 'spells'/'abilities'/'skills' leafs through their journal instead.
+        val me = players.get(sessionId)
+        if (me != null && me.isAkathavae) {
+            akathavaeSystem?.emitJournal(sessionId)
+            outbound.send(OutboundEvent.SendInfo(sessionId, "As an Akathavae you wield no spells — your art is the Arcanum."))
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "  Recorded: ${me.arcanum.rooms.size} places, ${me.arcanum.mobs.size} creatures, ${me.arcanum.items.size} items.",
+                ),
+            )
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Type 'arcanum' to leaf through its pages."))
+            return
+        }
         val abilities = requireSystemOrNull(sessionId, abilitySystem, "Abilities", outbound) ?: return
         val known = abilities.knownAbilities(sessionId)
         if (known.isEmpty()) {

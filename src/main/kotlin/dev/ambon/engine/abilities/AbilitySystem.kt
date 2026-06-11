@@ -1113,8 +1113,17 @@ class AbilitySystem(
 
     fun refreshKnownAbilities(sessionId: SessionId): List<AbilityDefinition> {
         val player = players.get(sessionId) ?: return emptyList()
-        return recomputeKnownAbilities(sessionId, player.level, player.unlockedClasses)
+        return recomputeKnownAbilities(sessionId, player.level, effectiveAbilityClasses(player))
     }
+
+    /**
+     * The classes that actually grant abilities to [player]. Normally this is the
+     * full unlocked set, but a pledged Akathavae draws only from the Akathavae
+     * class: a former class left unlocked (so renouncing can restore it) must not
+     * keep arming the vow-bound with its old arts.
+     */
+    private fun effectiveAbilityClasses(player: PlayerState): Set<String> =
+        if (player.isAkathavae) setOf(player.playerClass) else player.unlockedClasses
 
     fun recomputeKnownAbilities(
         sessionId: SessionId,
@@ -1177,7 +1186,7 @@ class AbilitySystem(
     private fun ensureAbilitiesCurrent(sessionId: SessionId) {
         val player = players.get(sessionId) ?: return
         if (manualLearnedAbilities[sessionId] == null) return
-        recomputeKnownAbilities(sessionId, player.level, player.unlockedClasses)
+        recomputeKnownAbilities(sessionId, player.level, effectiveAbilityClasses(player))
     }
 
     private fun resolveEffectiveKnownAbilities(
