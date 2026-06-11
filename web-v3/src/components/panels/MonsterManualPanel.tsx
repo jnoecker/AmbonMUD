@@ -155,6 +155,10 @@ export function MonsterManualPanel({
 
   const { info, name } = monster;
   const skinned = !!bg; // a monster_manual_bg frame is registered
+  // Optional painted portrait frame. Overlaid on the figure, its opaque border
+  // masks the rectangular rare-variant colorize seam (and frames every portrait
+  // when registered). Absent → the plain bordered portrait shows through.
+  const portraitFrame = serverAssets["monster_manual_portrait_frame"];
   // Rare-variant colorize: a valid "#rrggbb" tint washes the portrait the same
   // way the canvas sprite is colorized, so albino/verdant/etc. read consistently
   // in the field manual. Invalid/absent tints leave the portrait untouched.
@@ -215,7 +219,7 @@ export function MonsterManualPanel({
 
         {/* Framed art (left) */}
         <figure
-          className={`mm-figure${variantTint ? " mm-figure-variant" : ""}`}
+          className={`mm-figure${variantTint ? " mm-figure-variant" : ""}${portraitFrame ? " mm-figure-framed" : ""}`}
           style={variantTint ? { ["--mm-variant-tint" as string]: variantTint } : undefined}
         >
           {monster.image ? (
@@ -224,6 +228,8 @@ export function MonsterManualPanel({
               {/* Colorize wash: grayscale (on .mm-image) × tint (multiply) mirrors
                   the canvas luminance-colorize, so pale variants stay pale. */}
               {variantTint && <span className="mm-variant-wash" aria-hidden="true" />}
+              {/* Painted frame sits above the art + wash, masking the colorize seam. */}
+              {portraitFrame && <img className="mm-portrait-frame" src={portraitFrame} alt="" aria-hidden="true" />}
               <button
                 type="button"
                 className="mm-zoom"
