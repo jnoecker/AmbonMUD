@@ -106,12 +106,14 @@ rooms:
       panel shows how you rank against other students across various categories."
 
 
-      The Grand Hall is to the east, the Treasury is to the south, and the Stylist's Parlor lies to the north.
+      The Grand Hall is to the east, the Treasury is to the south, the Stylist's Parlor lies to the north, and a
+      velvet-curtained doorway to the west breathes faint clockwork music from the Parlor of Borrowed Songs.
     tavern: true
     exits:
       e: grand_hall
       s: treasury
       n: stylist_parlor
+      w: song_parlor
     image: 877842311c0643d0e2eb5c616ec94fdfb95e9c73e040e571a6322088fef8897a.jpg
   treasury:
     title: The Treasury
@@ -368,6 +370,93 @@ rooms:
     exits:
       s: common_room
     image: fe897d386ee1ff382d9b4a5d268504b10a5c9cc765c4addc3f6c0d47212b3342.jpg
+  song_parlor:
+    title: The Parlor of Borrowed Songs
+    description: >-
+      A velvet-hushed listening room off the Common Room, its walls quilted in tapestry so that no note escapes to
+      trouble the hearth. Filling half the parlor stands a giant music-box of walnut, brass, and dreamglass — an
+      invention of Tessikar the Springwright — its pinned brass cylinder turning behind a crystal pane above a tiny
+      stage of shuttered doors. Fed a coin, the doors swing open on cuckoo-clock hinges and a troupe of clockwork
+      musicians glides out on rails: fiddlers no taller than a teacup, a bellows-chested singer with a painted
+      porcelain face, a drummer whose sticks are wound springs. Together they perform the great ballads of Ambon. A few
+      alcoves on the little stage wait dark and empty, chalked in hopeful letters THE SPRINGWRIGHT and THE SHINING
+      QUARTZ VOID, for songs not yet pressed. A hand-lettered placard is bolted to the cabinet ('read placard').
+
+
+      The Common Room is back to the east.
+    exits:
+      e: common_room
+    features:
+      jukebox_placard:
+        type: SIGN
+        displayName: a hand-lettered placard bolted to the cabinet
+        keyword: placard
+        text: THE BORROWED SONG. Feed the jukebox a few coins and it plays your chosen song for EVERYONE in the parlor,
+          not just you. Type 'jukebox' (or 'jb') to read the songbook, then 'jukebox play <number>' to pay for a track.
+          While a song plays the jukebox is busy — it won't take another coin until the tune ends, after which the
+          parlor drifts back to its usual quiet. Web players can click the Jukebox badge to browse and watch the
+          countdown. The clockwork singer mouths every verse as the cylinder turns, so even visitors who keep their
+          sound off can follow the song in the room text. Tonight's songbook runs to the old ballads of Aineroia and
+          Malkuth — the wedding, the painted stones, the wail, and the hanging of the moon.
+    jukebox:
+      - title: "The Wedding of Gold and Shadow"
+        file: jukebox/wedding_of_gold_and_shadow.mp3
+        durationSeconds: 120
+        cost: 3
+        artist: "Tessikar's Clockwork Troupe"
+        description: "A slow processional ballad of the forest healer taken to be a king's queen, and the gilded cage that waited past the altar."
+        lyrics:
+          - "In a cottage of herbs by the old forest door"
+          - "Lived a wise woman healing the sick and the poor"
+          - "But a king felt the magic asleep in her hands"
+          - "And he carried her off to his cold palace lands"
+          - "Oh the bells rang of gold but the vows rang of shadow"
+          - "And the bride wore a crown that was heavy as sorrow"
+      - title: "The Graveyard of Painted Stones"
+        file: jukebox/graveyard_of_painted_stones.mp3
+        durationSeconds: 150
+        cost: 5
+        artist: "Tessikar's Clockwork Troupe"
+        description: "A lullaby-lament for the queen's lost children, whose painted headstones — phoenix and dragon, fox and faerie — would one day wake as the races of Ambon."
+        lyrics:
+          - "She buried her babies where wildflowers grow"
+          - "And painted each headstone with creatures aglow"
+          - "A phoenix that rises, a dragon set free"
+          - "A fox warm and clever, a light in the sea"
+          - "A faerie-held changeling, a bloom on the stone"
+          - "And she sat with them nightly and sang them each home"
+          - "Sleep now my darlings, your stories are deep"
+          - "And stories, like seeds, are not dead — they're asleep"
+      - title: "The Wail That Made a Goddess"
+        file: jukebox/wail_that_made_a_goddess.mp3
+        durationSeconds: 135
+        cost: 8
+        artist: "Tessikar's Clockwork Troupe"
+        description: "The dark heart of the cycle: the betrayal at the altar, the god-killing dagger turned on its master, and the grief that cracked the world into the Caldera."
+        lyrics:
+          - "By candlelight she followed where her king had gone alone"
+          - "And found him at an altar that was carved of children's bone"
+          - "The dagger drank their little lives to feed his crown of night"
+          - "She took the blade, she drew it true, she put out his cold light"
+          - "Then she wailed — and the mountains broke, and the forest burned to glass"
+          - "Then she wailed — and the paintings woke, every dragon, bloom, and lass"
+          - "Where her grief came down, the world still bears the scar"
+          - "And they call it the Caldera, and it glows like a fallen star"
+      - title: "The Night She Hung the Moon"
+        file: jukebox/night_she_hung_the_moon.mp3
+        durationSeconds: 120
+        cost: 5
+        artist: "Tessikar's Clockwork Troupe"
+        description: "A gentle closing ballad for the youngest child, who had no grave and no painting, and the moon his mother hung so he would never run in darkness."
+        lyrics:
+          - "The youngest had no headstone, for she held him as he passed"
+          - "And grief with no painting becomes a screaming blast"
+          - "A wind of death at midnight that no mother could destroy"
+          - "For even as a terror, he was still her little boy"
+          - "So she hung a silver lantern in the black above the plain"
+          - "And she made him a white stallion with starlight in his mane"
+          - "Now he runs on roads of moonlight, and he never runs alone"
+          - "For his mother's lamp burns nightly to light her youngest home"
   sanctum:
     title: The Sanctum
     description: >-
