@@ -2997,16 +2997,30 @@ class GameEngine(
     }
 
     /**
-     * Reverts any room whose jukebox track just ended to its default music by
-     * pushing a cleared `Jukebox.Info` to its occupants. Cheap when nothing has
-     * expired (the common case): [JukeboxSystem.pollExpired] returns an empty list.
+     * Drives playing jukebox tracks: broadcasts lyric lines as they come due
+     * (spread across each track's duration — flavour for players without audio),
+     * then announces tracks that just ended and reverts their rooms to default
+     * music via a cleared `Jukebox.Info`. Cheap when nothing is playing (the
+     * common case): both polls return empty.
      */
     private suspend fun tickJukebox() {
-        val emitter = gmcpEmitter ?: return
-        for (roomId in jukeboxSystem.pollExpired()) {
-            val playlist = world.rooms[roomId]?.jukebox ?: emptyList()
-            val payload = emitter.buildJukeboxInfo(playlist, nowPlaying = null, remainingSeconds = 0)
-            emitter.broadcastJukeboxInfo(roomId, payload, players)
+        for ((roomId, lines) in jukeboxSystem.pollDueLyrics()) {
+            for (line in lines) {
+                broadcastToRoom(players, outbound, roomId, "♪ $line ♪")
+            }
+        }
+        for ((roomId, ended) in jukeboxSystem.pollExpired()) {
+            broadcastToRoom(
+                players,
+                outbound,
+                roomId,
+                "The jukebox winds down as \"${ended.song.title}\" comes to an end.",
+            )
+            gmcpEmitter?.let { emitter ->
+                val playlist = world.rooms[roomId]?.jukebox ?: emptyList()
+                val payload = emitter.buildJukeboxInfo(playlist, nowPlaying = null, remainingSeconds = 0)
+                emitter.broadcastJukeboxInfo(roomId, payload, players)
+            }
         }
     }
 

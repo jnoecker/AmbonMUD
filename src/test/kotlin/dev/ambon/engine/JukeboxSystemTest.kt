@@ -60,15 +60,17 @@ class JukeboxSystemTest {
     }
 
     @Test
-    fun `pollExpired returns only newly-ended rooms`() {
+    fun `pollExpired returns only newly-ended tracks`() {
         val (clock, jb) = system()
         var gold = 100L
         jb.play(room, playlist, 0, "Bob", gold) { gold -= it }
 
-        assertEquals(emptyList<RoomId>(), jb.pollExpired())
+        assertTrue(jb.pollExpired().isEmpty())
         clock.advance(60_000)
-        assertEquals(listOf(room), jb.pollExpired())
-        assertEquals(emptyList<RoomId>(), jb.pollExpired()) // already cleared
+        val expired = jb.pollExpired()
+        assertEquals(setOf(room), expired.keys)
+        assertEquals("Tavern Reel", expired[room]?.song?.title)
+        assertTrue(jb.pollExpired().isEmpty()) // already cleared
     }
 
     @Test
@@ -120,5 +122,78 @@ class JukeboxSystemTest {
         var gold = 100L
         val result = jb.play(room, playlist, 0, "Bob", gold) { gold -= it }
         assertTrue(result is JukeboxPlayResult.Disabled)
+    }
+
+    // ---------- lyrics ----------
+
+    private val ballad =
+        listOf(
+            JukeboxSong(
+                "Cat Ballad",
+                "/audio/ballad.mp3",
+                durationSeconds = 100,
+                cost = 5,
+                lyrics = listOf("line one", "line two", "line three", "line four"),
+            ),
+        )
+
+    @Test
+    fun `lyrics come due spread evenly across the duration`() {
+        // 4 lines over 100s -> one every 20s, starting at 20s and ending at 80s.
+        val (clock, jb) = system()
+        var gold = 100L
+        jb.play(room, ballad, 0, "Bob", gold) { gold -= it }
+
+        assertTrue(jb.pollDueLyrics().isEmpty()) // t=0: nothing due yet
+        clock.advance(19_999)
+        assertTrue(jb.pollDueLyrics().isEmpty())
+        clock.advance(1)
+        assertEquals(mapOf(room to listOf("line one")), jb.pollDueLyrics())
+        assertTrue(jb.pollDueLyrics().isEmpty()) // no duplicates on re-poll
+        clock.advance(40_000) // t=60s: lines two and three both due
+        assertEquals(mapOf(room to listOf("line two", "line three")), jb.pollDueLyrics())
+        clock.advance(20_000) // t=80s: final line, before the track ends at 100s
+        assertEquals(mapOf(room to listOf("line four")), jb.pollDueLyrics())
+        assertTrue(jb.pollDueLyrics().isEmpty())
+        assertTrue(jb.pollExpired().isEmpty()) // still playing until t=100s
+    }
+
+    @Test
+    fun `unsent lyrics flush when polled after the track ends`() {
+        val (clock, jb) = system()
+        var gold = 100L
+        jb.play(room, ballad, 0, "Bob", gold) { gold -= it }
+
+        clock.advance(100_000) // whole track elapsed without a lyric poll
+        assertEquals(
+            mapOf(room to listOf("line one", "line two", "line three", "line four")),
+            jb.pollDueLyrics(),
+        )
+        assertEquals(setOf(room), jb.pollExpired().keys)
+        assertTrue(jb.pollDueLyrics().isEmpty())
+    }
+
+    @Test
+    fun `lyric progress resets for a new track in the same room`() {
+        val (clock, jb) = system()
+        var gold = 100L
+        jb.play(room, ballad, 0, "Bob", gold) { gold -= it }
+        clock.advance(100_000)
+        jb.pollDueLyrics()
+        jb.pollExpired()
+
+        jb.play(room, ballad, 0, "Carol", gold) { gold -= it }
+        assertTrue(jb.pollDueLyrics().isEmpty()) // fresh track: nothing due at t=0
+        clock.advance(20_000)
+        assertEquals(mapOf(room to listOf("line one")), jb.pollDueLyrics())
+    }
+
+    @Test
+    fun `songs without lyrics never surface lyric lines`() {
+        val (clock, jb) = system()
+        var gold = 100L
+        jb.play(room, playlist, 0, "Bob", gold) { gold -= it }
+        clock.advance(30_000)
+        assertTrue(jb.pollDueLyrics().isEmpty())
     }
 }

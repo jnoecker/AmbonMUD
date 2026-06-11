@@ -10,8 +10,10 @@ package dev.ambon.domain.world
  * [durationSeconds] is the authored play length — the jukebox locks the room to
  * this track for that long, then reverts to the room's default music, so a song
  * effectively "plays once" without the client needing to report track-end.
- * [description] is lore flavour shown in the song list / web panel
- * (e.g. "Raucous Pub Song About Aineroia's Ascension").
+ * [description] is lore flavour shown in the song list / web panel and broadcast
+ * to the room when the song starts (e.g. "Raucous Pub Song About Aineroia's
+ * Ascension"). [lyrics] lines are broadcast to the room spread evenly across the
+ * song's duration — flavour for players without audio.
  */
 data class JukeboxSong(
     val title: String,
@@ -20,4 +22,5 @@ data class JukeboxSong(
     val cost: Long,
     val artist: String? = null,
     val description: String? = null,
+    val lyrics: List<String> = emptyList(),
 )

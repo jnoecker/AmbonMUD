@@ -49,7 +49,10 @@ data class RoomFile(
  * One authored jukebox track. [file] is an audio filename resolved against the
  * zone audio base (like room `music`/`ambient`). [durationSeconds] is the play
  * length the jukebox locks the room for; [cost] (gold) defaults to the configured
- * jukebox cost when omitted. [description] is optional lore flavour.
+ * jukebox cost when omitted. [description] is optional lore flavour, broadcast to
+ * the room when the song starts. [lyrics] lines are broadcast to the room spread
+ * evenly across the song's duration — flavour for players without audio, so the
+ * count must leave at least a few seconds between lines (validated at load).
  */
 data class JukeboxSongFile(
     val title: String,
@@ -58,4 +61,5 @@ data class JukeboxSongFile(
     val cost: Long? = null,
     val artist: String? = null,
     val description: String? = null,
+    val lyrics: List<String> = emptyList(),
 )

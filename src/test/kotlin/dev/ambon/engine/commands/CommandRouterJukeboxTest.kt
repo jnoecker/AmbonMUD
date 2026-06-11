@@ -76,6 +76,34 @@ class CommandRouterJukeboxTest {
         }
 
     @Test
+    fun `playing a song broadcasts its description to everyone in the room`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            val watcherSid = SessionId(2L)
+            val res = env.players.login(watcherSid, "Watcher", "password")
+            require(res == LoginResult.Ok) { "Login failed: $res" }
+            env.outbound.drainAll()
+
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+
+            val outs = env.outbound.drainAll()
+            val description = "A foot-stomping reel about a barkeep's lost cat."
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == watcherSid && it.text.contains("feeds the jukebox") },
+                "Expected the watcher to see the play announcement. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == watcherSid && it.text == description },
+                "Expected the watcher to see the song description. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == env.sid && it.text == description },
+                "Expected the buyer to see the song description. got=$outs",
+            )
+        }
+
+    @Test
     fun `a playing jukebox is busy until the track ends`() =
         runTest {
             val env = setup()

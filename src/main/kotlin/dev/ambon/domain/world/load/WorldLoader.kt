@@ -1752,11 +1752,14 @@ object WorldLoader {
         }
     }
 
+    /** Minimum average gap between broadcast lyric lines; caps how many lines a song may author. */
+    private const val MIN_SECONDS_PER_LYRIC_LINE = 3
+
     /**
      * Resolves an authored jukebox playlist into [JukeboxSong]s: each track's
      * audio [file] is prefixed with the zone [audioBase] (like room music), an
-     * omitted cost falls back to [DEFAULT_JUKEBOX_COST], and durations/costs are
-     * validated. An empty list (the common case) means the room has no jukebox.
+     * omitted cost falls back to [DEFAULT_JUKEBOX_COST], and durations/costs/lyrics
+     * are validated. An empty list (the common case) means the room has no jukebox.
      */
     private fun parseJukebox(
         songs: List<JukeboxSongFile>,
@@ -1774,6 +1777,17 @@ object WorldLoader {
             }
             val cost = song.cost ?: DEFAULT_JUKEBOX_COST
             if (cost < 0) throw WorldLoadException("$where ('${song.title}') has a negative cost ($cost)")
+            if (song.lyrics.any { it.isBlank() }) {
+                throw WorldLoadException("$where ('${song.title}') has a blank lyrics line")
+            }
+            val maxLyricLines = song.durationSeconds / MIN_SECONDS_PER_LYRIC_LINE
+            if (song.lyrics.size > maxLyricLines) {
+                throw WorldLoadException(
+                    "$where ('${song.title}') has ${song.lyrics.size} lyrics lines; " +
+                        "max is $maxLyricLines for durationSeconds=${song.durationSeconds} " +
+                        "(${MIN_SECONDS_PER_LYRIC_LINE}s per line)",
+                )
+            }
             JukeboxSong(
                 title = song.title,
                 url = "$audioBase${song.file}",
@@ -1781,6 +1795,7 @@ object WorldLoader {
                 cost = cost,
                 artist = song.artist,
                 description = song.description,
+                lyrics = song.lyrics,
             )
         }
 

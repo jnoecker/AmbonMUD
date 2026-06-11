@@ -1,0 +1,16 @@
+zone: bad_jukebox_too_many_lyrics
+startRoom: tavern
+
+rooms:
+  tavern:
+    title: "The Singing Flagon"
+    description: "A cozy tavern with a battered jukebox in the corner."
+    jukebox:
+      - title: "Patter Song"
+        file: jukebox/patter.mp3
+        durationSeconds: 9
+        lyrics:
+          - "line one"
+          - "line two"
+          - "line three"
+          - "line four"

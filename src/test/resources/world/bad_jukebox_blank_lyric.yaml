@@ -1,0 +1,14 @@
+zone: bad_jukebox_blank_lyric
+startRoom: tavern
+
+rooms:
+  tavern:
+    title: "The Singing Flagon"
+    description: "A cozy tavern with a battered jukebox in the corner."
+    jukebox:
+      - title: "Tavern Reel"
+        file: jukebox/tavern_reel.mp3
+        durationSeconds: 90
+        lyrics:
+          - "Oh the barkeep's cat ran out the door"
+          - "   "

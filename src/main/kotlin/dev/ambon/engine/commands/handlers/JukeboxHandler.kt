@@ -112,6 +112,11 @@ class JukeboxHandler(
                         outbound,
                     )
 
+                    // Describe the song to everyone present — flavour for players without audio.
+                    song.description?.let { description ->
+                        broadcastToRoom(me.roomId, description, players, outbound)
+                    }
+
                     // Push the new track + countdown to everyone in the room so their audio swaps.
                     gmcpEmitter?.let { emitter ->
                         val payload =

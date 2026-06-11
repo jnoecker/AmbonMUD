@@ -113,7 +113,11 @@ jukebox: <list of song objects, optional - see `jukebox` notes>
       cost: 5                           # optional, gold (default 5); >= 0
       artist: "The Wandering Bards"      # optional
       description: "A foot-stomping reel about a barkeep's lost cat."  # optional lore flavour
+      lyrics:                           # optional - lines broadcast to the room, spread over the duration
+        - "Oh the barkeep's cat ran out the door"
+        - "She chased a rat across the floor"
   ```
+- Text-only flavour (players without audio): the `description` is broadcast to the room when the song starts, each `lyrics` line is broadcast as `♪ line ♪` spread evenly across `durationSeconds` (it need not match the actual sung pacing), and the room is told when the song ends. Lyrics are capped at one line per 3 seconds of duration; lines must be non-blank.
 
 `dungeon` notes:
 - When `true`, shows a Dungeon badge on the web client canvas that opens the dungeon kiosk panel.
