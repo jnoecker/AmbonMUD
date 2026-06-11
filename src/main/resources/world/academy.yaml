@@ -378,9 +378,11 @@ rooms:
       invention of Tessikar the Springwright — its pinned brass cylinder turning behind a crystal pane above a tiny
       stage of shuttered doors. Fed a coin, the doors swing open on cuckoo-clock hinges and a troupe of clockwork
       musicians glides out on rails: fiddlers no taller than a teacup, a bellows-chested singer with a painted
-      porcelain face, a drummer whose sticks are wound springs. Together they perform the great ballads of Ambon. A few
-      alcoves on the little stage wait dark and empty, chalked in hopeful letters THE SPRINGWRIGHT and THE SHINING
-      QUARTZ VOID, for songs not yet pressed. A hand-lettered placard is bolted to the cabinet ('read placard').
+      porcelain face, a drummer whose sticks are wound springs. Together they perform the great ballads of Ambon — the
+      faerie-song of Aineroia, the mother goddess; the footprint-ballad of Kvarcgagap, the shining quartz void; the
+      music-box ballad of Tessikar the Springwright; and a call-and-response shanty begging fair passage of Maelsang,
+      the tide between worlds. A few alcoves on the little stage still wait dark and empty, freshly chalked for songs
+      not yet pressed. A hand-lettered placard is bolted to the cabinet ('read placard').
 
 
       The Common Room is back to the east.
@@ -396,67 +398,299 @@ rooms:
           While a song plays the jukebox is busy — it won't take another coin until the tune ends, after which the
           parlor drifts back to its usual quiet. Web players can click the Jukebox badge to browse and watch the
           countdown. The clockwork singer mouths every verse as the cylinder turns, so even visitors who keep their
-          sound off can follow the song in the room text. Tonight's songbook runs to the old ballads of Aineroia and
-          Malkuth — the wedding, the painted stones, the wail, and the hanging of the moon.
+          sound off can follow the song in the room text. Tonight's songbook holds four pressed cylinders — Aineroia
+          the mother goddess, Kvarcgagap the shining quartz void, Tessikar the Springwright, and Maelsang of the tides
+          — and the songbook grows as new cylinders are pressed. The saddest verses are about real people, some of
+          whom still visit.
     jukebox:
-      - title: "The Wedding of Gold and Shadow"
-        file: jukebox/wedding_of_gold_and_shadow.mp3
-        durationSeconds: 120
-        cost: 3
-        artist: "Tessikar's Clockwork Troupe"
-        description: "A slow processional ballad of the forest healer taken to be a king's queen, and the gilded cage that waited past the altar."
+      - title: Aineroia, Faerie Queen
+        file: 3ccdaf5a030d0eb17791755e4903645e0bfb63283140ac72335b5440823c1228.mp3
+        durationSeconds: 288
+        cost: 1
+        artist: TRADITIONAL
+        description: Airy Irish faerie folk song about Aineroia the Mother Goddess
         lyrics:
-          - "In a cottage of herbs by the old forest door"
-          - "Lived a wise woman healing the sick and the poor"
-          - "But a king felt the magic asleep in her hands"
-          - "And he carried her off to his cold palace lands"
-          - "Oh the bells rang of gold but the vows rang of shadow"
-          - "And the bride wore a crown that was heavy as sorrow"
-      - title: "The Graveyard of Painted Stones"
-        file: jukebox/graveyard_of_painted_stones.mp3
-        durationSeconds: 150
-        cost: 5
-        artist: "Tessikar's Clockwork Troupe"
-        description: "A lullaby-lament for the queen's lost children, whose painted headstones — phoenix and dragon, fox and faerie — would one day wake as the races of Ambon."
+          - Aineroia lived alone
+          - By pine and river stone
+          - Her hands knew bark and fever
+          - And the names of every root
+          - Malkuth came down in iron
+          - With a crown on his hungry brow
+          - He smelled her in the cedar
+          - And made her kneel to now
+          - She bore the storm in silence
+          - Each child a bright-tongued spark
+          - Alive beneath her heartbeat
+          - Gone out inside the dark
+          - Aineroia, mother of ash and gold
+          - Aineroia, hear what the graves have told
+          - Phoenix, dragon, faerie light
+          - Carry them home through the night
+          - Aineroia, grief turned holy flame
+          - Aineroia, the dead learned names
+          - She painted stone with wonder
+          - On a hill of moss and rain
+          - Aureliae for the water
+          - Mycorae in the plain
+          - Pyrae burned on the headstones
+          - Lustriae with silver wings
+          - Ophirae in salt and thunder
+          - Luneqrae on moonlit strings
+          - Each night she walked the graveyard
+          - And sang the small ones true
+          - Told them of a forest cottage
+          - And a sky that held them blue
+          - Aineroia, mother of ash and gold
+          - Aineroia, hear what the graves have told
+          - Phoenix, dragon, faerie light
+          - Carry them home through the night
+          - Aineroia, grief turned holy flame
+          - Aineroia, the dead learned names
+          - Then she found him at the altar
+          - With their stolen breath around him
+          - A storm of little voices
+          - And a dagger poised to crown him
+          - The floor split like winter ice
+          - The dark went thin and white
+          - His kingdom came apart in glass
+          - At the center of her cry
+          - Aineroia, mother of ash and gold
+          - Aineroia, hear what the graves have told
+          - Phoenix, dragon, faerie light
+          - Carry them home through the night
+          - Aineroia, grief turned holy flame
+          - Aineroia, the dead learned names
+          - From shadow she made Aetherae
+          - From his black soul, Malukae
+          - And when death became the moon
+          - She lifted night into a place they could stay
+      - title: Kvarcgagap - Footprints in Emberfell
+        file: a22985f846a93ff62f6acf9925959dd4c7784899200152084cd9fbe9645bd33c.mp3
+        durationSeconds: 202
+        cost: 1
+        artist: TRADITIONAL
+        description: Up-tempo Fantasy Bard Song about Kvarcgagap, the Shining Quartz Void
         lyrics:
-          - "She buried her babies where wildflowers grow"
-          - "And painted each headstone with creatures aglow"
-          - "A phoenix that rises, a dragon set free"
-          - "A fox warm and clever, a light in the sea"
-          - "A faerie-held changeling, a bloom on the stone"
-          - "And she sat with them nightly and sang them each home"
-          - "Sleep now my darlings, your stories are deep"
-          - "And stories, like seeds, are not dead — they're asleep"
-      - title: "The Wail That Made a Goddess"
-        file: jukebox/wail_that_made_a_goddess.mp3
-        durationSeconds: 135
-        cost: 8
-        artist: "Tessikar's Clockwork Troupe"
-        description: "The dark heart of the cycle: the betrayal at the altar, the god-killing dagger turned on its master, and the grief that cracked the world into the Caldera."
+          - Kvarcgagap came first
+          - When Ambon was young
+          - He moved like quicksilver
+          - Through bedrock and lung
+          - He wore no fixed face
+          - Just opal and shine
+          - He carved out the deep
+          - And seeded the mines
+          - Then Malkuth came smiling
+          - With a question, sweet and cold
+          - “From what kind of seed
+          - Did the world unfold?”
+          - Footprints in the dark
+          - Footprints in the stone
+          - Footprints in the dark
+          - Footprints in the stone
+          - He brought the roots up home
+          - Footprints in the dark
+          - Then the dagger drank
+          - Footprints in the dark
+          - And the world grew fangs
+          - He fetched the black slabs
+          - From the Creator’s ground
+          - By the bare feet of God
+          - Where the first steps were found
+          - Malkuth made his blade
+          - From the holy black stone
+          - And used that gift
+          - To turn friend into bone
+          - In the clockwork woods
+          - Near Kaerinlith’s ring
+          - The shining quartz void
+          - Fell without a warning
+          - But dying, Kvarcgagap
+          - Still gave one final sign
+          - A breath of warning
+          - To the Springwright’s mind
+          - Footprints in the dark
+          - Footprints in the stone
+          - Footprints in the stone
+          - He brought the roots up home
+          - Footprints in the dark
+          - Then the dagger drank
+          - Footprints in the dark
+          - And the world grew fangs
+          - So the Springwright ran
+          - To the crystal heights
+          - Built a forge of grief
+          - On the Emberfell night
+          - He melted the shards
+          - Of the sacred black
+          - Threw the molten sky
+          - And did not look back
+          - Footprints in the dark
+          - Footprints in the stone
+          - (Footprints in the dark)
+          - The dead still make us strong
+          - Footprints in the dark
+          - The sparks fell wide
+          - And the Lithae opened their eyes
+          - Aineroia was born
+          - Where the fire came down
+          - And the sleeping children woke
+          - Under Kaerinlith’s crown
+      - title: Tessikar of Kaerinlith
+        file: 52347048fdeae3029d6d216d559863b6cc7bc43097a1bb71661bb98d6059b8e5.mp3
+        durationSeconds: 243
+        cost: 1
+        artist: TRADITIONAL
+        description: Lyrical Music-Box Style Ballad about Tessikar the Springwright
         lyrics:
-          - "By candlelight she followed where her king had gone alone"
-          - "And found him at an altar that was carved of children's bone"
-          - "The dagger drank their little lives to feed his crown of night"
-          - "She took the blade, she drew it true, she put out his cold light"
-          - "Then she wailed — and the mountains broke, and the forest burned to glass"
-          - "Then she wailed — and the paintings woke, every dragon, bloom, and lass"
-          - "Where her grief came down, the world still bears the scar"
-          - "And they call it the Caldera, and it glows like a fallen star"
-      - title: "The Night She Hung the Moon"
-        file: jukebox/night_she_hung_the_moon.mp3
-        durationSeconds: 120
-        cost: 5
-        artist: "Tessikar's Clockwork Troupe"
-        description: "A gentle closing ballad for the youngest child, who had no grave and no painting, and the moon his mother hung so he would never run in darkness."
+          - Born beyond the veil
+          - Where brass sang slow
+          - Copper rivers down below
+          - He came to Ambon
+          - Through his own door
+          - Wheels and crystal
+          - Spun the floor
+          - One amber eye
+          - One arm of brass
+          - Broad-shouldered, quiet
+          - Built to last
+          - Not to rule, not to reign
+          - Just a bench, and a flame
+          - Kaerinlith rose
+          - Under the peaks
+          - Walls with hidden breath
+          - Windows on tracks
+          - Metal flowers rang
+          - On the roof at night
+          - And Tessikar Kept the light
+          - Tessikar, Tessikar, Hammer the sky
+          - Tessikar, Tessikar, Make the world fly
+          - Kvarcgagap Shined in the deep
+          - Tessikar, Tessikar, Kept the dream
+          - Thumb-sized birds with prayer-wheel wings
+          - Fish that swam through the air like things
+          - Brass trees spoke in a copper shade
+          - Crystal fruit held thunder made
+          - Below the mountain, his truest friend
+          - Quartz and ore, would never bend
+          - Kvarcgagap, gave all it knew
+          - And every wonder, came through
+          - Then the Obsidian Dagger
+          - Found the bone
+          - Malkuth came
+          - For a throne of stone
+          - But a warning ran
+          - Through the dark and cold
+          - And Tessikar stood
+          - Grit and gold
+          - Tessikar, Tessikar
+          - Hammer the sky (Tessikar)
+          - Tessikar, Tessikar
+          - Make the world fly
+          - Kvarcgagap
+          - Shined in the deep
+          - Tessikar, Tessikar
+          - Kept the dream
+          - At Emberfell
+          - He took the shards
+          - Creator’s Footprints
+          - In his hands
+          - Melted them down
+          - In a furnace bright
+          - Then struck the slag
+          - Through the night
+          - Sparks fell wide
+          - Across the land
+          - Into the blood
+          - Of every clan
+          - And what was lost
+          - Became a flame
+          - In every road
+          - In every name
+          - Tessikar, Tessikar
+          - Hammer the sky (Tessikar)
+          - Tessikar, Tessikar
+          - Make the world fly
+          - Father of hands
+          - And the fearless and free
+          - Tessikar, Tessikar
+          - Lives in the trees
+          - Clockwork wonders
+          - Born from grace
+          - In the mountain hush
+          - He still makes space
+      - title: Maelsang Tide
+        file: 9d03cdc3ec70ee29aafdf2b14481b5924f2ec4bc8fb3bc26897b79c11148ce70.mp3
+        durationSeconds: 252
+        cost: 1
+        artist: TRADITIONAL
+        description: Call-and-response sea shanty about Maelsang, The Tide Between Worlds
         lyrics:
-          - "The youngest had no headstone, for she held him as he passed"
-          - "And grief with no painting becomes a screaming blast"
-          - "A wind of death at midnight that no mother could destroy"
-          - "For even as a terror, he was still her little boy"
-          - "So she hung a silver lantern in the black above the plain"
-          - "And she made him a white stallion with starlight in his mane"
-          - "Now he runs on roads of moonlight, and he never runs alone"
-          - "For his mother's lamp burns nightly to light her youngest home"
+          - Maelsang, hear us now
+          - Keep our keel from stone
+          - Bless the rope and canvas
+          - Guide us safely home
+          - We leave the ashore at dawn
+          - With lanterns low and dim
+          - If the deep should call our names
+          - Turn the tide from him
+          - Wind above us
+          - Dark below
+          - Hold the line
+          - And do not let go
+          - Ho, Maelsang, take the wheel!
+          - Ho, Maelsang, take the wheel!
+          - (Ho, Maelsang, take the wheel!)
+          - Let the foam be soft as wool
+          - (Ho, let it be soft!)
+          - Ho, Maelsang, hear our plea!
+          - (Ho, let it be soft!)
+          - Ho, Maelsang, hear our plea!
+          - (Ho, let it be soft!)
+          - Ho, Maelsang, hear our plea!
+          - (Ho, Maelsang, hear our plea!)
+          - Carry us across the sea
+          - (Carry us across!)
+          - First the sky went silver
+          - Then the black clouds came
+          - Lightning split the distance
+          - And the waves spoke your name
+          - Mast bowed like a prayer stick
+          - Sail tore with a cry
+          - We kept both hands on the line
+          - And watched the night run by
+          - Wind above us
+          - Drum and roar
+          - Hold us fast
+          - Till we find the shore
+          - Ho, Maelsang, take the wheel!
+          - Let the foam be soft as wool
+          - Ho, Maelsang, hear our plea!
+          - Ho, Maelsang, hear our plea!
+          - Carry us across the sea
+          - Carry us across the sea
+          - Then the storm began to tire
+          - Like a beast with no more bite
+          - Gray dawn rose from the water
+          - And the gulls called back the light
+          - We saw the port ahead
+          - With its smoke and painted masts
+          - Every man stood wordless
+          - Counting breath and holding fast
+          - Ho, Maelsang, take the wheel!
+          - Let the foam be soft as wool
+          - Ho, Maelsang, hear our plea!
+          - Ho, Maelsang, hear our plea!
+          - Carry us across the sea
+          - (Ho, Maelsang, hear our plea!)
+          - Carry us across the sea
+          - Now the rope is coiled
+          - And the harbor bells ring clear
+          - Bless the hands that steer us
+          - Bless the home we’ve found near
+          - Maelsang, mighty wonder
+          - Salt and thunder wide
+          - Thanks for every living soul
+          - You brought in on the tide
   sanctum:
     title: The Sanctum
     description: >-
