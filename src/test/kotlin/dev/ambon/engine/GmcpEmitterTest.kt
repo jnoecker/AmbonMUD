@@ -1180,10 +1180,12 @@ class GmcpEmitterTest {
         runTest {
             val target = CombatTargetInfo(
                 id = "mob-1",
-                name = "Goblin",
+                name = "Albino Goblin",
                 hp = 15,
                 maxHp = 30,
                 image = "/images/goblin.png",
+                tint = "#f5f0ff",
+                variantName = "Albino",
             )
             val e = combatEmitter(target, "Char")
             e.sendCharCombat(sid)
@@ -1192,10 +1194,12 @@ class GmcpEmitterTest {
             val data = events[0]
             assertEquals("Char.Combat", data.gmcpPackage)
             assertTrue(data.jsonData.contains("\"targetId\":\"mob-1\""))
-            assertTrue(data.jsonData.contains("\"targetName\":\"Goblin\""))
+            assertTrue(data.jsonData.contains("\"targetName\":\"Albino Goblin\""))
             assertTrue(data.jsonData.contains("\"targetHp\":15"))
             assertTrue(data.jsonData.contains("\"targetMaxHp\":30"))
             assertTrue(data.jsonData.contains("\"targetImage\":\"/images/goblin.png\""))
+            assertTrue(data.jsonData.contains("\"targetTint\":\"#f5f0ff\""))
+            assertTrue(data.jsonData.contains("\"targetVariant\":\"Albino\""))
         }
 
     @Test

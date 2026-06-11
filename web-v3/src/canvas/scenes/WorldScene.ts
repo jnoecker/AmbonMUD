@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Text, Texture, Assets, ColorMatrixFilter } from "pixi.js";
+import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
 import { gameStateRef, canvasCallbacks, pendingCastRef } from "../GameStateBridge";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { Minimap } from "../systems/Minimap";
@@ -9,6 +9,7 @@ import { WeatherParticles } from "../systems/WeatherParticles";
 import type { MobInfo } from "../../types";
 import { ROOM_SURFACE_WIDGETS } from "../../featureMetadata";
 import { loadTexture } from "../textureLoader";
+import { parseHexTint, makeVariantColorize } from "../variantTint";
 
 /** Resolves a global asset key to its server-provided URL, with a hardcoded fallback. */
 function assetUrl(key: string, fallbackFilename: string): string {
@@ -79,46 +80,6 @@ const ROLE_SHOP_COLOR = 0x81a2be;
 /** Responsive size for a status indicator icon given the host mob's sprite size. */
 function statusIconSize(mobSize: number): number {
   return clamp(mobSize * STATUS_ICON_RATIO, STATUS_ICON_MIN, STATUS_ICON_MAX);
-}
-
-/** Parses a server "#rrggbb" tint into a PixiJS numeric color, or null if absent/invalid. */
-function parseHexTint(tint: string | null | undefined): number | null {
-  if (!tint) return null;
-  const hex = tint.replace("#", "").trim();
-  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return null;
-  return parseInt(hex, 16);
-}
-
-/**
- * Builds a luminance-colorize ColorMatrixFilter for a rare-variant tint.
- *
- * PixiJS's `sprite.tint` is a *multiply*, which can only darken toward the tint
- * — so a pale tint like albino's `#f5f0ff` leaves the sprite essentially
- * unchanged. Colorizing instead (desaturate to luminance, then scale by the
- * tint) makes a near-white tint read as a pale/ghostly creature and a saturated
- * tint as a richly recolored one. A small gain/lift keeps pale variants from
- * coming out muddy, and `alpha` leaves a touch of the original texture so the
- * creature still reads through the wash.
- */
-function makeVariantColorize(tint: number): ColorMatrixFilter {
-  const tr = ((tint >> 16) & 0xff) / 255;
-  const tg = ((tint >> 8) & 0xff) / 255;
-  const tb = (tint & 0xff) / 255;
-  // Rec. 601 luma weights.
-  const lr = 0.299;
-  const lg = 0.587;
-  const lb = 0.114;
-  const gain = 1.15;
-  const lift = 0.1;
-  const filter = new ColorMatrixFilter();
-  filter.matrix = [
-    lr * tr * gain, lg * tr * gain, lb * tr * gain, 0, tr * lift,
-    lr * tg * gain, lg * tg * gain, lb * tg * gain, 0, tg * lift,
-    lr * tb * gain, lg * tb * gain, lb * tb * gain, 0, tb * lift,
-    0, 0, 0, 1, 0,
-  ];
-  filter.alpha = 0.92;
-  return filter;
 }
 
 function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo, spriteSize: number) {

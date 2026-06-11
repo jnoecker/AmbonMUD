@@ -7,6 +7,7 @@ import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { SpellProjectileSystem } from "../systems/SpellProjectile";
 import { loadTexture } from "../textureLoader";
+import { parseHexTint, makeVariantColorize } from "../variantTint";
 
 const BASE_SPRITE_SIZE = 248;
 const MIN_SPRITE_SIZE = 184;
@@ -63,6 +64,7 @@ export class BattleScene {
 
   private lastPlayerSpritePath: string | null = null;
   private lastEnemyImage: string | null = null;
+  private lastEnemyTint: string | null = null;
   private lastTargetId: string | null = null;
   private lastPartyKey = "";
   private lastPetsKey = "";
@@ -212,9 +214,11 @@ export class BattleScene {
     const enemyCategory = combatTarget?.targetCategory ?? "humanoid";
     const enemyImage = combatTarget?.targetImage ?? gameStateRef.current.serverAssets[`default_mob_${enemyCategory}`] ?? null;
     const targetId = combatTarget?.targetId ?? null;
-    if (enemyImage !== this.lastEnemyImage) {
+    const enemyTint = combatTarget?.targetTint ?? null;
+    if (enemyImage !== this.lastEnemyImage || enemyTint !== this.lastEnemyTint) {
       this.lastEnemyImage = enemyImage;
-      this.loadEnemySprite(enemyImage);
+      this.lastEnemyTint = enemyTint;
+      this.loadEnemySprite(enemyImage, enemyTint);
     }
 
     // If the combat target changed to a different mob, cancel any in-progress
@@ -227,7 +231,7 @@ export class BattleScene {
         if (this.enemySprite) {
           this.enemySprite.alpha = 1;
           this.enemySprite.scale.set(1);
-          this.enemySprite.tint = this.lastEnemyImage ? 0xffffff : ENEMY_TINT;
+          this.enemySprite.tint = (this.lastEnemyImage || this.lastEnemyTint) ? 0xffffff : ENEMY_TINT;
         }
         if (!this.fadingIn) {
           this.container.alpha = 1;
@@ -350,7 +354,7 @@ export class BattleScene {
       if (this.enemySprite) {
         this.enemySprite.alpha = 1;
         this.enemySprite.scale.set(1);
-        this.enemySprite.tint = this.lastEnemyImage ? 0xffffff : ENEMY_TINT;
+        this.enemySprite.tint = (this.lastEnemyImage || this.lastEnemyTint) ? 0xffffff : ENEMY_TINT;
       }
       this.enemyLabel.alpha = 1;
       this.enemyHpBar.alpha = 1;
@@ -685,7 +689,7 @@ export class BattleScene {
     }
   }
 
-  private rebuildBattlePets(pets: Array<{ id: string; name: string; hp: number; maxHp: number; image?: string | null; category?: string }>) {
+  private rebuildBattlePets(pets: Array<{ id: string; name: string; hp: number; maxHp: number; image?: string | null; category?: string; tint?: string | null }>) {
     for (const { sprite, label, hpBar } of this.petMembers) {
       this.container.removeChild(sprite);
       this.container.removeChild(label);
@@ -701,7 +705,14 @@ export class BattleScene {
       sprite.width = SMALL_SPRITE;
       sprite.height = SMALL_SPRITE;
       sprite.anchor.set(0.5);
-      sprite.tint = PET_TINT;
+      // Rare-variant pets colorize like world/enemy sprites; others keep the flat purple tint.
+      const variantTint = parseHexTint(pet.tint);
+      if (variantTint != null) {
+        sprite.filters = [makeVariantColorize(variantTint)];
+        sprite.tint = 0xffffff;
+      } else {
+        sprite.tint = PET_TINT;
+      }
 
       const petImage = pet.image ?? gameStateRef.current.serverAssets[`default_mob_${pet.category ?? "humanoid"}`] ?? null;
       if (petImage) {
@@ -781,7 +792,7 @@ export class BattleScene {
     }
   }
 
-  private async loadEnemySprite(imagePath: string | null) {
+  private async loadEnemySprite(imagePath: string | null, tint?: string | null) {
     if (this.enemySprite) {
       this.container.removeChild(this.enemySprite);
       this.enemySprite.destroy();
@@ -792,7 +803,15 @@ export class BattleScene {
     sprite.width = BASE_SPRITE_SIZE;
     sprite.height = BASE_SPRITE_SIZE;
     sprite.anchor.set(0.5);
-    sprite.tint = ENEMY_TINT;
+    // A rare variant gets a luminance-colorize filter (lightens *and* darkens),
+    // matching the world scene; ordinary mobs keep the flat gold placeholder tint.
+    const variantTint = parseHexTint(tint);
+    if (variantTint != null) {
+      sprite.filters = [makeVariantColorize(variantTint)];
+      sprite.tint = 0xffffff;
+    } else {
+      sprite.tint = ENEMY_TINT;
+    }
     this.container.addChildAt(sprite, 1);
     this.enemySprite = sprite;
 
@@ -802,7 +821,8 @@ export class BattleScene {
         sprite.texture = texture;
         sprite.width = BASE_SPRITE_SIZE;
         sprite.height = BASE_SPRITE_SIZE;
-        sprite.tint = 0xffffff;
+        // The colorize filter (if any) recolors the loaded art; otherwise show it as-is.
+        if (variantTint == null) sprite.tint = 0xffffff;
       } catch {
         // Keep placeholder
       }

@@ -36,6 +36,10 @@ data class CombatTargetInfo(
     val maxHp: Int,
     val image: String? = null,
     val category: String = "humanoid",
+    /** CSS hex tint for a rare variant (e.g. "#f5f0ff"), or null for ordinary mobs. */
+    val tint: String? = null,
+    /** Variant display label (e.g. "Albino"), or null for ordinary mobs. */
+    val variantName: String? = null,
 )
 
 /** Input DTO for building a Server.Who GMCP payload. */
@@ -236,6 +240,8 @@ class GmcpEmitter(
                 targetMaxHp = target?.maxHp,
                 targetImage = target?.image,
                 targetCategory = target?.category,
+                targetTint = target?.tint,
+                targetVariant = target?.variantName,
             ),
         )
     }
@@ -2675,6 +2681,8 @@ class GmcpEmitter(
         val targetMaxHp: Int?,
         val targetImage: String?,
         val targetCategory: String?,
+        val targetTint: String?,
+        val targetVariant: String?,
     )
 
     @Suppress("unused") // Jackson serializes all fields

@@ -21149,12 +21149,14 @@ html:has(.game-shell),
   min-height: 220px;
 }
 
-/* Rare-variant colorize for the portrait. Desaturating the art and multiplying
-   a colored wash over it reproduces the canvas luminance-colorize: a pale tint
-   (albino) leaves the creature pale, a saturated tint (verdant) recolors it.
-   A plain multiply over full-colour art would only darken and lose albino. */
+/* Rare-variant colorize for the portrait — mirrors the canvas screen-colorize
+   in variantTint.ts. Desaturate the art to luminance, then *screen* a colored
+   wash over it so a pale tint (albino) lifts the creature to a pale/ghostly
+   read and a saturated tint (verdant) recolors it without flooding. A plain
+   multiply would only darken: albino vanished and verdant turned to mud. The
+   wash opacity matches VARIANT_TINT_STRENGTH so canvas and bestiary agree. */
 .mm-figure-variant .mm-image {
-  filter: grayscale(0.9) brightness(1.08);
+  filter: grayscale(0.85);
 }
 
 .mm-variant-wash {
@@ -21162,7 +21164,8 @@ html:has(.game-shell),
   inset: 0;
   border-radius: 10px;
   background: var(--mm-variant-tint, transparent);
-  mix-blend-mode: multiply;
+  mix-blend-mode: screen;
+  opacity: 0.6;
   pointer-events: none;
 }
 

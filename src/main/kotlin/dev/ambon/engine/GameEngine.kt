@@ -588,6 +588,8 @@ class GameEngine(
                         maxHp = mob.maxHp,
                         image = mob.image,
                         category = mob.category,
+                        tint = mob.tint,
+                        variantName = mob.variantName,
                     )
                 }
             },
