@@ -127,6 +127,15 @@ class JukeboxHandler(
                             )
                         emitter.broadcastJukeboxInfo(me.roomId, payload, players)
                     }
+
+                    // Inline music links for non-web clients (see PlayerState.audioLinksEnabled),
+                    // so their audio swaps along with the GMCP push above.
+                    for (occupant in players.playersInRoom(me.roomId)) {
+                        if (occupant.audioLinksEnabled && song.url != occupant.lastEmittedMusicUrl) {
+                            occupant.lastEmittedMusicUrl = song.url
+                            outbound.send(OutboundEvent.SendInfo(occupant.sessionId, "[music] ${song.url}"))
+                        }
+                    }
                 }
 
                 is JukeboxPlayResult.Busy -> {

@@ -71,4 +71,44 @@ class GameEngineJukeboxTickTest {
 
             h.close()
         }
+
+    @Test
+    fun `inline audio links follow the jukebox track and revert when it ends`() =
+        runTest {
+            val clock = MutableClock(0)
+            val world = WorldLoader.loadFromResource("world/ok_jukebox.yaml")
+            val h = GameEngineHarness.start(scope = this, world = world, clock = clock)
+
+            val sid = SessionId(1L)
+            h.loginNewPlayer(sid, "Alice")
+            runCurrent()
+            advanceTimeBy(h.tickMillis * 20)
+            runCurrent()
+            val player = h.players.get(sid)
+            require(player != null) { "Login did not complete; got=${h.drain()}" }
+            player.gold = 50L
+            h.players.setAudioLinksEnabled(sid, true)
+            h.drain()
+
+            h.inbound.send(InboundEvent.LineReceived(sid, "jukebox play 1"))
+            advanceTimeBy(h.tickMillis * 5)
+            runCurrent()
+            val playOuts = h.drain()
+            assertTrue(
+                playOuts.any { it is OutboundEvent.SendInfo && it.text == "[music] /audio/jukebox/tavern_reel.mp3" },
+                "Expected the jukebox track's inline link on play. got=$playOuts",
+            )
+
+            // Jump past the end of the 90s track: the room reverts to its default music.
+            clock.advance(91_000)
+            advanceTimeBy(h.tickMillis * 2)
+            runCurrent()
+            val endOuts = h.drain()
+            assertTrue(
+                endOuts.any { it is OutboundEvent.SendInfo && it.text == "[music] /audio/tavern/ambient_loop.mp3" },
+                "Expected the room's default music link after the track ended. got=$endOuts",
+            )
+
+            h.close()
+        }
 }

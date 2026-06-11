@@ -17,6 +17,7 @@ import dev.ambon.domain.world.exitPhrase
 import dev.ambon.domain.world.opposite
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
+import dev.ambon.engine.JukeboxSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
@@ -208,6 +209,7 @@ internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
         questSystem,
         trainerRegistry,
         puzzleSystem,
+        jukeboxSystem,
     )
     emitShopGmcp(sessionId)
     emitBankGmcp(sessionId)
@@ -353,6 +355,7 @@ internal suspend fun sendLook(
     questSystem: QuestSystem? = null,
     trainerRegistry: TrainerRegistry? = null,
     puzzleSystem: PuzzleSystem? = null,
+    jukeboxSystem: JukeboxSystem? = null,
 ) {
     val me = players.get(sessionId) ?: return
     val roomId = me.roomId
@@ -536,10 +539,12 @@ internal suspend fun sendLook(
     // Inline audio links for non-web clients (see PlayerState.audioLinksEnabled). Music/ambient
     // ride GMCP to the web client; here we also print the URLs as plain text so other clients can
     // play them. Emitted only on change so walking a same-music zone doesn't reprint every step.
+    // A playing jukebox track overrides the room's default music, matching what web clients hear.
     if (me.audioLinksEnabled) {
-        if (room.music != me.lastEmittedMusicUrl) {
-            me.lastEmittedMusicUrl = room.music
-            room.music?.let { outbound.send(OutboundEvent.SendInfo(sessionId, "[music] $it")) }
+        val music = jukeboxSystem?.overrideMusic(roomId) ?: room.music
+        if (music != me.lastEmittedMusicUrl) {
+            me.lastEmittedMusicUrl = music
+            music?.let { outbound.send(OutboundEvent.SendInfo(sessionId, "[music] $it")) }
         }
         if (room.ambient != me.lastEmittedAmbientUrl) {
             me.lastEmittedAmbientUrl = room.ambient

@@ -3,6 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.JukeboxSystem
@@ -59,6 +60,14 @@ class CommandRouterJukeboxTest {
         return TestEnv(outbound, router, players, clock, sid, player)
     }
 
+    private fun musicLines(
+        events: List<OutboundEvent>,
+        sid: SessionId,
+    ): List<String> =
+        events.filterIsInstance<OutboundEvent.SendInfo>()
+            .filter { it.sessionId == sid && it.text.startsWith("[music]") }
+            .map { it.text }
+
     @Test
     fun `playing a song deducts gold and announces the track`() =
         runTest {
@@ -100,6 +109,57 @@ class CommandRouterJukeboxTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == env.sid && it.text == description },
                 "Expected the buyer to see the song description. got=$outs",
+            )
+        }
+
+    @Test
+    fun `playing a song sends an inline music link to audio-links players only`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            val watcherSid = SessionId(2L)
+            val res = env.players.login(watcherSid, "Watcher", "password")
+            require(res == LoginResult.Ok) { "Login failed: $res" }
+            env.players.setAudioLinksEnabled(watcherSid, true)
+            env.outbound.drainAll()
+
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+
+            val outs = env.outbound.drainAll()
+            assertEquals(listOf("[music] /audio/jukebox/tavern_reel.mp3"), musicLines(outs, watcherSid))
+            assertTrue(
+                musicLines(outs, env.sid).isEmpty(),
+                "Expected no inline music link for the buyer without audio links. got=$outs",
+            )
+        }
+
+    @Test
+    fun `walking in mid-song shows the jukebox track instead of the room default`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            val watcherSid = SessionId(2L)
+            val res = env.players.login(watcherSid, "Watcher", "password")
+            require(res == LoginResult.Ok) { "Login failed: $res" }
+            env.players.setAudioLinksEnabled(watcherSid, true)
+            env.players.moveTo(watcherSid, RoomId("ok_jukebox:cellar"))
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+            env.outbound.drainAll()
+
+            env.clock.advance(10_000)
+            env.router.handle(watcherSid, Command.Move(Direction.SOUTH))
+
+            // The jukebox track, not the tavern's default /audio/tavern/ambient_loop.mp3.
+            assertEquals(
+                listOf("[music] /audio/jukebox/tavern_reel.mp3"),
+                musicLines(env.outbound.drainAll(), watcherSid),
+            )
+
+            // Second look while the same track plays — nothing is reprinted.
+            env.router.handle(watcherSid, Command.Look)
+            assertTrue(
+                musicLines(env.outbound.drainAll(), watcherSid).isEmpty(),
+                "Expected no reprint of the unchanged jukebox track",
             )
         }
 

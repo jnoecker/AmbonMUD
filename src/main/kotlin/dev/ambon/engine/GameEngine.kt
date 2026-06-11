@@ -3021,6 +3021,15 @@ class GameEngine(
                 val payload = emitter.buildJukeboxInfo(playlist, nowPlaying = null, remainingSeconds = 0)
                 emitter.broadcastJukeboxInfo(roomId, payload, players)
             }
+            // Inline music links for non-web clients revert to the room's default
+            // (see PlayerState.audioLinksEnabled), mirroring the GMCP revert above.
+            val defaultMusic = world.rooms[roomId]?.music
+            for (occupant in players.playersInRoom(roomId)) {
+                if (occupant.audioLinksEnabled) {
+                    occupant.lastEmittedMusicUrl = defaultMusic
+                    defaultMusic?.let { outbound.send(OutboundEvent.SendInfo(occupant.sessionId, "[music] $it")) }
+                }
+            }
         }
     }
 
