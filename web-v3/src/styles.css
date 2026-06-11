@@ -21169,6 +21169,35 @@ html:has(.game-shell),
   pointer-events: none;
 }
 
+/* Painted portrait frame (asset monster_manual_portrait_frame). Overlaid above
+   the art + variant wash so its opaque ornamental border masks the rectangular
+   colorize seam; the transparent center lets the creature show through. The zoom
+   button renders after this in the DOM, so it stays clickable. */
+.mm-portrait-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+/* Unskinned card: lock the figure to the frame art's ~2:3 portrait so the
+   painted border isn't stretched. (In the skinned card the figure is already
+   sized by its painted slot, so the frame simply overlays it.) */
+.mm-card:not(.mm-card-skinned) .mm-figure-framed {
+  flex: 0 0 auto;
+  aspect-ratio: 2 / 3;
+  align-self: center;
+}
+
+/* The frame's border already supplies the edge — drop the portrait's own
+   border/radius so they don't double up under the painted frame. */
+.mm-figure-framed .mm-image {
+  border: none;
+  box-shadow: none;
+}
+
 .mm-zoom {
   position: absolute;
   right: 8px;

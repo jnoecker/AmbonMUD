@@ -3425,6 +3425,10 @@ data class ImagesConfig(
             "friends_bg" to "global_assets/friends_bg.png",
             "group_bg" to "global_assets/group_bg.png",
             "command_reference_bg" to "global_assets/command_reference_bg.png",
+            // Bestiary portrait frame — painted ornamental border overlaid on the
+            // monster-manual portrait. Its opaque edge masks the rectangular
+            // rare-variant colorize seam. Transparent center, ~2:3 portrait.
+            "monster_manual_portrait_frame" to "global_assets/monster_manual_portrait_frame.png",
             "stylist_bg" to "global_assets/stylist_bg.png",
             "housing_bg" to "global_assets/housing_bg.png",
             "lottery_bg" to "global_assets/lottery_bg.png",
