@@ -1653,6 +1653,11 @@ ambonmud:
           description: "Roll d100 against the house (requires a tavern)"
           category: "social"
           staff: false
+        jukebox:
+          usage: "jukebox [list] | jukebox play <number>"
+          description: "List the room's jukebox songs or pay to play one for everyone"
+          category: "social"
+          staff: false
         ansi:
           usage: "ansi on/off"
           description: "Toggle color output"

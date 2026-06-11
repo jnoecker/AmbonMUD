@@ -82,6 +82,7 @@ image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown as clickable cinematic>
 music: <string, optional - overrides zone audio.music>
 ambient: <string, optional - overrides zone audio.ambient>
+jukebox: <list of song objects, optional - see `jukebox` notes>
 ```
 
 `bank` notes:
@@ -98,6 +99,21 @@ ambient: <string, optional - overrides zone audio.ambient>
 `tavern` notes:
 - When `true`, enables gambling commands (`gamble`, `dice`) and lottery ticket purchases (`lottery buy`) in this room. (`lottery` info works anywhere.)
 - Also shows Lottery and Dice badges on the web client canvas.
+
+`jukebox` notes:
+- A non-empty `jukebox` list turns this room into a jukebox: players pay gold to play a song that becomes the room's music for everyone present, locked for the song's `durationSeconds`, then the room reverts to its default `music`.
+- Commands: `jukebox` / `jb` lists the playlist; `jukebox play <n>` / `jb play <n>` pays for the n-th song. Shows a Jukebox badge + picker panel on the web client.
+- Globally gated by `ambonMUD.engine.jukebox.enabled`; `maxSongDurationSeconds` is a sanity bound.
+- Each song object:
+  ```yaml
+  jukebox:
+    - title: "Tavern Reel"              # required
+      file: jukebox/tavern_reel.mp3     # required - resolved under the zone audio base, like `music`
+      durationSeconds: 90               # required, > 0 - how long it locks the room (≈ the track length)
+      cost: 5                           # optional, gold (default 5); >= 0
+      artist: "The Wandering Bards"      # optional
+      description: "A foot-stomping reel about a barkeep's lost cat."  # optional lore flavour
+  ```
 
 `dungeon` notes:
 - When `true`, shows a Dungeon badge on the web client canvas that opens the dungeon kiosk panel.
