@@ -50,10 +50,16 @@ interface TrackState {
   pulseGain: GainNode | null;
   url: string | null;
   buffer: AudioBuffer | null;
+  /**
+   * Monotonic ticket for in-flight startTrack calls. Each call takes the next
+   * number and re-checks it after every await; a mismatch means a newer call
+   * superseded this one and owns the audio graph now.
+   */
+  seq: number;
 }
 
 function emptyTrack(): TrackState {
-  return { source: null, gain: null, filter: null, pulseGain: null, url: null, buffer: null };
+  return { source: null, gain: null, filter: null, pulseGain: null, url: null, buffer: null, seq: 0 };
 }
 
 interface CombatFxState {
@@ -168,23 +174,37 @@ export function useAudioEngine(): AudioEngine {
     const track = trackRef.current;
     if (!track) return;
 
-    // Same URL already playing — nothing to do
+    // Same URL already playing (or already being started) — nothing to do
     if (url === track.url) return;
+
+    // Take a ticket. Two quick calls (fast room moves, or Room.Info +
+    // Jukebox.Info landing back-to-back at login) both reach the awaits below
+    // concurrently; without this, the loser would still build and start its
+    // source — an orphaned loop nothing ever stops, heard under all later
+    // music. After every await the ticket is re-checked and stale calls bail.
+    const mySeq = ++track.seq;
 
     // Fade out old track
     if (track.source) {
       stopTrack(track);
     }
+    // Claim the slot now so a duplicate call for the same URL dedupes while
+    // the buffer is still fetching. Failure paths release the claim.
+    track.url = url;
 
-    if (!url) {
-      track.url = null;
-      return;
-    }
+    if (!url) return;
 
     const ctx = getCtx();
-    if (!ctx) return;
+    if (!ctx) {
+      if (track.seq === mySeq) track.url = null;
+      return;
+    }
     if (ctx.state === "suspended") {
-      try { await ctx.resume(); } catch { return; }
+      try { await ctx.resume(); } catch {
+        if (track.seq === mySeq) track.url = null;
+        return;
+      }
+      if (trackRef.current !== track || track.seq !== mySeq) return;
     }
 
     let buffer = bufferCache.current.get(url);
@@ -193,12 +213,14 @@ export function useAudioEngine(): AudioEngine {
         buffer = await fetchAudioBuffer(ctx, url);
         bufferCache.current.set(url, buffer);
       } catch {
+        if (track.seq === mySeq) track.url = null;
         return;
       }
     }
 
-    // Check that another call hasn't already replaced this track
-    if (trackRef.current !== track) return;
+    // A newer call superseded this one while awaiting (or stopAll swapped the
+    // track object) — it owns the audio graph now.
+    if (trackRef.current !== track || track.seq !== mySeq) return;
 
     // Build audio graph: source → filter → pulseGain → gain → destination
     // For music tracks, filter + pulseGain are used by combat effects.
