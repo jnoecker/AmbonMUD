@@ -5,7 +5,7 @@ rooms from the live Auringold zones, and all 128 rooms of the Auringold Academy.
 
 - **`lookbook.pdf`** — the assembled document: painted cover, a gameplay overview and
   a one-page technical summary up front, then large subsystem captures, representative
-  rooms, small grid of every Academy room).
+  rooms, and a small grid of every Academy room.
 - **`lookbook.md`** — the source document; image references point into `screenshots/`.
 - **`screenshots/subsystems/`** — login flow, world view, and every panel (character,
   professions, achievements, prestige, inventory, equipment, spellbook, trainer, quests,
