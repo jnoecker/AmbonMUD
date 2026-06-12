@@ -15003,7 +15003,7 @@ body {
    fill hides the placeholder text baked into the art. */
 .login-art-input {
   position: absolute;
-  inset: 61.23% 51.56% 32.81% 29.95%;
+  inset: 61.13% 52.21% 34.86% 30.27%;
   border: none;
   border-radius: 0.5em;
   padding: 0 0.85em;
@@ -15011,7 +15011,7 @@ body {
   box-shadow: inset 0 2px 7px rgb(73 47 12 / 30%);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 3.1cqh;
+  font-size: 2.6cqh;
   color: #45300f;
   caret-color: #6b4a16;
 }
@@ -15081,6 +15081,8 @@ body {
    Image-space bounds for every painted control, measured off each PNG and
    expressed as percentage insets (top right bottom left = bounds ÷ art size).
 
+   login_bg 1536×1024: input (465,626)-(734,667) — the painted box interior
+     runs x 464-735, y 624-666; the field sits just inside its frame bars.
    login_password_bg 1448×1086: chip (700,470)-(972,545) · input (300,612)-(810,704)
      · wand (815,615)-(885,700) · login (932,600)-(1158,705) · error (290,735)-(1160,792)
    login_set_password_bg 1536×1024: chip (860,488)-(1077,543) · input (318,590)-(835,694)
@@ -15376,7 +15378,7 @@ body {
 /* ── Phone-portrait companions (941×1672) ──────────────────────────────
    Measured element bounds in art space (see the landscape comment block
    above for the convention):
-   login_bg_portrait: input (163,1102)-(352,1162) · create/login (165,1180)-(415,1262)
+   login_bg_portrait: input (175,1089)-(411,1140) · create/login (165,1180)-(415,1262)
      · start demo (525,1180)-(805,1262) · error (150,1035)-(365,…)
    login_password_bg_portrait: chip (260,800)-(680,935) · input (190,1005)-(645,1070)
      · wand (650,1008)-(715,1068) · login (225,1165)-(720,1265) · error (190,1095)-(720,…)
@@ -15395,7 +15397,7 @@ body {
    so the cascade resolves the name scene vs the password scenes. */
 
 .login-art-stage--phone .login-art-input {
-  inset: 65.91% 62.59% 30.50% 17.32%;
+  inset: 65.13% 56.32% 31.82% 18.60%;
   font-size: 1.9cqh;
 }
 
