@@ -217,6 +217,10 @@ The painted login flow: name entry, returning-character picker, and the race and
 ### Dice table
 ![Dice table](screenshots/subsystems/37b-dice.jpg)
 
+### Jukebox
+![Jukebox](screenshots/subsystems/38-jukebox.jpg)
+*The jukebox in the Parlor of Borrowed Songs — pay a few coins and your chosen track plays for everyone in the room*
+
 ### Puzzle cabinet
 ![Puzzle cabinet](screenshots/subsystems/43-puzzle.jpg)
 
