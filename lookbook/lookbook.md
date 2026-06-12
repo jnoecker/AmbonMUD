@@ -213,6 +213,7 @@ The painted login flow: name entry, returning-character picker, and the race and
 
 ### Lottery
 ![Lottery](screenshots/subsystems/36b-lottery.jpg)
+*The lottery board in the academy's games parlor — jackpot, ticket numbers, and the nightly drawing*
 
 ### Dice table
 ![Dice table](screenshots/subsystems/37b-dice.jpg)
