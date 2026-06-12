@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useMediaFits } from "../../canvas/loginArtFit";
 import type { JukeboxState, UiFeedbackEntry } from "../../types";
 
 interface JukeboxPanelProps {
@@ -11,8 +12,10 @@ interface JukeboxPanelProps {
   onCommand: (command: string) => void;
 }
 
-/** Songs per page — one per painted scroll when the `jukebox_bg` art is present. */
-const PAGE_SIZE = 4;
+/** Songs per page — one per painted scroll: the landscape frame has 4 song
+ *  scrolls under the now-playing banner, the phone-portrait frame has 6. */
+const LANDSCAPE_PAGE_SIZE = 4;
+const PORTRAIT_PAGE_SIZE = 6;
 
 function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -49,9 +52,11 @@ export function JukeboxPanel({ jukebox, gold, selfName, uiFeedbackFeed, assets, 
   const busy = nowPlaying !== null && remaining > 0;
   const mineIsPlaying = busy && nowPlaying?.buyer === selfName;
 
-  const pages = Math.max(1, Math.ceil(songs.length / PAGE_SIZE));
+  const portraitViewport = useMediaFits("(orientation: portrait)");
+  const pageSize = portraitViewport ? PORTRAIT_PAGE_SIZE : LANDSCAPE_PAGE_SIZE;
+  const pages = Math.max(1, Math.ceil(songs.length / pageSize));
   const safePage = Math.min(page, pages - 1);
-  const pageSongs = songs.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+  const pageSongs = songs.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   const skinned = Boolean(assets.jukebox_bg);
 

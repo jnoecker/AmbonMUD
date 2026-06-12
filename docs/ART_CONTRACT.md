@@ -31,6 +31,7 @@ the *values* (paths/filenames) are what deployments override.
 | Family | Convention | Examples |
 |---|---|---|
 | Panel frames | `<panel>_bg` | `admin_bg`, `chat_bg`, `who_bg`, `guild_bg`, `friends_bg`, `group_bg`, `auction_bg`, `crafting_bg`, `professions_bg`, `housing_bg`, `stylist_bg`, `lottery_bg`, `dice_bg`, `jukebox_bg`, `bank_bg`, `puzzle_bg`, `command_reference_bg`, `character_bg`, `character_scribe_bg` |
+| Phone-portrait companions | `<key>_portrait` | `login_bg_portrait` (+ the other login scenes), `lottery_bg_portrait`, `dice_bg_portrait`, `jukebox_bg_portrait` — a 941×1672 *recomposition* of the landscape art (not a crop); the client prefers it on portrait viewports |
 | Control overlays | `<panel>_<control>_btn` / `<scope>_<control>` | `staff_action_btn`, `staff_action_btn_active`, `who_examine_btn`, `who_tell_btn`, `who_friend_btn`, `char_btn_achievements`, `char_btn_prestige`, `char_btn_professions` |
 | Multi-piece sets | `<panel>_<piece>` | Character "Woodland Fae Cabinet": `character_niche` (full art), `character_frame` / `character_plaque` / `character_charm` (**9-slice** carved frames) |
 | World-feature art | `feature_*`, `door_*`, `lever_*`, `container_bg`, `sign_bg` | `door_frame` + `door_leaf` + `door_lock` + `door_portal` (static frame, swinging leaf, warded-seal lock, doorway vortex), `lever_plate` + `lever_handle` |
@@ -160,6 +161,17 @@ multi-piece sets noted above). It is plain CSS + React.
 10. **Ship the art** — Arcanum uploads the hashed file to R2 and adds the key to the overlay's
     `globalAssets`. Until then the panel renders its CSS fallback everywhere except environments
     that bundle the PNG.
+
+### Phone-portrait companions (drawer skins)
+
+Drawer-skinned panels (lottery, dice, jukebox) carry a second painting for portrait
+viewports: a **941×1672 recomposition** (the login-scene portrait stage) registered as
+`<panel>_bg_portrait` and passed to the `Drawer` as `skinBgPortrait` (exposed to CSS as
+`--skin-bg-portrait`). The skin CSS scopes the landscape frame to
+`(min-width: 768px) and (orientation: landscape)` and seats a **second inset map** under
+`(orientation: portrait)` — same measuring convention, measured off the portrait painting.
+Components stay orientation-agnostic except where the art changes capacity (the jukebox
+pages 4 songs on the landscape frame's scrolls, 6 on the portrait frame's).
 
 ### Fallback hierarchy
 

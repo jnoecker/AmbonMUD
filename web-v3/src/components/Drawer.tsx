@@ -12,6 +12,9 @@ interface DrawerProps {
   variant?: "default" | "satchel" | "equipment" | "shop" | "trainer" | "journal" | "questboard" | "grimoire" | "mail" | "feature" | "tome" | "vault" | "cabinet" | "board" | "starframe" | "archive" | "stainedglass" | "codex" | "boudoir" | "estate" | "fortune" | "dicetable" | "jukebox" | "auctionhouse" | "forge" | "professions" | "chart";
   /** Optional background art for a skinned variant (server asset). */
   skinBg?: string;
+  /** Optional phone-portrait companion art (941×1672); the skin CSS prefers it
+   *  on portrait viewports via the --skin-bg-portrait variable. */
+  skinBgPortrait?: string;
   /** Height (as a fraction of the viewport) the drawer snaps to when it opens. */
   initialHeight?: number;
 }
@@ -22,7 +25,7 @@ const DISMISS_THRESHOLD = 0.3;
 const DRAG_VELOCITY_DISMISS = 800; // px/s
 const ANIMATION_MS = 300;
 
-export function Drawer({ open, title, onClose, children, variant = "default", skinBg, initialHeight = SNAP_HALF }: DrawerProps) {
+export function Drawer({ open, title, onClose, children, variant = "default", skinBg, skinBgPortrait, initialHeight = SNAP_HALF }: DrawerProps) {
   const [height, setHeight] = useState(initialHeight);
   const [dragging, setDragging] = useState(false);
   const [renderPhase, setRenderPhase] = useState<"hidden" | "animating" | "open">(open ? "open" : "hidden");
@@ -169,6 +172,7 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
           ["--drawer-height" as string]: `${height * 100}vh`,
           ["--drawer-transition" as string]: transition,
           ...(skinBg ? { ["--skin-bg" as string]: `url("${skinBg}")` } : {}),
+          ...(skinBgPortrait ? { ["--skin-bg-portrait" as string]: `url("${skinBgPortrait}")` } : {}),
         }}
       >
         <div

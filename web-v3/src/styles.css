@@ -25004,7 +25004,7 @@ html:has(.game-shell),
   position: relative;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (orientation: landscape) {
   .drawer-sheet.drawer-sheet-fortune {
     width: auto;
     height: min(94vh, 71vw);
@@ -25183,6 +25183,54 @@ html:has(.game-shell),
 }
 .lot-buy-btn:hover { filter: brightness(1.14); transform: translateY(-1px); }
 
+/* ── Phone-portrait fortune hall — `lottery_bg_portrait` (941×1672).
+   The sheet aspect-locks to the portrait painting (bottom-anchored,
+   horizontally centered) and the live values move to its slots; painted
+   icons/labels sit left in each stacked box, values seat in the clear
+   space. Regions measured off the portrait painting:
+     jackpot box      y 23.0→36.0%  → value right of the painted coins
+     countdown box    y 37.5→47.0%  → value under the painted label
+     owned box        y 48.5→56.0%  → value right of the painted label
+     total sold       y 58.0→66.5% (left half)
+     ticket limit     y 68.0→75.5% (left half)
+     ticket cost      y 58.0→75.5% (right half)
+     buy panel        y 77.5→95.5%  → controls under the painted heading
+   Without the portrait art the gradient paints under the same layout. */
+@media (orientation: portrait) {
+  .drawer-sheet.drawer-sheet-fortune {
+    top: auto;
+    right: auto;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100vw, 52.9vh);
+    height: auto;
+    max-height: none;
+    aspect-ratio: 941 / 1672;
+    padding-bottom: 0;
+    background-image:
+      var(--skin-bg-portrait, var(--skin-bg, none)),
+      radial-gradient(ellipse at 50% 30%, rgb(24 22 56 / 96%), rgb(10 10 28 / 98%));
+    background-size: 100% 100%, auto;
+  }
+
+  .lot-jackpot { left: 36%; top: 27%; width: 45%; }
+  .lot-countdown { left: 38%; top: 42.3%; width: 42%; }
+  .lot-owned { left: 60%; top: 50.8%; width: 20%; }
+  .lot-total { left: 33.5%; top: 62.3%; width: 14.5%; }
+  .lot-cost { left: 68.5%; top: 62%; width: 13%; }
+  .lot-limit { left: 30%; top: 72.6%; width: 18%; }
+  .lot-limit-unit { display: none; } /* the painted label already says it */
+
+  .lot-buy { left: 17.5%; right: 17.5%; top: 81.5%; bottom: 3.5%; gap: clamp(2px, 0.5vh, 6px); }
+  .lot-buy-sub { display: none; } /* the painted BUY TICKETS heading covers it */
+  .lot-qty { flex-wrap: wrap; justify-content: center; }
+  .lot-qty-step,
+  .lot-qty-num { min-width: clamp(20px, 6.4vw, 30px); padding: 3px 2px; }
+  .lot-summary { font-size: clamp(0.6rem, 2.6vw, 0.8rem); }
+  .lot-buy-btn { padding: clamp(5px, 0.9vh, 9px) clamp(22px, 10vw, 48px); font-size: clamp(0.82rem, 3.6vw, 1.1rem); }
+}
+
 /* ============================================================
    Aineroia's Dice — painted `dice_bg` frame (1280×960, 4:3).
    The six children tumble in the purple velvet and settle into
@@ -25216,7 +25264,7 @@ html:has(.game-shell),
   position: relative;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (orientation: landscape) {
   .drawer-sheet.drawer-sheet-dicetable {
     width: auto;
     height: min(94vh, 71vw);
@@ -25706,6 +25754,70 @@ html:has(.game-shell),
   10% { opacity: 1; }
   80% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* ── Phone-portrait dice table — `dice_bg_portrait` (941×1672).
+   Vine-framed carnival stand. Regions measured off the portrait painting:
+     Your Gold strip   y 16.0→22.0% (value between painted coin + pouch)
+     How to Play       y 24.0→48.0% (left wood panel)
+     bet parchment     y 24.0→47.5% (right; Place-Your-Bet controls)
+     stat boxes        y 50.0→59.0% (WIN TARGET / PAYOUT / CURRENT BET)
+     velvet tray       y 60.5→79.0% (active die top, settled strip lower,
+                       running total on the painted TOTAL plaque)
+     green panel       y 83.5→94.0% (result banner; jester sits right)
+   Without the portrait art the gradient paints under the same layout. */
+@media (orientation: portrait) {
+  .drawer-sheet.drawer-sheet-dicetable {
+    top: auto;
+    right: auto;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100vw, 52.9vh);
+    height: auto;
+    max-height: none;
+    aspect-ratio: 941 / 1672;
+    padding-bottom: 0;
+    background-image:
+      var(--skin-bg-portrait, var(--skin-bg, none)),
+      radial-gradient(ellipse at 50% 30%, rgb(22 20 50 / 96%), rgb(9 9 24 / 98%));
+    background-size: 100% 100%, auto;
+  }
+
+  .dice-gold { left: 14%; top: 18.8%; width: 15%; }
+
+  .dice-howto { left: 9.5%; top: 28.5%; width: 37%; bottom: 53.5%; font-size: clamp(0.58rem, 2.6vw, 0.82rem); }
+
+  .dice-bet { left: 56%; top: 26.5%; width: 31%; bottom: 54.5%; gap: clamp(3px, 0.7vh, 8px); }
+
+  .dice-stat { top: 54%; }
+  .dice-stat-target { left: 7.5%; width: 24.5%; }
+  .dice-stat-payout { left: 34%; width: 24.5%; }
+  .dice-stat-bet { left: 60.5%; width: 31.5%; }
+
+  .dice-velvet { left: 24%; top: 62%; width: 52%; height: 8.5%; }
+  .dice-total { left: 39%; top: 74.4%; width: 22%; }
+
+  /* The felt band dissolves: the settled-dice strip seats inside the velvet
+     tray and the banner moves to the green bottom panel. */
+  .dice-felt {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    display: block;
+    pointer-events: none;
+  }
+  .dice-tray { position: absolute; left: 13%; right: 13%; top: 70.6%; min-height: 0; }
+  .dice-banner {
+    position: absolute;
+    left: 10%;
+    top: 85.5%;
+    width: 46%;
+    bottom: 8%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* ============================================================
@@ -27504,11 +27616,12 @@ html:has(.game-shell),
                        (the pager docks at its right end when >1 page)
      corner plaque     y 87.5→96.0%, x 81.5→96.5%  → up-next song number
      close medallion   painted ✕ at top-right ~(94.6%, 4.7%)
-   ≥768px only: on phones the drawer keeps its default chrome and
-   the panel renders the flow layout, art-free. Without art the
-   sheet falls back to a gradient and stays fully usable.
+   Landscape ≥768px only — portrait viewports use the 7-scroll
+   `jukebox_bg_portrait` companion (block below); landscape phones
+   keep the default chrome + flow layout. Without art the sheet
+   falls back to a gradient and stays fully usable.
    ============================================================ */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (orientation: landscape) {
   .drawer-sheet.drawer-sheet-jukebox {
     width: auto;
     height: min(94vh, 71vw);
@@ -27790,6 +27903,302 @@ html:has(.game-shell),
   .jukebox-panel-skinned .jukebox-next-num {
     color: var(--jb-ink-strong);
     font-size: clamp(0.85rem, 1.9vw, 1.45rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ── Phone-portrait jukebox — `jukebox_bg_portrait` (941×1672, 7 scrolls).
+   Same cabinet recomposed tall. Regions measured off the portrait painting:
+     scroll 1          y 16.0→23.8%, x 24.5→77.0%  → now-playing banner
+     scrolls 2–7       y 24.3→77.1%, x 24.5→77.0%  → song rows, 6 per page
+                       (rows go two-line: title, then duration·cost·button;
+                       artist + description are dropped for space)
+     bottom plaque     y 81.5→93.0%, x 23.0→77.0%  → feedback on top, pager
+                       bottom-left, "Up next #n" bottom-right
+     close medallion   painted ✕ at top-right ~(92%, 3.4%)
+   Without the portrait art the gradient paints under the same layout. */
+@media (orientation: portrait) {
+  .drawer-sheet.drawer-sheet-jukebox {
+    top: auto;
+    right: auto;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100vw, 52.9vh);
+    height: auto;
+    max-height: none;
+    aspect-ratio: 941 / 1672;
+    padding-bottom: 0;
+    background-image:
+      var(--skin-bg-portrait, var(--skin-bg, none)),
+      radial-gradient(ellipse at 50% 28%, rgb(48 32 22 / 97%), rgb(16 11 24 / 98%));
+    background-size: 100% 100%, auto;
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
+  }
+
+  .drawer-sheet-jukebox .drawer-title { display: none; }
+  .drawer-sheet-jukebox .drawer-handle-zone { display: none; }
+
+  .drawer-sheet-jukebox .drawer-header {
+    position: absolute;
+    top: 1.4%;
+    right: 2%;
+    left: auto;
+    z-index: 6;
+    padding: 0;
+    min-height: 0;
+    border-bottom: none;
+  }
+
+  .drawer-sheet-jukebox .drawer-close {
+    border-color: transparent;
+    background: transparent;
+    color: rgb(244 230 200 / 70%);
+    text-shadow: 0 1px 2px rgb(20 10 4 / 60%);
+  }
+
+  .drawer-sheet-jukebox .drawer-close:hover,
+  .drawer-sheet-jukebox .drawer-close:focus-visible {
+    color: #f8ecd2;
+    background: rgb(120 84 30 / 30%);
+  }
+
+  .drawer-sheet-jukebox .drawer-body {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .jukebox-panel-skinned {
+    position: absolute;
+    inset: 0;
+    display: block;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    font-family: var(--font-display);
+
+    /* Parchment ink palette — shared with the landscape frame. */
+    --jb-ink: #3a2c18;
+    --jb-ink-strong: #1f3c6e;
+    --jb-ink-soft: rgb(74 56 30 / 80%);
+    --jb-ink-accent: #7c2d2d;
+    --jb-gold: #7c5a14;
+  }
+
+  /* Now playing — seated on the top scroll. */
+  .jukebox-panel-skinned .jukebox-nowplaying {
+    position: absolute;
+    inset: 16% 23% 76.2% 24.5%;
+    padding: 0 2%;
+    overflow: hidden;
+    gap: 3%;
+    background: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  .jukebox-panel-skinned .jukebox-np-text { min-width: 0; }
+  .jukebox-panel-skinned .jukebox-np-eq i { background: var(--jb-ink-strong); }
+
+  .jukebox-panel-skinned .jukebox-np-title {
+    overflow: hidden;
+    color: var(--jb-ink-strong);
+    font-size: clamp(0.74rem, 3.4vw, 1.05rem);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .jukebox-panel-skinned .jukebox-np-artist { display: none; }
+
+  .jukebox-panel-skinned .jukebox-np-sub {
+    color: var(--jb-ink-accent);
+    font-size: clamp(0.6rem, 2.7vw, 0.85rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-np-next {
+    overflow: hidden;
+    color: var(--jb-ink-accent);
+    font-size: clamp(0.6rem, 2.7vw, 0.85rem);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .jukebox-panel-skinned .jukebox-np-desc { display: none; }
+
+  /* Song rows — one per painted scroll, six to a page, two lines each. */
+  .jukebox-panel-skinned .jukebox-list {
+    position: absolute;
+    inset: 24.3% 23% 22.9% 24.5%;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .jukebox-panel-skinned .jukebox-song {
+    flex: 0 0 16.6667%;
+    height: 16.6667%;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: center;
+    row-gap: 2px;
+    padding: 0 2%;
+    background: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  .jukebox-panel-skinned .jukebox-song.is-playing,
+  .jukebox-panel-skinned .jukebox-song.is-queued { box-shadow: none; }
+
+  .jukebox-panel-skinned .jukebox-song-num {
+    width: 1.8em;
+    min-width: 1.8em;
+    height: 1.8em;
+    margin-top: 0;
+    border: 1px solid rgb(110 78 26 / 60%);
+    background: radial-gradient(circle at 35% 30%, rgb(252 242 216 / 92%), rgb(206 178 126 / 92%));
+    color: #4a3414;
+    font-size: clamp(0.6rem, 2.7vw, 0.85rem);
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgb(60 38 10 / 35%);
+  }
+
+  .jukebox-panel-skinned .jukebox-song-main { flex: 1 1 0; min-width: 0; }
+
+  .jukebox-panel-skinned .jukebox-song-title {
+    display: block;
+    overflow: hidden;
+    color: var(--jb-ink-strong);
+    font-size: clamp(0.68rem, 3.1vw, 0.98rem);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .jukebox-panel-skinned .jukebox-song-artist { display: none; }
+  .jukebox-panel-skinned .jukebox-song-desc { display: none; }
+
+  .jukebox-panel-skinned .jukebox-song-meta {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+    gap: 4%;
+  }
+
+  .jukebox-panel-skinned .jukebox-song-dur {
+    color: var(--jb-ink-strong);
+    font-size: clamp(0.58rem, 2.6vw, 0.82rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-song-cost {
+    color: var(--jb-gold);
+    font-size: clamp(0.58rem, 2.6vw, 0.82rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-song-cost.is-short { color: #9c2f23; }
+
+  .jukebox-panel-skinned .jukebox-play-btn {
+    min-width: 4.6em;
+    padding: 0.26em 0.7em;
+    border-radius: 0.55em;
+    border: 1px solid rgb(216 178 96 / 80%);
+    background: linear-gradient(170deg, #3f6db4, #274a86);
+    color: #f2e8cf;
+    font-family: var(--font-display);
+    font-size: clamp(0.58rem, 2.6vw, 0.82rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 25%), 0 2px 6px rgb(40 24 8 / 45%);
+    text-shadow: 0 1px 2px rgb(10 20 40 / 55%);
+  }
+
+  .jukebox-panel-skinned .jukebox-song.is-playing .jukebox-play-btn {
+    background: linear-gradient(170deg, #3f9a52, #1f6b33);
+    opacity: 1;
+  }
+
+  .jukebox-panel-skinned .jukebox-song.is-queued .jukebox-play-btn {
+    background: linear-gradient(170deg, #b3892b, #7c5c14);
+    opacity: 1;
+  }
+
+  .jukebox-panel-skinned .jukebox-empty {
+    position: absolute;
+    inset: 24.3% 23% 22.9% 24.5%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--jb-ink-soft);
+    font-style: italic;
+  }
+
+  /* Bottom plaque: feedback line on top; pager bottom-left, up-next bottom-right. */
+  .jukebox-panel-skinned .jukebox-feedback {
+    position: absolute;
+    inset: 81.5% 23% 12.5% 23%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--jb-ink);
+    font-size: clamp(0.58rem, 2.6vw, 0.82rem);
+    text-align: center;
+  }
+
+  .jukebox-panel-skinned .jukebox-feedback-error { color: #9c2f23; }
+  .jukebox-panel-skinned .jukebox-feedback-success { color: #1d5a32; }
+  .jukebox-panel-skinned .jukebox-feedback-info { color: var(--jb-ink-soft); }
+
+  .jukebox-panel-skinned .jukebox-pager {
+    position: absolute;
+    top: 88%;
+    bottom: 7.5%;
+    left: 23.5%;
+    gap: clamp(4px, 1.5vw, 9px);
+  }
+
+  .jukebox-panel-skinned .jukebox-pager-btn {
+    width: clamp(20px, 7vw, 28px);
+    height: clamp(20px, 7vw, 28px);
+    border-color: rgb(110 78 26 / 60%);
+    background: radial-gradient(circle at 35% 30%, rgb(252 242 216 / 92%), rgb(206 178 126 / 92%));
+    color: #4a3414;
+  }
+
+  .jukebox-panel-skinned .jukebox-pager-btn:hover:not(:disabled) {
+    border-color: #7c5a14;
+    color: #1f3c6e;
+  }
+
+  .jukebox-panel-skinned .jukebox-pager-info {
+    color: var(--jb-ink);
+    font-size: clamp(0.56rem, 2.5vw, 0.78rem);
+  }
+
+  /* Up-next number rides the plaque's bottom-right corner as a single row. */
+  .jukebox-panel-skinned .jukebox-next-plaque {
+    position: absolute;
+    top: 88%;
+    right: 23.5%;
+    bottom: 7.5%;
+    left: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--jb-ink-soft);
+  }
+
+  .jukebox-panel-skinned .jukebox-next-label {
+    font-size: clamp(0.5rem, 2.2vw, 0.68rem);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .jukebox-panel-skinned .jukebox-next-num {
+    color: var(--jb-ink-strong);
+    font-size: clamp(0.78rem, 3.4vw, 1.1rem);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }

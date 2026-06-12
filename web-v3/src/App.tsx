@@ -1216,6 +1216,15 @@ function App() {
                           ? state.serverAssets["mail_bg"]
                           : undefined
         }
+        skinBgPortrait={
+          drawerPanel === "lottery"
+            ? state.serverAssets["lottery_bg_portrait"]
+            : drawerPanel === "dice"
+            ? state.serverAssets["dice_bg_portrait"]
+            : drawerPanel === "jukebox"
+            ? state.serverAssets["jukebox_bg_portrait"]
+            : undefined
+        }
         initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
       >
         {/* Panels are lazy chunks; the drawer chrome shows while one loads. */}
