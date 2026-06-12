@@ -34,6 +34,23 @@ data class JukeboxNowPlaying(
     }
 }
 
+/** A paid-for track waiting its turn; it starts the moment the current track ends. */
+data class JukeboxQueuedSong(
+    val song: JukeboxSong,
+    /** 0-based index into the room's playlist. */
+    val songIndex: Int,
+    /** Name of the player who paid to queue it. */
+    val buyerName: String,
+)
+
+/** What changed in a room when [JukeboxSystem.pollExpired] retired a track. */
+data class JukeboxTransition(
+    /** The track that just finished. */
+    val ended: JukeboxNowPlaying,
+    /** The queued successor that took over, or null if the room reverts to default music. */
+    val started: JukeboxNowPlaying?,
+)
+
 /** Outcome of a `jukebox play` attempt. */
 sealed interface JukeboxPlayResult {
     /** The track started; [nowPlaying] is the room's new state. */
@@ -65,23 +82,74 @@ sealed interface JukeboxPlayResult {
     ) : JukeboxPlayResult
 }
 
+/** Outcome of a `jukebox queue` attempt. */
+sealed interface JukeboxQueueResult {
+    /** The track was paid for and queued; it starts when [current] ends. */
+    data class Queued(
+        val entry: JukeboxQueuedSong,
+        val current: JukeboxNowPlaying,
+    ) : JukeboxQueueResult
+
+    /** Nothing was playing, so the track was paid for and started immediately. */
+    data class StartedInstead(
+        val nowPlaying: JukeboxNowPlaying,
+    ) : JukeboxQueueResult
+
+    /** The jukebox feature is disabled server-wide. */
+    data object Disabled : JukeboxQueueResult
+
+    /** This room has no jukebox playlist. */
+    data object NoJukebox : JukeboxQueueResult
+
+    /** The requested song number was out of range; [count] songs are available. */
+    data class NoSuchSong(
+        val count: Int,
+    ) : JukeboxQueueResult
+
+    /** The player cannot afford the track. */
+    data class InsufficientGold(
+        val need: Long,
+        val have: Long,
+    ) : JukeboxQueueResult
+
+    /** The requester's own song is playing — they can't also claim the next slot. */
+    data class OwnSongPlaying(
+        val current: JukeboxNowPlaying,
+    ) : JukeboxQueueResult
+
+    /** The single queue slot is already taken by [entry]. */
+    data class AlreadyQueued(
+        val entry: JukeboxQueuedSong,
+    ) : JukeboxQueueResult
+}
+
 /**
- * Tracks each room's currently-playing jukebox track. State is transient (in
- * memory, reset on restart) — a paid song locks the room for its authored
- * [JukeboxSong.durationSeconds], then the room reverts to its default music.
+ * Tracks each room's currently-playing jukebox track plus a single queued
+ * successor. State is transient (in memory, reset on restart) — a paid song
+ * locks the room for its authored [JukeboxSong.durationSeconds], then the
+ * queued track (if any) takes over, otherwise the room reverts to its default
+ * music.
+ *
+ * Queueing is the anti-monopoly valve: while a track plays, any player *except
+ * the one who paid for it* can pay to reserve the single next-up slot ([queue]),
+ * so whoever is quickest on the draw can't chain-control the room's music.
  *
  * The engine drives the lifecycle by polling each tick: [pollDueLyrics] surfaces
  * lyric lines to broadcast (spread evenly across the track — flavour for players
- * without audio), then [pollExpired] removes and returns finished tracks so the
- * engine can announce the end and re-emit default music. Reads ([nowPlaying])
- * treat an expired-but-not-yet-polled track as already over. All time comes from
- * the injected [clock] (never wall-clock) so tests can drive it with `MutableClock`.
+ * without audio), then [pollExpired] removes finished tracks and promotes their
+ * queued successors, returning a [JukeboxTransition] per room so the engine can
+ * announce the change and re-emit music. Reads ([nowPlaying]) treat an
+ * expired-but-not-yet-polled track as already over. All time comes from the
+ * injected [clock] (never wall-clock) so tests can drive it with `MutableClock`.
  */
 class JukeboxSystem(
     private val clock: Clock,
     private val enabled: Boolean = true,
 ) {
     private val playing = mutableMapOf<RoomId, JukeboxNowPlaying>()
+
+    /** Per-room queued successor track — a single slot (see [queue]). */
+    private val queuedSongs = mutableMapOf<RoomId, JukeboxQueuedSong>()
 
     /** Per-room count of lyric lines already handed out for the current track. */
     private val lyricsSent = mutableMapOf<RoomId, Int>()
@@ -94,6 +162,9 @@ class JukeboxSystem(
         if (current.endsAtMs <= clock.millis()) return null
         return current
     }
+
+    /** The track queued to play next in [roomId], or null if the slot is free. */
+    fun queuedSong(roomId: RoomId): JukeboxQueuedSong? = queuedSongs[roomId]
 
     /** The override music URL for [roomId] while a track plays, else null (use room default). */
     fun overrideMusic(roomId: RoomId): String? = nowPlaying(roomId)?.song?.url
@@ -121,11 +192,64 @@ class JukeboxSystem(
         if (current != null) {
             return JukeboxPlayResult.Busy(current, current.remainingSeconds(clock.millis()))
         }
+        // A lapsed track with a queued successor still owns the box for the tick
+        // gap until pollExpired promotes it — don't let a play jump the queue.
+        val lapsed = playing[roomId]
+        if (lapsed != null && queuedSongs.containsKey(roomId)) {
+            return JukeboxPlayResult.Busy(lapsed, 0)
+        }
 
         val song = playlist.getOrNull(songIndex) ?: return JukeboxPlayResult.NoSuchSong(playlist.size)
         if (currentGold < song.cost) return JukeboxPlayResult.InsufficientGold(song.cost, currentGold)
 
         deductGold(song.cost)
+        return JukeboxPlayResult.Success(start(roomId, song, songIndex, buyerName))
+    }
+
+    /**
+     * Attempts to queue [songIndex] (0-based) from [playlist] to play right after
+     * the current track in [roomId]. One slot per room, and the buyer of the
+     * *playing* track can't take it — that way someone else always gets the next
+     * pick and one player can't chain-control the room's music. Queueing while
+     * nothing plays simply starts the song. Gold is charged up front via
+     * [deductGold].
+     */
+    fun queue(
+        roomId: RoomId,
+        playlist: List<JukeboxSong>,
+        songIndex: Int,
+        buyerName: String,
+        currentGold: Long,
+        deductGold: (Long) -> Unit,
+    ): JukeboxQueueResult {
+        if (!enabled) return JukeboxQueueResult.Disabled
+        if (playlist.isEmpty()) return JukeboxQueueResult.NoJukebox
+
+        val song = playlist.getOrNull(songIndex) ?: return JukeboxQueueResult.NoSuchSong(playlist.size)
+        val current = nowPlaying(roomId)
+        if (current != null && current.buyerName == buyerName) {
+            return JukeboxQueueResult.OwnSongPlaying(current)
+        }
+        queuedSongs[roomId]?.let { return JukeboxQueueResult.AlreadyQueued(it) }
+        if (currentGold < song.cost) return JukeboxQueueResult.InsufficientGold(song.cost, currentGold)
+
+        deductGold(song.cost)
+        if (current == null) {
+            // Nothing playing — no need to wait, the song starts right now.
+            return JukeboxQueueResult.StartedInstead(start(roomId, song, songIndex, buyerName))
+        }
+        val entry = JukeboxQueuedSong(song = song, songIndex = songIndex, buyerName = buyerName)
+        queuedSongs[roomId] = entry
+        return JukeboxQueueResult.Queued(entry, current)
+    }
+
+    /** Records [song] as playing in [roomId] starting now, resetting lyric progress. */
+    private fun start(
+        roomId: RoomId,
+        song: JukeboxSong,
+        songIndex: Int,
+        buyerName: String,
+    ): JukeboxNowPlaying {
         val now = clock.millis()
         val nowPlaying =
             JukeboxNowPlaying(
@@ -137,7 +261,7 @@ class JukeboxSystem(
             )
         playing[roomId] = nowPlaying
         lyricsSent.remove(roomId)
-        return JukeboxPlayResult.Success(nowPlaying)
+        return nowPlaying
     }
 
     /**
@@ -164,23 +288,31 @@ class JukeboxSystem(
     }
 
     /**
-     * Removes and returns the tracks that have ended since the last call, keyed
-     * by room. The engine announces each ending and re-emits the room's default
-     * music to its occupants. Called once per tick.
+     * Removes the tracks that have ended since the last call and promotes each
+     * room's queued successor (if any), returning a [JukeboxTransition] per room.
+     * The engine announces each ending — and the takeover, when
+     * [JukeboxTransition.started] is non-null — then re-emits music to the room's
+     * occupants. Called once per tick.
      */
-    fun pollExpired(): Map<RoomId, JukeboxNowPlaying> {
+    fun pollExpired(): Map<RoomId, JukeboxTransition> {
         val now = clock.millis()
         val due = playing.filterValues { it.endsAtMs <= now }
-        for (roomId in due.keys) {
+        if (due.isEmpty()) return emptyMap()
+        val transitions = mutableMapOf<RoomId, JukeboxTransition>()
+        for ((roomId, ended) in due) {
             playing.remove(roomId)
             lyricsSent.remove(roomId)
+            val next = queuedSongs.remove(roomId)
+            val started = next?.let { start(roomId, it.song, it.songIndex, it.buyerName) }
+            transitions[roomId] = JukeboxTransition(ended = ended, started = started)
         }
-        return due
+        return transitions
     }
 
     /** Clears all state. For tests / world reloads. */
     fun clear() {
         playing.clear()
+        queuedSongs.clear()
         lyricsSent.clear()
     }
 }

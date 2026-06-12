@@ -2375,8 +2375,8 @@ data class CommandsConfig(
             ),
             "gamble" to CommandMetadata("gamble/dice <amount>", "Roll d100 against the house (requires a tavern)", "social"),
             "jukebox" to CommandMetadata(
-                usage = "jukebox [list] | jukebox play <number>",
-                description = "List the room's jukebox songs or pay to play one for everyone",
+                usage = "jukebox [list] | jukebox play <number> | jukebox queue <number>",
+                description = "List the room's jukebox songs, pay to play one, or queue the next track",
                 category = "social",
             ),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),

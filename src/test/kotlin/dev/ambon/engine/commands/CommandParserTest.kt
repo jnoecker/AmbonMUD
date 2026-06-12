@@ -54,9 +54,13 @@ class CommandParserTest {
         assertEquals(Command.Jukebox, CommandParser.parse("jukebox list"))
         assertEquals(Command.JukeboxPlay(3), CommandParser.parse("jukebox play 3"))
         assertEquals(Command.JukeboxPlay(1), CommandParser.parse("jb play 1"))
-        // Non-numeric or non-positive song number is Invalid, not a play.
+        assertEquals(Command.JukeboxQueue(2), CommandParser.parse("jukebox queue 2"))
+        assertEquals(Command.JukeboxQueue(1), CommandParser.parse("jb queue 1"))
+        // Non-numeric or non-positive song number is Invalid, not a play/queue.
         assertTrue(CommandParser.parse("jukebox play abc") is Command.Invalid)
         assertTrue(CommandParser.parse("jukebox play 0") is Command.Invalid)
+        assertTrue(CommandParser.parse("jukebox queue abc") is Command.Invalid)
+        assertTrue(CommandParser.parse("jukebox queue 0") is Command.Invalid)
     }
 
     @Test

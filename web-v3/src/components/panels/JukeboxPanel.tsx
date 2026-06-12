@@ -4,10 +4,15 @@ import type { JukeboxState, UiFeedbackEntry } from "../../types";
 interface JukeboxPanelProps {
   jukebox: JukeboxState | null;
   gold: number;
+  /** This player's character name — the current track's buyer can't also queue the next. */
+  selfName: string;
   uiFeedbackFeed: UiFeedbackEntry[];
   assets: Record<string, string>;
   onCommand: (command: string) => void;
 }
+
+/** Songs per page — one per painted scroll when the `jukebox_bg` art is present. */
+const PAGE_SIZE = 4;
 
 function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -15,13 +20,15 @@ function formatDuration(seconds: number): string {
 }
 
 /**
- * Room jukebox. Lists the room's playlist; the player pays a few gold to play a
- * song, which becomes the room's music for everyone until it ends. While a track
- * is playing the jukebox is locked (every Play button disabled) and a now-playing
- * banner counts down to the revert.
+ * Room jukebox. Lists the room's playlist four songs to a page (each seated on a
+ * painted scroll when skinned); the player pays a few gold to play a song, which
+ * becomes the room's music for everyone until it ends. While a track plays the
+ * box is locked, but anyone except the track's buyer can pay to queue the single
+ * next-up slot — the bottom-right plaque shows the queued song's number.
  */
-export function JukeboxPanel({ jukebox, gold, uiFeedbackFeed, assets, onCommand }: JukeboxPanelProps) {
+export function JukeboxPanel({ jukebox, gold, selfName, uiFeedbackFeed, assets, onCommand }: JukeboxPanelProps) {
   const [now, setNow] = useState(() => Date.now());
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -35,41 +42,78 @@ export function JukeboxPanel({ jukebox, gold, uiFeedbackFeed, assets, onCommand 
 
   const songs = jukebox?.songs ?? [];
   const nowPlaying = jukebox?.nowPlaying ?? null;
+  const queued = jukebox?.queued ?? null;
   const remaining = nowPlaying
     ? Math.max(0, nowPlaying.secondsRemaining - Math.floor((now - nowPlaying.receivedAt) / 1000))
     : 0;
   const busy = nowPlaying !== null && remaining > 0;
+  const mineIsPlaying = busy && nowPlaying?.buyer === selfName;
 
-  const bg = assets.jukebox_bg;
-  const style = bg ? { ["--jukebox-bg" as string]: `url(${bg})` } : undefined;
+  const pages = Math.max(1, Math.ceil(songs.length / PAGE_SIZE));
+  const safePage = Math.min(page, pages - 1);
+  const pageSongs = songs.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+
+  const skinned = Boolean(assets.jukebox_bg);
 
   return (
-    <div className={`jukebox-panel${bg ? " jukebox-panel-skinned" : ""}`} style={style}>
-      {nowPlaying && (
-        <div className="jukebox-nowplaying" aria-live="polite">
-          <span className="jukebox-np-eq" aria-hidden="true"><i /><i /><i /></span>
+    <div className={`jukebox-panel${skinned ? " jukebox-panel-skinned" : ""}`}>
+      <div className="jukebox-nowplaying">
+        {nowPlaying && busy ? (
+          <>
+            <span className="jukebox-np-eq" aria-hidden="true"><i /><i /><i /></span>
+            <div className="jukebox-np-text">
+              <div className="jukebox-np-title" aria-live="polite">
+                {nowPlaying.title}
+                {nowPlaying.artist ? <span className="jukebox-np-artist"> — {nowPlaying.artist}</span> : null}
+              </div>
+              <div className="jukebox-np-sub">
+                Played by {nowPlaying.buyer} · {formatDuration(remaining)} left
+              </div>
+              {queued ? (
+                <div className="jukebox-np-next">Up next: “{queued.title}” — queued by {queued.buyer}</div>
+              ) : nowPlaying.description ? (
+                <div className="jukebox-np-desc">{nowPlaying.description}</div>
+              ) : null}
+            </div>
+          </>
+        ) : (
           <div className="jukebox-np-text">
-            <div className="jukebox-np-title">
-              {nowPlaying.title}
-              {nowPlaying.artist ? <span className="jukebox-np-artist"> — {nowPlaying.artist}</span> : null}
-            </div>
-            <div className="jukebox-np-sub">
-              Queued by {nowPlaying.buyer} · {busy ? `${formatDuration(remaining)} left` : "ending…"}
-            </div>
-            {nowPlaying.description ? <div className="jukebox-np-desc">{nowPlaying.description}</div> : null}
+            <div className="jukebox-np-title" aria-live="polite">The jukebox sits quiet.</div>
+            <div className="jukebox-np-sub">Drop a coin to set the room’s music.</div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {songs.length === 0 ? (
         <p className="jukebox-empty">This jukebox has no songs loaded.</p>
       ) : (
         <ul className="jukebox-list">
-          {songs.map((song) => {
+          {pageSongs.map((song) => {
             const canAfford = gold >= song.cost;
-            const playing = nowPlaying?.number === song.number && busy;
+            const playing = busy && nowPlaying?.number === song.number;
+            const isQueued = queued !== null && queued.number === song.number;
+            const verb = busy ? "queue" : "play";
+            const actionable = !playing && !isQueued && !(busy && (mineIsPlaying || queued !== null));
+            const label = playing ? "Playing" : isQueued ? "Queued" : busy ? "Queue" : "Play";
+            const tooltip = playing
+              ? "This song is playing now"
+              : isQueued
+                ? `Queued next by ${queued?.buyer ?? "someone"}`
+                : busy && mineIsPlaying
+                  ? "Your song is playing — someone else gets to queue the next one"
+                  : busy && queued !== null
+                    ? "A song is already queued next"
+                    : !canAfford
+                      ? "Not enough gold"
+                      : busy
+                        ? `Queue "${song.title}" to play next`
+                        : `Play "${song.title}" for everyone`;
             return (
-              <li key={song.number} className={`jukebox-song${playing ? " is-playing" : ""}`}>
+              <li
+                key={song.number}
+                className={`jukebox-song${playing ? " is-playing" : ""}${isQueued ? " is-queued" : ""}`}
+              >
+                <span className="jukebox-song-num" aria-hidden="true">{song.number}</span>
                 <div className="jukebox-song-main">
                   <span className="jukebox-song-title">{song.title}</span>
                   {song.artist ? <span className="jukebox-song-artist"> — {song.artist}</span> : null}
@@ -81,17 +125,11 @@ export function JukeboxPanel({ jukebox, gold, uiFeedbackFeed, assets, onCommand 
                   <button
                     type="button"
                     className="jukebox-play-btn"
-                    disabled={busy || !canAfford}
-                    title={
-                      busy
-                        ? "The jukebox is busy until the current song ends"
-                        : canAfford
-                          ? `Play "${song.title}" for everyone`
-                          : "Not enough gold"
-                    }
-                    onClick={() => onCommand(`jukebox play ${song.number}`)}
+                    disabled={!actionable || !canAfford}
+                    title={tooltip}
+                    onClick={() => onCommand(`jukebox ${verb} ${song.number}`)}
                   >
-                    {playing ? "Playing" : "Play"}
+                    {label}
                   </button>
                 </div>
               </li>
@@ -100,9 +138,40 @@ export function JukeboxPanel({ jukebox, gold, uiFeedbackFeed, assets, onCommand 
         </ul>
       )}
 
+      {pages > 1 && (
+        <div className="jukebox-pager">
+          <button
+            type="button"
+            className="jukebox-pager-btn"
+            onClick={() => setPage(Math.max(0, safePage - 1))}
+            disabled={safePage === 0}
+            aria-label="Previous songs"
+          >
+            ‹
+          </button>
+          <span className="jukebox-pager-info">{safePage + 1} / {pages}</span>
+          <button
+            type="button"
+            className="jukebox-pager-btn"
+            onClick={() => setPage(Math.min(pages - 1, safePage + 1))}
+            disabled={safePage === pages - 1}
+            aria-label="More songs"
+          >
+            ›
+          </button>
+        </div>
+      )}
+
       {activeFeedback && (
         <p className={`jukebox-feedback jukebox-feedback-${activeFeedback.type}`}>{activeFeedback.message}</p>
       )}
+
+      {/* Seated on the painted corner plaque when skinned; hidden in the flow layout
+          (the banner's "Up next" line carries the same information). */}
+      <div className="jukebox-next-plaque" aria-hidden="true">
+        <span className="jukebox-next-label">Up next</span>
+        <span className="jukebox-next-num">{queued ? `#${queued.number}` : "—"}</span>
+      </div>
     </div>
   );
 }

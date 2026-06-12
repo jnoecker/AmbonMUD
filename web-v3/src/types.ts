@@ -1314,10 +1314,21 @@ export interface JukeboxNowPlaying {
   receivedAt: number;
 }
 
+/** The paid-for track queued to start when the current one ends (Jukebox.Info.queued). */
+export interface JukeboxQueued {
+  number: number;
+  title: string;
+  artist: string | null;
+  /** Name of the player who paid to queue it. */
+  buyer: string;
+}
+
 /** Room jukebox state from the Jukebox.Info GMCP package. */
 export interface JukeboxState {
   songs: JukeboxSong[];
   nowPlaying: JukeboxNowPlaying | null;
+  /** Null when the single next-up queue slot is free. */
+  queued: JukeboxQueued | null;
 }
 
 export interface GuildHallRoom {
