@@ -4,6 +4,89 @@ A visual tour of AmbonMUD — every major subsystem of the web client, represent
 rooms from across the Auringold world, and all 128 rooms of the Auringold Academy.
 Captured from a live server running the full Auringold dataset (Ambon).
 
+## The Game at a Glance
+
+AmbonMUD is a multiplayer fantasy world in the classic MUD tradition, rebuilt for the
+browser: every room, character, and panel is rendered over painted scenes, while the
+same world remains fully playable over plain telnet. New players can jump in instantly
+as a guest with the demo mode and claim their character later, or create an account in
+a painted login flow that walks them through choosing one of **nine races** and **six
+classes** (Bulwark, Arcanist, Veil, Herald, Scrollwright, and Songweaver).
+
+**Adventure & progression.** Characters level by exploring and fighting through
+hand-authored zones, from the 128-room Auringold Academy tutorial onward. Class
+trainers teach new abilities with earned skill points, and multi-classing lets a
+character branch into additional classes over time. Abilities, status effects, and
+tactical choices (including a wimpy auto-flee threshold) drive real-time, tick-based
+combat with damage toasts, enemy vitals, and a combat log. Beyond fighting, a complete
+**pacifist path** (the Akathavae) progresses through illumination and a personal
+Arcanum journal instead of violence. Rare cosmetic mob variants — albino, ember,
+shadow-touched, spectral, and kin — appear on a small chance for collectors and
+bragging rights.
+
+**Quests & goals.** NPCs offer branching, voice-acted dialogue with structured quest
+offers; the quest log tracks active, daily, weekly, bounty, and global quests.
+Achievements, leaderboards, factions with reputation tiers, special currencies (quest
+points, honor, crafting tokens), and a prestige system give long-term goals past the
+level cap.
+
+**Economy & crafting.** Shops buy and sell with configurable economy multipliers; the
+bank stores gold and items; an auction house runs player-to-player sales; direct
+trading handles face-to-face deals. Gathering nodes feed a recipe-driven crafting
+system, with enchanting to improve gear and item manuals to study what you've found.
+
+**Places & possessions.** Player housing is bought through realtors and furnished;
+guilds get shared halls. Inns offer rest, pets can be adopted and named, the stylist
+re-styles your look, and a wardrobe manages outfits.
+
+**Diversions & world life.** Lottery drawings, dice tables, jukeboxes with zone
+soundtracks, puzzles and riddle doors, instanced dungeons, and PvP dueling round out
+the world — which itself lives on a day/night clock with seasons, weather, and
+scheduled world events that change the sky overhead.
+
+**Together.** Groups for shared adventuring and XP, guilds with boards and halls,
+friends lists, mail with attachments, global and group chat channels, and a who's-online
+board keep it social.
+
+## Under the Hood
+
+A one-page technical orientation for software engineers.
+
+**Server.** Kotlin on JDK 21. A single-threaded game engine advances the world on a
+100&nbsp;ms tick; all gameplay state lives inside the engine, and the engine speaks to
+the outside world only through typed inbound/outbound event buses — transports contain
+no game logic, and the engine contains no transport code. The same binary runs as a
+single **standalone** process or splits into **gateway** (transports) and **engine**
+(simulation) processes connected over gRPC, with Redis-backed buses, optional player
+caching, and zone sharding/instancing hooks for horizontal scale.
+
+**Protocols.** Plain telnet for classic clients, and WebSocket with **GMCP** packages
+for the web client — room state, vitals, maps, shop/trainer/bank inventories, dialogue,
+quests, and painted-art asset URLs all stream as structured GMCP messages emitted by
+the server.
+
+**Web client.** React 19 + PixiJS. The world view is a canvas scene seated over painted
+room art; UI panels are DOM, skinned by a *painted panel contract*: the server registers
+art asset keys, delivers URLs via GMCP, and the client locks each panel's aspect ratio
+to the art and seats live controls onto the painting with percentage insets — with a
+CSS-only fallback when art is absent.
+
+**World as data.** Zones, rooms, mobs, items, shops, trainers, quests, recipes,
+puzzles, and dungeons are declarative YAML validated by a strict loader. The world
+ships separately from the binary: production assembles its dataset (config overlay +
+zone files + sprites + achievements) from object storage at boot, so content updates
+deploy without rebuilding the server. The companion desktop app **Arcanum** (Tauri +
+React) edits the same schema — entity editors, validation mirroring the server's rules,
+AI art and ElevenLabs voice generation with content-addressed publishing to R2/CDN.
+
+**Persistence.** Pluggable player store — YAML files with atomic writes for simple
+deployments or PostgreSQL (Flyway-migrated) for production — wrapped in a
+write-coalescing worker and an optional Redis cache.
+
+**Operations.** Docker images deployed via GitHub Actions with health-checked restarts,
+an admin HTTP API for live reloads and moderation, Prometheus metrics, and CI running
+lint, unit, and integration suites on every PR.
+
 ## Login & Character Creation
 
 The painted login flow: name entry, returning-character picker, and the race and class galleries.
