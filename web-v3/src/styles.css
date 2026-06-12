@@ -15003,7 +15003,7 @@ body {
    fill hides the placeholder text baked into the art. */
 .login-art-input {
   position: absolute;
-  inset: 61.23% 51.56% 32.81% 29.95%;
+  inset: 61.13% 52.21% 34.86% 30.27%;
   border: none;
   border-radius: 0.5em;
   padding: 0 0.85em;
@@ -15011,7 +15011,7 @@ body {
   box-shadow: inset 0 2px 7px rgb(73 47 12 / 30%);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 3.1cqh;
+  font-size: 2.6cqh;
   color: #45300f;
   caret-color: #6b4a16;
 }
@@ -15081,13 +15081,17 @@ body {
    Image-space bounds for every painted control, measured off each PNG and
    expressed as percentage insets (top right bottom left = bounds ÷ art size).
 
+   login_bg 1536×1024: input (465,626)-(734,667) — the painted box interior
+     runs x 464-735, y 624-666; the field sits just inside its frame bars.
    login_password_bg 1448×1086: chip (700,470)-(972,545) · input (300,612)-(810,704)
      · wand (815,615)-(885,700) · login (932,600)-(1158,705) · error (290,735)-(1160,792)
    login_set_password_bg 1536×1024: chip (860,488)-(1077,543) · input (318,590)-(835,694)
      · wand (840,592)-(930,700) · set (955,592)-(1255,692) · error (300,725)-(1240,782)
    login_confirm_bg 1448×1086: chip (650,505)-(910,580) · yes (372,750)-(668,845)
      · no (776,750)-(1080,845) · error (350,868)-(1100,925)
-   login_picker_bg 1448×1086: list (425,555)-(1030,760) · create (525,835)-(930,897)
+   login_picker_bg 1448×1086: list (425,505)-(1030,760) · create (525,835)-(930,897)
+     — the list opens at the faint inset panel line right under the painted
+     subtitle (panel interior y 505-763), so the name cards sit close to it
    login_race_bg 1122×1402: 3×3 cells seated per niche (the painted frames
      drift a few px), parchment interiors ~ cols x 220-406/465-656/714-905,
      rows y 327-487/530-689/732-892; each cell box is the interior + ~3px
@@ -15182,7 +15186,7 @@ body {
   overflow-y: auto;
 }
 
-.lpk-list { inset: 51.10% 28.87% 30.02% 29.35%; }
+.lpk-list { inset: 46.50% 28.87% 30.02% 29.35%; }
 .lpk-create { inset: 76.89% 35.77% 17.40% 36.26%; }
 
 /* Re-tint the glass entry rows for parchment. */
@@ -15380,7 +15384,7 @@ body {
 /* ── Phone-portrait companions (941×1672) ──────────────────────────────
    Measured element bounds in art space (see the landscape comment block
    above for the convention):
-   login_bg_portrait: input (163,1102)-(352,1162) · create/login (165,1180)-(415,1262)
+   login_bg_portrait: input (175,1089)-(411,1140) · create/login (165,1180)-(415,1262)
      · start demo (525,1180)-(805,1262) · error (150,1035)-(365,…)
    login_password_bg_portrait: chip (260,800)-(680,935) · input (190,1005)-(645,1070)
      · wand (650,1008)-(715,1068) · login (225,1165)-(720,1265) · error (190,1095)-(720,…)
@@ -15399,7 +15403,7 @@ body {
    so the cascade resolves the name scene vs the password scenes. */
 
 .login-art-stage--phone .login-art-input {
-  inset: 65.91% 62.59% 30.50% 17.32%;
+  inset: 65.13% 56.32% 31.82% 18.60%;
   font-size: 1.9cqh;
 }
 
