@@ -3438,6 +3438,10 @@ data class ImagesConfig(
             "duel_arena_widget" to "global_assets/duel_arena_widget.png",
             "jukebox_widget" to "global_assets/jukebox_widget.png",
             "jukebox_bg" to "global_assets/jukebox_bg.png",
+            // Phone-portrait companion (941×1672, 7 scrolls); the drawer prefers
+            // it on portrait viewports. Absent/404 → gradient under the same
+            // seated layout, like the landscape frame.
+            "jukebox_bg_portrait" to "global_assets/jukebox_bg_portrait.png",
             "puzzle_kiosk" to "global_assets/puzzle_kiosk.png",
             "feature_door" to "global_assets/feature_door.png",
             "feature_container" to "global_assets/feature_container.png",
@@ -3502,6 +3506,10 @@ data class ImagesConfig(
             "housing_bg" to "global_assets/housing_bg.png",
             "lottery_bg" to "global_assets/lottery_bg.png",
             "dice_bg" to "global_assets/dice_bg.png",
+            // Phone-portrait companions (941×1672) for the fortune hall and the
+            // dice table; the drawer prefers them on portrait viewports.
+            "lottery_bg_portrait" to "global_assets/lottery_bg_portrait.png",
+            "dice_bg_portrait" to "global_assets/dice_bg_portrait.png",
             // Aineroia's Dice — the six children, each with a themed die sprite
             // and an illustrated max face, plus the Luneqrae coin's two sides.
             // All optional; each die falls back to a themed CSS render.
