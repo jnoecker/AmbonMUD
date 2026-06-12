@@ -15088,11 +15088,15 @@ body {
    login_confirm_bg 1448×1086: chip (650,505)-(910,580) · yes (372,750)-(668,845)
      · no (776,750)-(1080,845) · error (350,868)-(1100,925)
    login_picker_bg 1448×1086: list (425,555)-(1030,760) · create (525,835)-(930,897)
-   login_race_bg 1122×1402: 3×3 cells, cols x 240-408/469-657/718-906,
-     rows y 328-493/502-695/728-898 · detail (235,985)-(905,1160)
+   login_race_bg 1122×1402: 3×3 cells seated per niche (the painted frames
+     drift a few px), parchment interiors ~ cols x 220-406/465-656/714-905,
+     rows y 327-487/530-689/732-892; each cell box is the interior + ~3px
+     bleed expanded by 4/92 per side so the 4%-inset .login-art-cell-img
+     lands exactly on the frame's inner lip · detail (235,985)-(905,1160)
      · choose (390,1240)-(735,1315) · error (300,200)-(820,252)
-   login_class_bg 1122×1402: 2×3 cells, cols x 250-517/605-874,
-     rows y 334-495/550-714/770-933 · detail (235,1030)-(900,1215)
+   login_class_bg 1122×1402: 2×3 cells seated the same way, interiors
+     ~ cols x 246-520/602-878, rows y 336-491/554-711/774-928
+     · detail (235,1030)-(900,1215)
      · choose (355,1290)-(770,1365) · error (300,215)-(820,267) */
 
 /* Dynamic character name seated onto the painted parchment chips. */
@@ -15275,24 +15279,24 @@ body {
   text-overflow: ellipsis;
 }
 
-.lrc-c1 { inset: 23.40% 63.64% 64.84% 21.39%; }
-.lrc-c2 { inset: 23.40% 41.44% 64.84% 41.80%; }
-.lrc-c3 { inset: 23.40% 19.25% 64.84% 63.99%; }
-.lrc-c4 { inset: 35.81% 63.64% 50.43% 21.39%; }
-.lrc-c5 { inset: 35.81% 41.44% 50.43% 41.80%; }
-.lrc-c6 { inset: 35.81% 19.25% 50.43% 63.99%; }
-.lrc-c7 { inset: 51.93% 63.64% 35.95% 21.39%; }
-.lrc-c8 { inset: 51.93% 41.44% 35.95% 41.80%; }
-.lrc-c9 { inset: 51.93% 19.25% 35.95% 63.99%; }
+.lrc-c1 { inset: 22.68% 62.90% 64.76% 18.79%; }
+.lrc-c2 { inset: 22.60% 40.51% 64.54% 40.60%; }
+.lrc-c3 { inset: 22.67% 18.51% 64.61% 62.89%; }
+.lrc-c4 { inset: 37.16% 63.00% 50.28% 18.98%; }
+.lrc-c5 { inset: 37.08% 40.69% 50.13% 40.51%; }
+.lrc-c6 { inset: 37.08% 18.59% 50.28% 62.62%; }
+.lrc-c7 { inset: 51.64% 62.80% 35.88% 18.60%; }
+.lrc-c8 { inset: 51.48% 40.60% 35.65% 40.42%; }
+.lrc-c9 { inset: 51.49% 18.31% 35.80% 62.70%; }
 .lrc-detail { inset: 70.26% 19.34% 17.26% 20.94%; }
 .lrc-choose { inset: 88.45% 34.49% 6.21% 34.76%; }
 
-.lcl-c1 { inset: 23.82% 53.92% 64.69% 22.28%; }
-.lcl-c2 { inset: 23.82% 22.10% 64.69% 53.92%; }
-.lcl-c3 { inset: 39.23% 53.92% 49.07% 22.28%; }
-.lcl-c4 { inset: 39.23% 22.10% 49.07% 53.92%; }
-.lcl-c5 { inset: 54.92% 53.92% 33.45% 22.28%; }
-.lcl-c6 { inset: 54.92% 22.10% 33.45% 53.92%; }
+.lcl-c1 { inset: 23.25% 52.30% 64.27% 20.57%; }
+.lcl-c2 { inset: 23.26% 20.49% 64.34% 52.48%; }
+.lcl-c3 { inset: 38.87% 52.30% 48.57% 20.57%; }
+.lcl-c4 { inset: 38.80% 20.39% 48.57% 52.48%; }
+.lcl-c5 { inset: 54.50% 52.30% 33.10% 20.57%; }
+.lcl-c6 { inset: 54.50% 20.39% 33.10% 52.29%; }
 .lcl-detail { inset: 73.47% 19.79% 13.34% 20.94%; }
 .lcl-choose { inset: 92.01% 31.37% 2.64% 31.64%; }
 
