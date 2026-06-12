@@ -25799,10 +25799,15 @@ html:has(.game-shell),
   .dice-total { left: 39%; top: 74.4%; width: 22%; }
 
   /* The felt band dissolves: the settled-dice strip seats inside the velvet
-     tray and the banner moves to the green bottom panel. */
+     tray and the banner moves to the green bottom panel. The landscape rule's
+     width/height would otherwise survive `inset: 0` and pin a shrunken felt to
+     the top-left (left+width beats right; top+height beats bottom), stranding
+     the tray and banner at the top of the frame. */
   .dice-felt {
     position: absolute;
     inset: 0;
+    width: auto;
+    height: auto;
     padding: 0;
     display: block;
     pointer-events: none;
