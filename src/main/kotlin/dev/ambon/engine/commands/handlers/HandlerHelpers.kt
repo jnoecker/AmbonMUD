@@ -299,9 +299,9 @@ internal suspend fun EngineContext.emitStylistGmcp(sessionId: SessionId) {
 
 /**
  * Emits `Jukebox.Info` for the player's current room: its playlist plus whatever
- * track is playing right now (so someone entering mid-song hears it). Sent on
- * every room look/entry; rooms without a jukebox send an empty playlist so the
- * client clears any stale state from the previous room.
+ * track is playing or queued right now (so someone entering mid-song hears it).
+ * Sent on every room look/entry; rooms without a jukebox send an empty playlist
+ * so the client clears any stale state from the previous room.
  */
 internal suspend fun EngineContext.emitJukeboxGmcp(sessionId: SessionId) {
     val emitter = gmcpEmitter ?: return
@@ -310,7 +310,10 @@ internal suspend fun EngineContext.emitJukeboxGmcp(sessionId: SessionId) {
     val room = world.rooms[me.roomId] ?: return
     val nowPlaying = system.nowPlaying(room.id)
     val remaining = nowPlaying?.let { system.secondsRemaining(it) } ?: 0
-    emitter.sendJukeboxInfo(sessionId, emitter.buildJukeboxInfo(room.jukebox, nowPlaying, remaining))
+    emitter.sendJukeboxInfo(
+        sessionId,
+        emitter.buildJukeboxInfo(room.jukebox, nowPlaying, remaining, queued = system.queuedSong(room.id)),
+    )
 }
 
 /**

@@ -1681,21 +1681,34 @@ class GmcpEmitter(
         val secondsRemaining: Int,
     )
 
+    /** The paid-for track queued to start when the current one ends. */
+    data class JukeboxQueuedPayload(
+        val number: Int,
+        val title: String,
+        val artist: String? = null,
+        /** Name of the player who paid to queue it. */
+        val buyer: String,
+    )
+
     data class JukeboxInfoPayload(
         val songs: List<JukeboxSongPayload>,
         /** Null when nothing is playing; the room then uses its default music. */
         val nowPlaying: JukeboxNowPlayingPayload? = null,
+        /** Null when the single next-up queue slot is free. */
+        val queued: JukeboxQueuedPayload? = null,
     )
 
     /**
-     * Builds a `Jukebox.Info` payload from a room's [playlist] and the optionally
+     * Builds a `Jukebox.Info` payload from a room's [playlist], the optionally
      * playing [nowPlaying] track ([remainingSeconds] is the caller's clock-derived
-     * countdown). A null [nowPlaying] means the room is on its default music.
+     * countdown), and the optionally [queued] next-up track. A null [nowPlaying]
+     * means the room is on its default music.
      */
     fun buildJukeboxInfo(
         playlist: List<JukeboxSong>,
         nowPlaying: JukeboxNowPlaying?,
         remainingSeconds: Int,
+        queued: JukeboxQueuedSong? = null,
     ): JukeboxInfoPayload =
         JukeboxInfoPayload(
             songs = playlist.mapIndexed { index, song ->
@@ -1717,6 +1730,14 @@ class GmcpEmitter(
                     url = np.song.url,
                     buyer = np.buyerName,
                     secondsRemaining = remainingSeconds,
+                )
+            },
+            queued = queued?.let { q ->
+                JukeboxQueuedPayload(
+                    number = q.songIndex + 1,
+                    title = q.song.title,
+                    artist = q.song.artist,
+                    buyer = q.buyerName,
                 )
             },
         )

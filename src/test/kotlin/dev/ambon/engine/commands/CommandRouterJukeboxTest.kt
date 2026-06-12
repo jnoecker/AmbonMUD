@@ -215,6 +215,146 @@ class CommandRouterJukeboxTest {
         }
 
     @Test
+    fun `another player can queue the next song while one plays`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            val quillSid = SessionId(2L)
+            val res = env.players.login(quillSid, "Quill", "password")
+            require(res == LoginResult.Ok) { "Login failed: $res" }
+            val quill = env.players.get(quillSid)!!
+            quill.gold = 20L
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+            env.outbound.drainAll()
+
+            env.router.handle(quillSid, Command.JukeboxQueue(2))
+
+            assertEquals(15L, quill.gold) // song 2 costs the default 5 gold
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.sessionId == quillSid && it.text.contains("will play next") },
+                "Expected the queue confirmation. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == env.sid && it.text.contains("will play next") },
+                "Expected the room to see the queue announcement. got=$outs",
+            )
+        }
+
+    @Test
+    fun `the current buyer cannot queue the next song`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+            env.outbound.drainAll()
+
+            env.router.handle(env.sid, Command.JukeboxQueue(2))
+
+            assertEquals(45L, env.player.gold) // charged only for the original play
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("someone else") },
+                "Expected the own-song rejection. got=$outs",
+            )
+        }
+
+    @Test
+    fun `only one song can be queued at a time`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            val quillSid = SessionId(2L)
+            val resQuill = env.players.login(quillSid, "Quill", "password")
+            require(resQuill == LoginResult.Ok) { "Login failed: $resQuill" }
+            val nockSid = SessionId(3L)
+            val resNock = env.players.login(nockSid, "Nock", "password")
+            require(resNock == LoginResult.Ok) { "Login failed: $resNock" }
+            val quill = env.players.get(quillSid)!!
+            val nock = env.players.get(nockSid)!!
+            quill.gold = 20L
+            nock.gold = 20L
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+            env.router.handle(quillSid, Command.JukeboxQueue(2))
+            env.outbound.drainAll()
+
+            env.router.handle(nockSid, Command.JukeboxQueue(1))
+
+            assertEquals(20L, nock.gold)
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == nockSid && it.text.contains("already queued") },
+                "Expected the queue-full rejection. got=$outs",
+            )
+        }
+
+    @Test
+    fun `queueing with nothing playing starts the song immediately`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+
+            env.router.handle(env.sid, Command.JukeboxQueue(1))
+
+            assertEquals(45L, env.player.gold)
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text.contains("begins to play \"Tavern Reel\"") },
+                "Expected the song to start immediately. got=$outs",
+            )
+        }
+
+    @Test
+    fun `busy play rejection points at the queue command`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            val quillSid = SessionId(2L)
+            val res = env.players.login(quillSid, "Quill", "password")
+            require(res == LoginResult.Ok) { "Login failed: $res" }
+            val quill = env.players.get(quillSid)!!
+            quill.gold = 20L
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+            env.outbound.drainAll()
+
+            env.router.handle(quillSid, Command.JukeboxPlay(2))
+
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == quillSid && it.text.contains("jukebox queue 2") },
+                "Expected the busy error to suggest queueing. got=$outs",
+            )
+        }
+
+    @Test
+    fun `list shows the queued track`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            val quillSid = SessionId(2L)
+            val res = env.players.login(quillSid, "Quill", "password")
+            require(res == LoginResult.Ok) { "Login failed: $res" }
+            val quill = env.players.get(quillSid)!!
+            quill.gold = 20L
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+            env.router.handle(quillSid, Command.JukeboxQueue(2))
+            env.outbound.drainAll()
+
+            env.router.handle(env.sid, Command.Jukebox)
+
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == env.sid &&
+                        it.text.contains("Up next: \"Aineroia's Ascension\"") &&
+                        it.text.contains("queued by Quill")
+                },
+                "Expected the up-next line in the list. got=$outs",
+            )
+        }
+
+    @Test
     fun `jukebox is unavailable outside a jukebox room`() =
         runTest {
             val env = setup()

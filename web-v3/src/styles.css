@@ -27325,13 +27325,8 @@ html:has(.game-shell),
   margin: 0 auto;
 }
 
-/* When painted art is supplied, seat it behind the list (CSS fallback otherwise). */
-.jukebox-panel-skinned {
-  background-image: var(--jukebox-bg);
-  background-size: cover;
-  background-position: center;
-  border-radius: var(--radius-lg);
-}
+/* The painted-frame layout lives in the "painted jukebox_bg frame" section
+   below; the drawer sheet itself paints the art (--skin-bg). */
 
 .jukebox-nowplaying {
   display: flex;
@@ -27374,6 +27369,7 @@ html:has(.game-shell),
 .jukebox-np-artist { color: var(--text-muted); font-weight: 400; }
 .jukebox-np-sub { font-size: 0.78rem; color: var(--text-muted); }
 .jukebox-np-desc { margin-top: 2px; font-size: 0.78rem; font-style: italic; color: var(--text-muted); }
+.jukebox-np-next { margin-top: 2px; font-size: 0.78rem; font-weight: 600; color: var(--accent-primary); }
 
 .jukebox-list {
   list-style: none;
@@ -27399,6 +27395,29 @@ html:has(.game-shell),
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 1px var(--accent-primary) inset;
 }
+
+.jukebox-song.is-queued {
+  border-color: var(--color-gold-bright);
+  box-shadow: 0 0 0 1px var(--color-gold-bright) inset;
+}
+
+.jukebox-song-num {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7em;
+  height: 1.7em;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-edge);
+  background: var(--surface-chip);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jukebox-song-main { flex: 1; min-width: 0; }
 
 .jukebox-song-title { color: var(--text-primary); font-weight: 600; }
 .jukebox-song-artist { color: var(--text-muted); }
@@ -27440,7 +27459,338 @@ html:has(.game-shell),
 
 .jukebox-empty { color: var(--text-muted); text-align: center; padding: var(--space-4); }
 
+.jukebox-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.jukebox-pager-btn {
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-edge);
+  background: var(--surface-chip);
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.jukebox-pager-btn:hover:not(:disabled) { border-color: var(--accent-primary); color: var(--accent-primary); }
+.jukebox-pager-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.jukebox-pager-info { font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* Corner plaque only exists on the painted frame; the flow layout's banner
+   already carries the up-next line. */
+.jukebox-next-plaque { display: none; }
+
 .jukebox-feedback { margin: 0; font-size: 0.82rem; }
 .jukebox-feedback-error { color: var(--color-error); }
 .jukebox-feedback-success { color: var(--color-success); }
 .jukebox-feedback-info { color: var(--text-muted); }
+
+/* ============================================================
+   Jukebox — painted `jukebox_bg` frame (clockwork music-hall
+   cabinet, 4:3). The drawer sheet stretches the art full-bleed
+   and live content seats onto the painted boxes; percentage
+   insets measured off the painting:
+     scroll 1          y 16.0→29.0%, x 26.5→76.0%  → now-playing banner
+     scrolls 2–5       y 29.3→84.5%, x 26.5→76.0%  → song rows, 4 per page
+     bottom plaque     y 88.0→95.5%, x 33.0→72.0%  → feedback line
+                       (the pager docks at its right end when >1 page)
+     corner plaque     y 87.5→96.0%, x 81.5→96.5%  → up-next song number
+     close medallion   painted ✕ at top-right ~(94.6%, 4.7%)
+   ≥768px only: on phones the drawer keeps its default chrome and
+   the panel renders the flow layout, art-free. Without art the
+   sheet falls back to a gradient and stays fully usable.
+   ============================================================ */
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-jukebox {
+    width: auto;
+    height: min(94vh, 71vw);
+    max-height: 94vh;
+    aspect-ratio: 4 / 3;
+    background-image:
+      var(--skin-bg, none),
+      radial-gradient(ellipse at 50% 30%, rgb(48 32 22 / 97%), rgb(16 11 24 / 98%));
+    background-size: 100% 100%, auto;
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
+  }
+
+  .drawer-sheet-jukebox .drawer-title { display: none; }
+  .drawer-sheet-jukebox .drawer-handle-zone { display: none; }
+
+  .drawer-sheet-jukebox .drawer-header {
+    position: absolute;
+    top: 1.8%;
+    right: 1.8%;
+    left: auto;
+    z-index: 6;
+    padding: 0;
+    min-height: 0;
+    border-bottom: none;
+  }
+
+  /* Ghost the stock close button so the painted medallion shows through;
+     it stays a full-size hit target and lights up on hover/focus. */
+  .drawer-sheet-jukebox .drawer-close {
+    border-color: transparent;
+    background: transparent;
+    color: rgb(244 230 200 / 70%);
+    text-shadow: 0 1px 2px rgb(20 10 4 / 60%);
+  }
+
+  .drawer-sheet-jukebox .drawer-close:hover,
+  .drawer-sheet-jukebox .drawer-close:focus-visible {
+    color: #f8ecd2;
+    background: rgb(120 84 30 / 30%);
+  }
+
+  .drawer-sheet-jukebox .drawer-body {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .jukebox-panel-skinned {
+    position: absolute;
+    inset: 0;
+    display: block;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    font-family: var(--font-display);
+
+    /* Parchment ink palette — the glass-theme tokens are too pale on paper. */
+    --jb-ink: #3a2c18;
+    --jb-ink-strong: #1f3c6e;
+    --jb-ink-soft: rgb(74 56 30 / 80%);
+    --jb-ink-accent: #7c2d2d;
+    --jb-gold: #7c5a14;
+  }
+
+  /* Now playing — seated on the top scroll. */
+  .jukebox-panel-skinned .jukebox-nowplaying {
+    position: absolute;
+    inset: 16% 24% 71% 26.5%;
+    padding: 0 1.5%;
+    overflow: hidden;
+    background: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  .jukebox-panel-skinned .jukebox-np-text { min-width: 0; }
+  .jukebox-panel-skinned .jukebox-np-eq i { background: var(--jb-ink-strong); }
+
+  .jukebox-panel-skinned .jukebox-np-title {
+    overflow: hidden;
+    color: var(--jb-ink-strong);
+    font-size: clamp(0.78rem, 1.6vw, 1.2rem);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .jukebox-panel-skinned .jukebox-np-artist { color: var(--jb-ink-soft); }
+
+  .jukebox-panel-skinned .jukebox-np-sub {
+    color: var(--jb-ink-accent);
+    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-np-next {
+    color: var(--jb-ink-accent);
+    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-np-desc {
+    overflow: hidden;
+    color: var(--jb-ink-soft);
+    font-size: clamp(0.6rem, 1.15vw, 0.88rem);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Song rows — one per painted scroll, four to a page. */
+  .jukebox-panel-skinned .jukebox-list {
+    position: absolute;
+    inset: 29.3% 24% 15.5% 26.5%;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .jukebox-panel-skinned .jukebox-song {
+    flex: 0 0 25%;
+    height: 25%;
+    align-items: center;
+    padding: 0 1.5%;
+    background: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  .jukebox-panel-skinned .jukebox-song.is-playing,
+  .jukebox-panel-skinned .jukebox-song.is-queued { box-shadow: none; }
+
+  .jukebox-panel-skinned .jukebox-song-num {
+    width: 2em;
+    min-width: 2em;
+    height: 2em;
+    margin-top: 0;
+    border: 1px solid rgb(110 78 26 / 60%);
+    background: radial-gradient(circle at 35% 30%, rgb(252 242 216 / 92%), rgb(206 178 126 / 92%));
+    color: #4a3414;
+    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgb(60 38 10 / 35%);
+  }
+
+  .jukebox-panel-skinned .jukebox-song-title {
+    color: var(--jb-ink-strong);
+    font-size: clamp(0.72rem, 1.5vw, 1.12rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-song-artist {
+    color: var(--jb-ink-soft);
+    font-size: clamp(0.62rem, 1.2vw, 0.9rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-song-desc {
+    overflow: hidden;
+    color: var(--jb-ink-soft);
+    font-size: clamp(0.58rem, 1.1vw, 0.85rem);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .jukebox-panel-skinned .jukebox-song-dur {
+    color: var(--jb-ink-strong);
+    font-size: clamp(0.62rem, 1.3vw, 1rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-song-cost {
+    color: var(--jb-gold);
+    font-size: clamp(0.62rem, 1.3vw, 0.95rem);
+  }
+
+  .jukebox-panel-skinned .jukebox-song-cost.is-short { color: #9c2f23; }
+
+  /* Gilded play/queue buttons, echoing the painted brass-and-enamel chips. */
+  .jukebox-panel-skinned .jukebox-play-btn {
+    min-width: 5.4em;
+    padding: 0.32em 0.9em;
+    border-radius: 0.55em;
+    border: 1px solid rgb(216 178 96 / 80%);
+    background: linear-gradient(170deg, #3f6db4, #274a86);
+    color: #f2e8cf;
+    font-family: var(--font-display);
+    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 25%), 0 2px 6px rgb(40 24 8 / 45%);
+    text-shadow: 0 1px 2px rgb(10 20 40 / 55%);
+  }
+
+  .jukebox-panel-skinned .jukebox-play-btn:hover:not(:disabled) {
+    color: #fff;
+    border-color: rgb(244 214 140 / 95%);
+    filter: brightness(1.12);
+  }
+
+  .jukebox-panel-skinned .jukebox-song.is-playing .jukebox-play-btn {
+    background: linear-gradient(170deg, #3f9a52, #1f6b33);
+    opacity: 1;
+  }
+
+  .jukebox-panel-skinned .jukebox-song.is-queued .jukebox-play-btn {
+    background: linear-gradient(170deg, #b3892b, #7c5c14);
+    opacity: 1;
+  }
+
+  .jukebox-panel-skinned .jukebox-empty {
+    position: absolute;
+    inset: 29.3% 24% 15.5% 26.5%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--jb-ink-soft);
+    font-style: italic;
+  }
+
+  /* Feedback — centered on the bottom plaque (the keyhole sits to its left). */
+  .jukebox-panel-skinned .jukebox-feedback {
+    position: absolute;
+    inset: 88% 28% 4.5% 33%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--jb-ink);
+    font-size: clamp(0.6rem, 1.2vw, 0.92rem);
+    text-align: center;
+  }
+
+  .jukebox-panel-skinned .jukebox-feedback-error { color: #9c2f23; }
+  .jukebox-panel-skinned .jukebox-feedback-success { color: #1d5a32; }
+  .jukebox-panel-skinned .jukebox-feedback-info { color: var(--jb-ink-soft); }
+
+  /* Pager docks at the right end of the bottom plaque; the feedback line
+     yields the overlap when both render. */
+  .jukebox-panel-skinned .jukebox-pager {
+    position: absolute;
+    top: 88%;
+    right: 28.5%;
+    bottom: 4.5%;
+    gap: clamp(4px, 0.6vw, 10px);
+  }
+
+  .jukebox-panel-skinned:has(.jukebox-pager) .jukebox-feedback { right: 42%; }
+
+  .jukebox-panel-skinned .jukebox-pager-btn {
+    width: clamp(18px, 1.9vw, 28px);
+    height: clamp(18px, 1.9vw, 28px);
+    border-color: rgb(110 78 26 / 60%);
+    background: radial-gradient(circle at 35% 30%, rgb(252 242 216 / 92%), rgb(206 178 126 / 92%));
+    color: #4a3414;
+  }
+
+  .jukebox-panel-skinned .jukebox-pager-btn:hover:not(:disabled) {
+    border-color: #7c5a14;
+    color: #1f3c6e;
+  }
+
+  .jukebox-panel-skinned .jukebox-pager-info {
+    color: var(--jb-ink);
+    font-size: clamp(0.58rem, 1.1vw, 0.85rem);
+  }
+
+  /* Up-next song number — seated on the small corner plaque (bottom right). */
+  .jukebox-panel-skinned .jukebox-next-plaque {
+    position: absolute;
+    inset: 87.5% 3.5% 4% 81.5%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--jb-ink-soft);
+  }
+
+  .jukebox-panel-skinned .jukebox-next-label {
+    font-size: clamp(0.46rem, 0.85vw, 0.66rem);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .jukebox-panel-skinned .jukebox-next-num {
+    color: var(--jb-ink-strong);
+    font-size: clamp(0.85rem, 1.9vw, 1.45rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}

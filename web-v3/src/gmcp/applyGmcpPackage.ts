@@ -2482,7 +2482,17 @@ export function applyGmcpPackage(
               receivedAt: Date.now(),
             }
           : null;
-      ctx.setJukebox({ songs, nowPlaying });
+      const q = packet.queued as Partial<Record<string, unknown>> | null | undefined;
+      const queued =
+        q && typeof q.title === "string"
+          ? {
+              number: safeNumber(q.number, 0),
+              title: q.title,
+              artist: typeof q.artist === "string" ? q.artist : null,
+              buyer: typeof q.buyer === "string" ? q.buyer : "",
+            }
+          : null;
+      ctx.setJukebox({ songs, nowPlaying, queued });
       break;
     }
 

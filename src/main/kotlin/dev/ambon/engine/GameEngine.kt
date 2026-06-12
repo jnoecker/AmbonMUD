@@ -2999,9 +2999,10 @@ class GameEngine(
     /**
      * Drives playing jukebox tracks: broadcasts lyric lines as they come due
      * (spread across each track's duration — flavour for players without audio),
-     * then announces tracks that just ended and reverts their rooms to default
-     * music via a cleared `Jukebox.Info`. Cheap when nothing is playing (the
-     * common case): both polls return empty.
+     * then announces tracks that just ended. A queued successor (paid via
+     * `jukebox queue`) takes over immediately; otherwise the room reverts to its
+     * default music via a cleared `Jukebox.Info`. Cheap when nothing is playing
+     * (the common case): both polls return empty.
      */
     private suspend fun tickJukebox() {
         for ((roomId, lines) in jukeboxSystem.pollDueLyrics()) {
@@ -3009,25 +3010,42 @@ class GameEngine(
                 broadcastToRoom(players, outbound, roomId, "♪ $line ♪")
             }
         }
-        for ((roomId, ended) in jukeboxSystem.pollExpired()) {
+        for ((roomId, transition) in jukeboxSystem.pollExpired()) {
             broadcastToRoom(
                 players,
                 outbound,
                 roomId,
-                "The jukebox winds down as \"${ended.song.title}\" comes to an end.",
+                "The jukebox winds down as \"${transition.ended.song.title}\" comes to an end.",
             )
+            val started = transition.started
+            if (started != null) {
+                val byline = started.song.artist?.let { " by $it" } ?: ""
+                broadcastToRoom(
+                    players,
+                    outbound,
+                    roomId,
+                    "The jukebox whirs back to life with \"${started.song.title}\"$byline, queued by ${started.buyerName}.",
+                )
+                started.song.description?.let { broadcastToRoom(players, outbound, roomId, it) }
+            }
             gmcpEmitter?.let { emitter ->
                 val playlist = world.rooms[roomId]?.jukebox ?: emptyList()
-                val payload = emitter.buildJukeboxInfo(playlist, nowPlaying = null, remainingSeconds = 0)
+                val payload = emitter.buildJukeboxInfo(
+                    playlist,
+                    nowPlaying = started,
+                    remainingSeconds = started?.let { jukeboxSystem.secondsRemaining(it) } ?: 0,
+                    queued = jukeboxSystem.queuedSong(roomId),
+                )
                 emitter.broadcastJukeboxInfo(roomId, payload, players)
             }
-            // Inline music links for non-web clients revert to the room's default
-            // (see PlayerState.audioLinksEnabled), mirroring the GMCP revert above.
-            val defaultMusic = world.rooms[roomId]?.music
+            // Inline music links for non-web clients follow the promoted track, or
+            // revert to the room's default (see PlayerState.audioLinksEnabled),
+            // mirroring the GMCP push above.
+            val music = started?.song?.url ?: world.rooms[roomId]?.music
             for (occupant in players.playersInRoom(roomId)) {
                 if (occupant.audioLinksEnabled) {
-                    occupant.lastEmittedMusicUrl = defaultMusic
-                    defaultMusic?.let { outbound.send(OutboundEvent.SendInfo(occupant.sessionId, "[music] $it")) }
+                    occupant.lastEmittedMusicUrl = music
+                    music?.let { outbound.send(OutboundEvent.SendInfo(occupant.sessionId, "[music] $it")) }
                 }
             }
         }

@@ -1602,6 +1602,7 @@ function App() {
           <JukeboxPanel
             jukebox={state.jukebox}
             gold={state.vitals.gold}
+            selfName={state.character.name}
             uiFeedbackFeed={state.uiFeedbackFeed}
             assets={state.serverAssets}
             onCommand={sendCommand}

@@ -243,6 +243,14 @@ sealed interface Command {
         val song: Int,
     ) : Command
 
+    /**
+     * `jukebox queue <n>`/`jb queue <n>` — pay to queue the n-th song (1-based) to
+     * play next. One slot, and not for whoever's song is currently playing.
+     */
+    data class JukeboxQueue(
+        val song: Int,
+    ) : Command
+
     // ---- Bank commands ----
 
     sealed interface Bank : Command {
@@ -1159,7 +1167,7 @@ object CommandParser {
             }
         }?.let { return it }
 
-        // jukebox: "jukebox play <n>" then bare "jukebox" (alias jb). Play must match first.
+        // jukebox: "jukebox play/queue <n>" then bare "jukebox" (alias jb). Subcommands must match first.
         matchPrefix(line, listOf("jukebox play", "jb play")) { rest ->
             val n = rest.trim().toIntOrNull()
             if (n == null || n < 1) {
@@ -1169,12 +1177,21 @@ object CommandParser {
             }
         }?.let { return it }
 
+        matchPrefix(line, listOf("jukebox queue", "jb queue")) { rest ->
+            val n = rest.trim().toIntOrNull()
+            if (n == null || n < 1) {
+                Command.Invalid(line, "jukebox queue <number>")
+            } else {
+                Command.JukeboxQueue(n)
+            }
+        }?.let { return it }
+
         matchPrefix(line, listOf("jukebox", "jb")) { rest ->
             val sub = rest.trim().lowercase()
             if (sub.isEmpty() || sub == "list" || sub == "info") {
                 Command.Jukebox
             } else {
-                Command.Invalid(line, "jukebox [list] | jukebox play <number>")
+                Command.Invalid(line, "jukebox [list] | jukebox play <number> | jukebox queue <number>")
             }
         }?.let { return it }
 
