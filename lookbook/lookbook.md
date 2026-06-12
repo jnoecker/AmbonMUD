@@ -113,6 +113,8 @@ The painted login flow: name entry, returning-character picker, and the race and
 
 ## The World View
 
+### The Adventurer's View
+
 ![World view](screenshots/subsystems/06-game-room-view.jpg)
 *The in-game view: painted room scene with player and NPC sprites, vitals HUD, minimap, room narrative, exits compass, and the panel dock.*
 
