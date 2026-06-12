@@ -27609,13 +27609,14 @@ html:has(.game-shell),
    Jukebox — painted `jukebox_bg` frame (clockwork music-hall
    cabinet, 4:3). The drawer sheet stretches the art full-bleed
    and live content seats onto the painted boxes; percentage
-   insets measured off the painting:
-     scroll 1          y 16.0→29.0%, x 26.5→76.0%  → now-playing banner
-     scrolls 2–5       y 29.3→84.5%, x 26.5→76.0%  → song rows, 4 per page
-     bottom plaque     y 88.0→95.5%, x 33.0→72.0%  → feedback line
+   insets measured off the shipped painting (in-game screenshot):
+     scroll 1          y 16.4→29.4%, x 28.5→75.5%  → now-playing banner
+     scrolls 2–5       y 31.3→78.0%, x 28.5→75.5%  → song rows, 4 per page
+                       (painted scroll pitch ≈ 11.7%)
+     bottom plaque     y 79.5→89.2%, x 31.5→71.0%  → feedback line
                        (the pager docks at its right end when >1 page)
-     corner plaque     y 87.5→96.0%, x 81.5→96.5%  → up-next song number
-     close medallion   painted ✕ at top-right ~(94.6%, 4.7%)
+     corner plaque     y 81.5→88.0%, x 81.0→90.0%  → up-next song number
+     close medallion   painted ✕ centered ~(94.3%, 5.8%)
    Landscape ≥768px only — portrait viewports use the 7-scroll
    `jukebox_bg_portrait` companion (block below); landscape phones
    keep the default chrome + flow layout. Without art the sheet
@@ -27640,8 +27641,8 @@ html:has(.game-shell),
 
   .drawer-sheet-jukebox .drawer-header {
     position: absolute;
-    top: 1.8%;
-    right: 1.8%;
+    top: 2.4%;
+    right: 2.4%;
     left: auto;
     z-index: 6;
     padding: 0;
@@ -27650,8 +27651,10 @@ html:has(.game-shell),
   }
 
   /* Ghost the stock close button so the painted medallion shows through;
-     it stays a full-size hit target and lights up on hover/focus. */
+     sized up to cover the medallion as a hit target, lit on hover/focus. */
   .drawer-sheet-jukebox .drawer-close {
+    width: clamp(34px, 4vw, 52px);
+    height: clamp(34px, 4vw, 52px);
     border-color: transparent;
     background: transparent;
     color: rgb(244 230 200 / 70%);
@@ -27680,17 +27683,17 @@ html:has(.game-shell),
     font-family: var(--font-display);
 
     /* Parchment ink palette — the glass-theme tokens are too pale on paper. */
-    --jb-ink: #3a2c18;
-    --jb-ink-strong: #1f3c6e;
-    --jb-ink-soft: rgb(74 56 30 / 80%);
-    --jb-ink-accent: #7c2d2d;
-    --jb-gold: #7c5a14;
+    --jb-ink: #2c2110;
+    --jb-ink-strong: #1a3260;
+    --jb-ink-soft: rgb(56 40 18 / 92%);
+    --jb-ink-accent: #6e2222;
+    --jb-gold: #6b4c0e;
   }
 
   /* Now playing — seated on the top scroll. */
   .jukebox-panel-skinned .jukebox-nowplaying {
     position: absolute;
-    inset: 16% 24% 71% 26.5%;
+    inset: 17% 24.5% 71% 28.5%;
     padding: 0 1.5%;
     overflow: hidden;
     background: none;
@@ -27704,7 +27707,8 @@ html:has(.game-shell),
   .jukebox-panel-skinned .jukebox-np-title {
     overflow: hidden;
     color: var(--jb-ink-strong);
-    font-size: clamp(0.78rem, 1.6vw, 1.2rem);
+    font-size: clamp(0.88rem, 1.85vw, 1.4rem);
+    font-weight: 700;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
@@ -27713,18 +27717,20 @@ html:has(.game-shell),
 
   .jukebox-panel-skinned .jukebox-np-sub {
     color: var(--jb-ink-accent);
-    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
+    font-size: clamp(0.68rem, 1.4vw, 1.05rem);
+    font-weight: 600;
   }
 
   .jukebox-panel-skinned .jukebox-np-next {
     color: var(--jb-ink-accent);
-    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
+    font-size: clamp(0.68rem, 1.4vw, 1.05rem);
+    font-weight: 600;
   }
 
   .jukebox-panel-skinned .jukebox-np-desc {
     overflow: hidden;
     color: var(--jb-ink-soft);
-    font-size: clamp(0.6rem, 1.15vw, 0.88rem);
+    font-size: clamp(0.64rem, 1.3vw, 0.98rem);
     white-space: nowrap;
     text-overflow: ellipsis;
   }
@@ -27732,7 +27738,7 @@ html:has(.game-shell),
   /* Song rows — one per painted scroll, four to a page. */
   .jukebox-panel-skinned .jukebox-list {
     position: absolute;
-    inset: 29.3% 24% 15.5% 26.5%;
+    inset: 31.3% 24.5% 22% 28.5%;
     gap: 0;
     overflow: hidden;
   }
@@ -27758,37 +27764,40 @@ html:has(.game-shell),
     border: 1px solid rgb(110 78 26 / 60%);
     background: radial-gradient(circle at 35% 30%, rgb(252 242 216 / 92%), rgb(206 178 126 / 92%));
     color: #4a3414;
-    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
+    font-size: clamp(0.66rem, 1.35vw, 1rem);
     font-weight: 700;
     box-shadow: 0 1px 3px rgb(60 38 10 / 35%);
   }
 
   .jukebox-panel-skinned .jukebox-song-title {
     color: var(--jb-ink-strong);
-    font-size: clamp(0.72rem, 1.5vw, 1.12rem);
+    font-size: clamp(0.8rem, 1.7vw, 1.28rem);
+    font-weight: 700;
   }
 
   .jukebox-panel-skinned .jukebox-song-artist {
     color: var(--jb-ink-soft);
-    font-size: clamp(0.62rem, 1.2vw, 0.9rem);
+    font-size: clamp(0.66rem, 1.35vw, 1rem);
   }
 
   .jukebox-panel-skinned .jukebox-song-desc {
     overflow: hidden;
     color: var(--jb-ink-soft);
-    font-size: clamp(0.58rem, 1.1vw, 0.85rem);
+    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
     white-space: nowrap;
     text-overflow: ellipsis;
   }
 
   .jukebox-panel-skinned .jukebox-song-dur {
     color: var(--jb-ink-strong);
-    font-size: clamp(0.62rem, 1.3vw, 1rem);
+    font-size: clamp(0.7rem, 1.45vw, 1.08rem);
+    font-weight: 700;
   }
 
   .jukebox-panel-skinned .jukebox-song-cost {
     color: var(--jb-gold);
-    font-size: clamp(0.62rem, 1.3vw, 0.95rem);
+    font-size: clamp(0.7rem, 1.45vw, 1.05rem);
+    font-weight: 700;
   }
 
   .jukebox-panel-skinned .jukebox-song-cost.is-short { color: #9c2f23; }
@@ -27802,7 +27811,7 @@ html:has(.game-shell),
     background: linear-gradient(170deg, #3f6db4, #274a86);
     color: #f2e8cf;
     font-family: var(--font-display);
-    font-size: clamp(0.62rem, 1.25vw, 0.95rem);
+    font-size: clamp(0.66rem, 1.35vw, 1rem);
     font-weight: 700;
     letter-spacing: 0.04em;
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 25%), 0 2px 6px rgb(40 24 8 / 45%);
@@ -27827,7 +27836,7 @@ html:has(.game-shell),
 
   .jukebox-panel-skinned .jukebox-empty {
     position: absolute;
-    inset: 29.3% 24% 15.5% 26.5%;
+    inset: 31.3% 24.5% 22% 28.5%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -27838,13 +27847,13 @@ html:has(.game-shell),
   /* Feedback — centered on the bottom plaque (the keyhole sits to its left). */
   .jukebox-panel-skinned .jukebox-feedback {
     position: absolute;
-    inset: 88% 28% 4.5% 33%;
+    inset: 80.5% 29% 11.5% 31.5%;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     color: var(--jb-ink);
-    font-size: clamp(0.6rem, 1.2vw, 0.92rem);
+    font-size: clamp(0.64rem, 1.3vw, 1rem);
     text-align: center;
   }
 
@@ -27856,13 +27865,13 @@ html:has(.game-shell),
      yields the overlap when both render. */
   .jukebox-panel-skinned .jukebox-pager {
     position: absolute;
-    top: 88%;
-    right: 28.5%;
-    bottom: 4.5%;
+    top: 80.5%;
+    right: 29.5%;
+    bottom: 11.5%;
     gap: clamp(4px, 0.6vw, 10px);
   }
 
-  .jukebox-panel-skinned:has(.jukebox-pager) .jukebox-feedback { right: 42%; }
+  .jukebox-panel-skinned:has(.jukebox-pager) .jukebox-feedback { right: 40%; }
 
   .jukebox-panel-skinned .jukebox-pager-btn {
     width: clamp(18px, 1.9vw, 28px);
@@ -27885,7 +27894,7 @@ html:has(.game-shell),
   /* Up-next song number — seated on the small corner plaque (bottom right). */
   .jukebox-panel-skinned .jukebox-next-plaque {
     position: absolute;
-    inset: 87.5% 3.5% 4% 81.5%;
+    inset: 81.5% 10% 12% 81%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -27894,15 +27903,15 @@ html:has(.game-shell),
   }
 
   .jukebox-panel-skinned .jukebox-next-label {
-    font-size: clamp(0.46rem, 0.85vw, 0.66rem);
-    font-weight: 600;
+    font-size: clamp(0.5rem, 0.95vw, 0.72rem);
+    font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
 
   .jukebox-panel-skinned .jukebox-next-num {
     color: var(--jb-ink-strong);
-    font-size: clamp(0.85rem, 1.9vw, 1.45rem);
+    font-size: clamp(0.95rem, 2.1vw, 1.6rem);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
@@ -27981,11 +27990,11 @@ html:has(.game-shell),
     font-family: var(--font-display);
 
     /* Parchment ink palette — shared with the landscape frame. */
-    --jb-ink: #3a2c18;
-    --jb-ink-strong: #1f3c6e;
-    --jb-ink-soft: rgb(74 56 30 / 80%);
-    --jb-ink-accent: #7c2d2d;
-    --jb-gold: #7c5a14;
+    --jb-ink: #2c2110;
+    --jb-ink-strong: #1a3260;
+    --jb-ink-soft: rgb(56 40 18 / 92%);
+    --jb-ink-accent: #6e2222;
+    --jb-gold: #6b4c0e;
   }
 
   /* Now playing — seated on the top scroll. */
