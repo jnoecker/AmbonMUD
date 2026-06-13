@@ -182,32 +182,28 @@ The painted login flow: name entry, returning-character picker, and the race and
 ## Commerce & Services
 
 ### Shop
-![Shop — buy/sell with the Shop That Sells Everything](screenshots/subsystems/30-shop.jpg)
-*Shop — buy/sell with the Shop That Sells Everything*
+![Shop](screenshots/subsystems/30-shop.jpg)
+*Buying and selling at Madam Daydreams' General Store*
 
 ### Bank vault
-![Bank vault — gold and item storage](screenshots/subsystems/33-bank.jpg)
-*Bank vault — gold and item storage*
+![Bank vault](screenshots/subsystems/33-bank.jpg)
+*The Bursar's Vault — gold and item storage*
 
 ### Auction house
 ![Auction house](screenshots/subsystems/32-auction.jpg)
-*Auction house*
+*The Auction Hall of Whispered Bids — player-to-player sales*
 
 ### Stylist
-![Stylist — cosmetic restyling](screenshots/subsystems/34-stylist.jpg)
-*Stylist — cosmetic restyling*
+![Stylist](screenshots/subsystems/34-stylist.jpg)
+*The Twilight Salon — cosmetic restyling*
 
 ### Housing realtor
 ![Housing realtor](screenshots/subsystems/35-housing.jpg)
-*Housing realtor*
-
-### Inn
-![Inn — rest and recovery](screenshots/subsystems/36-inn.jpg)
-*Inn — rest and recovery*
+*The Estates Broker's Office — buy and furnish a home*
 
 ### Crafting recipes
 ![Crafting recipes](screenshots/subsystems/41-crafting.jpg)
-*Crafting recipes*
+*The recipe book at the Crafters' Workshop*
 
 ## Games & Diversions
 
@@ -217,6 +213,7 @@ The painted login flow: name entry, returning-character picker, and the race and
 
 ### Dice table
 ![Dice table](screenshots/subsystems/37b-dice.jpg)
+*Fortuna's honest dice in the Parlor of Small Fortunes*
 
 ### Jukebox
 ![Jukebox](screenshots/subsystems/38-jukebox.jpg)
@@ -228,66 +225,53 @@ The painted login flow: name entry, returning-character picker, and the race and
 ## NPC Dialogue, Quests & Combat
 
 ### NPC dialogue
-![NPC dialogue — branching conversation with a quest giver](screenshots/subsystems/44-dialogue.jpg)
-*NPC dialogue — branching conversation with a quest giver*
-
-### Quest accepted
-![Quest accepted](screenshots/subsystems/46-quest-accepted.jpg)
-*Quest accepted*
+![NPC dialogue](screenshots/subsystems/44-dialogue.jpg)
+*Branching conversation with Krioshaeu, who offers the first quest*
 
 ### Combat
-![Combat — damage toasts, enemy vitals, and the flee escape hatch](screenshots/subsystems/47-combat-1.jpg)
-*Combat — damage toasts, enemy vitals, and the flee escape hatch*
+![Combat](screenshots/subsystems/47-combat-1.jpg)
+*Sparring a practice dummy in the Proving Yard — damage toasts, enemy vitals, and the flee escape hatch*
 
 ### Combat continues
 ![Combat continues](screenshots/subsystems/48-combat-2.jpg)
-*Combat continues*
+*Abilities on the hotbar fire as the bout plays out*
 
-## Around the World
+## A Few Academy Rooms Up Close
 
-Representative rooms from the live zones.
+A handful of Auringold Academy rooms at full size — including the homes of services
+the web client surfaces through the world itself.
 
-### The Celestial Plaza (Playtesting)
-![The Celestial Plaza (Playtesting)](screenshots/rooms/playtesting-celestial-plaza.jpg)
+### The Academy Quad
+![The Academy Quad](screenshots/academy/academy_quad.jpg)
+*The heart of the Academy, where Provost Lumina holds court*
 
-### The Shop That Sells Everything
-![The Shop That Sells Everything](screenshots/rooms/playtesting-shop.jpg)
+### The Library of Fairytales
+![The Library of Fairytales](screenshots/academy/library_fairytales.jpg)
+*Where the class trainer teaches new abilities for skill points*
 
-### The Bank of Borrowed Time
-![The Bank of Borrowed Time](screenshots/rooms/playtesting-vault.jpg)
+### The Retired Professor Tavern
+![The Retired Professor Tavern](screenshots/academy/auringold_tavern.jpg)
+*Rest and recover at the Academy's inn*
 
-### The Trainer That Trains Every Class
-![The Trainer That Trains Every Class](screenshots/rooms/playtesting-trainer.jpg)
+### The Chapel of Patient Rest
+![The Chapel of Patient Rest](screenshots/academy/catacomb_chapel.jpg)
+*The portal to the Academy catacombs, a dungeon that rearranges itself nightly*
 
-### The Mad Jester's Gameroom
-![The Mad Jester's Gameroom](screenshots/rooms/playtesting-gameroom.jpg)
+### The Duel Ring
+![The Duel Ring](screenshots/academy/duel_ring.jpg)
+*Where students settle matters with sanctioned PvP duels*
 
-### The Battle Arena of the Gods
-![The Battle Arena of the Gods](screenshots/rooms/playtesting-arena.jpg)
+### The Gathering Garden
+![The Gathering Garden](screenshots/academy/gathering_garden.jpg)
+*Gathering nodes feed the crafting professions*
 
-### The Undercroft of Sundry Affairs
-![The Undercroft of Sundry Affairs](screenshots/rooms/playtesting-undercroft.jpg)
+### The Almanac Terrace
+![The Almanac Terrace](screenshots/academy/almanac_terrace.jpg)
+*Where the Academy's day/night clock, seasons, and weather turn overhead*
 
-### A Monster Pit of Low Level Creatures
-![A Monster Pit of Low Level Creatures](screenshots/rooms/playtesting-pve-mob.jpg)
-
-### Before the Gate (Aineroia's Cottage)
-![Before the Gate (Aineroia's Cottage)](screenshots/rooms/aineroia_cottage-before_gate.jpg)
-
-### The West Garden
-![The West Garden](screenshots/rooms/aineroia_cottage-west_garden.jpg)
-
-### The Small Pond
-![The Small Pond](screenshots/rooms/aineroia_cottage-small_pond.jpg)
-
-### The Study
-![The Study](screenshots/rooms/aineroia_cottage-study.jpg)
-
-### The Poison Garden
-![The Poison Garden](screenshots/rooms/aineroia_cottage-poison_garden.jpg)
-
-### Krioshaeu's Cabin (Celestial Sanctum)
-![Krioshaeu's Cabin (Celestial Sanctum)](screenshots/rooms/celestial_sanctum-krioshaeu_cabin.jpg)
+### The Parlor of Borrowed Songs
+![The Parlor of Borrowed Songs](screenshots/academy/song_parlor.jpg)
+*Home of the jukebox that plays for the whole room*
 
 ## The Auringold Academy — All 128 Rooms
 

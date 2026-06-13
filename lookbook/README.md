@@ -1,18 +1,16 @@
 # AmbonMUD Lookbook
 
-A visual tour of AmbonMUD: every major subsystem of the web client, representative
-rooms from the live Auringold zones, and all 128 rooms of the Auringold Academy.
+A visual tour of AmbonMUD: every major subsystem of the web client and all 128 rooms of
+the Auringold Academy. Every screenshot is from the Auringold Academy zone.
 
 - **`lookbook.pdf`** — the assembled document: painted cover, a gameplay overview and
-  a one-page technical summary up front, then large subsystem captures, representative
-  rooms, and a small grid of every Academy room.
+  a one-page technical summary up front, then large subsystem captures, a handful of
+  featured Academy rooms, and a small grid of every Academy room.
 - **`lookbook.md`** — the source document; image references point into `screenshots/`.
 - **`screenshots/subsystems/`** — login flow, world view, and every panel (character,
-  professions, achievements, prestige, inventory, equipment, spellbook, trainer, quests,
-  combat log, social boards, shop, bank, auction, stylist, housing, inn, lottery, dice,
-  crafting, puzzles, NPC dialogue, combat).
-- **`screenshots/rooms/`** — representative rooms from the playtesting, Aineroia's
-  Cottage, and Celestial Sanctum zones.
+  professions, achievements, prestige, inventory, equipment, spellbook, quests, combat
+  log, social boards, shop, bank, auction, stylist, housing, crafting, lottery, dice,
+  jukebox, puzzles, NPC dialogue, combat), all captured in real Academy service rooms.
 - **`screenshots/academy/`** — one capture per Auringold Academy room, named by room id.
 
 ## How it was captured
