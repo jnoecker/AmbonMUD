@@ -145,8 +145,8 @@ The painted login flow: name entry, returning-character picker, and the race and
 *Equipment*
 
 ### Trainer
-![Trainer — spending skill points on class abilities](screenshots/subsystems/31b-trainer-trained.jpg)
-*Trainer — spending skill points on class abilities*
+![Trainer](screenshots/subsystems/31-trainer.jpg)
+*The class trainer at the Library of Fairytales — spend skill points to learn abilities*
 
 ### Spellbook
 ![Spellbook — learned abilities with hotbar binding](screenshots/subsystems/13-spellbook-panel.jpg)
