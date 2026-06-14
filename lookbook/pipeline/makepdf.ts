@@ -81,7 +81,7 @@ for (const sec of sections) {
   // Insert the codex (classes → races → figures) just before the login/creation
   // section, so the world primer sits up front with the gameplay intro.
   if (sec.title === "Login &amp; Character Creation" || sec.title === "Login & Character Creation") {
-    for (const key of ["classes", "races", "chars"]) {
+    for (const key of ["classes", "races", "creatures", "chars"]) {
       for (const p of codexPages(codex[key])) pages.push(p);
     }
   }
