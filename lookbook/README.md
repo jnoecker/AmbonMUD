@@ -10,9 +10,8 @@ the Auringold Academy. Every screenshot is from the Auringold Academy zone.
 - **`lookbook.md`** — the prose source; image references point into `screenshots/`.
 - **`codex.json`** — the class/race/character codex data (titles, stats, summaries,
   portrait filenames), rendered directly into the PDF.
-- **`screenshots/portraits/`** — class, race, and character portraits. Class/race art
-  and four character portraits are the lore showcase images; the other nine characters
-  use their in-game sprite (their lore portraits are not yet published).
+- **`screenshots/portraits/`** — the lore showcase art for the six classes, nine races,
+  and all thirteen characters.
 - **`screenshots/subsystems/`** — login flow, world view, and every panel (character,
   professions, achievements, prestige, inventory, equipment, spellbook, quests, combat
   log, social boards, shop, bank, auction, stylist, housing, crafting, lottery, dice,
