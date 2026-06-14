@@ -219,8 +219,9 @@ The painted login flow: name entry, returning-character picker, and the race and
 ![Jukebox](screenshots/subsystems/38-jukebox.jpg)
 *The jukebox in the Parlor of Borrowed Songs — pay a few coins and your chosen track plays for everyone in the room*
 
-### Puzzle cabinet
-![Puzzle cabinet](screenshots/subsystems/43-puzzle.jpg)
+### Puzzle
+![Puzzle](screenshots/subsystems/43-puzzle.jpg)
+*A riddle from the Sphinx of Softwords in the Riddle Gallery — inscribe the answer to open the way*
 
 ## NPC Dialogue, Quests & Combat
 

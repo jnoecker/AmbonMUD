@@ -63,7 +63,6 @@
 "entry",
 "race_archae.jpg",
 "Archae",
-"STR +1 · DEX +1",
 "The first children of the Creator, adaptable and ambitious inheritors of divine legacy."
 ],
 [
@@ -75,7 +74,6 @@
 "entry",
 "race_lithae.jpg",
 "Lithae",
-"CON +1 · DEX -1",
 "Living beings of crystal and stone, their forms shimmering with the earth’s raw beauty."
 ],
 [
@@ -87,7 +85,6 @@
 "entry",
 "race_kitsarae.jpg",
 "Kitsarae",
-"INT +1 · DEX +1 · CHA +1 · STR -1",
 "Animal spirits who walk between animal and humanoid form, masters of deception and subtle enchantment."
 ]
 ],
@@ -101,42 +98,36 @@
 "entry",
 "race_lustriae.jpg",
 "Lustriae",
-"DEX +1 · CHA +1 · CON -1",
 "Eternally youthful fae and her firstborn, who perceive time as a living current and flit between moments with curious playfulness."
 ],
 [
 "entry",
 "race_aetherae.jpg",
 "Aetherae",
-"INT +1 · WIS +1 · DEX +1 · CON -3",
 "Beings of shadow and mist born from Aineroia’s own shadow — shapeshifters of the far north who tend the moonlight horses."
 ],
 [
 "entry",
 "race_pyrae.jpg",
 "Pyrae",
-"STR +1 · CON +1 · CHA +1",
 "Sons of the Phoenix, beings of living flame born from stories of rebirth and resurrection."
 ],
 [
 "entry",
 "race_ophirae.jpg",
 "Ophirae",
-"STR +1 · DEX +1 · CON +1",
 "Serpentine abyssal dragons who rule the cold northern waters from underwater cities built of leviathan bone."
 ],
 [
 "entry",
 "race_mycorae.jpg",
 "Mycorae",
-"WIS +1 · CON +1 · CHA -1",
 "Fungal people grown from living mycelium, embodying the natural cycle of decay and rebirth."
 ],
 [
 "entry",
 "race_aureliae.jpg",
 "Aureliae",
-"INT +1 · WIS +1 · DEX +1",
 "Bioluminescent beings of the deep ocean, drifting like living constellations through Ambon’s darkest waters."
 ]
 ]
