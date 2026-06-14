@@ -37,12 +37,26 @@ How it lays out:
 ## Stage 2 — capture the screenshots (`capture.ts` + `*.sh`)
 
 Only needed to *re-capture* `../screenshots/` (login flow, every panel, and one
-shot per Auringold Academy room). Requires a local server with the full world:
+shot per Auringold Academy room). Requires a local server with the full world
+**and the painted backgrounds from R2** — without them, art-forward panels (the
+chest/container modal, signs, levers, door heroes) fall back to the unskinned CSS
+and the screenshots look plain.
+
+1. **Assemble `AMBONMUD_DATA_DIR`** the way production does (see
+   `AmbonMUD/docs/DEPLOYMENT.md` § "Remote world & config overlay"): a directory
+   holding `application-local.yaml` (the lore config overlay), the zone YAMLs
+   under `world/`, `sprites.yaml`, and `achievements.yaml`. The overlay's
+   `ambonmud.globalAssets` map (e.g. `container_bg: <hash>.jpg`) is what points
+   the web client at the painted backdrops, which it fetches from R2 at runtime —
+   so the capture box needs outbound network to R2.
+2. **Boot the demo against it:**
 
 ```bash
-# in the AmbonMUD repo root, with the Ambon dataset assembled into AMBONMUD_DATA_DIR:
-./gradlew demo         # note the web port it prints (worktree-stable, e.g. 18543)
+# in the AmbonMUD repo root:
+AMBONMUD_DATA_DIR=/path/to/data ./gradlew demo   # note the web port it prints (e.g. 18543)
 ```
+
+Needs JDK 21 on PATH (the Gradle build won't start without a JVM).
 
 Then drive it. `capture.ts` takes a JSON step-script (`{login}`, `{goto}`,
 `{cmd}`, `{click}`, `{shot}`, `{sleep}`, …):
