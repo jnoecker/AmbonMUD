@@ -4,9 +4,15 @@ A visual tour of AmbonMUD: every major subsystem of the web client and all 128 r
 the Auringold Academy. Every screenshot is from the Auringold Academy zone.
 
 - **`lookbook.pdf`** — the assembled document: painted cover, a gameplay overview and
-  a one-page technical summary up front, then large subsystem captures, a handful of
-  featured Academy rooms, and a small grid of every Academy room.
-- **`lookbook.md`** — the source document; image references point into `screenshots/`.
+  a one-page technical summary, a codex of the six classes, nine peoples (grouped by
+  their maker), and the gods and figures of Ambon, then large subsystem captures, a
+  handful of featured Academy rooms, and a small grid of every Academy room.
+- **`lookbook.md`** — the prose source; image references point into `screenshots/`.
+- **`codex.json`** — the class/race/character codex data (titles, stats, summaries,
+  portrait filenames), rendered directly into the PDF.
+- **`screenshots/portraits/`** — class, race, and character portraits. Class/race art
+  and four character portraits are the lore showcase images; the other nine characters
+  use their in-game sprite (their lore portraits are not yet published).
 - **`screenshots/subsystems/`** — login flow, world view, and every panel (character,
   professions, achievements, prestige, inventory, equipment, spellbook, quests, combat
   log, social boards, shop, bank, auction, stylist, housing, crafting, lottery, dice,

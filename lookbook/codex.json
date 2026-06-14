@@ -1,0 +1,227 @@
+{
+"classes": {
+"title": "The Six Classes of Auringold",
+"lead": "The path a hero walks into the world. Each class favors a primary attribute and a way of facing trouble.",
+"pages": [
+[
+[
+"class_bulwark.jpg",
+"Bulwark",
+"Primary stat: Strength",
+"Immovable defender clad in heavy armor, holding the line against overwhelming odds."
+],
+[
+"class_arcanist.jpg",
+"Arcanist",
+"Primary stat: Intelligence",
+"Master of advanced spellcraft who bends illusion and reality through communion with the Arcanum."
+],
+[
+"class_veil.jpg",
+"Veil",
+"Primary stat: Dexterity",
+"Stealth assassins who strike from shadow and vanish before their enemies can react."
+],
+[
+"class_herald.jpg",
+"Herald",
+"Primary stat: Wisdom",
+"Divine conduit who channels patron power to heal wounds, restore strength, and kindle hope amid darkness."
+],
+[
+"class_scrollwright.jpg",
+"Scrollwright",
+"Primary stat: Intelligence",
+"Craftspeople who command enchanted clockwork constructs powered by captured starlight and celestial magic."
+],
+[
+"class_songweaver.jpg",
+"Songweaver",
+"Primary stat: Constitution",
+"Minstrels and bards who channel primal magic through melody, narrative, and performance, shaping reality itself."
+]
+]
+]
+},
+"races": {
+"title": "The Peoples of Ambon",
+"lead": "Nine peoples are born to adventurers, each shaped by a different hand at the world’s making.",
+"pages": [
+[
+[
+"origin",
+"The Children of Aineroia",
+"The goddess who rose from a mortal Archae healer; her line includes the moonlight horses, the Luneqrae."
+],
+[
+"entry",
+"race_lustriae.jpg",
+"Lustriae",
+"DEX +1 · CHA +1 · CON -1",
+"Eternally youthful fae and her firstborn, who perceive time as a living current and flit between moments with curious playfulness."
+],
+[
+"entry",
+"race_aetherae.jpg",
+"Aetherae",
+"INT +1 · WIS +1 · DEX +1 · CON -3",
+"Beings of shadow and mist born from Aineroia’s own shadow — shapeshifters of the far north who tend the moonlight horses."
+],
+[
+"entry",
+"race_pyrae.jpg",
+"Pyrae",
+"STR +1 · CON +1 · CHA +1",
+"Sons of the Phoenix, beings of living flame born from stories of rebirth and resurrection."
+],
+[
+"entry",
+"race_ophirae.jpg",
+"Ophirae",
+"STR +1 · DEX +1 · CON +1",
+"Serpentine abyssal dragons who rule the cold northern waters from underwater cities built of leviathan bone."
+],
+[
+"entry",
+"race_mycorae.jpg",
+"Mycorae",
+"WIS +1 · CON +1 · CHA -1",
+"Fungal people grown from living mycelium, embodying the natural cycle of decay and rebirth."
+],
+[
+"entry",
+"race_aureliae.jpg",
+"Aureliae",
+"INT +1 · WIS +1 · DEX +1",
+"Bioluminescent beings of the deep ocean, drifting like living constellations through Ambon’s darkest waters."
+]
+],
+[
+[
+"origin",
+"The Children of the Creator",
+"Shaped at the dawn of the world; their kin, the luminous Alorae, descended as his Divine Heralds."
+],
+[
+"entry",
+"race_archae.jpg",
+"Archae",
+"STR +1 · DEX +1",
+"The first children of the Creator, adaptable and ambitious inheritors of divine legacy."
+],
+[
+"origin",
+"Shaped by Kvarcgagap",
+"The primordial god of bedrock, gems, and the glitter beneath the ground."
+],
+[
+"entry",
+"race_lithae.jpg",
+"Lithae",
+"CON +1 · DEX -1",
+"Living beings of crystal and stone, their forms shimmering with the earth’s raw beauty."
+],
+[
+"origin",
+"Made by the Naraxian Akathavae",
+"Raised from animals who sought cultivation and enlightenment."
+],
+[
+"entry",
+"race_kitsarae.jpg",
+"Kitsarae",
+"INT +1 · DEX +1 · CHA +1 · STR -1",
+"Animal spirits who walk between animal and humanoid form, masters of deception and subtle enchantment."
+]
+]
+]
+},
+"chars": {
+"title": "Figures of Ambon",
+"lead": "Gods, makers, and rulers whose choices shaped the world the Academy now teaches.",
+"pages": [
+[
+[
+"entry",
+"char_aineroia.jpg",
+"Aineroia",
+"An Archae herbalist taken as bride by the tyrant Malkuth; when she found him draining the life of their children, she slew him with the obsidian dagger and ascended to godhood. The mother-goddess of many of Ambon’s peoples."
+],
+[
+"entry",
+"char_malkuth.jpg",
+"Malkuth",
+"A cruel battle-mage tyrant from beyond the veil who wed Aineroia only to secretly drain the power of their children. Slain by her hand, his death tore a caldera into the world."
+],
+[
+"entry",
+"char_krioshaeu.jpg",
+"Krioshaeu",
+"The kind face Aineroia gave to Death — a gentle woman who meets each soul and leads it onward, turning a formless terror into a comforting guide."
+],
+[
+"entry",
+"char_naraxian_akathavae.jpg",
+"Naraxian Akathavae",
+"Keeper of the divine history and one of the Old Gods, who arrived with the Creator as the Archivist that writes the Arcanum itself. A many-faced god of scholars, musicians, and stories who gave music to the Archae and made the Kitsarae."
+],
+[
+"entry",
+"char_kvarcgagap.jpg",
+"Kvarcgagap",
+"An ancient primordial being from beyond Ambon — god of bedrock, caverns, gems, and ore — who flows through solid stone as shimmering opal quicksilver. Shaper of the Lithae."
+],
+[
+"entry",
+"char_caemyr.jpg",
+"Caemyr",
+"A visiting scholar-god known in his own reality as the Founder, who first codified the threads of creation into Arcane magic. Mentor to King Ambuoroko and keeper of the Athenaeum Unbound."
+],
+[
+"entry",
+"char_verathaios.jpg",
+"Verathaios",
+"The World Healer, a gentle god of growth who arrived from beyond the veil after Aineroia’s ascension; his divinity is the quiet miracle of life taking root."
+]
+],
+[
+[
+"entry",
+"char_maelsang.jpg",
+"Maelsang",
+"A god of storms and seas from another world, heralded by lightning across cloudless skies and waves that sing with otherworldly voices."
+],
+[
+"entry",
+"char_ambuoroko.jpg",
+"Ambuoroko",
+"Ambuoroko Ambonien, an Aetherae Arcanist and King of Ambon — a brilliant, restless mind who rose amid the Age of Monsters under Caemyr’s tutelage."
+],
+[
+"entry",
+"char_elustriaine.jpg",
+"Elustriaine",
+"The Faerie Queen of the Lustriae, her crown woven of crystallized moments and captured dawns, bound to duties that stretch across the fabric of time."
+],
+[
+"entry",
+"char_tessikar.jpg",
+"Tessikar",
+"The Springwright, a clockwork artificer born beyond the veil who arrived through a temporal-mechanical gateway of his own making — patron of brass-and-starlight machinery."
+],
+[
+"entry",
+"char_astriel.jpg",
+"Astriel",
+"The Star Summoner, among the first Alorae who descended with the Creator as Divine Heralds — an enigmatic keeper of the fading celestial connection."
+],
+[
+"entry",
+"char_kirot_aethiryn.jpg",
+"Kirot Aethiryn",
+"An Alorae Divine Herald who turned from the light to dark necromancy; where Ambon’s necromancers work in clockwork and crystal, he walks a far darker path."
+]
+]
+]
+}
+}
