@@ -223,6 +223,10 @@ The painted login flow: name entry, returning-character picker, and the race and
 ![Puzzle](screenshots/subsystems/43-puzzle.jpg)
 *A riddle from the Sphinx of Softwords in the Riddle Gallery — inscribe the answer to open the way*
 
+### Treasure chest
+![Treasure chest](screenshots/subsystems/42-chest.jpg)
+*A painted container in Kvarcgagap's Vault — open the chest and take the loot inside*
+
 ## NPC Dialogue, Quests & Combat
 
 ### NPC dialogue
