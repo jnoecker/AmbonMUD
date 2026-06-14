@@ -5,36 +5,42 @@
 "pages": [
 [
 [
+"entry",
 "class_bulwark.jpg",
 "Bulwark",
 "Primary stat: Strength",
 "Immovable defender clad in heavy armor, holding the line against overwhelming odds."
 ],
 [
+"entry",
 "class_arcanist.jpg",
 "Arcanist",
 "Primary stat: Intelligence",
 "Master of advanced spellcraft who bends illusion and reality through communion with the Arcanum."
 ],
 [
+"entry",
 "class_veil.jpg",
 "Veil",
 "Primary stat: Dexterity",
 "Stealth assassins who strike from shadow and vanish before their enemies can react."
 ],
 [
+"entry",
 "class_herald.jpg",
 "Herald",
 "Primary stat: Wisdom",
 "Divine conduit who channels patron power to heal wounds, restore strength, and kindle hope amid darkness."
 ],
 [
+"entry",
 "class_scrollwright.jpg",
 "Scrollwright",
 "Primary stat: Intelligence",
 "Craftspeople who command enchanted clockwork constructs powered by captured starlight and celestial magic."
 ],
 [
+"entry",
 "class_songweaver.jpg",
 "Songweaver",
 "Primary stat: Constitution",
@@ -47,6 +53,44 @@
 "title": "The Peoples of Ambon",
 "lead": "Nine peoples are born to adventurers, each shaped by a different hand at the world’s making.",
 "pages": [
+[
+[
+"origin",
+"The Children of the Creator",
+"Shaped at the dawn of the world; their kin, the luminous Alorae, descended as his Divine Heralds."
+],
+[
+"entry",
+"race_archae.jpg",
+"Archae",
+"STR +1 · DEX +1",
+"The first children of the Creator, adaptable and ambitious inheritors of divine legacy."
+],
+[
+"origin",
+"Shaped by Kvarcgagap",
+"The primordial god of bedrock, gems, and the glitter beneath the ground."
+],
+[
+"entry",
+"race_lithae.jpg",
+"Lithae",
+"CON +1 · DEX -1",
+"Living beings of crystal and stone, their forms shimmering with the earth’s raw beauty."
+],
+[
+"origin",
+"Made by the Naraxian Akathavae",
+"Raised from animals who sought cultivation and enlightenment."
+],
+[
+"entry",
+"race_kitsarae.jpg",
+"Kitsarae",
+"INT +1 · DEX +1 · CHA +1 · STR -1",
+"Animal spirits who walk between animal and humanoid form, masters of deception and subtle enchantment."
+]
+],
 [
 [
 "origin",
@@ -94,44 +138,6 @@
 "Aureliae",
 "INT +1 · WIS +1 · DEX +1",
 "Bioluminescent beings of the deep ocean, drifting like living constellations through Ambon’s darkest waters."
-]
-],
-[
-[
-"origin",
-"The Children of the Creator",
-"Shaped at the dawn of the world; their kin, the luminous Alorae, descended as his Divine Heralds."
-],
-[
-"entry",
-"race_archae.jpg",
-"Archae",
-"STR +1 · DEX +1",
-"The first children of the Creator, adaptable and ambitious inheritors of divine legacy."
-],
-[
-"origin",
-"Shaped by Kvarcgagap",
-"The primordial god of bedrock, gems, and the glitter beneath the ground."
-],
-[
-"entry",
-"race_lithae.jpg",
-"Lithae",
-"CON +1 · DEX -1",
-"Living beings of crystal and stone, their forms shimmering with the earth’s raw beauty."
-],
-[
-"origin",
-"Made by the Naraxian Akathavae",
-"Raised from animals who sought cultivation and enlightenment."
-],
-[
-"entry",
-"race_kitsarae.jpg",
-"Kitsarae",
-"INT +1 · DEX +1 · CHA +1 · STR -1",
-"Animal spirits who walk between animal and humanoid form, masters of deception and subtle enchantment."
 ]
 ]
 ]
