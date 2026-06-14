@@ -129,7 +129,7 @@
 },
 "creatures": {
 "title": "Creatures of Ambon",
-"lead": "Beings that share the world beyond the nine playable peoples.",
+"lead": "More of the peoples and creatures of Ambon, beyond the playable nine.",
 "pages": [
 [
 [
@@ -137,6 +137,12 @@
 "creature_malukae.jpg",
 "Malukae",
 "Ambon's trolls, fashioned from the cooling malice of Malkuth's heart — stone-skinned and cold-blooded, walled onto a sun-baked peninsula and slowly dwindling. The one people no adventurer can play."
+],
+[
+"entry",
+"creature_sylflorae.jpg",
+"Sylflorae",
+"A people accidentally sown when the fading Alorae spent their light growing crops. Driven underground in the Kirot War, they thrive in cavern gardens lit by Astriel — an angel turned god turned crystal."
 ],
 [
 "entry",
@@ -149,6 +155,12 @@
 "creature_luneqrae.jpg",
 "Luneqrae",
 "Moonlight horses descended from Aineroia's youngest child, bound to run on moonlight across the northern plains in the care of the Aetherae."
+],
+[
+"entry",
+"creature_alorae.jpg",
+"Alorae",
+"The luminous Divine Heralds who descended with the Creator. Their angelic power all but spent, they endure as a scattered remnant, giving the last of their light to any who need it."
 ]
 ]
 ]
