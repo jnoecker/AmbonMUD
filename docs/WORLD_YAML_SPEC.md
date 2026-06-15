@@ -83,6 +83,7 @@ video: <string, optional - relative path under /videos/, shown as clickable cine
 music: <string, optional - overrides zone audio.music>
 ambient: <string, optional - overrides zone audio.ambient>
 jukebox: <list of song objects, optional - see `jukebox` notes>
+musicBox: <single song object, optional - see `musicBox` notes>
 ```
 
 `bank` notes:
@@ -118,6 +119,23 @@ jukebox: <list of song objects, optional - see `jukebox` notes>
         - "She chased a rat across the floor"
   ```
 - Text-only flavour (players without audio): the `description` is broadcast to the room when the song starts, each `lyrics` line is broadcast as `♪ line ♪` spread evenly across `durationSeconds` (it need not match the actual sung pacing), and the room is told when the song ends. Lyrics are capped at one line per 3 seconds of duration; lines must be non-blank.
+
+`musicBox` notes:
+- A `musicBox` block turns this room into a music box: a one-song miniature of the jukebox (a miniaturization of Tessikar's musical device). Unlike the room-wide, paid jukebox, the music box is **free** and **player-scoped** — winding it up starts the song for *you* only, and it follows you out of the room until it ends or you stop it.
+- Commands: `musicbox` / `mb` opens the device (shows the song + lyrics); `musicbox play` / `mb play` winds it up; `musicbox stop` / `mb stop` closes it. Shows a Music Box kiosk badge + device panel on the web client; the badge stays in the rail wherever the player goes while their song is still playing.
+- The song object mirrors a jukebox song minus `cost` (it is always free):
+  ```yaml
+  musicBox:
+    title: "Tessikar of Kaerinlith"      # required
+    file: musicbox/lullaby.mp3           # required - resolved under the zone audio base, like `music`
+    durationSeconds: 243                 # required, > 0 - the play length
+    artist: "TRADITIONAL"                # optional
+    description: "A palm-sized walnut-and-brass music box on the desk."  # optional lore flavour
+    lyrics:                              # optional - shown on the device, spread over the duration
+      - "Born beyond the veil"
+      - "Where brass sang slow"
+  ```
+- Lyric timing is computed on the client from the song's start, `durationSeconds`, and line count (lines spread evenly; pacing need not match the sung pacing). On the open device the current line is lit and scrolls; while the device is closed each line pops as a brief 🎵 toast so an exploring player can keep up. The personal song plays over the room's jukebox/default music for the player who started it. Lyrics are capped at one line per 3 seconds of duration; lines must be non-blank.
 
 `dungeon` notes:
 - When `true`, shows a Dungeon badge on the web client canvas that opens the dungeon kiosk panel.

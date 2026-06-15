@@ -47,8 +47,8 @@ import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.JukeboxHandler
 import dev.ambon.engine.commands.handlers.LeaderboardHandler
 import dev.ambon.engine.commands.handlers.LotteryHandler
-import dev.ambon.engine.commands.handlers.MusicBoxHandler
 import dev.ambon.engine.commands.handlers.MailHandler
+import dev.ambon.engine.commands.handlers.MusicBoxHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.PrestigeHandler
