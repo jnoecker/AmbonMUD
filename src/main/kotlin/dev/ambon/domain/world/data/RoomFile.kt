@@ -41,6 +41,8 @@ data class RoomFile(
     val ambient: String? = null,
     /** Jukebox playlist for this room. Non-empty enables the jukebox command + badge. */
     val jukebox: List<JukeboxSongFile> = emptyList(),
+    /** A single-song music box for this room. Present enables the music-box device + badge. */
+    val musicBox: MusicBoxFile? = null,
     /** Terrain type for this room (overrides zone default). Affects weather display and default background. */
     val terrain: String? = null,
 )
@@ -59,6 +61,23 @@ data class JukeboxSongFile(
     val file: String,
     val durationSeconds: Int,
     val cost: Long? = null,
+    val artist: String? = null,
+    val description: String? = null,
+    val lyrics: List<String> = emptyList(),
+)
+
+/**
+ * A room's one-song music box. [file] is an audio filename resolved against the
+ * zone audio base (like room `music`). [durationSeconds] is the play length.
+ * Playing it is free and player-scoped — the song follows the player out of the
+ * room. [lyrics] lines are surfaced on the player's device, spread evenly across
+ * the duration, so the count must leave at least a few seconds between lines
+ * (validated at load). [artist]/[description] are optional flavour.
+ */
+data class MusicBoxFile(
+    val title: String,
+    val file: String,
+    val durationSeconds: Int,
     val artist: String? = null,
     val description: String? = null,
     val lyrics: List<String> = emptyList(),

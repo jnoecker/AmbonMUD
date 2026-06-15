@@ -41,6 +41,7 @@ import dev.ambon.domain.world.AchievementGate
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.JukeboxSong
+import dev.ambon.domain.world.MusicBox
 import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.MobDrop
@@ -59,6 +60,7 @@ import dev.ambon.domain.world.data.ExitValue
 import dev.ambon.domain.world.data.ExitValueDeserializer
 import dev.ambon.domain.world.data.FeatureFile
 import dev.ambon.domain.world.data.JukeboxSongFile
+import dev.ambon.domain.world.data.MusicBoxFile
 import dev.ambon.domain.world.data.MobFile
 import dev.ambon.domain.world.data.MobSpawnFile
 import dev.ambon.domain.world.data.ReputationRequirementFile
@@ -260,6 +262,7 @@ object WorldLoader {
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
                         ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "$audioBase$it" },
                         jukebox = parseJukebox(rf.jukebox, audioBase, id),
+                        musicBox = parseMusicBox(rf.musicBox, audioBase, id),
                         graphical = zoneGraphical,
                         terrain = (rf.terrain ?: zoneTerrain ?: "outside").also {
                             validateTerrain(it, "room '${id.value}'")
@@ -1798,6 +1801,41 @@ object WorldLoader {
                 lyrics = song.lyrics,
             )
         }
+
+    private fun parseMusicBox(
+        box: MusicBoxFile?,
+        audioBase: String,
+        roomId: RoomId,
+    ): MusicBox? {
+        if (box == null) return null
+        val where = "room '${roomId.value}' music box"
+        if (box.title.isBlank()) throw WorldLoadException("$where has a blank title")
+        if (box.file.isBlank()) throw WorldLoadException("$where ('${box.title}') has a blank file")
+        if (box.durationSeconds <= 0) {
+            throw WorldLoadException(
+                "$where ('${box.title}') has durationSeconds=${box.durationSeconds}; must be > 0",
+            )
+        }
+        if (box.lyrics.any { it.isBlank() }) {
+            throw WorldLoadException("$where ('${box.title}') has a blank lyrics line")
+        }
+        val maxLyricLines = box.durationSeconds / MIN_SECONDS_PER_LYRIC_LINE
+        if (box.lyrics.size > maxLyricLines) {
+            throw WorldLoadException(
+                "$where ('${box.title}') has ${box.lyrics.size} lyrics lines; " +
+                    "max is $maxLyricLines for durationSeconds=${box.durationSeconds} " +
+                    "(${MIN_SECONDS_PER_LYRIC_LINE}s per line)",
+            )
+        }
+        return MusicBox(
+            title = box.title,
+            url = "$audioBase${box.file}",
+            durationSeconds = box.durationSeconds,
+            artist = box.artist,
+            description = box.description,
+            lyrics = box.lyrics,
+        )
+    }
 
     private fun parseSpawnCondition(
         file: dev.ambon.domain.world.data.SpawnConditionFile?,

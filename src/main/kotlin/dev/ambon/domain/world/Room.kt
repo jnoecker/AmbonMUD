@@ -47,6 +47,8 @@ data class Room(
     val ambient: String? = null,
     /** Jukebox playlist for this room. Non-empty enables the jukebox command + badge. */
     val jukebox: List<JukeboxSong> = emptyList(),
+    /** A single-song music box for this room, or null. Present enables the music-box device + badge. */
+    val musicBox: MusicBox? = null,
     /** Precomputed minimap X coordinate (assigned by WorldLoader BFS). */
     val mapX: Int = 0,
     /** Precomputed minimap Y coordinate (assigned by WorldLoader BFS). */
