@@ -28225,3 +28225,272 @@ html:has(.game-shell),
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ============================================================
+   Music box — the one-song miniature of the jukebox. The drawer
+   sheet paints the device art (`musicbox_bg`, 4:5 portrait) and
+   the panel seats its title / scrolling-lyric parchment / crank
+   controls over the painted zones. Without art it falls back to
+   a clean flow layout. Closed-device 🎵 lyric toasts live at the
+   bottom of this section.
+   ============================================================ */
+.musicbox-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.musicbox-title {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.musicbox-title-artist { color: var(--text-secondary); font-weight: 500; }
+
+.musicbox-parchment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 9.5em;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-chip);
+  border: 1px solid var(--glass-edge);
+}
+
+.musicbox-no-lyrics {
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Viewport masks the scrolling list to ~5 lines, the current line centered. */
+.musicbox-lyrics-viewport {
+  position: relative;
+  width: 100%;
+  height: 10.5em;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+}
+
+.musicbox-lyrics {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+  transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.musicbox-lyric {
+  height: 2.1em;
+  line-height: 2.1em;
+  font-size: 0.96rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.4s ease, opacity 0.4s ease, transform 0.4s ease;
+}
+
+.musicbox-lyric.is-past { color: var(--text-secondary); opacity: 0.45; }
+.musicbox-lyric.is-future { color: var(--text-secondary); opacity: 0.6; }
+.musicbox-lyric.is-current {
+  color: var(--text-primary);
+  opacity: 1;
+  font-weight: 700;
+  transform: scale(1.06);
+}
+
+.musicbox-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.musicbox-btn {
+  padding: 0.5em 1.4em;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-edge);
+  background: var(--surface-chip);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.musicbox-btn:hover:not(:disabled) { background: var(--surface-raised); }
+.musicbox-btn:disabled { opacity: 0.45; cursor: default; }
+.musicbox-btn-play { color: #8fd6a0; }
+.musicbox-btn-stop { color: #e0a3a3; }
+
+.musicbox-remaining {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.musicbox-remaining-idle { opacity: 0.7; }
+
+.musicbox-feedback { text-align: center; font-size: 0.85rem; }
+.musicbox-feedback-error { color: #e0a3a3; }
+.musicbox-feedback-success { color: #8fd6a0; }
+
+/* Painted device frame — seat the panel over `musicbox_bg`. The art is 4:5
+   portrait, so we constrain by height and place zones by percentage. */
+@media (min-width: 768px) {
+  .drawer-sheet.drawer-sheet-musicbox {
+    width: auto;
+    height: min(94vh, 118vw);
+    max-height: 94vh;
+    aspect-ratio: 4 / 5;
+    background-image:
+      var(--skin-bg, none),
+      radial-gradient(ellipse at 50% 34%, rgb(48 32 22 / 97%), rgb(16 11 24 / 98%));
+    background-size: 100% 100%, auto;
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
+  }
+
+  .drawer-sheet-musicbox .drawer-title { display: none; }
+  .drawer-sheet-musicbox .drawer-handle-zone { display: none; }
+
+  .drawer-sheet-musicbox .drawer-header {
+    position: absolute;
+    top: 1.6%;
+    right: 2%;
+    left: auto;
+    z-index: 6;
+    padding: 0;
+    min-height: 0;
+    border-bottom: none;
+  }
+
+  .drawer-sheet-musicbox .drawer-close {
+    width: clamp(30px, 3.4vw, 46px);
+    height: clamp(30px, 3.4vw, 46px);
+    border-color: transparent;
+    background: transparent;
+    color: rgb(244 230 200 / 70%);
+  }
+  .drawer-sheet-musicbox .drawer-close:hover,
+  .drawer-sheet-musicbox .drawer-close:focus-visible {
+    color: #f8ecd2;
+    background: rgb(120 84 30 / 30%);
+  }
+
+  .drawer-sheet-musicbox .drawer-body {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .musicbox-panel-skinned {
+    position: absolute;
+    inset: 0;
+    display: block;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    font-family: var(--font-display);
+    --mb-ink: #2c2110;
+    --mb-ink-strong: #4a2f12;
+    --mb-ink-soft: rgb(56 40 18 / 92%);
+    --mb-ink-accent: #6e3a1c;
+  }
+
+  /* Title parchment cartouche near the top of the box. */
+  .musicbox-panel-skinned .musicbox-title {
+    position: absolute;
+    inset: 11.5% 31% 81% 31%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--mb-ink-strong);
+    font-size: clamp(0.7rem, 1.7vw, 1.05rem);
+    white-space: nowrap;
+  }
+  .musicbox-panel-skinned .musicbox-title-artist { color: var(--mb-ink-soft); }
+
+  /* Central parchment — the big paper panel between the corner figurines. */
+  .musicbox-panel-skinned .musicbox-parchment {
+    position: absolute;
+    inset: 37% 31% 21% 31%;
+    min-height: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    color: var(--mb-ink);
+  }
+  .musicbox-panel-skinned .musicbox-no-lyrics { color: var(--mb-ink-soft); }
+  .musicbox-panel-skinned .musicbox-lyrics-viewport { height: 100%; }
+  .musicbox-panel-skinned .musicbox-lyric { color: var(--mb-ink-soft); }
+  .musicbox-panel-skinned .musicbox-lyric.is-past { color: var(--mb-ink-soft); opacity: 0.4; }
+  .musicbox-panel-skinned .musicbox-lyric.is-future { color: var(--mb-ink-soft); opacity: 0.55; }
+  .musicbox-panel-skinned .musicbox-lyric.is-current { color: var(--mb-ink-strong); opacity: 1; }
+
+  /* Play / stop crank + countdown seated on the base plaque. */
+  .musicbox-panel-skinned .musicbox-controls {
+    position: absolute;
+    inset: 84% 24% 6.5% 24%;
+  }
+  .musicbox-panel-skinned .musicbox-feedback {
+    position: absolute;
+    inset: 78% 14% 18% 14%;
+    margin: 0;
+  }
+}
+
+/* Closed-device floating lyric toasts — bottom-center, stacked, fading. */
+.musicbox-toasts {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(80px, 14vh, 160px);
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+.musicbox-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  max-width: min(78vw, 460px);
+  padding: 0.4em 1em;
+  border-radius: 999px;
+  background: rgb(28 18 36 / 88%);
+  border: 1px solid rgb(199 160 221 / 35%);
+  color: #f3e8d2;
+  font-family: var(--font-display);
+  font-size: 0.94rem;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 35%);
+  animation: musicbox-toast-in 0.32s ease;
+}
+
+.musicbox-toast-note { color: #c7a0dd; }
+.musicbox-toast-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes musicbox-toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

@@ -58,6 +58,12 @@ export interface GameStateSnapshot {
   zoneEnvironment: ZoneEnvironment | null;
   /** Player + pet skills indexed by id for fast per-ability visual lookup. */
   skillsById: Map<string, SkillSummary>;
+  /**
+   * True while this player has a music-box song playing. Player-scoped and
+   * room-independent — keeps the kiosk badge in the rail as the song follows
+   * them out of the room it started in.
+   */
+  musicBoxPlaying: boolean;
 }
 
 export interface PendingCast {
@@ -82,6 +88,7 @@ export const canvasCallbacks: {
   openLottery: (() => void) | null;
   openDice: (() => void) | null;
   openJukebox: (() => void) | null;
+  openMusicBox: (() => void) | null;
   openHousing: (() => void) | null;
   openInn: (() => void) | null;
   openMail: (() => void) | null;
@@ -127,6 +134,7 @@ export const canvasCallbacks: {
   openLottery: null,
   openDice: null,
   openJukebox: null,
+  openMusicBox: null,
   openHousing: null,
   openInn: null,
   openMail: null,
@@ -180,5 +188,6 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     worldWeather: null,
     zoneEnvironment: null,
     skillsById: new Map(),
+    musicBoxPlaying: false,
   },
 };

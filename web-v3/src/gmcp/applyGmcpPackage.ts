@@ -101,6 +101,7 @@ import type {
   DiceRoll,
   JukeboxState,
   JukeboxSong,
+  MusicBoxState,
   GuildHallInfo,
   GuildHallRoom,
   DuelState,
@@ -236,6 +237,7 @@ interface GmcpContext {
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
   setDiceResult: Dispatch<SetStateAction<DiceGambleResult | null>>;
   setJukebox: Dispatch<SetStateAction<JukeboxState | null>>;
+  setMusicBox: Dispatch<SetStateAction<MusicBoxState | null>>;
   setGuildHall: Dispatch<SetStateAction<GuildHallInfo | null>>;
   setDuelState: Dispatch<SetStateAction<DuelState | null>>;
   setDuelChallenge: Dispatch<SetStateAction<DuelChallenge | null>>;
@@ -445,6 +447,7 @@ export function applyGmcpPackage(
       const housingBroker = packet.housingBroker === true;
       const inn = packet.inn === true;
       const jukebox = packet.jukebox === true;
+      const musicBox = packet.musicBox === true;
       const canDepart = packet.canDepart === true;
       const rawPeek = Array.isArray(packet.peek) ? packet.peek : [];
       const peek = rawPeek
@@ -466,7 +469,7 @@ export function applyGmcpPackage(
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, jukebox, canDepart, peek };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, jukebox, musicBox, canDepart, peek };
       });
 
       if (id) {
@@ -2493,6 +2496,41 @@ export function applyGmcpPackage(
             }
           : null;
       ctx.setJukebox({ songs, nowPlaying, queued });
+      break;
+    }
+
+    case "MusicBox.Info": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const toLyrics = (v: unknown): string[] =>
+        Array.isArray(v) ? (v as unknown[]).filter((l): l is string => typeof l === "string") : [];
+      const b = packet.box as Partial<Record<string, unknown>> | null | undefined;
+      const box =
+        b && typeof b.title === "string"
+          ? {
+              title: b.title,
+              artist: typeof b.artist === "string" ? b.artist : null,
+              description: typeof b.description === "string" ? b.description : null,
+              durationSeconds: safeNumber(b.durationSeconds, 0),
+              lyrics: toLyrics(b.lyrics),
+            }
+          : null;
+      const np = packet.nowPlaying as Partial<Record<string, unknown>> | null | undefined;
+      const nowPlaying =
+        np && typeof np.url === "string"
+          ? {
+              title: typeof np.title === "string" ? np.title : "",
+              artist: typeof np.artist === "string" ? np.artist : null,
+              description: typeof np.description === "string" ? np.description : null,
+              url: np.url,
+              startedAtMs: safeNumber(np.startedAtMs, 0),
+              durationSeconds: safeNumber(np.durationSeconds, 0),
+              secondsRemaining: safeNumber(np.secondsRemaining, 0),
+              lyrics: toLyrics(np.lyrics),
+              roomId: typeof np.roomId === "string" ? np.roomId : null,
+              receivedAt: Date.now(),
+            }
+          : null;
+      ctx.setMusicBox({ box, nowPlaying });
       break;
     }
 

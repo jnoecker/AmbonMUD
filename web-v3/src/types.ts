@@ -1,4 +1,4 @@
-export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "puzzle" | "features" | "combatlog" | "inn" | null;
+export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -261,6 +261,8 @@ export interface RoomState {
   inn?: boolean;
   /** True when this room has a jukebox playlist (drives the in-world badge + panel). */
   jukebox?: boolean;
+  /** True when this room has a music box (drives the in-world kiosk badge + device). */
+  musicBox?: boolean;
   /** True when this is the death sanctum and the player has somewhere to depart back to. */
   canDepart?: boolean;
   /** Auto-peek entries: open exits paired with destination room titles. Empty when autopeek is off. */
@@ -1329,6 +1331,46 @@ export interface JukeboxState {
   nowPlaying: JukeboxNowPlaying | null;
   /** Null when the single next-up queue slot is free. */
   queued: JukeboxQueued | null;
+}
+
+/** The single song offered by the music box in the player's current room (MusicBox.Info.box). */
+export interface MusicBoxSong {
+  title: string;
+  artist: string | null;
+  description: string | null;
+  durationSeconds: number;
+  /** Lyric lines; the client spreads them evenly across durationSeconds. */
+  lyrics: string[];
+}
+
+/**
+ * The song this player currently has playing (MusicBox.Info.nowPlaying). Player-
+ * scoped: it follows them between rooms until it ends or they stop it. Lyric timing
+ * is computed locally from startedAtMs + durationSeconds + lyrics.
+ */
+export interface MusicBoxNowPlaying {
+  title: string;
+  artist: string | null;
+  description: string | null;
+  /** Audio URL the client plays over the room's default music. */
+  url: string;
+  /** Epoch millis the song started — the clock anchor for lyric timing. */
+  startedAtMs: number;
+  durationSeconds: number;
+  secondsRemaining: number;
+  lyrics: string[];
+  /** The room the song was started from. */
+  roomId: string | null;
+  /** Client clock (ms) when this packet arrived. */
+  receivedAt: number;
+}
+
+/** Player music-box state from the MusicBox.Info GMCP package. */
+export interface MusicBoxState {
+  /** The box in the player's current room, or null if none here. */
+  box: MusicBoxSong | null;
+  /** The song the player has playing (follows them), or null. */
+  nowPlaying: MusicBoxNowPlaying | null;
 }
 
 export interface GuildHallRoom {
