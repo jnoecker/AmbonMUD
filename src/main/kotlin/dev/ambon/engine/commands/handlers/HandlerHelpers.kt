@@ -216,6 +216,7 @@ internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     emitPuzzleGmcp(sessionId)
     emitStylistGmcp(sessionId)
     emitJukeboxGmcp(sessionId)
+    emitMusicBoxGmcp(sessionId)
 }
 
 /** Emits `Puzzle.List` with the puzzles in the player's current room, or `Puzzle.Close` otherwise. */
@@ -313,6 +314,26 @@ internal suspend fun EngineContext.emitJukeboxGmcp(sessionId: SessionId) {
     emitter.sendJukeboxInfo(
         sessionId,
         emitter.buildJukeboxInfo(room.jukebox, nowPlaying, remaining, queued = system.queuedSong(room.id)),
+    )
+}
+
+/**
+ * Emits `MusicBox.Info` for the player: the music box in their current room (if
+ * any) plus whatever song they personally have playing right now (which follows
+ * them between rooms — see [dev.ambon.engine.MusicBoxSystem]). Sent on every room
+ * look/entry; the client shows the kiosk when either side is present and clears it
+ * when both are absent.
+ */
+internal suspend fun EngineContext.emitMusicBoxGmcp(sessionId: SessionId) {
+    val emitter = gmcpEmitter ?: return
+    val system = musicBoxSystem ?: return
+    val me = players.get(sessionId) ?: return
+    val room = world.rooms[me.roomId] ?: return
+    val nowPlaying = system.nowPlaying(me.name)
+    val remaining = nowPlaying?.let { system.secondsRemaining(it) } ?: 0
+    emitter.sendMusicBoxInfo(
+        sessionId,
+        emitter.buildMusicBoxInfo(room.musicBox, nowPlaying, remaining),
     )
 }
 

@@ -1,0 +1,17 @@
+zone: bad_musicbox_too_many_lyrics
+startRoom: parlor
+
+rooms:
+  parlor:
+    title: "The Quiet Parlor"
+    description: "A snug parlor with a little music box on the mantel."
+    musicBox:
+      title: "Scuttlefish's Lullaby"
+      file: musicbox/lullaby.mp3
+      durationSeconds: 9
+      lyrics:
+        - "one"
+        - "two"
+        - "three"
+        - "four"
+    exits: {}

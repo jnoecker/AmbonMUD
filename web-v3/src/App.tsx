@@ -42,6 +42,7 @@ const DungeonPanel = lazy(() => import("./components/panels/DungeonPanel").then(
 const LotteryPanel = lazy(() => import("./components/panels/LotteryPanel").then((m) => ({ default: m.LotteryPanel })));
 const DicePanel = lazy(() => import("./components/panels/DicePanel").then((m) => ({ default: m.DicePanel })));
 const JukeboxPanel = lazy(() => import("./components/panels/JukeboxPanel").then((m) => ({ default: m.JukeboxPanel })));
+const MusicBoxPanel = lazy(() => import("./components/panels/MusicBoxPanel").then((m) => ({ default: m.MusicBoxPanel })));
 const AdminPanel = lazy(() => import("./components/panels/AdminPanel").then((m) => ({ default: m.AdminPanel })));
 const CombatLogPanel = lazy(() => import("./components/panels/CombatLogPanel").then((m) => ({ default: m.CombatLogPanel })));
 import { HelpContent } from "./components/HelpContent";
@@ -52,6 +53,7 @@ import { LevelUpBanner } from "./components/LevelUpBanner";
 import { QuestCompleteToast } from "./components/QuestCompleteToast";
 import { CombatVictoryToast } from "./components/CombatVictoryToast";
 import { FleeToast } from "./components/FleeToast";
+import { MusicBoxLyricToasts } from "./components/MusicBoxLyricToasts";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
 import { CommandPalette } from "./components/CommandPalette";
@@ -474,6 +476,7 @@ function App() {
       skillsById: new Map(
         [...state.skills, ...state.petSkills].map((s) => [s.id, s]),
       ),
+      musicBoxPlaying: state.musicBox?.nowPlaying != null,
     };
   });
 
@@ -524,6 +527,7 @@ function App() {
     canvasCallbacks.openLottery = () => openPanel("lottery");
     canvasCallbacks.openDice = () => openPanel("dice");
     canvasCallbacks.openJukebox = () => openPanel("jukebox");
+    canvasCallbacks.openMusicBox = () => openPanel("musicbox");
     canvasCallbacks.openHousing = () => openPanel("housing");
     canvasCallbacks.openInn = () => setShowInn(true);
     canvasCallbacks.openAdminPanel = () => setShowAdminPanel(true);
@@ -585,6 +589,7 @@ function App() {
       canvasCallbacks.openDungeon = null;
       canvasCallbacks.openLottery = null;
       canvasCallbacks.openJukebox = null;
+      canvasCallbacks.openMusicBox = null;
       canvasCallbacks.openHousing = null;
       canvasCallbacks.openInn = null;
       canvasCallbacks.openAdminPanel = null;
@@ -681,10 +686,22 @@ function App() {
   const jukeboxStartedAtMs = jukeboxNow && jukeboxDuration > 0
     ? jukeboxNow.receivedAt - Math.max(0, jukeboxDuration - jukeboxNow.secondsRemaining) * 1000
     : null;
-  // Deps stay URL-keyed on purpose: Jukebox.Info re-emissions for the same
-  // playing song refresh the anchor by a rounding second or two, and reseeking
-  // an already-synced track for that would be an audible glitch.
-  useEffect(() => { audio.playMusic(jukeboxMusic ?? state.room.music ?? null, jukeboxMusic ? jukeboxStartedAtMs : null); }, [jukeboxMusic, state.room.music]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The music box is personal: a song you wound up plays over even the room's
+  // jukebox track, for you only, and follows you between rooms. Same client-anchor
+  // trick as the jukebox so the audio lines up with the on-device lyric scroll.
+  const musicBoxNow = state.musicBox?.nowPlaying ?? null;
+  const musicBoxMusic = musicBoxNow?.url ?? null;
+  const musicBoxStartedAtMs = musicBoxNow && musicBoxNow.durationSeconds > 0
+    ? musicBoxNow.receivedAt - Math.max(0, musicBoxNow.durationSeconds - musicBoxNow.secondsRemaining) * 1000
+    : null;
+  // Deps stay URL-keyed on purpose: Jukebox.Info / MusicBox.Info re-emissions for
+  // the same playing song refresh the anchor by a rounding second or two, and
+  // reseeking an already-synced track for that would be an audible glitch.
+  useEffect(() => {
+    const overrideUrl = musicBoxMusic ?? jukeboxMusic;
+    const overrideAnchor = musicBoxMusic ? musicBoxStartedAtMs : jukeboxMusic ? jukeboxStartedAtMs : null;
+    audio.playMusic(overrideUrl ?? state.room.music ?? null, overrideUrl ? overrideAnchor : null);
+  }, [musicBoxMusic, jukeboxMusic, state.room.music]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { audio.playAmbient(state.room.ambient ?? null); }, [state.room.ambient]); // eslint-disable-line react-hooks/exhaustive-deps
   // Dialogue voice-over: play the current node's clip when it changes (a new node
   // supersedes the previous one via playVoice's internal stop).
@@ -1035,6 +1052,7 @@ function App() {
       case "lottery": return "Lottery";
       case "dice": return "Dice Table";
       case "jukebox": return "Jukebox";
+      case "musicbox": return "Music Box";
       case "combatlog": return "Battle Journal";
       case "arcanum": return "The Arcanum";
       case "help": return "Command Reference";
@@ -1128,6 +1146,8 @@ function App() {
             ? "dicetable"
             : drawerPanel === "jukebox"
             ? "jukebox"
+            : drawerPanel === "musicbox"
+            ? "musicbox"
             : drawerPanel === "auction"
             ? "auctionhouse"
             : drawerPanel === "crafting"
@@ -1184,6 +1204,8 @@ function App() {
             ? state.serverAssets["dice_bg"]
             : drawerPanel === "jukebox"
             ? state.serverAssets["jukebox_bg"]
+            : drawerPanel === "musicbox"
+            ? state.serverAssets["musicbox_bg"]
             : drawerPanel === "auction"
             ? state.serverAssets["auction_bg"]
             : drawerPanel === "crafting"
@@ -1223,9 +1245,11 @@ function App() {
             ? state.serverAssets["dice_bg_portrait"]
             : drawerPanel === "jukebox"
             ? state.serverAssets["jukebox_bg_portrait"]
+            : drawerPanel === "musicbox"
+            ? state.serverAssets["musicbox_bg_portrait"]
             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "musicbox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
       >
         {/* Panels are lazy chunks; the drawer chrome shows while one loads. */}
         <Suspense fallback={null}>
@@ -1612,6 +1636,15 @@ function App() {
             jukebox={state.jukebox}
             gold={state.vitals.gold}
             selfName={state.character.name}
+            uiFeedbackFeed={state.uiFeedbackFeed}
+            assets={state.serverAssets}
+            onCommand={sendCommand}
+          />
+        )}
+
+        {drawerPanel === "musicbox" && (
+          <MusicBoxPanel
+            musicBox={state.musicBox}
             uiFeedbackFeed={state.uiFeedbackFeed}
             assets={state.serverAssets}
             onCommand={sendCommand}
@@ -2315,6 +2348,8 @@ function App() {
           state.setFleeNotifications((prev) => prev.filter((n) => n.id !== id))
         }
       />
+
+      <MusicBoxLyricToasts musicBox={state.musicBox} suppressed={drawerPanel === "musicbox"} />
 
       {/* Server broadcast */}
       {state.broadcast && (

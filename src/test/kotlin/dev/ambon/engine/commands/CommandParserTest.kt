@@ -64,6 +64,19 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parser parses music box commands and aliases`() {
+        assertEquals(Command.MusicBox, CommandParser.parse("musicbox"))
+        assertEquals(Command.MusicBox, CommandParser.parse("mb"))
+        assertEquals(Command.MusicBox, CommandParser.parse("musicbox list"))
+        assertEquals(Command.MusicBoxPlay, CommandParser.parse("musicbox play"))
+        assertEquals(Command.MusicBoxPlay, CommandParser.parse("mb play"))
+        assertEquals(Command.MusicBoxStop, CommandParser.parse("musicbox stop"))
+        assertEquals(Command.MusicBoxStop, CommandParser.parse("mb stop"))
+        // An unknown subcommand is Invalid, not a silent no-op.
+        assertTrue(CommandParser.parse("musicbox wobble") is Command.Invalid)
+    }
+
+    @Test
     fun `parser parses tell and t aliases`() {
         assertEquals(Command.Tell("Bob", "hi there"), CommandParser.parse("tell Bob hi there"))
         assertEquals(Command.Tell("Bob", "hi there"), CommandParser.parse("t Bob hi there"))

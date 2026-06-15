@@ -14,6 +14,7 @@ import dev.ambon.domain.world.WorldFactory
 import dev.ambon.domain.world.data.ItemFile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -1166,6 +1167,36 @@ class WorldLoaderTest {
         val ex =
             assertThrows(WorldLoadException::class.java) {
                 WorldLoader.loadFromResource("world/bad_jukebox_too_many_lyrics.yaml")
+            }
+        assertTrue(ex.message!!.contains("lyrics lines"), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `music box resolves its audio url and keeps lyrics`() {
+        val world = WorldLoader.loadFromResource("world/ok_musicbox.yaml")
+
+        val parlor = world.rooms.getValue(RoomId("ok_musicbox:parlor"))
+        val box = parlor.musicBox
+        assertNotNull(box)
+        box!!
+        assertEquals("Scuttlefish's Lullaby", box.title)
+        assertEquals("/audio/musicbox/lullaby.mp3", box.url)
+        assertEquals(60, box.durationSeconds)
+        assertEquals("Scuttlefish", box.artist)
+        assertEquals(3, box.lyrics.size)
+        assertEquals("Down where the lantern-light is low", box.lyrics.first())
+
+        // A room without a musicBox block has none.
+        val hall = world.rooms.getValue(RoomId("ok_musicbox:hall"))
+        assertNull(hall.musicBox)
+    }
+
+    @Test
+    fun `music box with more lyrics lines than the duration allows fails to load`() {
+        // 4 lines over 9 seconds is under the 3s-per-line floor.
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_musicbox_too_many_lyrics.yaml")
             }
         assertTrue(ex.message!!.contains("lyrics lines"), "Got: ${ex.message}")
     }

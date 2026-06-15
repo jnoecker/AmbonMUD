@@ -74,6 +74,34 @@ rooms:
       s: training_yard
       e: akathavae_alcove
     image: 8f6e95312493937bdb5d43391a9db948336450c4d3173731b4950b3dfaf0ac64.jpg
+    musicBox:
+      title: Tessikar of Kaerinlith
+      file: 52347048fdeae3029d6d216d559863b6cc7bc43097a1bb71661bb98d6059b8e5.mp3
+      durationSeconds: 243
+      artist: TRADITIONAL
+      description: >-
+        A palm-sized walnut-and-brass music box on the desk — a miniature of the great cabinet in the Parlor of
+        Borrowed Songs, said to be Tessikar's own travelling model. Type 'musicbox' (or 'mb') to open it, then
+        'musicbox play' to wind it up. Its song is yours alone and follows you from room to room until it winds down
+        or you 'musicbox stop' it.
+      lyrics:
+        - Born beyond the veil
+        - Where brass sang slow
+        - Copper rivers down below
+        - He came to Ambon
+        - Through his own door
+        - Wheels and crystal
+        - Spun the floor
+        - One amber eye
+        - One arm of brass
+        - Broad-shouldered, quiet
+        - Built to last
+        - Not to rule, not to reign
+        - Just a bench, and a flame
+        - Tessikar, Tessikar, Hammer the sky
+        - Tessikar, Tessikar, Make the world fly
+        - Kvarcgagap Shined in the deep
+        - Tessikar, Tessikar, Kept the dream
   akathavae_alcove:
     title: Alcove of the Akathavae
     description: >-

@@ -48,6 +48,7 @@ import dev.ambon.engine.commands.handlers.JukeboxHandler
 import dev.ambon.engine.commands.handlers.LeaderboardHandler
 import dev.ambon.engine.commands.handlers.LotteryHandler
 import dev.ambon.engine.commands.handlers.MailHandler
+import dev.ambon.engine.commands.handlers.MusicBoxHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.PrestigeHandler
@@ -350,6 +351,7 @@ class GameEngine(
                     }
                 }
                 lotterySystem.onDisconnect(sid)
+                musicBoxSystem.clearPlayer(player.name)
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
                 friendsSystem.onPlayerLogout(player.name)
@@ -1015,6 +1017,10 @@ class GameEngine(
         enabled = engineConfig.jukebox.enabled,
     )
 
+    private val musicBoxSystem = MusicBoxSystem(
+        clock = clock,
+    )
+
     private val dialogueSystem =
         DialogueSystem(
             mobs = mobs,
@@ -1305,6 +1311,7 @@ class GameEngine(
             trainerRegistry = trainerRegistry,
             puzzleSystem = puzzleSystem,
             jukeboxSystem = jukeboxSystem,
+            musicBoxSystem = musicBoxSystem,
             bankConfig = engineConfig.bank,
             stylistConfig = engineConfig.stylist,
             akathavaeSystem = akathavaeSystem,
@@ -1581,6 +1588,10 @@ class GameEngine(
                 jukeboxSystem = jukeboxSystem,
                 markVitalsDirty = ::markVitalsDirty,
             ),
+            MusicBoxHandler(
+                ctx = ctx,
+                musicBoxSystem = musicBoxSystem,
+            ),
             ReputationHandler(
                 ctx = ctx,
                 reputationSystem = reputationSystem,
@@ -1835,6 +1846,9 @@ class GameEngine(
 
                     // Revert rooms whose jukebox track has ended back to their default music
                     tickJukebox()
+
+                    // Clear players' music-box songs that have run their length
+                    tickMusicBox()
 
                     // Tick duel combat
                     tickDuels()
@@ -3047,6 +3061,35 @@ class GameEngine(
                     occupant.lastEmittedMusicUrl = music
                     music?.let { outbound.send(OutboundEvent.SendInfo(occupant.sessionId, "[music] $it")) }
                 }
+            }
+        }
+    }
+
+    /**
+     * Clears each player's music-box song the moment its authored length elapses:
+     * tells them it wound down, pushes a cleared `MusicBox.Info` (so the web client
+     * drops the device audio and reverts to the room's music), and reverts inline
+     * music links for non-web clients. Player-scoped — the song followed them, so
+     * the cleanup lands wherever they are now. Cheap when nobody's playing.
+     */
+    private suspend fun tickMusicBox() {
+        for ((playerName, ended) in musicBoxSystem.pollExpired()) {
+            val me = players.getByName(playerName) ?: continue
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    me.sessionId,
+                    "The music box winds down as \"${ended.box.title}\" comes to an end.",
+                ),
+            )
+            gmcpEmitter?.let { emitter ->
+                val box = world.rooms[me.roomId]?.musicBox
+                emitter.sendMusicBoxInfo(me.sessionId, emitter.buildMusicBoxInfo(box, nowPlaying = null))
+            }
+            // Revert inline music for non-web clients to the room's own track.
+            val music = world.rooms[me.roomId]?.music
+            if (me.audioLinksEnabled && music != me.lastEmittedMusicUrl) {
+                me.lastEmittedMusicUrl = music
+                music?.let { outbound.send(OutboundEvent.SendInfo(me.sessionId, "[music] $it")) }
             }
         }
     }

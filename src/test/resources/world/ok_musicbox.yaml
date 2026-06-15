@@ -1,0 +1,26 @@
+zone: ok_musicbox
+startRoom: parlor
+
+rooms:
+  parlor:
+    title: "The Quiet Parlor"
+    description: "A snug parlor with a little music box on the mantel."
+    music: parlor/ambient_loop.mp3
+    musicBox:
+      title: "Scuttlefish's Lullaby"
+      file: musicbox/lullaby.mp3
+      durationSeconds: 60
+      artist: "Scuttlefish"
+      description: "A soft tune the old fortune-teller used to hum."
+      lyrics:
+        - "Down where the lantern-light is low"
+        - "the scuttlefish sings soft and slow"
+        - "and counts the coins the dreamers owe"
+    exits:
+      north: hall
+
+  hall:
+    title: "Entrance Hall"
+    description: "A bare hall."
+    exits:
+      south: parlor

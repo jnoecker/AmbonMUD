@@ -9,7 +9,7 @@ interface DrawerProps {
   /** Visual skin for the sheet chrome: warm leather (satchel), a dim
    *  dressing-chamber (equipment), a merchant cart (shop), a chalkboard
    *  (trainer), a parchment journal (combat log), or a cork quest board. */
-  variant?: "default" | "satchel" | "equipment" | "shop" | "trainer" | "journal" | "questboard" | "grimoire" | "mail" | "feature" | "tome" | "vault" | "cabinet" | "board" | "starframe" | "archive" | "stainedglass" | "codex" | "boudoir" | "estate" | "fortune" | "dicetable" | "jukebox" | "auctionhouse" | "forge" | "professions" | "chart";
+  variant?: "default" | "satchel" | "equipment" | "shop" | "trainer" | "journal" | "questboard" | "grimoire" | "mail" | "feature" | "tome" | "vault" | "cabinet" | "board" | "starframe" | "archive" | "stainedglass" | "codex" | "boudoir" | "estate" | "fortune" | "dicetable" | "jukebox" | "musicbox" | "auctionhouse" | "forge" | "professions" | "chart";
   /** Optional background art for a skinned variant (server asset). */
   skinBg?: string;
   /** Optional phone-portrait companion art (941×1672); the skin CSS prefers it

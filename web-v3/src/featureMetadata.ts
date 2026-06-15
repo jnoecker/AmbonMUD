@@ -63,7 +63,7 @@ export const CURRENCY_METADATA: Record<string, { description: string; gainHints:
   },
 };
 
-export type RoomSurfaceWidgetId = "auction" | "dungeon" | "duel" | "lottery" | "dice" | "jukebox";
+export type RoomSurfaceWidgetId = "auction" | "dungeon" | "duel" | "lottery" | "dice" | "jukebox" | "musicbox";
 
 export const ROOM_SURFACE_WIDGETS: Record<
   RoomSurfaceWidgetId,
@@ -110,6 +110,14 @@ export const ROOM_SURFACE_WIDGETS: Record<
     label: "Jukebox",
     assetKey: "jukebox_widget",
     fallbackFilename: "jukebox_widget.png",
+    roomIds: [],
+  },
+  // Music-box visibility is driven by the per-room `musicBox` flag (Room.Info) OR
+  // the player carrying a playing song out of the room, not a hardcoded list.
+  musicbox: {
+    label: "Music Box",
+    assetKey: "music_box_widget",
+    fallbackFilename: "music_box_widget.png",
     roomIds: [],
   },
 };

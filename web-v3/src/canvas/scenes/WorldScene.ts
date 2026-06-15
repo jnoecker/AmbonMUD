@@ -233,6 +233,13 @@ export class WorldScene {
   private jukeboxHitArea = new Graphics();
   private jukeboxVisible = false;
 
+  private musicBoxBadge: Container | null = null;
+  private musicBoxSprite: Sprite | null = null;
+  private musicBoxLabel: Text | null = null;
+  private musicBoxLabelBg = new Graphics();
+  private musicBoxHitArea = new Graphics();
+  private musicBoxVisible = false;
+
   private dungeonBadge: Container | null = null;
   private dungeonSprite: Sprite | null = null;
   private dungeonLabel: Text | null = null;
@@ -587,6 +594,34 @@ export class WorldScene {
     this.jukeboxBadge.addChild(this.jukeboxLabelBg);
     this.jukeboxBadge.addChild(this.jukeboxLabel);
 
+    this.musicBoxBadge = new Container();
+    this.musicBoxBadge.visible = false;
+    this.musicBoxBadge.eventMode = "static";
+    this.musicBoxBadge.cursor = "pointer";
+    this.musicBoxBadge.on("pointerdown", () => {
+      canvasCallbacks.openMusicBox?.();
+    });
+    this.musicBoxBadge.on("pointerover", () => {
+      if (this.musicBoxSprite) this.musicBoxSprite.alpha = 1;
+    });
+    this.musicBoxBadge.on("pointerout", () => {
+      if (this.musicBoxSprite) this.musicBoxSprite.alpha = 0.85;
+    });
+    this.musicBoxHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.musicBoxHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.musicBoxHitArea.eventMode = "auto";
+    this.musicBoxBadge.addChild(this.musicBoxHitArea);
+    this.musicBoxLabel = new Text({
+      text: ROOM_SURFACE_WIDGETS.musicbox.label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#c7a0dd", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.musicBoxLabel.anchor.set(0.5, 0);
+    this.musicBoxLabel.y = hs / 2 + 2;
+    this.musicBoxLabel.eventMode = "none";
+    this.musicBoxLabelBg.eventMode = "none";
+    this.musicBoxBadge.addChild(this.musicBoxLabelBg);
+    this.musicBoxBadge.addChild(this.musicBoxLabel);
+
     this.dungeonBadge = new Container();
     this.dungeonBadge.visible = false;
     this.dungeonBadge.eventMode = "static";
@@ -923,6 +958,7 @@ export class WorldScene {
     this.container.addChild(this.lotteryBadge!);
     this.container.addChild(this.diceBadge!);
     this.container.addChild(this.jukeboxBadge!);
+    this.container.addChild(this.musicBoxBadge!);
     this.container.addChild(this.dungeonBadge!);
     this.container.addChild(this.housingBadge!);
     this.container.addChild(this.innBadge!);
@@ -971,6 +1007,7 @@ export class WorldScene {
       this.loadLotteryIcon();
       this.loadDiceIcon();
       this.loadJukeboxIcon();
+      this.loadMusicBoxIcon();
       this.loadDungeonIcon();
       this.loadHousingBrokerIcon();
       this.loadInnIcon();
@@ -1189,6 +1226,14 @@ export class WorldScene {
       if (this.jukeboxBadge) this.jukeboxBadge.visible = hasJukebox;
     }
 
+    // Music box: show in this room, or wherever a song the player started is still
+    // playing (it follows them out of the room until it ends or they stop it).
+    const hasMusicBox = !!state.room.musicBox || state.musicBoxPlaying;
+    if (hasMusicBox !== this.musicBoxVisible) {
+      this.musicBoxVisible = hasMusicBox;
+      if (this.musicBoxBadge) this.musicBoxBadge.visible = hasMusicBox;
+    }
+
     const hasDungeon = !!state.room.dungeon;
     if (hasDungeon !== this.dungeonVisible) {
       this.dungeonVisible = hasDungeon;
@@ -1352,6 +1397,7 @@ export class WorldScene {
     if (this.lotteryBadge) this.lotteryBadge.visible = this.lotteryVisible && !stripMode;
     if (this.diceBadge) this.diceBadge.visible = this.diceVisible && !stripMode;
     if (this.jukeboxBadge) this.jukeboxBadge.visible = this.jukeboxVisible && !stripMode;
+    if (this.musicBoxBadge) this.musicBoxBadge.visible = this.musicBoxVisible && !stripMode;
     if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
     if (this.housingBadge) this.housingBadge.visible = this.housingVisible && !stripMode;
     if (this.innBadge) this.innBadge.visible = this.innVisible && !stripMode;
@@ -1693,6 +1739,13 @@ export class WorldScene {
       this.jukeboxBadge.x = badgeX;
       this.jukeboxBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.jukeboxLabelBg, this.jukeboxLabel!);
+      badgeSlot++;
+    }
+
+    if (this.musicBoxBadge?.visible) {
+      this.musicBoxBadge.x = badgeX;
+      this.musicBoxBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.musicBoxLabelBg, this.musicBoxLabel!);
       badgeSlot++;
     }
 
@@ -2533,6 +2586,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.jukeboxSprite = sprite;
       this.jukeboxBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadMusicBoxIcon() {
+    try {
+      const texture = await Assets.load(assetUrl(ROOM_SURFACE_WIDGETS.musicbox.assetKey, ROOM_SURFACE_WIDGETS.musicbox.fallbackFilename));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.musicBoxSprite = sprite;
+      this.musicBoxBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }
