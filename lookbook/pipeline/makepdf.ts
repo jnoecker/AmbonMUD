@@ -105,11 +105,16 @@ for (const sec of sections) {
     }
     if (cur.length) page("textpage", (emitted === 0 ? lead + h2 : "") + cur.join(""));
   } else if (figures.length) {
-    // academy grid: 2-up figures, opener gets header + 6, then 8 per page
     const txt = texts.map((t) => t.html).join("");
-    page("gridpage", h2 + txt + figures.slice(0, 6).map((f) => f.html).join(""));
-    for (let i = 6; i < figures.length; i += 8) {
-      page("gridpage", figures.slice(i, i + 8).map((f) => f.html).join(""));
+    if (figures.length <= 8) {
+      // small figure set (e.g. the version-history grid): keep it all on one page
+      page("gridpage", h2 + txt + figures.map((f) => f.html).join(""));
+    } else {
+      // academy grid: 2-up figures, opener gets header + 6, then 8 per page
+      page("gridpage", h2 + txt + figures.slice(0, 6).map((f) => f.html).join(""));
+      for (let i = 6; i < figures.length; i += 8) {
+        page("gridpage", figures.slice(i, i + 8).map((f) => f.html).join(""));
+      }
     }
   } else {
     // plate section: opener = header + intro + 1 plate; then 2 per page
@@ -157,6 +162,7 @@ const doc = `<!doctype html><html><head><meta charset="utf-8"><style>
   .gridpage h2, .gridpage p { text-align: left; }
   .gridpage p { font-size: 12pt; font-weight: 700; color: #120c03; }
   .gridpage figure { width: 46% !important; margin: 0.06in 1% !important; }
+  .gridpage figure.evo { width: 31.5% !important; margin: 0.5% !important; }
   .gridpage figure img { border-radius: 2px; border: 1px solid #8a7045; }
   .gridpage figcaption { font-size: 9.5pt !important; font-weight: 700 !important; color: #2a1c08 !important; margin-top: 3pt; }
   .codexpage { padding: 1.05in 1.25in 1in 1.3in; }

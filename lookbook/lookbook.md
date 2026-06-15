@@ -87,6 +87,18 @@ write-coalescing worker and an optional Redis cache.
 an admin HTTP API for live reloads and moderation, Prometheus metrics, and CI running
 lint, unit, and integration suites on every PR.
 
+## From Telnet to Painted
+
+AmbonMUD began as a plain telnet proof-of-concept and grew, across five generations of client, into the fully-painted interface this book tours. The whole journey, oldest to newest:
+
+<figure class="evo" style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/evolution/v0-telnet.png" alt="v0 telnet" style="width:100%"><figcaption style="font-size:7.5pt;text-align:center;margin-top:2pt">v0 — Telnet (PuTTY): the first proof of concept</figcaption></figure>
+<figure class="evo" style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/evolution/v0-5-telnet-ansi.png" alt="v0.5 telnet with ANSI" style="width:100%"><figcaption style="font-size:7.5pt;text-align:center;margin-top:2pt">v0.5 — Telnet with ANSI color</figcaption></figure>
+<figure class="evo" style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/evolution/v1-web-client.png" alt="v1 web client" style="width:100%"><figcaption style="font-size:7.5pt;text-align:center;margin-top:2pt">v1 — First web terminal, no panels</figcaption></figure>
+<figure class="evo" style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/evolution/v2-web-panels.png" alt="v2 web client with panels" style="width:100%"><figcaption style="font-size:7.5pt;text-align:center;margin-top:2pt">v2 — Web client with panels</figcaption></figure>
+<figure class="evo" style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/evolution/v3-web-client.jpg" alt="v3 web client" style="width:100%"><figcaption style="font-size:7.5pt;text-align:center;margin-top:2pt">v3 — Surreal Gentle Magic redesign</figcaption></figure>
+<figure class="evo" style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/evolution/webclient-v4.jpeg" alt="v4 web client" style="width:100%"><figcaption style="font-size:7.5pt;text-align:center;margin-top:2pt">v4 — PixiJS canvas and JRPG scenes</figcaption></figure>
+<figure class="evo" style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/evolution/webclient-v5.png" alt="v5 web client" style="width:100%"><figcaption style="font-size:7.5pt;text-align:center;margin-top:2pt">v5 — Painted panels (current)</figcaption></figure>
+
 ## Login & Character Creation
 
 The painted login flow: name entry, returning-character picker, and the race and class galleries.
