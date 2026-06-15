@@ -251,6 +251,17 @@ sealed interface Command {
         val song: Int,
     ) : Command
 
+    // ---- Music box commands ----
+
+    /** Bare `musicbox`/`mb` — show this room's music box (its song + lyrics). */
+    data object MusicBox : Command
+
+    /** `musicbox play`/`mb play` — start the room's single song (free; follows you). */
+    data object MusicBoxPlay : Command
+
+    /** `musicbox stop`/`mb stop` — stop whatever music-box song you have playing. */
+    data object MusicBoxStop : Command
+
     // ---- Bank commands ----
 
     sealed interface Bank : Command {
@@ -1192,6 +1203,25 @@ object CommandParser {
                 Command.Jukebox
             } else {
                 Command.Invalid(line, "jukebox [list] | jukebox play <number> | jukebox queue <number>")
+            }
+        }?.let { return it }
+
+        // music box: "musicbox play/stop" then bare "musicbox" (alias mb). Subcommands first.
+        matchPrefix(line, listOf("musicbox play", "mb play")) { _ ->
+            Command.MusicBoxPlay
+        }?.let { return it }
+
+        matchPrefix(line, listOf("musicbox stop", "mb stop")) { _ ->
+            Command.MusicBoxStop
+        }?.let { return it }
+
+        matchPrefix(line, listOf("musicbox", "mb")) { rest ->
+            val sub = rest.trim().lowercase()
+            when {
+                sub.isEmpty() || sub == "list" || sub == "info" -> Command.MusicBox
+                sub == "play" -> Command.MusicBoxPlay
+                sub == "stop" -> Command.MusicBoxStop
+                else -> Command.Invalid(line, "musicbox [list] | musicbox play | musicbox stop")
             }
         }?.let { return it }
 

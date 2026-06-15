@@ -13,6 +13,7 @@ import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.JukeboxSong
+import dev.ambon.domain.world.MusicBox
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.abilities.AbilityDefinition
@@ -288,6 +289,7 @@ class GmcpEmitter(
                 housingBroker = room.housingBroker,
                 inn = room.inn,
                 jukebox = room.jukebox.isNotEmpty(),
+                musicBox = room.musicBox != null,
                 canDepart = canDepart,
                 peek = peek,
             ),
@@ -1759,6 +1761,90 @@ class GmcpEmitter(
         broadcastSerialized(players.playersInRoom(roomId), "Jukebox.Info", payload, supportCheck = "Jukebox")
     }
 
+    // ---------- music box ----------
+
+    /** The single song offered by the music box in the player's current room. */
+    data class MusicBoxSongPayload(
+        val title: String,
+        val artist: String? = null,
+        val description: String? = null,
+        val durationSeconds: Int,
+        /** Lyric lines; the client spreads them evenly across [durationSeconds]. */
+        val lyrics: List<String> = emptyList(),
+    )
+
+    /**
+     * The song this player currently has playing. Player-scoped: it follows them
+     * between rooms until it ends or they stop it. The client computes lyric timing
+     * locally from [startedAtMs], [durationSeconds], and [lyrics] (scrolling on the
+     * open device, 🎵 toasts while closed), and plays [url] over the room's music.
+     */
+    data class MusicBoxNowPlayingPayload(
+        val title: String,
+        val artist: String? = null,
+        val description: String? = null,
+        /** Resolved audio URL the web client plays over the room's default music. */
+        val url: String,
+        /** Epoch millis the song started — the client's clock anchor for lyric timing. */
+        val startedAtMs: Long,
+        val durationSeconds: Int,
+        val secondsRemaining: Int,
+        val lyrics: List<String> = emptyList(),
+        /** The room the song was started from (lore / re-identification). */
+        val roomId: String? = null,
+    )
+
+    data class MusicBoxInfoPayload(
+        /** The music box in the player's current room, or null if none here. */
+        val box: MusicBoxSongPayload? = null,
+        /** The song this player has playing right now (follows them), or null. */
+        val nowPlaying: MusicBoxNowPlayingPayload? = null,
+    )
+
+    /**
+     * Builds a `MusicBox.Info` payload from the optionally-present room [box] and
+     * the player's optionally-playing [nowPlaying] song ([remainingSeconds] is the
+     * caller's clock-derived countdown). The client shows the kiosk when *either*
+     * is non-null (in the room, or carrying a song out of it).
+     */
+    fun buildMusicBoxInfo(
+        box: MusicBox?,
+        nowPlaying: MusicBoxNowPlaying?,
+        remainingSeconds: Int = 0,
+    ): MusicBoxInfoPayload =
+        MusicBoxInfoPayload(
+            box = box?.let {
+                MusicBoxSongPayload(
+                    title = it.title,
+                    artist = it.artist,
+                    description = it.description,
+                    durationSeconds = it.durationSeconds,
+                    lyrics = it.lyrics,
+                )
+            },
+            nowPlaying = nowPlaying?.let { np ->
+                MusicBoxNowPlayingPayload(
+                    title = np.box.title,
+                    artist = np.box.artist,
+                    description = np.box.description,
+                    url = np.box.url,
+                    startedAtMs = np.startedAtMs,
+                    durationSeconds = np.box.durationSeconds,
+                    secondsRemaining = remainingSeconds,
+                    lyrics = np.box.lyrics,
+                    roomId = np.roomId.value,
+                )
+            },
+        )
+
+    /** Sends one player their music-box state: the room's box (if any) + their now-playing song. */
+    suspend fun sendMusicBoxInfo(
+        sessionId: SessionId,
+        payload: MusicBoxInfoPayload,
+    ) {
+        emit(sessionId, "MusicBox.Info", payload, supportCheck = "MusicBox")
+    }
+
     // ---------- pets ----------
 
     data class PetStatePayload(
@@ -2854,6 +2940,8 @@ class GmcpEmitter(
         val inn: Boolean = false,
         /** True when this room has a jukebox playlist (drives the in-world badge). */
         val jukebox: Boolean = false,
+        /** True when this room has a music box (drives the in-world kiosk badge). */
+        val musicBox: Boolean = false,
         val canDepart: Boolean = false,
         /** Auto-peek entries: open exits paired with destination room titles. Empty when the player has autopeek off. */
         val peek: List<RoomPeekEntry> = emptyList(),

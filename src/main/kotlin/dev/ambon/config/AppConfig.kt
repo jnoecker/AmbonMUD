@@ -3442,6 +3442,10 @@ data class ImagesConfig(
             // it on portrait viewports. Absent/404 → gradient under the same
             // seated layout, like the landscape frame.
             "jukebox_bg_portrait" to "global_assets/jukebox_bg_portrait.png",
+            // Music box: the rail kiosk badge and the opened device frame. The
+            // device shows a play/stop control and scrolling lyrics on its face.
+            "music_box_widget" to "global_assets/music_box_widget.png",
+            "musicbox_bg" to "global_assets/musicbox_bg.png",
             "puzzle_kiosk" to "global_assets/puzzle_kiosk.png",
             "feature_door" to "global_assets/feature_door.png",
             "feature_container" to "global_assets/feature_container.png",

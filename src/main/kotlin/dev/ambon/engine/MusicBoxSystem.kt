@@ -50,6 +50,9 @@ class MusicBoxSystem(
         return current
     }
 
+    /** Seconds left on [nowPlaying], from the injected clock (never negative). */
+    fun secondsRemaining(nowPlaying: MusicBoxNowPlaying): Int = nowPlaying.remainingSeconds(clock.millis())
+
     /**
      * Starts [box] (from [roomId]) playing for [player], replacing any song they
      * already had going. Returns the new state, or null if the feature is disabled.

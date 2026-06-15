@@ -12,6 +12,7 @@ import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.JukeboxSystem
 import dev.ambon.engine.LeaderboardSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.MusicBoxSystem
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PuzzleSystem
@@ -57,6 +58,8 @@ data class EngineContext(
     val puzzleSystem: PuzzleSystem? = null,
     /** Per-room jukebox state. Null disables jukebox GMCP/commands (e.g. in tests). */
     val jukeboxSystem: JukeboxSystem? = null,
+    /** Per-player music-box state. Null disables music-box GMCP/commands (e.g. in tests). */
+    val musicBoxSystem: MusicBoxSystem? = null,
     val bankConfig: BankConfig = BankConfig(),
     val stylistConfig: StylistConfig = StylistConfig(),
     /** Records shop/craft/gather item discoveries into Akathavae journals when present. */
