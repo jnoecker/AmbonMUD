@@ -136,6 +136,9 @@ class WebClientParityTest {
         "Jukebox" to "jukebox",
         "JukeboxPlay" to "jukebox",
         "JukeboxQueue" to "jukebox",
+        "MusicBox" to "musicbox",
+        "MusicBoxPlay" to "musicbox",
+        "MusicBoxStop" to "musicbox",
         // Quests
         "QuestLog" to "quest_log",
         "QuestInfo" to "quest_info",

@@ -2379,6 +2379,11 @@ data class CommandsConfig(
                 description = "List the room's jukebox songs, pay to play one, or queue the next track",
                 category = "social",
             ),
+            "musicbox" to CommandMetadata(
+                usage = "musicbox [list] | musicbox play | musicbox stop",
+                description = "Open the room's music box and wind up its one song — free, and it follows you until it ends",
+                category = "social",
+            ),
             "ansi" to CommandMetadata("ansi on/off", "Toggle color output", "utility"),
             "screenreader" to CommandMetadata("screenreader [on/off]", "Toggle screen reader mode", "utility"),
             "audio" to CommandMetadata(
