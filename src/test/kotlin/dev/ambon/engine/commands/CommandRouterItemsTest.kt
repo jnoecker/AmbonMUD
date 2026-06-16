@@ -690,8 +690,83 @@ class CommandRouterItemsTest {
 
             val outs = h.drain()
             assertTrue(
-                outs.any { it is OutboundEvent.SendError && it.text.contains("don't see that item") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("don't see") },
                 "Unknown id should report not found. got=$outs",
             )
+        }
+
+    @Test
+    fun `wear by id equips the exact item when keyword is shared`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(93L)
+            h.loginPlayer(sid, "Dresser")
+
+            // Two amulets share the "amulet" keyword but differ by id.
+            h.items.addToInventory(
+                sid,
+                ItemInstance(
+                    ItemId("test:amulet-copper"),
+                    Item(keyword = "amulet", displayName = "a copper amulet", slot = ItemSlot.NECK),
+                ),
+            )
+            h.items.addToInventory(
+                sid,
+                ItemInstance(
+                    ItemId("test:amulet-silver"),
+                    Item(keyword = "amulet", displayName = "a silver amulet", slot = ItemSlot.NECK),
+                ),
+            )
+
+            h.router.handle(sid, Command.Wear("#test:amulet-silver"))
+
+            assertEquals("test:amulet-silver", h.items.equipment(sid).getValue(ItemSlot.NECK).id.value)
+            assertEquals("test:amulet-copper", h.items.inventory(sid).single().id.value)
+        }
+
+    @Test
+    fun `drop by id drops the exact item when keyword is shared`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(94L)
+            h.loginPlayer(sid, "Dropper")
+
+            h.items.addToInventory(
+                sid,
+                ItemInstance(ItemId("test:gem-ruby"), Item(keyword = "gem", displayName = "a ruby")),
+            )
+            h.items.addToInventory(
+                sid,
+                ItemInstance(ItemId("test:gem-pearl"), Item(keyword = "gem", displayName = "a pearl")),
+            )
+
+            h.router.handle(sid, Command.Drop("#test:gem-pearl"))
+
+            assertEquals("test:gem-ruby", h.items.inventory(sid).single().id.value)
+            assertEquals("test:gem-pearl", h.items.itemsInRoom(h.world.startRoom).single().id.value)
+        }
+
+    @Test
+    fun `give by id gives the exact item when keyword is shared`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val giver = SessionId(95L)
+            val receiver = SessionId(96L)
+            h.loginPlayer(giver, "Giver")
+            h.loginPlayer(receiver, "Taker")
+
+            h.items.addToInventory(
+                giver,
+                ItemInstance(ItemId("test:coin-gold"), Item(keyword = "coin", displayName = "a gold coin")),
+            )
+            h.items.addToInventory(
+                giver,
+                ItemInstance(ItemId("test:coin-copper"), Item(keyword = "coin", displayName = "a copper coin")),
+            )
+
+            h.router.handle(giver, Command.Give("#test:coin-copper", "Taker"))
+
+            assertEquals("test:coin-gold", h.items.inventory(giver).single().id.value)
+            assertEquals("test:coin-copper", h.items.inventory(receiver).single().id.value)
         }
 }

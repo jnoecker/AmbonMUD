@@ -33,10 +33,22 @@ internal fun itemMatchModes(input: String): List<ItemMatchMode> =
         listOf(ItemMatchMode.EXACT)
     }
 
+/**
+ * The web client targets a specific item instance with the selector "#<itemId>"
+ * so that similarly-named items (e.g. distinct keepsakes sharing a keyword)
+ * resolve unambiguously instead of always hitting the first keyword match.
+ *
+ * Returns the bare item id when [input] is such a selector, or null otherwise.
+ */
+fun itemIdSelector(input: String): String? = if (input.startsWith("#")) input.substring(1) else null
+
 internal fun findMatchingItemIndex(
     items: List<ItemInstance>,
     input: String,
 ): Int {
+    itemIdSelector(input)?.let { id ->
+        return items.indexOfFirst { it.id.value == id }
+    }
     for (mode in itemMatchModes(input)) {
         val idx = items.indexOfFirst { mode.matches(it.item, input) }
         if (idx >= 0) return idx
@@ -53,8 +65,10 @@ internal fun findMatchingItemIndex(
  *
  * This is the canonical matching logic — use it instead of ad-hoc comparisons.
  */
-fun ItemInstance.matchesKeyword(input: String): Boolean =
-    itemMatchModes(input).any { it.matches(item, input) }
+fun ItemInstance.matchesKeyword(input: String): Boolean {
+    itemIdSelector(input)?.let { return id.value == it }
+    return itemMatchModes(input).any { it.matches(item, input) }
+}
 
 /** Same as [ItemInstance.matchesKeyword] but operates on a bare [Item]. */
 fun Item.matchesKeyword(input: String): Boolean =

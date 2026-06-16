@@ -13,9 +13,10 @@ interface InventoryPanelProps {
   containerContents: ContainerContents | null;
   /** Resolved server assets, for the optional action-button icons. */
   serverAssets: Record<string, string>;
-  onWearItem: (itemName: string) => void;
-  onDropItem: (itemName: string) => void;
-  onGiveItem: (itemKeyword: string, playerName: string) => void;
+  /** Receives a server item selector (see {@link itemSelector}), not a display name. */
+  onWearItem: (itemSelector: string) => void;
+  onDropItem: (itemSelector: string) => void;
+  onGiveItem: (itemSelector: string, playerName: string) => void;
   /** Open the parchment item card (same window as clicking a ground item). */
   onExamineItem: (item: ItemSummary, image: string | null) => void;
   onCommand: (command: string) => void;
@@ -39,6 +40,16 @@ interface Section {
   title: string;
   hint: string | null;
   stacks: ItemStack[];
+}
+
+/**
+ * Builds the command selector for an item. Prefers the unique instance id
+ * ("#<id>") so similarly-named items (e.g. distinct keepsakes sharing a
+ * keyword) resolve unambiguously; falls back to the keyword for older servers
+ * that don't send an id.
+ */
+function itemSelector(item: ItemSummary): string {
+  return item.id ? `#${item.id}` : item.keyword;
 }
 
 function resolveItemType(item: ItemSummary): ItemType {
@@ -222,7 +233,7 @@ export function InventoryPanel({
                 aria-label={`Use ${item.name}`}
                 title={`Use ${item.name}${item.useEffect ? ` - ${item.useEffect}` : ""}`}
                 disabled={!canManageItems}
-                onClick={() => onCommand(`use ${item.keyword}`)}
+                onClick={() => onCommand(`use ${itemSelector(item)}`)}
               >
                 {actionAsset("action_use") ?? <span className="inventory-action-glyph" aria-hidden="true">✚</span>}
               </button>
@@ -234,7 +245,7 @@ export function InventoryPanel({
                 aria-label={`Equip ${item.name}`}
                 title={equipHint ? `Equip ${item.name}` : `Wear ${item.name}`}
                 disabled={!canManageItems}
-                onClick={() => onWearItem(item.name)}
+                onClick={() => onWearItem(itemSelector(item))}
               >
                 {actionAsset("action_equip") ?? <WearItemIcon className="inventory-action-icon" />}
               </button>
@@ -246,7 +257,7 @@ export function InventoryPanel({
                 aria-label={`Store ${item.name} in ${containerContents.name}`}
                 title={`Store ${item.name} in ${containerContents.name}`}
                 disabled={!canManageItems}
-                onClick={() => onCommand(`put ${item.keyword} in ${containerContents.keyword}`)}
+                onClick={() => onCommand(`put ${itemSelector(item)} in ${containerContents.keyword}`)}
               >
                 {actionAsset("action_store") ?? <span className="inventory-action-glyph" aria-hidden="true">⊞</span>}
               </button>
@@ -271,7 +282,7 @@ export function InventoryPanel({
                 title={count > 1 ? `Drop one ${item.name}` : `Drop ${item.name}`}
                 aria-label={count > 1 ? `Drop one ${item.name}` : `Drop ${item.name}`}
                 disabled={!canManageItems}
-                onClick={() => onDropItem(item.name)}
+                onClick={() => onDropItem(itemSelector(item))}
               >
                 {actionAsset("action_drop") ?? <DropItemIcon className="inventory-action-icon" />}
               </button>
@@ -297,7 +308,7 @@ export function InventoryPanel({
                 role="option"
                 className="inventory-give-option"
                 onClick={() => {
-                  onGiveItem(item.keyword, player.name);
+                  onGiveItem(itemSelector(item), player.name);
                   setGivePickerStackKey(null);
                 }}
               >

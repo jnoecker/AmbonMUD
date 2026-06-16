@@ -460,27 +460,8 @@ class NavigationHandler(
         val me = players.get(sessionId) ?: return
         val roomId = me.roomId
 
-        // The web client targets a specific item via "#<itemId>" so that
-        // similarly-named items (e.g. distinct keepsakes sharing a keyword)
-        // resolve unambiguously rather than always matching the first one.
-        if (cmd.target.startsWith("#")) {
-            val itemId = cmd.target.substring(1)
-            val match = (
-                ctx.items.inventory(sessionId) +
-                    ctx.items.equipment(sessionId).values +
-                    ctx.items.itemsInRoom(roomId)
-            ).firstOrNull { it.id.value == itemId }
-            if (match != null) {
-                val desc = match.item.description.ifEmpty { "You see nothing special about ${match.item.displayName}." }
-                outbound.send(OutboundEvent.SendText(sessionId, "${match.item.displayName}: $desc"))
-                sendItemLookTarget(sessionId, match, desc)
-                return
-            }
-            val msg = "You don't see that item."
-            outbound.send(OutboundEvent.SendError(sessionId, msg))
-            gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "TARGET_NOT_FOUND", scope = "navigation", command = "look")
-            return
-        }
+        // Note: the "#<itemId>" selector the web client sends to disambiguate
+        // similarly-named items is handled transparently by matchesKeyword below.
 
         // Try mob first
         val mob = ctx.mobs.findInRoomByKeyword(roomId, cmd.target).firstOrNull()

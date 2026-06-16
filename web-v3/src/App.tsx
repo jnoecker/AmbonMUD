@@ -1312,9 +1312,9 @@ function App() {
             roomFeatures={state.roomFeatures}
             containerContents={state.containerContents}
             serverAssets={state.serverAssets}
-            onWearItem={(name) => sendCommand(`wear ${name}`)}
-            onDropItem={(name) => sendCommand(`drop ${name}`)}
-            onGiveItem={(keyword, player) => sendCommand(`give ${keyword} ${player}`)}
+            onWearItem={(sel) => sendCommand(`wear ${sel}`)}
+            onDropItem={(sel) => sendCommand(`drop ${sel}`)}
+            onGiveItem={(sel, player) => sendCommand(`give ${sel} ${player}`)}
             onExamineItem={(it, image) => {
               // Fetch the full look; the response (Room.LookTarget) is routed
               // into the item card by the effect below.

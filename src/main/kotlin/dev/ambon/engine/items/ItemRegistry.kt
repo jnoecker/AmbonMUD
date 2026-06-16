@@ -339,8 +339,12 @@ class ItemRegistry {
         sessionId: SessionId,
         keyword: String,
     ): EquipResult {
+        // "#<itemId>" targets one exact instance (web client); resolve it directly.
+        itemIdSelector(keyword)?.let { id ->
+            return equipFromInventoryWithMatcher(sessionId) { it.id.value == id }
+        }
         for (mode in itemMatchModes(keyword)) {
-            val result = equipFromInventoryWithMatcher(sessionId, keyword, mode)
+            val result = equipFromInventoryWithMatcher(sessionId) { mode.matches(it.item, keyword) }
             if (result !is EquipResult.NotFound) return result
         }
         return EquipResult.NotFound
@@ -348,8 +352,7 @@ class ItemRegistry {
 
     private fun equipFromInventoryWithMatcher(
         sessionId: SessionId,
-        keyword: String,
-        mode: ItemMatchMode,
+        matches: (ItemInstance) -> Boolean,
     ): EquipResult {
         val inv = inventoryItems[sessionId] ?: return EquipResult.NotFound
         var firstNonWearable: ItemInstance? = null
@@ -358,7 +361,7 @@ class ItemRegistry {
         // Pass 1: prefer a matching item whose target slot is empty. Only if no
         // such item exists do we fall through to auto-swap.
         for ((idx, instance) in inv.withIndex()) {
-            if (!mode.matches(instance.item, keyword)) continue
+            if (!matches(instance)) continue
 
             val slot = instance.item.slot
             if (slot == null) {
@@ -672,6 +675,8 @@ class ItemRegistry {
         sessionId: SessionId,
         keyword: String,
     ): MatchedOwnedItem? {
+        itemIdSelector(keyword)?.let { return findOwnedItemMatchById(sessionId, ItemId(it)) }
+
         val inv = inventoryItems[sessionId]
         val equipped = equippedItems[sessionId]
 
