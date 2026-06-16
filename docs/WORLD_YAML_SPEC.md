@@ -131,11 +131,13 @@ musicBox: <single song object, optional - see `musicBox` notes>
     durationSeconds: 243                 # required, > 0 - the play length
     artist: "TRADITIONAL"                # optional
     description: "A palm-sized walnut-and-brass music box on the desk."  # optional lore flavour
+    image: items/lyric-sheet.png         # optional - keepsake art, resolved under the zone images base
     lyrics:                              # optional - shown on the device, spread over the duration
       - "Born beyond the veil"
       - "Where brass sang slow"
   ```
 - Lyric timing is computed on the client from the song's start, `durationSeconds`, and line count (lines spread evenly; pacing need not match the sung pacing). On the open device the current line is lit and scrolls; while the device is closed each line pops as a brief 🎵 toast so an exploring player can keep up. The personal song plays over the room's jukebox/default music for the player who started it. Lyrics are capped at one line per 3 seconds of duration; lines must be non-blank.
+- The first time a player winds up a given music box, a collectible **lyric-sheet keepsake** is minted into their inventory (a bound souvenir holding the title, artist, and full lyrics; replays are quiet). `image` sets that keepsake's picture — an optional filename resolved under the zone images base, exactly like room/item art. When omitted, the keepsake falls back to the web client's generic item default.
 
 `dungeon` notes:
 - When `true`, shows a Dungeon badge on the web client canvas that opens the dungeon kiosk panel.

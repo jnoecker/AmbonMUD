@@ -262,7 +262,7 @@ object WorldLoader {
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
                         ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "$audioBase$it" },
                         jukebox = parseJukebox(rf.jukebox, audioBase, id),
-                        musicBox = parseMusicBox(rf.musicBox, audioBase, id),
+                        musicBox = parseMusicBox(rf.musicBox, audioBase, imagesBase, id),
                         graphical = zoneGraphical,
                         terrain = (rf.terrain ?: zoneTerrain ?: "outside").also {
                             validateTerrain(it, "room '${id.value}'")
@@ -1805,6 +1805,7 @@ object WorldLoader {
     private fun parseMusicBox(
         box: MusicBoxFile?,
         audioBase: String,
+        imagesBase: String,
         roomId: RoomId,
     ): MusicBox? {
         if (box == null) return null
@@ -1834,6 +1835,7 @@ object WorldLoader {
             artist = box.artist,
             description = box.description,
             lyrics = box.lyrics,
+            image = box.image?.trim()?.takeUnless { it.isEmpty() }?.let { "$imagesBase$it" },
         )
     }
 

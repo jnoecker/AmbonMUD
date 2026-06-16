@@ -12,6 +12,7 @@ rooms:
       durationSeconds: 60
       artist: "Scuttlefish"
       description: "A soft tune the old fortune-teller used to hum."
+      image: items/lyric-sheet-lullaby.png
       lyrics:
         - "Down where the lantern-light is low"
         - "the scuttlefish sings soft and slow"

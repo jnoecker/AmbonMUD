@@ -15,6 +15,11 @@ package dev.ambon.domain.world
  * the player's device, spread evenly across the duration (the open device scrolls
  * them; while closed they pop as transient toasts so an exploring player can keep
  * up). [description] is optional lore flavour shown on the device.
+ *
+ * [image] is the fully-resolved image URL for the collectible lyric-sheet keepsake
+ * minted on first play (the WorldLoader prefixes the authored filename with the
+ * zone's images base, like room/item art); null falls back to the client's generic
+ * item default.
  */
 data class MusicBox(
     val title: String,
@@ -23,4 +28,5 @@ data class MusicBox(
     val artist: String? = null,
     val description: String? = null,
     val lyrics: List<String> = emptyList(),
+    val image: String? = null,
 )
