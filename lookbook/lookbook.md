@@ -137,6 +137,14 @@ The painted login flow: name entry, returning-character picker, and the race and
 ![World view](screenshots/subsystems/06-game-room-view.jpg)
 *The in-game view: painted room scene with player and NPC sprites, vitals HUD, minimap, room narrative, exits compass, and the panel dock.*
 
+### The vitals bar, up close
+![Health, mana, and gold — the painted vitals bar](screenshots/subsystems/06b-vitals-hud.jpg)
+*The vitals bar, carved into the flowering branch that frames the scene: health and mana pools, gold, and one-tap heal and mana potions.*
+
+### The room sign
+![The painted room-name sign](screenshots/subsystems/06c-room-sign.jpg)
+*Every room hangs its name on a painted placard — tap it to enlarge.*
+
 ## Character & Progression
 
 ### Character sheet
@@ -216,6 +224,10 @@ The painted login flow: name entry, returning-character picker, and the race and
 ![Housing realtor](screenshots/subsystems/35-housing.jpg)
 *The Estates Broker's Office — buy and furnish a home*
 
+### Inn & recall
+![The inn — take the key to set your recall point](screenshots/subsystems/40-inn-recall.jpg)
+*The Cozy Inn of Dreams — take the hanging key to rest and make the inn your recall point, and the `recall` command will always carry you home to it*
+
 ### Crafting recipes
 ![Crafting recipes](screenshots/subsystems/41-crafting.jpg)
 *The recipe book at the Crafters' Workshop*
@@ -259,6 +271,12 @@ The painted login flow: name entry, returning-character picker, and the race and
 ### Combat continues
 ![Combat continues](screenshots/subsystems/48-combat-2.jpg)
 *Abilities on the hotbar fire as the bout plays out*
+
+## Staff Tools
+
+### Staff control panel
+![Staff control panel](screenshots/subsystems/50-staff-control.jpg)
+*The staff control panel — teleport, spawn, set level and stats, moderate players, and reload the world live, all gated to staff accounts*
 
 ## A Few Academy Rooms Up Close
 

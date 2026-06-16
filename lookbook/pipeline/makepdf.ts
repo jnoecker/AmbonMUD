@@ -160,6 +160,10 @@ const doc = `<!doctype html><html><head><meta charset="utf-8"><style>
   /* Portrait plates (e.g. the tall Ambon world map) overflow at the fixed plate
      width, so cap them by height and let the width shrink to keep them on-page. */
   .plate img[src*="ambon-map"] { width: auto; max-width: 6.3in; max-height: 7.1in; }
+  /* Tight UI close-ups (vitals bar, room-name sign) print sharper shown smaller
+     than the full plate width rather than upscaled to it. */
+  .plate img[src*="06b-vitals-hud"] { width: 5in; }
+  .plate img[src*="06c-room-sign"] { width: 2.7in; }
   .plate .cap { font-size: 10pt; font-style: italic; font-weight: 700; color: #3a2710; margin: 7pt 0 0 !important; }
   .gridpage .inner { text-align: center; width: 100%; }
   .gridpage h2, .gridpage p { text-align: left; }
