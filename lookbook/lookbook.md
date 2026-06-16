@@ -26,9 +26,8 @@ bragging rights.
 
 **Quests & goals.** NPCs offer branching, voice-acted dialogue with structured quest
 offers; the quest log tracks active, daily, weekly, bounty, and global quests.
-Achievements, leaderboards, factions with reputation tiers, special currencies (quest
-points, honor, crafting tokens), and a prestige system give long-term goals past the
-level cap.
+Achievements, leaderboards, factions with reputation tiers, and special currencies (quest
+points, honor, crafting tokens) give long-term goals past the level cap.
 
 **Economy & crafting.** Shops buy and sell with configurable economy multipliers; the
 bank stores gold and items; an auction house runs player-to-player sales; direct
@@ -141,8 +140,8 @@ The painted login flow: name entry, returning-character picker, and the race and
 ## Character & Progression
 
 ### Character sheet
-![Character sheet — portrait, stats, settings, and links to professions, achievements, and prestige](screenshots/subsystems/10-character-panel.jpg)
-*Character sheet — portrait, stats, settings, and links to professions, achievements, and prestige*
+![Character sheet — portrait, stats, settings, and links to professions and achievements](screenshots/subsystems/10-character-panel.jpg)
+*Character sheet — portrait, stats, settings, and links to professions and achievements*
 
 ### Professions
 ![Professions](screenshots/subsystems/10b-professions.jpg)
@@ -151,10 +150,6 @@ The painted login flow: name entry, returning-character picker, and the race and
 ### Achievements
 ![Achievements](screenshots/subsystems/10c-achievements.jpg)
 *Achievements*
-
-### Prestige
-![Prestige](screenshots/subsystems/10d-prestige.jpg)
-*Prestige*
 
 ### Inventory
 ![Inventory](screenshots/subsystems/11-inventory-panel.jpg)
@@ -241,7 +236,7 @@ The painted login flow: name entry, returning-character picker, and the race and
 
 ### Music box
 ![Music box](screenshots/subsystems/39-musicbox.jpg)
-*The music box in the Fortune Teller's Astral Parlor — a free, one-song miniature of the jukebox. Wind it up and "The Word of Ambon" plays only for you, its lyrics scrolling past as the song follows you from room to room*
+*The music box in the Fortune Teller's Astral Parlor — a free, one-song miniature of the jukebox. Wind it up and "The Word of Ambon" plays only for you, its lyrics scrolling past as the song follows you from room to room. Plus you keep a souvenir: the first play mints a collectible lyric sheet into your inventory — a little printed keepsake of the song you can read back any time*
 
 ### Puzzle
 ![Puzzle](screenshots/subsystems/43-puzzle.jpg)
@@ -433,6 +428,4 @@ Every room of the Auringold Academy tutorial zone, in zone-file order.
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/catacomb_chapel.jpg" alt="The Chapel of Patient Rest" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Chapel of Patient Rest</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/memento_mori_shrine.jpg" alt="The Memento Mori Shrine" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Memento Mori Shrine</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/restless_repository.jpg" alt="The Restless Repository" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Restless Repository</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/gates_approach.jpg" alt="The Approach to the Gates" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Approach to the Gates</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/gates_of_ambon.jpg" alt="The Gates of Ambon" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Gates of Ambon</figcaption></figure>
 </div>

@@ -157,6 +157,9 @@ const doc = `<!doctype html><html><head><meta charset="utf-8"><style>
   .plate { text-align: center; margin: 0.12in 0; }
   .plate h3 { font-size: 13.5pt; color: #2a1c08; font-weight: 800; margin: 0 0 5pt; }
   .plate img { width: 5.6in; border-radius: 3px; border: 1px solid #8a7045; }
+  /* Portrait plates (e.g. the tall Ambon world map) overflow at the fixed plate
+     width, so cap them by height and let the width shrink to keep them on-page. */
+  .plate img[src*="ambon-map"] { width: auto; max-width: 6.3in; max-height: 7.1in; }
   .plate .cap { font-size: 10pt; font-style: italic; font-weight: 700; color: #3a2710; margin: 7pt 0 0 !important; }
   .gridpage .inner { text-align: center; width: 100%; }
   .gridpage h2, .gridpage p { text-align: left; }
