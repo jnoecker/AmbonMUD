@@ -225,7 +225,7 @@ The painted login flow: name entry, returning-character picker, and the race and
 
 ### Dice table
 ![Dice table](screenshots/subsystems/37b-dice.jpg)
-*Fortuna's honest dice in the Parlor of Small Fortunes*
+*Kolksprut's honest dice in the Parlor of Small Fortunes*
 
 ### Jukebox
 ![Jukebox](screenshots/subsystems/38-jukebox.jpg)
