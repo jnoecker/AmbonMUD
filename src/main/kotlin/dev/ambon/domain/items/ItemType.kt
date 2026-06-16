@@ -2,8 +2,10 @@ package dev.ambon.domain.items
 
 /**
  * Broad categorization used by the client to group inventory items and by
- * the server to gate certain actions (quest items cannot be dropped, sold,
- * given, or stored in containers).
+ * the server to gate certain actions. Both [QUEST] and [KEEPSAKE] items are
+ * "bound" — they cannot be dropped, sold, given, traded, banked, or mailed
+ * (see [Item.isBound]). Keepsakes are personal souvenirs (e.g. a music-box
+ * lyric sheet); they bind the same way but read as keepsakes, not quest items.
  *
  * When an item does not declare [Item.itemType] explicitly, a value is
  * inferred via [Item.resolvedType] from the item's other properties.
@@ -13,6 +15,7 @@ enum class ItemType {
     CONSUMABLE,
     QUEST,
     TREASURE,
+    KEEPSAKE,
     MISC,
     ;
 

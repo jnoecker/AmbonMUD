@@ -175,11 +175,11 @@ class ShopHandler(
                 outbound.send(OutboundEvent.SendError(sessionId, "You don't have '$keyword'."))
                 return
             }
-            if (invItem.item.questItem) {
+            if (invItem.item.isBound()) {
                 outbound.send(
                     OutboundEvent.SendError(
                         sessionId,
-                        "You can't sell ${invItem.item.displayName} — it's a quest item.",
+                        "You can't sell ${invItem.item.displayName} — it's a ${invItem.item.boundKind()}.",
                     ),
                 )
                 return

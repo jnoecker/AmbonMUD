@@ -32,7 +32,7 @@ interface ItemStack {
   instances: ItemSummary[];
 }
 
-type SectionKey = "equipment" | "consumable" | "quest" | "treasure" | "misc";
+type SectionKey = "equipment" | "consumable" | "quest" | "treasure" | "keepsake" | "misc";
 
 interface Section {
   key: SectionKey;
@@ -56,6 +56,7 @@ function groupAndCategorize(items: ItemSummary[]): Section[] {
     consumable: new Map(),
     quest: new Map(),
     treasure: new Map(),
+    keepsake: new Map(),
     misc: new Map(),
   };
 
@@ -78,6 +79,7 @@ function groupAndCategorize(items: ItemSummary[]): Section[] {
     { key: "consumable", title: "Consumables", hint: null },
     { key: "quest", title: "Quest Items", hint: "Soulbound — cannot be dropped or sold." },
     { key: "treasure", title: "Valuables", hint: "Sell to a shopkeeper for gold." },
+    { key: "keepsake", title: "Keepsakes", hint: "Souvenirs — kept, not traded. Open one to read it." },
     { key: "misc", title: "Other", hint: null },
   ];
 
@@ -101,6 +103,8 @@ function categoryChipLabel(type: ItemType): string {
       return "Quest";
     case "treasure":
       return "Sell";
+    case "keepsake":
+      return "Keepsake";
     case "misc":
       return "Misc";
   }
@@ -156,14 +160,14 @@ export function InventoryPanel({
   const renderStack = (stack: ItemStack, type: ItemType) => {
     const item = stack.lead;
     const count = stack.instances.length;
-    const isQuest = type === "quest" || !!item.questItem;
+    const isBound = type === "quest" || type === "keepsake" || !!item.questItem;
     const isVendorFodder = type === "treasure" && !item.slot && !item.consumable;
     const image = resolveItemImage(item);
 
     const rowClasses = [
       "inventory-item-row",
       `inventory-item-row-${type}`,
-      isQuest ? "inventory-item-row-quest" : "",
+      isBound ? "inventory-item-row-quest" : "",
       isVendorFodder ? "inventory-item-row-vendor" : "",
     ]
       .filter(Boolean)
@@ -235,7 +239,7 @@ export function InventoryPanel({
                 {actionAsset("action_equip") ?? <WearItemIcon className="inventory-action-icon" />}
               </button>
             )}
-            {containerContents && !isQuest && (
+            {containerContents && !isBound && (
               <button
                 type="button"
                 className="inventory-action-btn inventory-action-btn-icon inventory-action-put"
@@ -247,7 +251,7 @@ export function InventoryPanel({
                 {actionAsset("action_store") ?? <span className="inventory-action-glyph" aria-hidden="true">⊞</span>}
               </button>
             )}
-            {players.length > 0 && !isQuest && (
+            {players.length > 0 && !isBound && (
               <button
                 type="button"
                 className={`inventory-action-btn inventory-action-btn-icon${givePickerStackKey === stack.key ? " inventory-action-btn-active" : ""}`}
@@ -260,7 +264,7 @@ export function InventoryPanel({
                 {actionAsset("action_give") ?? <GiveItemIcon className="inventory-action-icon" />}
               </button>
             )}
-            {!isQuest && (
+            {!isBound && (
               <button
                 type="button"
                 className="inventory-action-btn inventory-action-btn-icon"
@@ -272,7 +276,7 @@ export function InventoryPanel({
                 {actionAsset("action_drop") ?? <DropItemIcon className="inventory-action-icon" />}
               </button>
             )}
-            {isQuest && (
+            {isBound && (
               <span
                 className="inventory-item-soulbound"
                 title="Quest items cannot be dropped, given, sold, or traded."

@@ -85,11 +85,11 @@ class TradeHandler(
         }
 
         val carried = items.peekInventoryItem(sessionId, cmd.itemKeyword)
-        if (carried != null && carried.item.questItem) {
+        if (carried != null && carried.item.isBound()) {
             outbound.send(
                 OutboundEvent.SendError(
                     sessionId,
-                    "You can't trade ${carried.item.displayName} — it's a quest item.",
+                    "You can't trade ${carried.item.displayName} — it's a ${carried.item.boundKind()}.",
                 ),
             )
             return

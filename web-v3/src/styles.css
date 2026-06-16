@@ -21324,6 +21324,9 @@ html:has(.game-shell),
   font-size: 1.02rem;
   line-height: 1.5;
   color: #3a2c1a;
+  /* Preserve authored line breaks (e.g. a lyric sheet's verses); prose with no
+     newlines renders unchanged. */
+  white-space: pre-line;
 }
 
 .mm-desc::first-letter {
