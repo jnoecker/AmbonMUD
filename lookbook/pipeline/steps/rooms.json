@@ -1,0 +1,1139 @@
+[
+  {
+    "login": true
+  },
+  {
+    "cmd": "goto academy_quad"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/academy_quad.jpg"
+  },
+  {
+    "cmd": "goto aetherae"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/aetherae.jpg"
+  },
+  {
+    "cmd": "goto aineroia_cottage"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/aineroia_cottage.jpg"
+  },
+  {
+    "cmd": "goto aineron"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/aineron.jpg"
+  },
+  {
+    "cmd": "goto alchemy_lab"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/alchemy_lab.jpg"
+  },
+  {
+    "cmd": "goto almanac_terrace"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/almanac_terrace.jpg"
+  },
+  {
+    "cmd": "goto aolexia"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/aolexia.jpg"
+  },
+  {
+    "cmd": "goto aolia"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/aolia.jpg"
+  },
+  {
+    "cmd": "goto arcane_tempest"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/arcane_tempest.jpg"
+  },
+  {
+    "cmd": "goto arrival_king"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/arrival_king.jpg"
+  },
+  {
+    "cmd": "goto auction_hall"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/auction_hall.jpg"
+  },
+  {
+    "cmd": "goto aureliae"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/aureliae.jpg"
+  },
+  {
+    "cmd": "goto auringold_tavern"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/auringold_tavern.jpg"
+  },
+  {
+    "cmd": "goto beast_pen"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/beast_pen.jpg"
+  },
+  {
+    "cmd": "goto beside_clockwork_pond"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/beside_clockwork_pond.jpg"
+  },
+  {
+    "cmd": "goto betrayer_study"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/betrayer_study.jpg"
+  },
+  {
+    "cmd": "goto broker_office"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/broker_office.jpg"
+  },
+  {
+    "cmd": "goto bursar_bank"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/bursar_bank.jpg"
+  },
+  {
+    "cmd": "goto caldera"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/caldera.jpg"
+  },
+  {
+    "cmd": "goto call_for_heroes"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/call_for_heroes.jpg"
+  },
+  {
+    "cmd": "goto campus_post_office"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/campus_post_office.jpg"
+  },
+  {
+    "cmd": "goto caravan_stable"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/caravan_stable.jpg"
+  },
+  {
+    "cmd": "goto carnival_prophecy"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/carnival_prophecy.jpg"
+  },
+  {
+    "cmd": "goto catacomb_chapel"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/catacomb_chapel.jpg"
+  },
+  {
+    "cmd": "goto catacombs_landing"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/catacombs_landing.jpg"
+  },
+  {
+    "cmd": "goto cindaron"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/cindaron.jpg"
+  },
+  {
+    "cmd": "goto clockwork_battle"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/clockwork_battle.jpg"
+  },
+  {
+    "cmd": "goto clockwork_clearing"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/clockwork_clearing.jpg"
+  },
+  {
+    "cmd": "goto clockwork_dias"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/clockwork_dias.jpg"
+  },
+  {
+    "cmd": "goto clockwork_forest"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/clockwork_forest.jpg"
+  },
+  {
+    "cmd": "goto coral_reef"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/coral_reef.jpg"
+  },
+  {
+    "cmd": "goto cozy_inn"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/cozy_inn.jpg"
+  },
+  {
+    "cmd": "goto crafters_workshop"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/crafters_workshop.jpg"
+  },
+  {
+    "cmd": "goto creeping_darkness"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/creeping_darkness.jpg"
+  },
+  {
+    "cmd": "goto crystal_seam"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/crystal_seam.jpg"
+  },
+  {
+    "cmd": "goto deep_clockwork_forest"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/deep_clockwork_forest.jpg"
+  },
+  {
+    "cmd": "goto desert_sands"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/desert_sands.jpg"
+  },
+  {
+    "cmd": "goto dream_hotel"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/dream_hotel.jpg"
+  },
+  {
+    "cmd": "goto duel_ring"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/duel_ring.jpg"
+  },
+  {
+    "cmd": "goto emberfell"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/emberfell.jpg"
+  },
+  {
+    "cmd": "goto enchanted_bakery"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/enchanted_bakery.jpg"
+  },
+  {
+    "cmd": "goto enchanting_sanctum"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/enchanting_sanctum.jpg"
+  },
+  {
+    "cmd": "goto endless_starry_void"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/endless_starry_void.jpg"
+  },
+  {
+    "cmd": "goto faegrimm"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/faegrimm.jpg"
+  },
+  {
+    "cmd": "goto first_archae"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/first_archae.jpg"
+  },
+  {
+    "cmd": "goto foothills_kaerinlith"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/foothills_kaerinlith.jpg"
+  },
+  {
+    "cmd": "goto fortune_teller_parlor"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/fortune_teller_parlor.jpg"
+  },
+  {
+    "cmd": "goto games_parlor"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/games_parlor.jpg"
+  },
+  {
+    "cmd": "goto gathering_garden"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/gathering_garden.jpg"
+  },
+  {
+    "cmd": "goto gemstone_mineshaft"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/gemstone_mineshaft.jpg"
+  },
+  {
+    "cmd": "goto general_store"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/general_store.jpg"
+  },
+  {
+    "cmd": "goto great_betrayal"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/great_betrayal.jpg"
+  },
+  {
+    "cmd": "goto guild_registry"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/guild_registry.jpg"
+  },
+  {
+    "cmd": "goto hall_of_records"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/hall_of_records.jpg"
+  },
+  {
+    "cmd": "goto heralds_of_creation"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/heralds_of_creation.jpg"
+  },
+  {
+    "cmd": "goto humble_forest_cabin"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/humble_forest_cabin.jpg"
+  },
+  {
+    "cmd": "goto kiriton_winter"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/kiriton_winter.jpg"
+  },
+  {
+    "cmd": "goto kitsarae_mountain_basin"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/kitsarae_mountain_basin.jpg"
+  },
+  {
+    "cmd": "goto kitsarae_study"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/kitsarae_study.jpg"
+  },
+  {
+    "cmd": "goto krioshaeu_cabin"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/krioshaeu_cabin.jpg"
+  },
+  {
+    "cmd": "goto krioshaion"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/krioshaion.jpg"
+  },
+  {
+    "cmd": "goto lagauri"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/lagauri.jpg"
+  },
+  {
+    "cmd": "goto lantern_cloister"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/lantern_cloister.jpg"
+  },
+  {
+    "cmd": "goto library_fairytales"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/library_fairytales.jpg"
+  },
+  {
+    "cmd": "goto luneqrae"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/luneqrae.jpg"
+  },
+  {
+    "cmd": "goto lustriae"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/lustriae.jpg"
+  },
+  {
+    "cmd": "goto lyrasael"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/lyrasael.jpg"
+  },
+  {
+    "cmd": "goto market_row"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/market_row.jpg"
+  },
+  {
+    "cmd": "goto memento_mori_shrine"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/memento_mori_shrine.jpg"
+  },
+  {
+    "cmd": "goto memory_creation"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/memory_creation.jpg"
+  },
+  {
+    "cmd": "goto mine_opening"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/mine_opening.jpg"
+  },
+  {
+    "cmd": "goto moon"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/moon.jpg"
+  },
+  {
+    "cmd": "goto mycollum"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/mycollum.jpg"
+  },
+  {
+    "cmd": "goto mycorae"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/mycorae.jpg"
+  },
+  {
+    "cmd": "goto nakhara"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/nakhara.jpg"
+  },
+  {
+    "cmd": "goto necrambon"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/necrambon.jpg"
+  },
+  {
+    "cmd": "goto night_wind"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/night_wind.jpg"
+  },
+  {
+    "cmd": "goto obsidian_dagger"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/obsidian_dagger.jpg"
+  },
+  {
+    "cmd": "goto old_mine_gate"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/old_mine_gate.jpg"
+  },
+  {
+    "cmd": "goto ophirae"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/ophirae.jpg"
+  },
+  {
+    "cmd": "goto orientation_hall"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/orientation_hall.jpg"
+  },
+  {
+    "cmd": "goto ossuary_walk"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/ossuary_walk.jpg"
+  },
+  {
+    "cmd": "goto path_kaerinlith"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/path_kaerinlith.jpg"
+  },
+  {
+    "cmd": "goto phosmaren"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/phosmaren.jpg"
+  },
+  {
+    "cmd": "goto prestige_vestibule"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/prestige_vestibule.jpg"
+  },
+  {
+    "cmd": "goto proving_yard"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/proving_yard.jpg"
+  },
+  {
+    "cmd": "goto provisioners_nook"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/provisioners_nook.jpg"
+  },
+  {
+    "cmd": "goto pyrae"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/pyrae.jpg"
+  },
+  {
+    "cmd": "goto resistance_camp"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/resistance_camp.jpg"
+  },
+  {
+    "cmd": "goto restless_repository"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/restless_repository.jpg"
+  },
+  {
+    "cmd": "goto riddle_gallery"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/riddle_gallery.jpg"
+  },
+  {
+    "cmd": "goto royal_graveyard"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/royal_graveyard.jpg"
+  },
+  {
+    "cmd": "goto royal_wedding"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/royal_wedding.jpg"
+  },
+  {
+    "cmd": "goto sandy_shoal"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/sandy_shoal.jpg"
+  },
+  {
+    "cmd": "goto seaweed_thicket"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/seaweed_thicket.jpg"
+  },
+  {
+    "cmd": "goto secret_archive"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/secret_archive.jpg"
+  },
+  {
+    "cmd": "goto shattered_fae_wood"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/shattered_fae_wood.jpg"
+  },
+  {
+    "cmd": "goto shining_crystal_mine"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/shining_crystal_mine.jpg"
+  },
+  {
+    "cmd": "goto ship_graveyard"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/ship_graveyard.jpg"
+  },
+  {
+    "cmd": "goto sleeping_stone_statues"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/sleeping_stone_statues.jpg"
+  },
+  {
+    "cmd": "goto song_parlor"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/song_parlor.jpg"
+  },
+  {
+    "cmd": "goto sparring_circle"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/sparring_circle.jpg"
+  },
+  {
+    "cmd": "goto spotters_walk"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/spotters_walk.jpg"
+  },
+  {
+    "cmd": "goto springwright_workshop"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/springwright_workshop.jpg"
+  },
+  {
+    "cmd": "goto sunken_ship_hull"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/sunken_ship_hull.jpg"
+  },
+  {
+    "cmd": "goto sylflorae_farm"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/sylflorae_farm.jpg"
+  },
+  {
+    "cmd": "goto tempest_between_worlds"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/tempest_between_worlds.jpg"
+  },
+  {
+    "cmd": "goto tessikon"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/tessikon.jpg"
+  },
+  {
+    "cmd": "goto thalvorek"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/thalvorek.jpg"
+  },
+  {
+    "cmd": "goto tinkers_bench"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/tinkers_bench.jpg"
+  },
+  {
+    "cmd": "goto turbulent_waters"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/turbulent_waters.jpg"
+  },
+  {
+    "cmd": "goto twilight_salon"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/twilight_salon.jpg"
+  },
+  {
+    "cmd": "goto underground_river"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/underground_river.jpg"
+  },
+  {
+    "cmd": "goto vault"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/vault.jpg"
+  },
+  {
+    "cmd": "goto vault_of_whispers"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/vault_of_whispers.jpg"
+  },
+  {
+    "cmd": "goto verathaios_workshop"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/verathaios_workshop.jpg"
+  },
+  {
+    "cmd": "goto veratheron"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/veratheron.jpg"
+  },
+  {
+    "cmd": "goto void_below_mountain"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/void_below_mountain.jpg"
+  },
+  {
+    "cmd": "goto voxspore"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/voxspore.jpg"
+  },
+  {
+    "cmd": "goto vulgorth"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/vulgorth.jpg"
+  },
+  {
+    "cmd": "goto wading_pond"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/wading_pond.jpg"
+  },
+  {
+    "cmd": "goto wagon_drifting_stars"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/wagon_drifting_stars.jpg"
+  },
+  {
+    "cmd": "goto waterfall"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/waterfall.jpg"
+  },
+  {
+    "cmd": "goto world_seed"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/world_seed.jpg"
+  },
+  {
+    "cmd": "goto yaleron"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/yaleron.jpg"
+  },
+  {
+    "cmd": "goto zoetrope_carriage"
+  },
+  {
+    "sleep": 4
+  },
+  {
+    "shot": "../screenshots/academy/zoetrope_carriage.jpg"
+  }
+]

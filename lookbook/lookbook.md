@@ -183,6 +183,7 @@ The painted login flow: name entry, returning-character picker, and the race and
 
 ### Chat board
 ![Chat board](screenshots/subsystems/16-chat.jpg)
+*The Social Board, mid-conversation on the server-wide Gossip channel — players coordinating a catacombs run. Five channels (Say, Tell, Gossip, Shout, OOC) share the one painted frame.*
 
 ### Who's online
 ![Who's online](screenshots/subsystems/17-who.jpg)

@@ -34,36 +34,42 @@ How it lays out:
   so a page holds ~7 entries. If you add entries, rebalance the `pages` arrays
   in `codex.json` rather than letting a page clip at the bottom.
 
-## Stage 2 — capture the screenshots (`capture.ts` + `*.sh`)
+## Stage 2 — capture the screenshots (`capture.ts` + `steps/`)
 
-Only needed to *re-capture* `../screenshots/` (login flow, every panel, and one
-shot per Auringold Academy room). Requires a local server with the full world
-**and the painted backgrounds from R2** — without them, art-forward panels (the
-chest/container modal, signs, levers, door heroes) fall back to the unskinned CSS
-and the screenshots look plain.
+Re-captures `../screenshots/` **from the live demo** (`https://mud.ambon.dev`) —
+no local server or `AMBONMUD_DATA_DIR` assembly needed. The live demo already
+serves the full Auringold world and the painted R2 backgrounds, so art-forward
+panels (signs, the inn key, the vitals bar, staff control) come through skinned.
+Just point a Playwright Chromium at it and drive it as the lookbook character.
 
-1. **Assemble `AMBONMUD_DATA_DIR`** the way production does (see
-   `AmbonMUD/docs/DEPLOYMENT.md` § "Remote world & config overlay"): a directory
-   holding `application-local.yaml` (the lore config overlay), the zone YAMLs
-   under `world/`, `sprites.yaml`, and `achievements.yaml`. The overlay's
-   `ambonmud.globalAssets` map (e.g. `container_bg: <hash>.jpg`) is what points
-   the web client at the painted backdrops, which it fetches from R2 at runtime —
-   so the capture box needs outbound network to R2.
-2. **Boot the demo against it:**
+`capture.ts` reads a JSON step-script. Steps:
 
-```bash
-# in the AmbonMUD repo root:
-AMBONMUD_DATA_DIR=/path/to/data ./gradlew demo   # note the web port it prints (e.g. 18543)
-```
+| Step | Effect |
+|------|--------|
+| `{ "login": true }` | log in as `LOOKBOOK_NAME`/`LOOKBOOK_PASS` (waits on the in-game vitals HUD) |
+| `{ "cmd": "goto cozy_inn" }` | submit an in-game command (staff `goto <room-id>` teleports) |
+| `{ "shot": "path.jpg" }` | full-page screenshot |
+| `{ "clip": ".sel", "shot": "path.jpg", "pad": 10 }` | screenshot one element's box (UI close-ups) |
+| `{ "click": "Chat" }` | click the first DOM button whose aria-label/text starts with the string |
+| `{ "clickxy": [x, y] }` | click a viewport coordinate (Pixi canvas badges: the inn kiosk, the STAFF/Recall pills) |
+| `{ "press": "Escape" }`, `{ "sleep": 3 }`, `{ "fill": ".sel", "value": "x" }`, `{ "waitfor": ".sel" }`, `{ "js": "expr" }` | misc |
 
-Needs JDK 21 on PATH (the Gradle build won't start without a JVM).
-
-Then drive it. `capture.ts` takes a JSON step-script (`{login}`, `{goto}`,
-`{cmd}`, `{click}`, `{shot}`, `{sleep}`, …):
+The committed step-scripts in `steps/` are the repeatable process:
 
 ```bash
-LOOKBOOK_URL=http://localhost:18543 bun capture.ts steps.json
+bun capture.ts steps/rooms.json          # re-shoot every Auringold Academy room (goto by room id)
+bun capture.ts steps/subsystems.json     # exercise the panels, vitals/sign close-ups, inn recall, staff control
+LOOKBOOK_DSF=3 bun capture.ts steps/subsystems.json   # hi-res for the {clip} close-ups
+bun social.ts                            # populate the Social Board (gossip) with a multi-account conversation
 ```
+
+`steps/rooms.json` is generated from the room ids (the `../screenshots/academy/`
+filenames are the room ids); regenerate it if rooms are added or removed. Room
+**services** opened from a room's painted kiosk badge (shop, bank, auction,
+stylist, housing, crafting, lottery, dice, jukebox, music box, puzzle, chest,
+inn) are Pixi canvas elements — open them with `clickxy` at the badge on the
+left rail (see `subsystems.json`'s inn step for the pattern), or by their
+in-game command, then `shot`.
 
 The `*.sh` helpers (`cap.sh`, `ensure.sh`, `send.sh`, `panel.sh`) are an
 alternative driver built on the gstack `browse` daemon for interactive capture
@@ -74,8 +80,9 @@ and auto-relogin; they read the same env.
 | Var | Default | Used by |
 |-----|---------|---------|
 | `CHROMIUM_BIN` | macOS Playwright cache, else Playwright's resolved Chromium | both |
-| `LOOKBOOK_URL` | `http://localhost:18543` | capture |
-| `LOOKBOOK_NAME` / `LOOKBOOK_PASS` | `Loremaster` / `lookbook-pass-1` (throwaway local-demo staff login) | capture |
+| `LOOKBOOK_URL` | `https://mud.ambon.dev` (the live demo) | capture |
+| `LOOKBOOK_NAME` / `LOOKBOOK_PASS` | `Claude` / `ClaudeFable5` (the staff lookbook character, with the painted "animae akathavae illustrator" skin) | capture |
+| `LOOKBOOK_DSF` | `1` (raise to 3 for crisp `{clip}` close-ups) | capture |
 | `BROWSE_BIN` | `~/.claude/skills/gstack/browse/dist/browse` | `cap.sh` |
 
 The lookbook lives outside the Gradle build, so `ktlintCheck` / `test` don't
