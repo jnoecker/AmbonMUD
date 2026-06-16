@@ -1,6 +1,10 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemType
 import dev.ambon.domain.world.MusicBox
 import dev.ambon.engine.MusicBoxSystem
 import dev.ambon.engine.commands.Command
@@ -126,6 +130,10 @@ class MusicBoxHandler(
                 outbound,
             )
 
+            // Souvenir: the first time you play a given song, the box prints you a
+            // keepsake lyric sheet (collect-once, bound, valueless). Replays are quiet.
+            grantLyricSheet(sessionId, box)
+
             ctx.emitMusicBoxGmcp(sessionId)
             // Inline music link for non-web clients (see PlayerState.audioLinksEnabled).
             if (me.audioLinksEnabled && box.url != me.lastEmittedMusicUrl) {
@@ -133,6 +141,58 @@ class MusicBoxHandler(
                 outbound.send(OutboundEvent.SendInfo(sessionId, "[music] ${box.url}"))
             }
         }
+    }
+
+    /**
+     * Tuck a keepsake [lyricSheet] for [box] into the player's inventory the first
+     * time they hear the song. Dedup is by the sheet's deterministic id, so playing
+     * the same song again (or one that shares a title in another room) is a no-op.
+     */
+    private suspend fun grantLyricSheet(
+        sessionId: SessionId,
+        box: MusicBox,
+    ) {
+        val sheet = lyricSheet(box)
+        if (ctx.items.inventory(sessionId).any { it.id == sheet.id }) return
+        ctx.items.addToInventory(sessionId, sheet)
+        gmcpEmitter?.sendCharItemsAdd(sessionId, sheet)
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                "The music box prints a little card — you tuck a lyric sheet for \"${box.title}\" into your satchel.",
+            ),
+        )
+    }
+
+    /**
+     * Builds the keepsake lyric-sheet item for [box]: a valueless, bound souvenir
+     * whose description is the song's title, artist, and full lyrics — so both the
+     * web examine panel and a telnet `look sheet` read the words back. The id is
+     * derived from the title so the same song always maps to the same sheet.
+     */
+    private fun lyricSheet(box: MusicBox): ItemInstance {
+        val slug = box.title.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').ifEmpty { "song" }
+        val header = box.artist?.let { "\"${box.title}\" — $it" } ?: "\"${box.title}\""
+        val description =
+            buildString {
+                append("A printed lyric sheet — a keepsake from a music box.\n\n")
+                append(header)
+                if (box.lyrics.isNotEmpty()) {
+                    append("\n\n")
+                    append(box.lyrics.joinToString("\n"))
+                }
+            }
+        return ItemInstance(
+            id = ItemId("lyric-sheet:$slug"),
+            item =
+                Item(
+                    keyword = "sheet",
+                    displayName = "a lyric sheet for \"${box.title}\"",
+                    description = description,
+                    basePrice = 0,
+                    itemType = ItemType.KEEPSAKE,
+                ),
+        )
     }
 
     private suspend fun handleStop(sessionId: SessionId) {

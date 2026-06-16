@@ -172,11 +172,11 @@ class WorldFeaturesHandler(
     ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = requireOpenContainer(sessionId, room, containerKeyword, worldState, outbound) ?: return
         val carried = items.peekInventoryItem(sessionId, itemKeyword)
-        if (carried != null && carried.item.questItem) {
+        if (carried != null && carried.item.isBound()) {
             outbound.send(
                 OutboundEvent.SendError(
                     sessionId,
-                    "You can't stash ${carried.item.displayName} — it's a quest item.",
+                    "You can't stash ${carried.item.displayName} — it's a ${carried.item.boundKind()}.",
                 ),
             )
             return

@@ -64,4 +64,13 @@ data class Item(
             else -> ItemType.MISC
         }
     }
+
+    /**
+     * True when the item is bound to its owner — it cannot be dropped, sold,
+     * given, traded, banked, or mailed. Quest items and keepsakes both bind.
+     */
+    fun isBound(): Boolean = questItem || itemType == ItemType.KEEPSAKE
+
+    /** Human-readable noun for why a [isBound] item is stuck ("quest item" / "keepsake"). */
+    fun boundKind(): String = if (questItem) "quest item" else "keepsake"
 }

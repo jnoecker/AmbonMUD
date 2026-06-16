@@ -106,8 +106,8 @@ class AuctionHandler(
 
         players.withPlayer(sessionId) { me ->
             val carried = items.peekInventoryItem(sessionId, cmd.itemKeyword)
-            if (carried != null && carried.item.questItem) {
-                val message = "You can't auction ${carried.item.displayName} — it's a quest item."
+            if (carried != null && carried.item.isBound()) {
+                val message = "You can't auction ${carried.item.displayName} — it's a ${carried.item.boundKind()}."
                 sendErrorWithFeedback(sessionId, outbound, gmcpEmitter, message, "auction", code = "QUEST_ITEM", command = "sell")
                 return
             }

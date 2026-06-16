@@ -233,12 +233,12 @@ class MailHandler(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
                 return
             }
-            if (removed.item.questItem) {
+            if (removed.item.isBound()) {
                 items.addToInventory(sessionId, removed)
                 outbound.send(
                     OutboundEvent.SendError(
                         sessionId,
-                        "You can't mail ${removed.item.displayName} — it's a quest item. Mail not sent.",
+                        "You can't mail ${removed.item.displayName} — it's a ${removed.item.boundKind()}. Mail not sent.",
                     ),
                 )
                 outbound.send(OutboundEvent.SendPrompt(sessionId))

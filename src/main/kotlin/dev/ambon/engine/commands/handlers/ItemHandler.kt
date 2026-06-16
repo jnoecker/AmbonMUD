@@ -298,11 +298,11 @@ class ItemHandler(
                 }
             }
             val carried = items.peekInventoryItem(me.sessionId, cmd.keyword)
-            if (carried != null && carried.item.questItem) {
+            if (carried != null && carried.item.isBound()) {
                 outbound.send(
                     OutboundEvent.SendError(
                         sessionId,
-                        "You can't drop ${carried.item.displayName} — it's a quest item.",
+                        "You can't drop ${carried.item.displayName} — it's a ${carried.item.boundKind()}.",
                     ),
                 )
                 return
@@ -416,11 +416,11 @@ class ItemHandler(
             players.withPlayer(targetSid) { target ->
                 if (!requireSameRoom(sessionId, me, target, outbound)) return
                 val owned = items.peekOwnedItem(me.sessionId, cmd.keyword)
-                if (owned != null && owned.item.questItem) {
+                if (owned != null && owned.item.isBound()) {
                     outbound.send(
                         OutboundEvent.SendError(
                             sessionId,
-                            "You can't give away ${owned.item.displayName} — it's a quest item.",
+                            "You can't give away ${owned.item.displayName} — it's a ${owned.item.boundKind()}.",
                         ),
                     )
                     return

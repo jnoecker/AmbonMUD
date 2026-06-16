@@ -284,6 +284,7 @@ export type ItemType =
   | "consumable"
   | "quest"
   | "treasure"
+  | "keepsake"
   | "misc";
 
 export interface ItemSummary {
