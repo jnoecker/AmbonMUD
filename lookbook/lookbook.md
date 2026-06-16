@@ -48,6 +48,13 @@ scheduled world events that change the sky overhead.
 friends lists, mail with attachments, global and group chat channels, and a who's-online
 board keep it social.
 
+## The World of Ambon
+
+### The Map of Ambon
+
+![The hand-drawn world map of Ambon](screenshots/ambon-map.jpg)
+*The world of Ambon, hand-drawn in Wonderdraft. The Auringold Academy — the zone toured throughout this lookbook — is one corner of a continent of twenty-plus zones the live demo streams in at boot.*
+
 ## Under the Hood
 
 A one-page technical orientation for software engineers.
@@ -231,6 +238,10 @@ The painted login flow: name entry, returning-character picker, and the race and
 ### Jukebox
 ![Jukebox](screenshots/subsystems/38-jukebox.jpg)
 *The jukebox in the Parlor of Borrowed Songs — pay a few coins and your chosen track plays for everyone in the room*
+
+### Music box
+![Music box](screenshots/subsystems/39-musicbox.jpg)
+*The music box in the Fortune Teller's Astral Parlor — a free, one-song miniature of the jukebox. Wind it up and "The Word of Ambon" plays only for you, its lyrics scrolling past as the song follows you from room to room*
 
 ### Puzzle
 ![Puzzle](screenshots/subsystems/43-puzzle.jpg)
