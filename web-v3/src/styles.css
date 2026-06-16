@@ -21687,7 +21687,7 @@ html:has(.game-shell),
 .mm-dialog-waiting { flex: 0 0 auto; opacity: 0.6; font-style: normal; }
 
 .mm-dialog-choices {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   list-style: none;
   margin: 0;
   /* Slim side padding so the hover translate never clips a button's border. */
@@ -21695,7 +21695,18 @@ html:has(.game-shell),
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /* Cap the choice column to roughly four rows so a chatty NPC with six
+     options can't squeeze the spoken line down to a sliver — extra choices
+     scroll within their own track while the speech keeps its space. */
+  max-height: 45%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(106 74 36 / 55%) transparent;
 }
+
+.mm-dialog-choices::-webkit-scrollbar { width: 6px; }
+.mm-dialog-choices::-webkit-scrollbar-track { background: transparent; }
+.mm-dialog-choices::-webkit-scrollbar-thumb { background: rgb(106 74 36 / 50%); border-radius: 3px; }
 
 .mm-dialog-choice {
   position: relative;
@@ -27157,20 +27168,22 @@ html:has(.game-shell),
   color: #2e2212;
 }
 
-/* The command line reads as an ink rule on the parchment. */
+/* The command line reads as a luminous rule on the dark celestial scroll —
+   a faint inked trough with a soft gold underline, light text so the player's
+   typing stays legible against the starfield (the art is dark, not parchment). */
 .terminal-screen-skinned .canvas-command {
-  background: rgb(255 252 244 / 35%);
+  background: rgb(20 16 40 / 42%);
   border: none;
-  border-bottom: 2px solid rgb(106 74 36 / 50%);
+  border-bottom: 2px solid rgb(206 174 96 / 55%);
   border-radius: 4px 4px 0 0;
 }
 
 .terminal-screen-skinned .canvas-command-input {
-  color: #2e2212;
+  color: #f3ead2;
 }
 
 .terminal-screen-skinned .canvas-command-input::placeholder {
-  color: rgb(106 74 36 / 55%);
+  color: rgb(230 216 182 / 50%);
 }
 
 /* Quill send button inside the terminal — the painted art replaces the
@@ -28412,19 +28425,31 @@ html:has(.game-shell),
     --mb-ink-accent: #6e3a1c;
   }
 
-  /* Title parchment cartouche near the top of the box (art zone ≈ y10–16%, x38–69%). */
+  /* Title parchment cartouche near the top of the box (art zone ≈ y11–17%,
+     x31–69%). Insets are symmetric so the title sits centered on the plate —
+     the old 38%/32% pair pushed it right and clipped the leading letter — and
+     the font caps lower so a long "Song — Artist" line fits the narrow band. */
   .musicbox-panel-skinned .musicbox-title {
     position: absolute;
-    inset: 9.5% 32% 84% 38%;
+    inset: 11.5% 31% 83% 31%;
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: center;
+    gap: 0.25em;
     overflow: hidden;
     color: var(--mb-ink-strong);
-    font-size: clamp(0.62rem, 1.5vw, 1rem);
+    font-size: clamp(0.5rem, 1.05vw, 0.82rem);
     white-space: nowrap;
   }
-  .musicbox-panel-skinned .musicbox-title-artist { color: var(--mb-ink-soft); }
+  /* Each part may individually ellipsize so neither end of the line gets
+     hard-clipped mid-word when the title runs long. */
+  .musicbox-panel-skinned .musicbox-title-name,
+  .musicbox-panel-skinned .musicbox-title-artist {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .musicbox-panel-skinned .musicbox-title-artist { color: var(--mb-ink-soft); flex-shrink: 2; }
 
   /* Central parchment — the big paper panel between the corner figurines
      (art zone ≈ y36–76%, x29–73%; inset a touch so text stays off the wood). */
@@ -28445,10 +28470,22 @@ html:has(.game-shell),
   .musicbox-panel-skinned .musicbox-lyric.is-future { color: var(--mb-ink-soft); opacity: 0.55; }
   .musicbox-panel-skinned .musicbox-lyric.is-current { color: var(--mb-ink-strong); opacity: 1; }
 
-  /* Play / stop crank + countdown seated on the base plaque (art zone ≈ y82–91%). */
+  /* Play / stop crank + countdown seated on the base plaque (art zone ≈ y80–89%).
+     Raised onto the oval and the gap tightened so the button + countdown stay
+     centered on the plaque instead of the time spilling onto the wood beside it. */
   .musicbox-panel-skinned .musicbox-controls {
     position: absolute;
-    inset: 82.5% 27% 6.5% 27%;
+    inset: 80% 24% 9% 24%;
+    gap: 0.6em;
+  }
+  /* Tighter button so the Play/Stop label + countdown sit together on the oval. */
+  .musicbox-panel-skinned .musicbox-btn {
+    padding: 0.35em 1em;
+    font-size: clamp(0.72rem, 1.1vw, 0.92rem);
+  }
+  .musicbox-panel-skinned .musicbox-remaining {
+    color: var(--mb-ink-soft);
+    font-size: clamp(0.62rem, 0.9vw, 0.82rem);
   }
   .musicbox-panel-skinned .musicbox-feedback {
     position: absolute;
