@@ -74,6 +74,21 @@ class CommandRouterMusicBoxTest {
         }
 
     @Test
+    fun `the lyric sheet carries the music box's resolved keepsake image`() =
+        runTest {
+            val env = setup()
+
+            env.router.handle(env.sid, Command.MusicBoxPlay)
+
+            val sheet = lyricSheets(env.items, env.sid).first().item
+            assertEquals(
+                "/images/items/lyric-sheet-lullaby.png",
+                sheet.image,
+                "the keepsake should carry the music box's image, resolved against the images base",
+            )
+        }
+
+    @Test
     fun `replaying the same song does not add a second sheet`() =
         runTest {
             val env = setup()

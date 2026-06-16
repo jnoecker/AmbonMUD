@@ -72,7 +72,10 @@ data class JukeboxSongFile(
  * Playing it is free and player-scoped — the song follows the player out of the
  * room. [lyrics] lines are surfaced on the player's device, spread evenly across
  * the duration, so the count must leave at least a few seconds between lines
- * (validated at load). [artist]/[description] are optional flavour.
+ * (validated at load). [artist]/[description] are optional flavour. [image] is an
+ * optional filename (resolved against the zone images base, like room/item art)
+ * for the collectible lyric-sheet keepsake minted on first play; when omitted the
+ * keepsake falls back to the client's generic item default.
  */
 data class MusicBoxFile(
     val title: String,
@@ -81,4 +84,5 @@ data class MusicBoxFile(
     val artist: String? = null,
     val description: String? = null,
     val lyrics: List<String> = emptyList(),
+    val image: String? = null,
 )

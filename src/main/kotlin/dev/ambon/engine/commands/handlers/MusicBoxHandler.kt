@@ -191,6 +191,7 @@ class MusicBoxHandler(
                     description = description,
                     basePrice = 0,
                     itemType = ItemType.KEEPSAKE,
+                    image = box.image,
                 ),
         )
     }
