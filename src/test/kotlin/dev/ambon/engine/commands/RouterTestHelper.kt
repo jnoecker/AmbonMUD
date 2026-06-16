@@ -22,6 +22,7 @@ import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.JukeboxSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
+import dev.ambon.engine.MusicBoxSystem
 import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerProgression
@@ -50,6 +51,7 @@ import dev.ambon.engine.commands.handlers.HousingHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.JukeboxHandler
 import dev.ambon.engine.commands.handlers.MailHandler
+import dev.ambon.engine.commands.handlers.MusicBoxHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.PrestigeHandler
@@ -123,6 +125,7 @@ internal fun buildTestRouter(
     markVitalsDirty: (SessionId) -> Unit = {},
     playerRepo: PlayerRepository? = null,
     jukeboxSystem: JukeboxSystem? = null,
+    musicBoxSystem: MusicBoxSystem? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val resolvedAkathavaeSystem = akathavaeSystem ?: AkathavaeSystem(
@@ -158,6 +161,7 @@ internal fun buildTestRouter(
         akathavaeSystem = resolvedAkathavaeSystem,
         puzzleSystem = puzzleSystem,
         jukeboxSystem = jukeboxSystem,
+        musicBoxSystem = musicBoxSystem,
     )
     val puzzleHandler = puzzleSystem?.let { PuzzleHandler(ctx = ctx, puzzleSystem = it) }
     listOfNotNull(
@@ -197,6 +201,7 @@ internal fun buildTestRouter(
         enchantSystem?.let { EnchantHandler(ctx = ctx, enchantSystem = it) },
         bankConfig?.let { BankHandler(ctx = ctx, bankConfig = it) },
         jukeboxSystem?.let { JukeboxHandler(ctx = ctx, jukeboxSystem = it, markVitalsDirty = markVitalsDirty) },
+        musicBoxSystem?.let { MusicBoxHandler(ctx = ctx, musicBoxSystem = it) },
         stylistConfig?.let {
             StylistHandler(
                 ctx = ctx,
