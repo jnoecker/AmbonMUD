@@ -2481,7 +2481,12 @@ export function applyGmcpPackage(
               description: typeof np.description === "string" ? np.description : null,
               url: np.url,
               buyer: typeof np.buyer === "string" ? np.buyer : "",
+              startedAtMs: safeNumber(np.startedAtMs, 0),
+              durationSeconds: safeNumber(np.durationSeconds, 0),
               secondsRemaining: safeNumber(np.secondsRemaining, 0),
+              lyrics: Array.isArray(np.lyrics)
+                ? (np.lyrics as unknown[]).filter((l): l is string => typeof l === "string")
+                : [],
               receivedAt: Date.now(),
             }
           : null;

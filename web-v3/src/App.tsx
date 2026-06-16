@@ -53,7 +53,8 @@ import { LevelUpBanner } from "./components/LevelUpBanner";
 import { QuestCompleteToast } from "./components/QuestCompleteToast";
 import { CombatVictoryToast } from "./components/CombatVictoryToast";
 import { FleeToast } from "./components/FleeToast";
-import { MusicBoxLyricToasts } from "./components/MusicBoxLyricToasts";
+import { LyricToasts } from "./components/LyricToasts";
+import { buildLyricSources } from "./components/lyricSources";
 import { LoginModal } from "./canvas/LoginModal";
 import { CharacterPicker } from "./components/CharacterPicker";
 import { CommandPalette } from "./components/CommandPalette";
@@ -2349,7 +2350,7 @@ function App() {
         }
       />
 
-      <MusicBoxLyricToasts musicBox={state.musicBox} suppressed={drawerPanel === "musicbox"} />
+      <LyricToasts sources={buildLyricSources(state.musicBox, state.jukebox, drawerPanel)} />
 
       {/* Server broadcast */}
       {state.broadcast && (

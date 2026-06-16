@@ -1680,7 +1680,12 @@ class GmcpEmitter(
         /** Resolved audio URL the web client plays in place of the room's default music. */
         val url: String,
         val buyer: String,
+        /** Epoch millis the track started — a stable identity for the playing song. */
+        val startedAtMs: Long,
+        val durationSeconds: Int,
         val secondsRemaining: Int,
+        /** Lyric lines; the client spreads them evenly across [durationSeconds] (🎵 toasts). */
+        val lyrics: List<String> = emptyList(),
     )
 
     /** The paid-for track queued to start when the current one ends. */
@@ -1731,7 +1736,10 @@ class GmcpEmitter(
                     description = np.song.description,
                     url = np.song.url,
                     buyer = np.buyerName,
+                    startedAtMs = np.startedAtMs,
+                    durationSeconds = np.song.durationSeconds,
                     secondsRemaining = remainingSeconds,
+                    lyrics = np.song.lyrics,
                 )
             },
             queued = queued?.let { q ->
