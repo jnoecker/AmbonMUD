@@ -28556,11 +28556,11 @@ html:has(.game-shell),
   }
 }
 
-/* Closed-device floating lyric toasts — bottom-center, stacked, fading. */
-.musicbox-toasts {
+/* Floating lyric toasts (music box + jukebox) — top-center, stacked, fading. */
+.lyric-toasts {
   position: fixed;
   left: 50%;
-  bottom: clamp(80px, 14vh, 160px);
+  top: clamp(16px, 7vh, 80px);
   transform: translateX(-50%);
   z-index: 60;
   display: flex;
@@ -28570,7 +28570,7 @@ html:has(.game-shell),
   pointer-events: none;
 }
 
-.musicbox-toast {
+.lyric-toast {
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
@@ -28583,17 +28583,17 @@ html:has(.game-shell),
   font-family: var(--font-display);
   font-size: 0.94rem;
   box-shadow: 0 4px 18px rgb(0 0 0 / 35%);
-  animation: musicbox-toast-in 0.32s ease;
+  animation: lyric-toast-in 0.32s ease;
 }
 
-.musicbox-toast-note { color: #c7a0dd; }
-.musicbox-toast-text {
+.lyric-toast-note { color: #c7a0dd; }
+.lyric-toast-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-@keyframes musicbox-toast-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+@keyframes lyric-toast-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }

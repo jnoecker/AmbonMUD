@@ -469,6 +469,35 @@ internal suspend fun sendLook(
         outbound.send(OutboundEvent.SendInfo(sessionId, "Crafting station: ${stationDisplayName(room.station)}"))
     }
 
+    // Music devices — parity with the web client's canvas widget rail. Without
+    // these lines a music box / jukebox is GMCP-only and telnet players have no
+    // way to discover it (#1336 follow-up).
+    room.musicBox?.let { box ->
+        val by = box.artist?.let { " by $it" } ?: ""
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                "A music box rests here, its glass orb aswirl with caught song — " +
+                    "type 'musicbox' to play \"${box.title}\"$by (free).",
+            ),
+        )
+    }
+    if (room.jukebox.isNotEmpty()) {
+        val count = room.jukebox.size
+        val songs = "$count song${if (count == 1) "" else "s"}"
+        val playing = jukeboxSystem?.nowPlaying(roomId)
+        val line =
+            if (playing != null && jukeboxSystem != null) {
+                val by = playing.song.artist?.let { " by $it" } ?: ""
+                val remain = jukeboxSystem.secondsRemaining(playing)
+                "A jukebox stands here, now playing \"${playing.song.title}\"$by " +
+                    "(${remain}s left) — type 'jukebox' to browse $songs."
+            } else {
+                "A jukebox stands here, its brass horn quiet — type 'jukebox' to browse $songs."
+            }
+        outbound.send(OutboundEvent.SendInfo(sessionId, line))
+    }
+
     // Gathering resources
     val nodes = gatheringRegistry?.nodesInRoom(roomId) ?: emptyList()
     if (nodes.isNotEmpty()) {

@@ -1311,7 +1311,12 @@ export interface JukeboxNowPlaying {
   /** Audio URL the client plays in place of the room's default music. */
   url: string;
   buyer: string;
+  /** Epoch millis the track started — a stable identity for the playing song. */
+  startedAtMs: number;
+  durationSeconds: number;
   secondsRemaining: number;
+  /** Lyric lines; the client spreads them evenly across durationSeconds (🎵 toasts). */
+  lyrics: string[];
   /** Client clock (ms) when this packet arrived — drives the live countdown. */
   receivedAt: number;
 }
