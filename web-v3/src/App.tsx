@@ -1319,7 +1319,7 @@ function App() {
               // Fetch the full look; the response (Room.LookTarget) is routed
               // into the item card by the effect below.
               pendingExamineRef.current = { image };
-              sendCommand(`look ${it.keyword}`);
+              sendCommand(it.id ? `look #${it.id}` : `look ${it.keyword}`);
               window.setTimeout(() => { pendingExamineRef.current = null; }, 2500);
             }}
             onCommand={sendCommand}
@@ -1336,7 +1336,7 @@ function App() {
             slotDefs={state.equipmentSlotDefs}
             onExamineItem={(it, image, slot) => {
               pendingExamineRef.current = { image, equippedSlot: slot };
-              sendCommand(`look ${it.keyword}`);
+              sendCommand(it.id ? `look #${it.id}` : `look ${it.keyword}`);
               window.setTimeout(() => { pendingExamineRef.current = null; }, 2500);
             }}
           />
@@ -1443,7 +1443,7 @@ function App() {
             })}
             onShowSellItem={(it, image) => {
               pendingExamineRef.current = { image };
-              sendCommand(`look ${it.keyword}`);
+              sendCommand(it.id ? `look #${it.id}` : `look ${it.keyword}`);
               window.setTimeout(() => { pendingExamineRef.current = null; }, 2500);
             }}
           />
