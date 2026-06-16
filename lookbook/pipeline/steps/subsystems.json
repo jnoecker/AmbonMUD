@@ -69,5 +69,18 @@
   { "clickxy": [144, 530] },
   { "sleep": 2 },
   { "shot": "../screenshots/subsystems/50-staff-control.jpg" },
-  { "press": "Escape" }
+  { "press": "Escape" },
+
+  { "cmd": "goto general_store" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/30-shop.jpg" }, { "press": "Escape" },
+  { "cmd": "goto library_fairytales" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/31-trainer.jpg" }, { "press": "Escape" },
+  { "cmd": "goto auction_hall" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/32-auction.jpg" }, { "press": "Escape" },
+  { "cmd": "goto bursar_bank" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/33-bank.jpg" }, { "press": "Escape" },
+  { "cmd": "goto twilight_salon" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/34-stylist.jpg" }, { "press": "Escape" },
+  { "cmd": "goto broker_office" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/35-housing.jpg" }, { "press": "Escape" },
+  { "cmd": "goto games_parlor" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/36b-lottery.jpg" }, { "press": "Escape" },
+  { "cmd": "goto games_parlor" }, { "sleep": 4 }, { "clickxy": [78, 320] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/37b-dice.jpg" }, { "press": "Escape" },
+  { "cmd": "goto song_parlor" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/38-jukebox.jpg" }, { "press": "Escape" },
+  { "cmd": "goto crafters_workshop" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/41-crafting.jpg" }, { "press": "Escape" },
+  { "cmd": "goto vault" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/42-chest.jpg" }, { "press": "Escape" },
+  { "cmd": "goto riddle_gallery" }, { "sleep": 4 }, { "clickxy": [78, 168] }, { "sleep": 2 }, { "shot": "../screenshots/subsystems/43-puzzle.jpg" }, { "press": "Escape" }
 ]

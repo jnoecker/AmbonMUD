@@ -58,10 +58,25 @@ The committed step-scripts in `steps/` are the repeatable process:
 
 ```bash
 bun capture.ts steps/rooms.json          # re-shoot every Auringold Academy room (goto by room id)
-bun capture.ts steps/subsystems.json     # exercise the panels, vitals/sign close-ups, inn recall, staff control
+bun capture.ts steps/subsystems.json     # panels, vitals/sign close-ups, inn recall, staff control, all room-service kiosks
 LOOKBOOK_DSF=3 bun capture.ts steps/subsystems.json   # hi-res for the {clip} close-ups
 bun social.ts                            # populate the Social Board (gossip) with a multi-account conversation
+bun combat.ts                            # combat (damage toasts + victory) and the battle-journal combat log
 ```
+
+Two panels need a sprite click, and mob sprite positions shift per session, so
+they use dedicated scripts / a recon click rather than fixed `clickxy`:
+
+- **NPC dialogue** is the *field manual's* Talk view — click the NPC sprite
+  (≈ `[1080, 330]` for Krioshaeu in `krioshaeu_cabin`; the manual root is
+  `.mm-card`) then the **Talk** tab. The plain `talk <npc>` command only opens the
+  unskinned canvas overlay.
+- **Combat** can't be driven by typed commands; `combat.ts` grid-clicks to find
+  the mob whose manual has an **Attack** action, attacks, and shoots the result.
+
+The room-service kiosks are Pixi badges stacked on the left rail at `x≈76`, first
+badge `y≈168`, ~150px apart (see `subsystems.json`); the dock panels, social
+stack, and field-manual tabs are DOM and clickable by `{click}` label.
 
 `steps/rooms.json` is generated from the room ids (the `../screenshots/academy/`
 filenames are the room ids); regenerate it if rooms are added or removed. Room
