@@ -369,4 +369,101 @@ class CommandRouterJukeboxTest {
                 "Expected a no-jukebox error. got=$outs",
             )
         }
+
+    @Test
+    fun `looking surfaces the jukebox so terminal players can discover it`() =
+        runTest {
+            val env = setup()
+
+            env.router.handle(env.sid, Command.Look)
+
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == env.sid &&
+                        it.text.contains("A jukebox stands here") &&
+                        it.text.contains("2 songs") &&
+                        it.text.contains("type 'jukebox'")
+                },
+                "Expected a jukebox discoverability line on look. got=$outs",
+            )
+        }
+
+    @Test
+    fun `looking names the track while the jukebox is playing`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 50L
+            env.router.handle(env.sid, Command.JukeboxPlay(1))
+            env.outbound.drainAll()
+
+            env.router.handle(env.sid, Command.Look)
+
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == env.sid &&
+                        it.text.contains("now playing") &&
+                        it.text.contains("Tavern Reel")
+                },
+                "Expected the playing track named on look. got=$outs",
+            )
+        }
+
+    @Test
+    fun `no jukebox line in a room without one`() =
+        runTest {
+            val env = setup()
+            env.players.moveTo(env.sid, RoomId("ok_jukebox:cellar"))
+            env.outbound.drainAll()
+
+            env.router.handle(env.sid, Command.Look)
+
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.none { it is OutboundEvent.SendInfo && it.text.contains("jukebox stands here") },
+                "Expected no jukebox line in a room without a jukebox. got=$outs",
+            )
+        }
+
+    @Test
+    fun `looking surfaces a music box so terminal players can discover it`() =
+        runTest {
+            val world = WorldLoader.loadFromResource("world/ok_musicbox.yaml")
+            val items = ItemRegistry()
+            items.loadSpawns(world.itemSpawns)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val combat = CombatSystem(players, mobs, items, outbound)
+            val clock = MutableClock(0)
+            val router = buildTestRouter(
+                world = world,
+                players = players,
+                mobs = mobs,
+                items = items,
+                combat = combat,
+                outbound = outbound,
+                clock = clock,
+            )
+            val sid = SessionId(1L)
+            require(players.login(sid, "Hummer", "password") == LoginResult.Ok)
+            outbound.drainAll()
+
+            router.handle(sid, Command.Look)
+
+            val outs = outbound.drainAll()
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text.contains("A music box rests here") &&
+                        it.text.contains("Scuttlefish's Lullaby") &&
+                        it.text.contains("type 'musicbox'")
+                },
+                "Expected a music-box discoverability line on look. got=$outs",
+            )
+        }
 }
