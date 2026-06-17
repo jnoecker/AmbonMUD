@@ -107,6 +107,7 @@ export class Minimap {
   // Server-asset textures + the sprites that use them.
   private texCache = new Map<string, Texture>();
   private assetsLoaded = false;
+  private assetsLoading = false;
   private destroyed = false;
   private paperSprite: Sprite | null = null;
   private expandSprite: Sprite | null = null;
@@ -359,8 +360,10 @@ export class Minimap {
     if (!roomId) return;
 
     // Load the optional minimap textures once Server.Assets GMCP arrives.
-    if (!this.assetsLoaded && Object.keys(gameStateRef.current.serverAssets).length > 0) {
-      this.assetsLoaded = true;
+    // loadAssets() only latches assetsLoaded once every present key resolves, so
+    // a transient failure leaves it clear and the next room change retries the
+    // failed textures rather than pinning the procedural fallback for the session.
+    if (!this.assetsLoaded && !this.assetsLoading && Object.keys(gameStateRef.current.serverAssets).length > 0) {
       this.loadAssets();
     }
 
@@ -802,20 +805,34 @@ export class Minimap {
 
   /** Load all optional minimap textures from Server.Assets, then redraw. */
   private async loadAssets() {
+    if (this.assetsLoading) return;
+    this.assetsLoading = true;
     const sa = gameStateRef.current.serverAssets;
+    let allOk = true;
     await Promise.all(
       ASSET_KEYS.map(async (k) => {
         const url = sa[k];
-        if (!url) return;
+        if (!url) return; // no art supplied for this key — not a failure
+        if (this.texCache.has(k)) return; // already loaded on an earlier pass
         try {
           const tex = await loadTexture(url);
           if (this.destroyed) return;
           // Auto-trim the transparent margin off room/quest glyphs so the
           // artwork fills the node; the parchment scrap is left untouched.
           this.texCache.set(k, k === A_BG ? tex : (this.trimTexture(tex) ?? tex));
-        } catch { /* keep the procedural fallback for this key */ }
+        } catch {
+          // Transient failure (CDN/network): leave it uncached and don't latch
+          // assetsLoaded, so the next updateRoom() retries this key instead of
+          // pinning the procedural fallback for the whole session.
+          allOk = false;
+        }
       }),
     );
+
+    this.assetsLoading = false;
+    // Only consider the textures fully loaded once every present key resolved;
+    // a partial failure keeps the flag clear so a later room change retries.
+    if (allOk) this.assetsLoaded = true;
 
     // The whole Pixi app may have been torn down while assets were loading;
     // bail before touching the (now destroyed) container.
