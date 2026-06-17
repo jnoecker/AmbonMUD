@@ -17,7 +17,14 @@ checked-in content:
 
 ```bash
 bun run build          # → ../lookbook.html and ../lookbook.pdf
+bun run promo          # → ../promo.pdf — a 2-page double-sided Letter handout
 ```
+
+`makepromo.ts` builds the giveaway flyer: page 1 is the painted cover with a
+play-the-demo CTA + QR over the centre plaque; page 2 is a parchment montage of
+the best captures, feature bullets, and QR codes to the lookbook and the source.
+QR codes are generated at build time with `qrcode` (no network), so changing a
+URL just means editing `makepromo.ts` and re-running.
 
 How it lays out:
 

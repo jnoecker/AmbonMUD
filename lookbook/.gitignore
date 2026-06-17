@@ -1,5 +1,6 @@
-# Build intermediate emitted by pipeline/makepdf.ts (the PDF is committed).
+# Build intermediates emitted by the pipeline (the PDFs are committed).
 lookbook.html
+promo.html
 
 # Pipeline deps (bun install).
 pipeline/node_modules
