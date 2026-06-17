@@ -142,6 +142,27 @@ export function useAudioEngine(): AudioEngine {
     }
   }, []);
 
+  // iOS Safari only lets an AudioContext produce sound if it is created and/or
+  // resumed inside a real user-gesture handler. Our playback is almost always
+  // kicked off by a GMCP/WebSocket event (room music, ambient, dialogue voice),
+  // which is never a gesture — so the context would stay suspended forever and
+  // every channel is silent. Calling this from a tap handler unlocks it; the
+  // one-sample silent buffer is the belt-and-suspenders unlock older iOS wants.
+  const unlockCtx = useCallback(async () => {
+    const ctx = getCtx();
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      try { await ctx.resume(); } catch { return; }
+    }
+    try {
+      const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    } catch { /* ok */ }
+  }, [getCtx]);
+
   const stopTrack = useCallback((track: TrackState, fadeDuration = CROSSFADE_MS) => {
     if (track.source && track.gain) {
       const src = track.source;
@@ -473,15 +494,17 @@ export function useAudioEngine(): AudioEngine {
   const toggle = useCallback(() => {
     const next = !prefsRef.current.enabled;
     updatePrefs({ enabled: next });
-    if (next && ctxRef.current?.state === "suspended") {
-      ctxRef.current.resume();
-    }
-    // If disabling, also kill combat effects
-    if (!next) {
+    if (next) {
+      // Runs inside the toggle's tap handler — the one reliable moment to
+      // unlock audio on iOS. (The old guard checked ctxRef.current, but the
+      // context usually doesn't exist yet here, so it never fired.)
+      void unlockCtx();
+    } else {
+      // If disabling, also kill combat effects
       stopPulseLfo();
       combatActiveRef.current = false;
     }
-  }, [updatePrefs, stopPulseLfo]);
+  }, [updatePrefs, stopPulseLfo, unlockCtx]);
 
   const setMusicVolume = useCallback((v: number) => {
     updatePrefs({ musicVolume: Math.max(0, Math.min(1, v)) });
@@ -494,6 +517,21 @@ export function useAudioEngine(): AudioEngine {
   const setVoiceVolume = useCallback((v: number) => {
     updatePrefs({ voiceVolume: Math.max(0, Math.min(1, v)) });
   }, [updatePrefs]);
+
+  // When audio was already enabled in a previous session, a page reload has no
+  // user gesture yet, so the context can't be unlocked until the player taps
+  // something. Resume it on the first interaction anywhere (iOS requirement).
+  useEffect(() => {
+    const handler = () => {
+      if (prefsRef.current.enabled) void unlockCtx();
+    };
+    window.addEventListener("pointerdown", handler);
+    window.addEventListener("touchend", handler);
+    return () => {
+      window.removeEventListener("pointerdown", handler);
+      window.removeEventListener("touchend", handler);
+    };
+  }, [unlockCtx]);
 
   // Cleanup on unmount
   useEffect(() => {
