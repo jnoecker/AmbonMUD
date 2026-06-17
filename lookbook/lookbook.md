@@ -284,9 +284,9 @@ The painted login flow: name entry, returning-character picker, and the race and
 A handful of Auringold Academy rooms at full size — including the homes of services
 the web client surfaces through the world itself.
 
-### The Academy Quad
-![The Academy Quad](screenshots/academy/academy_quad.jpg)
-*The heart of the Academy, where Provost Lumina holds court*
+### Magnificent Palace Beneath the Waves
+![Magnificent Palace Beneath the Waves](screenshots/academy/academy_quad.jpg)
+*The Academy's heart, reimagined beneath the waves — Provost Enid Maykoyla holds court from a throne of obsidian and gold beneath jellyfish chandeliers*
 
 ### The Library of Fairytales
 ![The Library of Fairytales](screenshots/academy/library_fairytales.jpg)
@@ -296,9 +296,9 @@ the web client surfaces through the world itself.
 ![The Retired Professor Tavern](screenshots/academy/auringold_tavern.jpg)
 *Rest and recover at the Academy's inn*
 
-### The Chapel of Patient Rest
-![The Chapel of Patient Rest](screenshots/academy/catacomb_chapel.jpg)
-*The portal to the Academy catacombs, a dungeon that rearranges itself nightly*
+### The Chapel of the Last Lamp
+![The Chapel of the Last Lamp](screenshots/academy/catacomb_chapel.jpg)
+*The Lampkeeper tends the last warm light over a sealed door to the deep — the portal to a dungeon that rearranges itself nightly*
 
 ### The Duel Ring
 ![The Duel Ring](screenshots/academy/duel_ring.jpg)
@@ -413,8 +413,8 @@ Every room of the Auringold Academy tutorial zone, in zone-file order.
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/crafters_workshop.jpg" alt="Crafter's Workshop" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">Crafter's Workshop</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/betrayer_study.jpg" alt="The Betrayer's Study" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Betrayer's Study</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/kitsarae_mountain_basin.jpg" alt="The Awakening of the Kitsarae" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Awakening of the Kitsarae</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/academy_quad.jpg" alt="The Academy Quad" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Academy Quad</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/orientation_hall.jpg" alt="The Orientation Hall" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Orientation Hall</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/academy_quad.jpg" alt="Magnificent Palace Beneath the Waves" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">Magnificent Palace Beneath the Waves</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/orientation_hall.jpg" alt="Undersea Orientation Hall" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">Undersea Orientation Hall</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/proving_yard.jpg" alt="The Proving Yard" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Proving Yard</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/sparring_circle.jpg" alt="The Sparring Circle" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Sparring Circle</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/beast_pen.jpg" alt="The Misbehaving Menagerie" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Misbehaving Menagerie</figcaption></figure>
@@ -435,16 +435,18 @@ Every room of the Auringold Academy tutorial zone, in zone-file order.
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/tinkers_bench.jpg" alt="The Tinker's Bench" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Tinker's Bench</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/enchanting_sanctum.jpg" alt="The Enchanting Sanctum" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Enchanting Sanctum</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/hall_of_records.jpg" alt="The Hall of Records" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Hall of Records</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/prestige_vestibule.jpg" alt="The Vestibule of Ascension" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Vestibule of Ascension</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/riddle_gallery.jpg" alt="The Riddle Gallery" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Riddle Gallery</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/vault_of_whispers.jpg" alt="The Vault of Whispers" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Vault of Whispers</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/secret_archive.jpg" alt="The Secret Archive" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Secret Archive</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/games_parlor.jpg" alt="The Parlor of Small Fortunes" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Parlor of Small Fortunes</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/song_parlor.jpg" alt="The Parlor of Borrowed Songs" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Parlor of Borrowed Songs</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/twilight_salon.jpg" alt="The Twilight Salon" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Twilight Salon</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/catacombs_landing.jpg" alt="The Catacombs Landing" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Catacombs Landing</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/ossuary_walk.jpg" alt="The Ossuary Walk" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Ossuary Walk</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/catacomb_chapel.jpg" alt="The Chapel of Patient Rest" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Chapel of Patient Rest</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/catacombs_landing.jpg" alt="The Long Way Down" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Long Way Down</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/ossuary_walk.jpg" alt="The Long Dark Hall" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Long Dark Hall</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/catacomb_chapel.jpg" alt="The Chapel of the Last Lamp" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Chapel of the Last Lamp</figcaption></figure>
 <figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/memento_mori_shrine.jpg" alt="The Memento Mori Shrine" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Memento Mori Shrine</figcaption></figure>
-<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/restless_repository.jpg" alt="The Restless Repository" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Restless Repository</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/restless_repository.jpg" alt="The Waiting Dark" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">The Waiting Dark</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/aineroias_children_dice.jpg" alt="Full Family Dice Game — Aineroia's Children" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">Full Family Dice Game — Aineroia's Children</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/future_yaleron.jpg" alt="An Astral Shimmer of Yaleron's Future" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">An Astral Shimmer of Yaleron's Future</figcaption></figure>
+<figure style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/academy/nightmare_demon.jpg" alt="A Nightmare in the King's Chamber" style="width:100%"><figcaption style="font-size:7pt;text-align:center;margin-top:2pt">A Nightmare in the King's Chamber</figcaption></figure>
 </div>
