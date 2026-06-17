@@ -1,0 +1,2972 @@
+zone: ambon_auringold_academy
+startRoom: krioshaeu_cabin
+rooms:
+  krioshaeu_cabin:
+    title: Krioshaeu's Cabin
+    description: >-
+      Welcome, Adventurer! You stand within a cozy cabin that is lit by a roaring fire in the hearth. Here in the realm
+      between life and death, you've been chosen to be reborn as a hero of Ambon. A small tea cart is set with two cups
+      of hot tea and a variety of pastries and finger sandwiches. Krioshaeu sits in her rocking chair, smiling warmly at
+      you. 
+
+
+      To the north, the doorway opens into an endless starry void.
+    exits:
+      e: endless_starry_void
+    image: 613b834e1c5a15f3ab92b48bb587e658f23ee641982e0a621f872c2811067897.jpg
+    inn: true
+  endless_starry_void:
+    title: The Endless Starry Void
+    description: >-
+      You drift suspended in an infinite expanse of darkness punctuated by countless stars of brilliant white and deep
+      sapphire, their light seeming to bend and refract through threads of luminescent cosmic dust that spiral outward
+      like frozen aurora. Distant galaxies bloom and fade like flowers of light in slow motion, their swirling arms of
+      gold and violet painting stories across the void while wisps of nebulae drift past in haunting, ever-shifting
+      formations that seem to echo with the weight of eons.
+
+
+      To the south, the door to Krioshaeu's Cabin stands open, suspended in space. To the east you see a caravan wagon
+      drifting through the stars.
+    exits:
+      e: wagon_drifting_stars
+      w: krioshaeu_cabin
+    image: f8fddeb64308955ea614751d515ce962b84d915e7358a907a1befddd61074689.jpg
+  wagon_drifting_stars:
+    title: Outside a Wagon Drifting Through the Stars
+    description: A weathered fortune teller's wagon drifts silently through the cosmic void, its wooden frame adorned with
+      faded gilt and arcane symbols, while stained glass windows pulse with an eerie, otherworldly luminescence in hues
+      of deep violet and emerald. Before it, a perfect ring of spectral campfire hovers impossibly in the starless
+      darkness, casting dancing shadows across the wagon's ornate side and illuminating the endless expanse of space
+      around it.
+    exits:
+      w: endless_starry_void
+      e: fortune_teller_parlor
+    image: 5fe5b3703e99268e052c30e150d25b90c551d83b859f2bba75333e4d822ac708.jpg
+  memory_creation:
+    title: A Memory of Creation
+    description: You stand within a dream, or a memory, witnessing the creation of Ambon. The world is pulled apart,
+      floating in pieces around a central platform. A humanoid figure stands on the platform, bathed in blinding light,
+      manipulating the arcane energies as the world forms around them. At their feet, the heat of their presence melts
+      the ground, forming two slabs of obsidian beneath them.
+    exits:
+      w: first_archae
+      e: sylflorae_farm
+    image: 4ef2f86cdbcb4d0c18f41e8d928f53142326b90ea2438fa62e807f5b114a9682.jpg
+  fortune_teller_parlor:
+    title: Fortune Teller's Astral Parlor
+    description: Within the impossibly vast interior of what should be a cramped wagon, towering shelves overflow with
+      leather-bound tomes and crystalline artifacts, their spines glowing with arcane script, while overhead a vaulted
+      ceiling painted with zodiac constellations is illuminated by an ever-shifting kaleidoscope of colored light
+      streaming through intricate stained glass windows—each pane depicting celestial events and mystical symbols. The
+      air itself seems to shimmer with otherworldly energy, dense with the scent of incense and old parchment, as though
+      the space exists partially in this world and partially in something far stranger beyond.
+    exits:
+      w: wagon_drifting_stars
+      n: caravan_stable
+    image: bb927aba5c9850398131e4beae923248056b00d07ab1cfbdc7543e999aa85836.jpg
+  heralds_of_creation:
+    title: The Heralds of Creation
+    description: You stand upon eternally soft grass that shifts between verdant green and opalescent shimmer, as if reality
+      itself cannot decide what this primordial earth should be. Towering above in the luminous haze are beings of pure
+      prismatic light—their forms vaguely humanoid yet composed of cascading colors that refract and bloom like living
+      stained glass, their movements leaving trails of soft radiance as they prepare the new world for its coming
+      inhabitants.
+    exits:
+      e: kitsarae_study
+      s: sylflorae_farm
+    image: 40a3c6b24126ae3a3aee670b1608f20af005377ba7cb91d538058022cec7db02.jpg
+  first_archae:
+    title: The First Archae
+    description: The first Archae city, Marldon, begins as a humble town along the river. As the eons pass, it grows into a
+      thriving metropolis, the cultural center of Archae civilization.
+    exits:
+      e: memory_creation
+      n: kiriton_winter
+    image: 5758bbee5a0387d513d43df2da3ae7383fbb293269a3cc7c27782dc440f120bd.jpg
+  drifting_through_clouds:
+    title: Drifting Through the Clouds
+    description: As you continue through the dream world, passing into the mists of time, you find yourself floating among
+      the clouds.
+    exits:
+      s: kiriton_winter
+      n: foothills_kaerinlith
+    image: b67aa79ea650bd3ebb793693896976049e6c7f1b434da2baa095e4c03d9d07af.jpg
+  tempest_between_worlds:
+    title: The Tempest Between Worlds
+    description: Drawn by the absence of the Creator, primal forces from other realms began to arrive in Ambon. Maelsang,
+      the Tempest Between Worlds,  is a god of storms and seas who came to Ambon from another world. Here in the dream,
+      you witness him in his full fury, the unbridled tempest of the harsh early land.
+    exits:
+      w: sandy_shoal
+      n: cozy_inn
+      s: seaweed_thicket
+    image: 239e3a7617e3ef18ada3f7fa99afe7e06220db1dfe68195ab18b35d6ef6a19f2.jpg
+  turbulent_waters:
+    title: Turbulent Waters
+    description: You find yourself suspended in roiling, storm-churned depths where jagged shards of lightning flicker
+      through murky jade-green waters, their brief illumination revealing debris and strange shapes drifting in the
+      turbulent currents that pull and twist around you.
+    exits:
+      e: waterfall
+      n: ship_graveyard
+    image: 021a9feee2afaf2325f3027f8344850654c0bb933178448c74460184ff2f7be7.jpg
+  sandy_shoal:
+    title: A Sandy Shoal
+    description: A shallow expanse of pale golden sand stretches beneath crystalline shallows, where sunlight dances in
+      rippling patterns across the seafloor—the boundary between waking and dreaming where the waters seem both
+      impossibly clear and softly luminescent, as though lit from within by the gentle glow of awakening consciousness.
+    exits:
+      e: tempest_between_worlds
+      s: coral_reef
+    image: 649cc3a698ec161fd7cfa5d46c6a84f1b01ce86069eda2485d1f8f3ec117be74.jpg
+  foothills_kaerinlith:
+    title: The Foothills Below Kaerinlith
+    description: Gentle slopes of amber-hued grass roll downward from the towering crystalline peak of Kaerinlith, its
+      faceted surface catching ethereal light in shimmering cascades of lavender and gold. The air carries the sweet,
+      dreamlike quality of a place half-remembered, where wildflowers in impossible colors bloom between smooth stones
+      worn soft by time, and the distant sound of crystalline chimes drifts down from the mountain above like a lullaby
+      calling the newly-reborn toward their destiny.
+    exits:
+      e: clockwork_forest
+      n: path_kaerinlith
+      s: drifting_through_clouds
+    image: 63a8d8a27732d3908ada5e32d057d7a0cc2e60f2ace1b9ebbbf1e20e8e5f1a48.jpg
+  sylflorae_farm:
+    title: A Sylflorae Farm
+    description: >-
+      You stand on a mountaintop, looking over a valley filled with various Sylflorae migrating outward from their point
+      of creation. 
+
+
+      The Sylflorae are enormous, slow-moving, deeply intelligent creatures whose backs grow orchards, berry tangles,
+      tea-shrubs, moss gardens, or grainlike seed-plumes. Created by Astriel to provide plentiful harvests for the young
+      Archae civilizations, the Sylflorae resemble vast mythical animals with bark-hide, rootlike limbs, vine manes,
+      antler-branches, and entire cultivated ecosystems growing across their backs. They roam through the plains of
+      central Ambon seeking favorable growing conditions.
+    exits:
+      n: heralds_of_creation
+      w: memory_creation
+    image: dc534a1162bb966d5bf593f1bf3caa7888ca3fdc778307b722901d70256cfa79.jpg
+  clockwork_forest:
+    title: A Clockwork Forest
+    description: Towering brass and copper trees rise like skeletal sentinels, their branches fashioned from interlocking
+      gears and crystalline chimes that hum with an ethereal resonance. Soft luminescent sap glows amber and violet
+      within transparent trunks, casting dancing shadows across a forest floor of polished cogs and delicate clockwork
+      vines that tick softly with each passing breeze.
+    exits:
+      w: foothills_kaerinlith
+      n: deep_clockwork_forest
+      e: springwright_workshop
+    image: 16f905247d5b9ecd0fddad92ad5aa2ae171eb9db92bc74ca8417adc83a687318.jpg
+  deep_clockwork_forest:
+    title: Deeper in the Clockwork Forest
+    description: Massive brass gears and copper clockwork mechanisms jut from the forest floor like mechanical roots, their
+      surfaces etched with intricate patterns that gleam faintly in the dreamlike golden light filtering through
+      canopies of crystalline leaves that chime softly as they shift. The air hums with the rhythmic tick-tock of
+      countless unseen mechanisms, while shimmering pathways of polished metal wind between ancient trees whose trunks
+      spiral with embedded cogs and spinning wheels, creating an eerie beauty where nature and machinery exist in
+      perfect, impossible harmony.
+    exits:
+      e: clockwork_clearing
+      s: clockwork_forest
+      w: path_kaerinlith
+      n: beside_clockwork_pond
+    image: 8e4203135ce37b06a29654de22a463557a9f0d806699cc861ef87c6a9c41f046.jpg
+  clockwork_clearing:
+    title: A Clearing in the Clockwork Forest
+    description: A sun-dappled clearing opens within a forest of towering mechanisms—gears the size of boulders mesh with
+      crystalline branches that chime softly in the breeze, their surfaces catching golden light like stained glass.
+      Grass dotted with luminescent flowers grows in neat spirals around the mechanical trunks, while the sky above
+      shimmers with the warm, dreamlike glow of perpetual late afternoon.
+    exits:
+      w: deep_clockwork_forest
+      s: springwright_workshop
+    image: 56f92adf42b8d8ab89fbc9197fb6f69764ca8592bdac67683988b6360f2c7798.jpg
+  springwright_workshop:
+    title: The Springwright's Workshop
+    description: This is a memory of the workshop of Tessikar the Springwright. The workshop is magnificent chaos — gears,
+      springs, crystals, half-finished mechanisms, blueprints, tools of every kind covering every surface. Crystals from
+      the Lithae mines glow in racks along the walls, some already integrated into mechanical housings. Through the
+      workshop window, the city of Tessikon is visible far below on the mountainside — his creation, grown from one
+      workshop into a civilization.
+    exits:
+      n: clockwork_clearing
+      w: clockwork_forest
+    image: d633c965d8fc432e28f36fef4f4b93ec05151d0fb2b0c397e5623eb0ccf190c9.jpg
+  beside_clockwork_pond:
+    title: Beside the Clockwork Pond
+    description: A serene glade unfolds beside a luminous pond whose surface ripples with the gentle ticking of countless
+      tiny gears and clockwork mechanisms, their brass and copper casings catching dreamlike light as they drift lazily
+      through crystalline water. Whimsical mushrooms with iridescent caps dot the mossy banks, while delicate chiming
+      bells hang from nearby branches, creating soft melodies that echo the pond's mechanical heartbeat—a place where
+      the boundary between nature's organic beauty and artifice's precise wonder blurs into something wholly
+      fantastical.
+    exits:
+      s: deep_clockwork_forest
+      n: wading_pond
+    image: 8984ff1e9218880088c17e18ec9c1eb15b3cbce6a1f116c8c738a6414a1979fa.jpg
+  clockwork_dias:
+    title: Mechanical Dias at the Center of a Clockwork Pond
+    description: A towering mechanical platform spirals downward like the intricate gears of a grand cuckoo-clock, its brass
+      and copper surfaces etched with dreamlike symbols that seem to shift in the ethereal light filtering down from
+      above, while crystalline clockwork mechanisms turn with hypnotic precision around a shimmering pool of liquid
+      starlight that reflects both the mechanical intricacy above and bottomless depths below.
+    exits:
+      d: void_below_mountain
+      s: wading_pond
+    image: f74c98af49a2266ea3cb590587c55b9858d999e23c487faadd71024e294607ea.jpg
+  mine_opening:
+    title: The Opening of a Shining Crystal Mine
+    description: Crystalline formations jut from earth and stone in every direction, their facets catching and scattering
+      light into dancing rainbows that paint the walls in shifting hues of amber, violet, and rose gold. The mine's
+      entrance yawns wide and inviting, with glittering veins of precious ore running through the rock face like threads
+      of solidified starlight, while loose gemstones crunch softly beneath your feet, their surfaces polished smooth by
+      time and the passage of many before you.
+    exits:
+      n: shining_crystal_mine
+      s: path_kaerinlith
+    image: 04ec6af335a47726b74fb33a4ce2b91135f4a23cc0e7c150a692a8df344d8334.jpg
+  shining_crystal_mine:
+    title: A Shining Crystal Mineshaft
+    description: Crystalline formations of brilliant amber and pale gold jut from earthen walls, their facets catching and
+      refracting an ethereal, opalescent glow that illuminates the narrow passage without any apparent source of light.
+      The air shimmers with faint, dreamlike iridescence, and the ground beneath your feet crunches softly with
+      fragments of glittering mineral dust, as though you walk through solidified starlight freshly mined from the
+      depths of slumber itself.
+    exits:
+      s: mine_opening
+      n: void_below_mountain
+    image: 71a8c1cc81e9f074b100eb353a92f2f72a0386f06f8307667fdc7f610ac8e4c2.jpg
+  void_below_mountain:
+    title: The Void Below the Mountain
+    description: Early in Ambon's history Kvarcgagap, The Sparkling Quartz Void, arrived. Like a trickle of quicksilver, he
+      moved through the deep places, carving the caverns and seeding the crystals and ore. You stand within a memory of
+      his home, deep beneath Kaerinlith, among the sparkling rainbow crystal statues of his children, the Lithae.
+    exits:
+      s: shining_crystal_mine
+      u: clockwork_dias
+      n: sleeping_stone_statues
+    image: 65c58c4bfb44bc6e991b2e2292d8b09a86a7bec118667f074043135cf0206101.jpg
+  sleeping_stone_statues:
+    title: Cavern of Sleeping Stone Lithae
+    description: A cavernous vault stretches endlessly into shadow, its vaulted ceiling soaring impossibly high above rows
+      upon rows of towering crystalline statues—some translucent and gleaming with inner light, others carved from
+      obsidian and pale limestone, their humanoid forms frozen in eternal poses of dignity, anguish, or defiance. Veins
+      of luminescent ore thread through the chamber's walls, casting an ethereal glow that dances across the statues'
+      blank faces and reaches toward distant archways where deeper darkness beckons.
+    exits:
+      s: void_below_mountain
+      e: underground_river
+    image: e59be12e7c4f62341bca12179e086b60c7e0919b79c328371b0568964a4740c6.jpg
+  arrival_king:
+    title: The Arrival of the King
+    description: A tear of blinding light splits the mountainside as reality warps and fractures—through the shimmering
+      breach emerges an ornate mahogany chariot drawn by four majestic white stallions whose manes seem woven from
+      starlight, their hooves striking the ground with an otherworldly resonance as they pull their gilded burden into
+      this realm of dreams and rebirth.
+    exits:
+      e: world_seed
+      w: enchanted_bakery
+      s: cozy_inn
+    image: 70ddc93b82acc84d079074756bd38a2ce35928106a36a57560fd788ab67bc6f1.jpg
+  world_seed:
+    title: The World Seed
+    description: >-
+      You stand within a memory of a time long past. Malkuth the Betrayer visits Kvarcgagap and presents him with a
+      seemingly simple question: "From what kind of seed did the world grow?". 
+
+
+      And so Kvarcgagap traveled to the center of Ambon, in the deepest and oldest places there, and discovered the
+      obsidian slabs where the Creator stood as they created the realm.
+    exits:
+      w: arrival_king
+      e: obsidian_dagger
+    image: f5ce8ccae85ce7c46e523f8439096fef1fd05f22cba141498c66cce48b8be9ae.jpg
+  great_betrayal:
+    title: The Great Betrayal
+    description: You stand within a memory, watching as Malkuth the Betrayer meets with Kvarcgagap, the Shining Quartz Void.
+      The scene unfolds in the clockwork forest near Kaerinlith. As the dream plays out, Malkuth draws the Obsidian
+      Dagger from its sheath and steals the life force of the great stone god. At the edge of the clearing, a fortune
+      teller's wagon sits next to a smoldering fire.
+    exits:
+      s: obsidian_dagger
+      w: carnival_prophecy
+    image: f487378011d105ccc9ae770e27c31b0bcfdd4607cc914d34cde6b9c4a10cb48a.jpg
+  clockwork_battle:
+    title: The Clockwork Battle
+    description: You stand in a clearing that shows clear signs of a terrible battle. Fragments of memory drift by - Malkuth
+      attacking Tessikar and being driven off by the Springwright. The ground is scorched and the clockwork trees are
+      bent and damaged.
+    exits:
+      e: carnival_prophecy
+      w: emberfell
+    image: 1afcc2081e9ae30b6fdaa9f19ac733cd9ef2ec5bdf501710167a6cf05fdf8149.jpg
+  obsidian_dagger:
+    title: The Birth of the Obsidian Dagger
+    description: A cavernous forge wreathed in ethereal, twilight-blue flames burns at the center of a black cathedral, its
+      edges fractured into jagged shards that seem to pierce the boundary between worlds. At the furnace's heart, the
+      flames have turned black and gold —while whispers of the divine realm echo through fissures in reality that bleed
+      starlight and ash.
+    exits:
+      w: world_seed
+      n: great_betrayal
+    image: 251bd1319f9613ef49af40b4511053a9da56dd1b1e715d29e801ceed1d1a7c48.jpg
+  carnival_prophecy:
+    title: The Fortune Teller's Prophecy
+    description: Inside a cramped wagon perfumed with exotic incense, candlelight flickers across crimson silks and
+      mysterious symbols etched into wooden walls, casting dancing shadows that seem to move of their own accord; a
+      robed figure gestures solemnly over scattered tarot cards and glowing crystals while their companion leans forward
+      intently, caught between wonder and dread as ancient words hang heavy in the air.
+    exits:
+      e: great_betrayal
+      w: clockwork_battle
+    image: bb74026309406e22be8412c90271d29af79c5b670e6f19d945e75d308a028a9b.jpg
+  emberfell:
+    title: The Emberfell
+    description: You stand at the highest peak of the mountain Kaerinlith. The memories swirl around you, showing the scenes
+      of the Emberfell. Tessikar the Springwright strikes the molten slag of obsidian with his hammer, sending a shower
+      of sparks over the countryside.
+    exits:
+      e: clockwork_battle
+      w: gemstone_mineshaft
+    image: 4dd33bee0fe60e833565f12bf79399921854859300afc76210271ccebe14c1e3.jpg
+  humble_forest_cabin:
+    title: A Humble Forest Cabin
+    description: Weathered logs form the walls of this modest cabin, its thatched roof sagging gently with age and patched
+      in places with bundled reeds. Smoke curls lazily from a stone chimney, and the air carries the mingled scents of
+      dried herbs hanging from the rafters, medicinal poultices simmering on a clay stove, and old wood worn smooth by
+      decades of care.
+    exits:
+      e: vault
+      n: royal_wedding
+    image: 2485cb1112f5285bbe47dc098616e21af07ebe5a1d9b2cf97990f86da04467b6.jpg
+    inn: true
+  royal_wedding:
+    title: The Royal Wedding
+    description: You stand in a lavishly decorated ballroom, as the memory of the wedding of Malkuth and Aineroia plays out
+      before you. Ghostly figures dance and twirl and the sounds of music and revelry fill the air.
+    exits:
+      s: humble_forest_cabin
+      w: royal_graveyard
+    image: 7802b7ac63f421722602048072f4c98a6ccd261193ae354f2c80ba386a98906c.jpg
+  royal_graveyard:
+    title: In a Tiny, Brightly-Lit Graveyard
+    description: Rows of cheerfully painted gravestones glow under the warm light of countless torches, their surfaces
+      ablaze with vibrant depictions of phoenixes mid-flight, delicate faeries dancing between flowers, and majestic
+      dragons coiled protectively around ornate monuments. The dancing firelight casts playful shadows across the tiny
+      cemetery, transforming what might be a place of sorrow into a luminous garden of hope and wonder.
+    exits:
+      e: royal_wedding
+      s: sacrificial_altar
+    image: 60ced20788a1cd22edaba28c162b3a3d4d85da7d58b705c5aae95ef4430317ea.jpg
+  sacrificial_altar:
+    title: Beside the Sacrificial Altar
+    description: Candlelight flickers across an obsidian altar of polished black glass, its surface etched with spiraling
+      runes that seem to drink in the shadows; arranged upon it are dried bundles of luminescent herbs that glow with
+      soft violet and silver light, an ornate bassinet lined with gossamer silk, and a ceremonial dagger whose blade
+      catches the firelight like captured starlight. The air shimmers with an otherworldly haze, carrying the sweet
+      scent of dreamsmoke and rebirth magic, as if the very boundary between the realm of the dead and the waking world
+      grows thin in this consecrated space.
+    exits:
+      w: arcane_tempest
+      n: royal_graveyard
+    image: 6b29eecd9d926df7dc9ba82464845f20853a7e6db961320e906da0ebffa79ca5.jpg
+  caldera:
+    title: The Caldera
+    description: A colossal wound carved into the world itself, this massive crater sprawls endlessly in all directions—its
+      jagged rim rising like broken teeth against the sky while the depths plunge into shadow and swirling auroras of
+      unstable arcane energy. The displaced earth hangs suspended in impossible geometry, great chunks of stone and
+      shattered kingdom frozen mid-fall through layers of ethereal light and crackling magical force that hums with the
+      residual power of catastrophic enchantment.
+    exits:
+      n: verathaios_workshop
+      s: arcane_tempest
+    image: ed537d7226cc97991d59ada6e3b68934a5fe5ef760480251dd54313558be6a32.jpg
+  arcane_tempest:
+    title: Inside the Arcane Tempest
+    description: Swirling columns of prismatic energy spiral endlessly through this impossible chamber, their colors
+      shifting from deep violet to brilliant gold with each rotation. The air crackles with raw magical force, and the
+      very ground beneath your feet seems to flicker between solid stone and shimmering, translucent arcane matter as
+      reality bends around the tempest's violent heart.
+    exits:
+      e: sacrificial_altar
+      n: caldera
+    image: 8df8148b2df1550f5ca0af5f8c8d94ff6aeab83d4296aa244d1b383db68e8a34.jpg
+  verathaios_workshop:
+    title: Verathaios's Workshop
+    description: A lush tropical greenhouse thrums with verdant life, its canopy towering overhead with bioluminescent vines
+      that cast dancing shadows across massive ferns and exotic flowers blooming in impossible colors—deep purples,
+      luminous golds, and soft greens that seem to glow from within. The air shimmers with visible magic, and the ground
+      is carpeted with moss so soft it muffles footsteps while healing herbs and crystalline-stemmed plants grow in wild
+      abundance, their properties whispered through the humid breeze.
+    exits:
+      s: caldera
+      n: aolia
+    image: fa2811af5c4f38aa2f7924da84a7502f9364081daf117cba7155259f850a0fa1.jpg
+  aolexia:
+    title: Aolexia
+    description: A breathtaking expanse of crystalline islands drift like silent sentinels through an ethereal void where
+      starlight pools into luminous streams and the very atmosphere thrums with ancient arcane knowledge. Vast libraries
+      spiral across floating terraces of solidified starlight, their ever-shifting shelves laden with tomes in forgotten
+      and unspoken tongues, while meditation chambers hewn from cosmic crystal invite seekers deeper into
+      understanding—all tethered to the world below through Aolia, a delicate observatory whose constellation of
+      gleaming telescopes pierces both the celestial vault above and the misty lands of Ambon beneath, their lenses
+      reflecting equal wonder at the infinite and the mortal.
+    exits:
+      n: shattered_fae_wood
+      s: aolia
+    image: 239e1807f2166b41557f80739ee447a9633be639a3a0df19559fd372e1355dfa.jpg
+  aolia:
+    title: Aolia
+    description: A sprawling observatory suspended among billowing clouds, its brass telescopes pointed skyward like fingers
+      grasping at celestial secrets, while below the misty veil Ambon's civilizations shimmer in miniature; gossamer
+      pathways of solidified starlight wind between crystalline domes and floating platforms, and a shimmering archway
+      pulses with arcane energy—the threshold to the grand library beyond.
+    exits:
+      s: verathaios_workshop
+      n: aolexia
+    image: f467c9bbf1d5be8e17f97b8c4a3a8b2a20f7f296163ffb8daa5404ba78d135d7.jpg
+  shattered_fae_wood:
+    title: The Shattered Fae Wood
+    description: Fractured crystalline shards of impossible geometry drift through an endless void of twilight purple and
+      shimmering gold, their surfaces reflecting distorted glimpses of a forest that exists in a thousand broken pieces
+      simultaneously—skeletal trees with luminescent bark twist through the weightless expanse while spectral wisps of
+      displaced magic coalesce and scatter like disturbed embers, all beneath a sky that has itself splintered into
+      jagged segments of starlight and shadow.
+    exits:
+      s: aolexia
+      n: aineroia_cottage
+    image: aef70a2517c299715389cfd992ed0fcd3bcc647365e715c6bd730f84bbde48b3.jpg
+  lustriae:
+    title: The Lustriae
+    description: A shimmering glade where twilight lingers eternally, neither fully day nor night, with ancient trees whose
+      bark glimmers faintly as though dusted with captured starlight and frost. Gossamer veils of pale blue and silver
+      mist coil through the air like living things, swirling around impossible architecture that seems to exist in
+      multiple moments at once—archways that loop back upon themselves, crystalline structures that refract light into
+      cascading rainbows, and clearings where the same stone appears both weathered by ages and pristine and new.
+    exits:
+      n: aineron
+      s: faegrimm
+      e: pyrae
+    image: 5618e60c3c8903f9f8fb34f7a07c889ffcb4a49b03c6d1fbef0d4caada45d7ab.jpg
+  pyrae:
+    title: The Pyrae
+    description: Scorched air ripples from every surface as waves of heat distort the very atmosphere, and towering trees
+      with bark blackened by eternal flame stretch impossibly high into a hazy crimson sky where embers drift like snow.
+      Suspended bridges of woven vines and phoenix feathers span between colossal canopy dwellings, their architecture
+      carved from still-smoldering wood and reinforced with bands of hardened ash, while the glow of contained infernos
+      within illuminates everything in dancing shades of gold, amber, and deep blood-red.
+    exits:
+      s: veratheron
+      n: cindaron
+      w: lustriae
+      e: aureliae
+    image: 923ffc5b2f6e2d02adff0a07e59dd87a777e7cf7286ef08f37a0131cddf03049.jpg
+  aureliae:
+    title: The Aureliae
+    description: Bioluminescent beings of the deep ocean drift through endless darkness like living constellations, their
+      translucent forms pulsing with otherworldly radiance in cascades of azure, violet, and pearl that ripple
+      hypnotically across jellyfish-like bodies. Around them, vast coral metropolises rise in impossible spirals and
+      delicate arches, each structure alive and glowing in harmony with the gentle light of their creators, while
+      haunting magic songs—complex symphonies resonating through the water—echo endlessly through the luminous realm.
+    exits:
+      n: phosmaren
+      s: lagauri
+      w: pyrae
+      e: ophirae
+    image: ba7f96858dbfb15a30cdae1ea605e8fccb54481493ba59181154f828d5ed30f1.jpg
+  ophirae:
+    title: The Ophirae
+    description: A vast underwater cathedral of pearlescent bone and midnight scales emerges from obsidian depths, its
+      spiraling towers crafted from the ancient ribs of forgotten leviathans; serpentine forms with iridescent eyes
+      glide through currents of luminescent bioluminescence, their scaled bodies rippling with the grace of creatures
+      born to command both the crushing abyss and storm-torn skies.
+    exits:
+      s: thalvorek
+      n: nakhara
+      w: aureliae
+      e: mycorae
+    image: c16891bc0c61bb1cff601ea423754eaabf44c49ae3995a39ebbb6b995676466e.jpg
+  mycorae:
+    title: The Mycorae
+    description: Beneath the forest floor, a vast network of silvery mycelial threads pulses with bioluminescent life, their
+      collective consciousness made manifest in fruiting bodies that rise like living architecture—towering mushroom
+      cities with caps of deep amber, ethereal blue, and ghostly white glow softly in the perpetual twilight. Individual
+      Mycorae emerge from this living substrate as graceful, translucent-skinned beings with stalks for limbs and crowns
+      of luminescent tissue, their bark-like flesh breathing in rhythm with the greater fungal network, embodying the
+      eternal cycle of decay, death, and rebirth that defines their very existence.
+    exits:
+      n: mycollum
+      s: voxspore
+      w: ophirae
+      e: vulgorth
+    image: f3ff7412809bc028fbbf36255c38775cbb288da0625864a3e5e200ff77ee3e41.jpg
+  night_wind:
+    title: A Shrieking Night Wind
+    description: A violent, keening gale that shrieks with the anguish of a child's unfinished cry, its form a roiling mass
+      of pale, corpse-cold mist threaded through with wisps of deep indigo and sickly green that pulse like a dying
+      heartbeat. The air itself seems to fracture in its presence, crystalline shards of supernatural frost hanging
+      suspended in the wind, while an overwhelming sense of abandon and grief presses down upon all who stand within its
+      maddening howl.
+    exits:
+      e: moon
+      s: vulgorth
+      w: mycollum
+    image: 1b9cf119ed5409c5ee6be40b6e3be43c0e503cb30e4185b83bb015e799c75f55.jpg
+  luneqrae:
+    title: The Luneqrae
+    description: You stand on the grassy plains in Northern Ambon. Ethereal forms of pearlescent mist and silver smoke
+      coalesce into the shapes of graceful horses, their bodies translucent and shifting like captured moonlight, their
+      hoofbeats silent against the ground as they drift through the space with an haunting, weightless elegance. Their
+      eyes gleam with a sorrowful luminescence, and trails of gossamer light mark their passage—the restless spirits of
+      those who never found rest, now bound eternally to the silver glow of the moon's domain.
+    exits:
+      n: krioshaion
+      e: aetherae
+    image: 2e3914cc3d4acb876508a20cbfa05d17f8b4e004ce2c38209bdef8b20689bbe1.jpg
+  moon:
+    title: Aineroia Lights the Night Sky
+    description: >-
+      Nearly 200 years after her ascension, Aineroia returns to Ambon to find the people terrified by the newly released
+      magical creatures, haunted by the screeching night wind, cowering in fear of Ambon's dark nights. Death existed in
+      Ambon from the beginning — terrifying, formless, nameless, the end of all things. Aineroia could not accept this
+      for her children - for any of Ambon's children - so she took this primordial terror and shaped it into something
+      beautiful.
+
+
+      Thus was born Krioshaion, the realm of the dead, ruled by the benevolent Krioshaeu —death given form, purpose, and
+      compassion. She lifted Krioshaion itself into Ambon's night sky, transforming the realm of the dead into the
+      world's moon. Now it hangs there like a luminous pearl, casting gentle light across the world below—no longer the
+      harsh, distant gleam of stars, but the warm radiance of a mother's eternal vigil.
+    exits:
+      w: night_wind
+      s: krioshaion
+    image: 04964efc65110967409883815bbfbe28acb281f6a6624db7d2a66a82d096938e.jpg
+  aetherae:
+    title: The Aetherae
+    description: Swirling mists coalesce into spectral forms that drift across windswept northern plains, their translucent
+      bodies shifting between shadow and starlight as they move with the grace of nomadic herders tending luminescent,
+      ethereal creatures. These beings of living darkness wear flowing garments that billow without wind, their eyes
+      glowing softly like distant moons, eternally bound to guard an ancient, concealed blade and shepherd their fey
+      charges across endless grasslands.
+    exits:
+      w: luneqrae
+      n: desert_sands
+    image: 295ffd14d731dc1a302d058fe100c03d38e082d22c8a93b8dc959c74cbb6ec92.jpg
+  call_for_heroes:
+    title: The Call for Heroes
+    description: Outside a quaint cottage of pale wisteria wood that sits nestled among luminescent dream-flowers, its
+      thatched roof shimmering with threads of silver starlight that seem to drift upward like smoke. Warm amber light
+      spills from curtained windows, and the doorway is framed by climbing vines bearing delicate glass-like blooms that
+      chime softly in an unfelt breeze.
+    exits:
+      n: necrambon
+      s: tessikon
+    image: 5e346c92fbcced4e0173984767743ffc5d4a56593216f255aafb648034086ffb.jpg
+  desert_sands:
+    title: The Hot Desert Sands
+    description: The Hot Desert Sands stretch endlessly beneath a merciless sun, where towering rock formations pierce the
+      shimmering heat haze like the weathered bones of ancient titans. Vast expanses of rust-colored sand and
+      sun-bleached stone dominate the landscape, interrupted by scattered outcroppings of dark basalt and veins of
+      crystalline minerals that gleam like captured starlight, while the distant eastern peaks loom snow-capped and
+      forbidding against the harsh blue sky—a frozen barrier separating this scorched realm from the world beyond.
+    exits:
+      s: aetherae
+      n: creeping_darkness
+    image: c810b18fe025076c707067d259ed07fb012d1b0f727a940f1b803a571bd82c3c.jpg
+  aineron:
+    title: Aineron
+    description: "A massive archway grown from ancient, living trees at the edge of a sparse northern forest. The trees
+      forming the arch are enormous, their trunks twisted together into a cathedral-like gateway, branches interlocking
+      overhead. Beyond the archway, the world changes — the light is warmer, the colors more saturated, the air filled
+      with drifting motes of gold. On this side: thin boreal forest, cold light, frost on the ground. Through the arch:
+      an impossibly lush magical realm glimpsed in the distance. Small cozy structures of wood and vine cluster near the
+      base of the archway. The feeling of standing at a threshold between worlds."
+    exits:
+      s: lustriae
+      w: aineroia_cottage
+      e: cindaron
+    image: f85000a2b14e478aeecc5f24ac3be48f8cab1ad6b6f2f29b56f091681e73f5bb.jpg
+  veratheron:
+    title: Veratheron
+    description: Tall, slender tower-like structures rising above the jungle canopy along the western coast. The towers are
+      organic in design — grown from living wood rather than built, spiraling upward like enormous vines reaching for
+      the sky. At their tops, platform-homes and lookout posts give views across both the jungle and the ocean. The warm
+      river flows nearby, steam rising where supernatural warmth meets ocean breeze. Named for Verathaios the World
+      Healer, this settlement has a sacred quality — a place where the divine greenhouse meets the sea.
+    exits:
+      n: pyrae
+      w: faegrimm
+      e: lagauri
+    image: e3eba791cc6aecd074f24bfeebe102aace5bd1c5d142584a1f9ae7a41a15a88e.jpg
+  phosmaren:
+    title: Phosmaren
+    description: The main Aureliae port at the southeastern tip of the continent — the place where other races come to trade
+      with the jellyfish people. A larger settlement than the others, with proper docks and harbor facilities, but still
+      unmistakably Aureliae in design. The architecture glows with phosphorescent light, especially beautiful at dusk
+      and night. A lighthouse-like structure emits a soft, pulsing bioluminescent beacon.
+    exits:
+      s: aureliae
+      w: cindaron
+      e: nakhara
+    image: 6d0366fd51bca3cb8d606f612452833f43c29aa7b069bd2c0319ef403082a4e7.jpg
+  thalvorek:
+    title: Thalvorek
+    description: The underwater city of Thalvorek. Massive coral-and-stone architecture spiraling downward into deep blue
+      water. Bioluminescent lights illuminate the structures in blues, greens, and golds. The buildings have a flowing,
+      organic quality — grown from coral and shaped by current rather than built with straight lines. Schools of fish
+      move through open archways. The scale is enormous — this is a true city, with districts, plazas, and towering
+      structures, all beneath the waves. The surface above is calm, giving no hint of what lies below except a faint,
+      diffused glow.
+    exits:
+      n: ophirae
+      w: lagauri
+      e: voxspore
+    image: cd8eb775ef558b685a4b2fbbc407efa32a32170ff9341fe3d33d0bfd5ca84dbd.jpg
+  mycollum:
+    title: Mycollum
+    description: A fungal city at the intersection of forest and marsh. Enormous mushroom caps — some the size of buildings
+      — form the canopy over a settlement built from living fungal material. Bioluminescent fungi of every color provide
+      light — pale blues, soft greens, warm ambers. The ground is a thick carpet of mycelium, visibly pulsing with faint
+      light as information travels through the network. Structures are grown, not built — hollowed-out giant mushrooms
+      serve as homes, with shelf fungi forming stairs and platforms. The air is thick with spores that drift like snow.
+      Everything is damp, organic, alive.
+    exits:
+      s: mycorae
+      w: nakhara
+      e: night_wind
+    image: d8cd6ba77489ac863da3ad2889855ced94637cd0af1c0a1cbb11d6449e05b509.jpg
+  creeping_darkness:
+    title: The Creeping Darkness
+    description: "Creeping shadows pool unnaturally thick in this place, darkness so profound it seems almost solid—a
+      tangible wrongness that swallows light rather than merely obscuring it. The very stone beneath your feet bears the
+      discolored marks of decay, fractured and weeping a sickly luminescence like infected wounds, while the air tastes
+      of copper, ash, and something far more ancient: the reek of stolen divinity twisted into instruments of
+      suffering."
+    exits:
+      e: resistance_camp
+      s: desert_sands
+    image: 4e0f00e1a337c2631fb7c05f684d81f4a74b958bce2ce0d4510be3b8208fa572.jpg
+  tessikon:
+    title: The Coming-Soon Portal to Tessikon
+    description: A city of pure engineering at the base of the central mountains, built by Tessikar the Springwright. High
+      above the city, Tessikar's cabin and workshop are visible carved into the mountainside — smoke and steam venting
+      from a cluttered genius's workshop, with a path winding down to the city below. The architecture is unlike
+      anything else in Ambon — every surface is mechanical. Buildings of polished brass, copper, and steel, with visible
+      gears, pistons, and clockwork mechanisms integrated into the structure itself. Towers topped with spinning
+      orreries. Streets paved with interlocking metal plates. Steam vents release gentle plumes from underground
+      workshops. Mechanical lifts carry people between terraced levels built into the mountainside. Automated market
+      stalls with clockwork attendants. Crystal-powered lamps line every street — the crystals traded from the nearby
+      Lithae, repurposed from beauty into function. The city hums — a constant low vibration of a thousand mechanisms
+      working in harmony.
+    exits:
+      n: call_for_heroes
+      s: dream_hotel
+    image: dba36fb9d3398fddb4e65ca2925bcd321961e8b54ec578a583149b95f1fcb301.jpg
+  faegrimm:
+    title: Faegrimm
+    description: A weathered Lustriae settlement at the eastern edge of the sparse forest where it meets the rocky coast.
+      Harder and grimmer than the western faerie communities — structures of dark twisted wood and grey stone, built to
+      withstand coastal winds. Watch towers of black timber rise above the treeline. The faeries here are frontier folk.
+      Fog rolls in from the sea. The buildings have a fortress quality underneath their organic construction — thorned
+      vines growing over defensive walls, trees shaped into barricades. A settlement that says "this is where the gentle
+      forest ends and the wild coast begins."
+    exits:
+      n: lustriae
+      e: veratheron
+    image: 803086ada29205a432ab00a84c1b77b0e80c93567faf3953d170c243be493c61.jpg
+  cindaron:
+    title: Cindaron
+    description: A Pyrae settlement at the southern edge of the jungle, where the canopy thins and the caldera's warmth
+      fades. The structures are lower here, the trees less massive. The architecture transitions from full canopy-city
+      to something closer to ground level. The light is different — less of the supernatural golden glow, more natural.
+      The settlement has a frontier quality — the last outpost of Pyrae civilization before the open Archae heartland
+      begins. Embers of the caldera's warmth linger in the air, but just barely. A place of endings and thresholds.
+    exits:
+      s: pyrae
+      e: phosmaren
+      w: aineron
+    image: 706c8863e01d15c9c918137cc2d51acafdf9176834c358dfac0984f0fc24e215.jpg
+  lagauri:
+    title: Lagauri
+    description: An Aureliae settlement in the central archipelago, built around and within a warm tropical lagoon. The
+      architecture is half above water, half below — structures that descend from stilts above the surface down into the
+      lagoon below. Everything glows — bioluminescent coral, luminescent jellyfish drifting through the shallows, the
+      buildings themselves emanating soft golden and purple light. The lagoon water is shallow and warm, filled with
+      life. Aureliae in their natural translucent, glowing forms are visible moving through the water. A city of light
+      floating on a tropical sea.
+    exits:
+      n: aureliae
+      e: thalvorek
+      w: veratheron
+    image: d8a294b13d13f08bd6307897b78987c7376e0be0a6ee750a461b8cd4904240ca.jpg
+  nakhara:
+    title: Nakhara
+    description: A coastal trading settlement on the northeastern shore, larger and more developed than Thalnakh. Built on
+      the beach and extending onto stilts over shallow water. The architecture incorporates pearl, shell, coral, and
+      sea-glass — beautiful in an understated way. A harbor with unusual boats — sleek, low vessels designed to be
+      sailed both on and beneath the surface. The offshore water is crystal-clear, revealing coral structures and the
+      tops of underwater buildings in the shallows. Ophirae in their natural dragon-like forms are visible swimming in
+      the water below the docks.
+    exits:
+      s: ophirae
+      e: mycollum
+      w: phosmaren
+    image: 740c8b94b168088bb445d9d9c920ce8ecf0ff1a522e98c994c49675eb1c2ae3e.jpg
+  voxspore:
+    title: Voxspore
+    description: A unique settlement where Kitsarae and Mycorae cultures blend. On one side, Kitsarae architecture —
+      colorful, elegant, silk-draped market stalls and carved buildings. On the other, Mycorae fungal structures — giant
+      mushrooms, bioluminescent light, mycelium walkways. The two styles meet and mingle in the center, creating a
+      hybrid district unlike anything else in Ambon. A place where fox-clever diplomats trade with a hive-mind. The
+      market stalls sell both conventional goods and exotic fungal products. The atmosphere is bustling, cosmopolitan,
+      slightly surreal.
+    exits:
+      n: mycorae
+      e: lyrasael
+      w: thalvorek
+    image: 90aaebdace0cd77fbe764ef4d780b70b1a6ea4d422338ffd5de775fa6c78b67d.jpg
+  lyrasael:
+    title: Lyrasael
+    description: A beautiful port city on the eastern coast of the Kitsarae basin. White and pastel buildings cascading down
+      a hillside to a crescent harbor. The architecture is the most refined on the continent — graceful arches, tile
+      roofs in warm terracotta and blue, open courtyards with fountains and flowering gardens. Musicians perform in
+      public squares. Sailing vessels fill the harbor. The climate is perfect — warm sun, gentle breeze, blue water.
+      This is the jewel of Kitsarae culture, the place every bard wants to perform and every diplomat wants to be
+      posted. Mediterranean paradise with fox-clever charm.
+    exits:
+      w: voxspore
+      n: vulgorth
+    image: c846d5c47d43ba0dc5c90d2a04dd66a529a4b9236b1f04e0fe6563a45ebbd1bd.jpg
+  vulgorth:
+    title: Vulgorth
+    description: A Lithae settlement on the eastern slope of the mountains, facing the lowlands. More industrial and
+      outward-facing than the deep holds — great forge chimneys rise from the mountainside, smoke and steam venting into
+      the open air. The architecture transitions from mountain-carved stone at the top to more conventional buildings at
+      the base where the settlement meets the trade roads. Workshops, smithies, and markets line terraced streets
+      descending the slope. The gateway where dwarven craft meets the outside world. Warm forge-light glows from every
+      window. Carts of finished metalwork and crystal goods line the roads heading east.
+    exits:
+      s: lyrasael
+      n: night_wind
+      w: mycorae
+    image: e4954e343a5277e3342716311bddab8c023bce33ff6ba30d385528c6385b6e29.jpg
+  krioshaion:
+    title: Krioshaion
+    description: Vast, rolling expanses of luminous colored mist — aurora-touched fog in silvers, golds, pale blues, soft
+      violets, and rose pinks — drifting and shifting like a living sky made of ground. The mist doesn't obscure — it
+      reveals, parting and reforming to show glimpses of impossible beauty. There is no ground in the conventional sense
+      — visitors walk on surfaces of solidified moonlight, smooth and faintly warm, that glow from within. The "sky"
+      above is not a sky but the inner surface of the moon itself — a vast dome of pearlescent silver-white that
+      radiates gentle, ambient light from every direction.
+    exits:
+      n: moon
+      s: luneqrae
+    image: c0ecb5b5eb85821482d6ae33fb3da3c2cce66574470e690638861925d5baa5b8.jpg
+  path_kaerinlith:
+    title: The Path to Kaerinlith
+    description: A winding mountain path ascends toward a distant crystalline peak that shimmers with ethereal light, its
+      slopes bathed in the soft, dreamlike glow of Auringold's perpetual twilight. Wildflowers in impossible
+      hues—lavender, rose-gold, and pale silver—dot the rocky terrain, while the air itself seems to shimmer with gentle
+      mist that obscures the drop-offs below, creating an atmosphere both wondrous and slightly disorienting, as if the
+      very path exists between waking and dreaming.
+    exits:
+      n: mine_opening
+      s: foothills_kaerinlith
+      e: deep_clockwork_forest
+    image: 565438541b1a4ccdff72100268ed0b8ae741abdd75b072887096c994eb913c6f.jpg
+  cozy_inn:
+    title: The Cozy Inn of Dreams
+    description: "Warm lamplight spills across worn wooden floorboards as the crackling fireplace casts dancing shadows on
+      the plush, dream-touched furnishings—every cushion and curtain rendered in soft golds and drowsy blues, as if the
+      inn itself exists half in sleep. Familiar comforts materialize around you: a well-stocked bar of frosted glass
+      bottles, small round tables perfect for quiet conversations, and an overall atmosphere that feels both safely
+      enclosed and somehow infinite, like a cherished memory made manifest."
+    exits:
+      s: tempest_between_worlds
+      w: auringold_tavern
+      n: arrival_king
+    image: 1e19697f890b64879b1d612493983a1afa309aab0196c0d9bc66bb6be76136d0.jpg
+    inn: true
+  gemstone_mineshaft:
+    title: A Mineshaft Full of Gemstones
+    description: Glittering veins of amethyst, emerald, and sapphire streak through the rough stone walls, catching light in
+      fractured rainbows that dance across the earthen floor, while loose gemstones of every hue scatter across the
+      ground like fallen stars awaiting discovery.
+    exits:
+      e: emberfell
+      s: vault
+    image: d4c87ca1d4ae4ef2a5e4768908d0795494ac688dd5ea9e50ce21699f7dd38e9b.jpg
+  enchanted_bakery:
+    title: The Enchanted Bakery of Auringold
+    description: Warm golden light spills through frosted windows as the scent of fresh-baked bread and sweet honey fills
+      the air, with shelves lined in soft pastels displaying delicate confections that seem to glow with an otherworldly
+      luminescence. The cozy interior radiates comfort and wonder—all rounded corners, soft textures, and whimsical
+      details that feel both inviting and slightly dreamlike, as if you've stepped into a memory of safety rather than a
+      real place.
+    exits:
+      s: auringold_tavern
+      e: arrival_king
+    image: 993a837b7b86dcfb1ffb02ce8c6861b74c8241a7fee7515f031c9634c69211ec.jpg
+  auringold_tavern:
+    title: The Retired Professor Tavern
+    description: A cozy tavern bathed in warm lamplight, its wooden beams and shelves lined with well-worn books, curious
+      artifacts, and half-empty bottles of amber liquor that catch the glow like captured firelight. Comfortable
+      armchairs and round tables scattered throughout invite weary travelers to settle in, while the air itself seems
+      thick with the scent of pipe smoke, old leather, and the faint sweetness of mulled wine—a place where stories
+      linger as much as the patrons who tell them.
+    exits:
+      e: cozy_inn
+      n: enchanted_bakery
+    image: 041c7cef3768e5ed8547e0e1a341d480724c652a43171ce1cdb390c2f3fea595.jpg
+  ship_graveyard:
+    title: A Graveyard of Sunken Ships
+    description: Skeletal hulls of countless vessels lie scattered across the murky seafloor like the ribs of massive
+      beasts, their splintered wood encrusted with bioluminescent coral and writhing sea anemones that paint the
+      darkness with ethereal blues and greens. Swaying kelp forests have claimed the masts and rigging, while schools of
+      phosphorescent fish weave through the skeletal remains, transforming this graveyard of human ambition into a
+      haunting garden of brine and decay.
+    exits:
+      s: turbulent_waters
+      e: sunken_ship_hull
+      n: coral_reef
+    image: 400f043ac859a59e7808ad7d126173d92dfcdacdd5065faaa660461b3f629284.jpg
+  coral_reef:
+    title: A Coral Reef
+    description: Brilliant corals in impossible hues—deep purples, electric blues, and shimmering golds—form towering
+      formations around you, their branching arms creating natural corridors of wonder. Schools of luminescent fish dart
+      through the crystalline water in synchronized waves, while anemones sway gently in the current, their tentacles
+      painting trails of bioluminescent light across the dreamlike seascape.
+    exits:
+      e: seaweed_thicket
+      n: sandy_shoal
+      s: ship_graveyard
+    image: 78779de38f67dcd0383727f63d979370e2d906216ebedf220f91a6a8b597dd7e.jpg
+  seaweed_thicket:
+    title: A Seaweed Thicket
+    description: Towering strands of emerald and amber seaweed sway gently in invisible currents, their fronds creating a
+      dense, shifting labyrinth of shadows and filtered green light that dapples across the sandy bottom. The water here
+      tastes of salt and ancient growth, with occasional glimpses of bioluminescent plankton twinkling like drowsy stars
+      between the tangled stems.
+    exits:
+      s: sunken_ship_hull
+      w: coral_reef
+      n: tempest_between_worlds
+    image: 1356b0886e96370f414a386e81a049e9891656991953ea82566f15f365dbd6d2.jpg
+  sunken_ship_hull:
+    title: Within the Hull of a Sunken Ship
+    description: The rotting wooden hull of an ancient vessel lies tilted in the murky depths, its barnacle-encrusted
+      timbers creaking softly with the current, while bioluminescent algae casts an eerie green-blue glow across the
+      tilted deck and the skeletal remains of its rigging.
+    exits:
+      n: seaweed_thicket
+      w: ship_graveyard
+    image: 83f7e3783c345b9cef97c5dd57ba8d99318bb201d0f2a7865c8d9e3f4dd06b4e.jpg
+  vault:
+    title: Kvarcgagap's Vault
+    description: A cavernous chamber carved from glittering quartz-veined stone, its walls faceted to catch and refract
+      ethereal dreamlight into prismatic cascades of amber and violet. Towering crystalline formations jut from floor
+      and ceiling like frozen waterfalls, their surfaces etched with faint runes that seem to shimmer with the memory of
+      countless treasures once guarded within this hallowed vault.
+    exits:
+      n: gemstone_mineshaft
+      w: humble_forest_cabin
+    image: 9c1bdc443e9a04e72a6f6ce586f36abd3e6f59059899b3b5433bcb876a339b08.jpg
+    features:
+      vault_chest:
+        type: CONTAINER
+        displayName: Kvarcgagap's Vault
+        keyword: vault
+        initialState: closed
+        resetWithZone: true
+        items:
+          - gemstone_crate
+  wading_pond:
+    title: Wading Across a Clockwork Pond
+    description: A tranquil expanse of shallow water glimmers with an otherworldly luminescence, its surface dotted with
+      floating brass gears and crystalline cogs that turn in perfect, silent synchronization; delicate streams of golden
+      light dance between the mechanical pieces like living threads, while the water itself shimmers in soft blues and
+      silvers, reflecting a sky that seems both dream-like and impossibly precise.
+    exits:
+      s: beside_clockwork_pond
+      n: clockwork_dias
+    image: cb43ff130d5d58b5dee4092e6cf4350766490588587beca14551bc14aee4c20f.jpg
+  caravan_stable:
+    title: A Stable of Clockwork Horses
+    description: A pair of gleaming brass automatons stand beneath a makeshift stable, floating among the stars. their
+      bodies etched with intricate filigree and spinning gears visible beneath translucent panels in their flanks. Their
+      mechanical eyes glow with an amber light, and wisps of enchanted steam curl from their nostrils, their polished
+      surfaces reflecting candlelight in mesmerizing patterns.
+    exits:
+      s: fortune_teller_parlor
+      n: kitsarae_study
+    image: 8247cafd27b1e86050e138a627dd715b2a56571038c2e0bd804c47698ecc33c5.jpg
+  kitsarae_study:
+    title: The Path to Enlightenment
+    description: A serene forest clearing bathed in soft, ethereal light where creatures of fur and feather sit in
+      contemplative circles around glowing tomes and intricate geometric diagrams etched into moonlit stone. The air
+      shimmers with arcane energy as some beings remain locked in animal form while others stand half-transformed, their
+      silhouettes flickering between bestial and humanoid grace, their eyes alight with the spark of dawning intellect.
+    exits:
+      s: caravan_stable
+      w: heralds_of_creation
+    image: 51b40d594c2f5ebe3a7250ed967cde905fb2cf32f9a8657d0fa3b36fd973f4bf.jpg
+  aineroia_cottage:
+    title: Aineroia's Cottage
+    description: A quaint cottage of pale wisteria wood sits nestled among luminescent dream-flowers, its thatched roof
+      shimmering with threads of silver starlight that seem to drift upward like smoke. Warm amber light spills from
+      curtained windows, and the doorway is framed by climbing vines bearing delicate glass-like blooms that chime
+      softly in an unfelt breeze.
+    exits:
+      s: shattered_fae_wood
+      e: aineron
+    image: 3edef5e2570ef32d74960271ad3a4623358554fec8ac0d2f7042d2fa95efcebe.jpg
+    inn: true
+  yaleron:
+    title: Yaleron - A City Under Seige
+    description: A walled Archae city east of the mountains, dominated by a large temple to the Creator. High, thick walls
+      with few gates. The architecture is austere and conservative — functional stone buildings, no ornamentation, no
+      concession to the newer magical aesthetics of post-ascension Ambon. The temple is the largest structure, its spire
+      visible for miles. The city feels deliberately isolated — no sprawling suburbs, no welcoming market districts
+      outside the walls. Roads approach but the gates are narrow.
+    exits:
+      s: necrambon
+      n: resistance_camp
+    image: 8ef0a3167b5d881ed14f38d740bec2d484c9c266a7ec1f20d9e0b04a730c3262.jpg
+  necrambon:
+    title: Necrambon
+    description: >-
+      A walled Archae city east of the mountains, dominated by a large temple to the Creator. High, thick walls with few
+      gates. The architecture is austere and conservative — functional stone buildings, no ornamentation, no concession
+      to the newer magical aesthetics of post-ascension Ambon. The temple is the largest structure, its spire visible
+      for miles. The city feels deliberately isolated — no sprawling suburbs, no welcoming market districts outside the
+      walls. Roads approach but the gates are narrow.
+
+      The city has been destroyed. The walls are breached, the temple damaged. The streets are empty of the living. An
+      oppressive, grey atmosphere — the light seems dimmer here, the air colder. Signs of Kirot's occupation everywhere
+      — dark stains on the stones, an unnatural stillness. This is a place where terrible things happened and the land
+      remembers. The architecture is intact but lifeless — a city that died with its people.
+    image: dd7567e3831cd929336d15cbed21de0a4fa37f43af42404135566457e7f5c914.jpg
+    exits:
+      n: yaleron
+      s: call_for_heroes
+  resistance_camp:
+    title: A Resistance Camp in the Mountains
+    description: Rough-hewn tents of grey and brown canvas cling to the windswept ledges of a jagged mountain pass, their
+      guide-ropes straining against the biting alpine wind, while cookfires glow like embers in the cold dusk below
+      peaks dusted with snow. Banners of a dozen different orders and factions hang side by side between the rocks, and
+      armored figures move purposefully among stacked crates and weapon racks, their breath misting in the thin air as
+      the sprawling walled city of Yaleron looms far below in the valley's shadow.
+    image: 486a32fa93475acb69b281e5f9757d1f0c411a55b95dd5cdfcd6636cb03c51ed.jpg
+    exits:
+      w: creeping_darkness
+      s: yaleron
+  dream_hotel:
+    title: Hotel at the Edge of Dreams
+    description: A grand but unsettling establishment where the architecture subtly defies logic — doorways slightly too
+      tall, hallways that curve where they shouldn't, and wallpaper of deep burgundy and tarnished gold that seems to
+      shift patterns when not looked at directly. Soft amber lamplight flickers throughout, casting long shadows across
+      velvet furnishings and a front desk of dark lacquered wood, behind which hangs a clock with too many hands, all
+      moving at different speeds.
+    exits:
+      n: tessikon
+      w: general_store
+      s: library_fairytales
+    image: b003d0960624177e1b43aa0a09d52b28d781710fb5011da101d332a6ce851b25.jpg
+    inn: true
+  general_store:
+    title: Madam Daydreams' General Store
+    description: A cozy, cluttered shop bathed in warm amber lamplight, its wooden shelves sagging under the weight of
+      colorful potion bottles, bundled herbs, and peculiar knick-knacks stacked from floor to ceiling. A faded velvet
+      curtain separates the front counter from some unseen back room, and the air seems to shimmer faintly with the
+      mingled scents of dried flowers and old magic.
+    exits:
+      e: dream_hotel
+      s: crafters_workshop
+    image: 24e1f2423e639465bd14ac340f379ad1aadd763db50150e3eba4b4cd3013c62e.jpg
+  library_fairytales:
+    title: The Library of Fairytales
+    description: Towering shelves of dark mahogany stretch from floor to vaulted ceiling, crammed with leather-bound tomes
+      whose gilded spines shimmer with a faint, otherworldly glow, while clusters of floating candles drift lazily
+      between the stacks, casting warm pools of amber light across worn reading tables scattered with open books and
+      fallen feathers. Faded tapestries depicting wolves in grandmother's clothing, glass slippers, and spinning wheels
+      adorn the stone walls, and in the far corner, a massive illustrated atlas lies open on a pedestal, its pages
+      slowly turning on their own as if an invisible hand searches for a forgotten story.
+    image: c0d55292fe438fd1d97c2c80cced8922d8b71044234b48c0abeb0039572b0f0b.jpg
+    exits:
+      w: crafters_workshop
+      n: dream_hotel
+  kiriton_winter:
+    title: Harsh Kiriton Winter
+    description: Frost-rimed wooden structures huddle together beneath a merciless grey sky, their rooftops buried under
+      heavy drifts of snow while icicles hang like pale fangs from every eave. The settlement's paths are swallowed in
+      white, the frozen earth cracked and unyielding, and the skeletal silhouettes of barren trees sway against a biting
+      wind that scours the land bare of any warmth or color.
+    exits:
+      s: first_archae
+      n: drifting_through_clouds
+    image: 6c316a2e4ae64fbbf318405f7fddc36efe6e5934a6e661d0e088d61e560a57ae.jpg
+  underground_river:
+    title: An Underground River
+    description: A wide, dark river cuts silently through a vaulted stone cavern, its black water catching faint glimmers of
+      bioluminescent moss clinging to the slick, dripping walls. Jagged stalactites hang overhead like stone teeth, and
+      the air carries the cold, mineral scent of deep earth made almost visible in faint wisps of pale mist drifting
+      across the slow current.
+    exits:
+      w: sleeping_stone_statues
+      n: waterfall
+    image: 558b91c745ca938541ac524cfc4dc315abff7e2af7b0002cf37c10e58c693ff3.jpg
+  waterfall:
+    title: A Mountain Waterfall
+    description: A breathtaking cascade of crystalline water thunders down the face of a moss-covered granite cliff,
+      catching the light in a thousand shimmering droplets that drift like silver mist through the cool mountain air.
+      Lush ferns and wildflowers cling to the rocky banks where the churning white water collects into a deep, emerald
+      pool below.
+    exits:
+      s: underground_river
+      w: turbulent_waters
+    image: 10e024819a16b3bfe3d6d994a2f92f6a64833aadcaed2eaddb575fe46127c5b8.jpg
+  crafters_workshop:
+    title: Crafter's Workshop
+    description: Warm firelight flickers from a stone forge tucked into one corner, its chimney blackened with years of
+      soot, while across the room an alchemist's table gleams with glass vials, bubbling retorts, and shelves crowded
+      with labeled reagents. A sturdy loom and spinning wheel occupy a quieter alcove, draped with half-finished bolts
+      of cloth in rich, earthy hues, the whole space smelling of coal smoke, herbs, and raw wool.
+    exits:
+      n: general_store
+      e: library_fairytales
+    image: 699c75864057bbca5646f793eb9ad3776dabbc2c45f0805a9dbd594024c03cba.jpg
+    station: forge
+lifespan: 30
+terrain: inside
+levelBand:
+  min: 1
+  max: 1
+difficultyHint: standard
+mobs:
+  krioshaeu:
+    name: Krioshaeu
+    role: quest_giver
+    spawns:
+      - room: krioshaeu_cabin
+    description: "A Lustriae woman with salt-and-pepper hair — the only faerie who looks aged — pale iridescent skin, dark
+      eyes, and softly rounded ears. Beautiful but slightly off. Her features have a faerie delicacy but there is
+      something wild and untamed about her. Her clothing is colorful and deliberately mismatched — patchwork silks,
+      embroidered scarves in clashing patterns, a wide-brimmed hat adorned with flowers, feathers, and small dangling
+      charms. She looks like a beloved eccentric aunt who dresses however she pleases. Her most striking feature: large,
+      strong black raven wings spreading from her back — not the translucent, diaphanous wings of the Lustriae but
+      solid, dark, powerful feathered wings. She sits in a cozy cabin interior — a roaring fire, a steaming teapot, two
+      cups on the table. One hand holds a teacup. She is smiling warmly, as if the viewer just arrived and she's been
+      expecting them. Her dark eyes are kind but ancient — they have seen everyone's last moment and they are not
+      afraid. Death dressed like a carnival, waiting with tea."
+    image: d54a8a98459cd12cf5f866e9fcd464f72637c064e71767ea760114bf2971232e.png
+  naraxian_akathavae:
+    name: Naraxian Akathavae
+    spawns:
+      - room: fortune_teller_parlor
+    description: A wrinkled old woman dressed in colorful minstrel garb with an extremely ornate masquerade-style mask
+      covering most of their face. They hold an ancient tome that crackles with magic in their left hand, and a flaming
+      phoenix feather quill in their right. They have an ornately carved violin floating next to them, and wear a tall,
+      overly complicated hat.
+    role: dialog
+    image: d60ba19e37c9304f720e3b55d94e0284bada92969338661b646292aa46605496.png
+  maelsang:
+    name: A Dream of Maelsang
+    spawns:
+      - room: tempest_between_worlds
+    description: A tempest given form — a colossal figure emerging from or composed of a raging ocean storm. His body is
+      made of churning seawater, dark clouds, and crackling lightning. Waves tower around him. His face is barely
+      defined in the storm — just the suggestion of features in the roiling clouds, eyes of lightning, a mouth that is a
+      whirlpool. He is in motion — fleeing westward across the ocean, and his passage is destruction. Behind him, ships
+      are shattered, waves crash impossibly high, waterspouts spiral into the sky. The ocean itself is being torn apart
+      by his panicked retreat. In the far background, the coastline of Ambon is barely visible through the storm. He is
+      not attacking — he is running, and the devastation is collateral. A god so afraid of what's behind him that he's
+      destroying everything in his path without even noticing.
+    image: 90d3ea787353984dc0fb864351a7e47abb8c0849da342eed024034fbec3c75c1.png
+    tier: boss
+    category: elemental
+    level: 1
+    drops:
+      - itemId: aura_tempest
+        chance: 1
+  tessikar:
+    name: Tessikar the Springwright
+    spawns:
+      - room: springwright_workshop
+    description: A dwarf — short, stocky, broad-shouldered — sitting at a cluttered workbench in a mountain workshop. One
+      eye is replaced by a clockwork mechanism that whirs and focuses with mechanical precision, its lens glowing
+      faintly amber. One arm is entirely mechanical — brass and copper gears, pistons, and articulated fingers that move
+      with impossible delicacy as they work on a small clockwork creation on the bench. His organic hand holds a tiny
+      tool. The workshop is magnificent chaos — gears, springs, crystals, half-finished mechanisms, blueprints, tools of
+      every kind covering every surface. Crystals from the Lithae mines glow in racks along the walls, some already
+      integrated into mechanical housings. Through the workshop window, the city of Tessikon is visible far below on the
+      mountainside — his creation, grown from one workshop into a civilization. His expression is pure concentration —
+      the look of someone who has forgotten to eat because this particular gear ratio is almost perfect. A god who would
+      rather tinker than rule.
+    image: 5c37e9f97dd508962c971591a62e0e91e9bc38c296dce379c638e0492c5f2b04.png
+    role: prop
+  kvarcgagap:
+    name: Kvarcgagap the Shining Quartz Void
+    spawns:
+      - room: void_below_mountain
+    role: dialog
+    description: "An ancient, primordial being from outside of Ambon. God of bedrock, caverns, precious gems and crystals,
+      metal ores, and everything glittering under the ground. A force of nature, he most often takes the form of a
+      shimmering liquid the consistency of quicksilver, but shimmering like liquid opal. In this form, he travels freely
+      through solid stone, sometimes as a trickle and other times as a great deluge. Sometimes leaving no trail and
+      others carving massive underground caverns and seeding the deep places with crystals and metals. "
+    image: 6f9afaac0614f870bdf90986658afa2aceeafdf45d2c6f59e6609ea677e51cce.png
+  ambon_auringold_academy_mob6:
+    name: Shade of Malkuth
+    spawns:
+      - room: clockwork_battle
+    description: A pale, sharp-featured specter cloaked in tattered shadows grips an obsidian dagger aloft, its form
+      flickering between solid and incorporeal as if struggling to maintain existence in this realm. Fragments of ornate
+      regalia—golden chains, jeweled rings, and threads of silk—cling to the shade's dark silhouette like the fading
+      echoes of stolen royalty, while its cold, possessive gaze burns with otherworldly hunger and bitter resentment.
+    image: cf8acbcb1c4aced3f78c579249729c6529f0a280449a760a55ca42c6eec65dfd.png
+    level: 2
+    tier: boss
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+    drops:
+      - itemId: ruby_necklace
+        chance: 1
+  ambon_auringold_academy_mob7:
+    name: Tick the Clockwork Horse
+    description: "A gleaming brass automaton horse, its body etched with intricate filigree and spinning gears visible
+      beneath translucent panels in its flanks. Its mechanical eyes glow with an amber light, and wisps of enchanted
+      steam curl from its nostrils, its polished surfaces reflecting candlelight in mesmerizing patterns. "
+    spawns:
+      - room: caravan_stable
+    role: prop
+    category: construct
+    image: 7b7ad53665b6757e97ef69d4bc58785ec5d5e1f6cccc176e9ff52ebcfbb6fdf0.png
+  ambon_auringold_academy_mob8:
+    name: Tock the Clockwork Horse
+    description: "A gleaming silver automaton horse, its body etched with intricate filigree and glowing gems visible
+      beneath translucent panels in its flanks. Its mechanical eyes glow with an violet light, and wisps of enchanted
+      steam curl from its nostrils, its polished surfaces reflecting candlelight in mesmerizing patterns. "
+    role: prop
+    spawns:
+      - room: caravan_stable
+    image: 406aeff907501fdb1890d19c75821d59e5dbd185c83e73f4f9f6af09d787c668.png
+  kitsarae_scholar:
+    name: Kitsarae Scholar
+    description: A humanoid with silver and black fur and kind, sleepy, black eyes eyes. Part badger, part human, dressed in
+      the academic robes of a scholar.
+    image: 7925beec888dc3d98d4da40a1bb2921f64c30d94d0de93ea018fc351a21144e3.png
+    spawns:
+      - room: kitsarae_study
+  kitsarae_minstrel:
+    name: Kitsarae Minstrel
+    description: A humanoid with rusty fur and clever, amber eyes. Part fox, part human, dressed in minstrel garb.
+    spawns:
+      - room: kitsarae_study
+    image: cb54f2764862bb3303559e3cff2a99363413ae7910f68779be4ed46b7e5c1a85.png
+  ambon_auringold_academy_mob11:
+    name: Alorae Herald
+    description: A tall, ethereal figure shimmers with translucent luminosity—its delicate skin refracting light into
+      swirling spectrums of deep purple, golden yellow, and silvery blue, almost crystalline in quality. Starlight
+      glimmers within its eyes while hair flows like captured cosmic wind, surrounded by soft prismatic halos that shift
+      with each movement, and it glides within gold and cream religious robes, clasping a ceremonial mace carved with
+      intricate celestial patterns.
+    role: prop
+    image: 94fcfa8862f8ab422286a0af3e8975a3385cfc7175353096a95441585b56750a.png
+    spawns:
+      - room: heralds_of_creation
+  orchard_back_sylflorae:
+    name: Orchard-Back Sylflorae
+    tier: standard
+    level: 1
+    description: Resembling enormous porcupines, these gentle giants grow apple, pear, fig, starfruit, or dream-fruit trees
+      rooted into their backs.
+    spawns:
+      - room: sylflorae_farm
+    role: prop
+    image: 91376b7860f909db3256afea24cf8ca576265eb5a4c51eb604cdcce4d5be01c4.png
+  mossmantle_sylflorae:
+    name: Mossmantle Sylflorae
+    tier: standard
+    level: 1
+    description: Enormous tortoise-like beasts covered in moss, mushrooms, ferns, and medicinal herbs.
+    spawns:
+      - room: sylflorae_farm
+    role: prop
+    image: c174b79c1169ccc2801edaa69301dd41b08e3c89218f9543ac32a45533d7592d.png
+  vinehorn_sylflorae:
+    name: Vinehold Sylflorae
+    tier: standard
+    level: 1
+    description: Massive elk-like wanderers with antlers covered in edible berries or exotic spices.
+    spawns:
+      - room: sylflorae_farm
+    role: prop
+    category: elemental
+    image: 20c81f32053c712189dd43b9c8b9df937d383d305340703b3b2e21edab3b690e.png
+  granary_sylflorae:
+    name: Granary Sylflorae
+    tier: standard
+    level: 1
+    description: Mountain-sized aurochs-like beings with waving seed-grasses growing along their spines.
+    spawns:
+      - room: sylflorae_farm
+    role: prop
+    image: 766b9f806b2167ef4d9a353f62989f29e11649d63bf6dc0d9b03c38bd7f36ecc.png
+  bloomwake_sylflorae:
+    name: Bloomwake Sylflorae
+    tier: standard
+    level: 1
+    description: Bright, birdlike plant-beasts with feathers made of wildflowers, orchids, and lilies. The blooms and seeds
+      fall to the ground as they fly, leaving a trail of flowers wherever they pass.
+    spawns:
+      - room: sylflorae_farm
+    role: prop
+    image: 17c5c23ba12f3b6e080f7924ac1431a65f200ae74abc428fe0f6d062f48437fc.png
+  kitsarae_farmer:
+    name: Kitsarae Farmer
+    description: A humanoid boar with rough, bark line skin, a long snout and protruding fangs. Part boar, part human,
+      dressed in simple farmers' garb and holding a pitchfork.
+    image: 54f287883da3db3fba6e287f1cf3bb2c15a57a515b771f05fe69a7259805a040.png
+    spawns:
+      - room: kitsarae_study
+  verathaios:
+    name: Verathaios
+    description: A human man standing in the heart of an impossibly lush magical rainforest, his arms outstretched,
+      magically manipulating the plants around him. Vines respond to his gestures, growing and weaving in real time.
+      Flowers bloom at his command. Trees bend toward him like sunflowers toward the sun. He wears extraordinary
+      clothing — a long coat or robe made entirely of phoenix feathers, iridescent and shimmering with fiery reds,
+      oranges, and golds that contrast dramatically with the green jungle around him. The feather-coat seems alive,
+      shifting colors as he moves. His face is serene, patient, deeply focused — a gardener at work in the most
+      important garden in the world. Every plant around him is unique and magical — bioluminescent flowers, vines
+      bearing glowing fruit, herbs that shimmer with healing energy. The caldera's warmth is visible as a golden haze in
+      the air. He is not commanding nature — he is collaborating with it. A god who came to a new world and decided to
+      plant things.
+    spawns:
+      - room: verathaios_workshop
+    image: 78de31bd4103d3108270d7c7e3ebb997bc71110259b4199b671cac00be03d7e2.png
+    role: prop
+  dream_wisp:
+    name: a flickering dream wisp
+    tier: weak
+    level: 1
+    description: A gossamer ribbon of pale luminescence drifts lazily through the air, its form constantly shifting between
+      solid and translucent as if struggling to maintain existence. Wisps of opalescent light trail behind it in slow,
+      hypnotic waves, creating the fleeting impression of a half-remembered face before dissolving back into formless
+      radiance.
+    category: elemental
+    image: b7adbcc7ff099e109ccd9be4ae002a8388203e5b9c5575c72a09dd95ae58a07e.png
+    spawns:
+      - room: endless_starry_void
+        count: 2
+      - room: heralds_of_creation
+      - room: drifting_through_clouds
+        count: 2
+      - room: fortune_teller_parlor
+        count: 2
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 4
+  angry_nebula:
+    name: a tiny angry nebula
+    tier: standard
+    level: 1
+    description: A swirling sphere of cosmic dust no larger than a clenched fist roils with violent purples and blues, its
+      edges crackling with barely contained energy as it zips erratically through the air, leaving a faint trail of
+      sparkling particles in its wake.
+    spawns:
+      - room: endless_starry_void
+        count: 2
+      - room: wagon_drifting_stars
+        count: 2
+      - room: caravan_stable
+    image: 98a543f8c919057bd9fbbe0d8fa0308f4c497dfe8a600288802d978ee9278606.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 2
+    drops:
+      - itemId: stardust
+        chance: 1
+  unruly_tarot:
+    name: a deck of unruly tarot cards
+    tier: standard
+    level: 1
+    description: A chaotic swirl of oversized playing cards hovers in mid-air, their gilded edges catching the light as they
+      flutter and dance with manic energy—some depicting strange arcane symbols while others show warped, laughing faces
+      that seem to shift when you're not looking directly at them. The entire mass pulses with an eerie violet glow,
+      cards occasionally shooting out in random directions before snapping back into the roiling cloud like they're
+      bound by invisible strings.
+    spawns:
+      - room: fortune_teller_parlor
+    category: construct
+    image: c9298312c6d9bbbfd90cbd7a467ed6afcb95fe4a1dea5a02082ffa2e32df88c8.png
+  crackling_firmament:
+    name: a crackling piece of firmament of creation
+    tier: standard
+    level: 1
+    description: A jagged shard of shimmering sky hangs suspended in mid-air, its surface rippling with arcs of pale blue
+      and white energy that crackle and spark with primordial power, casting dancing shadows across nearby surfaces as
+      reality seems to bend unnaturally around its edges.
+    spawns:
+      - room: heralds_of_creation
+        count: 2
+    image: 144f961ddb4cd2bfffca478d38779f92e77301cbe4d9f85bd505e3a4f51ed492.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 2
+    drops:
+      - itemId: stardust
+        chance: 1
+  tiny_seamonster:
+    name: a tiny sea monster
+    description: A diminutive creature no larger than a clenched fist, with translucent bluish skin that glistens wetly and
+      a cluster of short, writhing tentacles around a gaping circular mouth lined with needle-like teeth. Two large,
+      bulbous eyes glow faintly with bioluminescent green light as it darts erratically through the water.
+    image: eb571fb53c8ce6a97cb37659ddfb2c71fd6c14e729872006d44155158c30c17f.png
+    spawns:
+      - room: sunken_ship_hull
+    level: 2
+    drops:
+      - itemId: kelp
+        chance: 1
+  seahorse:
+    name: a neon colored seahorse
+    description: A diminutive seahorse with a translucent body that shimmers in brilliant neon blues and magentas, its
+      serpentine tail curling gracefully as bioluminescent patterns dance across its delicate frame like living
+      electricity.
+    spawns:
+      - room: seaweed_thicket
+        count: 3
+    image: 3aa6f199ca8ff8bcd00469a23a3b94b2ae3e37d4d94f67e399d4f5247c81aea9.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 1
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  cavern_rat:
+    name: a crystalline cavern rat
+    tier: standard
+    level: 1
+    description: A skeletal rodent no larger than a fist, its entire body formed from translucent crystal that catches and
+      refracts light into scattered rainbows; its beady eyes glow faintly with an inner luminescence, and delicate
+      shards protrude from its spine like a crystalline mane.
+    image: 506d659c758b23237589f958e0f779cca3c929e1a5dc23fc0a48571324ad99fb.png
+    spawns:
+      - room: vault
+        count: 2
+      - room: gemstone_mineshaft
+        count: 2
+      - room: shining_crystal_mine
+        count: 2
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 2
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  clockwork_deer:
+    name: a clockwork deer
+    tier: standard
+    level: 1
+    description: A delicate brass stag no taller than a hound, with intricate copper gears visible through transparent
+      panels along its flanks and neck, its antlers crafted from polished steel that catch the light with each
+      mechanical tick of its movements. Its eyes glow with a faint amber luminescence, and wisps of steam occasionally
+      escape from vents near its shoulders as it moves with an eerie, synchronized grace.
+    spawns:
+      - room: clockwork_forest
+      - room: deep_clockwork_forest
+        count: 2
+    image: 94202d0ed57ecea852a93400b0dd7189454e91faee7c94e7ebfa3e10ba7963f2.png
+    behavior:
+      template: wander
+      params: {}
+    drops:
+      - itemId: broken_clockwork_gears
+        chance: 0.5
+  clockwork_sparrow:
+    name: a filigree clockwork sparrow
+    tier: standard
+    level: 1
+    description: A tiny mechanical bird no larger than a thumb, its delicate brass body intricately etched with scrolling
+      patterns and barely-visible gears visible through transparent crystal panels; gossamer copper wings beat with a
+      soft, rhythmic ticking as it hovers on diminutive springs, its jeweled eyes glowing a faint amber.
+    spawns:
+      - room: deep_clockwork_forest
+      - room: clockwork_clearing
+      - room: beside_clockwork_pond
+    image: 4f0b9851a85ffd1b925dd6801d83f21cb4fc4610d9c38c32fa1573ae78e1dbd3.png
+    behavior:
+      template: wander
+      params: {}
+    drops:
+      - itemId: broken_clockwork_gears
+        chance: 0.5
+  clockwork_koi:
+    name: a clockwork koi
+    tier: standard
+    level: 1
+    description: A small mechanical fish with burnished copper scales that shimmer with an oily iridescence, its body
+      wrought from interlocking gears and delicate brass plating. Rhythmic clicking emanates from within as crystalline
+      fins of frosted glass rotate with hypnotic precision, propelling the diminutive construct through the air with
+      unnaturally fluid grace.
+    spawns:
+      - room: wading_pond
+        count: 2
+    category: beast
+    image: fa6161e40322460d3a4836754311d8473a8bf94f3a976cd0c18c88b3af64eddb.png
+    drops:
+      - itemId: broken_clockwork_gears
+        chance: 0.5
+  clockwork_frog:
+    name: a clockwork frog
+    description: A diminutive brass automaton no larger than a fist, with segmented copper limbs articulated at delicate
+      joints and a bulbous body etched with intricate gear patterns. Two luminous emerald gems serve as its eyes,
+      casting a faint glow as they swivel with mechanical precision, while a small winding key protrudes from its back.
+    spawns:
+      - room: wading_pond
+      - room: beside_clockwork_pond
+    image: 48fb4bf8946a3efd4569b1dd39cbf622ac0c32c11be9daa970632619c77c06e5.png
+    drops:
+      - itemId: broken_clockwork_gears
+        chance: 0.5
+  clockwork_alligator:
+    name: a clockwork alligator
+    description: A small mechanical reptile with brass plating and copper joints, its segmented tail ticking rhythmically as
+      it moves with jerky, predatory grace across the ground. Tiny gears visible through gaps in its corroded metal hide
+      catch the light as it snaps its hinged jaw open and closed with a metallic clang.
+    spawns:
+      - room: clockwork_dias
+        count: 2
+    tier: elite
+    category: beast
+    image: 036fc6608c00aa8394614e25043d60cee96941d5e0fe93adb3b4679d4a75dcd6.png
+    drops:
+      - itemId: broken_clockwork_gears
+        chance: 1
+  sea_anemone:
+    name: a sea anemone
+    description: A translucent, gelatinous creature no larger than a human fist clings to the seafloor, its stubby tentacles
+      swaying gently in the currents with delicate, rippling motions. Soft hues of pale pink and cream shimmer across
+      its translucent body, while its countless thin tendrils undulate hypnotically, seeking sustenance from the water
+      around it.
+    spawns:
+      - room: coral_reef
+        count: 2
+      - room: ship_graveyard
+      - room: underground_river
+    image: 33b8297cbf361cab5865637553d78a15e81327e777339d2f0d0b3743cbf2070c.png
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  electric_eel:
+    name: an electric eel
+    description: A sleek, serpentine creature about two feet long with a mottled dark green and black body that glistens
+      with moisture, its small beady eyes gleaming with predatory intelligence as faint blue arcs of electricity
+      occasionally dance across its slick scales.
+    spawns:
+      - room: ship_graveyard
+        count: 2
+      - room: seaweed_thicket
+      - room: sunken_ship_hull
+    image: 0301dcf9f6f581bb5384c00d772e09d68eca2eba3d16fb6d4685e88dbfd0bb70.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 1
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  venomous_jellyfish:
+    name: a highly venomous jellyfish
+    tier: standard
+    level: 1
+    description: A translucent, bell-shaped creature drifts lazily through the water, its gelatinous body tinged with sickly
+      purples and greens that seem to pulse with an inner toxin. Long, wispy tentacles trail beneath it like deadly
+      threads, each one shimmering with a faint bioluminescent glow that marks their venom-laden nature.
+    spawns:
+      - room: coral_reef
+      - room: seaweed_thicket
+      - room: sandy_shoal
+    image: 40036ab669c15613201610ed854b32283130633b795720369e344edcdf0cf8ae.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 2
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  spiny_starfish:
+    name: a spiny starfish
+    tier: standard
+    level: 1
+    description: A small, brick-red starfish sprawls across the seafloor with five stubby arms, its surface bristling with
+      blunt spines that give it a rough, defensive appearance; tiny suction cups line the undersides of its limbs as it
+      slowly glides across sand and stone.
+    spawns:
+      - room: sandy_shoal
+      - room: turbulent_waters
+    image: f4e70308854fc2e3c50c4c4560d7c8f1be3841b464c7276956b4c845132324f4.png
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  ice_elemental:
+    name: a piercing ice elemental
+    tier: standard
+    level: 1
+    description: A shimmering humanoid form coalesces from swirling frost and glacial mist, its translucent body crackling
+      with razor-sharp icicles that jut outward at jagged angles. Its core glows with an ethereal pale blue
+      luminescence, and as it moves, crystalline shards rain down around it, leaving trails of frozen air in its wake.
+    spawns:
+      - room: turbulent_waters
+      - room: drifting_through_clouds
+    image: 385b6bee1a0245f18cde6a7f2bcc946ddfe106f7eb452625967a907dedc6b054.png
+  kirot_aethiryn:
+    name: Shade Kirot Aethiryn
+    tier: elite
+    level: 3
+    description: An Alorae who has fallen — tall, with the frame of a divine being, but corrupted. Where a healthy Alorae
+      radiates prismatic light, Kirot radiates a sickly darkness. His skin is pale and cracked, with veins of black
+      energy visible beneath the surface. His eyes burn with cold green light. His vestments were once white and gold
+      but are now stained, tattered, and rewoven with dark threads. He stands in a blighted landscape — dead trees, grey
+      earth, withered crops — and from his outstretched hands, tendrils of dark magic reach into the ground, pulling
+      skeletal and rotting forms upward. The dead rise around him in a spreading circle. His expression is calm,
+      methodical, clinical — this is not madness, it is craft.
+    spawns:
+      - room: creeping_darkness
+    image: 78c1065f5ddcbe3525aca9663578aaf449279628755b5af1e28b5f40f67ddda7.png
+  astriel:
+    name: Astriel
+    tier: standard
+    level: 1
+    description: A tall, radiant Alorae standing in golden subtropical farmland at sunset. He is luminous — prismatic light
+      refracting from his skin, rainbows playing across his white and gold vestments. But his light is gentle here, not
+      blinding — he is using it to bless the land. His hands are extended over rows of growing crops, and where his
+      light touches the earth, plants surge upward, flowering and fruiting in fast-forward.
+    image: 6d25e68d9148fd56f45e55e0208f7e331cae8690967d9c44b40f8f15702cfdfd.png
+    spawns:
+      - room: heralds_of_creation
+  ambonien:
+    name: Ambonien
+    tier: standard
+    level: 1
+    description: "Ambonien is draped in animal skins — heavy furs and hides that wrap and layer around their body,
+      concealing their form entirely. The skins are rough, unworked, the first practical clothing of someone who has no
+      one to teach them craft. The draping obscures any gendered features — this figure could be anyone, could become
+      anyone. Only their face and hands are visible. Their skin is the warm brown of freshly turned earth — the soil the
+      Creator used. Their hair is dark, thick, wind-tossed, falling to their shoulders. Their eyes are large, dark, and
+      startlingly alert — the eyes of someone seeing everything for the first time. There is wonder in that gaze, but
+      also confusion, and the very beginning of loneliness. "
+    image: 5477884ba8d9b0525938b0e85f92ae70e43e889ccdbb64042f77920ff6af01cb.png
+    spawns:
+      - room: first_archae
+    role: prop
+  ambuoroko:
+    name: Ambuoroko
+    tier: standard
+    level: 1
+    description: A figure of dark, billowing shadow wrapped in a magnificent ornate cloak, standing atop a rocky outcropping
+      overlooking a vast battlefield. Glowing blue eyes burn intensely from within the churning darkness of the hood —
+      the only solid feature in the smoke. His hands are extended and from them erupts an enormous display of arcane
+      power — cascading blue and white lightning, spiraling geometric patterns of pure magical energy, reality itself
+      bending around him. The scale is devastating — the magic he channels dwarfs the landscape below. His cloak billows
+      dramatically in the energy discharge.
+    image: 54beb14ecc2d6fcca66683e4fe512b75453204b034c187f6d603a7368042cdd9.png
+    spawns:
+      - room: resistance_camp
+    role: prop
+  elustriaine:
+    name: Elustriaine
+    tier: standard
+    level: 1
+    description: A smaller, younger-looking version of Aineroia — the same Lustriae features, translucent diaphanous wings,
+      dark hair, dark eyes, pale mother-of-pearl skin - but more compact, fiercer, with an edge of wildness. She wears
+      layered silks in neon pastel tones — bright and cheery — draped and wrapped in a traveling style, with coin
+      bracelets on both wrists that catch the light. The bracelets are prominent — scale-like or coin-like metal pieces
+      that jingle with movement. A small crossbow is slung at her hip. Her dark hair is wild, adorned with small coins
+      and silk ribbons. She has rainbow, diaphanous wings extending from her back like enormous stained glass windows
+      that seem to emit an otherworldly light.
+    image: 0c8be01cb30ae22ea70a3fc430a8a09423c89be60fe773bb2b196e4152e51b0a.png
+    spawns:
+      - room: resistance_camp
+    role: prop
+  geode_fragment:
+    name: an animated geode fragment
+    tier: standard
+    level: 2
+    description: A fist-sized chunk of rough grey stone shambles forward on tiny crystalline legs, its cracked exterior
+      splitting open to reveal a jagged interior of glittering purple amethyst that catches the light with an eerie,
+      pulsing shimmer.
+    image: 8e665ee5a222d51a0c5f3301b68622c59817f47ad4006a163baace0d8d238f49.png
+    spawns:
+      - room: mine_opening
+      - room: shining_crystal_mine
+      - room: gemstone_mineshaft
+      - room: vault
+        count: 2
+    drops:
+      - itemId: stone_fragments
+        chance: 0.75
+  crystal_drake:
+    name: the Crystal Drake
+    tier: boss
+    level: 1
+    description: A massive serpentine creature coils with regal menace, its scales formed entirely of razor-sharp
+      crystalline facets that refract light into cascading prismatic rainbows across every surface it touches. Two
+      enormous wings of translucent amethyst membrane stretch wide behind a horned head crowned with jagged spires of
+      pure quartz, its piercing eyes glowing with an inner violet luminescence.
+    spawns:
+      - room: vault
+    image: 41077ae48c688ba78b0232fd9a468fd2a695946a74ef3e330e19e6b1130ccc20.png
+    drops:
+      - itemId: quartz_bootz
+        chance: 1
+      - itemId: stone_fragments
+        chance: 0.8
+  magma_spawn:
+    name: a magma spawn
+    tier: standard
+    level: 2
+    description: A small, roughly humanoid figure formed from cooling volcanic rock, its cracked obsidian shell glowing a
+      fierce orange-red at the seams where molten magma churns just beneath the surface.
+    spawns:
+      - room: gemstone_mineshaft
+      - room: shining_crystal_mine
+    image: f2f2bbfad65d80b2db22cc923cd22c89906239613f18a69d40b1f95feae1df81.png
+    behavior:
+      template: wander
+      params: {}
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  stalactite:
+    name: a furious stalactite
+    tier: standard
+    level: 2
+    description: A jagged spike of pale limestone hangs motionless from the cave ceiling, its wet surface glinting faintly
+      in the dim light, a thin crack running along its length suggesting it is moments from breaking free.
+    spawns:
+      - room: void_below_mountain
+      - room: mine_opening
+    category: elemental
+    image: 494bc30b4ae0b97e13566ed5c12af7fa3e12a7e6cba589f5a432f37474e9dba7.png
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  stalagmite:
+    name: a giggling stalagmite
+    tier: standard
+    level: 2
+    description: A small, lumpy column of pale grey stone rises from the cave floor, its rough mineral surface etched with a
+      crude, unsettling grin of jagged calcite teeth that seems to widen whenever no one is looking directly at it.
+    spawns:
+      - room: void_below_mountain
+      - room: gemstone_mineshaft
+    category: elemental
+    image: dd3692c7d65684507c8ed9cba5a5dd31c18658dc5e48612535e3a0fdc3189842.png
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  fanged_jackelope:
+    name: a fanged jackalope
+    tier: weak
+    level: 2
+    description: A small, tawny-furred rabbit crouches low to the ground, its oversized antlers still velvet-soft and
+      slightly crooked, while two tiny but wickedly sharp fangs curl over its lower lip.
+    spawns:
+      - room: foothills_kaerinlith
+      - room: path_kaerinlith
+      - room: clockwork_clearing
+      - room: arrival_king
+    image: dbac06930e37a7507c3c977250b6e0fa571e8e6ec3cd7d8a4f52c23912bc2d48.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 2
+  malkuth:
+    name: Malkuth
+    tier: standard
+    level: 1
+    description: "A distinctly human man dressed like a caricature of a king or lord. He is handsome in a cold, calculated
+      way — sharp features, dark hair, pale skin. His clothing is absurdly elaborate — layer upon layer of royal
+      regalia, gold crown encrusted with too many jewels, fur-trimmed robes over embroidered tunics over silk shirts,
+      rings on every finger, chains of office stacked upon chains of office. He has overdone it. "
+    spawns:
+      - room: arrival_king
+    role: prop
+    image: 5117dee0d0b24223283fa6c5af6bcea8d7a0c089450e6447e02a7b7640985b24.png
+  mechanical_fortune_teller:
+    name: a mechanical fortune teller
+    tier: standard
+    level: 1
+    description: A small, weathered automaton encased in a glass cabinet, its brass gears and clockwork face visible through
+      cracked panes, glass eyes glowing with a faint amber light beneath a painted turban of chipped red and gold.
+    spawns:
+      - room: carnival_prophecy
+    role: prop
+    image: 9227885a44956785c52ceaf1bf8f590489c4fe6e1d3ff9042255fc3e04f5b389.png
+  kvarcgagap_fragments:
+    name: broken fragments of Kvarcgagap
+    tier: standard
+    level: 1
+    description: Scattered across the ground lie jagged shards of translucent quartz, each fragment still faintly pulsing
+      with an inner iridescent light — pale golds, blues, and violets shifting like trapped opalescence beneath a
+      cracked and cloudy surface, as though something divine and liquid once filled them but has long since drained
+      away.
+    spawns:
+      - room: great_betrayal
+        count: 2
+    role: prop
+    image: 282e89473e87bc551182406e6a26a4a0a18786a40d3e3748d92a3d96e628a185.png
+  time_wraith:
+    name: a time wraith
+    tier: standard
+    level: 2
+    description: A wispy, translucent figure drifts just above the ground, its tattered shroud shifting between moments like
+      a flickering candle flame, now solid, now barely a shimmer of pale silver and faded grey. Empty hollow eyes glow
+      with a dim, ghostly light, and its elongated fingers trail behind it like smoke dissolving into forgotten time.
+    image: ebdc43cab1d8f0305ce0236387ae3176b373e43f3a6f433801584b9b0af9a1f5.png
+    spawns:
+      - room: obsidian_dagger
+      - room: carnival_prophecy
+      - room: lustriae
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 10
+  emberfell_tessikar:
+    name: Tessikar the Springwright
+    tier: standard
+    level: 1
+    description: A stout dwarf figure in a heavy leather apron, his arms corded with muscle and streaked with old burn
+      scars, stands with the quiet confidence of someone who has bent the world to the shape of his hammer. Flecks of
+      obsidian dust glitter in his beard and along the creases of his weathered knuckles, and a faint ember-glow lingers
+      in his eyes like the last sparks of a forge that never fully cools. One eye is replaced by a clockwork mechanism
+      that whirs and focuses with mechanical precision, its lens glowing faintly amber. One arm is entirely mechanical —
+      brass and copper gears, pistons, and articulated fingers that move with impossible delicacy.
+    image: ba7831cc48893d041afd0689aea07a7c0b378388aa0271a37820294d3f3f1153.png
+    spawns:
+      - room: emberfell
+    role: prop
+  void_elemental:
+    name: a crackling void elemental
+    tier: standard
+    level: 2
+    description: A wispy, translucent figure of swirling darkness crackles with faint purple-white sparks along its
+      ever-shifting edges, its vaguely humanoid form constantly dissolving and reforming as though struggling to hold
+      itself together. Twin pinpricks of cold violet light serve as eyes, flickering unsteadily within the hollow depths
+      of its amorphous, shadowy mass.
+    spawns:
+      - room: world_seed
+        count: 2
+      - room: obsidian_dagger
+      - room: clockwork_battle
+        count: 2
+      - room: memory_creation
+    image: 1c39ed8e25b54664185b85f0f11407bc63531083e3556a6f4345f646536550ce.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 1
+    drops:
+      - itemId: stardust
+        chance: 1
+  archae_healer:
+    name: a humble Archae healer woman
+    tier: standard
+    level: 1
+    description: A slender Archae woman with waist-length dark hair and sharp, slightly pointed ears stands with quiet
+      composure, her extremely pale skin almost luminous against the simple earthen robes she wears. Her dark, attentive
+      eyes carry a calm warmth, and a small pouch of herbs and wrapped linen bandages hangs at her hip.
+    spawns:
+      - room: humble_forest_cabin
+    role: prop
+    image: 73ecd984fb8d0cfa68c3fb66684c6a32d04e352e2074aa629b940ad443e25282.png
+  doctor_reinheart:
+    name: Doctor Reinheart
+    tier: standard
+    level: 1
+    description: a young Kitsarae reindeer scholar, a humanoid woman with animalistic features. She is a world renowned
+      scholar and an expert in every field. She provides refreshment and training for new heroes, and a friendly ear to
+      the residents of Auringold.
+    image: 2baba8ff70c6e7d5633fa88be0fa46afd2d0edc21a2993c4b04b829f5a104824.png
+    spawns:
+      - room: auringold_tavern
+  madame_herb:
+    name: Madame Herb
+    tier: standard
+    level: 1
+    description: A smaller Sylflorae formed entirely from dense tangles of living flowers, vines, and root-fibers gathered
+      into the rough shape of a creature. Its body has no clear anatomy beneath the growth; instead, layered iris
+      petals, curling stems, moss, and flowering tendrils continuously weave and shift against one another as it moves.
+      Long streamer-like leaves trail behind it like flowing hair, while great blooming irises open and close across its
+      body in response to mood and attention. Clusters of bird-of-paradise flowers flare from its shoulders and back in
+      brilliant bursts of orange, violet, sapphire, and gold, giving it the appearance of a wandering living bouquet
+      caught in a permanent state of bloom.
+    spawns:
+      - room: cozy_inn
+    role: prop
+    image: 2ad9bf818ef6ae0e771e5676ff834da87462fdb7678fb9eb31de2b5e14d8bd7f.png
+  shadow_of_betrayal:
+    name: a shadow of betrayal
+    tier: standard
+    level: 3
+    description: A wispy, humanoid silhouette of deep violet-black smoke drifts silently just above the ground, its
+      featureless face turned slightly away as though perpetually averting its gaze. Faint, jagged cracks of sickly
+      green light fracture across its translucent form, pulsing with a dim, unsettling glow.
+    spawns:
+      - room: royal_wedding
+      - room: sacrificial_altar
+      - room: royal_graveyard
+    image: ee2e571871ba3ee3bf3d82b946ae02b3cd25a8ee2d18744e5e5a60e51e0e752c.png
+  grief_aineroia:
+    name: Aineroia
+    tier: standard
+    level: 1
+    description: "A tall, luminous woman with delicate features and pale iridescent skin of a Lustriae faerie — dark hair,
+      dark eyes, softly rounded ears but she is taller, broader. She walks through the garden, holding a children's
+      fairytale book, telling stories that spiral outward as golden magic, forming shapes in the air — the ghostly
+      silhouettes of fantastical creatures taking form: a phoenix, a dragon, a glowing jellyfish, a tiny shimmering
+      pixie. Her expression is not triumph but grief — tears streaming down her dark eyes even as she creates."
+    role: prop
+    spawns:
+      - room: royal_graveyard
+    image: aa41e9a8cf2f0ac6a3ded856c8297c416a8627d11abb2c1b5085cd6f55f5efd7.png
+  wandering_spirit:
+    name: a wandering displaced spirit
+    tier: weak
+    level: 3
+    description: A translucent, softly glowing figure drifts aimlessly just above the ground, its ethereal form flickering
+      between visibility and absence like a candle flame caught in the wind. The ghostly silhouette appears vaguely
+      humanoid, its edges dissolving into wisps of pale blue-white mist, features blurred and expression vacant — caught
+      in a state between worlds.
+    category: undead
+    spawns:
+      - room: arcane_tempest
+        count: 3
+      - room: caldera
+        count: 4
+      - room: shattered_fae_wood
+        count: 2
+    image: 178ed72cb38d22c2fee0589080351a07db08ce483ce85b62d37f37af267d360e.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 8
+  venus_flytrap:
+    name: a slithering adventurer-eating venus flytrap
+    tier: standard
+    level: 3
+    description: A knee-high carnivorous plant with a wide, tooth-lined snap-jaw blossom dripping with translucent digestive
+      fluid, its mottled green and crimson leaves bristling with coarse trigger hairs. It sways hypnotically on a thick
+      fibrous stalk.
+    category: elemental
+    image: 4c693139ffa7cd163fe9e465b3a99a8d8f1894d54248d9900d167fe81b120c50.png
+    spawns:
+      - room: verathaios_workshop
+        count: 2
+      - room: caldera
+  pitcher_plant:
+    name: a walking pitcher-plant with venomous tentacles
+    tier: standard
+    level: 3
+    description: A squat, bulbous green plant shuffles forward on a tangle of pale root-like legs, its wide-mouthed pitcher
+      glistening with sweet-smelling digestive fluid. Slender, violet-veined tentacles writhe lazily around its base,
+      their tips beaded with tiny drops of shimmering amber venom.
+    spawns:
+      - room: verathaios_workshop
+      - room: caldera
+    image: 3505ce1aff57fceb6dac41aa1a7d85368dfe9908153e38db78290051ec82a5e2.png
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+  knowledge_gremlin:
+    name: a tiny knowledge-stealing gremlin
+    tier: weak
+    level: 3
+    description: A knee-high wrinkled creature with oversized ears and bulging yellow eyes crouches low to the ground, its
+      spindly fingers perpetually twitching as though eager to snatch something away. Tattered scraps of stolen
+      parchment and broken quill tips are tucked haphazardly into its patchy, matted fur.
+    spawns:
+      - room: aolexia
+        count: 2
+      - room: aolia
+      - room: shattered_fae_wood
+        count: 2
+    image: 17baff29f50b9938b2e4b219b0468782edaf2899306fa4326700988449cafaef.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 2
+  flowerpetal_phoenix:
+    name: a phoenix formed from flower petals
+    tier: standard
+    level: 3
+    description: A small, delicate bird composed entirely of softly layered flower petals in shades of blush pink, coral,
+      and gold, their edges catching the light like living flame. Its wings trail wisps of pollen dust as it moves, and
+      tiny ember-like sparks drift upward from its feathered crest like floating seeds on a warm breeze.
+    spawns:
+      - room: verathaios_workshop
+      - room: aolia
+      - room: caldera
+    image: e27a5bdc565b26d93636b9e2c8d4ea8f185edbad867bf99e657b1e70988984bc.png
+    category: beast
+  dancing_couple:
+    name: Shade of Aineroia and Malkuth at the Wedding
+    tier: standard
+    level: 1
+    description: "A ghostly memory-shade flickers with translucent luminescence, depicting a tall faerie bride — iridescent
+      pale skin, dark eyes, dark hair crowned with a delicate crystal tiara — swathed in billowing diaphanous silks and
+      scattered flower blooms, her softly rounded ears and broader frame marking her as something between mortal and
+      fey. She dances in the arms of a sharp-featured human man draped in an almost comical excess of royal finery:
+      jewel-encrusted gold crown, fur-trimmed robes layered over embroidered tunics, fingers lost beneath rings, and
+      chains of office heaped upon chains of office — handsome in a cold, deliberate way, every inch of him calculated
+      pageantry."
+    spawns:
+      - room: royal_wedding
+    role: prop
+    image: b798a621633d969293348b2b1d429cb5bb144827f71123292940d06d48995913.png
+  aineroia_ascended:
+    name: Ascended Aineroia
+    tier: standard
+    level: 1
+    description: A tall, luminous woman with delicate features and pale iridescent skin of a Lustriae faerie — dark hair,
+      dark eyes, softly rounded ears but she is taller, broader. She has rainbow, diaphanous wings extending from her
+      back, taller than she is, like enormous stained glass windows. She is dressed in fae garb, like the forest itself
+      grew over her to provide clothing, with moss and vines, leaves and blooms forming a living gown.
+    spawns:
+      - room: aineroia_cottage
+    role: prop
+    image: cd5f5ceb973e476d0c3d443e4fc8701b3815b556ff1b22b88f6a6f91f5ecadb4.png
+  lustriae_guard:
+    name: A Lustriae Guard
+    tier: standard
+    level: 3
+    description: A short, luminous man with delicate features and pale iridescent skin of a Lustriae faerie — pastel hair,
+      dark eyes, softly pointed ears. He has jade colored diaphanous wings extending from his back. He is dressed as a
+      fairy guard, like the forest itself grew over him to provide clothing, with bark, leaves thorns forming a living
+      military uniform.
+    spawns:
+      - room: aineron
+    image: 60df53f9f92f4a4c6b393cbfd4e20571feead9404d3febba877783a10a8c30fb.png
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+  lustriae_diver:
+    name: Lustriae Pearl Diver
+    tier: standard
+    level: 3
+    description: A short, luminous woman with delicate features and pale iridescent skin of a Lustriae faerie — pastel hair,
+      dark eyes, softly pointed ears. She has 青 colored diaphanous wings extending from her back that shift in the light
+      like a stormy sky. She is dressed as a fairy pearl diver, like the ocean itself grew over her to provide clothing,
+      with coral, seaweed and shells forming a living bathing suit.
+    spawns:
+      - room: faegrimm
+    image: ef641f38737b0c8c3aa87ca0345247518a30c65a1e3580dd36d3f93e78cead2a.png
+  pyrae_faeweaver:
+    name: Pyrae Faeweaver
+    tier: standard
+    level: 3
+    description: A slender humanoid figure draped in woven garments threaded with living vines and luminous amber filaments,
+      their ember-warm skin casting a soft ruddy glow across the surrounding leaves. Their hair drifts upward like
+      slow-rising flame in shades of copper and gold, and their eyes hold a calm, smoldering light — fingers laced with
+      creeping tendrils of enchanted greenery that curl and bloom at their touch.
+    spawns:
+      - room: pyrae
+    image: ed7e0b4bd37c383f2c0ca6e71351dbe0a7d8bcd84d57251fbf8ae6df89a122eb.png
+    toughness: -1
+    hpMult: 0.8
+    dmgMult: 0.8
+    xpMult: 0.8
+    goldMult: 0.8
+  aureliae_starweaver:
+    name: Aureliae Starweaver
+    tier: standard
+    level: 3
+    description: A boneless, translucent humanoid figure draped in flowing robes and floating crystal-clasped armor, their
+      gelatinous form faintly revealing luminescent internal structures beneath the skin, crowned by a pulsing jellyfish
+      bell that casts pale blue and violet light across the surrounding dark. Fingerless, tapering hands raise toward
+      the night sky as threads of starlight weave between them into shimmering geometric patterns, while long
+      phosphorescent tentacle-hair trails behind them and spreading tendrils anchor their formless lower body to ground
+      scattered with softly glowing celestial motes.
+    spawns:
+      - room: aureliae
+    image: 81232835e03804024e411b1ed83d77b0a38aae95a38abc3f1e0e9966bfeb84cd.png
+  ophirae_diplomat:
+    name: Ophirae Diplomat
+    tier: standard
+    level: 3
+    description: A fully reptilian dragon-humanoid with a distinct dragon head — scaled snout, frilled or horned crest,
+      intelligent golden eyes. Their entire body is covered in iridescent blue-green scales. Clawed hands and feet, a
+      long tail. Small draconic wings with translucent fin-like membranes. Wearing a flowing white robe or kimono-like
+      garment draped over their scaled body, adorned with seaweed, coral beads, and shell necklaces. They should look
+      like an eastern sea dragon who got dressed for a diplomatic meeting — regal, ancient, clearly not mammalian in any
+      way. A creature of deep water and open sky.
+    image: 3ac22d1ef9c9bc5d19c65dc4ba462e11e26559863fbca1c8428e51572ddaa3a9.png
+    spawns:
+      - room: ophirae
+  mycorae_merchant:
+    name: Mycorae Merchant
+    description: "A Mycorae, an enchanted fungal forest guardian, sitting among tiny mushrooms in a glowing woodland
+      clearing at sunset. The creature is composed entirely of various mushrooms, made from dark mycelium, moss, and
+      layered mushroom flesh. Instead of a head, it has an enormous ruffled mushroom cap. It is crowned by a huge
+      layered orange-red mushroom cap, wide and fan-shaped, with wavy frilled edges, pale gill ridges, and soft golden
+      highlights. Its body is covered in overlapping shelf mushrooms and petal-like fungal plates in red, coral,
+      magenta, violet, and deep purple. "
+    level: 3
+    spawns:
+      - room: mycorae
+    image: f687358068277c7b6fd2d32df908b8985b413ee8046e3a3a412341c4371ca412.png
+  messenger_tessikar:
+    name: Tessikar's Messenger
+    tier: standard
+    level: 1
+    description: A slender brass automaton stands with poised, courier's alertness, its torso etched in flowing scrollwork
+      that pulses with faint golden light as though carrying a message written in living flame. Transparent panels at
+      its wrists and temples reveal tiny spinning gears, and tucked beneath one articulated arm is a sealed cylindrical
+      case of dark lacquered wood banded in polished copper.
+    spawns:
+      - room: tessikon
+    role: prop
+    image: e1e21fbf640c88136920bd99da3ce47147863445f82671bd19891214b3818168.png
+  snapdragons:
+    name: a fire-breathing snapdragon
+    description: A small, vivid crimson flower with snapping petals shaped like a dragon's maw, its pistils glowing faintly
+      amber as tiny licks of flame curl from between its blooms with each hungry bite of the air.
+    spawns:
+      - room: night_wind
+        count: 2
+      - room: desert_sands
+      - room: verathaios_workshop
+    level: 3
+    image: a4866b9ba8eb46c6229584889142a1bbd0bae51cc8ab45628f17a74d795f6c99.png
+  luneqrae:
+    name: Luneqrae
+    tier: elite
+    level: 3
+    description: Pure white smoke and swirling mists run across the countryside, forming the vague outlines of spectral horses.
+    spawns:
+      - room: luneqrae
+        count: 3
+    category: beast
+    image: 712ed1682648f50eb779fc71bee1719df7558d78562daee08fa9c32af8498e69.png
+  aetherae_stablemaster:
+    name: Aetherae Stablemaster
+    tier: elite
+    level: 4
+    description: A figure made of dark, billowing shadowy smoke, wrapped in a heavy ornate cloak with intricate embroidery
+      and clasps. The cloak is richly detailed and clearly physical — the body within it is not. Where the cloak opens
+      or where a face should be, there is only roiling dark fog, dense and slowly churning. No visible features, no
+      solid form beneath the garment — just darkness. The smoke curls and wisps at the edges of the cloak's hood and
+      hem.
+    spawns:
+      - room: aetherae
+    image: 849276c8c29ba33f6fc16ec2eb5c02b6871b2a047f4c73ab97d4aff6e1e526e6.png
+  doktuk_malukae:
+    name: Doktuk Mulkae
+    description: A towering, broad-shouldered figure of sun-baked terracotta hide, etched with pale mineral veins that catch
+      the light like cracked desert stone, stooped slightly beneath the weight of a massive flat rock clutched to its
+      chest like a sacred tome. Its deep-set eyes hold a ponderous, straining intensity beneath a heavy brow ridge
+      dusted with fine crystalline sediment.
+    spawns:
+      - room: desert_sands
+    level: 3
+    tier: standard
+    image: b49b2f0bbb0353dc336dd2f2360586774580f9452585620b6f3e6d1f0a64cdf2.png
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  graktuk_malukae:
+    name: Graktuk Malukae
+    tier: standard
+    level: 3
+    description: A hulking humanoid of sun-baked terracotta hide and granite-grey undertones, its massive frame hunched with
+      slow, brutish power, thick limbs scarred from countless contests of strength. Rough-hewn loincloths of cured
+      leather hang from its waist, and its fists are calloused and cracked like ancient stone, ever ready to grapple.
+    spawns:
+      - room: desert_sands
+    image: 4194a24ec36ce1292d652db8c6b3630f372c9286fd7ab652fe4f3317f01d4bd0.png
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  avatar_krioshaeu:
+    name: Tea in the Afterlife
+    tier: standard
+    level: 1
+    description: Two women having tea in a small, cozy cabin. A roaring fire in the hearth. The scene is intimate, warm,
+      quiet — the most important meeting in Ambon's cosmology rendered as the most ordinary moment imaginable. Aineroia
+      sits on one side of the table. She is tall, luminous, with the pale iridescent skin and delicate features of a
+      Lustriae faerie — dark hair falling past her shoulders, dark eyes that carry immeasurable depth, softly rounded
+      ears. Translucent diaphanous wings folded behind her shimmer faintly with blues and violets. She wears simple
+      robes — not the regalia of a goddess but the clothes of a woman visiting a friend. She holds her teacup in both
+      hands. Her expression is soft, warm, a little sad — the way a mother looks when she's been talking about her
+      children. Krioshaeu sits across from her. She is also Lustriae — pale iridescent skin, salt-and-pepper hair
+      streaked with grey, dark eyes — but wilder, more eccentric. The only faerie who looks aged. Her clothing is
+      colorful and deliberately mismatched — patchwork silks, embroidered scarves in clashing patterns, a wide-brimmed
+      hat adorned with flowers, feathers, and small dangling charms sitting on the table beside her teacup. Large,
+      strong black raven wings — not translucent like Aineroia's but solid, dark, feathered — are folded comfortably
+      behind her. She is mid-laugh or mid-sentence, gesturing with one hand while the other holds her cup. Her eyes are
+      kind and ancient and slightly wild. She looks like someone who knows how every story ends and has decided to enjoy
+      the telling anyway.
+    spawns:
+      - room: krioshaion
+    role: prop
+    image: 1e66c0c7edb604c6b6ddcf575198d818628016b5f270417d8e2da65149e228da.png
+  undead_wight:
+    name: an undead wight
+    tier: weak
+    level: 4
+    description: A gaunt, pale-gray humanoid figure draped in tattered burial shrouds, its sunken hollow eyes glowing with a
+      faint, cold blue light. Wisps of dark shadow cling to its emaciated form as it shuffles forward with stiff, jerky
+      movements, bony fingers outstretched.
+    spawns:
+      - room: necrambon
+        count: 3
+      - room: yaleron
+        count: 2
+    image: eca2a114125fb331f7db63b5a7cfb7e12f0e1b191d5f803a6c21cd760dbd8734.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 1
+  scarab_spider:
+    name: a creeping scarab spider
+    tier: weak
+    level: 4
+    description: A small, unsettling creature with the glossy black carapace of a scarab beetle fused to the twitching legs
+      of a spider, its iridescent shell catching the light with flickers of dark green and purple as it skitters low to
+      the ground.
+    spawns:
+      - room: necrambon
+        count: 3
+      - room: yaleron
+    image: c5c8c7dc59e5631aba21af445e6ad1465e8124b0042c4fafcc6ccc9e229bb539.png
+    behavior:
+      template: wander
+      params: {}
+  kitsarae_ship_captain:
+    name: Kitsarae Ship's Captain
+    tier: standard
+    level: 3
+    description: A tall, broad-shouldered figure draped in a salt-worn naval coat, his body covered in sleek white and grey
+      feathers that ruffle slightly in the sea breeze, with a long hooked beak and sharp amber eyes that carry the
+      weathered authority of countless ocean voyages. A battered captain's hat sits cocked atop his feathered head, and
+      a worn leather satchel of charts and manifests hangs at his side.
+    spawns:
+      - room: lyrasael
+    image: f81d6813f7a8ef21f6efef64f3478ccfa40a0e56f8d74cccb39b10b8c438ad3f.png
+  rogue_spore:
+    name: a cloud of rogue spores
+    tier: weak
+    level: 3
+    description: A drifting, translucent haze of pale greenish-yellow particles floats lazily through the air, barely
+      visible except where clusters of tiny luminescent spores catch the light in soft, eerie pulses.
+    spawns:
+      - room: voxspore
+        count: 3
+    image: 04dc0b10a1584430c48cdaf09873a16112679d71d970ca07ba834c20b449923a.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 1
+  bad_dream_pickpocket:
+    name: a bad dream turned pickpocket
+    tier: weak
+    level: 4
+    description: A wispy, translucent child-like figure with hollow dark eyes and tattered smoky rags, its insubstantial
+      fingers nonetheless nimble and quick as it drifts unnervingly close. The faint impression of a grinning face
+      flickers across its ghostly features, half-forgotten and unsettling, like a dream slipping away at dawn.
+    spawns:
+      - room: voxspore
+        count: 2
+      - room: night_wind
+        count: 2
+      - room: moon
+      - room: yaleron
+    image: 7fdbad06013b126cbd8888ef4dd4dab48362810b40dc48a120c9da5ff5b98688.png
+    behavior:
+      template: wander
+      params: {}
+  banished_nightmare:
+    name: a banished nightmare
+    tier: weak
+    level: 4
+    description: A wispy, translucent shadow-wraith barely larger than a human child, its tattered dark form flickering like
+      a dying flame as hollow white eyes stare out from an ever-shifting face of smoke and despair. Thin tendrils of
+      darkness curl from its edges, dissolving into nothing before they can fully take shape.
+    category: aberration
+    image: 0246116a44c7c773f65165a35ff1ad5867986c60b36dfd1459703bc48dc1428c.png
+    spawns:
+      - room: moon
+        count: 2
+      - room: night_wind
+  undead_scout:
+    name: an undead scout
+    tier: standard
+    level: 3
+    description: A gaunt, hollow-eyed corpse clad in tattered leather armor, its pale grey skin stretched tight over sharp
+      bones, moves with a stilted, lurching gait, scanning its surroundings with milky, unseeing eyes.
+    spawns:
+      - room: resistance_camp
+    image: 8fde74effbc4c5f8bdc14a9a2eb32126045b6b282b77b4e02749d686fdad2b2c.png
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+  uehma:
+    name: Uehma the Fairytale Librarian
+    tier: standard
+    level: 1
+    description: A plump, silver-feathered goose stands upright with dignified poise, her luminous amber eyes gleaming with
+      ancient wisdom behind a pair of delicate wire-rimmed spectacles perched upon her orange bill. She wears a flowing,
+      patchwork robe stitched from pages of old storybooks, the inked illustrations still faintly glowing as if the
+      tales within haven't quite finished telling themselves.
+    spawns:
+      - room: library_fairytales
+    image: d589560aaaa0185e84cd0c0066e83721de15b092494d324d8190ac67b3ebdbd5.png
+  madam_daydreams:
+    name: Madam Daydreams
+    tier: standard
+    level: 1
+    description: A plump, drowsy-eyed woman draped in layers of mismatched silk and lace, her graying hair pinned loosely
+      with a cluster of faded flowers that seem perpetually on the verge of tumbling free. She sways gently on her feet
+      as if half-lost in some pleasant reverie, her unfocused gaze drifting just past you toward something only she can
+      see.
+    image: a3ceb6c9fbbd7b7f4ba162dcd83afa602d2af312adf75be453d2400052590090.png
+    role: vendor
+    spawns:
+      - room: general_store
+  creeping_ivy_hotel_receptionist:
+    name: Creeping Ivy Hotel Receptionist
+    tier: standard
+    level: 1
+    description: Tendrils of creeping ivy grow over the front desk, culminating in violet blooms that coalesce to form a face.
+    spawns:
+      - room: dream_hotel
+    role: prop
+    image: e450de3bc5c12faf15eadf1790e76fa3dffbec42de42de3eede54b8c1c321d1f.png
+  alorae_refugee:
+    name: Alorae Refugee
+    tier: standard
+    level: 1
+    description: Tall and ethereal with translucent, luminous skin that refracts light into impossible spectrums of deep
+      purple, golden yellow, and silvery blue. The body appears delicate yet substantial, with graceful proportions and
+      an almost crystalline quality to the flesh. Soft prismatic halos shimmer around the form, shifting colors with
+      emotion. Eyes glow with inner starlight. Hair flows like captured cosmic wind. The overall presence seems to
+      subtly bend surrounding air and light, creating an effect of gentle distortion around the figure. Wrapped in
+      tattered robes and unusually thin, with a reduced lustre.
+    spawns:
+      - room: call_for_heroes
+    role: prop
+    image: 37b8eada69add388237dbb7ea9e260a0107cad430dbdbba805f6e174ee6fbec6.png
+  lithae_blacksmith:
+    name: Lithae Blacksmith
+    tier: standard
+    level: 3
+    description: A stocky crystalline figure stands at the forge, its faceted obsidian-black body threaded with deep ruby
+      veins that pulse faintly with internal light, rough-hewn angles and sharp geometric limbs still bearing the
+      unpolished edges of youth. Its hammer-worn hands catch the firelight in dull prismatic shards, apron replaced by a
+      natural breastplate of fused mineral growth, and each strike of its tools sends hairline vibrations rippling
+      visibly across its translucent torso.
+    spawns:
+      - room: vulgorth
+    image: 4023606d8801a7b7f21a9d0eead9d46f2185fffd9119b91d777aeaf4fe6508f5.png
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  fungus_gnat:
+    name: a Fungus Gnat
+    tier: weak
+    level: 4
+    description: A tiny, delicate insect with translucent wings veined in pale grey, its slender dark body barely larger
+      than a thumbnail. It drifts lazily through the air in erratic loops, drawn toward damp earth and the faint glow of
+      bioluminescent mushrooms nearby.
+    spawns:
+      - room: mycollum
+        count: 3
+      - room: mycorae
+    image: 45f8c772678074eb7a0125009633541966407ff34aee99b4f8a45db3c2c0a803.png
+  snapping_turtle:
+    name: an iridescent snapping turtle
+    tier: weak
+    level: 4
+    description: A small, ancient-looking turtle with a hooked beak and a rough, algae-darkened shell that shimmers with an
+      unexpected rainbow sheen when caught in the light. Its leathery neck and stubby clawed feet are mottled
+      grey-green, and it regards the world with beady, suspicious eyes from the muddy shallows.
+    spawns:
+      - room: aureliae
+      - room: lagauri
+      - room: phosmaren
+    category: beast
+    image: f11a67dfff4420da58d6fdfce76f4a14a6c5b91ba321d3428eb6b235ba003a7f.png
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  ocean_sunfish:
+    name: a vicious ocean sunfish
+    tier: standard
+    level: 3
+    description: A massive, silvery-gray disc of a fish drifts through the water with eerie slowness, its truncated, finless
+      body giving it the unsettling appearance of a swimming head with no tail. Two tall, rigid fins extend from its top
+      and bottom, and its small, puckered mouth lends it a permanently bewildered expression despite its enormous,
+      car-sized bulk.
+    spawns:
+      - room: lagauri
+        count: 2
+      - room: phosmaren
+    image: 9498e10fca0456ac076b91cc6020f79a8c03f470b30ccd98a0b84b1ff69cbaf9.png
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  rust_nymph:
+    name: a creeping rust ooze
+    tier: weak
+    level: 3
+    description: A slow-moving blob of reddish-brown slime oozes across the ground, its gelatinous body flecked with
+      corroded metal fragments and orange powdery rust that leave faint stains wherever it passes. Its translucent form
+      occasionally catches the light, revealing dark clumps of dissolved iron suspended within like grim inclusions in
+      amber.
+    spawns:
+      - room: vulgorth
+        count: 3
+    image: 70467deed856b0d007520af33dfa0171bba59336f8b324811d08a3e1f5ea39fb.png
+    drops:
+      - itemId: broken_clockwork_gears
+        chance: 0.5
+  fire_snail:
+    name: a fire snail
+    tier: weak
+    level: 4
+    description: A tiny snail with a dull ember-orange shell streaked with ash-grey, its soft body glowing faintly like
+      cooling coal as it leaves a thin trail of scorched slime behind it.
+    spawns:
+      - room: mycollum
+        count: 2
+      - room: voxspore
+        count: 2
+    image: e8effb2c5ec7d520219c8bfbbf2bc9b7498b2516808c778fa41ae483e48fa2f4.png
+  burrowing_barnacle:
+    name: a burrowing barnacle
+    tier: standard
+    level: 1
+    description: A pale, thumbnail-sized crustacean clings to a rocky surface, its ridged white shell streaked with gray and
+      edged in barnacled teeth that scrape and rasp against stone.
+    spawns:
+      - room: lyrasael
+        count: 3
+    image: c57088b0e1e4ce2a34e08d6940dc4e842727da4b5b2176aec212e98a53cfff6f.png
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  lemprey_leviathan:
+    name: a lamprey leviathan
+    tier: standard
+    level: 3
+    description: A massive, pale-fleshed serpentine creature coils through the water, its enormous circular maw lined with
+      countless rows of jagged, inward-curving teeth that glisten with viscous slime. Its translucent, eel-like body
+      shimmers with sickly iridescent hues, dark spots running along its length like bruises beneath the skin.
+    spawns:
+      - room: ophirae
+      - room: thalvorek
+        count: 2
+    category: beast
+    image: 49781ad44e797683a8f6d762a6f157a1f33f6ab84da41a001641335bb27ab90c.png
+    drops:
+      - itemId: kelp
+        chance: 1
+  glass_urchin:
+    name: a glass urchin
+    tier: weak
+    level: 4
+    description: A small, translucent sea creature rests motionless on the ocean floor, its delicate crystalline spines
+      refracting light into tiny scattered rainbows across the surrounding sand. Its glassy, dome-shaped body is almost
+      perfectly clear, revealing faint shadowy organs within.
+    spawns:
+      - room: thalvorek
+      - room: nakhara
+    image: 21554a3b4a6d415962780f4f8b4262b7d0662d0c3b959229a02d6c907bd8acdb.png
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  pearl_wasp:
+    name: a pearl wasp
+    tier: standard
+    level: 3
+    description: an underwater parasite with a powerful stinger that targets clams, mollusks and oysters
+    spawns:
+      - room: aureliae
+      - room: phosmaren
+    image: 749d6fc71264d0c07b2656ebe5db317dd54712622e0ab1481754779e51849c4c.png
+    drops:
+      - itemId: kelp
+        chance: 0.5
+  antlion:
+    name: an antlion
+    tier: weak
+    level: 3
+    description: A pale, segmented insect roughly the size of a fist, its six spindly legs splayed wide as it skitters
+      across the sandy ground, trailing a shallow groove behind it. Its oversized mandibles curve outward like cracked
+      ivory hooks, far too large for its dull, sand-dusted body.
+    spawns:
+      - room: nakhara
+        count: 2
+    image: 73ec70f3f77a6b6beb18fcc4d2c1d60ae0ba797c9143f82270b30231579f0744.png
+  bramblethorn_eagle:
+    name: a bramblethorn eagle
+    tier: weak
+    level: 3
+    description: A mid-sized raptor woven entirely from gnarled, woody bramble vines, its "feathers" formed by overlapping
+      thorns and dark serrated leaves that rustle softly when it shifts its weight. Clusters of tiny white blossoms and
+      glossy blackberries dot its wings and crest, giving it a deceptively delicate appearance despite its sharp, hooked
+      beak of dense, lacquered wood.
+    spawns:
+      - room: pyrae
+      - room: cindaron
+    image: e6458250da8a45b42668422f97efd41aea651252d5a3aef79892d02549c8eee8.png
+  stone_macaque:
+    name: a stone macaque
+    tier: elite
+    level: 2
+    description: A small, dusty grey monkey crouches low with watchful amber eyes, its rough fur the color and texture of
+      weathered granite. Chips of pale stone cling to its wiry limbs, and its knuckles are calloused to near-rocklike
+      hardness from scrambling across mountain terrain.
+    spawns:
+      - room: veratheron
+      - room: cindaron
+    image: abd120a285383d4d117798e3e2e0e8038320b241d73f2bf86b4181875947ea69.png
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  ice_beaver:
+    name: an ice beaver
+    tier: weak
+    level: 3
+    description: A small, pudgy rodent with thick silvery-white fur rimmed with frost, its flat tail glazed with a thin
+      sheen of ice that catches the light like polished glass.
+    spawns:
+      - room: faegrimm
+        count: 2
+    image: 0c002162fd19726233242ca6912447a3994b10cd94be914de2ef317265cd4802.png
+  mischievous_stoat:
+    name: a mischievous stoat
+    tier: weak
+    level: 3
+    description: A small, slender-bodied mustelid with sleek chestnut-brown fur and a cream-white belly, its black-tipped
+      tail flicking with restless energy as its bright, beady eyes dart about with clever, impish curiosity.
+    spawns:
+      - room: aineron
+      - room: lustriae
+    image: 6a284162878511516d4744e15d0eaf0fae6398da4d7bfd84b628b6e731e73074.png
+  lustriae_guard_woman:
+    name: A Lustriae Guard
+    tier: standard
+    level: 3
+    description: A short, luminous woman with delicate features and pale iridescent skin of a Lustriae faerie — pastel hair,
+      dark eyes, softly pointed ears. She has rust colored diaphanous wings extending from her back. She is dressed as a
+      fairy guard, like the forest itself grew over her to provide clothing, with bark, leaves thorns forming a living
+      military uniform.
+    spawns:
+      - room: aineron
+    image: d70ccdc7787279ae760a141cd4389f23e1cd0be302a96291225e21f97bb3f3c1.png
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+  lustriae_diver_man:
+    name: Lustriae Pearl Diver
+    tier: standard
+    level: 3
+    description: A slender, iridescent-skinned fae crouches at the water's edge, her translucent wings folded tight against
+      her back, droplets still beading across her pale blue diving suit stitched from woven kelp and silkfish scales.
+      She grips a slender obsidian spear tipped with a luminescent pearl, her sharp eyes scanning the depths below with
+      practiced intensity.
+    spawns:
+      - room: faegrimm
+    image: 3a3d0af4985f99bf0361a55c97e41b450fbe0f8448a4f45a7aea31c09336d616.png
+  pyrae_warrior:
+    name: Pyrae Warrior
+    tier: standard
+    level: 3
+    description: A slender humanoid figure draped in woven garments threaded with living vines and luminous amber filaments,
+      their ember-warm skin casting a soft ruddy glow across the surrounding leaves. Their hair drifts upward like
+      slow-rising flame in shades of copper and gold, and their eyes hold a calm, smoldering light — fingers laced with
+      creeping tendrils of enchanted greenery that curl and bloom at their touch.
+    spawns:
+      - room: pyrae
+    image: bc66f9c5fe76d201be468ffc67745cfcba68d32758958a70bf294e58d5bcfa44.png
+    toughness: -1
+    hpMult: 0.8
+    dmgMult: 0.8
+    xpMult: 0.8
+    goldMult: 0.8
+  aetherae_stablemaster_2:
+    name: Aetherae Stablemaster
+    tier: elite
+    level: 4
+    description: A figure of churning midnight-blue smoke and shadow fills the heavy ornate cloak that drapes its formless
+      body, the fabric richly embroidered in silver and deep cobalt with clasps of tarnished steel catching the light.
+      Where a face should be, only dense cerulean fog churns and roils, tendrils of blue-black mist curling from the
+      hood's edges and hem like breath in cold air, hinting at immense, inhuman presence within.
+    spawns:
+      - room: aetherae
+    image: 9f2b0058c12d0ff8b26306960d7e45f826fa5a8b2aff0fc350b5609c8ede7b62.png
+  doktuk_malukae_copy:
+    name: Doktuk Mulkae
+    description: A towering, broad-shouldered figure of sun-baked terracotta hide, etched with pale mineral veins that catch
+      the light like cracked desert stone, stooped slightly beneath the weight of a massive flat rock clutched to its
+      chest like a sacred tome. Its deep-set eyes hold a ponderous, straining intensity beneath a heavy brow ridge
+      dusted with fine crystalline sediment.
+    spawns:
+      - room: desert_sands
+    level: 3
+    tier: standard
+    image: b7b13ccefe3932fb3d60dc8971bbc5a33002d4cf906b40fedee507f183be56d7.png
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  graktuk_malukae_copy:
+    name: Graktuk Malukae
+    tier: standard
+    level: 3
+    description: A hulking humanoid of sun-baked terracotta hide and granite-grey undertones, its massive frame hunched with
+      slow, brutish power, thick limbs scarred from countless contests of strength. Rough-hewn loincloths of cured
+      leather hang from its waist, and its fists are calloused and cracked like ancient stone, ever ready to grapple.
+    spawns:
+      - room: desert_sands
+    image: f4838f8e7e994a2d8155f21e5e49bc849d7f4fd45a8971b423c18d86e2afeadc.png
+    toughness: 1
+    hpMult: 1.25
+    dmgMult: 1.25
+    xpMult: 1.25
+    goldMult: 1.25
+    drops:
+      - itemId: stone_fragments
+        chance: 0.5
+  sandy_crab:
+    name: a sandy crab
+    tier: weak
+    level: 1
+    description: A small, pale sand-colored crab scuttles sideways across the ground, its shell dusted with fine grit and
+      its beady black eyes perched on short, wary stalks.
+    spawns:
+      - room: tempest_between_worlds
+      - room: sandy_shoal
+      - room: waterfall
+    image: bb389660fe5eabd9353a836c00b377035b9a054e7cebdf9af90eba0086f0b832.png
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 2
+    drops:
+      - itemId: kelp
+        chance: 1
+items:
+  starlight_sword:
+    displayName: Starlight Sword
+    description: A slender, elegant blade forged from pale silver metal that seems to drink in darkness and radiate a soft,
+      cold luminescence, its fuller etched with tiny constellation patterns that shimmer and shift like a living star
+      map. The crossguard is wrought in the shape of sweeping crescent moons, and the hilt is wrapped in deep
+      midnight-blue leather threaded with fine filaments of glowing white that pulse faintly, as though the sword
+      breathes.
+    keyword: starlight sword
+    slot: weapon
+    level: 1
+    tier: rare
+    archetype: damage
+    basePrice: 25
+    itemType: equipment
+    image: 38be7089bf59f45619ee1a7c269c8676cfb921e3dd6ea5b09e10448db6ed193e.png
+    damage: 4
+    stats:
+      PRIMARY: 5
+      SECONDARY: 3
+      TERTIARY: 2
+  starlight_mace:
+    displayName: Starlight Mace
+    description: A radiant ceremonial mace with a shaft of deep midnight-blue metal etched with constellations that faintly
+      glow silver, topped with a heavy flanged head inlaid with a brilliant starburst of white and gold gemstones that
+      cast soft prismatic light across nearby surfaces.
+    keyword: starlight mace
+    slot: weapon
+    level: 1
+    tier: rare
+    basePrice: 20
+    itemType: equipment
+    archetype: damage
+    damage: 4
+    stats:
+      PRIMARY: 5
+      SECONDARY: 3
+      TERTIARY: 2
+    image: 33f8158ab26edf3a4266cc2f61a1d7c3ff3b89b6c35b0ded0eb3d189012e488a.png
+  starlight_staff:
+    displayName: Starlight Staff
+    description: A slender crystalline staff that pulses with a soft inner glow, its surface etched with constellations that
+      shimmer and shift like a living star map. The tip blooms into a radiant cluster of translucent shards, perpetually
+      shedding tiny motes of silver-white light that drift downward like falling stardust.
+    keyword: ambon_auringold_academy_item3
+    slot: weapon
+    level: 1
+    tier: rare
+    archetype: damage
+    damage: 4
+    stats:
+      PRIMARY: 5
+      SECONDARY: 3
+      TERTIARY: 2
+    itemType: equipment
+    image: 21f820c5c67b470a9aaf3d79ee98c50745fa92d00d00cc2e4539332ba8ada3bc.png
+  starlight_sceptre:
+    displayName: Starlight Sceptre
+    description: A slender ceremonial staff of deep midnight-blue metal, its shaft etched with delicate constellation
+      patterns that shimmer with faint silver light, crowned by a polished orb of pale crystal that pulses softly like a
+      distant star.
+    keyword: starlight sceptre
+    slot: weapon
+    level: 1
+    tier: rare
+    archetype: damage
+    damage: 4
+    stats:
+      PRIMARY: 5
+      SECONDARY: 3
+      TERTIARY: 2
+    basePrice: 20
+    itemType: equipment
+    image: 638e592fbb36aece8ce11d7fb1d99aef40b14d53dec6952d8715041a320ae44b.png
+  starlight_dagger:
+    displayName: Starlight Dagger
+    description: A sleek, crescent-curved blade forged from a pale, luminous metal that seems to hold captured starlight
+      within its edge, casting faint silver-blue glimmers across nearby surfaces. The slender hilt is wrapped in dark
+      material etched with tiny celestial markings, contrasting beautifully against the dagger's ethereal, moonlit
+      sheen.
+    keyword: starlight dagger
+    slot: weapon
+    level: 1
+    tier: rare
+    archetype: damage
+    damage: 4
+    stats:
+      PRIMARY: 5
+      SECONDARY: 3
+      TERTIARY: 2
+    basePrice: 20
+    itemType: equipment
+    image: 57113e3b810163736b9e9e5a3bfc0bc4da3bd4d8fd5d37895ac0a03213159861.png
+  starlight_crook:
+    displayName: Starlight Shepherd's Hook
+    description: A gracefully curved shepherd's crook wound with living emerald vines and soft silver-veined leaves that
+      shimmer faintly, as though touched by moonlight, with tiny star-shaped blossoms blooming along its length and a
+      pale, luminous glow emanating from the polished heartwood beneath.
+    keyword: starlight crook
+    slot: weapon
+    level: 1
+    tier: rare
+    archetype: damage
+    damage: 4
+    stats:
+      PRIMARY: 5
+      SECONDARY: 3
+      TERTIARY: 2
+    basePrice: 20
+    itemType: equipment
+    image: 762888b12f729bba038d03029946783930c83b6be4c657b3410108324bec07fb.png
+  auringold_robes:
+    displayName: Auringold Academy Robes
+    description: Flowing robes of midnight blue cascade to the floor, their fabric alive with slowly shifting
+      constellations, distant nebulae, and spiraling galaxies that shimmer with an inner celestial light, as though the
+      wearer is draped in a living piece of the cosmos itself.
+    keyword: auringold academy robes
+    image: 8fb912752f6fcede704f6a8346e8bf73944c6cabbf6ee151a84084c9eb712014.png
+    slot: body
+    level: 1
+    tier: rare
+    archetype: armor
+    armor: 8
+    stats:
+      PRIMARY: 5
+      SECONDARY: 3
+      TERTIARY: 2
+    basePrice: 20
+    itemType: equipment
+  silk_tophat:
+    displayName: Silk Top Hat
+    description: A towering stovepipe hat of shimmering silk rises to an absurd height, its surface layered in cascading
+      ribbons, oversized bows, and dangling baubles in clashing shades of mint green, lavender, bubblegum pink, and
+      lemon yellow. Every inch of the fabric is embroidered with swirling patterns and studded with tiny glittering
+      gems, giving the impression that it was designed by someone who had never once been told the word "enough."
+    keyword: ambon_auringold_academy_item8
+    slot: head
+    level: 1
+    tier: rare
+    archetype: balanced
+    damage: 1
+    armor: 2
+    stats:
+      PRIMARY: 3
+      SECONDARY: 2
+      TERTIARY: 1
+    image: 68ffc02cbd51644e10ef1c312e5c9643f9e8f321e487f9616d632d1f16b220f0.png
+  quartz_bootz:
+    displayName: Quartz Boots
+    description: Crafted from translucent quartz crystal that catches the light in pale, prismatic flickers, these sturdy
+      boots are seamlessly formed without visible seam or buckle, their smooth mineral surface veined with threads of
+      milky white and soft rose that seem to glow faintly from within.
+    keyword: dreamwoven boots
+    slot: feet
+    level: 1
+    tier: rare
+    archetype: balanced
+    basePrice: 20
+    itemType: equipment
+    damage: 1
+    armor: 2
+    stats:
+      PRIMARY: 3
+      SECONDARY: 2
+      TERTIARY: 1
+    image: 17484b47e4d6998640e32a4bab506f3c0cc74ff605205e218da56e587e72f7af.png
+  aura_tempest:
+    displayName: Aura of the Tempest
+    description: A swirling corona of crackling lightning and dark stormclouds orbits the wearer in a perpetual tempest,
+      electric arcs dancing between coiling wisps of violet-tinged thunderheads.
+    keyword: aura tempest
+    slot: floating
+    level: 1
+    tier: epic
+    disableTertiary: true
+    secondaryStat: DEX
+    stats:
+      PRIMARY: 3
+      DEX: 5
+    basePrice: 27
+    image: 709f54e2da1945010beb6717aa110e9de253fb85ef210b0ef275eb1369ca5b05.png
+  ruby_necklace:
+    displayName: Royal Ruby Necklace
+    description: A massive, ostentatious necklace of deep crimson rubies set in heavy gold filigree, each gemstone the size
+      of a thumbnail and catching the light with an almost vulgar brilliance. The ornate links drip with dangling
+      teardrop pendants, the entire piece screaming wealth and poor taste in equal measure.
+    keyword: ruby necklace
+    slot: neck
+    level: 2
+    tier: rare
+    disableTertiary: true
+    basePrice: 25
+    secondaryStat: CHA
+    stats:
+      CHA: 6
+      PRIMARY: 4
+    image: db3704d4d38b973946f1832a4df2a7c11ca5b59fcd68b9eec9258ffde39c2f0d.png
+  cup_tea:
+    displayName: a cup of the tea of magic
+    description: A delicate porcelain cup filled with softly glowing amber liquid, wisps of luminescent steam curling upward
+      in slow, ethereal spirals that shimmer with faint hues of gold and pale green.
+    keyword: tea
+    consumable: true
+    basePrice: 5
+    charges: 5
+    onUse:
+      healMana: 100
+    image: cf18b4fbd20cfd11d3bb803b0119792a2974caec832df8385eb0414ec8d30601.png
+  slice_cake:
+    displayName: a slice of the cake of rebirth
+    description: A perfectly preserved wedge of ethereal cake, its layers shimmering between pale gold and ghostly white,
+      dusted with silver flecks that drift upward like embers in reverse, as though defying death itself.
+    keyword: cake
+    basePrice: 5
+    itemType: consumable
+    consumable: true
+    charges: 5
+    onUse:
+      healHp: 100
+    image: 33d4514352abc4739dfc000c94b020e59790e681ea1d06845c838777b8b073e4.png
+  cucumber_sandwich:
+    displayName: a magically charged cucumber sandwich
+    description: A neatly trimmed sandwich of pale white bread and crisp green cucumber slices, crackling with faint arcs of
+      violet electricity that dance along its crusts and leave a faint smell of ozone in the air.
+    keyword: cucumber sandwich
+    basePrice: 7
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 100
+      healMana: 100
+    image: 09ac0b84cb08235300d79517d26cdca1388b37b3cd86a877d48bd7c5dec5f21d.png
+  lavender_macaron:
+    displayName: a lavender macaron
+    description: A delicate, pastel-purple sandwich cookie with a smooth, slightly domed shell and ruffled edges, its two
+      airy meringue halves pressed together around a thin layer of creamy lavender filling.
+    keyword: a lavender macaron
+    basePrice: 10
+    itemType: consumable
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 200
+    image: 7f095dff12e79921381f2634500635ec0e918d65f008eb31f9d5d498e2fbc5b8.png
+  fizzy_apple_cider:
+    displayName: fizzy apple cider
+    description: A tall, slender glass bottle filled with pale golden liquid that sparkles with tiny rising bubbles, its
+      cork stopper sealed with a twist of twine and a small dried apple slice tied around the neck.
+    keyword: cider
+    basePrice: 10
+    itemType: consumable
+    consumable: true
+    onUse:
+      healMana: 200
+    image: 8355e0a91e5223919c36ef5e07ab8f249cd8baeed54aa54ac056a39474798481.png
+  forest_berry_pie:
+    displayName: a slice of berry of the forest pie
+    description: A golden-brown pastry wedge glistening with crimson and violet berry juices that seep through its flaky,
+      latticed crust, dusted lightly with crystallized sugar along its crumbling edges.
+    keyword: pie
+    basePrice: 15
+    itemType: consumable
+    consumable: true
+    onUse:
+      healHp: 200
+      healMana: 200
+    image: 7fdaffc8d6ada432d70d21bbd20a26940e93faa23e58d0706bb56b13073186ee.png
+  stardust:
+    displayName: a handful of stardust
+    description: A shimmering collection of luminescent particles gathered loosely in the palm, each mote glowing with soft
+      silver and gold light that pulses faintly like distant stars, leaving trails of ghostly radiance as they drift and
+      swirl against one another.
+    keyword: stardust
+    basePrice: 3
+    itemType: treasure
+    image: 6380bf4b0bd8a0e9fc06533bd53a860c660ab984607d5d54364fc022868b4905.png
+  kelp:
+    displayName: a handful of kelp
+    description: Slick, dark green strands of ocean kelp drape limply from your grasp, their rubbery blades glistening with
+      saltwater and catching the light with a faint iridescent sheen. Tiny air bladders dot the slender stalks, and the
+      faint smell of the sea clings to every tangled frond.
+    keyword: ambon_auringold_academy_item19
+    itemType: misc
+    basePrice: 9
+    image: 1d61dbd268b199f8ce44f81eb6a89708a7a54effc8e841d5d79961fb0c299d20.png
+  stone_fragments:
+    displayName: assorted stone fragments
+    description: A small pile of rough, irregular chunks of stone in varying shades of grey and brown, their broken edges
+      sharp and uneven where they were cleaved from larger rocks.
+    keyword: ambon_auringold_academy_item20
+    itemType: misc
+    basePrice: 8
+    image: 98c5cc0eccfd567513ba9026acb763eb4e896c4dfd4f60922b131abb989becf7.png
+  broken_clockwork_gears:
+    displayName: a pile of broken clockwork gears
+    description: A tarnished heap of interlocking brass and iron gears, their teeth chipped and edges rusted, lie tangled
+      together in a useless clatter of stripped mechanisms and snapped springs.
+    keyword: gears
+    basePrice: 10
+    itemType: misc
+    image: eb8dc7ed34864792a7562667c550cd573f6ce954c6cecf044a10a9bfcd70d30c.png
+  gemstone_crate:
+    displayName: a crate of glittering gemstones
+    description: A heavy wooden crate packed with straw cradles dozens of loose gemstones that catch the light in brilliant
+      flashes of ruby red, sapphire blue, and emerald green. The rough-hewn box is barely able to contain the dazzling
+      wealth within, its slats slightly bowed outward as scattered gems spill over the edges like a treasure chest
+      mid-overflow.
+    keyword: gemstone crate
+    basePrice: 150
+    itemType: treasure
+    image: 60c88d0bd3e1827d7fc23503cacaecab0e9384fdedd5cb3fea8759da5221bb22.png
+shops:
+  krioshaeu:
+    name: Krioshaeu's Tea Cart
+    room: krioshaeu_cabin
+    items:
+      - cup_tea
+      - slice_cake
+      - cucumber_sandwich
+  general_store:
+    name: Madam Daydreams'  General Store
+    room: general_store
+    items:
+      - starlight_sword
+      - starlight_mace
+      - starlight_staff
+      - starlight_sceptre
+      - starlight_dagger
+      - starlight_crook
+      - cup_tea
+      - slice_cake
+      - cucumber_sandwich
+      - lavender_macaron
+      - fizzy_apple_cider
+      - forest_berry_pie
+    image: 24e1f2423e639465bd14ac340f379ad1aadd763db50150e3eba4b4cd3013c62e.jpg
+  enchanted_bakery:
+    name: The Enchanted Bakery of Auringold
+    room: enchanted_bakery
+    items:
+      - cup_tea
+      - slice_cake
+      - cucumber_sandwich
+      - forest_berry_pie
+      - lavender_macaron
+      - fizzy_apple_cider
+trainers:
+  doctor_reinheart:
+    name: Doctor Reinheart
+    room: auringold_tavern
+    classes:
+      - CLERIC
+      - WARRIOR
+      - ROGUE
+      - RULER
+      - MAGE
+    image: 2baba8ff70c6e7d5633fa88be0fa46afd2d0edc21a2993c4b04b829f5a104824.png
+  uehma:
+    name: Uehma the Fairytale Librarian
+    room: library_fairytales
+    classes:
+      - CLERIC
+      - WARRIOR
+      - ROGUE
+      - RULER
+      - MAGE
+    image: d589560aaaa0185e84cd0c0066e83721de15b092494d324d8190ac67b3ebdbd5.png
+quests:
+  ambon_auringold_academy_quest1:
+    name: Visit the Naraxian Akathavae
+    giver: krioshaeu
+    description: The Naraxian Akathavae is the god of stories, historians, musicians and performers. Visit their floating
+      caravan wagon in the stars and learn about the history of Ambon.
+    turnInMob: naraxian_akathavae
+    completionType: npc_turn_in
+    level: 1
+    difficulty: standard
+    rewards:
+      items:
+        - itemId: silk_tophat
+          count: 1

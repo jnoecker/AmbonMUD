@@ -1,0 +1,689 @@
+zone: demo_ruins
+startRoom: caravan_gate
+rooms:
+  caravan_gate:
+    image: 0eae3a807ecc943b76c28eda12645cef18c8a4757e6f56b8fc6c0b037dd9075b.jpg
+    title: Caravan Gate
+    description: "A rutted track widens into a makeshift gate of lashed timbers. Beyond it, the hills rise in broken steps
+      toward old ruins. A hand-painted sign reads: 'WELCOME, STAY ALIVE.' The track leads south back toward the
+      Wanderer's Inn."
+    exits:
+      n: campfire_ring
+      e: river_ford
+      w: old_milestone
+      s: ambon_hub:wanderers_inn
+  old_milestone:
+    image: a6f0e39929e937080630f843442d25eb5917227548dff2453e1fa5b2b6994fc6.jpg
+    title: Old Milestone
+    description: A toppled stone marker lies half-buried in grass. The original carving has been scraped away, replaced by
+      newer tally marks and a crude arrow.
+    exits:
+      e: caravan_gate
+      w: windbreak_ridge
+  windbreak_ridge:
+    image: 796326d345aeb421ac98e47358386e43881abc7c6130f9e3fb7df8be0b093cff.jpg
+    title: Windbreak Ridge
+    description: "A low ridge blocks the worst of the wind. From here you can see the ruins: arches like broken teeth and a
+      tower slumped into itself."
+    exits:
+      e: old_milestone
+      n: fallen_archway
+  campfire_ring:
+    image: f8ec92bc59d4f8cb016baf530f4f5b499530d0bd392d10588afd97c1d6af72d0.jpg
+    title: Campfire Ring
+    description: Stones circle a bed of ash where caravans rest. Scuffed bedrolls and empty crates suggest someone left in a hurry.
+    exits:
+      s: caravan_gate
+      n: fallen_archway
+      e: trader_tents
+  trader_tents:
+    image: e7a2a956a5b02fc3f8da01ba975a42863d4ef69b8e1a9465d697e384ff9d8be6.jpg
+    title: Trader Tents
+    description: "Two canvas tents lean against each other for support. A few trade goods remain: cracked pottery, coils of
+      rope, and a bundle of damp kindling."
+    exits:
+      w: campfire_ring
+      n: rope_bridge
+  river_ford:
+    image: 65cf4f2871fe0d0035ed6759bb7dd2dc895c63b05d1892e50b4e0bee8e2b810b.jpg
+    title: River Ford
+    description: Cold water braids around pale stones. Something metallic glitters under the surface, and reeds hiss in the
+      breeze like whispered warnings.
+    exits:
+      w: caravan_gate
+      n: reed_maze
+      e: fisher_ledge
+  fisher_ledge:
+    image: fabd7e19caa6ea3e7e91b0de6b78cd9a16ecd7f8aedcebbe1e26b029d0d2c8ce.jpg
+    title: Fisher's Ledge
+    description: A narrow ledge overlooks a deeper pool. Old hooks and lines dangle from a dead branch, and the water below
+      turns dark too quickly.
+    exits:
+      w: river_ford
+      n: flooded_steps
+  reed_maze:
+    image: 6ef77184dd5d2337f90472cc36e542e70e3ff2596b8942a046936804d102206d.jpg
+    title: Reed Maze
+    description: Reeds tower overhead, bending into corridors that look different every time you blink. Water laps at your
+      ankles, carrying silt and tiny shells.
+    exits:
+      s: river_ford
+      n: shrine_approach
+      e: muddy_island
+  muddy_island:
+    image: 061feda805ec05b39d0f565abe02735024cd5ffadccbb5627f2d48743bd59ec6.jpg
+    title: Muddy Island
+    description: A raised patch of ground dotted with driftwood and river trash. Someone has arranged stones in a spiral
+      here, half sunk into the mud.
+    exits:
+      w: reed_maze
+      n: shrine_approach
+  shrine_approach:
+    image: f1160aa64b9a4bccced6634b9f1d0c0e10f8516dd05a1a2ed4ad92c4369c5f9e.jpg
+    title: Shrine Approach
+    description: A broken causeway of stone blocks leads to a half-submerged shrine. Small bells hang from a leaning post,
+      chiming softly without wind.
+    exits:
+      s: reed_maze
+      n: shrine_antechamber
+      e: flooded_steps
+  shrine_antechamber:
+    image: 973d38f7cef9ed79a0f885ccdb5fba50163d11bd6958adaee3d9c8b1d94099c1.jpg
+    title: Shrine Antechamber
+    description: "Carved pillars rise from shallow water. Salt stains and moss blur the old reliefs: a river, a crown, and a
+      figure holding a key."
+    exits:
+      s: shrine_approach
+      n: cracked_sanctum
+      e: flooded_steps
+      w: reed_maze
+  cracked_sanctum:
+    image: 25501e7ea5357ed573e651d704a79968ead04eaaa2926e6a7eb1e82809594268.jpg
+    title: Cracked Sanctum
+    description: The shrine's heart is fractured by a jagged crack running floor to ceiling. Cold air spills from the split,
+      carrying a faint scent of ink and wet stone.
+    exits:
+      s: shrine_antechamber
+      d: fissure_descent
+      w: guard_post
+  guard_post:
+    image: 7066c61fb1aaacd86dfbd1f6d203da93174521334cd349433e119149e2e769f6.jpg
+    title: Abandoned Guard Post
+    description: A small stone room with arrow slits facing the river. A shattered stool and a pile of moldy straw show
+      where someone once kept watch.
+    exits:
+      e: cracked_sanctum
+      n: fallen_archway
+  fallen_archway:
+    image: c938e1ff637b8c474c7b28101027a00deedf712b5c4a602844b748fcfca747c8.jpg
+    title: Fallen Archway
+    description: A grand arch has collapsed into a heap of dressed stone. You can pass through the rubble if you pick your
+      footing carefully.
+    exits:
+      s: campfire_ring
+      n: courtyard_of_thorns
+      e: rope_bridge
+      w: windbreak_ridge
+  rope_bridge:
+    image: 7d99813b58e9ed9639ed2ac22e3ae26db563e2439c11f49b05f0ddaad357ad8c.jpg
+    title: Rope Bridge
+    description: A swaying rope bridge spans a narrow ravine. Planks creak underfoot, and the ropes are frayed in places
+      where hands have gripped too often.
+    exits:
+      w: fallen_archway
+      e: tower_base
+      s: trader_tents
+  tower_base:
+    image: 4230b4e9f83bfc21c372b12439a67b13561835f3647b83ba06e93dce7f3b2e0c.jpg
+    title: Tower Base
+    description: The base of a broken watchtower. The interior smells of damp wood and old smoke, and stairs spiral upward
+      in uneasy darkness.
+    exits:
+      w: rope_bridge
+      u: tower_stairs
+      n: courtyard_of_thorns
+  tower_stairs:
+    image: 7954fca3d5a7aaf7cdec204cafa070d0eb9cf0c2e39b5d6ab2c60c595f990bcf.jpg
+    title: Tower Stairs
+    description: A narrow spiral staircase climbs through crumbling stone. Loose grit slides under your boots with every step.
+    exits:
+      d: tower_base
+      u: tower_overlook
+  tower_overlook:
+    image: ab5a90a7ac918030984f736d8b93a75e6796826af4677ef631907b14f18229f1.jpg
+    title: Tower Overlook
+    description: From the broken parapet you see the river's bend, the camp below, and—farther north—a strange orchard of
+      pale trees reflecting moonlight even now.
+    exits:
+      d: tower_stairs
+      n: mirror_orchard
+  courtyard_of_thorns:
+    image: c1a65fb53569dd4fa7e7f52da21d8cca6a1246c1677c70af4403583159868a8a.jpg
+    title: Courtyard of Thorns
+    description: "A courtyard choked with thorny vines. Statues lie face-down, and the stones are scratched with hurried
+      messages: 'NOT THE WATER' and 'DON'T FOLLOW THE BELLS.'"
+    exits:
+      s: fallen_archway
+      e: tower_base
+      n: archive_entrance
+      w: beetle_grotto
+  beetle_grotto:
+    image: 88e808387e8d6a7393b10a1a44d0332c3c6f0190421fcc6de37adb85c8e39080.jpg
+    title: Beetle Grotto
+    description: A hollow under the ruined wall where beetles click and scuttle. Their shells glitter like shards of bottle
+      glass, and the air tastes faintly of copper.
+    exits:
+      e: courtyard_of_thorns
+      n: mossy_passage
+  mossy_passage:
+    image: 4163115e5dc69b249a24543be41d4ce783973f74c55ad1e5b9b6b1a309f9ce03.jpg
+    title: Mossy Passage
+    description: A passageway lined with green-black moss. Every sound becomes muffled, as if the stone is listening and
+      swallowing echoes.
+    exits:
+      s: beetle_grotto
+      n: archive_entrance
+      e: fissure_descent
+  archive_entrance:
+    image: d8013ef3389d5615ab04f850c8e91f9ca957ce12859729e4bd53df8ddaa1df22.jpg
+    title: Archive Entrance
+    description: "A low doorway marked with a worn sigil: an eye above a river. The threshold is clean, as if someone has
+      recently swept away the dust."
+    exits:
+      s: courtyard_of_thorns
+      n: archive_stacks
+      w: mossy_passage
+    features:
+      archive_notice:
+        type: SIGN
+        displayName: a weathered notice
+        keyword: notice
+        text: The Archive of the River Compact. Handle all documents with care. Unauthorized access to the sealed vault is a
+          punishable offense. — The Last Curator
+  archive_stacks:
+    image: 735a701a16a07f855937611a572cada9a00f7d744f05bbb8c394969258fdb6c8.jpg
+    title: Archive Stacks
+    description: Tall shelves lean at odd angles, packed with swollen books and scroll cases. Here and there, wax seals bear
+      the same eye-and-river sigil.
+    exits:
+      s: archive_entrance
+      e: reading_nook
+      n: ledger_room
+  reading_nook:
+    image: cbabe34386f7557aa505431a761609bd30d3aaf692df3e49d6de9896422e43ea.jpg
+    title: Reading Nook
+    description: A small alcove with a stone desk and a melted-down candle stub. Someone has scratched a neat diagram of
+      rooms and arrows into the desktop.
+    exits:
+      w: archive_stacks
+      e: curator_cell
+    features:
+      reading_chest:
+        type: CONTAINER
+        displayName: a locked iron chest
+        keyword: chest
+        initialState: locked
+        keyItemId: archive_key
+        keyConsumed: false
+        resetWithZone: true
+  curator_cell:
+    image: dbae3da556fd07dbaf5fbeaca7e4badea5e111aa8b5aded7a33ef4933eeec6be.jpg
+    title: Curator's Cell
+    description: A narrow cell with iron rings set into the wall. The air smells of old perfume and damp parchment, and the
+      floor is dry despite the ruin outside.
+    exits:
+      w: reading_nook
+  ledger_room:
+    image: 877f8a0182b4ce3a38d661eb0c40297fbd2305602036a201d12aaf685ac7e3bf.jpg
+    title: Ledger Room
+    description: A chamber dominated by a stone table and an enormous ledger bound in green leather. Pages are stuck
+      together as if they were dipped in river water and dried.
+    exits:
+      s: archive_stacks
+      e: fissure_descent
+      n: hidden_vault_door
+    features:
+      ledger_lever:
+        type: LEVER
+        displayName: a stone lever
+        keyword: lever
+        initialState: up
+        resetWithZone: true
+  hidden_vault_door:
+    image: 96cba10e9da3b4975a52c6704c5618322076f8de60a49e38c96de4a5591d088a.jpg
+    title: Hidden Vault Door
+    description: A round door of stone with a keyhole carved into the shape of a river delta. The surrounding stone is
+      etched with tiny names, most too worn to read.
+    exits:
+      s: ledger_room
+      d:
+        to: submerged_vault
+        door:
+          initialState: locked
+          keyItemId: archive_key
+          keyConsumed: false
+          resetWithZone: true
+  fissure_descent:
+    image: 18176524bc57c683ec2b2ca72078d21b6f271b6f43d3c241135db78edcd490d0.jpg
+    title: Fissure Descent
+    description: A slanted crack descends into the earth. Water drips steadily, and the walls are striated with pale mineral
+      bands like frozen lightning.
+    exits:
+      u: cracked_sanctum
+      w: mossy_passage
+      e: flooded_steps
+      d: undercroft_pool
+  flooded_steps:
+    image: ea05f8a0f8adec9a78c2c7e75a761d80e2a49f2aea25e878deadc14c14591425.jpg
+    title: Flooded Steps
+    description: Stone steps vanish into dark water. The surface ripples in slow circles as if something below is breathing.
+    exits:
+      w: shrine_approach
+      s: fisher_ledge
+      n: undercroft_pool
+      e: silt_tunnel
+  silt_tunnel:
+    image: 5d0674689910fa7c4174034ed62a3a851f2efdc4c896073b4498a266d1cc89f8.jpg
+    title: Silt Tunnel
+    description: A low tunnel packed with damp silt. Your footsteps leave crisp prints that fill with water moments later,
+      as if the ground is trying to erase you.
+    exits:
+      w: flooded_steps
+      n: undercroft_pool
+      e: river_cistern
+  river_cistern:
+    image: 5e485f9c798d305db6d74a43b56286ebfb01cc7375e07f502398ed14e6c7274b.jpg
+    title: River Cistern
+    description: A circular cistern where river water filters through cracks in the stone. A faint glow pulses beneath the
+      surface like a heartbeat.
+    exits:
+      w: silt_tunnel
+      n: undercroft_pool
+  undercroft_pool:
+    image: 32b9f081c41bb536851924e5bc1a3c94749f3eb56d2b9a9d327fe18ee5a0f065.jpg
+    title: Undercroft Pool
+    description: A subterranean pool stretches into shadow. On the far side, stonework rises into a sealed platform—an old
+      counting place, perhaps, for offerings and debts.
+    exits:
+      u: fissure_descent
+      s: flooded_steps
+      w: silt_tunnel
+      n: submerged_vault
+  submerged_vault:
+    image: 8af9f10f1f74f325dde69c856af0269f6912ae714f88a2eb4d29a92b334e4d47.jpg
+    title: Submerged Vault
+    description: A vault chamber half-filled with still water. Coins and ornaments glitter under the surface, and carved
+      columns depict a crowned figure bargaining with a river.
+    exits:
+      u: hidden_vault_door
+      s: undercroft_pool
+  mirror_orchard:
+    image: df84d9bb6f3615125be4728d52774ba4b26781863e2c7e1819ebaedbf4d47242.jpg
+    title: Mirror Orchard
+    description: Pale trees grow in perfect rows, their leaves glossy as glass. Every branch reflects you from a slightly
+      different angle, as if the orchard is taking inventory.
+    exits:
+      s: tower_overlook
+      e: orchard_path
+      w: moonwell_edge
+  orchard_path:
+    image: 038125b5bdf5f70ca8786c78673b939943505cf740a427cbf009fc49dfd31b3f.jpg
+    title: Orchard Path
+    description: A gravel path crunches softly. The air here is cool and sweet, and the trees' reflections slide over your
+      skin like moonlight in water.
+    exits:
+      w: mirror_orchard
+      e: moonwell_edge
+      n: overlook_of_names
+  moonwell_edge:
+    image: aae1ee75b2b049244144b5ed46392d2b9cb8b8d3b7d513b44f37bd550464e25d.jpg
+    title: Moonwell Edge
+    description: A circular well lined with white stone. The water is impossibly clear, showing stars even though the sky
+      above is hidden by tree canopy.
+    exits:
+      w: mirror_orchard
+      e: orchard_path
+      n: overlook_of_names
+      d: whisper_well
+  whisper_well:
+    image: e284d9a44f8c2bfb8b912caa063c07f5bdb86917551a28be754dc8653a04b257.jpg
+    title: Whisper Well
+    description: A narrow chamber beneath the well. Every drip echoes as a word you almost understand. Names float up from
+      the water and vanish before you can grasp them.
+    exits:
+      u: moonwell_edge
+  overlook_of_names:
+    image: 202ff9c51e5638a8f3777434cb46c651af36100f904fad1343800fee0921b7d0.jpg
+    title: Overlook of Names
+    description: A stone terrace overlooking both orchard and ruins. The balustrade is carved with a long list of names;
+      some are crisp, others scratched away.
+    exits:
+      s: orchard_path
+      w: moonwell_edge
+lifespan: 45
+levelBand:
+  min: 4
+  max: 5
+difficultyHint: casual
+image:
+  room: demo_ruins/default_room.png
+  mob: demo_ruins/default_mob.png
+  item: demo_ruins/default_item.png
+audio:
+  music: 6edf048aa93780dc9cde92c4dcb746aa2aecee19d1af3d896b73c67b656013c7.mp3
+mobs:
+  gate_scout:
+    image: 428cc92d46ac20b0db01a886a7ac7d91db06a1df480d0acd6c8050b355ffdfb9.png
+    name: a wary caravan scout
+    spawns:
+      - room: caravan_gate
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The scout shouts: You shouldn't be here!"
+    drops:
+      - itemId: travel_cloak
+        chance: 1
+    level: 4
+  camp_cook:
+    image: 7b1f3e4effdcb8af4e2d1094da2934ea6cd847ff02c1c9859bbf9c827b774132.png
+    name: a soot-faced camp cook
+    spawns:
+      - room: campfire_ring
+    drops:
+      - itemId: cook_knife
+        chance: 1
+    level: 4
+  shrine_acolyte:
+    image: 48ffffe1371db1f406214c98ba25edd9da65633f500da3d7d11b58cd0dfdc53e.png
+    name: a whispering shrine acolyte
+    spawns:
+      - room: shrine_antechamber
+    drops:
+      - itemId: acolyte_mask
+        chance: 1
+    level: 4
+  beetle_swarm:
+    image: a680e06c406c8411d885e757523a2341b635d196b7efed99d43c019714f42f8a.png
+    name: a swarm of glassy beetles
+    spawns:
+      - room: beetle_grotto
+    behavior:
+      template: coward
+      params:
+        fleeHpPercent: 40
+        fleeMessage: The beetles scatter in a panic!
+    drops:
+      - itemId: beetle_shell
+        chance: 1
+    level: 4
+  stone_sentinel:
+    image: 42b39833fa3f1b0185794cbbe33fd07b44020699effea9b963044e0c66349fd8.png
+    name: a cracked stone sentinel
+    spawns:
+      - room: cracked_sanctum
+    behavior:
+      template: patrol
+      params:
+        patrolRoute:
+          - cracked_sanctum
+          - shrine_antechamber
+          - shrine_approach
+          - shrine_antechamber
+    level: 4
+  bridge_bandit:
+    image: 4647b7b6b83ed05b497ee7498c36217242d1bc05cc09efc8eff06efdf27ec940.png
+    name: a bridge bandit
+    spawns:
+      - room: rope_bridge
+    behavior:
+      template: wander_aggro
+      params:
+        aggroMessage: "The bandit snarls: Your coin or your life!"
+    drops:
+      - itemId: bandit_dagger
+        chance: 1
+    level: 4
+  drowned_warder:
+    image: 623a220bdc3d762c926bc17b6f8eba213339aeb0e15c13d515e83856b0113a2c.png
+    name: a drowned warder
+    spawns:
+      - room: flooded_steps
+    behavior:
+      template: aggro_guard
+    level: 4
+  orchard_keeper:
+    image: 9547a878b37cb2cc797ac48589748da0b9aa166f48f7cabae343cb934f87ce3a.png
+    name: an orchard keeper
+    spawns:
+      - room: mirror_orchard
+    quests:
+      - cull_the_beetles
+    dialogue:
+      root:
+        text: These beetles are ruining my orchard. If you have time, I could use some help.
+    level: 4
+  archive_scribe:
+    image: f7bc1ef6a1219ade2162cfd38bbe7fe116d99d113978862b476db0cf392a16e4.png
+    name: a dust-choked archive scribe
+    spawns:
+      - room: archive_stacks
+    drops:
+      - itemId: archive_key
+        chance: 1
+    level: 4
+  sunken_treasurer:
+    image: 53f858fe0e42b4084589ec1ec4c140372116fa2f563949d12646606d570372e8.png
+    name: a sunken treasurer
+    spawns:
+      - room: submerged_vault
+    drops:
+      - itemId: pearl_ring
+        chance: 1
+    level: 4
+items:
+  brass_lantern:
+    image: 1e90f62c0e6aa5acb7c3c354d855dcf2be3c0a2b1d98d6bb2d3f65c6618f14e2.png
+    displayName: a brass lantern
+    keyword: lantern
+    description: A heavy brass lantern with a mica window. It smells faintly of whale oil.
+    room: caravan_gate
+    basePrice: 5
+  travel_cloak:
+    image: c9bd5835530a98f994e9fb2b2eca0e029fbc862389f11ae6b7c8773224136e6a.png
+    displayName: a weathered travel cloak
+    keyword: cloak
+    description: A sturdy cloak patched at the hem. It still repels drizzle.
+    slot: body
+    basePrice: 15
+    level: 4
+    tier: common
+    archetype: armor
+    armor: 6
+  iron_pot:
+    image: 1c03d9540197ba2242da975305b6c789e34da7bcab1f7681f78f1dddb06604cd.png
+    displayName: a dented iron pot
+    keyword: pot
+    description: Blackened from many meals. Something herbal clings to the scent.
+    room: campfire_ring
+    basePrice: 3
+  cook_knife:
+    image: 49afad94bfee448e1594202891732dcb57491686c44ac36c03b8d1f57ec69012.png
+    displayName: a camp cook's knife
+    keyword: knife
+    description: Sharp enough to make you careful.
+    slot: hand
+    damage: 1
+    basePrice: 10
+    level: 4
+    tier: common
+    archetype: balanced
+    armor: 2
+  river_charm:
+    image: 4154cbe70a85b7430673766160e484c0209276f3f2a62b78310c27b9f120445e.png
+    displayName: a braided river charm
+    keyword: charm
+    description: A reed braid wrapped around a smooth river stone, cool to the touch.
+    stats:
+      CON: 1
+    room: river_ford
+    basePrice: 8
+  bandit_dagger:
+    image: 0a01fd6b421f487a651004aef38cb4b474540139c90d86f3fb4f19889ae35c3b.png
+    displayName: a nicked dagger
+    keyword: dagger
+    description: A small blade with a chipped tip and a confident grip.
+    slot: hand
+    damage: 1
+    basePrice: 20
+    level: 4
+    tier: common
+    archetype: balanced
+    armor: 2
+  shrine_censer:
+    image: cbd12ae8ebbabf96a07ffc10a61bdf9e5ee4db69abb228236b7d9b8240f4779e.png
+    displayName: a bronze censer
+    keyword: censer
+    description: A little brazier on chains, stained green with age.
+    room: shrine_antechamber
+    basePrice: 6
+  acolyte_mask:
+    image: c75da1142fd77509910a00395ac0884b07ea96a6707fd3984926d945bec5af6f.png
+    displayName: a stitched linen mask
+    keyword: mask
+    description: A pale mask with tiny bead eyes. It makes your breath sound far away.
+    slot: head
+    armor: 3
+    basePrice: 12
+    level: 4
+    tier: common
+    archetype: armor
+  beetle_shell:
+    image: a16892e259e1629b2b396059a2c6d477a68c62dd71cb681881e46db9df5f1d6a.png
+    displayName: a beetle shell shard
+    keyword: shell
+    description: A shard of iridescent shell that catches light like broken glass.
+    basePrice: 2
+  sentinel_tablet:
+    image: 7072daa3eb5ccc1f4abdd79e8c5b8ee5f34c3c5fd5062f958631d62188980b7b.png
+    displayName: a cracked stone tablet
+    keyword: tablet
+    description: A slate tablet etched with a faded oath. The cracks look like a map.
+    room: cracked_sanctum
+  rusted_buckler:
+    image: c56342e079b460e5b7115865a600d5a8fe47c2de7448261a389566df0fcf03d5.png
+    displayName: a rusted buckler
+    keyword: buckler
+    description: A small shield with flaking paint and a stubborn strap.
+    slot: hand
+    armor: 2
+    room: guard_post
+    basePrice: 18
+    level: 4
+    tier: common
+    archetype: balanced
+    damage: 1
+  archive_key:
+    image: c4af432a2fc6dd8fe2a65ff1eb27ed59b874a4d933e1f6b1af450bdb6b3d1c04.png
+    displayName: a thin iron key
+    keyword: key
+    description: A narrow key with an odd, asymmetrical tooth pattern.
+  scribe_quill:
+    image: 48db7284e38e6522a49a9e9ef6f458cf22355ea2e863da329c2bf5bc853c702a.png
+    displayName: a brittle quill
+    keyword: quill
+    description: A feather quill that crumbles if you squeeze it too hard.
+    room: archive_stacks
+  pearl_ring:
+    image: 950261e0aa330007a52184c83e53c4b01eb277d708b102eb6ee9cfb2f476fc59.png
+    displayName: a tarnished pearl ring
+    keyword: ring
+    description: A band set with a cloudy pearl. It gleams faintly when wet.
+    slot: hand
+    basePrice: 35
+    level: 4
+    tier: common
+    archetype: balanced
+    damage: 1
+    armor: 2
+  vault_mace:
+    image: 01408028717092ba69da9822e9a2c220dc8a519bca411ebfd4ed64bd0b968557.png
+    displayName: a silt-caked ceremonial mace
+    keyword: mace
+    description: A ceremonial mace with river silt packed into its carvings.
+    slot: hand
+    damage: 1
+    room: submerged_vault
+    basePrice: 40
+    level: 4
+    tier: common
+    archetype: balanced
+    armor: 2
+  mirror_apple:
+    image: f1d9ee687ec54a3e2569064b5739360de28fa9ad86cdf459bb885cde6954ce95.png
+    displayName: a mirror-bright apple
+    keyword: apple
+    description: Perfectly smooth, reflecting your face like a tiny moon.
+    consumable: true
+    onUse:
+      healHp: 4
+      grantXp: 5
+    room: mirror_orchard
+    basePrice: 8
+  mossy_helm:
+    image: 7acc0e94923f43685a69e1a0bc9c2df3942ab3d98b6b63e485376360446644cc.png
+    displayName: a mossy helm
+    keyword: helm
+    description: A helmet overgrown with soft moss. It smells like rain and stone.
+    slot: head
+    armor: 3
+    room: fallen_archway
+    basePrice: 25
+    level: 4
+    tier: common
+    archetype: armor
+  rope_gloves:
+    image: 17ab63ea9860035b962e48e88f58963821ad1b23c2d577af1de15cdd9fc10a54.png
+    displayName: a pair of rope-worn gloves
+    keyword: gloves
+    description: Gloves rubbed smooth from climbing. The palms are tough as leather.
+    slot: hand
+    armor: 2
+    room: rope_bridge
+    basePrice: 10
+    level: 4
+    tier: common
+    archetype: balanced
+    damage: 1
+  health_potion:
+    image: cc9687d16f5a3602c8859d8023f5983bd02b46894aa2978ba2c3d10fcee158fa.png
+    displayName: a small health potion
+    keyword: potion
+    description: A corked vial of ruby liquid that smells of mint and copper.
+    consumable: true
+    onUse:
+      healHp: 8
+    basePrice: 20
+shops:
+  trader_supplies:
+    name: Caravan Trader's Supplies
+    room: trader_tents
+    items:
+      - travel_cloak
+      - cook_knife
+      - health_potion
+      - brass_lantern
+      - mirror_apple
+quests:
+  cull_the_beetles:
+    name: Cull the Beetles
+    description: The orchard keeper needs the beetle population thinned out to save the mirror orchard.
+    giver: orchard_keeper
+    objectives:
+      - type: kill
+        targetKey: beetle_swarm
+        count: 3
+        description: Kill 3 beetle swarms
+    rewards:
+      xp: 200
+      gold: 30

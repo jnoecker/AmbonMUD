@@ -1,0 +1,485 @@
+zone: quiltwinds_township
+startRoom: the_quilted_crossroads
+rooms:
+  the_quilted_crossroads:
+    title: The Quilted Crossroads
+    description: A sprawling intersection where the famous patchwork road converges, its soft fabric blocks shifting between
+      sunset hues of crimson, amber, and gold. The air thrums gently with the distant rhythm of looms, and the scent of
+      dyed thread hangs sweet and dreamy.
+    exits:
+      s: the_great_spindle
+      e: threadbare_market_square
+      w: pixel_haven:road_quiltwinds
+    image: fe55269e2bdd8fe6ea5513edfad6db0c40c70439f1c6bb267f745acf339ac934.jpg
+  threadbare_market_square:
+    title: Threadbare Market Square
+    description: A vibrant open plaza where stalls display spools of luminescent thread and bolts of shimmering fabric in
+      every conceivable color. Citizens of woven fiber drift between vendors, their stitched forms catching light like
+      prisms.
+    exits:
+      n: spool_street
+      w: the_quilted_crossroads
+    image: cb56a389fffa1b7cf53fda3fd1b6120ac5581545cd4eea02ed5cb5e49eb16417.jpg
+  the_great_spindle:
+    title: The Great Spindle
+    description: An imposing monument of polished silver needle rises skyward at the heart of Quiltwinds, its base
+      surrounded by spiraling paths of twisted yarn and needle-point flowers in perpetual bloom. The needle's surface
+      reflects dreamlike visions of creation unfolding.
+    exits:
+      n: the_quilted_crossroads
+      s: the_weaver_s_garden
+      w: knitter_s_row
+    image: b1e906406302602d32cbd142fcdd26aa75ab821bb098f32e58198ffec565413b.jpg
+  the_weaver_s_garden:
+    title: The Weaver's Garden
+    description: Carefully tended beds where living threads grow like vines, their blooms composed of interlocking stitches
+      in shades that shift with the changing light. Master craftspeople work silently here, their hands moving with
+      practiced grace as they tend to young fibers.
+    exits:
+      n: the_great_spindle
+      w: the_dye_vat_house
+      s: the_loom_house
+    image: 27a9d726109a1b1de9dccb224dccf60a6bc68a4a7985ea78a3adaa79b932d4ea.jpg
+  the_dye_vat_house:
+    title: The Dye Vat House
+    description: A long building with walls of deep indigo fabric, its interior filled with enormous vats of shimmering dye
+      that swirl with colors too vivid to be real. Steam rises from the vats, carrying the rich aroma of dream-stuff and
+      chromatic magic.
+    exits:
+      e: the_weaver_s_garden
+      s: the_stitcher_s_guild_hall
+    image: 2c23378eddb8613ca9b4b961bbf763fc02f680acb27a4ee0506b2076d83d79d0.jpg
+  knitter_s_row:
+    title: Knitter's Row
+    description: A charming residential street where homes are constructed from bolts of patterned fabric stretched across
+      wooden needle frames, their walls shifting hue as light moves across them. Soft smoke curls from chimneys woven
+      from yarn.
+    exits:
+      e: the_great_spindle
+    image: 65f236356f5f99a36331b61b838233281531398938639ad9ccb20aea20899bc7.jpg
+  the_loom_house:
+    title: The Loom House
+    description: A sprawling workshop filled with the gentle click-clack of countless looms working in harmony, their frames
+      towering like wooden cathedrals. Finished fabrics hang from every available space, creating a forest of color and
+      pattern.
+    exits:
+      n: the_weaver_s_garden
+      w: the_stitcher_s_guild_hall
+      s: the_fiber_district
+    image: e57e4f53f328d10e0a233a43cf7e688bb99d705e12b8ff483a7452e4a1d88cd1.jpg
+  spool_street:
+    title: Spool Street
+    description: A narrow lane lined with towering spools of thread in dream-bright colors that seem to glow from within,
+      casting soft colored light onto the fabric-paved ground below. The whisper of thread sliding across bobbins fills
+      the air.
+    exits:
+      s: threadbare_market_square
+    image: bb1e71e92aba91918406359c40ce539f6893bb08c23843c073c15bfcd6eb8cbd.jpg
+  the_stitcher_s_guild_hall:
+    title: The Stitcher's Guild Hall
+    description: A grand building with walls of pristine cream-colored linen, its entrance marked by an enormous needle and
+      thread carved from dream-silver. Inside, the echoes of countless needles clicking together create a meditative
+      symphony.
+    exits:
+      n: the_dye_vat_house
+      w: the_twisted_yarn_path
+      s: the_crochet_commons
+      e: the_loom_house
+    image: 41402edf88c908d54ffb810409137b3077abed3ae6fa1e9949f8d248d157579d.jpg
+  the_twisted_yarn_path:
+    title: The Twisted Yarn Path
+    description: A winding walkway of spiraled thread that leads deeper into Quiltwinds, each turn revealing new gardens and
+      hidden workshops tucked between fabric walls. The path glows softly with bioluminescent fibers woven into its
+      strands.
+    exits:
+      e: the_stitcher_s_guild_hall
+      w: embroidery_square
+    image: 51b355e608e781049dd1720cad91e16f5ef7fcce63621319bd03b6eaefaab94f.jpg
+  embroidery_square:
+    title: Embroidery Square
+    description: A peaceful plaza decorated with intricate embroidered tapestries hanging from wooden needle frames,
+      depicting scenes of Auringold's dreamscapes. Citizens gather here to admire fine needlework and share patterns.
+    exits:
+      e: the_twisted_yarn_path
+      w: the_pattern_library
+      s: the_spindle_keeper_s_cottage
+    image: fb89a9049cb854c50d7d3cd22f3067dbe6ef0dc1ae62bd510e0319bc1c7153fa.jpg
+  the_crochet_commons:
+    title: The Crochet Commons
+    description: An open courtyard where larger, loosely-woven citizens gather and socialize, their airy forms billowing
+      gently with each passing breeze like living curtains. The ground is soft and yielding beneath the feet, woven from
+      the finest cushioning thread.
+    exits:
+      n: the_stitcher_s_guild_hall
+      e: the_fiber_district
+    image: 0f7a18764e71e45ff4904311e2ef45e35a1784f32469cfef63cafba76ae9d551.jpg
+  the_pattern_library:
+    title: The Pattern Library
+    description: A circular tower constructed entirely of pressed fabric pages, its walls inscribed with countless weaving
+      and knitting patterns that shimmer with magical intent. The air inside carries the whisper of rustling thread and
+      forgotten designs.
+    exits:
+      e: embroidery_square
+      s: seamstress_alley
+      w: dream_thread_gardens
+    image: baa4d6cf286c1e4d8aec72e70aaa19bb26d79f9d2884ee6c9db9505718b6942c.jpg
+  seamstress_alley:
+    title: Seamstress Alley
+    description: A narrow, winding passage where the most skilled artisans work in small boutique studios, their needle-work
+      visible through translucent fabric walls. The faint glow of enchanted thread emanates from each doorway.
+    exits:
+      n: the_pattern_library
+      w: the_bobbin_bazaar
+      e: the_spindle_keeper_s_cottage
+    image: 19a560c2496a40858a5b84d383de00528d0200c83197d802edc5753d147df192.jpg
+  the_bobbin_bazaar:
+    title: The Bobbin Bazaar
+    description: A bustling market where bobbins and spools of every size are bought and sold, their bright enamel catches
+      the light like jewels. The chiming of metal bobbins creates an accidental wind-chime melody throughout the day.
+    exits:
+      e: seamstress_alley
+      n: dream_thread_gardens
+    image: 8fbdbf09c92cc255bdd6d3ea671842edc9adefe19fea69a5d17b87a896983e82.jpg
+  dream_thread_gardens:
+    title: Dream-Thread Gardens
+    description: Enchanted gardens where threads grow wild and free, creating natural tapestries of astonishing beauty and
+      complexity. Visitors can glimpse visions of possible futures woven into the fabric of the place.
+    exits:
+      e: the_pattern_library
+      n: the_tapestry_hall
+      s: the_bobbin_bazaar
+    image: 1f7749252852e833f47c3a8cf434b7ed7790997af3ee444f29b0041d7df8b7a4.jpg
+  the_spindle_keeper_s_cottage:
+    title: The Spindle Keeper's Cottage
+    description: A small, intricately woven home nestled near the Great Spindle, its walls a masterwork of color-blending
+      and pattern integration. A thin ribbon of silver thread spirals up its roof toward the sky.
+    exits:
+      w: seamstress_alley
+      e: the_needle_tree_grove
+      n: embroidery_square
+    image: 08b2140b4ec6342de1751a461a01974355525fd0e937083f83be9372bc4cb503.jpg
+  the_fiber_district:
+    title: The Fiber District
+    description: A warehouse district containing vast stores of raw fiber in every imaginable texture—silk, wool, cotton,
+      and dreamstuff—each organized by color and weight. The air shimmers with lint motes that dance like tiny sprites.
+    exits:
+      w: the_crochet_commons
+      e: the_cross_stitch_cottage_district
+      n: the_loom_house
+    image: 948566dbb6126ec42105b8464ae683a88b69dacb388092b1866e0903c4c7cccf.jpg
+  the_tapestry_hall:
+    title: The Tapestry Hall
+    description: A grand exhibition space where the finest works of Quiltwinds' artisans are permanently displayed, each
+      tapestry telling a story of creation and transformation. The room seems to breathe with the collective intention
+      woven into the walls.
+    exits:
+      s: dream_thread_gardens
+    image: 6a1d663b78faa1a99e123fd659dcde8436f084b6c4a837748d91bd3482b5284c.jpg
+  the_cross_stitch_cottage_district:
+    title: The Cross-Stitch Cottage District
+    description: A charming neighborhood of small homes decorated with intricate cross-stitch designs covering their
+      exterior fabric walls, creating a kaleidoscope effect that shifts with the sun's movement. Each dwelling is a
+      unique masterwork of geometric design.
+    exits:
+      w: the_fiber_district
+    image: 59403dfc78b0325a91b1b78f6e230d370f65eed645000474f3de8cf3252ca03e.jpg
+  the_needle_tree_grove:
+    title: The Needle Tree Grove
+    description: An unusual forest of wooden needles of various sizes growing naturally from the fabric-paved ground, their
+      pointed tips glinting silver in the dream-light. Between them, curtains of living thread sway gently in the
+      breeze.
+    exits:
+      w: the_spindle_keeper_s_cottage
+      s: the_dye_master_s_studio
+    image: 1acca971b2d1fd54ee58aefff32e64f419e973d38bd1ac0ba35e1d2edc7ea923.jpg
+  the_dye_master_s_studio:
+    title: The Dye Master's Studio
+    description: An exclusive workshop where the oldest and most powerful dye mages perfect their chromatic arts, surrounded
+      by vials of liquid color that defy natural explanation. The very walls seem to absorb and reflect every hue
+      imaginable.
+    exits:
+      n: the_needle_tree_grove
+      w: quilter_s_rest_inn
+    image: c61c4cd9c12316eddd8d9b7854b4624a89a6c86274196ae91619c70c93b5ed27.jpg
+  quilter_s_rest_inn:
+    title: Quilter's Rest Inn
+    description: A cozy inn constructed from the softest quilted fabric, its interior warm and inviting with the scent of
+      fresh thread and herbal infusions. Windows of gossamer show glimpses of Quiltwinds' gentle streets beyond.
+    exits:
+      e: the_dye_master_s_studio
+      s: the_master_weaver_s_workshop
+    image: 99a9d8e72f19719c106b6cea49123f55ee74293e2c2fb6973ce38950b42624ff.jpg
+  the_master_weaver_s_workshop:
+    title: The Master Weaver's Workshop
+    description: An elite studio where the most legendary craftspeople of Auringold create their masterworks, filled with
+      looms so intricate they seem to have a consciousness of their own. The threads here shimmer with concentrated
+      dream-magic.
+    exits:
+      n: quilter_s_rest_inn
+      w: the_patchwork_fountain
+      s: the_loose_yarn_district
+    image: d732a46da4c1f93bf08a77be0f4e6eec6f2f3726c9bb9f0877d3b29ef35f9810.jpg
+  the_patchwork_fountain:
+    title: The Patchwork Fountain
+    description: A central water feature constructed from hundreds of differently-colored fabric squares stitched together,
+      through which water flows in an endless, mesmerizing pattern. The fountain hums with the collective dreams of
+      those who created it.
+    exits:
+      e: the_master_weaver_s_workshop
+      s: the_thread_bank
+    image: 54c50dc90f111e40ebfb08a0cb07d27908ce68e3e88e7c6e3be2e24830b6df23.jpg
+  the_thread_bank:
+    title: The Thread Bank
+    description: A secure building with vaults of rare and precious threads, each fiber catalogued and stored with
+      meticulous care by dedicated archivists. The walls are threaded with security enchantments that shimmer faintly in
+      the shadows.
+    exits:
+      n: the_patchwork_fountain
+    image: 809d92accabd50058addacc36f468b87831ded3b873959effdeadde57170f2f2.jpg
+  the_loose_yarn_district:
+    title: The Loose Yarn District
+    description: An avant-garde neighborhood where experimental and loosely-woven citizens gather, their airy forms
+      constantly transforming and reshaping. Buildings here are constructed with less rigid fabric, allowing them to
+      sway and flow with the inhabitants' moods.
+    exits:
+      n: the_master_weaver_s_workshop
+      e: the_spindle_market
+      s: the_tightly_woven_quarter
+    image: 2efb747e6c7b56e0d22e6f08018b45bf92158d5dbcd1bd21a7597172553a2bbd.jpg
+  the_spindle_market:
+    title: The Spindle Market
+    description: A seasonal marketplace that appears around the base of the Great Spindle, selling specialized crafting
+      tools, rare fibers, and enchanted bobbins. The market glows brighter at night, drawing craftspeople from across
+      Auringold.
+    exits:
+      w: the_loose_yarn_district
+    image: 7b8c785f625cbca0a42b4f21f0a8683996cfaa0847e627ee840d7590e67318cb.jpg
+  the_tightly_woven_quarter:
+    title: The Tightly-Woven Quarter
+    description: A formal district where densely-woven citizens of solid appearance conduct business and governance, their
+      pristine stitching reflecting their dedication to order and tradition. Architecture here is geometric and precise.
+    exits:
+      n: the_loose_yarn_district
+      e: the_edge_of_unraveling
+    image: e9d17b410ce74838474053b285d2c7ea6bcbf4f93170f6314bf95c8e96cc09e5.jpg
+  the_edge_of_unraveling:
+    title: The Edge of Unraveling
+    description: A mysterious area at the township's border where threads gradually return to raw fiber, the boundary
+      between what is woven and what might become. Strange and beautiful patterns form naturally in this transitional
+      space.
+    exits:
+      w: the_tightly_woven_quarter
+    image: 4f2049951b507860ba47d2e029f91d96d19379618724fe7d69a1e83b9b52d2dc.jpg
+lifespan: 30
+levelBand:
+  min: 13
+  max: 13
+difficultyHint: standard
+image:
+  room: cb031c5215fb98e7ae6b2308b94388bc53964fca3d5e1f84685ea21c62ac1c5e.jpg
+  mob: 74d64ddaeac940ff7aa09aed379274c64d7990900f5f66d375b77657bd6f5e02.png
+  item: 96250039bd9bbe1a8611cad4dcc2929a3789bfa2f951e3519b39586ae44a6b99.png
+mobs:
+  stitch_guardian:
+    name: Stitch Guardian
+    description: A tightly-woven protector composed of crimson and silver thread, its form crackling with protective magic.
+      Its needle-sharp fingers glow with defensive enchantment.
+    tier: standard
+    spawns:
+      - room: the_great_spindle
+    level: 13
+    image: 2493504153a89ec722add240a61b63640166620822ae00ecb69759e83e80ac5b.png
+  loose_spirit:
+    name: Loose Spirit
+    description: An airy, billowing form of pale blue thread that dances and shifts like curtains in wind, barely contained
+      within a coherent shape. Its movements are graceful but unpredictable.
+    tier: weak
+    spawns:
+      - room: the_crochet_commons
+    level: 13
+    image: 78a925423e9fbbd5cedd6f2b977b991ae3fdd06f2f929c0db7852775d2686931.png
+  dye_wraith:
+    name: Dye Wraith
+    description: A swirling vortex of multi-colored thread essence that leaves trails of vibrant pigment in the air, its
+      form constantly shifting between hues. It smells of rich chromatic magic.
+    tier: standard
+    spawns:
+      - room: the_dye_vat_house
+    level: 13
+    image: 49a81c3f2b3ca933414b5f329d6902a96843f29bb88196fc52403b551220cff3.png
+  pattern_keeper:
+    name: Pattern Keeper
+    description: A precisely woven citizen covered entirely in intricate geometric designs, their form a living tapestry of
+      mathematical beauty. Their movements are measured and deliberate.
+    tier: weak
+    spawns:
+      - room: the_pattern_library
+    level: 13
+    image: d5a96cb4cb95d00497972eeae5fe0aa00e049471ad01601f223032297f2e982a.png
+  tangled_knot:
+    name: Tangled Knot
+    description: An ominous mass of twisted thread that has somehow achieved chaotic sentience, its form a writhing tangle
+      of conflicting patterns. It hisses and crackles with unstable fiber magic.
+    tier: elite
+    spawns:
+      - room: the_edge_of_unraveling
+    level: 13
+    image: f1cc8bd6ca800777ff820df979db57f69d445c7ad95239a1bf70e93d3f7f5119.png
+  loom_sentinel:
+    name: Loom Sentinel
+    description: A disciplined guardian woven from the finest workshop threads, its body perfectly uniform and constructed
+      from thousands of interlocking stitches. It radiates an aura of mechanical precision.
+    tier: standard
+    spawns:
+      - room: the_loom_house
+    level: 13
+    image: 1e4bf82e440753a28df526713ce1a17324e78f87bf6b7db6a6843c19ca77d2b2.png
+  spindle_maiden:
+    name: Spindle Maiden
+    description: An elegant fiber-being dressed in flowing robes of gossamer thread, her form both delicate and powerful.
+      She moves with the grace of silk in water.
+    tier: weak
+    spawns:
+      - room: the_weaver_s_garden
+    level: 13
+    image: 94149ddcf4fba3827e0c9076f255d70fb7251b85e0397759876de196f0c9d460.png
+  master_craftsperson:
+    name: Master Craftsperson
+    description: The most skilled weaver in Quiltwinds, their body a masterwork of artistic expression woven from
+      dream-stuff itself. Their very presence radiates creative power and purposeful intent.
+    tier: boss
+    spawns:
+      - room: the_master_weaver_s_workshop
+    level: 13
+    image: a0fb9044559fcdf0167569b67f8da795bab0378bc781a8fd825ef56b17621620.png
+  spool_goblin:
+    name: Spool Goblin
+    description: A small, mischievous creature composed of tightly-wound thread scraps, its tiny form crackling with chaotic
+      energy. It darts about like a wind-up toy, leaving tangled thread in its wake.
+    tier: weak
+    spawns:
+      - room: spool_street
+    level: 13
+    image: c9b9f861ff2448e55b30bf5e43c0af119a19d176626a62a0cb7800ba4c7c2758.png
+  unraveler:
+    name: Unraveler
+    description: A corrosive entity that slowly dissolves threads and patterns, its form a consuming void surrounded by
+      fraying fiber. It leaves only unspun thread and chaos in its path.
+    tier: elite
+    spawns:
+      - room: the_edge_of_unraveling
+    level: 13
+    image: 9600d54a370788362c2504ee49849a201e75e9585fc2763b8951a70508767d38.png
+  needle_knight:
+    name: Needle Knight
+    description: A valiant warrior woven from reinforced silk thread, wielding a needle as a sword with deadly skill. Their
+      armor is quilted and cross-stitched for maximum protection.
+    tier: standard
+    spawns:
+      - room: the_stitcher_s_guild_hall
+    level: 13
+    image: 493538d87b33b4407a127bd8062ccac25eb05d7c50afed834c586b6db2342d28.png
+  thread_sprite:
+    name: Thread Sprite
+    description: A delicate, luminescent being composed of gossamer thread that glows in soft pastels, fluttering about like
+      a living ribbon. It seems to contain dreams of creation within its shimmering form.
+    tier: weak
+    spawns:
+      - room: dream_thread_gardens
+    level: 13
+    image: 4fb8880689967766394cb5bf266343aaac3fac8015cffa9e4e6a79e48f645113.png
+items:
+  silver_thread_needle:
+    displayName: Silver Thread Needle
+    description: A perfectly balanced needle crafted from dream-silver, its eye glowing faintly with creative potential.
+      Masters of Quiltwinds wield these as both tools and weapons.
+    slot: weapon
+    damage: 3
+    level: 13
+    tier: common
+    archetype: damage
+    image: 9beaec5cce7a7a9e238fb288b4bcd72c5629a9a92cd2f742da2739e3367a61fe.png
+    keyword: silver_thread_needle
+  quilted_vest:
+    displayName: Quilted Vest
+    description: A protective garment stitched from patchwork fabric in a dozen soft hues, its quilting providing surprising
+      durability without weight. It feels as warm and safe as being wrapped in memories.
+    slot: body
+    armor: 6
+    level: 13
+    tier: common
+    archetype: armor
+    image: d636172a853c3f11e5ddbb5c696634f365152b507b9a2f1beec8b227125c4c1e.png
+    keyword: quilted_vest
+  embroidered_gloves:
+    displayName: Embroidered Gloves
+    description: Fine knitted gloves decorated with intricate thread-patterns that seem to shift and change when viewed from
+      different angles. They grant dexterity to any weaver's hands.
+    slot: hands
+    level: 13
+    tier: common
+    archetype: armor
+    armor: 3
+    image: 0e24fcbd9ad68de3146a5f7d85ff0478df000093161ab9fa2c83a2d581d06b4d.png
+    keyword: embroidered_gloves
+  woven_crown:
+    displayName: Woven Crown
+    description: A regal headpiece created from interlocking threads in gold and royal blue, depicting scenes of creation
+      and transformation. It radiates an air of leadership and authority.
+    slot: head
+    level: 13
+    tier: common
+    archetype: armor
+    armor: 3
+    image: a691902c432e522856cc9e25feb402e9192fb91f1c32a902af5d423ad81dc263.png
+    keyword: woven_crown
+  spool_of_dreamthread:
+    displayName: Spool of Dream Thread
+    description: A delicate bobbin wound with thread that shimmers between reality and dream-substance, containing enough
+      material to create something extraordinary. The thread hums softly with potential.
+    room: spool_street
+    image: 2a03e7406443503da0a18e7660f70d979bb981aabc5f4f0eb67a7a7047d2843b.png
+    keyword: spool_of_dreamthread
+  master_dyer_vial:
+    displayName: Master Dyer's Vial
+    description: A small crystal vial containing pure chromatic essence capable of dyeing anything in Quiltwinds' most
+      coveted colors. A single drop can transform thread or fabric beyond recognition.
+    room: the_dye_vat_house
+    image: 3ba5025cc347b920ee57deee39040c232b333c8e9b9369084e44797bcb707f16.png
+    keyword: master_dyer_vial
+  pattern_scroll:
+    displayName: Pattern Scroll
+    description: An ancient parchment inscribed with a legendary weaving pattern said to grant insight and wisdom to those
+      who study it. The pattern itself seems to move and breathe on the page.
+    room: the_pattern_library
+    image: 26fcc7dc354e13c26e8a6510beea73b0d51fe9f9e0449fc3200998e4c52fa0b9.png
+    keyword: pattern_scroll
+  needle_of_swift_weaving:
+    displayName: Needle of Swift Weaving
+    description: An enchanted needle that allows its wielder to work at impossible speeds, leaving perfect stitches in its
+      wake. It feels light as air but strong as silver.
+    slot: weapon
+    damage: 3
+    level: 13
+    tier: common
+    archetype: damage
+    image: 471d240177325f95830629d5d5c8e1675db4a6fba8bfa4e0cf1a5a4d584df3c6.png
+    keyword: needle_of_swift_weaving
+  gossamer_shawl:
+    displayName: Gossamer Shawl
+    description: An impossibly fine wrap woven from the dreams of sleeping children, light enough to pass through hands like
+      mist yet protective as armor. It seems to shimmer with borrowed starlight.
+    slot: body
+    armor: 6
+    level: 13
+    tier: common
+    archetype: armor
+    image: 0d1d0fc50262a0bf4c0390789585bcc0f2ccc42bbea1f889b91f3e84aebdb62d.png
+    keyword: gossamer_shawl
+  spindle_of_potential:
+    displayName: Spindle of Potential
+    description: A mystical spindle that contains within it all the threads that might be—visions of possible creations
+      swirl within its core. To touch it is to glimpse infinite possibilities.
+    room: the_great_spindle
+    image: e353e2072df6f9af292fad438bf0a0a0ed173f57c4320228061448623e1e3065.png
+    keyword: spindle_of_potential
