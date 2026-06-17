@@ -460,6 +460,9 @@ class NavigationHandler(
         val me = players.get(sessionId) ?: return
         val roomId = me.roomId
 
+        // Note: the "#<itemId>" selector the web client sends to disambiguate
+        // similarly-named items is handled transparently by matchesKeyword below.
+
         // Try mob first
         val mob = ctx.mobs.findInRoomByKeyword(roomId, cmd.target).firstOrNull()
         if (mob != null) {
