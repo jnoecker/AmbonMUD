@@ -1610,20 +1610,27 @@ export class WorldScene {
       const itemSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, itemCount));
       const totalItemWidth = (itemCount - 1) * itemSpacing;
       let itemX = w / 2 - totalItemWidth / 2;
+      // Vertical stagger so adjacent item labels don't collide, mirroring the
+      // mob label stagger. Cycles through up to 3 rows for 3+ items.
+      const itemStaggerStep = itemCount > 1 ? Math.min(32, itemSize * 0.26) : 0;
+      const itemStaggerRows = Math.min(itemCount, 3);
+      let itemIdx = 0;
       for (const { sprite, label, labelBg, hitArea } of this.itemSprites) {
+        const thisItemY = itemY + (itemIdx % itemStaggerRows) * itemStaggerStep;
         sprite.x = itemX;
-        sprite.y = itemY;
+        sprite.y = thisItemY;
         sprite.width = itemSize;
         sprite.height = itemSize;
         label.x = itemX;
-        label.y = itemY + itemSize / 2 + 4;
+        label.y = thisItemY + itemSize / 2 + 4;
         drawLabelPill(labelBg, label);
         hitArea.clear();
         hitArea.rect(0, 0, itemSize, itemSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
         hitArea.x = itemX - itemSize / 2;
-        hitArea.y = itemY - itemSize / 2;
+        hitArea.y = thisItemY - itemSize / 2;
         itemX += itemSpacing;
+        itemIdx += 1;
       }
     }
 
