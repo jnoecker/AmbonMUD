@@ -370,14 +370,36 @@ function App() {
   // as a flash. Server.Assets arrives at login, well before any in-game panel
   // opens, so a fire-and-forget preload here means those panels paint warm. Skip
   // inline data: URIs (already resolved, nothing to fetch).
+  //
+  // A transient failure during the login burst (CDN cold edge, a dropped
+  // connection, an HTTP/2 stream reset) used to pin the art off for the whole
+  // session: the URL was marked seen before the load resolved and never
+  // re-attempted, so the panel stuck on its gradient fallback until a full page
+  // refresh. Now each preload retries with backoff, and a terminal failure
+  // drops the URL from the seen-set so a later Server.Assets emit tries again.
   useEffect(() => {
+    let cancelled = false;
+    const warm = (url: string, attempt: number) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.onerror = () => {
+        if (cancelled) return;
+        if (attempt < 4) {
+          const delay = 500 * 2 ** attempt; // 0.5s, 1s, 2s, 4s
+          window.setTimeout(() => { if (!cancelled) warm(url, attempt + 1); }, delay);
+        } else {
+          // Give up warming for now, but let a future Server.Assets emit retry.
+          preloadedArt.delete(url);
+        }
+      };
+      img.src = url;
+    };
     for (const url of Object.values(state.serverAssets)) {
       if (typeof url !== "string" || url.startsWith("data:") || preloadedArt.has(url)) continue;
       preloadedArt.add(url);
-      const img = new Image();
-      img.decoding = "async";
-      img.src = url;
+      warm(url, 0);
     }
+    return () => { cancelled = true; };
   }, [state.serverAssets]);
 
   const sendCommand = (raw: string) => {
