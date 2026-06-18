@@ -197,11 +197,11 @@ AmbonMUD began as a plain telnet proof-of-concept and grew, across six generatio
 ![Quest log with an active quest](screenshots/subsystems/14-quests-panel.jpg)
 *Quest log with an active quest*
 
-## Social
-
 ### Chat board
 ![Chat board](screenshots/subsystems/16-chat.jpg)
 *The Social Board, mid-conversation on the server-wide Gossip channel — players coordinating a catacombs run. Five channels (Say, Tell, Gossip, Shout, OOC) share the one painted frame.*
+
+## Social
 
 ### Who's online
 ![Who's online](screenshots/subsystems/17-who.jpg)
@@ -314,9 +314,9 @@ the web client surfaces through the world itself.
 ![The Retired Professor Tavern](screenshots/academy/auringold_tavern.jpg)
 *Rest and recover at the Academy's inn*
 
-### The Chapel of the Last Lamp
-![The Chapel of the Last Lamp](screenshots/academy/catacomb_chapel.jpg)
-*The Lampkeeper tends the last warm light over a sealed door to the deep — the portal to a dungeon that rearranges itself nightly*
+### The Parlor of Borrowed Songs
+![The Parlor of Borrowed Songs](screenshots/academy/song_parlor.jpg)
+*Home of the jukebox that plays for the whole room*
 
 ### The Duel Ring
 ![The Duel Ring](screenshots/academy/duel_ring.jpg)
@@ -329,10 +329,6 @@ the web client surfaces through the world itself.
 ### The Almanac Terrace
 ![The Almanac Terrace](screenshots/academy/almanac_terrace.jpg)
 *Where the Academy's day/night clock, seasons, and weather turn overhead*
-
-### The Parlor of Borrowed Songs
-![The Parlor of Borrowed Songs](screenshots/academy/song_parlor.jpg)
-*Home of the jukebox that plays for the whole room*
 
 ## The Auringold Academy — All 128 Rooms
 
