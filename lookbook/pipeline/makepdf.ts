@@ -33,7 +33,8 @@ function codexItem(item: any[]): string {
 }
 function codexPages(sec: { title: string; lead: string; pages: any[][] }): string[] {
   return sec.pages.map((items, i) => {
-    const head = i === 0 ? `<h2>${sec.title}</h2><p class="codex-lead">${sec.lead}</p>` : "";
+    const lead = sec.lead ? `<p class="codex-lead">${sec.lead}</p>` : "";
+    const head = i === 0 ? `<h2>${sec.title}</h2>${lead}` : "";
     return `<div class="page codexpage"><div class="inner">${head}${items.map(codexItem).join("")}</div></div>`;
   });
 }
@@ -80,10 +81,50 @@ for (const sec of sections) {
 
   // Insert the codex (classes → races → figures) just before the login/creation
   // section, so the world primer sits up front with the gameplay intro.
-  if (sec.title === "Login &amp; Character Creation" || sec.title === "Login & Character Creation") {
+  const isLogin = sec.title === "Login &amp; Character Creation" || sec.title === "Login & Character Creation";
+  if (isLogin) {
     for (const key of ["classes", "races", "creatures", "chars"]) {
       for (const p of codexPages(codex[key])) pages.push(p);
     }
+  }
+
+  // The world map gets a page to itself — just the image, maximized, no header
+  // or caption.
+  if (sec.title === "The World of Ambon") {
+    const mapImg = (plates[0]?.html ?? sec.rest).match(/<img[^>]*>/)?.[0] ?? "";
+    pages.push(`<div class="page mappage">${mapImg}</div>`);
+    continue;
+  }
+
+  // Login & character creation: no section header. The three account screens
+  // (name entry, returning-character picker, new-character confirmation) ride
+  // together on one page; race and class selection follow as a 2-up plate page.
+  if (isLogin) {
+    const account = plates.slice(0, 3).map((p) => p.html).join("");
+    const selection = plates.slice(3).map((p) => p.html).join("");
+    page("loginpage", account);
+    if (selection) page("platepage", selection);
+    continue;
+  }
+
+  // World view: the adventurer's view opens alone with the section header; the
+  // two close-ups (vitals bar, room sign) share the next page, spaced apart.
+  if (sec.title === "The World View") {
+    page("platepage", h2 + plates[0].html);
+    if (plates.length > 1) {
+      pages.push(`<div class="page viewpair"><div class="inner-spread">${plates.slice(1).map((p) => p.html).join("")}</div></div>`);
+    }
+    continue;
+  }
+
+  // Games & diversions: pair the plates from the top so related diversions sit
+  // together (lottery + dice, jukebox + music box, riddle + treasure chest).
+  if (sec.title === "Games &amp; Diversions" || sec.title === "Games & Diversions") {
+    page("platepage", h2 + plates.slice(0, 2).map((p) => p.html).join(""));
+    for (let i = 2; i < plates.length; i += 2) {
+      page("platepage", plates.slice(i, i + 2).map((p) => p.html).join(""));
+    }
+    continue;
   }
 
   if (!plates.length && !figures.length) {
@@ -187,6 +228,20 @@ const doc = `<!doctype html><html><head><meta charset="utf-8"><style>
     border-bottom: 1.5px solid #a8916a; padding-bottom: 2pt; }
   .codex-origin-note { font-size: 9.5pt !important; font-style: italic; font-weight: 700 !important;
     color: #5a4628 !important; margin: 2pt 0 0.1in !important; }
+  /* Full-page world map: just the image, maximized within the sheet. The map is
+     a tall 9:16 portrait, so it is height-bound and the width follows. */
+  .mappage { padding: 0.1in; display: flex; align-items: center; justify-content: center; }
+  .mappage img { max-height: 10.8in; max-width: 8.3in; border-radius: 3px; border: 1px solid #8a7045; }
+  /* Login page: three landscape account screens stacked compactly, no header. */
+  .loginpage { padding: 0.65in 1.1in; }
+  .loginpage .inner { width: 100%; text-align: center; }
+  .loginpage .plate { margin: 0.06in 0; }
+  .loginpage .plate img { width: 4.15in; }
+  .loginpage .plate h3 { font-size: 11.5pt; margin: 0 0 3pt; }
+  .loginpage .plate .cap { font-size: 8.5pt; margin: 3pt 0 0 !important; }
+  /* World-view close-ups page: spread the two small plates apart vertically. */
+  .viewpair .inner-spread { display: flex; flex-direction: column; justify-content: space-evenly;
+    align-items: center; height: 100%; text-align: center; }
 </style></head><body>${pages.join("\n")}</body></html>`;
 writeFileSync(`${dir}/lookbook.html`, doc);
 

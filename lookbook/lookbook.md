@@ -1,8 +1,7 @@
 # AmbonMUD Lookbook
 
-A visual tour of AmbonMUD — every major subsystem of the web client, representative
-rooms from across the Auringold world, and all 128 rooms of the Auringold Academy.
-Captured from a live server running the full Auringold dataset (Ambon).
+A visual tour of AmbonMUD — a cozy adventure game set in the world of Ambon, where
+players are called from beyond the veil to become its heroes.
 
 ## The Game at a Glance
 
@@ -56,8 +55,6 @@ board keep it social.
 
 ## Under the Hood
 
-A one-page technical orientation for software engineers.
-
 **Server.** Kotlin on JDK 21. A single-threaded game engine advances the world on a
 100&nbsp;ms tick; all gameplay state lives inside the engine, and the engine speaks to
 the outside world only through typed inbound/outbound event buses — transports contain
@@ -77,6 +74,21 @@ art asset keys, delivers URLs via GMCP, and the client locks each panel's aspect
 to the art and seats live controls onto the painting with percentage insets — with a
 CSS-only fallback when art is absent.
 
+**Gameplay systems.** A sealed `Command` hierarchy of roughly two hundred verbs parses
+into typed inbound events that a thin router dispatches across three dozen focused
+handlers — combat, quests, crafting and enchanting, housing and guilds, trading and the
+auction house, pets, dueling, and the rest. NPCs run behavior trees and branching,
+voice-acted dialogue; class trainers, multi-classing, abilities and status effects,
+factions with reputation tiers, achievements, and special currencies all layer onto the
+same tick loop. A complete pacifist progression path advances through illumination
+rather than combat, sharing the engine with everything else.
+
+**Realtime delivery.** Outbound text and GMCP updates pass through a router that applies
+backpressure and coalesces consecutive prompts before they reach a session, with a
+final-message-then-close path for clean disconnects. The same engine code runs unchanged
+whether the event bus behind it is in-process (standalone), Redis-backed (multi-process),
+or gRPC (gateway↔engine) — the engine never learns which.
+
 **World as data.** Zones, rooms, mobs, items, shops, trainers, quests, recipes,
 puzzles, and dungeons are declarative YAML validated by a strict loader. The world
 ships separately from the binary: production assembles its dataset (config overlay +
@@ -87,7 +99,15 @@ AI art and ElevenLabs voice generation with content-addressed publishing to R2/C
 
 **Persistence.** Pluggable player store — YAML files with atomic writes for simple
 deployments or PostgreSQL (Flyway-migrated) for production — wrapped in a
-write-coalescing worker and an optional Redis cache.
+write-coalescing worker and an optional Redis cache. Schema changes ship as Flyway
+migrations; a coverage test fails the build if a persisted field is added without its
+mapping on both sides.
+
+**Testing.** The suite runs on a deterministic injected clock and in-memory repositories,
+so time and persistence are reproducible; database tests use H2 in PostgreSQL mode with
+no Docker required. Coroutine tests advance virtual time rather than sleeping, and the
+world loader is exercised against fixtures of both valid and deliberately invalid zone
+files to keep validation strict.
 
 **Operations.** Docker images deployed via GitHub Actions with health-checked restarts,
 an admin HTTP API for live reloads and moderation, Prometheus metrics, and CI running
@@ -107,8 +127,6 @@ AmbonMUD began as a plain telnet proof-of-concept and grew, across six generatio
 <figure class="evo" style="display:inline-block;width:31.5%;margin:0.5%;vertical-align:top;page-break-inside:avoid"><img src="screenshots/evolution/webclient-v6.jpg" alt="v6 painted client" style="width:100%"><figcaption style="font-size:7.5pt;text-align:center;margin-top:2pt">v6 — Fully painted panels (current)</figcaption></figure>
 
 ## Login & Character Creation
-
-The painted login flow: name entry, returning-character picker, and the race and class galleries.
 
 ### Name entry
 ![Name entry — the cottage login scene with the Start Demo side panel](screenshots/subsystems/01-login-name.jpg)

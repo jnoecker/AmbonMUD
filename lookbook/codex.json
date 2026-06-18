@@ -1,7 +1,7 @@
 {
 "classes": {
-"title": "The Six Classes of Auringold",
-"lead": "The path a hero walks into the world. Each class favors a primary attribute and a way of facing trouble.",
+"title": "The Six Classes of Ambon",
+"lead": "",
 "pages": [
 [
 [
@@ -45,13 +45,13 @@
 },
 "races": {
 "title": "The Peoples of Ambon",
-"lead": "Nine peoples are born to adventurers, each shaped by a different hand at the world’s making.",
+"lead": "",
 "pages": [
 [
 [
 "origin",
 "The Children of the Creator",
-"Shaped at the dawn of the world; their kin, the luminous Alorae, descended as his Divine Heralds."
+"Woven into being by the Creator at the dawn of creation."
 ],
 [
 "entry",
@@ -86,25 +86,25 @@
 [
 "origin",
 "The Children of Aineroia",
-"The goddess who rose from a mortal Archae healer; her line includes the moonlight horses, the Luneqrae."
+"The goddess who rose from a mortal Archae healer."
 ],
 [
 "entry",
 "race_lustriae.jpg",
 "Lustriae",
-"Eternally youthful fae and her firstborn, who perceive time as a living current and flit between moments with curious playfulness."
+"Eternally youthful fae who perceive time as a living current and flit between moments with curious playfulness."
 ],
 [
 "entry",
 "race_aetherae.jpg",
 "Aetherae",
-"Beings of shadow and mist born from Aineroia’s own shadow — shapeshifters of the far north who tend the moonlight horses."
+"Beings of shadow and mist born from Aineroia’s own shadow — shapeshifters of the far north who tend the Luneqrae."
 ],
 [
 "entry",
 "race_pyrae.jpg",
 "Pyrae",
-"Sons of the Phoenix, beings of living flame born from stories of rebirth and resurrection."
+"Children of the Phoenix, beings of living flame born from stories of rebirth and resurrection."
 ],
 [
 "entry",
@@ -129,7 +129,7 @@
 },
 "creatures": {
 "title": "Creatures of Ambon",
-"lead": "More of the peoples and creatures of Ambon, beyond the playable nine.",
+"lead": "",
 "pages": [
 [
 [
@@ -167,7 +167,7 @@
 },
 "chars": {
 "title": "Figures of Ambon",
-"lead": "Gods, makers, and rulers whose choices shaped the world the Academy now teaches.",
+"lead": "",
 "pages": [
 [
 [
@@ -206,7 +206,7 @@
 "entry",
 "char_caemyr.jpg",
 "Caemyr",
-"A visiting scholar-god known in his own reality as the Founder, who first codified the threads of creation into Arcane magic. Mentor to King Ambuoroko and keeper of the Athenaeum Unbound."
+"A visiting scholar-god who helped to repair the arcane scar left by the ascension of Aineroia. Mentor to Ambuoroko."
 ],
 [
 "entry",
@@ -268,7 +268,7 @@
 "entry",
 "char_kolksprut.jpg",
 "Kolksprut",
-"Trickster, traveler, and gambler — a cuttlefish who cultivated his way from beast to godhood on sheer thirst for knowledge, then won immortality from the Naraxian on a single coin-flip. A shapeshifting weaver of illusions and god of luck: the one turn of chance even the all-knowing cannot foresee."
+"Trickster, traveler, and gambler — a cuttlefish who cultivated his way from beast to godhood on sheer thirst for knowledge, then won immortality from the Naraxian on a single coin-flip. A shapeshifting weaver of illusions and god of luck."
 ],
 [
 "entry",
