@@ -86,6 +86,8 @@ for (const sec of sections) {
     for (const key of ["classes", "races", "creatures", "chars"]) {
       for (const p of codexPages(codex[key])) pages.push(p);
     }
+    // A breath between the gods/figures and the login flow.
+    page("blankpage", "");
   }
 
   // The world map gets a page to itself — just the image, maximized, no header
@@ -124,6 +126,8 @@ for (const sec of sections) {
     for (let i = 2; i < plates.length; i += 2) {
       page("platepage", plates.slice(i, i + 2).map((p) => p.html).join(""));
     }
+    // A breath after the treasure chest closes out the diversions.
+    page("blankpage", "");
     continue;
   }
 

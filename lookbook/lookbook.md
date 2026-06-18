@@ -221,11 +221,11 @@ AmbonMUD began as a plain telnet proof-of-concept and grew, across six generatio
 ### Help compendium
 ![Help compendium](screenshots/subsystems/22-help.jpg)
 
-## Commerce & Services
-
 ### Shop
 ![Shop](screenshots/subsystems/30-shop.jpg)
 *Buying and selling at Madam Daydreams' General Store*
+
+## Commerce & Services
 
 ### Bank vault
 ![Bank vault](screenshots/subsystems/33-bank.jpg)
