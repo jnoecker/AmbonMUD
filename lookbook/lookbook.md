@@ -285,7 +285,7 @@ AmbonMUD began as a plain telnet proof-of-concept and grew, across six generatio
 
 ### Combat
 ![Combat](screenshots/subsystems/47-combat-1.jpg)
-*Sparring a practice dummy in the Proving Yard — damage toasts, enemy vitals, and the flee escape hatch*
+*Facing the storm-god A Dream of Maelsang in the Tempest Between Worlds — damage toasts, enemy vitals, and the flee escape hatch*
 
 ### Combat continues
 ![Combat continues](screenshots/subsystems/48-combat-2.jpg)
