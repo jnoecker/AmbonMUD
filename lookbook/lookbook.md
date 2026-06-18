@@ -132,14 +132,6 @@ AmbonMUD began as a plain telnet proof-of-concept and grew, across six generatio
 ![Name entry — the cottage login scene with the Start Demo side panel](screenshots/subsystems/01-login-name.jpg)
 *Name entry — the cottage login scene with the Start Demo side panel*
 
-### Welcome Back
-![Welcome Back — saved-character picker](screenshots/subsystems/02-login-picker.jpg)
-*Welcome Back — saved-character picker*
-
-### New-character confirmation
-![New-character confirmation](screenshots/subsystems/03-login-confirm.jpg)
-*New-character confirmation*
-
 ### Race selection
 ![Race selection — nine races of Ambon in their painted niches](screenshots/subsystems/04-race-select.jpg)
 *Race selection — nine races of Ambon in their painted niches*

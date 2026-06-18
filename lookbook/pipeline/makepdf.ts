@@ -98,12 +98,11 @@ for (const sec of sections) {
     continue;
   }
 
-  // Login & character creation: no section header. The three account screens
-  // (name entry, returning-character picker, new-character confirmation) ride
-  // together on one page; race and class selection follow as a 2-up plate page.
+  // Login & character creation: no section header. The name-entry screen sits
+  // alone on its own page; race and class selection follow as a 2-up plate page.
   if (isLogin) {
-    const account = plates.slice(0, 3).map((p) => p.html).join("");
-    const selection = plates.slice(3).map((p) => p.html).join("");
+    const account = plates.slice(0, 1).map((p) => p.html).join("");
+    const selection = plates.slice(1).map((p) => p.html).join("");
     page("loginpage", account);
     if (selection) page("platepage", selection);
     continue;
@@ -236,13 +235,13 @@ const doc = `<!doctype html><html><head><meta charset="utf-8"><style>
      a tall 9:16 portrait, so it is height-bound and the width follows. */
   .mappage { padding: 0.1in; display: flex; align-items: center; justify-content: center; }
   .mappage img { max-height: 10.8in; max-width: 8.3in; border-radius: 3px; border: 1px solid #8a7045; }
-  /* Login page: three landscape account screens stacked compactly, no header. */
-  .loginpage { padding: 0.65in 1.1in; }
+  /* Login page: the name-entry screen alone, centered, no header. */
+  .loginpage { padding: 0.9in 1.1in; }
   .loginpage .inner { width: 100%; text-align: center; }
   .loginpage .plate { margin: 0.06in 0; }
-  .loginpage .plate img { width: 4.15in; }
-  .loginpage .plate h3 { font-size: 11.5pt; margin: 0 0 3pt; }
-  .loginpage .plate .cap { font-size: 8.5pt; margin: 3pt 0 0 !important; }
+  .loginpage .plate img { width: 6in; }
+  .loginpage .plate h3 { font-size: 14pt; margin: 0 0 6pt; }
+  .loginpage .plate .cap { font-size: 10pt; margin: 7pt 0 0 !important; }
   /* World-view close-ups page: spread the two small plates apart vertically. */
   .viewpair .inner-spread { display: flex; flex-direction: column; justify-content: space-evenly;
     align-items: center; height: 100%; text-align: center; }
