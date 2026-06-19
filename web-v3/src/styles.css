@@ -1,6 +1,14 @@
 :root {
   /* ── Fonts ────────────────────────────────────────────── */
   --font-display: "Cormorant Garamond", "Georgia", serif;
+  /* Solid-serif companion for short labels painted directly onto parchment
+     (creature names, saved-character names). Cormorant Garamond is a delicate
+     high-contrast serif: at label sizes its thin strokes read as washed-out
+     grey, and because it loads cross-origin from Google Fonts a hard refresh
+     can swap between it and the heavier Georgia fallback, so the same label
+     looks grey on one load and black on the next. These labels pin the heavier
+     system serif (no web font, no swap) so they always read solid and dark. */
+  --font-display-solid: "Georgia", "Times New Roman", serif;
   --font-body: "Nunito Sans", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Mono", monospace;
 
@@ -15198,7 +15206,7 @@ body {
   box-shadow: none;
   backdrop-filter: none;
   color: #45300f;
-  font-family: var(--font-display);
+  font-family: var(--font-display-solid);
   font-weight: 700;
   font-size: 2.6cqh;
 }
@@ -21273,7 +21281,7 @@ html:has(.game-shell),
 
 .mm-name {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display-solid);
   font-size: 1.7rem;
   font-weight: 700;
   line-height: 1.1;
@@ -21294,7 +21302,7 @@ html:has(.game-shell),
 }
 
 .mm-meta {
-  font-family: var(--font-display);
+  font-family: var(--font-display-solid);
   font-size: 0.92rem;
   color: #6b5640;
   letter-spacing: 0.02em;
