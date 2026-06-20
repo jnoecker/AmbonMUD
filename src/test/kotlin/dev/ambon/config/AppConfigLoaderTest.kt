@@ -599,6 +599,66 @@ class AppConfigLoaderTest {
         valid.validated() // should not throw
     }
 
+    private fun configWithRacialAbility(ability: RacialAbilityConfig): AppConfig =
+        AppConfig(
+            engine = EngineConfig(
+                races = RaceEngineConfig(
+                    definitions = mapOf(
+                        "testrace" to RaceDefinitionConfig(displayName = "Test", racialAbility = ability),
+                    ),
+                ),
+            ),
+            world = validWorld,
+        )
+
+    @Test
+    fun `validation rejects racial ability with unknown kind`() {
+        val invalid = configWithRacialAbility(RacialAbilityConfig(kind = "NOT_A_KIND"))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects low-health racial ability with no trigger threshold`() {
+        val invalid =
+            configWithRacialAbility(
+                RacialAbilityConfig(kind = "PYRAE_IMMOLATE", triggerHealthPct = 0, aoeDamagePctOfMaxHp = 0.6),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects dazzle racial ability without a stun status id`() {
+        val invalid =
+            configWithRacialAbility(
+                RacialAbilityConfig(kind = "AURELIA_DAZZLE", triggerHealthPct = 15, stunStatusId = null),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects summon racial ability without a pet template`() {
+        val invalid =
+            configWithRacialAbility(
+                RacialAbilityConfig(kind = "MYCORAE_SPORES", triggerHealthPct = 25, petTemplateKey = null),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation accepts a fully configured racial ability`() {
+        val valid =
+            configWithRacialAbility(
+                RacialAbilityConfig(
+                    kind = "MYCORAE_SPORES",
+                    triggerHealthPct = 25,
+                    petTemplateKey = "spore_mushroom",
+                    petCountMin = 1,
+                    petCountMax = 3,
+                ),
+            )
+        valid.validated() // should not throw
+    }
+
     @Test
     fun `multiclass maxClasses decodes JavaScript MAX_SAFE_INTEGER sentinel`() {
         // Regression: prod overlay YAML carried `maxClasses: 9007199254740991` (Number.MAX_SAFE_INTEGER,

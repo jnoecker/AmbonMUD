@@ -197,6 +197,22 @@ data class AppConfig(
                     "$prefix.triggerHealthPct must be 1..100 for low-health ability '$kind'"
                 }
             }
+            // Fields whose absence makes the ability silently do nothing at runtime (the system
+            // bails out early when they are missing) are required up front so a misconfigured race
+            // fails fast at boot rather than no-op'ing mid-fight.
+            when (kind) {
+                dev.ambon.domain.RacialAbilityKind.AURELIA_DAZZLE ->
+                    require(!ability.stunStatusId.isNullOrBlank()) {
+                        "$prefix.stunStatusId is required for '$kind'"
+                    }
+                dev.ambon.domain.RacialAbilityKind.MYCORAE_SPORES,
+                dev.ambon.domain.RacialAbilityKind.ARCHAE_DRENGARIAE,
+                ->
+                    require(!ability.petTemplateKey.isNullOrBlank()) {
+                        "$prefix.petTemplateKey is required for '$kind'"
+                    }
+                else -> Unit
+            }
         }
     }
 
