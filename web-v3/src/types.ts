@@ -839,6 +839,19 @@ export interface FleeNotification {
   receivedAt: number;
 }
 
+/**
+ * Top-right toast surfaced when a racial passive cheats death — a lethal-blow
+ * save (Kitsarae reversal, Lithae stoneform, Aetherae phase, Lustriae timeslip).
+ * Built from `Char.Combat.Event` `abilityCast` packets whose `abilityId` is
+ * namespaced `racial:save:`. Low-health racial procs only reach the combat log.
+ */
+export interface RacialProcNotification {
+  id: string;
+  abilityName: string;
+  text: string;
+  receivedAt: number;
+}
+
 export interface QuestRewardItem {
   itemId: string;
   displayName: string;

@@ -53,6 +53,7 @@ import { LevelUpBanner } from "./components/LevelUpBanner";
 import { QuestCompleteToast } from "./components/QuestCompleteToast";
 import { CombatVictoryToast } from "./components/CombatVictoryToast";
 import { FleeToast } from "./components/FleeToast";
+import { RacialProcToast } from "./components/RacialProcToast";
 import { LyricToasts } from "./components/LyricToasts";
 import { buildLyricSources } from "./components/lyricSources";
 import { LoginModal } from "./canvas/LoginModal";
@@ -2369,6 +2370,14 @@ function App() {
         notifications={state.fleeNotifications}
         onDismiss={(id) =>
           state.setFleeNotifications((prev) => prev.filter((n) => n.id !== id))
+        }
+      />
+
+      {/* Racial proc toast — surfaces lethal-blow saves (cheated-death passives). */}
+      <RacialProcToast
+        notifications={state.racialProcNotifications}
+        onDismiss={(id) =>
+          state.setRacialProcNotifications((prev) => prev.filter((n) => n.id !== id))
         }
       />
 

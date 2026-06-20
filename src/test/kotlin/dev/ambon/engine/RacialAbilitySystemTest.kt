@@ -7,6 +7,7 @@ import dev.ambon.domain.RacialAbilityKind
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
@@ -111,6 +112,37 @@ class RacialAbilitySystemTest {
         assertTrue(texts.any { it.contains("engulfed in flames") }, "expected immolation AoE, got: $texts")
         assertTrue(mob.hp <= 200 - 60, "mob should take >= 60 AoE damage, hp=${mob.hp}")
         assertTrue(fixture.players.get(sid)!!.racialAbilityCooldownUntilMs > 0L, "cooldown should be set")
+    }
+
+    @Test
+    fun `racial proc emits an AbilityCast combat event so the web client surfaces it`() = runTest {
+        val fixture = CombatTestFixture()
+        val racial = fixture.buildRacialAbilities(
+            registryWith(
+                RacialAbility(
+                    kind = RacialAbilityKind.PYRAE_IMMOLATE,
+                    displayName = "Immolation",
+                    cooldownMs = 120_000L,
+                    triggerHealthPct = 10,
+                    aoeDamagePctOfMaxHp = 0.6,
+                    selfMessage = "You erupt in flame!",
+                ),
+            ),
+        )
+        val combatEvents = mutableListOf<Pair<SessionId, CombatEvent>>()
+        racial.onCombatEvent = { sid, event -> combatEvents.add(sid to event) }
+        val (sid, _, combat) = fixture.engage(racial, playerMaxHp = 100, playerHp = 8, mob = enemyMob(hp = 200))
+
+        fixture.tickCombat(combat)
+
+        // The self message reaches the web client as a combat-log/canvas event carrying the same text,
+        // not just the telnet-only SendText.
+        val cast = combatEvents.map { it.second }.filterIsInstance<CombatEvent.AbilityCast>()
+            .firstOrNull { it.text == "You erupt in flame!" }
+        assertTrue(cast != null, "expected an AbilityCast carrying the self message, got: $combatEvents")
+        assertEquals(sid, combatEvents.first { it.second is CombatEvent.AbilityCast }.first)
+        assertTrue(cast!!.targetIsPlayer, "a self-proc targets the triggering player")
+        assertEquals("racial:pyrae_immolate", cast.abilityId)
     }
 
     @Test
@@ -263,6 +295,34 @@ class RacialAbilitySystemTest {
         assertEquals(80, fixture.players.get(sid)!!.hp, "blow should become a heal of equal size")
         assertTrue(combat.isInCombat(sid), "Kitsarae keeps fighting")
         assertTrue(fixture.players.get(sid)!!.racialAbilityCooldownUntilMs > 0L)
+    }
+
+    @Test
+    fun `a lethal-blow save tags its combat event as a death-cheat for the toast`() = runTest {
+        val fixture = CombatTestFixture()
+        val racial = fixture.buildRacialAbilities(
+            registryWith(
+                RacialAbility(
+                    kind = RacialAbilityKind.KITSARAE_REVERSAL,
+                    displayName = "Reversal of Fate",
+                    cooldownMs = 180_000L,
+                    selfMessage = "Death reverses — the blow becomes a healing tide.",
+                ),
+            ),
+        )
+        val combatEvents = mutableListOf<CombatEvent>()
+        racial.onCombatEvent = { _, event -> combatEvents.add(event) }
+        val (_, _, combat) =
+            fixture.engage(racial, playerMaxHp = 100, playerHp = 30, mob = enemyMob(damage = DamageRange(50, 50)))
+
+        fixture.tickCombat(combat)
+
+        // The `racial:save:` prefix is what the web client keys the "cheated death" toast off of; a
+        // low-health proc would instead be `racial:` and only reach the combat log.
+        val save = combatEvents.filterIsInstance<CombatEvent.AbilityCast>()
+            .firstOrNull { it.abilityId == "racial:save:kitsarae_reversal" }
+        assertTrue(save != null, "lethal-blow save should be tagged racial:save:, got: $combatEvents")
+        assertEquals("Death reverses — the blow becomes a healing tide.", save!!.text)
     }
 
     @Test

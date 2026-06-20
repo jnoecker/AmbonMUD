@@ -6,6 +6,7 @@ import dev.ambon.domain.RacialAbilityKind
 import dev.ambon.domain.RacialTrigger
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.engine.status.StatusEffectSystem
@@ -69,6 +70,14 @@ class RacialAbilitySystem(
     var combatBridge: RacialCombatBridge? = null
 
     /**
+     * Emits a structured combat event for the triggering player. Wired by GameEngine to the same
+     * `Char.Combat.Event` GMCP path the rest of combat uses, so racial procs reach the web client's
+     * scrolling combat log and floating canvas text — a bare [OutboundEvent.SendText] only renders
+     * on telnet and is invisible in the graphical client.
+     */
+    var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
+
+    /**
      * Summons a racial pet. Wired by GameEngine, which knows how to scale pet stats to the owner and
      * broadcast the new mob to the room. `replaceExisting=false` lets multiple pets coexist (spores).
      * Returns the spawned pet, or null if summoning failed.
@@ -105,12 +114,44 @@ class RacialAbilitySystem(
         player: PlayerState,
         ability: RacialAbility,
     ) {
-        if (ability.selfMessage.isNotEmpty()) {
-            outbound.send(OutboundEvent.SendText(player.sessionId, ability.selfMessage))
-        }
+        // A LETHAL_BLOW proc only ever announces on a successful save, so flag it as a death-cheat so
+        // the web client pops a dedicated toast (a turned-around low-health fight just goes to the log).
+        emitProc(player.sessionId, ability, ability.selfMessage, deathCheat = ability.trigger == RacialTrigger.LETHAL_BLOW)
         if (ability.roomMessage.isNotEmpty()) {
             combatBridge?.broadcastToRoomExcept(player.sessionId, ability.roomMessage.replace("{player}", player.name))
         }
+    }
+
+    /**
+     * Surfaces a racial proc's narrative line to the triggering player on both transports: an
+     * [OutboundEvent.SendText] for the telnet/terminal stream, and a [CombatEvent.AbilityCast] so the
+     * web client renders it in the combat log and as floating canvas text. The combat log prefers the
+     * server-rendered [text], so the player sees the exact same line on both clients.
+     *
+     * When [deathCheat] is true the ability id is namespaced `racial:save:` (vs `racial:`) so the web
+     * client can pop a triumphant "cheated death" toast for the lethal-blow saves specifically.
+     */
+    private suspend fun emitProc(
+        sessionId: SessionId,
+        ability: RacialAbility,
+        text: String,
+        deathCheat: Boolean = false,
+    ) {
+        if (text.isEmpty()) return
+        outbound.send(OutboundEvent.SendText(sessionId, text))
+        val idPrefix = if (deathCheat) "racial:save:" else "racial:"
+        onCombatEvent(
+            sessionId,
+            CombatEvent.AbilityCast(
+                abilityId = "$idPrefix${ability.kind.name.lowercase()}",
+                abilityName = ability.displayName,
+                targetName = null,
+                targetId = null,
+                targetIsPlayer = true,
+                sourceIsPlayer = true,
+                text = text,
+            ),
+        )
     }
 
     // ── Low-health trigger ───────────────────────────────────────────────
@@ -271,12 +312,10 @@ class RacialAbilitySystem(
             // The extra attack felled the foe before its blow could land — the player is unharmed.
             player.hp = preHitHp.coerceAtLeast(1)
             dirtyNotifier.playerVitalsDirty(sessionId)
-            outbound.send(
-                OutboundEvent.SendText(sessionId, "Time snaps back into place — ${attacker.name} falls and you stand unscathed."),
-            )
+            emitProc(sessionId, ability, "Time snaps back into place — ${attacker.name} falls and you stand unscathed.", deathCheat = true)
             true
         } else {
-            outbound.send(OutboundEvent.SendText(sessionId, "...but it was not enough to fell ${attacker.name}."))
+            emitProc(sessionId, ability, "...but it was not enough to fell ${attacker.name}.")
             false
         }
     }

@@ -1102,6 +1102,9 @@ class GameEngine(
         // bridge, and summon their pets through this callback so pet stats scale to the owner and
         // the new mob is broadcast to the room immediately.
         racialAbilitySystem.combatBridge = combatSystem
+        // Racial procs surface their narrative lines through the same combat-event GMCP path as the
+        // rest of combat, so the web client shows them in the combat log / canvas (not just telnet).
+        racialAbilitySystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
         racialAbilitySystem.summonRacialPet = { sid, templateKey, durationMs, replaceExisting ->
             val player = players.get(sid)
             if (player == null) {
