@@ -81,6 +81,22 @@ data class PlayerState(
     var recallCooldownUntilMs: Long = 0L,
     /** Epoch-ms of the last stat/ability respec. Persisted so the cooldown survives logout. */
     var lastRespecAtMs: Long = 0L,
+    /**
+     * Epoch-ms after which this player's race-specific passive ability can fire again. Persisted
+     * (unlike runtime ability cooldowns) precisely because the racial passive cheats death — a relog
+     * must not reset the cooldown mid-fight and let it be re-triggered. See [RacialAbilitySystem].
+     */
+    var racialAbilityCooldownUntilMs: Long = 0L,
+    /**
+     * Epoch-ms until which the player cannot be selected as a mob's attack target (Aetherae phase,
+     * Lithae stone form). Runtime-only; not persisted.
+     */
+    var untargetableUntilMs: Long = 0L,
+    /** Epoch-ms until which the player's outgoing damage is multiplied by [damageBoostMultiplier]
+     *  (Ophirae wrath). Runtime-only; not persisted. */
+    var damageBoostUntilMs: Long = 0L,
+    /** Outgoing-damage multiplier applied while [damageBoostUntilMs] is in the future. */
+    var damageBoostMultiplier: Double = 1.0,
     var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
     var discoveredRecipes: MutableSet<String> = mutableSetOf(),
     var craftingSpecialization: String? = null,
@@ -244,6 +260,13 @@ fun PlayerState.takeDamage(amount: Int) {
     hp = (hp - amount).coerceAtLeast(0)
 }
 
+/** True while the player can't be picked as a mob's target (Aetherae phase / Lithae stone form). */
+fun PlayerState.isUntargetable(nowMs: Long): Boolean = nowMs < untargetableUntilMs
+
+/** Outgoing-damage multiplier from an active damage buff (Ophirae wrath), else 1.0. */
+fun PlayerState.outgoingDamageMultiplier(nowMs: Long): Double =
+    if (nowMs < damageBoostUntilMs) damageBoostMultiplier else 1.0
+
 /** Increases mana by [amount], clamped to [maxMana]. Returns `true` if mana actually changed. */
 fun PlayerState.healMana(amount: Int): Boolean {
     val new = (mana + amount).coerceAtMost(maxMana)
@@ -333,6 +356,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         autopeekEnabled = autopeekEnabled,
         wimpyThresholdPct = wimpyThresholdPct,
         lastRespecAtMs = lastRespecAtMs,
+        racialAbilityCooldownUntilMs = racialAbilityCooldownUntilMs,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -401,6 +425,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         autopeekEnabled = autopeekEnabled,
         wimpyThresholdPct = wimpyThresholdPct,
         lastRespecAtMs = lastRespecAtMs,
+        racialAbilityCooldownUntilMs = racialAbilityCooldownUntilMs,
     )
 }
 

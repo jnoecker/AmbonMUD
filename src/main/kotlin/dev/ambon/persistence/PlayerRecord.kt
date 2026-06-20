@@ -108,6 +108,9 @@ data class PlayerRecord(
     val wimpyThresholdPct: Int = 10,
     /** Epoch-ms of the last stat/ability respec. 0 means never respec'd. */
     val lastRespecAtMs: Long = 0L,
+    /** Epoch-ms after which the race-specific passive ability can fire again. Persisted so a relog
+     *  can't reset a death-cheating cooldown mid-fight. */
+    val racialAbilityCooldownUntilMs: Long = 0L,
     /** Persisted dialogue-flag set used to gate quests behind prior conversations. */
     val dialogueFlags: Set<String> = emptySet(),
     /** Zones whose intro cinematic this player has already watched (auto-plays once per zone). */
