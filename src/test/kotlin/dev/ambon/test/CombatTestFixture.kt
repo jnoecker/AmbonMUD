@@ -18,6 +18,8 @@ import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.RaceRegistry
+import dev.ambon.engine.RacialAbilitySystem
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectRegistry
@@ -89,6 +91,7 @@ class CombatTestFixture(
         classRegistry: PlayerClassRegistry? = null,
         onRoomItemsChanged: suspend (RoomId) -> Unit = { _ -> },
         petSystem: PetSystem? = null,
+        racialAbilitySystem: RacialAbilitySystem? = null,
     ): CombatSystem {
         require(minDamage == maxDamage) {
             "Test fixture damage range collapsed to a single value (was $minDamage..$maxDamage). " +
@@ -122,7 +125,11 @@ class CombatTestFixture(
             ),
             classRegistry = classRegistry,
             petSystem = petSystem,
-        )
+            racialAbilitySystem = racialAbilitySystem,
+        ).also { combat ->
+            // Mirror GameEngine: the racial system reaches back into combat through the bridge.
+            racialAbilitySystem?.combatBridge = combat
+        }
     }
 
     /**
@@ -171,6 +178,22 @@ class CombatTestFixture(
             dirtyNotifier = DirtyNotifier.NO_OP,
         )
     }
+
+    /** Build a [RacialAbilitySystem] wired to this fixture, with [raceRegistry] supplying race defs. */
+    fun buildRacialAbilities(
+        raceRegistry: RaceRegistry,
+        statusEffects: StatusEffectSystem? = null,
+        rng: Random = Random(1),
+        tickMillis: Long = 1_000L,
+    ): RacialAbilitySystem =
+        RacialAbilitySystem(
+            raceRegistry = raceRegistry,
+            outbound = outbound,
+            dirtyNotifier = DirtyNotifier.NO_OP,
+            statusEffects = statusEffects,
+            rng = rng,
+            tickMillis = tickMillis,
+        )
 }
 
 /**

@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.RacialAbility
+import dev.ambon.domain.RacialAbilityKind
 import dev.ambon.domain.RacialTrigger
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
@@ -128,11 +129,11 @@ class RacialAbilitySystem(
         if (onCooldown(player, nowMs)) return
         if (!atOrBelowThreshold(player, ability)) return
         when (ability.kind) {
-            dev.ambon.domain.RacialAbilityKind.PYRAE_IMMOLATE -> fireImmolate(sessionId, player, ability, nowMs)
-            dev.ambon.domain.RacialAbilityKind.AURELIA_DAZZLE -> fireDazzle(sessionId, player, ability, nowMs)
-            dev.ambon.domain.RacialAbilityKind.MYCORAE_SPORES -> fireSpores(sessionId, player, ability, nowMs)
-            dev.ambon.domain.RacialAbilityKind.ARCHAE_DRENGARIAE -> fireDrengariae(sessionId, player, ability, nowMs)
-            dev.ambon.domain.RacialAbilityKind.OPHIRAE_WRATH -> fireWrath(sessionId, player, ability, nowMs)
+            RacialAbilityKind.PYRAE_IMMOLATE -> fireImmolate(sessionId, player, ability, nowMs)
+            RacialAbilityKind.AURELIA_DAZZLE -> fireDazzle(sessionId, player, ability, nowMs)
+            RacialAbilityKind.MYCORAE_SPORES -> fireSpores(sessionId, player, ability, nowMs)
+            RacialAbilityKind.ARCHAE_DRENGARIAE -> fireDrengariae(sessionId, player, ability, nowMs)
+            RacialAbilityKind.OPHIRAE_WRATH -> fireWrath(sessionId, player, ability, nowMs)
             else -> Unit
         }
     }
@@ -231,10 +232,10 @@ class RacialAbilitySystem(
         if (ability.trigger != RacialTrigger.LETHAL_BLOW) return false
         if (onCooldown(player, nowMs)) return false
         return when (ability.kind) {
-            dev.ambon.domain.RacialAbilityKind.KITSARAE_REVERSAL -> fireReversal(player, ability, blowDamage, preHitHp, nowMs)
-            dev.ambon.domain.RacialAbilityKind.LUSTRIAE_TIMESLIP -> fireTimeslip(sessionId, player, ability, attacker, preHitHp, nowMs)
-            dev.ambon.domain.RacialAbilityKind.LITHAE_STONEFORM -> fireStoneform(sessionId, player, ability, preHitHp, nowMs)
-            dev.ambon.domain.RacialAbilityKind.AETHERAE_PHASE -> firePhase(player, ability, preHitHp, nowMs)
+            RacialAbilityKind.KITSARAE_REVERSAL -> fireReversal(player, ability, blowDamage, preHitHp, nowMs)
+            RacialAbilityKind.LUSTRIAE_TIMESLIP -> fireTimeslip(sessionId, player, ability, attacker, preHitHp, nowMs)
+            RacialAbilityKind.LITHAE_STONEFORM -> fireStoneform(sessionId, player, ability, preHitHp, nowMs)
+            RacialAbilityKind.AETHERAE_PHASE -> firePhase(player, ability, preHitHp, nowMs)
             else -> false
         }
     }
