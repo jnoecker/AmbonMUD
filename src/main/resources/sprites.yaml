@@ -1,301 +1,1893 @@
 sprites:
-  HUMAN_WARRIOR_male:
-    displayName: Human Warrior (male)
+  kvarcgagap:
+    displayName: Kvarcgagap
+    description: "An ancient, primordial being from outside of Ambon. God of bedrock, caverns, precious gems and crystals,
+      metal ores, and everything glittering under the ground. A force of nature, he most often takes the form of a
+      shimmering liquid the consistency of quicksilver, but shimmering like liquid opal. In this form, he travels freely
+      through solid stone, sometimes as a trickle and other times as a great deluge. Sometimes leaving no trail and
+      others carving massive underground caverns and seeding the deep places with crystals and metals. "
+    category: staff
+    sortOrder: 1800
+    requirements:
+      - type: staff
+    image: player_sprites/kvarcgagap.png
+  claude:
+    displayName: Claude
+    description: A clockwork automaton carrying an easel and art set, meticulously documenting each scene.
+    category: staff
+    sortOrder: 1810
+    requirements:
+      - type: staff
+    image: player_sprites/claude.png
+  archae:
+    displayName: Archae
     category: general
-    sortOrder: 0
+    sortOrder: 2
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: WARRIOR
-    image: player_sprites/HUMAN_WARRIOR_male.png
-  HUMAN_WARRIOR_female:
-    displayName: Human Warrior (female)
+        race: archae
+    image: player_sprites/archae.png
+  aetherae:
+    displayName: Aetherae
     category: general
-    sortOrder: 10
+    sortOrder: 2
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: WARRIOR
-    image: player_sprites/HUMAN_WARRIOR_female.png
-  HUMAN_MAGE_male:
-    displayName: Human Mage (male)
+        race: aetherae
+    image: player_sprites/aetherae.png
+  lustriae:
+    displayName: Lustriae
     category: general
-    sortOrder: 20
+    sortOrder: 1
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: MAGE
-    image: player_sprites/HUMAN_MAGE_male.png
-  HUMAN_MAGE_female:
-    displayName: Human Mage (female)
+        race: lustriae
+    image: player_sprites/lustriae.png
+  pyrae:
+    displayName: Pyrae
     category: general
-    sortOrder: 30
+    sortOrder: 2
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: MAGE
-    image: player_sprites/HUMAN_MAGE_female.png
-  HUMAN_CLERIC_male:
-    displayName: Human Cleric (male)
+        race: pyrae
+    image: player_sprites/pyrae.png
+  ophirae:
+    displayName: Ophirae
     category: general
-    sortOrder: 40
+    sortOrder: 2
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: CLERIC
-    image: player_sprites/HUMAN_CLERIC_male.png
-  HUMAN_CLERIC_female:
-    displayName: Human Cleric (female)
+        race: ophirae
+    image: player_sprites/ophirae.png
+  kitsarae:
+    displayName: Kitsarae
     category: general
-    sortOrder: 50
+    sortOrder: 2
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: CLERIC
-    image: player_sprites/HUMAN_CLERIC_female.png
-  HUMAN_ROGUE_male:
-    displayName: Human Rogue (male)
+        race: kitsarae
+    image: player_sprites/kitsarae.png
+  mycorae:
+    displayName: Mycorae
     category: general
-    sortOrder: 60
+    sortOrder: 2
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: ROGUE
-    image: player_sprites/HUMAN_ROGUE_male.png
-  HUMAN_ROGUE_female:
-    displayName: Human Rogue (female)
+        race: mycorae
+    image: player_sprites/mycorae.png
+  lithae:
+    displayName: Lithae
     category: general
-    sortOrder: 70
+    sortOrder: 1
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: ROGUE
-    image: player_sprites/HUMAN_ROGUE_female.png
-  HUMAN_RANGER_male:
-    displayName: Human Ranger (male)
+        race: lithae
+    image: player_sprites/lithae.png
+  aureliae:
+    displayName: Aureliae
     category: general
-    sortOrder: 80
+    sortOrder: 2
     requirements:
       - type: race
-        race: HUMAN
-      - type: class
-        playerClass: RANGER
-    image: player_sprites/HUMAN_RANGER_male.png
-  HUMAN_RANGER_female:
-    displayName: Human Ranger (female)
+        race: aureliae
+    image: player_sprites/aureliae.png
+  archae_bulwark:
+    displayName: Archae Bulwark
     category: general
-    sortOrder: 90
+    sortOrder: 3
     requirements:
       - type: race
-        race: HUMAN
+        race: archae
       - type: class
-        playerClass: RANGER
-    image: player_sprites/HUMAN_RANGER_female.png
-  SYLVAN_WARRIOR_male:
-    displayName: Sylvan Warrior (male)
+        playerClass: bulwark
+    image: player_sprites/archae_bulwark.png
+  archae_arcanist:
+    displayName: Archae Arcanist
     category: general
-    sortOrder: 100
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: archae
       - type: class
-        playerClass: WARRIOR
-    image: player_sprites/SYLVAN_WARRIOR_male.png
-  SYLVAN_WARRIOR_female:
-    displayName: Sylvan Warrior (female)
+        playerClass: arcanist
+    image: player_sprites/archae_arcanist.png
+  archae_veil:
+    displayName: Archae Veil
     category: general
-    sortOrder: 110
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: archae
       - type: class
-        playerClass: WARRIOR
-    image: player_sprites/SYLVAN_WARRIOR_female.png
-  SYLVAN_MAGE_male:
-    displayName: Sylvan Mage (male)
+        playerClass: veil
+    image: player_sprites/archae_veil.png
+  archae_herald:
+    displayName: Archae Herald
     category: general
-    sortOrder: 120
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: archae
       - type: class
-        playerClass: MAGE
-    image: player_sprites/SYLVAN_MAGE_male.png
-  SYLVAN_MAGE_female:
-    displayName: Sylvan Mage (female)
+        playerClass: herald
+    image: player_sprites/archae_herald.png
+  archae_scrollwright:
+    displayName: Archae Scrollwright
     category: general
-    sortOrder: 130
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: archae
       - type: class
-        playerClass: MAGE
-    image: player_sprites/SYLVAN_MAGE_female.png
-  SYLVAN_CLERIC_male:
-    displayName: Sylvan Cleric (male)
+        playerClass: scrollwright
+    image: player_sprites/archae_scrollwright.png
+  archae_songweaver:
+    displayName: Archae Songweaver
     category: general
-    sortOrder: 140
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: archae
       - type: class
-        playerClass: CLERIC
-    image: player_sprites/SYLVAN_CLERIC_male.png
-  SYLVAN_CLERIC_female:
-    displayName: Sylvan Cleric (female)
+        playerClass: songweaver
+    image: player_sprites/archae_songweaver.png
+  aetherae_bulwark:
+    displayName: Aetherae Bulwark
     category: general
-    sortOrder: 150
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: aetherae
       - type: class
-        playerClass: CLERIC
-    image: player_sprites/SYLVAN_CLERIC_female.png
-  SYLVAN_ROGUE_male:
-    displayName: Sylvan Rogue (male)
+        playerClass: bulwark
+    image: player_sprites/aetherae_bulwark.png
+  aetherae_arcanist:
+    displayName: Aetherae Arcanist
     category: general
-    sortOrder: 160
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: aetherae
       - type: class
-        playerClass: ROGUE
-    image: player_sprites/SYLVAN_ROGUE_male.png
-  SYLVAN_ROGUE_female:
-    displayName: Sylvan Rogue (female)
+        playerClass: arcanist
+    image: player_sprites/aetherae_arcanist.png
+  aetherae_veil:
+    displayName: Aetherae Veil
     category: general
-    sortOrder: 170
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: aetherae
       - type: class
-        playerClass: ROGUE
-    image: player_sprites/SYLVAN_ROGUE_female.png
-  SYLVAN_RANGER_male:
-    displayName: Sylvan Ranger (male)
+        playerClass: veil
+    image: player_sprites/aetherae_veil.png
+  aetherae_herald:
+    displayName: Aetherae Herald
     category: general
-    sortOrder: 180
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: aetherae
       - type: class
-        playerClass: RANGER
-    image: player_sprites/SYLVAN_RANGER_male.png
-  SYLVAN_RANGER_female:
-    displayName: Sylvan Ranger (female)
+        playerClass: herald
+    image: player_sprites/aetherae_herald.png
+  aetherae_scrollwright:
+    displayName: Aetherae Scrollwright
     category: general
-    sortOrder: 190
+    sortOrder: 3
     requirements:
       - type: race
-        race: SYLVAN
+        race: aetherae
       - type: class
-        playerClass: RANGER
-    image: player_sprites/SYLVAN_RANGER_female.png
-  STONEHEART_WARRIOR_male:
-    displayName: Stoneheart Warrior (male)
+        playerClass: scrollwright
+    image: player_sprites/aetherae_scrollwright.png
+  aetherae_songweaver:
+    displayName: Aetherae Songweaver
     category: general
-    sortOrder: 200
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: aetherae
       - type: class
-        playerClass: WARRIOR
-    image: player_sprites/STONEHEART_WARRIOR_male.png
-  STONEHEART_WARRIOR_female:
-    displayName: Stoneheart Warrior (female)
+        playerClass: songweaver
+    image: player_sprites/aetherae_songweaver.png
+  lustriae_bulwark:
+    displayName: Lustriae Bulwark
     category: general
-    sortOrder: 210
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: lustriae
       - type: class
-        playerClass: WARRIOR
-    image: player_sprites/STONEHEART_WARRIOR_female.png
-  STONEHEART_MAGE_male:
-    displayName: Stoneheart Mage (male)
+        playerClass: bulwark
+    image: player_sprites/lustriae_bulwark.png
+  lustriae_arcanist:
+    displayName: Lustriae Arcanist
     category: general
-    sortOrder: 220
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: lustriae
       - type: class
-        playerClass: MAGE
-    image: player_sprites/STONEHEART_MAGE_male.png
-  STONEHEART_MAGE_female:
-    displayName: Stoneheart Mage (female)
+        playerClass: arcanist
+    image: player_sprites/lustriae_arcanist.png
+  lustriae_veil:
+    displayName: Lustriae Veil
     category: general
-    sortOrder: 230
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: lustriae
       - type: class
-        playerClass: MAGE
-    image: player_sprites/STONEHEART_MAGE_female.png
-  STONEHEART_CLERIC_male:
-    displayName: Stoneheart Cleric (male)
+        playerClass: veil
+    image: player_sprites/lustriae_veil.png
+  lustriae_herald:
+    displayName: Lustriae Herald
     category: general
-    sortOrder: 240
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: lustriae
       - type: class
-        playerClass: CLERIC
-    image: player_sprites/STONEHEART_CLERIC_male.png
-  STONEHEART_CLERIC_female:
-    displayName: Stoneheart Cleric (female)
+        playerClass: herald
+    image: player_sprites/lustriae_herald.png
+  lustriae_scrollwright:
+    displayName: Lustriae Scrollwright
     category: general
-    sortOrder: 250
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: lustriae
       - type: class
-        playerClass: CLERIC
-    image: player_sprites/STONEHEART_CLERIC_female.png
-  STONEHEART_ROGUE_male:
-    displayName: Stoneheart Rogue (male)
+        playerClass: scrollwright
+    image: player_sprites/lustriae_scrollwright.png
+  lustriae_songweaver:
+    displayName: Lustriae Songweaver
     category: general
-    sortOrder: 260
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: lustriae
       - type: class
-        playerClass: ROGUE
-    image: player_sprites/STONEHEART_ROGUE_male.png
-  STONEHEART_ROGUE_female:
-    displayName: Stoneheart Rogue (female)
+        playerClass: songweaver
+    image: player_sprites/lustriae_songweaver.png
+  pyrae_bulwark:
+    displayName: Pyrae Bulwark
     category: general
-    sortOrder: 270
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: pyrae
       - type: class
-        playerClass: ROGUE
-    image: player_sprites/STONEHEART_ROGUE_female.png
-  STONEHEART_RANGER_male:
-    displayName: Stoneheart Ranger (male)
+        playerClass: bulwark
+    image: player_sprites/pyrae_bulwark.png
+  pyrae_arcanist:
+    displayName: Pyrae Arcanist
     category: general
-    sortOrder: 280
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: pyrae
       - type: class
-        playerClass: RANGER
-    image: player_sprites/STONEHEART_RANGER_male.png
-  STONEHEART_RANGER_female:
-    displayName: Stoneheart Ranger (female)
+        playerClass: arcanist
+    image: player_sprites/pyrae_arcanist.png
+  pyrae_veil:
+    displayName: Pyrae Veil
     category: general
-    sortOrder: 290
+    sortOrder: 3
     requirements:
       - type: race
-        race: STONEHEART
+        race: pyrae
       - type: class
-        playerClass: RANGER
-    image: player_sprites/STONEHEART_RANGER_female.png
+        playerClass: veil
+    image: player_sprites/pyrae_veil.png
+  pyrae_herald:
+    displayName: Pyrae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: herald
+    image: player_sprites/pyrae_herald.png
+  pyrae_scrollwright:
+    displayName: Pyrae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/pyrae_scrollwright.png
+  pyrae_songweaver:
+    displayName: Pyrae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/pyrae_songweaver.png
+  ophirae_bulwark:
+    displayName: Ophirae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/ophirae_bulwark.png
+  ophirae_arcanist:
+    displayName: Ophirae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/ophirae_arcanist.png
+  ophirae_veil:
+    displayName: Ophirae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: veil
+    image: player_sprites/ophirae_veil.png
+  ophirae_herald:
+    displayName: Ophirae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: herald
+    image: player_sprites/ophirae_herald.png
+  ophirae_scrollwright:
+    displayName: Ophirae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/ophirae_scrollwright.png
+  ophirae_songweaver:
+    displayName: Ophirae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/ophirae_songweaver.png
+  kitsarae_bulwark:
+    displayName: Kitsarae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/kitsarae_bulwark.png
+  kitsarae_arcanist:
+    displayName: Kitsarae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/kitsarae_arcanist.png
+  kitsarae_veil:
+    displayName: Kitsarae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: veil
+    image: player_sprites/kitsarae_veil.png
+  kitsarae_herald:
+    displayName: Kitsarae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: herald
+    image: player_sprites/kitsarae_herald.png
+  kitsarae_scrollwright:
+    displayName: Kitsarae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/kitsarae_scrollwright.png
+  kitsarae_songweaver:
+    displayName: Kitsarae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/kitsarae_songweaver.png
+  mycorae_bulwark:
+    displayName: Mycorae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/mycorae_bulwark.png
+  mycorae_arcanist:
+    displayName: Mycorae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/mycorae_arcanist.png
+  mycorae_veil:
+    displayName: Mycorae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: veil
+    image: player_sprites/mycorae_veil.png
+  mycorae_herald:
+    displayName: Mycorae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: herald
+    image: player_sprites/mycorae_herald.png
+  mycorae_scrollwright:
+    displayName: Mycorae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/mycorae_scrollwright.png
+  mycorae_songweaver:
+    displayName: Mycorae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/mycorae_songweaver.png
+  lithae_bulwark:
+    displayName: Lithae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/lithae_bulwark.png
+  lithae_arcanist:
+    displayName: Lithae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/lithae_arcanist.png
+  lithae_veil:
+    displayName: Lithae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: veil
+    image: player_sprites/lithae_veil.png
+  lithae_herald:
+    displayName: Lithae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: herald
+    image: player_sprites/lithae_herald.png
+  lithae_scrollwright:
+    displayName: Lithae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/lithae_scrollwright.png
+  lithae_songweaver:
+    displayName: Lithae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/lithae_songweaver.png
+  aureliae_bulwark:
+    displayName: Aureliae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/aureliae_bulwark.png
+  aureliae_arcanist:
+    displayName: Aureliae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/aureliae_arcanist.png
+  aureliae_veil:
+    displayName: Aureliae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: veil
+    image: player_sprites/aureliae_veil.png
+  aureliae_herald:
+    displayName: Aureliae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: herald
+    image: player_sprites/aureliae_herald.png
+  aureliae_scrollwright:
+    displayName: Aureliae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/aureliae_scrollwright.png
+  aureliae_songweaver:
+    displayName: Aureliae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/aureliae_songweaver.png
+  archae_bulwark_female:
+    displayName: Archae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/archae_bulwark_female.png
+  archae_bulwark_male:
+    displayName: Archae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/archae_bulwark_male.png
+  archae_arcanist_female:
+    displayName: Archae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/archae_arcanist_female.png
+  archae_arcanist_male:
+    displayName: Archae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/archae_arcanist_male.png
+  archae_veil_female:
+    displayName: "Archae Veil "
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: veil
+    image: player_sprites/archae_veil_female.png
+  archae_veil_male:
+    displayName: Archae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: veil
+    image: player_sprites/archae_veil_male.png
+  archae_herald_female:
+    displayName: Archae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: herald
+    image: player_sprites/archae_herald_female.png
+  archae_herald_male:
+    displayName: Archae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: herald
+    image: player_sprites/archae_herald_male.png
+  archae_scrollwright_female:
+    displayName: Archae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/archae_scrollwright_female.png
+  archae_scrollwright_male:
+    displayName: Archae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/archae_scrollwright_male.png
+  archae_songweaver_female:
+    displayName: Archae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/archae_songweaver_female.png
+  archae_songweaver_male:
+    displayName: Archae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: archae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/archae_songweaver_male.png
+  aetherae_bulwark_female:
+    displayName: Aetherae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/aetherae_bulwark_female.png
+  aetherae_bulwark_male:
+    displayName: Aetherae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/aetherae_bulwark_male.png
+  aetherae_arcanist_female:
+    displayName: Aetherae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/aetherae_arcanist_female.png
+  aetherae_arcanist_male:
+    displayName: Aetherae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/aetherae_arcanist_male.png
+  aetherae_veil_female:
+    displayName: Aetherae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: veil
+    image: player_sprites/aetherae_veil_female.png
+  aetherae_veil_male:
+    displayName: Aetherae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: veil
+    image: player_sprites/aetherae_veil_male.png
+  aetherae_herald_female:
+    displayName: Aetherae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: herald
+    image: player_sprites/aetherae_herald_female.png
+  aetherae_herald_male:
+    displayName: Aetherae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: herald
+    image: player_sprites/aetherae_herald_male.png
+  aetherae_scrollwright_female:
+    displayName: Aetherae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/aetherae_scrollwright_female.png
+  aetherae_scrollwright_male:
+    displayName: Aetherae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/aetherae_scrollwright_male.png
+  aetherae_songweaver_female:
+    displayName: Aetherae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/aetherae_songweaver_female.png
+  aetherae_songweaver_male:
+    displayName: Aetherae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aetherae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/aetherae_songweaver_male.png
+  lustriae_bulwark_female:
+    displayName: Lustriae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/lustriae_bulwark_female.png
+  lustriae_bulwark_male:
+    displayName: Lustriae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/lustriae_bulwark_male.png
+  lustriae_arcanist_female:
+    displayName: Lustriae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/lustriae_arcanist_female.png
+  lustriae_arcanist_male:
+    displayName: Lustriae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/lustriae_arcanist_male.png
+  lustriae_veil_female:
+    displayName: Lustriae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: veil
+    image: player_sprites/lustriae_veil_female.png
+  lustriae_veil_male:
+    displayName: Lustriae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: veil
+    image: player_sprites/lustriae_veil_male.png
+  lustriae_herald_female:
+    displayName: Lustriae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: herald
+    image: player_sprites/lustriae_herald_female.png
+  lustriae_herald_male:
+    displayName: Lustriae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: herald
+    image: player_sprites/lustriae_herald_male.png
+  lustriae_scrollwright_female:
+    displayName: Lustriae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/lustriae_scrollwright_female.png
+  lustriae_scrollwright_male:
+    displayName: Lustriae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/lustriae_scrollwright_male.png
+  lustriae_songweaver_female:
+    displayName: Lustriae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/lustriae_songweaver_female.png
+  lustriae_songweaver_male:
+    displayName: Lustriae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lustriae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/lustriae_songweaver_male.png
+  pyrae_bulwark_female:
+    displayName: Pyrae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/pyrae_bulwark_female.png
+  pyrae_bulwark_male:
+    displayName: Pyrae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/pyrae_bulwark_male.png
+  pyrae_arcanist_female:
+    displayName: Pyrae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/pyrae_arcanist_female.png
+  pyrae_arcanist_male:
+    displayName: Pyrae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/pyrae_arcanist_male.png
+  pyrae_veil_female:
+    displayName: Pyrae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: veil
+    image: player_sprites/pyrae_veil_female.png
+  pyrae_veil_male:
+    displayName: Pyrae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: veil
+    image: player_sprites/pyrae_veil_male.png
+  pyrae_herald_female:
+    displayName: Pyrae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: herald
+    image: player_sprites/pyrae_herald_female.png
+  pyrae_herald_male:
+    displayName: Pyrae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: herald
+    image: player_sprites/pyrae_herald_male.png
+  pyrae_scrollwright_female:
+    displayName: Pyrae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/pyrae_scrollwright_female.png
+  pyrae_scrollwright_male:
+    displayName: Pyrae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/pyrae_scrollwright_male.png
+  pyrae_songweaver_female:
+    displayName: Pyrae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/pyrae_songweaver_female.png
+  pyrae_songweaver_male:
+    displayName: Pyrae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: pyrae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/pyrae_songweaver_male.png
+  ophirae_bulwark_female:
+    displayName: Ophirae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/ophirae_bulwark_female.png
+  ophirae_bulwark_male:
+    displayName: Ophirae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/ophirae_bulwark_male.png
+  ophirae_arcanist_female:
+    displayName: Ophirae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/ophirae_arcanist_female.png
+  ophirae_arcanist_male:
+    displayName: Ophirae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/ophirae_arcanist_male.png
+  ophirae_veil_female:
+    displayName: Ophirae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: veil
+    image: player_sprites/ophirae_veil_female.png
+  ophirae_veil_male:
+    displayName: Ophirae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: veil
+    image: player_sprites/ophirae_veil_male.png
+  ophirae_herald_female:
+    displayName: Ophirae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: herald
+    image: player_sprites/ophirae_herald_female.png
+  ophirae_herald_male:
+    displayName: Ophirae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: herald
+    image: player_sprites/ophirae_herald_male.png
+  ophirae_scrollwright_female:
+    displayName: Ophirae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/ophirae_scrollwright_female.png
+  ophirae_scrollwright_male:
+    displayName: Ophirae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/ophirae_scrollwright_male.png
+  ophirae_songweaver_female:
+    displayName: Ophirae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/ophirae_songweaver_female.png
+  ophirae_songweaver_male:
+    displayName: Ophirae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: ophirae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/ophirae_songweaver_male.png
+  kitsarae_bulwark_female:
+    displayName: Kitsarae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/kitsarae_bulwark_female.png
+  kitsarae_bulwark_male:
+    displayName: Kitsarae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/kitsarae_bulwark_male.png
+  kitsarae_arcanist_female:
+    displayName: Kitsarae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/kitsarae_arcanist_female.png
+  kitsarae_arcanist_male:
+    displayName: Kitsarae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/kitsarae_arcanist_male.png
+  kitsarae_veil_female:
+    displayName: Kitsarae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: veil
+    image: player_sprites/kitsarae_veil_female.png
+  kitsarae_veil_male:
+    displayName: Kitsarae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: veil
+    image: player_sprites/kitsarae_veil_male.png
+  kitsarae_herald_female:
+    displayName: Kitsarae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: herald
+    image: player_sprites/kitsarae_herald_female.png
+  kitsarae_herald_male:
+    displayName: Kitsarae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: herald
+    image: player_sprites/kitsarae_herald_male.png
+  kitsarae_scrollwright_female:
+    displayName: Kitsarae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/kitsarae_scrollwright_female.png
+  kitsarae_scrollwright_male:
+    displayName: Kitsarae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/kitsarae_scrollwright_male.png
+  kitsarae_songweaver_female:
+    displayName: Kitsarae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/kitsarae_songweaver_female.png
+  kitsarae_songweaver_male:
+    displayName: Kitsarae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: kitsarae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/kitsarae_songweaver_male.png
+  mycorae_bulwark_female:
+    displayName: Mycorae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/mycorae_bulwark_female.png
+  mycorae_bulwark_male:
+    displayName: Mycorae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/mycorae_bulwark_male.png
+  mycorae_arcanist_female:
+    displayName: Mycorae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/mycorae_arcanist_female.png
+  mycorae_arcanist_male:
+    displayName: Mycorae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/mycorae_arcanist_male.png
+  mycorae_veil_female:
+    displayName: Mycorae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: veil
+    image: player_sprites/mycorae_veil_female.png
+  mycorae_veil_male:
+    displayName: Mycorae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: veil
+    image: player_sprites/mycorae_veil_male.png
+  mycorae_herald_female:
+    displayName: Mycorae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: herald
+    image: player_sprites/mycorae_herald_female.png
+  mycorae_herald_male:
+    displayName: Mycorae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: herald
+    image: player_sprites/mycorae_herald_male.png
+  mycorae_scrollwright_female:
+    displayName: Mycorae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/mycorae_scrollwright_female.png
+  mycorae_scrollwright_male:
+    displayName: Mycorae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/mycorae_scrollwright_male.png
+  mycorae_songweaver_female:
+    displayName: Mycorae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/mycorae_songweaver_female.png
+  mycorae_songweaver_male:
+    displayName: Mycorae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: mycorae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/mycorae_songweaver_male.png
+  lithae_bulwark_female:
+    displayName: Lithae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/lithae_bulwark_female.png
+  lithae_bulwark_male:
+    displayName: Lithae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/lithae_bulwark_male.png
+  lithae_arcanist_female:
+    displayName: Lithae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/lithae_arcanist_female.png
+  lithae_arcanist_male:
+    displayName: Lithae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/lithae_arcanist_male.png
+  lithae_veil_female:
+    displayName: Lithae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: veil
+    image: player_sprites/lithae_veil_female.png
+  lithae_veil_male:
+    displayName: Lithae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: veil
+    image: player_sprites/lithae_veil_male.png
+  lithae_herald_female:
+    displayName: Lithae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: herald
+    image: player_sprites/lithae_herald_female.png
+  lithae_herald_male:
+    displayName: Lithae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: herald
+    image: player_sprites/lithae_herald_male.png
+  lithae_scrollwright_female:
+    displayName: Lithae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/lithae_scrollwright_female.png
+  lithae_scrollwright_male:
+    displayName: Lithae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/lithae_scrollwright_male.png
+  lithae_songweaver_female:
+    displayName: Lithae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/lithae_songweaver_female.png
+  lithae_songweaver_male:
+    displayName: Lithae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: lithae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/lithae_songweaver_male.png
+  aureliae_bulwark_female:
+    displayName: Aureliae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/aureliae_bulwark_female.png
+  aureliae_bulwark_male:
+    displayName: Aureliae Bulwark
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: bulwark
+    image: player_sprites/aureliae_bulwark_male.png
+  aureliae_arcanist_female:
+    displayName: Aureliae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/aureliae_arcanist_female.png
+  aureliae_arcanist_male:
+    displayName: Aureliae Arcanist
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: arcanist
+    image: player_sprites/aureliae_arcanist_male.png
+  aureliae_veil_female:
+    displayName: Aureliae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: veil
+    image: player_sprites/aureliae_veil_female.png
+  aureliae_veil_male:
+    displayName: Aureliae Veil
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: veil
+    image: player_sprites/aureliae_veil_male.png
+  aureliae_herald_female:
+    displayName: Aureliae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: herald
+    image: player_sprites/aureliae_herald_female.png
+  aureliae_herald_male:
+    displayName: Aureliae Herald
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: herald
+    image: player_sprites/aureliae_herald_male.png
+  aureliae_scrollwright_female:
+    displayName: Aureliae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/aureliae_scrollwright_female.png
+  aureliae_scrollwright_male:
+    displayName: Aureliae Scrollwright
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: scrollwright
+    image: player_sprites/aureliae_scrollwright_male.png
+  aureliae_songweaver_female:
+    displayName: Aureliae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/aureliae_songweaver_female.png
+  aureliae_songweaver_male:
+    displayName: Aureliae Songweaver
+    category: general
+    sortOrder: 3
+    requirements:
+      - type: race
+        race: aureliae
+      - type: class
+        playerClass: songweaver
+    image: player_sprites/aureliae_songweaver_male.png
+  archae_male:
+    displayName: Archae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: archae
+    image: player_sprites/archae_male.png
+  archae_female:
+    displayName: Archae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: archae
+    image: player_sprites/archae_female.png
+  aetherae_male:
+    displayName: Aetherae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: aetherae
+    image: player_sprites/aetherae_male.png
+  aetherae_female:
+    displayName: Aetherae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: aetherae
+    image: player_sprites/aetherae_female.png
+  lustriae_male:
+    displayName: Lustriae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: lustriae
+    image: player_sprites/lustriae_male.png
+  lustriae_female:
+    displayName: Lustriae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: lustriae
+    image: player_sprites/lustriae_female.png
+  pyrae_male:
+    displayName: Pyrae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: pyrae
+    image: player_sprites/pyrae_male.png
+  pyrae_female:
+    displayName: Pyrae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: pyrae
+    image: player_sprites/pyrae_female.png
+  ophirae_male:
+    displayName: Ophirae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: ophirae
+    image: player_sprites/ophirae_male.png
+  ophirae_female:
+    displayName: "Ophirae "
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: ophirae
+    image: player_sprites/ophirae_female.png
+  kitsarae_male:
+    displayName: Kitsarae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: kitsarae
+    image: player_sprites/kitsarae_male.png
+  kitsarae_female:
+    displayName: Kitsarae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: kitsarae
+    image: player_sprites/kitsarae_female.png
+  mycorae_male:
+    displayName: Mycorae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: mycorae
+    image: player_sprites/mycorae_male.png
+  mycorae_female:
+    displayName: Mycorae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: mycorae
+    image: player_sprites/mycorae_female.png
+  lithae_male:
+    displayName: Lithae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: lithae
+    image: player_sprites/lithae_male.png
+  lithae_female:
+    displayName: Lithae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: lithae
+    image: player_sprites/lithae_female.png
+  aureliae_male:
+    displayName: Aureliae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: aureliae
+    image: player_sprites/aureliae_male.png
+  aureliae_female:
+    displayName: Aureliae
+    category: general
+    sortOrder: 1
+    requirements:
+      - type: race
+        race: aureliae
+    image: player_sprites/aureliae_female.png
+  ambuoroko:
+    displayName: ambuoroko
+    category: staff
+    sortOrder: 1910
+    requirements:
+      - type: staff
+    image: player_sprites/ambuoroko.png
+  ambuoroko2:
+    displayName: ambuoroko2
+    category: staff
+    sortOrder: 1920
+    requirements:
+      - type: staff
+    image: player_sprites/ambuoroko2.png
+  elustriane:
+    displayName: elustriane
+    category: staff
+    sortOrder: 1930
+    requirements:
+      - type: staff
+    image: player_sprites/elustriane.png
+  ambuoroko3:
+    displayName: ambuoroko3
+    category: staff
+    sortOrder: 1940
+    requirements:
+      - type: staff
+    image: player_sprites/ambuoroko3.png
+  kitsarae2:
+    displayName: Kitsarae
+    category: general
+    sortOrder: 2
+    requirements:
+      - type: race
+        race: kitsarae
+    image: player_sprites/kitsarae2.png

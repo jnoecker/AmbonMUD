@@ -1,192 +1,163 @@
 achievements:
-  # ── Combat ────────────────────────────────────────────────────────
-  first_blood:
-    displayName: First Blood
-    description: Defeat your first creature at the Academy.
-    category: combat
-    hidden: false
-    criteria:
-      - type: kill
-        targetId: ""
-        count: 1
-        description: Kill any mob
-    rewards:
-      xp: 50
-  proving_yourself:
-    displayName: Proving Yourself
-    description: Defeat five creatures in the Academy Proving Grounds.
-    category: combat
-    hidden: false
-    criteria:
-      - type: kill
-        targetId: ""
-        count: 5
-        description: Kill 5 creatures
-    rewards:
-      xp: 150
-      gold: 25
-  warden_slayer:
-    displayName: Warden Slayer
-    description: Defeat the Dread Warden lurking in the Academy Throne Room.
-    category: combat
-    hidden: false
-    criteria:
-      - type: kill
-        targetId: academy:dread_warden
-        count: 1
-        description: Kill the Dread Warden
-    rewards:
-      xp: 500
-      gold: 100
-      title: Warden Slayer
-  catacomb_delver:
-    displayName: Catacomb Delver
-    description: Complete a run through the Academy catacombs dungeon.
-    category: combat
-    hidden: false
-    criteria:
-      - type: dungeon_complete
-        targetId: academy
-        count: 1
-        description: Complete the Academy dungeon
-    rewards:
-      xp: 500
-      title: Catacomb Delver
-  champion_slayer:
-    displayName: Champion Slayer
-    description: Defeat the Fallen Champion in the depths of the catacombs.
+  king_ambon:
+    displayName: King of Ambon
+    description: Whoever slays the fallen Kirot Aethiryn will become the King of Ambon.
     category: combat
     hidden: true
     criteria:
       - type: kill
-        targetId: academy:fallen_champion
+        targetId: playtesting:void_seraph
         count: 1
-        description: Kill the Fallen Champion
+        description: ""
     rewards:
-      xp: 1000
-      gold: 200
-      title: Champion Slayer
-
-  # ── Exploration & Quests ──────────────────────────────────────────
-  grand_tour:
-    displayName: The Grand Tour
-    description: Complete Headmaster Aldric's introductory quest and collect three Arcane Fragments.
+      title: Ambonien, King of Ambon
+  first_lesson:
+    displayName: First Lesson
+    description: Complete Orientation Day and let Pip log your enrollment at the Auringold Academy.
     category: exploration
-    hidden: false
     criteria:
       - type: quest_complete
-        targetId: grand_tour
+        targetId: auringold_academy:school_orientation
         count: 1
-        description: Complete The Grand Tour quest
+        description: Complete Orientation Day
     rewards:
-      xp: 200
-      gold: 50
-  creature_roundup:
-    displayName: Creature Roundup
-    description: Help Groundskeeper Thorne by completing the Creature Roundup quest.
-    category: exploration
-    hidden: false
-    criteria:
-      - type: quest_complete
-        targetId: creature_roundup
-        count: 1
-        description: Complete the Creature Roundup quest
-    rewards:
-      xp: 200
-      gold: 50
-  riddle_master:
-    displayName: Riddle Master
-    description: Solve the Puzzlewright's riddle in the Riddle Tower and unlock the Secret Library.
-    category: exploration
-    hidden: false
-    criteria:
-      - type: quest_complete
-        targetId: tower_riddle
-        count: 1
-        description: Solve the tower riddle
-    rewards:
-      xp: 300
-      title: Riddle Master
-
-  # ── Crafting & Gathering ──────────────────────────────────────────
-  master_crafter:
-    displayName: Master Crafter
-    description: Craft 10 items at the Academy workshops.
+      xp: 50
+  first_steps:
+    displayName: First Steps
+    description: Reach the second year of your power.
     category: class
-    hidden: false
-    criteria:
-      - type: craft
-        targetId: ""
-        count: 10
-        description: Craft 10 items
-    rewards:
-      xp: 400
-      title: Artisan
-  herb_collector:
-    displayName: Herb Collector
-    description: Gather 10 bundles of spider silk from the Academy Herb Garden.
-    category: class
-    hidden: false
-    criteria:
-      - type: gather
-        targetId: herbalism
-        count: 10
-        description: Gather 10 herbs
-    rewards:
-      xp: 200
-      gold: 30
-  ore_miner:
-    displayName: Deep Delver
-    description: Mine 10 iron ore from the veins in the Academy Herb Garden.
-    category: class
-    hidden: false
-    criteria:
-      - type: gather
-        targetId: mining
-        count: 10
-        description: Mine 10 ore
-    rewards:
-      xp: 200
-      gold: 30
-
-  # ── Social ────────────────────────────────────────────────────────
-  full_party:
-    displayName: Strength in Numbers
-    description: Complete the Academy dungeon with a full adventuring party.
-    category: social
-    hidden: false
-    criteria:
-      - type: dungeon_complete_full_party
-        targetId: ""
-        count: 1
-        description: Complete a dungeon with a full group
-    rewards:
-      xp: 600
-      title: Party Leader
-  guild_founder:
-    displayName: Guild Founder
-    description: Establish a guild at the Academy.
-    category: social
-    hidden: false
-    criteria:
-      - type: guild_create
-        targetId: ""
-        count: 1
-        description: Create a guild
-    rewards:
-      xp: 300
-      title: Founder
-
-  # ── Progression ───────────────────────────────────────────────────
-  max_level:
-    displayName: Level Ten
-    description: Reach level 10 and stand among the Academy's elite.
-    category: class
-    hidden: false
     criteria:
       - type: reach_level
-        count: 10
-        description: Reach level 10
+        targetId: ""
+        count: 2
+        description: Reach level 2
     rewards:
-      xp: 1000
-      title: Veteran
+      xp: 50
+  scarecrows_bane:
+    displayName: Scarecrow's Bane
+    description: Burst three practice dummies on the proving yard. They signed waivers.
+    category: combat
+    criteria:
+      - type: kill
+        targetId: auringold_academy:practice_dummy
+        count: 3
+        description: Burst practice dummies
+    rewards:
+      gold: 10
+  proven_in_the_yard:
+    displayName: Proven in the Yard
+    description: Complete the Drillmaster's menagerie lesson — chase a coward, survive an ambush, and learn the better part
+      of valor.
+    category: combat
+    criteria:
+      - type: quest_complete
+        targetId: auringold_academy:the_better_part_of_valor
+        count: 1
+        description: Complete The Better Part of Valor
+    rewards:
+      xp: 100
+  honest_work:
+    displayName: Honest Work
+    description: Log your fieldwork with Gardener Fernwhistle — garden and mine both.
+    category: crafting
+    criteria:
+      - type: quest_complete
+        targetId: auringold_academy:green_thumbs
+        count: 1
+        description: Complete Green Thumbs, Steady Hands
+    rewards:
+      xp: 100
+  the_makers_mark:
+    displayName: The Maker's Mark
+    description: Have your first enchanting work witnessed in the sanctum, charm and stardust in hand.
+    category: crafting
+    criteria:
+      - type: quest_complete
+        targetId: auringold_academy:a_finer_polish
+        count: 1
+        description: Complete A Finer Polish
+    rewards:
+      xp: 150
+  out_riddled:
+    displayName: Out-Riddled
+    description: Answer the sphinx, walk the levers' verse, and carry the Grimoire of Beginnings back to the Hall of Records.
+    category: exploration
+    criteria:
+      - type: quest_complete
+        targetId: auringold_academy:echoes_in_the_stacks
+        count: 1
+        description: Complete Echoes in the Stacks
+    rewards:
+      xp: 150
+  a_friendly_face:
+    displayName: A Friendly Face
+    description: Carry the Registrar's regards across campus and collect Fortuna's signature.
+    category: social
+    criteria:
+      - type: quest_complete
+        targetId: auringold_academy:a_friendly_word
+        count: 1
+        description: Complete A Friendly Word
+    rewards:
+      xp: 100
+  laid_to_rest:
+    displayName: Laid to Rest
+    description: Soothe ten of the Academy's running-late nightmares back to the sleep they never quite reached.
+    category: combat
+    criteria:
+      - type: kill
+        targetId: auringold_academy:restless_pupil
+        count: 10
+        description: Soothe running-late nightmares
+    rewards:
+      gold: 50
+  the_deans_red_quill:
+    displayName: The Dean's Red Quill
+    description: Put the Dean of Bad Dreams to rest at the bottom of the catacombs delve — the worst of Effiənoae's
+      leavings, finally tucked in.
+    category: combat
+    criteria:
+      - type: kill
+        targetId: auringold_academy:dean_of_the_dead
+        count: 1
+        description: Defeat the Dean of Bad Dreams
+    rewards:
+      gold: 100
+      title: Bane of the Dean
+  head_of_the_class:
+    displayName: Head of the Class
+    description: Reach the fifth year of your power — the Gates take notice.
+    category: class
+    criteria:
+      - type: reach_level
+        targetId: ""
+        count: 5
+        description: Reach level 5
+    rewards:
+      gold: 100
+  schools_out:
+    displayName: School's Out
+    description: Complete the rite of Commencement with all eight wing badges and present your credentials at the Gates of Ambon.
+    category: class
+    criteria:
+      - type: quest_complete
+        targetId: auringold_academy:commencement
+        count: 1
+        description: Complete Commencement
+    rewards:
+      xp: 500
+      gold: 250
+      title: Graduate of Auringold
+  the_hard_way:
+    displayName: The Hard Way
+    description: Survive the Final Lesson's entire demonstration — and end it.
+    category: combat
+    hidden: true
+    criteria:
+      - type: kill
+        targetId: auringold_academy:the_final_lesson
+        count: 1
+        description: Defeat the Final Lesson
+    rewards:
+      gold: 150
+      title: Death's Pupil

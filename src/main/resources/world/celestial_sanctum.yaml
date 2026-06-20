@@ -1,0 +1,55 @@
+zone: celestial_sanctum
+startRoom: krioshaeu_cabin
+rooms:
+  krioshaeu_cabin:
+    title: Krioshaeu's Cabin
+    description: >-
+      A cozy cabin materializes around you, its walls built from stones that somehow feel familiar, its windows framing
+      meadows half-remembered from dreams. A fire crackles in the hearth with driftwood that smells of distant shores,
+      and Krioshaeu sits in a weathered rocking chair, steam rising from two cups of tea that smell like every comfort
+      you've ever known. 
+
+
+      Rest here and recover. When you are ready to return to the living world, simply type 'depart'.
+    terrain: inside
+    image: 4c19bdaf791f67fa7596cc7131cb735cd1e367aeb8feb5f0e0ceaa73dfeb40e8.jpg
+    music: c2117023ff3ac1bbb6b4b7d99c6497153de9d4ef9514c8fb598e19091d82b96f.mp3
+lifespan: 30
+levelBand:
+  min: 30
+  max: 30
+difficultyHint: standard
+mobs:
+  krioshaeu:
+    name: Krioshaeu, the Kindly Death
+    description: A Lustriae woman with salt-and-pepper hair — the only faerie who looks aged — pale iridescent skin, dark
+      eyes, and softly rounded ears. Beautiful but slightly off. Her features have a faerie delicacy A woman of
+      indeterminate age sits before you, her features shifting like candlelight—sometimes appearing as a grandmother,
+      sometimes as a gentle stranger whose kindness saved a difficult day. Her presence transforms fear into peace, and
+      her eyes hold the warmth of someone who has walked countless souls home and still finds wonder in each one.
+    spawns:
+      - room: krioshaeu_cabin
+    role: dialog
+    image: 284bf6fa5d93a3438135631dfdf15d48a18a589a51074ac87aa38ec303eb3689.png
+    dialogue:
+      root:
+        text: Welcome, child. You were badly wounded, but nothing a bit of rest won't cure. When you're ready to return to
+          Ambon, type `depart`
+  faerie_tea:
+    name: Ambuoroko and Elustriaine at Tea
+    tier: standard
+    level: 1
+    description: Ambuoroko and Elustriaine having tea together.
+    image: 11fd26d3eef7bc6a2448c28af948d977e98e5f5e5303d39a1c32768f67d17a26.png
+    spawns:
+      - room: krioshaeu_cabin
+    role: prop
+    condition:
+      events:
+        - wandering_star
+items:
+  celestial_sanctum_item1:
+    displayName: celestial_sanctum_item1
+    description: ""
+    keyword: celestial_sanctum_item1
+    image: 00cbf1416f3f23899472cf9b71d3f496d6cdbab360f89bc8a6bf6622aff5400f.png
