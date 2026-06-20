@@ -56,20 +56,23 @@ ambonmud:
     tickMillis: 100
     inboundBudgetMs: 30
   world:
-    startRoom: academy:academy_gates
-    resources: []
+    startRoom: auringold_academy:krioshaeu_cabin
+    resources:
+      - world/auringold_academy.yaml
+      - world/celestial_sanctum.yaml
+      - world/playtesting.yaml
   persistence:
     backend: YAML
     rootDir: data/players
     worker:
       enabled: true
-      flushIntervalMs: 5000
+      flushIntervalMs: 1000
   database:
-    jdbcUrl: jdbc:postgresql://localhost:5432/ambonmud
+    jdbcUrl: jdbc:postgresql://postgres:5432/ambonmud
     username: ambon
-    password: ambon
-    maxPoolSize: 5
-    minimumIdle: 1
+    password: override-via-secrets-yaml
+    maxPoolSize: 15
+    minimumIdle: 2
   login:
     maxWrongPasswordRetries: 3
     maxFailedAttemptsBeforeDisconnect: 3
@@ -88,74 +91,54 @@ ambonmud:
         STR:
           displayName: Strength
           abbreviation: STR
-          description: Physical power. Governs melee damage and carrying capacity.
+          description: Physical power
           baseStat: 10
         DEX:
           displayName: Dexterity
           abbreviation: DEX
-          description: Agility and reflexes. Governs dodge chance and ranged precision.
+          description: Agility and reflexes
           baseStat: 10
         CON:
           displayName: Constitution
           abbreviation: CON
-          description: Health and endurance. Governs hit points and resistance to fatigue.
+          description: Health and endurance
           baseStat: 10
         INT:
           displayName: Intelligence
           abbreviation: INT
-          description: Magical aptitude. Governs spell damage and mana capacity.
+          description: Magical aptitude
           baseStat: 10
         WIS:
           displayName: Wisdom
           abbreviation: WIS
-          description: Insight and willpower. Governs healing potency and mana regeneration.
+          description: Insight and willpower
           baseStat: 10
         CHA:
           displayName: Charisma
           abbreviation: CHA
-          description: Force of personality. Governs merchant prices and companion loyalty.
+          description: Force of personality
           baseStat: 10
       bindings:
         meleeDamageStat: STR
-        # New damage formula:
-        #   attackPower = meleeBaseAttackPower + equipmentAttack
-        #   statBonus   = (stat - baseStat) * meleeStatMultiplier
-        #   levelScale  = meleeLevelScalingRate ^ (level - 1)
-        #   core        = (attackPower + statBonus) * levelScale
-        #   raw         = round(core * uniform(varianceMin, varianceMax))
-        #   mitigation  = enemyArmor / (enemyArmor + meleeArmorMitigationK)
-        #   final       = round(raw * (1 - mitigation)), clamped >= 1
-        # Armor mitigation is multiplicative and applied symmetrically to both
-        # sides — see CombatSystem.applyArmorMitigation.
         meleeStatMultiplier: 0.25
-        meleeLevelScalingRate: 1.30
+        meleeLevelScalingRate: 1.4
         meleeVarianceMin: 0.85
         meleeVarianceMax: 1.15
-        meleeBaseAttackPower: 1
-        meleeArmorMitigationK: 20.0
+        meleeBaseAttackPower: 10
+        meleeArmorMitigationK: 20
         dodgeStat: DEX
         dodgePerPoint: 2
         maxDodgePercent: 30
         spellDamageStat: INT
-        # Spell damage uses the same shape as melee minus armor:
-        #   anchor      = (effect.damage.min + effect.damage.max) / 2
-        #   statBonus   = (stat - baseStat) * spellStatMultiplier
-        #   levelScale  = spellLevelScalingRate ^ (level - 1)
-        #   final       = round((anchor + statBonus) * levelScale *
-        #                       uniform(spellVarianceMin, spellVarianceMax))
         spellStatMultiplier: 0.25
-        spellLevelScalingRate: 1.30
+        spellLevelScalingRate: 1.4
         spellVarianceMin: 0.85
         spellVarianceMax: 1.15
-        # Heals follow the same formula scaled by `healStat` (WIS by default).
         healStat: WIS
         healStatMultiplier: 0.25
-        healLevelScalingRate: 1.30
+        healLevelScalingRate: 1.3
         healVarianceMin: 0.85
         healVarianceMax: 1.15
-        # Buff bindings — reserved for utility/support classes (bard, herald).
-        # Wiring into status-effect duration/magnitude is a follow-up; the knobs
-        # exist now so support abilities have a defined scaling lane.
         buffStat: CHA
         buffDurationPerStat: 0.02
         buffMagnitudePerStat: 0.02
@@ -168,632 +151,386 @@ ambonmud:
         manaRegenStat: WIS
         manaRegenMsPerPoint: 200
         xpBonusStat: CHA
-        xpBonusPerPoint: 1
+        xpBonusPerPoint: 0.01
     abilities:
       definitions:
-        power_strike:
-          displayName: Power Strike
-          manaCostPct: 0
-          cooldownMs: 0
-          levelRequired: 1
+        hammer_strike:
+          displayName: Hammer Strike
+          manaCostPct: 25
+          cooldownMs: 3000
+          levelRequired: 2
           targetType: ENEMY
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 8
-            maxDamage: 14
-          description: A forceful melee attack that channels raw strength into a single devastating blow.
-          image: dd61f883dfea38e9c5702f35d5a337652140b246ee44822ea3db137a58013c2e.png
-          requiredClass: WARRIOR
-        shield_bash:
-          displayName: Shield Bash
-          manaCostPct: 12
-          cooldownMs: 8000
-          levelRequired: 3
-          targetType: ENEMY
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: shield_bash_stun
-          description: Slams the shield into an enemy's face, leaving them dazed and unable to act.
-          image: c92bf6fcadaf978c9b34c955d83dd6d42b2a8e5f0f95c41e9ad3c8c537a6571b.png
-          requiredClass: WARRIOR
-        war_cry:
-          displayName: War Cry
-          manaCostPct: 14
-          cooldownMs: 10000
-          levelRequired: 5
-          targetType: SELF
-          effect:
-            type: TAUNT
-            flatThreat: 60
-            margin: 15
-          description: A thunderous battle shout that forces nearby enemies to focus their aggression on the warrior.
-          image: 612be83ff89804c1a39f902917f30736aa7aaf82a1b33487155639803b6e4cce.png
-          requiredClass: WARRIOR
-        fortify:
-          displayName: Fortify
-          manaCostPct: 18
-          cooldownMs: 15000
-          levelRequired: 7
-          targetType: SELF
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: fortify_shield
-          description: Braces behind the shield, generating a temporary barrier that absorbs incoming damage.
-          image: e45ae03545a94defacf4a1be8d245922efeb3a652b2f8d0852bd1ae51e424a46.png
-          requiredClass: WARRIOR
-        cleave:
-          displayName: Cleave
-          manaCostPct: 25
-          cooldownMs: 12000
-          levelRequired: 9
-          targetType: ENEMY
-          effect:
-            type: AREA_DAMAGE
-            minDamage: 14
-            maxDamage: 22
-          description: A wide sweeping strike that carves through all enemies within reach.
-          image: 89934f29d6735864e190a2108e57bd4f569ccc5e6605ddebec6e4422eee0f557.png
-          requiredClass: WARRIOR
+            minDamage: 15
+            maxDamage: 15
+          description: A heroic overhand swing that brings your weapon crashing down on your foes.
+          image: 5edf15f67418dafd07503a73e4e638ff0cc91082c0a5d60542c3f1f8d7136976.png
+          requiredClass: bulwark
+          tree: bulwark_base
+          tier: 1
+          skillPointCost: 0
+          visual:
+            archetype: MELEE_STRIKE
+            projectileImage: f06ba2c4060ea8e8712a5c4932f0ce08db9040bc86f8103bee57105b9fa52651.png
         arcane_bolt:
           displayName: Arcane Bolt
-          manaCostPct: 10
-          cooldownMs: 0
-          levelRequired: 1
-          targetType: ENEMY
-          effect:
-            type: DIRECT_DAMAGE
-            minDamage: 10
-            maxDamage: 16
-          description: Launches a concentrated bolt of raw arcane energy at a single target.
-          image: 92ffba697c3c76a12f57f67952794cba6f20ce38a604f6c15c8748d03c48aa07.png
-          requiredClass: MAGE
-        flame_brand:
-          displayName: Flame Brand
-          manaCostPct: 15
-          cooldownMs: 6000
-          levelRequired: 3
-          targetType: ENEMY
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: flame_brand_dot
-          description: Sears the target with magical fire that continues to burn over time.
-          image: 8f875a9c4356d78ddfb92295bdce25caec871ce13caf969b04ffb33f9debef10.png
-          requiredClass: MAGE
-        arcane_shield:
-          displayName: Arcane Shield
-          manaCostPct: 15
-          cooldownMs: 15000
-          levelRequired: 5
-          targetType: SELF
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: arcane_shield_effect
-          description: Conjures a shimmering barrier of magical force that absorbs incoming damage.
-          image: 0a9cc349777938f2dfc88dd34e9b010780ae5b8a2de337f43af65da9ab04e36e.png
-          requiredClass: MAGE
-        chain_lightning:
-          displayName: Chain Lightning
-          manaCostPct: 25
-          cooldownMs: 8000
-          levelRequired: 7
-          targetType: ENEMY
-          effect:
-            type: AREA_DAMAGE
-            minDamage: 12
-            maxDamage: 20
-          description: Unleashes a crackling arc of lightning that leaps between nearby enemies.
-          image: 712a92a6e22da2b40b374f30bb1a6b0527dc65f73715b0e6575d74b6a55c3633.png
-          requiredClass: MAGE
-        hex:
-          displayName: Hex
-          manaCostPct: 18
-          cooldownMs: 10000
-          levelRequired: 9
-          targetType: ENEMY
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: hex_debuff
-          description: Curses the target with dark magic, sapping their physical attributes.
-          image: 5a314c1112771e96b25b31496f049b29c184246bbed62525161b4bdd33883446.png
-          requiredClass: MAGE
-        heal:
-          displayName: Heal
-          manaCostPct: 12
-          cooldownMs: 0
-          levelRequired: 1
-          targetType: SELF
-          effect:
-            type: DIRECT_HEAL
-            minHeal: 12
-            maxHeal: 20
-          description: Channels divine energy to mend the cleric's own wounds.
-          image: 78037433fb3cfb381a24f85e8f355b25cbe710cb26381e457e78d52593624bd1.png
-          requiredClass: CLERIC
-        restore:
-          displayName: Restore
-          manaCostPct: 15
+          manaCostPct: 24
           cooldownMs: 3000
+          levelRequired: 2
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 18
+            maxDamage: 18
+          description: Fire a glittering bolt of arcane energy at your enemies.
+          image: 1f1a5824903c8ac013a9bbd74e18b49903081ebe46c6d2422c3ba34bc537c4f3.png
+          requiredClass: arcanist
+          tree: arcanist_base
+          tier: 1
+          skillPointCost: 0
+          visual:
+            archetype: RANGED_PROJECTILE
+            projectileImage: 1696e6495a26aa26f2d42f167e2c73d1681f76165b1d0af154108e02ad2d2a2a.png
+        shadow_strike:
+          displayName: Shadow Strike
+          manaCostPct: 24
+          cooldownMs: 3000
+          levelRequired: 2
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 18
+            maxDamage: 18
+          description: Vanish into the shadows and strike unpredictably at your enemies.
+          image: 2cc68fbc7976d10c708adbef109c886fa9fcaa6a7ed23390898dbfc7c29dd29e.png
+          requiredClass: veil
+          tree: veil_base
+          tier: 1
+          skillPointCost: 0
+          visual:
+            archetype: AREA_BURST
+            projectileImage: 5b70f635ed0b9c4eb0c52230a63bfa8b6cdcff2f6d9d3096294101550095fbf5.png
+        smite:
+          displayName: Smite
+          manaCostPct: 24
+          cooldownMs: 3000
+          levelRequired: 2
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 15
+            maxDamage: 15
+          description: Call upon your patron deity to smite your foes.
+          image: 4c26a732a96e3a9bceb38df35b90fe117ef7b46313efd3c27e440a2ae0a5a2e5.png
+          requiredClass: herald
+          tree: herald_base
+          tier: 1
+          skillPointCost: 0
+          visual:
+            archetype: RANGED_PROJECTILE
+            projectileImage: 0b61954cf14166e528cc990c77e001a812a18726050fef3692decf12668aaa4d.png
+        springshot:
+          displayName: Spring Shot
+          manaCostPct: 26
+          cooldownMs: 3000
+          levelRequired: 2
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 15
+            maxDamage: 15
+          description: Fire a small spring-loaded peashooter loaded with grapeshot at your enemies.
+          image: 1739a381b864fbd126783ec4347756751d7d57036fc4753bdd4448456e7f0ea4.png
+          requiredClass: scrollwright
+          tree: scrollwright_base
+          tier: 1
+          skillPointCost: 0
+          visual:
+            archetype: RANGED_PROJECTILE
+            projectileImage: fcb8bf771ef20951e93074afa351981a503a5c6d0cb3f7b4f98aefbf539509fe.png
+        sour_note:
+          displayName: Sour Note
+          manaCostPct: 24
+          cooldownMs: 3000
+          levelRequired: 2
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 17
+            maxDamage: 17
+          description: Strike a dysphonic chord empowered by magic to damage your enemies.
+          image: afe88e0e1032df79e1bc9892e281021db4fc7351d4b7cf22a6277961f1fd9a08.png
+          requiredClass: songweaver
+          tree: songweaver_base
+          tier: 1
+          skillPointCost: 0
+          visual:
+            projectileImage: 48159b0178e363a3f2ee8dbfdf0cf619ec92faa727afab313075735c6f2b34ef.png
+        shield_bash:
+          displayName: Shield Bash
+          manaCostPct: 30
+          cooldownMs: 5000
           levelRequired: 3
-          targetType: ALLY
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 24
+            maxDamage: 24
+          description: Charge forward, driving enemies asunder with your shield.
+          image: 79e11324e68d4f796c715a61a2b8dcec12ba29d56533c30a6e5a04fdaf8652cf.png
+          requiredClass: bulwark
+          tree: bulwark_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: MELEE_STRIKE
+            projectileImage: 74001f073eb27602850f6ca19e070e3bb8e7977d6d7a7630d8781d918affc959.png
+        arcane_blast:
+          displayName: Arcane Blast
+          manaCostPct: 29
+          cooldownMs: 5000
+          levelRequired: 3
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 27
+            maxDamage: 27
+          description: Summon a massive arcane blast at your enemies' feet.
+          image: 781746e617fbb28d4120a4fbf8437acd1e0a2c260e096fe7f743b87df92c4ef1.png
+          requiredClass: arcanist
+          tree: arcanist_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: AREA_BURST
+            projectileImage: 24457042d3b2ef5fd51717c4ed76b1e548ad1efc61363236a375bd34ab57df1d.png
+        poison_dart:
+          displayName: Poison Dart
+          manaCostPct: 33
+          cooldownMs: 5000
+          levelRequired: 3
+          targetType: ENEMY
+          effect:
+            type: COMPOSITE
+            effects:
+              - type: DIRECT_DAMAGE
+                minDamage: 21
+                maxDamage: 21
+              - type: APPLY_STATUS
+                statusEffectId: poison
+          description: Fire a tiny poisoned dart at your enemies.
+          image: f092d49be03df3fffcc666372337ac2a6268815c895df949c5dfad63c93743d5.png
+          requiredClass: veil
+          tree: veil_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: RANGED_PROJECTILE
+            projectileImage: 13512e3a4d14522af2a298fa3d17a9ee675beb617e2ff3ec31b11be362c1edd4.png
+        minor_heal:
+          displayName: Minor Heal
+          manaCostPct: 20
+          cooldownMs: 3500
+          levelRequired: 3
+          targetType: self
           effect:
             type: DIRECT_HEAL
-            minHeal: 15
-            maxHeal: 25
-          description: Extends a hand of sacred light to heal an injured ally.
-          image: a7ddd58504f3b070e3a33d5b1c4e9d89cfa4a8428501bb8762dfdb3409f206df.png
-          requiredClass: CLERIC
-        blessing:
-          displayName: Blessing
-          manaCostPct: 18
-          cooldownMs: 20000
-          levelRequired: 5
-          targetType: SELF
+            minHeal: 24
+            maxHeal: 24
+          description: Petition your patron deity for healing, restoring your health.
+          image: 5d3b9a67a0477af94aaeb1abb5db43eddef62f6720f2b228b859db840cfdad05.png
+          requiredClass: herald
+          tree: herald_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: HEAL_AURA
+            projectileImage: 7ea0b18d7df98de28e550fa2ea8334490462760bbaabf79f167e527c04cd0ccb.png
+        song_strength:
+          displayName: Song of Strength
+          manaCostPct: 50
+          cooldownMs: 300000
+          levelRequired: 3
+          targetType: self
           effect:
             type: APPLY_STATUS
-            statusEffectId: blessing_buff
-          description: Invokes a divine blessing that fortifies the body and sharpens the mind.
-          image: fd50ee369f0ea272a2fbb430a957827765e9223f8ddb6c3cd46791c4e89f53ab.png
-          requiredClass: CLERIC
-        purge:
-          displayName: Purge
-          manaCostPct: 15
-          cooldownMs: 8000
-          levelRequired: 7
-          targetType: ENEMY
+            statusEffectId: song_strength
+          description: Perform an inspiring patriotic ballad that strongly enhances your own strength and constitution.
+          image: e5f6e3dc2757f0088a020ba7e8bbdd58f472665e41f2f1ca8156240f5b616e16.png
+          requiredClass: songweaver
+          tree: songweaver_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: BUFF_AURA
+            projectileImage: 7665fcae778963c68d9b434667da6675fdb5412263b4407029b7536a7763d5b8.png
+        song_intellect:
+          displayName: Song of Intellect
+          manaCostPct: 50
+          cooldownMs: 300000
+          levelRequired: 3
+          targetType: self
           effect:
             type: APPLY_STATUS
-            statusEffectId: purge_dot
-          description: Calls down a searing radiance that burns the unholy with sustained divine fire.
-          image: 5c760190bd246f9f784e77593c7f5c8f200994f40862dce0d350e9eff9e04ca6.png
-          requiredClass: CLERIC
-        sanctuary:
-          displayName: Sanctuary
-          manaCostPct: 22
-          cooldownMs: 12000
-          levelRequired: 9
-          targetType: SELF
+            statusEffectId: song_intellect
+          description: Perform an enlightened philosophical opera that strongly enhances your own intelligence and wisdom.
+          image: 44b8aa15eea77f645177f55111f62b87e31f6d3969a0cd9c2d4f9fc7aef1f649.png
+          requiredClass: songweaver
+          tree: songweaver_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: BUFF_AURA
+            projectileImage: 0cf19acb68751dd32fd0b72ce8a05b8586585eda647663b3fc3c3e091466847a.png
+        prayer_fortification:
+          displayName: Prayer of Fortification
+          manaCostPct: 40
+          cooldownMs: 300000
+          levelRequired: 3
+          targetType: self
           effect:
             type: APPLY_STATUS
-            statusEffectId: sanctuary_hot
-          description: Wraps the cleric in a sustained aura of restorative energy that heals wounds over time.
-          image: 296b4eb56f1b9011a91498073d3f8532c3f20e8514651546a03ede4777828698.png
-          requiredClass: CLERIC
-        backstab:
-          displayName: Backstab
-          manaCostPct: 8
-          cooldownMs: 0
-          levelRequired: 1
-          targetType: ENEMY
-          effect:
-            type: DIRECT_DAMAGE
-            minDamage: 9
-            maxDamage: 15
-          description: Drives a blade into a vulnerable spot, dealing heavy damage from close range.
-          image: 699e270d07c1ecfeabbcd3a9f52f47a4d01a2d55cdaded80aafd6fec4d66ca2f.png
-          requiredClass: ROGUE
-        blind:
-          displayName: Blind
-          manaCostPct: 10
-          cooldownMs: 10000
+            statusEffectId: divine_fortification
+          description: Petition your patron deity for protection, greatly increasing your constitution and wisdom.
+          image: c36bde14b796c7715d26774e405fa0cadc3e69872c876bf05600a99698bde504.png
+          requiredClass: herald
+          tree: herald_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: BUFF_AURA
+            projectileImage: a803b03876b4ae6430d1ba1debb6dc2fffbe653b00e83eccc175bc4bf490ab30.png
+        scimitar_slash:
+          displayName: Scimitar Slash
+          manaCostPct: 27
+          cooldownMs: 5000
           levelRequired: 3
           targetType: ENEMY
           effect:
-            type: APPLY_STATUS
-            statusEffectId: blind_stun
-          description: Throws a handful of blinding powder into an enemy's eyes, leaving them stunned.
-          image: d0eed43973784561fd4e582079c0b8428e4decd946a0d752d2e531593153e1ea.png
-          requiredClass: ROGUE
-        envenom:
-          displayName: Envenom
-          manaCostPct: 15
-          cooldownMs: 8000
-          levelRequired: 5
-          targetType: ENEMY
+            type: DIRECT_DAMAGE
+            minDamage: 22
+            maxDamage: 22
+          description: Dash toward your enemy, slashing wildly before they can react.
+          image: b4179380a1079001730a05235dd7ab19795e42932623acc3f1d23bc1bebff5ac.png
+          requiredClass: veil
+          tree: veil_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: MELEE_STRIKE
+            projectileImage: 1ce10496032a15f9e95c0139c2995c46766f46b124ff987e49caa672195b64a3.png
+        arcane_intuition:
+          displayName: Arcane Intuition
+          manaCostPct: 33
+          cooldownMs: 300000
+          levelRequired: 3
+          targetType: self
           effect:
             type: APPLY_STATUS
-            statusEffectId: envenom_dot
-          description: Coats a weapon in virulent poison that eats at the target's vitality over time.
-          image: 7ff0574b1779e42ccaaf86e7dda7e2c9a386181291ce20c63e45f4e69124d386.png
-          requiredClass: ROGUE
-        shadow_step:
-          displayName: Shadow Step
-          manaCostPct: 18
-          cooldownMs: 25000
-          levelRequired: 7
-          targetType: SELF
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: shadow_step_buff
-          description: Slips into the shadows, gaining a burst of supernatural agility and resilience.
-          image: 7a5b4adc668a8cc136cb26c2d5e54289f81ea63aaaddaebfdbf3dce5f5d17b3e.png
-          requiredClass: ROGUE
-        ambush:
-          displayName: Ambush
+            statusEffectId: arcane_intellect
+          description: Temporarily increase your intellect through meditation, cultivation, and study of the arcane arts.
+          image: e8b06b9af905d32e5653999ced895318ca8677a7c32c68d6744319e945280d59.png
+          requiredClass: arcanist
+          tree: arcanist_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: BUFF_AURA
+            projectileImage: b57d0ebaf89e28bc83169937a4cc24b61c43a432500eaabfd2bedffe0e7a07b8.png
+        triage_wounds:
+          displayName: Triage Wounds
           manaCostPct: 25
-          cooldownMs: 8000
-          levelRequired: 9
-          targetType: ENEMY
-          effect:
-            type: DIRECT_DAMAGE
-            minDamage: 25
-            maxDamage: 40
-          description: Strikes from concealment with lethal precision, dealing massive damage to an unsuspecting target.
-          image: ba481e6edf71d234d729d9fd69c3a6887558dadc491b9e712de8a75d7884cb6a.png
-          requiredClass: ROGUE
-        summon_wolf:
-          displayName: Summon Wolf
-          manaCostPct: 18
-          cooldownMs: 5000
-          levelRequired: 1
-          targetType: SELF
-          effect:
-            type: SUMMON_PET
-            petTemplateKey: wolf_companion
-          description: Calls a loyal wolf companion to fight at the ranger's side.
-          image: a1f6b4d0dac200e2f722836f6bbaaa8b26363482f20b6fdc1d74475d344894f8.png
-          requiredClass: RANGER
-        aimed_shot:
-          displayName: Aimed Shot
-          manaCostPct: 12
           cooldownMs: 5000
           levelRequired: 3
-          targetType: ENEMY
+          targetType: self
           effect:
-            type: DIRECT_DAMAGE
-            minDamage: 10
-            maxDamage: 18
-          description: Takes careful aim and releases a precise arrow that strikes a vital area.
-          image: f8268b41165fb08d519880b752ff25a3c6cb6e11fa232fc23dd4d9312a0323e0.png
-          requiredClass: RANGER
-        summon_hawk:
-          displayName: Summon Hawk
-          manaCostPct: 20
-          cooldownMs: 5000
-          levelRequired: 5
-          targetType: SELF
-          effect:
-            type: SUMMON_PET
-            petTemplateKey: spirit_hawk
-          description: Calls a fierce spirit hawk to harry enemies from above.
-          image: 10103755ad680b21778e51c2f58ff1be38712032ba2d43e97461626819ec0949.png
-          requiredClass: RANGER
-        natures_gift:
-          displayName: Nature's Gift
-          manaCostPct: 18
-          cooldownMs: 15000
-          levelRequired: 7
-          targetType: SELF
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: natures_gift_hot
-          description: Draws on the vitality of the natural world to gradually restore health over time.
-          image: 0b07953b16f2c197eefe383e4d6ee356a1de50894762650e0649a930cdf0e1c3.png
-          requiredClass: RANGER
-        summon_bear:
-          displayName: Summon Bear
-          manaCostPct: 28
-          cooldownMs: 5000
-          levelRequired: 9
-          targetType: SELF
+            type: DIRECT_HEAL
+            minHeal: 23
+            maxHeal: 23
+          description: Quickly triage and heal the worst of your wounds using your extensive knowledge of combat medicine.
+          image: 182245cedcabca5cc29f5733a581b424cd03dd0602f204d1c6beedca6ef7c618.png
+          requiredClass: bulwark
+          tree: bulwark_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: HEAL_AURA
+            projectileImage: 890804a5267754536f2e4d9a0974656370ef26171507b92e1548fbe176544d82.png
+        summon_alligator:
+          displayName: Summon Clockwork Alligator
+          manaCostPct: 30
+          cooldownMs: 30000
+          levelRequired: 2
+          targetType: self
           effect:
             type: SUMMON_PET
-            petTemplateKey: bear_guardian
-          description: Calls a massive bear guardian to absorb damage and protect the ranger.
-          image: 198deb0c7cb5fae8bf52b14929b10751dc9b50986f334abfc059a95c0432c5a3.png
-          requiredClass: RANGER
+            petTemplateKey: clockwork_alligator
+          description: Summon a small clockwork alligator that boosts your damage in battle.
+          image: fb12dea457b73ebe828bea82a071720745b8060cd829aeb6ec0a60e84f402abe.png
+          requiredClass: scrollwright
+          tree: scrollwright_base
+          tier: 2
+          skillPointCost: 2
+          visual:
+            archetype: SUMMON_POOF
+            projectileImage: 04766896a5cb0263166caec4cbf92910d201e3ad386799ae62e3a5cdb06abf5e.png
     statusEffects:
       definitions:
-        ignite:
-          displayName: Ignite
+        song_strength:
+          displayName: Song of Strength
+          effectType: stat_buff
+          durationMs: 300000
+          image: 7055291c5fa996e5d6aaca28d495979939132639079f0328f048888311acb632.png
+          stackBehavior: REFRESH
+          strMod: 10
+          conMod: 5
+        song_intellect:
+          displayName: Song of Intellect
+          effectType: stat_buff
+          durationMs: 300000
+          image: ba9cc0e2aaba837d076ea866ef4482e2e8c42cc2612a49fbbfc018ff175810ca.png
+          stackBehavior: REFRESH
+          strMod: 0
+          conMod: 0
+          intMod: 10
+          wisMod: 5
+        divine_fortification:
+          displayName: Divine Fortification
+          effectType: stat_buff
+          durationMs: 300000
+          image: 7305984b056f8028ab60d9eee6d510083d90af6cf1c284338b77d981a1d50ca8.png
+          stackBehavior: REFRESH
+          conMod: 10
+          wisMod: 6
+        arcane_intellect:
+          displayName: Arcane Intellect
+          effectType: stat_buff
+          durationMs: 300000
+          image: bfcd40a14d1aafa5ab2986ff9f4d2291030a88b19c06e86b759cc5487785313e.png
+          stackBehavior: REFRESH
+          intMod: 10
+          wisMod: 5
+        poison:
+          displayName: Poisoned
           effectType: dot
           durationMs: 6000
-          tickIntervalMs: 2000
+          image: 4813254323d5c3231a468a084df94d3e63fe5a4722a07cdc014fdff13909b226.png
+          tickMinValue: 5
+          tickMaxValue: 10
           stackBehavior: REFRESH
-        poison:
-          displayName: Poison
-          effectType: dot
-          durationMs: 10000
-          tickIntervalMs: 2000
-          stackBehavior: STACK
-          maxStacks: 3
-        shield_of_faith:
-          displayName: Shield of Faith
-          effectType: shield
-          durationMs: 30000
-          shieldAmount: 20
-          stackBehavior: NONE
-        battle_shout:
-          displayName: Battle Shout
-          effectType: stat_buff
-          durationMs: 60000
-          stackBehavior: REFRESH
-        rejuvenation:
-          displayName: Rejuvenation
-          effectType: hot
-          durationMs: 10000
-          tickIntervalMs: 2000
-          stackBehavior: REFRESH
-        frost_grip:
-          displayName: Frost Grip
-          effectType: root
-          durationMs: 4000
-          stackBehavior: NONE
-        concuss:
-          displayName: Concuss
-          effectType: stun
-          durationMs: 2000
-          stackBehavior: NONE
         dazzle_stun:
           displayName: Dazzled
           effectType: stun
           durationMs: 3000
+          image: d746dfa76d51be91faf4caaade5a427fd050ac936e499113ed95fdd872812ffb.png
           stackBehavior: REFRESH
         stoneform_root:
           displayName: Stone Form
           effectType: root
           durationMs: 4000
+          image: 3585cd1e27cecab7943a6a086863c3378ac37ea80153f95f4167565e431cb56c.png
           stackBehavior: NONE
-        whirlwind_rage:
-          displayName: Whirlwind Rage
-          effectType: stat_buff
-          durationMs: 8000
-          tickIntervalMs: 1000
-          stackBehavior: REFRESH
-        berserker_state:
-          displayName: Berserker State
-          effectType: stat_buff
-          durationMs: 10000
-          stackBehavior: REFRESH
-        thornhide_armor:
-          displayName: Thornhide Armor
-          effectType: shield
-          durationMs: 15000
-          shieldAmount: 30
-          stackBehavior: REFRESH
-        weakened:
-          displayName: Weakened
-          effectType: stat_debuff
-          durationMs: 8000
-          stackBehavior: REFRESH
-        mana_shield:
-          displayName: Mana Shield
-          effectType: shield
-          durationMs: 20000
-          shieldAmount: 25
-          stackBehavior: REFRESH
-        flame_armor:
-          displayName: Flame Armor
-          effectType: stat_buff
-          durationMs: 12000
-          stackBehavior: REFRESH
-        frost_armor:
-          displayName: Frost Armor
-          effectType: shield
-          durationMs: 12000
-          shieldAmount: 28
-          stackBehavior: REFRESH
-        frozen:
-          displayName: Frozen
-          effectType: stun
-          durationMs: 3000
-          stackBehavior: NONE
-        chilled:
-          displayName: Chilled
-          effectType: stat_debuff
-          durationMs: 6000
-          stackBehavior: REFRESH
-        arcane_burn:
-          displayName: Arcane Burn
-          effectType: dot
-          durationMs: 8000
-          tickIntervalMs: 2000
-          stackBehavior: STACK
-          maxStacks: 2
-        holy_light:
-          displayName: Holy Light
-          effectType: hot
-          durationMs: 12000
-          tickIntervalMs: 2000
-          stackBehavior: REFRESH
-        divine_blessing:
-          displayName: Divine Blessing
-          effectType: stat_buff
-          durationMs: 15000
-          stackBehavior: REFRESH
-        consecrated_ground:
-          displayName: Consecrated Ground
-          effectType: hot
-          durationMs: 20000
-          tickIntervalMs: 2000
-          stackBehavior: REFRESH
-        purified:
-          displayName: Purified
-          effectType: stat_buff
-          durationMs: 10000
-          stackBehavior: REFRESH
-        shadow_veil:
-          displayName: Shadow Veil
-          effectType: shield
-          durationMs: 10000
-          shieldAmount: 15
-          stackBehavior: REFRESH
-        venomous:
-          displayName: Venomous
-          effectType: dot
-          durationMs: 12000
-          tickIntervalMs: 2000
-          stackBehavior: STACK
-          maxStacks: 4
-        shadow_mark:
-          displayName: Shadow Mark
-          effectType: stat_debuff
-          durationMs: 8000
-          stackBehavior: REFRESH
-        death_mark:
-          displayName: Death Mark
-          effectType: stat_debuff
-          durationMs: 10000
-          stackBehavior: REFRESH
-        blinded:
-          displayName: Blinded
-          effectType: stat_debuff
-          durationMs: 5000
-          stackBehavior: NONE
-        camouflage_stance:
-          displayName: Camouflage
-          effectType: stat_buff
-          durationMs: 4000
-          stackBehavior: REFRESH
-          dexMod: 4
-        hunters_mark:
-          displayName: Hunter's Mark
-          effectType: stat_debuff
-          durationMs: 10000
-          stackBehavior: REFRESH
-          strMod: -2
-          dexMod: -2
-        bleed:
-          displayName: Bleeding
-          effectType: dot
-          durationMs: 8000
-          tickIntervalMs: 2000
-          tickMinValue: 2
-          tickMaxValue: 4
-          stackBehavior: STACK
-          maxStacks: 3
-        natures_grasp:
-          displayName: Nature's Grasp
-          effectType: root
-          durationMs: 4000
-          stackBehavior: NONE
-        nature_bond_hot:
-          displayName: Nature Bond
-          effectType: hot
-          durationMs: 8000
-          tickIntervalMs: 2000
-          stackBehavior: REFRESH
-        rend_bleed:
-          displayName: Rend
-          effectType: dot
-          durationMs: 12000
-          tickIntervalMs: 2000
-          stackBehavior: REFRESH
-        ice_barrier:
-          displayName: Ice Barrier
-          effectType: shield
-          durationMs: 15000
-          shieldAmount: 35
-          stackBehavior: REFRESH
-        rallying_cry_buff:
-          displayName: Rallying Cry
-          effectType: stat_buff
-          durationMs: 15000
-          stackBehavior: REFRESH
-          strMod: 3
-          conMod: 3
-        shield_wall_buff:
-          displayName: Shield Wall
-          effectType: shield
-          durationMs: 10000
-          shieldAmount: 50
-          stackBehavior: REFRESH
-        last_stand_buff:
-          displayName: Last Stand
-          effectType: shield
-          durationMs: 8000
-          shieldAmount: 80
-          stackBehavior: REFRESH
-        frozen_orb_dot:
-          displayName: Frozen Orb
-          effectType: dot
-          durationMs: 8000
-          tickIntervalMs: 2000
-          stackBehavior: REFRESH
-        shield_bash_stun:
-          displayName: Stunned
-          effectType: stun
-          durationMs: 2000
-          stackBehavior: none
-        fortify_shield:
-          displayName: Fortify
-          effectType: shield
-          durationMs: 15000
-          shieldAmount: 30
-          stackBehavior: refresh
-        flame_brand_dot:
-          displayName: Flame Brand
-          effectType: dot
-          durationMs: 8000
-          tickIntervalMs: 2000
-          tickMinValue: 5
-          tickMaxValue: 8
-          stackBehavior: refresh
-        arcane_shield_effect:
-          displayName: Arcane Shield
-          effectType: shield
-          durationMs: 12000
-          shieldAmount: 25
-          stackBehavior: refresh
-        hex_debuff:
-          displayName: Hex
-          effectType: stat_debuff
-          durationMs: 10000
-          stackBehavior: refresh
-          strMod: -2
-          dexMod: -2
-          conMod: -1
-        blessing_buff:
-          displayName: Blessing
-          effectType: stat_buff
-          durationMs: 30000
-          stackBehavior: refresh
-          conMod: 3
-          wisMod: 1
-        purge_dot:
-          displayName: Purge
-          effectType: dot
-          durationMs: 10000
-          tickIntervalMs: 2000
-          tickMinValue: 4
-          tickMaxValue: 7
-          stackBehavior: refresh
-        sanctuary_hot:
-          displayName: Sanctuary
-          effectType: hot
-          durationMs: 15000
-          tickIntervalMs: 3000
-          tickMinValue: 6
-          tickMaxValue: 10
-          stackBehavior: refresh
-        blind_stun:
-          displayName: Blinded
-          effectType: stun
-          durationMs: 2000
-          stackBehavior: none
-        envenom_dot:
-          displayName: Envenom
-          effectType: dot
-          durationMs: 10000
-          tickIntervalMs: 2000
-          tickMinValue: 4
-          tickMaxValue: 6
-          stackBehavior: stack
-          maxStacks: 3
-        shadow_step_buff:
-          displayName: Shadow Step
-          effectType: stat_buff
-          durationMs: 20000
-          stackBehavior: refresh
-          dexMod: 4
-          conMod: 1
-        natures_gift_hot:
-          displayName: Nature's Gift
-          effectType: hot
-          durationMs: 12000
-          tickIntervalMs: 2000
-          tickMinValue: 5
-          tickMaxValue: 8
-          stackBehavior: refresh
     effectTypes:
       types:
         dot:
@@ -831,100 +568,114 @@ ambonmud:
           displayName: Self
         ally:
           displayName: Ally
+        pet:
+          displayName: Pet
     combat:
       maxCombatsPerTick: 20
       tickMillis: 2000
       feedback:
         enabled: false
         roomBroadcastEnabled: false
-    death:
-      sanctumRoom: academy:sanctum
-      respawnHpFraction: 0.2
-      respawnManaFraction: 0.2
-      xpPenaltyFraction: 0.0
     mob:
-      minActionDelayMillis: 2000
-      maxActionDelayMillis: 5000
+      minActionDelayMillis: 10000
+      maxActionDelayMillis: 20000
       tiers:
         weak:
-          baseHp: 5
-          hpScalingRate: 1.10
-          baseMinDamage: 1
-          baseMaxDamage: 2
-          damageScalingRate: 1.30
+          baseHp: 20
+          hpScalingRate: 1.5
+          baseMinDamage: 13
+          baseMaxDamage: 17
+          damageScalingRate: 1.35
           baseArmor: 0
-          baseXpReward: 15
-          xpScalingRate: 1.09
-          baseGoldMin: 1
-          baseGoldMax: 3
-          goldScalingRate: 1.19
+          baseXpReward: 24
+          xpScalingRate: 1.5
+          baseGoldMin: 2
+          baseGoldMax: 6
+          goldScalingRate: 1.45
         standard:
-          baseHp: 12
-          hpScalingRate: 1.10
-          baseMinDamage: 2
-          baseMaxDamage: 4
-          damageScalingRate: 1.30
+          baseHp: 40
+          hpScalingRate: 1.5
+          baseMinDamage: 17
+          baseMaxDamage: 23
+          damageScalingRate: 1.4
           baseArmor: 1
-          baseXpReward: 30
-          xpScalingRate: 1.08
-          baseGoldMin: 3
-          baseGoldMax: 8
-          goldScalingRate: 1.19
+          baseXpReward: 45
+          xpScalingRate: 1.5
+          baseGoldMin: 5
+          baseGoldMax: 14
+          goldScalingRate: 1.5
         elite:
-          baseHp: 28
-          hpScalingRate: 1.09
-          baseMinDamage: 3
-          baseMaxDamage: 6
-          damageScalingRate: 1.30
+          baseHp: 80
+          hpScalingRate: 1.5
+          baseMinDamage: 23
+          baseMaxDamage: 29
+          damageScalingRate: 1.45
           baseArmor: 2
-          baseXpReward: 75
-          xpScalingRate: 1.08
-          baseGoldMin: 10
-          baseGoldMax: 25
-          goldScalingRate: 1.19
+          baseXpReward: 60
+          xpScalingRate: 1.5
+          baseGoldMin: 18
+          baseGoldMax: 45
+          goldScalingRate: 1.5
         boss:
-          baseHp: 55
-          hpScalingRate: 1.09
-          baseMinDamage: 4
-          baseMaxDamage: 9
-          damageScalingRate: 1.30
-          baseArmor: 3
-          baseXpReward: 200
-          xpScalingRate: 1.07
-          baseGoldMin: 50
-          baseGoldMax: 100
-          goldScalingRate: 1.19
+          baseHp: 200
+          hpScalingRate: 1.5
+          baseMinDamage: 25
+          baseMaxDamage: 40
+          damageScalingRate: 1.5
+          baseArmor: 4
+          baseXpReward: 100
+          xpScalingRate: 1.52
+          baseGoldMin: 70
+          baseGoldMax: 150
+          goldScalingRate: 1.52
     economy:
       buyMultiplier: 1
       sellMultiplier: 0.5
     regen:
-      cycleTargetMillis: 2000
-      minPlayersPerTick: 5
-      maxPlayersPerTick: 200
-      baseIntervalMillis: 4500
+      maxPlayersPerTick: 10
+      baseIntervalMillis: 4000
       minIntervalMillis: 1000
-      # Fraction of max HP restored per regen tick (0.05 = 5%).
-      regenPercent: 0.05
-      # Multiplier applied to regen amount while the player is in combat
-      # (0.5 = half regen, 0.0 = no regen while fighting).
-      inCombatMultiplier: 0.5
-      # Multiplier applied to HP + mana regen while resting in an inn room
-      # (2.0 = double regen). Stacks with inCombatMultiplier.
-      innMultiplier: 2.0
+      regenPercent: 0.15
+      inCombatMultiplier: 0.33
+      innMultiplier: 2
       mana:
-        baseIntervalMillis: 4500
+        baseIntervalMillis: 4000
         minIntervalMillis: 1000
-        # Fraction of max mana restored per regen tick.
-        regenPercent: 0.05
+        regenPercent: 0.15
     crafting:
-      maxSkillLevel: 75
+      maxSkillLevel: 10
       baseXpPerLevel: 100
       xpExponent: 1.5
-      gatherCooldownMs: 3000
-      stationBonusQuantity: 1
+      gatherCooldownMs: 30000
+      stationBonusQuantity: 2
+    craftingSkills:
+      skills:
+        mining:
+          displayName: Mining
+          type: gathering
+        herbalism:
+          displayName: Herbalism
+          type: gathering
+        smithing:
+          displayName: Smithing
+          type: crafting
+        alchemy:
+          displayName: Alchemy
+          type: crafting
+        enchanting:
+          displayName: Enchanting
+          type: crafting
+    craftingStationTypes:
+      stationTypes:
+        forge:
+          displayName: Forge
+        alchemy_table:
+          displayName: Alchemy Table
+        workbench:
+          displayName: Workbench
     navigation:
       recall:
-        cooldownMs: 60000
+        cooldownMs: 300000
         messages:
           combatBlocked: You are fighting for your life...
           cooldownRemaining: You need to rest... ({seconds} seconds remaining)
@@ -933,1311 +684,1323 @@ ambonmud:
           departNotice: vanishes in a flash of light.
           arriveNotice: appears in a flash of light.
           arrival: You feel a familiar warmth...
+    death:
+      sanctumRoom: celestial_sanctum:krioshaeu_cabin
+      respawnHpFraction: 0.2
+      respawnManaFraction: 0.2
+      xpPenaltyFraction: 0
+      messages:
+        arriveSanctum: The world fades... and you awaken in the sanctum, your body mending.
+        departNoSanctum: You can only depart from the sanctum.
+        departNoDeath: You have nowhere to return to.
+        departBegin: You step through the spirit gate and return to the world.
+        departUnreachable: The spirit gate flickers, but nothing happens.
     commands:
       entries:
         help:
-          usage: "help/?"
-          description: "Show this help"
-          category: "utility"
+          usage: help/?
+          description: Show this help
+          category: utility
           staff: false
         look:
-          usage: "look/l [target|direction]"
-          description: "Look around, at a target, or in a direction"
-          category: "navigation"
+          usage: look/l [target|direction]
+          description: Look around, at a target, or in a direction
+          category: navigation
           staff: false
         move:
-          usage: "n/s/e/w/u/d"
-          description: "Move in a direction"
-          category: "navigation"
+          usage: n/s/e/w/u/d
+          description: Move in a direction
+          category: navigation
           staff: false
         exits:
-          usage: "exits/ex"
-          description: "List available exits"
-          category: "navigation"
+          usage: exits/ex
+          description: List available exits
+          category: navigation
           staff: false
         recall:
-          usage: "recall"
-          description: "Teleport to your recall point (set by resting at an inn)"
-          category: "navigation"
+          usage: recall
+          description: Teleport to your recall point (set by resting at an inn)
+          category: navigation
           staff: false
         rest:
-          usage: "rest"
-          description: "Rest at an inn to make it your recall point."
-          category: "navigation"
+          usage: rest
+          description: Rest at an inn to make it your recall point.
+          category: navigation
           staff: false
         depart:
-          usage: "depart"
-          description: "Leave the death sanctum and return to the world"
-          category: "navigation"
+          usage: depart
+          description: Leave the death sanctum and return to the world
+          category: navigation
           staff: false
         run:
-          usage: "run <directions> (e.g. 5n3e)"
-          description: "Move along a sequence of directions. Numeric prefixes repeat — '5n3e' walks five north then three east."
-          category: "navigation"
+          usage: run <directions> (e.g. 5n3e)
+          description: Move along a sequence of directions. Numeric prefixes repeat — '5n3e' walks five north then three east.
+          category: navigation
           staff: false
           requiresTarget: true
         areas:
-          usage: "areas [<minLevel> [<maxLevel>]]"
-          description: "List known areas. With one level, shows areas covering that level; with two, shows areas overlapping the range."
-          category: "navigation"
+          usage: areas [<minLevel> [<maxLevel>]]
+          description: List known areas. With one level, shows areas covering that level; with two, shows areas overlapping the
+            range.
+          category: navigation
           staff: false
         say:
-          usage: "say <msg> or '<msg>"
-          description: "Speak to the room"
-          category: "communication"
+          usage: say <msg> or '<msg>
+          description: Speak to the room
+          category: communication
           staff: false
           requiresTarget: true
         emote:
-          usage: "emote <msg>"
-          description: "Perform an emote"
-          category: "communication"
+          usage: emote <msg>
+          description: Perform an emote
+          category: communication
           staff: false
           requiresTarget: true
         pose:
-          usage: "pose <msg>"
-          description: "Strike a pose"
-          category: "communication"
+          usage: pose <msg>
+          description: Strike a pose
+          category: communication
           staff: false
           requiresTarget: true
         who:
-          usage: "who"
-          description: "List online players"
-          category: "communication"
+          usage: who
+          description: List online players
+          category: communication
           staff: false
         tell:
-          usage: "tell/t <player> <msg>"
-          description: "Private message a player"
-          category: "communication"
+          usage: tell/t <player> <msg>
+          description: Private message a player
+          category: communication
           staff: false
           requiresTarget: true
         whisper:
-          usage: "whisper/wh <player> <msg>"
-          description: "Whisper to a player"
-          category: "communication"
+          usage: whisper/wh <player> <msg>
+          description: Whisper to a player
+          category: communication
           staff: false
           requiresTarget: true
         gossip:
-          usage: "gossip/gs <msg>"
-          description: "Global chat channel"
-          category: "communication"
+          usage: gossip/gs <msg>
+          description: Global chat channel
+          category: communication
           staff: false
           requiresTarget: true
         shout:
-          usage: "shout/sh <msg>"
-          description: "Shout to your zone"
-          category: "communication"
+          usage: shout/sh <msg>
+          description: Shout to your zone
+          category: communication
           staff: false
           requiresTarget: true
         ooc:
-          usage: "ooc <msg>"
-          description: "Out-of-character channel"
-          category: "communication"
+          usage: ooc <msg>
+          description: Out-of-character channel
+          category: communication
           staff: false
           requiresTarget: true
         inventory:
-          usage: "inventory/inv/i"
-          description: "View your inventory"
-          category: "items"
+          usage: inventory/inv/i
+          description: View your inventory
+          category: items
           staff: false
         equipment:
-          usage: "equipment/eq"
-          description: "View worn equipment"
-          category: "items"
+          usage: equipment/eq
+          description: View worn equipment
+          category: items
           staff: false
         wear:
-          usage: "wear/equip <item>"
-          description: "Equip an item"
-          category: "items"
+          usage: wear/equip <item>
+          description: Equip an item
+          category: items
           staff: false
           requiresTarget: true
         remove:
-          usage: "remove/unequip <slot>"
-          description: "Unequip from a slot"
-          category: "items"
+          usage: remove/unequip <slot>
+          description: Unequip from a slot
+          category: items
           staff: false
           requiresTarget: true
         get:
-          usage: "get/take/pickup <item>"
-          description: "Pick up an item"
-          category: "items"
+          usage: get/take/pickup <item>
+          description: Pick up an item
+          category: items
           staff: false
           requiresTarget: true
         drop:
-          usage: "drop <item>"
-          description: "Drop an item"
-          category: "items"
+          usage: drop <item>
+          description: Drop an item
+          category: items
           staff: false
           requiresTarget: true
         use:
-          usage: "use/eat/drink <item>"
-          description: "Use a consumable item"
-          category: "items"
+          usage: use/eat/drink <item>
+          description: Use a consumable item
+          category: items
           staff: false
           requiresTarget: true
         quickheal:
-          usage: "quickheal/qh"
-          description: "Auto-use best healing potion"
-          category: "combat"
+          usage: quickheal/qh
+          description: Auto-use best healing potion
+          category: combat
           staff: false
         quickmana:
-          usage: "quickmana/qm"
-          description: "Auto-use best mana potion"
-          category: "combat"
+          usage: quickmana/qm
+          description: Auto-use best mana potion
+          category: combat
           staff: false
         give:
-          usage: "give <item> <player>"
-          description: "Give an item to a player"
-          category: "items"
+          usage: give <item> <player>
+          description: Give an item to a player
+          category: items
           staff: false
           requiresTarget: true
         talk:
-          usage: "talk <npc>"
-          description: "Start a conversation with an NPC"
-          category: "social"
+          usage: talk <npc>
+          description: Start a conversation with an NPC
+          category: social
           staff: false
           requiresTarget: true
         bye:
-          usage: "bye/goodbye"
-          description: "End the current NPC conversation"
-          category: "social"
+          usage: bye/goodbye
+          description: End the current NPC conversation
+          category: social
           staff: false
         kill:
-          usage: "kill <mob>"
-          description: "Attack a mob"
-          category: "combat"
+          usage: kill <mob>
+          description: Attack a mob
+          category: combat
           staff: false
           requiresTarget: true
         flee:
-          usage: "flee"
-          description: "Attempt to flee combat"
-          category: "combat"
+          usage: flee
+          description: Attempt to flee combat
+          category: combat
           staff: false
         cast:
-          usage: "cast/c <spell> [target]"
-          description: "Cast a spell or ability"
-          category: "combat"
+          usage: cast/c <spell> [target]
+          description: Cast a spell or ability
+          category: combat
           staff: false
           requiresTarget: true
         consider:
-          usage: "consider/con <mob>"
-          description: "Estimate your odds against a mob before attacking"
-          category: "combat"
+          usage: consider/con <mob>
+          description: Estimate your odds against a mob before attacking
+          category: combat
           staff: false
           requiresTarget: true
         wimpy:
-          usage: "wimpy [off | 0-95]"
-          description: "View or set the HP percent where you auto-flee combat"
-          category: "combat"
+          usage: wimpy [off | 0-95]
+          description: View or set the HP percent where you auto-flee combat
+          category: combat
           staff: false
         duel:
-          usage: "duel <player> | duel accept | duel decline"
-          description: "Challenge another player to a PvP duel"
-          category: "combat"
+          usage: duel <player> | duel accept | duel decline
+          description: Challenge another player to a PvP duel
+          category: combat
           staff: false
           requiresTarget: true
         spells:
-          usage: "spells/abilities/skills"
-          description: "List your abilities"
-          category: "progression"
+          usage: spells/abilities/skills
+          description: List your abilities
+          category: progression
           staff: false
         effects:
-          usage: "effects/buffs/debuffs"
-          description: "View active status effects"
-          category: "progression"
+          usage: effects/buffs/debuffs
+          description: View active status effects
+          category: progression
           staff: false
         score:
-          usage: "score/sc"
-          description: "View your character sheet"
-          category: "progression"
+          usage: score/sc
+          description: View your character sheet
+          category: progression
           staff: false
         balance:
-          usage: "gold/balance"
-          description: "Check the gold you are carrying"
-          category: "shops"
+          usage: gold/balance
+          description: Check the gold you are carrying
+          category: shops
           staff: false
         currencies:
-          usage: "currencies/currency/wallet"
-          description: "View secondary currencies"
-          category: "progression"
+          usage: currencies/currency/wallet
+          description: View secondary currencies
+          category: progression
           staff: false
         reputation:
-          usage: "reputation/rep/factions"
-          description: "View your faction standings"
-          category: "progression"
+          usage: reputation/rep/factions
+          description: View your faction standings
+          category: progression
           staff: false
         shop_list:
-          usage: "list/shop"
-          description: "Browse a shop's wares"
-          category: "shops"
+          usage: list/shop
+          description: Browse a shop's wares
+          category: shops
           staff: false
         buy:
-          usage: "buy <item>"
-          description: "Purchase from a shop"
-          category: "shops"
+          usage: buy <item>
+          description: Purchase from a shop
+          category: shops
           staff: false
           requiresTarget: true
         sell:
-          usage: "sell <item>"
-          description: "Sell to a shop"
-          category: "shops"
+          usage: sell <item>
+          description: Sell to a shop
+          category: shops
           staff: false
           requiresTarget: true
         bank:
-          usage: "bank"
-          description: "View bank balance and vault contents (requires a bank)"
-          category: "shops"
+          usage: bank
+          description: View bank balance and vault contents (requires a bank)
+          category: shops
           staff: false
         deposit:
-          usage: "deposit <amount|item>"
-          description: "Deposit gold or an item into your bank vault"
-          category: "shops"
+          usage: deposit <amount|item>
+          description: Deposit gold or an item into your bank vault
+          category: shops
           staff: false
           requiresTarget: true
         withdraw:
-          usage: "withdraw <amount|item>"
-          description: "Withdraw gold or an item from your bank vault"
-          category: "shops"
+          usage: withdraw <amount|item>
+          description: Withdraw gold or an item from your bank vault
+          category: shops
           staff: false
           requiresTarget: true
         auction:
-          usage: "auction"
-          description: "Browse auction house listings"
-          category: "shops"
+          usage: auction
+          description: Browse auction house listings
+          category: shops
           staff: false
         auction_sell:
-          usage: "auction sell <item> <price>"
-          description: "List an item on the auction house"
-          category: "shops"
+          usage: auction sell <item> <price>
+          description: List an item on the auction house
+          category: shops
           staff: false
           requiresTarget: true
         auction_buy:
-          usage: "auction buy <#>"
-          description: "Buy an auction listing by number"
-          category: "shops"
+          usage: auction buy <#>
+          description: Buy an auction listing by number
+          category: shops
           staff: false
           requiresTarget: true
         auction_cancel:
-          usage: "auction cancel <#>"
-          description: "Cancel your listing and reclaim the item"
-          category: "shops"
+          usage: auction cancel <#>
+          description: Cancel your listing and reclaim the item
+          category: shops
           staff: false
           requiresTarget: true
         trade:
-          usage: "trade <player> | trade accept | trade cancel | trade status"
-          description: "Trade items and gold with another player"
-          category: "items"
+          usage: trade <player> | trade accept | trade cancel | trade status
+          description: Trade items and gold with another player
+          category: items
           staff: false
           requiresTarget: true
         trade_offer:
-          usage: "trade offer <item> | trade offer <amount> gold"
-          description: "Add an item or gold to the active trade"
-          category: "items"
+          usage: trade offer <item> | trade offer <amount> gold
+          description: Add an item or gold to the active trade
+          category: items
           staff: false
           requiresTarget: true
         trade_remove:
-          usage: "trade remove <item>"
-          description: "Remove an item from your trade offer"
-          category: "items"
+          usage: trade remove <item>
+          description: Remove an item from your trade offer
+          category: items
           staff: false
           requiresTarget: true
         quest_log:
-          usage: "quest log/list"
-          description: "View active quests"
-          category: "quests"
+          usage: quest log/list
+          description: View active quests
+          category: quests
           staff: false
         quest_info:
-          usage: "quest info <name>"
-          description: "Quest details"
-          category: "quests"
+          usage: quest info <name>
+          description: Quest details
+          category: quests
           staff: false
           requiresTarget: true
         quest_abandon:
-          usage: "quest abandon <name>"
-          description: "Abandon a quest"
-          category: "quests"
+          usage: quest abandon <name>
+          description: Abandon a quest
+          category: quests
           staff: false
           requiresTarget: true
         quest_turnin:
-          usage: "quest turnin <name>"
-          description: "Turn in a completed quest to its giver NPC"
-          category: "quests"
+          usage: quest turnin <name>
+          description: Turn in a completed quest to its giver NPC
+          category: quests
           staff: false
           requiresTarget: true
         accept:
-          usage: "accept <quest>"
-          description: "Accept a quest from an NPC"
-          category: "quests"
+          usage: accept <quest>
+          description: Accept a quest from an NPC
+          category: quests
           staff: false
           requiresTarget: true
         bounty:
-          usage: "bounty / quest auto"
-          description: "Request an auto-generated bounty quest"
-          category: "quests"
+          usage: bounty / quest auto
+          description: Request an auto-generated bounty quest
+          category: quests
           staff: false
         bounty_info:
-          usage: "bounty info / quest auto info"
-          description: "View active bounty progress"
-          category: "quests"
+          usage: bounty info / quest auto info
+          description: View active bounty progress
+          category: quests
           staff: false
         bounty_abandon:
-          usage: "bounty abandon / quest auto abandon"
-          description: "Abandon active bounty"
-          category: "quests"
+          usage: bounty abandon / quest auto abandon
+          description: Abandon active bounty
+          category: quests
           staff: false
         achievements:
-          usage: "achievements/ach"
-          description: "View achievements"
-          category: "quests"
+          usage: achievements/ach
+          description: View achievements
+          category: quests
           staff: false
         daily:
-          usage: "daily/dailies"
-          description: "View daily quest board"
-          category: "quests"
+          usage: daily/dailies
+          description: View daily quest board
+          category: quests
           staff: false
         weekly:
-          usage: "weekly"
-          description: "View weekly quest board"
-          category: "quests"
+          usage: weekly
+          description: View weekly quest board
+          category: quests
           staff: false
         gquest:
-          usage: "gquest/gq/global"
-          description: "View active global quest status"
-          category: "quests"
+          usage: gquest/gq/global
+          description: View active global quest status
+          category: quests
           staff: false
         qoffers:
-          usage: "qoffers <mob>"
-          description: "List the quests an NPC has to offer"
-          category: "quests"
+          usage: qoffers <mob>
+          description: List the quests an NPC has to offer
+          category: quests
           staff: false
           requiresTarget: true
         group_invite:
-          usage: "group invite <player>"
-          description: "Invite to your group"
-          category: "groups"
+          usage: group invite <player>
+          description: Invite to your group
+          category: groups
           staff: false
           requiresTarget: true
         group_accept:
-          usage: "group accept"
-          description: "Accept a group invite"
-          category: "groups"
+          usage: group accept
+          description: Accept a group invite
+          category: groups
           staff: false
         group_leave:
-          usage: "group leave"
-          description: "Leave your group"
-          category: "groups"
+          usage: group leave
+          description: Leave your group
+          category: groups
           staff: false
         group_kick:
-          usage: "group kick <player>"
-          description: "Kick from group"
-          category: "groups"
+          usage: group kick <player>
+          description: Kick from group
+          category: groups
           staff: false
           requiresTarget: true
         group_list:
-          usage: "group list (or just 'group')"
-          description: "List group members"
-          category: "groups"
+          usage: group list (or just 'group')
+          description: List group members
+          category: groups
           staff: false
         gtell:
-          usage: "gtell/gt <message>"
-          description: "Group chat"
-          category: "groups"
+          usage: gtell/gt <message>
+          description: Group chat
+          category: groups
           staff: false
           requiresTarget: true
         guild_create:
-          usage: "guild create <name> <tag>"
-          description: "Create a guild"
-          category: "guilds"
+          usage: guild create <name> <tag>
+          description: Create a guild
+          category: guilds
           staff: false
           requiresTarget: true
         guild_disband:
-          usage: "guild disband"
-          description: "Disband your guild"
-          category: "guilds"
+          usage: guild disband
+          description: Disband your guild
+          category: guilds
           staff: false
         guild_invite:
-          usage: "guild invite <player>"
-          description: "Invite to guild"
-          category: "guilds"
+          usage: guild invite <player>
+          description: Invite to guild
+          category: guilds
           staff: false
           requiresTarget: true
         guild_accept:
-          usage: "guild accept"
-          description: "Accept a guild invite"
-          category: "guilds"
+          usage: guild accept
+          description: Accept a guild invite
+          category: guilds
           staff: false
         guild_leave:
-          usage: "guild leave"
-          description: "Leave your guild"
-          category: "guilds"
+          usage: guild leave
+          description: Leave your guild
+          category: guilds
           staff: false
         guild_kick:
-          usage: "guild kick <player>"
-          description: "Remove from guild"
-          category: "guilds"
+          usage: guild kick <player>
+          description: Remove from guild
+          category: guilds
           staff: false
           requiresTarget: true
         guild_promote:
-          usage: "guild promote <player>"
-          description: "Promote a member"
-          category: "guilds"
+          usage: guild promote <player>
+          description: Promote a member
+          category: guilds
           staff: false
           requiresTarget: true
         guild_demote:
-          usage: "guild demote <player>"
-          description: "Demote a member"
-          category: "guilds"
+          usage: guild demote <player>
+          description: Demote a member
+          category: guilds
           staff: false
           requiresTarget: true
         guild_motd:
-          usage: "guild motd <message>"
-          description: "Set guild message of the day"
-          category: "guilds"
+          usage: guild motd <message>
+          description: Set guild message of the day
+          category: guilds
           staff: false
           requiresTarget: true
         guild_roster:
-          usage: "guild roster"
-          description: "View guild members"
-          category: "guilds"
+          usage: guild roster
+          description: View guild members
+          category: guilds
           staff: false
         guild_info:
-          usage: "guild info (or just 'guild')"
-          description: "Guild overview"
-          category: "guilds"
+          usage: guild info (or just 'guild')
+          description: Guild overview
+          category: guilds
           staff: false
         gchat:
-          usage: "gchat/g <message>"
-          description: "Guild chat"
-          category: "guilds"
+          usage: gchat/g <message>
+          description: Guild chat
+          category: guilds
           staff: false
           requiresTarget: true
         guild_hall:
-          usage: "guild hall [buy | expand <template> <direction> | enter | leave]"
-          description: "View, buy, expand, and visit your guild hall"
-          category: "guilds"
+          usage: guild hall [buy | expand <template> <direction> | enter | leave]
+          description: View, buy, expand, and visit your guild hall
+          category: guilds
           staff: false
         gather:
-          usage: "gather/harvest/mine <node>"
-          description: "Gather from a resource node"
-          category: "crafting"
+          usage: gather/harvest/mine <node>
+          description: Gather from a resource node
+          category: crafting
           staff: false
           requiresTarget: true
         craft:
-          usage: "craft/make <recipe>"
-          description: "Craft an item from a recipe"
-          category: "crafting"
+          usage: craft/make <recipe>
+          description: Craft an item from a recipe
+          category: crafting
           staff: false
           requiresTarget: true
         recipes:
-          usage: "recipes [filter]"
-          description: "Browse available recipes"
-          category: "crafting"
+          usage: recipes [filter]
+          description: Browse available recipes
+          category: crafting
           staff: false
         craftskills:
-          usage: "craftskills/professions"
-          description: "View crafting skill levels"
-          category: "crafting"
+          usage: craftskills/professions
+          description: View crafting skill levels
+          category: crafting
           staff: false
         specialize:
-          usage: "specialize/spec [profession]"
-          description: "View or choose a crafting specialization"
-          category: "crafting"
+          usage: specialize/spec [profession]
+          description: View or choose a crafting specialization
+          category: crafting
           staff: false
         enchant:
-          usage: "enchant <item> [enchantment]"
-          description: "Enchant an item with a known enchantment"
-          category: "crafting"
+          usage: enchant <item> [enchantment]
+          description: Enchant an item with a known enchantment
+          category: crafting
           staff: false
           requiresTarget: true
         enchantments:
-          usage: "enchantments"
-          description: "List available enchantments"
-          category: "crafting"
+          usage: enchantments
+          description: List available enchantments
+          category: crafting
           staff: false
         house:
-          usage: "house [status]"
-          description: "View your house info"
-          category: "housing"
+          usage: house [status]
+          description: View your house info
+          category: housing
           staff: false
         house_list:
-          usage: "house list"
-          description: "Browse available room templates"
-          category: "housing"
+          usage: house list
+          description: Browse available room templates
+          category: housing
           staff: false
         house_buy:
-          usage: "house buy"
-          description: "Purchase your house (at broker)"
-          category: "housing"
+          usage: house buy
+          description: Purchase your house (at broker)
+          category: housing
           staff: false
         house_expand:
-          usage: "house expand <template> <direction>"
-          description: "Add a room to your house"
-          category: "housing"
+          usage: house expand <template> <direction>
+          description: Add a room to your house
+          category: housing
           staff: false
           requiresTarget: true
         house_describe:
-          usage: "house describe [title|desc] <text>"
-          description: "Customize room title or description"
-          category: "housing"
+          usage: house describe [title|desc] <text>
+          description: Customize room title or description
+          category: housing
           staff: false
           requiresTarget: true
         house_invite:
-          usage: "house invite <player>"
-          description: "Invite a player to your house"
-          category: "housing"
+          usage: house invite <player>
+          description: Invite a player to your house
+          category: housing
           staff: false
           requiresTarget: true
         house_kick:
-          usage: "house kick <player>"
-          description: "Remove a visitor from your house"
-          category: "housing"
+          usage: house kick <player>
+          description: Remove a visitor from your house
+          category: housing
           staff: false
           requiresTarget: true
         house_guests:
-          usage: "house guests"
-          description: "List visitors in your house"
-          category: "housing"
+          usage: house guests
+          description: List visitors in your house
+          category: housing
           staff: false
         open:
-          usage: "open <door|container>"
-          description: "Open a door or container"
-          category: "world"
+          usage: open <door|container>
+          description: Open a door or container
+          category: world
           staff: false
           requiresTarget: true
         close:
-          usage: "close <door|container>"
-          description: "Close a door or container"
-          category: "world"
+          usage: close <door|container>
+          description: Close a door or container
+          category: world
           staff: false
           requiresTarget: true
         unlock:
-          usage: "unlock <door|container>"
-          description: "Unlock with a key"
-          category: "world"
+          usage: unlock <door|container>
+          description: Unlock with a key
+          category: world
           staff: false
           requiresTarget: true
         lock:
-          usage: "lock <door|container>"
-          description: "Lock with a key"
-          category: "world"
+          usage: lock <door|container>
+          description: Lock with a key
+          category: world
           staff: false
           requiresTarget: true
         search:
-          usage: "search <container>"
-          description: "Search a container for its contents"
-          category: "world"
+          usage: search <container>
+          description: Search a container for its contents
+          category: world
           staff: false
           requiresTarget: true
         get_from:
-          usage: "get <item> from <container>"
-          description: "Take an item from a container"
-          category: "world"
+          usage: get <item> from <container>
+          description: Take an item from a container
+          category: world
           staff: false
           requiresTarget: true
         put_in:
-          usage: "put <item> <container>"
-          description: "Place an item in a container"
-          category: "world"
+          usage: put <item> <container>
+          description: Place an item in a container
+          category: world
           staff: false
           requiresTarget: true
         pull:
-          usage: "pull <lever>"
-          description: "Pull a lever or object"
-          category: "world"
+          usage: pull <lever>
+          description: Pull a lever or object
+          category: world
           staff: false
           requiresTarget: true
         read:
-          usage: "read <sign>"
-          description: "Read a sign or inscription"
-          category: "world"
+          usage: read <sign>
+          description: Read a sign or inscription
+          category: world
           staff: false
           requiresTarget: true
         answer:
-          usage: "answer <text>"
-          description: "Answer a riddle in the room"
-          category: "world"
+          usage: answer <text>
+          description: Answer a riddle in the room
+          category: world
           staff: false
           requiresTarget: true
         dungeon:
-          usage: "dungeon enter <name> [difficulty] | dungeon leave"
-          description: "Enter or leave an instanced dungeon"
-          category: "world"
+          usage: dungeon enter <name> [difficulty] | dungeon leave
+          description: Enter or leave an instanced dungeon
+          category: world
           staff: false
           requiresTarget: true
         title:
-          usage: "title <titleName> | title clear"
-          description: "Set or clear your title"
-          category: "progression"
+          usage: title <titleName> | title clear
+          description: Set or clear your title
+          category: progression
           staff: false
           requiresTarget: true
         gender:
-          usage: "gender <option>"
-          description: "Set your gender"
-          category: "progression"
+          usage: gender <option>
+          description: Set your gender
+          category: progression
           staff: false
           requiresTarget: true
         sprite:
-          usage: "sprite list | set <id> | default"
-          description: "Manage your character sprite"
-          category: "progression"
+          usage: sprite list | set <id> | default
+          description: Manage your character sprite
+          category: progression
           staff: false
         describe:
-          usage: "describe <text> | describe clear | describe check <player>"
-          description: "Set, clear, or view a character description"
-          category: "progression"
+          usage: describe <text> | describe clear | describe check <player>
+          description: Set, clear, or view a character description
+          category: progression
           staff: false
           requiresTarget: true
         train:
-          usage: "train [list] | train learn <ability> | train unlock <class> | train reset"
-          description: "Learn abilities, unlock classes, or respec at a class trainer"
-          category: "progression"
+          usage: train [list] | train learn <ability> | train unlock <class> | train reset
+          description: Learn abilities, unlock classes, or respec at a class trainer
+          category: progression
           staff: false
         prestige:
-          usage: "prestige | prestige info"
-          description: "Reset at max level for permanent prestige perks"
-          category: "progression"
+          usage: prestige | prestige info
+          description: Reset at max level for permanent prestige perks
+          category: progression
           staff: false
         leaderboard:
-          usage: "leaderboard/top [category]"
-          description: "View player leaderboards"
-          category: "progression"
+          usage: leaderboard/top [category]
+          description: View player leaderboards
+          category: progression
           staff: false
         stylist:
-          usage: "stylist"
-          description: "View race-change options and fee (requires a stylist)"
-          category: "progression"
-          staff: false
-        pledge:
-          usage: "pledge"
-          description: "Take the Akathavae pledge at a shrine — forsake combat, level through illumination"
-          category: "progression"
-          staff: false
-        renounce:
-          usage: "renounce [confirm]"
-          description: "Renounce the Akathavae pledge at a shrine (costs gold)"
-          category: "progression"
-          staff: false
-        illuminate:
-          usage: "illuminate <creature>"
-          description: "Record a creature in your Arcanum — the Akathavae's replacement for attacking"
-          category: "progression"
-          staff: false
-          requiresTarget: true
-        arcanum:
-          usage: "arcanum [rooms|mobs|items]"
-          description: "Leaf through your Arcanum journal of recorded places, creatures, and items"
-          category: "progression"
-          staff: false
-        wardrobe:
-          usage: "wardrobe [item]"
-          description: "Conjure and wear equipment recorded in your Arcanum (Akathavae only)"
-          category: "progression"
+          usage: stylist
+          description: View race-change options and fee (requires a stylist)
+          category: progression
           staff: false
         changerace:
-          usage: "changerace <race>"
-          description: "Pay the stylist to change your race"
-          category: "progression"
+          usage: changerace <race>
+          description: Pay the stylist to change your race
+          category: progression
           staff: false
           requiresTarget: true
         pet:
-          usage: "pet [status] | pet name <name> | pet skills | pet <skill> | pet dismiss"
-          description: "Manage your pet and trigger its skills"
-          category: "progression"
+          usage: pet [status] | pet name <name> | pet skills | pet <skill> | pet dismiss
+          description: Manage your pet and trigger its skills
+          category: progression
           staff: false
         friend:
-          usage: "friend list | add <player> | remove <player>"
-          description: "Manage your friends list"
-          category: "social"
+          usage: friend list | add <player> | remove <player>
+          description: Manage your friends list
+          category: social
           staff: false
         mail:
-          usage: "mail list | read <n> | send <player> | delete <n>"
-          description: "Manage mail"
-          category: "social"
+          usage: mail list | read <n> | send <player> | delete <n>
+          description: Manage mail
+          category: social
           staff: false
         lottery:
-          usage: "lottery [info] | lottery buy [count]"
-          description: "View the lottery or buy tickets (buying requires a tavern)"
-          category: "social"
+          usage: lottery [info] | lottery buy [count]
+          description: View the lottery or buy tickets (buying requires a tavern)
+          category: social
           staff: false
         gamble:
-          usage: "gamble/dice <amount>"
-          description: "Roll d100 against the house (requires a tavern)"
-          category: "social"
-          staff: false
-        jukebox:
-          usage: "jukebox [list] | jukebox play <number> | jukebox queue <number>"
-          description: "List the room's jukebox songs, pay to play one, or queue the next track"
-          category: "social"
-          staff: false
-        musicbox:
-          usage: "musicbox [list] | musicbox play | musicbox stop"
-          description: "Open the room's music box and wind up its one song — free, and it follows you until it ends"
-          category: "social"
+          usage: gamble/dice <amount>
+          description: Roll d100 against the house (requires a tavern)
+          category: social
           staff: false
         ansi:
-          usage: "ansi on/off"
-          description: "Toggle color output"
-          category: "utility"
+          usage: ansi on/off
+          description: Toggle color output
+          category: utility
           staff: false
         screenreader:
-          usage: "screenreader [on/off]"
-          description: "Toggle screen reader mode"
-          category: "utility"
-          staff: false
-        audio:
-          usage: "audio [on/off]"
-          description: "Print music, ambient, and NPC voice URLs inline (for non-web clients)"
-          category: "utility"
+          usage: screenreader [on/off]
+          description: Toggle screen reader mode
+          category: utility
           staff: false
         autoloot:
-          usage: "autoloot on/off/status"
-          description: "Auto-loot mob corpses when enabled"
-          category: "utility"
+          usage: autoloot on/off/status
+          description: Auto-loot mob corpses when enabled
+          category: utility
           staff: false
         autopeek:
-          usage: "autopeek on/off/status"
-          description: "Append adjacent room names below room descriptions"
-          category: "utility"
+          usage: autopeek on/off/status
+          description: Append adjacent room names below room descriptions
+          category: utility
           staff: false
         colors:
-          usage: "colors"
-          description: "Preview ANSI color palette"
-          category: "utility"
+          usage: colors
+          description: Preview ANSI color palette
+          category: utility
           staff: false
         clear:
-          usage: "clear"
-          description: "Clear the terminal"
-          category: "utility"
+          usage: clear
+          description: Clear the terminal
+          category: utility
           staff: false
         quit:
-          usage: "quit/exit"
-          description: "Disconnect"
-          category: "utility"
+          usage: quit/exit
+          description: Disconnect
+          category: utility
           staff: false
         phase:
-          usage: "phase/layer [instance]"
-          description: "Switch zone instance"
-          category: "utility"
+          usage: phase/layer [instance]
+          description: Switch zone instance
+          category: utility
           staff: false
         time:
-          usage: "time"
-          description: "Show the in-game time of day"
-          category: "utility"
+          usage: time
+          description: Show the in-game time of day
+          category: utility
           staff: false
         claim:
-          usage: "claim <password> | claim <newname> <password>"
-          description: "Save a demo character as a permanent account"
-          category: "utility"
+          usage: claim <password> | claim <newname> <password>
+          description: Save a demo character as a permanent account
+          category: utility
           staff: false
         goto:
-          usage: "goto <zone:room | room | zone:>"
-          description: "Teleport to a room"
-          category: "admin"
+          usage: goto <zone:room | room | zone:>
+          description: Teleport to a room
+          category: admin
           staff: true
           requiresTarget: true
         transfer:
-          usage: "transfer <player> <room>"
-          description: "Move a player"
-          category: "admin"
+          usage: transfer <player> <room>
+          description: Move a player
+          category: admin
           staff: true
           requiresTarget: true
         spawn:
-          usage: "spawn <mob-template>"
-          description: "Spawn a mob"
-          category: "admin"
+          usage: spawn <mob-template>
+          description: Spawn a mob
+          category: admin
           staff: true
           requiresTarget: true
         smite:
-          usage: "smite <player|mob>"
-          description: "Instantly kill a target"
-          category: "admin"
+          usage: smite <player|mob>
+          description: Instantly kill a target
+          category: admin
           staff: true
           requiresTarget: true
         staff_kick:
-          usage: "kick <player>"
-          description: "Disconnect a player"
-          category: "admin"
+          usage: kick <player>
+          description: Disconnect a player
+          category: admin
           staff: true
           requiresTarget: true
         dispel:
-          usage: "dispel <player|mob>"
-          description: "Remove all effects"
-          category: "admin"
+          usage: dispel <player|mob>
+          description: Remove all effects
+          category: admin
           staff: true
           requiresTarget: true
         setlevel:
-          usage: "setlevel <player> <level>"
-          description: "Set a player's level"
-          category: "admin"
+          usage: setlevel <player> <level>
+          description: Set a player's level
+          category: admin
           staff: true
           requiresTarget: true
         shutdown:
-          usage: "shutdown"
-          description: "Shut down the server"
-          category: "admin"
+          usage: shutdown
+          description: Shut down the server
+          category: admin
           staff: true
         reload:
-          usage: "reload [scope]"
-          description: "Reload world data"
-          category: "admin"
+          usage: reload [scope]
+          description: Reload world data
+          category: admin
           staff: true
         possess:
-          usage: "possess/switch <mob>"
-          description: "Take control of a mob"
-          category: "admin"
+          usage: possess/switch <mob>
+          description: Take control of a mob
+          category: admin
           staff: true
           requiresTarget: true
         return:
-          usage: "return/unpossess"
-          description: "Release a possessed mob"
-          category: "admin"
+          usage: return/unpossess
+          description: Release a possessed mob
+          category: admin
           staff: true
         invis:
-          usage: "invis"
-          description: "Toggle staff invisibility"
-          category: "admin"
+          usage: invis
+          description: Toggle staff invisibility
+          category: admin
           staff: true
         broadcast:
-          usage: "broadcast <message>"
-          description: "Send a server-wide announcement"
-          category: "admin"
+          usage: broadcast <message>
+          description: Send a server-wide announcement
+          category: admin
           staff: true
           requiresTarget: true
         heal:
-          usage: "heal [player]"
-          description: "Fully restore a player's HP and mana"
-          category: "admin"
+          usage: heal [player]
+          description: Fully restore a player's HP and mana
+          category: admin
           staff: true
         pinfo:
-          usage: "pinfo <player>"
-          description: "Inspect a player's state"
-          category: "admin"
+          usage: pinfo <player>
+          description: Inspect a player's state
+          category: admin
           staff: true
           requiresTarget: true
         setstaff:
-          usage: "setstaff/grantstaff <player> | revokestaff <player>"
-          description: "Grant or revoke staff access"
-          category: "admin"
+          usage: setstaff/grantstaff <player> | revokestaff <player>
+          description: Grant or revoke staff access
+          category: admin
           staff: true
           requiresTarget: true
         setgold:
-          usage: "setgold <player> <amount>"
-          description: "Set a player's gold"
-          category: "admin"
+          usage: setgold <player> <amount>
+          description: Set a player's gold
+          category: admin
           staff: true
           requiresTarget: true
         setrace:
-          usage: "setrace <player> <race>"
-          description: "Set a player's race"
-          category: "admin"
+          usage: setrace <player> <race>
+          description: Set a player's race
+          category: admin
           staff: true
           requiresTarget: true
         setclass:
-          usage: "setclass <player> <class>"
-          description: "Set a player's class"
-          category: "admin"
+          usage: setclass <player> <class>
+          description: Set a player's class
+          category: admin
           staff: true
           requiresTarget: true
         setgender:
-          usage: "setgender <player> <gender>"
-          description: "Set a player's gender"
-          category: "admin"
+          usage: setgender <player> <gender>
+          description: Set a player's gender
+          category: admin
           staff: true
           requiresTarget: true
         setxp:
-          usage: "setxp <player> <xp>"
-          description: "Set a player's XP"
-          category: "admin"
+          usage: setxp <player> <xp>
+          description: Set a player's XP
+          category: admin
           staff: true
           requiresTarget: true
     group:
       maxSize: 5
       inviteTimeoutMs: 60000
-      xpBonusPerMember: 10
+      xpBonusPerMember: 0.1
     guildRanks:
       founderRank: leader
       defaultRank: member
-      ranks: {}
+      ranks:
+        leader:
+          displayName: Leader
+          level: 100
+          permissions:
+            - invite
+            - kick
+            - promote
+            - demote
+            - disband
+            - set_motd
+        officer:
+          displayName: Officer
+          level: 50
+          permissions:
+            - invite
+            - kick
+            - set_motd
+        member:
+          displayName: Member
+          level: 0
+          permissions: []
     friends:
       maxFriends: 50
     classes:
       definitions:
-        WARRIOR:
-          displayName: Warrior
-          hpScalingRate: 1.305
-          manaScalingRate: 1.05
-          description: A battle-hardened combatant trained in heavy armor and martial weapons, equally capable of absorbing
-            punishment and dealing devastating blows.
-          backstory: >-
-            Warriors are forged in the crucibles of military academies, mercenary companies, and frontier garrisons
-            scattered across the known world. Their training begins young — often as squires hauling shields for veteran
-            soldiers or as pit fighters scrapping for coin in underground arenas. Every warrior carries the scars of a
-            hundred sparring matches before they ever see true battle.
-
-
-            The great martial traditions vary by region. In the northern holds, warriors learn to fight in tight shield
-            walls against raiding parties. Along the coast, they train aboard warships where footing is treacherous and
-            a single misstep means death. In the heartland cities, formal fencing academies produce duelists of
-            extraordinary precision. What unites them all is an unflinching willingness to stand at the front and meet
-            violence head-on.
-
-
-            Veteran warriors often find employment as caravan guards, siege engineers, or lieutenants in the standing
-            armies of various lords. A rare few earn enough reputation to command their own companies. Regardless of
-            station, a warrior's worth is measured in the battles they have survived and the comrades they brought home
-            alive.
+        bulwark:
+          displayName: Bulwark
+          hpScalingRate: 1.42
+          manaScalingRate: 1.39
+          description: Immovable defender clad in heavy armor, holding the line against overwhelming odds.
           primaryStat: STR
-          image: 98169782bef9c4739ce982aba28b5022ddc0ad413e466031389a33778d3162c8.jpg
-          outfitDescription: Full plate armor with a heavy steel breastplate, layered pauldrons, gauntlets, and greaves. A
-            longsword hangs from a leather baldric at the hip, and a kite shield bearing a battle-worn heraldic crest is
-            strapped to one arm. A crimson half-cape drapes from the left shoulder.
-          # Starter equipment is data-driven by item id. Items must already be loaded
-          # in the world (zone:item_id). Unknown ids are silently skipped so the
-          # bundled defaults below remain valid even when a deployment loads a
-          # different world. `equip: true` (default) auto-equips slotted items on
-          # login; set `equip: false` (or use unslotted items) to land in inventory.
+          statPriorities:
+            - STR
+            - CON
+            - DEX
+          selectable: true
+          threatMultiplier: 3
+          image: 85b8254589f7de36b47b5b39ee41b6b261e987d794ac7d970793584387451f63.jpg
+          outfitDescription: Massive plate mail bearing the patina of countless battles, each dent a testament to blows survived.
+            Tower shield tall as a door, emblazoned with heraldry of protected causes. Stance planted firm, feet taking
+            root, immovable as ancient oak before the storm.
+          showcaseRace: lithae
           starterEquipment:
-            - itemId: academy:iron_sword
-            - itemId: academy:chain_mail
-            - itemId: academy:leather_hood
-            - itemId: academy:leather_gloves
-            - itemId: academy:healing_potion
+            - itemId: auringold_academy:starlight_sword
+            - itemId: auringold_academy:auringold_robes
+            - itemId: auringold_academy:slice_cake
               equip: false
-            - itemId: academy:hearty_ration
+            - itemId: auringold_academy:cup_tea
               equip: false
-        MAGE:
-          displayName: Mage
-          hpScalingRate: 1.290
-          manaScalingRate: 1.110
-          description: A scholar of the arcane arts who channels raw magical energy into destructive spells, protective wards, and
-            debilitating hexes.
-          backstory: >-
-            Mages are products of the great arcane colleges — cloistered institutions built on ley-line nexuses where
-            the veil between the material and ethereal planes runs thin. Admission requires proof of innate magical
-            sensitivity, and the washout rate is brutal. Students who survive years of grueling study, failed
-            incantations, and the occasional laboratory explosion emerge as some of the most dangerous individuals
-            alive.
-
-
-            The curriculum covers elemental theory, planar cosmology, glyph construction, and counter-magic. Practical
-            training takes place in warded chambers where novices learn to shape raw mana into coherent spell forms
-            without killing themselves or their classmates. Those who show talent for destruction are shepherded toward
-            battle-magic tracks; those with subtler gifts may specialize in enchantment, divination, or ward-crafting.
-
-
-            Graduated mages often serve as court advisors, war-casters attached to military units, or independent
-            researchers pursuing obscure branches of arcane knowledge. The colleges maintain strict records of all
-            licensed practitioners, and rogue mages who practice without sanction are hunted by the order's enforcers.
+            - itemId: auringold_academy:cucumber_sandwich
+              equip: false
+        arcanist:
+          displayName: Arcanist
+          hpScalingRate: 1.39
+          manaScalingRate: 1.42
+          description: Master of advanced spellcraft who bends illusion and reality through communion with the Arcanum.
           primaryStat: INT
-          image: 08f5d33a0dc82a3cfa8bf3849c7e0b3a3fef71b5c7c635981dd17c02f09e732d.jpg
-          outfitDescription: Deep indigo robes with silver arcane sigils embroidered along the hems and cuffs. A tall oak staff
-            topped with a faintly glowing crystal is held in one hand. A thick leather-bound spellbook hangs from a
-            chain at the belt. The robe's hood is pulled back, revealing sharp, studious features.
+          statPriorities:
+            - INT
+            - WIS
+            - CHA
+          selectable: true
+          threatMultiplier: 0.5
+          image: 5fe37527a0b5fd1e3a9b2ca1555ed853f84d7834d521c734e2365dd4c74c787d.jpg
+          outfitDescription: Robes of deep midnight blue that shift like ocean currents, embroidered with constellations that
+            faintly glow in darkness. A scholar's sash holds pouches of ritual components and a leather-bound grimoire.
+            Eyes reflect distant starlight. Fingers occasionally spark with borrowed cosmic radiance. Carries an ornate
+            staff or wand topped with compressed starlight.
+          showcaseRace: aetherae
           starterEquipment:
-            - itemId: academy:iron_sword
-            - itemId: academy:leather_hood
-            - itemId: academy:leather_gloves
-            - itemId: academy:elixir_of_clarity
+            - itemId: auringold_academy:starlight_staff
+            - itemId: auringold_academy:auringold_robes
+            - itemId: auringold_academy:slice_cake
               equip: false
-            - itemId: academy:healing_potion
+            - itemId: auringold_academy:cup_tea
               equip: false
-        CLERIC:
-          displayName: Cleric
-          hpScalingRate: 1.301
-          manaScalingRate: 1.099
-          description: A devoted servant of the divine who channels sacred power to mend wounds, bolster allies, and smite the
-            unholy.
+            - itemId: auringold_academy:cucumber_sandwich
+              equip: false
+        veil:
+          displayName: Veil
+          hpScalingRate: 1.41
+          manaScalingRate: 1.41
+          description: Stealth assassins who strike from shadow and vanish before their enemies can react.
           backstory: >-
-            Clerics are ordained within the great temple hierarchies — sprawling religious institutions that maintain
-            hospitals, libraries, and fortified sanctuaries across the realm. Aspirants are taken in as acolytes, often
-            from orphanages or devout families, and spend years studying scripture, herbalism, and the channeling of
-            divine energy before they are permitted to lay hands on the sick or wounded.
+            In an age when heroes are called to face eldritch horrors, the Veil remain Ambon's most enigmatic
+            practitioners—masters of secrecy elevated to an art form. They move like living extensions of darkness
+            itself, bending light around their forms and muffling sound before it escapes their footsteps, becoming so
+            perfectly still that even time-perceiving Lustriae sometimes fail to notice them until movement betrays
+            presence.
 
 
-            The path to ordination is one of discipline and sacrifice. Acolytes rise before dawn for prayer, spend their
-            mornings tending to the injured and dying, and devote their afternoons to theological study. Combat training
-            is mandatory — the temples learned long ago that healers who cannot defend themselves are liabilities on the
-            battlefield. Maces and warhammers are favored because they are effective against armored foes without
-            requiring the shedding of blood that some orders find doctrinally objectionable.
+            Many serve as spies, assassins, and infiltrators across Ambon's kingdoms, slipping through noble courts like
+            well-dressed ghosts or traversing canopy highways without disturbing a single leaf. Yet in this hopeful age,
+            not all Veil members follow the path of death—some have adapted their ancient arts to serve newer purposes,
+            redirecting killing strokes to disable rather than destroy, delivering sleep rather than fatality.
 
 
-            Full clerics serve wherever need is greatest. Some are permanently stationed at frontier clinics. Others
-            march with armies, keeping soldiers alive through grueling campaigns. A few are dispatched as wandering
-            mendicants, carrying the temple's mercy to remote villages that would otherwise have no access to healing
-            magic.
-          primaryStat: WIS
-          image: b5d2b5a7da755dd6335713f466cea867faf24f552f398f2516139105a52df7c3.jpg
-          outfitDescription: White and gold vestments layered over a chain hauberk. A polished steel mace hangs from the belt
-            alongside a radiant holy symbol on a heavy chain. The vestments bear the emblem of a sunburst, and a hooded
-            mantle of deep gold cloth rests across the shoulders.
-          starterEquipment:
-            - itemId: academy:iron_sword
-            - itemId: academy:chain_mail
-            - itemId: academy:leather_hood
-            - itemId: academy:healing_potion
-              equip: false
-            - itemId: academy:hearty_ration
-              equip: false
-        ROGUE:
-          displayName: Rogue
-          hpScalingRate: 1.294
-          manaScalingRate: 1.094
-          description: A cunning operative who relies on stealth, precision, and dirty tricks to eliminate targets before they can
-            retaliate.
-          backstory: >-
-            Rogues come from the shadow side of civilization — the thieves' guilds, spy networks, and assassin
-            brotherhoods that thrive in every major city. Their training is informal compared to warriors or mages, but
-            no less rigorous. Apprentices learn lockpicking, poison craft, silent movement, and blade work from
-            experienced mentors who tolerate nothing less than perfection. A fumbled lock or a creaking floorboard
-            during training earns a beating; in the field, it earns a grave.
-
-
-            The guilds operate under strict codes of conduct. Contracts are honored, territories are respected, and
-            information is the most valuable currency. A rogue who breaks guild law faces exile or worse. In return, the
-            guild provides fencing services for stolen goods, legal protection through bribed magistrates, and a network
-            of safe houses spanning multiple cities.
-
-
-            Not all rogues are criminals. Military scouts, royal intelligence agents, and freelance investigators all
-            employ the same skill set in service of legitimate employers. The line between spy and thief is largely a
-            matter of who signs the paycheck. Regardless of allegiance, all rogues share a preference for ending fights
-            quickly, quietly, and on their own terms.
+            Whether bound by coin, ancient oaths, or personal codes as shadowy as the practitioners themselves, the Veil
+            represent the necessary darkness that gives meaning to light—the price of peace, the watchers who ensure
+            that some threats never live long enough to require heroes to face them.
           primaryStat: DEX
-          image: 673082bf0f825c957ba5629399b2670cf6254645f322813e84c86c928d51b10a.jpg
-          outfitDescription: Supple dark leather armor with reinforced shoulder guards and bracers studded with dull metal rivets.
-            Twin daggers are sheathed in crossed back-scabbards. A deep hooded cloak of charcoal-grey wool obscures the
-            face, and a bandolier of small pouches and vials crosses the chest.
+          statPriorities:
+            - DEX
+            - STR
+            - CON
+          selectable: true
+          threatMultiplier: 0.5
+          image: 4df10f07cdc2d3265e8fe6453d5b21cd8c033130349d36893543d7897cec4cf3.jpg
+          outfitDescription: Fitted dark silhouettes that absorb light rather than reflect it—deep leather armor in grays and
+            blacks, with subtle silver or moonlit accents. Dual daggers or short blades concealed until the moment of
+            strike. Movement is fluid and economical, a figure that seems to occupy less space than should be possible.
+            Eyes are alert, watchful, carrying the calm stillness of a predator perfectly at ease in shadow.
+          showcaseRace: mycorae
           starterEquipment:
-            - itemId: academy:iron_sword
-            - itemId: academy:leather_gloves
-            - itemId: academy:leather_hood
-            - itemId: academy:healing_potion
+            - itemId: auringold_academy:starlight_dagger
+            - itemId: auringold_academy:auringold_robes
+            - itemId: auringold_academy:slice_cake
               equip: false
-            - itemId: academy:hearty_ration
+            - itemId: auringold_academy:cup_tea
               equip: false
-        RANGER:
-          displayName: Ranger
-          hpScalingRate: 1.298
-          manaScalingRate: 1.097
-          description: A wilderness expert who fights alongside bonded animal companions, blending archery with nature magic to
-            control the battlefield.
-          backstory: >-
-            Rangers are trained by the wardens — a loose confederation of frontier scouts, beast-tamers, and wilderness
-            survivalists who patrol the untamed lands beyond the reach of civilization. There are no formal academies;
-            instead, apprentice rangers are taken into the wild by experienced mentors and taught through years of
-            practical experience. They learn to track prey across any terrain, read weather patterns, identify edible
-            and poisonous plants, and forge the empathic bonds with wild animals that are the hallmark of their craft.
-
-
-            The bond between a ranger and their companions is not mere domestication. It is a form of primal magic — an
-            ancient pact between humanoid and beast that predates the arcane colleges by millennia. Rangers who attune
-            to this power can communicate wordlessly with their bonded animals, share sensory impressions across great
-            distances, and even channel restorative natural energy through the bond. The deeper the trust between ranger
-            and companion, the more potent these abilities become.
-
-
-            Rangers serve as border patrols, monster hunters, and guides for expeditions into uncharted territory. They
-            are often the first line of defense when creatures from the deep wilderness encroach on settled lands. Their
-            knowledge of the natural world makes them invaluable to military commanders planning campaigns through
-            hostile terrain, and their animal companions provide scouting capabilities that no amount of conventional
-            reconnaissance can match.
+            - itemId: auringold_academy:cucumber_sandwich
+              equip: false
+        herald:
+          displayName: Herald
+          hpScalingRate: 1.4
+          manaScalingRate: 1.42
+          description: Divine conduit who channels patron power to heal wounds, restore strength, and kindle hope amid darkness.
           primaryStat: WIS
-          image: d1d7c4b66422dce6c5d2b7d4362872730da19ad9abb3d10962946f0571e0de50.jpg
-          outfitDescription: Weathered green and brown leather armor with leaf-shaped scale overlays across the chest. A longbow
-            of dark yew is slung across the back alongside a quiver of fletched arrows. A short hunting knife sits at
-            the hip. The armor is accented with fur trim and wooden toggles, and a forest-green cloak is pinned at the
-            shoulder with an antler brooch.
+          statPriorities:
+            - WIS
+            - INT
+            - CHA
+          selectable: true
+          threatMultiplier: 0.3
+          image: 9187ad816d4f719d48a85dcfed58bf5667e39a79aaac5dbf9236b5a889a91e47.jpg
+          outfitDescription: Robes or vestments adorned with symbols of their patron, bearing holy talismans, prayer beads, or
+            reliquaries. Their presence radiates gentle luminescence—petals for Sylflorae, fragrant smoke for Pyrae,
+            resonant shimmer for Lithae. They carry themselves with serene conviction, hands open in blessing, an aura
+            of compassion and sacred power.
+          showcaseRace: pyrae
           starterEquipment:
-            - itemId: academy:iron_sword
-            - itemId: academy:leather_hood
-            - itemId: academy:leather_gloves
-            - itemId: academy:healing_potion
+            - itemId: auringold_academy:starlight_mace
+            - itemId: auringold_academy:auringold_robes
+            - itemId: auringold_academy:slice_cake
               equip: false
-            - itemId: academy:hearty_ration
+            - itemId: auringold_academy:cup_tea
+              equip: false
+            - itemId: auringold_academy:cucumber_sandwich
+              equip: false
+        scrollwright:
+          displayName: Scrollwright
+          hpScalingRate: 1.41
+          manaScalingRate: 1.415
+          description: Craftspeople who command enchanted clockwork constructs powered by captured starlight and celestial magic.
+          backstory: >-
+            You have studied under the gentle tutelage of scrollwrights who learned their craft from Tessikar the
+            Springwight himself—or at least from those who did. In quiet workshops filled with the tick-tock of brass
+            hearts and the crystalline hum of awakening consciousness, you have learned to etch spiraling patterns onto
+            clockwork frames, patterns that seem to shift when glimpsed from the corner of one's eye. You have learned
+            to seat luminous crystals—fragments of starlight captured in faceted stone—into delicate mechanisms,
+            breathing synthetic life into automatons through a sublime fusion of precise craftsmanship and reverent
+            magic.
+
+
+            Your creations are humble compared to the legendary Animae of Tessikar's greatest works, yet each one
+            carries a spark of the same wonder. Perhaps you command clockwork sparrows that chirp melodies of pure
+            mathematics, or brass companions no larger than a child's cupped hands. Each ticking heart within your
+            constructs pulses with a genuine essence of life drawn from Ambon's creative force, making them true
+            servants rather than mere puppets.
+          primaryStat: INT
+          statPriorities:
+            - INT
+            - CON
+            - STR
+          selectable: true
+          image: df3e3c7a4988f937df3c6ec63b982c26b86a57d560281b7cd62a02241b398c5f.jpg
+          outfitDescription: A Scrollwright wears workshop-stained robes of warm earth tones, pockets heavy with clockwork
+            components and luminous crystal fragments. Their fingers bear the precise marks of steady
+            craftsmanship—calluses from engraving tools, faint scorch marks from soldering brass. They carry themselves
+            with the patient focus of an artisan, often accompanied by one or more of their small clockwork creations
+            hovering or perched nearby, their surfaces gleaming with brass and crystal in rhythmic, hypnotic motion.
+          showcaseRace: lustriae
+          starterEquipment:
+            - itemId: auringold_academy:starlight_hammer
+            - itemId: auringold_academy:auringold_robes
+            - itemId: auringold_academy:slice_cake
+              equip: false
+            - itemId: auringold_academy:cup_tea
+              equip: false
+            - itemId: auringold_academy:cucumber_sandwich
+              equip: false
+        songweaver:
+          displayName: Songweaver
+          hpScalingRate: 1.4
+          manaScalingRate: 1.42
+          description: Minstrels and bards who channel primal magic through melody, narrative, and performance—shaping reality
+            itself with their songs.
+          primaryStat: CON
+          statPriorities:
+            - CON
+            - DEX
+            - STR
+          selectable: true
+          threatMultiplier: 0.4
+          image: baf687e5bd4600479ddc4c53f39a2883ca76f50fd4ccc794b11cc50b5a8343ac.jpg
+          outfitDescription: Flowing garments adorned with ornate patterns and baroque embellishments that shimmer with subtle
+            bioluminescence; an elegant instrument—lyre, pipe, or voice itself—carried with practiced grace; stance
+            poised between performer and mystic, movements fluid and expressive as living song.
+          showcaseRace: kitsarae
+          starterEquipment:
+            - itemId: auringold_academy:starlight_lyre
+            - itemId: auringold_academy:auringold_robes
+            - itemId: auringold_academy:slice_cake
+              equip: false
+            - itemId: auringold_academy:cup_tea
+              equip: false
+            - itemId: auringold_academy:cucumber_sandwich
               equip: false
         AKATHAVAE:
           displayName: Akathavae
-          # Not selectable at character creation — this class is entered only by
-          # taking the Akathavae pledge at a shrine, and left only by renouncing it.
-          selectable: false
-          # Scholars, not soldiers: modest HP growth (they flee, not fight) and
-          # strong mana growth for the illumination arts to come.
-          hpScalingRate: 1.288
-          manaScalingRate: 1.108
-          description: A keeper of the Arcanum who has forsworn violence, leveling through illumination — recording the
-            world's creatures, places, and treasures in a personal journal rather than conquering them.
-          backstory: >-
-            The Akathavae serve the Naraxian Akathavae, the keeper of stories who writes the Arcanum — the great record
-            of all that is and all that has been. Their name is older than the colleges: it means "those who give
-            voice," for an Akathavae's calling is to speak for the things the world would otherwise forget. A windswept
-            ruin, a beast glimpsed once at dusk, a door nobody opens anymore — each is a story going silent, and each
-            silence is a small death the Akathavae refuse to permit.
-
-
-            There is no academy for the pledge. Any soul may kneel at a shrine of the open book and unsay their
-            violence, and the hush that follows is the only ordination there is. What the pledge takes — the sword, the
-            spell hurled in anger, the glory of the kill — it repays in sight. The pledged learn to still their breath
-            and illuminate what they witness, line by line, until the subject lives more vividly on the page than it
-            ever did in fear of them.
-
-
-            Akathavae wander every road the fighters do, and some no fighter would survive, armed with nothing but ink,
-            patience, and a well-practiced soothing word. The Arcanum remembers its firsts forever, and among the
-            pledged there is no higher honor than the line beneath a creature no one had ever recorded: first
-            illuminated by your hand.
+          hpScalingRate: 1.35
+          manaScalingRate: 2
+          description: Pledge-granted pacifist path. Players who pledge at an Akathavae shrine become Akathavae — combat is
+            forsworn and the world is leveled through illumination. Multiclassing is locked while pledged, and the prior
+            class is restored on renunciation. Not selectable at character creation.
+          backstory: The Akathavae are keepers of knowledge who give voice to stories, in service of the Naraxian god who writes
+            the Arcanum. Where others conquer the world, the Akathavae record it — every room walked, every creature
+            met, every relic held — illuminating each into a personal Arcanum.
           primaryStat: INT
+          statPriorities:
+            - INT
+            - WIS
+            - CHA
+          selectable: false
+          image: 36ec1b6c729d27b84e059a26ac8434432a35ea185a378c27fa8c5cb56ce48f06.jpg
+          outfitDescription: Candle-lit scholar's robes layered over travelling leathers, a satchel of blank parchment, and a
+            quill kept always within reach.
+          showcaseRace: archae
     races:
       definitions:
-        HUMAN:
-          displayName: Human
-          description: Versatile and adaptable, humans excel in any role through sheer determination and ingenuity.
-          backstory: >-
-            Humans are the most widespread of the civilized races, having carved kingdoms, republics, and trading
-            empires out of every habitable corner of the known world. Their relatively short lifespans drive an urgency
-            that other races sometimes mistake for recklessness, but which humans understand as ambition. A human who
-            lives to see sixty has likely accomplished more in raw volume than an elf who has spent three centuries
-            perfecting a single craft.
-
-
-            Human societies are staggeringly diverse. The northern clans organize around warrior-kings and blood oaths.
-            The southern city-states are governed by merchant councils and guild charters. The eastern provinces
-            maintain rigid feudal hierarchies with landed nobility and peasant levies. What unites them is a relentless
-            drive to build, expand, and leave a mark on the world that outlasts their mortal years.
-
-
-            In adventuring companies, humans serve as the glue that holds disparate races and temperaments together.
-            They lack the innate magical affinity of the sylvan or the physical resilience of the stoneheart, but they
-            compensate with adaptability and an unmatched talent for learning new skills quickly. A human fighter can
-            retrain as a passable scout in weeks; a human mage can pick up the basics of herbalism between campaigns.
-            This flexibility makes them welcome in any party composition.
-          traits:
-            - Adaptable
-            - Ambitious
-          image: a6c6cc0632454035a29c3afbff6f91716bd7c1d4dbe4c22dcc574fabbab6c029.jpg
-          bodyDescription: Medium build with a wide range of skin tones from pale to deep brown. Features are varied and
-            unremarkable compared to the other races — no pointed ears, no stone-like skin. Hair ranges from straight to
-            curly in shades of black, brown, red, and blonde. Eyes are brown, blue, green, or grey. Sturdy and
-            well-proportioned, neither slight nor bulky.
-        SYLVAN:
-          displayName: Sylvan
-          description: Graceful forest-dwellers attuned to nature and magic, with keen senses honed over centuries of life among
-            the ancient woods.
-          backstory: >-
-            The sylvan emerged from the deep forests in an age before recorded history, and they have never fully left
-            them. Their settlements are built into living trees, across suspended bridges, and within root-hollowed
-            chambers beneath the forest floor. To outsiders, a sylvan village is nearly invisible — indistinguishable
-            from the surrounding woodland until you are standing in the middle of it.
-
-
-            Sylvan lifespans stretch across centuries, which gives them a fundamentally different relationship with time
-            than the shorter-lived races. A sylvan artisan may spend decades perfecting a single bow. Their historians
-            remember events that humans consider ancient mythology. This long perspective makes them cautious and
-            deliberate, but it also means that when a sylvan commits to a course of action, they have considered the
-            consequences more thoroughly than most.
-
-
-            Despite their reclusive reputation, sylvan are not isolationists. They maintain trade relationships with
-            human border towns, exchanging rare herbs, enchanted wood, and masterwork bows for metals and manufactured
-            goods that the forest cannot provide. Sylvan rangers patrol the borders between civilization and the wild
-            places, serving as an early warning system against incursions from the deeper wilderness. Those who leave
-            the forest to adventure abroad often do so out of a sense of duty — a threat has been identified that
-            requires intervention beyond the treeline.
-          traits:
-            - Keen Senses
-            - Nature Affinity
-            - Graceful
-          image: d0f51898fa492713d576ad22596bd48c94ebfcba487c8acde8ba187044038d4a.jpg
+        archae:
+          displayName: Archae
+          description: The first children of the Creator, adaptable and ambitious inheritors of divine legacy.
+          backstory: Before the world had learned its own name, before the seas remembered their shores or the mountains
+            understood their heights, the Creator breathed intention into clay and starlight, and the Archae opened
+            their eyes for the very first time. They are the eldest children, the prototype and the promise, shaped not
+            for any single purpose but for all purposes at once — a people built from divine curiosity rather than
+            divine certainty.
+          image: ed7a68c77e2223e074cfa6d21bda4e71448d28b61809403409324382952cf4cc.jpg
+          statMods:
+            STR: 1
+            DEX: 1
+          bodyDescription: Medium humanoid frame, well-proportioned and graceful. Smooth brown skin with large, expressive eyes
+            that seem to hold depths of ancient memory. Hair is brown. Hands are elegant and dexterous, suggesting
+            capability across many pursuits.
+          racialAbility:
+            kind: ARCHAE_DRENGARIAE
+            displayName: Call the Drengariae
+            cooldownMs: 150000
+            triggerHealthPct: 25
+            petTemplateKey: drengariae_soldier
+            petDurationMs: 9000
+            selfMessage: You cry out to the Drengariae — a frost-clad soldier answers, blade aflame!
+            roomMessage: A Drengariae soldier answers {player}'s call, blade wreathed in pale fire!
+        aetherae:
+          displayName: Aetherae
+          description: Beings of shadow and mist, charged with ancient sacred duties since their creation from Aineroia's own
+            essence.
+          backstory: "Beings of shadow and mist, the Aetherae are shapeshifters who take on whatever form they please. They reside
+            in the far north of Ambon, living in nomadic societies where they care for the moonlight horses, the
+            Luneqrae. "
+          image: 482b6bbc79161499c4c200f507ac1e84c9cf19779d31bad11f7522563451b210.jpg
+          statMods:
+            INT: 1
+            WIS: 1
+            DEX: 1
+            CON: -3
+          bodyDescription: "A figure made of dark, billowing shadowy smoke, wrapped in a heavy ornate purple cloak with intricate
+            embroidery and clasps, made of a mother-of-pearl like material. The cloak is richly detailed and clearly
+            physical — the body within it is not. Where the cloak opens or where a face should be, there is only roiling
+            dark fog, dense and slowly churning. No visible features, no solid form beneath the garment . The smoke
+            curls and wisps at the edges of the cloak's hood and hem. "
+          imagePromptDirective: NO FACE, NO HUMAN FACE, NO SOLID FORM, MADE OF FOG AND SMOKE
+          racialAbility:
+            kind: AETHERAE_PHASE
+            displayName: Phase Shift
+            cooldownMs: 150000
+            phaseTicks: 2
+            selfMessage: You flicker out of existence — the blow passes through empty air.
+            roomMessage: "{player} flickers and fades out of existence!"
+        lustriae:
+          displayName: Lustriae
+          description: Eternally youthful fae who perceive time as a living current, flitting between moments with curious
+            playfulness.
+          backstory: The Lustriae are the first children of Aineroia. Resembling faeries, with colorful diaphanous wings and an
+            eternally youthful, perfect visage. They have a natural affinity for time magic and prophecy.
+          image: c3b3f34dc46cba273afea05a5c0a0640817ff938344ea21d74c8e990e17cacf0.jpg
           statMods:
             DEX: 1
-            INT: 1
+            CHA: 1
             CON: -1
-          bodyDescription: Tall and slender with an angular, fine-boned frame. Skin has a faint warm undertone ranging from fair
-            to olive. Ears are long and pointed, sweeping back from the head. Eyes are large and almond-shaped, often in
-            vivid greens, golds, or pale silver. Hair is typically straight and worn long, in shades of silver-white,
-            deep black, or autumnal auburn. Movements are fluid and precise.
-        STONEHEART:
-          displayName: Stoneheart
-          description: Hardy mountain folk with dense bones and iron constitutions, shaped by generations of life in the deep
-            halls beneath the peaks.
-          backstory: >-
-            The stoneheart were born of the mountains — or so their creation myths insist. Their earliest histories
-            speak of a time when the first clans simply walked out of the rock itself, fully formed and already arguing
-            about whose tunnel was deeper. Whether this is literal truth or cultural metaphor, the stoneheart have dwelt
-            beneath the great mountain ranges for as long as any race can remember.
-
-
-            Stoneheart civilization is built around the clan-hold: a vast underground complex of mines, forges, dwelling
-            halls, and mushroom farms carved into the living rock over generations. Each clan-hold is a self-sufficient
-            fortress capable of withstanding siege for years. The stoneheart are master miners and smiths, producing
-            metalwork of extraordinary quality. Their steel is sought after across the known world, and a
-            stoneheart-forged blade can fetch ten times the price of its human-made equivalent.
-
-
-            Stoneheart who venture above ground do so for trade, diplomacy, or the pursuit of rare minerals that their
-            home mountains lack. They find the open sky disorienting at first — too much empty space above the head —
-            but adapt quickly enough. In battle, stoneheart are immovable anchors. Their dense bones and thick muscles
-            make them extraordinarily difficult to knock down, and their natural resistance to poison and disease means
-            that battlefield conditions that would incapacitate other races barely slow them down.
-          traits:
-            - Stone Resilience
-            - Mountain Born
-            - Enduring
-          image: df4a97f7b08199838134bf56438cf02fb9d6434b8ff8b573d799fd5647099a86.jpg
-          statMods:
-            CON: 2
-            DEX: -1
-          bodyDescription: Short and broad with a powerful, stocky build. Skin is thick and weathered, ranging from ruddy tan to
-            deep granite-grey. Features are heavy and blunt — strong jaw, prominent brow ridge, wide nose. Eyes are
-            deep-set in shades of slate, amber, or dark brown. Hair is coarse and thick, typically worn in braids, in
-            shades of iron-grey, black, or dark copper. Hands are broad with thick, calloused fingers.
-        # ── Auringold ancestries with race-specific passive abilities ──────────────────────────────
-        # Each ability fires from a combat hook (low-health threshold or a would-be-lethal blow) and
-        # burns a long, persisted cooldown so it can't be cheesed by relogging. See RacialAbilitySystem.
-        PYRAE:
+          bodyDescription: "A faerie with luminous iridescent skin, pastel-toned hair, and delicate youthful features. Large
+            softly glowing eyes. Wearing elegant garments that appear grown from leaves, petals, silk, and vines. Large,
+            multicolor diaphanous wings extend behind them like stained glass windows. "
+          racialAbility:
+            kind: LUSTRIAE_TIMESLIP
+            displayName: Timeslip
+            cooldownMs: 150000
+            selfMessage: Time stutters — you slip a heartbeat sideways and strike again!
+            roomMessage: "{player} blurs as time stutters around them!"
+        pyrae:
           displayName: Pyrae
-          description: Flame-born kindred whose blood runs molten; cornered and bleeding, they detonate.
+          description: Sons of the Phoenix — beings of living flame born from stories of rebirth and resurrection.
+          backstory: Creatures of fire and rebirth, the Pyrae are the descendants of the mythical phoenix. They reside in the
+            thick jungles formed in the wake of the heat of the Caldera, building cities high in the trees. They produce
+            numerous unique salves and herbal remedies and have a strong symbiotic relationship with their jungle
+            homeland.
+          image: 3f4c8ad44513c967813302f641e61f614f16396671209408fe5e5a46d8ef764b.jpg
+          statMods:
+            STR: 1
+            CON: 1
+            CHA: 1
+          bodyDescription: >-
+            a tall, elegant humanoid phoenix made of living flame, with sharp avian features, ember-bright eyes, molten
+            crimson-and-amber skin, glowing fire-veins, and a crest of open flame for hair. A great pair of phoenix
+            wings grows from their shoulders and back, folding around them like a fiery cloak, while they still retain
+            normal human arms and hands. Regal, radiant, severe, and mythic, with ash motes and heat shimmer surrounding
+            them.
+
+            Their skin is not true flesh, but a fluid surface of deep crimson, ruby-black, and molten amber, rippling
+            like the crust of cooling magma. Beneath that surface, veins of brilliant gold-white fire trace their
+            throats, collarbones, ribs, and limbs, flaring brighter with strong emotion. Their hair rises as a crest of
+            open flame, curling upward in scarlet, orange, and gold like phoenix plumage caught in a windless blaze.
+
+
+            From their shoulders springs a magnificent pair of wings, large and expressive, worn almost like a regal
+            cloak draped across their back. At rest, the wings fold close around them, creating the impression of a
+            mantle of living feathers and fire; when spread, they blaze outward in long layered plumes of crimson,
+            orange, gold, and white-hot light. The wings should feel unmistakably phoenix-like: elegant, fiery, and
+            ceremonial, framing the body rather than replacing the arms.
+
+
+            Unlike true birdfolk, the Pyrae retain normal humanoid arms and hands. 
+
+
+            Their legs are long and elegant, human-shaped or subtly raptor-like in posture, ending in darkened feet
+            wreathed in heat distortion. At rest, they seem like living embers in humanoid form; in motion, they become
+            radiant phoenix figures, wing-cloaks unfurling in a storm of fire and light.
           racialAbility:
             kind: PYRAE_IMMOLATE
             displayName: Immolation
             cooldownMs: 120000
             triggerHealthPct: 10
             aoeDamagePctOfMaxHp: 0.6
-            selfMessage: "Your blood boils over — you erupt in a roar of flame!"
+            selfMessage: Your blood boils over — you erupt in a roar of flame!
             roomMessage: "{player} erupts in a roar of flame!"
-        LUSTRIAE:
-          displayName: Lustriae
-          description: Time-touched wanderers who can steal a heartbeat back from the edge of death.
+        ophirae:
+          displayName: Ophirae
+          description: Serpentine abyssal dragons who rule the cold northern waters from underwater cities built of leviathan bone.
+          backstory: The Ophirae were born from Aineroia's stories of power, fierceness, and freedom—the hope of being stronger
+            than death itself. Created to rule the air, water, and skies, they rose as apex predators of the cold
+            northern seas, claiming the bones and scales of now-extinct ocean leviathans to craft their vast underwater
+            cities. From these architectural marvels of ancient bone, they venture forth to maintain small trading posts
+            on the edges of lakes and oceans, bridging their abyssal realm with the surface world.
+          image: f23e93bc5af134a6631c9530b44b67f673f4261fb3bfb434c4c4d85242e19870.jpg
+          statMods:
+            STR: 1
+            DEX: 1
+            CON: 1
+          bodyDescription: "A fully reptilian dragon-humanoid with a true dragon head, scaled snout, elegant horned or frilled
+            crest, intelligent golden eyes, and blue-green iridescent scales. Clawed hands and feet, long tail, and
+            small draconic wings with translucent fin-like membranes folded behind. "
           racialAbility:
-            kind: LUSTRIAE_TIMESLIP
-            displayName: Timeslip
-            cooldownMs: 150000
-            selfMessage: "Time stutters — you slip a heartbeat sideways and strike again!"
-            roomMessage: "{player} blurs as time stutters around them!"
-        AURELIA:
-          displayName: Aurelia
-          description: Bioluminescent depths-folk who blind their attackers with a dazzling pulse of light.
-          racialAbility:
-            kind: AURELIA_DAZZLE
-            displayName: Dazzling Burst
+            kind: OPHIRAE_WRATH
+            displayName: Draconic Wrath
             cooldownMs: 120000
-            triggerHealthPct: 15
-            stunStatusId: dazzle_stun
-            selfMessage: "You flare with blinding bioluminescence!"
-            roomMessage: "{player} flares with blinding light!"
-        LITHAE:
-          displayName: Lithae
-          description: Stoneblooded who petrify at death's door, weathering the blow as living rock.
+            triggerHealthPct: 20
+            damageMultiplier: 1.5
+            buffDurationMs: 6000
+            selfMessage: Your draconic blood ignites — your strikes turn merciless!
+            roomMessage: "{player}'s eyes blaze with draconic fury!"
+        kitsarae:
+          displayName: Kitsarae
+          description: Animal spirits who walk between animal and humanoid form, masters of deception and subtle enchantment.
+          backstory: Coming from many different backgrounds, the Kitsarae began life as simple animals but through an unquenchable
+            thirst for knowledge and cultivation have become sentient. They are disciples of the Naraxian Akathavae, the
+            goddess of scholars and performers, who has gifted them the ability to shift between humanoid and animal
+            forms. They excel at diplomacy and are often found as traveling minstrels and performers.
+          image: 31929073f06f7aafe73d7a949549dc8f568d2158acf1483728e037be3275c81d.jpg
+          statMods:
+            INT: 1
+            DEX: 1
+            CHA: 1
+            STR: -1
+          bodyDescription: Animal humanoids that come in many shapes and sizes. Any animal that chooses a path of cultivation.
+            Choose a random and unusual mammal and anthropomorphize it. They walk on two legs but retain most of their
+            animal features unless they are trying to disguise themselves. They come in all shapes and sizes, living
+            harmoniously in their pursuit of knowledge. No vulpines.
+          imagePromptDirective: NO HUMAN FACE, FULLY ANIMAL FACE , Try to pick unusual mammals and avoid foxes in general, NO FOXES
           racialAbility:
-            kind: LITHAE_STONEFORM
-            displayName: Stone Form
-            cooldownMs: 150000
-            regenPctOfMaxHp: 0.2
-            stoneStatusId: stoneform_root
-            stoneDurationMs: 4000
-            selfMessage: "Your skin hardens to living stone — the blow glances away as you settle, immovable."
-            roomMessage: "{player} turns to living stone!"
-        MYCORAE:
+            kind: KITSARAE_REVERSAL
+            displayName: Cultivated Reversal
+            cooldownMs: 180000
+            selfMessage: You breathe the lethal force inward — the killing blow becomes life!
+            roomMessage: "{player} draws a killing blow inward as though it were a breath."
+        mycorae:
           displayName: Mycorae
-          description: Fungal symbiotes who scatter living spores that erupt into shrieking guardians.
+          description: Fungal people grown from living mycelium, embodying the natural cycle of decay and rebirth.
+          backstory: Born of Aineroia's stories of the natural order—of decay and rebirth, the endless turning of seasons—the
+            Mycorae emerged as living proof that death is not an ending but a transformation. Their consciousness dwells
+            both in the fruiting bodies that walk among the forests of Ambon and in the vast mycelial networks that web
+            beneath the soil, connecting them to one another in ways other races scarcely comprehend.
+          image: a04e5a698881ebd23ac7f06454a8d687dc6ab475040151f57d1e10158e4e0531.jpg
+          statMods:
+            WIS: 1
+            CON: 1
+            CHA: -1
+          bodyDescription: A Mycorae, a gentle, small humanoid mushroom spirit made of mycelium, bark fibers, moss, and layered
+            fungi. Ruffled orange-red mushroom cap like a living hat, shadowed face with glowing cyan eyes, body covered
+            in overlapping red, purple, and magenta shelf mushrooms, turquoise bioluminescent droplets and spores,
+            covered in colorful glowing mushrooms and wildflowers.  Short and delicate. No human face.
+          imagePromptDirective: NO FACE, NO HUMAN FACE
           racialAbility:
             kind: MYCORAE_SPORES
             displayName: Spore Burst
@@ -2247,110 +2010,114 @@ ambonmud:
             petCountMin: 1
             petCountMax: 3
             petDurationMs: 12000
-            selfMessage: "You burst, scattering a cloud of spores that erupt into shrieking mushrooms!"
+            selfMessage: You burst, scattering a cloud of spores that erupt into shrieking mushrooms!
             roomMessage: "{player} bursts in a cloud of spores!"
-        KITSARAE:
-          displayName: Kitsarae
-          description: Cultivation-masters who breathe a killing blow inward and turn it into renewed life.
+        lithae:
+          displayName: Lithae
+          description: Living beings of crystal and stone, their forms shimmer with the earth's raw beauty and transform across
+            centuries into glittering prisms.
+          backstory: When the world was young, Kvarcgagap the Shining Quartz Void moved through the deep places, seeding them with
+            caverns filled with ore and gemstone. Within those caverns, he carved ornate crystalline humanoid statues,
+            sleeping below the mountains. When the Emberfell awoke Ambon's magic, the Lithae awoke as well, constructing
+            shining cities in the mountain's core.
+          image: 19886d18950cd05184efcc7933605b13b5833626b50b70d9b8d8d7ed3f7dbe49.jpg
+          statMods:
+            CON: 1
+            DEX: -1
+          bodyDescription: "A  short, stocky humanoid made from a colorful patchwork of irregular gemstones, crystals, rocks, and
+            ore, held together by glowing gold kintsugi-like seams. Not a sleek crystal warrior, but an ancient mountain
+            spirit with a craggy expressive face, large rounded hands, warm glowing eyes, and a richly varied mosaic
+            body of amethyst, garnet, quartz, jasper, emerald, opal, obsidian, citrine, and rose quartz. "
+          imagePromptDirective: No human face
           racialAbility:
-            kind: KITSARAE_REVERSAL
-            displayName: Cultivated Reversal
-            cooldownMs: 180000
-            selfMessage: "You breathe the lethal force inward — the killing blow becomes life!"
-            roomMessage: "{player} draws a killing blow inward as though it were a breath."
-        ARCHAE:
-          displayName: Archae
-          description: Old-blood faithful who call the frozen war-host of the Drengariae in their hour of need.
-          racialAbility:
-            kind: ARCHAE_DRENGARIAE
-            displayName: Call the Drengariae
+            kind: LITHAE_STONEFORM
+            displayName: Stone Form
             cooldownMs: 150000
-            triggerHealthPct: 25
-            petTemplateKey: drengariae_soldier
-            petDurationMs: 9000
-            selfMessage: "You cry out to the Drengariae — a frost-clad soldier answers, blade aflame!"
-            roomMessage: "A Drengariae soldier answers {player}'s call, blade wreathed in pale fire!"
-        OPHIRAE:
-          displayName: Ophirae
-          description: Draconic-blooded who turn savage and ruthlessly precise when cornered.
+            regenPctOfMaxHp: 0.2
+            stoneStatusId: stoneform_root
+            stoneDurationMs: 4000
+            selfMessage: Your skin hardens to living stone — the blow glances away as you settle, immovable.
+            roomMessage: "{player} turns to living stone!"
+        aureliae:
+          displayName: Aureliae
+          description: Bioluminescent beings of the deep ocean, drifting like living constellations through Ambon's darkest waters.
+          backstory: The Aureliae were born from Aineroia's desire to light the darkness of the next world for her lost children.
+            These jellyfish-like beings emerged as living radiance—translucent forms that pulse with cascades of azure,
+            violet, and pearl, their bioluminescence a gentle beacon in the deep. They live in underwater cities
+            constructed from living coral, which they manipulate through their magic songs.
+          image: be0ac8d68f5ec2bbb86cb2806841cd7e86e00d123938fba8ae87b9dd848bb614.jpg
+          statMods:
+            INT: 1
+            WIS: 1
+            DEX: 1
+          bodyDescription: A tall, elegant aureliae with a partially humanoid silhouette, its upper body shaped with subtle
+            suggestions of shoulders, torso, and posture beneath layers of translucent jelly-like flesh. Its head is a
+            luminous crystal-clear bell resembling a celestial jellyfish dome, filled with swirling galaxies, drifting
+            nebulae, and radiant constellations that pulse softly like a living universe. The creature has no true face,
+            only shifting concentrations of starlight within the dome that imply awareness and emotion. From beneath the
+            bell cascade long, graceful tendrils that resemble a fusion of jellyfish tentacles and flowing robes,
+            curling and drifting with weightless elegance. Several thicker tendrils function almost like elongated arms,
+            capable of delicate movement and manipulation, while finer sensory filaments trail behind like cosmic silk.
+            Its body narrows into a vaguely humanoid torso before dissolving into a mass of floating bioluminescent
+            appendages instead of legs. The flesh is semi-transparent and iridescent, glowing with deep blues, violets,
+            and ultraviolet hues, threaded with faint veins of astral light. The creature radiates an ancient, mystical
+            intelligence—less like an animal and more like a wandering cosmic sage born from the abyss between stars.
+            High-detail fantasy creature design, ethereal bioluminescence, elegant humanoid anatomy blended with
+            jellyfish morphology, painterly fantasy illustration, celestial deep-sea aesthetic, soft cosmic bloom
+            lighting, flowing organic shapes, alien but beautiful, no clothing, no armor, no human skin textures, no
+            human face
+          imagePromptDirective: NO FACE, NO HUMAN FACE
           racialAbility:
-            kind: OPHIRAE_WRATH
-            displayName: Draconic Wrath
+            kind: AURELIA_DAZZLE
+            displayName: Dazzling Burst
             cooldownMs: 120000
-            triggerHealthPct: 20
-            damageMultiplier: 1.5
-            buffDurationMs: 6000
-            selfMessage: "Your draconic blood ignites — your strikes turn merciless!"
-            roomMessage: "{player}'s eyes blaze with draconic fury!"
-        AETHERAE:
-          displayName: Aetherae
-          description: Half-real voidkin who phase out of existence to let a killing blow pass through empty air.
-          racialAbility:
-            kind: AETHERAE_PHASE
-            displayName: Phase Shift
-            cooldownMs: 150000
-            phaseTicks: 2
-            selfMessage: "You flicker out of existence — the blow passes through empty air."
-            roomMessage: "{player} flickers and fades out of existence!"
+            triggerHealthPct: 15
+            stunStatusId: dazzle_stun
+            selfMessage: You flare with blinding bioluminescence!
+            roomMessage: "{player} flares with blinding light!"
     equipment:
       slots:
+        weapon:
+          displayName: WEAPON
+          order: 0
+          x: 65.4329680238656
+          y: 52.383033872145454
         head:
-          displayName: Head
+          displayName: HEAD
           order: 1
-          x: 50
-          y: 50
-        chest:
-          displayName: Chest
-          order: 2
-          x: 50
-          y: 50
-        legs:
-          displayName: Legs
+          x: 50.48882573966712
+          y: 9.50593555160745
+        body:
+          displayName: BODY
           order: 3
-          x: 50
-          y: 50
-        feet:
-          displayName: Feet
-          order: 4
-          x: 50
-          y: 50
+          x: 50.48882573966712
+          y: 33.10929126613145
         hands:
-          displayName: Hands
+          displayName: HANDS
+          order: 4
+          x: 35.54468345546864
+          y: 51.964039467666886
+        feet:
+          displayName: FEET
           order: 5
-          x: 50
-          y: 50
-        main_hand:
-          displayName: Main Hand
+          x: 40
+          y: 88
+        floating:
+          displayName: Floating Nearby
           order: 6
-          x: 50
-          y: 50
-        off_hand:
-          displayName: Off Hand
-          order: 7
-          x: 50
-          y: 50
-        ring:
-          displayName: Ring
-          order: 8
-          x: 50
-          y: 50
+          x: 79.539095925718
+          y: 13.27688519191454
         neck:
           displayName: Neck
-          order: 9
-          x: 50
-          y: 50
+          order: 2
+          x: 50.34915667594277
+          y: 20.12046472729593
     characterCreation:
       startingGold: 100
-      defaultRace: HUMAN
-      defaultClass: WARRIOR
-      defaultGender: MALE
-    genders:
-      MALE:
-        displayName: Male
-      FEMALE:
-        displayName: Female
-      NON_BINARY:
-        displayName: Non-Binary
+      defaultRace: archae
+      defaultClass: bulwark
+      demoEnabled: true
+    genders: {}
     emotePresets:
       presets:
         - label: Wave
@@ -2396,8 +2163,7 @@ ambonmud:
       duskHour: 18
       nightHour: 20
     season:
-      # One full game year (all four seasons). 2 hours = 30 min per season.
-      cycleLengthMs: 7200000
+      cycleLengthMs: 14400000
     weather:
       minTransitionMs: 180000
       maxTransitionMs: 600000
@@ -2432,36 +2198,96 @@ ambonmud:
           weight: 1
           particleHint: wind
           icon: 💨
-    # World events: named happenings that broadcast start/end messages, surface
-    # in the `world` command + World.Events GMCP, and set flags that gate
-    # conditional mob spawns (`condition.events` in zone YAML) and quests.
-    # Each definition supports:
-    #   startDate/endDate  — ISO dates (yyyy-MM-dd) bounding the event; both empty = unbounded.
-    #   recurrence         — optional repeating window WITHIN the date range, for events
-    #                        players can encounter during normal play:
-    #                          periodMs:   full cycle length (e.g. 3600000 = hourly)
-    #                          durationMs: active window at the start of each cycle (< periodMs)
-    #                          offsetMs:   shifts the cycle anchor (stagger multiple events)
-    #   flags              — flag ids matched by spawn conditions / quest gates.
-    #   startMessage/endMessage — broadcast to all players on activation edges.
-    # No events ship by default; world overlays (e.g. the Auringold config) define them.
-    # worldEvents:
-    #   definitions:
-    #     wandering_star:
-    #       displayName: The Wandering Star
-    #       description: A vagrant star drifts low; strange things glimmer beneath it.
-    #       flags: [wandering_star]
-    #       recurrence:
-    #         periodMs: 3600000
-    #         durationMs: 600000
-    #       startMessage: A wandering star slips loose and drifts low over the world.
-    #       endMessage: The wandering star climbs back into the firmament.
-    # Server-generated rare cosmetic variants. The archetype set (albino, ember,
-    # shadow-touched, spectral, …) is defined in code; override `variants` here to
-    # replace it wholesale. Leaving it unset keeps the built-in palette.
     mobVariants:
       enabled: true
       chance: 0.04
+      variants:
+        albino:
+          displayName: Albino
+          namePrefix: "Albino "
+          tint: "#f5f0ff"
+          rarity: uncommon
+          weight: 3
+          hpMultiplier: 1.2
+          xpMultiplier: 1.3
+          lootMultiplier: 1.2
+          announce: ZONE
+        verdant:
+          displayName: Verdant
+          namePrefix: "Verdant "
+          tint: "#5fd17a"
+          rarity: uncommon
+          weight: 2.5
+          hpMultiplier: 1.2
+          xpMultiplier: 1.3
+          lootMultiplier: 1.2
+          announce: ZONE
+        shadow:
+          displayName: Shadow-touched
+          namePrefix: "Shadow-touched "
+          tint: "#6a4aa0"
+          overlay: swirl
+          rarity: uncommon
+          weight: 2.5
+          hpMultiplier: 1.25
+          xpMultiplier: 1.4
+          lootMultiplier: 1.25
+          announce: ZONE
+        ember:
+          displayName: Ember
+          namePrefix: "Ember "
+          tint: "#ff6a3c"
+          overlay: embers
+          rarity: rare
+          weight: 1.4
+          hpMultiplier: 1.5
+          xpMultiplier: 1.7
+          lootMultiplier: 1.5
+          announce: ZONE
+        glimmering:
+          displayName: Glimmering
+          namePrefix: "Glimmering "
+          tint: "#ffe8a3"
+          overlay: sparkle
+          rarity: rare
+          weight: 1.2
+          hpMultiplier: 1.5
+          xpMultiplier: 1.8
+          lootMultiplier: 1.6
+          announce: ZONE
+        frostbound:
+          displayName: Frostbound
+          namePrefix: "Frostbound "
+          tint: "#a3e4ff"
+          overlay: frost
+          rarity: rare
+          weight: 1.2
+          hpMultiplier: 1.5
+          xpMultiplier: 1.7
+          lootMultiplier: 1.5
+          announce: ZONE
+        spectral:
+          displayName: Spectral
+          namePrefix: "Spectral "
+          tint: "#bfeaff"
+          overlay: mist
+          rarity: legendary
+          weight: 0.4
+          hpMultiplier: 2
+          xpMultiplier: 2.5
+          lootMultiplier: 2
+          announce: SERVER
+        ancient:
+          displayName: Ancient
+          namePrefix: "Ancient "
+          tint: "#caa86a"
+          overlay: swirl
+          rarity: legendary
+          weight: 0.3
+          hpMultiplier: 2.2
+          xpMultiplier: 2.6
+          lootMultiplier: 2.2
+          announce: SERVER
     environment:
       defaultTheme:
         moteColors:
@@ -2486,21 +2312,61 @@ ambonmud:
           - "#8caec9"
         weatherParticleOverrides: {}
       zones: {}
-    enchanting:
-      maxEnchantmentsPerItem: 3
-      definitions: {}
-    pets:
-      manualSkillGraceMs: 8000
-      # Global caps on ratio scaling — keep pets relevant without out-scaling players.
-      maxHpRatio: 1.0
-      maxDamageRatio: 0.8
-      maxArmorRatio: 1.0
+    worldEvents:
       definitions:
-        # Mycorae racial summon: a swarm tank. Tiny HP/damage but a very high threat multiplier so a
-        # cluster of mushrooms peels aggro off the player within a round or two and soaks a few hits.
+        wandering_star:
+          displayName: The Wandering Star
+          description: A vagrant star has slipped its mooring and drifts low over the dream. The almanac terrace glimmers beneath
+            it.
+          flags:
+            - wandering_star
+          startMessage: A wandering star slips its mooring and drifts low over the dream — the almanac terrace glimmers beneath it.
+          endMessage: The wandering star climbs back into the firmament, trailing one last ribbon of silver light.
+    enchanting:
+      maxEnchantmentsPerItem: 1
+      definitions:
+        keen_edge:
+          displayName: Keen Edge
+          skill: enchanting
+          skillRequired: 1
+          materials:
+            - itemId: stardust
+              quantity: 2
+            - itemId: gears
+              quantity: 1
+          xpReward: 30
+          damageBonus: 2
+          targetSlots:
+            - weapon
+        warded_weave:
+          displayName: Warded Weave
+          skill: enchanting
+          skillRequired: 1
+          materials:
+            - itemId: stardust
+              quantity: 2
+            - itemId: moonpetal
+              quantity: 1
+          xpReward: 30
+          armorBonus: 2
+          targetSlots:
+            - body
+        scholars_focus:
+          displayName: Scholar's Focus
+          skill: enchanting
+          skillRequired: 2
+          materials:
+            - itemId: stardust
+              quantity: 3
+            - itemId: dreamglass
+              quantity: 1
+          xpReward: 45
+          statBonuses:
+            PRIMARY: 2
+    pets:
+      definitions:
         spore_mushroom:
           name: a shrieking mushroom
-          description: A squat, pulsing fungus that hisses spores and draws every angry eye toward itself.
           hpRatio: 0.15
           damageRatio: 0.1
           armorRatio: 0.2
@@ -2508,12 +2374,12 @@ ambonmud:
           baseMinDamage: 1
           baseMaxDamage: 3
           baseArmor: 0
-          threatMultiplier: 6.0
-        # Archae racial summon: a short-lived DPS soldier. No threat multiplier — it fights, it
-        # doesn't tank.
+          description: Small brightly-colored flying mushrooms that create clouds of dazzling rainbow spores, temporarily
+            distracting enemies.
+          image: 413bce939129a68d80d1f56decdc36a601ed21ee33ec190da0cf442dbb4b8bdb.png
+          threatMultiplier: 6
         drengariae_soldier:
           name: a Drengariae soldier
-          description: A frost-rimed Alorae warrior wreathed in pale flame, sword drawn against the cold and the dark.
           hpRatio: 0.4
           damageRatio: 0.9
           armorRatio: 0.5
@@ -2521,105 +2387,84 @@ ambonmud:
           baseMinDamage: 6
           baseMaxDamage: 12
           baseArmor: 2
-          threatMultiplier: 0.0
-        wolf_companion:
-          name: a wolf companion
-          # DPS pet: light HP/armor, strong damage.
-          hpRatio: 0.4
-          damageRatio: 0.7
-          armorRatio: 0.3
-          baseHp: 25
-          baseMinDamage: 2
-          baseMaxDamage: 5
-          baseArmor: 1
-          description: A lean grey wolf with sharp yellow eyes, trained to fight alongside its bonded ranger.
-          image: a2a1f51c3361391908f68af1083a59c1daa2242750af576ca59b9b5cec03ac62.png
+          description: A frost-rimed warrior with prismatic skin and long white hair, wielding a flaming sword against the cold
+            and the dark, protector of the innocent.
+          image: 9b5b58a5b163491687d471bd9d0507067ae2dc1d7965af951e3b2a9fc578c0f0.png
+        clockwork_alligator:
+          name: Clockwork Alligator
+          hpRatio: 0.6
+          damageRatio: 0.6
+          armorRatio: 0.4
+          baseHp: 20
+          baseMinDamage: 1
+          baseMaxDamage: 4
+          baseArmor: 0
+          description: A small clockwork alligator decorated with brass filigree. It packs quite a bite!
+          image: 4c88540eb88b2e93de173fdbeb4f5110f30f37314230e65b457e7fc0ed4bb2b1.png
+          defaultAttack: bite
           spells:
             bite:
-              displayName: Bite
-              message: "{pet} clamps onto {target} with vicious jaws"
-              roomMessage: "{pet} clamps onto {target} with vicious jaws"
-              damageRatio: 2.0
-              statusEffectId: bleed
-              cooldownMs: 6000
-              weight: 2
-            pounce:
-              displayName: Pounce
-              message: "{pet} pounces on {target} and slams them to the ground"
-              roomMessage: "{pet} pounces on {target} and slams them to the ground"
-              damageRatio: 2.5
-              statusEffectId: concuss
-              cooldownMs: 12000
-              weight: 1
-        spirit_hawk:
-          name: a spirit hawk
-          # Glass DPS / utility: very low HP, no armor, but hits hard.
-          hpRatio: 0.3
-          damageRatio: 0.7
-          armorRatio: 0.0
-          baseHp: 15
-          baseMinDamage: 3
-          baseMaxDamage: 7
-          baseArmor: 0
-          description: A large hawk wreathed in faint translucent light, striking at enemies with razor talons from above.
-          image: f9c143caa4e04b89106323f85d699e9faf58909be1aaef81273b5fc5b5fb44fa.png
-          spells:
-            dive:
-              displayName: Dive
-              message: "{pet} folds its wings and rakes {target} with talons"
-              roomMessage: "{pet} folds its wings and rakes {target} with talons"
-              damageRatio: 2.0
-              cooldownMs: 7000
-              weight: 2
-            screech:
-              displayName: Screech
-              message: "{pet} lets out a piercing screech that staggers {target}"
-              roomMessage: "{pet} lets out a piercing screech that staggers {target}"
-              statusEffectId: weakened
+              displayName: Tail Whip
+              message: "{pet} whips its tail at {target} for {damage}. "
+              roomMessage: "{pet} whips its tail at {target} for {damage}."
+              damageRatio: 1
+              cooldownMs: 3000
+              image: 04f14a46e0db4dc732bbeff6189918695ecebf6cd9efb3d30997ab6eb768f1c9.png
+            chomp:
+              displayName: Chomp
+              message: "{pet} chomps down viciously on {target} for {damage}."
+              roomMessage: "{pet} chomps down viciously on {target} for {damage}."
+              damageRatio: 1.5
               cooldownMs: 10000
-              weight: 1
-        bear_guardian:
-          name: a bear guardian
-          # Tank pet: high HP and armor, lower damage, holds aggro.
-          hpRatio: 0.9
-          damageRatio: 0.4
-          armorRatio: 0.7
-          baseHp: 40
-          baseMinDamage: 5
-          baseMaxDamage: 10
-          baseArmor: 2
-          description: A massive brown bear with thick scarred hide, summoned to absorb punishment and crush foes in its grip.
-          image: e6ee852324a6ad9cab840afb3731f33ea000dd6da6dc7fc639f61fd2fb045dc0.png
-          threatMultiplier: 2.0
-          spells:
-            maul:
-              displayName: Maul
-              message: "{pet} swings a massive paw and mauls {target}"
-              roomMessage: "{pet} swings a massive paw and mauls {target}"
-              damageRatio: 2.0
-              cooldownMs: 8000
-              weight: 2
-            roar:
-              displayName: Roar
-              message: "{pet} unleashes a thunderous roar at {target}"
-              roomMessage: "{pet} unleashes a thunderous roar at {target}"
-              threatBonus: 100.0
-              cooldownMs: 15000
-              weight: 1
+              image: 707d8ca34cbb655ac9eac4df698e7cb85a4bd8ca97a617b56703071f4fef6ce9.png
     skillPoints:
-      interval: 3
+      interval: 1
     multiclass:
-      minLevel: 15
-      goldCost: 500
-      # Hard cap on total unlocked classes per player (includes the starter class).
-      maxClasses: 3
-      # Exponential scaling on gold cost: the Nth trainer unlock costs
-      # goldCost * goldCostMultiplier^(N-1). With these values: 500g, then 1000g, then 2000g.
-      goldCostMultiplier: 2.0
+      minLevel: 30
+      goldCost: 50000
+      maxClasses: 2
+      goldCostMultiplier: 2
     housing:
       enabled: true
       entryExitDirection: SOUTH
-      templates: {}
+      templates:
+        entry_room:
+          title: A Carriage House
+          description: A small but well-appointed carriage house along the path to a much grander estate. The quiet country
+            cottage provides a safe, peaceful place to rest your head.
+          cost: 10000
+          isEntry: true
+          image: 524331583d0a605fd73f7ab031eb26e58f50ea17ea59d7af852f4c9cad401376.jpg
+          maxDroppedItems: 2
+          safe: true
+        new_room:
+          title: A Hidden Vault
+          description: Hidden behind a door disguised as a bookshelf, the vault provides ample room for the storage of all kinds
+            of goods. A secure place to keep your valuables safe and sound.
+          cost: 15000
+          image: 5b57e70a37865fd3a44d3f4bb1b6ae62f095720a8bc95315244cf82d4c260913.jpg
+          maxDroppedItems: 500
+        new_room_2:
+          title: The Forge
+          description: A fully appointed blacksmith forge on the lawn of the estate. The fire is kept burning by unseen servants,
+            ensuring the forge is always ready.
+          cost: 15000
+          image: cd40ef849e87aceab1df98b6943b936cef2f5fdf8ec3b531af660143ae05f750.jpg
+          safe: true
+          station: forge
+        new_room_3:
+          title: A Sprawling Mansion
+          description: The sprawling main house of the estate, a Rococo-style mansion dripping with ornamentation. A stunning
+            display of wealth and power.
+          cost: 50000
+          image: 5af710de83df5a7ed1e35c518fa6b9d6479793e7251961b64b92d3b5ea508936.jpg
+          safe: true
+        new_room_4:
+          title: A Magnificent Castle
+          description: The sprawling main house of the estate, a Baroque-style stone castle. A stunning display of wealth and power.
+          cost: 50000
+          image: 675fe2738287e0bafa747c13cc9507dd6f3aaffdfdb45d1ebb4a188abfdd079a.jpg
+          safe: true
     classStartRooms: {}
     lottery:
       enabled: true
@@ -2635,27 +2480,24 @@ ambonmud:
       diceWinChance: 0.45
       diceWinMultiplier: 2
       cooldownMs: 5000
-    jukebox:
-      enabled: true
-      maxSongDurationSeconds: 600
     stylist:
       feeGold: 500
     akathavae:
       enabled: true
       renounceCostGold: 2500
       repledgeCooldownMs: 86400000
-      illuminateBaseSuccessPct: 70
-      successStat: "INT"
-      successPerStatPoint: 2.0
-      levelGapPenaltyPct: 8.0
-      gapReliefStat: "STR"
+      illuminateBaseSuccessPct: 75
+      successStat: INT
+      successPerStatPoint: 2
+      levelGapPenaltyPct: 30
+      gapReliefStat: STR
       gapReliefPerStatPoint: 0.5
-      minSuccessPct: 5
+      minSuccessPct: 1
       maxSuccessPct: 95
       failRetryCooldownMs: 30000
-      escapeStat: "CHA"
-      escapePerStatPoint: 3.0
-      xpStat: "WIS"
+      escapeStat: CHA
+      escapePerStatPoint: 3
+      xpStat: WIS
       xpBonusPerStatPoint: 0.02
       repeatXpFraction: 0.2
       repeatXpCooldownMs: 300000
@@ -2665,22 +2507,47 @@ ambonmud:
       discoveryXpThrottleMs: 1500
     respec:
       enabled: true
-      goldCost: 100
+      goldCost: 1500
       cooldownMs: 300000
     prestige:
-      enabled: true
+      enabled: false
       xpCostBase: 10000
       xpCostMultiplier: 1.5
       maxRank: 5
     dailyQuests:
-      enabled: false
+      enabled: true
       resetHourUtc: 0
       dailySlots: 3
       weeklySlots: 1
       streakBonusPercent: 10
       streakMaxDays: 7
-      dailyPool: []
-      weeklyPool: []
+      dailyPool:
+        - type: kill
+          targetCount: 8
+          description: Tidy up the grounds — put down eight unruly creatures anywhere in the dream.
+          goldReward: 40
+          xpReward: 350
+        - type: gather
+          targetCount: 5
+          description: Fill a basket for the faculty — gather five times from any herb bed or ore seam.
+          goldReward: 35
+          xpReward: 300
+        - type: craft
+          targetCount: 3
+          description: Keep the workshops humming — craft three items at any station.
+          goldReward: 35
+          xpReward: 300
+        - type: kill
+          targetCount: 12
+          description: The Drillmaster wants drills — defeat twelve creatures before lights-out.
+          goldReward: 60
+          xpReward: 500
+      weeklyPool:
+        - type: dungeon
+          targetCount: 2
+          description: Take the deep lesson twice — clear two dungeon delves this week.
+          goldReward: 200
+          xpReward: 2000
     autoQuests:
       enabled: true
       timeLimitMs: 300000
@@ -2692,7 +2559,7 @@ ambonmud:
       killCountMin: 3
       killCountMax: 8
     globalQuests:
-      enabled: false
+      enabled: true
       intervalMs: 7200000
       durationMs: 3600000
       announceIntervalMs: 300000
@@ -2703,20 +2570,65 @@ ambonmud:
       rewardXpFirst: 5000
       rewardXpSecond: 2500
       rewardXpThird: 1000
-      objectives: []
+      objectives:
+        - type: kill
+          targetCount: 25
+          description: The Academy declares a field day! Fell twenty-five creatures before the bell tolls.
+        - type: gather
+          targetCount: 15
+          description: Harvest festival! Gather fifteen times from the dream's herb beds and ore seams.
+        - type: craft
+          targetCount: 10
+          description: The Makers' Fair is on! Craft ten items at any station before the bell tolls.
     guildHalls:
       enabled: true
       purchaseCost: 10000
       roomCost: 10000
       maxRooms: 10
-      templates: {}
+      templates:
+        guild_commons:
+          title: The Guild Commons
+          description: A warm common room raised by dream-masons in a single night, its rafters hung with banners waiting for a
+            crest. A long oak table, a roaring hearth, and a notice board stand ready for whatever fellowship claims
+            them.
+          hasStorage: true
     factions:
       defaultReputation: 0
       killPenalty: 10
       killBonus: 5
+      definitions:
+        auringold_academy:
+          name: The Auringold Academy
+          description: The dream-realm school where Krioshaeu's chosen are reborn and readied for Ambon. Its faculty of
+            professors, wisps, and well-meaning constructs grade generously but remember everything.
+          enemies:
+            - restless_dead
+        restless_dead:
+          name: The Bad Dreams
+          description: Nightmares that pooled in the deep dark beneath the Academy — the leftover work of the nightmare demon
+            Effiənoae, never tucked in. They drift up to trouble sleeping students with the same small terrors children
+            have always carried to school.
+          enemies:
+            - auringold_academy
+      questRewards:
+        auringold_academy:rattling_bones:
+          auringold_academy: 25
+        auringold_academy:the_deep_lesson:
+          auringold_academy: 50
+        auringold_academy:commencement:
+          auringold_academy: 100
     leaderboard:
       refreshIntervalMs: 120000
       topN: 10
+    currencies:
+      definitions:
+        academy_merit:
+          displayName: Academy Merits
+          abbreviation: AM
+          description: Tokens of recognition stamped with the Academy seal, awarded for completed coursework. Treasured by
+            collectors, ignored by shopkeepers.
+      honorPerPvpKill: 10
+      tokensPerCraft: 1
     achievementCategories:
       categories:
         combat:
@@ -2740,35 +2652,12 @@ ambonmud:
         quest_complete:
           displayName: Quest Complete
           progressFormat: "{current}/{required}"
-        craft:
-          displayName: Craft
-          progressFormat: "{current}/{required}"
-        gather:
-          displayName: Gather
-          progressFormat: "{current}/{required}"
-        dungeon_complete:
-          displayName: Complete Dungeon
-          progressFormat: "{current}/{required}"
-        dungeon_complete_full_party:
-          displayName: Complete Dungeon (Full Party)
-          progressFormat: "{current}/{required}"
-        guild_create:
-          displayName: Create Guild
-          progressFormat: "{current}/{required}"
     questObjectiveTypes:
       types:
         kill:
           displayName: Kill
         collect:
           displayName: Collect
-        gather:
-          displayName: Gather
-        craft:
-          displayName: Craft
-        dungeon:
-          displayName: Dungeon
-        pvpKill:
-          displayName: PvP Kill
     questCompletionTypes:
       types:
         auto:
@@ -2776,47 +2665,33 @@ ambonmud:
         npc_turn_in:
           displayName: NPC Turn-In
   progression:
-    maxLevel: 50
+    maxLevel: 30
     xp:
-      baseXp: 100
-      exponent: 2.2
-      linearXp: 150
+      baseXp: 1000
+      exponent: 2
+      linearXp: 500
       multiplier: 1
-      defaultKillXp: 10
-      # Diminishing returns when a player has out-levelled the XP source.
-      # Applies to kills (mob level) and to quests/puzzles that declare an
-      # intended player level. Largest matching `levelsBelow` wins — prevents
-      # trivial trash farming and flat-reward quest ladders from capping XP.
+      defaultKillXp: 50
       diminishing:
         enabled: true
         thresholds:
+          - levelsBelow: 1
+            multiplier: 0.66
+          - levelsBelow: 2
+            multiplier: 0.33
           - levelsBelow: 3
-            multiplier: 0.5
+            multiplier: 0.15
+          - levelsBelow: 4
+            multiplier: 0.05
           - levelsBelow: 5
-            multiplier: 0.2
-          - levelsBelow: 8
-            multiplier: 0.0
+            multiplier: 0
     rewards:
-      hpScalingRate: 1.30
-      manaScalingRate: 1.10
+      hpScalingRate: 1.4
+      manaScalingRate: 1.4
       fullHealOnLevelUp: true
       fullManaOnLevelUp: true
       baseHp: 130
-      baseMana: 10
-    # Engine-computed XP for quests. Authors pick a difficulty tier (or leave
-    # `rewards.xp` authored for an explicit override) and the engine produces
-    #   (baseXp + xpPerLevel * (level - 1)) * tiers[difficulty]
-    # at completion time. Diminishing returns still applies on top.
-    quests:
-      baseline:
-        baseXp: 50
-        xpPerLevel: 20
-      tiers:
-        TRIVIAL: 0.25
-        EASY: 0.5
-        STANDARD: 1.0
-        HARD: 1.75
-        EPIC: 3.0
+      baseMana: 120
   transport:
     telnet:
       maxLineLen: 1024
@@ -2838,17 +2713,17 @@ ambonmud:
     webClientHost: localhost
     webClientUrl: null
   observability:
-    metricsEnabled: false
+    metricsEnabled: true
     metricsEndpoint: /metrics
-    metricsHttpPort: 9099
+    metricsHttpPort: 9090
     metricsHttpHost: 0.0.0.0
     staticTags: {}
   admin:
-    enabled: false
+    enabled: true
     host: 127.0.0.1
     port: 9091
-    token: ""
-    basePath: /
+    token: OVERRIDE_ME_FROM_ENV
+    basePath: /admin/
     corsOrigins: []
   logging:
     level: INFO
@@ -2866,32 +2741,220 @@ ambonmud:
       instanceId: ""
       sharedSecret: ""
   images:
-    baseUrl: /images/
+    baseUrl: https://auringold.ambon.dev/
     globalAssets:
-      # Painted login flow scenes; bundled art so the painted login works out
-      # of the box. Deployments may remap these to Arcanum-hashed CDN files.
-      login_bg: global_assets/login_bg.png
-      login_password_bg: global_assets/login_password_bg.png
-      login_set_password_bg: global_assets/login_set_password_bg.png
-      login_confirm_bg: global_assets/login_confirm_bg.png
-      login_picker_bg: global_assets/login_picker_bg.png
-      login_race_bg: global_assets/login_race_bg.png
-      login_class_bg: global_assets/login_class_bg.png
-      login_claim_bg: global_assets/login_claim_bg.png
-      login_bg_portrait: global_assets/login_bg_portrait.png
-      login_password_bg_portrait: global_assets/login_password_bg_portrait.png
-      login_set_password_bg_portrait: global_assets/login_set_password_bg_portrait.png
-      login_confirm_bg_portrait: global_assets/login_confirm_bg_portrait.png
-      login_picker_bg_portrait: global_assets/login_picker_bg_portrait.png
-      login_claim_bg_portrait: global_assets/login_claim_bg_portrait.png
-      # Painted parchment scroll that skins the whole world-map/atlas drawer
-      # (and is the surface the map ink draws onto).
-      map_background: global_assets/map_background.png
-    defaultAssets: {}
+      video_available_indicator: ac328e8e385800803ef5aea9a7fe963711ce5c681f930fe3230a161c392f35dd.png
+      shop_kiosk: 3699576c7332b06f0ac536801722f71c4eccb90cdca296ba3489eba810e4cf73.png
+      puzzle_kiosk: fb85995de19d7a8d57bf36e33145672caece99ad8b9f4934b96f71305e8ba885.png
+      feature_door: 4ed8b5d128f487deed37af8db64f70a4277c7319b094ef585af1e00d045a1b5a.png
+      feature_container: 1291556348b068aa66e573391d2ac6d688ee8afeaf57c2577107015fb1d9cbff.png
+      feature_lever: 81ee35e123ee51bed3bc5b5a04520c955c49240c48007b12ea046ef0b195e1f9.png
+      dialog_indicator: 67facd5603268c5a77986ff24009f59ce074d2f86b850107b3353ff2e503a2a5.png
+      aggro_indicator: 77f68f43e5fd01b0c7a96ddcc8449b3edd2381e7a590f53cf1c2f5ca3ccc5b9f.png
+      quest_available_indicator: 3004021c47d6ed86893b6f6492f35857a39b69e0c010bc5b38651deb3ed98b25.png
+      quest_complete_indicator: c8b2133105d3ce245eff955a214f0ad1cb8c4d04c937ef596c9b2b46c4a7a962.png
+      crafting_station: d9af507e2d8eb6d858189474db6b6de9826287a693804a68e67fa2c368f8e75d.png
+      trainer_icon: b507c6e706f3d798570330989a6e9a8099ebd6afbec2845ecaa625a7bddbc290.png
+      bank_vault: ac819ab35da895e6e379e35c4824007e025908e6bd849596b2749a2f27812fae.png
+      lottery_board_widget: b616be644447da0dd25996705a1bf42315fcf3758c8839fdee55238679d1c4d5.png
+      dungeon_portal_widget: 568b00f7d341cb36d3010c811eeb19a8a409fe26b93579388f8f9b4405c065f5.png
+      auction_hall_widget: e6842e7073bbdf4c0e96bda1cfa606789d98a3e629d4306ec79053f95818d003.png
+      duel_arena_widget: dba6cd3089d8fee339ca7b617cd2bd8b09a517a2d752b79d3fc83f72fd1e5c42.png
+      stylist_mirror: cae1e1beda9d225cedc3c03683383b587a59a1ee9e06e6d4c9dd053dae10d6c1.png
+      housing_broker: 4f4da3a556d24b6e71504c14a6d2371f9fb5fab85a6897db10e0a0b6c7bc75af.png
+      minimap_unexplored: 5201d931922eb8f4930afc2b5dcf2960c25188a85c1c6b28d1e679d08fbb5f83.png
+      map_background: fd66466a56b0dcf51059ae115d4f1d368a77daa75ca8988405ac83f55d903bef.jpg
+      inn_widget: cd20695c19f7364f2af79df7ef77c68843517ac4e477150b37b93f0b6b162f65.png
+      character_widget: 9c619d23f0154136cd2c8b95613cfa6406836cdf856bbd4729876b5b8b265d75.png
+      inventory_widget: 9356dc9d1c666a808d3b7bda2f9c33ba053212b8a4fc797971ce8f621cb17371.png
+      equipment_widget: f7f9aefe2d63a76409c71823adefde4f8ef66a214f82977081d7f4ddf8b65ff4.png
+      spellbook_widget: 0c427d77a5b3ab30ead2fdcf1b354aa6baeb91b923a634190fa124e907cf635e.png
+      quests_widget: aa51ed212599bed0a40c5086e5d377c91e23cb144cc976771ae502ebede0576a.png
+      combat_log_widget: 64c8a6623bd864db6ccdc90dc4acc1b6faade9ac7fb87e91ca6c6bcbe1f5c29c.png
+      social_widget: 0556fd59c8b14bbdd19e4e24aab1a641a02703dfffe1fbb686adcb9adab13486.png
+      crafting_widget: 5f768adeff42d6b2a5268e931f40818df1dcd3f255f4f43cdbb8008001005671.png
+      auction_widget: eabd657740d152a174ee9c48857c3c1717e2fab69bd2fc0c84b17bb20e8a8724.png
+      mail_widget: dc09a460045101f6e9d012da48ed60c8d04b5328616075714c3d68dd564153df.png
+      help_widget: da8fa38d3ec1692c0d1f953eeff0be1beff4b3822be19de0b0e760a183f46bcd.png
+      terminal_widget: d83739cda44ac3d8542528d5bda4b9f2ec956b23cc16d9232a7d4d8d01a34a69.png
+      compass_widget: 6cde8b669287750ce7fc0abff952bfeae99ed465a5ec4775b0095b744222778f.png
+      compass_north: 40236ddb430b62902f7aff9fc5c5db0122c0804d2301ed3f0ac7822a9e3bac56.png
+      compass_east: de9e2d64a77448cd4d86e872449fef7371653a3b238814bf04f5f5f855a20789.png
+      compass_south: 3d94104d5b5e3294e8d3af2022dce535bd52f63a127ce20363c898f4cc1c6252.png
+      compass_west: 09470e9f9bb20dfa919b936cd8d5ea8c4ecba37337acf6758dd0de94d71280a4.png
+      compass_up: 33dfa3977fde1dd5e26d44ff96b42a21683830b6ad81bdae57405b9b87d7cec1.png
+      compass_down: 22bc427fc878437746c73d3d993fcea5478cd31ac862d5d264e162637e0d0bdc.png
+      room_panel_bg: 0d4d99f559e7c44604c212b8ef60e621c4f03cd2c7f5341ea18e9918e0daac4c.jpg
+      compass_bg: 41b9096d1856207edf0136bb5ad6d5aaabd18f2dc903656d312eea302443f26c.png
+      action_bar_bg: ad75d58df939c7af99f270bd1865249c10db5146462ae0214e58a9c1cf94a886.jpg
+      minimap_bg: 1ef4107ba73990fc9ac7f721d18640f46d66804d2041f94e7d3ff41d6ea9cf7a.jpg
+      minimap_room: f781efb35e90453645a115d49b02fdffe8d5bb00b0e2d0894e813f33c264ccff.png
+      minimap_room_current: 63398b2c6f1dbb74b838c54604aa16767fc222bd6c2f78d007ed511ce44b4aca.png
+      minimap_quest: e17daa1991ec2bace7fea0ea1e0e6672bdd73067b4f7d4d40b86e12155d29551.png
+      minimap_room_housing: 52657c407cdcbe72f47bc97fda48de63ab17d3ce3c84ffbc89c3a351cb51992e.png
+      minimap_room_inside: 9e00fdbf537f4db48579d3073e25088957b25f852c4aa7e00082d10fea157dc7.png
+      minimap_room_outside: cda1e7e1a53d4373b7e18d47db68a0681f6dbc0a7641f64851c6bb01f5c59dda.png
+      minimap_room_forest: fd718da79a0e776a8fc836e88985e7ad8a4349565093992c3c0beebece79a8b4.png
+      minimap_room_mountain: 61fa8105a83799228fc6ddf2017d096e8ca1a1e7a8d254bd40e967f58343484f.png
+      minimap_room_underground: 3f6c907ac1a4b7f70ba56e7f39fd2d9b33a3840ba5815d8bce8ecee3598e5585.png
+      minimap_room_underwater: b77b70bf8580a12fd4cfdd2d7a62847b5c4b550e9968d361d6d8537b305d1009.png
+      minimap_room_desert: cf4c297b8a815f7f398fef8f09e157a6a93d58a8a03011bd9c48f0f32a90c5cb.png
+      minimap_room_swamp: 6c593c3a3398f92b89f743e0f720f5819989f3f601978d7e15b5181b0e0cc5d4.png
+      minimap_room_urban: d0247ce515ccdd159aa3633767e360ac43968c74389c723c6c36f8975c6c69c5.png
+      minimap_room_sky: d4627c86c88bd6e4e6304bb25c646a37bc22257ae99b4a34ed435906379aba0e.png
+      vitals_bar_bg: b7545d41b588a569ffe74415baf419defa84939f406853ae4cec0bcf83843472.png
+      room_sign_bg: fe7da1d762068bf4fb512d1dc92194e97bc809e9a24702ef3ec985578599cc62.png
+      minimap_expand: 1cd485bcad2a1c5b3f63ff7580c9af13647fbc99292c993c34b4a2154e1406aa.png
+      monster_manual_bg: 345cc2e18653023c32a40a659d3843d60982d914d6a23ff6f99bf278039f39c2.jpg
+      action_attack: eee8efa20f228219a1cf2228d5dfd389a0bc7cf48030707050e64c31394edc7b.png
+      action_quest: 52f1dbb62d1d90e1e55538659514ea50fa582d3a5ca3af668d42e2cf7392c12c.png
+      action_talk: 7a2832c6c0962775d744e6194f79e58321cc93054d07a38652d45307e207c39e.png
+      action_shop: 892071b9e4cc959a349a3276684b4f88da324b5b57fdb6a3d8c56b9952865e93.png
+      action_cinematic: 0ab9506cc9bee64150a8e96d48e2471aec9481ac05c543b3442127143e337505.png
+      action_possess: 696696567f7fd8beab7f509d1853dc11434df25dc40a6c0ceb96bd5f6a5b48d9.png
+      action_close: b62f27fcbb2b46ba1c1cc392a6b341a89c3022eb3003433e070caf145957ad0c.png
+      action_entry: e57929f382965ad241f9709213d97c3c47f37504ef4d78c41109074027c781b4.png
+      action_get: 5bf3597e6493126049c9fe0f33eca21ac2b3e02aea6c9549436cfaa7e5e3af9a.png
+      action_look: 273437120e7e7255f20d7f578f6f566297cafa933c12006d48c67cb8b4668474.png
+      action_use: c992cb410ffe563d6668c844bb1579bfce01b6bd6417190910dbd78c3f099f70.png
+      action_drop: db7b7c073cc509ea22b1863ba4346fbd04b97f56b06066bd820e06427178ef56.png
+      inventory_satchel_bg: 8ac8983b112c69256e8171816a1bae8a58dcf7f384742ecef890e0142961c163.jpg
+      action_equip: 1bcfdc5348cec8109a978ce94c8705803e6e63dac8ec74858aac9a0abdfd5cb8.png
+      action_store: 07f59710bd60918befe11ab6a9dd49bbb1f610c4d94570e812c8bf1700aa0fcf.png
+      equipment_bg: d321cd749c5b1b7b84465fc745e23dadb0203fbdbcf2da0f01a7779ce203fd21.jpg
+      action_unequip: 6589e75f522607f7f74c8206cd81442b3e0dbcf24e8f4d82c48779ceac50fe07.png
+      inn_bg: a018bd6432fa003986b286b441697b25b4108955663a1613102cfd1f2b1851a0.jpg
+      inn_key: cb6c1a3f30f8c9ad95afd5ae9015a6e1a7e328f7886aeff3fdbb3ea4e51ef109.png
+      shop_bg: dc4020d535229d61c16f7a7b055768659ff2797428ea0fa4a1bc70062963fb7c.jpg
+      trainer_bg: 158f24cfb29472fda8eaf651566d1624d8d8c857154bfb0a08cee975d28248a3.jpg
+      journal_bg: 29157b28fd8fccdc63987ea078963d69ce9284d28295a1f4ca854538e485e30d.jpg
+      quest_board_bg: c2d65bf6c071a7e5e5bc6da704290516a3b24c27bbf6ef264828ca4145521be0.jpg
+      spellbook_bg: 83f8ec95bc4b8b2ff760822639e88a27db9c68be684dab7cc2b9d180b33f071d.jpg
+      terminal_bg: f83278e79808bb40b555e78b2da5b91f11b0d4848812845cf17a966eae748871.jpg
+      desk_quill: 7cf4d1de4232c8d4e5a5187c6c028d58b2322bc5d2d48d65a1fd1947e2f0a5a8.png
+      mail_bg: f1ba89f7a9cda7ec90eb56b530233b4354587e44ab7675bb0b62f111870ed299.jpg
+      dice_table_widget: 66ce489b0114dc39cdc570683ebf97ffb409ad46a03e426a0908803be567cb6d.png
+      feature_sign: 751c698d34a05175fb5d6006d6695aaf2a3811fed78918ef35c17667d9fac065.png
+      lever_handle: 50be1c0e5979e48e70348cc65e83befb8d22afc04f423ea8847656b5b8858314.png
+      lever_plate: 31c6a7a0100688c9ca828d2e2467d188e2c026d8e26d378bdd3a893987ed15dd.png
+      container_bg: d81a432ccb2c74046397d09c2d1db5c0ce9d41fc6cd29acc45fcf164b728d91b.jpg
+      sign_bg: 6b8a42f398bde77fd8bd3c72e61f19b330498dbf1f33242b2bcf48d03d37b6b1.jpg
+      lever_bg: 2099469401ebc4a11e1abcee5dfa51b4848699a0dca63db2405dbcc1023e36cb.jpg
+      puzzle_bg: 5593f93a561ea3c488e97ec7efab86bf0daa0f53fa6c0e205e40325c63d2c563.jpg
+      door_frame: 6c530965b4e6b06781967fdfb8b57b84b2cf54372d9f593f91b98e6ec47aa932.png
+      door_leaf: a3e231d369c1eae224c3a0605219bedac100e058350082a0a3c2b92fc29183ce.png
+      door_lock: 1c07aa16aba8aeb401da55ece12152df8ec4cb1c3532c704defd0b10a133ff1e.png
+      door_bg: bbc8f5f1c76822a20c0d6078d3b97fd987ea07bb41122ab43421969b167503c2.jpg
+      bank_bg: e2c0c650b5732f0b7f65904a64c2e21f2610dee716987dd57f7d851875718e36.jpg
+      character_bg: ba03d48c28f9f9e5ff7ffcfb5044b727bd13ba86a49d54bff63684e4b0f1d01f.jpg
+      character_niche: e43bc89bee29c11703da6bbb0bee6b5b186808ffa022061cc69d66df2658a5af.jpg
+      character_frame: a460cf8357c3c34041407f01441967ffc832d8d8705faed5faa6aa700d308924.png
+      character_plaque: ba49864f899e0620fb389feb60cbd8cfb0e56072450ee2ed0067c14ed2513f16.png
+      character_charm: 19cc87179cadf0e8322e5c0dd85566b14253d1b785292aa0feffe4e5873ab6c5.png
+      char_btn_achievements: 5c726e4b0e5d142f2957fa5f1ea8b4c96c408966833f5b80eb6557f189c36564.png
+      char_btn_prestige: 0ce2729b36fbbe326bf14894a1344471279745e05e7f338f1eda3d82065db629.png
+      character_scribe_bg: 29bd1775388f5ae3f7df9be41caf4ec315a3c53d492e59e3f81e5dfd336e1f59.jpg
+      door_portal: da6f8a8a8664c2b32d0458c70e8c2645d0e0427284105630f918f07c9c117357.png
+      chat_bg: a2239edbea20b624daa0366a4edc84ebd8feaf012e77c81ccdbbe85645fcbf8e.png
+      chat_widget: cf2db8d6d6673dd71839f8d32a73491a114b977a81bbfaa52886d3d2a66eb6d3.png
+      who_bg: 523f8f7957304f034d1ec0392a9699c5205f5851e6b2d26fb5fc79f8393c23b5.png
+      who_examine_btn: 0c672521de8b1d1912adbe3409340a7e3e644b1589a9da62746023a0a160817d.png
+      who_tell_btn: 765590812efcbc250ea094b4501e0a4b84a9d741ab697c16392336221f3b8b48.png
+      who_widget: c40f118b071ea4d4a37b424fcda05028c34f53095414c8ad18e9361e0222bfcc.png
+      guild_bg: 9ecef8547b20cd5cb916d15824a9542e328cfef2e77b9a33040b8c32875e0854.png
+      guild_widget: 0a8528a67c94600ee2200f2ea4df47a7214d29646fa26b72da81b236edaabc4d.png
+      friends_bg: dca895f4b6cf7139430f05a026d599c95e8fbadd88969fe8197a0d4c825d69cd.png
+      who_friend_btn: b7798e442c9156a6585c260e2468d8200338a99d6f3cec0c9e6e6409907d35ff.png
+      friends_widget: 648309ad021a7658a5f67ae53274f1349a68fae6340dc72a52deeec7cdd45676.png
+      group_bg: dbc75efd83b194b037de863685fc87586bc36ffaee0d35a3abcb3f92d4ec9de6.png
+      group_widget: b080dd4b7d74bdcb50711e51e51f8710b25cef04803d3ffee86519c1696427d6.png
+      action_duel: 3cc3e02b6a022bf192a348ebdebbaed8cdc1a2bbbb3d87d91e6cdb17612f20a3.png
+      action_tell: 88a213eb3788fafcf590c453fd90aef9c15ab31c66f537982bfd3458e425cafd.png
+      action_whisper: 9682adc4837f6edc77df84fec8dffe9a21fa28579d5a34f695b96449536b0314.png
+      action_give: 1c724e62a24e75fb053fec29118155999778baaecc300a3c68cd672e8345c5f4.png
+      action_groupinvite: b7c0b79651e0b8a22d1a794e7f63d22c38a480332753fb4fcd333b49822342ac.png
+      action_friend: 5a8e0ed952a27d42ca2a2eb0d1eed190a66728604e7cce0ae8645f03b25f0a06.png
+      command_reference_bg: 2a91d75b646cbae0fd3892897fe8d9779811330f136e7c4c50bf0b86a7a5f23e.png
+      stylist_bg: 4ee8e4799e18c1513cc971e491c97d5196ea2814815f0ba63b6d39c3c6ac9ed7.png
+      housing_bg: be180d3849d626ed584f162d6315f9a9a07aa010c044b6043f3af40b95fea1ba.png
+      lottery_bg: 4699e9668da5ce398b9799e2d0536ab5dd6dc8ca0dbc143bf88349775744e821.png
+      dice_bg: aa24ba6f02397f96855f2c1c9295a86aba0b7b822df3e53c9149c07abb0fb3f2.png
+      dice_ophirae: e46adc190d952ccba193f2f56e7b62ff16f73c91a39d0251cbd60c33f9fcb39e.png
+      dice_ophirae_max: 63de063589fb351afd1da6a37112fdd32aca6ea741cf5acd7744327106dd1d23.png
+      dice_mycorae: c309b0c332dc82dac6c36a6e6855ecf6a3b62084be6f48abcf732ba3e5044ea4.png
+      dice_mycorae_max: 5f0403a5a00a87ff197a108e9494063b9a5a910ece355baa2dd34e14fdd9ccc5.png
+      dice_pyrae: 6a059fecc2be1bcda5e4e4e6df7621326b2e433a703b582513fcda15f97088a4.png
+      dice_pyrae_max: 2b2fe86a7c2117898e6f97a124e05a032ee2b29d34abae95a831bc7f8e391c81.png
+      dice_aetherae: 3c2d968b61271659d168dd843dbebb98bd40ddac995fe9050beba319faae1aee.png
+      dice_aetherae_max: ae26e1f19026ecc90f7ae4832355b49c4ecca65f85d3e4ea0c518e2d83ffcef1.png
+      dice_lustriae: 45415066db180a70129d19e0bf59152e5ac296873ec9b5e4ff4fdf49d3a88e07.png
+      dice_lustriae_max: f4b8f217cdb28cc8865b91012361e144d36920c862ddb1652cd8f24646f2dd65.png
+      dice_aureliae: 770f0e25b5aa9a5980d0c32eacce366c7f281c93b4dc4267843b2ef7294d50ad.png
+      dice_aureliae_max: 973b16d20d7dca90193628ea5bbe9ea3aa6843cc01d23c8b71ab3c9fbbed9625.png
+      coin_luneqrae_moon: fd71fcacc2c9b8665424a566adb8a89face039e82d3ea1bbc696ecc014134701.png
+      coin_luneqrae_wind: 631877be24b5d096ef6c826c24053ec65996e9635f4350d1f9432f18d39f2818.png
+      auction_bg: 772df17a41df98d037b51d3205bfe6de8d9465ee1ee86de36da9c4c2a9bb17d2.png
+      char_btn_professions: 1dc4bb8610c2ce6e882bac612e27ded9da942fdeecce9d4e2d2cc26e976c159d.png
+      crafting_bg: 7f4bde6953295358f59269dffeac62242b481176563d8a9e3d602571a6e98fdc.png
+      professions_bg: 14fd2fd7c24e87fca9a633cbafa7ccc70cbc5cee2756c7afd2c1dfaad26a30fa.png
+      admin_bg: 5adac05e0a400d8f630bbe53a43e31e7fedb5cbac2a732803ff05cb590b7d289.png
+      staff_action_btn: 1c49c4ba0a7f03e9d8910b6cf8ba8bb4b0456f4f533cd51e66fe5f7d4a751111.png
+      staff_action_btn_active: 6dfd6725995dde71ed8c44f46056994e6f02f17105cd86ccb33cc6610b1537f0.png
+      terminal_parchment_bg: 60cb9c37b11bf0a71dbb4964f829747958773e7f94df15b40563ec605487727d.jpg
+      login_bg: 7765a74e7f49de87eb43a1063c21fdbbb4d12b67fbe9fff798ae17081f14d23c.png
+      login_password_bg: b900971fd7c1fefa9a0bb48e63de35dc02af859a9c3d14c68e3d7e2d92e020bc.png
+      login_set_password_bg: 8d94bbf31747517b99e03e076bbc035a1e65caf5f49f62b2dd6f6b4c73f9361c.png
+      login_claim_bg: 5fe4dbcde88339f02556a97bbf43b91fa864d8ac2d98800f9cf6f9e24c575f33.png
+      login_confirm_bg: 3d0f8c266f14e018cf0b05cdaabd1b1868e5b4c45dadd8b5256fd7e576eb616b.png
+      login_picker_bg: 06f92944c40ed4b4e60490e2b978c5a982d8cc5c83012297ce48229f21dbe278.png
+      login_race_bg: d88cc71e848d66fdb4b7055966a61461e3aac3efa0bde49ab959b2715a5603cf.png
+      login_class_bg: 0d326cd205d1d85c0b39177e2f391ceff03132a464d980a06b2b8a4566b172b4.png
+      login_bg_portrait: 89206ad1bbe142fa1d02adc54e08c88a320223a74da9a2d3f0f522892bb964cd.png
+      login_password_bg_portrait: 375e032885368d645196ea8e95a3f6792b36ee9d9ebf72e36614f4de3a8588d3.png
+      login_set_password_bg_portrait: f7f1ef4c3f9e22f0cc0449e87d3ffd70a57d32aa784685777751178ae45724b2.png
+      login_confirm_bg_portrait: d9c3d4c573f9b3431ba2f95adfa995f93d77922132391b912ad97c2bb084b16d.png
+      login_claim_bg_portrait: 9ae44e385ab35e8e16586bf0675d5d689a08d6c87a30ae5baf5abf4106ac45cf.png
+      login_picker_bg_portrait: bdce683bdc3e95569d26a2e9594410ee518db56f1cfa9002be39f552a43915bf.png
+      arcanum_widget: db3158beccceb28920ba17d952c874e1356922340da666e4c338d7bcc78c48e7.png
+      arcanum_bg: 3989cace358d76928c1167e47dd99c4a06fdafdc9519699b69062fae3a470b6c.jpg
+      monster_manual_portrait_frame: ad421d27b1672d9aa85d252d1b2d90d0dd1eb32e8a3d83d08e0baac98ac43828.png
+      jukebox_widget: 81ab02ce85f387709405d2bad5f42d045a903d6e3fb764cd204dbed2f955001a.png
+      jukebox_bg: 96faed2efc8918004d5bbdd4742cb86b0b07eb92c96e69881372cad2c45167d9.png
+      jukebox_bg_portrait: 82db262ff47a8160aa7b3d09c841bcae2e9a5b468a01f90553f3fc60cedefd97.png
+      music_box_widget: 1363bc9076e0faa2cacf5c56a0e6156086b50bc0f1fa8efe5cad2ad85bdff161.png
+      musicbox_bg: a8af564a19ac79a935c37d51412fea60821372a3a1f2915a33b71c6a6f2489d1.png
+      musicbox_bg_portrait: 67a19b222124cc90f4da5c27447efb9e622a24b30d0c089f1f5242ae079b1e8c.png
+      lottery_bg_portrait: 4e3e4d3330578d7344b8b9f8e801fe78e8604077798afc45d0bd1368a4d4b63b.png
+      dice_bg_portrait: 3c4e369d0a25a0d293a779b52f605c3d51adf493d1a6e7838bfac61577a30593.png
+    defaultAssets:
+      default_bg_inside: 39f70a506f8211c67f8228ec33c4ffd5ccbaa6c5abe8c8838d6a76157dc16693.jpg
+      default_bg_outside: c34986a95a9f45fcdd6f2320d2e4098351c88ebf8d7a10dc7c7a3647fd29a4b7.jpg
+      default_bg_forest: 631c0cc9132752081dc160ad72a800a1c0bab2884d1cf8101dcf2aec5677c56c.jpg
+      default_bg_mountain: 2656911bf1caa3d8f203ef69be6f4b39d1560658dc6b89da5a4e96a3e6b2f770.jpg
+      default_bg_underground: c763c2bf51d976f09fe7699f42b42933f572ed3bdbfa238fe166659b27ff32a1.jpg
+      default_bg_underwater: e91fd04a58a2c42bb81b8ffe7546aa8fdaed3717176d28b598edc70a0da3737a.jpg
+      default_bg_desert: c531a0dd2e4f77979d580eb050f2a8b68a16cc6b9cb8a779641ca0f328e62c49.jpg
+      default_bg_swamp: 4190c6ab6b88ae6183f4156ad21e55103c9f4b2cf554299130f893f8da329e92.jpg
+      default_bg_urban: 47b321bd810a21da3bb4bf5d519c1467cbdf957d8b0189438e90f6594649dd65.jpg
+      default_bg_sky: 5de847350f176fa667878274f49aa9b2ec1451e033c8fde46e79942b0f0735a8.jpg
+      default_mob_humanoid: 0628eed5db402825b002f1f0de801c47adf839ec773ae4f02b2874d56d4be2eb.png
+      default_mob_beast: 130f4c870a643d07155950d4cad78892ff150c6dd1a259ef6e5ef3fee2166cd2.png
+      default_mob_undead: d9224464892a4c734a59b6274af88267d079314740444a946faf5def88bf4ee3.png
+      default_mob_elemental: 4e68a4b7ac53ec5068a60af3b82da18abef2ecfbc0432b481d5400280531d348.png
+      default_mob_construct: 71b5f9d4706a5997655217b930109106723519a07894ddeb51d6d24c514efabf.png
+      default_mob_aberration: 34275b69d208cfd1dd15dcd985e511c7f9f9b45cea7de5e5e8da139ba24e2b20.png
+      default_item_weapon: fa0450060eac9b8b3a305e0fb93ae9bff02bd4ce61eb975e4dc6b96289a1bb1f.png
+      default_item_head: 0bf873f8217163a33f9b59b010016d95c3f82ae5a9019c58edc97cffbd9ea022.png
+      default_item_body: f3f0c392113d594d4936ef397e3dcd4db8a9ce52e13f5c91677ac15e0ad6a1f6.png
+      default_item_hand: 6bb94f9219c9a85b0c61d1a609ffcb32cae71bbfea537edf4b5bcd95fd8e91d6.png
+      default_item_consumable: 372dc5f2044b862086146ede64beab4e0ae659fb8916112b2fc1010c5fad6ac3.png
+      default_item_generic: 4d98b2b30f937fe6a908e8c7a43699e56e5accb6915957798127a5e57cded3a5.png
+      default_player: 8b73ca6ab3de11f179a5929786c1be084748539636c50dc36e9439eb2f735e9e.png
+      default_ability: 63983e65c6d52f5631c8d3e9184341b492e5d2a43945b0bd9e231a9a7729ce51.png
   videos:
-    baseUrl: /videos/
+    baseUrl: https://auringold.ambon.dev/
   audio:
-    baseUrl: /audio/
+    baseUrl: https://auringold.ambon.dev/
   voices:
-    enabled: false
-    baseUrl: /voices/
+    enabled: true
+    baseUrl: https://auringold.ambon.dev/voices/
