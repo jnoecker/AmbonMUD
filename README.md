@@ -5,7 +5,7 @@ AmbonMUD
 
 **Live demo:** [https://mud.ambon.dev](https://mud.ambon.dev) — or `telnet mud.ambon.dev 4000`
 
-![AmbonMUD web client](docs/screenshots/webclient-v5.png)
+![AmbonMUD web client](docs/screenshots/webclient-v6.jpg)
 
 ---
 
