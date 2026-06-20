@@ -416,6 +416,7 @@ data class AppConfig(
             b.dodgeStat to "dodgeStat",
             b.spellDamageStat to "spellDamageStat",
             b.healStat to "healStat",
+            b.shieldStat to "shieldStat",
             b.buffStat to "buffStat",
             b.hpScalingStat to "hpScalingStat",
             b.manaScalingStat to "manaScalingStat",
@@ -455,6 +456,10 @@ data class AppConfig(
         }
         require(b.healVarianceMin > 0.0 && b.healVarianceMax >= b.healVarianceMin) {
             "ambonMUD.engine.stats.bindings.healVarianceMin/Max must satisfy 0 < min <= max"
+        }
+        require(b.shieldStatMultiplier >= 0.0) { "ambonMUD.engine.stats.bindings.shieldStatMultiplier must be >= 0" }
+        require(b.shieldLevelScalingRate >= 1.0) {
+            "ambonMUD.engine.stats.bindings.shieldLevelScalingRate must be >= 1.0 (use 1.0 to disable)"
         }
         require(b.buffDurationPerStat >= 0.0) {
             "ambonMUD.engine.stats.bindings.buffDurationPerStat must be >= 0"
@@ -2743,6 +2748,20 @@ data class StatBindingsConfig(
     val healLevelScalingRate: Double = 1.30,
     val healVarianceMin: Double = 0.85,
     val healVarianceMax: Double = 1.15,
+    /**
+     * Bindings for absorb shields (`shield` effect type) — same shape as direct
+     * heals, scaled by [shieldStat] (WIS by default). Replaces the flat authored
+     * `shieldAmount` with a stat + level-scaled pool snapshotted at apply time:
+     *
+     *   statBonus   = (stat - basePoint) × shieldStatMultiplier
+     *   levelScale  = shieldLevelScalingRate ^ (level - 1)
+     *   shield      = (shieldAmount + statBonus) × levelScale
+     *
+     * A shield is a one-time pool, not a per-tick roll, so no variance applies.
+     */
+    val shieldStat: String = "WIS",
+    val shieldStatMultiplier: Double = 0.25,
+    val shieldLevelScalingRate: Double = 1.30,
     /**
      * Bindings for buff-style abilities (`AbilityEffect.ApplyStatus` targeting
      * self/ally/group). [buffStat] (CHA by default) drives duration and magnitude

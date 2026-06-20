@@ -48,6 +48,9 @@ class StatusEffectScalingTest {
             healLevelScalingRate = 1.30,
             healVarianceMin = 1.0,
             healVarianceMax = 1.0,
+            shieldStat = "WIS",
+            shieldStatMultiplier = 1.0,
+            shieldLevelScalingRate = 1.30,
         )
 
     private inner class Fixture : TestFixtureBase {
@@ -98,6 +101,18 @@ class StatusEffectScalingTest {
                     tickIntervalMs = 2000,
                     tickMinValue = min,
                     tickMaxValue = max,
+                ),
+            )
+        }
+
+        fun registerShield(amount: Int = 10) {
+            registry.register(
+                StatusEffectDefinition(
+                    id = StatusEffectId("barrier"),
+                    displayName = "Barrier",
+                    effectType = "shield",
+                    durationMs = 6000,
+                    shieldAmount = amount,
                 ),
             )
         }
@@ -253,5 +268,41 @@ class StatusEffectScalingTest {
             skewedSystem.tick(h.clock.millis())
 
             assertEquals(1 + 8, player.hp, "HOT should roll with heal variance window")
+        }
+
+    @Test
+    fun `shield pool scales with caster level and WIS`() =
+        runTest {
+            val h = Fixture()
+            h.login()
+            h.registerShield(amount = 10)
+
+            // Level 5, WIS = BASE + 6 → pool = (10 + 6×1.0) × 1.30^4 ≈ 45.698 → 46
+            val wisBonus = 6
+            val expected = ((10.0 + wisBonus * 1.0) * 1.30.pow(4)).roundToInt()
+            h.system.applyToPlayer(
+                sessionId = sid,
+                effectId = StatusEffectId("barrier"),
+                casterLevel = 5,
+                casterStats = StatMap.of("WIS" to PlayerState.BASE_STAT + wisBonus),
+            )
+
+            // Absorb a huge hit — the remainder tells us how big the pool was.
+            val remaining = h.system.absorbPlayerDamage(sid, 100_000)
+            assertEquals(100_000 - expected, remaining, "Shield pool should scale with level + WIS")
+        }
+
+    @Test
+    fun `omitting caster context falls back to flat shield amount`() =
+        runTest {
+            val h = Fixture()
+            h.login()
+            h.registerShield(amount = 25)
+
+            // No casterLevel → flat authored shieldAmount (backward compatible).
+            h.system.applyToPlayer(sessionId = sid, effectId = StatusEffectId("barrier"))
+
+            val remaining = h.system.absorbPlayerDamage(sid, 100_000)
+            assertEquals(100_000 - 25, remaining, "Without caster context, shield should use authored amount")
         }
 }

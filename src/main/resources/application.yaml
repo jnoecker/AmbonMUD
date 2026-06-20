@@ -153,6 +153,13 @@ ambonmud:
         healLevelScalingRate: 1.30
         healVarianceMin: 0.85
         healVarianceMax: 1.15
+        # Absorb shields scale the authored `shieldAmount` like a heal (WIS by
+        # default), snapshotted at apply time. A shield is a one-time pool, not a
+        # per-tick roll, so no variance applies:
+        #   final = round((shieldAmount + statBonus) * shieldLevelScalingRate^(level-1))
+        shieldStat: WIS
+        shieldStatMultiplier: 0.25
+        shieldLevelScalingRate: 1.30
         # Buff bindings — reserved for utility/support classes (bard, herald).
         # Wiring into status-effect duration/magnitude is a follow-up; the knobs
         # exist now so support abilities have a defined scaling lane.
