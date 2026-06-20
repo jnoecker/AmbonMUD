@@ -97,7 +97,8 @@ class CombatSystem(
     private val classRegistry: PlayerClassRegistry? = null,
     private val petSystem: PetSystem? = null,
     private val racialAbilitySystem: RacialAbilitySystem? = null,
-) : GameSystem, RacialCombatBridge {
+) : GameSystem,
+    RacialCombatBridge {
     /** Callback for combat events; wired by GameEngine after construction. */
     var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
 

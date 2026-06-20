@@ -18,7 +18,9 @@ enum class RacialTrigger {
  * `RacialAbilitySystem`; the [trigger] determines which combat hook invokes it. Config supplies the
  * tunable numbers (thresholds, cooldowns, multipliers) — the kind only selects the behaviour.
  */
-enum class RacialAbilityKind(val trigger: RacialTrigger) {
+enum class RacialAbilityKind(
+    val trigger: RacialTrigger,
+) {
     /** Pyrae: explode in flames, dealing area damage to every enemy in combat with the player. */
     PYRAE_IMMOLATE(RacialTrigger.LOW_HEALTH),
 
