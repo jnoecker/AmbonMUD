@@ -772,6 +772,14 @@ class GameEngine(
         clock = clock,
         imagesBaseUrl = imagesBaseUrl,
     )
+    private val racialAbilitySystem =
+        RacialAbilitySystem(
+            raceRegistry = raceRegistry,
+            outbound = outbound,
+            dirtyNotifier = dirtyNotifier,
+            statusEffects = statusEffectSystem,
+            tickMillis = engineConfig.combat.tickMillis,
+        )
     private val combatSystem =
         CombatSystem(
             players = players,
@@ -799,6 +807,7 @@ class GameEngine(
             ),
             classRegistry = classRegistry,
             petSystem = petSystem,
+            racialAbilitySystem = racialAbilitySystem,
         )
 
     private val akathavaeSystem =
@@ -1089,6 +1098,43 @@ class GameEngine(
         combatSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
         combatSystem.onPlayerEnteredCombat = { sid -> dialogueSystem.endConversation(sid) }
         combatSystem.onPetSkillCast = { sid -> emitPetSkills(sid, petSystem.getActivePet(sid)) }
+        // Racial passive abilities reach back into combat (AoE, extra swings, disengage) via the
+        // bridge, and summon their pets through this callback so pet stats scale to the owner and
+        // the new mob is broadcast to the room immediately.
+        racialAbilitySystem.combatBridge = combatSystem
+        racialAbilitySystem.summonRacialPet = { sid, templateKey, durationMs, replaceExisting ->
+            val player = players.get(sid)
+            if (player == null) {
+                null
+            } else {
+                val classDef = classRegistry.get(player.playerClass)
+                val playerStats = resolvePlayerStats(player, items, statusEffectSystem, classRegistry)
+                val equipBonuses = items.equipmentBonuses(sid, classDef)
+                val dmgRange = combatSystem.damageRangeForDisplay(player, playerStats, equipBonuses.attack)
+                val ownerStats = PetSystem.OwnerStats(
+                    maxHp = player.maxHp,
+                    damageMin = dmgRange.first,
+                    damageMax = dmgRange.last,
+                    armor = equipBonuses.armor,
+                )
+                val pet = petSystem.summon(
+                    sid,
+                    templateKey,
+                    player.roomId,
+                    ownerStats,
+                    durationMs,
+                    player.name,
+                    replaceExisting,
+                )
+                if (pet != null) {
+                    gmcpEmitter.broadcastRoomAddMob(player.roomId, pet, players)
+                    val mobsInRoom = mobs.mobsInRoom(player.roomId)
+                    val mobInfoEntries = gmcpEmitter.buildMobInfoEntries(mobsInRoom)
+                    gmcpEmitter.broadcastRoomMobInfo(player.roomId, mobInfoEntries, players)
+                }
+                pet
+            }
+        }
         combatSystem.onXpGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "xp", amount, source) }
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }

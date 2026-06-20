@@ -89,6 +89,7 @@ object PlayersTable : Table("players") {
     val autopeekEnabled = bool("autopeek_enabled").default(false)
     val wimpyThresholdPct = integer("wimpy_threshold_pct").default(10)
     val lastRespecAtMs = long("last_respec_at_ms").default(0L)
+    val racialAbilityCooldownUntilMs = long("racial_ability_cooldown_until_ms").default(0L)
     val dialogueFlags = text("dialogue_flags").default("[]")
     val seenZoneCinematics = text("seen_zone_cinematics").default("[]")
     val isAkathavae = bool("is_akathavae").default(false)
@@ -159,6 +160,7 @@ object PlayersTable : Table("players") {
             autopeekEnabled = row[autopeekEnabled],
             wimpyThresholdPct = row[wimpyThresholdPct],
             lastRespecAtMs = row[lastRespecAtMs],
+            racialAbilityCooldownUntilMs = row[racialAbilityCooldownUntilMs],
             dialogueFlags = safeReadJson(row[dialogueFlags], dialogueFlagsType, emptySet()),
             seenZoneCinematics = safeReadJson(row[seenZoneCinematics], seenZoneCinematicsType, emptySet()),
             isAkathavae = row[isAkathavae],
@@ -234,6 +236,7 @@ object PlayersTable : Table("players") {
         statement[autopeekEnabled] = record.autopeekEnabled
         statement[wimpyThresholdPct] = record.wimpyThresholdPct
         statement[lastRespecAtMs] = record.lastRespecAtMs
+        statement[racialAbilityCooldownUntilMs] = record.racialAbilityCooldownUntilMs
         statement[dialogueFlags] = jsonMapper.writeValueAsString(record.dialogueFlags)
         statement[seenZoneCinematics] = jsonMapper.writeValueAsString(record.seenZoneCinematics)
         statement[isAkathavae] = record.isAkathavae

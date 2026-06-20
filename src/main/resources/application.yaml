@@ -523,6 +523,16 @@ ambonmud:
           effectType: stun
           durationMs: 2000
           stackBehavior: NONE
+        dazzle_stun:
+          displayName: Dazzled
+          effectType: stun
+          durationMs: 3000
+          stackBehavior: REFRESH
+        stoneform_root:
+          displayName: Stone Form
+          effectType: root
+          durationMs: 4000
+          stackBehavior: NONE
         whirlwind_rage:
           displayName: Whirlwind Rage
           effectType: stat_buff
@@ -2179,6 +2189,109 @@ ambonmud:
             deep granite-grey. Features are heavy and blunt — strong jaw, prominent brow ridge, wide nose. Eyes are
             deep-set in shades of slate, amber, or dark brown. Hair is coarse and thick, typically worn in braids, in
             shades of iron-grey, black, or dark copper. Hands are broad with thick, calloused fingers.
+        # ── Auringold ancestries with race-specific passive abilities ──────────────────────────────
+        # Each ability fires from a combat hook (low-health threshold or a would-be-lethal blow) and
+        # burns a long, persisted cooldown so it can't be cheesed by relogging. See RacialAbilitySystem.
+        PYRAE:
+          displayName: Pyrae
+          description: Flame-born kindred whose blood runs molten; cornered and bleeding, they detonate.
+          racialAbility:
+            kind: PYRAE_IMMOLATE
+            displayName: Immolation
+            cooldownMs: 120000
+            triggerHealthPct: 10
+            aoeDamagePctOfMaxHp: 0.6
+            selfMessage: "Your blood boils over — you erupt in a roar of flame!"
+            roomMessage: "{player} erupts in a roar of flame!"
+        LUSTRIAE:
+          displayName: Lustriae
+          description: Time-touched wanderers who can steal a heartbeat back from the edge of death.
+          racialAbility:
+            kind: LUSTRIAE_TIMESLIP
+            displayName: Timeslip
+            cooldownMs: 150000
+            selfMessage: "Time stutters — you slip a heartbeat sideways and strike again!"
+            roomMessage: "{player} blurs as time stutters around them!"
+        AURELIA:
+          displayName: Aurelia
+          description: Bioluminescent depths-folk who blind their attackers with a dazzling pulse of light.
+          racialAbility:
+            kind: AURELIA_DAZZLE
+            displayName: Dazzling Burst
+            cooldownMs: 120000
+            triggerHealthPct: 15
+            stunStatusId: dazzle_stun
+            selfMessage: "You flare with blinding bioluminescence!"
+            roomMessage: "{player} flares with blinding light!"
+        LITHAE:
+          displayName: Lithae
+          description: Stoneblooded who petrify at death's door, weathering the blow as living rock.
+          racialAbility:
+            kind: LITHAE_STONEFORM
+            displayName: Stone Form
+            cooldownMs: 150000
+            regenPctOfMaxHp: 0.2
+            stoneStatusId: stoneform_root
+            stoneDurationMs: 4000
+            selfMessage: "Your skin hardens to living stone — the blow glances away as you settle, immovable."
+            roomMessage: "{player} turns to living stone!"
+        MYCORAE:
+          displayName: Mycorae
+          description: Fungal symbiotes who scatter living spores that erupt into shrieking guardians.
+          racialAbility:
+            kind: MYCORAE_SPORES
+            displayName: Spore Burst
+            cooldownMs: 120000
+            triggerHealthPct: 25
+            petTemplateKey: spore_mushroom
+            petCountMin: 1
+            petCountMax: 3
+            petDurationMs: 12000
+            selfMessage: "You burst, scattering a cloud of spores that erupt into shrieking mushrooms!"
+            roomMessage: "{player} bursts in a cloud of spores!"
+        KITSARAE:
+          displayName: Kitsarae
+          description: Cultivation-masters who breathe a killing blow inward and turn it into renewed life.
+          racialAbility:
+            kind: KITSARAE_REVERSAL
+            displayName: Cultivated Reversal
+            cooldownMs: 180000
+            selfMessage: "You breathe the lethal force inward — the killing blow becomes life!"
+            roomMessage: "{player} draws a killing blow inward as though it were a breath."
+        ARCHAE:
+          displayName: Archae
+          description: Old-blood faithful who call the frozen war-host of the Drengariae in their hour of need.
+          racialAbility:
+            kind: ARCHAE_DRENGARIAE
+            displayName: Call the Drengariae
+            cooldownMs: 150000
+            triggerHealthPct: 25
+            petTemplateKey: drengariae_soldier
+            petDurationMs: 9000
+            selfMessage: "You cry out to the Drengariae — a frost-clad soldier answers, blade aflame!"
+            roomMessage: "A Drengariae soldier answers {player}'s call, blade wreathed in pale fire!"
+        OPHIRAE:
+          displayName: Ophirae
+          description: Draconic-blooded who turn savage and ruthlessly precise when cornered.
+          racialAbility:
+            kind: OPHIRAE_WRATH
+            displayName: Draconic Wrath
+            cooldownMs: 120000
+            triggerHealthPct: 20
+            damageMultiplier: 1.5
+            buffDurationMs: 6000
+            selfMessage: "Your draconic blood ignites — your strikes turn merciless!"
+            roomMessage: "{player}'s eyes blaze with draconic fury!"
+        AETHERAE:
+          displayName: Aetherae
+          description: Half-real voidkin who phase out of existence to let a killing blow pass through empty air.
+          racialAbility:
+            kind: AETHERAE_PHASE
+            displayName: Phase Shift
+            cooldownMs: 150000
+            phaseTicks: 2
+            selfMessage: "You flicker out of existence — the blow passes through empty air."
+            roomMessage: "{player} flickers and fades out of existence!"
     equipment:
       slots:
         head:
@@ -2383,6 +2496,32 @@ ambonmud:
       maxDamageRatio: 0.8
       maxArmorRatio: 1.0
       definitions:
+        # Mycorae racial summon: a swarm tank. Tiny HP/damage but a very high threat multiplier so a
+        # cluster of mushrooms peels aggro off the player within a round or two and soaks a few hits.
+        spore_mushroom:
+          name: a shrieking mushroom
+          description: A squat, pulsing fungus that hisses spores and draws every angry eye toward itself.
+          hpRatio: 0.15
+          damageRatio: 0.1
+          armorRatio: 0.2
+          baseHp: 8
+          baseMinDamage: 1
+          baseMaxDamage: 3
+          baseArmor: 0
+          threatMultiplier: 6.0
+        # Archae racial summon: a short-lived DPS soldier. No threat multiplier — it fights, it
+        # doesn't tank.
+        drengariae_soldier:
+          name: a Drengariae soldier
+          description: A frost-rimed Alorae warrior wreathed in pale flame, sword drawn against the cold and the dark.
+          hpRatio: 0.4
+          damageRatio: 0.9
+          armorRatio: 0.5
+          baseHp: 25
+          baseMinDamage: 6
+          baseMaxDamage: 12
+          baseArmor: 2
+          threatMultiplier: 0.0
         wolf_companion:
           name: a wolf companion
           # DPS pet: light HP/armor, strong damage.

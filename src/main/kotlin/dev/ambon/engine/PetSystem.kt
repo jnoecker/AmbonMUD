@@ -72,11 +72,12 @@ class PetSystem(
         owner: OwnerStats,
         durationMs: Long = 0L,
         ownerName: String? = null,
+        replaceExisting: Boolean = true,
     ): MobState? {
         val template = config.definitions[templateKey] ?: return null
 
-        // Dismiss existing pet
-        dismissAll(ownerSid)
+        // Dismiss existing pet unless the caller wants pets to coexist (e.g. a swarm of summons).
+        if (replaceExisting) dismissAll(ownerSid)
 
         val hpRatio = template.hpRatio.coerceAtMost(config.maxHpRatio)
         val dmgRatio = template.damageRatio.coerceAtMost(config.maxDamageRatio)

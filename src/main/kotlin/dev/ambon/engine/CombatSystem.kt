@@ -96,7 +96,8 @@ class CombatSystem(
     private val callbacks: CombatSystemCallbacks = CombatSystemCallbacks(),
     private val classRegistry: PlayerClassRegistry? = null,
     private val petSystem: PetSystem? = null,
-) : GameSystem {
+    private val racialAbilitySystem: RacialAbilitySystem? = null,
+) : GameSystem, RacialCombatBridge {
     /** Callback for combat events; wired by GameEngine after construction. */
     var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
 
@@ -791,6 +792,79 @@ class CombatSystem(
         }
     }
 
+    // ── RacialCombatBridge ───────────────────────────────────────────────
+    // Combat-internal operations the RacialAbilitySystem invokes (Pyrae AoE, Lustriae extra swing,
+    // Lithae disengage, room broadcasts). See RacialCombatBridge for contracts.
+
+    override fun enemiesInCombatWith(sessionId: SessionId): List<MobState> {
+        val player = players.get(sessionId) ?: return emptyList()
+        return threatTable.mobsThreatenedBy(sessionId)
+            .mapNotNull { mobs.get(it) }
+            .filter { !it.isPet && it.hp > 0 && it.roomId == player.roomId }
+    }
+
+    override suspend fun dealRacialDamage(
+        sessionId: SessionId,
+        mob: MobState,
+        damage: Int,
+        hitText: String,
+    ) {
+        val player = players.get(sessionId) ?: return
+        mob.takeDamage(damage)
+        dirtyNotifier.mobHpDirty(mob.id)
+        threatTable.addThreat(mob.id, sessionId, damage.toDouble() * threatMultiplier(player))
+        outbound.send(OutboundEvent.SendText(sessionId, hitText))
+        broadcastToRoom(players, outbound, mob.roomId, hitText, exclude = sessionId)
+        if (mob.hp <= 0) {
+            handleMobDeath(sessionId, mob)
+        }
+    }
+
+    override suspend fun extraMeleeSwing(
+        sessionId: SessionId,
+        mob: MobState,
+    ): Boolean {
+        val player = players.get(sessionId) ?: return false
+        if (mob.hp <= 0) return true
+        val stats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        val equip = items.equipmentBonuses(sessionId, classRegistry?.get(player.playerClass))
+        val swing = rollPlayerMeleeSwing(player, stats, equip, mob.armor)
+        val damage = swing.final
+        mob.takeDamage(damage)
+        dirtyNotifier.mobHpDirty(mob.id)
+        threatTable.addThreat(mob.id, sessionId, damage.toDouble() * threatMultiplier(player))
+        val hitText = "You slip through time and strike ${mob.name} for $damage damage!"
+        outbound.send(OutboundEvent.SendText(sessionId, hitText))
+        onCombatEvent(
+            sessionId,
+            CombatEvent.MeleeHit(
+                targetName = mob.name,
+                targetId = mob.id.value,
+                damage = damage,
+                sourceIsPlayer = true,
+                text = hitText,
+            ),
+        )
+        broadcastToRoom(players, outbound, mob.roomId, hitText, exclude = sessionId)
+        val killed = mob.hp <= 0
+        if (killed) {
+            handleMobDeath(sessionId, mob)
+        }
+        return killed
+    }
+
+    override fun disengageFromCombat(sessionId: SessionId) {
+        removePlayerFromCombat(sessionId)
+    }
+
+    override suspend fun broadcastToRoomExcept(
+        sessionId: SessionId,
+        text: String,
+    ) {
+        val player = players.get(sessionId) ?: return
+        broadcastToRoom(players, outbound, player.roomId, text, exclude = sessionId)
+    }
+
     @Suppress("CyclomaticComplexity", "LongMethod")
     suspend fun tick(maxCombatsPerTick: Int = 20): Int {
         val now = clock.millis()
@@ -847,7 +921,9 @@ class CombatSystem(
             if (!stunned && !player.isAkathavae) {
                 val playerStats = resolvePlayerStats(player, items, statusEffects, classRegistry)
                 val swing = rollPlayerMeleeSwing(player, playerStats, playerBonuses, mob.armor)
-                val effectivePlayerDamage = swing.final
+                // Ophirae wrath (and any future damage buff) multiplies outgoing melee damage.
+                val effectivePlayerDamage =
+                    (swing.final * player.outgoingDamageMultiplier(now)).roundToInt().coerceAtLeast(1)
                 val playerFeedbackSuffix =
                     combatFeedbackSuffix(
                         roll = swing.raw,
@@ -909,57 +985,62 @@ class CombatSystem(
                 if (now < mobCombatState.nextTickAtMs) continue
                 val mob = mobs.get(mobId) ?: continue
                 if (mob.hp <= 0) continue
-                val pet = petSystem.getActivePet(sessionId) ?: continue
-                if (pet.roomId != mob.roomId) continue
+                // Every pet the owner controls attacks (a single companion is the common case; the
+                // Mycorae spore swarm and other multi-summons all act, and tank pets each build
+                // threat so a wall of mushrooms actually holds aggro).
+                for (pet in petSystem.getPets(sessionId)) {
+                    if (mob.hp <= 0) break
+                    if (pet.roomId != mob.roomId) continue
 
-                val autoSkill =
-                    if (petSystem.isManualGraceActive(sessionId, now)) {
-                        null
-                    } else {
-                        selectPetSkill(pet, now)
+                    val autoSkill =
+                        if (petSystem.isManualGraceActive(sessionId, now)) {
+                            null
+                        } else {
+                            selectPetSkill(pet, now)
+                        }
+
+                    if (autoSkill != null) {
+                        executePetSkill(pet, autoSkill, mob, sessionId, now)
+                        onPetSkillCast(sessionId)
+                        continue
                     }
 
-                if (autoSkill != null) {
-                    executePetSkill(pet, autoSkill, mob, sessionId, now)
-                    onPetSkillCast(sessionId)
-                    continue
-                }
+                    val petRoll = rollRange(rng, pet.damage.min, pet.damage.max)
+                    val petDamage = (petRoll - mob.armor).coerceAtLeast(1)
+                    mob.takeDamage(petDamage)
+                    dirtyNotifier.mobHpDirty(mob.id)
+                    val petHitText = "${pet.name} hits ${mob.name} for $petDamage damage."
+                    outbound.send(OutboundEvent.SendText(sessionId, petHitText))
+                    onCombatEvent(
+                        sessionId,
+                        CombatEvent.PetHit(
+                            petName = pet.name,
+                            targetName = mob.name,
+                            targetId = mob.id.value,
+                            damage = petDamage,
+                            text = petHitText,
+                        ),
+                    )
+                    broadcastToRoom(
+                        players,
+                        outbound,
+                        mob.roomId,
+                        petHitText,
+                        exclude = sessionId,
+                    )
 
-                val petRoll = rollRange(rng, pet.damage.min, pet.damage.max)
-                val petDamage = (petRoll - mob.armor).coerceAtLeast(1)
-                mob.takeDamage(petDamage)
-                dirtyNotifier.mobHpDirty(mob.id)
-                val petHitText = "${pet.name} hits ${mob.name} for $petDamage damage."
-                outbound.send(OutboundEvent.SendText(sessionId, petHitText))
-                onCombatEvent(
-                    sessionId,
-                    CombatEvent.PetHit(
-                        petName = pet.name,
-                        targetName = mob.name,
-                        targetId = mob.id.value,
-                        damage = petDamage,
-                        text = petHitText,
-                    ),
-                )
-                broadcastToRoom(
-                    players,
-                    outbound,
-                    mob.roomId,
-                    petHitText,
-                    exclude = sessionId,
-                )
-
-                // Tank pets generate threat so mobs target them instead of the player.
-                if (pet.threatMultiplier > 0.0) {
-                    val petSid = petSystem.getPetSessionId(pet.id)
-                    if (petSid != null) {
-                        threatTable.addThreat(mob.id, petSid, petDamage.toDouble() * pet.threatMultiplier)
+                    // Tank pets generate threat so mobs target them instead of the player.
+                    if (pet.threatMultiplier > 0.0) {
+                        val petSid = petSystem.getPetSessionId(pet.id)
+                        if (petSid != null) {
+                            threatTable.addThreat(mob.id, petSid, petDamage.toDouble() * pet.threatMultiplier)
+                        }
                     }
-                }
 
-                if (mob.hp <= 0) {
-                    handleMobDeath(sessionId, mob)
-                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    if (mob.hp <= 0) {
+                        handleMobDeath(sessionId, mob)
+                        outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    }
                 }
             }
         }
@@ -977,12 +1058,19 @@ class CombatSystem(
                 continue
             }
 
-            // Pick target = highest threat in same room (includes pet synthetic SIDs)
+            // Stunned mobs (e.g. Aurelia's dazzle) forfeit their attack but stay in combat.
+            if (statusEffects?.hasMobEffect(mob.id, "stun") == true) {
+                mobState.nextTickAtMs = now + config.tickMillis
+                continue
+            }
+
+            // Pick target = highest threat in same room (includes pet synthetic SIDs), skipping
+            // players who are currently untargetable (Aetherae phase / Lithae stone form).
             val targetSid =
                 threatTable.topThreatInRoom(mobState.mobId) { sid ->
                     val p = players.get(sid)
                     if (p != null) {
-                        p.roomId == mob.roomId
+                        p.roomId == mob.roomId && !p.isUntargetable(now)
                     } else {
                         // Check if it's a tank pet in the same room
                         val pet = petSystem?.getPetBySession(sid)
@@ -991,7 +1079,18 @@ class CombatSystem(
                 }
 
             if (targetSid == null) {
-                // No valid targets — mob exits combat
+                // No targetable foe. If a phased player is still present and holding threat, the mob
+                // simply whiffs this round rather than leaving combat — so it resumes attacking once
+                // the phase ends. Otherwise the room is genuinely clear and the mob disengages.
+                val phasedPresent =
+                    threatTable.playersThreateningMob(mobState.mobId).any { sid ->
+                        val p = players.get(sid)
+                        p != null && p.roomId == mob.roomId && p.isUntargetable(now)
+                    }
+                if (phasedPresent) {
+                    mobState.nextTickAtMs = now + config.tickMillis
+                    continue
+                }
                 removeMobFromCombat(mobState.mobId)
                 continue
             }
@@ -1002,33 +1101,51 @@ class CombatSystem(
                 executeMobMeleeOnPet(mob, targetPet, targetSid)
             } else {
                 val target = players.get(targetSid) ?: continue
+                val preHitHp = target.hp
 
                 // Pick a spell from the mob's pool (excluding defaultAttack), or fall back.
                 val chosenSpell = selectMobSpell(mob, now)
-                if (chosenSpell != null) {
-                    executeMobSpell(chosenSpell, mob, target, targetSid, now)
-                } else {
-                    // Use defaultAttack spell or standard melee.
-                    val defaultSpell = mob.defaultAttack?.let { id -> mob.spells.find { it.id == id } }
-                    if (defaultSpell != null) {
-                        executeMobSpell(defaultSpell, mob, target, targetSid, now)
+                val blowDamage =
+                    if (chosenSpell != null) {
+                        executeMobSpell(chosenSpell, mob, target, targetSid, now)
                     } else {
-                        executeMobMelee(mob, target, targetSid)
+                        // Use defaultAttack spell or standard melee.
+                        val defaultSpell = mob.defaultAttack?.let { id -> mob.spells.find { it.id == id } }
+                        if (defaultSpell != null) {
+                            executeMobSpell(defaultSpell, mob, target, targetSid, now)
+                        } else {
+                            executeMobMelee(mob, target, targetSid)
+                        }
                     }
-                }
 
                 if (target.hp <= 0) {
-                    metrics.onPlayerDeath()
-                    removePlayerFromCombat(targetSid)
-                    handlePlayerDeath(
-                        sessionId = targetSid,
-                        playerName = target.name,
-                        roomId = target.roomId,
-                        deathMessage = "You have been slain by ${mob.name}.",
-                        roomMessage = "${target.name} has been slain by ${mob.name}.",
-                        killerName = mob.name,
-                    )
+                    // Give a lethal-blow racial passive the chance to cheat death before we kill them.
+                    val survived =
+                        racialAbilitySystem?.tryPreventLethalBlow(
+                            sessionId = targetSid,
+                            player = target,
+                            attacker = mob,
+                            blowDamage = blowDamage,
+                            preHitHp = preHitHp,
+                            nowMs = now,
+                        ) ?: false
+                    if (survived) {
+                        outbound.send(OutboundEvent.SendPrompt(targetSid))
+                    } else {
+                        metrics.onPlayerDeath()
+                        removePlayerFromCombat(targetSid)
+                        handlePlayerDeath(
+                            sessionId = targetSid,
+                            playerName = target.name,
+                            roomId = target.roomId,
+                            deathMessage = "You have been slain by ${mob.name}.",
+                            roomMessage = "${target.name} has been slain by ${mob.name}.",
+                            killerName = mob.name,
+                        )
+                    }
                 } else {
+                    // Survived the hit — fire a low-health racial passive before wimpy auto-flee.
+                    racialAbilitySystem?.onPlayerSurvivedHit(targetSid, target, now)
                     checkWimpyAutoFlee(targetSid, target)
                 }
             }
@@ -1089,6 +1206,8 @@ class CombatSystem(
     /**
      * Executes a mob spell against a target player (or as a self-heal/buff).
      * Handles dodge checks for offensive spells, damage, healing, and status effects.
+     * Returns the damage dealt to the player (0 for dodges, heals, and pure-buff spells) so the
+     * caller can resolve lethal-blow racial passives that need to know the killing blow's magnitude.
      */
     private suspend fun executeMobSpell(
         spell: MobSpell,
@@ -1096,7 +1215,8 @@ class CombatSystem(
         target: PlayerState,
         targetSid: SessionId,
         now: Long,
-    ) {
+    ): Int {
+        var damageDealtToPlayer = 0
         // Record cooldown
         if (spell.cooldownMs > 0L) {
             mobSpellCooldowns.getOrPut(mob.id) { mutableMapOf() }[spell.id] = now + spell.cooldownMs
@@ -1122,7 +1242,7 @@ class CombatSystem(
                         text = dodgeText,
                     ),
                 )
-                return
+                return 0
             }
         }
 
@@ -1135,6 +1255,7 @@ class CombatSystem(
             }
             val shieldAbsorbed = spellRoll - spellDamage
             target.takeDamage(spellDamage)
+            damageDealtToPlayer = spellDamage
             dirtyNotifier.playerVitalsDirty(targetSid)
 
             val msg = spell.message
@@ -1243,14 +1364,15 @@ class CombatSystem(
                 )
             }
         }
+        return damageDealtToPlayer
     }
 
-    /** Standard melee attack — the original mob attack path. */
+    /** Standard melee attack — the original mob attack path. Returns the damage dealt (0 on a dodge). */
     private suspend fun executeMobMelee(
         mob: MobState,
         target: PlayerState,
         targetSid: SessionId,
-    ) {
+    ): Int {
         val targetStats = resolvePlayerStats(target, items, statusEffects, classRegistry)
         val dodgePct =
             ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
@@ -1267,7 +1389,7 @@ class CombatSystem(
                     text = dodgeText,
                 ),
             )
-            return
+            return 0
         }
         val mobRoll = rollRange(rng, mob.damage.min, mob.damage.max)
         // Equipment armor mitigates incoming mob damage with the same multiplicative
@@ -1328,6 +1450,7 @@ class CombatSystem(
                 exclude = targetSid,
             )
         }
+        return mobDamage
     }
 
     /**

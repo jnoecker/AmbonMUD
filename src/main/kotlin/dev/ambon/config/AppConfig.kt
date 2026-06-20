@@ -133,6 +133,7 @@ data class AppConfig(
         validateEngineHousing()
         validateEngineCharacterCreation()
         validateEngineClasses()
+        validateEngineRaces()
         validateEngineStats()
         validateEngineAbilities()
         validateEngineStatusEffects()
@@ -169,6 +170,31 @@ data class AppConfig(
             if (dq.weeklySlots > 0) {
                 require(dq.weeklyPool.size >= dq.weeklySlots) {
                     "ambonMUD.engine.dailyQuests.weeklyPool must have at least ${dq.weeklySlots} entries (weeklySlots)"
+                }
+            }
+        }
+    }
+
+    private fun validateEngineRaces() {
+        val validKinds = dev.ambon.domain.RacialAbilityKind.entries.map { it.name }.toSet()
+        engine.races.definitions.forEach { (raceId, raceDef) ->
+            val ability = raceDef.racialAbility ?: return@forEach
+            val prefix = "ambonMUD.engine.races.definitions.$raceId.racialAbility"
+            require(ability.kind.uppercase() in validKinds) {
+                "$prefix.kind must be one of $validKinds, got '${ability.kind}'"
+            }
+            require(ability.cooldownMs >= 0L) { "$prefix.cooldownMs must be >= 0" }
+            require(ability.triggerHealthPct in 0..100) { "$prefix.triggerHealthPct must be 0..100" }
+            require(ability.damageMultiplier >= 0.0) { "$prefix.damageMultiplier must be >= 0" }
+            require(ability.aoeDamagePctOfMaxHp >= 0.0) { "$prefix.aoeDamagePctOfMaxHp must be >= 0" }
+            require(ability.regenPctOfMaxHp >= 0.0) { "$prefix.regenPctOfMaxHp must be >= 0" }
+            require(ability.petCountMin >= 1) { "$prefix.petCountMin must be >= 1" }
+            require(ability.petCountMax >= ability.petCountMin) { "$prefix.petCountMax must be >= petCountMin" }
+            require(ability.phaseTicks >= 1) { "$prefix.phaseTicks must be >= 1" }
+            val kind = dev.ambon.domain.RacialAbilityKind.valueOf(ability.kind.uppercase())
+            if (kind.trigger == dev.ambon.domain.RacialTrigger.LOW_HEALTH) {
+                require(ability.triggerHealthPct in 1..100) {
+                    "$prefix.triggerHealthPct must be 1..100 for low-health ability '$kind'"
                 }
             }
         }
@@ -2563,6 +2589,33 @@ data class RaceDefinitionConfig(
     val abilities: List<String> = emptyList(),
     val image: String = "",
     val statMods: Map<String, Int> = emptyMap(),
+    /** Optional race-specific passive ability (low-health / lethal-blow trigger). */
+    val racialAbility: RacialAbilityConfig? = null,
+)
+
+/**
+ * Tunable knobs for a race's passive ability. [kind] selects the mechanic (must match a
+ * `RacialAbilityKind` name); the remaining fields are read only by the kinds that use them.
+ */
+data class RacialAbilityConfig(
+    val kind: String = "",
+    val displayName: String = "",
+    val cooldownMs: Long = 120_000L,
+    val triggerHealthPct: Int = 0,
+    val aoeDamagePctOfMaxHp: Double = 0.0,
+    val damageMultiplier: Double = 1.0,
+    val buffDurationMs: Long = 0L,
+    val stunStatusId: String? = null,
+    val petTemplateKey: String? = null,
+    val petCountMin: Int = 1,
+    val petCountMax: Int = 1,
+    val petDurationMs: Long = 0L,
+    val regenPctOfMaxHp: Double = 0.0,
+    val stoneStatusId: String? = null,
+    val stoneDurationMs: Long = 0L,
+    val phaseTicks: Int = 2,
+    val selfMessage: String = "",
+    val roomMessage: String = "",
 )
 
 data class RaceEngineConfig(
