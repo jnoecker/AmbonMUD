@@ -199,18 +199,49 @@ data class AppConfig(
             }
             // Fields whose absence makes the ability silently do nothing at runtime (the system
             // bails out early when they are missing) are required up front so a misconfigured race
-            // fails fast at boot rather than no-op'ing mid-fight.
+            // fails fast at boot rather than no-op'ing mid-fight. References must also resolve to a
+            // real definition of the right shape — the most likely production slip is carrying the
+            // racialAbility block into an overlay but forgetting its pet template / status effect.
             when (kind) {
-                dev.ambon.domain.RacialAbilityKind.AURELIA_DAZZLE ->
-                    require(!ability.stunStatusId.isNullOrBlank()) {
-                        "$prefix.stunStatusId is required for '$kind'"
+                dev.ambon.domain.RacialAbilityKind.AURELIA_DAZZLE -> {
+                    val statusId = ability.stunStatusId
+                    require(!statusId.isNullOrBlank()) { "$prefix.stunStatusId is required for '$kind'" }
+                    val def = engine.statusEffects.definitions[statusId]
+                    require(def != null) {
+                        "$prefix.stunStatusId '$statusId' is not a defined status effect " +
+                            "(ambonMUD.engine.statusEffects.definitions)"
                     }
+                    require(def.effectType == "stun") {
+                        "$prefix.stunStatusId '$statusId' must have effectType 'stun' to stun enemies, " +
+                            "got '${def.effectType}'"
+                    }
+                }
+                dev.ambon.domain.RacialAbilityKind.LITHAE_STONEFORM -> {
+                    // stoneStatusId is optional (the root is a nicety on top of disengage), but if
+                    // set it must resolve to a real 'root' effect, else the player stays mobile.
+                    val statusId = ability.stoneStatusId
+                    if (!statusId.isNullOrBlank()) {
+                        val def = engine.statusEffects.definitions[statusId]
+                        require(def != null) {
+                            "$prefix.stoneStatusId '$statusId' is not a defined status effect " +
+                                "(ambonMUD.engine.statusEffects.definitions)"
+                        }
+                        require(def.effectType == "root") {
+                            "$prefix.stoneStatusId '$statusId' must have effectType 'root' to root the player, " +
+                                "got '${def.effectType}'"
+                        }
+                    }
+                }
                 dev.ambon.domain.RacialAbilityKind.MYCORAE_SPORES,
                 dev.ambon.domain.RacialAbilityKind.ARCHAE_DRENGARIAE,
-                ->
-                    require(!ability.petTemplateKey.isNullOrBlank()) {
-                        "$prefix.petTemplateKey is required for '$kind'"
+                -> {
+                    val templateKey = ability.petTemplateKey
+                    require(!templateKey.isNullOrBlank()) { "$prefix.petTemplateKey is required for '$kind'" }
+                    require(engine.pets.definitions.containsKey(templateKey)) {
+                        "$prefix.petTemplateKey '$templateKey' is not a defined pet template " +
+                            "(ambonMUD.engine.pets.definitions)"
                     }
+                }
                 else -> Unit
             }
         }

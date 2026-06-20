@@ -607,6 +607,18 @@ class AppConfigLoaderTest {
                         "testrace" to RaceDefinitionConfig(displayName = "Test", racialAbility = ability),
                     ),
                 ),
+                // Seed the definitions a fully-configured ability references so existence checks pass.
+                pets = PetConfig(
+                    definitions = mapOf(
+                        "spore_mushroom" to PetTemplateConfig(name = "a mushroom"),
+                    ),
+                ),
+                statusEffects = StatusEffectEngineConfig(
+                    definitions = mapOf(
+                        "dazzle_stun" to StatusEffectDefinitionConfig(effectType = "stun"),
+                        "stoneform_root" to StatusEffectDefinitionConfig(effectType = "root"),
+                    ),
+                ),
             ),
             world = validWorld,
         )
@@ -640,6 +652,34 @@ class AppConfigLoaderTest {
         val invalid =
             configWithRacialAbility(
                 RacialAbilityConfig(kind = "MYCORAE_SPORES", triggerHealthPct = 25, petTemplateKey = null),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects dazzle referencing an undefined status effect`() {
+        val invalid =
+            configWithRacialAbility(
+                RacialAbilityConfig(kind = "AURELIA_DAZZLE", triggerHealthPct = 15, stunStatusId = "no_such_effect"),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects dazzle referencing a non-stun status effect`() {
+        // stoneform_root exists in the fixture but is a 'root', not a 'stun' — the dazzle would no-op.
+        val invalid =
+            configWithRacialAbility(
+                RacialAbilityConfig(kind = "AURELIA_DAZZLE", triggerHealthPct = 15, stunStatusId = "stoneform_root"),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects summon referencing an undefined pet template`() {
+        val invalid =
+            configWithRacialAbility(
+                RacialAbilityConfig(kind = "MYCORAE_SPORES", triggerHealthPct = 25, petTemplateKey = "no_such_pet"),
             )
         assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
     }
