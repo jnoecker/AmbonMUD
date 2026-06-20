@@ -114,7 +114,9 @@ class RacialAbilitySystem(
         player: PlayerState,
         ability: RacialAbility,
     ) {
-        emitProc(player.sessionId, ability, ability.selfMessage)
+        // A LETHAL_BLOW proc only ever announces on a successful save, so flag it as a death-cheat so
+        // the web client pops a dedicated toast (a turned-around low-health fight just goes to the log).
+        emitProc(player.sessionId, ability, ability.selfMessage, deathCheat = ability.trigger == RacialTrigger.LETHAL_BLOW)
         if (ability.roomMessage.isNotEmpty()) {
             combatBridge?.broadcastToRoomExcept(player.sessionId, ability.roomMessage.replace("{player}", player.name))
         }
@@ -125,18 +127,23 @@ class RacialAbilitySystem(
      * [OutboundEvent.SendText] for the telnet/terminal stream, and a [CombatEvent.AbilityCast] so the
      * web client renders it in the combat log and as floating canvas text. The combat log prefers the
      * server-rendered [text], so the player sees the exact same line on both clients.
+     *
+     * When [deathCheat] is true the ability id is namespaced `racial:save:` (vs `racial:`) so the web
+     * client can pop a triumphant "cheated death" toast for the lethal-blow saves specifically.
      */
     private suspend fun emitProc(
         sessionId: SessionId,
         ability: RacialAbility,
         text: String,
+        deathCheat: Boolean = false,
     ) {
         if (text.isEmpty()) return
         outbound.send(OutboundEvent.SendText(sessionId, text))
+        val idPrefix = if (deathCheat) "racial:save:" else "racial:"
         onCombatEvent(
             sessionId,
             CombatEvent.AbilityCast(
-                abilityId = "racial:${ability.kind.name.lowercase()}",
+                abilityId = "$idPrefix${ability.kind.name.lowercase()}",
                 abilityName = ability.displayName,
                 targetName = null,
                 targetId = null,
@@ -305,7 +312,7 @@ class RacialAbilitySystem(
             // The extra attack felled the foe before its blow could land — the player is unharmed.
             player.hp = preHitHp.coerceAtLeast(1)
             dirtyNotifier.playerVitalsDirty(sessionId)
-            emitProc(sessionId, ability, "Time snaps back into place — ${attacker.name} falls and you stand unscathed.")
+            emitProc(sessionId, ability, "Time snaps back into place — ${attacker.name} falls and you stand unscathed.", deathCheat = true)
             true
         } else {
             emitProc(sessionId, ability, "...but it was not enough to fell ${attacker.name}.")

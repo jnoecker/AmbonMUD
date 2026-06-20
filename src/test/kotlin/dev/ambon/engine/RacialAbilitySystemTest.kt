@@ -298,6 +298,34 @@ class RacialAbilitySystemTest {
     }
 
     @Test
+    fun `a lethal-blow save tags its combat event as a death-cheat for the toast`() = runTest {
+        val fixture = CombatTestFixture()
+        val racial = fixture.buildRacialAbilities(
+            registryWith(
+                RacialAbility(
+                    kind = RacialAbilityKind.KITSARAE_REVERSAL,
+                    displayName = "Reversal of Fate",
+                    cooldownMs = 180_000L,
+                    selfMessage = "Death reverses — the blow becomes a healing tide.",
+                ),
+            ),
+        )
+        val combatEvents = mutableListOf<CombatEvent>()
+        racial.onCombatEvent = { _, event -> combatEvents.add(event) }
+        val (_, _, combat) =
+            fixture.engage(racial, playerMaxHp = 100, playerHp = 30, mob = enemyMob(damage = DamageRange(50, 50)))
+
+        fixture.tickCombat(combat)
+
+        // The `racial:save:` prefix is what the web client keys the "cheated death" toast off of; a
+        // low-health proc would instead be `racial:` and only reach the combat log.
+        val save = combatEvents.filterIsInstance<CombatEvent.AbilityCast>()
+            .firstOrNull { it.abilityId == "racial:save:kitsarae_reversal" }
+        assertTrue(save != null, "lethal-blow save should be tagged racial:save:, got: $combatEvents")
+        assertEquals("Death reverses — the blow becomes a healing tide.", save!!.text)
+    }
+
+    @Test
     fun `Aetherae phase survives the blow and the mob whiffs while untargetable`() = runTest {
         val fixture = CombatTestFixture()
         val racial = fixture.buildRacialAbilities(

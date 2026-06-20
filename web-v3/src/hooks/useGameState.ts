@@ -77,6 +77,7 @@ import type {
   QuestAvailable,
   QuestEntry,
   QuestNotification,
+  RacialProcNotification,
   RoomFeature,
   RoomItem,
   RoomMob,
@@ -232,6 +233,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const combatVictoryIdRef = useRef(0);
   const [fleeNotifications, setFleeNotifications] = useState<FleeNotification[]>([]);
   const fleeIdRef = useRef(0);
+  const [racialProcNotifications, setRacialProcNotifications] = useState<RacialProcNotification[]>([]);
+  const racialProcIdRef = useRef(0);
   const [duelState, setDuelState] = useState<DuelState | null>(null);
   const [duelChallenge, setDuelChallenge] = useState<DuelChallenge | null>(null);
 
@@ -387,9 +390,25 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       // Replace (rather than append) so back-to-back kills don't queue stale
       // toasts behind the active one — otherwise the active toast's dismissal
       // resurfaces a prior kill several seconds late. Also clear any active
-      // flee toast: kill and flee share a fixed corner slot, and the freshest
-      // outcome supersedes the stale one.
+      // flee / racial-save toast: they share a fixed corner slot, and the
+      // freshest outcome supersedes the stale one.
       setCombatVictoryNotifications([notification]);
+      setFleeNotifications([]);
+      setRacialProcNotifications([]);
+    }
+    // A racial passive that cheated death (lethal-blow save). The server tags these
+    // abilityCast events `racial:save:*`; low-health procs (`racial:*`) only hit the log.
+    if (event.type === "abilityCast" && event.abilityId?.startsWith("racial:save:") && event.text) {
+      racialProcIdRef.current += 1;
+      const notification: RacialProcNotification = {
+        id: `racial-proc-${racialProcIdRef.current}`,
+        abilityName: event.abilityName ?? "Racial power",
+        text: event.text,
+        receivedAt: Date.now(),
+      };
+      // Freshest outcome wins the shared corner slot, mirroring kill/flee.
+      setRacialProcNotifications([notification]);
+      setCombatVictoryNotifications([]);
       setFleeNotifications([]);
     }
     if (event.type === "flee" && event.targetName) {
@@ -406,6 +425,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       // cards stack at the same `top:` and overlap.
       setFleeNotifications([notification]);
       setCombatVictoryNotifications([]);
+      setRacialProcNotifications([]);
     }
   }, [pushCombatLogMessage]);
 
@@ -755,6 +775,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setQuestNotifications([]);
     setCombatVictoryNotifications([]);
     setFleeNotifications([]);
+    setRacialProcNotifications([]);
     setCraftingSkills([]);
     setCraftingRecipes([]);
     setCraftingNodes([]);
@@ -851,6 +872,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     levelUpNotification, setLevelUpNotification,
     combatVictoryNotifications, setCombatVictoryNotifications,
     fleeNotifications, setFleeNotifications,
+    racialProcNotifications, setRacialProcNotifications,
     // Setters needed by App
     setQuestsAvailable,
     // GMCP

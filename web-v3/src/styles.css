@@ -21119,6 +21119,111 @@ html:has(.game-shell),
   }
 }
 
+/* ── Racial proc toast (cheated-death lethal-blow saves) ──────────────────
+   Shares the top-right corner slot with the victory/flee toasts; `useGameState`
+   clears the other lists when one fires, so the cards never overlap. A mythic
+   gold/lavender treatment sets it apart from a kill (rose) or flee (blue). */
+.racial-proc-toast {
+  position: fixed;
+  top: calc(var(--space-4, 16px) + 56px + 180px);
+  right: var(--space-4, 16px);
+  z-index: 240;
+  width: min(320px, calc(100vw - 32px));
+  padding: 14px 16px;
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--c-soft-gold, #f0c674) 26%, var(--c-surface-raised, #1e2340)) 0%,
+    var(--c-surface-raised, #1e2340) 58%,
+    color-mix(in srgb, var(--c-accent-lavender, #b294bb) 20%, var(--c-surface-raised, #1e2340)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--c-soft-gold, #f0c674) 50%, transparent);
+  border-radius: 14px;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px color-mix(in srgb, var(--c-soft-gold, #f0c674) 24%, transparent),
+    0 0 34px color-mix(in srgb, var(--c-accent-lavender, #b294bb) 30%, transparent);
+  color: var(--c-text-primary, #d8dcef);
+  cursor: pointer;
+  animation: racialProcToastIn 380ms var(--ease-out-soft, cubic-bezier(0.22, 1, 0.36, 1));
+  backdrop-filter: blur(8px);
+}
+
+.racial-proc-toast.racial-proc-toast-closing {
+  animation: racialProcToastOut 320ms var(--ease-out-soft, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+}
+
+@keyframes racialProcToastIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes racialProcToastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(16px) scale(0.97);
+  }
+}
+
+.racial-proc-toast-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.racial-proc-toast-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c-soft-gold, #f0c674) 65%, transparent));
+}
+
+.racial-proc-toast-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.racial-proc-toast-eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--c-soft-gold, #f0c674) 82%, var(--c-text-secondary, #8890b0));
+  font-weight: 600;
+}
+
+.racial-proc-toast-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text-primary, #d8dcef);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.racial-proc-toast-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--c-text-secondary, #8890b0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .racial-proc-toast,
+  .racial-proc-toast.racial-proc-toast-closing {
+    animation-duration: 80ms;
+  }
+}
+
 /* ── Monster manual / bestiary page ──────────────────────────────────────
    A parchment "field manual" entry for a clicked creature. Tier classes
    (.consider-tier-*) set --consider-accent, reused for the badge + win bar.
