@@ -818,6 +818,10 @@ class CombatSystem(
         broadcastToRoom(players, outbound, mob.roomId, hitText, exclude = sessionId)
         if (mob.hp <= 0) {
             handleMobDeath(sessionId, mob)
+            // handleMobDeath drops this mob from playerTarget, so the mob-attack phase's later
+            // prompt sweep won't cover it. Prompt here (like the player/pet kill paths) so a racial
+            // proc that ends combat still leaves the triggering client with a fresh prompt.
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
         }
     }
 
@@ -1059,9 +1063,12 @@ class CombatSystem(
                 continue
             }
 
-            // Stunned mobs (e.g. Aurelia's dazzle) forfeit their attack but stay in combat.
+            // Stunned mobs (e.g. Aurelia's dazzle) forfeit their attack but stay in combat. Still
+            // advance the tick and prompt targeting players, otherwise prompt-driven clients look
+            // idle through every stunned round even though combat is ongoing.
             if (statusEffects?.hasMobEffect(mob.id, "stun") == true) {
                 mobState.nextTickAtMs = now + config.tickMillis
+                promptPlayersTargeting(mobState.mobId)
                 continue
             }
 
@@ -1090,6 +1097,7 @@ class CombatSystem(
                     }
                 if (phasedPresent) {
                     mobState.nextTickAtMs = now + config.tickMillis
+                    promptPlayersTargeting(mobState.mobId)
                     continue
                 }
                 removeMobFromCombat(mobState.mobId)
@@ -1152,15 +1160,19 @@ class CombatSystem(
             }
 
             mobState.nextTickAtMs = now + config.tickMillis
-            // Send prompt to all players targeting this mob
-            for ((sid, mid) in playerTarget) {
-                if (mid == mobState.mobId) {
-                    outbound.send(OutboundEvent.SendPrompt(sid))
-                }
-            }
+            promptPlayersTargeting(mobState.mobId)
             ran++
         }
         return ran
+    }
+
+    /** Sends a prompt to every player whose current combat target is [mobId]. */
+    private suspend fun promptPlayersTargeting(mobId: MobId) {
+        for ((sid, mid) in playerTarget) {
+            if (mid == mobId) {
+                outbound.send(OutboundEvent.SendPrompt(sid))
+            }
+        }
     }
 
     /**

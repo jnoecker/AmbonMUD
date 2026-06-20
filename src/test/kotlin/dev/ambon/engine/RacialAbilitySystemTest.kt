@@ -114,6 +114,36 @@ class RacialAbilitySystemTest {
     }
 
     @Test
+    fun `Pyrae immolation that kills the engaged mob still prompts the player`() = runTest {
+        val fixture = CombatTestFixture()
+        val racial = fixture.buildRacialAbilities(
+            registryWith(
+                RacialAbility(
+                    kind = RacialAbilityKind.PYRAE_IMMOLATE,
+                    displayName = "Immolation",
+                    cooldownMs = 120_000L,
+                    triggerHealthPct = 10,
+                    aoeDamagePctOfMaxHp = 0.6,
+                ),
+            ),
+        )
+        // 60-damage AoE on a 30-HP mob ends the fight during the mob-attack phase. handleMobDeath
+        // clears the player's target, so the late prompt sweep can't cover them — dealRacialDamage
+        // must prompt directly.
+        val (sid, mob, combat) = fixture.engage(racial, playerMaxHp = 100, playerHp = 8, mob = enemyMob(hp = 30))
+
+        fixture.tickCombat(combat)
+        val events = fixture.outbound.drainAll()
+
+        assertTrue(mob.hp <= 0, "immolation should have killed the mob")
+        assertFalse(combat.isInCombat(sid), "the kill should end combat")
+        assertTrue(
+            events.any { it is OutboundEvent.SendPrompt && it.sessionId == sid },
+            "a racial kill that ends combat must still prompt the player",
+        )
+    }
+
+    @Test
     fun `Aurelia dazzle stuns the enemy so it skips its next attack`() = runTest {
         val fixture = CombatTestFixture()
         val statusEffects = fixture.buildStatusEffects(
@@ -140,9 +170,15 @@ class RacialAbilitySystemTest {
         assertTrue(statusEffects.hasMobEffect(mob.id, "stun"), "mob should be stunned by the dazzle")
         val hpAfterDazzle = fixture.players.get(sid)!!.hp
 
-        // Round 2: the stunned mob forfeits its attack, so the player takes no further damage.
+        // Round 2: the stunned mob forfeits its attack, so the player takes no further damage — but
+        // it must still emit a prompt, or prompt-driven clients look idle through the stun.
         fixture.tickCombat(combat)
+        val round2 = fixture.outbound.drainAll()
         assertEquals(hpAfterDazzle, fixture.players.get(sid)!!.hp, "stunned mob should not damage the player")
+        assertTrue(
+            round2.any { it is OutboundEvent.SendPrompt && it.sessionId == sid },
+            "a stunned round should still prompt the engaged player",
+        )
     }
 
     @Test
