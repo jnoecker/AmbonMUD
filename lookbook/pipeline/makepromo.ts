@@ -34,8 +34,8 @@ const backBox = { l: 0.7121, r: 0.8971, t: 0.7077, b: 0.8894 };
 const fp = place(frontBox);
 const bp = place(backBox, 0.88);
 // Nudge the back QR right + down a touch to sit dead-centre in its painted box.
-bp.left += 0.08;
-bp.top += 0.16;
+bp.left += 0.04;
+bp.top += 0.08;
 
 const qrPlay = await qr("https://mud.ambon.dev");
 const qrBook = await qr("https://ambon.dev/lookbook.html");
