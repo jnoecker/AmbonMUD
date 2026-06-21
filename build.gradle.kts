@@ -35,7 +35,7 @@ dependencies {
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
 
     implementation("ch.qos.logback:logback-classic:1.5.34")
-    implementation("io.github.oshai:kotlin-logging-jvm:8.0.03")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.0")
     implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
