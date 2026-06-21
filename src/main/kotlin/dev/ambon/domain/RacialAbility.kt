@@ -59,6 +59,10 @@ data class RacialAbility(
     val displayName: String,
     /** Cooldown before the ability can fire again. Persisted on the player so a relog can't reset it. */
     val cooldownMs: Long,
+    /** Player-facing explanation of what the ability does, surfaced in the spellbook. */
+    val description: String = "",
+    /** Spellbook icon: a raw image filename resolved against the images base URL when emitted. */
+    val image: String? = null,
     /** LOW_HEALTH only: fires once the player's HP is at or below this percent (1..100) of max. */
     val triggerHealthPct: Int = 0,
     /** Pyrae: AoE damage dealt to each enemy, as a fraction of the player's max HP. */

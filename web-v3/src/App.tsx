@@ -1513,7 +1513,10 @@ function App() {
             availableSkillPoints={state.trainer?.availableSkillPoints}
             onShowSkillInfo={(skill) => {
               const cd = skill.cooldownMs > 0 ? `${skill.cooldownMs / 1000}s cooldown` : "No cooldown";
-              state.setToast(`${skill.name} — ${skill.manaCost} MP, ${cd}`);
+              const isRacial = skill.source === "racial" || skill.passive === true;
+              const lead = isRacial ? "Racial passive" : `${skill.manaCost} MP`;
+              const detail = skill.description ? ` — ${skill.description}` : "";
+              state.setToast(`${skill.name} — ${lead}, ${cd}${detail}`);
             }}
             onAssignSlot={quickbar.assign}
             onOpenCrafting={() => openPanel("crafting")}

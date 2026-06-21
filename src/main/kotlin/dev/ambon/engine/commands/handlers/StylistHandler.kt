@@ -154,6 +154,7 @@ class StylistHandler(
                 sessionId,
                 abilitySystem.knownAbilities(sessionId),
                 cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+                player = me,
                 manaCostFor = { ability -> abilitySystem.computeManaCost(me, ability) },
             )
         }

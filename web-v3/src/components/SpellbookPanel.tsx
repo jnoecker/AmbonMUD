@@ -74,11 +74,12 @@ function SkillCard({
   const assignBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const isPet = skill.source === "pet";
+  const isRacial = skill.source === "racial" || skill.passive === true;
   return (
     <div className="spellbook-card-wrapper">
       <button
         type="button"
-        className={`spellbook-card${isPet ? " spellbook-card-pet" : ""}`}
+        className={`spellbook-card${isPet ? " spellbook-card-pet" : ""}${isRacial ? " spellbook-card-racial" : ""}`}
         onClick={() => onShowInfo(skill)}
         title={`${skill.name} — click for info`}
       >
@@ -93,7 +94,11 @@ function SkillCard({
           <span className="spellbook-card-name">{skill.name}</span>
           <span className="spellbook-card-desc">{skill.description}</span>
           <div className="spellbook-card-stats">
-            {isPet ? (
+            {isRacial ? (
+              <span className="spellbook-stat spellbook-stat-racial" title="Racial passive — fires automatically in combat">
+                Racial
+              </span>
+            ) : isPet ? (
               <span className="spellbook-stat spellbook-stat-pet" title="Pet skill — triggered via `pet &lt;skill&gt;`">
                 Pet
               </span>
@@ -101,8 +106,14 @@ function SkillCard({
               <span className="spellbook-stat spellbook-stat-mana">{skill.manaCost} MP</span>
             )}
             <span className="spellbook-stat spellbook-stat-cd">CD: {cooldownLabel(skill.cooldownMs)}</span>
-            <span className="spellbook-stat spellbook-stat-target">{targetLabel(skill.targetType)}</span>
-            {!isPet && (
+            {isRacial ? (
+              <span className="spellbook-stat spellbook-stat-passive" title="Triggers automatically — cannot be cast">
+                Passive
+              </span>
+            ) : (
+              <span className="spellbook-stat spellbook-stat-target">{targetLabel(skill.targetType)}</span>
+            )}
+            {!isPet && !isRacial && (
               <span className="spellbook-stat spellbook-stat-level">Lv {skill.levelRequired}</span>
             )}
             {skill.classRestriction && (
@@ -111,6 +122,7 @@ function SkillCard({
           </div>
         </div>
       </button>
+      {!isRacial && (
       <button
         ref={assignBtnRef}
         type="button"
@@ -124,6 +136,7 @@ function SkillCard({
       >
         {slotNumber !== null ? slotNumber : "+"}
       </button>
+      )}
       {showSlotPicker && (
         <div
           className="spellbook-slot-picker"

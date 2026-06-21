@@ -115,6 +115,10 @@ class GmcpEmitter(
     private val featureFlags: () -> ServerFeaturesPayload = { ServerFeaturesPayload() },
     private val sanctumRoomId: () -> RoomId? = { null },
     private val worldAreas: List<WorldAreaPayload> = emptyList(),
+    /** Resolves a player's race so the racial passive can be folded into the spellbook. */
+    private val raceRegistry: RaceRegistry? = null,
+    /** Current engine time in millis, used to compute racial-ability cooldown remaining. */
+    private val nowMs: () -> Long = { 0L },
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -499,11 +503,10 @@ class GmcpEmitter(
         sessionId: SessionId,
         abilities: List<AbilityDefinition>,
         cooldownRemainingMs: (AbilityId) -> Long = { 0L },
+        player: PlayerState? = null,
         manaCostFor: (AbilityDefinition) -> Int,
     ) {
-        emit(
-            sessionId,
-            "Char.Skills",
+        val abilityPayloads =
             abilities.map { a ->
                 CharSkillPayload(
                     id = a.id.value,
@@ -527,8 +530,37 @@ class GmcpEmitter(
                         color = a.visual.color,
                         accentColor = a.visual.accentColor,
                     ),
+                    source = "self",
                 )
-            },
+            }
+        val racialPayload = player?.let { racialSkillPayload(it) }
+        emit(sessionId, "Char.Skills", abilityPayloads + listOfNotNull(racialPayload))
+    }
+
+    /**
+     * Builds the spellbook entry for [player]'s race passive, or null if the race has none. Racial
+     * abilities are passive (they fire automatically from combat hooks), so the entry carries no mana
+     * cost or level gate; the client renders it with a "Racial" badge and no cast/quickbar affordance.
+     */
+    private fun racialSkillPayload(player: PlayerState): CharSkillPayload? {
+        val ability = raceRegistry?.get(player.race)?.racialAbility ?: return null
+        val remaining = (player.racialAbilityCooldownUntilMs - nowMs()).coerceAtLeast(0L)
+        val image = ability.image?.takeIf { it.isNotBlank() }?.let { "$imagesBase$it" }
+        return CharSkillPayload(
+            id = "racial:${ability.kind.name.lowercase()}",
+            name = ability.displayName,
+            description = ability.description,
+            skillPointCost = 0,
+            manaCost = 0,
+            cooldownMs = ability.cooldownMs,
+            cooldownRemainingMs = remaining,
+            levelRequired = 1,
+            targetType = "SELF",
+            effectType = "PASSIVE",
+            classRestriction = null,
+            image = image,
+            source = "racial",
+            passive = true,
         )
     }
 
@@ -990,6 +1022,7 @@ class GmcpEmitter(
             sessionId,
             abilitySystem.knownAbilities(sessionId),
             cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+            player = player,
             manaCostFor = { ability -> abilitySystem.computeManaCost(player, ability) },
         )
         sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
@@ -3073,6 +3106,10 @@ class GmcpEmitter(
         val tree: String = "",
         val tier: Int = 0,
         val visual: SkillVisualPayload? = null,
+        /** "self" for cast abilities, "racial" for race passives. Drives client badges/affordances. */
+        val source: String? = null,
+        /** Passive abilities fire automatically — the client hides cast/quickbar UI for them. */
+        val passive: Boolean = false,
     )
 
     private data class SkillVisualPayload(

@@ -832,6 +832,11 @@ export function applyGmcpPackage(
             image: typeof entry.image === "string" ? entry.image : null,
             visual: parseSkillVisual(entry.visual),
             receivedAt: now,
+            source:
+              entry.source === "pet" || entry.source === "racial" || entry.source === "self"
+                ? entry.source
+                : "self",
+            passive: entry.passive === true,
           })),
       );
       break;
