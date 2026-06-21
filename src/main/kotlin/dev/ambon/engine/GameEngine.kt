@@ -642,6 +642,8 @@ class GameEngine(
             sanctumRoomId = {
                 engineConfig.death.sanctumRoom?.let { RoomId(it) }?.takeIf { world.rooms.containsKey(it) }
             },
+            raceRegistry = raceRegistry,
+            nowMs = { clock.millis() },
             worldAreas = buildWorldAreaPayloads(world),
         )
 
@@ -2637,6 +2639,7 @@ class GameEngine(
                 sessionId,
                 abilitySystem.knownAbilities(sessionId),
                 cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+                player = p,
                 manaCostFor = { ability -> abilitySystem.computeManaCost(p, ability) },
             )
             gmcpEmitter.sendCharGain(

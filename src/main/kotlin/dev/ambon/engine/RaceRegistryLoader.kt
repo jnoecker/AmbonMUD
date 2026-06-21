@@ -33,6 +33,8 @@ object RaceRegistryLoader {
         RacialAbility(
             kind = RacialAbilityKind.valueOf(kind.uppercase()),
             displayName = displayName,
+            description = description,
+            image = image,
             cooldownMs = cooldownMs,
             triggerHealthPct = triggerHealthPct,
             aoeDamagePctOfMaxHp = aoeDamagePctOfMaxHp,

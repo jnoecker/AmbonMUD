@@ -3,6 +3,9 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.EquipmentConfig
 import dev.ambon.domain.DamageRange
+import dev.ambon.domain.RaceDef
+import dev.ambon.domain.RacialAbility
+import dev.ambon.domain.RacialAbilityKind
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
@@ -523,6 +526,80 @@ class GmcpEmitterTest {
                 manaCostFor = { it.manaCostPct.toInt() },
             )
             assertTrue(drainGmcp().isEmpty())
+        }
+
+    @Test
+    fun `sendCharSkills appends racial passive for the player race`() =
+        runTest {
+            val registry = RaceRegistry()
+            registry.register(
+                RaceDef(
+                    id = "PYRAE",
+                    displayName = "Pyrae",
+                    racialAbility =
+                        RacialAbility(
+                            kind = RacialAbilityKind.PYRAE_IMMOLATE,
+                            displayName = "Immolation",
+                            description = "Erupt in flame at low health.",
+                            image = "flame.png",
+                            cooldownMs = 120_000L,
+                        ),
+                ),
+            )
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg == "Char.Skills" || pkg.startsWith("Char.Skills.") },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    imagesBaseUrl = "/images/",
+                    raceRegistry = registry,
+                    nowMs = { 1_000L },
+                )
+            val me = player(race = "PYRAE").copy(racialAbilityCooldownUntilMs = 31_000L)
+            e.sendCharSkills(
+                sid,
+                listOf(ability()),
+                cooldownRemainingMs = { 0L },
+                player = me,
+                manaCostFor = { it.manaCostPct.toInt() },
+            )
+            val json = drainGmcp()[0].jsonData
+            assertTrue(json.contains("\"id\":\"racial:pyrae_immolate\""))
+            assertTrue(json.contains("\"name\":\"Immolation\""))
+            assertTrue(json.contains("\"description\":\"Erupt in flame at low health.\""))
+            assertTrue(json.contains("\"source\":\"racial\""))
+            assertTrue(json.contains("\"passive\":true"))
+            assertTrue(json.contains("\"image\":\"/images/flame.png\""))
+            assertTrue(json.contains("\"cooldownMs\":120000"))
+            // 31000 (until) - 1000 (now) = 30000 remaining
+            assertTrue(json.contains("\"cooldownRemainingMs\":30000"))
+            // The regular ability is still present alongside the racial entry.
+            assertTrue(json.contains("\"id\":\"firebolt\""))
+        }
+
+    @Test
+    fun `sendCharSkills omits racial entry when race has no passive`() =
+        runTest {
+            val registry = RaceRegistry()
+            registry.register(RaceDef(id = "HUMAN", displayName = "Human"))
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg == "Char.Skills" || pkg.startsWith("Char.Skills.") },
+                    progression = progression,
+                    equipmentSlotRegistry = defaultSlotRegistry,
+                    raceRegistry = registry,
+                )
+            e.sendCharSkills(
+                sid,
+                listOf(ability()),
+                player = player(race = "HUMAN"),
+                manaCostFor = { it.manaCostPct.toInt() },
+            )
+            val json = drainGmcp()[0].jsonData
+            assertTrue(!json.contains("\"source\":\"racial\""))
+            assertTrue(json.contains("\"id\":\"firebolt\""))
         }
 
     @Test

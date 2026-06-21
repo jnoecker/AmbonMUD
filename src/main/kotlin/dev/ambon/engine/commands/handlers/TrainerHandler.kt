@@ -301,6 +301,7 @@ class TrainerHandler(
                 sessionId,
                 abilitySystem.knownAbilities(sessionId),
                 cooldownRemainingMs = { id -> abilitySystem.cooldownRemainingMs(sessionId, id) },
+                player = me,
                 manaCostFor = { a -> abilitySystem.computeManaCost(me, a) },
             )
             gmcpEmitter?.sendTrainerList(sessionId, trainer, me, remaining, abilitySystem, multiclassConfig)
@@ -478,6 +479,7 @@ class TrainerHandler(
                 sessionId,
                 abilitySystem.knownAbilities(sessionId),
                 cooldownRemainingMs = { id -> abilitySystem.cooldownRemainingMs(sessionId, id) },
+                player = me,
                 manaCostFor = { a -> abilitySystem.computeManaCost(me, a) },
             )
             gmcpEmitter?.sendCharVitals(sessionId, me)

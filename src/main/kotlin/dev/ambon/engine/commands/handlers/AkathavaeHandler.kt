@@ -417,6 +417,7 @@ class AkathavaeHandler(
                 sessionId,
                 abilities.knownAbilities(sessionId),
                 cooldownRemainingMs = { abilityId -> abilities.cooldownRemainingMs(sessionId, abilityId) },
+                player = me,
                 manaCostFor = { ability -> abilities.computeManaCost(me, ability) },
             )
         }

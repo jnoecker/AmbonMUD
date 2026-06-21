@@ -2198,6 +2198,9 @@ ambonmud:
           racialAbility:
             kind: PYRAE_IMMOLATE
             displayName: Immolation
+            description: When you drop to 10% health, your molten blood detonates, searing every enemy fighting you for
+              60% of your maximum health.
+            image: 145ac97d85b7d26fa30a1797a52ceeaf0d16cd35eb2699d390188a455ffd05ff.png
             cooldownMs: 120000
             triggerHealthPct: 10
             aoeDamagePctOfMaxHp: 0.6
@@ -2209,6 +2212,9 @@ ambonmud:
           racialAbility:
             kind: LUSTRIAE_TIMESLIP
             displayName: Timeslip
+            description: When a blow would kill you, you slip a heartbeat sideways and strike first. If that extra
+              attack fells your attacker, the killing blow never lands and you walk away unscathed.
+            image: 27dfbe1a27a90d7b5b7366c0c404f7062c01bb0647c94c1721512a256d2e0290.png
             cooldownMs: 150000
             selfMessage: "Time stutters — you slip a heartbeat sideways and strike again!"
             roomMessage: "{player} blurs as time stutters around them!"
@@ -2218,6 +2224,9 @@ ambonmud:
           racialAbility:
             kind: AURELIA_DAZZLE
             displayName: Dazzling Burst
+            description: When you drop to 15% health, you flare with blinding bioluminescence, stunning every enemy
+              in combat with you for several rounds.
+            image: 05531995b5cb4d7e1a96ae2c169b2e9dc35d989517a7fc48f4efd6dbe37d3d1a.png
             cooldownMs: 120000
             triggerHealthPct: 15
             stunStatusId: dazzle_stun
@@ -2229,6 +2238,9 @@ ambonmud:
           racialAbility:
             kind: LITHAE_STONEFORM
             displayName: Stone Form
+            description: When a blow would kill you, your skin hardens to living stone. You disengage and become
+              untargetable for a few seconds, restoring 20% of your maximum health, but cannot move while petrified.
+            image: 73b9a885e6fbf140441f34e8ebac6b5aa68a2247d134837b130a7206eb871181.png
             cooldownMs: 150000
             regenPctOfMaxHp: 0.2
             stoneStatusId: stoneform_root
@@ -2241,6 +2253,9 @@ ambonmud:
           racialAbility:
             kind: MYCORAE_SPORES
             displayName: Spore Burst
+            description: When you drop to 25% health, you scatter living spores that erupt into 1-3 shrieking mushroom
+              guardians. They taunt your foes and fight at your side for a short time.
+            image: 92282fa09e77f7b79305aca0bac5632cc08a77bb699fa53c374d82407a07332f.png
             cooldownMs: 120000
             triggerHealthPct: 25
             petTemplateKey: spore_mushroom
@@ -2255,6 +2270,9 @@ ambonmud:
           racialAbility:
             kind: KITSARAE_REVERSAL
             displayName: Cultivated Reversal
+            description: When a blow would kill you, you breathe the lethal force inward and turn it into renewed life,
+              healing yourself for the full amount of the killing blow instead of dying.
+            image: 5e68358696484a6d7fec73adf93218f1470e3408cff7c0460513be3b3711abbf.png
             cooldownMs: 180000
             selfMessage: "You breathe the lethal force inward — the killing blow becomes life!"
             roomMessage: "{player} draws a killing blow inward as though it were a breath."
@@ -2264,6 +2282,9 @@ ambonmud:
           racialAbility:
             kind: ARCHAE_DRENGARIAE
             displayName: Call the Drengariae
+            description: When you drop to 25% health, you cry out to the Drengariae and a frost-clad soldier answers,
+              fighting at your side for a short time.
+            image: 1fea2eabd3438e7703bd4077573eebbac91d7808ad278c6185e640291be6ce48.png
             cooldownMs: 150000
             triggerHealthPct: 25
             petTemplateKey: drengariae_soldier
@@ -2276,6 +2297,9 @@ ambonmud:
           racialAbility:
             kind: OPHIRAE_WRATH
             displayName: Draconic Wrath
+            description: When you drop to 20% health, your draconic blood ignites, multiplying your outgoing damage by
+              1.5x for six seconds.
+            image: 224349833aec7b719e94529455fb17836d156c1612bea2cdbbbd5a3eaf41e8a1.png
             cooldownMs: 120000
             triggerHealthPct: 20
             damageMultiplier: 1.5
@@ -2288,6 +2312,9 @@ ambonmud:
           racialAbility:
             kind: AETHERAE_PHASE
             displayName: Phase Shift
+            description: When a blow would kill you, you flicker out of existence. The killing blow passes through empty
+              air and you stay untargetable for the next couple of combat rounds.
+            image: 466b648cc57dc312bb51c3f9cea900bc42a045069b58e66366185e8ab10ee38e.png
             cooldownMs: 150000
             phaseTicks: 2
             selfMessage: "You flicker out of existence — the blow passes through empty air."

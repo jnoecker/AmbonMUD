@@ -2647,6 +2647,8 @@ data class RaceDefinitionConfig(
 data class RacialAbilityConfig(
     val kind: String = "",
     val displayName: String = "",
+    val description: String = "",
+    val image: String? = null,
     val cooldownMs: Long = 120_000L,
     val triggerHealthPct: Int = 0,
     val aoeDamagePctOfMaxHp: Double = 0.0,

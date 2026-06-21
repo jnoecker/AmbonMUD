@@ -179,6 +179,7 @@ class ProgressionHandler(
                 sessionId,
                 known,
                 cooldownRemainingMs = { abilityId -> abilities.cooldownRemainingMs(sessionId, abilityId) },
+                player = me,
                 manaCostFor = { ability -> abilities.computeManaCost(me, ability) },
             )
         }

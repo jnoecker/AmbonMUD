@@ -596,9 +596,15 @@ export interface SkillSummary {
   receivedAt: number;
   /**
    * "self" for player abilities (cast via `cast <id>`), "pet" for pet signature skills
-   * (cast via `pet <id>`). Defaults to "self" when absent for back-compat.
+   * (cast via `pet <id>`), "racial" for race passives that fire automatically. Defaults
+   * to "self" when absent for back-compat.
    */
-  source?: "self" | "pet";
+  source?: "self" | "pet" | "racial";
+  /**
+   * Passive abilities fire automatically from combat hooks — they can't be cast or slotted,
+   * so the spellbook hides the mana/quickbar affordances and shows a "Racial" badge instead.
+   */
+  passive?: boolean;
 }
 
 export interface CombatEventData {

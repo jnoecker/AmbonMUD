@@ -501,6 +501,7 @@ class ItemHandler(
                     sessionId,
                     abilitySystem.knownAbilities(sessionId),
                     cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+                    player = player,
                     manaCostFor = { ability -> abilitySystem.computeManaCost(player, ability) },
                 )
             }
