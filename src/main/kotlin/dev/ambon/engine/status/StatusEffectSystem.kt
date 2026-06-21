@@ -112,7 +112,7 @@ class StatusEffectSystem(
                 expiresAtMs = now + def.durationMs,
                 lastTickAtMs = now,
                 sourceSessionId = sourceSessionId,
-                shieldRemaining = def.shieldAmount,
+                shieldRemaining = computeShieldAmount(def, casterLevel, casterStats),
                 tickAnchor = computeTickAnchor(def, casterLevel, casterStats),
             ),
         )
@@ -152,6 +152,33 @@ class StatusEffectSystem(
         val statBonus = (statTotal - PlayerState.BASE_STAT) * statMul
         val levelScale = rate.pow((casterLevel - 1).coerceAtLeast(0))
         return (anchor + statBonus) * levelScale
+    }
+
+    /**
+     * Scales an absorb shield's pool at apply time using the same shape as
+     * direct heals:
+     *
+     *   statBonus  = (stats[shieldStat] - BASE_STAT) × shieldStatMultiplier
+     *   levelScale = shieldLevelScalingRate ^ (level - 1)
+     *   shield     = (shieldAmount + statBonus) × levelScale
+     *
+     * Unlike DOT/HOT ticks the result is a one-time pool, so no variance is
+     * applied. Falls back to the flat authored [StatusEffectDefinition.shieldAmount]
+     * when no caster context is provided (e.g. environmental or admin-applied
+     * effects) or the effect doesn't absorb damage.
+     */
+    private fun computeShieldAmount(
+        def: StatusEffectDefinition,
+        casterLevel: Int?,
+        casterStats: StatMap?,
+    ): Int {
+        if (def.shieldAmount <= 0) return def.shieldAmount
+        if (casterLevel == null) return def.shieldAmount
+        if (effectTypes.get(def.effectType)?.absorbsDamage != true) return def.shieldAmount
+        val statTotal = casterStats?.get(bindings.shieldStat) ?: PlayerState.BASE_STAT
+        val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.shieldStatMultiplier
+        val levelScale = bindings.shieldLevelScalingRate.pow((casterLevel - 1).coerceAtLeast(0))
+        return ((def.shieldAmount + statBonus) * levelScale).roundToInt().coerceAtLeast(1)
     }
 
     private fun rollTickValue(
