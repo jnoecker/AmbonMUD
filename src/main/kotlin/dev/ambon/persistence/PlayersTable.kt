@@ -21,6 +21,7 @@ private val achievementProgressType = object : TypeReference<Map<String, Achieve
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
 private val craftingSkillsType = object : TypeReference<Map<String, CraftingSkillState>>() {}
 private val discoveredRecipesType = object : TypeReference<Set<String>>() {}
+private val discoveredFlightPointsType = object : TypeReference<Set<String>>() {}
 private val factionStandingsType = object : TypeReference<Map<String, Int>>() {}
 private val currenciesType = object : TypeReference<Map<String, Long>>() {}
 private val friendsListType = object : TypeReference<Set<String>>() {}
@@ -62,6 +63,7 @@ object PlayersTable : Table("players") {
     val lastInnByZone = text("last_inn_by_zone").default("{}")
     val craftingSkills = text("crafting_skills").default("{}")
     val discoveredRecipes = text("discovered_recipes").default("[]")
+    val discoveredFlightPoints = text("discovered_flight_points").default("[]")
     val craftingSpecialization = varchar("crafting_specialization", 64).nullable()
     val factionStandings = text("faction_standings").default("{}")
     val currencies = text("currencies").default("{}")
@@ -133,6 +135,7 @@ object PlayersTable : Table("players") {
             lastInnByZone = safeReadJson(row[lastInnByZone], lastInnByZoneType, emptyMap()),
             craftingSkills = safeReadJson(row[craftingSkills], craftingSkillsType, emptyMap()),
             discoveredRecipes = safeReadJson(row[discoveredRecipes], discoveredRecipesType, emptySet()),
+            discoveredFlightPoints = safeReadJson(row[discoveredFlightPoints], discoveredFlightPointsType, emptySet()),
             craftingSpecialization = row[craftingSpecialization],
             factionStandings = safeReadJson(row[factionStandings], factionStandingsType, emptyMap()),
             currencies = safeReadJson(row[currencies], currenciesType, emptyMap()),
@@ -209,6 +212,7 @@ object PlayersTable : Table("players") {
         statement[lastInnByZone] = jsonMapper.writeValueAsString(record.lastInnByZone)
         statement[craftingSkills] = jsonMapper.writeValueAsString(record.craftingSkills)
         statement[discoveredRecipes] = jsonMapper.writeValueAsString(record.discoveredRecipes)
+        statement[discoveredFlightPoints] = jsonMapper.writeValueAsString(record.discoveredFlightPoints)
         statement[craftingSpecialization] = record.craftingSpecialization
         statement[factionStandings] = jsonMapper.writeValueAsString(record.factionStandings)
         statement[currencies] = jsonMapper.writeValueAsString(record.currencies)

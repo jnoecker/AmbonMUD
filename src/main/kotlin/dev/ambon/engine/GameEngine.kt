@@ -38,6 +38,7 @@ import dev.ambon.engine.commands.handlers.DuelHandler
 import dev.ambon.engine.commands.handlers.DungeonHandler
 import dev.ambon.engine.commands.handlers.EnchantHandler
 import dev.ambon.engine.commands.handlers.EngineContext
+import dev.ambon.engine.commands.handlers.FlightHandler
 import dev.ambon.engine.commands.handlers.FriendsHandler
 import dev.ambon.engine.commands.handlers.GlobalQuestHandler
 import dev.ambon.engine.commands.handlers.GroupHandler
@@ -831,6 +832,16 @@ class GameEngine(
             gmcpEmitter = gmcpEmitter,
         )
 
+    private val flightSystem =
+        FlightSystem(
+            players = players,
+            world = world,
+            outbound = outbound,
+            config = engineConfig.flight,
+            metrics = metrics,
+            markVitalsDirty = ::markVitalsDirty,
+        )
+
     private val regenSystem =
         RegenSystem(
             players = players,
@@ -1365,6 +1376,8 @@ class GameEngine(
             musicBoxSystem = musicBoxSystem,
             bankConfig = engineConfig.bank,
             stylistConfig = engineConfig.stylist,
+            flightSystem = flightSystem,
+            flightConfig = engineConfig.flight,
             akathavaeSystem = akathavaeSystem,
             metrics = metrics,
         )
@@ -1460,6 +1473,7 @@ class GameEngine(
                 onPlayerMoved = { sid, roomId ->
                     petSystem.followOwner(sid, roomId)
                     akathavaeSystem.onRoomVisited(sid)
+                    flightSystem.onRoomVisited(sid)
                 },
                 puzzleSystem = puzzleSystem,
             ),
@@ -1551,6 +1565,15 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 markStatsDirty = ::markStatsDirty,
                 spriteRegistry = spriteRegistry,
+            ),
+            FlightHandler(
+                ctx = ctx,
+                dialogueSystem = dialogueSystem,
+                onPlayerMoved = { sid, roomId ->
+                    petSystem.followOwner(sid, roomId)
+                    akathavaeSystem.onRoomVisited(sid)
+                },
+                markVitalsDirty = ::markVitalsDirty,
             ),
             AkathavaeHandler(
                 ctx = ctx,

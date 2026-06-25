@@ -215,6 +215,7 @@ internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     emitBankGmcp(sessionId)
     emitPuzzleGmcp(sessionId)
     emitStylistGmcp(sessionId)
+    emitFlightGmcp(sessionId)
     emitJukeboxGmcp(sessionId)
     emitMusicBoxGmcp(sessionId)
 }
@@ -295,6 +296,22 @@ internal suspend fun EngineContext.emitStylistGmcp(sessionId: SessionId) {
         )
     } else {
         emitter.sendStylistClose(sessionId)
+    }
+}
+
+/** Emits `Char.Flight` with reachable destinations when the player is at a flight master, else `Char.Flight.Close`. */
+internal suspend fun EngineContext.emitFlightGmcp(sessionId: SessionId) {
+    val emitter = gmcpEmitter ?: return
+    val system = flightSystem ?: return
+    val me = players.get(sessionId) ?: return
+    if (system.isFlightMaster(me.roomId)) {
+        emitter.sendFlightState(
+            sessionId = sessionId,
+            playerGold = me.gold,
+            destinations = system.destinationsFrom(me.roomId, me.discoveredFlightPoints),
+        )
+    } else {
+        emitter.sendFlightClose(sessionId)
     }
 }
 

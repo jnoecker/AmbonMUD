@@ -292,6 +292,7 @@ class GmcpEmitter(
                 auction = room.auction,
                 housingBroker = room.housingBroker,
                 inn = room.inn,
+                flightMaster = room.flightMaster,
                 jukebox = room.jukebox.isNotEmpty(),
                 musicBox = room.musicBox != null,
                 canDepart = canDepart,
@@ -2012,6 +2013,52 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- flight master ----------
+
+    data class FlightStatePayload(
+        val playerGold: Long,
+        val destinations: List<FlightDestinationPayload>,
+    )
+
+    data class FlightDestinationPayload(
+        val roomId: String,
+        val name: String,
+        val zone: String,
+        /** BFS hops from the current room, or null when unreachable on this engine. */
+        val distance: Int?,
+        val cost: Long,
+        /** True when the player can currently afford this fare. */
+        val affordable: Boolean,
+    )
+
+    suspend fun sendFlightClose(sessionId: SessionId) {
+        emitRaw(sessionId, "Char.Flight.Close", "{}")
+    }
+
+    suspend fun sendFlightState(
+        sessionId: SessionId,
+        playerGold: Long,
+        destinations: List<FlightSystem.Destination>,
+    ) {
+        emit(
+            sessionId,
+            "Char.Flight",
+            FlightStatePayload(
+                playerGold = playerGold,
+                destinations = destinations.map {
+                    FlightDestinationPayload(
+                        roomId = it.roomId.value,
+                        name = it.name,
+                        zone = it.zone,
+                        distance = it.distance,
+                        cost = it.cost,
+                        affordable = playerGold >= it.cost,
+                    )
+                },
+            ),
+        )
+    }
+
     // ---------- world atmosphere ----------
 
     data class WorldTimePayload(
@@ -2988,6 +3035,8 @@ class GmcpEmitter(
         val auction: Boolean = false,
         val housingBroker: Boolean = false,
         val inn: Boolean = false,
+        /** True when this room has a flight master (drives the in-world kiosk badge). */
+        val flightMaster: Boolean = false,
         /** True when this room has a jukebox playlist (drives the in-world badge). */
         val jukebox: Boolean = false,
         /** True when this room has a music box (drives the in-world kiosk badge). */

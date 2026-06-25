@@ -28774,3 +28774,108 @@ html:has(.game-shell),
   from { opacity: 0; transform: translateY(-8px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* ── Flight master — gold fast-travel between discovered roosts ─────── */
+.flight-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.flight-board-empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.flight-empty {
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 32ch;
+  line-height: 1.5;
+}
+
+.flight-empty code {
+  color: var(--color-gold-bright);
+  font-family: var(--font-mono, monospace);
+}
+
+.flight-gold {
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.flight-gold strong { color: var(--color-gold-bright); }
+
+.flight-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.flight-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface-subpanel);
+  border: 1px solid rgb(212 184 92 / 22%);
+  border-radius: var(--radius-md);
+}
+
+.flight-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.flight-row-name {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.flight-row-meta {
+  color: var(--text-tertiary);
+  font-size: 0.85em;
+}
+
+.flight-row-fare {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.flight-cost {
+  color: var(--color-gold-bright);
+  white-space: nowrap;
+}
+
+.flight-cost-short { color: var(--text-disabled); }
+
+.flight-go {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid rgb(212 184 92 / 45%);
+  border-radius: var(--radius-sm);
+  background: var(--surface-chip);
+  color: var(--text-bright);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.flight-go:hover:not(:disabled) {
+  background: rgb(212 184 92 / 22%);
+  border-color: var(--color-gold-bright);
+}
+
+.flight-go:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

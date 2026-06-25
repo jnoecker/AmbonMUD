@@ -1,4 +1,4 @@
-export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
+export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "flight" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -259,6 +259,8 @@ export interface RoomState {
   auction?: boolean;
   housingBroker?: boolean;
   inn?: boolean;
+  /** True when this room has a flight master (drives the in-world badge + flight panel). */
+  flightMaster?: boolean;
   /** True when this room has a jukebox playlist (drives the in-world badge + panel). */
   jukebox?: boolean;
   /** True when this room has a music box (drives the in-world kiosk badge + device). */
@@ -1214,6 +1216,24 @@ export interface StylistState {
   feeGold: number;
   playerGold: number;
   races: StylistRace[];
+}
+
+/** One destination a flight master can carry the player to (Char.Flight). */
+export interface FlightDestination {
+  roomId: string;
+  name: string;
+  zone: string;
+  /** BFS hops from the current room, or null when unreachable on this engine. */
+  distance: number | null;
+  cost: number;
+  /** True when the player can currently afford this fare. */
+  affordable: boolean;
+}
+
+/** Flight-master state from the Char.Flight GMCP package. */
+export interface FlightState {
+  playerGold: number;
+  destinations: FlightDestination[];
 }
 
 export interface DailyQuestEntry {

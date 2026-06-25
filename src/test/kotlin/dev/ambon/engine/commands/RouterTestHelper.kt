@@ -4,6 +4,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.config.AkathavaeConfig
 import dev.ambon.config.BankConfig
 import dev.ambon.config.EconomyConfig
+import dev.ambon.config.FlightConfig
 import dev.ambon.config.PrestigeConfig
 import dev.ambon.config.StylistConfig
 import dev.ambon.domain.ids.RoomId
@@ -13,6 +14,7 @@ import dev.ambon.engine.AkathavaeSystem
 import dev.ambon.engine.AuctionSystem
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
+import dev.ambon.engine.FlightSystem
 import dev.ambon.engine.GenderRegistry
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
@@ -45,6 +47,7 @@ import dev.ambon.engine.commands.handlers.DuelHandler
 import dev.ambon.engine.commands.handlers.DungeonHandler
 import dev.ambon.engine.commands.handlers.EnchantHandler
 import dev.ambon.engine.commands.handlers.EngineContext
+import dev.ambon.engine.commands.handlers.FlightHandler
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.HousingHandler
@@ -105,6 +108,7 @@ internal fun buildTestRouter(
     enchantSystem: EnchantSystem? = null,
     bankConfig: BankConfig? = null,
     stylistConfig: StylistConfig? = null,
+    flightConfig: FlightConfig? = null,
     akathavaeConfig: AkathavaeConfig? = null,
     akathavaeSystem: AkathavaeSystem? = null,
     raceRegistry: RaceRegistry? = null,
@@ -141,6 +145,14 @@ internal fun buildTestRouter(
         config = akathavaeConfig ?: AkathavaeConfig(),
         markVitalsDirty = markVitalsDirty,
     )
+    val resolvedFlightConfig = flightConfig ?: FlightConfig()
+    val flightSystem = FlightSystem(
+        players = players,
+        world = world,
+        outbound = outbound,
+        config = resolvedFlightConfig,
+        markVitalsDirty = markVitalsDirty,
+    )
     val ctx = EngineContext(
         players = players,
         mobs = mobs,
@@ -158,6 +170,8 @@ internal fun buildTestRouter(
         genderRegistry = genderRegistry,
         bankConfig = bankConfig ?: BankConfig(),
         stylistConfig = stylistConfig ?: StylistConfig(),
+        flightSystem = flightSystem,
+        flightConfig = resolvedFlightConfig,
         akathavaeSystem = resolvedAkathavaeSystem,
         puzzleSystem = puzzleSystem,
         jukeboxSystem = jukeboxSystem,
@@ -211,6 +225,7 @@ internal fun buildTestRouter(
                 spriteRegistry = spriteRegistry,
             )
         },
+        FlightHandler(ctx = ctx, markVitalsDirty = markVitalsDirty),
         AkathavaeHandler(
             ctx = ctx,
             config = akathavaeConfig ?: AkathavaeConfig(),

@@ -257,6 +257,7 @@ object WorldLoader {
                         housingBroker = rf.housingBroker,
                         inn = rf.inn,
                         akathavaeShrine = rf.akathavaeShrine,
+                        flightMaster = rf.flightMaster,
                         image = (rf.image ?: imageDefaults?.room)?.let { "$imagesBase$it" },
                         video = rf.video?.let { "$videosBase$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },

@@ -44,8 +44,14 @@ rooms:
       online, and the Friends panel lets you keep track of companions."
 
 
+      Beneath the eastern arch, a hooded griffin-keeper tends a roost of saddled griffins. A slate beside her reads:
+      "Flight master — type 'flights' to see the roosts I can carry you to, then 'fly <name>' (or 'fly <#>') to take
+      wing. You can only fly to roosts you've visited yourself, and the fare grows with the distance."
+
+
       Paths lead east to the Scholar's Study, west to the Common Room, and south to the Armory. A winding staircase
       climbs upward to the Catacombs. The Academy Gates are back to the north.
+    flightMaster: true
     exits:
       n: academy_gates
       e: scholars_study
@@ -261,7 +267,12 @@ rooms:
       Someone has dropped a healing potion on the ground near the gate.
 
 
+      A weathered griffin-keeper has staked a roost beside the gate, his griffins preening between trials. "Visited the
+      Grand Hall or the Throne Room?" he calls. "Type 'flights' and I'll wing you straight there."
+
+
       The Armory is to the north. The Riddle Tower is to the east. The Throne Room lies to the south.
+    flightMaster: true
     exits:
       n: armory
       e: riddle_tower
@@ -344,7 +355,13 @@ rooms:
       A battered treasure chest sits near the base of the throne.
 
 
+      Tucked in an alcove by the entrance, a quiet griffin-keeper minds a lone saddled griffin. A faded card hung from
+      its reins reads: "Flight master — 'flights' to list roosts, 'fly <name>' to depart. The longer the journey, the
+      heavier the fare."
+
+
       The Proving Grounds are back to the north.
+    flightMaster: true
     exits:
       n: proving_grounds
     features:

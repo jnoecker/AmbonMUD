@@ -248,6 +248,8 @@ class WebClientParityTest {
         "Bank.Balance" to "bank",
         "Stylist.List" to "stylist",
         "Stylist.ChangeRace" to "changerace",
+        "Flight.List" to "flights",
+        "Flight.Travel" to "fly",
         "Train.List" to "train",
         "Train.Learn" to "train",
         "Train.Unlock" to "train",

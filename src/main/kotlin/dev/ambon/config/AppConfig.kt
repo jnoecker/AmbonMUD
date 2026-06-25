@@ -2069,6 +2069,41 @@ data class EngineConfig(
     val gambling: GamblingConfig = GamblingConfig(),
     val jukebox: JukeboxConfig = JukeboxConfig(),
     val death: DeathConfig = DeathConfig(),
+    val flight: FlightConfig = FlightConfig(),
+)
+
+/**
+ * Tuning for flight masters — room kiosks that let players pay gold to fast-travel between
+ * flight points they have personally discovered (by visiting). The fare scales with travel
+ * distance: the BFS hop count between the player's current room and the destination over the
+ * world's exit graph. Flying is blocked only in combat; otherwise gold is the sole gate.
+ */
+data class FlightConfig(
+    /** Base gold fare for any flight, before distance scaling. */
+    val baseCost: Long = 25L,
+    /** Additional gold per room of travel distance (BFS hops between source and destination). */
+    val costPerRoom: Long = 4L,
+    /** Floor for the total fare after scaling. */
+    val minCost: Long = 25L,
+    /** Ceiling for the total fare after scaling. */
+    val maxCost: Long = 5_000L,
+    /** Fare charged when distance can't be computed (destination not loaded on this engine). */
+    val unreachableCost: Long = 500L,
+    val messages: FlightMessagesConfig = FlightMessagesConfig(),
+)
+
+data class FlightMessagesConfig(
+    val combatBlocked: String = "You can't take flight in the middle of a battle!",
+    val notAtFlightMaster: String = "You need to be at a flight master to do that.",
+    val noDestinations: String = "You haven't discovered any other flight points yet. Explore to find more!",
+    val unknownDestination: String = "The flight master doesn't recognize that destination.",
+    val alreadyHere: String = "You're already at that flight point.",
+    val notEnoughGold: String = "That flight costs {cost} gold, but you only have {gold}.",
+    val discovered: String = "[Flight] You commit this flight point to memory — you can now fly here from afar.",
+    val departNotice: String = "leaps skyward and soars away.",
+    val arriveNotice: String = "descends from the sky and alights gracefully.",
+    val depart: String = "You climb aboard and take to the skies, bound for {dest}...",
+    val arrival: String = "You alight at {dest}. (-{cost} gold)",
 )
 
 /**
@@ -2189,6 +2224,13 @@ data class CommandsConfig(
             "exits" to CommandMetadata("exits/ex", "List available exits", "navigation"),
             "recall" to CommandMetadata("recall", "Teleport to your recall point (set by resting at an inn)", "navigation"),
             "rest" to CommandMetadata("rest", "Rest at an inn to make it your recall point.", "navigation"),
+            "flights" to CommandMetadata("flights", "List flight points you can fly to (at a flight master).", "navigation"),
+            "fly" to CommandMetadata(
+                usage = "fly <destination|#>",
+                description = "Pay gold to fast-travel to a discovered flight point (at a flight master).",
+                category = "navigation",
+                requiresTarget = true,
+            ),
             "depart" to CommandMetadata("depart", "Leave the death sanctum and return to the world", "navigation"),
             "run" to CommandMetadata(
                 usage = "run <directions> (e.g. 5n3e)",

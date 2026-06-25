@@ -99,6 +99,8 @@ data class PlayerState(
     var damageBoostMultiplier: Double = 1.0,
     var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
     var discoveredRecipes: MutableSet<String> = mutableSetOf(),
+    /** Flight-master room ids (`zone:room`) this player has visited and can fast-travel to. */
+    var discoveredFlightPoints: MutableSet<String> = mutableSetOf(),
     var craftingSpecialization: String? = null,
     var factionStandings: MutableMap<String, Int> = mutableMapOf(),
     /** Secondary currency balances (e.g. quest_points, honor, crafting_tokens). */
@@ -321,6 +323,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
             key.lowercase() to state
         }.toMap().toMutableMap(),
         discoveredRecipes = discoveredRecipes.toMutableSet(),
+        discoveredFlightPoints = discoveredFlightPoints.toMutableSet(),
         craftingSpecialization = craftingSpecialization,
         factionStandings = factionStandings.toMutableMap(),
         currencies = currencies.toMutableMap(),
@@ -395,6 +398,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         lastInnByZone = lastInnByZone.mapValues { (_, v) -> v.value }.toMap(),
         craftingSkills = craftingSkills.toMap(),
         discoveredRecipes = discoveredRecipes.toSet(),
+        discoveredFlightPoints = discoveredFlightPoints.toSet(),
         craftingSpecialization = craftingSpecialization,
         factionStandings = factionStandings.toMap(),
         currencies = currencies.toMap(),
