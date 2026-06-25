@@ -572,7 +572,12 @@ export function useMiniMap() {
     const maxZoom = MAX_ZOOM;
     zoomBoundsRef.current = { min: minZoom, max: maxZoom };
 
-    if (zoomRef.current === 0) zoomRef.current = clamp(DEFAULT_ZOOM, minZoom, maxZoom);
+    // On first open (and after a zone change / recenter, which reset zoom to 0),
+    // open at a zoom that shows the WHOLE zone — but never more zoomed-in than the
+    // comfortable default for zones small enough to already fit at DEFAULT_ZOOM.
+    // Without this, large zones (e.g. 16×28 = 280 rooms) opened at a fixed
+    // DEFAULT_ZOOM showing only a small fragment that scrolled as you travelled.
+    if (zoomRef.current === 0) zoomRef.current = clamp(Math.min(DEFAULT_ZOOM, fitCell), minZoom, maxZoom);
     zoomRef.current = clamp(zoomRef.current, minZoom, maxZoom);
 
     // Pan: follow the current room (or zone centre) until the user takes over.
