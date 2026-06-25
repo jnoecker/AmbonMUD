@@ -481,16 +481,29 @@ export function applyGmcpPackage(
     case "Zone.Map": {
       const packet = data as Partial<Record<string, unknown>>;
       const zone = typeof packet.zone === "string" ? packet.zone : "";
+      // The server strips the redundant `<zone>:` prefix from room ids and exit
+      // targets (the payload already names the zone, and exits are same-zone only)
+      // to keep large zones under the GMCP payload cap. Re-qualify them so the
+      // map keys match the full `zone:room` ids used everywhere else. Guarded on
+      // `:` so a legacy server that still sends full ids keeps working.
+      const qualify = (raw: string): string => (raw === "" || raw.includes(":") ? raw : `${zone}:${raw}`);
       const rooms = Array.isArray(packet.rooms)
         ? packet.rooms
             .filter((r): r is Record<string, unknown> => typeof r === "object" && r !== null)
-            .map((r) => ({
-              id: typeof r.id === "string" ? r.id : "",
-              x: typeof r.x === "number" ? r.x : 0,
-              y: typeof r.y === "number" ? r.y : 0,
-              z: typeof r.z === "number" ? r.z : 0,
-              exits: r.exits && typeof r.exits === "object" ? (r.exits as Record<string, string>) : {},
-            }))
+            .map((r) => {
+              const rawExits = r.exits && typeof r.exits === "object" ? (r.exits as Record<string, string>) : {};
+              const exits: Record<string, string> = {};
+              for (const [dir, target] of Object.entries(rawExits)) {
+                if (typeof target === "string") exits[dir] = qualify(target);
+              }
+              return {
+                id: qualify(typeof r.id === "string" ? r.id : ""),
+                x: typeof r.x === "number" ? r.x : 0,
+                y: typeof r.y === "number" ? r.y : 0,
+                z: typeof r.z === "number" ? r.z : 0,
+                exits,
+              };
+            })
         : [];
       if (zone && rooms.length > 0) {
         ctx.loadZoneMap(zone, rooms);

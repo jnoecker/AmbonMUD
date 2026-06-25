@@ -2077,16 +2077,63 @@ class GmcpEmitterTest {
             assertEquals(1, data.size)
             assertEquals("Zone.Map", data[0].gmcpPackage)
             val json = data[0].jsonData
-            // North exit to same zone should be present
-            assertTrue(json.contains("\"north\":\"z:b\""), "Expected north exit. got=$json")
-            // Up exit to same zone should be present (clients badge stairs from it)
-            assertTrue(json.contains("\"up\":\"z:c\""), "Expected up exit. got=$json")
-            // Cross-zone exit should be filtered out
+            // Room ids and exit targets are sent without the redundant `<zone>:`
+            // prefix; clients re-qualify them from the top-level `zone` field.
+            assertTrue(json.contains("\"id\":\"a\""), "Expected unprefixed room id 'a'. got=$json")
+            // North exit to same zone should be present (prefix stripped).
+            assertTrue(json.contains("\"north\":\"b\""), "Expected north exit. got=$json")
+            // Up exit to same zone should be present (clients badge stairs from it).
+            assertTrue(json.contains("\"up\":\"c\""), "Expected up exit. got=$json")
+            // Cross-zone exit should be filtered out entirely.
             assertTrue(!json.contains("other:x"), "Cross-zone exit should be excluded. got=$json")
+            // The full namespaced form must not leak back in.
+            assertTrue(!json.contains("z:a"), "Room ids should be unprefixed. got=$json")
             // Coordinates should be present, including the floor
             assertTrue(json.contains("\"x\":0"), "Expected x coordinate. got=$json")
             assertTrue(json.contains("\"y\":-1"), "Expected y=-1 coordinate. got=$json")
             assertTrue(json.contains("\"z\":1"), "Expected z=1 floor on the attic room. got=$json")
+        }
+
+    @Test
+    fun `sendZoneMap stays under payload cap for a large zone`() =
+        runTest {
+            val e = emitter("Zone.Map")
+            // Mirrors the real crystal_forest profile (300 grid rooms, ~17-char
+            // local ids, 4 exits each). With the redundant `<zone>:` prefix on
+            // every id and exit target the payload serialized to ~73 KB — over
+            // MAX_GMCP_PAYLOAD_BYTES — and emit() silently dropped the whole map,
+            // leaving the client to render only the player's explored trail.
+            // Stripping the prefix brings it to ~51 KB, safely under the cap.
+            val zone = "crystal_forest"
+            val n = 300
+            fun roomId(i: Int) = RoomId("$zone:cf_room_node_%04d".format(i))
+            val rooms = (0 until n).map { i ->
+                zoneRoom(
+                    roomId(i).value,
+                    exits = mapOf(
+                        Direction.NORTH to roomId((i + 1) % n),
+                        Direction.SOUTH to roomId((i + 2) % n),
+                        Direction.EAST to roomId((i + 3) % n),
+                        Direction.WEST to roomId((i + 4) % n),
+                    ),
+                    mapX = i % 16,
+                    mapY = i / 16,
+                )
+            }
+            e.sendZoneMap(sid, zone, rooms)
+            val data = drainGmcp()
+            assertEquals(1, data.size, "Large-zone Zone.Map must not be dropped by the payload cap")
+            assertEquals("Zone.Map", data[0].gmcpPackage)
+            assertTrue(
+                data[0].jsonData.length <= GmcpEmitter.MAX_GMCP_PAYLOAD_BYTES,
+                "Zone.Map payload (${data[0].jsonData.length}B) must stay under the cap",
+            )
+            // Sanity: this is genuinely a large payload (so removing the prefix
+            // strip would push it back over the cap and re-trigger the bug).
+            assertTrue(
+                data[0].jsonData.length > 40_000,
+                "Expected a large payload to guard the regression. got=${data[0].jsonData.length}B",
+            )
         }
 
     @Test
