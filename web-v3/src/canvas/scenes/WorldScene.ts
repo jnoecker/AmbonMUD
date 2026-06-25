@@ -160,6 +160,13 @@ export class WorldScene {
   private stylistHitArea = new Graphics();
   private stylistVisible = false;
 
+  private flightBadge: Container;
+  private flightSprite: Sprite | null = null;
+  private flightLabel: Text;
+  private flightLabelBg = new Graphics();
+  private flightHitArea = new Graphics();
+  private flightVisible = false;
+
   private targetingText: Text | null = null;
   private targetingBg = new Graphics();
   private targetingAnimTime = 0;
@@ -422,6 +429,35 @@ export class WorldScene {
     this.stylistLabelBg.eventMode = "none";
     this.stylistBadge.addChild(this.stylistLabelBg);
     this.stylistBadge.addChild(this.stylistLabel);
+
+    // Flight master badge — floating kiosk icon when a flight master is present
+    this.flightBadge = new Container();
+    this.flightBadge.visible = false;
+    this.flightBadge.eventMode = "static";
+    this.flightBadge.cursor = "pointer";
+    this.flightBadge.on("pointerdown", () => {
+      canvasCallbacks.openFlight?.();
+    });
+    this.flightBadge.on("pointerover", () => {
+      if (this.flightSprite) this.flightSprite.alpha = 1;
+    });
+    this.flightBadge.on("pointerout", () => {
+      if (this.flightSprite) this.flightSprite.alpha = 0.85;
+    });
+    this.flightHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.flightHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.flightHitArea.eventMode = "auto";
+    this.flightBadge.addChild(this.flightHitArea);
+    this.flightLabel = new Text({
+      text: "Flight",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#e0c878", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.flightLabel.anchor.set(0.5, 0);
+    this.flightLabel.y = hs / 2 + 2;
+    this.flightLabel.eventMode = "none";
+    this.flightLabelBg.eventMode = "none";
+    this.flightBadge.addChild(this.flightLabelBg);
+    this.flightBadge.addChild(this.flightLabel);
 
     // Station badge — floating icon when a crafting station is present
     this.stationBadge = new Container();
@@ -952,6 +988,7 @@ export class WorldScene {
     this.container.addChild(this.shopBadge);
     this.container.addChild(this.auctionBadge);
     this.container.addChild(this.stylistBadge);
+    this.container.addChild(this.flightBadge);
     this.container.addChild(this.stationBadge);
     this.container.addChild(this.trainerBadge);
     this.container.addChild(this.bankBadge!);
@@ -1001,6 +1038,7 @@ export class WorldScene {
       this.loadShopIcon();
       this.loadAuctionIcon();
       this.loadStylistIcon();
+      this.loadFlightIcon();
       this.loadStationIcon();
       this.loadTrainerIcon();
       this.loadBankIcon();
@@ -1168,6 +1206,12 @@ export class WorldScene {
     if (hasStylist !== this.stylistVisible) {
       this.stylistVisible = hasStylist;
       this.stylistBadge.visible = hasStylist;
+    }
+
+    const hasFlight = !!state.room.flightMaster;
+    if (hasFlight !== this.flightVisible) {
+      this.flightVisible = hasFlight;
+      this.flightBadge.visible = hasFlight;
     }
 
     // Station badge visibility
@@ -1673,6 +1717,7 @@ export class WorldScene {
     // Count visible badges to compute adaptive spacing
     const visibleBadgeCount = [
       this.shopBadge.visible, this.auctionBadge.visible, this.stylistBadge.visible,
+      this.flightBadge.visible,
       this.stationBadge.visible, this.trainerBadge.visible,
       this.bankBadge?.visible,
       this.lotteryBadge?.visible, this.diceBadge?.visible, this.dungeonBadge?.visible,
@@ -1711,6 +1756,13 @@ export class WorldScene {
       this.stylistBadge.x = badgeX;
       this.stylistBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.stylistLabelBg, this.stylistLabel);
+      badgeSlot++;
+    }
+
+    if (this.flightBadge.visible) {
+      this.flightBadge.x = badgeX;
+      this.flightBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.flightLabelBg, this.flightLabel);
       badgeSlot++;
     }
 
@@ -2504,6 +2556,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.stylistSprite = sprite;
       this.stylistBadge.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadFlightIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("flight_roost", "flight_roost.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.flightSprite = sprite;
+      this.flightBadge.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }
