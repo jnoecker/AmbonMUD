@@ -28882,10 +28882,14 @@ html:has(.game-shell),
 
 /* ---------- Painted Ambon map (skinned flight kiosk) ---------- */
 
-/* The map drives its own height via the <img>; the unplaced list flows beneath it. */
+/* The image is height-bounded so the whole map fits the viewport (rather than
+   stretching to the panel width, which cropped it on tall screens). The wrapper
+   shrink-wraps that scaled image so the percentage-positioned markers stay aligned. */
 .flight-map {
   position: relative;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: 0 2px 14px rgb(0 0 0 / 35%);
@@ -28893,7 +28897,9 @@ html:has(.game-shell),
 
 .flight-map-img {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  max-height: var(--flight-map-max-h, 62vh);
   height: auto;
   user-select: none;
 }
@@ -29039,4 +29045,30 @@ button.flight-marker[aria-disabled="true"] {
   font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* On desktop the kiosk drops the blue drawer box entirely and shrink-wraps the
+   painted map — "just the map" floating on the dimmed backdrop, sized so the
+   whole thing is visible at once. The map art carries its own painted border.
+   Only applies when the map is shown; the fallback list keeps normal chrome. */
+@media (min-width: 768px) {
+  .drawer-sheet:has(.flight-board-skinned) {
+    width: auto;
+    max-width: 96vw;
+    height: auto;
+    max-height: 96vh;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  .drawer-sheet:has(.flight-board-skinned) .drawer-body {
+    padding: 0;
+  }
+
+  .flight-board-skinned {
+    --flight-map-max-h: 80vh;
+    padding: 0;
+    gap: var(--space-2);
+  }
 }
