@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import type { FlightDestination, FlightState } from "../../types";
 
 interface FlightPanelProps {
@@ -65,6 +65,14 @@ function DestinationRow({
  * Clicking always sends `fly <roomId>` (unambiguous), so the picked roost matches the marker.
  */
 export function FlightPanel({ flightState, serverAssets, onCommand }: FlightPanelProps) {
+  // The flight_map key is always registered, so its URL is non-null even before the painted
+  // PNG is uploaded. A failed load (404) records the offending URL and we degrade to the
+  // textual list rather than stranding the player on a broken image. Comparing against the
+  // current URL auto-resets the broken state if the art is swapped in later.
+  const mapUrl = serverAssets["flight_map"] ?? null;
+  const [brokenMapUrl, setBrokenMapUrl] = useState<string | null>(null);
+  const mapBroken = brokenMapUrl !== null && brokenMapUrl === mapUrl;
+
   if (!flightState) {
     return (
       <div className="flight-board flight-board-empty">
@@ -76,16 +84,15 @@ export function FlightPanel({ flightState, serverAssets, onCommand }: FlightPane
   }
 
   const { playerGold, destinations, originName, originMapX, originMapY } = flightState;
-  const mapUrl = serverAssets["flight_map"] ?? null;
   const roostUrl = serverAssets["flight_roost"] ?? null;
 
   const placed = destinations.filter((d) => d.mapX != null && d.mapY != null);
   const unplaced = destinations.filter((d) => d.mapX == null || d.mapY == null);
   const originPlaced = originMapX != null && originMapY != null;
 
-  // Render the painted map only when we have art and at least one thing to pin onto it;
-  // otherwise the plain list below is the whole kiosk (graceful degradation).
-  const showMap = mapUrl != null && (placed.length > 0 || originPlaced);
+  // Render the painted map only when we have (working) art and at least one thing to pin onto
+  // it; otherwise the plain list below is the whole kiosk (graceful degradation).
+  const showMap = mapUrl != null && !mapBroken && (placed.length > 0 || originPlaced);
 
   const goldLine = (
     <div className="flight-gold">
@@ -120,7 +127,13 @@ export function FlightPanel({ flightState, serverAssets, onCommand }: FlightPane
       {goldLine}
 
       <div className="flight-map">
-        <img className="flight-map-img" src={mapUrl} alt="Map of Ambon" draggable={false} />
+        <img
+          className="flight-map-img"
+          src={mapUrl ?? undefined}
+          alt="Map of Ambon"
+          draggable={false}
+          onError={() => setBrokenMapUrl(mapUrl)}
+        />
         {originPlaced && (
           <div
             className="flight-marker flight-marker-origin"
