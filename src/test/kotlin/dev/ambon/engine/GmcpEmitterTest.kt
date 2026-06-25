@@ -2106,6 +2106,7 @@ class GmcpEmitterTest {
             // Stripping the prefix brings it to ~51 KB, safely under the cap.
             val zone = "crystal_forest"
             val n = 300
+
             fun roomId(i: Int) = RoomId("$zone:cf_room_node_%04d".format(i))
             val rooms = (0 until n).map { i ->
                 zoneRoom(
