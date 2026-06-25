@@ -2016,11 +2016,16 @@ export function applyGmcpPackage(
             distance: typeof d.distance === "number" ? d.distance : null,
             cost: safeNumber(d.cost, 0),
             affordable: d.affordable === true,
+            mapX: typeof d.mapX === "number" ? d.mapX : null,
+            mapY: typeof d.mapY === "number" ? d.mapY : null,
           }))
         : [];
       ctx.setFlightState({
         playerGold: safeNumber(packet.playerGold, 0),
         destinations,
+        originName: typeof packet.originName === "string" ? packet.originName : null,
+        originMapX: typeof packet.originMapX === "number" ? packet.originMapX : null,
+        originMapY: typeof packet.originMapY === "number" ? packet.originMapY : null,
       });
       break;
     }

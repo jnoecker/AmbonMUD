@@ -33,6 +33,15 @@ data class RoomFile(
     val akathavaeShrine: Boolean = false,
     /** True if this room has a flight master (enables `flights`/`fly` fast-travel + kiosk badge). */
     val flightMaster: Boolean = false,
+    /**
+     * Flight-master position on the painted Ambon world map, as a percentage (0–100) of the map
+     * image — `flightMapX` across, `flightMapY` down. Drives the clickable griffin hotspot in the
+     * web flight kiosk. Same percentage convention as equipment paper-doll slots, understood by
+     * both Arcanum and the engine. Null on a flight master means "unplaced": the destination still
+     * lists textually in the kiosk but gets no map pin. Ignored when [flightMaster] is false.
+     */
+    val flightMapX: Double? = null,
+    val flightMapY: Double? = null,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */

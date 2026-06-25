@@ -3713,6 +3713,13 @@ data class ImagesConfig(
             "quest_complete_indicator" to "global_assets/quest_complete_indicator.png",
             "minimap_unexplored" to "global_assets/minimap-unexplored.png",
             "map_background" to "global_assets/map_background.png",
+            // Painted Ambon world map behind the flight kiosk. Discovered flight points are
+            // seated onto it as clickable griffin hotspots at their authored flightMapX/Y
+            // percentages. When absent, the kiosk degrades to its plain destination list.
+            "flight_map" to "global_assets/flight_map.png",
+            // Griffin/roost marker painted at each flight hotspot. Optional — a CSS jewel-dot
+            // renders in its place when the art is missing.
+            "flight_roost" to "global_assets/flight_roost.png",
             // Default terrain backgrounds
             "default_bg_inside" to "defaults/bg_inside.png",
             "default_bg_outside" to "defaults/bg_outside.png",

@@ -2018,6 +2018,11 @@ class GmcpEmitter(
     data class FlightStatePayload(
         val playerGold: Long,
         val destinations: List<FlightDestinationPayload>,
+        /** Name of the flight master the player is standing at (the "you are here" marker). */
+        val originName: String? = null,
+        /** World-map pin of the origin flight master as a percentage (0–100), or null when unplaced. */
+        val originMapX: Double? = null,
+        val originMapY: Double? = null,
     )
 
     data class FlightDestinationPayload(
@@ -2029,6 +2034,9 @@ class GmcpEmitter(
         val cost: Long,
         /** True when the player can currently afford this fare. */
         val affordable: Boolean,
+        /** World-map pin as a percentage (0–100) of the Ambon map, or null when unplaced (list-only). */
+        val mapX: Double? = null,
+        val mapY: Double? = null,
     )
 
     suspend fun sendFlightClose(sessionId: SessionId) {
@@ -2039,6 +2047,7 @@ class GmcpEmitter(
         sessionId: SessionId,
         playerGold: Long,
         destinations: List<FlightSystem.Destination>,
+        origin: FlightSystem.Origin? = null,
     ) {
         emit(
             sessionId,
@@ -2053,8 +2062,13 @@ class GmcpEmitter(
                         distance = it.distance,
                         cost = it.cost,
                         affordable = playerGold >= it.cost,
+                        mapX = it.mapX,
+                        mapY = it.mapY,
                     )
                 },
+                originName = origin?.name,
+                originMapX = origin?.mapX,
+                originMapY = origin?.mapY,
             ),
         )
     }

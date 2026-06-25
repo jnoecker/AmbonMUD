@@ -166,6 +166,7 @@ class FlightHandler(
             sessionId = sessionId,
             playerGold = me.gold,
             destinations = destinations,
+            origin = flight?.originAt(me.roomId),
         )
     }
 }

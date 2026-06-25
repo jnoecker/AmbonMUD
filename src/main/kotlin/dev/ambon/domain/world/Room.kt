@@ -39,6 +39,14 @@ data class Room(
     val akathavaeShrine: Boolean = false,
     /** True if this room has a flight master (enables `flights`/`fly` fast-travel + kiosk badge). */
     val flightMaster: Boolean = false,
+    /**
+     * Flight-master position on the painted Ambon world map as a percentage (0–100) of the map
+     * image — X across, Y down — driving the clickable griffin hotspot in the web kiosk. Null
+     * means "unplaced": the destination still lists textually but has no map pin. Only meaningful
+     * when [flightMaster] is true. Mirrors the equipment paper-doll percentage convention.
+     */
+    val flightMapX: Double? = null,
+    val flightMapY: Double? = null,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */

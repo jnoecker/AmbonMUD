@@ -97,6 +97,38 @@ class FlightCommandTest {
         }
 
         @Test
+        fun `destinationsFrom carries world-map pins and leaves unpinned roosts null`() {
+            val system = FlightSystem(
+                players = buildTestPlayerRegistry(aerie),
+                world = flightWorld(),
+                outbound = LocalOutboundBus(),
+            )
+            val discovered = setOf(aerie.value, bastion.value, citadel.value)
+            val dests = system.destinationsFrom(aerie, discovered)
+
+            val bastionDest = dests.first { it.name == "Bastion" }
+            val citadelDest = dests.first { it.name == "Citadel" }
+            assertEquals(55.0, bastionDest.mapX)
+            assertEquals(60.0, bastionDest.mapY)
+            assertNull(citadelDest.mapX, "unpinned roost has no map x")
+            assertNull(citadelDest.mapY, "unpinned roost has no map y")
+        }
+
+        @Test
+        fun `originAt returns the current flight master pin and null off a flight master`() {
+            val system = FlightSystem(
+                players = buildTestPlayerRegistry(aerie),
+                world = flightWorld(),
+                outbound = LocalOutboundBus(),
+            )
+            val origin = system.originAt(aerie)
+            assertEquals("Aerie", origin?.name)
+            assertEquals(20.0, origin?.mapX)
+            assertEquals(30.0, origin?.mapY)
+            assertNull(system.originAt(mid1), "non-flight room is not an origin")
+        }
+
+        @Test
         fun `onRoomVisited records the flight point persists and notifies once`() = runTest {
             val players = buildTestPlayerRegistry(aerie)
             val outbound = LocalOutboundBus()
@@ -304,7 +336,15 @@ class FlightCommandTest {
          */
         private fun flightWorld(): World {
             val rooms = mapOf(
-                aerie to Room(aerie, "Aerie", "A high roost.", mapOf(Direction.EAST to mid1), flightMaster = true),
+                aerie to Room(
+                    aerie,
+                    "Aerie",
+                    "A high roost.",
+                    mapOf(Direction.EAST to mid1),
+                    flightMaster = true,
+                    flightMapX = 20.0,
+                    flightMapY = 30.0,
+                ),
                 mid1 to Room(mid1, "Windy Pass", "A pass.", mapOf(Direction.WEST to aerie, Direction.EAST to bastion)),
                 bastion to Room(
                     bastion,
@@ -312,8 +352,11 @@ class FlightCommandTest {
                     "A fortified roost.",
                     mapOf(Direction.WEST to mid1, Direction.EAST to mid2),
                     flightMaster = true,
+                    flightMapX = 55.0,
+                    flightMapY = 60.0,
                 ),
                 mid2 to Room(mid2, "Cloud Bridge", "A bridge.", mapOf(Direction.WEST to bastion, Direction.EAST to citadel)),
+                // Citadel is intentionally left unpinned (no flightMapX/Y) to cover the list-only fallback.
                 citadel to Room(citadel, "Citadel", "A distant roost.", mapOf(Direction.WEST to mid2), flightMaster = true),
             )
             return World(rooms = rooms, startRoom = aerie)

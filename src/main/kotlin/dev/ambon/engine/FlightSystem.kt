@@ -38,10 +38,28 @@ class FlightSystem(
         /** BFS hops from the current room, or null when unreachable on this engine. */
         val distance: Int?,
         val cost: Long,
+        /** World-map pin as a percentage (0–100) of the Ambon map, or null when unplaced. */
+        val mapX: Double?,
+        val mapY: Double?,
+    )
+
+    /** The flight master the player is standing at: its name + world-map pin, for the "you are here" marker. */
+    data class Origin(
+        val roomId: RoomId,
+        val name: String,
+        val mapX: Double?,
+        val mapY: Double?,
     )
 
     /** True if [roomId] hosts a flight master right now. */
     fun isFlightMaster(roomId: RoomId): Boolean = world.rooms[roomId]?.flightMaster == true
+
+    /** The origin marker for [roomId] when it hosts a flight master, else null. */
+    fun originAt(roomId: RoomId): Origin? {
+        val room = world.rooms[roomId] ?: return null
+        if (!room.flightMaster) return null
+        return Origin(roomId = roomId, name = room.title, mapX = room.flightMapX, mapY = room.flightMapY)
+    }
 
     /**
      * Records the player's current room as a discovered flight point. Fires on every movement;
@@ -81,6 +99,8 @@ class FlightSystem(
                     zone = roomId.zone,
                     distance = dist,
                     cost = costForDistance(dist),
+                    mapX = room.flightMapX,
+                    mapY = room.flightMapY,
                 )
             }
             .sortedWith(compareBy({ it.zone }, { it.name }))

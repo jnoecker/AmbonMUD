@@ -258,6 +258,8 @@ object WorldLoader {
                         inn = rf.inn,
                         akathavaeShrine = rf.akathavaeShrine,
                         flightMaster = rf.flightMaster,
+                        flightMapX = validateFlightCoord(rf.flightMapX, "flightMapX", id),
+                        flightMapY = validateFlightCoord(rf.flightMapY, "flightMapY", id),
                         image = (rf.image ?: imageDefaults?.room)?.let { "$imagesBase$it" },
                         video = rf.video?.let { "$videosBase$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
@@ -1746,6 +1748,20 @@ object WorldLoader {
                 "$context has invalid terrain '$terrain'; valid values: $VALID_TERRAINS",
             )
         }
+    }
+
+    /**
+     * Validates a flight-master world-map coordinate: a percentage in 0..100, or null when the
+     * room declares no pin. Returned verbatim so it can be assigned inline during room mapping.
+     */
+    private fun validateFlightCoord(value: Double?, field: String, id: RoomId): Double? {
+        if (value == null) return null
+        if (value !in 0.0..100.0) {
+            throw WorldLoadException(
+                "Room '${id.value}' has invalid $field '$value'; must be a percentage in 0..100",
+            )
+        }
+        return value
     }
 
     private fun validateMobCategory(category: String, context: String) {
