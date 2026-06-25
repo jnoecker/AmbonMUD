@@ -78,6 +78,7 @@ tavern: <boolean, optional, default false>
 dungeon: <boolean, optional, default false>
 inn: <boolean, optional, default false>
 akathavaeShrine: <boolean, optional, default false>
+flightMaster: <boolean, optional, default false>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown as clickable cinematic>
 music: <string, optional - overrides zone audio.music>
@@ -100,6 +101,12 @@ musicBox: <single song object, optional - see `musicBox` notes>
 `tavern` notes:
 - When `true`, enables gambling commands (`gamble`, `dice`) and lottery ticket purchases (`lottery buy`) in this room. (`lottery` info works anywhere.)
 - Also shows Lottery and Dice badges on the web client canvas.
+
+`flightMaster` notes:
+- When `true`, this room hosts a flight master: `flights` lists the flight points the player can travel to, `fly <name|#>` pays gold to fast-travel there.
+- The network is **per-player and discovery-gated** — visiting a `flightMaster` room records it; from any flight master you can fly to any point you've personally discovered. Mark every roost in the network with `flightMaster: true`.
+- The fare scales with travel distance (BFS hops between the current room and the destination), clamped to a min/max. Flying is blocked in combat; otherwise gold is the only gate. Configurable via `ambonMUD.engine.flight` in `application.yaml`.
+- Shows a Flight badge + destination panel on the web client canvas.
 
 `jukebox` notes:
 - A non-empty `jukebox` list turns this room into a jukebox: players pay gold to play a song that becomes the room's music for everyone present, locked for the song's `durationSeconds`, then the room reverts to its default `music`.
