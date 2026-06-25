@@ -79,6 +79,8 @@ dungeon: <boolean, optional, default false>
 inn: <boolean, optional, default false>
 akathavaeShrine: <boolean, optional, default false>
 flightMaster: <boolean, optional, default false>
+flightMapX: <number, optional - 0..100, % across the Ambon world map; only meaningful with flightMaster>
+flightMapY: <number, optional - 0..100, % down the Ambon world map; only meaningful with flightMaster>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown as clickable cinematic>
 music: <string, optional - overrides zone audio.music>
@@ -107,6 +109,7 @@ musicBox: <single song object, optional - see `musicBox` notes>
 - The network is **per-player and discovery-gated** — visiting a `flightMaster` room records it; from any flight master you can fly to any point you've personally discovered. Mark every roost in the network with `flightMaster: true`.
 - The fare scales with travel distance (BFS hops between the current room and the destination), clamped to a min/max. Flying is blocked in combat; otherwise gold is the only gate. Configurable via `ambonMUD.engine.flight` in `application.yaml`.
 - Shows a Flight badge + destination panel on the web client canvas.
+- `flightMapX`/`flightMapY` pin this roost on the painted Ambon world map (`flight_map` global asset) in the web kiosk: percentages of the map image (`0` = left/top edge, `100` = right/bottom). They drive a clickable griffin hotspot — the same percentage convention as equipment paper-doll slots, understood by both Arcanum and the engine. Omit them and the roost still works, just listed textually under the map rather than pinned. Loading fails if either value is outside `0..100`.
 
 `jukebox` notes:
 - A non-empty `jukebox` list turns this room into a jukebox: players pay gold to play a song that becomes the room's music for everyone present, locked for the song's `durationSeconds`, then the room reverts to its default `music`.

@@ -1624,7 +1624,7 @@ function App() {
         )}
 
         {drawerPanel === "flight" && (
-          <FlightPanel flightState={state.flightState} onCommand={sendCommand} />
+          <FlightPanel flightState={state.flightState} serverAssets={state.serverAssets} onCommand={sendCommand} />
         )}
 
         {drawerPanel === "auction" && (

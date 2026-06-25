@@ -1228,12 +1228,19 @@ export interface FlightDestination {
   cost: number;
   /** True when the player can currently afford this fare. */
   affordable: boolean;
+  /** World-map pin as a percentage (0–100) of the Ambon map, or null when unplaced (list-only). */
+  mapX: number | null;
+  mapY: number | null;
 }
 
 /** Flight-master state from the Char.Flight GMCP package. */
 export interface FlightState {
   playerGold: number;
   destinations: FlightDestination[];
+  /** The flight master the player is standing at — drives the "you are here" map marker. */
+  originName: string | null;
+  originMapX: number | null;
+  originMapY: number | null;
 }
 
 export interface DailyQuestEntry {
