@@ -305,12 +305,21 @@ class GmcpEmitter(
      * map with cloud-reveal as the player explores. Each room carries its floor
      * (`z`); clients draw one floor at a time. Up/down exits are included so the
      * map can badge stairs, but clients must not treat them as positional edges.
+     *
+     * Room ids and exit targets are sent **without** their `<zone>:` prefix: the
+     * payload already names the [zone] at the top level and exits are filtered to
+     * same-zone targets, so the prefix is pure repetition. Stripping it shrinks a
+     * large zone's payload by ~30% (e.g. a 280-room zone drops from ~67 KB to
+     * ~47 KB), keeping it under [MAX_GMCP_PAYLOAD_BYTES] — above which the whole
+     * map would be silently dropped and the client would render nothing but the
+     * player's own explored trail. Clients re-qualify the ids with the zone.
      */
     suspend fun sendZoneMap(
         sessionId: SessionId,
         zone: String,
         rooms: Collection<Room>,
     ) {
+        val prefix = "$zone:"
         emit(
             sessionId,
             "Zone.Map",
@@ -318,13 +327,13 @@ class GmcpEmitter(
                 zone = zone,
                 rooms = rooms.map { r ->
                     ZoneMapRoom(
-                        id = r.id.value,
+                        id = r.id.value.removePrefix(prefix),
                         x = r.mapX,
                         y = r.mapY,
                         z = r.mapZ,
                         exits = r.exits.entries
                             .filter { (_, target) -> target.zone == zone }
-                            .associate { (dir, target) -> dir.name.lowercase() to target.value },
+                            .associate { (dir, target) -> dir.name.lowercase() to target.value.removePrefix(prefix) },
                     )
                 },
             ),
