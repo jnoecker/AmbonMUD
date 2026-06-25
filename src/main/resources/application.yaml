@@ -929,6 +929,12 @@ ambonmud:
       xpExponent: 1.5
       gatherCooldownMs: 3000
       stationBonusQuantity: 1
+    flight:
+      baseCost: 25
+      costPerRoom: 4
+      minCost: 25
+      maxCost: 5000
+      unreachableCost: 500
     navigation:
       recall:
         cooldownMs: 60000
@@ -972,6 +978,17 @@ ambonmud:
           description: "Rest at an inn to make it your recall point."
           category: "navigation"
           staff: false
+        flights:
+          usage: "flights"
+          description: "List flight points you can fly to (at a flight master)."
+          category: "navigation"
+          staff: false
+        fly:
+          usage: "fly <destination|#>"
+          description: "Pay gold to fast-travel to a discovered flight point (at a flight master)."
+          category: "navigation"
+          staff: false
+          requiresTarget: true
         depart:
           usage: "depart"
           description: "Leave the death sanctum and return to the world"

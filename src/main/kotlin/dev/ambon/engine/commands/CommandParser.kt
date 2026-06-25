@@ -294,6 +294,18 @@ sealed interface Command {
         ) : Stylist
     }
 
+    // ---- Flight master commands ----
+
+    sealed interface Flight : Command {
+        /** `flights` — list discovered flight points reachable from here, with fares. */
+        data object List : Flight
+
+        /** `fly <destination|#>` — pay gold to fast-travel to a discovered flight point. */
+        data class Travel(
+            val destination: String,
+        ) : Flight
+    }
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -1135,6 +1147,20 @@ object CommandParser {
                 Command.Invalid(line, "changerace <race>")
             } else {
                 Command.Stylist.ChangeRace(raceId)
+            }
+        }?.let { return it }
+
+        // flight master: "flights" lists destinations + fares, "fly <dest|#>" travels
+        matchPrefix(line, listOf("flights")) { _ ->
+            Command.Flight.List
+        }?.let { return it }
+
+        matchPrefix(line, listOf("fly")) { rest ->
+            val dest = rest.trim()
+            if (dest.isEmpty()) {
+                Command.Invalid(line, "fly <destination|#>")
+            } else {
+                Command.Flight.Travel(dest)
             }
         }?.let { return it }
 

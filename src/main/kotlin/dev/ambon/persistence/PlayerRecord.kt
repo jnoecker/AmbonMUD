@@ -62,6 +62,7 @@ data class PlayerRecord(
     val lastInnByZone: Map<String, String> = emptyMap(),
     val craftingSkills: Map<String, CraftingSkillState> = emptyMap(),
     val discoveredRecipes: Set<String> = emptySet(),
+    val discoveredFlightPoints: Set<String> = emptySet(),
     val craftingSpecialization: String? = null,
     val factionStandings: Map<String, Int> = emptyMap(),
     /** Secondary currency balances (e.g. quest_points, honor, crafting_tokens). */

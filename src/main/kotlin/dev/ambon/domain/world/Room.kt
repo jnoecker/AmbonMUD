@@ -37,6 +37,8 @@ data class Room(
     val inn: Boolean = false,
     /** True if this room holds an Akathavae shrine (enables `pledge`/`renounce`). */
     val akathavaeShrine: Boolean = false,
+    /** True if this room has a flight master (enables `flights`/`fly` fast-travel + kiosk badge). */
+    val flightMaster: Boolean = false,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */
