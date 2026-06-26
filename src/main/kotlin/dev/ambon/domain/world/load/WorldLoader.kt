@@ -38,6 +38,7 @@ import dev.ambon.domain.quest.QuestItemReward
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.world.AchievementGate
+import dev.ambon.domain.world.BoatRoute
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.JukeboxSong
@@ -56,6 +57,7 @@ import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.domain.world.TrainerDefinition
 import dev.ambon.domain.world.World
 import dev.ambon.domain.world.ZoneScaling
+import dev.ambon.domain.world.data.BoatRouteFile
 import dev.ambon.domain.world.data.ExitValue
 import dev.ambon.domain.world.data.ExitValueDeserializer
 import dev.ambon.domain.world.data.FeatureFile
@@ -260,6 +262,10 @@ object WorldLoader {
                         flightMaster = rf.flightMaster,
                         flightMapX = validateFlightCoord(rf.flightMapX, "flightMapX", id),
                         flightMapY = validateFlightCoord(rf.flightMapY, "flightMapY", id),
+                        boatDock = rf.boatDock,
+                        boatMapX = validateFlightCoord(rf.boatMapX, "boatMapX", id),
+                        boatMapY = validateFlightCoord(rf.boatMapY, "boatMapY", id),
+                        boatRoutes = parseBoatRoutes(rf.boatRoutes, zone, id),
                         image = (rf.image ?: imageDefaults?.room)?.let { "$imagesBase$it" },
                         video = rf.video?.let { "$videosBase$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
@@ -1751,8 +1757,8 @@ object WorldLoader {
     }
 
     /**
-     * Validates a flight-master world-map coordinate: a percentage in 0..100, or null when the
-     * room declares no pin. Returned verbatim so it can be assigned inline during room mapping.
+     * Validates a world-map kiosk coordinate (flight or boat): a percentage in 0..100, or null when
+     * the room declares no pin. Returned verbatim so it can be assigned inline during room mapping.
      */
     private fun validateFlightCoord(value: Double?, field: String, id: RoomId): Double? {
         if (value == null) return null
@@ -1762,6 +1768,29 @@ object WorldLoader {
             )
         }
         return value
+    }
+
+    /**
+     * Parses a dock's authored boat passages: normalizes each destination id relative to [zone]
+     * (so `room` is local and `other:room` is cross-zone, exactly like exits) and requires a
+     * non-negative fare. Destinations are not checked for existence here — a route to a room not
+     * loaded on this engine is simply dropped at runtime, mirroring the flight kiosk's tolerance
+     * for cross-zone points. Returns an empty list when the room declares no routes.
+     */
+    private fun parseBoatRoutes(
+        routes: List<BoatRouteFile>,
+        zone: String,
+        id: RoomId,
+    ): List<BoatRoute> {
+        if (routes.isEmpty()) return emptyList()
+        return routes.map { route ->
+            if (route.price < 0) {
+                throw WorldLoadException(
+                    "Room '${id.value}' has a boat route to '${route.to}' with negative price ${route.price}",
+                )
+            }
+            BoatRoute(to = normalizeId(zone, route.to), price = route.price)
+        }
     }
 
     private fun validateMobCategory(category: String, context: String) {

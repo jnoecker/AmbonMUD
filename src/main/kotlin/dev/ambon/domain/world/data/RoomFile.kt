@@ -42,6 +42,22 @@ data class RoomFile(
      */
     val flightMapX: Double? = null,
     val flightMapY: Double? = null,
+    /** True if this room is a boat dock (enables `voyages`/`sail` + harbor kiosk badge). */
+    val boatDock: Boolean = false,
+    /**
+     * Boat-dock position on the painted Ambon world map, as a percentage (0–100) of the map image
+     * — `boatMapX` across, `boatMapY` down. Drives the clickable anchor hotspot in the web kiosk and
+     * doubles as the map pin for any route whose destination is this room. Same percentage
+     * convention as the flight kiosk. Null means "unplaced": the dock still works and routes here
+     * still list textually, just without a map pin. Ignored when [boatDock] is false.
+     */
+    val boatMapX: Double? = null,
+    val boatMapY: Double? = null,
+    /**
+     * Authored boat passages leaving this dock — the "fixed paths" players can buy. Each entry is a
+     * destination room id and a flat author-set fare. Only meaningful when [boatDock] is true.
+     */
+    val boatRoutes: List<BoatRouteFile> = emptyList(),
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */
@@ -56,6 +72,15 @@ data class RoomFile(
     val musicBox: MusicBoxFile? = null,
     /** Terrain type for this room (overrides zone default). Affects weather display and default background. */
     val terrain: String? = null,
+)
+
+/**
+ * One authored boat passage from a dock. [to] is the destination room id (`zone:room`); [price]
+ * is the flat gold fare, charged on every trip. Loaded into [dev.ambon.domain.world.BoatRoute].
+ */
+data class BoatRouteFile(
+    val to: String,
+    val price: Long,
 )
 
 /**

@@ -27,6 +27,7 @@ import dev.ambon.engine.commands.handlers.AkathavaeHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
 import dev.ambon.engine.commands.handlers.AutoQuestHandler
 import dev.ambon.engine.commands.handlers.BankHandler
+import dev.ambon.engine.commands.handlers.BoatHandler
 import dev.ambon.engine.commands.handlers.ClaimHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
@@ -842,6 +843,8 @@ class GameEngine(
             markVitalsDirty = ::markVitalsDirty,
         )
 
+    private val boatSystem = BoatSystem(world = world)
+
     private val regenSystem =
         RegenSystem(
             players = players,
@@ -1378,6 +1381,8 @@ class GameEngine(
             stylistConfig = engineConfig.stylist,
             flightSystem = flightSystem,
             flightConfig = engineConfig.flight,
+            boatSystem = boatSystem,
+            boatConfig = engineConfig.boat,
             akathavaeSystem = akathavaeSystem,
             metrics = metrics,
         )
@@ -1572,6 +1577,16 @@ class GameEngine(
                 onPlayerMoved = { sid, roomId ->
                     petSystem.followOwner(sid, roomId)
                     akathavaeSystem.onRoomVisited(sid)
+                },
+                markVitalsDirty = ::markVitalsDirty,
+            ),
+            BoatHandler(
+                ctx = ctx,
+                dialogueSystem = dialogueSystem,
+                onPlayerMoved = { sid, roomId ->
+                    petSystem.followOwner(sid, roomId)
+                    akathavaeSystem.onRoomVisited(sid)
+                    flightSystem.onRoomVisited(sid)
                 },
                 markVitalsDirty = ::markVitalsDirty,
             ),

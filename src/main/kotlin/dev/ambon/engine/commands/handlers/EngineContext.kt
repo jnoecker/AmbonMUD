@@ -2,10 +2,12 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.BankConfig
+import dev.ambon.config.BoatConfig
 import dev.ambon.config.EconomyConfig
 import dev.ambon.config.FlightConfig
 import dev.ambon.config.StylistConfig
 import dev.ambon.domain.world.World
+import dev.ambon.engine.BoatSystem
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.EquipmentSlotRegistry
 import dev.ambon.engine.FlightSystem
@@ -67,6 +69,9 @@ data class EngineContext(
     /** Flight-master fast-travel logic. Null disables flight GMCP/commands (e.g. in tests). */
     val flightSystem: FlightSystem? = null,
     val flightConfig: FlightConfig = FlightConfig(),
+    /** Boat-dock fast-travel logic. Null disables boat GMCP/commands (e.g. in tests). */
+    val boatSystem: BoatSystem? = null,
+    val boatConfig: BoatConfig = BoatConfig(),
     /** Records shop/craft/gather item discoveries into Akathavae journals when present. */
     val akathavaeSystem: dev.ambon.engine.AkathavaeSystem? = null,
     /** Gameplay metrics. Defaults to a no-op registry so tests need no wiring. */

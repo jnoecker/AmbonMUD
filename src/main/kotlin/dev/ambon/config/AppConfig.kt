@@ -2070,6 +2070,7 @@ data class EngineConfig(
     val jukebox: JukeboxConfig = JukeboxConfig(),
     val death: DeathConfig = DeathConfig(),
     val flight: FlightConfig = FlightConfig(),
+    val boat: BoatConfig = BoatConfig(),
 )
 
 /**
@@ -2104,6 +2105,29 @@ data class FlightMessagesConfig(
     val arriveNotice: String = "descends from the sky and alights gracefully.",
     val depart: String = "You climb aboard and take to the skies, bound for {dest}...",
     val arrival: String = "You alight at {dest}. (-{cost} gold)",
+)
+
+/**
+ * Tuning for boat docks — room kiosks that let players pay gold to sail a fixed set of routes the
+ * worldbuilder authored on each dock (see [dev.ambon.domain.world.BoatRoute]). Unlike the flight
+ * master, fares are flat and author-set (no distance scaling), routes need no discovery, and the
+ * fare is paid on every trip. Sailing is blocked only in combat; otherwise gold is the sole gate.
+ */
+data class BoatConfig(
+    val messages: BoatMessagesConfig = BoatMessagesConfig(),
+)
+
+data class BoatMessagesConfig(
+    val combatBlocked: String = "You can't set sail in the middle of a battle!",
+    val notAtDock: String = "You need to be at a boat dock to do that.",
+    val noRoutes: String = "No boats are berthed here. This dock has no routes.",
+    val unknownDestination: String = "The harbor master doesn't sail to that destination.",
+    val alreadyHere: String = "You're already at that dock.",
+    val notEnoughGold: String = "That voyage costs {cost} gold, but you only have {gold}.",
+    val departNotice: String = "casts off and sails away across the water.",
+    val arriveNotice: String = "sails in and steps ashore from the deck.",
+    val depart: String = "You board the boat and cast off, bound for {dest}...",
+    val arrival: String = "You step ashore at {dest}. (-{cost} gold)",
 )
 
 /**
@@ -2228,6 +2252,13 @@ data class CommandsConfig(
             "fly" to CommandMetadata(
                 usage = "fly <destination|#>",
                 description = "Pay gold to fast-travel to a discovered flight point (at a flight master).",
+                category = "navigation",
+                requiresTarget = true,
+            ),
+            "voyages" to CommandMetadata("voyages", "List boat routes you can sail (at a boat dock).", "navigation"),
+            "sail" to CommandMetadata(
+                usage = "sail <destination|#>",
+                description = "Pay gold to sail an authored boat route (at a boat dock).",
                 category = "navigation",
                 requiresTarget = true,
             ),
@@ -3720,6 +3751,13 @@ data class ImagesConfig(
             // Griffin/roost marker painted at each flight hotspot. Optional — a CSS jewel-dot
             // renders in its place when the art is missing.
             "flight_roost" to "global_assets/flight_roost.png",
+            // Boat kiosk shares the painted Ambon world map by default (same uploaded art as the
+            // flight kiosk), so harbor hotspots sit on the same coastline. Override this key alone
+            // to give boats their own map. When absent, the kiosk degrades to its plain route list.
+            "boat_map" to "global_assets/flight_map.png",
+            // Anchor/ship marker painted at each harbor hotspot — distinguishes boats from griffin
+            // flight roosts. Optional — a CSS jewel-dot renders in its place when the art is missing.
+            "boat_dock" to "global_assets/boat_dock.png",
             // Default terrain backgrounds
             "default_bg_inside" to "defaults/bg_inside.png",
             "default_bg_outside" to "defaults/bg_outside.png",
