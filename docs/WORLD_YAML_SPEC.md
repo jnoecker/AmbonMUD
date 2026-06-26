@@ -81,6 +81,10 @@ akathavaeShrine: <boolean, optional, default false>
 flightMaster: <boolean, optional, default false>
 flightMapX: <number, optional - 0..100, % across the Ambon world map; only meaningful with flightMaster>
 flightMapY: <number, optional - 0..100, % down the Ambon world map; only meaningful with flightMaster>
+boatDock: <boolean, optional, default false>
+boatMapX: <number, optional - 0..100, % across the Ambon world map; only meaningful with boatDock>
+boatMapY: <number, optional - 0..100, % down the Ambon world map; only meaningful with boatDock>
+boatRoutes: <list of {to, price} objects, optional - see `boatDock` notes>
 image: <string, optional - relative path under /images/>
 video: <string, optional - relative path under /videos/, shown as clickable cinematic>
 music: <string, optional - overrides zone audio.music>
@@ -110,6 +114,13 @@ musicBox: <single song object, optional - see `musicBox` notes>
 - The fare scales with travel distance (BFS hops between the current room and the destination), clamped to a min/max. Flying is blocked in combat; otherwise gold is the only gate. Configurable via `ambonMUD.engine.flight` in `application.yaml`.
 - Shows a Flight badge + destination panel on the web client canvas.
 - `flightMapX`/`flightMapY` pin this roost on the painted Ambon world map (`flight_map` global asset) in the web kiosk: percentages of the map image (`0` = left/top edge, `100` = right/bottom). They drive a clickable griffin hotspot — the same percentage convention as equipment paper-doll slots, understood by both Arcanum and the engine. Omit them and the roost still works, just listed textually under the map rather than pinned. Loading fails if either value is outside `0..100`.
+
+`boatDock` notes:
+- When `true`, this room is a boat dock: `voyages` lists the routes the player can sail from here, `sail <name|#>` pays a flat fare to travel there.
+- Unlike the flight master, boats are **authored, not discovered**: every route is listed in this room's `boatRoutes`, available immediately, with a fixed **author-set price** paid on **every** trip (no distance scaling, no ownership, no persistence). Sailing is blocked in combat; otherwise gold is the only gate.
+- `boatRoutes` is a list of `{ to: <zone:room>, price: <gold> }`. `to` may be local (`room`) or cross-zone (`other:room`), like an exit target; `price` must be `>= 0`. A route whose `to` room isn't loaded on this engine is silently skipped (mirrors the flight kiosk's tolerance for unloaded zones), so a typo'd destination simply won't appear.
+- `boatMapX`/`boatMapY` pin this dock on the painted Ambon world map (`boat_map` global asset — by default the same uploaded art as the flight kiosk) and double as the map pin for any route whose destination is this room. They drive a clickable anchor hotspot (`boat_dock` marker asset); omit them and the dock still works, with routes listed textually instead of pinned. Loading fails if either value is outside `0..100`. Message strings are configurable via `ambonMUD.engine.boat` in `application.yaml`.
+- A room may be both a `flightMaster` and a `boatDock` — a transit hub shows both badges and both kiosks.
 
 `jukebox` notes:
 - A non-empty `jukebox` list turns this room into a jukebox: players pay gold to play a song that becomes the room's music for everyone present, locked for the song's `durationSeconds`, then the room reverts to its default `music`.

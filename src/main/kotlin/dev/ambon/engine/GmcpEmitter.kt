@@ -2044,6 +2044,10 @@ class GmcpEmitter(
         emitRaw(sessionId, "Char.Flight.Close", "{}")
     }
 
+    suspend fun sendBoatClose(sessionId: SessionId) {
+        emitRaw(sessionId, "Char.Boat.Close", "{}")
+    }
+
     suspend fun sendFlightState(
         sessionId: SessionId,
         playerGold: Long,
