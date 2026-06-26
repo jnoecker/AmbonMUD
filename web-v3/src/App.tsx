@@ -37,6 +37,7 @@ const HousingPanel = lazy(() => import("./components/panels/HousingPanel").then(
 const BankPanel = lazy(() => import("./components/panels/BankPanel").then((m) => ({ default: m.BankPanel })));
 const StylistPanel = lazy(() => import("./components/panels/StylistPanel").then((m) => ({ default: m.StylistPanel })));
 const FlightPanel = lazy(() => import("./components/panels/FlightPanel").then((m) => ({ default: m.FlightPanel })));
+const BoatPanel = lazy(() => import("./components/panels/BoatPanel").then((m) => ({ default: m.BoatPanel })));
 const InnPanel = lazy(() => import("./components/panels/InnPanel").then((m) => ({ default: m.InnPanel })));
 const AuctionPanel = lazy(() => import("./components/panels/AuctionPanel").then((m) => ({ default: m.AuctionPanel })));
 const DungeonPanel = lazy(() => import("./components/panels/DungeonPanel").then((m) => ({ default: m.DungeonPanel })));
@@ -547,6 +548,7 @@ function App() {
     canvasCallbacks.openBank = () => openPanel("bank");
     canvasCallbacks.openStylist = () => openPanel("stylist");
     canvasCallbacks.openFlight = () => openPanel("flight");
+    canvasCallbacks.openBoat = () => openPanel("boat");
     canvasCallbacks.openTrainer = () => openPanel("trainer");
     canvasCallbacks.openCrafting = () => openPanel("crafting");
     canvasCallbacks.openDungeon = () => openPanel("dungeon");
@@ -611,6 +613,7 @@ function App() {
       canvasCallbacks.openBank = null;
       canvasCallbacks.openStylist = null;
       canvasCallbacks.openFlight = null;
+      canvasCallbacks.openBoat = null;
       canvasCallbacks.openTrainer = null;
       canvasCallbacks.openCrafting = null;
       canvasCallbacks.openDungeon = null;
@@ -1074,6 +1077,7 @@ function App() {
       case "bank": return "The Vault";
       case "stylist": return "Stylist";
       case "flight": return "Flight Master";
+      case "boat": return "Harbor Master";
       case "inn": return state.room.title !== "-" ? state.room.title : "Inn";
       case "auction": return "Auction House";
       case "dungeon": return "Dungeon";
@@ -1277,7 +1281,7 @@ function App() {
             ? state.serverAssets["musicbox_bg_portrait"]
             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "flight" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "musicbox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "flight" || drawerPanel === "boat" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "musicbox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
       >
         {/* Panels are lazy chunks; the drawer chrome shows while one loads. */}
         <Suspense fallback={null}>
@@ -1625,6 +1629,9 @@ function App() {
 
         {drawerPanel === "flight" && (
           <FlightPanel flightState={state.flightState} serverAssets={state.serverAssets} onCommand={sendCommand} />
+        )}
+        {drawerPanel === "boat" && (
+          <BoatPanel boatState={state.boatState} serverAssets={state.serverAssets} onCommand={sendCommand} />
         )}
 
         {drawerPanel === "auction" && (

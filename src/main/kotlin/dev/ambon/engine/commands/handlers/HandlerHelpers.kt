@@ -216,6 +216,7 @@ internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     emitPuzzleGmcp(sessionId)
     emitStylistGmcp(sessionId)
     emitFlightGmcp(sessionId)
+    emitBoatGmcp(sessionId)
     emitJukeboxGmcp(sessionId)
     emitMusicBoxGmcp(sessionId)
 }
@@ -312,6 +313,23 @@ internal suspend fun EngineContext.emitFlightGmcp(sessionId: SessionId) {
         )
     } else {
         emitter.sendFlightClose(sessionId)
+    }
+}
+
+/** Emits `Char.Boat` with this dock's authored routes when the player is at a boat dock, else `Char.Boat.Close`. */
+internal suspend fun EngineContext.emitBoatGmcp(sessionId: SessionId) {
+    val emitter = gmcpEmitter ?: return
+    val system = boatSystem ?: return
+    val me = players.get(sessionId) ?: return
+    if (system.isBoatDock(me.roomId)) {
+        emitter.sendBoatState(
+            sessionId = sessionId,
+            playerGold = me.gold,
+            destinations = system.destinationsFrom(me.roomId),
+            origin = system.originAt(me.roomId),
+        )
+    } else {
+        emitter.sendBoatClose(sessionId)
     }
 }
 

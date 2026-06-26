@@ -989,6 +989,17 @@ ambonmud:
           category: "navigation"
           staff: false
           requiresTarget: true
+        voyages:
+          usage: "voyages"
+          description: "List boat routes you can sail (at a boat dock)."
+          category: "navigation"
+          staff: false
+        sail:
+          usage: "sail <destination|#>"
+          description: "Pay gold to sail an authored boat route (at a boat dock)."
+          category: "navigation"
+          staff: false
+          requiresTarget: true
         depart:
           usage: "depart"
           description: "Leave the death sanctum and return to the world"

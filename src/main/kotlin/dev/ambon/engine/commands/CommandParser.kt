@@ -306,6 +306,18 @@ sealed interface Command {
         ) : Flight
     }
 
+    // ---- Boat dock commands ----
+
+    sealed interface Boat : Command {
+        /** `voyages` — list the authored boat routes sailable from this dock, with fares. */
+        data object List : Boat
+
+        /** `sail <destination|#>` — pay gold to sail an authored boat route. */
+        data class Travel(
+            val destination: String,
+        ) : Boat
+    }
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -1161,6 +1173,20 @@ object CommandParser {
                 Command.Invalid(line, "fly <destination|#>")
             } else {
                 Command.Flight.Travel(dest)
+            }
+        }?.let { return it }
+
+        // boat dock: "voyages" lists authored routes + fares, "sail <dest|#>" travels
+        matchPrefix(line, listOf("voyages")) { _ ->
+            Command.Boat.List
+        }?.let { return it }
+
+        matchPrefix(line, listOf("sail")) { rest ->
+            val dest = rest.trim()
+            if (dest.isEmpty()) {
+                Command.Invalid(line, "sail <destination|#>")
+            } else {
+                Command.Boat.Travel(dest)
             }
         }?.let { return it }
 

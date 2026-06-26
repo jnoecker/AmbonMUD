@@ -1,4 +1,4 @@
-export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "flight" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
+export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "flight" | "boat" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -261,6 +261,8 @@ export interface RoomState {
   inn?: boolean;
   /** True when this room has a flight master (drives the in-world badge + flight panel). */
   flightMaster?: boolean;
+  /** True when this room is a boat dock (drives the in-world badge + boat panel). */
+  boatDock?: boolean;
   /** True when this room has a jukebox playlist (drives the in-world badge + panel). */
   jukebox?: boolean;
   /** True when this room has a music box (drives the in-world kiosk badge + device). */
@@ -1238,6 +1240,30 @@ export interface FlightState {
   playerGold: number;
   destinations: FlightDestination[];
   /** The flight master the player is standing at — drives the "you are here" map marker. */
+  originName: string | null;
+  originMapX: number | null;
+  originMapY: number | null;
+}
+
+/** One authored route a boat dock can sail the player along (Char.Boat). */
+export interface BoatDestination {
+  roomId: string;
+  name: string;
+  zone: string;
+  /** Flat author-set fare in gold. */
+  price: number;
+  /** True when the player can currently afford this fare. */
+  affordable: boolean;
+  /** World-map pin as a percentage (0–100) of the Ambon map, or null when unplaced (list-only). */
+  mapX: number | null;
+  mapY: number | null;
+}
+
+/** Boat-dock state from the Char.Boat GMCP package. */
+export interface BoatState {
+  playerGold: number;
+  destinations: BoatDestination[];
+  /** The boat dock the player is standing at — drives the "you are here" map marker. */
   originName: string | null;
   originMapX: number | null;
   originMapY: number | null;

@@ -293,6 +293,7 @@ class GmcpEmitter(
                 housingBroker = room.housingBroker,
                 inn = room.inn,
                 flightMaster = room.flightMaster,
+                boatDock = room.boatDock,
                 jukebox = room.jukebox.isNotEmpty(),
                 musicBox = room.musicBox != null,
                 canDepart = canDepart,
@@ -2043,6 +2044,10 @@ class GmcpEmitter(
         emitRaw(sessionId, "Char.Flight.Close", "{}")
     }
 
+    suspend fun sendBoatClose(sessionId: SessionId) {
+        emitRaw(sessionId, "Char.Boat.Close", "{}")
+    }
+
     suspend fun sendFlightState(
         sessionId: SessionId,
         playerGold: Long,
@@ -2062,6 +2067,58 @@ class GmcpEmitter(
                         distance = it.distance,
                         cost = it.cost,
                         affordable = playerGold >= it.cost,
+                        mapX = it.mapX,
+                        mapY = it.mapY,
+                    )
+                },
+                originName = origin?.name,
+                originMapX = origin?.mapX,
+                originMapY = origin?.mapY,
+            ),
+        )
+    }
+
+    data class BoatStatePayload(
+        val playerGold: Long,
+        val destinations: List<BoatDestinationPayload>,
+        /** Name of the boat dock the player is standing at (the "you are here" marker). */
+        val originName: String? = null,
+        /** World-map pin of the origin dock as a percentage (0–100), or null when unplaced. */
+        val originMapX: Double? = null,
+        val originMapY: Double? = null,
+    )
+
+    data class BoatDestinationPayload(
+        val roomId: String,
+        val name: String,
+        val zone: String,
+        /** Flat author-set fare in gold. */
+        val price: Long,
+        /** True when the player can currently afford this fare. */
+        val affordable: Boolean,
+        /** World-map pin as a percentage (0–100) of the Ambon map, or null when unplaced (list-only). */
+        val mapX: Double? = null,
+        val mapY: Double? = null,
+    )
+
+    suspend fun sendBoatState(
+        sessionId: SessionId,
+        playerGold: Long,
+        destinations: List<BoatSystem.Destination>,
+        origin: BoatSystem.Origin? = null,
+    ) {
+        emit(
+            sessionId,
+            "Char.Boat",
+            BoatStatePayload(
+                playerGold = playerGold,
+                destinations = destinations.map {
+                    BoatDestinationPayload(
+                        roomId = it.roomId.value,
+                        name = it.name,
+                        zone = it.zone,
+                        price = it.price,
+                        affordable = playerGold >= it.price,
                         mapX = it.mapX,
                         mapY = it.mapY,
                     )
@@ -3051,6 +3108,8 @@ class GmcpEmitter(
         val inn: Boolean = false,
         /** True when this room has a flight master (drives the in-world kiosk badge). */
         val flightMaster: Boolean = false,
+        /** True when this room is a boat dock (drives the in-world kiosk badge). */
+        val boatDock: Boolean = false,
         /** True when this room has a jukebox playlist (drives the in-world badge). */
         val jukebox: Boolean = false,
         /** True when this room has a music box (drives the in-world kiosk badge). */

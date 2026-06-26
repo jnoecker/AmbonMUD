@@ -206,7 +206,20 @@ rooms:
       Abilities cost mana, shown in your vitals bar."
 
 
+      Past the weapon racks, a gate in the south wall opens onto a timber landing on the Academy canal, where a ferryman
+      waits beside his boat. "Fixed routes, fixed fares," he grunts. "Type 'voyages' to see where I sail, then
+      'sail <name>' to board."
+
+
       The Scholar's Study is to the north, and the Riddle Tower is to the south.
+    boatDock: true
+    boatMapX: 44.0
+    boatMapY: 35.0
+    boatRoutes:
+      - to: herb_garden
+        price: 30
+      - to: proving_grounds
+        price: 45
     exits:
       n: scholars_study
       s: riddle_tower
@@ -246,7 +259,19 @@ rooms:
       nodes and gather materials. Then head north to the Workshop to craft something!"
 
 
+      A mossy stair at the garden's edge drops to a stone quay where the Academy canal slips past. A weathered punt is
+      tied up, ready to carry you along its fixed routes — 'voyages' lists the fares, 'sail <name>' casts off.
+
+
       The Workshop is back to the north.
+    boatDock: true
+    boatMapX: 28.0
+    boatMapY: 42.0
+    boatRoutes:
+      - to: training_yard
+        price: 30
+      - to: proving_grounds
+        price: 60
     exits:
       n: workshop
     image: 977dd88e634b8fa228517e84cf5a2ff105b5c9397f91317e41bb1f7be1d8e715.jpg
@@ -273,10 +298,23 @@ rooms:
       Grand Hall or the Throne Room?" he calls. "Type 'flights' and I'll wing you straight there."
 
 
+      Where the proving fields meet the Academy canal, a low jetty juts into the water and a ferrywoman leans on her
+      pole. "Boats run a fixed circuit, no exploring required," she says. "Type 'voyages' to see my fares, then
+      'sail <name>' to ride."
+
+
       The Armory is to the north. The Riddle Tower is to the east. The Throne Room lies to the south.
     flightMaster: true
     flightMapX: 37.0
     flightMapY: 58.0
+    boatDock: true
+    boatMapX: 37.0
+    boatMapY: 58.0
+    boatRoutes:
+      - to: herb_garden
+        price: 60
+      - to: training_yard
+        price: 45
     exits:
       n: armory
       e: riddle_tower

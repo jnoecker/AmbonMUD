@@ -83,6 +83,7 @@ export const canvasCallbacks: {
   openBank: (() => void) | null;
   openStylist: (() => void) | null;
   openFlight: (() => void) | null;
+  openBoat: (() => void) | null;
   openTrainer: (() => void) | null;
   openCrafting: (() => void) | null;
   openDungeon: (() => void) | null;
@@ -130,6 +131,7 @@ export const canvasCallbacks: {
   openBank: null,
   openStylist: null,
   openFlight: null,
+  openBoat: null,
   openTrainer: null,
   openCrafting: null,
   openDungeon: null,

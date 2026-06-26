@@ -3,6 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.AkathavaeConfig
 import dev.ambon.config.BankConfig
+import dev.ambon.config.BoatConfig
 import dev.ambon.config.EconomyConfig
 import dev.ambon.config.FlightConfig
 import dev.ambon.config.PrestigeConfig
@@ -12,6 +13,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.AkathavaeSystem
 import dev.ambon.engine.AuctionSystem
+import dev.ambon.engine.BoatSystem
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.FlightSystem
@@ -40,6 +42,7 @@ import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.AkathavaeHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
 import dev.ambon.engine.commands.handlers.BankHandler
+import dev.ambon.engine.commands.handlers.BoatHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
@@ -109,6 +112,7 @@ internal fun buildTestRouter(
     bankConfig: BankConfig? = null,
     stylistConfig: StylistConfig? = null,
     flightConfig: FlightConfig? = null,
+    boatConfig: BoatConfig? = null,
     akathavaeConfig: AkathavaeConfig? = null,
     akathavaeSystem: AkathavaeSystem? = null,
     raceRegistry: RaceRegistry? = null,
@@ -153,6 +157,8 @@ internal fun buildTestRouter(
         config = resolvedFlightConfig,
         markVitalsDirty = markVitalsDirty,
     )
+    val resolvedBoatConfig = boatConfig ?: BoatConfig()
+    val boatSystem = BoatSystem(world = world)
     val ctx = EngineContext(
         players = players,
         mobs = mobs,
@@ -172,6 +178,8 @@ internal fun buildTestRouter(
         stylistConfig = stylistConfig ?: StylistConfig(),
         flightSystem = flightSystem,
         flightConfig = resolvedFlightConfig,
+        boatSystem = boatSystem,
+        boatConfig = resolvedBoatConfig,
         akathavaeSystem = resolvedAkathavaeSystem,
         puzzleSystem = puzzleSystem,
         jukeboxSystem = jukeboxSystem,
@@ -226,6 +234,7 @@ internal fun buildTestRouter(
             )
         },
         FlightHandler(ctx = ctx, markVitalsDirty = markVitalsDirty),
+        BoatHandler(ctx = ctx, markVitalsDirty = markVitalsDirty),
         AkathavaeHandler(
             ctx = ctx,
             config = akathavaeConfig ?: AkathavaeConfig(),
