@@ -29072,3 +29072,300 @@ button.flight-marker[aria-disabled="true"] {
     gap: var(--space-2);
   }
 }
+
+.boat-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.boat-board-empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.boat-empty {
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 32ch;
+  line-height: 1.5;
+}
+
+.boat-empty code {
+  color: var(--color-gold-bright);
+  font-family: var(--font-mono, monospace);
+}
+
+.boat-gold {
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.boat-gold strong { color: var(--color-gold-bright); }
+
+.boat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.boat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface-subpanel);
+  border: 1px solid rgb(212 184 92 / 22%);
+  border-radius: var(--radius-md);
+}
+
+.boat-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.boat-row-name {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.boat-row-meta {
+  color: var(--text-tertiary);
+  font-size: 0.85em;
+}
+
+.boat-row-fare {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.boat-cost {
+  color: var(--color-gold-bright);
+  white-space: nowrap;
+}
+
+.boat-cost-short { color: var(--text-disabled); }
+
+.boat-go {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid rgb(212 184 92 / 45%);
+  border-radius: var(--radius-sm);
+  background: var(--surface-chip);
+  color: var(--text-bright);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.boat-go:hover:not(:disabled) {
+  background: rgb(212 184 92 / 22%);
+  border-color: var(--color-gold-bright);
+}
+
+.boat-go:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Painted Ambon map (skinned boat kiosk) ---------- */
+
+/* The image is height-bounded so the whole map fits the viewport (rather than
+   stretching to the panel width, which cropped it on tall screens). The wrapper
+   shrink-wraps that scaled image so the percentage-positioned markers stay aligned. */
+.boat-map {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgb(0 0 0 / 35%);
+}
+
+.boat-map-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: var(--boat-map-max-h, 62vh);
+  height: auto;
+  user-select: none;
+}
+
+/*
+ * A boat hotspot. Positioned by the room's authored boatMapX/boatMapY percentages
+ * (set as inline left/top), centred on that point. Buttons for destinations; a plain div
+ * for the "you are here" origin. The tip floats above on hover/focus.
+ */
+.boat-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+button.boat-marker {
+  cursor: pointer;
+}
+
+button.boat-marker[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* The visible pin — a jewel dot by default, replaced by painted anchor art when present. */
+.boat-marker-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--color-gold-bright), #8a6a1e 70%);
+  border: 2px solid rgb(255 255 255 / 70%);
+  box-shadow: 0 0 8px 2px rgb(212 184 92 / 60%), 0 1px 3px rgb(0 0 0 / 50%);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.boat-marker-art .boat-marker-dot {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 0;
+  background: var(--boat-dock) center / contain no-repeat;
+  box-shadow: none;
+  filter: drop-shadow(0 0 6px rgb(212 184 92 / 70%)) drop-shadow(0 1px 2px rgb(0 0 0 / 60%));
+}
+
+.boat-marker:hover .boat-marker-dot,
+.boat-marker:focus-visible .boat-marker-dot {
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 0 12px 4px rgb(212 184 92 / 80%), 0 1px 3px rgb(0 0 0 / 50%);
+}
+
+.boat-marker-art:hover .boat-marker-dot,
+.boat-marker-art:focus-visible .boat-marker-dot {
+  box-shadow: none;
+  filter: drop-shadow(0 0 10px rgb(212 184 92 / 90%)) drop-shadow(0 1px 2px rgb(0 0 0 / 60%));
+}
+
+/* The port you're standing at — a calm teal beacon, no interaction. */
+.boat-marker-origin .boat-marker-dot {
+  background: radial-gradient(circle at 35% 35%, #7fe3d6, #1f6f66 70%);
+  box-shadow: 0 0 10px 3px rgb(127 227 214 / 55%), 0 1px 3px rgb(0 0 0 / 50%);
+  animation: boat-origin-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes boat-origin-pulse {
+  0%, 100% { box-shadow: 0 0 8px 2px rgb(127 227 214 / 45%), 0 1px 3px rgb(0 0 0 / 50%); }
+  50% { box-shadow: 0 0 14px 5px rgb(127 227 214 / 75%), 0 1px 3px rgb(0 0 0 / 50%); }
+}
+
+/* Unaffordable destinations dim but stay hoverable so the fare tip still reads. */
+.boat-marker-short .boat-marker-dot {
+  filter: grayscale(0.7) brightness(0.7);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
+}
+
+.boat-marker-short.boat-marker-art .boat-marker-dot {
+  filter: grayscale(0.7) brightness(0.7) drop-shadow(0 1px 2px rgb(0 0 0 / 60%));
+}
+
+/* Hover/focus tooltip above each marker. */
+.boat-marker-tip {
+  position: absolute;
+  left: 0;
+  bottom: 14px;
+  transform: translate(-50%, 0);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: max-content;
+  max-width: 22ch;
+  padding: var(--space-2) var(--space-3);
+  background: rgb(18 16 24 / 94%);
+  border: 1px solid rgb(212 184 92 / 35%);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 50%);
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.boat-marker:hover .boat-marker-tip,
+.boat-marker:focus-visible .boat-marker-tip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.boat-tip-name {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.boat-tip-meta {
+  color: var(--text-tertiary);
+  font-size: 0.82em;
+}
+
+.boat-tip-fare {
+  color: var(--color-gold-bright);
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+/* "Other ports" — discovered points the worldbuilder hasn't pinned to the map yet. */
+.boat-unplaced {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.boat-unplaced-head {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* On desktop the kiosk drops the blue drawer box entirely and shrink-wraps the
+   painted map — "just the map" floating on the dimmed backdrop, sized so the
+   whole thing is visible at once. The map art carries its own painted border.
+   Only applies when the map is shown; the fallback list keeps normal chrome. */
+@media (min-width: 768px) {
+  .drawer-sheet:has(.boat-board-skinned) {
+    width: auto;
+    max-width: 96vw;
+    height: auto;
+    max-height: 96vh;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  .drawer-sheet:has(.boat-board-skinned) .drawer-body {
+    padding: 0;
+  }
+
+  .boat-board-skinned {
+    --boat-map-max-h: 80vh;
+    padding: 0;
+    gap: var(--space-2);
+  }
+}

@@ -96,6 +96,7 @@ import type {
   StatusVarLabels,
   StylistState,
   FlightState,
+  BoatState,
   TradeState,
   TrainerData,
   UiFeedbackEntry,
@@ -288,6 +289,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [bankState, setBankState] = useState<BankState | null>(null);
   const [stylistState, setStylistState] = useState<StylistState | null>(null);
   const [flightState, setFlightState] = useState<FlightState | null>(null);
+  const [boatState, setBoatState] = useState<BoatState | null>(null);
   const [recallState, setRecallState] = useState<RecallState | null>(null);
   const [lotteryInfo, setLotteryInfo] = useState<LotteryInfo | null>(null);
   const [diceResult, setDiceResult] = useState<DiceGambleResult | null>(null);
@@ -710,6 +712,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setBankState,
         setStylistState,
         setFlightState,
+        setBoatState,
         setRecallState,
         setLotteryInfo,
         setDiceResult,
@@ -800,6 +803,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setBankState(null);
     setStylistState(null);
     setFlightState(null);
+    setBoatState(null);
     setRecallState(null);
     setLotteryInfo(null);
     setDiceResult(null);
@@ -851,7 +855,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     quests, questsAvailable, questNotifications, setQuestNotifications,
     dailyQuests, weeklyQuests, autoQuest, globalQuest,
     // Economy
-    shop, puzzle, puzzleResult, auctionListings, currencies, currencyActivity, bankState, stylistState, flightState, recallState, lotteryInfo, diceResult, jukebox, musicBox,
+    shop, puzzle, puzzleResult, auctionListings, currencies, currencyActivity, bankState, stylistState, flightState, boatState, recallState, lotteryInfo, diceResult, jukebox, musicBox,
     // Crafting
     craftingSkills, craftingRecipes, craftingNodes, gatherCooldownUntilMs,
     // World

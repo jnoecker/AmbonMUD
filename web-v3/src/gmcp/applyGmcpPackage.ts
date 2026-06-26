@@ -93,6 +93,8 @@ import type {
   StylistRace,
   FlightState,
   FlightDestination,
+  BoatState,
+  BoatDestination,
   DailyQuestBoard,
   DailyQuestEntry,
   AutoQuest,
@@ -236,6 +238,7 @@ interface GmcpContext {
   setBankState: Dispatch<SetStateAction<BankState | null>>;
   setStylistState: Dispatch<SetStateAction<StylistState | null>>;
   setFlightState: Dispatch<SetStateAction<FlightState | null>>;
+  setBoatState: Dispatch<SetStateAction<BoatState | null>>;
   setRecallState: Dispatch<SetStateAction<RecallState | null>>;
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
   setDiceResult: Dispatch<SetStateAction<DiceGambleResult | null>>;
@@ -450,6 +453,7 @@ export function applyGmcpPackage(
       const housingBroker = packet.housingBroker === true;
       const inn = packet.inn === true;
       const flightMaster = packet.flightMaster === true;
+      const boatDock = packet.boatDock === true;
       const jukebox = packet.jukebox === true;
       const musicBox = packet.musicBox === true;
       const canDepart = packet.canDepart === true;
@@ -473,7 +477,7 @@ export function applyGmcpPackage(
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, flightMaster, jukebox, musicBox, canDepart, peek };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, flightMaster, boatDock, jukebox, musicBox, canDepart, peek };
       });
 
       if (id) {
@@ -2032,6 +2036,36 @@ export function applyGmcpPackage(
 
     case "Char.Flight.Close": {
       ctx.setFlightState(null);
+      break;
+    }
+
+    case "Char.Boat": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const destinations: BoatDestination[] = Array.isArray(packet.destinations)
+        ? (packet.destinations as Array<Record<string, unknown>>)
+          .filter((d): d is Record<string, unknown> => typeof d === "object" && d !== null)
+          .map((d) => ({
+            roomId: typeof d.roomId === "string" ? d.roomId : "",
+            name: typeof d.name === "string" ? d.name : "",
+            zone: typeof d.zone === "string" ? d.zone : "",
+            price: safeNumber(d.price, 0),
+            affordable: d.affordable === true,
+            mapX: typeof d.mapX === "number" ? d.mapX : null,
+            mapY: typeof d.mapY === "number" ? d.mapY : null,
+          }))
+        : [];
+      ctx.setBoatState({
+        playerGold: safeNumber(packet.playerGold, 0),
+        destinations,
+        originName: typeof packet.originName === "string" ? packet.originName : null,
+        originMapX: typeof packet.originMapX === "number" ? packet.originMapX : null,
+        originMapY: typeof packet.originMapY === "number" ? packet.originMapY : null,
+      });
+      break;
+    }
+
+    case "Char.Boat.Close": {
+      ctx.setBoatState(null);
       break;
     }
 

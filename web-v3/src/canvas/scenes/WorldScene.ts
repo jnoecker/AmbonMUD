@@ -167,6 +167,13 @@ export class WorldScene {
   private flightHitArea = new Graphics();
   private flightVisible = false;
 
+  private boatBadge: Container;
+  private boatSprite: Sprite | null = null;
+  private boatLabel: Text;
+  private boatLabelBg = new Graphics();
+  private boatHitArea = new Graphics();
+  private boatVisible = false;
+
   private targetingText: Text | null = null;
   private targetingBg = new Graphics();
   private targetingAnimTime = 0;
@@ -458,6 +465,35 @@ export class WorldScene {
     this.flightLabelBg.eventMode = "none";
     this.flightBadge.addChild(this.flightLabelBg);
     this.flightBadge.addChild(this.flightLabel);
+
+    // Boat dock badge — floating harbor icon when a boat dock is present
+    this.boatBadge = new Container();
+    this.boatBadge.visible = false;
+    this.boatBadge.eventMode = "static";
+    this.boatBadge.cursor = "pointer";
+    this.boatBadge.on("pointerdown", () => {
+      canvasCallbacks.openBoat?.();
+    });
+    this.boatBadge.on("pointerover", () => {
+      if (this.boatSprite) this.boatSprite.alpha = 1;
+    });
+    this.boatBadge.on("pointerout", () => {
+      if (this.boatSprite) this.boatSprite.alpha = 0.85;
+    });
+    this.boatHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.boatHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.boatHitArea.eventMode = "auto";
+    this.boatBadge.addChild(this.boatHitArea);
+    this.boatLabel = new Text({
+      text: "Harbor",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#e0c878", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.boatLabel.anchor.set(0.5, 0);
+    this.boatLabel.y = hs / 2 + 2;
+    this.boatLabel.eventMode = "none";
+    this.boatLabelBg.eventMode = "none";
+    this.boatBadge.addChild(this.boatLabelBg);
+    this.boatBadge.addChild(this.boatLabel);
 
     // Station badge — floating icon when a crafting station is present
     this.stationBadge = new Container();
@@ -989,6 +1025,7 @@ export class WorldScene {
     this.container.addChild(this.auctionBadge);
     this.container.addChild(this.stylistBadge);
     this.container.addChild(this.flightBadge);
+    this.container.addChild(this.boatBadge);
     this.container.addChild(this.stationBadge);
     this.container.addChild(this.trainerBadge);
     this.container.addChild(this.bankBadge!);
@@ -1039,6 +1076,7 @@ export class WorldScene {
       this.loadAuctionIcon();
       this.loadStylistIcon();
       this.loadFlightIcon();
+      this.loadBoatIcon();
       this.loadStationIcon();
       this.loadTrainerIcon();
       this.loadBankIcon();
@@ -1212,6 +1250,12 @@ export class WorldScene {
     if (hasFlight !== this.flightVisible) {
       this.flightVisible = hasFlight;
       this.flightBadge.visible = hasFlight;
+    }
+
+    const hasBoat = !!state.room.boatDock;
+    if (hasBoat !== this.boatVisible) {
+      this.boatVisible = hasBoat;
+      this.boatBadge.visible = hasBoat;
     }
 
     // Station badge visibility
@@ -1717,7 +1761,7 @@ export class WorldScene {
     // Count visible badges to compute adaptive spacing
     const visibleBadgeCount = [
       this.shopBadge.visible, this.auctionBadge.visible, this.stylistBadge.visible,
-      this.flightBadge.visible,
+      this.flightBadge.visible, this.boatBadge.visible,
       this.stationBadge.visible, this.trainerBadge.visible,
       this.bankBadge?.visible,
       this.lotteryBadge?.visible, this.diceBadge?.visible, this.dungeonBadge?.visible,
@@ -1763,6 +1807,13 @@ export class WorldScene {
       this.flightBadge.x = badgeX;
       this.flightBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.flightLabelBg, this.flightLabel);
+      badgeSlot++;
+    }
+
+    if (this.boatBadge.visible) {
+      this.boatBadge.x = badgeX;
+      this.boatBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.boatLabelBg, this.boatLabel);
       badgeSlot++;
     }
 
@@ -2572,6 +2623,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.flightSprite = sprite;
       this.flightBadge.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadBoatIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("boat_dock", "boat_dock.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.boatSprite = sprite;
+      this.boatBadge.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }
