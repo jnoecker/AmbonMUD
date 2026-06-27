@@ -9,6 +9,7 @@ import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.QuestBaselineConfig
 import dev.ambon.config.QuestDifficulty
 import dev.ambon.config.QuestXpConfig
+import dev.ambon.config.UnderLevelXpBonusConfig
 import dev.ambon.config.XpCurveConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -319,6 +320,50 @@ class PlayerProgressionTest {
             )
 
         assertEquals(1.0, progression.diminishingKillXpMultiplier(playerLevel = 50, mobLevel = 1))
+    }
+
+    @Test
+    fun `under-level bonus rewards punching up and caps`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    xp = XpCurveConfig(
+                        underLevelBonus = UnderLevelXpBonusConfig(
+                            enabled = true,
+                            bonusPerLevel = 0.15,
+                            maxBonus = 0.5,
+                        ),
+                    ),
+                ),
+            )
+
+        // Mob at or below player level: no bonus.
+        assertEquals(1.0, progression.underLevelKillXpMultiplier(playerLevel = 5, mobLevel = 5))
+        assertEquals(1.0, progression.underLevelKillXpMultiplier(playerLevel = 5, mobLevel = 1))
+        // Mob above player level: +0.15 per level.
+        assertEquals(1.15, progression.underLevelKillXpMultiplier(playerLevel = 1, mobLevel = 2), 1e-9)
+        assertEquals(1.45, progression.underLevelKillXpMultiplier(playerLevel = 1, mobLevel = 4), 1e-9)
+        // Capped at maxBonus (+0.5): 5 levels above would be +0.75 uncapped.
+        assertEquals(1.5, progression.underLevelKillXpMultiplier(playerLevel = 1, mobLevel = 6), 1e-9)
+        assertEquals(1.5, progression.underLevelKillXpMultiplier(playerLevel = 1, mobLevel = 50), 1e-9)
+    }
+
+    @Test
+    fun `under-level bonus disabled yields full xp`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    xp = XpCurveConfig(
+                        underLevelBonus = UnderLevelXpBonusConfig(
+                            enabled = false,
+                            bonusPerLevel = 0.15,
+                            maxBonus = 0.5,
+                        ),
+                    ),
+                ),
+            )
+
+        assertEquals(1.0, progression.underLevelKillXpMultiplier(playerLevel = 1, mobLevel = 10))
     }
 
     @Test
