@@ -2858,6 +2858,14 @@ ambonmud:
             multiplier: 0.2
           - levelsBelow: 8
             multiplier: 0.0
+      # Bonus XP for punching up: killing a mob above your own level. Grants
+      # `bonusPerLevel` extra per level the mob out-levels you, capped at
+      # `maxBonus`. Kills only (quests/puzzles never get it), and never stacks
+      # with diminishing returns — a fight is either over- or under-levelled.
+      underLevelBonus:
+        enabled: true
+        bonusPerLevel: 0.15
+        maxBonus: 0.5
     rewards:
       hpScalingRate: 1.30
       manaScalingRate: 1.10

@@ -729,6 +729,12 @@ data class AppConfig(
                 "ambonMUD.progression.xp.diminishing.thresholds[$index].multiplier must be in [0.0, 1.0]"
             }
         }
+        require(progression.xp.underLevelBonus.bonusPerLevel >= 0.0) {
+            "ambonMUD.progression.xp.underLevelBonus.bonusPerLevel must be >= 0"
+        }
+        require(progression.xp.underLevelBonus.maxBonus >= 0.0) {
+            "ambonMUD.progression.xp.underLevelBonus.maxBonus must be >= 0"
+        }
         require(progression.rewards.hpScalingRate >= 1.0) {
             "ambonMUD.progression.rewards.hpScalingRate must be >= 1.0"
         }
@@ -2972,6 +2978,20 @@ data class XpCurveConfig(
     val multiplier: Double = 1.0,
     val defaultKillXp: Long = 50L,
     val diminishing: DiminishingXpConfig = DiminishingXpConfig(),
+    val underLevelBonus: UnderLevelXpBonusConfig = UnderLevelXpBonusConfig(),
+)
+
+/**
+ * Bonus XP for kills against mobs ABOVE the player's level — the reward for
+ * punching up. Grants [bonusPerLevel] extra XP per level the mob out-levels the
+ * killer, capped at [maxBonus]. Kills only; quests/puzzles do not get this.
+ * Complementary to [DiminishingXpConfig], which only ever reduces XP for
+ * over-levelled kills — the two never apply to the same fight.
+ */
+data class UnderLevelXpBonusConfig(
+    val enabled: Boolean = true,
+    val bonusPerLevel: Double = 0.15,
+    val maxBonus: Double = 0.5,
 )
 
 /**

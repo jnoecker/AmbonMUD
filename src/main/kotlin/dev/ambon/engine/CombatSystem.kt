@@ -1946,15 +1946,19 @@ class CombatSystem(
             val player = players.get(sid) ?: continue
             val equipStats = items.equipmentBonuses(sid, classRegistry?.get(player.playerClass)).stats
             val totalBonusStat = player.stats[config.bindings.xpBonusStat] + equipStats[config.bindings.xpBonusStat]
-            val diminish = progression.diminishingKillXpMultiplier(player.level, mob.level)
-            val afterDiminish =
-                if (diminish >= 1.0) {
+            // Over-levelled kills are penalised; under-levelled kills are rewarded.
+            // These are mutually exclusive — only one is ever != 1.0 for a given fight.
+            val levelMultiplier =
+                progression.diminishingKillXpMultiplier(player.level, mob.level) *
+                    progression.underLevelKillXpMultiplier(player.level, mob.level)
+            val afterLevel =
+                if (levelMultiplier == 1.0) {
                     perPlayerXp
                 } else {
-                    (perPlayerXp * diminish).toLong().coerceAtLeast(0L)
+                    (perPlayerXp * levelMultiplier).toLong().coerceAtLeast(0L)
                 }
-            if (afterDiminish <= 0L) continue
-            val reward = progression.applyCharismaXpBonus(totalBonusStat, afterDiminish)
+            if (afterLevel <= 0L) continue
+            val reward = progression.applyCharismaXpBonus(totalBonusStat, afterLevel)
 
             val result = players.grantXp(sid, reward, progression) ?: continue
             metrics.onXpAwarded(reward, "kill")

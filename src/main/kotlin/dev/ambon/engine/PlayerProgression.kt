@@ -207,6 +207,25 @@ class PlayerProgression(
     }
 
     /**
+     * Returns the XP multiplier for a kill against a mob ABOVE the player's
+     * level — the reward for punching up. Grants
+     * [UnderLevelXpBonusConfig.bonusPerLevel] per level the mob out-levels the
+     * killer, capped at [UnderLevelXpBonusConfig.maxBonus]. Returns 1.0 when the
+     * mob is at or below the player's level, or when the bonus is disabled.
+     * Complementary to [diminishingKillXpMultiplier]: that one only ever reduces
+     * XP for over-levelled kills, this one only ever increases it for
+     * under-levelled kills, so the two never both move a single kill.
+     */
+    fun underLevelKillXpMultiplier(playerLevel: Int, mobLevel: Int): Double {
+        val cfg = config.xp.underLevelBonus
+        if (!cfg.enabled || cfg.bonusPerLevel <= 0.0) return 1.0
+        val gap = mobLevel - playerLevel
+        if (gap <= 0) return 1.0
+        val bonus = (cfg.bonusPerLevel * gap).coerceAtMost(cfg.maxBonus)
+        return 1.0 + bonus
+    }
+
+    /**
      * Applies an XP multiplier based on the configured xpBonusStat (+[bindings.xpBonusPerPoint] per
      * point above [PlayerState.BASE_STAT]) to [baseXp]. Returns [baseXp] unchanged if there is no bonus.
      */
