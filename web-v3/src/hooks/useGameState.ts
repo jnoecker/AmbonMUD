@@ -111,6 +111,7 @@ import type {
   ZoneEnvironment,
   ZoneInstances,
   CurrencyActivity,
+  BorderStub,
 } from "../types";
 
 function createEmptyChatByChannel(): Record<ChatChannel, ChatMessage[]> {
@@ -196,7 +197,7 @@ export interface MiniMapBridge {
     housing?: boolean,
     terrain?: string | null,
   ) => void;
-  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>) => void;
+  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>, border: BorderStub[]) => void;
   resetMap: () => void;
 }
 

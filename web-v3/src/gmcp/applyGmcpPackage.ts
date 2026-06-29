@@ -4,6 +4,7 @@ import type {
   ArcanumJournal,
   ArcanumStatus,
   AuctionListing,
+  BorderStub,
   CharStats,
   FactionStanding,
   StatEntry,
@@ -171,7 +172,7 @@ interface GmcpContext {
   setPuzzleResult: Dispatch<SetStateAction<PuzzleResult | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, mapZ: number, housing?: boolean, terrain?: string | null) => void;
-  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>) => void;
+  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>, border: BorderStub[]) => void;
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
@@ -513,8 +514,23 @@ export function applyGmcpPackage(
               };
             })
         : [];
+      // Border stubs: foreign rooms one cell past a horizontal cross-zone exit,
+      // already positioned in this zone's frame and carrying their own zone for
+      // colour-coding. Their ids are sent fully qualified, so no re-qualifying.
+      const border: BorderStub[] = Array.isArray(packet.border)
+        ? packet.border
+            .filter((b): b is Record<string, unknown> => typeof b === "object" && b !== null)
+            .map((b) => ({
+              id: typeof b.id === "string" ? b.id : "",
+              zone: typeof b.zone === "string" ? b.zone : "",
+              x: typeof b.x === "number" ? b.x : 0,
+              y: typeof b.y === "number" ? b.y : 0,
+              z: typeof b.z === "number" ? b.z : 0,
+            }))
+            .filter((b) => b.id !== "" && b.zone !== "")
+        : [];
       if (zone && rooms.length > 0) {
-        ctx.loadZoneMap(zone, rooms);
+        ctx.loadZoneMap(zone, rooms, border);
       }
       break;
     }

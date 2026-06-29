@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.EquipmentConfig
 import dev.ambon.domain.DamageRange
@@ -2077,21 +2078,53 @@ class GmcpEmitterTest {
             assertEquals(1, data.size)
             assertEquals("Zone.Map", data[0].gmcpPackage)
             val json = data[0].jsonData
-            // Room ids and exit targets are sent without the redundant `<zone>:`
-            // prefix; clients re-qualify them from the top-level `zone` field.
+            // Room ids and same-zone exit targets are sent without the redundant
+            // `<zone>:` prefix; clients re-qualify them from the top-level `zone`.
             assertTrue(json.contains("\"id\":\"a\""), "Expected unprefixed room id 'a'. got=$json")
             // North exit to same zone should be present (prefix stripped).
             assertTrue(json.contains("\"north\":\"b\""), "Expected north exit. got=$json")
             // Up exit to same zone should be present (clients badge stairs from it).
             assertTrue(json.contains("\"up\":\"c\""), "Expected up exit. got=$json")
-            // Cross-zone exit should be filtered out entirely.
-            assertTrue(!json.contains("other:x"), "Cross-zone exit should be excluded. got=$json")
-            // The full namespaced form must not leak back in.
-            assertTrue(!json.contains("z:a"), "Room ids should be unprefixed. got=$json")
+            // Cross-zone exit is kept, fully qualified, so the client can draw the
+            // boundary edge and recognise the target as foreign.
+            assertTrue(json.contains("\"east\":\"other:x\""), "Expected cross-zone east exit. got=$json")
+            // The same-zone namespaced form must not leak back in.
+            assertTrue(!json.contains("z:a"), "Same-zone room ids should be unprefixed. got=$json")
             // Coordinates should be present, including the floor
             assertTrue(json.contains("\"x\":0"), "Expected x coordinate. got=$json")
             assertTrue(json.contains("\"y\":-1"), "Expected y=-1 coordinate. got=$json")
             assertTrue(json.contains("\"z\":1"), "Expected z=1 floor on the attic room. got=$json")
+        }
+
+    @Test
+    fun `sendZoneMap places a colour-coded border stub one cell past each horizontal cross-zone exit`() =
+        runTest {
+            val e = emitter("Zone.Map")
+            val rooms = listOf(
+                zoneRoom(
+                    "z:a",
+                    exits = mapOf(
+                        Direction.EAST to RoomId("east_zone:gate"),
+                        // Vertical cross-zone exit: kept as an exit for stair
+                        // badging but must NOT seed a stub (it lands on another
+                        // floor, not an adjacent cell).
+                        Direction.DOWN to RoomId("cellar_zone:hatch"),
+                    ),
+                    mapX = 3,
+                    mapY = 2,
+                    mapZ = 0,
+                ),
+            )
+            e.sendZoneMap(sid, "z", rooms)
+            val border = jacksonObjectMapper().readTree(drainGmcp()[0].jsonData)["border"]
+            assertEquals(1, border.size(), "Only the horizontal cross-zone exit should seed a stub. got=$border")
+            val stub = border[0]
+            assertEquals("east_zone:gate", stub["id"].asText())
+            assertEquals("east_zone", stub["zone"].asText())
+            // One cell east of the source room (3,2) on the same floor.
+            assertEquals(4, stub["x"].asInt())
+            assertEquals(2, stub["y"].asInt())
+            assertEquals(0, stub["z"].asInt())
         }
 
     @Test
