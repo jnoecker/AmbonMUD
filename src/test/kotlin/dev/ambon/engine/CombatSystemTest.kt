@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.config.DeathConfig
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
+import dev.ambon.config.UnderLevelXpBonusConfig
 import dev.ambon.config.XpCurveConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatMap
@@ -430,6 +431,85 @@ class CombatSystemTest {
                     .map { it.text }
             assertTrue(messages.contains("You gain 50 XP."))
             assertTrue(messages.contains("You reached level 2! (+8 max HP, +4 max Mana)"))
+        }
+
+    @Test
+    fun `Kill combat event xpGained reflects the actual award including under-level bonus`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            // Mob out-levels the player by 2 (level 3 vs level 1), so the
+            // under-level bonus (+0.15/level, capped) multiplies the reward.
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    fixture.roomId,
+                    hp = 1,
+                    maxHp = 1,
+                    level = 3,
+                    xpReward = 100L,
+                )
+            fixture.mobs.upsert(mob)
+
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(dev.ambon.test.testClassEngineConfig(), reg)
+                }
+            val progression =
+                PlayerProgression(
+                    ProgressionConfig(
+                        maxLevel = 20,
+                        xp =
+                            XpCurveConfig(
+                                // Large curve so the boosted reward never levels the player up,
+                                // keeping the assertion focused on the toast value.
+                                baseXp = 100_000L,
+                                exponent = 2.0,
+                                linearXp = 0L,
+                                multiplier = 1.0,
+                                defaultKillXp = 50L,
+                                underLevelBonus = UnderLevelXpBonusConfig(enabled = true),
+                            ),
+                    ),
+                    classRegistry = classRegistry,
+                )
+            val combat =
+                fixture.buildCombat(
+                    rng = Random(5),
+                    minDamage = 1,
+                    maxDamage = 1,
+                    progression = progression,
+                )
+
+            val sid = SessionId(515L)
+            fixture.players.loginOrFail(sid, "Underdog")
+
+            val combatEvents = mutableListOf<CombatEvent>()
+            combat.onCombatEvent = { _, event -> combatEvents += event }
+
+            assertNull(combat.startCombat(sid, "ogre"))
+            fixture.tickCombat(combat)
+
+            // gap = 3 - 1 = 2 → +0.30 → 100 * 1.30 = 130 XP actually awarded.
+            val kill = combatEvents.filterIsInstance<CombatEvent.Kill>().firstOrNull()
+            assertNotNull(kill, "Expected a Kill combat event, got: $combatEvents")
+            assertEquals(
+                130L,
+                kill!!.xpGained,
+                "Kill toast must report the boosted award, not the base ${mob.xpReward} XP",
+            )
+
+            // The toast value must match the "You gain N XP." line the player sees.
+            val messages =
+                fixture.outbound
+                    .drainAll()
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == sid }
+                    .map { it.text }
+            assertTrue(
+                messages.contains("You gain 130 XP."),
+                "Expected 'You gain 130 XP.' in: $messages",
+            )
         }
 
     @Test
