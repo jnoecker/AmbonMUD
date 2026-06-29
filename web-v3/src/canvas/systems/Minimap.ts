@@ -1,4 +1,4 @@
-import { Container, Graphics, Rectangle, Sprite, Texture } from "pixi.js";
+import { Container, Graphics, Rectangle, Sprite, Text, Texture } from "pixi.js";
 import { loadTexture } from "../textureLoader";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 import { MAP_OFFSETS, zoneColor } from "../../constants";
@@ -7,6 +7,15 @@ import type { BorderStub } from "../../types";
 /** Directions that represent the same horizontal plane. Up/down exits are shown
  *  as buttons beside the map but don't place nodes on the parchment. */
 const HORIZONTAL_DIRS = new Set(["north", "south", "east", "west"]);
+
+/** Zone id → display name, e.g. "demo_ruins" → "Demo Ruins". */
+function formatZoneName(zone: string): string {
+  return zone
+    .split("_")
+    .filter((part) => part.length > 0)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
 interface MapNode {
   x: number;
@@ -87,6 +96,18 @@ export class Minimap {
   private clipMask = new Graphics();
   private mapGraphics = new Graphics();
   private expandButton = new Graphics();
+  // Zone-name caption pinned to the top of the parchment.
+  private zoneLabel = new Text({
+    text: "",
+    style: {
+      fontFamily: "'JetBrains Mono', 'Cascadia Mono', monospace",
+      fontSize: 10,
+      fontWeight: "bold",
+      fill: CURRENT_MARK,
+      stroke: { color: 0x1c140a, width: 3 },
+      align: "center",
+    },
+  });
   private nodeLayer = new Container(); // textured room glyphs (when assets present)
   private markerLayer = new Container(); // textured quest markers
   private inner = new Container();
@@ -135,9 +156,13 @@ export class Minimap {
     this.inner.addChild(this.nodeLayer);
     this.inner.addChild(this.markerLayer);
 
+    this.zoneLabel.anchor.set(0.5, 0);
+    this.zoneLabel.eventMode = "none";
+
     this.container.addChild(this.bg);
     this.container.addChild(this.inner);
     this.container.addChild(this.border);
+    this.container.addChild(this.zoneLabel);
     this.container.addChild(this.clipMask);
     this.container.addChild(this.expandButton);
     this.container.addChild(this.upButton);
@@ -256,6 +281,18 @@ export class Minimap {
     this.upButton.y = this._height / 2 - btnR * 2 - 3;
     this.downButton.x = bx;
     this.downButton.y = this._height / 2 + 3;
+
+    this.updateZoneLabel();
+  }
+
+  /** Position + set the zone-name caption from the current zone. */
+  private updateZoneLabel() {
+    const text = this.currentZone ? formatZoneName(this.currentZone) : "";
+    if (this.zoneLabel.text !== text) this.zoneLabel.text = text;
+    this.zoneLabel.visible = text.length > 0;
+    this.zoneLabel.style.fontSize = this._width <= 160 ? 10 : 11;
+    this.zoneLabel.x = this._width / 2;
+    this.zoneLabel.y = 6;
   }
 
   /** Static parchment backdrop — drawn once per size, not per frame. */
@@ -458,6 +495,8 @@ export class Minimap {
     // Hide all textured glyphs; the ones in view are re-shown below.
     for (const s of this.roomSprites.values()) s.visible = false;
     for (const s of this.questSprites.values()) s.visible = false;
+
+    this.updateZoneLabel();
 
     if (!this.currentRoomId) return;
     const current = this.visited.get(this.currentRoomId);

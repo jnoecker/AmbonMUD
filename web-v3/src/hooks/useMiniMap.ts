@@ -51,6 +51,15 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
 
+/** Zone id → display name, e.g. "demo_ruins" → "Demo Ruins". */
+function formatZoneName(zone: string): string {
+  return zone
+    .split("_")
+    .filter((part) => part.length > 0)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 interface Trim {
   sx: number;
   sy: number;
@@ -502,7 +511,22 @@ function renderMap(
     ctx.restore();
   }
 
-  // Floor tag — only when the zone actually has more than one floor.
+  // Zone name tag — top-left, derived from the current room id (`<zone>:<room>`).
+  const zoneId = currentId.split(":")[0];
+  if (zoneId) {
+    const label = formatZoneName(zoneId);
+    ctx.font = "bold 13px 'JetBrains Mono', 'Cascadia Mono', monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = LABEL_OUTLINE;
+    ctx.strokeText(label, scrollLeft + 10, scrollTop + 8);
+    ctx.fillStyle = LABEL_CURRENT;
+    ctx.fillText(label, scrollLeft + 10, scrollTop + 8);
+  }
+
+  // Floor tag — only when the zone actually has more than one floor. Sits just
+  // below the zone name so the two stack at the top-left corner.
   if (multiFloor) {
     const label = floor === 0 ? "ground floor" : floor > 0 ? `floor +${floor}` : `floor ${floor}`;
     ctx.font = "bold 11px 'JetBrains Mono', 'Cascadia Mono', monospace";
@@ -510,9 +534,9 @@ function renderMap(
     ctx.textBaseline = "top";
     ctx.lineWidth = 3;
     ctx.strokeStyle = LABEL_OUTLINE;
-    ctx.strokeText(label, scrollLeft + 10, scrollTop + 8);
+    ctx.strokeText(label, scrollLeft + 10, scrollTop + 26);
     ctx.fillStyle = LABEL_VISITED;
-    ctx.fillText(label, scrollLeft + 10, scrollTop + 8);
+    ctx.fillText(label, scrollLeft + 10, scrollTop + 26);
   }
 
   // Restore from scroll-bounds clip
