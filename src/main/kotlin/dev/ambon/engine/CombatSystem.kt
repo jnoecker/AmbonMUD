@@ -1857,13 +1857,13 @@ class CombatSystem(
         broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
         val lootedItems = applyAutolootForKiller(killerSessionId, mob.roomId, mobCarried + rolledDrops)
         val goldGained = grantKillGold(killerSessionId, mob)
-        grantGroupKillXp(killerSessionId, mob)
+        val xpGained = grantGroupKillXp(killerSessionId, mob)
         onCombatEvent(
             killerSessionId,
             CombatEvent.Kill(
                 targetName = mob.name,
                 targetId = mob.id.value,
-                xpGained = mob.xpReward,
+                xpGained = xpGained,
                 goldGained = goldGained,
                 lootedItems = lootedItems,
             ),
@@ -1915,12 +1915,18 @@ class CombatSystem(
         }
     }
 
+    /**
+     * Grants kill XP to the killer (and any eligible group members in the room)
+     * and returns the XP actually awarded to [killerSessionId] — including the
+     * level-difference, group, and stat bonuses — so callers can surface the
+     * real figure in the kill toast. Returns 0 when the killer earns nothing.
+     */
     private suspend fun grantGroupKillXp(
         killerSessionId: SessionId,
         mob: MobState,
-    ) {
+    ): Long {
         val baseReward = progression.killXpReward(mob)
-        if (baseReward <= 0L) return
+        if (baseReward <= 0L) return 0L
 
         val group = groupSystem?.getGroup(killerSessionId)
         val recipients =
@@ -1942,6 +1948,7 @@ class CombatSystem(
             }
         val perPlayerXp = ((baseReward.toDouble() / memberCount) * groupBonus).toLong().coerceAtLeast(1L)
 
+        var killerXp = 0L
         for (sid in recipients) {
             val player = players.get(sid) ?: continue
             val equipStats = items.equipmentBonuses(sid, classRegistry?.get(player.playerClass)).stats
@@ -1961,6 +1968,7 @@ class CombatSystem(
             val reward = progression.applyCharismaXpBonus(totalBonusStat, afterLevel)
 
             val result = players.grantXp(sid, reward, progression) ?: continue
+            if (sid == killerSessionId) killerXp = reward
             metrics.onXpAwarded(reward, "kill")
             outbound.send(OutboundEvent.SendText(sid, "You gain $reward XP."))
             onXpGained(sid, reward, mob.name)
@@ -1978,6 +1986,7 @@ class CombatSystem(
                 callbacks.onLevelUp(sid, result)
             }
         }
+        return killerXp
     }
 
     private fun rollDrops(mob: MobState): List<dev.ambon.domain.items.ItemInstance> {
