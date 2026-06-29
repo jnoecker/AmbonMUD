@@ -436,6 +436,27 @@ export interface MapRoom {
   /** Terrain key (forest, mountain, …) once the room has been visited. */
   terrain?: string;
   housing?: boolean;
+  /**
+   * Set only for a *foreign* room sitting just across a zone boundary (a border
+   * stub). Names the neighbouring zone, so the renderer colour-codes it. Rooms in
+   * the current zone leave this undefined.
+   */
+  zone?: string;
+}
+
+/**
+ * A ghost room one cell across a zone boundary, positioned in the *current* zone's
+ * coordinate frame. Lets the minimap show that the world continues past an edge
+ * (colour-coded by [zone]) without pulling the whole neighbour zone into view.
+ */
+export interface BorderStub {
+  /** Fully-qualified `<zone>:room` id. */
+  id: string;
+  /** The neighbouring zone this stub belongs to. */
+  zone: string;
+  x: number;
+  y: number;
+  z: number;
 }
 
 export interface TabCycle {

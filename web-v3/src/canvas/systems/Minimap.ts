@@ -1,7 +1,8 @@
 import { Container, Graphics, Rectangle, Sprite, Texture } from "pixi.js";
 import { loadTexture } from "../textureLoader";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
-import { MAP_OFFSETS } from "../../constants";
+import { MAP_OFFSETS, zoneColor } from "../../constants";
+import type { BorderStub } from "../../types";
 
 /** Directions that represent the same horizontal plane. Up/down exits are shown
  *  as buttons beside the map but don't place nodes on the parchment. */
@@ -16,6 +17,8 @@ interface MapNode {
   /** Terrain key (forest, mountain, …) once the room has been visited. */
   terrain?: string;
   housing?: boolean;
+  /** Set only for a foreign border stub: the neighbouring zone it belongs to. */
+  zone?: string;
 }
 
 // Server-asset keys (all optional — each falls back to the procedural look).
@@ -145,7 +148,7 @@ export class Minimap {
     this.container.visible = false;
 
     // Register for zone map data from the React layer
-    canvasCallbacks.loadZoneMap = (zone, rooms) => this.loadZoneMap(zone, rooms);
+    canvasCallbacks.loadZoneMap = (zone, rooms, border) => this.loadZoneMap(zone, rooms, border);
   }
 
   /** Width of the parchment — kept as `diameter` for layout-call compatibility. */
@@ -393,20 +396,24 @@ export class Minimap {
       if (terrain) node.terrain = terrain;
     }
 
-    // Pre-place unvisited horizontal neighbors (N/S/E/W only).
+    // Pre-place unvisited horizontal neighbors (N/S/E/W only). A neighbor in a
+    // different zone is a border stub — tag it so redraw() colour-codes it.
     for (const [dir, targetId] of Object.entries(exits)) {
       if (!HORIZONTAL_DIRS.has(dir)) continue;
       if (this.visited.has(targetId)) continue;
       const offset = MAP_OFFSETS[dir];
       if (!offset) continue;
-      this.visited.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, exits: {}, title: "", image: null });
+      const targetZone = targetId.split(":")[0];
+      const foreign = targetZone !== zone ? targetZone : undefined;
+      this.visited.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, exits: {}, title: "", image: null, zone: foreign });
     }
 
     this.redraw();
   }
 
-  /** Pre-populate all rooms in a zone as fog nodes. */
-  loadZoneMap(zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) {
+  /** Pre-populate all rooms in a zone as fog nodes, plus any cross-zone border
+   *  stubs (foreign rooms one cell past a boundary, tagged with their zone). */
+  loadZoneMap(zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>, border: BorderStub[] = []) {
     this.visited.clear();
     this.clearNodeSprites();
     this.currentZone = zone;
@@ -414,6 +421,10 @@ export class Minimap {
     this.lastKey = "";
     for (const r of rooms) {
       this.visited.set(r.id, { x: r.x, y: r.y, exits: r.exits, title: "", image: null });
+    }
+    for (const b of border) {
+      if (this.visited.has(b.id)) continue;
+      this.visited.set(b.id, { x: b.x, y: b.y, exits: {}, title: "", image: null, zone: b.zone });
     }
     this.redraw();
   }
@@ -500,9 +511,11 @@ export class Minimap {
         // Only connect two visible rooms; exits to clipped/off-map rooms are
         // shown by the short direction ticks instead of long stubs into space.
         if (this.inBounds(sp.px, sp.py) && this.inBounds(tp.px, tp.py)) {
+          // An edge into a neighbouring zone takes that zone's colour.
+          const targetZone = this.visited.get(targetId)?.zone ?? node.zone;
           this.mapGraphics.moveTo(sp.px, sp.py);
           this.mapGraphics.lineTo(tp.px, tp.py);
-          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2.5, alpha: 0.9 });
+          this.mapGraphics.stroke({ color: targetZone ? zoneColor(targetZone) : LINE_COLOR, width: 2.5, alpha: 0.9 });
         }
       }
     }
@@ -536,6 +549,13 @@ export class Minimap {
       const nx = p.px;
       const ny = p.py;
       if (!this.inBounds(nx, ny)) continue;
+
+      // Border stub: a foreign room across a zone boundary. A zone-tinted diamond
+      // marks where the map continues, without posing as explored ground here.
+      if (node.zone) {
+        this.drawBorderStub(nx, ny, this._nodeHalf, node.zone);
+        continue;
+      }
 
       const isCurrent = id === this.currentRoomId;
       const half = isCurrent ? this._currentHalf : this._nodeHalf;
@@ -694,6 +714,23 @@ export class Minimap {
     spr.y = ny;
     spr.alpha = alpha;
     spr.visible = true;
+  }
+
+  /** Foreign border stub: a zone-tinted diamond marking where the map continues
+   *  into a neighbouring zone. */
+  private drawBorderStub(nx: number, ny: number, half: number, zone: string) {
+    const color = zoneColor(zone);
+    const diamond = () => {
+      this.mapGraphics.moveTo(nx, ny - half);
+      this.mapGraphics.lineTo(nx + half, ny);
+      this.mapGraphics.lineTo(nx, ny + half);
+      this.mapGraphics.lineTo(nx - half, ny);
+      this.mapGraphics.closePath();
+    };
+    diamond();
+    this.mapGraphics.fill({ color, alpha: 0.5 });
+    diamond();
+    this.mapGraphics.stroke({ color, width: 1.6, alpha: 0.95 });
   }
 
   /** Procedural inked room glyph (fallback when no room asset is present). */

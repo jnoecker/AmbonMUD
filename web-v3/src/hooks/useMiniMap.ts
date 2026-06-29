@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
-import { MAP_OFFSETS } from "../constants";
+import { MAP_OFFSETS, zoneColorCss } from "../constants";
 import { canvasCallbacks, gameStateRef } from "../canvas/GameStateBridge";
-import type { MapRoom } from "../types";
+import type { BorderStub, MapRoom } from "../types";
 
 // Parchment / ink palette — matches the in-scene minimap. The canvas itself is
 // transparent: the parchment scroll (`map_background`) is the map drawer's
@@ -187,6 +187,39 @@ function drawStairBadges(
 }
 
 /** Procedural quest marker (fallback when no minimap_quest asset). */
+/** A room just across a zone boundary: a small zone-tinted diamond with the
+ *  neighbour's name, so the chart shows where the world continues. */
+function drawBorderStub(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: number, zone: string) {
+  const color = zoneColorCss(zone);
+  ctx.save();
+  // Diamond marks it as "a way out" rather than an explored cell.
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - half);
+  ctx.lineTo(cx + half, cy);
+  ctx.lineTo(cx, cy + half);
+  ctx.lineTo(cx - half, cy);
+  ctx.closePath();
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+  // Zone name beneath the marker.
+  ctx.font = "10px 'JetBrains Mono', 'Cascadia Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  const label = zone.length > 12 ? zone.slice(0, 11) + "…" : zone;
+  const ly = cy + half + 3;
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = LABEL_OUTLINE;
+  ctx.strokeText(label, cx, ly);
+  ctx.fillStyle = color;
+  ctx.fillText(label, cx, ly);
+  ctx.restore();
+}
+
 function drawProceduralQuest(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: number, pulse: number) {
   ctx.save();
   ctx.globalAlpha = pulse;
@@ -291,7 +324,8 @@ function renderMap(
         const tx = nodeX(target);
         const ty = nodeY(target);
         if (sIn && inScrollBounds(tx, ty)) {
-          ctx.strokeStyle = LINE_COLOR;
+          // Edges into a neighbouring zone take that zone's colour so the seam reads.
+          ctx.strokeStyle = target.zone ? zoneColorCss(target.zone) : node.zone ? zoneColorCss(node.zone) : LINE_COLOR;
           ctx.lineWidth = 2.5;
           ctx.beginPath();
           ctx.moveTo(sx, sy);
@@ -364,6 +398,15 @@ function renderMap(
     const x = nodeX(node);
     const y = nodeY(node);
     if (!inScrollBounds(x, y)) continue;
+
+    // Border stub: a room in a neighbouring zone, one cell past the boundary.
+    // Drawn as a small zone-tinted marker with the zone's name, never as a
+    // regular room glyph — it shows the world continues without claiming to be
+    // explored ground in this zone.
+    if (node.zone) {
+      drawBorderStub(ctx, x, y, nodeSize / 2, node.zone);
+      continue;
+    }
 
     const isCurrent = id === currentId;
     const isVisited = node.title !== "";
@@ -740,12 +783,16 @@ export function useMiniMap() {
       }
 
       // Pre-place unvisited horizontal neighbors (N/S/E/W only) on the same floor.
+      // A neighbor in a different zone is a border stub — tag it so it colour-codes.
+      const zone = roomId.split(":")[0];
       for (const [dir, targetId] of Object.entries(exits)) {
         if (dir === "up" || dir === "down") continue;
         if (rooms.has(targetId)) continue;
         const offset = MAP_OFFSETS[dir];
         if (!offset) continue;
-        rooms.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, z: mapZ, exits: {}, title: "", image: null });
+        const targetZone = targetId.split(":")[0];
+        const foreign = targetZone !== zone ? targetZone : undefined;
+        rooms.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, z: mapZ, exits: {}, title: "", image: null, zone: foreign });
       }
 
       drawMap();
@@ -755,7 +802,11 @@ export function useMiniMap() {
 
   /** Pre-populate the map with all rooms in a zone as fog nodes. */
   const loadZoneMap = useCallback(
-    (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>) => {
+    (
+      zone: string,
+      rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>,
+      border: BorderStub[],
+    ) => {
       const map = visitedRef.current;
       map.clear();
       currentRoomIdRef.current = null;
@@ -767,10 +818,17 @@ export function useMiniMap() {
       for (const r of rooms) {
         map.set(r.id, { x: r.x, y: r.y, z: r.z, exits: r.exits, title: "", image: null });
       }
+      // Border stubs: foreign rooms just across a boundary, already positioned in
+      // this zone's frame. Tagged with their zone so drawMap colour-codes them.
+      // A stub never overwrites a real room (defensive — ids shouldn't collide).
+      for (const b of border) {
+        if (map.has(b.id)) continue;
+        map.set(b.id, { x: b.x, y: b.y, z: b.z, exits: {}, title: "", image: null, zone: b.zone });
+      }
       drawMap();
 
       // Also push to the PixiJS compact minimap
-      canvasCallbacks.loadZoneMap?.(zone, rooms);
+      canvasCallbacks.loadZoneMap?.(zone, rooms, border);
     },
     [drawMap],
   );

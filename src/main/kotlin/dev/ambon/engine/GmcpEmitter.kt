@@ -12,6 +12,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.JukeboxSong
 import dev.ambon.domain.world.MusicBox
 import dev.ambon.domain.world.Room
@@ -303,18 +304,39 @@ class GmcpEmitter(
     }
 
     /**
+     * Direction → (dx, dy) grid offset for placing a boundary stub one cell past a
+     * horizontal cross-zone exit. Must match the layout offsets in
+     * `WorldLoader.DIRECTION_OFFSETS` and the client's `MAP_OFFSETS`.
+     */
+    private val zoneMapHorizontalOffsets: Map<Direction, Pair<Int, Int>> = mapOf(
+        Direction.NORTH to (0 to -1),
+        Direction.SOUTH to (0 to 1),
+        Direction.EAST to (1 to 0),
+        Direction.WEST to (-1 to 0),
+    )
+
+    /**
      * Send the full room layout for a zone so the client can render a fog-of-war
      * map with cloud-reveal as the player explores. Each room carries its floor
      * (`z`); clients draw one floor at a time. Up/down exits are included so the
      * map can badge stairs, but clients must not treat them as positional edges.
      *
-     * Room ids and exit targets are sent **without** their `<zone>:` prefix: the
-     * payload already names the [zone] at the top level and exits are filtered to
-     * same-zone targets, so the prefix is pure repetition. Stripping it shrinks a
-     * large zone's payload by ~30% (e.g. a 280-room zone drops from ~67 KB to
-     * ~47 KB), keeping it under [MAX_GMCP_PAYLOAD_BYTES] — above which the whole
-     * map would be silently dropped and the client would render nothing but the
-     * player's own explored trail. Clients re-qualify the ids with the zone.
+     * Cross-zone exits are kept (so the map reflects the true shape of the world
+     * at zone boundaries rather than ending abruptly). Each horizontal exit into a
+     * neighbouring zone also contributes a [BorderStub]: a single ghost room placed
+     * one cell past the boundary, in *this* zone's coordinate frame, tagged with the
+     * neighbour's zone so the client can colour it. Vertical cross-zone exits ride
+     * along as stair badges but seed no stub (they would land on another floor).
+     *
+     * Same-zone room ids and exit targets are sent **without** their `<zone>:`
+     * prefix: the payload already names the [zone] at the top level, so for them the
+     * prefix is pure repetition. Stripping it shrinks a large zone's payload by ~30%
+     * (e.g. a 280-room zone drops from ~67 KB to ~47 KB), keeping it under
+     * [MAX_GMCP_PAYLOAD_BYTES] — above which the whole map would be silently dropped
+     * and the client would render nothing but the player's own explored trail.
+     * Cross-zone targets keep their full `<otherzone>:room` id (the prefix doesn't
+     * match, so nothing is stripped), which both disambiguates them and lets the
+     * client recognise them as foreign. Clients re-qualify the bare ids with [zone].
      */
     suspend fun sendZoneMap(
         sessionId: SessionId,
@@ -322,22 +344,37 @@ class GmcpEmitter(
         rooms: Collection<Room>,
     ) {
         val prefix = "$zone:"
+        val border = LinkedHashMap<String, BorderStub>()
+        val zoneRooms = rooms.map { r ->
+            for ((dir, target) in r.exits) {
+                if (target.zone == zone) continue
+                val offset = zoneMapHorizontalOffsets[dir] ?: continue
+                border.getOrPut(target.value) {
+                    BorderStub(
+                        id = target.value,
+                        zone = target.zone,
+                        x = r.mapX + offset.first,
+                        y = r.mapY + offset.second,
+                        z = r.mapZ,
+                    )
+                }
+            }
+            ZoneMapRoom(
+                id = r.id.value.removePrefix(prefix),
+                x = r.mapX,
+                y = r.mapY,
+                z = r.mapZ,
+                exits = r.exits.entries
+                    .associate { (dir, target) -> dir.name.lowercase() to target.value.removePrefix(prefix) },
+            )
+        }
         emit(
             sessionId,
             "Zone.Map",
             ZoneMapPayload(
                 zone = zone,
-                rooms = rooms.map { r ->
-                    ZoneMapRoom(
-                        id = r.id.value.removePrefix(prefix),
-                        x = r.mapX,
-                        y = r.mapY,
-                        z = r.mapZ,
-                        exits = r.exits.entries
-                            .filter { (_, target) -> target.zone == zone }
-                            .associate { (dir, target) -> dir.name.lowercase() to target.value.removePrefix(prefix) },
-                    )
-                },
+                rooms = zoneRooms,
+                border = border.values.toList(),
             ),
             supportCheck = "Zone.Map",
         )
@@ -3069,6 +3106,7 @@ class GmcpEmitter(
     private data class ZoneMapPayload(
         val zone: String,
         val rooms: List<ZoneMapRoom>,
+        val border: List<BorderStub>,
     )
 
     private data class ZoneMapRoom(
@@ -3077,6 +3115,21 @@ class GmcpEmitter(
         val y: Int,
         val z: Int,
         val exits: Map<String, String>,
+    )
+
+    /**
+     * A ghost room just across a zone boundary: a single cell placed one step past
+     * a horizontal cross-zone exit, in the *current* zone's coordinate frame. Its
+     * [id] is fully qualified (`<zone>:room`) and [zone] names the neighbour so the
+     * client can colour-code it. Stubs carry no exits — the map shows that the world
+     * continues past the edge without pulling the whole neighbour zone into frame.
+     */
+    private data class BorderStub(
+        val id: String,
+        val zone: String,
+        val x: Int,
+        val y: Int,
+        val z: Int,
     )
 
     private data class RoomInfoPayload(
