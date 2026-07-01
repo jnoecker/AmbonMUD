@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useTickingClock } from "../../hooks/useTickingClock";
 import type { LotteryInfo, UiFeedbackEntry } from "../../types";
 
 interface LotteryPanelProps {
@@ -22,13 +23,8 @@ function formatHMS(ms: number): string {
  * and Buy Tickets button in the bottom panel.
  */
 export function LotteryPanel({ lotteryInfo, uiFeedbackFeed, onCommand }: LotteryPanelProps) {
-  const [now, setNow] = useState(() => Date.now());
+  const now = useTickingClock(1000);
   const [qty, setQty] = useState(1);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   const activeFeedback = useMemo(
     () => [...uiFeedbackFeed].reverse().find((e) => e.scope === "lottery") ?? null,

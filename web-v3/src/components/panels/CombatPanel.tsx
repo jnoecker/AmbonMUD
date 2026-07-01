@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { CombatTarget, ItemSummary, RoomMob, SkillSummary, Vitals } from "../../types";
 import { selectQuickPotion } from "../../combat/quickPotion";
+import { useTickingClock } from "../../hooks/useTickingClock";
 import { percent } from "../../utils";
 import { CrosshairIcon, FleeIcon, RefreshIcon, SkillCastIcon } from "../Icons";
 
@@ -35,14 +36,9 @@ export function CombatPanel({
   onAttackMob,
   onCommand,
 }: CombatPanelProps) {
-  const [now, setNow] = useState(() => Date.now());
+  const now = useTickingClock(250);
   const [activeTab, setActiveTab] = useState<AbilityTab>("all");
   const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(interval);
-  }, []);
 
   const hasTarget = combatTarget !== null && combatTarget.targetId !== null;
   const targetHp = combatTarget?.targetHp ?? 0;
