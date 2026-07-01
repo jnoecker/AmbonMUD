@@ -300,6 +300,60 @@ function parseMobEffects(raw: unknown): StatusEffect[] | undefined {
   return effects.length > 0 ? effects : undefined;
 }
 
+/**
+ * Parse one wire item object into an {@link ItemSummary}. Shared by
+ * Char.Items.List (inventory + equipment) and Char.Items.Add so the field
+ * coercions stay in one place. `fallbackId` supplies a synthetic id when the
+ * server omits one (call sites differ: random for inventory, slot-based for
+ * equipment).
+ */
+function parseItemPacket(raw: unknown, fallbackId: string): ItemSummary {
+  const e = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return {
+    id: typeof e.id === "string" ? e.id : fallbackId,
+    name: typeof e.name === "string" ? e.name : "Unknown item",
+    keyword: typeof e.keyword === "string" ? e.keyword : (typeof e.name === "string" ? e.name : "item"),
+    slot: typeof e.slot === "string" ? e.slot : null,
+    basePrice: typeof e.basePrice === "number" ? e.basePrice : undefined,
+    damage: typeof e.damage === "number" ? e.damage : undefined,
+    armor: typeof e.armor === "number" ? e.armor : undefined,
+    image: typeof e.image === "string" ? e.image : null,
+    video: typeof e.video === "string" ? e.video : null,
+    stats: e.stats && typeof e.stats === "object" ? e.stats as Record<string, number> : undefined,
+    enchantments: Array.isArray(e.enchantments) ? e.enchantments.filter((x): x is string => typeof x === "string") : undefined,
+    consumable: typeof e.consumable === "boolean" ? e.consumable : undefined,
+    useEffect: typeof e.useEffect === "string" ? e.useEffect : undefined,
+    onUse: parseOnUse(e.onUse),
+  };
+}
+
+/**
+ * Parse one wire mob object into a {@link RoomMob}. Shared by Room.Mobs (full
+ * roster) and Room.AddMob. Room.UpdateMob is intentionally NOT routed through
+ * here — it merges a partial patch onto an existing mob rather than parsing a
+ * full record.
+ */
+function parseMobPacket(raw: unknown, fallbackId: string): RoomMob {
+  const e = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return {
+    id: typeof e.id === "string" ? e.id : fallbackId,
+    templateKey: typeof e.templateKey === "string" ? e.templateKey : "",
+    name: typeof e.name === "string" ? e.name : "Unknown mob",
+    description: typeof e.description === "string" ? e.description : undefined,
+    hp: safeNumber(e.hp),
+    maxHp: Math.max(1, safeNumber(e.maxHp, 1)),
+    image: typeof e.image === "string" ? e.image : null,
+    video: typeof e.video === "string" ? e.video : null,
+    category: typeof e.category === "string" ? e.category : "humanoid",
+    effects: parseMobEffects(e.effects),
+    ownerName: typeof e.ownerName === "string" ? e.ownerName : null,
+    variant: typeof e.variant === "string" ? e.variant : null,
+    variantName: typeof e.variantName === "string" ? e.variantName : null,
+    tint: typeof e.tint === "string" ? e.tint : null,
+    overlay: typeof e.overlay === "string" ? e.overlay : null,
+  };
+}
+
 export function applyGmcpPackage(
   pkg: string,
   data: unknown,
@@ -575,41 +629,14 @@ export function applyGmcpPackage(
       const inventoryList = Array.isArray(packet.inventory)
         ? packet.inventory
             .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
-            .map((entry) => ({
-              id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
-              name: typeof entry.name === "string" ? entry.name : "Unknown item",
-              keyword: typeof entry.keyword === "string" ? entry.keyword : (typeof entry.name === "string" ? entry.name : "item"),
-              slot: typeof entry.slot === "string" ? entry.slot : null,
-              basePrice: typeof entry.basePrice === "number" ? entry.basePrice : undefined,
-              damage: typeof entry.damage === "number" ? entry.damage : undefined,
-              armor: typeof entry.armor === "number" ? entry.armor : undefined,
-              image: typeof entry.image === "string" ? entry.image : null,
-              video: typeof entry.video === "string" ? entry.video : null,
-              stats: entry.stats && typeof entry.stats === "object" ? entry.stats as Record<string, number> : undefined,
-              enchantments: Array.isArray(entry.enchantments) ? entry.enchantments.filter((e): e is string => typeof e === "string") : undefined,
-              consumable: typeof entry.consumable === "boolean" ? entry.consumable : undefined,
-              useEffect: typeof entry.useEffect === "string" ? entry.useEffect : undefined,
-              onUse: parseOnUse(entry.onUse),
-            }))
+            .map((entry) => parseItemPacket(entry, `${Date.now()}-${Math.random()}`))
         : [];
 
       const equipmentMap: Record<string, ItemSummary> = {};
       if (packet.equipment && typeof packet.equipment === "object") {
         for (const [slot, entry] of Object.entries(packet.equipment as Record<string, unknown>)) {
           if (!entry || typeof entry !== "object") continue;
-          const item = entry as Record<string, unknown>;
-          equipmentMap[slot] = {
-            id: typeof item.id === "string" ? item.id : `${slot}-${Date.now()}`,
-            name: typeof item.name === "string" ? item.name : "Unknown item",
-            keyword: typeof item.keyword === "string" ? item.keyword : (typeof item.name === "string" ? item.name : "item"),
-            slot,
-            damage: typeof item.damage === "number" ? item.damage : undefined,
-            armor: typeof item.armor === "number" ? item.armor : undefined,
-            image: typeof item.image === "string" ? item.image : null,
-            video: typeof item.video === "string" ? item.video : null,
-            stats: item.stats && typeof item.stats === "object" ? item.stats as Record<string, number> : undefined,
-            enchantments: Array.isArray(item.enchantments) ? item.enchantments.filter((e): e is string => typeof e === "string") : undefined,
-          };
+          equipmentMap[slot] = { ...parseItemPacket(entry, `${slot}-${Date.now()}`), slot };
         }
       }
 
@@ -622,22 +649,7 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       ctx.setInventory((prev) => [
         ...prev,
-        {
-          id: typeof packet.id === "string" ? packet.id : `${Date.now()}-${Math.random()}`,
-          name: typeof packet.name === "string" ? packet.name : "Unknown item",
-          keyword: typeof packet.keyword === "string" ? packet.keyword : (typeof packet.name === "string" ? packet.name : "item"),
-          slot: typeof packet.slot === "string" ? packet.slot : null,
-          basePrice: typeof packet.basePrice === "number" ? packet.basePrice : undefined,
-          damage: typeof packet.damage === "number" ? packet.damage : undefined,
-          armor: typeof packet.armor === "number" ? packet.armor : undefined,
-          image: typeof packet.image === "string" ? packet.image : null,
-          video: typeof packet.video === "string" ? packet.video : null,
-          stats: packet.stats && typeof packet.stats === "object" ? packet.stats as Record<string, number> : undefined,
-          enchantments: Array.isArray(packet.enchantments) ? (packet.enchantments as unknown[]).filter((e): e is string => typeof e === "string") : undefined,
-          consumable: typeof packet.consumable === "boolean" ? packet.consumable : undefined,
-          useEffect: typeof packet.useEffect === "string" ? packet.useEffect : undefined,
-          onUse: parseOnUse(packet.onUse),
-        },
+        parseItemPacket(packet, `${Date.now()}-${Math.random()}`),
       ]);
       break;
     }
@@ -742,23 +754,7 @@ export function applyGmcpPackage(
       ctx.setMobs(
         data
           .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
-          .map((entry) => ({
-            id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
-            templateKey: typeof entry.templateKey === "string" ? entry.templateKey : "",
-            name: typeof entry.name === "string" ? entry.name : "Unknown mob",
-            description: typeof entry.description === "string" ? entry.description : undefined,
-            hp: safeNumber(entry.hp),
-            maxHp: Math.max(1, safeNumber(entry.maxHp, 1)),
-            image: typeof entry.image === "string" ? entry.image : null,
-            video: typeof entry.video === "string" ? entry.video : null,
-            category: typeof entry.category === "string" ? entry.category : "humanoid",
-            effects: parseMobEffects(entry.effects),
-            ownerName: typeof entry.ownerName === "string" ? entry.ownerName : null,
-            variant: typeof entry.variant === "string" ? entry.variant : null,
-            variantName: typeof entry.variantName === "string" ? entry.variantName : null,
-            tint: typeof entry.tint === "string" ? entry.tint : null,
-            overlay: typeof entry.overlay === "string" ? entry.overlay : null,
-          })),
+          .map((entry) => parseMobPacket(entry, `${Date.now()}-${Math.random()}`)),
       );
       break;
     }
@@ -767,26 +763,7 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const id = packet.id;
       if (typeof id !== "string") break;
-      ctx.setMobs((prev) => [
-        ...prev,
-        {
-          id,
-          templateKey: typeof packet.templateKey === "string" ? packet.templateKey : "",
-          name: typeof packet.name === "string" ? packet.name : "Unknown mob",
-          description: typeof packet.description === "string" ? packet.description : undefined,
-          hp: safeNumber(packet.hp),
-          maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
-          image: typeof packet.image === "string" ? packet.image : null,
-          video: typeof packet.video === "string" ? packet.video : null,
-          category: typeof packet.category === "string" ? packet.category : "humanoid",
-          effects: parseMobEffects(packet.effects),
-          ownerName: typeof packet.ownerName === "string" ? packet.ownerName : null,
-          variant: typeof packet.variant === "string" ? packet.variant : null,
-          variantName: typeof packet.variantName === "string" ? packet.variantName : null,
-          tint: typeof packet.tint === "string" ? packet.tint : null,
-          overlay: typeof packet.overlay === "string" ? packet.overlay : null,
-        },
-      ]);
+      ctx.setMobs((prev) => [...prev, parseMobPacket(packet, id)]);
       break;
     }
 
