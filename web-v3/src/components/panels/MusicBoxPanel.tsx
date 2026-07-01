@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useTickingClock } from "../../hooks/useTickingClock";
 import type { MusicBoxState, UiFeedbackEntry } from "../../types";
+import { formatMinutesSeconds } from "../../utils";
 
 interface MusicBoxPanelProps {
   musicBox: MusicBoxState | null;
   uiFeedbackFeed: UiFeedbackEntry[];
   assets: Record<string, string>;
   onCommand: (command: string) => void;
-}
-
-function formatDuration(seconds: number): string {
-  const s = Math.max(0, Math.floor(seconds));
-  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 }
 
 /**
@@ -23,11 +20,7 @@ function formatDuration(seconds: number): string {
 export function MusicBoxPanel({ musicBox, uiFeedbackFeed, assets, onCommand }: MusicBoxPanelProps) {
   // 250ms tick keeps the highlighted lyric line roughly in step with the music
   // without the cost of an animation frame.
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(timer);
-  }, []);
+  const now = useTickingClock(250);
 
   const activeFeedback = useMemo(
     () => [...uiFeedbackFeed].reverse().find((e) => e.scope === "musicbox") ?? null,
@@ -118,9 +111,9 @@ export function MusicBoxPanel({ musicBox, uiFeedbackFeed, assets, onCommand }: M
           </button>
         )}
         {playing ? (
-          <span className="musicbox-remaining" aria-live="polite">{formatDuration(remaining)} left</span>
+          <span className="musicbox-remaining" aria-live="polite">{formatMinutesSeconds(remaining)} left</span>
         ) : box ? (
-          <span className="musicbox-remaining musicbox-remaining-idle">{formatDuration(duration)}</span>
+          <span className="musicbox-remaining musicbox-remaining-idle">{formatMinutesSeconds(duration)}</span>
         ) : null}
       </div>
 

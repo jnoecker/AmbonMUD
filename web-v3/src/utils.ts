@@ -38,6 +38,15 @@ export function formatCompact(value: number): string {
   return String(Math.round(value));
 }
 
+/**
+ * Formats a duration in seconds as `M:SS` (e.g. 75 → "1:15"). Clamps negatives
+ * to 0. Shared by the jukebox and music box "time left" readouts.
+ */
+export function formatMinutesSeconds(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+}
+
 export function titleCaseWords(value: string): string {
   return value
     .split(/[\s_-]+/)

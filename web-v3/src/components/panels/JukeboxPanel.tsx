@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMediaFits } from "../../canvas/loginArtFit";
+import { useTickingClock } from "../../hooks/useTickingClock";
 import type { JukeboxState, UiFeedbackEntry } from "../../types";
+import { formatMinutesSeconds } from "../../utils";
 
 interface JukeboxPanelProps {
   jukebox: JukeboxState | null;
@@ -17,11 +19,6 @@ interface JukeboxPanelProps {
 const LANDSCAPE_PAGE_SIZE = 4;
 const PORTRAIT_PAGE_SIZE = 6;
 
-function formatDuration(seconds: number): string {
-  const s = Math.max(0, Math.floor(seconds));
-  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
-}
-
 /**
  * Room jukebox. Lists the room's playlist four songs to a page (each seated on a
  * painted scroll when skinned); the player pays a few gold to play a song, which
@@ -30,13 +27,8 @@ function formatDuration(seconds: number): string {
  * next-up slot — the bottom-right plaque shows the queued song's number.
  */
 export function JukeboxPanel({ jukebox, gold, selfName, uiFeedbackFeed, assets, onCommand }: JukeboxPanelProps) {
-  const [now, setNow] = useState(() => Date.now());
+  const now = useTickingClock(1000);
   const [page, setPage] = useState(0);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   const activeFeedback = useMemo(
     () => [...uiFeedbackFeed].reverse().find((e) => e.scope === "jukebox") ?? null,
@@ -72,7 +64,7 @@ export function JukeboxPanel({ jukebox, gold, selfName, uiFeedbackFeed, assets, 
                 {nowPlaying.artist ? <span className="jukebox-np-artist"> — {nowPlaying.artist}</span> : null}
               </div>
               <div className="jukebox-np-sub">
-                Played by {nowPlaying.buyer} · {formatDuration(remaining)} left
+                Played by {nowPlaying.buyer} · {formatMinutesSeconds(remaining)} left
               </div>
               {queued ? (
                 <div className="jukebox-np-next">Up next: “{queued.title}” — queued by {queued.buyer}</div>
@@ -125,7 +117,7 @@ export function JukeboxPanel({ jukebox, gold, selfName, uiFeedbackFeed, assets, 
                   {song.description ? <p className="jukebox-song-desc">{song.description}</p> : null}
                 </div>
                 <div className="jukebox-song-meta">
-                  <span className="jukebox-song-dur">{formatDuration(song.durationSeconds)}</span>
+                  <span className="jukebox-song-dur">{formatMinutesSeconds(song.durationSeconds)}</span>
                   <span className={`jukebox-song-cost${canAfford ? "" : " is-short"}`}>{song.cost} gold</span>
                   <button
                     type="button"

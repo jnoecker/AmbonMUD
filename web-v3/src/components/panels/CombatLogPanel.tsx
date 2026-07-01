@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTickingClock } from "../../hooks/useTickingClock";
 import type { CombatLogMessage } from "../../types";
 
 type CombatStyle = CombatLogMessage["style"];
@@ -33,17 +34,12 @@ function formatRelativeTime(receivedAt: number, now: number): string {
 }
 
 export function CombatLogPanel({ messages, onClearLog }: CombatLogPanelProps) {
-  const [now, setNow] = useState(() => Date.now());
+  // Tick once per second to keep relative timestamps fresh.
+  const now = useTickingClock(1000);
   const [hidden, setHidden] = useState<Set<CombatStyle>>(() => new Set());
   const scrollRef = useRef<HTMLDivElement | null>(null);
   // Start sticky so the newest entries are visible when the panel opens.
   const stickyRef = useRef<boolean>(true);
-
-  // Tick the clock once per second to keep relative timestamps fresh.
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(interval);
-  }, []);
 
   const toggleStyle = useCallback((style: CombatStyle) => {
     setHidden((prev) => {
