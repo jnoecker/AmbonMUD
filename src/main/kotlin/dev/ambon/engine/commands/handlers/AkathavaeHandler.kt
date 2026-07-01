@@ -231,17 +231,13 @@ class AkathavaeHandler(
             outbound.send(OutboundEvent.SendError(sessionId, "The Akathavae do not accept pledges in this world."))
             return false
         }
-        val room = world.rooms[me.roomId]
-        if (room == null || !room.akathavaeShrine) {
-            outbound.send(
-                OutboundEvent.SendError(
-                    sessionId,
-                    "Only at an Akathavae shrine can such a vow be spoken or unsaid.",
-                ),
-            )
-            return false
-        }
-        return true
+        return requireRoomFlag(
+            sessionId,
+            me,
+            world,
+            outbound,
+            "Only at an Akathavae shrine can such a vow be spoken or unsaid.",
+        ) { it.akathavaeShrine }
     }
 
     private suspend fun handlePledge(sessionId: SessionId) {

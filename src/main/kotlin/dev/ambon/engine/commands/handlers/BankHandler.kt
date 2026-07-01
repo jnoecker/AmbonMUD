@@ -28,14 +28,8 @@ class BankHandler(
         router.on<Command.Bank.Balance> { sid, _ -> handleBalance(sid) }
     }
 
-    private suspend fun requireBank(sessionId: SessionId, me: dev.ambon.engine.PlayerState): Boolean {
-        val room = world.rooms[me.roomId]
-        if (room == null || !room.bank) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You need to be at a bank to do that."))
-            return false
-        }
-        return true
-    }
+    private suspend fun requireBank(sessionId: SessionId, me: dev.ambon.engine.PlayerState): Boolean =
+        requireRoomFlag(sessionId, me, world, outbound, "You need to be at a bank to do that.") { it.bank }
 
     private suspend fun handleDepositGold(sessionId: SessionId, cmd: Command.Bank.DepositGold) {
         val me = players.get(sessionId) ?: return

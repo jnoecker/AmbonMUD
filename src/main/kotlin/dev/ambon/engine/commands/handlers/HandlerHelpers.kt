@@ -1122,3 +1122,45 @@ internal fun resolveGotoArg(
     } else {
         runCatching { RoomId(qualifyId(currentZone, arg)) }.getOrNull()
     }
+
+/**
+ * Gates a command on the player standing in a room whose [flag] is set (bank,
+ * stylist, inn, shrine, …). Sends [errorMessage] and returns `false` when the
+ * room is missing or the flag is unset; returns `true` otherwise. Callers that
+ * early-return use `if (!requireRoomFlag(...)) return`.
+ */
+internal suspend fun requireRoomFlag(
+    sessionId: SessionId,
+    me: PlayerState,
+    world: World,
+    outbound: OutboundBus,
+    errorMessage: String,
+    flag: (Room) -> Boolean,
+): Boolean {
+    val room = world.rooms[me.roomId]
+    if (room == null || !flag(room)) {
+        outbound.send(OutboundEvent.SendError(sessionId, errorMessage))
+        return false
+    }
+    return true
+}
+
+/**
+ * Resolves a user-typed destination argument against [items], trying in order:
+ * a 1-based list index, an exact (case-insensitive) [roomId], an exact
+ * (case-insensitive) [name], then a [name] substring. Shared by the flight and
+ * boat kiosks, which offer the same "pick by number or name" affordance over
+ * different destination types.
+ */
+internal fun <T> resolveByIndexOrName(
+    arg: String,
+    items: List<T>,
+    roomId: (T) -> String,
+    name: (T) -> String,
+): T? {
+    if (arg.isEmpty()) return null
+    arg.toIntOrNull()?.let { idx -> return items.getOrNull(idx - 1) }
+    items.firstOrNull { roomId(it).equals(arg, ignoreCase = true) }?.let { return it }
+    items.firstOrNull { name(it).equals(arg, ignoreCase = true) }?.let { return it }
+    return items.firstOrNull { name(it).contains(arg, ignoreCase = true) }
+}
