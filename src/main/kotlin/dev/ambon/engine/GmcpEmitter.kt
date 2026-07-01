@@ -476,16 +476,7 @@ class GmcpEmitter(
         emit(
             sessionId,
             "Room.Items",
-            items.map {
-                RoomItemPayload(
-                    id = it.id.value,
-                    name = it.item.displayName,
-                    description = it.item.description,
-                    image = it.item.image,
-                    video = it.item.video,
-                    takeable = it.item.takeable,
-                )
-            },
+            items.map { toRoomItemPayload(it) },
         )
     }
 
@@ -525,16 +516,7 @@ class GmcpEmitter(
     }
 
     suspend fun broadcastRoomItems(roomId: RoomId, items: List<ItemInstance>, players: PlayerRegistry) {
-        val payload = items.map {
-            RoomItemPayload(
-                id = it.id.value,
-                name = it.item.displayName,
-                description = it.item.description,
-                image = it.item.image,
-                video = it.item.video,
-                takeable = it.item.takeable,
-            )
-        }
+        val payload = items.map { toRoomItemPayload(it) }
         broadcastSerialized(players.playersInRoom(roomId), "Room.Items", payload)
     }
 
@@ -2463,38 +2445,12 @@ class GmcpEmitter(
         emit(
             sessionId,
             "Room.MobInfo",
-            mobs.map { m ->
-                RoomMobInfoPayload(
-                    id = m.id,
-                    level = m.level,
-                    tier = m.tier,
-                    questGiver = m.questGiver,
-                    questAvailable = m.questAvailable,
-                    questComplete = m.questComplete,
-                    shopKeeper = m.shopKeeper,
-                    dialogue = m.dialogue,
-                    aggressive = m.aggressive,
-                    combatant = m.combatant,
-                )
-            },
+            mobs.map { toRoomMobInfoPayload(it) },
         )
     }
 
     suspend fun broadcastRoomMobInfo(roomId: RoomId, mobInfos: List<MobInfoEntry>, players: PlayerRegistry) {
-        val payload = mobInfos.map { m ->
-            RoomMobInfoPayload(
-                id = m.id,
-                level = m.level,
-                tier = m.tier,
-                questGiver = m.questGiver,
-                questAvailable = m.questAvailable,
-                questComplete = m.questComplete,
-                shopKeeper = m.shopKeeper,
-                dialogue = m.dialogue,
-                aggressive = m.aggressive,
-                combatant = m.combatant,
-            )
-        }
+        val payload = mobInfos.map { toRoomMobInfoPayload(it) }
         broadcastSerialized(players.playersInRoom(roomId), "Room.MobInfo", payload)
     }
 
@@ -3050,6 +3006,30 @@ class GmcpEmitter(
             overlay = mob.overlay,
         )
     }
+
+    private fun toRoomItemPayload(item: ItemInstance) =
+        RoomItemPayload(
+            id = item.id.value,
+            name = item.item.displayName,
+            description = item.item.description,
+            image = item.item.image,
+            video = item.item.video,
+            takeable = item.item.takeable,
+        )
+
+    private fun toRoomMobInfoPayload(entry: MobInfoEntry) =
+        RoomMobInfoPayload(
+            id = entry.id,
+            level = entry.level,
+            tier = entry.tier,
+            questGiver = entry.questGiver,
+            questAvailable = entry.questAvailable,
+            questComplete = entry.questComplete,
+            shopKeeper = entry.shopKeeper,
+            dialogue = entry.dialogue,
+            aggressive = entry.aggressive,
+            combatant = entry.combatant,
+        )
 
     // ---------- payload types ----------
 
