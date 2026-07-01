@@ -147,15 +147,8 @@ class FlightHandler(
     private fun resolveDestination(
         arg: String,
         destinations: List<FlightSystem.Destination>,
-    ): FlightSystem.Destination? {
-        if (arg.isEmpty()) return null
-        arg.toIntOrNull()?.let { idx ->
-            return destinations.getOrNull(idx - 1)
-        }
-        destinations.firstOrNull { it.roomId.value.equals(arg, ignoreCase = true) }?.let { return it }
-        destinations.firstOrNull { it.name.equals(arg, ignoreCase = true) }?.let { return it }
-        return destinations.firstOrNull { it.name.contains(arg, ignoreCase = true) }
-    }
+    ): FlightSystem.Destination? =
+        resolveByIndexOrName(arg, destinations, { it.roomId.value }, { it.name })
 
     private suspend fun emitFlightState(
         sessionId: SessionId,

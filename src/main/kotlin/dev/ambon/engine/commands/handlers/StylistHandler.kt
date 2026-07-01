@@ -34,14 +34,8 @@ class StylistHandler(
         router.on<Command.Stylist.ChangeRace> { sid, cmd -> handleChangeRace(sid, cmd) }
     }
 
-    private suspend fun requireStylist(sessionId: SessionId, me: PlayerState): Boolean {
-        val room = world.rooms[me.roomId]
-        if (room == null || !room.stylist) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You need to be at a stylist to do that."))
-            return false
-        }
-        return true
-    }
+    private suspend fun requireStylist(sessionId: SessionId, me: PlayerState): Boolean =
+        requireRoomFlag(sessionId, me, world, outbound, "You need to be at a stylist to do that.") { it.stylist }
 
     private suspend fun handleList(sessionId: SessionId) {
         val me = players.get(sessionId) ?: return
