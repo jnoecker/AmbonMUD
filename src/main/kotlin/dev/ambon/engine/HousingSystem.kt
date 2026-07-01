@@ -77,14 +77,16 @@ class HousingSystem(
     /** In-memory cache of loaded houses. Populated on player login, stays until restart. */
     private val housesByOwner = mutableMapOf<PlayerId, HouseRecord>()
 
+    private val scoped = SessionScoped()
+
     /**
      * Tracks where each visitor (including the owner) entered from.
      * Used to resolve the dynamic "exit" when leaving the house.
      */
-    private val visitorOrigins = mutableMapOf<SessionId, RoomId>()
+    private val visitorOrigins = scoped.map<RoomId>()
 
     /** Tracks which house each session is visiting (by owner PlayerId). */
-    private val sessionInHouse = mutableMapOf<SessionId, PlayerId>()
+    private val sessionInHouse = scoped.map<PlayerId>()
 
     // -------- lifecycle --------
 
@@ -130,10 +132,7 @@ class HousingSystem(
         }
     }
 
-    override fun remapSession(oldSid: SessionId, newSid: SessionId) {
-        visitorOrigins.remapKey(oldSid, newSid)
-        sessionInHouse.remapKey(oldSid, newSid)
-    }
+    override fun remapSession(oldSid: SessionId, newSid: SessionId) = scoped.remap(oldSid, newSid)
 
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         val ps = players.get(sessionId) ?: return
@@ -146,8 +145,7 @@ class HousingSystem(
         }
 
         // Clean up this session's visitor state (if they were visiting someone else)
-        visitorOrigins.remove(sessionId)
-        sessionInHouse.remove(sessionId)
+        scoped.clear(sessionId)
     }
 
     // -------- house creation --------

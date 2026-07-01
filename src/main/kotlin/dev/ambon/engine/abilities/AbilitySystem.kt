@@ -17,13 +17,13 @@ import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.SessionScoped
 import dev.ambon.engine.applyHeal
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.engine.remapKey
 import dev.ambon.engine.resolvePlayerStats
 import dev.ambon.engine.spendMana
 import dev.ambon.engine.status.StatusEffectSystem
@@ -54,10 +54,11 @@ class AbilitySystem(
     private val onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> },
     val onSummonPet: suspend (SessionId, String, Long) -> Unit = { _, _, _ -> },
 ) : GameSystem {
-    private val manualLearnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
-    private val raceGrantedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
-    private val effectiveAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
-    private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
+    private val scoped = SessionScoped()
+    private val manualLearnedAbilities = scoped.map<MutableSet<AbilityId>>()
+    private val raceGrantedAbilities = scoped.map<MutableSet<AbilityId>>()
+    private val effectiveAbilities = scoped.map<MutableSet<AbilityId>>()
+    private val cooldowns = scoped.map<MutableMap<AbilityId, Long>>()
 
     fun syncAbilities(
         sessionId: SessionId,
@@ -1166,22 +1167,12 @@ class AbilitySystem(
         cooldowns.remove(sessionId)
     }
 
-    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
-        manualLearnedAbilities.remove(sessionId)
-        raceGrantedAbilities.remove(sessionId)
-        effectiveAbilities.remove(sessionId)
-        cooldowns.remove(sessionId)
-    }
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) = scoped.clear(sessionId)
 
     override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
-    ) {
-        manualLearnedAbilities.remapKey(oldSid, newSid)
-        raceGrantedAbilities.remapKey(oldSid, newSid)
-        effectiveAbilities.remapKey(oldSid, newSid)
-        cooldowns.remapKey(oldSid, newSid)
-    }
+    ) = scoped.remap(oldSid, newSid)
 
     private fun ensureAbilitiesCurrent(sessionId: SessionId) {
         val player = players.get(sessionId) ?: return

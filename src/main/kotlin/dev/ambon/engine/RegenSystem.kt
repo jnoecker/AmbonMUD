@@ -31,21 +31,16 @@ class RegenSystem(
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
     private val classRegistry: PlayerClassRegistry? = null,
 ) : GameSystem {
-    private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
-    private val lastManaRegenAtMs = mutableMapOf<SessionId, Long>()
+    private val scoped = SessionScoped()
+    private val lastRegenAtMs = scoped.map<Long>()
+    private val lastManaRegenAtMs = scoped.map<Long>()
 
     override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
-    ) {
-        lastRegenAtMs.remapKey(oldSid, newSid)
-        lastManaRegenAtMs.remapKey(oldSid, newSid)
-    }
+    ) = scoped.remap(oldSid, newSid)
 
-    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
-        lastRegenAtMs.remove(sessionId)
-        lastManaRegenAtMs.remove(sessionId)
-    }
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) = scoped.clear(sessionId)
 
     fun tick(capOverride: Int? = null) {
         val now = clock.millis()

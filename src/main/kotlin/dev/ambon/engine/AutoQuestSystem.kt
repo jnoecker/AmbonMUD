@@ -34,11 +34,13 @@ class AutoQuestSystem(
     private val clock: Clock,
     private val random: Random = Random.Default,
 ) : GameSystem {
+    private val scoped = SessionScoped()
+
     /** Active auto-quest per session (at most one). */
-    private val activeQuests = mutableMapOf<SessionId, AutoQuest>()
+    private val activeQuests = scoped.map<AutoQuest>()
 
     /** Epoch-ms timestamp after which a player may request again. */
-    private val cooldowns = mutableMapOf<SessionId, Long>()
+    private val cooldowns = scoped.map<Long>()
 
     /**
      * Generates and assigns a random kill quest based on mobs in the player's
@@ -154,14 +156,11 @@ class AutoQuestSystem(
     }
 
     /** Cleans up when a player disconnects. */
-    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
-        activeQuests.remove(sessionId)
-        cooldowns.remove(sessionId)
-    }
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) = scoped.clear(sessionId)
 
     override fun remapSession(oldSid: SessionId, newSid: SessionId) {
-        activeQuests.remapKey(oldSid, newSid)
-        cooldowns.remapKey(oldSid, newSid)
+        scoped.remap(oldSid, newSid)
+        // The moved AutoQuest still carries the old session id in its body; fix it up.
         activeQuests[newSid]?.let {
             activeQuests[newSid] = it.copy(sessionId = newSid)
         }

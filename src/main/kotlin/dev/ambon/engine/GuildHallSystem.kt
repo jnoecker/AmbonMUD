@@ -30,13 +30,15 @@ class GuildHallSystem(
     private val gmcpEmitter: GmcpEmitter? = null,
     private val guildSystem: GuildSystem,
 ) : GameSystem {
+    private val scoped = SessionScoped()
+
     /**
      * Tracks where each visitor entered from, so we can return them on leave.
      */
-    private val visitorOrigins = mutableMapOf<SessionId, RoomId>()
+    private val visitorOrigins = scoped.map<RoomId>()
 
     /** Tracks which guild hall each session is currently in (by guild id). */
-    private val sessionInHall = mutableMapOf<SessionId, String>()
+    private val sessionInHall = scoped.map<String>()
 
     // -------- lifecycle --------
 
@@ -88,15 +90,9 @@ class GuildHallSystem(
         sessionInHall[sessionId] = guildId
     }
 
-    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
-        visitorOrigins.remove(sessionId)
-        sessionInHall.remove(sessionId)
-    }
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) = scoped.clear(sessionId)
 
-    override fun remapSession(oldSid: SessionId, newSid: SessionId) {
-        visitorOrigins.remapKey(oldSid, newSid)
-        sessionInHall.remapKey(oldSid, newSid)
-    }
+    override fun remapSession(oldSid: SessionId, newSid: SessionId) = scoped.remap(oldSid, newSid)
 
     // -------- commands --------
 
