@@ -15,6 +15,12 @@ data class ArcanumJournal(
     var items: MutableMap<String, ArcanumEntry> = mutableMapOf(),
     /** Room entries, keyed by full `zone:room` id. */
     var rooms: MutableMap<String, ArcanumEntry> = mutableMapOf(),
+    /**
+     * Zones whose completion bundle (XP + gold) has already been paid — each
+     * zone rewards exactly once, ever. Defaulted so blobs written before this
+     * field existed still deserialize.
+     */
+    var completedZones: MutableSet<String> = mutableSetOf(),
 )
 
 /** One recorded subject in a player's [ArcanumJournal]. */

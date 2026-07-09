@@ -547,6 +547,9 @@ data class AppConfig(
         require(a.roomDiscoveryXp >= 0 && a.itemDiscoveryXp >= 0 && a.observeNpcXp >= 0) {
             "ambonMUD.engine.akathavae discovery XP values must be >= 0"
         }
+        require(a.roomDiscoveryXpPerZoneLevel >= 0) { "ambonMUD.engine.akathavae.roomDiscoveryXpPerZoneLevel must be >= 0" }
+        require(a.zoneCompletionXpPerRoom >= 0) { "ambonMUD.engine.akathavae.zoneCompletionXpPerRoom must be >= 0" }
+        require(a.zoneCompletionGold >= 0) { "ambonMUD.engine.akathavae.zoneCompletionGold must be >= 0" }
         require(a.unpledgedSuccessMultiplier in 0.0..1.0) { "ambonMUD.engine.akathavae.unpledgedSuccessMultiplier must be 0..1" }
         require(a.unpledgedXpMultiplier in 0.0..1.0) { "ambonMUD.engine.akathavae.unpledgedXpMultiplier must be 0..1" }
     }
@@ -1252,12 +1255,22 @@ data class AkathavaeConfig(
     val repeatXpCooldownMs: Long = 300_000,
     /** XP for recording a never-before-visited room. */
     val roomDiscoveryXp: Long = 15,
+    /**
+     * Extra room-discovery XP per point of the zone's average mob-template level,
+     * so recording rooms in dangerous zones pays like the zone. Zones with no mob
+     * templates fall back to the flat [roomDiscoveryXp] base.
+     */
+    val roomDiscoveryXpPerZoneLevel: Long = 5,
     /** XP for recording a never-before-seen item. */
     val itemDiscoveryXp: Long = 25,
     /** XP for observing a non-combat NPC (vendors, quest givers — recorded, never removed). */
     val observeNpcXp: Long = 10,
     /** Minimum gap between discovery XP awards (ms) — anti-speedrun throttle. Entries still record. */
     val discoveryXpThrottleMs: Long = 1_500,
+    /** [Zone completion] One-time XP per room in a zone, paid when its record reaches 100% (bypasses the throttle). */
+    val zoneCompletionXpPerRoom: Long = 50,
+    /** One-time gold paid on zone completion — the Akathavae's gold faucet (they earn no kill gold). */
+    val zoneCompletionGold: Long = 500,
     /**
      * [Unpledged journaling] Anyone may illuminate and keep a field journal, but
      * unpledged success odds are scaled by this multiplier (0..1) — the practiced
@@ -1321,7 +1334,7 @@ data class DailyQuestsConfig(
 )
 
 data class DailyQuestDefinition(
-    /** Quest objective type: kill, gather, dungeon, craft, pvpKill. */
+    /** Quest objective type: kill, gather, dungeon, craft, pvpKill, illuminate. */
     val type: String = "kill",
     /** Number of actions required to complete. */
     val targetCount: Int = 10,

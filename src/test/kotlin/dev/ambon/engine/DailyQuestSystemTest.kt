@@ -211,6 +211,67 @@ class DailyQuestSystemTest {
         }
     }
 
+    // ── Illuminate commissions ───────────────────────────────────────────
+
+    private fun illuminateSystem(): DailyQuestSystem = DailyQuestSystem(
+        config = DailyQuestsConfig(
+            enabled = true,
+            dailySlots = 1,
+            weeklySlots = 0,
+            streakBonusPercent = 10,
+            streakMaxDays = 7,
+            dailyPool = listOf(
+                DailyQuestDefinition(
+                    type = "illuminate",
+                    targetCount = 5,
+                    description = "The Arcanum requests five fresh accounts of living creatures.",
+                    goldReward = 150,
+                    xpReward = 400,
+                ),
+            ),
+        ),
+        players = players,
+        clock = clock,
+    )
+
+    @Test
+    fun `illuminate events advance illuminate commissions`() {
+        val sys = illuminateSystem()
+        sys.checkReset(sid)
+        sys.onEvent(sid, "illuminate", 1)
+        sys.onEvent(sid, "illuminate", 1)
+        val board = sys.getDailyQuestBoard(sid)
+        assertEquals(2, board.first().progress)
+        assertTrue(!board.first().completed)
+    }
+
+    @Test
+    fun `kill events do not advance illuminate commissions`() {
+        val sys = illuminateSystem()
+        sys.checkReset(sid)
+        sys.onEvent(sid, "kill", 5)
+        val board = sys.getDailyQuestBoard(sid)
+        assertEquals(0, board.first().progress, "kills must not advance an illumination commission")
+    }
+
+    @Test
+    fun `illuminate commission completion pays gold and xp with streak bonus`() = runTest {
+        val sys = illuminateSystem()
+        sys.checkReset(sid)
+        val player = players.get(sid)!!
+        player.dailyQuestState.streakDays = 2 // 1.2x multiplier
+        val initialGold = player.gold
+        val initialXp = player.xpTotal
+
+        val completed = sys.onEvent(sid, "illuminate", 5)
+        assertEquals(1, completed.size)
+        sys.awardRewards(sid, completed)
+
+        assertEquals(initialGold + 180L, player.gold, "150g at a 2-day streak (1.2x) pays 180g")
+        assertEquals(initialXp + 480L, player.xpTotal, "400xp at a 2-day streak (1.2x) pays 480xp")
+        assertTrue(sys.getDailyQuestBoard(sid).first().completed)
+    }
+
     @Test
     fun `disabled system returns empty lists`() {
         val disabledSystem = DailyQuestSystem(
