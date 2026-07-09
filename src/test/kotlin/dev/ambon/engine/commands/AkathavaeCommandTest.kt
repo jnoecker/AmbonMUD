@@ -456,6 +456,141 @@ class AkathavaeCommandTest {
         }
     }
 
+    // ── Illumination arts kit (#1394) ────────────────────────────────────
+
+    @Nested
+    inner class IlluminationArts {
+        private val kit = setOf("chroniclers_focus", "soothing_presence", "keepers_ward", "muses_insight")
+
+        /**
+         * Harness with the shipped ability definitions loaded from the real
+         * `application.yaml`, so pledging grants the actual illumination arts.
+         * A zero-cost Warrior ability is added so the pre-pledge kit visibly
+         * comes and goes around the pledge.
+         */
+        private fun artsHarness(
+            config: AkathavaeConfig = AkathavaeConfig(),
+        ): Pair<CommandRouterHarness, dev.ambon.engine.abilities.AbilitySystem> {
+            val appConfig = dev.ambon.config.AppConfigLoader.load().validated()
+            val classRegistry = dev.ambon.engine.PlayerClassRegistry().also { reg ->
+                dev.ambon.engine.PlayerClassRegistryLoader.load(dev.ambon.test.testClassEngineConfig(), reg)
+            }
+            val progression = dev.ambon.engine.PlayerProgression(classRegistry = classRegistry)
+            val world = shrineWorld()
+            val outbound = dev.ambon.bus.LocalOutboundBus()
+            val items = dev.ambon.engine.items.ItemRegistry()
+            val mobs = dev.ambon.engine.MobRegistry()
+            val players = buildTestPlayerRegistry(
+                world.startRoom,
+                items = items,
+                progression = progression,
+                classRegistry = classRegistry,
+            )
+            val combat = dev.ambon.engine.CombatSystem(players, mobs, items, outbound)
+            val registry = dev.ambon.engine.abilities.AbilityRegistry()
+            dev.ambon.engine.abilities.AbilityRegistryLoader.load(appConfig.engine.abilities, registry)
+            registry.register(
+                dev.ambon.engine.abilities.AbilityDefinition(
+                    id = dev.ambon.engine.abilities.AbilityId("warriors_swing"),
+                    displayName = "Warrior's Swing",
+                    description = "A mighty swing.",
+                    manaCostPct = 10.0,
+                    cooldownMs = 0,
+                    levelRequired = 1,
+                    skillPointCost = 0,
+                    requiredClass = "WARRIOR",
+                    targetType = "enemy",
+                    effect = dev.ambon.engine.abilities.AbilityEffect.DirectDamage(dev.ambon.domain.DamageRange(5, 5)),
+                ),
+            )
+            val abilitySystem = dev.ambon.engine.abilities.AbilitySystem(
+                players = players,
+                registry = registry,
+                outbound = outbound,
+                combat = combat,
+                clock = MutableClock(0L),
+            )
+            val h = CommandRouterHarness.create(
+                world = world,
+                players = players,
+                items = items,
+                mobs = mobs,
+                outbound = outbound,
+                progression = progression,
+                classRegistry = classRegistry,
+                abilitySystem = abilitySystem,
+                akathavaeConfig = config,
+            )
+            return h to abilitySystem
+        }
+
+        @Test
+        fun `pledging grants the illumination arts and renouncing withdraws them`() = runTest {
+            val (h, abilitySystem) = artsHarness(config = AkathavaeConfig(renounceCostGold = 0))
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.players.setLevel(sid, 14)
+            abilitySystem.refreshKnownAbilities(sid)
+            assertTrue(
+                abilitySystem.knownAbilities(sid).any { it.id.value == "warriors_swing" },
+                "warrior kit known before the pledge",
+            )
+            assertTrue(
+                abilitySystem.knownAbilities(sid).none { it.id.value in kit },
+                "no illumination arts before the pledge",
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Pledge)
+
+            assertEquals(
+                kit,
+                abilitySystem.knownAbilities(sid).map { it.id.value }.toSet(),
+                "a level-14 pledge should know the full kit and nothing else",
+            )
+
+            h.router.handle(sid, Command.Renounce(confirm = true))
+
+            val renouncedIds = abilitySystem.knownAbilities(sid).map { it.id.value }.toSet()
+            assertTrue(renouncedIds.none { it in kit }, "the arts must not outlive the pledge: $renouncedIds")
+            assertTrue("warriors_swing" in renouncedIds, "former-class abilities return on renounce")
+        }
+
+        @Test
+        fun `a low-level pledge only knows the arts they have earned`() = runTest {
+            val (h, abilitySystem) = artsHarness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.players.setLevel(sid, 6)
+            h.drain()
+
+            h.router.handle(sid, Command.Pledge)
+
+            assertEquals(
+                setOf("chroniclers_focus", "soothing_presence"),
+                abilitySystem.knownAbilities(sid).map { it.id.value }.toSet(),
+            )
+        }
+
+        @Test
+        fun `spells lists the illumination arts for a pledged keeper`() = runTest {
+            val (h, _) = artsHarness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.players.setLevel(sid, 3)
+            h.router.handle(sid, Command.Pledge)
+            h.drain()
+
+            h.router.handle(sid, Command.Spells)
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("illumination arts") }, "got=$infos")
+            assertTrue(infos.any { it.contains("Chronicler's Focus") }, "got=$infos")
+            assertTrue(infos.any { it.contains("Arcanum") }, "journal pointer stays, got=$infos")
+            assertFalse(infos.any { it.contains("wield no spells") }, "got=$infos")
+        }
+    }
+
     // ── Multiclass lockout ───────────────────────────────────────────────
 
     @Nested
