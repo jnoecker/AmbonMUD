@@ -161,20 +161,21 @@ class AkathavaeHandler(
         // Push the full journal to GMCP clients — the Arcanum panel renders from this.
         system.emitJournal(sessionId)
 
+        val page = cmd.page ?: 1
         when (cmd.section) {
             null -> renderArcanumSummary(sessionId, me, system)
-            "rooms", "places" -> renderArcanumSection(sessionId, "Places", me.arcanum.rooms.keys) { key ->
+            "rooms", "places" -> renderArcanumSection(sessionId, "Places", "rooms", page, me.arcanum.rooms.keys) { key ->
                 world.rooms[dev.ambon.domain.ids.RoomId(key)]?.title ?: key
             }
-            "mobs", "creatures", "beasts" -> renderArcanumSection(sessionId, "Creatures", me.arcanum.mobs.keys) { key ->
+            "mobs", "creatures", "beasts" -> renderArcanumSection(sessionId, "Creatures", "mobs", page, me.arcanum.mobs.keys) { key ->
                 val credit = system.worldFirstCredit("mob", key)
                 val name = key.substringAfter(':').replace('_', ' ')
                 if (credit?.first == me.name) "$name ★" else name
             }
-            "items", "things" -> renderArcanumSection(sessionId, "Items", me.arcanum.items.keys) { key ->
+            "items", "things" -> renderArcanumSection(sessionId, "Items", "items", page, me.arcanum.items.keys) { key ->
                 key.substringAfter(':').replace('_', ' ')
             }
-            else -> outbound.send(OutboundEvent.SendError(sessionId, "Usage: arcanum [rooms|mobs|items]"))
+            else -> outbound.send(OutboundEvent.SendError(sessionId, "Usage: arcanum [rooms|mobs|items] [page]"))
         }
     }
 
@@ -189,40 +190,55 @@ class AkathavaeHandler(
                 "  Recorded: ${me.arcanum.rooms.size} places, ${me.arcanum.mobs.size} creatures, ${me.arcanum.items.size} items.",
             ),
         )
-        val zones = (
-            me.arcanum.rooms.keys.map { it.substringBefore(':') } +
-                me.arcanum.mobs.keys.map { it.substringBefore(':') }
-        ).toSortedSet()
-        for (zone in zones) {
+        for (zone in system.recordedZones(me)) {
             val c = system.zoneCompletion(me, zone)
-            if (c.roomsTotal == 0 && c.mobsTotal == 0) continue
+            if (c.roomsTotal == 0 && c.mobsTotal == 0 && c.itemsTotal == 0) continue
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
-                    "  $zone: ${c.roomsRecorded}/${c.roomsTotal} places, ${c.mobsRecorded}/${c.mobsTotal} creatures.",
+                    "  $zone: ${c.roomsRecorded}/${c.roomsTotal} places, ${c.mobsRecorded}/${c.mobsTotal} creatures, " +
+                        "${c.itemsRecorded}/${c.itemsTotal} items.",
                 ),
             )
         }
-        outbound.send(OutboundEvent.SendInfo(sessionId, "Use 'arcanum rooms|mobs|items' to leaf through the pages."))
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Use 'arcanum rooms|mobs|items [page]' to leaf through the pages."))
     }
 
     private suspend fun renderArcanumSection(
         sessionId: SessionId,
         title: String,
+        sectionWord: String,
+        page: Int,
         keys: Set<String>,
         displayName: (String) -> String,
     ) {
-        outbound.send(OutboundEvent.SendInfo(sessionId, "[ Arcanum — $title (${keys.size}) ]"))
         if (keys.isEmpty()) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "[ Arcanum — $title (0) ]"))
             outbound.send(OutboundEvent.SendInfo(sessionId, "  These pages are still blank."))
             return
         }
-        keys.sorted().chunked(4).take(MAX_SECTION_ROWS).forEach { row ->
-            outbound.send(OutboundEvent.SendInfo(sessionId, "  " + row.joinToString(", ") { displayName(it) }))
+        val pageSize = MAX_SECTION_ROWS * SECTION_ENTRIES_PER_ROW
+        val totalPages = (keys.size + pageSize - 1) / pageSize
+        if (page < 1 || page > totalPages) {
+            outbound.send(
+                OutboundEvent.SendError(
+                    sessionId,
+                    "The $title pages run 1 to $totalPages — try 'arcanum $sectionWord $totalPages'.",
+                ),
+            )
+            return
         }
-        val shown = minOf(keys.size, MAX_SECTION_ROWS * 4)
-        if (keys.size > shown) {
-            outbound.send(OutboundEvent.SendInfo(sessionId, "  …and ${keys.size - shown} more."))
+        outbound.send(OutboundEvent.SendInfo(sessionId, "[ Arcanum — $title (${keys.size}) ]"))
+        keys.sorted()
+            .drop((page - 1) * pageSize)
+            .take(pageSize)
+            .chunked(SECTION_ENTRIES_PER_ROW)
+            .forEach { row ->
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  " + row.joinToString(", ") { displayName(it) }))
+            }
+        if (totalPages > 1) {
+            val hint = if (page < totalPages) " — 'arcanum $sectionWord ${page + 1}' for more" else ""
+            outbound.send(OutboundEvent.SendInfo(sessionId, "  Page $page/$totalPages$hint."))
         }
     }
 
@@ -426,5 +442,6 @@ class AkathavaeHandler(
         const val AKATHAVAE_CLASS = "AKATHAVAE"
         private const val HOUR_MS = 3_600_000L
         private const val MAX_SECTION_ROWS = 25
+        private const val SECTION_ENTRIES_PER_ROW = 4
     }
 }

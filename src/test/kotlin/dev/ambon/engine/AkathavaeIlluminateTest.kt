@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.config.AkathavaeConfig
 import dev.ambon.domain.StatMap
+import dev.ambon.domain.arcanum.ArcanumEntry
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -116,6 +117,39 @@ class AkathavaeIlluminateTest {
         me.isAkathavae = true
         s.fixture.outbound.drainAll()
         return me
+    }
+
+    // ── Zone completion ──────────────────────────────────────────────────
+
+    @Test
+    fun `zone completion counts item templates and recorded items for the zone`() = runTest {
+        val s = setup()
+        s.fixture.items.loadSpawns(
+            listOf(
+                ItemSpawn(instance = ItemInstance(ItemId("test:hood"), Item(keyword = "hood", displayName = "a leather hood"))),
+                ItemSpawn(instance = ItemInstance(ItemId("test:ring"), Item(keyword = "ring", displayName = "a copper ring"))),
+                // Another zone's template must not count toward "test".
+                ItemSpawn(instance = ItemInstance(ItemId("other:gem"), Item(keyword = "gem", displayName = "a dull gem"))),
+            ),
+        )
+        val me = loginAkathavae(s, SessionId(1L), "Thalen")
+        me.arcanum.items["test:hood"] = ArcanumEntry(firstRecordedAtMs = 1L)
+        me.arcanum.items["other:gem"] = ArcanumEntry(firstRecordedAtMs = 1L)
+
+        val c = s.system.zoneCompletion(me, "test")
+
+        assertEquals(1, c.itemsRecorded, "only the test-zone recording counts")
+        assertEquals(2, c.itemsTotal, "only test-zone templates count toward the total")
+    }
+
+    @Test
+    fun `recorded zones include zones known only through items`() = runTest {
+        val s = setup()
+        val me = loginAkathavae(s, SessionId(1L), "Thalen")
+        me.arcanum.rooms["test:room"] = ArcanumEntry(firstRecordedAtMs = 1L)
+        me.arcanum.items["bazaar:lamp"] = ArcanumEntry(firstRecordedAtMs = 1L)
+
+        assertEquals(listOf("bazaar", "test"), s.system.recordedZones(me))
     }
 
     // ── Success math ─────────────────────────────────────────────────────

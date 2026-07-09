@@ -982,6 +982,8 @@ class GmcpEmitter(
         val roomsTotal: Int,
         val mobsRecorded: Int,
         val mobsTotal: Int,
+        val itemsRecorded: Int,
+        val itemsTotal: Int,
     )
 
     data class ArcanumMobPayload(
