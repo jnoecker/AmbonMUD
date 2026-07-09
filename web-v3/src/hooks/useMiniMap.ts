@@ -579,29 +579,8 @@ function renderMap(
       }
     }
 
-    // Labels — fade in with zoom rather than popping, and allow longer names
-    // at close zoom; the hover tooltip carries the full title regardless.
-    if (isVisited && node.title) {
-      const labelAlpha = isCurrent ? 1 : clamp((cell - 34) / 26, 0, 1);
-      if (labelAlpha > 0.05) {
-        ctx.save();
-        ctx.globalAlpha = labelAlpha;
-        ctx.font = isCurrent
-          ? "bold 12px 'JetBrains Mono', 'Cascadia Mono', monospace"
-          : "11px 'JetBrains Mono', 'Cascadia Mono', monospace";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        const maxLen = isCurrent ? 20 : cell >= 76 ? 22 : 14;
-        const label = node.title.length > maxLen ? node.title.slice(0, maxLen - 1) + "…" : node.title;
-        const ly = y + size / 2 + 4;
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = LABEL_OUTLINE;
-        ctx.strokeText(label, x, ly);
-        ctx.fillStyle = isCurrent ? LABEL_CURRENT : LABEL_VISITED;
-        ctx.fillText(label, x, ly);
-        ctx.restore();
-      }
-    }
+    // Room labels are hover-only: the tooltip names the room under the cursor,
+    // so the chart itself stays clean ink at rest (no per-room text).
   }
 
   // Off-screen quest target edge indicators — gold chevrons at the scroll

@@ -1,8 +1,13 @@
 package dev.ambon.engine.commands
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.load.WorldLoader
+import dev.ambon.engine.GmcpEmitter
+import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.toPlayerRecord
 import dev.ambon.engine.toPlayerState
 import dev.ambon.persistence.PlayerId
@@ -20,6 +25,24 @@ import org.junit.jupiter.api.Test
 class ExplorationCommandRouterTest {
     private fun createHarness(): CommandRouterHarness =
         CommandRouterHarness.create(world = WorldLoader.loadFromResource("world/ok_small.yaml"))
+
+    private fun createGmcpHarness(): CommandRouterHarness {
+        val outbound = LocalOutboundBus()
+        val gmcpEmitter = GmcpEmitter(outbound = outbound, supportsPackage = { _, _ -> true })
+        return CommandRouterHarness.create(
+            world = WorldLoader.loadFromResource("world/ok_small.yaml"),
+            outbound = outbound,
+            gmcpEmitter = gmcpEmitter,
+        )
+    }
+
+    /** Rooms of the pending Zone.Map packet, keyed by room id. */
+    private suspend fun zoneMapRooms(h: CommandRouterHarness): Map<String, JsonNode> {
+        val packet = h.outbound.drainAll()
+            .filterIsInstance<OutboundEvent.GmcpData>()
+            .first { it.gmcpPackage == "Zone.Map" }
+        return jacksonObjectMapper().readTree(packet.jsonData)["rooms"].associateBy { it["id"].asText() }
+    }
 
     @Test
     fun `looking marks the current room explored`() =
@@ -47,6 +70,42 @@ class ExplorationCommandRouterTest {
             val explored = h.players.get(sid)!!.exploredRooms
             assertTrue("ok_small:a" in explored)
             assertTrue("ok_small:b" in explored)
+        }
+
+    @Test
+    fun `regular players get zone map detail only for rooms they explored`() =
+        runTest {
+            val h = createGmcpHarness()
+            val sid = SessionId(10)
+            h.players.loginOrFail(sid, "Norm")
+            h.outbound.drainAll()
+
+            h.router.handle(sid, Command.Look)
+            val rooms = zoneMapRooms(h)
+            assertEquals(1, rooms.getValue("a")["e"]?.asInt(), "entry room must be explored")
+            assertTrue(
+                rooms.getValue("b")["e"] == null && rooms.getValue("b")["t"] == null,
+                "unexplored room must stay bare. got=${rooms.getValue("b")}",
+            )
+        }
+
+    @Test
+    fun `staff get the zone map with every room explored`() =
+        runTest {
+            val h = createGmcpHarness()
+            val sid = SessionId(11)
+            h.players.loginOrFail(sid, "Steph")
+            h.players.get(sid)!!.isStaff = true
+            h.outbound.drainAll()
+
+            h.router.handle(sid, Command.Look)
+            val rooms = zoneMapRooms(h)
+            assertEquals(1, rooms.getValue("a")["e"]?.asInt())
+            assertEquals(1, rooms.getValue("b")["e"]?.asInt(), "staff must see unwalked rooms as explored")
+            assertEquals("Room B", rooms.getValue("b")["t"].asText())
+            // The staff override is view-only: nothing is written to the player's
+            // permanent exploration set beyond the rooms actually stood in.
+            assertFalse("ok_small:b" in h.players.get(sid)!!.exploredRooms)
         }
 
     @Test
