@@ -679,6 +679,22 @@ class AkathavaeIlluminateTest {
     }
 
     @Test
+    fun `the subject holds its pose while being sketched`() = runTest {
+        val s = setup(rng = ScriptedRandom(0), config = AkathavaeConfig())
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        assertFalse(s.system.isSketchSubject(MobId("test:w1")), "no pose before the sketch starts")
+        s.system.illuminate(sid, "wisp")
+        assertTrue(s.system.isSketchSubject(MobId("test:w1")), "a posing subject is pinned for the behavior tree")
+
+        s.clock.advance(20_000)
+        s.system.tick()
+        assertFalse(s.system.isSketchSubject(MobId("test:w1")), "the pose ends with the sketch")
+    }
+
+    @Test
     fun `a second illuminate while sketching is refused`() = runTest {
         val s = setup(rng = ScriptedRandom(0), config = AkathavaeConfig())
         val sid = SessionId(1L)

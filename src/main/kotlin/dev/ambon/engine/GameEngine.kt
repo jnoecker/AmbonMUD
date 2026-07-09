@@ -1299,7 +1299,11 @@ class GameEngine(
             outbound = outbound,
             clock = clock,
             isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
-            isMobRooted = { mobId -> statusEffectSystem.hasMobEffect(mobId, "root") },
+            // Root effects and an in-progress sketch both pin the mob: a posing
+            // subject takes no behavior-tree actions until the artist finishes.
+            isMobRooted = { mobId ->
+                statusEffectSystem.hasMobEffect(mobId, "root") || akathavaeSystem.isSketchSubject(mobId)
+            },
             isMobPossessed = { mobId -> players.allPlayers().any { it.possessedMobId == mobId } },
             startMobCombat = { mobId, sessionId -> combatSystem.startMobCombat(mobId, sessionId) },
             fleeMob = { mobId -> combatSystem.fleeMob(mobId) },

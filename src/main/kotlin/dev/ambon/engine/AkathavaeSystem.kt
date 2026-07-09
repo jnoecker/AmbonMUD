@@ -307,6 +307,15 @@ class AkathavaeSystem(
         }
     }
 
+    /**
+     * True while any player is sketching [mobId]. Wired into the behavior
+     * tree's root gate so the subject holds its pose — no wandering, no
+     * patrol, no aggro-initiation — until the artist finishes, mirroring how
+     * combat pins a mob in place. A mob already fighting keeps swinging
+     * (combat swings come from CombatSystem, not the behavior tree).
+     */
+    fun isSketchSubject(mobId: dev.ambon.domain.ids.MobId): Boolean = pendingSketches.values.any { it.mobId == mobId }
+
     /** Cancels [sessionId]'s in-progress sketch, if any, telling the player [reason]. */
     private suspend fun cancelSketch(
         sessionId: SessionId,
