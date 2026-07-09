@@ -194,6 +194,8 @@ data class PlayerState(
     var preAkathavaeClass: String? = null,
     /** The player's Arcanum journal. Persisted as a JSON blob (see [dev.ambon.persistence.PlayerRecord.arcanumData]). */
     var arcanum: ArcanumJournal = ArcanumJournal(),
+    /** Number of permanent Arcanum world-firsts credited to this player (the registry is keyed by subject, not player). */
+    var worldFirstsCount: Int = 0,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -353,6 +355,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         arcanum = runCatching {
             jsonMapper.readValue(arcanumData, ArcanumJournal::class.java)
         }.getOrDefault(ArcanumJournal()),
+        worldFirstsCount = worldFirstsCount,
         screenReaderEnabled = screenReaderEnabled,
         audioLinksEnabled = audioLinksEnabled,
         description = description,
@@ -424,6 +427,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         akathavaeRenouncedAtMs = akathavaeRenouncedAtMs,
         preAkathavaeClass = preAkathavaeClass,
         arcanumData = jsonMapper.writeValueAsString(arcanum),
+        worldFirstsCount = worldFirstsCount,
         screenReaderEnabled = screenReaderEnabled,
         audioLinksEnabled = audioLinksEnabled,
         description = description,

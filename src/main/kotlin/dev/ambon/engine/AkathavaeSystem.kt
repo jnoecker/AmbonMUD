@@ -55,6 +55,11 @@ class AkathavaeSystem(
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
     private val onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null,
     private val gmcpEmitter: GmcpEmitter? = null,
+    /**
+     * Fired after a first-time Arcanum record (creature, room, or item) or a newly
+     * stamped world-first, so achievement progress can update immediately.
+     */
+    private val onArcanumRecorded: (suspend (SessionId) -> Unit)? = null,
 ) {
     /** Per-session, per-subject retry locks after a failed illumination. Runtime-only. */
     private val failCooldowns = mutableMapOf<SessionId, MutableMap<String, Long>>()
@@ -185,6 +190,7 @@ class AkathavaeSystem(
             exclude = sessionId,
         )
         announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
+        if (firstTime) onArcanumRecorded?.invoke(sessionId)
 
         val baseXp = progression.killXpReward(mob)
         if (firstTime) {
@@ -274,6 +280,7 @@ class AkathavaeSystem(
                 ),
             )
             announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
+            onArcanumRecorded?.invoke(sessionId)
             awardDiscoveryXp(sessionId, me, config.observeNpcXp, "observation", now)
             markVitalsDirty?.invoke(sessionId)
             emitStatus(sessionId)
@@ -297,6 +304,7 @@ class AkathavaeSystem(
         val title = world.rooms[roomId]?.title ?: roomId.value
         outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You record $title."))
         announceWorldFirst(sessionId, me, "room:$key", title, now)
+        onArcanumRecorded?.invoke(sessionId)
         awardDiscoveryXp(sessionId, me, config.roomDiscoveryXp, "discovery", now)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
@@ -337,6 +345,7 @@ class AkathavaeSystem(
         recordEntry(me.arcanum.items, key, now, source)
         outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You record ${item.item.displayName}."))
         announceWorldFirst(sessionId, me, "item:$key", item.item.displayName, now)
+        onArcanumRecorded?.invoke(sessionId)
         awardDiscoveryXp(sessionId, me, config.itemDiscoveryXp, "discovery", now)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
@@ -461,6 +470,7 @@ class AkathavaeSystem(
     ) {
         val ws = worldState ?: return
         if (ws.recordArcanumFirst(firstKey, me.name, now)) {
+            me.worldFirstsCount += 1
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
@@ -468,6 +478,7 @@ class AkathavaeSystem(
                 ),
             )
             metrics.onGameEvent("akathavae", "world_first")
+            onArcanumRecorded?.invoke(sessionId)
         }
     }
 

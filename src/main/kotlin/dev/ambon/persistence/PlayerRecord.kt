@@ -128,6 +128,8 @@ data class PlayerRecord(
     val preAkathavaeClass: String? = null,
     /** JSON blob holding the player's Arcanum journal (rooms/mobs/items recorded). */
     val arcanumData: String = "{}",
+    /** Number of permanent Arcanum world-firsts credited to this player (see WorldStateRegistry). */
+    val worldFirstsCount: Int = 0,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

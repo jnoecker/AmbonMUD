@@ -831,6 +831,7 @@ class GameEngine(
             markVitalsDirty = ::markVitalsDirty,
             onLevelUp = ::onCombatLevelUp,
             gmcpEmitter = gmcpEmitter,
+            onArcanumRecorded = { sid -> achievementSystem.onArcanumRecorded(sid) },
         )
 
     private val flightSystem =
