@@ -15,6 +15,7 @@ import dev.ambon.engine.LoginResult
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PrestigePerkPayload
 import dev.ambon.engine.PrestigeSystem
+import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.CommandRouterHarness
@@ -756,6 +757,53 @@ class CommandRouterTest {
             val textLines = outs.filterIsInstance<OutboundEvent.SendText>()
             assertEquals(1, textLines.size, "Expected only the level line. got=$textLines")
             assertTrue(textLines[0].text.startsWith("You see Bob"), "got=${textLines[0].text}")
+        }
+
+    @Test
+    fun `look at pledged player shows the Akathavae pledge line`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(bob)!!.isAkathavae = true
+            h.drain()
+
+            h.router.handle(alice, Command.LookAt("Bob"))
+            val outs = h.drain()
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text == NavigationHandler.AKATHAVAE_PLEDGE_LINE },
+                "Expected the Akathavae pledge line. got=$outs",
+            )
+        }
+
+    @Test
+    fun `pledge line in look derives from live state and vanishes after renounce`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.players.get(bob)!!.isAkathavae = true
+            h.drain()
+
+            h.router.handle(alice, Command.LookAt("Bob"))
+            val pledged = h.drain()
+            assertTrue(
+                pledged.any { it is OutboundEvent.SendText && it.text == NavigationHandler.AKATHAVAE_PLEDGE_LINE },
+                "Expected the pledge line while pledged. got=$pledged",
+            )
+
+            h.players.get(bob)!!.isAkathavae = false
+            h.router.handle(alice, Command.LookAt("Bob"))
+            val renounced = h.drain()
+            assertFalse(
+                renounced.any { it is OutboundEvent.SendText && it.text == NavigationHandler.AKATHAVAE_PLEDGE_LINE },
+                "Pledge line must disappear after renouncing. got=$renounced",
+            )
         }
 
     @Test
