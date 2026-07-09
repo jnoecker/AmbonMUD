@@ -1159,7 +1159,6 @@ function App() {
         onQuickbarAssign={quickbar.assign}
         onQuickbarClear={quickbar.clear}
         activePopout={state.activePopout}
-        arcanumPledged={state.arcanumStatus?.pledged ?? false}
         onCommand={sendCommand}
         onOpenPanel={(panel) => openPanel(panel)}
         onOpenTerminal={openTerminal}

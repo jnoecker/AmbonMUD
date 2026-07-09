@@ -1461,10 +1461,11 @@ export function applyGmcpPackage(
             aggressive: entry.aggressive === true,
             combatant: entry.combatant !== false,
             illuminationPct: typeof entry.illuminationPct === "number" ? entry.illuminationPct : null,
-            // Arcanum badge fields ride only for pledged Akathavae viewers.
+            // Arcanum badge fields are per-viewer; anyone keeps a journal now.
             arcanumRecorded: typeof entry.arcanumRecorded === "boolean" ? entry.arcanumRecorded : undefined,
             arcanumSource: typeof entry.arcanumSource === "string" ? entry.arcanumSource : undefined,
             arcanumFirstBy: typeof entry.arcanumFirstBy === "string" ? entry.arcanumFirstBy : undefined,
+            arcanumFirstSlainBy: typeof entry.arcanumFirstSlainBy === "string" ? entry.arcanumFirstSlainBy : undefined,
           })),
       );
       break;
@@ -2299,6 +2300,8 @@ export function applyGmcpPackage(
           source: typeof m.source === "string" ? m.source : "illuminated",
           firstBy: typeof m.firstBy === "string" ? m.firstBy : null,
           firstAtMs: typeof m.firstAtMs === "number" ? m.firstAtMs : null,
+          firstSlainBy: typeof m.firstSlainBy === "string" ? m.firstSlainBy : null,
+          firstSlainAtMs: typeof m.firstSlainAtMs === "number" ? m.firstSlainAtMs : null,
         })),
         items: asRecords(packet.items).map((i) => ({
           key: typeof i.key === "string" ? i.key : "",

@@ -31,8 +31,6 @@ interface GameShellProps {
   onQuickbarAssign: (slotIndex: number, skillId: string) => void;
   onQuickbarClear: (slotIndex: number) => void;
   activePopout: PopoutPanel;
-  /** True when the player has taken the Akathavae pledge — surfaces the Arcanum kiosk. */
-  arcanumPledged?: boolean;
   onCommand: (cmd: string) => void;
   onOpenPanel: (panel: PopoutPanel) => void;
   onOpenTerminal: () => void;
@@ -73,7 +71,6 @@ export function GameShell({
   onQuickbarAssign,
   onQuickbarClear,
   activePopout,
-  arcanumPledged = false,
   onCommand,
   onOpenPanel,
   onOpenTerminal,
@@ -398,7 +395,6 @@ export function GameShell({
               <KioskBar
                 serverAssets={serverAssets}
                 activePopout={activePopout}
-                arcanumPledged={arcanumPledged}
                 onOpenPanel={onOpenPanel}
               />
             )}

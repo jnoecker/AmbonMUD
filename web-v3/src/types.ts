@@ -981,17 +981,16 @@ export interface MobInfo {
   dialogue: boolean;
   aggressive: boolean;
   combatant: boolean;
-  /** Illumination success odds for the viewer; null unless pledged Akathavae + combatant. */
+  /** Per-viewer illumination success odds (scaled down for the unpledged); null for non-combatants. */
   illuminationPct: number | null;
-  /**
-   * Pledged-Akathavae viewers only (absent otherwise): whether this creature
-   * is already recorded in the viewer's Arcanum journal.
-   */
+  /** Whether this creature is already recorded in the viewer's Arcanum journal. */
   arcanumRecorded?: boolean;
   /** How the viewer recorded it ("illuminated" | "observed"), when recorded. */
   arcanumSource?: string;
   /** Name of the permanent world-first illuminator, absent while unclaimed. */
   arcanumFirstBy?: string;
+  /** Name of the permanent world-first killer, absent while unclaimed. */
+  arcanumFirstSlainBy?: string;
 }
 
 export interface LoginRaceOption {
@@ -1608,6 +1607,9 @@ export interface ArcanumMobEntry {
   /** Permanent world-first credit — "First illuminated by <firstBy>". */
   firstBy: string | null;
   firstAtMs: number | null;
+  /** Permanent world-first kill credit — "First slain by <firstSlainBy>". */
+  firstSlainBy: string | null;
+  firstSlainAtMs: number | null;
 }
 
 export interface ArcanumItemEntry {

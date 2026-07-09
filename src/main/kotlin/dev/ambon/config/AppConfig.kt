@@ -2547,7 +2547,7 @@ data class CommandsConfig(
             ),
             "illuminate" to CommandMetadata(
                 usage = "illuminate <creature>",
-                description = "Record a creature in your Arcanum — the Akathavae's replacement for attacking",
+                description = "Record a creature in your Arcanum without harming it — anyone can; the pledged excel",
                 category = "progression",
                 requiresTarget = true,
             ),

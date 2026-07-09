@@ -25,21 +25,13 @@ const KIOSKS: KioskDef[] = [
   { panel: "spellbook", label: "Spellbook", assetKey: "spellbook_widget", fallback: <SpellbookIcon className="kiosk-icon-svg" /> },
   { panel: "quests", label: "Quests", assetKey: "quests_widget", fallback: <QuestsTabIcon className="kiosk-icon-svg" /> },
   { panel: "combatlog", label: "Combat Log", assetKey: "combat_log_widget", fallback: <AttackIcon className="kiosk-icon-svg" /> },
+  // Anyone keeps a field journal now, so the Arcanum rides for every player.
+  { panel: "arcanum", label: "Arcanum", assetKey: "arcanum_widget", fallback: <MapScrollIcon className="kiosk-icon-svg" /> },
 ];
-
-/** Appended for pledged Akathavae — quick access to their illuminated journal. */
-const ARCANUM_KIOSK: KioskDef = {
-  panel: "arcanum",
-  label: "Arcanum",
-  assetKey: "arcanum_widget",
-  fallback: <MapScrollIcon className="kiosk-icon-svg" />,
-};
 
 interface KioskBarProps {
   serverAssets: Record<string, string>;
   activePopout: PopoutPanel;
-  /** True when the player has taken the Akathavae pledge — adds the Arcanum kiosk. */
-  arcanumPledged?: boolean;
   onOpenPanel: (panel: PopoutPanel) => void;
 }
 
@@ -48,8 +40,8 @@ interface KioskBarProps {
  * (Auction, Mail) are handled by the in-world Pixi room badges instead, so they
  * stack with Shop/Inn and never overlap.
  */
-export function KioskBar({ serverAssets, activePopout, arcanumPledged = false, onOpenPanel }: KioskBarProps) {
-  const kiosks = arcanumPledged ? [...KIOSKS, ARCANUM_KIOSK] : KIOSKS;
+export function KioskBar({ serverAssets, activePopout, onOpenPanel }: KioskBarProps) {
+  const kiosks = KIOSKS;
   return (
     <nav className="kiosks" aria-label="Panels">
       {kiosks.map((def) => {
