@@ -202,6 +202,7 @@ class ShopHandler(
             ),
         )
         gmcpEmitter?.sendCharSprites(sessionId, me)
+        gmcpEmitter?.sendTravelStatus(sessionId, me)
         ctx.emitShopGmcp(sessionId)
     }
 

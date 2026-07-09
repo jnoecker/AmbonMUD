@@ -9,6 +9,8 @@ data object AggroAction : BtNode {
         val playersInRoom = ctx.players.playersInRoom(ctx.mob.roomId)
         for (p in playersInRoom) {
             if (p.isStaff) continue
+            // Riders fast-travelling through the room are passing traffic, not prey.
+            if (p.ridingMountId != null) continue
             val started = ctx.startMobCombat(ctx.mob.id, p.sessionId)
             if (started) return BtResult.SUCCESS
         }

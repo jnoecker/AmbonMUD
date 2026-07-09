@@ -306,6 +306,13 @@ sealed interface Command {
         ) : Flight
     }
 
+    // ---- Mount fast travel ----
+
+    /** `travel <zone:room>` — ride an owned mount along a known path to an explored room. */
+    data class Travel(
+        val destination: String,
+    ) : Command
+
     // ---- Boat dock commands ----
 
     sealed interface Boat : Command {
@@ -1173,6 +1180,16 @@ object CommandParser {
                 Command.Invalid(line, "fly <destination|#>")
             } else {
                 Command.Flight.Travel(dest)
+            }
+        }?.let { return it }
+
+        // mount fast travel: "travel <zone:room>" rides an owned mount to an explored room
+        matchPrefix(line, listOf("travel")) { rest ->
+            val dest = rest.trim()
+            if (dest.isEmpty()) {
+                Command.Invalid(line, "travel <zone:room>")
+            } else {
+                Command.Travel(dest)
             }
         }?.let { return it }
 

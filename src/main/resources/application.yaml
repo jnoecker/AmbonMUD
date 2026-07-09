@@ -935,6 +935,9 @@ ambonmud:
       minCost: 25
       maxCost: 5000
       unreachableCost: 500
+    mountTravel:
+      msPerRoom: 300
+      maxPathLength: 300
     navigation:
       recall:
         cooldownMs: 60000
@@ -986,6 +989,12 @@ ambonmud:
         fly:
           usage: "fly <destination|#>"
           description: "Pay gold to fast-travel to a discovered flight point (at a flight master)."
+          category: "navigation"
+          staff: false
+          requiresTarget: true
+        travel:
+          usage: "travel <zone:room>"
+          description: "Ride an owned mount along a known path to an explored room (or click the map)."
           category: "navigation"
           staff: false
           requiresTarget: true

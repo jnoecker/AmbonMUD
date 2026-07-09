@@ -1074,6 +1074,7 @@ class GmcpEmitter(
         sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         sendCharAchievements(sessionId, player, achievementRegistry)
         sendCharSprites(sessionId, player)
+        sendTravelStatus(sessionId, player)
         sendCharClasses(sessionId, player.unlockedClasses.ifEmpty { setOf(player.playerClass) }, player.playerClass)
         sendPrestigeInfoForPlayer(sessionId, player)
         if (world != null) {
@@ -2110,6 +2111,32 @@ class GmcpEmitter(
                 originMapX = origin?.mapX,
                 originMapY = origin?.mapY,
             ),
+        )
+    }
+
+    private data class TravelStatusPayload(
+        /** True when the player owns at least one mount and may click the map to ride. */
+        val canTravel: Boolean,
+        val riding: Boolean,
+        /** Destination room id while riding, else null. */
+        val destination: String? = null,
+    )
+
+    /** Sends `Travel.Status` — whether map click-to-ride is available and any ride in progress. */
+    suspend fun sendTravelStatus(
+        sessionId: SessionId,
+        player: PlayerState,
+        destination: String? = null,
+    ) {
+        emit(
+            sessionId,
+            "Travel.Status",
+            TravelStatusPayload(
+                canTravel = player.ownedMounts.isNotEmpty(),
+                riding = player.ridingMountId != null,
+                destination = destination,
+            ),
+            supportCheck = "Travel",
         )
     }
 
