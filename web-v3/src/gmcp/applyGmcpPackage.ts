@@ -94,6 +94,7 @@ import type {
   StylistRace,
   FlightState,
   FlightDestination,
+  TravelStatus,
   BoatState,
   BoatDestination,
   DailyQuestBoard,
@@ -239,6 +240,7 @@ interface GmcpContext {
   setBankState: Dispatch<SetStateAction<BankState | null>>;
   setStylistState: Dispatch<SetStateAction<StylistState | null>>;
   setFlightState: Dispatch<SetStateAction<FlightState | null>>;
+  setTravelStatus: Dispatch<SetStateAction<TravelStatus | null>>;
   setBoatState: Dispatch<SetStateAction<BoatState | null>>;
   setRecallState: Dispatch<SetStateAction<RecallState | null>>;
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
@@ -1458,6 +1460,11 @@ export function applyGmcpPackage(
             dialogue: entry.dialogue === true,
             aggressive: entry.aggressive === true,
             combatant: entry.combatant !== false,
+            illuminationPct: typeof entry.illuminationPct === "number" ? entry.illuminationPct : null,
+            // Arcanum badge fields ride only for pledged Akathavae viewers.
+            arcanumRecorded: typeof entry.arcanumRecorded === "boolean" ? entry.arcanumRecorded : undefined,
+            arcanumSource: typeof entry.arcanumSource === "string" ? entry.arcanumSource : undefined,
+            arcanumFirstBy: typeof entry.arcanumFirstBy === "string" ? entry.arcanumFirstBy : undefined,
           })),
       );
       break;
@@ -2041,6 +2048,16 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Travel.Status": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setTravelStatus({
+        canTravel: packet.canTravel === true,
+        riding: packet.riding === true,
+        destination: typeof packet.destination === "string" ? packet.destination : null,
+      });
+      break;
+    }
+
     case "Char.Boat": {
       const packet = data as Partial<Record<string, unknown>>;
       const destinations: BoatDestination[] = Array.isArray(packet.destinations)
@@ -2270,6 +2287,8 @@ export function applyGmcpPackage(
           roomsTotal: safeNumber(z.roomsTotal, 0),
           mobsRecorded: safeNumber(z.mobsRecorded, 0),
           mobsTotal: safeNumber(z.mobsTotal, 0),
+          itemsRecorded: safeNumber(z.itemsRecorded, 0),
+          itemsTotal: safeNumber(z.itemsTotal, 0),
         })),
         mobs: asRecords(packet.mobs).map((m) => ({
           key: typeof m.key === "string" ? m.key : "",

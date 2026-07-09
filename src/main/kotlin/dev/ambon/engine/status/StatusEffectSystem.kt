@@ -352,6 +352,16 @@ class StatusEffectSystem(
         effectType: String,
     ): Boolean = mobEffects[mobId]?.any { registry.get(it.definitionId)?.effectType == effectType } == true
 
+    /**
+     * Returns true if [effectId] resolves to an effect whose type ticks damage on its target
+     * (a DOT). Used by combat to classify pet skills as damage-dealing under the Akathavae
+     * pledge even when the skill has no direct damage roll.
+     */
+    fun effectTicksDamage(effectId: StatusEffectId): Boolean {
+        val def = registry.get(effectId) ?: return false
+        return effectTypes.get(def.effectType)?.ticksDamage == true
+    }
+
     fun getPlayerStatMods(sessionId: SessionId): StatMap = computeStatMods(playerEffects[sessionId])
 
     fun getMobStatMods(mobId: MobId): StatMap = computeStatMods(mobEffects[mobId])

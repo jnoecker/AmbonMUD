@@ -17,6 +17,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.quest.CompletionHandlerRegistry
 import dev.ambon.engine.quest.ObjectiveHandlerRegistry
+import dev.ambon.engine.quest.matchesCollectTarget
 import java.time.Clock
 
 class QuestSystem(
@@ -339,10 +340,7 @@ class QuestSystem(
         // Count any inventory items whose id matches the objective target, using the
         // same loose-suffix semantics the collect handler applies at pickup time.
         val currentCount =
-            items.inventory(sessionId).count { inv ->
-                val itemId = inv.id.value
-                itemId == targetIdRaw || itemId.endsWith(":${targetIdRaw.substringAfterLast(':')}")
-            }
+            items.inventory(sessionId).count { inv -> matchesCollectTarget(inv.id.value, targetIdRaw) }
         if (currentCount <= 0) return null
         return handler.advance(objDef, initial, targetIdRaw, currentCount)
     }
@@ -447,6 +445,33 @@ class QuestSystem(
             val currentCount = items.inventory(sessionId).count { inv -> inv.id.value == itemId }
             handler.advance(objDef, prog, itemId, currentCount)
         }
+    }
+
+    /**
+     * Remaining count across every active, unfinished COLLECT objective that
+     * [itemId] would satisfy, matched with the same exact + loose-suffix
+     * semantics as the collect handler ([matchesCollectTarget]). Returns 0
+     * when nothing needs the item. Used by the Akathavae illumination bridge
+     * to decide whether a recorded creature's drop should be granted to a
+     * pledged player, who can never loot it (#1392).
+     */
+    fun neededForCollectObjectives(
+        sessionId: SessionId,
+        itemId: ItemId,
+    ): Int {
+        val ps = players.get(sessionId) ?: return 0
+        var needed = 0
+        for ((questId, state) in ps.activeQuests) {
+            val quest = registry.get(questId) ?: continue
+            for ((index, objDef) in quest.objectives.withIndex()) {
+                if (objectiveHandlers.collectHandler(objDef.type) == null) continue
+                val prog = state.objectives.getOrNull(index) ?: continue
+                if (prog.isComplete) continue
+                if (!matchesCollectTarget(itemId.value, objDef.targetId)) continue
+                needed += prog.required - prog.current
+            }
+        }
+        return needed
     }
 
     /**
@@ -645,12 +670,11 @@ class QuestSystem(
         var removedAny = false
         for (obj in quest.objectives) {
             if (objectiveHandlers.collectHandler(obj.type) == null) continue
-            val localSuffix = ":${obj.targetId.substringAfterLast(':')}"
             var removed = 0
             var removedName: String? = null
             while (removed < obj.count) {
                 val match = items.inventory(sessionId).firstOrNull { inv ->
-                    inv.id.value == obj.targetId || inv.id.value.endsWith(localSuffix)
+                    matchesCollectTarget(inv.id.value, obj.targetId)
                 } ?: break
                 if (items.removeFromInventoryById(sessionId, match.id) == null) break
                 removedName = match.item.displayName

@@ -6,6 +6,8 @@ import dev.ambon.engine.AkathavaeSystem
 import dev.ambon.engine.CurrencySystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
+import dev.ambon.engine.PlayerState
+import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.commands.Command
@@ -133,12 +135,24 @@ class ProgressionHandler(
     }
 
     private suspend fun handleSpells(sessionId: SessionId) {
-        // For the Akathavae the Arcanum *is* the spellbook: they wield no spells,
-        // so 'spells'/'abilities'/'skills' leafs through their journal instead.
+        // For the Akathavae the Arcanum *is* the spellbook: 'spells'/'abilities'/
+        // 'skills' leafs through their journal instead — and, once the pledge has
+        // taught them the illumination arts, lists those arts alongside it.
         val me = players.get(sessionId)
         if (me != null && me.isAkathavae) {
             akathavaeSystem?.emitJournal(sessionId)
-            outbound.send(OutboundEvent.SendInfo(sessionId, "As an Akathavae you wield no spells — your art is the Arcanum."))
+            val arts = abilitySystem?.knownAbilities(sessionId).orEmpty()
+            if (abilitySystem == null || arts.isEmpty()) {
+                outbound.send(OutboundEvent.SendInfo(sessionId, "As an Akathavae you wield no spells — your art is the Arcanum."))
+            } else {
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "Your art is the Arcanum, and these illumination arts serve it (Mana: ${me.mana}/${me.maxMana}):",
+                    ),
+                )
+                sendSpellLines(sessionId, abilitySystem, arts, me)
+            }
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
@@ -146,6 +160,15 @@ class ProgressionHandler(
                 ),
             )
             outbound.send(OutboundEvent.SendInfo(sessionId, "Type 'arcanum' to leaf through its pages."))
+            if (abilitySystem != null) {
+                gmcpEmitter?.sendCharSkills(
+                    sessionId,
+                    arts,
+                    cooldownRemainingMs = { abilityId -> abilitySystem.cooldownRemainingMs(sessionId, abilityId) },
+                    player = me,
+                    manaCostFor = { ability -> abilitySystem.computeManaCost(me, ability) },
+                )
+            }
             return
         }
         val abilities = requireSystemOrNull(sessionId, abilitySystem, "Abilities", outbound) ?: return
@@ -155,23 +178,7 @@ class ProgressionHandler(
         } else {
             players.withPlayer(sessionId) { me ->
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Known spells (Mana: ${me.mana}/${me.maxMana}):"))
-                for (a in known) {
-                    val remainingMs = abilities.cooldownRemainingMs(sessionId, a.id)
-                    val cdText =
-                        if (remainingMs > 0) {
-                            "${remainingMs.ceilSeconds()}s remaining"
-                        } else if (a.cooldownMs > 0) {
-                            "${a.cooldownMs / 1000}s cooldown"
-                        } else {
-                            "no cooldown"
-                        }
-                    outbound.send(
-                        OutboundEvent.SendInfo(
-                            sessionId,
-                            "  ${a.displayName}  — ${abilities.computeManaCost(me, a)} mana, $cdText — ${a.description}",
-                        ),
-                    )
-                }
+                sendSpellLines(sessionId, abilities, known, me)
             }
         }
         players.withPlayer(sessionId) { me ->
@@ -181,6 +188,31 @@ class ProgressionHandler(
                 cooldownRemainingMs = { abilityId -> abilities.cooldownRemainingMs(sessionId, abilityId) },
                 player = me,
                 manaCostFor = { ability -> abilities.computeManaCost(me, ability) },
+            )
+        }
+    }
+
+    private suspend fun sendSpellLines(
+        sessionId: SessionId,
+        abilities: AbilitySystem,
+        known: List<AbilityDefinition>,
+        me: PlayerState,
+    ) {
+        for (a in known) {
+            val remainingMs = abilities.cooldownRemainingMs(sessionId, a.id)
+            val cdText =
+                if (remainingMs > 0) {
+                    "${remainingMs.ceilSeconds()}s remaining"
+                } else if (a.cooldownMs > 0) {
+                    "${a.cooldownMs / 1000}s cooldown"
+                } else {
+                    "no cooldown"
+                }
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "  ${a.displayName}  — ${abilities.computeManaCost(me, a)} mana, $cdText — ${a.description}",
+                ),
             )
         }
     }

@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN owned_mounts TEXT NOT NULL DEFAULT '[]';

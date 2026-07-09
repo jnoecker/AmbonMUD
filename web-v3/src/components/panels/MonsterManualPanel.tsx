@@ -169,6 +169,18 @@ export function MonsterManualPanel({
   const level = c?.mobLevel ?? monster.level;
   const category = c?.mobCategory ?? info?.tier ?? "";
 
+  // Arcanum badge (pledged Akathavae only). The server sends arcanumRecorded
+  // exclusively to pledged viewers, so its presence doubles as the render gate:
+  // non-pledged players (fields absent) see nothing here.
+  const arcanum =
+    akathavaePledged && info && typeof info.arcanumRecorded === "boolean"
+      ? info.arcanumRecorded
+        ? { tone: "recorded" as const, text: `Recorded ✓${info.arcanumSource ? ` · ${info.arcanumSource}` : ""}` }
+        : info.arcanumFirstBy
+          ? { tone: "claimed" as const, text: `First recorded by ${info.arcanumFirstBy}` }
+          : { tone: "first" as const, text: "★ Unrecorded — be the first" }
+      : null;
+
   const actions: ManualAction[] = [];
   if (info?.questComplete) actions.push({ key: "quest", label: "Turn In Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => { onQuest(name); setView("quest"); } });
   else if (info?.questAvailable) actions.push({ key: "quest", label: "Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => { onQuest(name); setView("quest"); } });
@@ -176,7 +188,11 @@ export function MonsterManualPanel({
   if (info?.shopKeeper) actions.push({ key: "shop", label: "Shop", glyph: "❖", assetKey: "action_shop", variant: "primary", run: onShop });
   // The Akathavae pledge replaces violence with illumination — same slot, same
   // creatures, but the action records the subject into the Arcanum instead.
-  if (monster.canAttack && akathavaePledged) actions.push({ key: "illuminate", label: "Illuminate", glyph: "✒", assetKey: "action_illuminate", variant: "primary", run: () => { onCommand(`illuminate ${name}`); close(); } });
+  // Surface the stat-driven success odds (Room.MobInfo `illuminationPct`) right
+  // on the button — failure turns the creature hostile, so pledged players
+  // shouldn't gamble blind.
+  const illumPct = info?.illuminationPct;
+  if (monster.canAttack && akathavaePledged) actions.push({ key: "illuminate", label: illumPct != null ? `Illuminate · ${illumPct}%` : "Illuminate", glyph: "✒", assetKey: "action_illuminate", variant: "primary", run: () => { onCommand(`illuminate ${name}`); close(); } });
   else if (monster.canAttack) actions.push({ key: "attack", label: "Attack", glyph: "⚔", assetKey: "action_attack", variant: "primary", run: () => { onCommand(`kill ${name}`); close(); } });
   if (monster.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(monster.video!) });
   if (monster.isStaff) actions.push({ key: "possess", label: "Possess", glyph: "✦", assetKey: "action_possess", variant: "ghost", run: () => { onCommand(`possess ${name}`); close(); } });
@@ -263,6 +279,11 @@ export function MonsterManualPanel({
                 <span className="mm-meta">
                   {level != null ? `Lv ${level}` : ""}{level != null && category ? " " : ""}{category}
                 </span>
+              )}
+              {/* Recorded / world-first state — the pledged decide whether an
+                  illumination attempt is worth the aggro risk before acting. */}
+              {arcanum && (
+                <span className={`mm-arcanum mm-arcanum-${arcanum.tone}`}>{arcanum.text}</span>
               )}
             </div>
           </header>

@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.ConsiderOutcome
@@ -25,6 +26,7 @@ class CombatHandler(
     private val players = ctx.players
     private val mobs = ctx.mobs
     private val combat = ctx.combat
+    private val akathavaeSystem = ctx.akathavaeSystem
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
     private val metrics = ctx.metrics
@@ -43,7 +45,25 @@ class CombatHandler(
     ) {
         when (val outcome = combat.consider(sessionId, cmd.target)) {
             is ConsiderOutcome.Error -> {
-                outbound.send(OutboundEvent.SendError(sessionId, outcome.message))
+                // Pledged players sizing up a non-combatant NPC get the Akathavae
+                // read (observation always succeeds) instead of the combat error.
+                val me = players.get(sessionId)
+                val mob =
+                    if (me?.isAkathavae == true && akathavaeSystem != null) {
+                        combat.findMobInRoom(me.roomId, cmd.target.trim())
+                    } else {
+                        null
+                    }
+                if (mob != null && !mob.role.isCombatant && !mob.isPet) {
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            sessionId,
+                            "${mob.name} poses no threat — observing them for your Arcanum always succeeds.",
+                        ),
+                    )
+                } else {
+                    outbound.send(OutboundEvent.SendError(sessionId, outcome.message))
+                }
             }
             is ConsiderOutcome.Ok -> {
                 val r = outcome.result
@@ -60,6 +80,21 @@ class CombatHandler(
                             "(your ~${r.playerAvgDamage} dmg vs their ~${r.mobAvgDamage} dmg).",
                     ),
                 )
+                // Pledged players don't fight — show their real gamble: the
+                // illumination success roll for their current effective stats.
+                val me = players.get(sessionId)
+                if (me?.isAkathavae == true && akathavaeSystem != null) {
+                    val mob = mobs.get(MobId(r.mobId))
+                    if (mob != null) {
+                        val pct = akathavaeSystem.illuminationOddsFor(me, mob)
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "  Your steady hand gives you a $pct% chance to illuminate ${r.mobName}.",
+                            ),
+                        )
+                    }
+                }
                 gmcpEmitter?.sendCombatConsider(sessionId, r)
             }
         }
