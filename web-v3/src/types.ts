@@ -1,4 +1,4 @@
-export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "flight" | "boat" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
+export type PopoutPanel = "arcanum" | "shrine" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "flight" | "boat" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -259,6 +259,8 @@ export interface RoomState {
   auction?: boolean;
   housingBroker?: boolean;
   inn?: boolean;
+  /** True when this room is an Akathavae shrine (enables pledge/renounce in the shrine panel). */
+  shrine?: boolean;
   /** True when this room has a flight master (drives the in-world badge + flight panel). */
   flightMaster?: boolean;
   /** True when this room is a boat dock (drives the in-world badge + boat panel). */
@@ -1585,6 +1587,10 @@ export interface ArcanumStatus {
   rooms: number;
   mobs: number;
   items: number;
+  /** Gold price of `renounce confirm`, for the shrine panel. */
+  renounceCostGold: number;
+  /** Epoch-ms when a re-pledge becomes possible again; 0 when pledging is available now. */
+  repledgeAvailableAtMs: number;
 }
 
 export interface ArcanumZoneCompletion {

@@ -509,6 +509,7 @@ export function applyGmcpPackage(
       const auction = packet.auction === true;
       const housingBroker = packet.housingBroker === true;
       const inn = packet.inn === true;
+      const shrine = packet.shrine === true;
       const flightMaster = packet.flightMaster === true;
       const boatDock = packet.boatDock === true;
       const jukebox = packet.jukebox === true;
@@ -534,7 +535,7 @@ export function applyGmcpPackage(
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, flightMaster, boatDock, jukebox, musicBox, canDepart, peek };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, shrine, flightMaster, boatDock, jukebox, musicBox, canDepart, peek };
       });
 
       if (id) {
@@ -2270,6 +2271,8 @@ export function applyGmcpPackage(
         rooms: safeNumber(packet.rooms, 0),
         mobs: safeNumber(packet.mobs, 0),
         items: safeNumber(packet.items, 0),
+        renounceCostGold: safeNumber(packet.renounceCostGold, 0),
+        repledgeAvailableAtMs: safeNumber(packet.repledgeAvailableAtMs, 0),
       });
       break;
     }

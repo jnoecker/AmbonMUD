@@ -132,6 +132,13 @@ class GmcpEmitter(
      * Feeds the per-viewer `illuminationPct` field of `Room.MobInfo`.
      */
     private val illuminationOdds: (SessionId, String) -> Int? = { _, _ -> null },
+    /**
+     * Renounce cost and re-pledge cooldown from the akathavae config, surfaced
+     * in `Arcanum.Status` so the web client's shrine panel can show real
+     * numbers instead of hardcoding them.
+     */
+    private val akathavaeRenounceCostGold: Long = 2_500,
+    private val akathavaeRepledgeCooldownMs: Long = 86_400_000,
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -305,6 +312,7 @@ class GmcpEmitter(
                 auction = room.auction,
                 housingBroker = room.housingBroker,
                 inn = room.inn,
+                shrine = room.akathavaeShrine,
                 flightMaster = room.flightMaster,
                 boatDock = room.boatDock,
                 jukebox = room.jukebox.isNotEmpty(),
@@ -979,6 +987,10 @@ class GmcpEmitter(
         val rooms: Int,
         val mobs: Int,
         val items: Int,
+        /** Gold price of `renounce confirm`, for the shrine panel. */
+        val renounceCostGold: Long,
+        /** Epoch-ms when a re-pledge becomes possible again; 0 when pledging is available now. */
+        val repledgeAvailableAtMs: Long,
     )
 
     data class ArcanumZonePayload(
@@ -1037,12 +1049,24 @@ class GmcpEmitter(
     /** Lightweight pledge + journal-count sync; emitted on login, pledge changes, and new recordings. */
     suspend fun sendArcanumStatus(
         sessionId: SessionId,
-        pledged: Boolean,
-        rooms: Int,
-        mobs: Int,
-        items: Int,
+        player: PlayerState,
     ) {
-        emit(sessionId, "Arcanum.Status", ArcanumStatusPayload(pledged, rooms, mobs, items), supportCheck = "Arcanum")
+        val cooldownEndsAt = player.akathavaeRenouncedAtMs + akathavaeRepledgeCooldownMs
+        val repledgeAvailableAtMs =
+            if (!player.isAkathavae && player.akathavaeRenouncedAtMs > 0 && nowMs() < cooldownEndsAt) cooldownEndsAt else 0L
+        emit(
+            sessionId,
+            "Arcanum.Status",
+            ArcanumStatusPayload(
+                pledged = player.isAkathavae,
+                rooms = player.arcanum.rooms.size,
+                mobs = player.arcanum.mobs.size,
+                items = player.arcanum.items.size,
+                renounceCostGold = akathavaeRenounceCostGold,
+                repledgeAvailableAtMs = repledgeAvailableAtMs,
+            ),
+            supportCheck = "Arcanum",
+        )
     }
 
     /** Full journal for the Arcanum panel; emitted when the player runs `arcanum`. */
@@ -1100,13 +1124,7 @@ class GmcpEmitter(
         }
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
-        sendArcanumStatus(
-            sessionId,
-            pledged = player.isAkathavae,
-            rooms = player.arcanum.rooms.size,
-            mobs = player.arcanum.mobs.size,
-            items = player.arcanum.items.size,
-        )
+        sendArcanumStatus(sessionId, player)
     }
 
     /**
@@ -3265,6 +3283,8 @@ class GmcpEmitter(
         val auction: Boolean = false,
         val housingBroker: Boolean = false,
         val inn: Boolean = false,
+        /** True when this room is an Akathavae shrine (enables the shrine panel's pledge/renounce actions). */
+        val shrine: Boolean = false,
         /** True when this room has a flight master (drives the in-world kiosk badge). */
         val flightMaster: Boolean = false,
         /** True when this room is a boat dock (drives the in-world kiosk badge). */

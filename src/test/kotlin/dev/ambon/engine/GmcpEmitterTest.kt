@@ -54,6 +54,7 @@ class GmcpEmitterTest {
         vararg supported: String,
         arcanumFirstBy: (String) -> String? = { null },
         illuminationOdds: (SessionId, String) -> Int? = { _, _ -> null },
+        nowMs: () -> Long = { 0L },
     ): GmcpEmitter {
         val packages = supported.toSet()
         return GmcpEmitter(
@@ -65,6 +66,7 @@ class GmcpEmitterTest {
             equipmentSlotRegistry = defaultSlotRegistry,
             arcanumFirstBy = arcanumFirstBy,
             illuminationOdds = illuminationOdds,
+            nowMs = nowMs,
         )
     }
 
@@ -1893,6 +1895,31 @@ class GmcpEmitterTest {
             val events = drainGmcp()
             assertEquals(1, events.size)
             assertFalse(events[0].jsonData.contains("arcanum"))
+        }
+
+    // ── Arcanum.Status pledge info ──
+
+    @Test
+    fun `sendArcanumStatus carries renounce cost and an open repledge window`() =
+        runTest {
+            val e = emitter("Arcanum")
+            e.sendArcanumStatus(sid, player())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"renounceCostGold\":2500"), "got=${events[0].jsonData}")
+            assertTrue(events[0].jsonData.contains("\"repledgeAvailableAtMs\":0"), "got=${events[0].jsonData}")
+        }
+
+    @Test
+    fun `sendArcanumStatus reports the repledge cooldown for a recent renouncer`() =
+        runTest {
+            val e = emitter("Arcanum", nowMs = { 1_000_000L })
+            val p = player().also { it.akathavaeRenouncedAtMs = 500_000L }
+            e.sendArcanumStatus(sid, p)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            // 500_000 + 86_400_000 default cooldown, still in the future at t=1_000_000.
+            assertTrue(events[0].jsonData.contains("\"repledgeAvailableAtMs\":86900000"), "got=${events[0].jsonData}")
         }
 
     // ── Group.Info mana ──

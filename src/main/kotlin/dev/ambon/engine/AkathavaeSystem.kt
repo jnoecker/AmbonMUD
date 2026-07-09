@@ -621,13 +621,7 @@ class AkathavaeSystem(
     /** Pushes the lightweight pledge + counts sync to the client. */
     suspend fun emitStatus(sessionId: SessionId) {
         val me = players.get(sessionId) ?: return
-        gmcpEmitter?.sendArcanumStatus(
-            sessionId,
-            pledged = me.isAkathavae,
-            rooms = me.arcanum.rooms.size,
-            mobs = me.arcanum.mobs.size,
-            items = me.arcanum.items.size,
-        )
+        gmcpEmitter?.sendArcanumStatus(sessionId, me)
     }
 
     /** Builds and pushes the full journal payload for the Arcanum panel. */

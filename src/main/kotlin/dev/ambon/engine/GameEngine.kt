@@ -660,6 +660,8 @@ class GameEngine(
                     null
                 }
             },
+            akathavaeRenounceCostGold = engineConfig.akathavae.renounceCostGold,
+            akathavaeRepledgeCooldownMs = engineConfig.akathavae.repledgeCooldownMs,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {

@@ -351,6 +351,19 @@ export function MapScrollIcon({ className }: { className?: string }) {
   );
 }
 
+export function ShrineIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      {/* Shrine arch over a vow flame. */}
+      <path d="M5 20h14" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M6.5 20v-8.5a5.5 5.5 0 0 1 11 0V20" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 16.4c-1.5-.9-2.1-2-1.5-3.2.3-.6.8-1.1 1.5-1.7.7.6 1.2 1.1 1.5 1.7.6 1.2 0 2.3-1.5 3.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+      <path d="M12 8.2V7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" opacity="0.75" />
+      <path d="M9.4 4.6l.9.9M14.6 4.6l-.9.9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" opacity="0.6" />
+    </svg>
+  );
+}
+
 export function RefreshIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

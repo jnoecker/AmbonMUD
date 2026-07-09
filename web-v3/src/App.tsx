@@ -31,6 +31,7 @@ const MailPanel = lazy(() => import("./components/panels/MailPanel").then((m) =>
 const MonsterManualPanel = lazy(() => import("./components/panels/MonsterManualPanel").then((m) => ({ default: m.MonsterManualPanel })));
 const ItemManualPanel = lazy(() => import("./components/panels/ItemManualPanel").then((m) => ({ default: m.ItemManualPanel })));
 const ArcanumPanel = lazy(() => import("./components/panels/ArcanumPanel").then((m) => ({ default: m.ArcanumPanel })));
+const ShrinePanel = lazy(() => import("./components/panels/ShrinePanel").then((m) => ({ default: m.ShrinePanel })));
 const CraftingPanel = lazy(() => import("./components/panels/CraftingPanel").then((m) => ({ default: m.CraftingPanel })));
 const ProfessionsPanel = lazy(() => import("./components/panels/ProfessionsPanel").then((m) => ({ default: m.ProfessionsPanel })));
 const HousingPanel = lazy(() => import("./components/panels/HousingPanel").then((m) => ({ default: m.HousingPanel })));
@@ -1106,6 +1107,7 @@ function App() {
       case "musicbox": return "Music Box";
       case "combatlog": return "Battle Journal";
       case "arcanum": return "The Arcanum";
+      case "shrine": return "Akathavae Shrine";
       case "help": return "Command Reference";
       case "room": return state.room.title !== "-" ? state.room.title : "Room Details";
       case "map": return "World Map";
@@ -1723,6 +1725,16 @@ function App() {
             journal={state.arcanumJournal}
             status={state.arcanumStatus}
             playerName={state.character.name}
+            connected={connected}
+            onCommand={sendCommand}
+          />
+        )}
+
+        {drawerPanel === "shrine" && (
+          <ShrinePanel
+            status={state.arcanumStatus}
+            room={state.room}
+            gold={state.vitals.gold}
             connected={connected}
             onCommand={sendCommand}
           />

@@ -8,6 +8,7 @@ import {
   QuestsTabIcon,
   AttackIcon,
   MapScrollIcon,
+  ShrineIcon,
 } from "./Icons";
 
 interface KioskDef {
@@ -27,6 +28,8 @@ const KIOSKS: KioskDef[] = [
   { panel: "combatlog", label: "Combat Log", assetKey: "combat_log_widget", fallback: <AttackIcon className="kiosk-icon-svg" /> },
   // Anyone keeps a field journal now, so the Arcanum rides for every player.
   { panel: "arcanum", label: "Arcanum", assetKey: "arcanum_widget", fallback: <MapScrollIcon className="kiosk-icon-svg" /> },
+  // Pledge/renounce home — actions inside gate on standing in a shrine room.
+  { panel: "shrine", label: "Shrine", assetKey: "shrine_widget", fallback: <ShrineIcon className="kiosk-icon-svg" /> },
 ];
 
 interface KioskBarProps {
