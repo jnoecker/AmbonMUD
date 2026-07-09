@@ -102,6 +102,7 @@ object PlayersTable : Table("players") {
     val akathavaeRenouncedAtMs = long("akathavae_renounced_at_ms").default(0L)
     val preAkathavaeClass = varchar("pre_akathavae_class", 32).nullable()
     val arcanumData = text("arcanum_data").default("{}")
+    val worldFirstsCount = integer("world_firsts_count").default(0)
     val ownedMounts = text("owned_mounts").default("[]")
 
     override val primaryKey = PrimaryKey(id)
@@ -176,6 +177,7 @@ object PlayersTable : Table("players") {
             akathavaeRenouncedAtMs = row[akathavaeRenouncedAtMs],
             preAkathavaeClass = row[preAkathavaeClass],
             arcanumData = row[arcanumData],
+            worldFirstsCount = row[worldFirstsCount],
             ownedMounts = safeReadJson(row[ownedMounts], ownedMountsType, emptySet()),
         ).migrateDefaults()
 
@@ -255,6 +257,7 @@ object PlayersTable : Table("players") {
         statement[akathavaeRenouncedAtMs] = record.akathavaeRenouncedAtMs
         statement[preAkathavaeClass] = record.preAkathavaeClass
         statement[arcanumData] = record.arcanumData
+        statement[worldFirstsCount] = record.worldFirstsCount
         statement[ownedMounts] = jsonMapper.writeValueAsString(record.ownedMounts)
     }
 }

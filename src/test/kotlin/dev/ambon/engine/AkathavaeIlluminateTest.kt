@@ -2,6 +2,8 @@ package dev.ambon.engine
 
 import dev.ambon.config.AkathavaeConfig
 import dev.ambon.domain.StatMap
+import dev.ambon.domain.achievement.AchievementCriterion
+import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.arcanum.ArcanumEntry
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
@@ -71,12 +73,20 @@ class AkathavaeIlluminateTest {
         rng: Random = ScriptedRandom(0),
         config: AkathavaeConfig = AkathavaeConfig(),
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
+        achievements: List<AchievementDef> = emptyList(),
     ): Setup {
         val clock = MutableClock(1_000_000L)
         val world = testWorld()
         val fixture = CombatTestFixture(roomId = roomA, clock = clock)
         val combat = fixture.buildCombat(rng = Random(1), onMobKilledByPlayer = onMobKilledByPlayer)
         val worldState = WorldStateRegistry(world)
+        val achievementRegistry = AchievementRegistry()
+        achievements.forEach { achievementRegistry.register(it) }
+        val achievementSystem = AchievementSystem(
+            registry = achievementRegistry,
+            players = fixture.players,
+            outbound = fixture.outbound,
+        )
         val system = AkathavaeSystem(
             players = fixture.players,
             items = fixture.items,
@@ -87,6 +97,7 @@ class AkathavaeIlluminateTest {
             clock = clock,
             rng = rng,
             config = config,
+            onArcanumRecorded = { sid -> achievementSystem.onArcanumRecorded(sid) },
         )
         return Setup(fixture, combat, system, worldState, clock)
     }
@@ -644,6 +655,87 @@ class AkathavaeIlluminateTest {
         val credit = s.worldState.getArcanumFirst("mob:test:wisp")
         assertNotNull(credit)
         assertEquals("Alice", credit!!.first, "world-firsts are immutable once written")
+    }
+
+    @Test
+    fun `world firsts increment the persistent counter only for the first recorder`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val alice = SessionId(1L)
+        val bob = SessionId(2L)
+        val aliceState = loginAkathavae(s, alice, "Alice")
+        val bobState = loginAkathavae(s, bob, "Bob")
+
+        s.fixture.mobs.upsert(wisp(id = "w1"))
+        s.system.illuminate(alice, "wisp")
+        assertEquals(1, aliceState.worldFirstsCount, "the first recorder banks a world-first")
+
+        s.clock.advance(10_000)
+        s.fixture.mobs.upsert(wisp(id = "w2"))
+        s.system.illuminate(bob, "wisp")
+        assertEquals(0, bobState.worldFirstsCount, "a later recorder earns no world-first")
+    }
+
+    // ── Achievements ─────────────────────────────────────────────────────
+
+    private fun arcanumAchievement(id: String, type: String, count: Int) = AchievementDef(
+        id = id,
+        displayName = id.substringAfter('/'),
+        description = "Arcanum test achievement.",
+        category = "exploration",
+        criteria = listOf(AchievementCriterion(type = type, targetId = "", count = count)),
+    )
+
+    @Test
+    fun `first illumination unlocks an illuminate achievement immediately`() = runTest {
+        val s = setup(
+            rng = ScriptedRandom(0),
+            achievements = listOf(arcanumAchievement("arcanum/first_light", "illuminate", 1)),
+        )
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+
+        assertTrue(me.unlockedAchievementIds.contains("arcanum/first_light"), "unlock must fire on the illuminating action itself")
+        val infos = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+        assertTrue(infos.any { it.contains("[Achievement] first_light") }, "got=$infos")
+    }
+
+    @Test
+    fun `room and world-first records unlock exploration achievements immediately`() = runTest {
+        val s = setup(
+            achievements = listOf(
+                arcanumAchievement("arcanum/wanderer", "explore_rooms", 1),
+                arcanumAchievement("arcanum/pioneer", "world_first", 1),
+            ),
+        )
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+
+        s.system.onRoomVisited(sid)
+
+        assertEquals(1, me.worldFirstsCount)
+        assertTrue(me.unlockedAchievementIds.contains("arcanum/wanderer"))
+        assertTrue(me.unlockedAchievementIds.contains("arcanum/pioneer"))
+    }
+
+    @Test
+    fun `item discovery unlocks a discover_items achievement immediately`() = runTest {
+        val s = setup(
+            rng = ScriptedRandom(0),
+            achievements = listOf(arcanumAchievement("arcanum/collector", "discover_items", 1)),
+        )
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.items.loadSpawns(
+            listOf(ItemSpawn(instance = ItemInstance(ItemId("test:dust"), Item(keyword = "dust", displayName = "glittering dust")))),
+        )
+        s.fixture.mobs.upsert(wisp(drops = listOf(MobDrop(ItemId("test:dust"), 1.0))))
+
+        s.system.illuminate(sid, "wisp")
+
+        assertTrue(me.unlockedAchievementIds.contains("arcanum/collector"))
     }
 
     @Test

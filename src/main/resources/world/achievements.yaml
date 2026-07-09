@@ -108,6 +108,102 @@ achievements:
       xp: 300
       title: Riddle Master
 
+  # ── The Arcanum (Akathavae illumination & discovery) ──────────────
+  first_light:
+    displayName: First Light
+    description: Illuminate your first creature, opening the first page of your Arcanum.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: illuminate
+        targetId: ""
+        count: 1
+        description: Record 1 creature in your Arcanum
+    rewards:
+      xp: 50
+  illuminator:
+    displayName: Illuminator
+    description: Fill your Arcanum with the likenesses of twenty-five creatures.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: illuminate
+        targetId: ""
+        count: 25
+        description: Record 25 creatures in your Arcanum
+    rewards:
+      xp: 400
+      gold: 50
+      title: Illuminator
+  lorekeeper:
+    displayName: Lorekeeper
+    description: Commit one hundred creatures to the Arcanum, line by patient line.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: illuminate
+        targetId: ""
+        count: 100
+        description: Record 100 creatures in your Arcanum
+    rewards:
+      xp: 1000
+      gold: 200
+      title: Lorekeeper
+  cartographer:
+    displayName: Cartographer
+    description: Record one hundred rooms in your Arcanum, one quiet step at a time.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: explore_rooms
+        targetId: ""
+        count: 100
+        description: Record 100 rooms in your Arcanum
+    rewards:
+      xp: 800
+      gold: 100
+      title: Cartographer
+  collector_of_curiosities:
+    displayName: Collector of Curiosities
+    description: Catalogue fifty items in your Arcanum without taking a single one.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: discover_items
+        targetId: ""
+        count: 50
+        description: Record 50 items in your Arcanum
+    rewards:
+      xp: 600
+      gold: 100
+  pioneer:
+    displayName: Pioneer
+    description: Be the first soul ever to record something in the Arcanum.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: world_first
+        targetId: ""
+        count: 1
+        description: Earn 1 Arcanum world-first
+    rewards:
+      xp: 300
+      title: Pioneer
+  legend_of_the_arcanum:
+    displayName: Legend of the Arcanum
+    description: Claim ten world-firsts — the Arcanum will speak your name for ages.
+    category: exploration
+    hidden: false
+    criteria:
+      - type: world_first
+        targetId: ""
+        count: 10
+        description: Earn 10 Arcanum world-firsts
+    rewards:
+      xp: 1500
+      gold: 300
+      title: Legend of the Arcanum
+
   # ── Crafting & Gathering ──────────────────────────────────────────
   master_crafter:
     displayName: Master Crafter
