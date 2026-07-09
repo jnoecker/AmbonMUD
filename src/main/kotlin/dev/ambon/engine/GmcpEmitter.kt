@@ -2660,6 +2660,7 @@ class GmcpEmitter(
         shopItems: List<Pair<dev.ambon.domain.ids.ItemId, dev.ambon.domain.items.Item>>,
         buyMultiplier: Double,
         sellMultiplier: Double,
+        ownedMounts: Set<String> = emptySet(),
     ) {
         emit(
             sessionId,
@@ -2681,6 +2682,8 @@ class GmcpEmitter(
                         consumable = item.consumable,
                         image = item.image,
                         video = item.video,
+                        itemType = item.resolvedType().label(),
+                        owned = item.mountId != null && item.mountId in ownedMounts,
                     )
                 },
             ),
@@ -3980,6 +3983,9 @@ class GmcpEmitter(
         val consumable: Boolean,
         val image: String? = null,
         val video: String? = null,
+        val itemType: String? = null,
+        /** True for mount items the player has already purchased. */
+        val owned: Boolean = false,
     )
 
     // ---------- puzzle payloads ----------
