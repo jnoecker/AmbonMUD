@@ -647,6 +647,7 @@ class GameEngine(
             raceRegistry = raceRegistry,
             nowMs = { clock.millis() },
             worldAreas = buildWorldAreaPayloads(world),
+            arcanumFirstBy = { key -> worldState.getArcanumFirst(key)?.first },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -831,6 +832,7 @@ class GameEngine(
             markVitalsDirty = ::markVitalsDirty,
             onLevelUp = ::onCombatLevelUp,
             gmcpEmitter = gmcpEmitter,
+            refreshRoomMobInfo = ::refreshRoomMobInfoForPlayer,
         )
 
     private val flightSystem =
@@ -2527,6 +2529,7 @@ class GameEngine(
                 questAvailableMobIds = questAvailable,
                 questCompleteMobIds = questComplete,
             ),
+            viewer = ps,
         )
     }
 

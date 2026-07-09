@@ -65,6 +65,7 @@ class AkathavaeIlluminateTest {
         rng: Random = ScriptedRandom(0),
         config: AkathavaeConfig = AkathavaeConfig(),
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
+        refreshRoomMobInfo: (suspend (SessionId) -> Unit)? = null,
     ): Setup {
         val clock = MutableClock(1_000_000L)
         val world = testWorld()
@@ -81,6 +82,7 @@ class AkathavaeIlluminateTest {
             clock = clock,
             rng = rng,
             config = config,
+            refreshRoomMobInfo = refreshRoomMobInfo,
         )
         return Setup(fixture, combat, system, worldState, clock)
     }
@@ -268,6 +270,33 @@ class AkathavaeIlluminateTest {
         assertTrue(me.arcanum.mobs.containsKey("test:merchant"))
         assertNotNull(s.fixture.mobs.get(MobId("test:w1")), "observed NPCs must never be removed")
         assertEquals(AkathavaeConfig().observeNpcXp, me.xpTotal)
+    }
+
+    @Test
+    fun `successful illumination refreshes the room mob info so badges flip live`() = runTest {
+        val refreshed = mutableListOf<SessionId>()
+        val s = setup(rng = ScriptedRandom(0), refreshRoomMobInfo = { refreshed += it })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(listOf(sid), refreshed, "Room.MobInfo must be re-emitted after a successful illumination")
+    }
+
+    @Test
+    fun `first observation refreshes the room mob info but repeats do not`() = runTest {
+        val refreshed = mutableListOf<SessionId>()
+        val s = setup(refreshRoomMobInfo = { refreshed += it })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(role = MobRole.VENDOR, templateKey = "test:merchant"))
+
+        s.system.illuminate(sid, "wisp")
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(listOf(sid), refreshed, "only the first observation changes the badge state")
     }
 
     @Test
