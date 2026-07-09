@@ -1976,6 +1976,9 @@ class GameEngine(
                     regenSystem.tick()
                     regenSample.stop(metrics.regenTickTimer)
 
+                    // Resolve finished Akathavae sketches (illumination is not instant)
+                    akathavaeSystem.tick()
+
                     // Periodic threat table cleanup — sweep stale mob entries every 60s
                     if (tickStart - lastThreatCleanupMs >= THREAT_CLEANUP_INTERVAL_MS) {
                         lastThreatCleanupMs = tickStart

@@ -26,6 +26,7 @@ import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.CombatTestFixture
+import dev.ambon.test.INSTANT_SKETCH_AKATHAVAE
 import dev.ambon.test.MutableClock
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
@@ -78,7 +79,7 @@ class AkathavaeIlluminateTest {
 
     private fun setup(
         rng: Random = ScriptedRandom(0),
-        config: AkathavaeConfig = AkathavaeConfig(),
+        config: AkathavaeConfig = INSTANT_SKETCH_AKATHAVAE,
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
         refreshRoomMobInfo: (suspend (SessionId) -> Unit)? = null,
         achievements: List<AchievementDef> = emptyList(),
@@ -648,6 +649,138 @@ class AkathavaeIlluminateTest {
         assertTrue(s.combat.isInCombat(sid), "a failed sketch still angers the subject")
         val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
         assertTrue(texts.any { it.contains("turns on you!") && !it.contains("pledge") }, "got=$texts")
+    }
+
+    // ── Timed sketching ──────────────────────────────────────────────────
+
+    @Test
+    fun `illuminate starts a timed sketch that resolves on tick`() = runTest {
+        val s = setup(rng = ScriptedRandom(0), config = AkathavaeConfig())
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(xpReward = 100L))
+
+        s.system.illuminate(sid, "wisp")
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("set your quill") }, "got=$texts")
+        assertFalse(me.arcanum.mobs.containsKey("test:wisp"), "the roll lands at the end, not the start")
+
+        // Below the 2s minimum clamp: still sketching.
+        s.clock.advance(1_999)
+        s.system.tick()
+        assertFalse(me.arcanum.mobs.containsKey("test:wisp"))
+
+        // Past the 10s maximum clamp: every sketch has resolved.
+        s.clock.advance(10_001)
+        s.system.tick()
+        assertTrue(me.arcanum.mobs.containsKey("test:wisp"), "the sketch resolves once its time is up")
+        assertEquals(100L, me.xpTotal)
+        assertNotNull(s.fixture.mobs.get(MobId("test:w1")), "illumination still never removes the subject")
+    }
+
+    @Test
+    fun `a second illuminate while sketching is refused`() = runTest {
+        val s = setup(rng = ScriptedRandom(0), config = AkathavaeConfig())
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+        s.system.illuminate(sid, "wisp")
+
+        val errors = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+        assertTrue(errors.any { it.contains("already busy") }, "got=$errors")
+    }
+
+    @Test
+    fun `moving rooms abandons the sketch`() = runTest {
+        val s = setup(rng = ScriptedRandom(0), config = AkathavaeConfig())
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+        me.roomId = roomB
+        s.system.onRoomVisited(sid)
+
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("moved on") }, "got=$texts")
+
+        s.clock.advance(20_000)
+        s.system.tick()
+        assertFalse(me.arcanum.mobs.containsKey("test:wisp"), "an abandoned sketch never resolves")
+    }
+
+    @Test
+    fun `entering combat cancels the sketch`() = runTest {
+        val s = setup(rng = ScriptedRandom(0), config = AkathavaeConfig())
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(id = "w1"))
+        s.fixture.mobs.upsert(wisp(id = "w2", templateKey = "test:brute"))
+
+        s.system.illuminate(sid, "wisp")
+        s.combat.engageMobCombat(sid, s.fixture.mobs.get(MobId("test:w2"))!!)
+        s.fixture.outbound.drainAll()
+
+        s.clock.advance(50)
+        s.system.tick()
+
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("shatters your concentration") }, "got=$texts")
+        s.clock.advance(20_000)
+        s.system.tick()
+        assertFalse(me.arcanum.mobs.containsKey("test:wisp"), "a ruined sketch never resolves")
+    }
+
+    @Test
+    fun `a subject that dies mid-sketch leaves the page unfinished`() = runTest {
+        val s = setup(rng = ScriptedRandom(0), config = AkathavaeConfig())
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+        s.fixture.mobs.remove(MobId("test:w1"))
+        s.clock.advance(20_000)
+        s.system.tick()
+
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("subject is gone") }, "got=$texts")
+        assertFalse(me.arcanum.mobs.containsKey("test:wisp"))
+    }
+
+    @Test
+    fun `observing a non-combat NPC uses the flat observe sketch time`() = runTest {
+        val s = setup(config = AkathavaeConfig())
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(role = MobRole.VENDOR, templateKey = "test:merchant"))
+
+        s.system.illuminate(sid, "wisp")
+        s.clock.advance(AkathavaeConfig().observeSketchMs - 1)
+        s.system.tick()
+        assertFalse(me.arcanum.mobs.containsKey("test:merchant"))
+
+        s.clock.advance(2)
+        s.system.tick()
+        assertTrue(me.arcanum.mobs.containsKey("test:merchant"))
+        assertEquals(AkathavaeConfig().observeNpcXp, me.xpTotal)
+    }
+
+    @Test
+    fun `re-observing a recorded NPC skips the sketch entirely`() = runTest {
+        val s = setup(config = AkathavaeConfig())
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        me.arcanum.mobs["test:merchant"] = ArcanumEntry(firstRecordedAtMs = 1L)
+        s.fixture.mobs.upsert(wisp(role = MobRole.VENDOR, templateKey = "test:merchant"))
+
+        s.system.illuminate(sid, "wisp")
+
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("already holds a page") }, "got=$texts")
+        assertFalse(texts.any { it.contains("set your quill") }, "no sketch should start; got=$texts")
     }
 
     // ── First slain ──────────────────────────────────────────────────────

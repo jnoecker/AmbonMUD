@@ -1046,6 +1046,36 @@ class GmcpEmitter(
         val rooms: List<ArcanumRoomPayload>,
     )
 
+    /**
+     * One moment in a sketch's life, for the web client's journal animation.
+     * `phase` is `start` (with `durationMs`), then exactly one of `success`
+     * (`xpGained`/`firstTime`/`worldFirst`), `fail` (`hostile` says whether the
+     * subject turned on the sketcher), or `cancel` (`reason` is display text).
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    data class ArcanumSketchPayload(
+        val phase: String,
+        val mobId: String,
+        val mobName: String,
+        val subjectKey: String,
+        /** True for a non-combat observation — it cannot fail. */
+        val observe: Boolean = false,
+        val durationMs: Long? = null,
+        val xpGained: Long? = null,
+        val firstTime: Boolean? = null,
+        val worldFirst: Boolean? = null,
+        val hostile: Boolean? = null,
+        val reason: String? = null,
+    )
+
+    /** Sketch lifecycle events (`Arcanum.Sketch`) — start, then success/fail/cancel. */
+    suspend fun sendArcanumSketch(
+        sessionId: SessionId,
+        payload: ArcanumSketchPayload,
+    ) {
+        emit(sessionId, "Arcanum.Sketch", payload, supportCheck = "Arcanum")
+    }
+
     /** Lightweight pledge + journal-count sync; emitted on login, pledge changes, and new recordings. */
     suspend fun sendArcanumStatus(
         sessionId: SessionId,

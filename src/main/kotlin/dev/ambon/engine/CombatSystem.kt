@@ -219,6 +219,9 @@ class CombatSystem(
         keyword: String,
     ): MobState? = findMobsInRoom(roomId, keyword).firstOrNull()
 
+    /** The live mob for [mobId], or null once it has died or despawned. */
+    fun mobById(mobId: MobId): MobState? = mobs.get(mobId)
+
     /**
      * No-op kept for callers (item equip/unequip hooks) that used to trigger a
      * maxHP recompute when equipment armor changed. Armor now mitigates damage
@@ -368,6 +371,23 @@ class CombatSystem(
                 rating = rating,
             ),
         )
+    }
+
+    /**
+     * Estimated melee rounds for [sessionId] to defeat [mob] — the same
+     * expected-value math [consider] uses (equipment attack bonus, stat-derived
+     * melee bonus, mob armor). Drives the Akathavae sketch duration, so
+     * illuminating a creature takes about as long as the fight would have.
+     */
+    fun estimatedHitsToKill(
+        sessionId: SessionId,
+        mob: MobState,
+    ): Int {
+        val player = players.get(sessionId) ?: return 1
+        val stats = resolvePlayerStats(player, items, statusEffects, classRegistry)
+        val equip = items.equipmentBonuses(sessionId, classRegistry?.get(player.playerClass))
+        val playerAvgDamage = avgPlayerMeleeDamage(player, stats, equip, mob.armor)
+        return ceil(mob.maxHp.toDouble() / playerAvgDamage).toInt().coerceAtLeast(1)
     }
 
     suspend fun flee(

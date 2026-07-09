@@ -1897,6 +1897,31 @@ class GmcpEmitterTest {
             assertFalse(events[0].jsonData.contains("arcanum"))
         }
 
+    // ── Arcanum.Sketch lifecycle ──
+
+    @Test
+    fun `sendArcanumSketch keeps phase-irrelevant fields off the wire`() =
+        runTest {
+            val e = emitter("Arcanum")
+            e.sendArcanumSketch(
+                sid,
+                GmcpEmitter.ArcanumSketchPayload(
+                    phase = "start",
+                    mobId = "forest:goblin_1",
+                    mobName = "a goblin",
+                    subjectKey = "forest:goblin",
+                    durationMs = 4_000,
+                ),
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Arcanum.Sketch", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"phase\":\"start\""), "got=${events[0].jsonData}")
+            assertTrue(events[0].jsonData.contains("\"durationMs\":4000"), "got=${events[0].jsonData}")
+            assertFalse(events[0].jsonData.contains("xpGained"), "got=${events[0].jsonData}")
+            assertFalse(events[0].jsonData.contains("reason"), "got=${events[0].jsonData}")
+        }
+
     // ── Arcanum.Status pledge info ──
 
     @Test
