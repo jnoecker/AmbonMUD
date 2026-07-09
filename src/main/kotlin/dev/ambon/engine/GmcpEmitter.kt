@@ -126,6 +126,12 @@ class GmcpEmitter(
      * or null when unclaimed), used for the pledged-viewer badges on `Room.MobInfo`.
      */
     private val arcanumFirstBy: (String) -> String? = { null },
+    /**
+     * Illumination success odds for a viewing session against a mob id, or null
+     * when not applicable (viewer not pledged Akathavae, mob not a combatant).
+     * Feeds the per-viewer `illuminationPct` field of `Room.MobInfo`.
+     */
+    private val illuminationOdds: (SessionId, String) -> Int? = { _, _ -> null },
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -981,6 +987,8 @@ class GmcpEmitter(
         val roomsTotal: Int,
         val mobsRecorded: Int,
         val mobsTotal: Int,
+        val itemsRecorded: Int,
+        val itemsTotal: Int,
     )
 
     data class ArcanumMobPayload(
@@ -1079,6 +1087,7 @@ class GmcpEmitter(
         sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         sendCharAchievements(sessionId, player, achievementRegistry)
         sendCharSprites(sessionId, player)
+        sendTravelStatus(sessionId, player)
         sendCharClasses(sessionId, player.unlockedClasses.ifEmpty { setOf(player.playerClass) }, player.playerClass)
         sendPrestigeInfoForPlayer(sessionId, player)
         if (world != null) {
@@ -2118,6 +2127,32 @@ class GmcpEmitter(
         )
     }
 
+    private data class TravelStatusPayload(
+        /** True when the player owns at least one mount and may click the map to ride. */
+        val canTravel: Boolean,
+        val riding: Boolean,
+        /** Destination room id while riding, else null. */
+        val destination: String? = null,
+    )
+
+    /** Sends `Travel.Status` — whether map click-to-ride is available and any ride in progress. */
+    suspend fun sendTravelStatus(
+        sessionId: SessionId,
+        player: PlayerState,
+        destination: String? = null,
+    ) {
+        emit(
+            sessionId,
+            "Travel.Status",
+            TravelStatusPayload(
+                canTravel = player.ownedMounts.isNotEmpty(),
+                riding = player.ridingMountId != null,
+                destination = destination,
+            ),
+            supportCheck = "Travel",
+        )
+    }
+
     data class BoatStatePayload(
         val playerGold: Long,
         val destinations: List<BoatDestinationPayload>,
@@ -2467,18 +2502,21 @@ class GmcpEmitter(
         emit(
             sessionId,
             "Room.MobInfo",
-            withArcanumBadges(mobs, viewer).map { toRoomMobInfoPayload(it) },
+            withArcanumBadges(mobs, viewer).map { toRoomMobInfoPayload(it, viewer = sessionId) },
         )
     }
 
     suspend fun broadcastRoomMobInfo(roomId: RoomId, mobInfos: List<MobInfoEntry>, players: PlayerRegistry) {
-        // Pledged Akathavae get per-viewer arcanum badges; everyone else shares one payload.
-        val (pledged, unpledged) = players.playersInRoom(roomId).partition { it.isAkathavae }
-        if (unpledged.isNotEmpty()) {
-            broadcastSerialized(unpledged, "Room.MobInfo", mobInfos.map { toRoomMobInfoPayload(it) })
+        // Both `illuminationPct` (odds) and the arcanum badge fields are per-viewer:
+        // odds depend on the pledged player's effective stats, and badges depend on
+        // the viewer's Arcanum state. So pledged recipients each get an individually
+        // built payload; everyone else shares a single serialization as before.
+        val (pledged, others) = players.playersInRoom(roomId).partition { it.isAkathavae }
+        if (others.isNotEmpty()) {
+            broadcastSerialized(others, "Room.MobInfo", mobInfos.map { toRoomMobInfoPayload(it, viewer = null) })
         }
-        for (viewer in pledged) {
-            sendRoomMobInfo(viewer.sessionId, mobInfos, viewer)
+        for (p in pledged) {
+            sendRoomMobInfo(p.sessionId, mobInfos, p)
         }
     }
 
@@ -2692,6 +2730,7 @@ class GmcpEmitter(
         shopItems: List<Pair<dev.ambon.domain.ids.ItemId, dev.ambon.domain.items.Item>>,
         buyMultiplier: Double,
         sellMultiplier: Double,
+        ownedMounts: Set<String> = emptySet(),
     ) {
         emit(
             sessionId,
@@ -2713,6 +2752,8 @@ class GmcpEmitter(
                         consumable = item.consumable,
                         image = item.image,
                         video = item.video,
+                        itemType = item.resolvedType().label(),
+                        owned = item.mountId != null && item.mountId in ownedMounts,
                     )
                 },
             ),
@@ -3065,22 +3106,25 @@ class GmcpEmitter(
             takeable = item.item.takeable,
         )
 
-    private fun toRoomMobInfoPayload(entry: MobInfoEntry) =
-        RoomMobInfoPayload(
-            id = entry.id,
-            level = entry.level,
-            tier = entry.tier,
-            questGiver = entry.questGiver,
-            questAvailable = entry.questAvailable,
-            questComplete = entry.questComplete,
-            shopKeeper = entry.shopKeeper,
-            dialogue = entry.dialogue,
-            aggressive = entry.aggressive,
-            combatant = entry.combatant,
-            arcanumRecorded = entry.arcanumRecorded,
-            arcanumSource = entry.arcanumSource,
-            arcanumFirstBy = entry.arcanumFirstBy,
-        )
+    private fun toRoomMobInfoPayload(
+        entry: MobInfoEntry,
+        viewer: SessionId? = null,
+    ) = RoomMobInfoPayload(
+        id = entry.id,
+        level = entry.level,
+        tier = entry.tier,
+        questGiver = entry.questGiver,
+        questAvailable = entry.questAvailable,
+        questComplete = entry.questComplete,
+        shopKeeper = entry.shopKeeper,
+        dialogue = entry.dialogue,
+        aggressive = entry.aggressive,
+        combatant = entry.combatant,
+        illuminationPct = if (entry.combatant) viewer?.let { illuminationOdds(it, entry.id) } else null,
+        arcanumRecorded = entry.arcanumRecorded,
+        arcanumSource = entry.arcanumSource,
+        arcanumFirstBy = entry.arcanumFirstBy,
+    )
 
     // ---------- payload types ----------
 
@@ -3973,6 +4017,8 @@ class GmcpEmitter(
         val dialogue: Boolean,
         val aggressive: Boolean,
         val combatant: Boolean,
+        /** Per-viewer illumination odds; present only for pledged Akathavae viewers. */
+        val illuminationPct: Int? = null,
         /** Pledged viewers only: whether this creature is in the viewer's Arcanum. */
         val arcanumRecorded: Boolean? = null,
         /** How the viewer recorded it (`illuminated`/`observed`), when recorded. */
@@ -4022,6 +4068,9 @@ class GmcpEmitter(
         val consumable: Boolean,
         val image: String? = null,
         val video: String? = null,
+        val itemType: String? = null,
+        /** True for mount items the player has already purchased. */
+        val owned: Boolean = false,
     )
 
     // ---------- puzzle payloads ----------
@@ -4090,6 +4139,15 @@ class GmcpEmitter(
     internal fun resolveSprite(player: PlayerState): String {
         val reg = spriteRegistry
         if (reg != null) {
+            // Mid-ride override: everyone sees the mount while the player fast-travels.
+            val riding = player.ridingMountId
+            if (riding != null) {
+                val mountDef = reg.mountSprite(riding)
+                val mountVariant = mountDef?.let {
+                    reg.bestVariant(it, player.race, player.playerClass, player.gender)
+                }
+                if (mountVariant != null) return "$imagesBase${mountVariant.imagePath}"
+            }
             // Explicit selection
             val chosen = player.activeSprite
             if (chosen != null) {
@@ -4101,6 +4159,7 @@ class GmcpEmitter(
                     playerRace = player.race,
                     playerClass = player.playerClass,
                     playerGender = player.gender,
+                    ownedMounts = player.ownedMounts,
                 )
                 if (valid != null) return "$imagesBase${valid.imagePath}"
             }
@@ -4134,6 +4193,7 @@ class GmcpEmitter(
             playerRace = player.race,
             playerClass = player.playerClass,
             playerGender = player.gender,
+            ownedMounts = player.ownedMounts,
         )
         val active = player.activeSprite
             ?: reg.autoResolve(

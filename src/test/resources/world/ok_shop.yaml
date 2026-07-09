@@ -17,6 +17,12 @@ items:
   trophy:
     displayName: "a trophy skull"
     keyword: "trophy"
+  pony:
+    displayName: "a dappled pony"
+    keyword: "pony"
+    itemType: mount
+    mountId: dappled_pony
+    basePrice: 100
 shops:
   market_vendor:
     name: "Market Vendor"
@@ -24,6 +30,7 @@ shops:
     items:
       - sword
       - potion
+      - pony
 rooms:
   market:
     title: "Market Square"

@@ -1,5 +1,17 @@
 # Custom sprite definitions (achievement, special, etc.)
 # Tier, class, and staff sprites are defined in sprites.yaml (Arcanum-generated).
 # Add achievement or event sprites here as needed.
+#
+# Mount sprites use `category: mount` with a `{type: mount, mountId: ...}`
+# requirement; the mountId matches the `mountId` on the shop item that sells
+# the mount (see academy.yaml `academy_pony`).
 
-sprites: {}
+sprites:
+  academy_pony:
+    displayName: Academy Pony
+    description: A patient dappled pony from the Academy stables. Owning her unlocks fast travel from the zone map.
+    category: mount
+    requirements:
+      - type: mount
+        mountId: academy_pony
+    image: player_sprites/mount_academy_pony.png

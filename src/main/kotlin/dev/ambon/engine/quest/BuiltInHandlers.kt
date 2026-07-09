@@ -17,6 +17,19 @@ class KillObjectiveHandlerImpl : KillObjectiveHandler {
     }
 }
 
+/**
+ * Collect-objective item matching: an item satisfies a collect target when its
+ * id equals the target exactly, or ends with the target's `:<localId>` suffix
+ * (loose-suffix matching, so any zone's copy of the same local item counts).
+ * Shared by the built-in collect handler and every QuestSystem path that must
+ * mirror its semantics (acceptance seeding, turn-in consumption, and the
+ * Akathavae illumination bridge).
+ */
+fun matchesCollectTarget(
+    itemId: String,
+    targetId: String,
+): Boolean = itemId == targetId || itemId.endsWith(":${targetId.substringAfterLast(':')}")
+
 /** Built-in collect objective handler: checks inventory count against the objective target. */
 class CollectObjectiveHandlerImpl : CollectObjectiveHandler {
     override val typeId: String = "collect"
@@ -27,8 +40,7 @@ class CollectObjectiveHandlerImpl : CollectObjectiveHandler {
         itemId: String,
         currentInventoryCount: Int,
     ): ObjectiveProgress? {
-        val targetIdRaw = objDef.targetId
-        if (itemId != targetIdRaw && !itemId.endsWith(":${targetIdRaw.substringAfterLast(':')}")) return null
+        if (!matchesCollectTarget(itemId, objDef.targetId)) return null
         val newCurrent = currentInventoryCount.coerceAtMost(progress.required)
         if (newCurrent <= progress.current) return null
         return progress.copy(current = newCurrent)

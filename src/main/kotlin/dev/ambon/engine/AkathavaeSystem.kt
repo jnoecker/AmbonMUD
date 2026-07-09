@@ -60,6 +60,11 @@ class AkathavaeSystem(
      * Monster Manual's recorded/world-first badge flips live (issue #1389).
      */
     private val refreshRoomMobInfo: (suspend (SessionId) -> Unit)? = null,
+    /**
+     * Fired after a first-time Arcanum record (creature, room, or item) or a newly
+     * stamped world-first, so achievement progress can update immediately.
+     */
+    private val onArcanumRecorded: (suspend (SessionId) -> Unit)? = null,
 ) {
     companion object {
         /**
@@ -69,6 +74,14 @@ class AkathavaeSystem(
          */
         fun mobSubjectKey(mob: MobState): String = mob.templateKey.ifEmpty { mob.id.value }
     }
+
+    /**
+     * Late-bound quest bridge (wired by GameEngine after both systems exist).
+     * Illumination grants a recorded creature's drops when — and only when — an
+     * active collect objective still needs them, so drop-only quest items stay
+     * reachable on the pacifist path (#1392).
+     */
+    var quests: QuestSystem? = null
 
     /** Per-session, per-subject retry locks after a failed illumination. Runtime-only. */
     private val failCooldowns = mutableMapOf<SessionId, MutableMap<String, Long>>()
@@ -155,6 +168,25 @@ class AkathavaeSystem(
     }
 
     /**
+     * Illumination success odds for [me] against [mob], resolving the player's
+     * current effective stats (equipment + status effects included) — the same
+     * inputs [illuminate] rolls against. Surfaced to the player via `consider`
+     * and the `Room.MobInfo` GMCP payload so the pledged never gamble blind.
+     */
+    fun illuminationOddsFor(
+        me: PlayerState,
+        mob: MobState,
+    ): Int {
+        val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
+        return illuminationSuccessPct(
+            statValue = stats[config.successStat],
+            reliefStatValue = stats[config.gapReliefStat],
+            playerLevel = me.level,
+            mobLevel = mob.level,
+        )
+    }
+
+    /**
      * Success chance: base + per-point bonus above [PlayerState.BASE_STAT] on the
      * success stat, minus a per-level penalty for subjects above the player's level
      * (softened per point of the gap-relief stat), clamped to the configured band.
@@ -199,6 +231,7 @@ class AkathavaeSystem(
             exclude = sessionId,
         )
         announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
+        if (firstTime) onArcanumRecorded?.invoke(sessionId)
 
         val baseXp = progression.killXpReward(mob)
         if (firstTime) {
@@ -221,8 +254,11 @@ class AkathavaeSystem(
 
         // Catalogue what the creature carries as Arcanum pages — this feeds the
         // wardrobe — but take nothing: the subject is unharmed and stays put.
+        // The illumination XP above just armed the discovery-XP throttle, so these
+        // same-action item awards bypass it — otherwise the items get recorded with
+        // their XP silently and permanently swallowed.
         for (drop in mob.drops) {
-            recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED)
+            recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED, bypassThrottle = true)
         }
 
         // A recorded creature counts as a defeated one for quests and achievements,
@@ -230,10 +266,46 @@ class AkathavaeSystem(
         // once per living instance, since illumination no longer consumes it.
         if (creditedIlluminations.getOrPut(sessionId) { mutableSetOf() }.add(mob.id.value)) {
             combat.creditIlluminationKill(sessionId, mob)
+            grantNeededQuestItems(sessionId, mob)
         }
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
         refreshRoomMobInfo?.invoke(sessionId)
+    }
+
+    /**
+     * The collect-objective half of the illumination bridge (#1392): kill
+     * credit covers kill objectives, but the pledged never loot, so a collect
+     * item that only drops from mobs would otherwise be unobtainable. For each
+     * of the subject's drops still needed by an active, unfinished collect
+     * objective, one real copy is granted into the inventory — deterministic
+     * (no drop-chance roll: if the quest needs it and the mob can drop it, the
+     * rubbing succeeds) and farm-proof, because this path is reachable only
+     * through the once-per-living-instance credit gate and re-checks the
+     * remaining need per drop entry, so no sellable surplus can accumulate.
+     * Granting through the inventory keeps the downstream flow intact:
+     * [QuestSystem.onItemCollected] advances the objective and turn-in
+     * consumption later finds the item it expects.
+     */
+    private suspend fun grantNeededQuestItems(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        val quests = quests ?: return
+        for (drop in mob.drops) {
+            if (quests.neededForCollectObjectives(sessionId, drop.itemId) <= 0) continue
+            val instance = items.createFromTemplate(drop.itemId) ?: continue
+            items.addToInventory(sessionId, instance)
+            outbound.send(
+                OutboundEvent.SendText(
+                    sessionId,
+                    "Sketching its likeness, you take a careful rubbing of ${instance.item.displayName} for your quest.",
+                ),
+            )
+            gmcpEmitter?.sendCharItemsAdd(sessionId, instance)
+            quests.onItemCollected(sessionId, instance)
+            metrics.onGameEvent("akathavae", "quest_item_rubbing")
+        }
     }
 
     private suspend fun resolveFailure(
@@ -289,6 +361,7 @@ class AkathavaeSystem(
                 ),
             )
             announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
+            onArcanumRecorded?.invoke(sessionId)
             awardDiscoveryXp(sessionId, me, config.observeNpcXp, "observation", now)
             markVitalsDirty?.invoke(sessionId)
             emitStatus(sessionId)
@@ -313,6 +386,7 @@ class AkathavaeSystem(
         val title = world.rooms[roomId]?.title ?: roomId.value
         outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You record $title."))
         announceWorldFirst(sessionId, me, "room:$key", title, now)
+        onArcanumRecorded?.invoke(sessionId)
         awardDiscoveryXp(sessionId, me, config.roomDiscoveryXp, "discovery", now)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
@@ -327,9 +401,10 @@ class AkathavaeSystem(
         sessionId: SessionId,
         itemId: dev.ambon.domain.ids.ItemId,
         source: String,
+        bypassThrottle: Boolean = false,
     ) {
         val template = items.getTemplate(itemId) ?: return
-        recordItemDiscovery(sessionId, ItemInstance(id = itemId, item = template), source)
+        recordItemDiscovery(sessionId, ItemInstance(id = itemId, item = template), source, bypassThrottle)
     }
 
     /**
@@ -341,6 +416,7 @@ class AkathavaeSystem(
         sessionId: SessionId,
         item: ItemInstance,
         source: String,
+        bypassThrottle: Boolean = false,
     ) {
         val me = players.get(sessionId) ?: return
         if (!me.isAkathavae) return
@@ -353,7 +429,8 @@ class AkathavaeSystem(
         recordEntry(me.arcanum.items, key, now, source)
         outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You record ${item.item.displayName}."))
         announceWorldFirst(sessionId, me, "item:$key", item.item.displayName, now)
-        awardDiscoveryXp(sessionId, me, config.itemDiscoveryXp, "discovery", now)
+        onArcanumRecorded?.invoke(sessionId)
+        awardDiscoveryXp(sessionId, me, config.itemDiscoveryXp, "discovery", now, bypassThrottle)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
     }
@@ -366,6 +443,8 @@ class AkathavaeSystem(
         val roomsTotal: Int,
         val mobsRecorded: Int,
         val mobsTotal: Int,
+        val itemsRecorded: Int,
+        val itemsTotal: Int,
     )
 
     /** Per-zone completion for [me], for every zone with at least one recorded entry plus the current zone. */
@@ -374,8 +453,17 @@ class AkathavaeSystem(
         val roomsRecorded = me.arcanum.rooms.keys.count { RoomId(it).zone == zone }
         val mobsTotal = world.mobTemplates.keys.count { it.value.substringBefore(':') == zone }
         val mobsRecorded = me.arcanum.mobs.keys.count { it.substringBefore(':') == zone }
-        return ZoneCompletion(zone, roomsRecorded, roomsTotal, mobsRecorded, mobsTotal)
+        val itemsTotal = items.templateCountForZone(zone)
+        val itemsRecorded = me.arcanum.items.keys.count { it.contains(':') && it.substringBefore(':') == zone }
+        return ZoneCompletion(zone, roomsRecorded, roomsTotal, mobsRecorded, mobsTotal, itemsRecorded, itemsTotal)
     }
+
+    /** Every zone touched by [me]'s journal — rooms, mobs, and items — in sorted order. */
+    fun recordedZones(me: PlayerState): List<String> = (
+        me.arcanum.rooms.keys.map { it.substringBefore(':') } +
+            me.arcanum.mobs.keys.map { it.substringBefore(':') } +
+            me.arcanum.items.keys.filter { it.contains(':') }.map { it.substringBefore(':') }
+    ).toSortedSet().toList()
 
     /** Returns the permanent world-first credit line for a subject, or null. */
     fun worldFirstCredit(kind: String, subjectKey: String): Pair<String, Long>? =
@@ -397,14 +485,19 @@ class AkathavaeSystem(
     suspend fun emitJournal(sessionId: SessionId) {
         val emitter = gmcpEmitter ?: return
         val me = players.get(sessionId) ?: return
-        val zones = (
-            me.arcanum.rooms.keys.map { it.substringBefore(':') } +
-                me.arcanum.mobs.keys.map { it.substringBefore(':') }
-        ).toSortedSet().map { zoneCompletion(me, it) }
+        val zones = recordedZones(me).map { zoneCompletion(me, it) }
         val payload = GmcpEmitter.ArcanumJournalPayload(
             pledged = me.isAkathavae,
             zones = zones.map {
-                GmcpEmitter.ArcanumZonePayload(it.zone, it.roomsRecorded, it.roomsTotal, it.mobsRecorded, it.mobsTotal)
+                GmcpEmitter.ArcanumZonePayload(
+                    zone = it.zone,
+                    roomsRecorded = it.roomsRecorded,
+                    roomsTotal = it.roomsTotal,
+                    mobsRecorded = it.mobsRecorded,
+                    mobsTotal = it.mobsTotal,
+                    itemsRecorded = it.itemsRecorded,
+                    itemsTotal = it.itemsTotal,
+                )
             },
             mobs = me.arcanum.mobs.entries.sortedBy { it.key }.map { (key, entry) ->
                 val template = world.mobTemplate(dev.ambon.domain.ids.MobId(key))
@@ -475,6 +568,7 @@ class AkathavaeSystem(
     ) {
         val ws = worldState ?: return
         if (ws.recordArcanumFirst(firstKey, me.name, now)) {
+            me.worldFirstsCount += 1
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
@@ -482,19 +576,28 @@ class AkathavaeSystem(
                 ),
             )
             metrics.onGameEvent("akathavae", "world_first")
+            onArcanumRecorded?.invoke(sessionId)
         }
     }
 
-    /** Grants discovery XP scaled by the XP stat, behind the anti-speedrun throttle. */
+    /**
+     * Grants discovery XP scaled by the XP stat, behind the anti-speedrun throttle.
+     *
+     * [bypassThrottle] is for intra-action awards only (e.g. cataloguing a mob's
+     * drops in the same illumination that just awarded XP): it skips the throttle
+     * check but still updates the next-award window, so a bypassed award never
+     * opens a farming window.
+     */
     private suspend fun awardDiscoveryXp(
         sessionId: SessionId,
         me: PlayerState,
         baseAmount: Long,
         label: String,
         now: Long,
+        bypassThrottle: Boolean = false,
     ) {
         if (baseAmount <= 0L) return
-        if (now < (nextDiscoveryXpAt[sessionId] ?: 0L)) return
+        if (!bypassThrottle && now < (nextDiscoveryXpAt[sessionId] ?: 0L)) return
         nextDiscoveryXpAt[sessionId] = now + config.discoveryXpThrottleMs
 
         val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)

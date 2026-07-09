@@ -10214,6 +10214,12 @@ body {
   opacity: 0.9;
 }
 
+/* Mount fast-travel affordance — shown when the hovered room is rideable. */
+.map-tooltip-ride {
+  font-weight: 600;
+  color: var(--color-gold-bright);
+}
+
 /* --- Atlas (zone browser) ---------------------------------------------
    Lives on the chart sheet's parchment: ink text, sepia rules, gold accents. */
 
@@ -27622,6 +27628,92 @@ html:has(.game-shell),
   color: var(--text-muted);
 }
 
+.arcanum-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.arcanum-search {
+  flex: 1 1 160px;
+  min-width: 120px;
+  padding: 5px 10px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: var(--surface-input);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.arcanum-search::placeholder {
+  color: var(--text-muted);
+}
+
+.arcanum-search:focus-visible {
+  outline: 2px solid var(--primary-dim);
+  outline-offset: 1px;
+}
+
+.arcanum-sort {
+  padding: 5px 8px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: var(--surface-input);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.arcanum-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.arcanum-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--line-faint);
+  border-radius: 999px;
+  background: var(--surface-chip);
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.arcanum-chip:hover {
+  background: var(--primary-glass);
+  color: var(--text-primary);
+}
+
+.arcanum-chip-active {
+  background: var(--primary-glass);
+  color: var(--accent-gold);
+  border-color: var(--primary-dim);
+}
+
+.arcanum-filter-note {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.arcanum-show-more {
+  align-self: center;
+  padding: 5px 14px;
+  border: 1px solid var(--primary-dim);
+  border-radius: var(--radius-sm);
+  background: var(--primary-glass);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.arcanum-show-more:hover {
+  border-color: var(--accent-gold);
+}
+
 .arcanum-tabs {
   display: flex;
   gap: var(--space-1);
@@ -27718,6 +27810,20 @@ html:has(.game-shell),
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+
+.arcanum-room-group-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-subpanel);
+  border-radius: var(--radius-sm);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: capitalize;
+  color: var(--accent-gold);
 }
 
 .arcanum-room-row {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.items.ItemType
@@ -919,6 +920,55 @@ class WorldLoaderTest {
             assertTrue(world.rooms.isNotEmpty())
             assertEquals(RoomId("academy:academy_gates"), world.startRoom)
         }
+
+        @Test
+        fun `academy shrine keeper questline is wired for both paths`() {
+            val world = WorldFactory.demoWorld(resources = productionZones)
+
+            // The keeper spawns exactly once, in the alcove, as a quest giver.
+            val keeper = world.mobTemplate(MobId("academy:keeper_veshtal"))
+            assertNotNull(keeper, "Expected academy:keeper_veshtal template")
+            val keeperSpawns = world.mobSpawns.filter { it.templateId.value == "academy:keeper_veshtal" }
+            assertEquals(1, keeperSpawns.size, "Quest giver must have exactly one spawn instance")
+            assertEquals(RoomId("academy:akathavae_alcove"), keeperSpawns.single().roomId)
+
+            // Every dialogue flag gating the chain is unlockable from the keeper's own tree.
+            val dialogueActions =
+                keeper!!
+                    .dialogue!!
+                    .nodes.values
+                    .flatMap { it.choices }
+                    .mapNotNull { it.action }
+                    .toSet()
+
+            val chain =
+                listOf(
+                    "academy:a_blank_page",
+                    "academy:three_lines_of_ink",
+                    "academy:what_is_written_remains",
+                )
+            for (questId in chain) {
+                val quest = world.questDefinitions.singleOrNull { it.id == questId }
+                assertNotNull(quest, "Expected quest $questId")
+                assertEquals("academy:keeper_veshtal", quest!!.giverMobId)
+                val flag = quest.requiresDialogueFlag
+                assertNotNull(flag, "$questId must be dialogue-flag gated")
+                assertTrue(
+                    dialogueActions.contains("unlock_flag:$flag"),
+                    "Flag '$flag' for $questId must be unlockable in the keeper's dialogue",
+                )
+                assertTrue(quest.objectives.isNotEmpty(), "$questId must have objectives")
+                for (objective in quest.objectives) {
+                    // Kill objectives are completable by both paths: combat kills and
+                    // Akathavae illumination both credit them (see AkathavaeSystem).
+                    assertEquals("kill", objective.type, "$questId objectives must be kill-type")
+                    assertNotNull(
+                        world.mobTemplate(MobId(objective.targetId)),
+                        "$questId objective target '${objective.targetId}' must be a known mob template",
+                    )
+                }
+            }
+        }
     }
 
     class ZoneFilteredWorldLoaderTest {
@@ -990,7 +1040,7 @@ class WorldLoaderTest {
             val shop = world.shopDefinitions.single()
             assertEquals("Market Vendor", shop.name)
             assertEquals(RoomId("ok_shop:market"), shop.roomId)
-            assertEquals(2, shop.itemIds.size)
+            assertEquals(3, shop.itemIds.size)
         }
 
         @Test
@@ -1042,6 +1092,24 @@ class WorldLoaderTest {
                     WorldLoader.loadFromResource("world/bad_shop_missing_item.yaml")
                 }
             assertTrue(ex.message!!.contains("item", ignoreCase = true), "Got: ${ex.message}")
+        }
+
+        @Test
+        fun `fails when a mount item lacks mountId`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_mount_missing_mount_id.yaml")
+                }
+            assertTrue(ex.message!!.contains("mountId", ignoreCase = true), "Got: ${ex.message}")
+        }
+
+        @Test
+        fun `fails when a non-mount item sets mountId`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_mount_id_on_non_mount.yaml")
+                }
+            assertTrue(ex.message!!.contains("mountId", ignoreCase = true), "Got: ${ex.message}")
         }
     }
 

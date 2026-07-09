@@ -280,6 +280,7 @@ Map pin notes (`mapX`/`mapY`/`mapZ`):
 - When `true`, enables the `pledge` and `renounce` commands in this room.
 - Pledging is free and converts the player into the AKATHAVAE class (their former class is stashed and restored on renounce): combat and multiclassing are forbidden, vitals rescale to the Akathavae curve, and the player levels by illuminating the world (recording rooms, creatures, and items in their Arcanum journal).
 - Renouncing at a shrine costs gold (`ambonMUD.engine.akathavae.renounceCostGold`, default 2500), restores the former class, and starts a re-pledge cooldown (`repledgeCooldownMs`, default 24h).
+- **Content guideline — quest collect items:** every item targeted by a quest `collect` objective should be obtainable through at least one non-kill channel: a room/ground spawn, a shop, a gathering node, or a mob drop. Mob drops are reachable on the pacifist path because illuminating a creature grants a drop the player still needs for an active collect objective (once per living instance, capped at the remaining count). An item that only exists as loot from a mob no Akathavae can illuminate would make the quest impossible for the pledged.
 
 `station` notes:
 - Designates the room as a crafting station of the given type.

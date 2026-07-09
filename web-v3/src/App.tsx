@@ -67,6 +67,7 @@ import { useTerminal } from "./hooks/useTerminal";
 import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useCommandHistory } from "./hooks/useCommandHistory";
 import { POI_META, useMiniMap } from "./hooks/useMiniMap";
+import type { MapHoverInfo } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
@@ -244,6 +245,9 @@ function App() {
   const terminalOverlayRef = useRef<HTMLDivElement | null>(null);
 
   // Minimap canvas + drawing helpers (owns its own ref, kept out of useGameState)
+  // Click-to-ride handler is assigned after `state`/`sendCommand` exist (below);
+  // the ref indirection breaks the declaration-order cycle with useGameState.
+  const mapRoomClickRef = useRef<(info: MapHoverInfo) => void>(() => {});
   const {
     mapCanvasRef,
     drawMap,
@@ -262,7 +266,7 @@ function App() {
     recenter: mapRecenter,
     zoneStats: mapZoneStats,
     hoverInfo: mapHoverInfo,
-  } = useMiniMap();
+  } = useMiniMap((info) => mapRoomClickRef.current(info));
 
   const state = useGameState(
     { resumeTokenRef, pendingAuthCharRef, sendGmcpRef },
@@ -422,6 +426,18 @@ function App() {
     if (!carriesSecret) pushHistory(command);
     resetComposerTraversal();
   };
+
+  // Map click-to-ride: owning a mount lets any explored, non-current room on the
+  // zone chart (including border stubs into adjacent zones) be a travel target.
+  // The server re-validates everything; this just gates the obvious no-ops.
+  useEffect(() => {
+    mapRoomClickRef.current = (info: MapHoverInfo) => {
+      if (!state.travelStatus?.canTravel) return;
+      if (info.id === state.room.id) return;
+      if (!info.explored && !info.zone) return; // fog-of-war frontier: nothing to ride to
+      sendCommand(`travel ${info.id}`);
+    };
+  });
 
   // Accept a quest and surface an "accepted" toast (no server signal for accept,
   // so we fire it optimistically from the name we already have on the offer).
@@ -1783,6 +1799,14 @@ function App() {
                 width={1280}
                 height={760}
                 role="img"
+                style={{
+                  cursor: state.travelStatus?.canTravel &&
+                    mapHoverInfo &&
+                    mapHoverInfo.id !== state.room.id &&
+                    (mapHoverInfo.explored || mapHoverInfo.zone)
+                    ? "pointer"
+                    : undefined,
+                }}
                 onPointerDown={onMapPointerDown}
                 onPointerMove={onMapPointerMove}
                 onPointerUp={onMapPointerUp}
@@ -1817,6 +1841,11 @@ function App() {
                     </>
                   ) : (
                     <span className="map-tooltip-title map-tooltip-unknown">Unexplored</span>
+                  )}
+                  {state.travelStatus?.canTravel &&
+                    mapHoverInfo.id !== state.room.id &&
+                    (mapHoverInfo.explored || mapHoverInfo.zone) && (
+                    <span className="map-tooltip-ride">🐎 Click to ride here</span>
                   )}
                 </div>
               )}

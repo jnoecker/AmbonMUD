@@ -53,6 +53,7 @@ class GmcpEmitterTest {
     private fun emitter(
         vararg supported: String,
         arcanumFirstBy: (String) -> String? = { null },
+        illuminationOdds: (SessionId, String) -> Int? = { _, _ -> null },
     ): GmcpEmitter {
         val packages = supported.toSet()
         return GmcpEmitter(
@@ -63,6 +64,7 @@ class GmcpEmitterTest {
             progression = progression,
             equipmentSlotRegistry = defaultSlotRegistry,
             arcanumFirstBy = arcanumFirstBy,
+            illuminationOdds = illuminationOdds,
         )
     }
 
@@ -1675,6 +1677,19 @@ class GmcpEmitterTest {
 
     // ── Room.MobInfo ──
 
+    private fun mobInfoEntry(combatant: Boolean) = MobInfoEntry(
+        id = "forest:goblin_1",
+        level = 3,
+        tier = "standard",
+        questGiver = true,
+        questAvailable = true,
+        questComplete = false,
+        shopKeeper = false,
+        dialogue = true,
+        aggressive = false,
+        combatant = combatant,
+    )
+
     @Test
     fun `sendRoomMobInfo emits correct JSON`() =
         runTest {
@@ -1704,6 +1719,57 @@ class GmcpEmitterTest {
             assertTrue(events[0].jsonData.contains("\"questGiver\":true"))
             assertTrue(events[0].jsonData.contains("\"shopKeeper\":false"))
             assertTrue(events[0].jsonData.contains("\"dialogue\":true"))
+        }
+
+    @Test
+    fun `sendRoomMobInfo omits illuminationPct without an odds provider`() =
+        runTest {
+            val e = emitter("Room.MobInfo")
+            e.sendRoomMobInfo(sid, listOf(mobInfoEntry(combatant = true)))
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertFalse(events[0].jsonData.contains("illuminationPct"), "got=${events[0].jsonData}")
+        }
+
+    @Test
+    fun `sendRoomMobInfo includes per-viewer illumination odds for combatants`() =
+        runTest {
+            val e = emitter("Room.MobInfo", illuminationOdds = { _, mobId -> if (mobId == "forest:goblin_1") 72 else null })
+            e.sendRoomMobInfo(sid, listOf(mobInfoEntry(combatant = true)))
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"illuminationPct\":72"), "got=${events[0].jsonData}")
+        }
+
+    @Test
+    fun `sendRoomMobInfo never adds illumination odds to non-combatants`() =
+        runTest {
+            val e = emitter("Room.MobInfo", illuminationOdds = { _, _ -> 72 })
+            e.sendRoomMobInfo(sid, listOf(mobInfoEntry(combatant = false)))
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertFalse(events[0].jsonData.contains("illuminationPct"), "got=${events[0].jsonData}")
+        }
+
+    @Test
+    fun `broadcastRoomMobInfo builds per-viewer payloads for pledged players`() =
+        runTest {
+            val e = emitter("Room.MobInfo", illuminationOdds = { viewer, _ -> if (viewer == SessionId(1L)) 72 else null })
+            val roomId = RoomId("test:room1")
+            val players = buildTestPlayerRegistry(roomId)
+            players.loginOrFail(SessionId(1L), "Pledged")
+            players.loginOrFail(SessionId(2L), "Fighter")
+            players.get(SessionId(1L))!!.isAkathavae = true
+            outbound.drainAll() // discard login-side events
+
+            e.broadcastRoomMobInfo(roomId, listOf(mobInfoEntry(combatant = true)), players)
+
+            val events = drainGmcp().filter { it.gmcpPackage == "Room.MobInfo" }
+            assertEquals(2, events.size, "Expected one GMCP event per room occupant")
+            val pledged = events.single { it.sessionId == SessionId(1L) }
+            val fighter = events.single { it.sessionId == SessionId(2L) }
+            assertTrue(pledged.jsonData.contains("\"illuminationPct\":72"), "got=${pledged.jsonData}")
+            assertFalse(fighter.jsonData.contains("illuminationPct"), "got=${fighter.jsonData}")
         }
 
     @Test

@@ -249,6 +249,7 @@ class CommunicationHandler(
                 if (guildTag != null) append("[$guildTag] ")
                 if (t != null) append("[$t] ")
                 if (grouped) append("[G] ")
+                if (p.isAkathavae) append("[Akathavae] ")
             }
             "$prefix${p.name}"
         }
