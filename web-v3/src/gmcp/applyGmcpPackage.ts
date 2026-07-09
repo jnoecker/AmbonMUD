@@ -2270,6 +2270,8 @@ export function applyGmcpPackage(
           roomsTotal: safeNumber(z.roomsTotal, 0),
           mobsRecorded: safeNumber(z.mobsRecorded, 0),
           mobsTotal: safeNumber(z.mobsTotal, 0),
+          itemsRecorded: safeNumber(z.itemsRecorded, 0),
+          itemsTotal: safeNumber(z.itemsTotal, 0),
         })),
         mobs: asRecords(packet.mobs).map((m) => ({
           key: typeof m.key === "string" ? m.key : "",

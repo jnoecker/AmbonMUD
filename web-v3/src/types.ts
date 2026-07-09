@@ -1574,6 +1574,8 @@ export interface ArcanumZoneCompletion {
   roomsTotal: number;
   mobsRecorded: number;
   mobsTotal: number;
+  itemsRecorded: number;
+  itemsTotal: number;
 }
 
 export interface ArcanumMobEntry {
