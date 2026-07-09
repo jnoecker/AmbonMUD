@@ -1256,6 +1256,9 @@ class GameEngine(
             gmcpEmitter.sendCharItemsAdd(sid, item)
             questSystem.onItemCollected(sid, item)
         }
+        // Illumination bridge: a recorded creature's drops can satisfy active
+        // collect objectives for the pledged, who never loot (#1392).
+        akathavaeSystem.quests = questSystem
         guildSystem?.onGuildCreated = { sid ->
             metrics.onGameEvent("guild", "created")
             achievementSystem.onGuildCreated(sid)

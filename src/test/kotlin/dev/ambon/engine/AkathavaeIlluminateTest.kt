@@ -10,6 +10,9 @@ import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.mob.MobRole
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.quest.QuestDef
+import dev.ambon.domain.quest.QuestObjectiveDef
+import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
@@ -25,6 +28,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.util.Random
@@ -283,6 +287,145 @@ class AkathavaeIlluminateTest {
         val errors = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendError>().map { it.text }
         assertTrue(errors.any { it.contains("pledge") }, "got=$errors")
         assertNotNull(s.fixture.mobs.get(MobId("test:w1")))
+    }
+
+    // ── Quest collect bridge (#1392) ─────────────────────────────────────
+
+    private val dustId = ItemId("test:dust")
+
+    private fun registerDustTemplate(s: Setup) {
+        s.fixture.items.loadSpawns(
+            listOf(ItemSpawn(instance = ItemInstance(dustId, Item(keyword = "dust", displayName = "glittering dust")))),
+        )
+    }
+
+    private fun collectDustQuest(count: Int) = QuestDef(
+        id = "test:gather_dust",
+        name = "Gather Dust",
+        description = "Bring back glittering dust.",
+        giverMobId = "test:quest_giver",
+        objectives = listOf(
+            QuestObjectiveDef(type = "collect", targetId = "test:dust", count = count, description = "Collect $count dust"),
+        ),
+        rewards = QuestRewards(),
+        completionType = "npc_turn_in",
+    )
+
+    /** Builds a QuestSystem over the fixture's components and wires it as the illumination bridge. */
+    private fun attachQuests(s: Setup, quest: QuestDef): QuestSystem {
+        val registry = QuestRegistry()
+        registry.register(quest)
+        val quests = QuestSystem(
+            registry = registry,
+            players = s.fixture.players,
+            items = s.fixture.items,
+            outbound = s.fixture.outbound,
+            clock = s.clock,
+        )
+        s.system.quests = quests
+        return quests
+    }
+
+    @Test
+    fun `illumination grants a needed collect item and turn-in consumes it`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        val quests = attachQuests(s, collectDustQuest(count = 2))
+        assertNull(quests.acceptQuest(sid, "test:gather_dust"))
+        s.fixture.outbound.drainAll()
+
+        // Deterministic grant: the drop's 0.25 chance is never rolled.
+        s.fixture.mobs.upsert(wisp(id = "w1", drops = listOf(MobDrop(dustId, 0.25))))
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(1, s.fixture.items.inventory(sid).size, "one rubbing per living instance")
+        assertEquals(1, me.activeQuests["test:gather_dust"]!!.objectives[0].current)
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("careful rubbing") }, "got=$texts")
+
+        // A second living instance completes the objective.
+        s.fixture.mobs.remove(MobId("test:w1"))
+        s.fixture.mobs.upsert(wisp(id = "w2", drops = listOf(MobDrop(dustId, 0.25))))
+        s.system.illuminate(sid, "wisp")
+        assertEquals(2, s.fixture.items.inventory(sid).size)
+        assertTrue(me.activeQuests["test:gather_dust"]!!.objectives[0].isComplete)
+
+        // Turn-in finds and consumes the granted items, exactly like looted ones.
+        assertNull(quests.turnInQuest(sid, "Gather Dust", listOf("test:quest_giver")))
+        assertTrue(me.completedQuestIds.contains("test:gather_dust"))
+        assertTrue(s.fixture.items.inventory(sid).isEmpty(), "turn-in hands over the rubbings")
+    }
+
+    @Test
+    fun `illumination grants nothing without an active collect objective`() = runTest {
+        val s = setup(rng = ScriptedRandom(0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        attachQuests(s, collectDustQuest(count = 2)) // quest exists but is never accepted
+        s.fixture.mobs.upsert(wisp(drops = listOf(MobDrop(dustId, 1.0))))
+
+        s.system.illuminate(sid, "wisp")
+
+        assertTrue(s.fixture.items.inventory(sid).isEmpty(), "no quest, no rubbing")
+        assertTrue(me.arcanum.items.containsKey("test:dust"), "journal cataloguing is unchanged")
+    }
+
+    @Test
+    fun `illumination grants nothing once the objective is complete`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        val quests = attachQuests(s, collectDustQuest(count = 1))
+        assertNull(quests.acceptQuest(sid, "test:gather_dust"))
+
+        s.fixture.mobs.upsert(wisp(id = "w1", drops = listOf(MobDrop(dustId, 1.0))))
+        s.system.illuminate(sid, "wisp")
+        assertTrue(me.activeQuests["test:gather_dust"]!!.objectives[0].isComplete)
+
+        // Objective satisfied — a fresh instance yields no sellable surplus.
+        s.fixture.mobs.remove(MobId("test:w1"))
+        s.fixture.mobs.upsert(wisp(id = "w2", drops = listOf(MobDrop(dustId, 1.0))))
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(1, s.fixture.items.inventory(sid).size, "grants are capped at the remaining count")
+    }
+
+    @Test
+    fun `re-illuminating the same living instance grants no second item`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        val quests = attachQuests(s, collectDustQuest(count = 2))
+        assertNull(quests.acceptQuest(sid, "test:gather_dust"))
+
+        s.fixture.mobs.upsert(wisp(id = "w1", drops = listOf(MobDrop(dustId, 1.0))))
+        s.system.illuminate(sid, "wisp")
+        s.system.illuminate(sid, "wisp") // same living instance, already credited
+
+        assertEquals(1, s.fixture.items.inventory(sid).size, "a living creature yields quest items at most once")
+        assertEquals(1, me.activeQuests["test:gather_dust"]!!.objectives[0].current)
+    }
+
+    @Test
+    fun `duplicate drop entries cannot overshoot the remaining count`() = runTest {
+        val s = setup(rng = ScriptedRandom(0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        val quests = attachQuests(s, collectDustQuest(count = 1))
+        assertNull(quests.acceptQuest(sid, "test:gather_dust"))
+
+        // The mob lists the same drop twice, but the quest only needs one.
+        s.fixture.mobs.upsert(wisp(drops = listOf(MobDrop(dustId, 1.0), MobDrop(dustId, 1.0))))
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(1, s.fixture.items.inventory(sid).size, "the grant re-checks the remaining need per drop entry")
+        assertTrue(me.activeQuests["test:gather_dust"]!!.objectives[0].isComplete)
     }
 
     // ── Passive discovery ────────────────────────────────────────────────
