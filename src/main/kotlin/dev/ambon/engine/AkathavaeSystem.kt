@@ -141,6 +141,25 @@ class AkathavaeSystem(
     }
 
     /**
+     * Illumination success odds for [me] against [mob], resolving the player's
+     * current effective stats (equipment + status effects included) — the same
+     * inputs [illuminate] rolls against. Surfaced to the player via `consider`
+     * and the `Room.MobInfo` GMCP payload so the pledged never gamble blind.
+     */
+    fun illuminationOddsFor(
+        me: PlayerState,
+        mob: MobState,
+    ): Int {
+        val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
+        return illuminationSuccessPct(
+            statValue = stats[config.successStat],
+            reliefStatValue = stats[config.gapReliefStat],
+            playerLevel = me.level,
+            mobLevel = mob.level,
+        )
+    }
+
+    /**
      * Success chance: base + per-point bonus above [PlayerState.BASE_STAT] on the
      * success stat, minus a per-level penalty for subjects above the player's level
      * (softened per point of the gap-relief stat), clamped to the configured band.

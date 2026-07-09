@@ -583,7 +583,9 @@ class GameEngine(
     /** Sessions whose stats changed this tick and need a Char.Stats push. */
     private val gmcpDirtyStats = mutableSetOf<SessionId>()
 
-    val gmcpEmitter =
+    // Explicit type: the illuminationOdds lambda references akathavaeSystem, whose
+    // initializer references gmcpEmitter back — inference needs one anchor.
+    val gmcpEmitter: GmcpEmitter =
         GmcpEmitter(
             outbound = outbound,
             supportsPackage = { sid, pkg ->
@@ -647,6 +649,15 @@ class GameEngine(
             raceRegistry = raceRegistry,
             nowMs = { clock.millis() },
             worldAreas = buildWorldAreaPayloads(world),
+            illuminationOdds = { sid, mobId ->
+                val viewer = players.get(sid)
+                val mob = mobs.get(MobId(mobId))
+                if (viewer != null && mob != null && viewer.isAkathavae && mob.role.isCombatant && !mob.isPet) {
+                    akathavaeSystem.illuminationOddsFor(viewer, mob)
+                } else {
+                    null
+                }
+            },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -814,7 +825,7 @@ class GameEngine(
             racialAbilitySystem = racialAbilitySystem,
         )
 
-    private val akathavaeSystem =
+    private val akathavaeSystem: AkathavaeSystem =
         AkathavaeSystem(
             players = players,
             items = items,
