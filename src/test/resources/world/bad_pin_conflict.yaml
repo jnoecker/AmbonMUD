@@ -1,0 +1,17 @@
+zone: bad_pin_conflict
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Pinned."
+    mapX: 2
+    mapY: 3
+    exits:
+      n: b
+  b:
+    title: "Room B"
+    description: "Pinned to the same cell as A."
+    mapX: 2
+    mapY: 3
+    exits:
+      s: a

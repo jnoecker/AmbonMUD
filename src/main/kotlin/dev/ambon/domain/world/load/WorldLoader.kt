@@ -66,6 +66,7 @@ import dev.ambon.domain.world.data.MobFile
 import dev.ambon.domain.world.data.MobSpawnFile
 import dev.ambon.domain.world.data.MusicBoxFile
 import dev.ambon.domain.world.data.ReputationRequirementFile
+import dev.ambon.domain.world.data.RoomFile
 import dev.ambon.domain.world.data.WorldFile
 import dev.ambon.domain.world.resolveMobStats
 import dev.ambon.engine.behavior.BehaviorTemplates
@@ -146,6 +147,7 @@ object WorldLoader {
 
         // Normalize + merge all rooms
         val mergedRooms = LinkedHashMap<RoomId, Room>()
+        val roomMapPins = LinkedHashMap<RoomId, MapCell>() // author-pinned minimap cells
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
         val allGates = LinkedHashMap<RoomId, Map<Direction, AchievementGate>>() // staged per-room achievement gates
         val allRoomFeatures = LinkedHashMap<RoomId, MutableList<RoomFeature>>() // staged features per room
@@ -244,6 +246,7 @@ object WorldLoader {
                 val station = rf.station?.let { raw ->
                     parseCraftingStationType(raw, "Room '${id.value}'")
                 }
+                parseMapPin(rf, id)?.let { roomMapPins[id] = it }
                 mergedRooms[id] =
                     Room(
                         id = id,
@@ -1180,8 +1183,9 @@ object WorldLoader {
             }
         }
 
-        // Assign minimap coordinates via per-zone BFS
-        val coordRooms = assignMapCoordinates(mergedRooms, zoneStartRooms)
+        // Assign minimap coordinates: author pins are honored as fixed anchors,
+        // everything else is placed by per-zone BFS around them.
+        val coordRooms = assignMapCoordinates(mergedRooms, zoneStartRooms, roomMapPins)
 
         return World(
             rooms = coordRooms.toMutableMap(),
@@ -1771,6 +1775,30 @@ object WorldLoader {
     }
 
     /**
+     * Parses a room's explicit minimap pin, or null when the room declares none. `mapX` and
+     * `mapY` must be given together (a half-specified pin is an authoring mistake, not a
+     * preference); `mapZ` is optional, defaults to floor 0, and only makes sense on a pinned room.
+     */
+    private fun parseMapPin(rf: RoomFile, id: RoomId): MapCell? {
+        val x = rf.mapX
+        val y = rf.mapY
+        if (x == null && y == null) {
+            if (rf.mapZ != null) {
+                throw WorldLoadException(
+                    "Room '${id.value}' declares mapZ without mapX/mapY — a floor alone doesn't pin a cell",
+                )
+            }
+            return null
+        }
+        if (x == null || y == null) {
+            throw WorldLoadException(
+                "Room '${id.value}' declares only one of mapX/mapY — a map pin needs both",
+            )
+        }
+        return MapCell(x, y, rf.mapZ ?: 0)
+    }
+
+    /**
      * Parses a dock's authored boat passages: normalizes each destination id relative to [zone]
      * (so `room` is local and `other:room` is cross-zone, exactly like exits) and requires a
      * non-negative fare. Destinations are not checked for existence here — a route to a room not
@@ -2022,10 +2050,18 @@ object WorldLoader {
      * via a spiral search — and a warning names both rooms, since the resulting
      * map draws that exit as a diagonal. Zone authors can keep maps clean by
      * laying out each floor so its horizontal exits are euclidean-consistent.
+     *
+     * [pins] are author-supplied cells (room `mapX`/`mapY`/`mapZ` in zone YAML,
+     * typically written by Arcanum's "Save map layout"). Pinned rooms are placed
+     * first, exactly where the author put them — no spiral displacement — and BFS
+     * lays out only the unpinned remainder around them. Two pins on the same cell
+     * of the same floor of one zone is a load error, since it silently discards
+     * authored intent.
      */
     private fun assignMapCoordinates(
         rooms: Map<RoomId, Room>,
         zoneStartRooms: Map<String, RoomId>,
+        pins: Map<RoomId, MapCell> = emptyMap(),
     ): Map<RoomId, Room> {
         val roomsByZone = rooms.keys.groupBy { it.zone }
         val coords = HashMap<RoomId, MapCell>(rooms.size)
@@ -2047,8 +2083,28 @@ object WorldLoader {
 
             val startId = zoneStartRooms[zone] ?: roomIds.first()
 
+            // Phase 0: seat author pins exactly where they were placed. A duplicate
+            // cell means two rooms were explicitly pinned on top of each other —
+            // fail the load rather than silently displacing authored intent.
+            for (roomId in roomIds) {
+                val pin = pins[roomId] ?: continue
+                val grid = layer(pin.z)
+                val cellKey = pin.x to pin.y
+                grid[cellKey]?.let { other ->
+                    throw WorldLoadException(
+                        "Rooms '${other.value}' and '${roomId.value}' are both pinned to " +
+                            "map cell (${pin.x},${pin.y}) on floor ${pin.z}",
+                    )
+                }
+                coords[roomId] = pin
+                grid[cellKey] = roomId
+            }
+
             // Lays out one floor (horizontal connected component) by BFS from an
             // anchor room at the given cell, warning on any collision-displacement.
+            // Already-placed rooms (pins, earlier passes) keep their cell but still
+            // expand, so BFS flows outward through pinned rooms and seats their
+            // unpinned neighbours relative to the authored layout.
             fun layoutFloor(
                 anchorId: RoomId,
                 anchorX: Int,
@@ -2057,42 +2113,51 @@ object WorldLoader {
             ) {
                 val grid = layer(z)
                 val queue = ArrayDeque<Pending>()
+                val expanded = HashSet<RoomId>()
                 queue.addLast(Pending(anchorId, anchorX, anchorY))
                 while (queue.isNotEmpty()) {
                     val (roomId, desiredX, desiredY) = queue.removeFirst()
-                    if (coords.containsKey(roomId)) continue
-
-                    val pos = findFreePosition(desiredX, desiredY, grid)
-                    if (pos != (desiredX to desiredY)) {
-                        logger.warn(
-                            "Minimap layout: zone '{}' room '{}' displaced from ({},{}) to ({},{}) on floor {} — " +
-                                "cell occupied by '{}'; this exit will draw diagonally on the map",
-                            zone,
-                            roomId.value,
-                            desiredX,
-                            desiredY,
-                            pos.first,
-                            pos.second,
-                            z,
-                            grid[desiredX to desiredY]?.value,
-                        )
+                    var cell = coords[roomId]
+                    if (cell == null) {
+                        val pos = findFreePosition(desiredX, desiredY, grid)
+                        if (pos != (desiredX to desiredY)) {
+                            logger.warn(
+                                "Minimap layout: zone '{}' room '{}' displaced from ({},{}) to ({},{}) on floor {} — " +
+                                    "cell occupied by '{}'; this exit will draw diagonally on the map",
+                                zone,
+                                roomId.value,
+                                desiredX,
+                                desiredY,
+                                pos.first,
+                                pos.second,
+                                z,
+                                grid[desiredX to desiredY]?.value,
+                            )
+                        }
+                        cell = MapCell(pos.first, pos.second, z)
+                        coords[roomId] = cell
+                        grid[pos] = roomId
                     }
-                    coords[roomId] = MapCell(pos.first, pos.second, z)
-                    grid[pos] = roomId
+                    if (!expanded.add(roomId)) continue
+                    // A room pinned on a different floor belongs to that floor's
+                    // layout — don't spread its neighbours onto this one.
+                    if (cell.z != z) continue
 
                     val room = rooms[roomId] ?: continue
                     for ((dir, targetId) in room.exits) {
                         if (dir !in horizontalDirs) continue
-                        if (coords.containsKey(targetId)) continue
+                        if (targetId in expanded) continue
                         if (targetId !in zoneRoomSet) continue
                         val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
-                        queue.addLast(Pending(targetId, pos.first + dx, pos.second + dy))
+                        queue.addLast(Pending(targetId, cell.x + dx, cell.y + dy))
                     }
                 }
             }
 
-            // Phase 1: the start room's floor is the zone's ground floor (z=0).
-            layoutFloor(startId, 0, 0, 0)
+            // Phase 1: the start room's floor is the zone's ground floor — unless
+            // the start room itself is pinned, in which case its pin sets the frame.
+            val startPin = coords[startId]
+            layoutFloor(startId, startPin?.x ?: 0, startPin?.y ?: 0, startPin?.z ?: 0)
 
             // Phase 2: repeatedly anchor unplaced floors through their stairs.
             // A placed room with an up/down exit to an unplaced room seeds that

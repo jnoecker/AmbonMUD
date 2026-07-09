@@ -1,0 +1,14 @@
+zone: bad_pin_partial
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Declares mapX without mapY."
+    mapX: 2
+    exits:
+      n: b
+  b:
+    title: "Room B"
+    description: "Plain."
+    exits:
+      s: a

@@ -1,0 +1,38 @@
+zone: ok_pinned_map
+startRoom: gate
+rooms:
+  gate:
+    title: "Gate"
+    description: "The pinned start room."
+    mapX: 5
+    mapY: 5
+    exits:
+      n: plaza
+  plaza:
+    title: "Plaza"
+    description: "Pinned one cell north of the gate."
+    mapX: 5
+    mapY: 4
+    exits:
+      s: gate
+      e: market
+      u: loft
+  market:
+    title: "Market"
+    description: "Unpinned — BFS should seat it east of the pinned plaza."
+    exits:
+      w: plaza
+  loft:
+    title: "Loft"
+    description: "Pinned above the plaza on floor 1."
+    mapX: 5
+    mapY: 4
+    mapZ: 1
+    exits:
+      d: plaza
+      e: annex
+  annex:
+    title: "Annex"
+    description: "Unpinned — reachable only through the pinned loft."
+    exits:
+      w: loft
