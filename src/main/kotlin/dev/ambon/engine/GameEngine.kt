@@ -50,6 +50,7 @@ import dev.ambon.engine.commands.handlers.JukeboxHandler
 import dev.ambon.engine.commands.handlers.LeaderboardHandler
 import dev.ambon.engine.commands.handlers.LotteryHandler
 import dev.ambon.engine.commands.handlers.MailHandler
+import dev.ambon.engine.commands.handlers.MountTravelHandler
 import dev.ambon.engine.commands.handlers.MusicBoxHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
@@ -1354,7 +1355,7 @@ class GameEngine(
                 null
             }
 
-        val ctx = EngineContext(
+        val baseCtx = EngineContext(
             players = players,
             mobs = mobs,
             world = world,
@@ -1386,6 +1387,25 @@ class GameEngine(
             akathavaeSystem = akathavaeSystem,
             metrics = metrics,
         )
+        val mountTravelSystem = MountTravelSystem(
+            players = players,
+            world = world,
+            outbound = outbound,
+            combat = combatSystem,
+            scheduler = scheduler,
+            gmcpEmitter = gmcpEmitter,
+            spriteRegistry = spriteRegistry,
+            config = engineConfig.mountTravel,
+            metrics = metrics,
+            dialogueSystem = dialogueSystem,
+            onPlayerMoved = { sid, roomId ->
+                petSystem.followOwner(sid, roomId)
+                akathavaeSystem.onRoomVisited(sid)
+                flightSystem.onRoomVisited(sid)
+            },
+            sendLook = { sid -> baseCtx.sendLook(sid) },
+        )
+        val ctx = baseCtx.copy(mountTravelSystem = mountTravelSystem)
 
         // Push a fresh room look when a dead player respawns, so the web client
         // stops showing the room they died in.
@@ -1580,6 +1600,7 @@ class GameEngine(
                 },
                 markVitalsDirty = ::markVitalsDirty,
             ),
+            MountTravelHandler(ctx = ctx),
             BoatHandler(
                 ctx = ctx,
                 dialogueSystem = dialogueSystem,
@@ -2726,6 +2747,7 @@ class GameEngine(
             isStaff = player.isStaff,
             playerRace = player.race,
             playerClass = player.playerClass,
+            ownedMounts = player.ownedMounts,
         )
         // Only notify if there are more sprites than just the one they have selected
         if (tierDefs.size > 1) {

@@ -1074,6 +1074,7 @@ class GmcpEmitter(
         sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         sendCharAchievements(sessionId, player, achievementRegistry)
         sendCharSprites(sessionId, player)
+        sendTravelStatus(sessionId, player)
         sendCharClasses(sessionId, player.unlockedClasses.ifEmpty { setOf(player.playerClass) }, player.playerClass)
         sendPrestigeInfoForPlayer(sessionId, player)
         if (world != null) {
@@ -2113,6 +2114,32 @@ class GmcpEmitter(
         )
     }
 
+    private data class TravelStatusPayload(
+        /** True when the player owns at least one mount and may click the map to ride. */
+        val canTravel: Boolean,
+        val riding: Boolean,
+        /** Destination room id while riding, else null. */
+        val destination: String? = null,
+    )
+
+    /** Sends `Travel.Status` — whether map click-to-ride is available and any ride in progress. */
+    suspend fun sendTravelStatus(
+        sessionId: SessionId,
+        player: PlayerState,
+        destination: String? = null,
+    ) {
+        emit(
+            sessionId,
+            "Travel.Status",
+            TravelStatusPayload(
+                canTravel = player.ownedMounts.isNotEmpty(),
+                riding = player.ridingMountId != null,
+                destination = destination,
+            ),
+            supportCheck = "Travel",
+        )
+    }
+
     data class BoatStatePayload(
         val playerGold: Long,
         val destinations: List<BoatDestinationPayload>,
@@ -2660,6 +2687,7 @@ class GmcpEmitter(
         shopItems: List<Pair<dev.ambon.domain.ids.ItemId, dev.ambon.domain.items.Item>>,
         buyMultiplier: Double,
         sellMultiplier: Double,
+        ownedMounts: Set<String> = emptySet(),
     ) {
         emit(
             sessionId,
@@ -2681,6 +2709,8 @@ class GmcpEmitter(
                         consumable = item.consumable,
                         image = item.image,
                         video = item.video,
+                        itemType = item.resolvedType().label(),
+                        owned = item.mountId != null && item.mountId in ownedMounts,
                     )
                 },
             ),
@@ -3980,6 +4010,9 @@ class GmcpEmitter(
         val consumable: Boolean,
         val image: String? = null,
         val video: String? = null,
+        val itemType: String? = null,
+        /** True for mount items the player has already purchased. */
+        val owned: Boolean = false,
     )
 
     // ---------- puzzle payloads ----------
@@ -4048,6 +4081,15 @@ class GmcpEmitter(
     internal fun resolveSprite(player: PlayerState): String {
         val reg = spriteRegistry
         if (reg != null) {
+            // Mid-ride override: everyone sees the mount while the player fast-travels.
+            val riding = player.ridingMountId
+            if (riding != null) {
+                val mountDef = reg.mountSprite(riding)
+                val mountVariant = mountDef?.let {
+                    reg.bestVariant(it, player.race, player.playerClass, player.gender)
+                }
+                if (mountVariant != null) return "$imagesBase${mountVariant.imagePath}"
+            }
             // Explicit selection
             val chosen = player.activeSprite
             if (chosen != null) {
@@ -4059,6 +4101,7 @@ class GmcpEmitter(
                     playerRace = player.race,
                     playerClass = player.playerClass,
                     playerGender = player.gender,
+                    ownedMounts = player.ownedMounts,
                 )
                 if (valid != null) return "$imagesBase${valid.imagePath}"
             }
@@ -4092,6 +4135,7 @@ class GmcpEmitter(
             playerRace = player.race,
             playerClass = player.playerClass,
             playerGender = player.gender,
+            ownedMounts = player.ownedMounts,
         )
         val active = player.activeSprite
             ?: reg.autoResolve(

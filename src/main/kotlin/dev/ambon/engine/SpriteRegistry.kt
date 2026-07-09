@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.domain.sprite.SpriteCategory
 import dev.ambon.domain.sprite.SpriteDefinition
+import dev.ambon.domain.sprite.SpriteRequirement
 import dev.ambon.domain.sprite.SpriteUnlockCondition
 import dev.ambon.domain.sprite.SpriteVariant
 
@@ -27,6 +28,16 @@ class SpriteRegistry {
     /** Looks up a variant by its [imageId] and returns the owning definition + variant. */
     fun findVariant(imageId: String): Pair<SpriteDefinition, SpriteVariant>? = variantIndex[imageId]
 
+    /**
+     * The sprite definition unlocked by owning [mountId] — the MOUNT-category
+     * definition carrying a matching [SpriteRequirement.Mount], or null when no
+     * sprite art exists for that mount.
+     */
+    fun mountSprite(mountId: String): SpriteDefinition? = definitions.values.firstOrNull { def ->
+        def.category == SpriteCategory.MOUNT &&
+            def.requirements.any { it is SpriteRequirement.Mount && it.mountId == mountId }
+    }
+
     fun clear() {
         definitions.clear()
         variantIndex.clear()
@@ -43,8 +54,9 @@ class SpriteRegistry {
         isStaff: Boolean,
         playerRace: String,
         playerClass: String,
+        ownedMounts: Set<String> = emptySet(),
     ): List<SpriteDefinition> = definitions.values.filter {
-        isUnlocked(it, level, unlockedAchievementIds, isStaff, playerRace, playerClass)
+        isUnlocked(it, level, unlockedAchievementIds, isStaff, playerRace, playerClass, ownedMounts)
     }
 
     /** Returns all variants the player can see (unlocked + matches race/class/gender). Staff see everything. */
@@ -55,10 +67,11 @@ class SpriteRegistry {
         playerRace: String,
         playerClass: String,
         playerGender: String,
+        ownedMounts: Set<String> = emptySet(),
     ): List<Pair<SpriteDefinition, SpriteVariant>> {
         val result = mutableListOf<Pair<SpriteDefinition, SpriteVariant>>()
         for (def in definitions.values) {
-            if (!isStaff && !isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass)) continue
+            if (!isStaff && !isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass, ownedMounts)) continue
             for (v in def.variants) {
                 if (isStaff || def.category == SpriteCategory.STAFF || v.matchesPlayer(playerRace, playerClass, playerGender)) {
                     result.add(def to v)
@@ -80,10 +93,11 @@ class SpriteRegistry {
         playerRace: String,
         playerClass: String,
         playerGender: String,
+        ownedMounts: Set<String> = emptySet(),
     ): SpriteVariant? {
         val (def, variant) = variantIndex[imageId] ?: return null
         if (isStaff) return variant
-        if (!isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass)) return null
+        if (!isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass, ownedMounts)) return null
         if (def.category != SpriteCategory.STAFF && !variant.matchesPlayer(playerRace, playerClass, playerGender)) return null
         return variant
     }
@@ -93,8 +107,9 @@ class SpriteRegistry {
      * Used when `activeSprite` is null (default/auto mode).
      *
      * Considers TIER and GENERAL sprites (and STAFF if the player is staff).
-     * ACHIEVEMENT sprites are intentionally excluded — those are special art
-     * that should require explicit selection rather than being chosen by default.
+     * ACHIEVEMENT and MOUNT sprites are intentionally excluded — those are
+     * special art that should require explicit selection rather than being
+     * chosen by default.
      */
     fun autoResolve(
         level: Int,
@@ -109,7 +124,7 @@ class SpriteRegistry {
                     SpriteCategory.TIER, SpriteCategory.GENERAL ->
                         isUnlocked(def, level, emptySet(), isStaff = false, playerRace, playerClass)
                     SpriteCategory.STAFF -> isStaff
-                    SpriteCategory.ACHIEVEMENT -> false
+                    SpriteCategory.ACHIEVEMENT, SpriteCategory.MOUNT -> false
                 }
             }
             .sortedByDescending { it.sortOrder }
@@ -161,10 +176,11 @@ class SpriteRegistry {
             isStaff: Boolean,
             playerRace: String,
             playerClass: String,
+            ownedMounts: Set<String> = emptySet(),
         ): Boolean {
             if (def.requirements.isNotEmpty()) {
                 return def.requirements.all { req ->
-                    req.isMet(level, playerRace, playerClass, unlockedAchievementIds, isStaff)
+                    req.isMet(level, playerRace, playerClass, unlockedAchievementIds, isStaff, ownedMounts)
                 }
             }
             return when (val cond = def.unlockCondition) {

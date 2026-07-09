@@ -30,6 +30,12 @@ data class ItemFile(
     val questItem: Boolean = false,
     val takeable: Boolean = true,
     /**
+     * Mount id unlocked by buying this item. Required when `itemType: mount`,
+     * forbidden otherwise. Must match a mount-requirement sprite definition
+     * in sprites.yaml.
+     */
+    val mountId: String? = null,
+    /**
      * Optional design-time metadata authored by the Arcanum creator. Accepted
      * for round-trip preservation; the server treats `damage`, `armor`, and
      * `stats` above as authoritative and does not recompute them from

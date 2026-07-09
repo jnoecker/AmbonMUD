@@ -1,0 +1,12 @@
+zone: bad_mount_id_on_non_mount
+startRoom: stable
+items:
+  sword:
+    displayName: "a steel sword"
+    keyword: "sword"
+    mountId: dappled_pony
+    basePrice: 50
+rooms:
+  stable:
+    title: "Stable"
+    description: "A stable."

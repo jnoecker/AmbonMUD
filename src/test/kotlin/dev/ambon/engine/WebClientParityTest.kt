@@ -250,6 +250,7 @@ class WebClientParityTest {
         "Stylist.ChangeRace" to "changerace",
         "Flight.List" to "flights",
         "Flight.Travel" to "fly",
+        "Travel" to "travel",
         "Boat.List" to "voyages",
         "Boat.Travel" to "sail",
         "Train.List" to "train",

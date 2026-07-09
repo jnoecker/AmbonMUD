@@ -128,6 +128,8 @@ data class PlayerRecord(
     val preAkathavaeClass: String? = null,
     /** JSON blob holding the player's Arcanum journal (rooms/mobs/items recorded). */
     val arcanumData: String = "{}",
+    /** Mount ids permanently unlocked by shop purchases — sprite unlocks + map fast travel. */
+    val ownedMounts: Set<String> = emptySet(),
 ) {
     /**
      * Applies legacy migration fixes after deserialization.
