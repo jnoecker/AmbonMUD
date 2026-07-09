@@ -39,6 +39,9 @@ enum class SpriteCategory {
 
     /** General-purpose sprites that don't fit the legacy categories. */
     GENERAL,
+
+    /** Rideable mounts unlocked by shop purchase (see [SpriteRequirement.Mount]). */
+    MOUNT,
 }
 
 /** Legacy single-condition unlock model (retained for backwards compatibility). */
@@ -82,18 +85,25 @@ sealed interface SpriteRequirement {
     /** Player must be staff. */
     data object Staff : SpriteRequirement
 
+    /** Player must have purchased the mount with the given id. */
+    data class Mount(
+        val mountId: String,
+    ) : SpriteRequirement
+
     fun isMet(
         playerLevel: Int,
         playerRace: String,
         playerClass: String,
         unlockedAchievementIds: Set<String>,
         isStaff: Boolean,
+        ownedMounts: Set<String> = emptySet(),
     ): Boolean = when (this) {
         is MinLevel -> playerLevel >= level
         is Race -> race.equals(playerRace, ignoreCase = true)
         is PlayerClass -> this.playerClass.equals(playerClass, ignoreCase = true)
         is Achievement -> achievementId in unlockedAchievementIds
         is Staff -> isStaff
+        is Mount -> mountId in ownedMounts
     }
 }
 

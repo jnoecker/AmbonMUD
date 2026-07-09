@@ -337,6 +337,8 @@ data class AppConfig(
 
     private fun validateEngineScheduler() {
         engine.scheduler.maxActionsPerTick.requirePositive("ambonMUD.engine.scheduler.maxActionsPerTick")
+        engine.mountTravel.msPerRoom.requirePositive("ambonMUD.engine.mountTravel.msPerRoom")
+        engine.mountTravel.maxPathLength.requirePositive("ambonMUD.engine.mountTravel.maxPathLength")
     }
 
     private fun validateEngineGroup() {
@@ -1322,7 +1324,7 @@ data class DailyQuestsConfig(
 )
 
 data class DailyQuestDefinition(
-    /** Quest objective type: kill, gather, dungeon, craft, pvpKill. */
+    /** Quest objective type: kill, gather, dungeon, craft, pvpKill, illuminate. */
     val type: String = "kill",
     /** Number of actions required to complete. */
     val targetCount: Int = 10,
@@ -2090,6 +2092,7 @@ data class EngineConfig(
     val death: DeathConfig = DeathConfig(),
     val flight: FlightConfig = FlightConfig(),
     val boat: BoatConfig = BoatConfig(),
+    val mountTravel: MountTravelConfig = MountTravelConfig(),
 )
 
 /**
@@ -2124,6 +2127,36 @@ data class FlightMessagesConfig(
     val arriveNotice: String = "descends from the sky and alights gracefully.",
     val depart: String = "You climb aboard and take to the skies, bound for {dest}...",
     val arrival: String = "You alight at {dest}. (-{cost} gold)",
+)
+
+/**
+ * Tuning for mount fast travel — owning any shop-bought mount lets a player click an explored
+ * room on the zone map (or use `travel <room-id>`) to auto-ride the shortest known path there.
+ * The ride is free but not instant: the engine walks the path one room per [msPerRoom]
+ * milliseconds. Routing is restricted to rooms the player has explored, the path stays inside
+ * the current zone (the destination itself may sit one exit-hop into an adjacent zone), and
+ * combat cancels the ride.
+ */
+data class MountTravelConfig(
+    /** Milliseconds spent riding through each room along the path. */
+    val msPerRoom: Long = 300L,
+    /** Safety cap on path length (rooms); longer routes are refused. */
+    val maxPathLength: Int = 300,
+    val messages: MountTravelMessagesConfig = MountTravelMessagesConfig(),
+)
+
+data class MountTravelMessagesConfig(
+    val noMount: String = "You don't own a mount. Some shops sell them...",
+    val combatBlocked: String = "You can't mount up in the middle of a battle!",
+    val unknownDestination: String = "You don't know how to get there.",
+    val alreadyHere: String = "You're already there.",
+    val notExplored: String = "You haven't explored that place yet.",
+    val noPath: String = "You can't find a route you know to ride there.",
+    val mountUp: String = "You swing onto {mount} and ride for {dest}...",
+    val arrival: String = "You arrive at {dest} and dismount.",
+    val combatInterrupted: String = "Your ride is cut short — you're dragged into battle!",
+    val mountUpNotice: String = "mounts up and rides off.",
+    val arriveNotice: String = "rides in and dismounts.",
 )
 
 /**
@@ -2271,6 +2304,12 @@ data class CommandsConfig(
             "fly" to CommandMetadata(
                 usage = "fly <destination|#>",
                 description = "Pay gold to fast-travel to a discovered flight point (at a flight master).",
+                category = "navigation",
+                requiresTarget = true,
+            ),
+            "travel" to CommandMetadata(
+                usage = "travel <zone:room>",
+                description = "Ride an owned mount along a known path to an explored room (or click the map).",
                 category = "navigation",
                 requiresTarget = true,
             ),

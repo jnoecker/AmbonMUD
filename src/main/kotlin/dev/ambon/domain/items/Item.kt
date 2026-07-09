@@ -48,6 +48,12 @@ data class Item(
      * reach trades, shops, banks, or the floor.
      */
     val conjured: Boolean = false,
+    /**
+     * For [ItemType.MOUNT] items: the mount id this purchase unlocks. Matches
+     * the id used by mount-requirement sprite definitions in sprites.yaml and
+     * stored in the player's owned-mounts set.
+     */
+    val mountId: String? = null,
 ) {
     /**
      * Effective item type for categorization. Uses [itemType] when set,

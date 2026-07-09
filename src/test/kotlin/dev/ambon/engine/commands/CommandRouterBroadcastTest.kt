@@ -95,6 +95,45 @@ class CommandRouterBroadcastTest {
         }
 
     @Test
+    fun `who tags pledged Akathavae players and untags them after renounce`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val a = SessionId(1)
+            val b = SessionId(2)
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
+            h.players.get(b)!!.isAkathavae = true
+            h.outbound.drainAll()
+
+            h.router.handle(a, Command.Who)
+            val pledgedMsg = h.outbound.drainAll()
+                .filterIsInstance<OutboundEvent.SendInfo>()
+                .firstOrNull { it.sessionId == a }
+                ?.text
+            assertNotNull(pledgedMsg, "Expected SendInfo for who")
+            assertTrue(
+                pledgedMsg!!.contains("[Akathavae] Bob"),
+                "Expected Bob to carry the Akathavae tag. got=$pledgedMsg",
+            )
+            assertFalse(
+                pledgedMsg.contains("[Akathavae] Alice"),
+                "Alice is not pledged and must not be tagged. got=$pledgedMsg",
+            )
+
+            h.players.get(b)!!.isAkathavae = false
+            h.router.handle(a, Command.Who)
+            val renouncedMsg = h.outbound.drainAll()
+                .filterIsInstance<OutboundEvent.SendInfo>()
+                .firstOrNull { it.sessionId == a }
+                ?.text
+            assertNotNull(renouncedMsg, "Expected SendInfo for who after renounce")
+            assertFalse(
+                renouncedMsg!!.contains("[Akathavae]"),
+                "Tag must disappear once the pledge is renounced. got=$renouncedMsg",
+            )
+        }
+
+    @Test
     fun `who shows G indicator for grouped players`() =
         runTest {
             val world = TestWorlds.testWorld

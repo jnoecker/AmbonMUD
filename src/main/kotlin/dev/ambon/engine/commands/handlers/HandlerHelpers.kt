@@ -275,6 +275,7 @@ internal suspend fun EngineContext.emitShopGmcp(sessionId: SessionId) {
             shopItems,
             buyMultiplier = economyConfig.buyMultiplier,
             sellMultiplier = economyConfig.sellMultiplier,
+            ownedMounts = me.ownedMounts,
         )
     } else {
         emitter.sendShopClose(sessionId)
@@ -656,6 +657,7 @@ internal suspend fun sendLook(
             questAvailableMobIds = questAvailable,
             questCompleteMobIds = questComplete,
         ),
+        viewer = me,
     )
     gmcpEmitter?.sendRoomItems(sessionId, here)
 

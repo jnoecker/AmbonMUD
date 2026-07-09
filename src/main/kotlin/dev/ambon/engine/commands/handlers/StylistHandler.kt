@@ -136,6 +136,7 @@ class StylistHandler(
                 playerRace = me.race,
                 playerClass = me.playerClass,
                 playerGender = me.gender,
+                ownedMounts = me.ownedMounts,
             )
             if (stillValid == null) {
                 me.activeSprite = null

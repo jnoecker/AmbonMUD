@@ -1,15 +1,24 @@
 package dev.ambon.engine
 
 import dev.ambon.config.AkathavaeConfig
+import dev.ambon.config.DailyQuestDefinition
+import dev.ambon.config.DailyQuestsConfig
 import dev.ambon.domain.StatMap
+import dev.ambon.domain.achievement.AchievementCriterion
+import dev.ambon.domain.achievement.AchievementDef
+import dev.ambon.domain.arcanum.ArcanumEntry
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobRole
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.quest.QuestDef
+import dev.ambon.domain.quest.QuestObjectiveDef
+import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
@@ -25,6 +34,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.util.Random
@@ -70,12 +80,22 @@ class AkathavaeIlluminateTest {
         rng: Random = ScriptedRandom(0),
         config: AkathavaeConfig = AkathavaeConfig(),
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
+        refreshRoomMobInfo: (suspend (SessionId) -> Unit)? = null,
+        achievements: List<AchievementDef> = emptyList(),
+        onIlluminated: (suspend (SessionId) -> Unit)? = null,
     ): Setup {
         val clock = MutableClock(1_000_000L)
         val world = testWorld()
         val fixture = CombatTestFixture(roomId = roomA, clock = clock)
         val combat = fixture.buildCombat(rng = Random(1), onMobKilledByPlayer = onMobKilledByPlayer)
         val worldState = WorldStateRegistry(world)
+        val achievementRegistry = AchievementRegistry()
+        achievements.forEach { achievementRegistry.register(it) }
+        val achievementSystem = AchievementSystem(
+            registry = achievementRegistry,
+            players = fixture.players,
+            outbound = fixture.outbound,
+        )
         val system = AkathavaeSystem(
             players = fixture.players,
             items = fixture.items,
@@ -86,6 +106,9 @@ class AkathavaeIlluminateTest {
             clock = clock,
             rng = rng,
             config = config,
+            refreshRoomMobInfo = refreshRoomMobInfo,
+            onArcanumRecorded = { sid -> achievementSystem.onArcanumRecorded(sid) },
+            onIlluminated = onIlluminated,
         )
         return Setup(fixture, combat, system, worldState, clock)
     }
@@ -96,9 +119,11 @@ class AkathavaeIlluminateTest {
         xpReward: Long = 100L,
         drops: List<MobDrop> = emptyList(),
         role: MobRole = MobRole.COMBAT,
+        name: String = "a wandering wisp",
+        level: Int = 1,
     ) = MobState(
         id = MobId("test:$id"),
-        name = "a wandering wisp",
+        name = name,
         roomId = roomA,
         hp = 10,
         maxHp = 10,
@@ -106,6 +131,7 @@ class AkathavaeIlluminateTest {
         templateKey = templateKey,
         drops = drops,
         role = role,
+        level = level,
     )
 
     private suspend fun loginAkathavae(s: Setup, sid: SessionId, name: String): PlayerState {
@@ -114,6 +140,39 @@ class AkathavaeIlluminateTest {
         me.isAkathavae = true
         s.fixture.outbound.drainAll()
         return me
+    }
+
+    // ── Zone completion ──────────────────────────────────────────────────
+
+    @Test
+    fun `zone completion counts item templates and recorded items for the zone`() = runTest {
+        val s = setup()
+        s.fixture.items.loadSpawns(
+            listOf(
+                ItemSpawn(instance = ItemInstance(ItemId("test:hood"), Item(keyword = "hood", displayName = "a leather hood"))),
+                ItemSpawn(instance = ItemInstance(ItemId("test:ring"), Item(keyword = "ring", displayName = "a copper ring"))),
+                // Another zone's template must not count toward "test".
+                ItemSpawn(instance = ItemInstance(ItemId("other:gem"), Item(keyword = "gem", displayName = "a dull gem"))),
+            ),
+        )
+        val me = loginAkathavae(s, SessionId(1L), "Thalen")
+        me.arcanum.items["test:hood"] = ArcanumEntry(firstRecordedAtMs = 1L)
+        me.arcanum.items["other:gem"] = ArcanumEntry(firstRecordedAtMs = 1L)
+
+        val c = s.system.zoneCompletion(me, "test")
+
+        assertEquals(1, c.itemsRecorded, "only the test-zone recording counts")
+        assertEquals(2, c.itemsTotal, "only test-zone templates count toward the total")
+    }
+
+    @Test
+    fun `recorded zones include zones known only through items`() = runTest {
+        val s = setup()
+        val me = loginAkathavae(s, SessionId(1L), "Thalen")
+        me.arcanum.rooms["test:room"] = ArcanumEntry(firstRecordedAtMs = 1L)
+        me.arcanum.items["bazaar:lamp"] = ArcanumEntry(firstRecordedAtMs = 1L)
+
+        assertEquals(listOf("bazaar", "test"), s.system.recordedZones(me))
     }
 
     // ── Success math ─────────────────────────────────────────────────────
@@ -131,6 +190,53 @@ class AkathavaeIlluminateTest {
         assertEquals(61, s.system.illuminationSuccessPct(10, 20, playerLevel = 5, mobLevel = 8))
         // Clamped to the configured floor.
         assertEquals(5, s.system.illuminationSuccessPct(10, 10, playerLevel = 1, mobLevel = 50))
+    }
+
+    @Test
+    fun `illuminationOddsFor resolves the player's current effective stats`() = runTest {
+        val s = setup()
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        me.level = 5
+
+        // Base stats, equal level: the configured base chance.
+        assertEquals(70, s.system.illuminationOddsFor(me, wisp(level = 5)))
+
+        // +2% per success-stat (INT) point above base.
+        me.stats = me.stats.with("INT", 20)
+        assertEquals(90, s.system.illuminationOddsFor(me, wisp(level = 5)))
+
+        // Subject above the player: the level-gap penalty applies (70 - 3*8).
+        me.stats = me.stats.with("INT", 10)
+        assertEquals(46, s.system.illuminationOddsFor(me, wisp(level = 8)))
+
+        // The gap-relief stat (STR) softens the penalty (70 - 3*(8 - 10*0.5)).
+        me.stats = me.stats.with("STR", 20)
+        assertEquals(61, s.system.illuminationOddsFor(me, wisp(level = 8)))
+    }
+
+    @Test
+    fun `illuminationOddsFor includes equipment bonuses`() = runTest {
+        val s = setup()
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        me.level = 5
+        s.fixture.items.setEquippedItem(
+            sid,
+            ItemSlot.HEAD,
+            ItemInstance(
+                id = ItemId("test:circlet"),
+                item = Item(
+                    keyword = "circlet",
+                    displayName = "a scholar's circlet",
+                    slot = ItemSlot.HEAD,
+                    stats = StatMap.of("INT" to 5),
+                ),
+            ),
+        )
+
+        // Effective INT 15 -> 70 + 5*2 = 80.
+        assertEquals(80, s.system.illuminationOddsFor(me, wisp(level = 5)))
     }
 
     // ── Illumination outcomes ────────────────────────────────────────────
@@ -169,6 +275,66 @@ class AkathavaeIlluminateTest {
     }
 
     @Test
+    fun `first illumination pays item-discovery XP for every drop in the same action`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.items.loadSpawns(
+            listOf(
+                ItemSpawn(instance = ItemInstance(ItemId("test:dust"), Item(keyword = "dust", displayName = "glittering dust"))),
+                ItemSpawn(instance = ItemInstance(ItemId("test:mote"), Item(keyword = "mote", displayName = "a pale mote"))),
+            ),
+        )
+        val drops = listOf(MobDrop(ItemId("test:dust"), 1.0), MobDrop(ItemId("test:mote"), 0.5))
+        s.fixture.mobs.upsert(wisp(id = "w1", xpReward = 100L, drops = drops))
+
+        s.system.illuminate(sid, "wisp")
+
+        val perItem = AkathavaeConfig().itemDiscoveryXp
+        assertEquals(
+            100L + 2 * perItem,
+            me.xpTotal,
+            "first illumination pays the mob XP plus item XP for each drop, same action",
+        )
+        assertTrue(me.arcanum.items.containsKey("test:dust"))
+        assertTrue(me.arcanum.items.containsKey("test:mote"))
+
+        // Repeat illumination: items already recorded → no further item XP, and the
+        // mob's repeat cooldown suppresses its XP too.
+        s.clock.advance(AkathavaeConfig().discoveryXpThrottleMs + 1)
+        s.fixture.mobs.upsert(wisp(id = "w2", xpReward = 100L, drops = drops))
+        s.system.illuminate(sid, "wisp")
+        assertEquals(100L + 2 * perItem, me.xpTotal, "repeat illumination pays no item XP for known pages")
+    }
+
+    @Test
+    fun `drop-catalogue bypass does not defeat the cross-action discovery throttle`() = runTest {
+        val s = setup(rng = ScriptedRandom(0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.items.loadSpawns(
+            listOf(ItemSpawn(instance = ItemInstance(ItemId("test:dust"), Item(keyword = "dust", displayName = "glittering dust")))),
+        )
+        s.fixture.mobs.upsert(wisp(xpReward = 100L, drops = listOf(MobDrop(ItemId("test:dust"), 1.0))))
+
+        s.system.illuminate(sid, "wisp")
+        val afterIllumination = 100L + AkathavaeConfig().itemDiscoveryXp
+        assertEquals(afterIllumination, me.xpTotal)
+
+        // A separate discovery inside the throttle window: recorded, but no XP.
+        me.roomId = roomB
+        s.system.onRoomVisited(sid)
+        assertEquals(afterIllumination, me.xpTotal, "the intra-action bypass must not open a farming window")
+        assertTrue(me.arcanum.rooms.containsKey(roomB.value), "the room is still recorded")
+
+        // Past the throttle, XP flows again.
+        s.clock.advance(AkathavaeConfig().discoveryXpThrottleMs + 1)
+        me.roomId = roomC
+        s.system.onRoomVisited(sid)
+        assertEquals(afterIllumination + AkathavaeConfig().roomDiscoveryXp, me.xpTotal)
+    }
+
+    @Test
     fun `illumination fires quest kill credit so the pledged complete the same quests`() = runTest {
         val credited = mutableListOf<String>()
         val s = setup(rng = ScriptedRandom(0), onMobKilledByPlayer = { _, templateKey -> credited += templateKey })
@@ -194,6 +360,111 @@ class AkathavaeIlluminateTest {
         s.system.illuminate(sid, "wisp")
 
         assertEquals(listOf("test:wisp"), credited, "a persistent subject grants kill credit only once")
+    }
+
+    // ── Illumination commissions (daily-quest hook) ──────────────────────
+
+    @Test
+    fun `illumination fires the commission hook once per living instance`() = runTest {
+        var credits = 0
+        val s = setup(rng = ScriptedRandom(0, 0), onIlluminated = { credits += 1 })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(1, credits, "re-illuminating the same living instance must not advance a commission")
+    }
+
+    @Test
+    fun `distinct living subjects each advance a commission`() = runTest {
+        var credits = 0
+        val s = setup(rng = ScriptedRandom(0, 0, 0), onIlluminated = { credits += 1 })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(id = "n1", templateKey = "test:newt", name = "a red newt"))
+        s.fixture.mobs.upsert(wisp(id = "c1", templateKey = "test:crab", name = "a blue crab"))
+
+        s.system.illuminate(sid, "newt")
+        s.system.illuminate(sid, "crab")
+
+        assertEquals(2, credits, "each distinct living subject counts toward a commission")
+    }
+
+    @Test
+    fun `failed illumination does not advance a commission`() = runTest {
+        var credits = 0
+        val s = setup(rng = ScriptedRandom(99, 99), onIlluminated = { credits += 1 })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(0, credits, "only successful recordings count")
+    }
+
+    @Test
+    fun `first-time observation advances a commission but repeats do not`() = runTest {
+        var credits = 0
+        val s = setup(onIlluminated = { credits += 1 })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(role = MobRole.VENDOR, templateKey = "test:merchant"))
+
+        s.system.illuminate(sid, "wisp")
+        assertEquals(1, credits, "commissions are about recording, so first observations count")
+
+        s.system.illuminate(sid, "wisp")
+        assertEquals(1, credits, "re-observing an already-recorded NPC must not advance a commission")
+    }
+
+    @Test
+    fun `illuminate commission completes after recording distinct subjects`() = runTest {
+        var hooked: DailyQuestSystem? = null
+        val s = setup(
+            rng = ScriptedRandom(0, 0, 0, 0),
+            onIlluminated = { sid -> hooked?.onEvent(sid, "illuminate") },
+        )
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        val dailyQuests = DailyQuestSystem(
+            config = DailyQuestsConfig(
+                enabled = true,
+                dailySlots = 1,
+                weeklySlots = 0,
+                dailyPool = listOf(
+                    DailyQuestDefinition(
+                        type = "illuminate",
+                        targetCount = 3,
+                        description = "The Arcanum requests three fresh accounts of living creatures.",
+                        goldReward = 150,
+                        xpReward = 400,
+                    ),
+                ),
+            ),
+            players = s.fixture.players,
+            clock = s.clock,
+        )
+        hooked = dailyQuests
+        dailyQuests.checkReset(sid)
+
+        s.fixture.mobs.upsert(wisp(id = "n1", templateKey = "test:newt", name = "a red newt"))
+        s.fixture.mobs.upsert(wisp(id = "c1", templateKey = "test:crab", name = "a blue crab"))
+        s.fixture.mobs.upsert(wisp(id = "t1", templateKey = "test:toad", name = "a green toad"))
+
+        s.system.illuminate(sid, "newt")
+        s.system.illuminate(sid, "newt") // same living instance — must not count twice
+        assertEquals(1, dailyQuests.getDailyQuestBoard(sid).first().progress)
+
+        s.system.illuminate(sid, "crab")
+        s.system.illuminate(sid, "toad")
+
+        val board = dailyQuests.getDailyQuestBoard(sid).first()
+        assertEquals(3, board.progress)
+        assertTrue(board.completed, "three distinct recordings should complete the commission")
     }
 
     @Test
@@ -276,6 +547,33 @@ class AkathavaeIlluminateTest {
     }
 
     @Test
+    fun `successful illumination refreshes the room mob info so badges flip live`() = runTest {
+        val refreshed = mutableListOf<SessionId>()
+        val s = setup(rng = ScriptedRandom(0), refreshRoomMobInfo = { refreshed += it })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(listOf(sid), refreshed, "Room.MobInfo must be re-emitted after a successful illumination")
+    }
+
+    @Test
+    fun `first observation refreshes the room mob info but repeats do not`() = runTest {
+        val refreshed = mutableListOf<SessionId>()
+        val s = setup(refreshRoomMobInfo = { refreshed += it })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(role = MobRole.VENDOR, templateKey = "test:merchant"))
+
+        s.system.illuminate(sid, "wisp")
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(listOf(sid), refreshed, "only the first observation changes the badge state")
+    }
+
+    @Test
     fun `unpledged players cannot illuminate`() = runTest {
         val s = setup()
         val sid = SessionId(1L)
@@ -288,6 +586,145 @@ class AkathavaeIlluminateTest {
         val errors = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendError>().map { it.text }
         assertTrue(errors.any { it.contains("pledge") }, "got=$errors")
         assertNotNull(s.fixture.mobs.get(MobId("test:w1")))
+    }
+
+    // ── Quest collect bridge (#1392) ─────────────────────────────────────
+
+    private val dustId = ItemId("test:dust")
+
+    private fun registerDustTemplate(s: Setup) {
+        s.fixture.items.loadSpawns(
+            listOf(ItemSpawn(instance = ItemInstance(dustId, Item(keyword = "dust", displayName = "glittering dust")))),
+        )
+    }
+
+    private fun collectDustQuest(count: Int) = QuestDef(
+        id = "test:gather_dust",
+        name = "Gather Dust",
+        description = "Bring back glittering dust.",
+        giverMobId = "test:quest_giver",
+        objectives = listOf(
+            QuestObjectiveDef(type = "collect", targetId = "test:dust", count = count, description = "Collect $count dust"),
+        ),
+        rewards = QuestRewards(),
+        completionType = "npc_turn_in",
+    )
+
+    /** Builds a QuestSystem over the fixture's components and wires it as the illumination bridge. */
+    private fun attachQuests(s: Setup, quest: QuestDef): QuestSystem {
+        val registry = QuestRegistry()
+        registry.register(quest)
+        val quests = QuestSystem(
+            registry = registry,
+            players = s.fixture.players,
+            items = s.fixture.items,
+            outbound = s.fixture.outbound,
+            clock = s.clock,
+        )
+        s.system.quests = quests
+        return quests
+    }
+
+    @Test
+    fun `illumination grants a needed collect item and turn-in consumes it`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        val quests = attachQuests(s, collectDustQuest(count = 2))
+        assertNull(quests.acceptQuest(sid, "test:gather_dust"))
+        s.fixture.outbound.drainAll()
+
+        // Deterministic grant: the drop's 0.25 chance is never rolled.
+        s.fixture.mobs.upsert(wisp(id = "w1", drops = listOf(MobDrop(dustId, 0.25))))
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(1, s.fixture.items.inventory(sid).size, "one rubbing per living instance")
+        assertEquals(1, me.activeQuests["test:gather_dust"]!!.objectives[0].current)
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("careful rubbing") }, "got=$texts")
+
+        // A second living instance completes the objective.
+        s.fixture.mobs.remove(MobId("test:w1"))
+        s.fixture.mobs.upsert(wisp(id = "w2", drops = listOf(MobDrop(dustId, 0.25))))
+        s.system.illuminate(sid, "wisp")
+        assertEquals(2, s.fixture.items.inventory(sid).size)
+        assertTrue(me.activeQuests["test:gather_dust"]!!.objectives[0].isComplete)
+
+        // Turn-in finds and consumes the granted items, exactly like looted ones.
+        assertNull(quests.turnInQuest(sid, "Gather Dust", listOf("test:quest_giver")))
+        assertTrue(me.completedQuestIds.contains("test:gather_dust"))
+        assertTrue(s.fixture.items.inventory(sid).isEmpty(), "turn-in hands over the rubbings")
+    }
+
+    @Test
+    fun `illumination grants nothing without an active collect objective`() = runTest {
+        val s = setup(rng = ScriptedRandom(0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        attachQuests(s, collectDustQuest(count = 2)) // quest exists but is never accepted
+        s.fixture.mobs.upsert(wisp(drops = listOf(MobDrop(dustId, 1.0))))
+
+        s.system.illuminate(sid, "wisp")
+
+        assertTrue(s.fixture.items.inventory(sid).isEmpty(), "no quest, no rubbing")
+        assertTrue(me.arcanum.items.containsKey("test:dust"), "journal cataloguing is unchanged")
+    }
+
+    @Test
+    fun `illumination grants nothing once the objective is complete`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        val quests = attachQuests(s, collectDustQuest(count = 1))
+        assertNull(quests.acceptQuest(sid, "test:gather_dust"))
+
+        s.fixture.mobs.upsert(wisp(id = "w1", drops = listOf(MobDrop(dustId, 1.0))))
+        s.system.illuminate(sid, "wisp")
+        assertTrue(me.activeQuests["test:gather_dust"]!!.objectives[0].isComplete)
+
+        // Objective satisfied — a fresh instance yields no sellable surplus.
+        s.fixture.mobs.remove(MobId("test:w1"))
+        s.fixture.mobs.upsert(wisp(id = "w2", drops = listOf(MobDrop(dustId, 1.0))))
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(1, s.fixture.items.inventory(sid).size, "grants are capped at the remaining count")
+    }
+
+    @Test
+    fun `re-illuminating the same living instance grants no second item`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        val quests = attachQuests(s, collectDustQuest(count = 2))
+        assertNull(quests.acceptQuest(sid, "test:gather_dust"))
+
+        s.fixture.mobs.upsert(wisp(id = "w1", drops = listOf(MobDrop(dustId, 1.0))))
+        s.system.illuminate(sid, "wisp")
+        s.system.illuminate(sid, "wisp") // same living instance, already credited
+
+        assertEquals(1, s.fixture.items.inventory(sid).size, "a living creature yields quest items at most once")
+        assertEquals(1, me.activeQuests["test:gather_dust"]!!.objectives[0].current)
+    }
+
+    @Test
+    fun `duplicate drop entries cannot overshoot the remaining count`() = runTest {
+        val s = setup(rng = ScriptedRandom(0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        registerDustTemplate(s)
+        val quests = attachQuests(s, collectDustQuest(count = 1))
+        assertNull(quests.acceptQuest(sid, "test:gather_dust"))
+
+        // The mob lists the same drop twice, but the quest only needs one.
+        s.fixture.mobs.upsert(wisp(drops = listOf(MobDrop(dustId, 1.0), MobDrop(dustId, 1.0))))
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(1, s.fixture.items.inventory(sid).size, "the grant re-checks the remaining need per drop entry")
+        assertTrue(me.activeQuests["test:gather_dust"]!!.objectives[0].isComplete)
     }
 
     // ── Passive discovery ────────────────────────────────────────────────
@@ -362,6 +799,87 @@ class AkathavaeIlluminateTest {
         val credit = s.worldState.getArcanumFirst("mob:test:wisp")
         assertNotNull(credit)
         assertEquals("Alice", credit!!.first, "world-firsts are immutable once written")
+    }
+
+    @Test
+    fun `world firsts increment the persistent counter only for the first recorder`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val alice = SessionId(1L)
+        val bob = SessionId(2L)
+        val aliceState = loginAkathavae(s, alice, "Alice")
+        val bobState = loginAkathavae(s, bob, "Bob")
+
+        s.fixture.mobs.upsert(wisp(id = "w1"))
+        s.system.illuminate(alice, "wisp")
+        assertEquals(1, aliceState.worldFirstsCount, "the first recorder banks a world-first")
+
+        s.clock.advance(10_000)
+        s.fixture.mobs.upsert(wisp(id = "w2"))
+        s.system.illuminate(bob, "wisp")
+        assertEquals(0, bobState.worldFirstsCount, "a later recorder earns no world-first")
+    }
+
+    // ── Achievements ─────────────────────────────────────────────────────
+
+    private fun arcanumAchievement(id: String, type: String, count: Int) = AchievementDef(
+        id = id,
+        displayName = id.substringAfter('/'),
+        description = "Arcanum test achievement.",
+        category = "exploration",
+        criteria = listOf(AchievementCriterion(type = type, targetId = "", count = count)),
+    )
+
+    @Test
+    fun `first illumination unlocks an illuminate achievement immediately`() = runTest {
+        val s = setup(
+            rng = ScriptedRandom(0),
+            achievements = listOf(arcanumAchievement("arcanum/first_light", "illuminate", 1)),
+        )
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+
+        assertTrue(me.unlockedAchievementIds.contains("arcanum/first_light"), "unlock must fire on the illuminating action itself")
+        val infos = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+        assertTrue(infos.any { it.contains("[Achievement] first_light") }, "got=$infos")
+    }
+
+    @Test
+    fun `room and world-first records unlock exploration achievements immediately`() = runTest {
+        val s = setup(
+            achievements = listOf(
+                arcanumAchievement("arcanum/wanderer", "explore_rooms", 1),
+                arcanumAchievement("arcanum/pioneer", "world_first", 1),
+            ),
+        )
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+
+        s.system.onRoomVisited(sid)
+
+        assertEquals(1, me.worldFirstsCount)
+        assertTrue(me.unlockedAchievementIds.contains("arcanum/wanderer"))
+        assertTrue(me.unlockedAchievementIds.contains("arcanum/pioneer"))
+    }
+
+    @Test
+    fun `item discovery unlocks a discover_items achievement immediately`() = runTest {
+        val s = setup(
+            rng = ScriptedRandom(0),
+            achievements = listOf(arcanumAchievement("arcanum/collector", "discover_items", 1)),
+        )
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.items.loadSpawns(
+            listOf(ItemSpawn(instance = ItemInstance(ItemId("test:dust"), Item(keyword = "dust", displayName = "glittering dust")))),
+        )
+        s.fixture.mobs.upsert(wisp(drops = listOf(MobDrop(ItemId("test:dust"), 1.0))))
+
+        s.system.illuminate(sid, "wisp")
+
+        assertTrue(me.unlockedAchievementIds.contains("arcanum/collector"))
     }
 
     @Test

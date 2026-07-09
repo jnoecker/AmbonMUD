@@ -50,6 +50,7 @@ import dev.ambon.engine.commands.handlers.JukeboxHandler
 import dev.ambon.engine.commands.handlers.LeaderboardHandler
 import dev.ambon.engine.commands.handlers.LotteryHandler
 import dev.ambon.engine.commands.handlers.MailHandler
+import dev.ambon.engine.commands.handlers.MountTravelHandler
 import dev.ambon.engine.commands.handlers.MusicBoxHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
@@ -583,7 +584,9 @@ class GameEngine(
     /** Sessions whose stats changed this tick and need a Char.Stats push. */
     private val gmcpDirtyStats = mutableSetOf<SessionId>()
 
-    val gmcpEmitter =
+    // Explicit type: the illuminationOdds lambda references akathavaeSystem, whose
+    // initializer references gmcpEmitter back — inference needs one anchor.
+    val gmcpEmitter: GmcpEmitter =
         GmcpEmitter(
             outbound = outbound,
             supportsPackage = { sid, pkg ->
@@ -647,6 +650,16 @@ class GameEngine(
             raceRegistry = raceRegistry,
             nowMs = { clock.millis() },
             worldAreas = buildWorldAreaPayloads(world),
+            arcanumFirstBy = { key -> worldState.getArcanumFirst(key)?.first },
+            illuminationOdds = { sid, mobId ->
+                val viewer = players.get(sid)
+                val mob = mobs.get(MobId(mobId))
+                if (viewer != null && mob != null && viewer.isAkathavae && mob.role.isCombatant && !mob.isPet) {
+                    akathavaeSystem.illuminationOddsFor(viewer, mob)
+                } else {
+                    null
+                }
+            },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -814,7 +827,7 @@ class GameEngine(
             racialAbilitySystem = racialAbilitySystem,
         )
 
-    private val akathavaeSystem =
+    private val akathavaeSystem: AkathavaeSystem =
         AkathavaeSystem(
             players = players,
             items = items,
@@ -831,6 +844,14 @@ class GameEngine(
             markVitalsDirty = ::markVitalsDirty,
             onLevelUp = ::onCombatLevelUp,
             gmcpEmitter = gmcpEmitter,
+            refreshRoomMobInfo = ::refreshRoomMobInfoForPlayer,
+            onArcanumRecorded = { sid -> achievementSystem.onArcanumRecorded(sid) },
+            // Illumination commissions: first-time illuminations and observations
+            // advance "illuminate"-type daily/weekly quests. Note the kill-credit
+            // path (creditIlluminationKill → onCombatMobKilledByPlayer) already
+            // advances "kill"-type dailies for parity with fighters; this hook is
+            // the path-flavored counterpart that only illuminations can progress.
+            onIlluminated = { sid -> notifyDailyQuest(sid, "illuminate") },
         )
 
     private val flightSystem =
@@ -1256,6 +1277,9 @@ class GameEngine(
             gmcpEmitter.sendCharItemsAdd(sid, item)
             questSystem.onItemCollected(sid, item)
         }
+        // Illumination bridge: a recorded creature's drops can satisfy active
+        // collect objectives for the pledged, who never loot (#1392).
+        akathavaeSystem.quests = questSystem
         guildSystem?.onGuildCreated = { sid ->
             metrics.onGameEvent("guild", "created")
             achievementSystem.onGuildCreated(sid)
@@ -1354,7 +1378,7 @@ class GameEngine(
                 null
             }
 
-        val ctx = EngineContext(
+        val baseCtx = EngineContext(
             players = players,
             mobs = mobs,
             world = world,
@@ -1386,6 +1410,25 @@ class GameEngine(
             akathavaeSystem = akathavaeSystem,
             metrics = metrics,
         )
+        val mountTravelSystem = MountTravelSystem(
+            players = players,
+            world = world,
+            outbound = outbound,
+            combat = combatSystem,
+            scheduler = scheduler,
+            gmcpEmitter = gmcpEmitter,
+            spriteRegistry = spriteRegistry,
+            config = engineConfig.mountTravel,
+            metrics = metrics,
+            dialogueSystem = dialogueSystem,
+            onPlayerMoved = { sid, roomId ->
+                petSystem.followOwner(sid, roomId)
+                akathavaeSystem.onRoomVisited(sid)
+                flightSystem.onRoomVisited(sid)
+            },
+            sendLook = { sid -> baseCtx.sendLook(sid) },
+        )
+        val ctx = baseCtx.copy(mountTravelSystem = mountTravelSystem)
 
         // Push a fresh room look when a dead player respawns, so the web client
         // stops showing the room they died in.
@@ -1580,6 +1623,7 @@ class GameEngine(
                 },
                 markVitalsDirty = ::markVitalsDirty,
             ),
+            MountTravelHandler(ctx = ctx),
             BoatHandler(
                 ctx = ctx,
                 dialogueSystem = dialogueSystem,
@@ -2527,6 +2571,7 @@ class GameEngine(
                 questAvailableMobIds = questAvailable,
                 questCompleteMobIds = questComplete,
             ),
+            viewer = ps,
         )
     }
 
@@ -2726,6 +2771,7 @@ class GameEngine(
             isStaff = player.isStaff,
             playerRace = player.race,
             playerClass = player.playerClass,
+            ownedMounts = player.ownedMounts,
         )
         // Only notify if there are more sprites than just the one they have selected
         if (tierDefs.size > 1) {

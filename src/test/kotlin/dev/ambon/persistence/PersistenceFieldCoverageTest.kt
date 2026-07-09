@@ -152,6 +152,7 @@ class PersistenceFieldCoverageTest {
                     """{"mobs":{"academy:wandering_wisp":{"firstRecordedAtMs":1700000333000,""" +
                         """"timesRecorded":2,"lastXpAtMs":1700000334000,"source":"illuminated"}},""" +
                         """"items":{},"rooms":{},"completedZones":["academy"]}""",
+                worldFirstsCount = 3,
                 racialAbilityCooldownUntilMs = 7_777_000L,
             )
 

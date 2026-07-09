@@ -4,6 +4,7 @@ import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementRewards
+import dev.ambon.domain.arcanum.ArcanumEntry
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.SystemTestComponents
@@ -329,6 +330,121 @@ class AchievementSystemTest {
 
             val ps = players.get(sid)!!
             assertTrue(ps.unlockedAchievementIds.contains("quests/any"))
+        }
+
+    // ── Arcanum criteria (illuminate / explore_rooms / discover_items / world_first) ──
+
+    private fun arcanumAch(
+        id: String,
+        type: String,
+        count: Int,
+        rewards: AchievementRewards = AchievementRewards(),
+    ) = AchievementDef(
+        id = id,
+        displayName = id.substringAfter('/'),
+        description = "Arcanum test achievement.",
+        category = "exploration",
+        criteria =
+            listOf(
+                AchievementCriterion(
+                    type = type,
+                    targetId = "",
+                    count = count,
+                ),
+            ),
+        rewards = rewards,
+    )
+
+    private fun entry() = ArcanumEntry(firstRecordedAtMs = 1L, timesRecorded = 1, lastXpAtMs = 1L)
+
+    @Test
+    fun `onArcanumRecorded syncs ILLUMINATE progress to the journal's creature count`() =
+        runTest {
+            val (sys, players, _) = setup(arcanumAch("arcanum/illuminator", "illuminate", 3))
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Thalen")
+            val ps = players.get(sid)!!
+            ps.arcanum.mobs["zone:wisp"] = entry()
+            ps.arcanum.mobs["zone:rat"] = entry()
+
+            sys.onArcanumRecorded(sid)
+
+            assertFalse(ps.unlockedAchievementIds.contains("arcanum/illuminator"))
+            assertEquals(2, ps.achievementProgress["arcanum/illuminator"]?.progress?.get(0)?.current)
+        }
+
+    @Test
+    fun `onArcanumRecorded unlocks ILLUMINATE achievement when the journal holds enough creatures`() =
+        runTest {
+            val (sys, players, outbound) = setup(
+                arcanumAch("arcanum/first_light", "illuminate", 1, rewards = AchievementRewards(xp = 50L)),
+            )
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Thalen")
+            val ps = players.get(sid)!!
+            ps.arcanum.mobs["zone:wisp"] = entry()
+
+            sys.onArcanumRecorded(sid)
+
+            assertTrue(ps.unlockedAchievementIds.contains("arcanum/first_light"))
+            val msgs = outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>()
+            assertTrue(msgs.any { it.text.contains("first_light") })
+        }
+
+    @Test
+    fun `onArcanumRecorded advances EXPLORE_ROOMS and DISCOVER_ITEMS from the journal in one pass`() =
+        runTest {
+            val (sys, players, _) = setup(
+                arcanumAch("arcanum/cartographer", "explore_rooms", 2),
+                arcanumAch("arcanum/collector", "discover_items", 2),
+            )
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Thalen")
+            val ps = players.get(sid)!!
+            ps.arcanum.rooms["zone:room_a"] = entry()
+            ps.arcanum.rooms["zone:room_b"] = entry()
+            ps.arcanum.items["zone:dust"] = entry()
+
+            sys.onArcanumRecorded(sid)
+
+            assertTrue(ps.unlockedAchievementIds.contains("arcanum/cartographer"))
+            assertFalse(ps.unlockedAchievementIds.contains("arcanum/collector"))
+            assertEquals(1, ps.achievementProgress["arcanum/collector"]?.progress?.get(0)?.current)
+        }
+
+    @Test
+    fun `onArcanumRecorded advances WORLD_FIRST from the persistent counter`() =
+        runTest {
+            val (sys, players, _) = setup(arcanumAch("arcanum/pioneer", "world_first", 2))
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Thalen")
+            val ps = players.get(sid)!!
+            ps.worldFirstsCount = 1
+
+            sys.onArcanumRecorded(sid)
+            assertFalse(ps.unlockedAchievementIds.contains("arcanum/pioneer"))
+            assertEquals(1, ps.achievementProgress["arcanum/pioneer"]?.progress?.get(0)?.current)
+
+            ps.worldFirstsCount = 2
+            sys.onArcanumRecorded(sid)
+            assertTrue(ps.unlockedAchievementIds.contains("arcanum/pioneer"))
+        }
+
+    @Test
+    fun `onArcanumRecorded is a no-op when counters have not grown`() =
+        runTest {
+            val (sys, players, _) = setup(arcanumAch("arcanum/illuminator", "illuminate", 5))
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Thalen")
+            val ps = players.get(sid)!!
+            ps.arcanum.mobs["zone:wisp"] = entry()
+
+            sys.onArcanumRecorded(sid)
+            val after = ps.achievementProgress
+            sys.onArcanumRecorded(sid)
+
+            // Same counts on the second call — the progress map must be untouched.
+            assertTrue(after === ps.achievementProgress)
         }
 
     // ── Title system ──────────────────────────────────────────────────────────

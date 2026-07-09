@@ -150,6 +150,36 @@ class AchievementSystem(
     }
 
     /**
+     * Called when a player records something new in their Arcanum (illuminated creature,
+     * explored room, discovered item) or earns a world-first. Syncs the ILLUMINATE,
+     * EXPLORE_ROOMS, DISCOVER_ITEMS, and WORLD_FIRST criteria to the absolute counts
+     * held on PlayerState — the journal and world-firsts counter are the source of truth,
+     * so progress is correct even for entries recorded before these achievements existed.
+     */
+    suspend fun onArcanumRecorded(sessionId: SessionId) {
+        val ps = players.get(sessionId) ?: return
+        val counters = mapOf(
+            "illuminate" to ps.arcanum.mobs.size,
+            "explore_rooms" to ps.arcanum.rooms.size,
+            "discover_items" to ps.arcanum.items.size,
+            "world_first" to ps.worldFirstsCount,
+        )
+        val advancers = counters.map { (type, count) ->
+            criterionAdvancer(
+                type = type,
+                newValue = { _, prog -> count.takeIf { it > prog.current } },
+            )
+        }
+        updateAchievementProgress(sessionId) { def, newProgressList ->
+            var changed = false
+            for (advancer in advancers) {
+                if (advancer(def, newProgressList)) changed = true
+            }
+            changed
+        }
+    }
+
+    /**
      * Builds a lambda that iterates an achievement's criteria, filters by [type] and [matches],
      * then computes a new progress value via [newValue]. Returns `true` if any criterion was
      * updated. [newValue] may return `null` to skip a criterion without modifying it.
@@ -325,6 +355,7 @@ class AchievementSystem(
                 isStaff = ps.isStaff,
                 playerRace = ps.race,
                 playerClass = ps.playerClass,
+                ownedMounts = ps.ownedMounts,
             ).filter { def ->
                 def.isUnlockedByAchievement(achievementId)
             }
@@ -354,6 +385,10 @@ class AchievementSystem(
                 val required = criterion.count
                 when (criterion.type) {
                     "reach_level" -> "level $current/$required"
+                    "illuminate" -> "$current/$required creatures"
+                    "explore_rooms" -> "$current/$required rooms"
+                    "discover_items" -> "$current/$required items"
+                    "world_first" -> "$current/$required world-firsts"
                     else -> "$current/$required"
                 }
             }.joinToString(", ")

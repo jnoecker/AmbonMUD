@@ -247,6 +247,13 @@ class ItemRegistry {
 
     fun getTemplate(itemId: ItemId): dev.ambon.domain.items.Item? = itemTemplates[itemId]?.item
 
+    /**
+     * Count of item templates keyed under [zone] (`<zone>:<item>`), for Arcanum
+     * zone-completion totals. Unzoned template ids (no `:`) are excluded.
+     */
+    fun templateCountForZone(zone: String): Int =
+        itemTemplates.keys.count { it.value.contains(':') && idZone(it.value) == zone }
+
     fun createFromTemplate(itemId: ItemId): ItemInstance? {
         val template = itemTemplates[itemId] ?: return null
         return ItemInstance(id = template.id, item = template.item.copy())
