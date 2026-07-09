@@ -488,6 +488,61 @@ ambonmud:
           description: Calls a massive bear guardian to absorb damage and protect the ranger.
           image: 198deb0c7cb5fae8bf52b14929b10751dc9b50986f334abfc059a95c0432c5a3.png
           requiredClass: RANGER
+        # ── Akathavae illumination arts ──────────────────────────────────
+        # The pledged wield no violence: every art is SELF/ALLY-targeted
+        # (hostile target types are refused under the pledge in AbilitySystem).
+        # skillPointCost 0 means each art is granted automatically when the
+        # pledged reach its level, and set aside again on renounce.
+        # Cooldowns run at least as long as the buffs so these stay rituals
+        # rather than permanent stat lines.
+        chroniclers_focus:
+          displayName: Chronicler's Focus
+          manaCostPct: 20
+          cooldownMs: 75000
+          levelRequired: 3
+          skillPointCost: 0
+          targetType: SELF
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: chroniclers_focus_buff
+          description: A stilling ritual that sharpens the mind's eye, steadying the hand for the illuminations to come.
+          requiredClass: AKATHAVAE
+        soothing_presence:
+          displayName: Soothing Presence
+          manaCostPct: 20
+          cooldownMs: 75000
+          levelRequired: 6
+          skillPointCost: 0
+          targetType: SELF
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: soothing_presence_buff
+          description: Settles the keeper's bearing into a practiced calm, making startled subjects far easier to talk down.
+          requiredClass: AKATHAVAE
+        keepers_ward:
+          displayName: Keeper's Ward
+          manaCostPct: 25
+          cooldownMs: 45000
+          levelRequired: 10
+          skillPointCost: 0
+          targetType: SELF
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: keepers_ward_shield
+          description: Binds the Arcanum's loose pages into a ward of drifting script that absorbs harm while the keeper withdraws.
+          requiredClass: AKATHAVAE
+        muses_insight:
+          displayName: Muse's Insight
+          manaCostPct: 25
+          cooldownMs: 75000
+          levelRequired: 14
+          skillPointCost: 0
+          targetType: ALLY
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: muses_insight_buff
+          description: Shares a whisper of the Arcanum's wisdom with a companion, deepening what they take from every lesson.
+          requiredClass: AKATHAVAE
     statusEffects:
       definitions:
         ignite:
@@ -801,6 +856,34 @@ ambonmud:
           tickMinValue: 5
           tickMaxValue: 8
           stackBehavior: refresh
+        # ── Akathavae illumination-art buffs ─────────────────────────────
+        # Modest magnitudes on purpose: +3 INT is ~+6% illumination success
+        # (successPerStatPoint: 2.0); CHA feeds the talk-out escape roll and
+        # WIS the illumination XP bonus (see ambonMUD.engine.akathavae).
+        chroniclers_focus_buff:
+          displayName: Chronicler's Focus
+          effectType: stat_buff
+          durationMs: 60000
+          stackBehavior: refresh
+          intMod: 3
+        soothing_presence_buff:
+          displayName: Soothing Presence
+          effectType: stat_buff
+          durationMs: 60000
+          stackBehavior: refresh
+          chaMod: 3
+        keepers_ward_shield:
+          displayName: Keeper's Ward
+          effectType: shield
+          durationMs: 20000
+          shieldAmount: 30
+          stackBehavior: refresh
+        muses_insight_buff:
+          displayName: Muse's Insight
+          effectType: stat_buff
+          durationMs: 60000
+          stackBehavior: refresh
+          wisMod: 3
     effectTypes:
       types:
         dot:
