@@ -56,6 +56,14 @@ class AkathavaeSystem(
     private val onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null,
     private val gmcpEmitter: GmcpEmitter? = null,
 ) {
+    /**
+     * Late-bound quest bridge (wired by GameEngine after both systems exist).
+     * Illumination grants a recorded creature's drops when — and only when — an
+     * active collect objective still needs them, so drop-only quest items stay
+     * reachable on the pacifist path (#1392).
+     */
+    var quests: QuestSystem? = null
+
     /** Per-session, per-subject retry locks after a failed illumination. Runtime-only. */
     private val failCooldowns = mutableMapOf<SessionId, MutableMap<String, Long>>()
 
@@ -238,9 +246,45 @@ class AkathavaeSystem(
         // once per living instance, since illumination no longer consumes it.
         if (creditedIlluminations.getOrPut(sessionId) { mutableSetOf() }.add(mob.id.value)) {
             combat.creditIlluminationKill(sessionId, mob)
+            grantNeededQuestItems(sessionId, mob)
         }
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
+    }
+
+    /**
+     * The collect-objective half of the illumination bridge (#1392): kill
+     * credit covers kill objectives, but the pledged never loot, so a collect
+     * item that only drops from mobs would otherwise be unobtainable. For each
+     * of the subject's drops still needed by an active, unfinished collect
+     * objective, one real copy is granted into the inventory — deterministic
+     * (no drop-chance roll: if the quest needs it and the mob can drop it, the
+     * rubbing succeeds) and farm-proof, because this path is reachable only
+     * through the once-per-living-instance credit gate and re-checks the
+     * remaining need per drop entry, so no sellable surplus can accumulate.
+     * Granting through the inventory keeps the downstream flow intact:
+     * [QuestSystem.onItemCollected] advances the objective and turn-in
+     * consumption later finds the item it expects.
+     */
+    private suspend fun grantNeededQuestItems(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        val quests = quests ?: return
+        for (drop in mob.drops) {
+            if (quests.neededForCollectObjectives(sessionId, drop.itemId) <= 0) continue
+            val instance = items.createFromTemplate(drop.itemId) ?: continue
+            items.addToInventory(sessionId, instance)
+            outbound.send(
+                OutboundEvent.SendText(
+                    sessionId,
+                    "Sketching its likeness, you take a careful rubbing of ${instance.item.displayName} for your quest.",
+                ),
+            )
+            gmcpEmitter?.sendCharItemsAdd(sessionId, instance)
+            quests.onItemCollected(sessionId, instance)
+            metrics.onGameEvent("akathavae", "quest_item_rubbing")
+        }
     }
 
     private suspend fun resolveFailure(
