@@ -81,3 +81,4 @@ ecr-trust.json
 
 # Arcanum settings (contains R2 credentials)
 .arcanum/
+.gstack/

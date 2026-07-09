@@ -295,7 +295,7 @@ function drawBorderStub(ctx: CanvasRenderingContext2D, cx: number, cy: number, h
 /** Inked compass rose — a quiet cartographic flourish in the corner of the sheet. */
 function drawCompassRose(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
   ctx.save();
-  ctx.globalAlpha = 0.45;
+  ctx.globalAlpha = 0.6;
   ctx.strokeStyle = INK;
   ctx.fillStyle = INK;
   ctx.lineWidth = 1.2;
@@ -650,8 +650,9 @@ function renderMap(
     ctx.restore();
   }
 
-  // Compass rose — bottom-left corner (the zoom cluster owns the bottom-right).
-  drawCompassRose(ctx, scrollLeft + 42, scrollBottom - 46, 24);
+  // Compass rose — bottom-left, inset past the drawer sheet's painted border art
+  // so the ink reads on open parchment (the zoom cluster owns the bottom-right).
+  drawCompassRose(ctx, scrollLeft + 104, scrollBottom - 100, 24);
 
   // Zone name tag — top-left, derived from the current room id (`<zone>:<room>`).
   const zoneId = currentId.split(":")[0];

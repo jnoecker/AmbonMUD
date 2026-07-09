@@ -10112,10 +10112,13 @@ body {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-3);
-  padding: 4px 10px 6px;
+  /* Wide inline padding clears the chart sheet's painted border art, and the
+     soft cream halo keeps the ink legible where the art runs dark. */
+  padding: 4px 48px 6px;
   font-family: var(--font-mono, "JetBrains Mono", "Cascadia Mono", monospace);
   font-size: 0.72rem;
   color: #4a3a28;
+  text-shadow: 0 1px 2px rgb(243 230 200 / 55%);
   border-bottom: 1px solid rgb(74 58 40 / 30%);
 }
 
