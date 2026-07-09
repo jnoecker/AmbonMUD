@@ -350,6 +350,8 @@ class AkathavaeSystem(
         val roomsTotal: Int,
         val mobsRecorded: Int,
         val mobsTotal: Int,
+        val itemsRecorded: Int,
+        val itemsTotal: Int,
     )
 
     /** Per-zone completion for [me], for every zone with at least one recorded entry plus the current zone. */
@@ -358,8 +360,17 @@ class AkathavaeSystem(
         val roomsRecorded = me.arcanum.rooms.keys.count { RoomId(it).zone == zone }
         val mobsTotal = world.mobTemplates.keys.count { it.value.substringBefore(':') == zone }
         val mobsRecorded = me.arcanum.mobs.keys.count { it.substringBefore(':') == zone }
-        return ZoneCompletion(zone, roomsRecorded, roomsTotal, mobsRecorded, mobsTotal)
+        val itemsTotal = items.templateCountForZone(zone)
+        val itemsRecorded = me.arcanum.items.keys.count { it.contains(':') && it.substringBefore(':') == zone }
+        return ZoneCompletion(zone, roomsRecorded, roomsTotal, mobsRecorded, mobsTotal, itemsRecorded, itemsTotal)
     }
+
+    /** Every zone touched by [me]'s journal — rooms, mobs, and items — in sorted order. */
+    fun recordedZones(me: PlayerState): List<String> = (
+        me.arcanum.rooms.keys.map { it.substringBefore(':') } +
+            me.arcanum.mobs.keys.map { it.substringBefore(':') } +
+            me.arcanum.items.keys.filter { it.contains(':') }.map { it.substringBefore(':') }
+    ).toSortedSet().toList()
 
     /** Returns the permanent world-first credit line for a subject, or null. */
     fun worldFirstCredit(kind: String, subjectKey: String): Pair<String, Long>? =
@@ -381,14 +392,19 @@ class AkathavaeSystem(
     suspend fun emitJournal(sessionId: SessionId) {
         val emitter = gmcpEmitter ?: return
         val me = players.get(sessionId) ?: return
-        val zones = (
-            me.arcanum.rooms.keys.map { it.substringBefore(':') } +
-                me.arcanum.mobs.keys.map { it.substringBefore(':') }
-        ).toSortedSet().map { zoneCompletion(me, it) }
+        val zones = recordedZones(me).map { zoneCompletion(me, it) }
         val payload = GmcpEmitter.ArcanumJournalPayload(
             pledged = me.isAkathavae,
             zones = zones.map {
-                GmcpEmitter.ArcanumZonePayload(it.zone, it.roomsRecorded, it.roomsTotal, it.mobsRecorded, it.mobsTotal)
+                GmcpEmitter.ArcanumZonePayload(
+                    zone = it.zone,
+                    roomsRecorded = it.roomsRecorded,
+                    roomsTotal = it.roomsTotal,
+                    mobsRecorded = it.mobsRecorded,
+                    mobsTotal = it.mobsTotal,
+                    itemsRecorded = it.itemsRecorded,
+                    itemsTotal = it.itemsTotal,
+                )
             },
             mobs = me.arcanum.mobs.entries.sortedBy { it.key }.map { (key, entry) ->
                 val template = world.mobTemplate(dev.ambon.domain.ids.MobId(key))

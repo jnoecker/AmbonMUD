@@ -362,9 +362,10 @@ sealed interface Command {
         val target: String,
     ) : Command
 
-    /** View the Arcanum journal. [section] filters to rooms/mobs/items; null = summary. */
+    /** View the Arcanum journal. [section] filters to rooms/mobs/items; null = summary. [page] pages a section; null = page 1. */
     data class Arcanum(
         val section: String?,
+        val page: Int? = null,
     ) : Command
 
     /** Arcanum wardrobe: null keyword lists conjurable items, otherwise conjure-and-wear the match. */
@@ -1532,9 +1533,16 @@ object CommandParser {
         // illuminate — the Akathavae's replacement for attacking
         requiredArg(line, listOf("illuminate", "illum"), "illuminate <creature>", { Command.Illuminate(it) })?.let { return it }
 
-        // arcanum [rooms|mobs|items] — the Akathavae journal
+        // arcanum [rooms|mobs|items] [page] — the Akathavae journal
         matchPrefix(line, listOf("arcanum", "journal")) { rest ->
-            Command.Arcanum(rest.trim().lowercase().takeIf { it.isNotBlank() })
+            val parts = rest.trim().lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }
+            when {
+                parts.isEmpty() -> Command.Arcanum(null)
+                parts.size == 1 -> Command.Arcanum(parts[0])
+                parts.size == 2 && parts[1].toIntOrNull() != null ->
+                    Command.Arcanum(parts[0], parts[1].toInt())
+                else -> Command.Invalid(line, "arcanum [rooms|mobs|items] [page]")
+            }
         }?.let { return it }
 
         // wardrobe [item] — conjure recorded equipment from the Arcanum

@@ -71,6 +71,19 @@ class AkathavaeCommandTest {
         }
 
         @Test
+        fun `arcanum parses an optional page after the section`() {
+            assertEquals(Command.Arcanum("mobs", 2), CommandParser.parse("arcanum mobs 2"))
+            assertEquals(Command.Arcanum("rooms", 10), CommandParser.parse("arcanum rooms 10"))
+            assertEquals(Command.Arcanum("items", 1), CommandParser.parse("journal items 1"))
+        }
+
+        @Test
+        fun `arcanum with a non-numeric page is invalid`() {
+            assertTrue(CommandParser.parse("arcanum mobs two") is Command.Invalid)
+            assertTrue(CommandParser.parse("arcanum mobs 2 extra") is Command.Invalid)
+        }
+
+        @Test
         fun `wardrobe parses with and without keyword`() {
             assertEquals(Command.Wardrobe(null), CommandParser.parse("wardrobe"))
             assertEquals(Command.Wardrobe("hood"), CommandParser.parse("wardrobe hood"))
@@ -526,6 +539,108 @@ class AkathavaeCommandTest {
                 "got=$errors",
             )
             assertFalse(me.unlockedClasses.contains("MAGE"))
+        }
+    }
+
+    // ── Journal (arcanum command) tests ──────────────────────────────────
+
+    @Nested
+    inner class Journal {
+        /** 100 entries per telnet page (MAX_SECTION_ROWS × 4 per row). */
+        private val pageSize = 100
+
+        private suspend fun pledgedWithMobEntries(h: CommandRouterHarness, sid: SessionId, count: Int) {
+            h.loginPlayer(sid, "Thalen")
+            val me = h.players.get(sid)!!
+            me.isAkathavae = true
+            for (i in 1..count) {
+                me.arcanum.mobs["test:mob_${"%03d".format(i)}"] = ArcanumEntry(firstRecordedAtMs = i.toLong())
+            }
+            h.drain()
+        }
+
+        @Test
+        fun `bare arcanum mobs shows page 1 with a paging footer`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithMobEntries(h, sid, count = 150)
+
+            h.router.handle(sid, Command.Arcanum("mobs"))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("Creatures (150)") }, "got=$infos")
+            assertTrue(infos.any { it.contains("mob 001") }, "page 1 should start at the first entry; got=$infos")
+            assertFalse(infos.any { it.contains("mob 150") }, "page 1 must not spill into page 2; got=$infos")
+            assertTrue(infos.any { it.contains("Page 1/2 — 'arcanum mobs 2' for more.") }, "got=$infos")
+        }
+
+        @Test
+        fun `arcanum mobs 2 shows the second page`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithMobEntries(h, sid, count = 150)
+
+            h.router.handle(sid, Command.Arcanum("mobs", 2))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("mob 101") }, "page 2 starts after the first $pageSize; got=$infos")
+            assertTrue(infos.any { it.contains("mob 150") }, "got=$infos")
+            assertFalse(infos.any { it.contains("mob 001") }, "page 2 must not repeat page 1; got=$infos")
+            assertTrue(infos.any { it.contains("Page 2/2.") }, "the last page has no next-page hint; got=$infos")
+        }
+
+        @Test
+        fun `out-of-range page is a friendly error`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithMobEntries(h, sid, count = 150)
+
+            h.router.handle(sid, Command.Arcanum("mobs", 5))
+
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("run 1 to 2") && it.contains("arcanum mobs 2") }, "got=$errors")
+        }
+
+        @Test
+        fun `a single page renders without a paging footer`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithMobEntries(h, sid, count = 8)
+
+            h.router.handle(sid, Command.Arcanum("mobs"))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertFalse(infos.any { it.contains("Page 1/") }, "got=$infos")
+        }
+
+        @Test
+        fun `summary zone lines include the items count`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.items.loadSpawns(
+                listOf(
+                    dev.ambon.domain.world.ItemSpawn(
+                        instance = ItemInstance(ItemId("test:hood"), Item(keyword = "hood", displayName = "a leather hood")),
+                    ),
+                    dev.ambon.domain.world.ItemSpawn(
+                        instance = ItemInstance(ItemId("test:ring"), Item(keyword = "ring", displayName = "a copper ring")),
+                    ),
+                ),
+            )
+            val me = h.players.get(sid)!!
+            me.isAkathavae = true
+            me.arcanum.rooms[shrineRoom.value] = ArcanumEntry(firstRecordedAtMs = 1L)
+            me.arcanum.items["test:hood"] = ArcanumEntry(firstRecordedAtMs = 1L)
+            h.drain()
+
+            h.router.handle(sid, Command.Arcanum(null))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(
+                infos.any { it.contains("test: 1/2 places, 0/0 creatures, 1/2 items.") },
+                "zone line should count all three kinds; got=$infos",
+            )
         }
     }
 
