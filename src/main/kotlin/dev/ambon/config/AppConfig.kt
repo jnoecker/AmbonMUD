@@ -2294,6 +2294,12 @@ data class CommandsConfig(
                 category = "navigation",
                 requiresTarget = true,
             ),
+            "travel" to CommandMetadata(
+                usage = "travel <zone:room>",
+                description = "Ride an owned mount along a known path to an explored room (or click the map).",
+                category = "navigation",
+                requiresTarget = true,
+            ),
             "voyages" to CommandMetadata("voyages", "List boat routes you can sail (at a boat dock).", "navigation"),
             "sail" to CommandMetadata(
                 usage = "sail <destination|#>",
