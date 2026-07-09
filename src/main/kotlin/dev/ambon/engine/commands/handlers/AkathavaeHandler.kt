@@ -148,18 +148,19 @@ class AkathavaeHandler(
             outbound.send(OutboundEvent.SendError(sessionId, "The Arcanum is not available."))
             return
         }
-        if (!me.isAkathavae && me.arcanum.rooms.isEmpty() && me.arcanum.mobs.isEmpty() && me.arcanum.items.isEmpty()) {
+        // Push the full journal to GMCP clients — the Arcanum panel renders from
+        // this, and an empty journal must still arrive so the panel can settle.
+        system.emitJournal(sessionId)
+
+        if (me.arcanum.rooms.isEmpty() && me.arcanum.mobs.isEmpty() && me.arcanum.items.isEmpty()) {
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
-                    "Your Arcanum is unwritten. Take the Akathavae pledge at a shrine to begin recording the world.",
+                    "Your Arcanum is unwritten. Try 'illuminate <creature>' to record your first page.",
                 ),
             )
             return
         }
-
-        // Push the full journal to GMCP clients — the Arcanum panel renders from this.
-        system.emitJournal(sessionId)
 
         val page = cmd.page ?: 1
         when (cmd.section) {
@@ -168,9 +169,10 @@ class AkathavaeHandler(
                 world.rooms[dev.ambon.domain.ids.RoomId(key)]?.title ?: key
             }
             "mobs", "creatures", "beasts" -> renderArcanumSection(sessionId, "Creatures", "mobs", page, me.arcanum.mobs.keys) { key ->
-                val credit = system.worldFirstCredit("mob", key)
+                val illuminatedFirst = system.worldFirstCredit("mob", key)?.first == me.name
+                val slainFirst = system.worldFirstCredit("slain", key)?.first == me.name
                 val name = key.substringAfter(':').replace('_', ' ')
-                if (credit?.first == me.name) "$name ★" else name
+                if (illuminatedFirst || slainFirst) "$name ★" else name
             }
             "items", "things" -> renderArcanumSection(sessionId, "Items", "items", page, me.arcanum.items.keys) { key ->
                 key.substringAfter(':').replace('_', ' ')
@@ -183,6 +185,13 @@ class AkathavaeHandler(
         outbound.send(OutboundEvent.SendInfo(sessionId, "[ The Arcanum of ${me.name} ]"))
         if (me.isAkathavae) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "  Pledged to the Akathavae — the world is your subject."))
+        } else {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "  A traveler's field journal — only a pledged Akathavae's record is accepted at the shrines.",
+                ),
+            )
         }
         outbound.send(
             OutboundEvent.SendInfo(

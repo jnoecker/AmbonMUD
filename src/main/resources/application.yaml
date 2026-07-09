@@ -1745,7 +1745,7 @@ ambonmud:
           staff: false
         illuminate:
           usage: "illuminate <creature>"
-          description: "Record a creature in your Arcanum — the Akathavae's replacement for attacking"
+          description: "Record a creature in your Arcanum without harming it — anyone can; the pledged excel"
           category: "progression"
           staff: false
           requiresTarget: true
@@ -2820,6 +2820,12 @@ ambonmud:
       discoveryXpThrottleMs: 1500
       zoneCompletionXpPerRoom: 50
       zoneCompletionGold: 500
+      unpledgedSuccessMultiplier: 0.5
+      unpledgedXpMultiplier: 0.25
+      sketchMsPerEstimatedRound: 1000
+      sketchMinMs: 2000
+      sketchMaxMs: 10000
+      observeSketchMs: 2000
     respec:
       enabled: true
       goldCost: 100

@@ -654,12 +654,14 @@ class GameEngine(
             illuminationOdds = { sid, mobId ->
                 val viewer = players.get(sid)
                 val mob = mobs.get(MobId(mobId))
-                if (viewer != null && mob != null && viewer.isAkathavae && mob.role.isCombatant && !mob.isPet) {
+                if (viewer != null && mob != null && mob.role.isCombatant && !mob.isPet) {
                     akathavaeSystem.illuminationOddsFor(viewer, mob)
                 } else {
                     null
                 }
             },
+            akathavaeRenounceCostGold = engineConfig.akathavae.renounceCostGold,
+            akathavaeRepledgeCooldownMs = engineConfig.akathavae.repledgeCooldownMs,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -821,6 +823,9 @@ class GameEngine(
                 onLevelUp = ::onCombatLevelUp,
                 onMobKilledByPlayer = ::onCombatMobKilledByPlayer,
                 onRoomItemsChanged = ::syncRoomItemsForRoom,
+                // Deliberately lazy: akathavaeSystem is constructed after combatSystem,
+                // and this callback only fires once the engine is fully wired.
+                onMobSlain = { sid, mob -> akathavaeSystem.onMobSlain(sid, mob) },
             ),
             classRegistry = classRegistry,
             petSystem = petSystem,
@@ -1294,7 +1299,11 @@ class GameEngine(
             outbound = outbound,
             clock = clock,
             isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
-            isMobRooted = { mobId -> statusEffectSystem.hasMobEffect(mobId, "root") },
+            // Root effects and an in-progress sketch both pin the mob: a posing
+            // subject takes no behavior-tree actions until the artist finishes.
+            isMobRooted = { mobId ->
+                statusEffectSystem.hasMobEffect(mobId, "root") || akathavaeSystem.isSketchSubject(mobId)
+            },
             isMobPossessed = { mobId -> players.allPlayers().any { it.possessedMobId == mobId } },
             startMobCombat = { mobId, sessionId -> combatSystem.startMobCombat(mobId, sessionId) },
             fleeMob = { mobId -> combatSystem.fleeMob(mobId) },
@@ -1970,6 +1979,9 @@ class GameEngine(
                     val regenSample = Timer.start()
                     regenSystem.tick()
                     regenSample.stop(metrics.regenTickTimer)
+
+                    // Resolve finished Akathavae sketches (illumination is not instant)
+                    akathavaeSystem.tick()
 
                     // Periodic threat table cleanup — sweep stale mob entries every 60s
                     if (tickStart - lastThreatCleanupMs >= THREAT_CLEANUP_INTERVAL_MS) {

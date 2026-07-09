@@ -72,7 +72,7 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
     if (!journal) return [];
     let list = journal.mobs;
     if (trimmedQuery) list = list.filter((m) => m.name.toLowerCase().includes(trimmedQuery));
-    if (firstsOnly) list = list.filter((m) => m.firstBy === playerName);
+    if (firstsOnly) list = list.filter((m) => m.firstBy === playerName || m.firstSlainBy === playerName);
     return sortEntries(list, sort);
   }, [journal, trimmedQuery, firstsOnly, sort, playerName]);
 
@@ -126,12 +126,12 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
   const activeCount = filtered[tab];
   const filtersActive = trimmedQuery.length > 0 || firstsOnly || (tab === "items" && sourceFilter !== null);
 
-  const firstLine = (firstBy: string | null) => {
+  const firstLine = (firstBy: string | null, verb = "illuminated") => {
     if (!firstBy) return null;
     const mine = firstBy === playerName;
     return (
       <span className={`arcanum-first${mine ? " arcanum-first-mine" : ""}`}>
-        ★ First illuminated by {firstBy}
+        ★ First {verb} by {firstBy}
       </span>
     );
   };
@@ -163,6 +163,7 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
           {m.timesRecorded > 1 ? ` ×${m.timesRecorded}` : ""}
         </span>
         {firstLine(m.firstBy)}
+        {firstLine(m.firstSlainBy, "slain")}
       </div>
     </div>
   );
@@ -206,7 +207,7 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
       <p className="arcanum-pledge-line">
         {pledged
           ? "You are an Akathavae — a keeper of the Arcanum. The world is your subject."
-          : "These pages were written under a pledge you no longer keep. They earn nothing while you bear arms."}
+          : "A field journal of your own travels. Only a pledged Akathavae's record is accepted at the shrines."}
       </p>
 
       {journal.zones.length > 0 && (

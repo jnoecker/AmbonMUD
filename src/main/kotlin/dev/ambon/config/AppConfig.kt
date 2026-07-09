@@ -550,6 +550,13 @@ data class AppConfig(
         require(a.roomDiscoveryXpPerZoneLevel >= 0) { "ambonMUD.engine.akathavae.roomDiscoveryXpPerZoneLevel must be >= 0" }
         require(a.zoneCompletionXpPerRoom >= 0) { "ambonMUD.engine.akathavae.zoneCompletionXpPerRoom must be >= 0" }
         require(a.zoneCompletionGold >= 0) { "ambonMUD.engine.akathavae.zoneCompletionGold must be >= 0" }
+        require(a.unpledgedSuccessMultiplier in 0.0..1.0) { "ambonMUD.engine.akathavae.unpledgedSuccessMultiplier must be 0..1" }
+        require(a.unpledgedXpMultiplier in 0.0..1.0) { "ambonMUD.engine.akathavae.unpledgedXpMultiplier must be 0..1" }
+        require(a.sketchMsPerEstimatedRound >= 0) { "ambonMUD.engine.akathavae.sketchMsPerEstimatedRound must be >= 0" }
+        require(a.sketchMinMs >= 0 && a.sketchMaxMs >= 0 && a.sketchMinMs <= a.sketchMaxMs) {
+            "ambonMUD.engine.akathavae.sketchMinMs/sketchMaxMs must be >= 0 with min <= max"
+        }
+        require(a.observeSketchMs >= 0) { "ambonMUD.engine.akathavae.observeSketchMs must be >= 0" }
     }
 
     private fun validateEngineWorldTime() {
@@ -1269,6 +1276,25 @@ data class AkathavaeConfig(
     val zoneCompletionXpPerRoom: Long = 50,
     /** One-time gold paid on zone completion — the Akathavae's gold faucet (they earn no kill gold). */
     val zoneCompletionGold: Long = 500,
+    /**
+     * [Unpledged journaling] Anyone may illuminate and keep a field journal, but
+     * unpledged success odds are scaled by this multiplier (0..1) — the practiced
+     * hand belongs to the pledged.
+     */
+    val unpledgedSuccessMultiplier: Double = 0.5,
+    /** Multiplier (0..1) on discovery XP for unpledged players. 0 turns their journaling into pure record-keeping. */
+    val unpledgedXpMultiplier: Double = 0.25,
+    /**
+     * [Sketching] Illumination is not instant: the sketch takes roughly as long
+     * as the fight would have — estimated melee rounds-to-kill × this many ms —
+     * clamped into [sketchMinMs]..[sketchMaxMs]. All zeros resolve instantly
+     * (the pre-sketch behavior, and what most unit tests configure).
+     */
+    val sketchMsPerEstimatedRound: Long = 1_000,
+    val sketchMinMs: Long = 2_000,
+    val sketchMaxMs: Long = 10_000,
+    /** Flat sketch time for observing a non-combat NPC (ms). */
+    val observeSketchMs: Long = 2_000,
 )
 
 data class LeaderboardConfig(
@@ -2550,7 +2576,7 @@ data class CommandsConfig(
             ),
             "illuminate" to CommandMetadata(
                 usage = "illuminate <creature>",
-                description = "Record a creature in your Arcanum — the Akathavae's replacement for attacking",
+                description = "Record a creature in your Arcanum without harming it — anyone can; the pledged excel",
                 category = "progression",
                 requiresTarget = true,
             ),

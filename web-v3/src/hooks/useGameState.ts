@@ -12,7 +12,9 @@ import {
 } from "../constants";
 import type {
   AchievementData,
+  ActiveSketch,
   ArcanumJournal,
+  ArcanumSketchEvent,
   ArcanumStatus,
   AuctionListing,
   AutoQuest,
@@ -334,6 +336,34 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   // ── Arcanum (Akathavae explorer path) ─────────────
   const [arcanumStatus, setArcanumStatus] = useState<ArcanumStatus | null>(null);
   const [arcanumJournal, setArcanumJournal] = useState<ArcanumJournal | null>(null);
+  const [activeSketch, setActiveSketch] = useState<ActiveSketch | null>(null);
+  const activeSketchRef = useRef<ActiveSketch | null>(null);
+
+  // Sketch lifecycle: `start` raises activeSketch (the SceneManager switches to
+  // the sketch scene off it); any terminal phase clears it. The raw event also
+  // rides the canvas queue so the scene can animate the outcome — but only when
+  // a sketch is actually in flight: an instant-mode server (all sketch timing
+  // zeroed) sends terminal events with no start, and queueing those would leak
+  // stale results into the next real sketch.
+  const pushArcanumSketch = useCallback((event: ArcanumSketchEvent) => {
+    if (event.phase === "start") {
+      const sketch: ActiveSketch = {
+        mobId: event.mobId,
+        mobName: event.mobName,
+        subjectKey: event.subjectKey,
+        observe: event.observe,
+        durationMs: event.durationMs ?? 0,
+        startedAtMs: Date.now(),
+      };
+      activeSketchRef.current = sketch;
+      setActiveSketch(sketch);
+      canvasEvents.pushSketch(event);
+    } else {
+      if (activeSketchRef.current) canvasEvents.pushSketch(event);
+      activeSketchRef.current = null;
+      setActiveSketch(null);
+    }
+  }, []);
 
   // ── Trainer ───────────────────────────────────────
   const [trainer, setTrainer] = useState<TrainerData | null>(null);
@@ -699,6 +729,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setLeaderboard,
         setArcanumStatus,
         setArcanumJournal,
+        pushArcanumSketch,
         setCurrencies: applyCurrencies,
         setTrainer,
         setUnlockedClasses,
@@ -732,7 +763,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         sendGmcp: (p: string, payload: unknown) => { sendGmcpRef.current(p, payload); return true; },
       });
     },
-    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushLevelUp, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef],
+    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushLevelUp, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, pushArcanumSketch, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef],
   );
 
   // ── Reset all HUD state on disconnect ─────────────
@@ -872,7 +903,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     // Leaderboard
     leaderboard,
     // Arcanum
-    arcanumStatus, arcanumJournal,
+    arcanumStatus, arcanumJournal, activeSketch,
     // Trainer
     trainer,
     // Login / connection

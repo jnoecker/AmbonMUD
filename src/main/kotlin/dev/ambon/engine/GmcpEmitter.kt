@@ -132,6 +132,13 @@ class GmcpEmitter(
      * Feeds the per-viewer `illuminationPct` field of `Room.MobInfo`.
      */
     private val illuminationOdds: (SessionId, String) -> Int? = { _, _ -> null },
+    /**
+     * Renounce cost and re-pledge cooldown from the akathavae config, surfaced
+     * in `Arcanum.Status` so the web client's shrine panel can show real
+     * numbers instead of hardcoding them.
+     */
+    private val akathavaeRenounceCostGold: Long = 2_500,
+    private val akathavaeRepledgeCooldownMs: Long = 86_400_000,
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -305,6 +312,7 @@ class GmcpEmitter(
                 auction = room.auction,
                 housingBroker = room.housingBroker,
                 inn = room.inn,
+                shrine = room.akathavaeShrine,
                 flightMaster = room.flightMaster,
                 boatDock = room.boatDock,
                 jukebox = room.jukebox.isNotEmpty(),
@@ -979,6 +987,10 @@ class GmcpEmitter(
         val rooms: Int,
         val mobs: Int,
         val items: Int,
+        /** Gold price of `renounce confirm`, for the shrine panel. */
+        val renounceCostGold: Long,
+        /** Epoch-ms when a re-pledge becomes possible again; 0 when pledging is available now. */
+        val repledgeAvailableAtMs: Long,
     )
 
     data class ArcanumZonePayload(
@@ -1001,6 +1013,9 @@ class GmcpEmitter(
         /** Permanent world-first credit — "First illuminated by <firstBy>". */
         val firstBy: String?,
         val firstAtMs: Long?,
+        /** Permanent world-first kill credit — "First slain by <firstSlainBy>". */
+        val firstSlainBy: String?,
+        val firstSlainAtMs: Long?,
     )
 
     data class ArcanumItemPayload(
@@ -1031,15 +1046,57 @@ class GmcpEmitter(
         val rooms: List<ArcanumRoomPayload>,
     )
 
+    /**
+     * One moment in a sketch's life, for the web client's journal animation.
+     * `phase` is `start` (with `durationMs`), then exactly one of `success`
+     * (`xpGained`/`firstTime`/`worldFirst`), `fail` (`hostile` says whether the
+     * subject turned on the sketcher), or `cancel` (`reason` is display text).
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    data class ArcanumSketchPayload(
+        val phase: String,
+        val mobId: String,
+        val mobName: String,
+        val subjectKey: String,
+        /** True for a non-combat observation — it cannot fail. */
+        val observe: Boolean = false,
+        val durationMs: Long? = null,
+        val xpGained: Long? = null,
+        val firstTime: Boolean? = null,
+        val worldFirst: Boolean? = null,
+        val hostile: Boolean? = null,
+        val reason: String? = null,
+    )
+
+    /** Sketch lifecycle events (`Arcanum.Sketch`) — start, then success/fail/cancel. */
+    suspend fun sendArcanumSketch(
+        sessionId: SessionId,
+        payload: ArcanumSketchPayload,
+    ) {
+        emit(sessionId, "Arcanum.Sketch", payload, supportCheck = "Arcanum")
+    }
+
     /** Lightweight pledge + journal-count sync; emitted on login, pledge changes, and new recordings. */
     suspend fun sendArcanumStatus(
         sessionId: SessionId,
-        pledged: Boolean,
-        rooms: Int,
-        mobs: Int,
-        items: Int,
+        player: PlayerState,
     ) {
-        emit(sessionId, "Arcanum.Status", ArcanumStatusPayload(pledged, rooms, mobs, items), supportCheck = "Arcanum")
+        val cooldownEndsAt = player.akathavaeRenouncedAtMs + akathavaeRepledgeCooldownMs
+        val repledgeAvailableAtMs =
+            if (!player.isAkathavae && player.akathavaeRenouncedAtMs > 0 && nowMs() < cooldownEndsAt) cooldownEndsAt else 0L
+        emit(
+            sessionId,
+            "Arcanum.Status",
+            ArcanumStatusPayload(
+                pledged = player.isAkathavae,
+                rooms = player.arcanum.rooms.size,
+                mobs = player.arcanum.mobs.size,
+                items = player.arcanum.items.size,
+                renounceCostGold = akathavaeRenounceCostGold,
+                repledgeAvailableAtMs = repledgeAvailableAtMs,
+            ),
+            supportCheck = "Arcanum",
+        )
     }
 
     /** Full journal for the Arcanum panel; emitted when the player runs `arcanum`. */
@@ -1097,13 +1154,7 @@ class GmcpEmitter(
         }
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
-        sendArcanumStatus(
-            sessionId,
-            pledged = player.isAkathavae,
-            rooms = player.arcanum.rooms.size,
-            mobs = player.arcanum.mobs.size,
-            items = player.arcanum.items.size,
-        )
+        sendArcanumStatus(sessionId, player)
     }
 
     /**
@@ -2508,26 +2559,22 @@ class GmcpEmitter(
 
     suspend fun broadcastRoomMobInfo(roomId: RoomId, mobInfos: List<MobInfoEntry>, players: PlayerRegistry) {
         // Both `illuminationPct` (odds) and the arcanum badge fields are per-viewer:
-        // odds depend on the pledged player's effective stats, and badges depend on
-        // the viewer's Arcanum state. So pledged recipients each get an individually
-        // built payload; everyone else shares a single serialization as before.
-        val (pledged, others) = players.playersInRoom(roomId).partition { it.isAkathavae }
-        if (others.isNotEmpty()) {
-            broadcastSerialized(others, "Room.MobInfo", mobInfos.map { toRoomMobInfoPayload(it, viewer = null) })
-        }
-        for (p in pledged) {
+        // odds depend on the player's effective stats and pledge state, and badges
+        // depend on the viewer's Arcanum. Anyone can illuminate, so every recipient
+        // gets an individually built payload.
+        for (p in players.playersInRoom(roomId)) {
             sendRoomMobInfo(p.sessionId, mobInfos, p)
         }
     }
 
     /**
      * Decorates [entries] with the viewer's Arcanum state — recorded flag, recording
-     * source, and permanent world-first holder — when the viewer is a pledged
-     * Akathavae. Any other viewer gets the entries untouched, so the fields stay
-     * absent on the wire (issue #1389). Pets carry no subject key and are skipped.
+     * source, and the permanent world-first holders for illumination and the kill
+     * (issue #1389). Anyone keeps a journal, so every viewer gets badges. Pets
+     * carry no subject key and are skipped.
      */
     private fun withArcanumBadges(entries: List<MobInfoEntry>, viewer: PlayerState?): List<MobInfoEntry> {
-        if (viewer == null || !viewer.isAkathavae) return entries
+        if (viewer == null) return entries
         return entries.map { entry ->
             if (entry.templateKey.isEmpty()) return@map entry
             val recorded = viewer.arcanum.mobs[entry.templateKey]
@@ -2535,6 +2582,7 @@ class GmcpEmitter(
                 arcanumRecorded = recorded != null,
                 arcanumSource = recorded?.source,
                 arcanumFirstBy = arcanumFirstBy("mob:${entry.templateKey}"),
+                arcanumFirstSlainBy = arcanumFirstBy("slain:${entry.templateKey}"),
             )
         }
     }
@@ -3124,6 +3172,7 @@ class GmcpEmitter(
         arcanumRecorded = entry.arcanumRecorded,
         arcanumSource = entry.arcanumSource,
         arcanumFirstBy = entry.arcanumFirstBy,
+        arcanumFirstSlainBy = entry.arcanumFirstSlainBy,
     )
 
     // ---------- payload types ----------
@@ -3264,6 +3313,8 @@ class GmcpEmitter(
         val auction: Boolean = false,
         val housingBroker: Boolean = false,
         val inn: Boolean = false,
+        /** True when this room is an Akathavae shrine (enables the shrine panel's pledge/renounce actions). */
+        val shrine: Boolean = false,
         /** True when this room has a flight master (drives the in-world kiosk badge). */
         val flightMaster: Boolean = false,
         /** True when this room is a boat dock (drives the in-world kiosk badge). */
@@ -4017,14 +4068,16 @@ class GmcpEmitter(
         val dialogue: Boolean,
         val aggressive: Boolean,
         val combatant: Boolean,
-        /** Per-viewer illumination odds; present only for pledged Akathavae viewers. */
+        /** Per-viewer illumination odds — the unpledged see their scaled-down chance. */
         val illuminationPct: Int? = null,
-        /** Pledged viewers only: whether this creature is in the viewer's Arcanum. */
+        /** Whether this creature is in the viewer's Arcanum. */
         val arcanumRecorded: Boolean? = null,
         /** How the viewer recorded it (`illuminated`/`observed`), when recorded. */
         val arcanumSource: String? = null,
         /** World-first illumination holder name, or null when unclaimed. */
         val arcanumFirstBy: String? = null,
+        /** World-first kill holder name, or null when unclaimed. */
+        val arcanumFirstSlainBy: String? = null,
     )
 
     // ---------- look target payload ----------
@@ -4628,10 +4681,11 @@ data class MobInfoEntry(
     val combatant: Boolean,
     /** Arcanum subject key (`zone:template`) for per-viewer badges; empty for pets. */
     val templateKey: String = "",
-    /** Per-viewer arcanum badge fields, populated only for pledged Akathavae viewers. */
+    /** Per-viewer arcanum badge fields, populated per recipient of Room.MobInfo. */
     val arcanumRecorded: Boolean? = null,
     val arcanumSource: String? = null,
     val arcanumFirstBy: String? = null,
+    val arcanumFirstSlainBy: String? = null,
 )
 
 /** Input DTO for building a Zone.Instances GMCP payload. */

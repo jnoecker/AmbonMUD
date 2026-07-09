@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type {
   AchievementData,
   ArcanumJournal,
+  ArcanumSketchEvent,
   ArcanumStatus,
   AuctionListing,
   BorderStub,
@@ -225,6 +226,7 @@ interface GmcpContext {
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
   setArcanumStatus: Dispatch<SetStateAction<ArcanumStatus | null>>;
   setArcanumJournal: Dispatch<SetStateAction<ArcanumJournal | null>>;
+  pushArcanumSketch: (event: ArcanumSketchEvent) => void;
   setCurrencies: Dispatch<SetStateAction<CurrencyBalance[]>>;
   setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
   setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
@@ -509,6 +511,7 @@ export function applyGmcpPackage(
       const auction = packet.auction === true;
       const housingBroker = packet.housingBroker === true;
       const inn = packet.inn === true;
+      const shrine = packet.shrine === true;
       const flightMaster = packet.flightMaster === true;
       const boatDock = packet.boatDock === true;
       const jukebox = packet.jukebox === true;
@@ -534,7 +537,7 @@ export function applyGmcpPackage(
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, flightMaster, boatDock, jukebox, musicBox, canDepart, peek };
+        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, shrine, flightMaster, boatDock, jukebox, musicBox, canDepart, peek };
       });
 
       if (id) {
@@ -1461,10 +1464,11 @@ export function applyGmcpPackage(
             aggressive: entry.aggressive === true,
             combatant: entry.combatant !== false,
             illuminationPct: typeof entry.illuminationPct === "number" ? entry.illuminationPct : null,
-            // Arcanum badge fields ride only for pledged Akathavae viewers.
+            // Arcanum badge fields are per-viewer; anyone keeps a journal now.
             arcanumRecorded: typeof entry.arcanumRecorded === "boolean" ? entry.arcanumRecorded : undefined,
             arcanumSource: typeof entry.arcanumSource === "string" ? entry.arcanumSource : undefined,
             arcanumFirstBy: typeof entry.arcanumFirstBy === "string" ? entry.arcanumFirstBy : undefined,
+            arcanumFirstSlainBy: typeof entry.arcanumFirstSlainBy === "string" ? entry.arcanumFirstSlainBy : undefined,
           })),
       );
       break;
@@ -2269,6 +2273,28 @@ export function applyGmcpPackage(
         rooms: safeNumber(packet.rooms, 0),
         mobs: safeNumber(packet.mobs, 0),
         items: safeNumber(packet.items, 0),
+        renounceCostGold: safeNumber(packet.renounceCostGold, 0),
+        repledgeAvailableAtMs: safeNumber(packet.repledgeAvailableAtMs, 0),
+      });
+      break;
+    }
+
+    case "Arcanum.Sketch": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const phase = typeof packet.phase === "string" ? packet.phase : "";
+      if (phase !== "start" && phase !== "success" && phase !== "fail" && phase !== "cancel") break;
+      ctx.pushArcanumSketch({
+        phase,
+        mobId: typeof packet.mobId === "string" ? packet.mobId : "",
+        mobName: typeof packet.mobName === "string" ? packet.mobName : "",
+        subjectKey: typeof packet.subjectKey === "string" ? packet.subjectKey : "",
+        observe: packet.observe === true,
+        durationMs: typeof packet.durationMs === "number" ? packet.durationMs : null,
+        xpGained: typeof packet.xpGained === "number" ? packet.xpGained : null,
+        firstTime: typeof packet.firstTime === "boolean" ? packet.firstTime : null,
+        worldFirst: typeof packet.worldFirst === "boolean" ? packet.worldFirst : null,
+        hostile: typeof packet.hostile === "boolean" ? packet.hostile : null,
+        reason: typeof packet.reason === "string" ? packet.reason : null,
       });
       break;
     }
@@ -2299,6 +2325,8 @@ export function applyGmcpPackage(
           source: typeof m.source === "string" ? m.source : "illuminated",
           firstBy: typeof m.firstBy === "string" ? m.firstBy : null,
           firstAtMs: typeof m.firstAtMs === "number" ? m.firstAtMs : null,
+          firstSlainBy: typeof m.firstSlainBy === "string" ? m.firstSlainBy : null,
+          firstSlainAtMs: typeof m.firstSlainAtMs === "number" ? m.firstSlainAtMs : null,
         })),
         items: asRecords(packet.items).map((i) => ({
           key: typeof i.key === "string" ? i.key : "",

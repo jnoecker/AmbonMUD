@@ -291,6 +291,39 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `mob death fires the onMobSlain callback with the killing-blow session`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:crane"),
+                    "a crane",
+                    fixture.roomId,
+                    hp = 1,
+                    maxHp = 1,
+                    xpReward = 1L,
+                    templateKey = "demo:crane",
+                )
+            fixture.mobs.upsert(mob)
+
+            val slain = mutableListOf<Pair<SessionId, String>>()
+            val combat = fixture.buildCombat(
+                rng = Random(1),
+                minDamage = 1,
+                maxDamage = 1,
+                onMobSlain = { sid, dead -> slain += sid to dead.templateKey },
+            )
+
+            val sid = SessionId(42L)
+            fixture.players.loginOrFail(sid, "Slayer")
+
+            assertNull(combat.startCombat(sid, "crane"))
+            fixture.tickCombat(combat)
+
+            assertEquals(listOf(sid to "demo:crane"), slain, "the killing blow drives 'First slain by' records")
+        }
+
+    @Test
     fun `mob death rolls guaranteed loot table drop`() =
         runTest {
             val fixture = CombatTestFixture()

@@ -16,27 +16,35 @@ import java.time.Clock
 import java.util.Random
 
 /**
- * Illumination — the Akathavae's replacement for combat.
+ * Illumination — recording the world in an Arcanum, and the Akathavae's
+ * replacement for combat.
  *
- * A pledged player `illuminate`s a creature to record it in their Arcanum.
- * Illumination never harms the subject: it leaves the creature exactly where it
- * stands, so even quest-givers and unique mobs are safe — and free — to record.
- * Success is stat-driven (success stat raises the chance, the subject's level
- * above the player lowers it, the gap-relief stat softens that penalty) and pays
- * first-time-big / repeat-small XP scaled by the XP stat. The subject's possible
- * drops are catalogued into the Arcanum as templates — feeding the wardrobe —
- * without anything being taken from it. A recorded creature still counts as a
- * defeated one for quest/achievement credit (once per living instance), so the
- * pledged complete the same objectives as everyone else. Failure puts the subject
- * on a retry cooldown and turns it hostile unless the escape stat talks the player
- * out of it.
+ * Anyone may `illuminate` a creature to record it in their own Arcanum — a
+ * field journal any traveler can keep. Illumination never harms the subject: it
+ * leaves the creature exactly where it stands, so even quest-givers and unique
+ * mobs are safe — and free — to record. Success is stat-driven (success stat
+ * raises the chance, the subject's level above the player lowers it, the
+ * gap-relief stat softens that penalty) and pays first-time-big / repeat-small
+ * XP scaled by the XP stat. Illumination is not instant: the quill works for
+ * roughly as long as the fight would have taken (see [PendingSketch] and
+ * [tick]), with the roll landing at the end — moving away, entering combat,
+ * or losing the subject abandons the page.
  *
- * The system also records passive discoveries: rooms visited and items first
- * seen, each worth XP behind an anti-speedrun throttle. Non-combat NPCs can be
- * observed (recorded without removal) for a small award.
+ * The pledged get the full craft; the unpledged get field notes. Unpledged
+ * odds and XP are scaled down by config, and everything past the creature page
+ * itself is reserved for the pledged: drop cataloguing (which feeds the
+ * wardrobe), quest/achievement kill credit (once per living instance — the
+ * unpledged can simply fight), quest-item rubbings, and the passive discovery
+ * of rooms visited and items first seen. Failure puts the subject on a retry
+ * cooldown and turns it hostile unless the escape stat talks the player out
+ * of it.
  *
  * World-firsts: the first player ever to illuminate a subject is stamped
- * permanently into [WorldStateRegistry] — "First illuminated by Thalen."
+ * permanently into [WorldStateRegistry] — "First illuminated by Thalen" — but
+ * only a pledged Akathavae's journal is accepted at the shrines, so only the
+ * pledged can seal that page. Separately, the first player to *kill* a
+ * creature is stamped as "First slain by" (see [onMobSlain]) — the two records
+ * sit side by side in the Arcanum.
  */
 class AkathavaeSystem(
     private val players: PlayerRegistry,
@@ -111,10 +119,29 @@ class AkathavaeSystem(
      */
     private val creditedIlluminations = mutableMapOf<SessionId, MutableSet<String>>()
 
+    /**
+     * An in-flight sketch: illumination is not instant, it takes roughly as
+     * long as the fight would have (see [AkathavaeConfig.sketchMsPerEstimatedRound]).
+     * The success roll happens at resolution, in [tick]. Runtime-only — a
+     * relog simply abandons the page.
+     */
+    private data class PendingSketch(
+        val mobId: dev.ambon.domain.ids.MobId,
+        val mobName: String,
+        val subjectKey: String,
+        val roomId: RoomId,
+        val endsAtMs: Long,
+        val observe: Boolean,
+    )
+
+    /** At most one sketch per session — a second `illuminate` while drawing is refused. */
+    private val pendingSketches = mutableMapOf<SessionId, PendingSketch>()
+
     fun onSessionRemoved(sessionId: SessionId) {
         failCooldowns.remove(sessionId)
         nextDiscoveryXpAt.remove(sessionId)
         creditedIlluminations.remove(sessionId)
+        pendingSketches.remove(sessionId)
     }
 
     // ── Illumination ─────────────────────────────────────────────────────
@@ -124,15 +151,6 @@ class AkathavaeSystem(
         keywordRaw: String,
     ) {
         val me = players.get(sessionId) ?: return
-        if (!me.isAkathavae) {
-            outbound.send(
-                OutboundEvent.SendError(
-                    sessionId,
-                    "Only those who have taken the Akathavae pledge may illuminate. Seek a shrine.",
-                ),
-            )
-            return
-        }
         val keyword = keywordRaw.trim()
         if (keyword.isEmpty()) {
             outbound.send(OutboundEvent.SendError(sessionId, "Illuminate what?"))
@@ -140,6 +158,10 @@ class AkathavaeSystem(
         }
         if (combat.isInCombat(sessionId)) {
             outbound.send(OutboundEvent.SendError(sessionId, "You cannot hold a steady image while under attack — flee first."))
+            return
+        }
+        pendingSketches[sessionId]?.let { pending ->
+            outbound.send(OutboundEvent.SendError(sessionId, "Your quill is already busy with ${pending.mobName}."))
             return
         }
         val mob = combat.findMobInRoom(me.roomId, keyword)
@@ -162,17 +184,121 @@ class AkathavaeSystem(
             return
         }
 
+        val observe = !mob.role.isCombatant
+        // A repeat observation resolves instantly: the page already exists, there
+        // is no roll, and nobody wants to watch a sketch end in "already have it".
+        if (observe && me.arcanum.mobs.containsKey(subjectKey)) {
+            outbound.send(OutboundEvent.SendText(sessionId, "Your Arcanum already holds a page on ${mob.name}."))
+            return
+        }
+
+        val durationMs =
+            if (observe) {
+                config.observeSketchMs
+            } else {
+                (combat.estimatedHitsToKill(sessionId, mob) * config.sketchMsPerEstimatedRound)
+                    .coerceIn(config.sketchMinMs, config.sketchMaxMs)
+            }
+        if (durationMs <= 0L) {
+            // Instant mode — all sketch knobs zeroed (the pre-sketch behavior).
+            resolveSketch(sessionId, me, mob, subjectKey, now)
+            return
+        }
+
+        pendingSketches[sessionId] = PendingSketch(
+            mobId = mob.id,
+            mobName = mob.name,
+            subjectKey = subjectKey,
+            roomId = me.roomId,
+            endsAtMs = now + durationMs,
+            observe = observe,
+        )
+        outbound.send(
+            OutboundEvent.SendText(
+                sessionId,
+                "You open your Arcanum and set your quill to ${mob.name} — hold steady...",
+            ),
+        )
+        broadcastToRoom(
+            players,
+            outbound,
+            me.roomId,
+            "${me.name} opens a journal and begins sketching ${mob.name}.",
+            exclude = sessionId,
+        )
+        gmcpEmitter?.sendArcanumSketch(
+            sessionId,
+            GmcpEmitter.ArcanumSketchPayload(
+                phase = "start",
+                mobId = mob.id.value,
+                mobName = mob.name,
+                subjectKey = subjectKey,
+                observe = observe,
+                durationMs = durationMs,
+            ),
+        )
+        metrics.onGameEvent("akathavae", "sketch_start")
+    }
+
+    // ── Sketch lifecycle ─────────────────────────────────────────────────
+
+    /**
+     * Resolves due sketches; called from the engine tick loop. Combat cancels
+     * a sketch (checked here rather than via a combat callback so any aggro
+     * source — wandering aggressives, a duel — interrupts it), and a subject
+     * that died or left mid-sketch leaves the page unfinished. The success
+     * roll happens now, at the end, against current stats.
+     */
+    suspend fun tick() {
+        if (pendingSketches.isEmpty()) return
+        val now = clock.millis()
+        for ((sid, sketch) in pendingSketches.entries.toList()) {
+            val me = players.get(sid)
+            if (me == null) {
+                pendingSketches.remove(sid)
+                continue
+            }
+            if (combat.isInCombat(sid)) {
+                cancelSketch(sid, "The fight shatters your concentration — the sketch is ruined.")
+                continue
+            }
+            if (me.roomId != sketch.roomId) {
+                // Safety net for any movement path that skips onRoomVisited.
+                cancelSketch(sid, "You have moved on — the sketch is abandoned.")
+                continue
+            }
+            if (now < sketch.endsAtMs) continue
+            pendingSketches.remove(sid)
+            val mob = combat.mobById(sketch.mobId)
+            if (mob == null || mob.roomId != me.roomId) {
+                sendSketchCancel(sid, sketch, "Your subject is gone — the page stays unfinished.")
+                continue
+            }
+            resolveSketch(sid, me, mob, sketch.subjectKey, now)
+        }
+    }
+
+    /** Rolls and resolves a finished sketch — the tail of the old instant illuminate. */
+    private suspend fun resolveSketch(
+        sessionId: SessionId,
+        me: PlayerState,
+        mob: MobState,
+        subjectKey: String,
+        now: Long,
+    ) {
         if (!mob.role.isCombatant) {
             observeNpc(sessionId, me, mob, subjectKey, now)
             return
         }
-
         val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
-        val successPct = illuminationSuccessPct(
-            statValue = stats[config.successStat],
-            reliefStatValue = stats[config.gapReliefStat],
-            playerLevel = me.level,
-            mobLevel = mob.level,
+        val successPct = pledgeScaledPct(
+            illuminationSuccessPct(
+                statValue = stats[config.successStat],
+                reliefStatValue = stats[config.gapReliefStat],
+                playerLevel = me.level,
+                mobLevel = mob.level,
+            ),
+            me.isAkathavae,
         )
         if (rng.nextInt(100) < successPct) {
             resolveSuccess(sessionId, me, mob, subjectKey, now)
@@ -182,23 +308,75 @@ class AkathavaeSystem(
     }
 
     /**
+     * True while any player is sketching [mobId]. Wired into the behavior
+     * tree's root gate so the subject holds its pose — no wandering, no
+     * patrol, no aggro-initiation — until the artist finishes, mirroring how
+     * combat pins a mob in place. A mob already fighting keeps swinging
+     * (combat swings come from CombatSystem, not the behavior tree).
+     */
+    fun isSketchSubject(mobId: dev.ambon.domain.ids.MobId): Boolean = pendingSketches.values.any { it.mobId == mobId }
+
+    /** Cancels [sessionId]'s in-progress sketch, if any, telling the player [reason]. */
+    private suspend fun cancelSketch(
+        sessionId: SessionId,
+        reason: String,
+    ) {
+        val sketch = pendingSketches.remove(sessionId) ?: return
+        sendSketchCancel(sessionId, sketch, reason)
+    }
+
+    private suspend fun sendSketchCancel(
+        sessionId: SessionId,
+        sketch: PendingSketch,
+        reason: String,
+    ) {
+        outbound.send(OutboundEvent.SendText(sessionId, reason))
+        gmcpEmitter?.sendArcanumSketch(
+            sessionId,
+            GmcpEmitter.ArcanumSketchPayload(
+                phase = "cancel",
+                mobId = sketch.mobId.value,
+                mobName = sketch.mobName,
+                subjectKey = sketch.subjectKey,
+                observe = sketch.observe,
+                reason = reason,
+            ),
+        )
+        metrics.onGameEvent("akathavae", "sketch_cancel")
+    }
+
+    /**
      * Illumination success odds for [me] against [mob], resolving the player's
      * current effective stats (equipment + status effects included) — the same
-     * inputs [illuminate] rolls against. Surfaced to the player via `consider`
-     * and the `Room.MobInfo` GMCP payload so the pledged never gamble blind.
+     * inputs [illuminate] rolls against, including the unpledged scaling.
+     * Surfaced to the player via `consider` and the `Room.MobInfo` GMCP payload
+     * so nobody gambles blind.
      */
     fun illuminationOddsFor(
         me: PlayerState,
         mob: MobState,
     ): Int {
         val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
-        return illuminationSuccessPct(
-            statValue = stats[config.successStat],
-            reliefStatValue = stats[config.gapReliefStat],
-            playerLevel = me.level,
-            mobLevel = mob.level,
+        return pledgeScaledPct(
+            illuminationSuccessPct(
+                statValue = stats[config.successStat],
+                reliefStatValue = stats[config.gapReliefStat],
+                playerLevel = me.level,
+                mobLevel = mob.level,
+            ),
+            me.isAkathavae,
         )
     }
+
+    /**
+     * Scales success odds for the pledge state: the unpledged keep field notes,
+     * not a practiced chronicler's hand, so their odds are cut by
+     * [AkathavaeConfig.unpledgedSuccessMultiplier] (floored at 1%).
+     */
+    private fun pledgeScaledPct(
+        pct: Int,
+        pledged: Boolean,
+    ): Int = if (pledged) pct else (pct * config.unpledgedSuccessMultiplier).toInt().coerceAtLeast(1)
 
     /**
      * Success chance: base + per-point bonus above [PlayerState.BASE_STAT] on the
@@ -244,17 +422,18 @@ class AkathavaeSystem(
             "${me.name} studies ${mob.name} with quiet intensity, committing it to the Arcanum.",
             exclude = sessionId,
         )
-        announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
+        val worldFirst = announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now, firstTimeForPlayer = firstTime)
         if (firstTime) onArcanumRecorded?.invoke(sessionId)
 
         val baseXp = progression.killXpReward(mob)
+        var xpGained = 0L
         if (firstTime) {
-            awardDiscoveryXp(sessionId, me, baseXp, "first illumination", now)
+            xpGained = awardDiscoveryXp(sessionId, me, baseXp, "first illumination", now)
         } else {
             val cooledDown = now >= entry.lastXpAtMs + config.repeatXpCooldownMs
             if (cooledDown) {
                 me.arcanum.mobs[subjectKey]?.lastXpAtMs = now
-                awardDiscoveryXp(
+                xpGained = awardDiscoveryXp(
                     sessionId,
                     me,
                     (baseXp * config.repeatXpFraction).toLong().coerceAtLeast(1L),
@@ -265,22 +444,40 @@ class AkathavaeSystem(
                 outbound.send(OutboundEvent.SendText(sessionId, "Your Arcanum already holds this page; it yields nothing new yet."))
             }
         }
+        gmcpEmitter?.sendArcanumSketch(
+            sessionId,
+            GmcpEmitter.ArcanumSketchPayload(
+                phase = "success",
+                mobId = mob.id.value,
+                mobName = mob.name,
+                subjectKey = subjectKey,
+                xpGained = xpGained,
+                firstTime = firstTime,
+                worldFirst = worldFirst,
+            ),
+        )
 
-        // Catalogue what the creature carries as Arcanum pages — this feeds the
-        // wardrobe — but take nothing: the subject is unharmed and stays put.
-        // The illumination XP above just armed the discovery-XP throttle, so these
-        // same-action item awards bypass it — otherwise the items get recorded with
-        // their XP silently and permanently swallowed.
-        for (drop in mob.drops) {
-            recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED, bypassThrottle = true)
+        if (me.isAkathavae) {
+            // Catalogue what the creature carries as Arcanum pages — this feeds the
+            // wardrobe — but take nothing: the subject is unharmed and stays put.
+            // The illumination XP above just armed the discovery-XP throttle, so these
+            // same-action item awards bypass it — otherwise the items get recorded with
+            // their XP silently and permanently swallowed.
+            for (drop in mob.drops) {
+                recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED, bypassThrottle = true)
+            }
         }
 
-        // A recorded creature counts as a defeated one for quests and achievements,
-        // so the pledged complete the same objectives as everyone else — but only
-        // once per living instance, since illumination no longer consumes it.
+        // A recorded creature counts as a defeated one — but only once per living
+        // instance, since illumination no longer consumes it. Kill credit and quest
+        // rubbings stay pledged-only (the unpledged can fight for their objectives,
+        // so a sketch must not bypass the fight), while daily illumination
+        // commissions count the recording itself, whoever holds the pen.
         if (creditedIlluminations.getOrPut(sessionId) { mutableSetOf() }.add(mob.id.value)) {
-            combat.creditIlluminationKill(sessionId, mob)
-            grantNeededQuestItems(sessionId, mob)
+            if (me.isAkathavae) {
+                combat.creditIlluminationKill(sessionId, mob)
+                grantNeededQuestItems(sessionId, mob)
+            }
             onIlluminated?.invoke(sessionId)
         }
         if (firstTime) {
@@ -347,7 +544,8 @@ class AkathavaeSystem(
             ((escapeStatValue - PlayerState.BASE_STAT) * config.escapePerStatPoint)
                 .toInt()
                 .coerceIn(0, 95)
-        if (escapePct > 0 && rng.nextInt(100) < escapePct) {
+        val talkedOut = escapePct > 0 && rng.nextInt(100) < escapePct
+        if (talkedOut) {
             outbound.send(
                 OutboundEvent.SendText(
                     sessionId,
@@ -355,11 +553,26 @@ class AkathavaeSystem(
                 ),
             )
             metrics.onGameEvent("akathavae", "illuminate_talked_out")
-            return
+        } else {
+            combat.engageMobCombat(sessionId, mob)
+            val cry =
+                if (me.isAkathavae) {
+                    "${theCap(mob.name)} turns on you! Your pledge holds — flee!"
+                } else {
+                    "${theCap(mob.name)} turns on you!"
+                }
+            outbound.send(OutboundEvent.SendText(sessionId, cry))
         }
-
-        combat.engageMobCombat(sessionId, mob)
-        outbound.send(OutboundEvent.SendText(sessionId, "${theCap(mob.name)} turns on you! Your pledge holds — flee!"))
+        gmcpEmitter?.sendArcanumSketch(
+            sessionId,
+            GmcpEmitter.ArcanumSketchPayload(
+                phase = "fail",
+                mobId = mob.id.value,
+                mobName = mob.name,
+                subjectKey = subjectKey,
+                hostile = !talkedOut,
+            ),
+        )
     }
 
     private suspend fun observeNpc(
@@ -371,6 +584,8 @@ class AkathavaeSystem(
     ) {
         val firstTime = !me.arcanum.mobs.containsKey(subjectKey)
         recordEntry(me.arcanum.mobs, subjectKey, now, ArcanumSource.OBSERVED)
+        var worldFirst = false
+        var xpGained = 0L
         if (firstTime) {
             outbound.send(
                 OutboundEvent.SendText(
@@ -378,9 +593,9 @@ class AkathavaeSystem(
                     "You quietly observe ${mob.name}, noting their manner and bearing in your Arcanum.",
                 ),
             )
-            announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
+            worldFirst = announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
             onArcanumRecorded?.invoke(sessionId)
-            awardDiscoveryXp(sessionId, me, config.observeNpcXp, "observation", now)
+            xpGained = awardDiscoveryXp(sessionId, me, config.observeNpcXp, "observation", now)
             // First-time observations count toward illumination commissions —
             // recording a subject matters, not whether it was dangerous.
             onIlluminated?.invoke(sessionId)
@@ -391,6 +606,19 @@ class AkathavaeSystem(
         } else {
             outbound.send(OutboundEvent.SendText(sessionId, "Your Arcanum already holds a page on ${mob.name}."))
         }
+        gmcpEmitter?.sendArcanumSketch(
+            sessionId,
+            GmcpEmitter.ArcanumSketchPayload(
+                phase = "success",
+                mobId = mob.id.value,
+                mobName = mob.name,
+                subjectKey = subjectKey,
+                observe = true,
+                xpGained = xpGained,
+                firstTime = firstTime,
+                worldFirst = worldFirst,
+            ),
+        )
     }
 
     // ── Passive discovery ────────────────────────────────────────────────
@@ -398,6 +626,10 @@ class AkathavaeSystem(
     /** Records the player's current room. Fires on every movement; no-op unless pledged and new. */
     suspend fun onRoomVisited(sessionId: SessionId) {
         val me = players.get(sessionId) ?: return
+        // Movement is the primary sketch interrupt — you cannot draw and walk.
+        if (pendingSketches[sessionId]?.roomId?.let { it != me.roomId } == true) {
+            cancelSketch(sessionId, "You have moved on — the sketch is abandoned.")
+        }
         if (!me.isAkathavae) return
         val roomId = me.roomId
         if (world.rooms[roomId] == null) return
@@ -470,6 +702,36 @@ class AkathavaeSystem(
         awardDiscoveryXp(sessionId, me, config.itemDiscoveryXp, "discovery", now, bypassThrottle)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
+    }
+
+    // ── First slain ──────────────────────────────────────────────────────
+
+    /**
+     * Stamps the permanent "First slain by" record when [sessionId]'s killing
+     * blow on [mob] is the first in the world's history — the combat-side
+     * sibling of the illumination world-first, sitting beside it in the
+     * Arcanum. Open to anyone (the pledged never land killing blows while
+     * their vow holds), and unlike illumination firsts it needs no shrine
+     * seal: a corpse is its own certification. Wired from [CombatSystem]'s
+     * mob-death path via GameEngine.
+     */
+    suspend fun onMobSlain(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        val ws = worldState ?: return
+        val me = players.get(sessionId) ?: return
+        if (mob.isPet || !mob.role.isCombatant || mob.templateKey.isEmpty()) return
+        if (ws.recordArcanumFirst("slain:${mobSubjectKey(mob)}", me.name, clock.millis())) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "★ ${theCap(mob.name)} falls for the first time in recorded history — " +
+                        "the Arcanum will forever read \"First slain by ${me.name}.\"",
+                ),
+            )
+            metrics.onGameEvent("akathavae", "world_first_slain")
+        }
     }
 
     // ── Zone completion ──────────────────────────────────────────────────
@@ -566,13 +828,7 @@ class AkathavaeSystem(
     /** Pushes the lightweight pledge + counts sync to the client. */
     suspend fun emitStatus(sessionId: SessionId) {
         val me = players.get(sessionId) ?: return
-        gmcpEmitter?.sendArcanumStatus(
-            sessionId,
-            pledged = me.isAkathavae,
-            rooms = me.arcanum.rooms.size,
-            mobs = me.arcanum.mobs.size,
-            items = me.arcanum.items.size,
-        )
+        gmcpEmitter?.sendArcanumStatus(sessionId, me)
     }
 
     /** Builds and pushes the full journal payload for the Arcanum panel. */
@@ -596,6 +852,7 @@ class AkathavaeSystem(
             mobs = me.arcanum.mobs.entries.sortedBy { it.key }.map { (key, entry) ->
                 val template = world.mobTemplate(dev.ambon.domain.ids.MobId(key))
                 val first = worldFirstCredit("mob", key)
+                val slain = worldFirstCredit("slain", key)
                 GmcpEmitter.ArcanumMobPayload(
                     key = key,
                     name = template?.name ?: key.substringAfter(':').replace('_', ' '),
@@ -605,6 +862,8 @@ class AkathavaeSystem(
                     source = entry.source,
                     firstBy = first?.first,
                     firstAtMs = first?.second,
+                    firstSlainBy = slain?.first,
+                    firstSlainAtMs = slain?.second,
                 )
             },
             items = me.arcanum.items.entries.sortedBy { it.key }.map { (key, entry) ->
@@ -653,14 +912,31 @@ class AkathavaeSystem(
         }
     }
 
+    /** Returns true when this call sealed the world-first for [firstKey]. */
     private suspend fun announceWorldFirst(
         sessionId: SessionId,
         me: PlayerState,
         firstKey: String,
         displayName: String,
         now: Long,
-    ) {
-        val ws = worldState ?: return
+        firstTimeForPlayer: Boolean = true,
+    ): Boolean {
+        val ws = worldState ?: return false
+        if (!me.isAkathavae) {
+            // Only a pledged Akathavae's journal is accepted at the shrines: the
+            // unpledged see the unclaimed page, but cannot seal it. Noted only on
+            // the player's own first recording, so repeats stay quiet.
+            if (firstTimeForPlayer && ws.getArcanumFirst(firstKey) == null) {
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "No account of $displayName exists in the shrine records — but only a pledged " +
+                            "Akathavae's journal is accepted there. The page stays unsealed.",
+                    ),
+                )
+            }
+            return false
+        }
         if (ws.recordArcanumFirst(firstKey, me.name, now)) {
             me.worldFirstsCount += 1
             outbound.send(
@@ -671,11 +947,15 @@ class AkathavaeSystem(
             )
             metrics.onGameEvent("akathavae", "world_first")
             onArcanumRecorded?.invoke(sessionId)
+            return true
         }
+        return false
     }
 
     /**
      * Grants discovery XP scaled by the XP stat, behind the anti-speedrun throttle.
+     * Unpledged awards are first scaled by [AkathavaeConfig.unpledgedXpMultiplier];
+     * a zero result awards nothing (and leaves the throttle unarmed).
      *
      * [bypassThrottle] serves both intra-action awards (e.g. cataloguing a mob's
      * drops in the same illumination that just awarded XP) and one-off milestone
@@ -690,16 +970,17 @@ class AkathavaeSystem(
         label: String,
         now: Long,
         bypassThrottle: Boolean = false,
-    ) {
-        if (baseAmount <= 0L) return
-        if (!bypassThrottle && now < (nextDiscoveryXpAt[sessionId] ?: 0L)) return
+    ): Long {
+        val pledgeScaled = if (me.isAkathavae) baseAmount else (baseAmount * config.unpledgedXpMultiplier).toLong()
+        if (pledgeScaled <= 0L) return 0L
+        if (!bypassThrottle && now < (nextDiscoveryXpAt[sessionId] ?: 0L)) return 0L
         nextDiscoveryXpAt[sessionId] = now + config.discoveryXpThrottleMs
 
         val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
         val bonus = (stats[config.xpStat] - PlayerState.BASE_STAT) * config.xpBonusPerStatPoint
-        val amount = (baseAmount * (1.0 + bonus.coerceAtLeast(-0.5))).toLong().coerceAtLeast(1L)
+        val amount = (pledgeScaled * (1.0 + bonus.coerceAtLeast(-0.5))).toLong().coerceAtLeast(1L)
 
-        val result = players.grantXp(sessionId, amount, progression) ?: return
+        val result = players.grantXp(sessionId, amount, progression) ?: return 0L
         metrics.onXpAwarded(amount, "illumination")
         outbound.send(OutboundEvent.SendText(sessionId, "You gain $amount XP ($label)."))
         markVitalsDirty?.invoke(sessionId)
@@ -714,6 +995,7 @@ class AkathavaeSystem(
             outbound.send(OutboundEvent.SendText(sessionId, message))
             onLevelUp?.invoke(sessionId, result)
         }
+        return amount
     }
 }
 

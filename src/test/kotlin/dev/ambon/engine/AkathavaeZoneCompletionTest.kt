@@ -1,6 +1,5 @@
 package dev.ambon.engine
 
-import dev.ambon.config.AkathavaeConfig
 import dev.ambon.domain.arcanum.ArcanumJournal
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -14,6 +13,7 @@ import dev.ambon.domain.world.World
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.persistence.jsonMapper
 import dev.ambon.test.CombatTestFixture
+import dev.ambon.test.INSTANT_SKETCH_AKATHAVAE
 import dev.ambon.test.MutableClock
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
@@ -35,7 +35,7 @@ private class AlwaysSucceedRandom : Random() {
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AkathavaeZoneCompletionTest {
-    private val config = AkathavaeConfig()
+    private val config = INSTANT_SKETCH_AKATHAVAE
 
     // "lair": one room, one level-10 combat template, one observable NPC template.
     private val lairDen = RoomId("lair:den")

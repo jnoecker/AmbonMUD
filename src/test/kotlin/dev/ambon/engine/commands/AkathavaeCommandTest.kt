@@ -316,7 +316,7 @@ class AkathavaeCommandTest {
         }
 
         @Test
-        fun `consider output is unchanged for the unpledged`() = runTest {
+        fun `consider shows scaled-down illumination odds for the unpledged`() = runTest {
             val h = harness()
             val sid = SessionId(1)
             h.loginPlayer(sid, "Thalen")
@@ -325,10 +325,10 @@ class AkathavaeCommandTest {
 
             h.router.handle(sid, Command.Consider("rat"))
 
-            val events = h.drain()
-            val texts = events.filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
             assertTrue(texts.any { it.contains("Estimated win chance") }, "got=$texts")
-            assertFalse(texts.any { it.contains("illuminate") }, "unpledged consider must not mention illumination: got=$texts")
+            // Base 70% halved by the unpledged multiplier: anyone can keep a field journal.
+            assertTrue(texts.any { it.contains("35% chance to illuminate") }, "got=$texts")
         }
 
         @Test
@@ -351,7 +351,7 @@ class AkathavaeCommandTest {
         }
 
         @Test
-        fun `consider on a non-combatant still errors for the unpledged`() = runTest {
+        fun `consider on a non-combatant offers observation to the unpledged too`() = runTest {
             val h = harness()
             val sid = SessionId(1)
             h.loginPlayer(sid, "Thalen")
@@ -362,8 +362,10 @@ class AkathavaeCommandTest {
 
             h.router.handle(sid, Command.Consider("elder"))
 
-            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
-            assertTrue(errors.any { it.contains("isn't a threat") }, "got=$errors")
+            val events = h.drain()
+            val infos = events.filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("observing them for your Arcanum always succeeds") }, "got=$infos")
+            assertTrue(events.filterIsInstance<OutboundEvent.SendError>().isEmpty(), "anyone keeps a journal — no combat error")
         }
 
         @Test
@@ -844,6 +846,35 @@ class AkathavaeCommandTest {
                 infos.any { it.contains("test: 1/2 places, 0/0 creatures, 1/2 items.") },
                 "zone line should count all three kinds; got=$infos",
             )
+        }
+
+        @Test
+        fun `arcanum for an unpledged player renders their field journal`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Bruiser")
+            val me = h.players.get(sid)!!
+            me.arcanum.mobs["test:rat"] = ArcanumEntry(firstRecordedAtMs = 1L)
+            h.drain()
+
+            h.router.handle(sid, Command.Arcanum(null))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("The Arcanum of Bruiser") }, "got=$infos")
+            assertTrue(infos.any { it.contains("field journal") }, "the unpledged summary names the shrine rule; got=$infos")
+        }
+
+        @Test
+        fun `an unwritten arcanum points anyone at illuminate`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Bruiser")
+            h.drain()
+
+            h.router.handle(sid, Command.Arcanum(null))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("unwritten") && it.contains("illuminate") }, "got=$infos")
         }
     }
 

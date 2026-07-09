@@ -54,6 +54,7 @@ class GmcpEmitterTest {
         vararg supported: String,
         arcanumFirstBy: (String) -> String? = { null },
         illuminationOdds: (SessionId, String) -> Int? = { _, _ -> null },
+        nowMs: () -> Long = { 0L },
     ): GmcpEmitter {
         val packages = supported.toSet()
         return GmcpEmitter(
@@ -65,6 +66,7 @@ class GmcpEmitterTest {
             equipmentSlotRegistry = defaultSlotRegistry,
             arcanumFirstBy = arcanumFirstBy,
             illuminationOdds = illuminationOdds,
+            nowMs = nowMs,
         )
     }
 
@@ -1752,9 +1754,9 @@ class GmcpEmitterTest {
         }
 
     @Test
-    fun `broadcastRoomMobInfo builds per-viewer payloads for pledged players`() =
+    fun `broadcastRoomMobInfo builds per-viewer payloads for every occupant`() =
         runTest {
-            val e = emitter("Room.MobInfo", illuminationOdds = { viewer, _ -> if (viewer == SessionId(1L)) 72 else null })
+            val e = emitter("Room.MobInfo", illuminationOdds = { viewer, _ -> if (viewer == SessionId(1L)) 72 else 36 })
             val roomId = RoomId("test:room1")
             val players = buildTestPlayerRegistry(roomId)
             players.loginOrFail(SessionId(1L), "Pledged")
@@ -1769,7 +1771,10 @@ class GmcpEmitterTest {
             val pledged = events.single { it.sessionId == SessionId(1L) }
             val fighter = events.single { it.sessionId == SessionId(2L) }
             assertTrue(pledged.jsonData.contains("\"illuminationPct\":72"), "got=${pledged.jsonData}")
-            assertFalse(fighter.jsonData.contains("illuminationPct"), "got=${fighter.jsonData}")
+            assertTrue(
+                fighter.jsonData.contains("\"illuminationPct\":36"),
+                "unpledged viewers see their own scaled odds; got=${fighter.jsonData}",
+            )
         }
 
     @Test
@@ -1842,13 +1847,34 @@ class GmcpEmitterTest {
         }
 
     @Test
-    fun `sendRoomMobInfo omits arcanum fields for non-pledged viewers`() =
+    fun `sendRoomMobInfo includes arcanum fields for unpledged viewers`() =
         runTest {
-            val e = emitter("Room.MobInfo", arcanumFirstBy = { "Thalen" })
+            val e = emitter("Room.MobInfo", arcanumFirstBy = { key -> "Thalen".takeIf { key == "mob:forest:goblin" } })
             e.sendRoomMobInfo(sid, listOf(goblinEntry()), viewer = player())
             val events = drainGmcp()
             assertEquals(1, events.size)
-            assertFalse(events[0].jsonData.contains("arcanum"))
+            assertTrue(events[0].jsonData.contains("\"arcanumRecorded\":false"), "got=${events[0].jsonData}")
+            assertTrue(events[0].jsonData.contains("\"arcanumFirstBy\":\"Thalen\""), "got=${events[0].jsonData}")
+        }
+
+    @Test
+    fun `sendRoomMobInfo names the first-slain holder separately from the illuminator`() =
+        runTest {
+            val e = emitter(
+                "Room.MobInfo",
+                arcanumFirstBy = { key ->
+                    when (key) {
+                        "mob:forest:goblin" -> "Thalen"
+                        "slain:forest:goblin" -> "Grog"
+                        else -> null
+                    }
+                },
+            )
+            e.sendRoomMobInfo(sid, listOf(goblinEntry()), viewer = pledgedViewer())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"arcanumFirstBy\":\"Thalen\""), "got=${events[0].jsonData}")
+            assertTrue(events[0].jsonData.contains("\"arcanumFirstSlainBy\":\"Grog\""), "got=${events[0].jsonData}")
         }
 
     @Test
@@ -1869,6 +1895,56 @@ class GmcpEmitterTest {
             val events = drainGmcp()
             assertEquals(1, events.size)
             assertFalse(events[0].jsonData.contains("arcanum"))
+        }
+
+    // ── Arcanum.Sketch lifecycle ──
+
+    @Test
+    fun `sendArcanumSketch keeps phase-irrelevant fields off the wire`() =
+        runTest {
+            val e = emitter("Arcanum")
+            e.sendArcanumSketch(
+                sid,
+                GmcpEmitter.ArcanumSketchPayload(
+                    phase = "start",
+                    mobId = "forest:goblin_1",
+                    mobName = "a goblin",
+                    subjectKey = "forest:goblin",
+                    durationMs = 4_000,
+                ),
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Arcanum.Sketch", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"phase\":\"start\""), "got=${events[0].jsonData}")
+            assertTrue(events[0].jsonData.contains("\"durationMs\":4000"), "got=${events[0].jsonData}")
+            assertFalse(events[0].jsonData.contains("xpGained"), "got=${events[0].jsonData}")
+            assertFalse(events[0].jsonData.contains("reason"), "got=${events[0].jsonData}")
+        }
+
+    // ── Arcanum.Status pledge info ──
+
+    @Test
+    fun `sendArcanumStatus carries renounce cost and an open repledge window`() =
+        runTest {
+            val e = emitter("Arcanum")
+            e.sendArcanumStatus(sid, player())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"renounceCostGold\":2500"), "got=${events[0].jsonData}")
+            assertTrue(events[0].jsonData.contains("\"repledgeAvailableAtMs\":0"), "got=${events[0].jsonData}")
+        }
+
+    @Test
+    fun `sendArcanumStatus reports the repledge cooldown for a recent renouncer`() =
+        runTest {
+            val e = emitter("Arcanum", nowMs = { 1_000_000L })
+            val p = player().also { it.akathavaeRenouncedAtMs = 500_000L }
+            e.sendArcanumStatus(sid, p)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            // 500_000 + 86_400_000 default cooldown, still in the future at t=1_000_000.
+            assertTrue(events[0].jsonData.contains("\"repledgeAvailableAtMs\":86900000"), "got=${events[0].jsonData}")
         }
 
     // ── Group.Info mana ──

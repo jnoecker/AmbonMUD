@@ -76,6 +76,7 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerRepository
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.PlayerLocationIndex
+import dev.ambon.test.INSTANT_SKETCH_AKATHAVAE
 import java.time.Clock
 
 /**
@@ -146,7 +147,7 @@ internal fun buildTestRouter(
         progression = progression,
         classRegistry = classRegistry,
         clock = clock,
-        config = akathavaeConfig ?: AkathavaeConfig(),
+        config = akathavaeConfig ?: INSTANT_SKETCH_AKATHAVAE,
         markVitalsDirty = markVitalsDirty,
     )
     val resolvedFlightConfig = flightConfig ?: FlightConfig()
@@ -237,7 +238,7 @@ internal fun buildTestRouter(
         BoatHandler(ctx = ctx, markVitalsDirty = markVitalsDirty),
         AkathavaeHandler(
             ctx = ctx,
-            config = akathavaeConfig ?: AkathavaeConfig(),
+            config = akathavaeConfig ?: INSTANT_SKETCH_AKATHAVAE,
             clock = clock,
             markVitalsDirty = markVitalsDirty,
             akathavaeSystem = resolvedAkathavaeSystem,

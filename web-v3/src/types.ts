@@ -1,4 +1,4 @@
-export type PopoutPanel = "arcanum" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "flight" | "boat" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
+export type PopoutPanel = "arcanum" | "shrine" | "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chatboard" | "whoboard" | "guildboard" | "friendsboard" | "groupboard" | "shop" | "spellbook" | "quests" | "questOffers" | "mail" | "crafting" | "professions" | "housing" | "leaderboard" | "trainer" | "bank" | "stylist" | "flight" | "boat" | "auction" | "dungeon" | "lottery" | "dice" | "jukebox" | "musicbox" | "puzzle" | "features" | "combatlog" | "inn" | null;
 export type SystemPanelView = "dungeon" | "duel" | "lottery" | "pet" | "prestige" | "currencies" | "factions";
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
@@ -259,6 +259,8 @@ export interface RoomState {
   auction?: boolean;
   housingBroker?: boolean;
   inn?: boolean;
+  /** True when this room is an Akathavae shrine (enables pledge/renounce in the shrine panel). */
+  shrine?: boolean;
   /** True when this room has a flight master (drives the in-world badge + flight panel). */
   flightMaster?: boolean;
   /** True when this room is a boat dock (drives the in-world badge + boat panel). */
@@ -981,17 +983,16 @@ export interface MobInfo {
   dialogue: boolean;
   aggressive: boolean;
   combatant: boolean;
-  /** Illumination success odds for the viewer; null unless pledged Akathavae + combatant. */
+  /** Per-viewer illumination success odds (scaled down for the unpledged); null for non-combatants. */
   illuminationPct: number | null;
-  /**
-   * Pledged-Akathavae viewers only (absent otherwise): whether this creature
-   * is already recorded in the viewer's Arcanum journal.
-   */
+  /** Whether this creature is already recorded in the viewer's Arcanum journal. */
   arcanumRecorded?: boolean;
   /** How the viewer recorded it ("illuminated" | "observed"), when recorded. */
   arcanumSource?: string;
   /** Name of the permanent world-first illuminator, absent while unclaimed. */
   arcanumFirstBy?: string;
+  /** Name of the permanent world-first killer, absent while unclaimed. */
+  arcanumFirstSlainBy?: string;
 }
 
 export interface LoginRaceOption {
@@ -1586,6 +1587,10 @@ export interface ArcanumStatus {
   rooms: number;
   mobs: number;
   items: number;
+  /** Gold price of `renounce confirm`, for the shrine panel. */
+  renounceCostGold: number;
+  /** Epoch-ms when a re-pledge becomes possible again; 0 when pledging is available now. */
+  repledgeAvailableAtMs: number;
 }
 
 export interface ArcanumZoneCompletion {
@@ -1608,6 +1613,9 @@ export interface ArcanumMobEntry {
   /** Permanent world-first credit — "First illuminated by <firstBy>". */
   firstBy: string | null;
   firstAtMs: number | null;
+  /** Permanent world-first kill credit — "First slain by <firstSlainBy>". */
+  firstSlainBy: string | null;
+  firstSlainAtMs: number | null;
 }
 
 export interface ArcanumItemEntry {
@@ -1628,6 +1636,38 @@ export interface ArcanumRoomEntry {
   zone: string;
   firstRecordedAtMs: number;
   firstBy: string | null;
+}
+
+/**
+ * One `Arcanum.Sketch` lifecycle event: a `start` (with `durationMs`), then
+ * exactly one of `success`, `fail`, or `cancel`. Drives the sketch scene.
+ */
+export interface ArcanumSketchEvent {
+  phase: "start" | "success" | "fail" | "cancel";
+  mobId: string;
+  mobName: string;
+  subjectKey: string;
+  /** Non-combat observation — it cannot fail. */
+  observe: boolean;
+  durationMs: number | null;
+  xpGained: number | null;
+  firstTime: boolean | null;
+  worldFirst: boolean | null;
+  /** Fail only: the subject turned on the sketcher (combat follows). */
+  hostile: boolean | null;
+  /** Cancel only: display text for why the page was abandoned. */
+  reason: string | null;
+}
+
+/** The in-progress sketch, set on `start` and cleared on any terminal phase. */
+export interface ActiveSketch {
+  mobId: string;
+  mobName: string;
+  subjectKey: string;
+  observe: boolean;
+  durationMs: number;
+  /** Client receipt time — drives the progress bar. */
+  startedAtMs: number;
 }
 
 /** Full journal payload for the Arcanum panel (Arcanum.Journal). */

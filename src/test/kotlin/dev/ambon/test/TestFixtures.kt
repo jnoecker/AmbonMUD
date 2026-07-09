@@ -61,6 +61,18 @@ val TEST_SESSION_ID = SessionId(1L)
 /** Common room ID for tests that need a generic `zone:room`. */
 val TEST_ROOM_ID = RoomId("zone:room")
 
+/**
+ * Akathavae config with the sketch timing zeroed so `illuminate` resolves
+ * synchronously — the default for tests that exercise illumination outcomes
+ * rather than the sketch clock itself.
+ */
+val INSTANT_SKETCH_AKATHAVAE = dev.ambon.config.AkathavaeConfig(
+    sketchMsPerEstimatedRound = 0,
+    sketchMinMs = 0,
+    sketchMaxMs = 0,
+    observeSketchMs = 0,
+)
+
 object TestWorlds {
     val testWorld: World by lazy { WorldLoader.loadFromResource("world/test_world.yaml") }
     val okSmall: World by lazy { WorldLoader.loadFromResource("world/ok_small.yaml") }

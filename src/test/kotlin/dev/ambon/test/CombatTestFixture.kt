@@ -7,6 +7,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.CombatSystemCallbacks
 import dev.ambon.engine.CombatSystemConfig
@@ -85,6 +86,7 @@ class CombatTestFixture(
         dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
         statusEffects: StatusEffectSystem? = null,
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
+        onMobSlain: suspend (SessionId, MobState) -> Unit = { _, _ -> },
         groupSystem: GroupSystem? = null,
         groupXpBonusPerMember: Double = 0.10,
         healingThreatMultiplier: Double = 0.5,
@@ -122,6 +124,7 @@ class CombatTestFixture(
                 onLevelUp = onLevelUp,
                 onMobKilledByPlayer = onMobKilledByPlayer,
                 onRoomItemsChanged = onRoomItemsChanged,
+                onMobSlain = onMobSlain,
             ),
             classRegistry = classRegistry,
             petSystem = petSystem,

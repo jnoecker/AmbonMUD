@@ -45,11 +45,11 @@ class CombatHandler(
     ) {
         when (val outcome = combat.consider(sessionId, cmd.target)) {
             is ConsiderOutcome.Error -> {
-                // Pledged players sizing up a non-combatant NPC get the Akathavae
+                // Anyone sizing up a non-combatant NPC gets the chronicler's
                 // read (observation always succeeds) instead of the combat error.
                 val me = players.get(sessionId)
                 val mob =
-                    if (me?.isAkathavae == true && akathavaeSystem != null) {
+                    if (me != null && akathavaeSystem != null) {
                         combat.findMobInRoom(me.roomId, cmd.target.trim())
                     } else {
                         null
@@ -80,10 +80,10 @@ class CombatHandler(
                             "(your ~${r.playerAvgDamage} dmg vs their ~${r.mobAvgDamage} dmg).",
                     ),
                 )
-                // Pledged players don't fight — show their real gamble: the
-                // illumination success roll for their current effective stats.
+                // Anyone can illuminate — show the real gamble: the illumination
+                // success roll for their current effective stats and pledge state.
                 val me = players.get(sessionId)
-                if (me?.isAkathavae == true && akathavaeSystem != null) {
+                if (me != null && akathavaeSystem != null) {
                     val mob = mobs.get(MobId(r.mobId))
                     if (mob != null) {
                         val pct = akathavaeSystem.illuminationOddsFor(me, mob)
