@@ -981,6 +981,8 @@ export interface MobInfo {
   dialogue: boolean;
   aggressive: boolean;
   combatant: boolean;
+  /** Illumination success odds for the viewer; null unless pledged Akathavae + combatant. */
+  illuminationPct: number | null;
 }
 
 export interface LoginRaceOption {

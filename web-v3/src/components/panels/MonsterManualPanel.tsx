@@ -176,7 +176,11 @@ export function MonsterManualPanel({
   if (info?.shopKeeper) actions.push({ key: "shop", label: "Shop", glyph: "❖", assetKey: "action_shop", variant: "primary", run: onShop });
   // The Akathavae pledge replaces violence with illumination — same slot, same
   // creatures, but the action records the subject into the Arcanum instead.
-  if (monster.canAttack && akathavaePledged) actions.push({ key: "illuminate", label: "Illuminate", glyph: "✒", assetKey: "action_illuminate", variant: "primary", run: () => { onCommand(`illuminate ${name}`); close(); } });
+  // Surface the stat-driven success odds (Room.MobInfo `illuminationPct`) right
+  // on the button — failure turns the creature hostile, so pledged players
+  // shouldn't gamble blind.
+  const illumPct = info?.illuminationPct;
+  if (monster.canAttack && akathavaePledged) actions.push({ key: "illuminate", label: illumPct != null ? `Illuminate · ${illumPct}%` : "Illuminate", glyph: "✒", assetKey: "action_illuminate", variant: "primary", run: () => { onCommand(`illuminate ${name}`); close(); } });
   else if (monster.canAttack) actions.push({ key: "attack", label: "Attack", glyph: "⚔", assetKey: "action_attack", variant: "primary", run: () => { onCommand(`kill ${name}`); close(); } });
   if (monster.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(monster.video!) });
   if (monster.isStaff) actions.push({ key: "possess", label: "Possess", glyph: "✦", assetKey: "action_possess", variant: "ghost", run: () => { onCommand(`possess ${name}`); close(); } });

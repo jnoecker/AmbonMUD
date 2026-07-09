@@ -9,6 +9,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.mob.MobRole
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
@@ -283,6 +284,73 @@ class AkathavaeCommandTest {
             val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
             assertTrue(errors.any { it.contains("pledge stays your hand") }, "got=$errors")
             assertFalse(h.combat.isInCombat(sid), "Pledged player must not enter combat")
+        }
+
+        @Test
+        fun `consider shows illumination odds while pledged`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.router.handle(sid, Command.Pledge)
+            h.mobs.upsert(MobState(id = MobId("test:rat"), name = "rat", roomId = shrineRoom))
+            h.drain()
+
+            h.router.handle(sid, Command.Consider("rat"))
+
+            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            // Base stats, equal level: the configured base chance of 70%.
+            assertTrue(texts.any { it.contains("70% chance to illuminate") }, "got=$texts")
+        }
+
+        @Test
+        fun `consider output is unchanged for the unpledged`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.mobs.upsert(MobState(id = MobId("test:rat"), name = "rat", roomId = shrineRoom))
+            h.drain()
+
+            h.router.handle(sid, Command.Consider("rat"))
+
+            val events = h.drain()
+            val texts = events.filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(texts.any { it.contains("Estimated win chance") }, "got=$texts")
+            assertFalse(texts.any { it.contains("illuminate") }, "unpledged consider must not mention illumination: got=$texts")
+        }
+
+        @Test
+        fun `consider on a non-combatant tells the pledged that observation always succeeds`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.router.handle(sid, Command.Pledge)
+            h.mobs.upsert(
+                MobState(id = MobId("test:elder"), name = "the village elder", roomId = shrineRoom, role = MobRole.DIALOG),
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Consider("elder"))
+
+            val events = h.drain()
+            val infos = events.filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("observing them for your Arcanum always succeeds") }, "got=$infos")
+            assertTrue(events.filterIsInstance<OutboundEvent.SendError>().isEmpty(), "pledged consider on an NPC is not an error")
+        }
+
+        @Test
+        fun `consider on a non-combatant still errors for the unpledged`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.mobs.upsert(
+                MobState(id = MobId("test:elder"), name = "the village elder", roomId = shrineRoom, role = MobRole.DIALOG),
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Consider("elder"))
+
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("isn't a threat") }, "got=$errors")
         }
 
         @Test

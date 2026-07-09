@@ -1460,6 +1460,7 @@ export function applyGmcpPackage(
             dialogue: entry.dialogue === true,
             aggressive: entry.aggressive === true,
             combatant: entry.combatant !== false,
+            illuminationPct: typeof entry.illuminationPct === "number" ? entry.illuminationPct : null,
           })),
       );
       break;

@@ -121,6 +121,12 @@ class GmcpEmitter(
     private val raceRegistry: RaceRegistry? = null,
     /** Current engine time in millis, used to compute racial-ability cooldown remaining. */
     private val nowMs: () -> Long = { 0L },
+    /**
+     * Illumination success odds for a viewing session against a mob id, or null
+     * when not applicable (viewer not pledged Akathavae, mob not a combatant).
+     * Feeds the per-viewer `illuminationPct` field of `Room.MobInfo`.
+     */
+    private val illuminationOdds: (SessionId, String) -> Int? = { _, _ -> null },
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -2488,13 +2494,19 @@ class GmcpEmitter(
         emit(
             sessionId,
             "Room.MobInfo",
-            mobs.map { toRoomMobInfoPayload(it) },
+            mobs.map { toRoomMobInfoPayload(it, viewer = sessionId) },
         )
     }
 
     suspend fun broadcastRoomMobInfo(roomId: RoomId, mobInfos: List<MobInfoEntry>, players: PlayerRegistry) {
-        val payload = mobInfos.map { toRoomMobInfoPayload(it) }
-        broadcastSerialized(players.playersInRoom(roomId), "Room.MobInfo", payload)
+        // `illuminationPct` is per-viewer (it depends on the pledged player's
+        // effective stats), so pledged recipients get an individually built
+        // payload; everyone else shares a single serialization as before.
+        val (pledged, others) = players.playersInRoom(roomId).partition { it.isAkathavae }
+        broadcastSerialized(others, "Room.MobInfo", mobInfos.map { toRoomMobInfoPayload(it, viewer = null) })
+        for (p in pledged) {
+            sendRoomMobInfo(p.sessionId, mobInfos)
+        }
     }
 
     /**
@@ -3063,19 +3075,22 @@ class GmcpEmitter(
             takeable = item.item.takeable,
         )
 
-    private fun toRoomMobInfoPayload(entry: MobInfoEntry) =
-        RoomMobInfoPayload(
-            id = entry.id,
-            level = entry.level,
-            tier = entry.tier,
-            questGiver = entry.questGiver,
-            questAvailable = entry.questAvailable,
-            questComplete = entry.questComplete,
-            shopKeeper = entry.shopKeeper,
-            dialogue = entry.dialogue,
-            aggressive = entry.aggressive,
-            combatant = entry.combatant,
-        )
+    private fun toRoomMobInfoPayload(
+        entry: MobInfoEntry,
+        viewer: SessionId? = null,
+    ) = RoomMobInfoPayload(
+        id = entry.id,
+        level = entry.level,
+        tier = entry.tier,
+        questGiver = entry.questGiver,
+        questAvailable = entry.questAvailable,
+        questComplete = entry.questComplete,
+        shopKeeper = entry.shopKeeper,
+        dialogue = entry.dialogue,
+        aggressive = entry.aggressive,
+        combatant = entry.combatant,
+        illuminationPct = if (entry.combatant) viewer?.let { illuminationOdds(it, entry.id) } else null,
+    )
 
     // ---------- payload types ----------
 
@@ -3956,6 +3971,7 @@ class GmcpEmitter(
 
     // ---------- room mob info payload ----------
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private data class RoomMobInfoPayload(
         val id: String,
         val level: Int,
@@ -3967,6 +3983,8 @@ class GmcpEmitter(
         val dialogue: Boolean,
         val aggressive: Boolean,
         val combatant: Boolean,
+        /** Per-viewer illumination odds; present only for pledged Akathavae viewers. */
+        val illuminationPct: Int? = null,
     )
 
     // ---------- look target payload ----------
