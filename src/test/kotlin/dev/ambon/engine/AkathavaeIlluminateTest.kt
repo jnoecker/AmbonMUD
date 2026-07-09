@@ -164,6 +164,66 @@ class AkathavaeIlluminateTest {
     }
 
     @Test
+    fun `first illumination pays item-discovery XP for every drop in the same action`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.items.loadSpawns(
+            listOf(
+                ItemSpawn(instance = ItemInstance(ItemId("test:dust"), Item(keyword = "dust", displayName = "glittering dust"))),
+                ItemSpawn(instance = ItemInstance(ItemId("test:mote"), Item(keyword = "mote", displayName = "a pale mote"))),
+            ),
+        )
+        val drops = listOf(MobDrop(ItemId("test:dust"), 1.0), MobDrop(ItemId("test:mote"), 0.5))
+        s.fixture.mobs.upsert(wisp(id = "w1", xpReward = 100L, drops = drops))
+
+        s.system.illuminate(sid, "wisp")
+
+        val perItem = AkathavaeConfig().itemDiscoveryXp
+        assertEquals(
+            100L + 2 * perItem,
+            me.xpTotal,
+            "first illumination pays the mob XP plus item XP for each drop, same action",
+        )
+        assertTrue(me.arcanum.items.containsKey("test:dust"))
+        assertTrue(me.arcanum.items.containsKey("test:mote"))
+
+        // Repeat illumination: items already recorded → no further item XP, and the
+        // mob's repeat cooldown suppresses its XP too.
+        s.clock.advance(AkathavaeConfig().discoveryXpThrottleMs + 1)
+        s.fixture.mobs.upsert(wisp(id = "w2", xpReward = 100L, drops = drops))
+        s.system.illuminate(sid, "wisp")
+        assertEquals(100L + 2 * perItem, me.xpTotal, "repeat illumination pays no item XP for known pages")
+    }
+
+    @Test
+    fun `drop-catalogue bypass does not defeat the cross-action discovery throttle`() = runTest {
+        val s = setup(rng = ScriptedRandom(0))
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.fixture.items.loadSpawns(
+            listOf(ItemSpawn(instance = ItemInstance(ItemId("test:dust"), Item(keyword = "dust", displayName = "glittering dust")))),
+        )
+        s.fixture.mobs.upsert(wisp(xpReward = 100L, drops = listOf(MobDrop(ItemId("test:dust"), 1.0))))
+
+        s.system.illuminate(sid, "wisp")
+        val afterIllumination = 100L + AkathavaeConfig().itemDiscoveryXp
+        assertEquals(afterIllumination, me.xpTotal)
+
+        // A separate discovery inside the throttle window: recorded, but no XP.
+        me.roomId = roomB
+        s.system.onRoomVisited(sid)
+        assertEquals(afterIllumination, me.xpTotal, "the intra-action bypass must not open a farming window")
+        assertTrue(me.arcanum.rooms.containsKey(roomB.value), "the room is still recorded")
+
+        // Past the throttle, XP flows again.
+        s.clock.advance(AkathavaeConfig().discoveryXpThrottleMs + 1)
+        me.roomId = roomC
+        s.system.onRoomVisited(sid)
+        assertEquals(afterIllumination + AkathavaeConfig().roomDiscoveryXp, me.xpTotal)
+    }
+
+    @Test
     fun `illumination fires quest kill credit so the pledged complete the same quests`() = runTest {
         val credited = mutableListOf<String>()
         val s = setup(rng = ScriptedRandom(0), onMobKilledByPlayer = { _, templateKey -> credited += templateKey })
