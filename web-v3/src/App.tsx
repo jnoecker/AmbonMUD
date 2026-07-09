@@ -578,6 +578,7 @@ function App() {
     canvasCallbacks.openJukebox = () => openPanel("jukebox");
     canvasCallbacks.openMusicBox = () => openPanel("musicbox");
     canvasCallbacks.openHousing = () => openPanel("housing");
+    canvasCallbacks.openShrine = () => openPanel("shrine");
     canvasCallbacks.openInn = () => setShowInn(true);
     canvasCallbacks.openAdminPanel = () => setShowAdminPanel(true);
     canvasCallbacks.toggleInvis = () => { sendCommand("invis"); setStaffInvisible((v) => !v); };
@@ -642,6 +643,7 @@ function App() {
       canvasCallbacks.openJukebox = null;
       canvasCallbacks.openMusicBox = null;
       canvasCallbacks.openHousing = null;
+      canvasCallbacks.openShrine = null;
       canvasCallbacks.openInn = null;
       canvasCallbacks.openAdminPanel = null;
       canvasCallbacks.toggleInvis = null;

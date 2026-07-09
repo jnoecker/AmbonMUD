@@ -97,6 +97,7 @@ export const canvasCallbacks: {
   openJukebox: (() => void) | null;
   openMusicBox: (() => void) | null;
   openHousing: (() => void) | null;
+  openShrine: (() => void) | null;
   openInn: (() => void) | null;
   openMail: (() => void) | null;
   openMap: (() => void) | null;
@@ -145,6 +146,7 @@ export const canvasCallbacks: {
   openJukebox: null,
   openMusicBox: null,
   openHousing: null,
+  openShrine: null,
   openInn: null,
   openMail: null,
   openMap: null,
