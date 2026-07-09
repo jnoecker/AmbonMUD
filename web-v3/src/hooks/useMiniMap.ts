@@ -704,8 +704,13 @@ function bfsQuestPath(
   return edges;
 }
 
-export function useMiniMap() {
+export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
   const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Kept in a ref so pointer handlers stay referentially stable across renders.
+  const onRoomClickRef = useRef(onRoomClick);
+  useEffect(() => {
+    onRoomClickRef.current = onRoomClick;
+  }, [onRoomClick]);
   const visitedRef = useRef<Map<string, MapRoom>>(new Map());
   const currentRoomIdRef = useRef<string | null>(null);
   // Glyph textures keyed by asset key (loaded once; global, not per-zone).
@@ -906,45 +911,48 @@ export function useMiniMap() {
     };
   }, [clearHover]);
 
-  /** Hit-test the pointer against the rendered rooms and surface a tooltip. */
-  const updateHover = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+  /** Hit-test a pointer position against the rendered rooms. */
+  const hitTestRoom = useCallback((target: HTMLCanvasElement, clientX: number, clientY: number): MapHoverInfo | null => {
     const v = viewRef.current;
     const vis = visibilityRef.current;
-    if (!v || !vis) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    if (!v || !vis) return null;
+    const rect = target.getBoundingClientRect();
+    const mx = clientX - rect.left;
+    const my = clientY - rect.top;
     const gx = Math.round(v.panGx + (mx - v.originX) / v.cell);
     const gy = Math.round(v.panGy + (my - v.originY) / v.cell);
     // The cursor must actually be inside the room's box, not just its grid cell.
     const sx = v.originX + (gx - v.panGx) * v.cell;
     const sy = v.originY + (gy - v.panGy) * v.cell;
     const half = Math.min(MAX_NODE, v.cell * 0.62) / 2 + 4;
-    let found: MapHoverInfo | null = null;
-    if (Math.abs(mx - sx) <= half && Math.abs(my - sy) <= half) {
-      for (const [id, node] of visitedRef.current.entries()) {
-        if (node.z !== v.floor || node.x !== gx || node.y !== gy) continue;
-        if (!vis.explored.has(id) && !vis.frontier.has(id)) continue;
-        const explored = node.title !== "" && !node.zone;
-        found = {
-          id,
-          title: explored ? node.title : "",
-          explored,
-          terrain: explored ? node.terrain : undefined,
-          poi: explored ? (node.poi ?? []) : [],
-          hasStairs: explored && ("up" in node.exits || "down" in node.exits),
-          zone: node.zone,
-          sx,
-          sy,
-        };
-        break;
-      }
+    if (Math.abs(mx - sx) > half || Math.abs(my - sy) > half) return null;
+    for (const [id, node] of visitedRef.current.entries()) {
+      if (node.z !== v.floor || node.x !== gx || node.y !== gy) continue;
+      if (!vis.explored.has(id) && !vis.frontier.has(id)) continue;
+      const explored = node.title !== "" && !node.zone;
+      return {
+        id,
+        title: explored ? node.title : "",
+        explored,
+        terrain: explored ? node.terrain : undefined,
+        poi: explored ? (node.poi ?? []) : [],
+        hasStairs: explored && ("up" in node.exits || "down" in node.exits),
+        zone: node.zone,
+        sx,
+        sy,
+      };
     }
+    return null;
+  }, []);
+
+  /** Hit-test the pointer against the rendered rooms and surface a tooltip. */
+  const updateHover = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    const found = hitTestRoom(e.currentTarget, e.clientX, e.clientY);
     if ((found?.id ?? null) !== hoverIdRef.current) {
       hoverIdRef.current = found?.id ?? null;
       setHoverInfo(found);
     }
-  }, []);
+  }, [hitTestRoom]);
 
   const onMapPointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     const d = dragRef.current;
@@ -963,8 +971,14 @@ export function useMiniMap() {
 
   const onMapPointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.releasePointerCapture?.(e.pointerId);
+    const d = dragRef.current;
     dragRef.current = null;
-  }, []);
+    // A press that barely moved is a click, not a pan — surface the room hit.
+    if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 6) {
+      const found = hitTestRoom(e.currentTarget, e.clientX, e.clientY);
+      if (found) onRoomClickRef.current?.(found);
+    }
+  }, [hitTestRoom]);
 
   const onMapPointerLeave = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     onMapPointerUp(e);

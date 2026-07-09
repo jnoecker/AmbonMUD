@@ -1285,6 +1285,15 @@ export interface FlightState {
   originMapY: number | null;
 }
 
+/** Mount fast-travel availability from the Travel.Status GMCP package. */
+export interface TravelStatus {
+  /** True when the player owns at least one mount and may click the map to ride. */
+  canTravel: boolean;
+  riding: boolean;
+  /** Destination room id while riding, else null. */
+  destination: string | null;
+}
+
 /** One authored route a boat dock can sail the player along (Char.Boat). */
 export interface BoatDestination {
   roomId: string;

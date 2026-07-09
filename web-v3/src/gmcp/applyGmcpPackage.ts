@@ -94,6 +94,7 @@ import type {
   StylistRace,
   FlightState,
   FlightDestination,
+  TravelStatus,
   BoatState,
   BoatDestination,
   DailyQuestBoard,
@@ -239,6 +240,7 @@ interface GmcpContext {
   setBankState: Dispatch<SetStateAction<BankState | null>>;
   setStylistState: Dispatch<SetStateAction<StylistState | null>>;
   setFlightState: Dispatch<SetStateAction<FlightState | null>>;
+  setTravelStatus: Dispatch<SetStateAction<TravelStatus | null>>;
   setBoatState: Dispatch<SetStateAction<BoatState | null>>;
   setRecallState: Dispatch<SetStateAction<RecallState | null>>;
   setLotteryInfo: Dispatch<SetStateAction<LotteryInfo | null>>;
@@ -2038,6 +2040,16 @@ export function applyGmcpPackage(
 
     case "Char.Flight.Close": {
       ctx.setFlightState(null);
+      break;
+    }
+
+    case "Travel.Status": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setTravelStatus({
+        canTravel: packet.canTravel === true,
+        riding: packet.riding === true,
+        destination: typeof packet.destination === "string" ? packet.destination : null,
+      });
       break;
     }
 
