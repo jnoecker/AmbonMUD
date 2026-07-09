@@ -600,7 +600,11 @@ internal suspend fun sendLook(
     val zone = room.id.zone
     if (gmcpEmitter != null && gmcpEmitter.trackZoneChange(sessionId, zone)) {
         val zoneRooms = world.rooms.values.filter { it.id.zone == zone }
-        gmcpEmitter.sendZoneMap(sessionId, zone, zoneRooms, me.exploredRooms)
+        // Staff see the whole chart: every room ships with its explored detail,
+        // so the client's fog of war never hides anything from them.
+        val exploredForMap =
+            if (me.isStaff) zoneRooms.mapTo(mutableSetOf()) { it.id.value } else me.exploredRooms
+        gmcpEmitter.sendZoneMap(sessionId, zone, zoneRooms, exploredForMap)
         gmcpEmitter.sendZoneEnvironment(sessionId, gmcpEmitter.buildZoneEnvironmentPayload(zone))
         // Zone intro cinematic: auto-plays on the player's first-ever entry,
         // then stays replayable from the expanded map.
