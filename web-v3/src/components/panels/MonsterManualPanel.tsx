@@ -169,6 +169,18 @@ export function MonsterManualPanel({
   const level = c?.mobLevel ?? monster.level;
   const category = c?.mobCategory ?? info?.tier ?? "";
 
+  // Arcanum badge (pledged Akathavae only). The server sends arcanumRecorded
+  // exclusively to pledged viewers, so its presence doubles as the render gate:
+  // non-pledged players (fields absent) see nothing here.
+  const arcanum =
+    akathavaePledged && info && typeof info.arcanumRecorded === "boolean"
+      ? info.arcanumRecorded
+        ? { tone: "recorded" as const, text: `Recorded ✓${info.arcanumSource ? ` · ${info.arcanumSource}` : ""}` }
+        : info.arcanumFirstBy
+          ? { tone: "claimed" as const, text: `First recorded by ${info.arcanumFirstBy}` }
+          : { tone: "first" as const, text: "★ Unrecorded — be the first" }
+      : null;
+
   const actions: ManualAction[] = [];
   if (info?.questComplete) actions.push({ key: "quest", label: "Turn In Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => { onQuest(name); setView("quest"); } });
   else if (info?.questAvailable) actions.push({ key: "quest", label: "Quest", glyph: "★", assetKey: "action_quest", variant: "primary", run: () => { onQuest(name); setView("quest"); } });
@@ -263,6 +275,11 @@ export function MonsterManualPanel({
                 <span className="mm-meta">
                   {level != null ? `Lv ${level}` : ""}{level != null && category ? " " : ""}{category}
                 </span>
+              )}
+              {/* Recorded / world-first state — the pledged decide whether an
+                  illumination attempt is worth the aggro risk before acting. */}
+              {arcanum && (
+                <span className={`mm-arcanum mm-arcanum-${arcanum.tone}`}>{arcanum.text}</span>
               )}
             </div>
           </header>

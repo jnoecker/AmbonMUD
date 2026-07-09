@@ -981,6 +981,15 @@ export interface MobInfo {
   dialogue: boolean;
   aggressive: boolean;
   combatant: boolean;
+  /**
+   * Pledged-Akathavae viewers only (absent otherwise): whether this creature
+   * is already recorded in the viewer's Arcanum journal.
+   */
+  arcanumRecorded?: boolean;
+  /** How the viewer recorded it ("illuminated" | "observed"), when recorded. */
+  arcanumSource?: string;
+  /** Name of the permanent world-first illuminator, absent while unclaimed. */
+  arcanumFirstBy?: string;
 }
 
 export interface LoginRaceOption {

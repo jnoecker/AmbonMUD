@@ -1458,6 +1458,10 @@ export function applyGmcpPackage(
             dialogue: entry.dialogue === true,
             aggressive: entry.aggressive === true,
             combatant: entry.combatant !== false,
+            // Arcanum badge fields ride only for pledged Akathavae viewers.
+            arcanumRecorded: typeof entry.arcanumRecorded === "boolean" ? entry.arcanumRecorded : undefined,
+            arcanumSource: typeof entry.arcanumSource === "string" ? entry.arcanumSource : undefined,
+            arcanumFirstBy: typeof entry.arcanumFirstBy === "string" ? entry.arcanumFirstBy : undefined,
           })),
       );
       break;
