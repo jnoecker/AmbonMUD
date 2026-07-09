@@ -2945,36 +2945,92 @@ class GmcpEmitter(
     // ---------- staff world info ----------
 
     /**
-     * Sends full world zone/room listing to staff players for the teleport browser.
+     * Sends the full world zone/room listing to staff for the teleport browser.
+     *
+     * The production world (20+ zones fetched from R2) serializes to hundreds of
+     * KB — far past [MAX_GMCP_PAYLOAD_BYTES] — so the listing is split into
+     * byte-bounded `{chunk, zones}` frames instead of one array that the frame
+     * cap would silently drop. The client resets its accumulator on `chunk == 0`
+     * and merge-appends later frames by zone key (see [emitStaffZoneChunks]).
      */
     suspend fun sendStaffWorldInfo(sessionId: SessionId, world: World) {
         val zones = world.zones().sorted().map { zone ->
-            val rooms = world.rooms.values
+            zone to world.rooms.values
                 .filter { it.id.zone == zone }
                 .sortedBy { it.id.value }
                 .map { StaffRoomPayload(id = it.id.value, title = it.title) }
-            StaffZonePayload(zone = zone, rooms = rooms)
         }
-        emit(sessionId, "Staff.WorldInfo", zones, supportCheck = "Staff")
+        emitStaffZoneChunks(sessionId, "Staff.WorldInfo", zones) { z, rooms -> StaffZonePayload(zone = z, rooms = rooms) }
     }
 
     /**
-     * Sends mob template listing to staff players for the spawn browser.
+     * Sends the mob template listing to staff for the spawn browser. Chunked the
+     * same way as [sendStaffWorldInfo].
      */
     suspend fun sendStaffMobTemplates(sessionId: SessionId, world: World) {
-        val grouped = world.mobTemplates.values.groupBy { it.id.value.substringBefore(':') }
-        val zones = grouped.entries.sortedBy { it.key }.map { (zone, templates) ->
-            StaffMobZonePayload(
-                zone = zone,
-                mobs = templates.sortedBy { it.id.value }.map { tpl ->
-                    StaffMobTemplatePayload(
-                        id = tpl.id.value,
-                        name = tpl.name,
-                    )
-                },
-            )
+        val zones = world.mobTemplates.values
+            .groupBy { it.id.value.substringBefore(':') }
+            .entries.sortedBy { it.key }
+            .map { (zone, templates) ->
+                zone to templates.sortedBy { it.id.value }
+                    .map { StaffMobTemplatePayload(id = it.id.value, name = it.name) }
+            }
+        emitStaffZoneChunks(sessionId, "Staff.MobTemplates", zones) { z, mobs -> StaffMobZonePayload(zone = z, mobs = mobs) }
+    }
+
+    /**
+     * Packs [zones] (each a `zone -> items` pair, pre-sorted) into byte-bounded
+     * `{chunk, zones}` frames and emits them in order. Each frame stays under
+     * [STAFF_CHUNK_BUDGET] chars; a single zone larger than the budget is split
+     * into multiple same-zone payloads (the client merge-appends by zone key, so
+     * the split is invisible downstream). An empty world still emits one `chunk 0`
+     * frame so the client clears any stale listing.
+     */
+    private suspend fun <I> emitStaffZoneChunks(
+        sessionId: SessionId,
+        packageName: String,
+        zones: List<Pair<String, List<I>>>,
+        zonePayload: (String, List<I>) -> Any,
+    ) {
+        if (!supportsPackage(sessionId, "Staff")) return
+
+        val chunks = mutableListOf<MutableList<Any>>()
+        var current = mutableListOf<Any>()
+        var currentChars = FRAME_ENVELOPE_OVERHEAD
+
+        fun flush() {
+            if (current.isNotEmpty()) {
+                chunks.add(current)
+                current = mutableListOf()
+                currentChars = FRAME_ENVELOPE_OVERHEAD
+            }
         }
-        emit(sessionId, "Staff.MobTemplates", zones, supportCheck = "Staff")
+
+        fun add(zone: String, items: List<I>) {
+            if (items.isEmpty()) return
+            val payload = zonePayload(zone, items)
+            val size = json.writeValueAsString(payload).length + 1 // + array comma
+            if (size > STAFF_CHUNK_BUDGET && items.size > 1) {
+                val mid = items.size / 2
+                add(zone, items.subList(0, mid))
+                add(zone, items.subList(mid, items.size))
+                return
+            }
+            if (currentChars + size > STAFF_CHUNK_BUDGET) flush()
+            current.add(payload)
+            currentChars += size
+        }
+
+        zones.forEach { (zone, items) -> add(zone, items) }
+        flush()
+
+        if (chunks.isEmpty()) {
+            emit(sessionId, packageName, StaffChunkEnvelope(chunk = 0, zones = emptyList()), supportCheck = "Staff")
+            return
+        }
+        chunks.forEachIndexed { index, zonePayloads ->
+            emit(sessionId, packageName, StaffChunkEnvelope(chunk = index, zones = zonePayloads), supportCheck = "Staff")
+        }
     }
 
     @Suppress("unused") // Jackson serializes all fields
@@ -2984,6 +3040,18 @@ class GmcpEmitter(
         val code: String? = null,
         val scope: String? = null,
         val command: String? = null,
+    )
+
+    /**
+     * One chunk of a `Staff.WorldInfo`/`Staff.MobTemplates` listing. [chunk] is a
+     * 0-based frame index; the client resets its accumulator on `chunk == 0` and
+     * merge-appends the [zones] of every frame by zone key. [zones] holds
+     * [StaffZonePayload] or [StaffMobZonePayload] elements — Jackson serializes
+     * each by its runtime type.
+     */
+    private data class StaffChunkEnvelope(
+        val chunk: Int,
+        val zones: List<Any>,
     )
 
     private data class StaffZonePayload(
@@ -4159,6 +4227,16 @@ class GmcpEmitter(
     internal companion object {
         /** Maximum serialized GMCP JSON payload size in bytes (64 KB). */
         const val MAX_GMCP_PAYLOAD_BYTES = 65_536
+
+        /**
+         * Per-chunk size target for the staff world/mob listings — kept well under
+         * [MAX_GMCP_PAYLOAD_BYTES] so a filled chunk plus its envelope never trips
+         * the frame cap. Measured in chars (matching the emit-path length check).
+         */
+        const val STAFF_CHUNK_BUDGET = 48_000
+
+        /** Approx chars a `{"chunk":N,"zones":[]}` envelope adds around the zones array. */
+        const val FRAME_ENVELOPE_OVERHEAD = 32
 
         /** Upper bound for the zone-tracking LRU cache (well above any realistic session count). */
         const val MAX_ZONE_CACHE_ENTRIES = 10_000

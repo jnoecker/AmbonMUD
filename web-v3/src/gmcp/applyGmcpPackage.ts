@@ -122,6 +122,27 @@ import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
 import type { AbilityVisualArchetype, SkillVisual, ZoneMapRoomData } from "../types";
 
+/**
+ * Merges the chunked staff world/mob listings: [base] is the accumulator so far
+ * (empty on the reset chunk), [incoming] is this frame's zones. Same-key zones
+ * are combined via [combine] (concatenating their room/mob lists), so a zone the
+ * server split across frames reassembles into one entry. Insertion order is
+ * preserved, so zones stay in the server's sorted order.
+ */
+function mergeStaffZones<Z extends { zone: string }>(
+  base: readonly Z[],
+  incoming: readonly Z[],
+  combine: (a: Z, b: Z) => Z,
+): Z[] {
+  const byZone = new Map<string, Z>();
+  for (const z of base) byZone.set(z.zone, z);
+  for (const z of incoming) {
+    const existing = byZone.get(z.zone);
+    byZone.set(z.zone, existing ? combine(existing, z) : z);
+  }
+  return [...byZone.values()];
+}
+
 const KNOWN_ARCHETYPES: ReadonlySet<AbilityVisualArchetype> = new Set([
   "RANGED_PROJECTILE",
   "MELEE_STRIKE",
@@ -2470,21 +2491,27 @@ export function applyGmcpPackage(
     }
 
     case "Staff.WorldInfo": {
-      if (!Array.isArray(data)) break;
-      ctx.setStaffWorldInfo(
-        data
-          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
-          .map((e) => ({
-            zone: typeof e.zone === "string" ? e.zone : "",
-            rooms: Array.isArray(e.rooms)
-              ? e.rooms
-                  .filter((r): r is Record<string, unknown> => typeof r === "object" && r !== null)
-                  .map((r) => ({
-                    id: typeof r.id === "string" ? r.id : "",
-                    title: typeof r.title === "string" ? r.title : "",
-                  }))
-              : [],
-          })),
+      // Chunked: reset the accumulator on chunk 0, merge-append later chunks by
+      // zone key (a large zone is split across frames server-side). Tolerates the
+      // legacy bare-array shape too, in case an old frame is ever seen.
+      const packet = data as Partial<Record<string, unknown>>;
+      const chunk = Array.isArray(data) ? 0 : safeNumber(packet.chunk, 0);
+      const rawZones = Array.isArray(data) ? data : Array.isArray(packet.zones) ? packet.zones : [];
+      const incoming = rawZones
+        .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+        .map((e) => ({
+          zone: typeof e.zone === "string" ? e.zone : "",
+          rooms: Array.isArray(e.rooms)
+            ? e.rooms
+                .filter((r): r is Record<string, unknown> => typeof r === "object" && r !== null)
+                .map((r) => ({
+                  id: typeof r.id === "string" ? r.id : "",
+                  title: typeof r.title === "string" ? r.title : "",
+                }))
+            : [],
+        }));
+      ctx.setStaffWorldInfo((prev) =>
+        mergeStaffZones(chunk === 0 ? [] : prev, incoming, (a, b) => ({ zone: a.zone, rooms: [...a.rooms, ...b.rooms] })),
       );
       break;
     }
@@ -2498,21 +2525,25 @@ export function applyGmcpPackage(
     }
 
     case "Staff.MobTemplates": {
-      if (!Array.isArray(data)) break;
-      ctx.setStaffMobTemplates(
-        data
-          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
-          .map((e) => ({
-            zone: typeof e.zone === "string" ? e.zone : "",
-            mobs: Array.isArray(e.mobs)
-              ? e.mobs
-                  .filter((m): m is Record<string, unknown> => typeof m === "object" && m !== null)
-                  .map((m) => ({
-                    id: typeof m.id === "string" ? m.id : "",
-                    name: typeof m.name === "string" ? m.name : "",
-                  }))
-              : [],
-          })),
+      // Chunked exactly like Staff.WorldInfo above.
+      const packet = data as Partial<Record<string, unknown>>;
+      const chunk = Array.isArray(data) ? 0 : safeNumber(packet.chunk, 0);
+      const rawZones = Array.isArray(data) ? data : Array.isArray(packet.zones) ? packet.zones : [];
+      const incoming = rawZones
+        .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+        .map((e) => ({
+          zone: typeof e.zone === "string" ? e.zone : "",
+          mobs: Array.isArray(e.mobs)
+            ? e.mobs
+                .filter((m): m is Record<string, unknown> => typeof m === "object" && m !== null)
+                .map((m) => ({
+                  id: typeof m.id === "string" ? m.id : "",
+                  name: typeof m.name === "string" ? m.name : "",
+                }))
+            : [],
+        }));
+      ctx.setStaffMobTemplates((prev) =>
+        mergeStaffZones(chunk === 0 ? [] : prev, incoming, (a, b) => ({ zone: a.zone, mobs: [...a.mobs, ...b.mobs] })),
       );
       break;
     }

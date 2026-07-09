@@ -2661,4 +2661,135 @@ class GmcpEmitterTest {
     fun `MAX_GMCP_PAYLOAD_BYTES is 64KB`() {
         assertEquals(65_536, GmcpEmitter.MAX_GMCP_PAYLOAD_BYTES)
     }
+
+    // ── Staff world/mob listing chunking ──
+
+    /** A world with [zoneCount] zones of [roomsPerZone] rooms each, titles padded to force size. */
+    private fun bigWorld(zoneCount: Int, roomsPerZone: Int): dev.ambon.domain.world.World {
+        val rooms = buildMap {
+            for (z in 0 until zoneCount) {
+                for (r in 0 until roomsPerZone) {
+                    val id = RoomId("zone%02d:room%04d".format(z, r))
+                    put(
+                        id,
+                        Room(
+                            id = id,
+                            title = "Room $r of zone $z — a chamber of some description here",
+                            description = "",
+                            exits = emptyMap(),
+                        ),
+                    )
+                }
+            }
+        }
+        return dev.ambon.domain.world.World(rooms = rooms, startRoom = RoomId("zone00:room0000"))
+    }
+
+    private fun mobWorld(zoneCount: Int, mobsPerZone: Int): dev.ambon.domain.world.World {
+        val templates = buildMap {
+            for (z in 0 until zoneCount) {
+                for (m in 0 until mobsPerZone) {
+                    val id = MobId("zone%02d:mob%04d".format(z, m))
+                    put(id, dev.ambon.domain.world.MobTemplateDef(id = id, name = "Creature $m of zone $z, a fearsome and verbose beast"))
+                }
+            }
+        }
+        return dev.ambon.domain.world.World(
+            rooms = mapOf(
+                RoomId("zone00:spawn") to Room(id = RoomId("zone00:spawn"), title = "Spawn", description = "", exits = emptyMap()),
+            ),
+            startRoom = RoomId("zone00:spawn"),
+            mobTemplates = templates,
+        )
+    }
+
+    @Test
+    fun `sendStaffWorldInfo chunks a large world under the frame cap without losing rooms`() =
+        runTest {
+            val world = bigWorld(zoneCount = 12, roomsPerZone = 220) // well past 64KB serialized
+            val e = emitter("Staff")
+            e.sendStaffWorldInfo(sid, world)
+
+            val frames = drainGmcp().filter { it.gmcpPackage == "Staff.WorldInfo" }
+            assertTrue(frames.size > 1, "expected the listing to split into multiple frames; got ${frames.size}")
+
+            val mapper = jacksonObjectMapper()
+            val seenChunks = mutableListOf<Int>()
+            val roomsByZone = mutableMapOf<String, MutableList<String>>()
+            for (frame in frames) {
+                assertTrue(
+                    frame.jsonData.length <= GmcpEmitter.MAX_GMCP_PAYLOAD_BYTES,
+                    "frame exceeded the cap: ${frame.jsonData.length}",
+                )
+                val node = mapper.readTree(frame.jsonData)
+                seenChunks += node["chunk"].asInt()
+                for (zoneNode in node["zones"]) {
+                    val zone = zoneNode["zone"].asText()
+                    zoneNode["rooms"].forEach { roomsByZone.getOrPut(zone) { mutableListOf() }.add(it["id"].asText()) }
+                }
+            }
+            // Chunk indices are 0..N contiguous.
+            assertEquals((0 until frames.size).toList(), seenChunks)
+            // Every room in the world is present exactly once across all frames.
+            val expected = world.rooms.keys.map { it.value }.sorted()
+            val actual = roomsByZone.values.flatten().sorted()
+            assertEquals(expected, actual, "chunking must not drop or duplicate rooms")
+        }
+
+    @Test
+    fun `sendStaffWorldInfo splits a single oversized zone across frames`() =
+        runTest {
+            val world = bigWorld(zoneCount = 1, roomsPerZone = 1400) // one zone alone over the cap
+            val e = emitter("Staff")
+            e.sendStaffWorldInfo(sid, world)
+
+            val frames = drainGmcp().filter { it.gmcpPackage == "Staff.WorldInfo" }
+            assertTrue(frames.size > 1, "a single huge zone must still split; got ${frames.size}")
+            val mapper = jacksonObjectMapper()
+            frames.forEach { assertTrue(it.jsonData.length <= GmcpEmitter.MAX_GMCP_PAYLOAD_BYTES) }
+            // The same zone key appears in more than one frame (client merges by key).
+            val zoneAppearances = frames.count { mapper.readTree(it.jsonData)["zones"].any { z -> z["zone"].asText() == "zone00" } }
+            assertTrue(zoneAppearances > 1, "the oversized zone should span multiple frames; appeared in $zoneAppearances")
+            val total = frames.sumOf { mapper.readTree(it.jsonData)["zones"].sumOf { z -> z["rooms"].size() } }
+            assertEquals(1400, total, "no rooms lost when splitting one zone")
+        }
+
+    @Test
+    fun `sendStaffMobTemplates chunks large template sets under the frame cap`() =
+        runTest {
+            val world = mobWorld(zoneCount = 10, mobsPerZone = 260)
+            val e = emitter("Staff")
+            e.sendStaffMobTemplates(sid, world)
+
+            val frames = drainGmcp().filter { it.gmcpPackage == "Staff.MobTemplates" }
+            assertTrue(frames.size > 1, "expected multiple frames; got ${frames.size}")
+            val mapper = jacksonObjectMapper()
+            val ids = mutableListOf<String>()
+            frames.forEach { frame ->
+                assertTrue(frame.jsonData.length <= GmcpEmitter.MAX_GMCP_PAYLOAD_BYTES)
+                mapper.readTree(frame.jsonData)["zones"].forEach { z -> z["mobs"].forEach { ids += it["id"].asText() } }
+            }
+            assertEquals(world.mobTemplates.keys.map { it.value }.sorted(), ids.sorted())
+        }
+
+    @Test
+    fun `sendStaffWorldInfo emits a single reset frame for an empty world`() =
+        runTest {
+            // One tiny room → one frame, chunk 0, so the client clears any prior listing.
+            val world = bigWorld(zoneCount = 1, roomsPerZone = 1)
+            val e = emitter("Staff")
+            e.sendStaffWorldInfo(sid, world)
+            val frames = drainGmcp().filter { it.gmcpPackage == "Staff.WorldInfo" }
+            assertEquals(1, frames.size)
+            assertEquals(0, jacksonObjectMapper().readTree(frames[0].jsonData)["chunk"].asInt())
+        }
+
+    @Test
+    fun `staff listings are withheld when the Staff package is unsupported`() =
+        runTest {
+            val e = emitter() // Staff not negotiated
+            e.sendStaffWorldInfo(sid, bigWorld(zoneCount = 2, roomsPerZone = 2))
+            e.sendStaffMobTemplates(sid, mobWorld(zoneCount = 2, mobsPerZone = 2))
+            assertTrue(drainGmcp().isEmpty())
+        }
 }
