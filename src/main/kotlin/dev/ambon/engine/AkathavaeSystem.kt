@@ -55,6 +55,13 @@ class AkathavaeSystem(
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
     private val onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null,
     private val gmcpEmitter: GmcpEmitter? = null,
+    /**
+     * Daily-quest hook for `illuminate`-type commissions. Fired once per living
+     * mob instance on a successful illumination (alongside the kill credit) and
+     * once per first-time NPC observation — commissions are about recording,
+     * so observations count, but re-recording the same subject never does.
+     */
+    private val onIlluminated: (suspend (SessionId) -> Unit)? = null,
 ) {
     /** Per-session, per-subject retry locks after a failed illumination. Runtime-only. */
     private val failCooldowns = mutableMapOf<SessionId, MutableMap<String, Long>>()
@@ -216,6 +223,7 @@ class AkathavaeSystem(
         // once per living instance, since illumination no longer consumes it.
         if (creditedIlluminations.getOrPut(sessionId) { mutableSetOf() }.add(mob.id.value)) {
             combat.creditIlluminationKill(sessionId, mob)
+            onIlluminated?.invoke(sessionId)
         }
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
@@ -275,6 +283,9 @@ class AkathavaeSystem(
             )
             announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
             awardDiscoveryXp(sessionId, me, config.observeNpcXp, "observation", now)
+            // First-time observations count toward illumination commissions —
+            // recording a subject matters, not whether it was dangerous.
+            onIlluminated?.invoke(sessionId)
             markVitalsDirty?.invoke(sessionId)
             emitStatus(sessionId)
         } else {

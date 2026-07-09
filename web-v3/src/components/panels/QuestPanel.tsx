@@ -47,6 +47,7 @@ function questTypeLabel(type: string): string {
     case "craft": return "Craft";
     case "dungeon": return "Dungeon";
     case "pvpKill": return "PvP";
+    case "illuminate": return "Illuminate";
     default: return type;
   }
 }

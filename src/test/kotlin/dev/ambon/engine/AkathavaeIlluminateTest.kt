@@ -1,6 +1,8 @@
 package dev.ambon.engine
 
 import dev.ambon.config.AkathavaeConfig
+import dev.ambon.config.DailyQuestDefinition
+import dev.ambon.config.DailyQuestsConfig
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
@@ -65,6 +67,7 @@ class AkathavaeIlluminateTest {
         rng: Random = ScriptedRandom(0),
         config: AkathavaeConfig = AkathavaeConfig(),
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
+        onIlluminated: (suspend (SessionId) -> Unit)? = null,
     ): Setup {
         val clock = MutableClock(1_000_000L)
         val world = testWorld()
@@ -81,6 +84,7 @@ class AkathavaeIlluminateTest {
             clock = clock,
             rng = rng,
             config = config,
+            onIlluminated = onIlluminated,
         )
         return Setup(fixture, combat, system, worldState, clock)
     }
@@ -91,9 +95,10 @@ class AkathavaeIlluminateTest {
         xpReward: Long = 100L,
         drops: List<MobDrop> = emptyList(),
         role: MobRole = MobRole.COMBAT,
+        name: String = "a wandering wisp",
     ) = MobState(
         id = MobId("test:$id"),
-        name = "a wandering wisp",
+        name = name,
         roomId = roomA,
         hp = 10,
         maxHp = 10,
@@ -189,6 +194,111 @@ class AkathavaeIlluminateTest {
         s.system.illuminate(sid, "wisp")
 
         assertEquals(listOf("test:wisp"), credited, "a persistent subject grants kill credit only once")
+    }
+
+    // ── Illumination commissions (daily-quest hook) ──────────────────────
+
+    @Test
+    fun `illumination fires the commission hook once per living instance`() = runTest {
+        var credits = 0
+        val s = setup(rng = ScriptedRandom(0, 0), onIlluminated = { credits += 1 })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(1, credits, "re-illuminating the same living instance must not advance a commission")
+    }
+
+    @Test
+    fun `distinct living subjects each advance a commission`() = runTest {
+        var credits = 0
+        val s = setup(rng = ScriptedRandom(0, 0, 0), onIlluminated = { credits += 1 })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(id = "n1", templateKey = "test:newt", name = "a red newt"))
+        s.fixture.mobs.upsert(wisp(id = "c1", templateKey = "test:crab", name = "a blue crab"))
+
+        s.system.illuminate(sid, "newt")
+        s.system.illuminate(sid, "crab")
+
+        assertEquals(2, credits, "each distinct living subject counts toward a commission")
+    }
+
+    @Test
+    fun `failed illumination does not advance a commission`() = runTest {
+        var credits = 0
+        val s = setup(rng = ScriptedRandom(99, 99), onIlluminated = { credits += 1 })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+
+        assertEquals(0, credits, "only successful recordings count")
+    }
+
+    @Test
+    fun `first-time observation advances a commission but repeats do not`() = runTest {
+        var credits = 0
+        val s = setup(onIlluminated = { credits += 1 })
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        s.fixture.mobs.upsert(wisp(role = MobRole.VENDOR, templateKey = "test:merchant"))
+
+        s.system.illuminate(sid, "wisp")
+        assertEquals(1, credits, "commissions are about recording, so first observations count")
+
+        s.system.illuminate(sid, "wisp")
+        assertEquals(1, credits, "re-observing an already-recorded NPC must not advance a commission")
+    }
+
+    @Test
+    fun `illuminate commission completes after recording distinct subjects`() = runTest {
+        var hooked: DailyQuestSystem? = null
+        val s = setup(
+            rng = ScriptedRandom(0, 0, 0, 0),
+            onIlluminated = { sid -> hooked?.onEvent(sid, "illuminate") },
+        )
+        val sid = SessionId(1L)
+        loginAkathavae(s, sid, "Thalen")
+        val dailyQuests = DailyQuestSystem(
+            config = DailyQuestsConfig(
+                enabled = true,
+                dailySlots = 1,
+                weeklySlots = 0,
+                dailyPool = listOf(
+                    DailyQuestDefinition(
+                        type = "illuminate",
+                        targetCount = 3,
+                        description = "The Arcanum requests three fresh accounts of living creatures.",
+                        goldReward = 150,
+                        xpReward = 400,
+                    ),
+                ),
+            ),
+            players = s.fixture.players,
+            clock = s.clock,
+        )
+        hooked = dailyQuests
+        dailyQuests.checkReset(sid)
+
+        s.fixture.mobs.upsert(wisp(id = "n1", templateKey = "test:newt", name = "a red newt"))
+        s.fixture.mobs.upsert(wisp(id = "c1", templateKey = "test:crab", name = "a blue crab"))
+        s.fixture.mobs.upsert(wisp(id = "t1", templateKey = "test:toad", name = "a green toad"))
+
+        s.system.illuminate(sid, "newt")
+        s.system.illuminate(sid, "newt") // same living instance — must not count twice
+        assertEquals(1, dailyQuests.getDailyQuestBoard(sid).first().progress)
+
+        s.system.illuminate(sid, "crab")
+        s.system.illuminate(sid, "toad")
+
+        val board = dailyQuests.getDailyQuestBoard(sid).first()
+        assertEquals(3, board.progress)
+        assertTrue(board.completed, "three distinct recordings should complete the commission")
     }
 
     @Test

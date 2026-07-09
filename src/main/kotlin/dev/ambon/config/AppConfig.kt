@@ -1309,7 +1309,7 @@ data class DailyQuestsConfig(
 )
 
 data class DailyQuestDefinition(
-    /** Quest objective type: kill, gather, dungeon, craft, pvpKill. */
+    /** Quest objective type: kill, gather, dungeon, craft, pvpKill, illuminate. */
     val type: String = "kill",
     /** Number of actions required to complete. */
     val targetCount: Int = 10,
