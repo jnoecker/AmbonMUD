@@ -1,0 +1,12 @@
+zone: bad_mount_missing_mount_id
+startRoom: stable
+items:
+  pony:
+    displayName: "a dappled pony"
+    keyword: "pony"
+    itemType: mount
+    basePrice: 100
+rooms:
+  stable:
+    title: "Stable"
+    description: "A stable."

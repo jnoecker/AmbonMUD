@@ -990,7 +990,7 @@ class WorldLoaderTest {
             val shop = world.shopDefinitions.single()
             assertEquals("Market Vendor", shop.name)
             assertEquals(RoomId("ok_shop:market"), shop.roomId)
-            assertEquals(2, shop.itemIds.size)
+            assertEquals(3, shop.itemIds.size)
         }
 
         @Test
@@ -1042,6 +1042,24 @@ class WorldLoaderTest {
                     WorldLoader.loadFromResource("world/bad_shop_missing_item.yaml")
                 }
             assertTrue(ex.message!!.contains("item", ignoreCase = true), "Got: ${ex.message}")
+        }
+
+        @Test
+        fun `fails when a mount item lacks mountId`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_mount_missing_mount_id.yaml")
+                }
+            assertTrue(ex.message!!.contains("mountId", ignoreCase = true), "Got: ${ex.message}")
+        }
+
+        @Test
+        fun `fails when a non-mount item sets mountId`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_mount_id_on_non_mount.yaml")
+                }
+            assertTrue(ex.message!!.contains("mountId", ignoreCase = true), "Got: ${ex.message}")
         }
     }
 

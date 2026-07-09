@@ -1607,6 +1607,15 @@ items:
     basePrice: 5
     room: proving_grounds
     image: cffaa6a25c0539ecea22160afaefb73534a4b013e9f634d8332d81edab041739.png
+  academy_pony:
+    displayName: a dappled Academy pony
+    keyword: pony
+    description: A patient dappled pony from the Academy stables, saddle already fitted. Buying her earns a permanent
+      place in your stable — she appears among your sprites, and once she is yours you can ride to any explored room
+      by clicking the zone map.
+    itemType: mount
+    mountId: academy_pony
+    basePrice: 250
 shops:
   academy_supply:
     name: Academy Armory Supplies
@@ -1619,6 +1628,7 @@ shops:
       - healing_potion
       - hearty_ration
       - elixir_of_clarity
+      - academy_pony
     image: a4ef3072c160a20d53e319f67d8d03498e889e391dd51d563525b82ec2383008.jpg
 trainers:
   valence_trainer:
