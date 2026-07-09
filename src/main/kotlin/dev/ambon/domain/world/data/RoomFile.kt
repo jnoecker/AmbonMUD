@@ -72,6 +72,17 @@ data class RoomFile(
     val musicBox: MusicBoxFile? = null,
     /** Terrain type for this room (overrides zone default). Affects weather display and default background. */
     val terrain: String? = null,
+    /**
+     * Explicit minimap grid coordinates, pinning this room's cell on the zone map instead of
+     * letting the loader's BFS place it. Integer grid cells within the zone's own frame: +x is
+     * east, +y is south, [mapZ] is the floor (0 = ground). `mapX`/`mapY` must be given together;
+     * `mapZ` defaults to 0 and requires them. Two rooms pinned to the same cell of the same floor
+     * is a load error. Unpinned rooms are BFS-placed around the pinned ones. Written by Arcanum's
+     * zone editor "Save map layout"; safe to hand-edit.
+     */
+    val mapX: Int? = null,
+    val mapY: Int? = null,
+    val mapZ: Int? = null,
 )
 
 /**

@@ -2,7 +2,7 @@ import { Container, Graphics, Rectangle, Sprite, Text, Texture } from "pixi.js";
 import { loadTexture } from "../textureLoader";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 import { MAP_OFFSETS, zoneColor } from "../../constants";
-import type { BorderStub } from "../../types";
+import type { BorderStub, ZoneMapRoomData } from "../../types";
 
 /** Directions that represent the same horizontal plane. Up/down exits are shown
  *  as buttons beside the map but don't place nodes on the parchment. */
@@ -448,16 +448,24 @@ export class Minimap {
     this.redraw();
   }
 
-  /** Pre-populate all rooms in a zone as fog nodes, plus any cross-zone border
-   *  stubs (foreign rooms one cell past a boundary, tagged with their zone). */
-  loadZoneMap(zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>, border: BorderStub[] = []) {
+  /** Pre-populate all rooms in a zone (explored rooms carry remembered detail;
+   *  the rest are hidden fog), plus any cross-zone border stubs (foreign rooms
+   *  one cell past a boundary, tagged with their zone). */
+  loadZoneMap(zone: string, rooms: ZoneMapRoomData[], border: BorderStub[] = []) {
     this.visited.clear();
     this.clearNodeSprites();
     this.currentZone = zone;
     this.currentRoomId = null;
     this.lastKey = "";
     for (const r of rooms) {
-      this.visited.set(r.id, { x: r.x, y: r.y, exits: r.exits, title: "", image: null });
+      this.visited.set(r.id, {
+        x: r.x,
+        y: r.y,
+        exits: r.exits,
+        title: r.explored ? (r.title ?? "") : "",
+        image: null,
+        terrain: r.explored ? r.terrain : undefined,
+      });
     }
     for (const b of border) {
       if (this.visited.has(b.id)) continue;
@@ -535,10 +543,29 @@ export class Minimap {
       return { px: cx + lp.lx * CELL, py: cy + lp.ly * CELL };
     };
 
+    // Fog of war — mirrors the expanded chart: only explored rooms and the
+    // one-hop frontier past them render; deeper fog stays off the parchment.
+    // (`fogFrontier`, not `frontier` — the BFS below already uses that name.)
+    const exploredSet = new Set<string>();
+    for (const [id, node] of this.visited) {
+      if (node.title !== "" && !node.zone) exploredSet.add(id);
+    }
+    const fogFrontier = new Set<string>();
+    for (const id of exploredSet) {
+      const node = this.visited.get(id);
+      if (!node) continue;
+      for (const targetId of Object.values(node.exits)) {
+        if (!exploredSet.has(targetId)) fogFrontier.add(targetId);
+      }
+    }
+    const isRendered = (id: string) => exploredSet.has(id) || fogFrontier.has(id);
+
     const pathEdges = this.computeQuestPath(questTargets);
 
-    // Inked connector lines between rooms.
+    // Inked connector lines — drawn outward from *explored* rooms only, so the
+    // scrap never sketches corridors the player hasn't earned.
     for (const [id] of localPos) {
+      if (!exploredSet.has(id)) continue;
       const node = this.visited.get(id);
       if (!node) continue;
       const sp = posOf(id);
@@ -566,6 +593,9 @@ export class Minimap {
         ? 0.7
         : 0.45 + 0.3 * (0.5 + 0.5 * Math.sin(Date.now() / PATH_SHIMMER_PERIOD * Math.PI * 2));
       for (const [fromId, toId] of pathEdges) {
+        // Only the explored/frontier stretch of the trail draws; the edge
+        // chevrons carry it onward into hidden territory.
+        if (!isRendered(fromId) || !isRendered(toId)) continue;
         const sp = posOf(fromId);
         const tp = posOf(toId);
         if (!sp || !tp) continue;
@@ -581,6 +611,7 @@ export class Minimap {
 
     // Room glyphs — textured stamp when an asset exists, else inked vectors.
     for (const [id] of localPos) {
+      if (!isRendered(id)) continue;
       const node = this.visited.get(id);
       if (!node) continue;
       const p = posOf(id);
@@ -602,16 +633,19 @@ export class Minimap {
       const isHousing = node.housing === true;
       const seed = this.hashSeed(id);
 
-      // Direction ticks for exits that leave the visible map.
-      for (const dir of Object.keys(node.exits)) {
-        if (!HORIZONTAL_DIRS.has(dir)) continue;
-        const tp = posOf(node.exits[dir]);
-        if (tp && this.inBounds(tp.px, tp.py)) continue; // drawn as a connector
-        const off = MAP_OFFSETS[dir];
-        if (!off) continue;
-        this.mapGraphics.moveTo(nx + off.dx * half, ny + off.dy * half);
-        this.mapGraphics.lineTo(nx + off.dx * (half + 6), ny + off.dy * (half + 6));
-        this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.8 });
+      // Direction ticks for exits that leave the visible map — explored rooms
+      // only, so a frontier room doesn't sketch onward exits the player hasn't seen.
+      if (visited) {
+        for (const dir of Object.keys(node.exits)) {
+          if (!HORIZONTAL_DIRS.has(dir)) continue;
+          const tp = posOf(node.exits[dir]);
+          if (tp && this.inBounds(tp.px, tp.py)) continue; // drawn as a connector
+          const off = MAP_OFFSETS[dir];
+          if (!off) continue;
+          this.mapGraphics.moveTo(nx + off.dx * half, ny + off.dy * half);
+          this.mapGraphics.lineTo(nx + off.dx * (half + 6), ny + off.dy * (half + 6));
+          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.8 });
+        }
       }
 
       // Pick the room stamp: current / fog / housing take priority; a plain

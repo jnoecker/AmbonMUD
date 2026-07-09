@@ -10104,6 +10104,116 @@ body {
   background: linear-gradient(160deg, rgb(96 66 36 / 94%), rgb(56 38 18 / 96%));
 }
 
+/* Exploration header — ink-on-parchment strip above the chart: zone completion
+   on the left, a glyph legend on the right. */
+.map-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  /* Wide inline padding clears the chart sheet's painted border art, and the
+     soft cream halo keeps the ink legible where the art runs dark. */
+  padding: 4px 48px 6px;
+  font-family: var(--font-mono, "JetBrains Mono", "Cascadia Mono", monospace);
+  font-size: 0.72rem;
+  color: #4a3a28;
+  text-shadow: 0 1px 2px rgb(243 230 200 / 55%);
+  border-bottom: 1px solid rgb(74 58 40 / 30%);
+}
+
+.map-stats-explored {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.map-stats-pct {
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.map-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  opacity: 0.9;
+}
+
+.map-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.map-legend-swatch {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border: 1px solid #4a3a28;
+  border-radius: 2px;
+}
+
+.map-legend-here { background: #9c3b22; }
+.map-legend-explored { background: #cdb487; }
+
+.map-legend-fog {
+  background: transparent;
+  border-color: rgb(138 122 94 / 70%);
+  border-style: dashed;
+}
+
+.map-legend-quest {
+  background: transparent;
+  border-color: #c69a2e;
+  box-shadow: 0 0 4px rgb(198 154 46 / 60%);
+}
+
+.map-legend-border {
+  background: rgb(94 122 168 / 55%);
+  border-color: rgb(94 122 168 / 95%);
+  transform: rotate(45deg);
+  border-radius: 1px;
+}
+
+/* Hover tooltip — a small ink card anchored just above the hovered room. */
+.map-hover-tooltip {
+  position: absolute;
+  transform: translate(-50%, -115%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 260px;
+  padding: 6px 10px;
+  pointer-events: none;
+  z-index: 3;
+  font-family: var(--font-mono, "JetBrains Mono", "Cascadia Mono", monospace);
+  font-size: 0.72rem;
+  color: #f3e6c8;
+  background: linear-gradient(160deg, rgb(56 42 24 / 96%), rgb(34 24 12 / 97%));
+  border: 1px solid rgb(190 168 115 / 60%);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 14px rgb(20 12 4 / 45%);
+}
+
+.map-tooltip-title {
+  font-weight: 700;
+}
+
+.map-tooltip-unknown {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.map-tooltip-terrain {
+  text-transform: capitalize;
+  opacity: 0.75;
+}
+
+.map-tooltip-poi {
+  opacity: 0.9;
+}
+
 /* --- Atlas (zone browser) ---------------------------------------------
    Lives on the chart sheet's parchment: ink text, sepia rules, gold accents. */
 

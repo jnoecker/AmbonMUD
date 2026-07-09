@@ -16,6 +16,7 @@ private val activeQuestsType = object : TypeReference<Map<String, QuestState>>()
 private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
 private val dialogueFlagsType = object : TypeReference<Set<String>>() {}
 private val seenZoneCinematicsType = object : TypeReference<Set<String>>() {}
+private val exploredRoomsType = object : TypeReference<Set<String>>() {}
 private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
 private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
@@ -94,6 +95,7 @@ object PlayersTable : Table("players") {
     val racialAbilityCooldownUntilMs = long("racial_ability_cooldown_until_ms").default(0L)
     val dialogueFlags = text("dialogue_flags").default("[]")
     val seenZoneCinematics = text("seen_zone_cinematics").default("[]")
+    val exploredRooms = text("explored_rooms").default("[]")
     val isAkathavae = bool("is_akathavae").default(false)
     val akathavaePledgedAtMs = long("akathavae_pledged_at_ms").default(0L)
     val akathavaeRenouncedAtMs = long("akathavae_renounced_at_ms").default(0L)
@@ -166,6 +168,7 @@ object PlayersTable : Table("players") {
             racialAbilityCooldownUntilMs = row[racialAbilityCooldownUntilMs],
             dialogueFlags = safeReadJson(row[dialogueFlags], dialogueFlagsType, emptySet()),
             seenZoneCinematics = safeReadJson(row[seenZoneCinematics], seenZoneCinematicsType, emptySet()),
+            exploredRooms = safeReadJson(row[exploredRooms], exploredRoomsType, emptySet()),
             isAkathavae = row[isAkathavae],
             akathavaePledgedAtMs = row[akathavaePledgedAtMs],
             akathavaeRenouncedAtMs = row[akathavaeRenouncedAtMs],
@@ -243,6 +246,7 @@ object PlayersTable : Table("players") {
         statement[racialAbilityCooldownUntilMs] = record.racialAbilityCooldownUntilMs
         statement[dialogueFlags] = jsonMapper.writeValueAsString(record.dialogueFlags)
         statement[seenZoneCinematics] = jsonMapper.writeValueAsString(record.seenZoneCinematics)
+        statement[exploredRooms] = jsonMapper.writeValueAsString(record.exploredRooms)
         statement[isAkathavae] = record.isAkathavae
         statement[akathavaePledgedAtMs] = record.akathavaePledgedAtMs
         statement[akathavaeRenouncedAtMs] = record.akathavaeRenouncedAtMs

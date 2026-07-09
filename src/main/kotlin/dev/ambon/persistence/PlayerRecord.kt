@@ -116,6 +116,8 @@ data class PlayerRecord(
     val dialogueFlags: Set<String> = emptySet(),
     /** Zones whose intro cinematic this player has already watched (auto-plays once per zone). */
     val seenZoneCinematics: Set<String> = emptySet(),
+    /** Room ids (`zone:room`) this player has ever entered — permanent map exploration. */
+    val exploredRooms: Set<String> = emptySet(),
     /** True while the player is under the Akathavae pledge (combat forbidden, illumination enabled). */
     val isAkathavae: Boolean = false,
     /** Epoch-ms the current Akathavae pledge was taken. 0 = never pledged. */

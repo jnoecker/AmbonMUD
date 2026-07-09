@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MAP_OFFSETS, zoneColorCss } from "../constants";
 import { canvasCallbacks, gameStateRef } from "../canvas/GameStateBridge";
-import type { BorderStub, MapRoom } from "../types";
+import type { BorderStub, MapRoom, ZoneMapRoomData } from "../types";
 
 // Parchment / ink palette — matches the in-scene minimap. The canvas itself is
 // transparent: the parchment scroll (`map_background`) is the map drawer's
@@ -30,6 +30,45 @@ const DEFAULT_ZOOM = 88; // comfortable default centred on the player
 const MAX_NODE = 52; // glyph size caps (px); scaled down to fit the cell
 const MAX_CURRENT = 64;
 
+// POI icon + display name per Zone.Map service token (Room.Info flag names).
+// Icons are drawn straight onto the canvas; names feed the hover tooltip.
+export const POI_META: Record<string, { icon: string; label: string }> = {
+  bank: { icon: "🪙", label: "Bank" },
+  tavern: { icon: "🍺", label: "Tavern" },
+  stylist: { icon: "✂️", label: "Stylist" },
+  dungeon: { icon: "🗝️", label: "Dungeon" },
+  auction: { icon: "🏷️", label: "Auction House" },
+  housingBroker: { icon: "🏠", label: "Housing Broker" },
+  inn: { icon: "🛏️", label: "Inn" },
+  shrine: { icon: "✨", label: "Akathavae Shrine" },
+  flightMaster: { icon: "🪶", label: "Flight Master" },
+  boatDock: { icon: "⚓", label: "Boat Dock" },
+  station: { icon: "🔨", label: "Crafting Station" },
+};
+
+/** Zone completion + floor info for the map header, derived from the loaded chart. */
+export interface MapZoneStats {
+  zone: string;
+  exploredCount: number;
+  totalRooms: number;
+  floor: number;
+  multiFloor: boolean;
+}
+
+/** The room under the cursor, for the hover tooltip (screen coords are canvas-local CSS px). */
+export interface MapHoverInfo {
+  id: string;
+  title: string;
+  explored: boolean;
+  terrain?: string;
+  poi: string[];
+  hasStairs: boolean;
+  /** Border-stub zone, when hovering a neighbouring-zone marker. */
+  zone?: string;
+  sx: number;
+  sy: number;
+}
+
 // Server-asset keys (shared with the in-scene minimap).
 const A_ROOM = "minimap_room";
 const A_ROOM_CURRENT = "minimap_room_current";
@@ -49,6 +88,30 @@ const EDGE_PAD = 0;
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
+}
+
+/**
+ * Fog-of-war visibility: only rooms the player has explored, plus the one-hop
+ * *frontier* just past them (targets of an explored room's exits — including
+ * border stubs into neighbouring zones), render at all. Everything further stays
+ * hidden until walked, so the chart physically grows with exploration.
+ * "Explored" is `title !== ""`: titles arrive only with the player's permanent
+ * exploration set (Zone.Map) or by standing in the room (Room.Info).
+ */
+function computeVisibility(visited: Map<string, MapRoom>): { explored: Set<string>; frontier: Set<string> } {
+  const explored = new Set<string>();
+  for (const [id, node] of visited) {
+    if (node.title !== "" && !node.zone) explored.add(id);
+  }
+  const frontier = new Set<string>();
+  for (const id of explored) {
+    const node = visited.get(id);
+    if (!node) continue;
+    for (const target of Object.values(node.exits)) {
+      if (!explored.has(target)) frontier.add(target);
+    }
+  }
+  return { explored, frontier };
 }
 
 /** Zone id → display name, e.g. "demo_ruins" → "Demo Ruins". */
@@ -229,6 +292,38 @@ function drawBorderStub(ctx: CanvasRenderingContext2D, cx: number, cy: number, h
   ctx.restore();
 }
 
+/** Inked compass rose — a quiet cartographic flourish in the corner of the sheet. */
+function drawCompassRose(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  ctx.save();
+  ctx.globalAlpha = 0.6;
+  ctx.strokeStyle = INK;
+  ctx.fillStyle = INK;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.62, 0, Math.PI * 2);
+  ctx.stroke();
+  // Cardinal ticks just past the ring.
+  for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+    ctx.beginPath();
+    ctx.moveTo(cx + dx * r * 0.68, cy + dy * r * 0.68);
+    ctx.lineTo(cx + dx * r * 0.88, cy + dy * r * 0.88);
+    ctx.stroke();
+  }
+  // North needle — a slim ink diamond.
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r * 0.95);
+  ctx.lineTo(cx + r * 0.18, cy);
+  ctx.lineTo(cx, cy + r * 0.34);
+  ctx.lineTo(cx - r * 0.18, cy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.font = "bold 10px 'JetBrains Mono', 'Cascadia Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("N", cx, cy - r * 0.98);
+  ctx.restore();
+}
+
 function drawProceduralQuest(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: number, pulse: number) {
   ctx.save();
   ctx.globalAlpha = pulse;
@@ -318,9 +413,16 @@ function renderMap(
   ctx.rect(scrollLeft, scrollTop, scrollRight - scrollLeft, scrollBottom - scrollTop);
   ctx.clip();
 
-  // Connecting lines — only between two visible rooms; off-map exits get a tick.
-  for (const node of visited.values()) {
+  // Fog of war: hidden rooms (neither explored nor on the one-hop frontier)
+  // draw nothing — no node, no edge, no marker.
+  const { explored, frontier } = computeVisibility(visited);
+  const isRendered = (id: string) => explored.has(id) || frontier.has(id);
+
+  // Connecting lines — drawn outward from *explored* rooms only, so the chart
+  // never reveals a corridor between two rooms the player hasn't earned.
+  for (const [nodeId, node] of visited.entries()) {
     if (node.z !== floor) continue;
+    if (!explored.has(nodeId)) continue;
     const sx = nodeX(node);
     const sy = nodeY(node);
     const sIn = inScrollBounds(sx, sy);
@@ -371,6 +473,9 @@ function renderMap(
         if (!fromNode || !toNode) continue;
         if (fromNode.z === floor && toNode.z !== floor) stairHops.add(fromId);
         if (fromNode.z !== floor || toNode.z !== floor) continue;
+        // The trail routes through the full zone graph, but only its explored/
+        // frontier stretch draws — the edge chevron carries it onward from there.
+        if (!isRendered(fromId) || !isRendered(toId)) continue;
         const sx = nodeX(fromNode);
         const sy = nodeY(fromNode);
         const tx = nodeX(toNode);
@@ -404,6 +509,7 @@ function renderMap(
     : 0.45 + 0.4 * (0.5 + 0.5 * Math.sin(Date.now() / PATH_SHIMMER_PERIOD * Math.PI * 2));
   for (const [id, node] of visited.entries()) {
     if (node.z !== floor) continue;
+    if (!isRendered(id)) continue;
     const x = nodeX(node);
     const y = nodeY(node);
     if (!inScrollBounds(x, y)) continue;
@@ -411,7 +517,8 @@ function renderMap(
     // Border stub: a room in a neighbouring zone, one cell past the boundary.
     // Drawn as a small zone-tinted marker with the zone's name, never as a
     // regular room glyph — it shows the world continues without claiming to be
-    // explored ground in this zone.
+    // explored ground in this zone. Renders only once its boundary room is
+    // explored (it sits on the frontier), like any other unearned ground.
     if (node.zone) {
       drawBorderStub(ctx, x, y, nodeSize / 2, node.zone);
       continue;
@@ -433,11 +540,34 @@ function renderMap(
     if (!drew) drawProceduralRoom(ctx, x, y, size / 2, isCurrent, isVisited, isHousing);
 
     // Stair badges — ▲/▼ beside rooms with vertical exits; gold-pulsing when
-    // the quest trail wants the player to take these stairs.
+    // the quest trail wants the player to take these stairs. Explored rooms
+    // only: a frontier room shouldn't advertise stairs the player hasn't seen.
     const hasUp = "up" in node.exits;
     const hasDown = "down" in node.exits;
-    if (hasUp || hasDown) {
+    if (isVisited && (hasUp || hasDown)) {
       drawStairBadges(ctx, x, y, size / 2, hasUp, hasDown, stairHops.has(id) ? stairPulse : 0);
+    }
+
+    // POI icons — small service glyphs across the top edge of explored rooms,
+    // shown once the zoom gives them room to breathe. The hover tooltip names
+    // them all, so hiding them at far zoom loses nothing.
+    if (isVisited && node.poi && node.poi.length > 0 && cell >= 44) {
+      const icons = node.poi
+        .map((p) => POI_META[p]?.icon)
+        .filter((icon): icon is string => !!icon)
+        .slice(0, 3);
+      if (icons.length > 0) {
+        const iconSize = Math.max(10, Math.round(cell * 0.22));
+        ctx.save();
+        ctx.font = `${iconSize}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        const step = iconSize + 2;
+        const startX = x - ((icons.length - 1) * step) / 2;
+        const iy = y - size / 2 - 2;
+        icons.forEach((icon, i) => ctx.fillText(icon, startX + i * step, iy));
+        ctx.restore();
+      }
     }
 
     // Quest objective marker
@@ -449,21 +579,28 @@ function renderMap(
       }
     }
 
-    // Labels
+    // Labels — fade in with zoom rather than popping, and allow longer names
+    // at close zoom; the hover tooltip carries the full title regardless.
     if (isVisited && node.title) {
-      ctx.font = isCurrent
-        ? "bold 12px 'JetBrains Mono', 'Cascadia Mono', monospace"
-        : "11px 'JetBrains Mono', 'Cascadia Mono', monospace";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      const maxLen = isCurrent ? 18 : 14;
-      const label = node.title.length > maxLen ? node.title.slice(0, maxLen - 1) + "…" : node.title;
-      const ly = y + size / 2 + 4;
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = LABEL_OUTLINE;
-      ctx.strokeText(label, x, ly);
-      ctx.fillStyle = isCurrent ? LABEL_CURRENT : LABEL_VISITED;
-      ctx.fillText(label, x, ly);
+      const labelAlpha = isCurrent ? 1 : clamp((cell - 34) / 26, 0, 1);
+      if (labelAlpha > 0.05) {
+        ctx.save();
+        ctx.globalAlpha = labelAlpha;
+        ctx.font = isCurrent
+          ? "bold 12px 'JetBrains Mono', 'Cascadia Mono', monospace"
+          : "11px 'JetBrains Mono', 'Cascadia Mono', monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        const maxLen = isCurrent ? 20 : cell >= 76 ? 22 : 14;
+        const label = node.title.length > maxLen ? node.title.slice(0, maxLen - 1) + "…" : node.title;
+        const ly = y + size / 2 + 4;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = LABEL_OUTLINE;
+        ctx.strokeText(label, x, ly);
+        ctx.fillStyle = isCurrent ? LABEL_CURRENT : LABEL_VISITED;
+        ctx.fillText(label, x, ly);
+        ctx.restore();
+      }
     }
   }
 
@@ -477,7 +614,9 @@ function renderMap(
     if (targetNode.z !== floor) continue; // off-floor targets are routed via the stair badge
     const tx = nodeX(targetNode);
     const ty = nodeY(targetNode);
-    if (inScrollBounds(tx, ty)) continue; // already visible
+    // Skip only when the target actually renders on screen — a quest room in
+    // fog-hidden territory still needs its edge chevron even inside the bounds.
+    if (inScrollBounds(tx, ty) && isRendered(targetId)) continue;
     const ddx = tx - originX;
     const ddy = ty - originY;
     const dist = Math.sqrt(ddx * ddx + ddy * ddy);
@@ -510,6 +649,10 @@ function renderMap(
     ctx.fill();
     ctx.restore();
   }
+
+  // Compass rose — bottom-left, inset past the drawer sheet's painted border art
+  // so the ink reads on open parchment (the zoom cluster owns the bottom-right).
+  drawCompassRose(ctx, scrollLeft + 104, scrollBottom - 100, 24);
 
   // Zone name tag — top-left, derived from the current room id (`<zone>:<room>`).
   const zoneId = currentId.split(":")[0];
@@ -599,6 +742,17 @@ export function useMiniMap() {
   const zoomBoundsRef = useRef({ min: 8, max: MAX_ZOOM });
   const dragRef = useRef<{ x: number; y: number; gx: number; gy: number } | null>(null);
 
+  // Last-render view + visibility, kept for pointer hit-testing (hover tooltip).
+  const viewRef = useRef<{ cell: number; panGx: number; panGy: number; originX: number; originY: number; floor: number } | null>(null);
+  const visibilityRef = useRef<{ explored: Set<string>; frontier: Set<string> } | null>(null);
+
+  // Header stats + hover tooltip — React state, updated only on real changes so
+  // the RAF pulse loop doesn't thrash renders.
+  const [zoneStats, setZoneStats] = useState<MapZoneStats | null>(null);
+  const statsKeyRef = useRef("");
+  const [hoverInfo, setHoverInfo] = useState<MapHoverInfo | null>(null);
+  const hoverIdRef = useRef<string | null>(null);
+
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
@@ -614,13 +768,17 @@ export function useMiniMap() {
 
     // Fit and pan bounds consider only the player's current floor — rooms on
     // other floors aren't drawn, so they shouldn't stretch the zoom either.
+    // Fog-hidden rooms are excluded too: the "whole zone" fit is the *revealed*
+    // chart, so an unexplored zone doesn't open zoomed out onto empty parchment.
     const floor = current?.z ?? 0;
+    const { explored: exploredIds, frontier: frontierIds } = computeVisibility(visited);
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
-    for (const node of visited.values()) {
+    for (const [nodeId, node] of visited.entries()) {
       if (node.z !== floor) continue;
+      if (!exploredIds.has(nodeId) && !frontierIds.has(nodeId)) continue;
       if (node.x < minX) minX = node.x;
       if (node.x > maxX) maxX = node.x;
       if (node.y < minY) minY = node.y;
@@ -656,6 +814,34 @@ export function useMiniMap() {
     if (hasRooms) {
       panRef.current.gx = clamp(panRef.current.gx, minX - 1, maxX + 1);
       panRef.current.gy = clamp(panRef.current.gy, minY - 1, maxY + 1);
+    }
+
+    // Record the resolved view + visibility for pointer hit-testing, and push
+    // header stats (zone, floor, exploration %) when they actually change.
+    viewRef.current = {
+      cell: zoomRef.current,
+      panGx: panRef.current.gx,
+      panGy: panRef.current.gy,
+      originX: width / 2,
+      originY: height / 2,
+      floor,
+    };
+    visibilityRef.current = { explored: exploredIds, frontier: frontierIds };
+    const zoneId = currentRoomIdRef.current?.split(":")[0] ?? "";
+    if (zoneId) {
+      let totalRooms = 0;
+      let multiFloor = false;
+      for (const node of visited.values()) {
+        if (node.zone) continue; // border stubs aren't this zone's rooms
+        totalRooms++;
+        if (node.z !== floor) multiFloor = true;
+      }
+      const stats: MapZoneStats = { zone: zoneId, exploredCount: exploredIds.size, totalRooms, floor, multiFloor };
+      const key = `${zoneId}|${stats.exploredCount}|${totalRooms}|${floor}|${multiFloor}`;
+      if (key !== statsKeyRef.current) {
+        statsKeyRef.current = key;
+        setZoneStats(stats);
+      }
     }
 
     // Draw a room/quest glyph (auto-trimmed, aspect-fit). Lazily loads the
@@ -723,19 +909,70 @@ export function useMiniMap() {
     y: (rect.height * SCROLL_INSET_TOP + rect.height * (1 - SCROLL_INSET_BOTTOM)) / 2,
   });
 
+  const clearHover = useCallback(() => {
+    if (hoverIdRef.current !== null) {
+      hoverIdRef.current = null;
+      setHoverInfo(null);
+    }
+  }, []);
+
   const onMapPointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture?.(e.pointerId);
+    clearHover();
     dragRef.current = {
       x: e.clientX,
       y: e.clientY,
       gx: panRef.current?.gx ?? 0,
       gy: panRef.current?.gy ?? 0,
     };
+  }, [clearHover]);
+
+  /** Hit-test the pointer against the rendered rooms and surface a tooltip. */
+  const updateHover = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    const v = viewRef.current;
+    const vis = visibilityRef.current;
+    if (!v || !vis) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const gx = Math.round(v.panGx + (mx - v.originX) / v.cell);
+    const gy = Math.round(v.panGy + (my - v.originY) / v.cell);
+    // The cursor must actually be inside the room's box, not just its grid cell.
+    const sx = v.originX + (gx - v.panGx) * v.cell;
+    const sy = v.originY + (gy - v.panGy) * v.cell;
+    const half = Math.min(MAX_NODE, v.cell * 0.62) / 2 + 4;
+    let found: MapHoverInfo | null = null;
+    if (Math.abs(mx - sx) <= half && Math.abs(my - sy) <= half) {
+      for (const [id, node] of visitedRef.current.entries()) {
+        if (node.z !== v.floor || node.x !== gx || node.y !== gy) continue;
+        if (!vis.explored.has(id) && !vis.frontier.has(id)) continue;
+        const explored = node.title !== "" && !node.zone;
+        found = {
+          id,
+          title: explored ? node.title : "",
+          explored,
+          terrain: explored ? node.terrain : undefined,
+          poi: explored ? (node.poi ?? []) : [],
+          hasStairs: explored && ("up" in node.exits || "down" in node.exits),
+          zone: node.zone,
+          sx,
+          sy,
+        };
+        break;
+      }
+    }
+    if ((found?.id ?? null) !== hoverIdRef.current) {
+      hoverIdRef.current = found?.id ?? null;
+      setHoverInfo(found);
+    }
   }, []);
 
   const onMapPointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     const d = dragRef.current;
-    if (!d) return;
+    if (!d) {
+      updateHover(e);
+      return;
+    }
     const cell = zoomRef.current || 1;
     panRef.current = {
       gx: d.gx - (e.clientX - d.x) / cell,
@@ -743,12 +980,17 @@ export function useMiniMap() {
     };
     userAdjustedRef.current = true;
     drawMap();
-  }, [drawMap]);
+  }, [drawMap, updateHover]);
 
   const onMapPointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.releasePointerCapture?.(e.pointerId);
     dragRef.current = null;
   }, []);
+
+  const onMapPointerLeave = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    onMapPointerUp(e);
+    clearHover();
+  }, [onMapPointerUp, clearHover]);
 
   const onMapWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -824,11 +1066,15 @@ export function useMiniMap() {
     [drawMap],
   );
 
-  /** Pre-populate the map with all rooms in a zone as fog nodes. */
+  /**
+   * Pre-populate the map with all rooms in a zone. Rooms the player has
+   * permanently explored arrive with title/terrain/poi and render remembered;
+   * the rest are fog nodes that stay hidden until their neighbour is explored.
+   */
   const loadZoneMap = useCallback(
     (
       zone: string,
-      rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>,
+      rooms: ZoneMapRoomData[],
       border: BorderStub[],
     ) => {
       const map = visitedRef.current;
@@ -838,9 +1084,19 @@ export function useMiniMap() {
       userAdjustedRef.current = false;
       panRef.current = null;
       zoomRef.current = 0;
+      clearHover();
 
       for (const r of rooms) {
-        map.set(r.id, { x: r.x, y: r.y, z: r.z, exits: r.exits, title: "", image: null });
+        map.set(r.id, {
+          x: r.x,
+          y: r.y,
+          z: r.z,
+          exits: r.exits,
+          title: r.explored ? (r.title ?? "") : "",
+          image: null,
+          terrain: r.explored ? r.terrain : undefined,
+          poi: r.poi,
+        });
       }
       // Border stubs: foreign rooms just across a boundary, already positioned in
       // this zone's frame. Tagged with their zone so drawMap colour-codes them.
@@ -854,7 +1110,7 @@ export function useMiniMap() {
       // Also push to the PixiJS compact minimap
       canvasCallbacks.loadZoneMap?.(zone, rooms, border);
     },
-    [drawMap],
+    [drawMap, clearHover],
   );
 
   const resetMap = useCallback(() => {
@@ -863,8 +1119,11 @@ export function useMiniMap() {
     userAdjustedRef.current = false;
     panRef.current = null;
     zoomRef.current = 0;
+    clearHover();
+    statsKeyRef.current = "";
+    setZoneStats(null);
     drawMap();
-  }, [drawMap]);
+  }, [drawMap, clearHover]);
 
   /** Start a gentle animation loop for quest marker pulse (call when map is visible). */
   const startPulse = useCallback(() => {
@@ -897,9 +1156,12 @@ export function useMiniMap() {
     onMapPointerDown,
     onMapPointerMove,
     onMapPointerUp,
+    onMapPointerLeave,
     onMapWheel,
     zoomIn,
     zoomOut,
     recenter,
+    zoneStats,
+    hoverInfo,
   };
 }

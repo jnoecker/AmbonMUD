@@ -121,6 +121,44 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `honors explicit map pins and BFS-places unpinned rooms around them`() {
+        val world = WorldLoader.loadFromResource("world/ok_pinned_map.yaml")
+
+        fun room(id: String) = world.rooms.getValue(RoomId("ok_pinned_map:$id"))
+        val gate = room("gate")
+        val plaza = room("plaza")
+        val market = room("market")
+        val loft = room("loft")
+        val annex = room("annex")
+
+        // Pinned rooms sit exactly where the author put them.
+        assertEquals(Triple(5, 5, 0), Triple(gate.mapX, gate.mapY, gate.mapZ), "gate pin")
+        assertEquals(Triple(5, 4, 0), Triple(plaza.mapX, plaza.mapY, plaza.mapZ), "plaza pin")
+        assertEquals(Triple(5, 4, 1), Triple(loft.mapX, loft.mapY, loft.mapZ), "loft pin")
+
+        // Unpinned rooms are BFS-placed relative to their pinned neighbours.
+        assertEquals(Triple(6, 4, 0), Triple(market.mapX, market.mapY, market.mapZ), "market east of plaza")
+        assertEquals(Triple(6, 4, 1), Triple(annex.mapX, annex.mapY, annex.mapZ), "annex east of loft")
+    }
+
+    @Test
+    fun `fails when two rooms are pinned to the same cell`() {
+        val ex = assertThrows(WorldLoadException::class.java) {
+            WorldLoader.loadFromResource("world/bad_pin_conflict.yaml")
+        }
+        assertTrue(ex.message!!.contains("pinned to"), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("(2,3)"), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when a room declares only one of mapX and mapY`() {
+        val ex = assertThrows(WorldLoadException::class.java) {
+            WorldLoader.loadFromResource("world/bad_pin_partial.yaml")
+        }
+        assertTrue(ex.message!!.contains("only one of mapX/mapY"), "Got: ${ex.message}")
+    }
+
+    @Test
     fun `loads mobs from a zone file`() {
         val world = dev.ambon.test.TestWorlds.okSmall
 

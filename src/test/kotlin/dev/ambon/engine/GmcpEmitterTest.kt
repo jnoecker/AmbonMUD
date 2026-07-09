@@ -2128,6 +2128,40 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendZoneMap marks explored rooms with title terrain and poi and leaves fog rooms bare`() =
+        runTest {
+            val e = emitter("Zone.Map")
+            val rooms = listOf(
+                zoneRoom("z:a", mapX = 0, mapY = 0).copy(title = "Old Gate", terrain = "urban", bank = true, inn = true),
+                zoneRoom("z:b", mapX = 1, mapY = 0).copy(title = "Meadow"), // terrain defaults to "outside"
+                zoneRoom("z:c", mapX = 2, mapY = 0).copy(title = "Secret Grove", terrain = "forest"),
+            )
+            e.sendZoneMap(sid, "z", rooms, exploredRooms = setOf("z:a", "z:b"))
+            val payload = jacksonObjectMapper().readTree(drainGmcp()[0].jsonData)
+            val byId = payload["rooms"].associateBy { it["id"].asText() }
+
+            val a = byId.getValue("a")
+            assertEquals(1, a["e"].asInt(), "explored flag on a")
+            assertEquals("Old Gate", a["t"].asText())
+            assertEquals("urban", a["tr"].asText())
+            assertEquals(listOf("bank", "inn"), a["poi"].map { it.asText() })
+
+            // Default "outside" terrain is implied, not sent.
+            val b = byId.getValue("b")
+            assertEquals(1, b["e"].asInt(), "explored flag on b")
+            assertEquals("Meadow", b["t"].asText())
+            assertTrue(b["tr"] == null, "default terrain must be omitted. got=$b")
+            assertTrue(b["poi"] == null, "no services — poi must be omitted. got=$b")
+
+            // Unexplored: no detail leaks — coordinates and exits only.
+            val c = byId.getValue("c")
+            assertTrue(
+                c["e"] == null && c["t"] == null && c["tr"] == null && c["poi"] == null,
+                "fog room must not carry explored detail. got=$c",
+            )
+        }
+
+    @Test
     fun `sendZoneMap stays under payload cap for a large zone`() =
         runTest {
             val e = emitter("Zone.Map")
@@ -2152,9 +2186,13 @@ class GmcpEmitterTest {
                     ),
                     mapX = i % 16,
                     mapY = i / 16,
-                )
+                    // Realistic-length titles: the fully-explored worst case below
+                    // adds `e`/`t` per room, and long titles are what push the size.
+                ).copy(title = "Crystal Grove Clearing %04d".format(i))
             }
-            e.sendZoneMap(sid, zone, rooms)
+            // Worst case: the player has explored the whole zone, so every room
+            // carries the explored detail fields on top of the base layout.
+            e.sendZoneMap(sid, zone, rooms, exploredRooms = rooms.map { it.id.value }.toSet())
             val data = drainGmcp()
             assertEquals(1, data.size, "Large-zone Zone.Map must not be dropped by the payload cap")
             assertEquals("Zone.Map", data[0].gmcpPackage)

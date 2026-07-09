@@ -119,6 +119,9 @@ ambient: <string, optional - overrides zone audio.ambient>
 jukebox: <list of song objects, optional - see `jukebox` notes>
 musicBox: <single song object, optional - see `musicBox` notes>
 terrain: <string, optional - overrides the zone terrain; same valid values>
+mapX: <integer, optional - explicit minimap grid column; see map pin notes>
+mapY: <integer, optional - explicit minimap grid row; must be given with mapX>
+mapZ: <integer, optional, default 0 - minimap floor; requires mapX/mapY>
 ```
 
 #### Exits
@@ -186,6 +189,11 @@ features:
 
 - Container refills on zone reset / `respawnSeconds` replace whatever is inside, including player-stored items.
 - Sequence puzzles reference features by `keyword` (see Puzzles).
+
+Map pin notes (`mapX`/`mapY`/`mapZ`):
+- By default the loader assigns every room a minimap cell by BFS from the zone's start room (N/S/E/W step one cell; up/down starts a new floor). `mapX`/`mapY` **pin** a room to an exact grid cell instead, and `mapZ` picks its floor (0 = ground, positive = up). `+x` is east, `+y` is south, in the zone's own frame — absolute values don't matter, only relative placement.
+- Pinned rooms are seated first, exactly where the author put them; unpinned rooms are BFS-placed around them (relative to their pinned neighbours where possible). Arcanum's zone editor "Save map layout" writes pins for every room; hand-editing is fine too.
+- Loading fails if `mapX`/`mapY` is given without the other, if `mapZ` appears without both, or if two rooms in the same zone are pinned to the same cell of the same floor.
 
 `bank` notes:
 - When `true`, enables bank commands (`deposit`, `withdraw`, `bank`) in this room.
