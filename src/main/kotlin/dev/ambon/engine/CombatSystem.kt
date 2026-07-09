@@ -185,6 +185,12 @@ class CombatSystem(
 
     private val pvpCombatStates = mutableMapOf<SessionId, PvpCombatState>()
 
+    /**
+     * Sessions already told (this login) that their Akathavae pledge forfeits
+     * group kill XP — the reminder is sent once per login, not on every kill.
+     */
+    private val pledgeKillXpNotified = mutableSetOf<SessionId>()
+
     /** Zone start room lookup, wired by GameEngine after construction. */
     var zoneStartRoomLookup: (String) -> RoomId? = { _ -> null }
 
@@ -457,11 +463,15 @@ class CombatSystem(
                 pvpCombatStates[sid] = state.copy(targetSid = newSid)
             }
         }
+        if (pledgeKillXpNotified.remove(oldSid)) {
+            pledgeKillXpNotified.add(newSid)
+        }
     }
 
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         removePlayerFromCombat(sessionId)
         endPvpCombat(sessionId)
+        pledgeKillXpNotified.remove(sessionId)
     }
 
     fun endCombatFor(sessionId: SessionId) {
@@ -1931,13 +1941,29 @@ class CombatSystem(
         val group = groupSystem?.getGroup(killerSessionId)
         val recipients =
             if (group != null) {
-                group.members.filter { sid ->
-                    val p = players.get(sid)
-                    p != null && p.roomId == mob.roomId
+                val membersInRoom =
+                    group.members.mapNotNull { sid ->
+                        players.get(sid)?.takeIf { it.roomId == mob.roomId }?.let { sid to it }
+                    }
+                // Pledged Akathavae forfeit kill XP entirely; they also don't count
+                // toward the split or the group bonus, so the fighters' payout is
+                // identical to a group without the pledged member along.
+                val (pledged, eligible) = membersInRoom.partition { (_, p) -> p.isAkathavae }
+                for ((sid, _) in pledged) {
+                    if (pledgeKillXpNotified.add(sid)) {
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sid,
+                                "Your pledge holds — the kill earns you nothing. Record the world instead.",
+                            ),
+                        )
+                    }
                 }
+                eligible.map { (sid, _) -> sid }
             } else {
                 listOf(killerSessionId)
             }
+        if (recipients.isEmpty()) return 0L
 
         val memberCount = recipients.size
         val groupBonus =
