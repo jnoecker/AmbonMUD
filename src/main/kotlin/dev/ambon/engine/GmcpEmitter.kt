@@ -4048,6 +4048,15 @@ class GmcpEmitter(
     internal fun resolveSprite(player: PlayerState): String {
         val reg = spriteRegistry
         if (reg != null) {
+            // Mid-ride override: everyone sees the mount while the player fast-travels.
+            val riding = player.ridingMountId
+            if (riding != null) {
+                val mountDef = reg.mountSprite(riding)
+                val mountVariant = mountDef?.let {
+                    reg.bestVariant(it, player.race, player.playerClass, player.gender)
+                }
+                if (mountVariant != null) return "$imagesBase${mountVariant.imagePath}"
+            }
             // Explicit selection
             val chosen = player.activeSprite
             if (chosen != null) {
@@ -4059,6 +4068,7 @@ class GmcpEmitter(
                     playerRace = player.race,
                     playerClass = player.playerClass,
                     playerGender = player.gender,
+                    ownedMounts = player.ownedMounts,
                 )
                 if (valid != null) return "$imagesBase${valid.imagePath}"
             }
@@ -4092,6 +4102,7 @@ class GmcpEmitter(
             playerRace = player.race,
             playerClass = player.playerClass,
             playerGender = player.gender,
+            ownedMounts = player.ownedMounts,
         )
         val active = player.activeSprite
             ?: reg.autoResolve(

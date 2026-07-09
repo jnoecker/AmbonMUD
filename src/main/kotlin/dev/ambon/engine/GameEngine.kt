@@ -2726,6 +2726,7 @@ class GameEngine(
             isStaff = player.isStaff,
             playerRace = player.race,
             playerClass = player.playerClass,
+            ownedMounts = player.ownedMounts,
         )
         // Only notify if there are more sprites than just the one they have selected
         if (tierDefs.size > 1) {
