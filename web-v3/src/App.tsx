@@ -66,7 +66,7 @@ import { useMudSocket } from "./hooks/useMudSocket";
 import { useTerminal } from "./hooks/useTerminal";
 import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useCommandHistory } from "./hooks/useCommandHistory";
-import { useMiniMap } from "./hooks/useMiniMap";
+import { POI_META, useMiniMap } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
@@ -80,7 +80,7 @@ import type {
   PopoutPanel,
   WhoPlayer,
 } from "./types";
-import { sortExits, titleCaseWords } from "./utils";
+import { formatZoneName, sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
 
 // ── Consider (threat assessment) helpers ────────────────────────────────────
@@ -255,10 +255,13 @@ function App() {
     onMapPointerDown,
     onMapPointerMove,
     onMapPointerUp,
+    onMapPointerLeave,
     onMapWheel,
     zoomIn: mapZoomIn,
     zoomOut: mapZoomOut,
     recenter: mapRecenter,
+    zoneStats: mapZoneStats,
+    hoverInfo: mapHoverInfo,
   } = useMiniMap();
 
   const state = useGameState(
@@ -1752,6 +1755,25 @@ function App() {
                 </button>
               )}
             </div>
+            {mapTab === "map" && mapZoneStats && (
+              <div className="map-stats-bar" role="status">
+                <span className="map-stats-explored">
+                  Explored {mapZoneStats.exploredCount}/{mapZoneStats.totalRooms} rooms
+                  {mapZoneStats.totalRooms > 0 && (
+                    <span className="map-stats-pct">
+                      {" "}({Math.round((mapZoneStats.exploredCount / mapZoneStats.totalRooms) * 100)}%)
+                    </span>
+                  )}
+                </span>
+                <span className="map-legend" aria-label="Map legend">
+                  <span className="map-legend-item"><span className="map-legend-swatch map-legend-here" aria-hidden="true" /> you</span>
+                  <span className="map-legend-item"><span className="map-legend-swatch map-legend-explored" aria-hidden="true" /> explored</span>
+                  <span className="map-legend-item"><span className="map-legend-swatch map-legend-fog" aria-hidden="true" /> unexplored</span>
+                  <span className="map-legend-item"><span className="map-legend-swatch map-legend-quest" aria-hidden="true" /> quest</span>
+                  <span className="map-legend-item"><span className="map-legend-swatch map-legend-border" aria-hidden="true" /> next zone</span>
+                </span>
+              </div>
+            )}
             {/* Keep the canvas mounted so the minimap renderer can keep drawing into it
                 even while the Atlas tab is in front — switching back must not lose state. */}
             <div className="drawer-map-canvas-wrap" hidden={mapTab !== "map"}>
@@ -1764,12 +1786,40 @@ function App() {
                 onPointerDown={onMapPointerDown}
                 onPointerMove={onMapPointerMove}
                 onPointerUp={onMapPointerUp}
-                onPointerLeave={onMapPointerUp}
+                onPointerLeave={onMapPointerLeave}
                 onWheel={onMapWheel}
                 aria-label={questMarkerCount > 0
                   ? `Visited room map — ${questMarkerCount} quest objective${questMarkerCount !== 1 ? "s" : ""} marked`
                   : "Visited room map"}
               />
+              {mapHoverInfo && (
+                <div
+                  className="map-hover-tooltip"
+                  role="tooltip"
+                  style={{ left: mapHoverInfo.sx, top: mapHoverInfo.sy }}
+                >
+                  {mapHoverInfo.zone ? (
+                    <span className="map-tooltip-title">→ {formatZoneName(mapHoverInfo.zone)}</span>
+                  ) : mapHoverInfo.explored ? (
+                    <>
+                      <span className="map-tooltip-title">{mapHoverInfo.title}</span>
+                      {mapHoverInfo.terrain && mapHoverInfo.terrain !== "outside" && (
+                        <span className="map-tooltip-terrain">{mapHoverInfo.terrain}</span>
+                      )}
+                      {(mapHoverInfo.poi.length > 0 || mapHoverInfo.hasStairs) && (
+                        <span className="map-tooltip-poi">
+                          {[
+                            ...mapHoverInfo.poi.map((p) => POI_META[p] ? `${POI_META[p].icon} ${POI_META[p].label}` : p),
+                            ...(mapHoverInfo.hasStairs ? ["↕ Stairs"] : []),
+                          ].join(" · ")}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="map-tooltip-title map-tooltip-unknown">Unexplored</span>
+                  )}
+                </div>
+              )}
               <div className="map-zoom-controls" aria-hidden="false">
                 <button type="button" className="map-zoom-btn" onClick={mapZoomIn} title="Zoom in" aria-label="Zoom in">+</button>
                 <button type="button" className="map-zoom-btn" onClick={mapZoomOut} title="Zoom out" aria-label="Zoom out">−</button>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MAP_OFFSETS, zoneColorCss } from "../constants";
 import { canvasCallbacks, gameStateRef } from "../canvas/GameStateBridge";
 import type { BorderStub, MapRoom, ZoneMapRoomData } from "../types";
@@ -29,6 +29,45 @@ const MAX_ZOOM = 120; // most zoomed-in cell size
 const DEFAULT_ZOOM = 88; // comfortable default centred on the player
 const MAX_NODE = 52; // glyph size caps (px); scaled down to fit the cell
 const MAX_CURRENT = 64;
+
+// POI icon + display name per Zone.Map service token (Room.Info flag names).
+// Icons are drawn straight onto the canvas; names feed the hover tooltip.
+export const POI_META: Record<string, { icon: string; label: string }> = {
+  bank: { icon: "🪙", label: "Bank" },
+  tavern: { icon: "🍺", label: "Tavern" },
+  stylist: { icon: "✂️", label: "Stylist" },
+  dungeon: { icon: "🗝️", label: "Dungeon" },
+  auction: { icon: "🏷️", label: "Auction House" },
+  housingBroker: { icon: "🏠", label: "Housing Broker" },
+  inn: { icon: "🛏️", label: "Inn" },
+  shrine: { icon: "✨", label: "Akathavae Shrine" },
+  flightMaster: { icon: "🪶", label: "Flight Master" },
+  boatDock: { icon: "⚓", label: "Boat Dock" },
+  station: { icon: "🔨", label: "Crafting Station" },
+};
+
+/** Zone completion + floor info for the map header, derived from the loaded chart. */
+export interface MapZoneStats {
+  zone: string;
+  exploredCount: number;
+  totalRooms: number;
+  floor: number;
+  multiFloor: boolean;
+}
+
+/** The room under the cursor, for the hover tooltip (screen coords are canvas-local CSS px). */
+export interface MapHoverInfo {
+  id: string;
+  title: string;
+  explored: boolean;
+  terrain?: string;
+  poi: string[];
+  hasStairs: boolean;
+  /** Border-stub zone, when hovering a neighbouring-zone marker. */
+  zone?: string;
+  sx: number;
+  sy: number;
+}
 
 // Server-asset keys (shared with the in-scene minimap).
 const A_ROOM = "minimap_room";
@@ -250,6 +289,38 @@ function drawBorderStub(ctx: CanvasRenderingContext2D, cx: number, cy: number, h
   ctx.strokeText(label, cx, ly);
   ctx.fillStyle = color;
   ctx.fillText(label, cx, ly);
+  ctx.restore();
+}
+
+/** Inked compass rose — a quiet cartographic flourish in the corner of the sheet. */
+function drawCompassRose(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  ctx.save();
+  ctx.globalAlpha = 0.45;
+  ctx.strokeStyle = INK;
+  ctx.fillStyle = INK;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.62, 0, Math.PI * 2);
+  ctx.stroke();
+  // Cardinal ticks just past the ring.
+  for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+    ctx.beginPath();
+    ctx.moveTo(cx + dx * r * 0.68, cy + dy * r * 0.68);
+    ctx.lineTo(cx + dx * r * 0.88, cy + dy * r * 0.88);
+    ctx.stroke();
+  }
+  // North needle — a slim ink diamond.
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r * 0.95);
+  ctx.lineTo(cx + r * 0.18, cy);
+  ctx.lineTo(cx, cy + r * 0.34);
+  ctx.lineTo(cx - r * 0.18, cy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.font = "bold 10px 'JetBrains Mono', 'Cascadia Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("N", cx, cy - r * 0.98);
   ctx.restore();
 }
 
@@ -477,6 +548,28 @@ function renderMap(
       drawStairBadges(ctx, x, y, size / 2, hasUp, hasDown, stairHops.has(id) ? stairPulse : 0);
     }
 
+    // POI icons — small service glyphs across the top edge of explored rooms,
+    // shown once the zoom gives them room to breathe. The hover tooltip names
+    // them all, so hiding them at far zoom loses nothing.
+    if (isVisited && node.poi && node.poi.length > 0 && cell >= 44) {
+      const icons = node.poi
+        .map((p) => POI_META[p]?.icon)
+        .filter((icon): icon is string => !!icon)
+        .slice(0, 3);
+      if (icons.length > 0) {
+        const iconSize = Math.max(10, Math.round(cell * 0.22));
+        ctx.save();
+        ctx.font = `${iconSize}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        const step = iconSize + 2;
+        const startX = x - ((icons.length - 1) * step) / 2;
+        const iy = y - size / 2 - 2;
+        icons.forEach((icon, i) => ctx.fillText(icon, startX + i * step, iy));
+        ctx.restore();
+      }
+    }
+
     // Quest objective marker
     if (!isCurrent && questTargetRoomIds.has(id)) {
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -486,21 +579,28 @@ function renderMap(
       }
     }
 
-    // Labels
+    // Labels — fade in with zoom rather than popping, and allow longer names
+    // at close zoom; the hover tooltip carries the full title regardless.
     if (isVisited && node.title) {
-      ctx.font = isCurrent
-        ? "bold 12px 'JetBrains Mono', 'Cascadia Mono', monospace"
-        : "11px 'JetBrains Mono', 'Cascadia Mono', monospace";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      const maxLen = isCurrent ? 18 : 14;
-      const label = node.title.length > maxLen ? node.title.slice(0, maxLen - 1) + "…" : node.title;
-      const ly = y + size / 2 + 4;
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = LABEL_OUTLINE;
-      ctx.strokeText(label, x, ly);
-      ctx.fillStyle = isCurrent ? LABEL_CURRENT : LABEL_VISITED;
-      ctx.fillText(label, x, ly);
+      const labelAlpha = isCurrent ? 1 : clamp((cell - 34) / 26, 0, 1);
+      if (labelAlpha > 0.05) {
+        ctx.save();
+        ctx.globalAlpha = labelAlpha;
+        ctx.font = isCurrent
+          ? "bold 12px 'JetBrains Mono', 'Cascadia Mono', monospace"
+          : "11px 'JetBrains Mono', 'Cascadia Mono', monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        const maxLen = isCurrent ? 20 : cell >= 76 ? 22 : 14;
+        const label = node.title.length > maxLen ? node.title.slice(0, maxLen - 1) + "…" : node.title;
+        const ly = y + size / 2 + 4;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = LABEL_OUTLINE;
+        ctx.strokeText(label, x, ly);
+        ctx.fillStyle = isCurrent ? LABEL_CURRENT : LABEL_VISITED;
+        ctx.fillText(label, x, ly);
+        ctx.restore();
+      }
     }
   }
 
@@ -549,6 +649,9 @@ function renderMap(
     ctx.fill();
     ctx.restore();
   }
+
+  // Compass rose — bottom-left corner (the zoom cluster owns the bottom-right).
+  drawCompassRose(ctx, scrollLeft + 42, scrollBottom - 46, 24);
 
   // Zone name tag — top-left, derived from the current room id (`<zone>:<room>`).
   const zoneId = currentId.split(":")[0];
@@ -638,6 +741,17 @@ export function useMiniMap() {
   const zoomBoundsRef = useRef({ min: 8, max: MAX_ZOOM });
   const dragRef = useRef<{ x: number; y: number; gx: number; gy: number } | null>(null);
 
+  // Last-render view + visibility, kept for pointer hit-testing (hover tooltip).
+  const viewRef = useRef<{ cell: number; panGx: number; panGy: number; originX: number; originY: number; floor: number } | null>(null);
+  const visibilityRef = useRef<{ explored: Set<string>; frontier: Set<string> } | null>(null);
+
+  // Header stats + hover tooltip — React state, updated only on real changes so
+  // the RAF pulse loop doesn't thrash renders.
+  const [zoneStats, setZoneStats] = useState<MapZoneStats | null>(null);
+  const statsKeyRef = useRef("");
+  const [hoverInfo, setHoverInfo] = useState<MapHoverInfo | null>(null);
+  const hoverIdRef = useRef<string | null>(null);
+
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
@@ -699,6 +813,34 @@ export function useMiniMap() {
     if (hasRooms) {
       panRef.current.gx = clamp(panRef.current.gx, minX - 1, maxX + 1);
       panRef.current.gy = clamp(panRef.current.gy, minY - 1, maxY + 1);
+    }
+
+    // Record the resolved view + visibility for pointer hit-testing, and push
+    // header stats (zone, floor, exploration %) when they actually change.
+    viewRef.current = {
+      cell: zoomRef.current,
+      panGx: panRef.current.gx,
+      panGy: panRef.current.gy,
+      originX: width / 2,
+      originY: height / 2,
+      floor,
+    };
+    visibilityRef.current = { explored: exploredIds, frontier: frontierIds };
+    const zoneId = currentRoomIdRef.current?.split(":")[0] ?? "";
+    if (zoneId) {
+      let totalRooms = 0;
+      let multiFloor = false;
+      for (const node of visited.values()) {
+        if (node.zone) continue; // border stubs aren't this zone's rooms
+        totalRooms++;
+        if (node.z !== floor) multiFloor = true;
+      }
+      const stats: MapZoneStats = { zone: zoneId, exploredCount: exploredIds.size, totalRooms, floor, multiFloor };
+      const key = `${zoneId}|${stats.exploredCount}|${totalRooms}|${floor}|${multiFloor}`;
+      if (key !== statsKeyRef.current) {
+        statsKeyRef.current = key;
+        setZoneStats(stats);
+      }
     }
 
     // Draw a room/quest glyph (auto-trimmed, aspect-fit). Lazily loads the
@@ -766,19 +908,70 @@ export function useMiniMap() {
     y: (rect.height * SCROLL_INSET_TOP + rect.height * (1 - SCROLL_INSET_BOTTOM)) / 2,
   });
 
+  const clearHover = useCallback(() => {
+    if (hoverIdRef.current !== null) {
+      hoverIdRef.current = null;
+      setHoverInfo(null);
+    }
+  }, []);
+
   const onMapPointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture?.(e.pointerId);
+    clearHover();
     dragRef.current = {
       x: e.clientX,
       y: e.clientY,
       gx: panRef.current?.gx ?? 0,
       gy: panRef.current?.gy ?? 0,
     };
+  }, [clearHover]);
+
+  /** Hit-test the pointer against the rendered rooms and surface a tooltip. */
+  const updateHover = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    const v = viewRef.current;
+    const vis = visibilityRef.current;
+    if (!v || !vis) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const gx = Math.round(v.panGx + (mx - v.originX) / v.cell);
+    const gy = Math.round(v.panGy + (my - v.originY) / v.cell);
+    // The cursor must actually be inside the room's box, not just its grid cell.
+    const sx = v.originX + (gx - v.panGx) * v.cell;
+    const sy = v.originY + (gy - v.panGy) * v.cell;
+    const half = Math.min(MAX_NODE, v.cell * 0.62) / 2 + 4;
+    let found: MapHoverInfo | null = null;
+    if (Math.abs(mx - sx) <= half && Math.abs(my - sy) <= half) {
+      for (const [id, node] of visitedRef.current.entries()) {
+        if (node.z !== v.floor || node.x !== gx || node.y !== gy) continue;
+        if (!vis.explored.has(id) && !vis.frontier.has(id)) continue;
+        const explored = node.title !== "" && !node.zone;
+        found = {
+          id,
+          title: explored ? node.title : "",
+          explored,
+          terrain: explored ? node.terrain : undefined,
+          poi: explored ? (node.poi ?? []) : [],
+          hasStairs: explored && ("up" in node.exits || "down" in node.exits),
+          zone: node.zone,
+          sx,
+          sy,
+        };
+        break;
+      }
+    }
+    if ((found?.id ?? null) !== hoverIdRef.current) {
+      hoverIdRef.current = found?.id ?? null;
+      setHoverInfo(found);
+    }
   }, []);
 
   const onMapPointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     const d = dragRef.current;
-    if (!d) return;
+    if (!d) {
+      updateHover(e);
+      return;
+    }
     const cell = zoomRef.current || 1;
     panRef.current = {
       gx: d.gx - (e.clientX - d.x) / cell,
@@ -786,12 +979,17 @@ export function useMiniMap() {
     };
     userAdjustedRef.current = true;
     drawMap();
-  }, [drawMap]);
+  }, [drawMap, updateHover]);
 
   const onMapPointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.releasePointerCapture?.(e.pointerId);
     dragRef.current = null;
   }, []);
+
+  const onMapPointerLeave = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    onMapPointerUp(e);
+    clearHover();
+  }, [onMapPointerUp, clearHover]);
 
   const onMapWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -885,6 +1083,7 @@ export function useMiniMap() {
       userAdjustedRef.current = false;
       panRef.current = null;
       zoomRef.current = 0;
+      clearHover();
 
       for (const r of rooms) {
         map.set(r.id, {
@@ -910,7 +1109,7 @@ export function useMiniMap() {
       // Also push to the PixiJS compact minimap
       canvasCallbacks.loadZoneMap?.(zone, rooms, border);
     },
-    [drawMap],
+    [drawMap, clearHover],
   );
 
   const resetMap = useCallback(() => {
@@ -919,8 +1118,11 @@ export function useMiniMap() {
     userAdjustedRef.current = false;
     panRef.current = null;
     zoomRef.current = 0;
+    clearHover();
+    statsKeyRef.current = "";
+    setZoneStats(null);
     drawMap();
-  }, [drawMap]);
+  }, [drawMap, clearHover]);
 
   /** Start a gentle animation loop for quest marker pulse (call when map is visible). */
   const startPulse = useCallback(() => {
@@ -953,9 +1155,12 @@ export function useMiniMap() {
     onMapPointerDown,
     onMapPointerMove,
     onMapPointerUp,
+    onMapPointerLeave,
     onMapWheel,
     zoomIn,
     zoomOut,
     recenter,
+    zoneStats,
+    hoverInfo,
   };
 }

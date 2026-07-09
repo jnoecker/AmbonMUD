@@ -77,3 +77,12 @@ export function parseGmcp(text: string): { pkg: string; data: unknown } | null {
   }
 }
 
+
+/** Zone id → display name, e.g. "demo_ruins" → "Demo Ruins". */
+export function formatZoneName(zone: string): string {
+  return zone
+    .split("_")
+    .filter((part) => part.length > 0)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}

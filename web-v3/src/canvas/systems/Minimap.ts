@@ -545,26 +545,27 @@ export class Minimap {
 
     // Fog of war — mirrors the expanded chart: only explored rooms and the
     // one-hop frontier past them render; deeper fog stays off the parchment.
-    const explored = new Set<string>();
+    // (`fogFrontier`, not `frontier` — the BFS below already uses that name.)
+    const exploredSet = new Set<string>();
     for (const [id, node] of this.visited) {
-      if (node.title !== "" && !node.zone) explored.add(id);
+      if (node.title !== "" && !node.zone) exploredSet.add(id);
     }
-    const frontier = new Set<string>();
-    for (const id of explored) {
+    const fogFrontier = new Set<string>();
+    for (const id of exploredSet) {
       const node = this.visited.get(id);
       if (!node) continue;
       for (const targetId of Object.values(node.exits)) {
-        if (!explored.has(targetId)) frontier.add(targetId);
+        if (!exploredSet.has(targetId)) fogFrontier.add(targetId);
       }
     }
-    const isRendered = (id: string) => explored.has(id) || frontier.has(id);
+    const isRendered = (id: string) => exploredSet.has(id) || fogFrontier.has(id);
 
     const pathEdges = this.computeQuestPath(questTargets);
 
     // Inked connector lines — drawn outward from *explored* rooms only, so the
     // scrap never sketches corridors the player hasn't earned.
     for (const [id] of localPos) {
-      if (!explored.has(id)) continue;
+      if (!exploredSet.has(id)) continue;
       const node = this.visited.get(id);
       if (!node) continue;
       const sp = posOf(id);
