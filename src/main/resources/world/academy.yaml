@@ -76,7 +76,8 @@ rooms:
 
 
       The Grand Hall is to the west, and the Training Yard lies to the south. A quiet alcove opens to the east, where
-      candlelight flickers against gilded shelves.
+      candlelight flickers against gilded shelves — Sister Veshtal, Keeper of the Alcove, welcomes anyone curious about
+      the chroniclers who level by recording the world instead of conquering it.
     exits:
       w: grand_hall
       s: training_yard
@@ -117,7 +118,9 @@ rooms:
       burn down. At its heart stands a modest shrine of pale stone: an open book carved so finely that its pages appear
       to turn when watched too long. This is a shrine to the Naraxian Akathavae — the keeper of stories, whose faithful
       give voice to all that would otherwise be forgotten. Pilgrims who forswear violence kneel here and pledge
-      themselves as Akathavae, recording the world in their own Arcanum rather than conquering it.
+      themselves as Akathavae, recording the world in their own Arcanum rather than conquering it. Sister Veshtal,
+      Keeper of the Alcove, tends the candle ring with ink-stained fingers, glad to answer the questions of the
+      curious.
 
 
       A small bronze plate at the shrine's base reads: "Speak 'pledge' to give your voice to the Arcanum. What is
@@ -938,7 +941,9 @@ mobs:
       directions:
         text: South of here you will find the Training Yard, where Instructor Valence teaches the combat arts. West returns you
           to the Grand Hall — the Academy's central hub. If you have not visited the Armory yet, I would recommend it.
-          Difficult to fight monsters without proper equipment!
+          Difficult to fight monsters without proper equipment! And should fighting hold no appeal at all, the alcove
+          east of my study shelters the shrine of the Akathavae — Sister Veshtal keeps it, and her chroniclers level by
+          recording the world rather than conquering it.
         choices:
           - text: I'll check it out.
             next: farewell
@@ -1214,6 +1219,129 @@ mobs:
       farewell:
         text: Whenever you are ready, just click on me. Everyone deserves to look their best!
     image: ea957fdba05f4f57ac0b18eacc94e38ccb7b7f90379ebc2658e97fdd21587820.png
+  keeper_veshtal:
+    name: Sister Veshtal
+    spawns:
+      - room: akathavae_alcove
+    role: quest_giver
+    tier: standard
+    level: 8
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - a_blank_page
+      - three_lines_of_ink
+      - what_is_written_remains
+    dialogue:
+      root:
+        text: A small woman in dove-grey robes kneels beside the ring of candles, trimming each wick with a silver knife. Ink
+          stains her fingers to the second knuckle, and a fat journal hangs from her belt on a brass chain. She rises
+          without hurry and smiles. "Welcome to the alcove, traveler. I am Sister Veshtal, Keeper of the Alcove — I
+          mind the candles, the shrine, and the questions of the curious. Ask, and I will answer."
+        choices:
+          - text: Who are the Akathavae?
+            next: who_they_are
+          - text: What does the pledge cost — and what does it give?
+            next: pledge_terms
+          - text: How does illumination work?
+            next: illumination
+          - text: Have you work for a would-be chronicler?
+            next: first_page
+            action: unlock_flag:akathavae_curious
+          - text: About the pages you set me...
+            next: turn_pages
+          - text: Just admiring the shrine.
+            next: farewell
+      who_they_are:
+        text: We serve the Naraxian Akathavae — the keeper of stories, who writes the Arcanum, the great record of all that is
+          and all that has been. The name is older than the colleges; it means "those who give voice." A windswept
+          ruin, a beast glimpsed once at dusk, a door nobody opens anymore — each is a story going silent, and each
+          silence is a small death we refuse to permit. Among the pledged there is no higher honor than the line
+          beneath a creature no one had ever recorded — first illuminated by your hand. The Arcanum remembers its
+          firsts forever.
+        choices:
+          - text: How would I join them?
+            next: pledge_terms
+          - text: How does illumination work?
+            next: illumination
+          - text: A lovely calling. Farewell.
+            next: farewell
+      pledge_terms:
+        text: Kneel at the shrine and speak 'pledge', and the hush that follows is the only ordination there is. But hear the
+          whole of it first, because the book keeps no secrets and neither do I. The pledge forsakes violence — you
+          will not swing a blade or hurl a spell in anger again, and the trainers will teach you no new class while it
+          holds. In exchange, you grow through illumination and discovery instead of slaughter, and any equipment
+          recorded in your Arcanum can be conjured to wear at will with 'wardrobe'. Should the quiet road prove not
+          yours, you may 'renounce' at any shrine for 2,500 gold — though the shrine will not take you back for a full
+          day afterward. Choose with open eyes.
+        choices:
+          - text: And how does illumination work?
+            next: illumination
+          - text: I understand. Have you work for me?
+            next: first_page
+            action: unlock_flag:akathavae_curious
+          - text: I need to think on it.
+            next: farewell
+      illumination:
+        text: Still your breath, hold the creature in your mind's eye, and speak 'illuminate' followed by its name. No blade is
+          drawn and the subject is never harmed — it simply becomes a page. But mind you — a startled subject knows it
+          is being watched. Fail, and it may take offense and come for you. A honeyed tongue can sometimes soothe it
+          back down, and when words fail there is no shame in fleeing; we are chroniclers, not martyrs. You can leaf
+          through everything you have recorded with 'arcanum'. And you need not be pledged to practice patience — even
+          fighters find these pages instructive.
+        choices:
+          - text: What does the pledge cost, exactly?
+            next: pledge_terms
+          - text: I'd like to try. Have you work for me?
+            next: first_page
+            action: unlock_flag:akathavae_curious
+          - text: Fascinating. Farewell, Keeper.
+            next: farewell
+      first_page:
+        text: Veshtal unclasps the journal from her belt and turns to an empty leaf. "Then show me you can hold a single
+          subject in your mind's eye. A flickering sprite drifts about the Proving Grounds, south and west of here —
+          deal with one however your conscience allows, by blade or by ink. Both write the same page. Look for 'A
+          Blank Page' in your Quest panel when you are ready, and come tell me how your chronicle grows."
+        choices:
+          - text: Remind me how to illuminate?
+            next: illumination
+          - text: The page is as good as written.
+            next: farewell
+      turn_pages:
+        text: She thumbs the journal open without needing to look. "Every chronicle is written one page at a time — and I never
+          hand out the next before the last is done. Tell me where yours stands."
+        choices:
+          - text: The blank page is filled. What comes next?
+            next: second_page
+            action: unlock_flag:akathavae_second_page
+          - text: Three lines are inked. Give me a real page.
+            next: final_page
+            action: unlock_flag:akathavae_final_page
+          - text: Still writing. I'll return.
+            next: farewell
+      second_page:
+        text: '"Good. One subject is a diary; many subjects are an Arcanum. Breadth over depth, always." She rules three empty
+          lines with a practiced thumbnail. "Bring the Academy''s little menagerie to the page — a wandering wisp from
+          the Grand Hall, a flickering sprite, and a shadow slime from the Proving Grounds. Defeat them or illuminate
+          them as suits you; each is one clean line of ink. Finish ''Three Lines of Ink'' and I have a chronicler''s
+          charm set aside for your trouble."'
+        choices:
+          - text: Three lines, coming up.
+            next: farewell
+      final_page:
+        text: For the first time her smile sharpens into something like hunger. "Then you are ready for the first real page.
+          The cave imps of the Proving Grounds — spiteful, fire-spitting, and wholly unchronicled. Put one on the
+          record, by steel or by stillness, and return to me. Complete 'What Is Written Remains' and I will enter your
+          name in the margin the way I was taught — Chronicler of the Academy. What is written remains."
+        choices:
+          - text: It will be written.
+            next: farewell
+      farewell:
+        text: May your pages fill and your candles never gutter. The alcove keeps no hours — come back whenever the book calls.
   wandering_wisp:
     name: a wandering wisp
     spawns:
@@ -1583,6 +1711,17 @@ items:
       constitution: 2
     basePrice: 100
     image: 1f29426336e0b8959942923254cfd6e91063556a18d149ddc893a6c5ad78092f.png
+  chroniclers_charm:
+    displayName: a chronicler's charm
+    keyword: charm
+    description: A small brass charm shaped like an open book, strung on a cord of waxed silk. Its tiny pages are inked
+      with three lines too fine to read, and it grows pleasantly warm whenever its wearer notices something worth
+      remembering. A gift of Sister Veshtal, Keeper of the Alcove.
+    slot: neck
+    armor: 1
+    stats:
+      WIS: 1
+    basePrice: 40
   puzzle_key:
     displayName: a key shaped from pure insight
     keyword: key
@@ -1684,6 +1823,63 @@ quests:
     rewards:
       xp: 100
       gold: 50
+  a_blank_page:
+    name: A Blank Page
+    description: Sister Veshtal, Keeper of the Alcove, has asked you to prove you can hold a single subject in your mind's
+      eye. Deal with one of the flickering sprites in the Proving Grounds however your conscience allows — defeat it in
+      combat, or record it with 'illuminate' if you walk the Akathavae path. Either way, the page gets written.
+    giver: keeper_veshtal
+    requiresDialogueFlag: akathavae_curious
+    objectives:
+      - type: kill
+        targetKey: flickering_sprite
+        count: 1
+        description: Defeat or illuminate a flickering sprite in the Proving Grounds
+    rewards:
+      xp: 50
+      gold: 25
+  three_lines_of_ink:
+    name: Three Lines of Ink
+    description: Breadth over depth, says Sister Veshtal — one subject is a diary, many subjects are an Arcanum. Defeat or
+      illuminate three different Academy creatures — a wandering wisp from the Grand Hall, plus a flickering sprite and
+      a shadow slime from the Proving Grounds. Each is one clean line of ink, and the Keeper has a chronicler's charm
+      set aside for whoever writes all three.
+    giver: keeper_veshtal
+    requiresDialogueFlag: akathavae_second_page
+    objectives:
+      - type: kill
+        targetKey: wandering_wisp
+        count: 1
+        description: Defeat or illuminate a wandering wisp
+      - type: kill
+        targetKey: flickering_sprite
+        count: 1
+        description: Defeat or illuminate a flickering sprite
+      - type: kill
+        targetKey: shadow_slime
+        count: 1
+        description: Defeat or illuminate a shadow slime
+    rewards:
+      xp: 100
+      gold: 40
+      items:
+        - itemId: chroniclers_charm
+  what_is_written_remains:
+    name: What Is Written Remains
+    description: The first real page. The cave imps of the Proving Grounds are spiteful, fire-spitting, and wholly
+      unchronicled — put one on the record, by steel or by stillness, and return to the alcove. Sister Veshtal has
+      promised to enter your name in the margin the way she was taught — Chronicler of the Academy. What is written
+      remains.
+    giver: keeper_veshtal
+    requiresDialogueFlag: akathavae_final_page
+    objectives:
+      - type: kill
+        targetKey: cave_imp
+        count: 1
+        description: Defeat or illuminate a cave imp in the Proving Grounds
+    rewards:
+      xp: 150
+      gold: 75
 gatheringNodes:
   spider_silk_web:
     displayName: a glistening spider web
