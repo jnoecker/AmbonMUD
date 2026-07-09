@@ -16,6 +16,13 @@ enum class ItemType {
     QUEST,
     TREASURE,
     KEEPSAKE,
+
+    /**
+     * A rideable mount sold in shops. Buying one never enters the inventory:
+     * it permanently unlocks the mount (sprite + map fast travel) via
+     * [Item.mountId].
+     */
+    MOUNT,
     MISC,
     ;
 
