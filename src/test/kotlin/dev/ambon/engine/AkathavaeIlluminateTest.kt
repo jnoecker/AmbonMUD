@@ -8,6 +8,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobRole
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Direction
@@ -91,6 +92,7 @@ class AkathavaeIlluminateTest {
         xpReward: Long = 100L,
         drops: List<MobDrop> = emptyList(),
         role: MobRole = MobRole.COMBAT,
+        level: Int = 1,
     ) = MobState(
         id = MobId("test:$id"),
         name = "a wandering wisp",
@@ -101,6 +103,7 @@ class AkathavaeIlluminateTest {
         templateKey = templateKey,
         drops = drops,
         role = role,
+        level = level,
     )
 
     private suspend fun loginAkathavae(s: Setup, sid: SessionId, name: String): PlayerState {
@@ -126,6 +129,53 @@ class AkathavaeIlluminateTest {
         assertEquals(61, s.system.illuminationSuccessPct(10, 20, playerLevel = 5, mobLevel = 8))
         // Clamped to the configured floor.
         assertEquals(5, s.system.illuminationSuccessPct(10, 10, playerLevel = 1, mobLevel = 50))
+    }
+
+    @Test
+    fun `illuminationOddsFor resolves the player's current effective stats`() = runTest {
+        val s = setup()
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        me.level = 5
+
+        // Base stats, equal level: the configured base chance.
+        assertEquals(70, s.system.illuminationOddsFor(me, wisp(level = 5)))
+
+        // +2% per success-stat (INT) point above base.
+        me.stats = me.stats.with("INT", 20)
+        assertEquals(90, s.system.illuminationOddsFor(me, wisp(level = 5)))
+
+        // Subject above the player: the level-gap penalty applies (70 - 3*8).
+        me.stats = me.stats.with("INT", 10)
+        assertEquals(46, s.system.illuminationOddsFor(me, wisp(level = 8)))
+
+        // The gap-relief stat (STR) softens the penalty (70 - 3*(8 - 10*0.5)).
+        me.stats = me.stats.with("STR", 20)
+        assertEquals(61, s.system.illuminationOddsFor(me, wisp(level = 8)))
+    }
+
+    @Test
+    fun `illuminationOddsFor includes equipment bonuses`() = runTest {
+        val s = setup()
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        me.level = 5
+        s.fixture.items.setEquippedItem(
+            sid,
+            ItemSlot.HEAD,
+            ItemInstance(
+                id = ItemId("test:circlet"),
+                item = Item(
+                    keyword = "circlet",
+                    displayName = "a scholar's circlet",
+                    slot = ItemSlot.HEAD,
+                    stats = StatMap.of("INT" to 5),
+                ),
+            ),
+        )
+
+        // Effective INT 15 -> 70 + 5*2 = 80.
+        assertEquals(80, s.system.illuminationOddsFor(me, wisp(level = 5)))
     }
 
     // ── Illumination outcomes ────────────────────────────────────────────
