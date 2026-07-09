@@ -545,6 +545,9 @@ data class AppConfig(
         require(a.roomDiscoveryXp >= 0 && a.itemDiscoveryXp >= 0 && a.observeNpcXp >= 0) {
             "ambonMUD.engine.akathavae discovery XP values must be >= 0"
         }
+        require(a.roomDiscoveryXpPerZoneLevel >= 0) { "ambonMUD.engine.akathavae.roomDiscoveryXpPerZoneLevel must be >= 0" }
+        require(a.zoneCompletionXpPerRoom >= 0) { "ambonMUD.engine.akathavae.zoneCompletionXpPerRoom must be >= 0" }
+        require(a.zoneCompletionGold >= 0) { "ambonMUD.engine.akathavae.zoneCompletionGold must be >= 0" }
     }
 
     private fun validateEngineWorldTime() {
@@ -1248,12 +1251,22 @@ data class AkathavaeConfig(
     val repeatXpCooldownMs: Long = 300_000,
     /** XP for recording a never-before-visited room. */
     val roomDiscoveryXp: Long = 15,
+    /**
+     * Extra room-discovery XP per point of the zone's average mob-template level,
+     * so recording rooms in dangerous zones pays like the zone. Zones with no mob
+     * templates fall back to the flat [roomDiscoveryXp] base.
+     */
+    val roomDiscoveryXpPerZoneLevel: Long = 5,
     /** XP for recording a never-before-seen item. */
     val itemDiscoveryXp: Long = 25,
     /** XP for observing a non-combat NPC (vendors, quest givers — recorded, never removed). */
     val observeNpcXp: Long = 10,
     /** Minimum gap between discovery XP awards (ms) — anti-speedrun throttle. Entries still record. */
     val discoveryXpThrottleMs: Long = 1_500,
+    /** [Zone completion] One-time XP per room in a zone, paid when its record reaches 100% (bypasses the throttle). */
+    val zoneCompletionXpPerRoom: Long = 50,
+    /** One-time gold paid on zone completion — the Akathavae's gold faucet (they earn no kill gold). */
+    val zoneCompletionGold: Long = 500,
 )
 
 data class LeaderboardConfig(

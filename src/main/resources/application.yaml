@@ -2722,9 +2722,12 @@ ambonmud:
       repeatXpFraction: 0.2
       repeatXpCooldownMs: 300000
       roomDiscoveryXp: 15
+      roomDiscoveryXpPerZoneLevel: 5
       itemDiscoveryXp: 25
       observeNpcXp: 10
       discoveryXpThrottleMs: 1500
+      zoneCompletionXpPerRoom: 50
+      zoneCompletionGold: 500
     respec:
       enabled: true
       goldCost: 100

@@ -44,11 +44,16 @@ class AkathavaeIlluminateTest {
     private val roomB = RoomId("test:hall")
     private val roomC = RoomId("test:attic")
 
+    // A fourth, never-visited room keeps the zone below 100% so these tests
+    // never trip the zone-completion bundle (covered by AkathavaeZoneCompletionTest).
+    private val roomD = RoomId("test:cellar")
+
     private fun testWorld(): World = World(
         rooms = mapOf(
             roomA to Room(roomA, "The Test Room", "A room.", exits = mapOf(Direction.NORTH to roomB)),
             roomB to Room(roomB, "The Hall", "A hall.", exits = mapOf(Direction.SOUTH to roomA, Direction.UP to roomC)),
             roomC to Room(roomC, "The Attic", "An attic.", exits = mapOf(Direction.DOWN to roomB)),
+            roomD to Room(roomD, "The Cellar", "A cellar.", exits = mapOf(Direction.UP to roomA)),
         ),
         startRoom = roomA,
     )
