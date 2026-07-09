@@ -3,6 +3,8 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.arcanum.ArcanumSource
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemType
 import dev.ambon.domain.world.ReputationRequirement
 import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.engine.PlayerState
@@ -108,10 +110,11 @@ class ShopHandler(
             for ((_, item) in shopItems) {
                 val buyPrice = (item.basePrice * economyConfig.buyMultiplier).roundToInt()
                 val sellPrice = (item.basePrice * economyConfig.sellMultiplier).roundToInt()
+                val ownedMark = if (item.mountId != null && item.mountId in me.ownedMounts) " (owned)" else ""
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "  %-30s %5d gp %5d gp".format(item.displayName, buyPrice, sellPrice),
+                        "  %-30s %5d gp %5d gp%s".format(item.displayName, buyPrice, sellPrice, ownedMark),
                     ),
                 )
             }
@@ -143,6 +146,10 @@ class ShopHandler(
                 gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "INSUFFICIENT_GOLD", scope = "shop", command = "buy")
                 return
             }
+            if (item.resolvedType() == ItemType.MOUNT) {
+                handleBuyMount(sessionId, me, item, buyPrice)
+                return
+            }
             val newItem = items.createFromTemplate(itemId)
             if (newItem == null) {
                 val msg = "That item is out of stock."
@@ -159,6 +166,44 @@ class ShopHandler(
             syncItemsGmcp(sessionId, items, gmcpEmitter)
             ctx.emitShopGmcp(sessionId)
         }
+    }
+
+    /**
+     * Buying a mount never touches the inventory: it permanently records the
+     * mount id on the character, which unlocks the matching sprite and map
+     * fast travel. Repeat purchases are refused.
+     */
+    private suspend fun handleBuyMount(
+        sessionId: SessionId,
+        me: PlayerState,
+        item: Item,
+        buyPrice: Long,
+    ) {
+        val mountId = item.mountId
+        if (mountId == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "${item.displayName} isn't for sale."))
+            return
+        }
+        if (mountId in me.ownedMounts) {
+            val msg = "You already own ${item.displayName}."
+            outbound.send(OutboundEvent.SendError(sessionId, msg))
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "MOUNT_ALREADY_OWNED", scope = "shop", command = "buy")
+            return
+        }
+        if (!me.isStaff) me.gold -= buyPrice
+        me.ownedMounts.add(mountId)
+        markVitalsDirty(sessionId)
+        outbound.send(OutboundEvent.SendText(sessionId, "You buy ${item.displayName} for $buyPrice gold."))
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                "${item.displayName} joins your stable! It's available as a sprite ('sprite list') " +
+                    "and you can now fast travel by clicking the map.",
+            ),
+        )
+        gmcpEmitter?.sendCharSprites(sessionId, me)
+        gmcpEmitter?.sendTravelStatus(sessionId, me)
+        ctx.emitShopGmcp(sessionId)
     }
 
     private suspend fun handleSell(

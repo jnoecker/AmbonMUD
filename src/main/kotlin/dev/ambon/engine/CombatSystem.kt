@@ -185,6 +185,12 @@ class CombatSystem(
 
     private val pvpCombatStates = mutableMapOf<SessionId, PvpCombatState>()
 
+    /**
+     * Sessions already told (this login) that their Akathavae pledge forfeits
+     * group kill XP — the reminder is sent once per login, not on every kill.
+     */
+    private val pledgeKillXpNotified = mutableSetOf<SessionId>()
+
     /** Zone start room lookup, wired by GameEngine after construction. */
     var zoneStartRoomLookup: (String) -> RoomId? = { _ -> null }
 
@@ -457,11 +463,15 @@ class CombatSystem(
                 pvpCombatStates[sid] = state.copy(targetSid = newSid)
             }
         }
+        if (pledgeKillXpNotified.remove(oldSid)) {
+            pledgeKillXpNotified.add(newSid)
+        }
     }
 
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         removePlayerFromCombat(sessionId)
         endPvpCombat(sessionId)
+        pledgeKillXpNotified.remove(sessionId)
     }
 
     fun endCombatFor(sessionId: SessionId) {
@@ -990,6 +1000,12 @@ class CombatSystem(
                 if (now < mobCombatState.nextTickAtMs) continue
                 val mob = mobs.get(mobId) ?: continue
                 if (mob.hp <= 0) continue
+                // Pets share their owner's Akathavae pledge: violence by proxy is still
+                // violence. A pledged owner's pets never melee and never auto-cast a
+                // damaging skill (direct roll or DOT), mirroring the owner-swing gate in
+                // the player attack phase above. Purely defensive skills (taunts, buffs)
+                // stay available so a tank pet can still soak hits.
+                val ownerPledged = players.get(sessionId)?.isAkathavae == true
                 // Every pet the owner controls attacks (a single companion is the common case; the
                 // Mycorae spore swarm and other multi-summons all act, and tank pets each build
                 // threat so a wall of mushrooms actually holds aggro).
@@ -1001,7 +1017,7 @@ class CombatSystem(
                         if (petSystem.isManualGraceActive(sessionId, now)) {
                             null
                         } else {
-                            selectPetSkill(pet, now)
+                            selectPetSkill(pet, now, excludeDamaging = ownerPledged)
                         }
 
                     if (autoSkill != null) {
@@ -1009,6 +1025,8 @@ class CombatSystem(
                         onPetSkillCast(sessionId)
                         continue
                     }
+
+                    if (ownerPledged) continue
 
                     val petRoll = rollRange(rng, pet.damage.min, pet.damage.max)
                     val petDamage = (petRoll - mob.armor).coerceAtLeast(1)
@@ -1180,11 +1198,16 @@ class CombatSystem(
      * Unlike [selectMobSpell] this does not exclude a defaultAttack — pets don't model a
      * default-attack spell separate from their melee, and every entry in `pet.spells` is a
      * triggerable signature skill.
+     *
+     * [excludeDamaging] drops skills that would reduce the target's HP (Akathavae owners —
+     * see [petSkillDealsDamage]), leaving only defensive utility like taunts and buffs.
      */
-    private fun selectPetSkill(pet: MobState, now: Long): MobSpell? {
+    private fun selectPetSkill(pet: MobState, now: Long, excludeDamaging: Boolean = false): MobSpell? {
         if (pet.spells.isEmpty()) return null
         val cooldowns = mobSpellCooldowns[pet.id] ?: emptyMap()
-        val eligible = pet.spells.filter { (cooldowns[it.id] ?: 0L) <= now }
+        val eligible = pet.spells.filter { skill ->
+            (cooldowns[skill.id] ?: 0L) <= now && !(excludeDamaging && petSkillDealsDamage(skill))
+        }
         if (eligible.isEmpty()) return null
         val totalWeight = eligible.sumOf { it.weight }
         if (totalWeight <= 0) return eligible.first()
@@ -1571,6 +1594,12 @@ class CombatSystem(
         val skill = pets.findSkill(pet, skillQuery)
             ?: return PetSkillResult.Error("${pet.name} doesn't know '$skillQuery'.", "UNKNOWN_SKILL")
 
+        // The pledge extends to the pet: a pledged owner may still trigger defensive
+        // skills (taunts, buffs) but never one that deals damage, directly or via DOT.
+        if (players.get(ownerSid)?.isAkathavae == true && petSkillDealsDamage(skill)) {
+            return PetSkillResult.Error(ERR_AKATHAVAE_PLEDGE, "AKATHAVAE_PLEDGE")
+        }
+
         val target = getCombatTarget(ownerSid)
             ?: return PetSkillResult.Error("You're not in combat.", "NOT_IN_COMBAT")
         if (target.roomId != pet.roomId) {
@@ -1592,6 +1621,16 @@ class CombatSystem(
         onPetSkillCast(ownerSid)
         return PetSkillResult.Ok
     }
+
+    /**
+     * Returns true if [skill] would reduce a mob's HP: a direct damage roll, or a status
+     * effect whose type ticks damage (DOT). Skills that only taunt, buff, or apply
+     * non-damaging debuffs are not damage-dealing. Used to hold pets to their owner's
+     * Akathavae pledge — violence by proxy is still violence (issue #1398).
+     */
+    private fun petSkillDealsDamage(skill: MobSpell): Boolean =
+        skill.damage != null ||
+            (skill.statusEffectId != null && statusEffects?.effectTicksDamage(skill.statusEffectId) == true)
 
     /**
      * Applies a pet skill against a target mob. Damage portion adds threat to the pet's synthetic
@@ -1931,13 +1970,29 @@ class CombatSystem(
         val group = groupSystem?.getGroup(killerSessionId)
         val recipients =
             if (group != null) {
-                group.members.filter { sid ->
-                    val p = players.get(sid)
-                    p != null && p.roomId == mob.roomId
+                val membersInRoom =
+                    group.members.mapNotNull { sid ->
+                        players.get(sid)?.takeIf { it.roomId == mob.roomId }?.let { sid to it }
+                    }
+                // Pledged Akathavae forfeit kill XP entirely; they also don't count
+                // toward the split or the group bonus, so the fighters' payout is
+                // identical to a group without the pledged member along.
+                val (pledged, eligible) = membersInRoom.partition { (_, p) -> p.isAkathavae }
+                for ((sid, _) in pledged) {
+                    if (pledgeKillXpNotified.add(sid)) {
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sid,
+                                "Your pledge holds — the kill earns you nothing. Record the world instead.",
+                            ),
+                        )
+                    }
                 }
+                eligible.map { (sid, _) -> sid }
             } else {
                 listOf(killerSessionId)
             }
+        if (recipients.isEmpty()) return 0L
 
         val memberCount = recipients.size
         val groupBonus =

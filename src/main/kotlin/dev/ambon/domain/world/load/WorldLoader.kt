@@ -561,6 +561,14 @@ object WorldLoader {
                         )
                 }
 
+                val mountId = itemFile.mountId?.trim()?.takeUnless { it.isEmpty() }
+                if (itemType == ItemType.MOUNT && mountId == null) {
+                    throw WorldLoadException("Item '${itemId.value}' has itemType 'mount' but no mountId")
+                }
+                if (itemType != ItemType.MOUNT && mountId != null) {
+                    throw WorldLoadException("Item '${itemId.value}' sets mountId but itemType is not 'mount'")
+                }
+
                 val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
                 val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
                 if (roomRaw != null && mobRaw != null) {
@@ -612,6 +620,7 @@ object WorldLoader {
                                         itemType = itemType,
                                         questItem = itemFile.questItem,
                                         takeable = itemFile.takeable,
+                                        mountId = mountId,
                                     ),
                             ),
                         roomId = roomId,

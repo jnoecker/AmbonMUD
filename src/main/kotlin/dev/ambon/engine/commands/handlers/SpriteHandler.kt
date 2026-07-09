@@ -38,6 +38,7 @@ class SpriteHandler(
             playerRace = ps.race,
             playerClass = ps.playerClass,
             playerGender = ps.gender,
+            ownedMounts = ps.ownedMounts,
         )
 
         if (available.isEmpty()) {
@@ -62,7 +63,13 @@ class SpriteHandler(
         }
         sb.appendLine()
 
-        for (cat in listOf(SpriteCategory.GENERAL, SpriteCategory.TIER, SpriteCategory.ACHIEVEMENT, SpriteCategory.STAFF)) {
+        for (cat in listOf(
+            SpriteCategory.GENERAL,
+            SpriteCategory.TIER,
+            SpriteCategory.ACHIEVEMENT,
+            SpriteCategory.MOUNT,
+            SpriteCategory.STAFF,
+        )) {
             val entries = grouped[cat] ?: continue
             sb.appendLine("--- ${cat.name.lowercase().replaceFirstChar { it.uppercase() }} Sprites ---")
             // Sort by definition sortOrder, then variant displayName
@@ -100,6 +107,7 @@ class SpriteHandler(
             playerRace = ps.race,
             playerClass = ps.playerClass,
             playerGender = ps.gender,
+            ownedMounts = ps.ownedMounts,
         )
 
         if (variant == null) {

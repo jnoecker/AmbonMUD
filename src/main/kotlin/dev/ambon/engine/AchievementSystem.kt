@@ -355,6 +355,7 @@ class AchievementSystem(
                 isStaff = ps.isStaff,
                 playerRace = ps.race,
                 playerClass = ps.playerClass,
+                ownedMounts = ps.ownedMounts,
             ).filter { def ->
                 def.isUnlockedByAchievement(achievementId)
             }

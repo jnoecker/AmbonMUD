@@ -277,6 +277,59 @@ class CommandRouterShopTest {
             assertEquals(1, env.items.inventory(env.sid).size)
         }
 
+    @Test
+    fun `buying a mount unlocks it permanently instead of entering inventory`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 150L
+
+            env.router.handle(env.sid, Command.Buy("pony"))
+
+            assertEquals(50L, env.player.gold, "mount price of 100 deducted")
+            assertTrue("dappled_pony" in env.player.ownedMounts, "mount recorded on the character")
+            assertTrue(
+                env.items.inventory(env.sid).none { it.item.keyword == "pony" },
+                "mount never enters the inventory",
+            )
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text.contains("stable", ignoreCase = true) },
+                "purchase celebrates the unlock. got=$outs",
+            )
+        }
+
+    @Test
+    fun `buying an already-owned mount is refused without charging`() =
+        runTest {
+            val env = setup()
+            env.player.gold = 300L
+            env.player.ownedMounts.add("dappled_pony")
+
+            env.router.handle(env.sid, Command.Buy("pony"))
+
+            assertEquals(300L, env.player.gold, "no gold taken for a refused repeat purchase")
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("already own") },
+                "expected already-owned refusal. got=$outs",
+            )
+        }
+
+    @Test
+    fun `mounts cannot be sold back`() =
+        runTest {
+            val env = setup()
+            env.player.ownedMounts.add("dappled_pony")
+
+            env.router.handle(env.sid, Command.Sell("pony"))
+
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.text.contains("don't have") },
+                "mounts are not inventory items, so there is nothing to sell. got=$outs",
+            )
+        }
+
     private data class TestEnv(
         val world: dev.ambon.domain.world.World,
         val items: ItemRegistry,

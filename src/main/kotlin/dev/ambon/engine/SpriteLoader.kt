@@ -42,6 +42,7 @@ internal data class SpriteRequirementFile(
     val race: String = "",
     val playerClass: String = "",
     val achievementId: String = "",
+    val mountId: String = "",
 )
 
 internal data class SpriteVariantFile(
@@ -88,6 +89,7 @@ object SpriteLoader {
                 "achievement" -> SpriteCategory.ACHIEVEMENT
                 "staff" -> SpriteCategory.STAFF
                 "general" -> SpriteCategory.GENERAL
+                "mount" -> SpriteCategory.MOUNT
                 else -> error("Sprite '$id' has unknown category '${entry.category}'")
             }
 
@@ -169,6 +171,10 @@ object SpriteLoader {
                 SpriteRequirement.Achievement(rf.achievementId)
             }
             "staff" -> SpriteRequirement.Staff
+            "mount" -> {
+                require(rf.mountId.isNotBlank()) { "Sprite '$spriteId' mount requirement must specify mountId" }
+                SpriteRequirement.Mount(rf.mountId)
+            }
             else -> error("Sprite '$spriteId' has unknown requirement type '${rf.type}'")
         }
 

@@ -31,6 +31,7 @@ private val equippedItemsType = object : TypeReference<Map<String, ItemInstance>
 private val learnedAbilityIdsType = object : TypeReference<Set<String>>() {}
 private val unlockedClassesType = object : TypeReference<Set<String>>() {}
 private val lastInnByZoneType = object : TypeReference<Map<String, String>>() {}
+private val ownedMountsType = object : TypeReference<Set<String>>() {}
 
 object PlayersTable : Table("players") {
     val id = long("id").autoIncrement("player_id_seq")
@@ -102,6 +103,7 @@ object PlayersTable : Table("players") {
     val preAkathavaeClass = varchar("pre_akathavae_class", 32).nullable()
     val arcanumData = text("arcanum_data").default("{}")
     val worldFirstsCount = integer("world_firsts_count").default(0)
+    val ownedMounts = text("owned_mounts").default("[]")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -176,6 +178,7 @@ object PlayersTable : Table("players") {
             preAkathavaeClass = row[preAkathavaeClass],
             arcanumData = row[arcanumData],
             worldFirstsCount = row[worldFirstsCount],
+            ownedMounts = safeReadJson(row[ownedMounts], ownedMountsType, emptySet()),
         ).migrateDefaults()
 
     /**
@@ -255,5 +258,6 @@ object PlayersTable : Table("players") {
         statement[preAkathavaeClass] = record.preAkathavaeClass
         statement[arcanumData] = record.arcanumData
         statement[worldFirstsCount] = record.worldFirstsCount
+        statement[ownedMounts] = jsonMapper.writeValueAsString(record.ownedMounts)
     }
 }

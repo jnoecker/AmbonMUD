@@ -7,6 +7,7 @@ const CATEGORIES = [
   { key: "crafting", label: "Crafting" },
   { key: "dungeons", label: "Dungeons" },
   { key: "kills", label: "Kills" },
+  { key: "arcanum", label: "Chronicler" },
 ];
 
 interface Props {

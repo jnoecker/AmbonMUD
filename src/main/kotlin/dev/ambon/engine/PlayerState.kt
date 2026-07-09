@@ -196,6 +196,14 @@ data class PlayerState(
     var arcanum: ArcanumJournal = ArcanumJournal(),
     /** Number of permanent Arcanum world-firsts credited to this player (the registry is keyed by subject, not player). */
     var worldFirstsCount: Int = 0,
+    /** Mount ids permanently unlocked by shop purchases — sprite unlocks + map fast travel. */
+    var ownedMounts: MutableSet<String> = mutableSetOf(),
+    /**
+     * Mount id the player is currently riding during map fast travel, or null when not
+     * riding. While set, sprite resolution shows the mount instead of the player's normal
+     * sprite and mobs skip aggro against the rider. Runtime-only; not persisted.
+     */
+    var ridingMountId: String? = null,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -366,6 +374,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         wimpyThresholdPct = wimpyThresholdPct,
         lastRespecAtMs = lastRespecAtMs,
         racialAbilityCooldownUntilMs = racialAbilityCooldownUntilMs,
+        ownedMounts = ownedMounts.toMutableSet(),
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -438,6 +447,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         wimpyThresholdPct = wimpyThresholdPct,
         lastRespecAtMs = lastRespecAtMs,
         racialAbilityCooldownUntilMs = racialAbilityCooldownUntilMs,
+        ownedMounts = ownedMounts.toSet(),
     )
 }
 

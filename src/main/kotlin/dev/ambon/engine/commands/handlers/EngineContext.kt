@@ -16,6 +16,7 @@ import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.JukeboxSystem
 import dev.ambon.engine.LeaderboardSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.MountTravelSystem
 import dev.ambon.engine.MusicBoxSystem
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -72,6 +73,8 @@ data class EngineContext(
     /** Boat-dock fast-travel logic. Null disables boat GMCP/commands (e.g. in tests). */
     val boatSystem: BoatSystem? = null,
     val boatConfig: BoatConfig = BoatConfig(),
+    /** Mount map-click fast travel. Null disables the `travel` command (e.g. in tests). */
+    val mountTravelSystem: MountTravelSystem? = null,
     /** Records shop/craft/gather item discoveries into Akathavae journals when present. */
     val akathavaeSystem: dev.ambon.engine.AkathavaeSystem? = null,
     /** Gameplay metrics. Defaults to a no-op registry so tests need no wiring. */

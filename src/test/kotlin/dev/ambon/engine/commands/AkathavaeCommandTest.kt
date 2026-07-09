@@ -9,6 +9,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.mob.MobRole
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
@@ -68,6 +69,19 @@ class AkathavaeCommandTest {
             assertEquals(Command.Arcanum(null), CommandParser.parse("arcanum"))
             assertEquals(Command.Arcanum("mobs"), CommandParser.parse("arcanum mobs"))
             assertEquals(Command.Arcanum(null), CommandParser.parse("journal"))
+        }
+
+        @Test
+        fun `arcanum parses an optional page after the section`() {
+            assertEquals(Command.Arcanum("mobs", 2), CommandParser.parse("arcanum mobs 2"))
+            assertEquals(Command.Arcanum("rooms", 10), CommandParser.parse("arcanum rooms 10"))
+            assertEquals(Command.Arcanum("items", 1), CommandParser.parse("journal items 1"))
+        }
+
+        @Test
+        fun `arcanum with a non-numeric page is invalid`() {
+            assertTrue(CommandParser.parse("arcanum mobs two") is Command.Invalid)
+            assertTrue(CommandParser.parse("arcanum mobs 2 extra") is Command.Invalid)
         }
 
         @Test
@@ -286,6 +300,73 @@ class AkathavaeCommandTest {
         }
 
         @Test
+        fun `consider shows illumination odds while pledged`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.router.handle(sid, Command.Pledge)
+            h.mobs.upsert(MobState(id = MobId("test:rat"), name = "rat", roomId = shrineRoom))
+            h.drain()
+
+            h.router.handle(sid, Command.Consider("rat"))
+
+            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            // Base stats, equal level: the configured base chance of 70%.
+            assertTrue(texts.any { it.contains("70% chance to illuminate") }, "got=$texts")
+        }
+
+        @Test
+        fun `consider output is unchanged for the unpledged`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.mobs.upsert(MobState(id = MobId("test:rat"), name = "rat", roomId = shrineRoom))
+            h.drain()
+
+            h.router.handle(sid, Command.Consider("rat"))
+
+            val events = h.drain()
+            val texts = events.filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(texts.any { it.contains("Estimated win chance") }, "got=$texts")
+            assertFalse(texts.any { it.contains("illuminate") }, "unpledged consider must not mention illumination: got=$texts")
+        }
+
+        @Test
+        fun `consider on a non-combatant tells the pledged that observation always succeeds`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.router.handle(sid, Command.Pledge)
+            h.mobs.upsert(
+                MobState(id = MobId("test:elder"), name = "the village elder", roomId = shrineRoom, role = MobRole.DIALOG),
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Consider("elder"))
+
+            val events = h.drain()
+            val infos = events.filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("observing them for your Arcanum always succeeds") }, "got=$infos")
+            assertTrue(events.filterIsInstance<OutboundEvent.SendError>().isEmpty(), "pledged consider on an NPC is not an error")
+        }
+
+        @Test
+        fun `consider on a non-combatant still errors for the unpledged`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.mobs.upsert(
+                MobState(id = MobId("test:elder"), name = "the village elder", roomId = shrineRoom, role = MobRole.DIALOG),
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Consider("elder"))
+
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("isn't a threat") }, "got=$errors")
+        }
+
+        @Test
         fun `spells leafs through the Arcanum for an Akathavae`() = runTest {
             val h = harness()
             val sid = SessionId(1)
@@ -456,6 +537,141 @@ class AkathavaeCommandTest {
         }
     }
 
+    // ── Illumination arts kit (#1394) ────────────────────────────────────
+
+    @Nested
+    inner class IlluminationArts {
+        private val kit = setOf("chroniclers_focus", "soothing_presence", "keepers_ward", "muses_insight")
+
+        /**
+         * Harness with the shipped ability definitions loaded from the real
+         * `application.yaml`, so pledging grants the actual illumination arts.
+         * A zero-cost Warrior ability is added so the pre-pledge kit visibly
+         * comes and goes around the pledge.
+         */
+        private fun artsHarness(
+            config: AkathavaeConfig = AkathavaeConfig(),
+        ): Pair<CommandRouterHarness, dev.ambon.engine.abilities.AbilitySystem> {
+            val appConfig = dev.ambon.config.AppConfigLoader.load().validated()
+            val classRegistry = dev.ambon.engine.PlayerClassRegistry().also { reg ->
+                dev.ambon.engine.PlayerClassRegistryLoader.load(dev.ambon.test.testClassEngineConfig(), reg)
+            }
+            val progression = dev.ambon.engine.PlayerProgression(classRegistry = classRegistry)
+            val world = shrineWorld()
+            val outbound = dev.ambon.bus.LocalOutboundBus()
+            val items = dev.ambon.engine.items.ItemRegistry()
+            val mobs = dev.ambon.engine.MobRegistry()
+            val players = buildTestPlayerRegistry(
+                world.startRoom,
+                items = items,
+                progression = progression,
+                classRegistry = classRegistry,
+            )
+            val combat = dev.ambon.engine.CombatSystem(players, mobs, items, outbound)
+            val registry = dev.ambon.engine.abilities.AbilityRegistry()
+            dev.ambon.engine.abilities.AbilityRegistryLoader.load(appConfig.engine.abilities, registry)
+            registry.register(
+                dev.ambon.engine.abilities.AbilityDefinition(
+                    id = dev.ambon.engine.abilities.AbilityId("warriors_swing"),
+                    displayName = "Warrior's Swing",
+                    description = "A mighty swing.",
+                    manaCostPct = 10.0,
+                    cooldownMs = 0,
+                    levelRequired = 1,
+                    skillPointCost = 0,
+                    requiredClass = "WARRIOR",
+                    targetType = "enemy",
+                    effect = dev.ambon.engine.abilities.AbilityEffect.DirectDamage(dev.ambon.domain.DamageRange(5, 5)),
+                ),
+            )
+            val abilitySystem = dev.ambon.engine.abilities.AbilitySystem(
+                players = players,
+                registry = registry,
+                outbound = outbound,
+                combat = combat,
+                clock = MutableClock(0L),
+            )
+            val h = CommandRouterHarness.create(
+                world = world,
+                players = players,
+                items = items,
+                mobs = mobs,
+                outbound = outbound,
+                progression = progression,
+                classRegistry = classRegistry,
+                abilitySystem = abilitySystem,
+                akathavaeConfig = config,
+            )
+            return h to abilitySystem
+        }
+
+        @Test
+        fun `pledging grants the illumination arts and renouncing withdraws them`() = runTest {
+            val (h, abilitySystem) = artsHarness(config = AkathavaeConfig(renounceCostGold = 0))
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.players.setLevel(sid, 14)
+            abilitySystem.refreshKnownAbilities(sid)
+            assertTrue(
+                abilitySystem.knownAbilities(sid).any { it.id.value == "warriors_swing" },
+                "warrior kit known before the pledge",
+            )
+            assertTrue(
+                abilitySystem.knownAbilities(sid).none { it.id.value in kit },
+                "no illumination arts before the pledge",
+            )
+            h.drain()
+
+            h.router.handle(sid, Command.Pledge)
+
+            assertEquals(
+                kit,
+                abilitySystem.knownAbilities(sid).map { it.id.value }.toSet(),
+                "a level-14 pledge should know the full kit and nothing else",
+            )
+
+            h.router.handle(sid, Command.Renounce(confirm = true))
+
+            val renouncedIds = abilitySystem.knownAbilities(sid).map { it.id.value }.toSet()
+            assertTrue(renouncedIds.none { it in kit }, "the arts must not outlive the pledge: $renouncedIds")
+            assertTrue("warriors_swing" in renouncedIds, "former-class abilities return on renounce")
+        }
+
+        @Test
+        fun `a low-level pledge only knows the arts they have earned`() = runTest {
+            val (h, abilitySystem) = artsHarness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.players.setLevel(sid, 6)
+            h.drain()
+
+            h.router.handle(sid, Command.Pledge)
+
+            assertEquals(
+                setOf("chroniclers_focus", "soothing_presence"),
+                abilitySystem.knownAbilities(sid).map { it.id.value }.toSet(),
+            )
+        }
+
+        @Test
+        fun `spells lists the illumination arts for a pledged keeper`() = runTest {
+            val (h, _) = artsHarness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.players.setLevel(sid, 3)
+            h.router.handle(sid, Command.Pledge)
+            h.drain()
+
+            h.router.handle(sid, Command.Spells)
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("illumination arts") }, "got=$infos")
+            assertTrue(infos.any { it.contains("Chronicler's Focus") }, "got=$infos")
+            assertTrue(infos.any { it.contains("Arcanum") }, "journal pointer stays, got=$infos")
+            assertFalse(infos.any { it.contains("wield no spells") }, "got=$infos")
+        }
+    }
+
     // ── Multiclass lockout ───────────────────────────────────────────────
 
     @Nested
@@ -526,6 +742,108 @@ class AkathavaeCommandTest {
                 "got=$errors",
             )
             assertFalse(me.unlockedClasses.contains("MAGE"))
+        }
+    }
+
+    // ── Journal (arcanum command) tests ──────────────────────────────────
+
+    @Nested
+    inner class Journal {
+        /** 100 entries per telnet page (MAX_SECTION_ROWS × 4 per row). */
+        private val pageSize = 100
+
+        private suspend fun pledgedWithMobEntries(h: CommandRouterHarness, sid: SessionId, count: Int) {
+            h.loginPlayer(sid, "Thalen")
+            val me = h.players.get(sid)!!
+            me.isAkathavae = true
+            for (i in 1..count) {
+                me.arcanum.mobs["test:mob_${"%03d".format(i)}"] = ArcanumEntry(firstRecordedAtMs = i.toLong())
+            }
+            h.drain()
+        }
+
+        @Test
+        fun `bare arcanum mobs shows page 1 with a paging footer`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithMobEntries(h, sid, count = 150)
+
+            h.router.handle(sid, Command.Arcanum("mobs"))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("Creatures (150)") }, "got=$infos")
+            assertTrue(infos.any { it.contains("mob 001") }, "page 1 should start at the first entry; got=$infos")
+            assertFalse(infos.any { it.contains("mob 150") }, "page 1 must not spill into page 2; got=$infos")
+            assertTrue(infos.any { it.contains("Page 1/2 — 'arcanum mobs 2' for more.") }, "got=$infos")
+        }
+
+        @Test
+        fun `arcanum mobs 2 shows the second page`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithMobEntries(h, sid, count = 150)
+
+            h.router.handle(sid, Command.Arcanum("mobs", 2))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(infos.any { it.contains("mob 101") }, "page 2 starts after the first $pageSize; got=$infos")
+            assertTrue(infos.any { it.contains("mob 150") }, "got=$infos")
+            assertFalse(infos.any { it.contains("mob 001") }, "page 2 must not repeat page 1; got=$infos")
+            assertTrue(infos.any { it.contains("Page 2/2.") }, "the last page has no next-page hint; got=$infos")
+        }
+
+        @Test
+        fun `out-of-range page is a friendly error`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithMobEntries(h, sid, count = 150)
+
+            h.router.handle(sid, Command.Arcanum("mobs", 5))
+
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("run 1 to 2") && it.contains("arcanum mobs 2") }, "got=$errors")
+        }
+
+        @Test
+        fun `a single page renders without a paging footer`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            pledgedWithMobEntries(h, sid, count = 8)
+
+            h.router.handle(sid, Command.Arcanum("mobs"))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertFalse(infos.any { it.contains("Page 1/") }, "got=$infos")
+        }
+
+        @Test
+        fun `summary zone lines include the items count`() = runTest {
+            val h = harness()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Thalen")
+            h.items.loadSpawns(
+                listOf(
+                    dev.ambon.domain.world.ItemSpawn(
+                        instance = ItemInstance(ItemId("test:hood"), Item(keyword = "hood", displayName = "a leather hood")),
+                    ),
+                    dev.ambon.domain.world.ItemSpawn(
+                        instance = ItemInstance(ItemId("test:ring"), Item(keyword = "ring", displayName = "a copper ring")),
+                    ),
+                ),
+            )
+            val me = h.players.get(sid)!!
+            me.isAkathavae = true
+            me.arcanum.rooms[shrineRoom.value] = ArcanumEntry(firstRecordedAtMs = 1L)
+            me.arcanum.items["test:hood"] = ArcanumEntry(firstRecordedAtMs = 1L)
+            h.drain()
+
+            h.router.handle(sid, Command.Arcanum(null))
+
+            val infos = h.drain().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+            assertTrue(
+                infos.any { it.contains("test: 1/2 places, 0/0 creatures, 1/2 items.") },
+                "zone line should count all three kinds; got=$infos",
+            )
         }
     }
 

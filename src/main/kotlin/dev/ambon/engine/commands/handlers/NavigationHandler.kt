@@ -512,6 +512,9 @@ class NavigationHandler(
             if (p.description.isNotEmpty()) {
                 outbound.send(OutboundEvent.SendText(sessionId, p.description))
             }
+            if (p.isAkathavae) {
+                outbound.send(OutboundEvent.SendText(sessionId, AKATHAVAE_PLEDGE_LINE))
+            }
             gmcpEmitter?.sendLookTarget(
                 sessionId,
                 "player",
@@ -570,5 +573,10 @@ class NavigationHandler(
                 }
             }
         }
+    }
+
+    companion object {
+        /** Flavor line appended to `look <player>` when the target is a pledged Akathavae. */
+        const val AKATHAVAE_PLEDGE_LINE = "Ink stains their fingers — a pledged Akathavae, keeper of an Arcanum."
     }
 }
