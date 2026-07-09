@@ -207,8 +207,11 @@ class AkathavaeSystem(
 
         // Catalogue what the creature carries as Arcanum pages — this feeds the
         // wardrobe — but take nothing: the subject is unharmed and stays put.
+        // The illumination XP above just armed the discovery-XP throttle, so these
+        // same-action item awards bypass it — otherwise the items get recorded with
+        // their XP silently and permanently swallowed.
         for (drop in mob.drops) {
-            recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED)
+            recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED, bypassThrottle = true)
         }
 
         // A recorded creature counts as a defeated one for quests and achievements,
@@ -311,9 +314,10 @@ class AkathavaeSystem(
         sessionId: SessionId,
         itemId: dev.ambon.domain.ids.ItemId,
         source: String,
+        bypassThrottle: Boolean = false,
     ) {
         val template = items.getTemplate(itemId) ?: return
-        recordItemDiscovery(sessionId, ItemInstance(id = itemId, item = template), source)
+        recordItemDiscovery(sessionId, ItemInstance(id = itemId, item = template), source, bypassThrottle)
     }
 
     /**
@@ -325,6 +329,7 @@ class AkathavaeSystem(
         sessionId: SessionId,
         item: ItemInstance,
         source: String,
+        bypassThrottle: Boolean = false,
     ) {
         val me = players.get(sessionId) ?: return
         if (!me.isAkathavae) return
@@ -337,7 +342,7 @@ class AkathavaeSystem(
         recordEntry(me.arcanum.items, key, now, source)
         outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You record ${item.item.displayName}."))
         announceWorldFirst(sessionId, me, "item:$key", item.item.displayName, now)
-        awardDiscoveryXp(sessionId, me, config.itemDiscoveryXp, "discovery", now)
+        awardDiscoveryXp(sessionId, me, config.itemDiscoveryXp, "discovery", now, bypassThrottle)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
     }
@@ -471,16 +476,24 @@ class AkathavaeSystem(
         }
     }
 
-    /** Grants discovery XP scaled by the XP stat, behind the anti-speedrun throttle. */
+    /**
+     * Grants discovery XP scaled by the XP stat, behind the anti-speedrun throttle.
+     *
+     * [bypassThrottle] is for intra-action awards only (e.g. cataloguing a mob's
+     * drops in the same illumination that just awarded XP): it skips the throttle
+     * check but still updates the next-award window, so a bypassed award never
+     * opens a farming window.
+     */
     private suspend fun awardDiscoveryXp(
         sessionId: SessionId,
         me: PlayerState,
         baseAmount: Long,
         label: String,
         now: Long,
+        bypassThrottle: Boolean = false,
     ) {
         if (baseAmount <= 0L) return
-        if (now < (nextDiscoveryXpAt[sessionId] ?: 0L)) return
+        if (!bypassThrottle && now < (nextDiscoveryXpAt[sessionId] ?: 0L)) return
         nextDiscoveryXpAt[sessionId] = now + config.discoveryXpThrottleMs
 
         val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
