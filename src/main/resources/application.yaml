@@ -2833,7 +2833,18 @@ ambonmud:
       weeklySlots: 1
       streakBonusPercent: 10
       streakMaxDays: 7
+      # Pool entry types: kill, gather, dungeon, craft, pvpKill, illuminate.
+      # "illuminate" commissions advance on first-time Akathavae illuminations and
+      # observations (once per living mob instance) — the explorer counterpart to
+      # kill bounties. Gold rewards matter here: the pledged have no kill-gold
+      # income. Example pool (uncomment and set enabled: true to use):
+      # dailyPool:
+      #   - { type: illuminate, targetCount: 5, description: "The Arcanum requests five fresh accounts of living creatures.", goldReward: 150, xpReward: 400 }
+      #   - { type: illuminate, targetCount: 3, description: "Commission: record three subjects never before held in your Arcanum.", goldReward: 100, xpReward: 250 }
+      #   - { type: kill, targetCount: 10, description: "Slay 10 creatures.", goldReward: 150, xpReward: 400 }
       dailyPool: []
+      # weeklyPool:
+      #   - { type: illuminate, targetCount: 25, description: "The Arcanum's grand commission: twenty-five living accounts this week.", goldReward: 800, xpReward: 2000 }
       weeklyPool: []
     autoQuests:
       enabled: true

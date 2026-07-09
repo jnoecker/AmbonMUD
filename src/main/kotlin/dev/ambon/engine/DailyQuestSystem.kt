@@ -150,7 +150,7 @@ class DailyQuestSystem(
      * Called by game systems when a player performs an action that may advance
      * daily or weekly quest progress.
      *
-     * @param type The quest objective type (e.g. "kill", "gather", "craft", "dungeon", "pvpKill").
+     * @param type The quest objective type (e.g. "kill", "gather", "craft", "dungeon", "pvpKill", "illuminate").
      * @param count The number of actions to credit.
      * @return list of (questLabel, isDaily) pairs for quests that just completed
      */

@@ -65,6 +65,13 @@ class AkathavaeSystem(
      * stamped world-first, so achievement progress can update immediately.
      */
     private val onArcanumRecorded: (suspend (SessionId) -> Unit)? = null,
+    /**
+     * Daily-quest hook for `illuminate`-type commissions. Fired once per living
+     * mob instance on a successful illumination (alongside the kill credit) and
+     * once per first-time NPC observation — commissions are about recording,
+     * so observations count, but re-recording the same subject never does.
+     */
+    private val onIlluminated: (suspend (SessionId) -> Unit)? = null,
 ) {
     companion object {
         /**
@@ -267,6 +274,7 @@ class AkathavaeSystem(
         if (creditedIlluminations.getOrPut(sessionId) { mutableSetOf() }.add(mob.id.value)) {
             combat.creditIlluminationKill(sessionId, mob)
             grantNeededQuestItems(sessionId, mob)
+            onIlluminated?.invoke(sessionId)
         }
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
@@ -363,6 +371,9 @@ class AkathavaeSystem(
             announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
             onArcanumRecorded?.invoke(sessionId)
             awardDiscoveryXp(sessionId, me, config.observeNpcXp, "observation", now)
+            // First-time observations count toward illumination commissions —
+            // recording a subject matters, not whether it was dangerous.
+            onIlluminated?.invoke(sessionId)
             markVitalsDirty?.invoke(sessionId)
             emitStatus(sessionId)
             refreshRoomMobInfo?.invoke(sessionId)

@@ -846,6 +846,12 @@ class GameEngine(
             gmcpEmitter = gmcpEmitter,
             refreshRoomMobInfo = ::refreshRoomMobInfoForPlayer,
             onArcanumRecorded = { sid -> achievementSystem.onArcanumRecorded(sid) },
+            // Illumination commissions: first-time illuminations and observations
+            // advance "illuminate"-type daily/weekly quests. Note the kill-credit
+            // path (creditIlluminationKill → onCombatMobKilledByPlayer) already
+            // advances "kill"-type dailies for parity with fighters; this hook is
+            // the path-flavored counterpart that only illuminations can progress.
+            onIlluminated = { sid -> notifyDailyQuest(sid, "illuminate") },
         )
 
     private val flightSystem =
