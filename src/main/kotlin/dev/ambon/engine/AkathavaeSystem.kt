@@ -56,11 +56,25 @@ class AkathavaeSystem(
     private val onLevelUp: (suspend (SessionId, LevelUpResult) -> Unit)? = null,
     private val gmcpEmitter: GmcpEmitter? = null,
     /**
+     * Re-emits `Room.MobInfo` for the session after a successful recording, so the
+     * Monster Manual's recorded/world-first badge flips live (issue #1389).
+     */
+    private val refreshRoomMobInfo: (suspend (SessionId) -> Unit)? = null,
+    /**
      * Fired after a first-time Arcanum record (creature, room, or item) or a newly
      * stamped world-first, so achievement progress can update immediately.
      */
     private val onArcanumRecorded: (suspend (SessionId) -> Unit)? = null,
 ) {
+    companion object {
+        /**
+         * Arcanum subject key for a mob — the shared template key (`zone:template`),
+         * falling back to the instance id for mobs without a template. Shared with
+         * [GmcpEmitter]'s Room.MobInfo arcanum badges so both sides agree on identity.
+         */
+        fun mobSubjectKey(mob: MobState): String = mob.templateKey.ifEmpty { mob.id.value }
+    }
+
     /**
      * Late-bound quest bridge (wired by GameEngine after both systems exist).
      * Illumination grants a recorded creature's drops when — and only when — an
@@ -256,6 +270,7 @@ class AkathavaeSystem(
         }
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
+        refreshRoomMobInfo?.invoke(sessionId)
     }
 
     /**
@@ -350,6 +365,7 @@ class AkathavaeSystem(
             awardDiscoveryXp(sessionId, me, config.observeNpcXp, "observation", now)
             markVitalsDirty?.invoke(sessionId)
             emitStatus(sessionId)
+            refreshRoomMobInfo?.invoke(sessionId)
         } else {
             outbound.send(OutboundEvent.SendText(sessionId, "Your Arcanum already holds a page on ${mob.name}."))
         }
@@ -528,8 +544,6 @@ class AkathavaeSystem(
     }
 
     // ── Internals ────────────────────────────────────────────────────────
-
-    private fun mobSubjectKey(mob: MobState): String = mob.templateKey.ifEmpty { mob.id.value }
 
     private fun recordEntry(
         map: MutableMap<String, ArcanumEntry>,

@@ -8,6 +8,8 @@ import dev.ambon.domain.RaceDef
 import dev.ambon.domain.RacialAbility
 import dev.ambon.domain.RacialAbilityKind
 import dev.ambon.domain.StatMap
+import dev.ambon.domain.arcanum.ArcanumEntry
+import dev.ambon.domain.arcanum.ArcanumSource
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -50,6 +52,7 @@ class GmcpEmitterTest {
 
     private fun emitter(
         vararg supported: String,
+        arcanumFirstBy: (String) -> String? = { null },
         illuminationOdds: (SessionId, String) -> Int? = { _, _ -> null },
     ): GmcpEmitter {
         val packages = supported.toSet()
@@ -60,6 +63,7 @@ class GmcpEmitterTest {
             },
             progression = progression,
             equipmentSlotRegistry = defaultSlotRegistry,
+            arcanumFirstBy = arcanumFirstBy,
             illuminationOdds = illuminationOdds,
         )
     }
@@ -1774,6 +1778,97 @@ class GmcpEmitterTest {
             val e = emitter()
             e.sendRoomMobInfo(sid, emptyList())
             assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Room.MobInfo arcanum badges (issue #1389) ──
+
+    private fun goblinEntry(templateKey: String = "forest:goblin") =
+        MobInfoEntry(
+            id = "forest:goblin_1",
+            level = 3,
+            tier = "standard",
+            questGiver = false,
+            questAvailable = false,
+            questComplete = false,
+            shopKeeper = false,
+            dialogue = false,
+            aggressive = false,
+            combatant = true,
+            templateKey = templateKey,
+        )
+
+    private fun pledgedViewer(): PlayerState = player().also { it.isAkathavae = true }
+
+    @Test
+    fun `sendRoomMobInfo marks recorded subjects for pledged viewers`() =
+        runTest {
+            val viewer = pledgedViewer()
+            viewer.arcanum.mobs["forest:goblin"] =
+                ArcanumEntry(
+                    firstRecordedAtMs = 1_000L,
+                    source = ArcanumSource.OBSERVED,
+                )
+            val e = emitter("Room.MobInfo", arcanumFirstBy = { key -> "Thalen".takeIf { key == "mob:forest:goblin" } })
+            e.sendRoomMobInfo(sid, listOf(goblinEntry()), viewer = viewer)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"arcanumRecorded\":true"))
+            assertTrue(events[0].jsonData.contains("\"arcanumSource\":\"observed\""))
+            assertTrue(events[0].jsonData.contains("\"arcanumFirstBy\":\"Thalen\""))
+        }
+
+    @Test
+    fun `sendRoomMobInfo flags unrecorded unclaimed subjects as world-first opportunities`() =
+        runTest {
+            val e = emitter("Room.MobInfo")
+            e.sendRoomMobInfo(sid, listOf(goblinEntry()), viewer = pledgedViewer())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"arcanumRecorded\":false"))
+            // Unrecorded → no source; unclaimed → no first-by. NON_NULL keeps them off the wire.
+            assertFalse(events[0].jsonData.contains("arcanumSource"))
+            assertFalse(events[0].jsonData.contains("arcanumFirstBy"))
+        }
+
+    @Test
+    fun `sendRoomMobInfo names the world-first holder for unrecorded claimed subjects`() =
+        runTest {
+            val e = emitter("Room.MobInfo", arcanumFirstBy = { "Rivka" })
+            e.sendRoomMobInfo(sid, listOf(goblinEntry()), viewer = pledgedViewer())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"arcanumRecorded\":false"))
+            assertTrue(events[0].jsonData.contains("\"arcanumFirstBy\":\"Rivka\""))
+        }
+
+    @Test
+    fun `sendRoomMobInfo omits arcanum fields for non-pledged viewers`() =
+        runTest {
+            val e = emitter("Room.MobInfo", arcanumFirstBy = { "Thalen" })
+            e.sendRoomMobInfo(sid, listOf(goblinEntry()), viewer = player())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertFalse(events[0].jsonData.contains("arcanum"))
+        }
+
+    @Test
+    fun `sendRoomMobInfo omits arcanum fields without a viewer`() =
+        runTest {
+            val e = emitter("Room.MobInfo", arcanumFirstBy = { "Thalen" })
+            e.sendRoomMobInfo(sid, listOf(goblinEntry()))
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertFalse(events[0].jsonData.contains("arcanum"))
+        }
+
+    @Test
+    fun `sendRoomMobInfo skips arcanum badges for entries without a subject key`() =
+        runTest {
+            val e = emitter("Room.MobInfo", arcanumFirstBy = { "Thalen" })
+            e.sendRoomMobInfo(sid, listOf(goblinEntry(templateKey = "")), viewer = pledgedViewer())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertFalse(events[0].jsonData.contains("arcanum"))
         }
 
     // ── Group.Info mana ──

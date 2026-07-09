@@ -657,6 +657,7 @@ internal suspend fun sendLook(
             questAvailableMobIds = questAvailable,
             questCompleteMobIds = questComplete,
         ),
+        viewer = me,
     )
     gmcpEmitter?.sendRoomItems(sessionId, here)
 

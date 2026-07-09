@@ -2271,7 +2271,10 @@ function App() {
         <Suspense fallback={null}>
         <MonsterManualPanel
           key={monster.id ?? monster.name}
-          monster={monster}
+          // Re-derive `info` from live Room.MobInfo state so server refreshes
+          // (quest flags, Arcanum recorded/world-first badges after an
+          // illumination) reach the open manual without reopening it.
+          monster={{ ...monster, info: state.mobInfo.find((m) => m.id === monster.id) ?? monster.info }}
           consider={state.considerResult}
           bg={state.serverAssets["monster_manual_bg"]}
           serverAssets={state.serverAssets}

@@ -122,6 +122,11 @@ class GmcpEmitter(
     /** Current engine time in millis, used to compute racial-ability cooldown remaining. */
     private val nowMs: () -> Long = { 0L },
     /**
+     * Permanent world-first arcanum credit lookup (key `"mob:<templateKey>"` → holder name,
+     * or null when unclaimed), used for the pledged-viewer badges on `Room.MobInfo`.
+     */
+    private val arcanumFirstBy: (String) -> String? = { null },
+    /**
      * Illumination success odds for a viewing session against a mob id, or null
      * when not applicable (viewer not pledged Akathavae, mob not a combatant).
      * Feeds the per-viewer `illuminationPct` field of `Room.MobInfo`.
@@ -2492,22 +2497,45 @@ class GmcpEmitter(
     suspend fun sendRoomMobInfo(
         sessionId: SessionId,
         mobs: List<MobInfoEntry>,
+        viewer: PlayerState? = null,
     ) {
         emit(
             sessionId,
             "Room.MobInfo",
-            mobs.map { toRoomMobInfoPayload(it, viewer = sessionId) },
+            withArcanumBadges(mobs, viewer).map { toRoomMobInfoPayload(it, viewer = sessionId) },
         )
     }
 
     suspend fun broadcastRoomMobInfo(roomId: RoomId, mobInfos: List<MobInfoEntry>, players: PlayerRegistry) {
-        // `illuminationPct` is per-viewer (it depends on the pledged player's
-        // effective stats), so pledged recipients get an individually built
-        // payload; everyone else shares a single serialization as before.
+        // Both `illuminationPct` (odds) and the arcanum badge fields are per-viewer:
+        // odds depend on the pledged player's effective stats, and badges depend on
+        // the viewer's Arcanum state. So pledged recipients each get an individually
+        // built payload; everyone else shares a single serialization as before.
         val (pledged, others) = players.playersInRoom(roomId).partition { it.isAkathavae }
-        broadcastSerialized(others, "Room.MobInfo", mobInfos.map { toRoomMobInfoPayload(it, viewer = null) })
+        if (others.isNotEmpty()) {
+            broadcastSerialized(others, "Room.MobInfo", mobInfos.map { toRoomMobInfoPayload(it, viewer = null) })
+        }
         for (p in pledged) {
-            sendRoomMobInfo(p.sessionId, mobInfos)
+            sendRoomMobInfo(p.sessionId, mobInfos, p)
+        }
+    }
+
+    /**
+     * Decorates [entries] with the viewer's Arcanum state — recorded flag, recording
+     * source, and permanent world-first holder — when the viewer is a pledged
+     * Akathavae. Any other viewer gets the entries untouched, so the fields stay
+     * absent on the wire (issue #1389). Pets carry no subject key and are skipped.
+     */
+    private fun withArcanumBadges(entries: List<MobInfoEntry>, viewer: PlayerState?): List<MobInfoEntry> {
+        if (viewer == null || !viewer.isAkathavae) return entries
+        return entries.map { entry ->
+            if (entry.templateKey.isEmpty()) return@map entry
+            val recorded = viewer.arcanum.mobs[entry.templateKey]
+            entry.copy(
+                arcanumRecorded = recorded != null,
+                arcanumSource = recorded?.source,
+                arcanumFirstBy = arcanumFirstBy("mob:${entry.templateKey}"),
+            )
         }
     }
 
@@ -2534,6 +2562,7 @@ class GmcpEmitter(
             dialogue = mob.dialogue != null,
             aggressive = mob.aggressive,
             combatant = mob.role.isCombatant,
+            templateKey = if (mob.isPet) "" else AkathavaeSystem.mobSubjectKey(mob),
         )
     }
 
@@ -3092,6 +3121,9 @@ class GmcpEmitter(
         aggressive = entry.aggressive,
         combatant = entry.combatant,
         illuminationPct = if (entry.combatant) viewer?.let { illuminationOdds(it, entry.id) } else null,
+        arcanumRecorded = entry.arcanumRecorded,
+        arcanumSource = entry.arcanumSource,
+        arcanumFirstBy = entry.arcanumFirstBy,
     )
 
     // ---------- payload types ----------
@@ -3987,6 +4019,12 @@ class GmcpEmitter(
         val combatant: Boolean,
         /** Per-viewer illumination odds; present only for pledged Akathavae viewers. */
         val illuminationPct: Int? = null,
+        /** Pledged viewers only: whether this creature is in the viewer's Arcanum. */
+        val arcanumRecorded: Boolean? = null,
+        /** How the viewer recorded it (`illuminated`/`observed`), when recorded. */
+        val arcanumSource: String? = null,
+        /** World-first illumination holder name, or null when unclaimed. */
+        val arcanumFirstBy: String? = null,
     )
 
     // ---------- look target payload ----------
@@ -4588,6 +4626,12 @@ data class MobInfoEntry(
     val dialogue: Boolean,
     val aggressive: Boolean,
     val combatant: Boolean,
+    /** Arcanum subject key (`zone:template`) for per-viewer badges; empty for pets. */
+    val templateKey: String = "",
+    /** Per-viewer arcanum badge fields, populated only for pledged Akathavae viewers. */
+    val arcanumRecorded: Boolean? = null,
+    val arcanumSource: String? = null,
+    val arcanumFirstBy: String? = null,
 )
 
 /** Input DTO for building a Zone.Instances GMCP payload. */

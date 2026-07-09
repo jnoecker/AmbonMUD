@@ -21553,6 +21553,43 @@ html:has(.game-shell),
   letter-spacing: 0.02em;
 }
 
+/* Arcanum badge — pledged Akathavae see a creature's recorded/world-first
+   state before acting (issue #1389). Parchment-anchored tones follow the
+   mm-badge pattern; works identically on the unskinned fallback card. */
+.mm-arcanum {
+  display: block;
+  width: fit-content;
+  margin-top: 5px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-family: var(--font-display-solid);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Already in the viewer's journal — quiet success tone. */
+.mm-arcanum-recorded {
+  color: #2c4a26;
+  background: color-mix(in srgb, var(--color-heal) 28%, #f3ead2);
+  border-color: color-mix(in srgb, var(--color-heal) 45%, #4a3825);
+}
+
+/* Unrecorded and unclaimed — the world-first prestige hook, so it shines. */
+.mm-arcanum-first {
+  color: #4a3208;
+  background: color-mix(in srgb, var(--color-gold-bright) 42%, #f3ead2);
+  border-color: color-mix(in srgb, var(--color-gold-bright) 60%, #4a3825);
+}
+
+/* Unrecorded here, but another explorer already holds the world-first. */
+.mm-arcanum-claimed {
+  color: #5c4a33;
+  background: color-mix(in srgb, #d9c89a 32%, #f3ead2);
+  border-color: color-mix(in srgb, #d9c89a 55%, #6b5640);
+}
+
 .mm-badge {
   position: absolute;
   top: 16px;

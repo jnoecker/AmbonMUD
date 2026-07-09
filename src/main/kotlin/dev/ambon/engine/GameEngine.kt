@@ -650,6 +650,7 @@ class GameEngine(
             raceRegistry = raceRegistry,
             nowMs = { clock.millis() },
             worldAreas = buildWorldAreaPayloads(world),
+            arcanumFirstBy = { key -> worldState.getArcanumFirst(key)?.first },
             illuminationOdds = { sid, mobId ->
                 val viewer = players.get(sid)
                 val mob = mobs.get(MobId(mobId))
@@ -843,6 +844,7 @@ class GameEngine(
             markVitalsDirty = ::markVitalsDirty,
             onLevelUp = ::onCombatLevelUp,
             gmcpEmitter = gmcpEmitter,
+            refreshRoomMobInfo = ::refreshRoomMobInfoForPlayer,
             onArcanumRecorded = { sid -> achievementSystem.onArcanumRecorded(sid) },
         )
 
@@ -2563,6 +2565,7 @@ class GameEngine(
                 questAvailableMobIds = questAvailable,
                 questCompleteMobIds = questComplete,
             ),
+            viewer = ps,
         )
     }
 
