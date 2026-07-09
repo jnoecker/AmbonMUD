@@ -211,15 +211,25 @@ class MountTravelTest {
             val reg = mountRegistry()
             assertNull(
                 reg.validateSelection(
-                    "mount_dappled_pony", level = 50, unlockedAchievementIds = emptySet(),
-                    isStaff = false, playerRace = "HUMAN", playerClass = "WARRIOR", playerGender = "enby",
+                    "mount_dappled_pony",
+                    level = 50,
+                    unlockedAchievementIds = emptySet(),
+                    isStaff = false,
+                    playerRace = "HUMAN",
+                    playerClass = "WARRIOR",
+                    playerGender = "enby",
                 ),
                 "locked without ownership",
             )
             assertNotNull(
                 reg.validateSelection(
-                    "mount_dappled_pony", level = 1, unlockedAchievementIds = emptySet(),
-                    isStaff = false, playerRace = "HUMAN", playerClass = "WARRIOR", playerGender = "enby",
+                    "mount_dappled_pony",
+                    level = 1,
+                    unlockedAchievementIds = emptySet(),
+                    isStaff = false,
+                    playerRace = "HUMAN",
+                    playerClass = "WARRIOR",
+                    playerGender = "enby",
                     ownedMounts = setOf("dappled_pony"),
                 ),
                 "unlocked once owned",
