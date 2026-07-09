@@ -547,6 +547,8 @@ data class AppConfig(
         require(a.roomDiscoveryXp >= 0 && a.itemDiscoveryXp >= 0 && a.observeNpcXp >= 0) {
             "ambonMUD.engine.akathavae discovery XP values must be >= 0"
         }
+        require(a.unpledgedSuccessMultiplier in 0.0..1.0) { "ambonMUD.engine.akathavae.unpledgedSuccessMultiplier must be 0..1" }
+        require(a.unpledgedXpMultiplier in 0.0..1.0) { "ambonMUD.engine.akathavae.unpledgedXpMultiplier must be 0..1" }
     }
 
     private fun validateEngineWorldTime() {
@@ -1256,6 +1258,14 @@ data class AkathavaeConfig(
     val observeNpcXp: Long = 10,
     /** Minimum gap between discovery XP awards (ms) — anti-speedrun throttle. Entries still record. */
     val discoveryXpThrottleMs: Long = 1_500,
+    /**
+     * [Unpledged journaling] Anyone may illuminate and keep a field journal, but
+     * unpledged success odds are scaled by this multiplier (0..1) — the practiced
+     * hand belongs to the pledged.
+     */
+    val unpledgedSuccessMultiplier: Double = 0.5,
+    /** Multiplier (0..1) on discovery XP for unpledged players. 0 turns their journaling into pure record-keeping. */
+    val unpledgedXpMultiplier: Double = 0.25,
 )
 
 data class LeaderboardConfig(

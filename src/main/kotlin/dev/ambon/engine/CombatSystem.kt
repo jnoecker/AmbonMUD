@@ -78,6 +78,8 @@ data class CombatSystemCallbacks(
     val onLevelUp: suspend (SessionId, LevelUpResult) -> Unit = { _, _ -> },
     val onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
     val onRoomItemsChanged: suspend (RoomId) -> Unit = {},
+    /** Fired once per mob death with the killing-blow session — drives "First slain by" Arcanum records. */
+    val onMobSlain: suspend (SessionId, MobState) -> Unit = { _, _ -> },
 )
 
 class CombatSystem(
@@ -1910,6 +1912,7 @@ class CombatSystem(
 
         // Increment kill counter for the killing blow
         players.get(killerSessionId)?.let { it.mobsKilledTotal += 1 }
+        callbacks.onMobSlain(killerSessionId, mob)
 
         // Fire quest/achievement callbacks for all contributors
         if (mob.templateKey.isNotEmpty()) {

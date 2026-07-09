@@ -1752,9 +1752,9 @@ class GmcpEmitterTest {
         }
 
     @Test
-    fun `broadcastRoomMobInfo builds per-viewer payloads for pledged players`() =
+    fun `broadcastRoomMobInfo builds per-viewer payloads for every occupant`() =
         runTest {
-            val e = emitter("Room.MobInfo", illuminationOdds = { viewer, _ -> if (viewer == SessionId(1L)) 72 else null })
+            val e = emitter("Room.MobInfo", illuminationOdds = { viewer, _ -> if (viewer == SessionId(1L)) 72 else 36 })
             val roomId = RoomId("test:room1")
             val players = buildTestPlayerRegistry(roomId)
             players.loginOrFail(SessionId(1L), "Pledged")
@@ -1769,7 +1769,10 @@ class GmcpEmitterTest {
             val pledged = events.single { it.sessionId == SessionId(1L) }
             val fighter = events.single { it.sessionId == SessionId(2L) }
             assertTrue(pledged.jsonData.contains("\"illuminationPct\":72"), "got=${pledged.jsonData}")
-            assertFalse(fighter.jsonData.contains("illuminationPct"), "got=${fighter.jsonData}")
+            assertTrue(
+                fighter.jsonData.contains("\"illuminationPct\":36"),
+                "unpledged viewers see their own scaled odds; got=${fighter.jsonData}",
+            )
         }
 
     @Test
@@ -1842,13 +1845,34 @@ class GmcpEmitterTest {
         }
 
     @Test
-    fun `sendRoomMobInfo omits arcanum fields for non-pledged viewers`() =
+    fun `sendRoomMobInfo includes arcanum fields for unpledged viewers`() =
         runTest {
-            val e = emitter("Room.MobInfo", arcanumFirstBy = { "Thalen" })
+            val e = emitter("Room.MobInfo", arcanumFirstBy = { key -> "Thalen".takeIf { key == "mob:forest:goblin" } })
             e.sendRoomMobInfo(sid, listOf(goblinEntry()), viewer = player())
             val events = drainGmcp()
             assertEquals(1, events.size)
-            assertFalse(events[0].jsonData.contains("arcanum"))
+            assertTrue(events[0].jsonData.contains("\"arcanumRecorded\":false"), "got=${events[0].jsonData}")
+            assertTrue(events[0].jsonData.contains("\"arcanumFirstBy\":\"Thalen\""), "got=${events[0].jsonData}")
+        }
+
+    @Test
+    fun `sendRoomMobInfo names the first-slain holder separately from the illuminator`() =
+        runTest {
+            val e = emitter(
+                "Room.MobInfo",
+                arcanumFirstBy = { key ->
+                    when (key) {
+                        "mob:forest:goblin" -> "Thalen"
+                        "slain:forest:goblin" -> "Grog"
+                        else -> null
+                    }
+                },
+            )
+            e.sendRoomMobInfo(sid, listOf(goblinEntry()), viewer = pledgedViewer())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"arcanumFirstBy\":\"Thalen\""), "got=${events[0].jsonData}")
+            assertTrue(events[0].jsonData.contains("\"arcanumFirstSlainBy\":\"Grog\""), "got=${events[0].jsonData}")
         }
 
     @Test

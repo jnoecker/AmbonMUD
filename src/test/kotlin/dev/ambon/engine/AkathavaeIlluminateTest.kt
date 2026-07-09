@@ -458,19 +458,118 @@ class AkathavaeIlluminateTest {
         assertEquals(listOf(sid), refreshed, "only the first observation changes the badge state")
     }
 
-    @Test
-    fun `unpledged players cannot illuminate`() = runTest {
-        val s = setup()
-        val sid = SessionId(1L)
-        s.fixture.players.loginOrFail(sid, "Bruiser")
-        s.fixture.mobs.upsert(wisp())
+    // ── Unpledged field journaling ───────────────────────────────────────
+
+    private suspend fun loginUnpledged(s: Setup, sid: SessionId, name: String): PlayerState {
+        s.fixture.players.loginOrFail(sid, name)
         s.fixture.outbound.drainAll()
+        return s.fixture.players.get(sid)!!
+    }
+
+    @Test
+    fun `unpledged illumination keeps a field journal at reduced XP`() = runTest {
+        val credited = mutableListOf<String>()
+        val s = setup(rng = ScriptedRandom(0), onMobKilledByPlayer = { _, templateKey -> credited += templateKey })
+        val sid = SessionId(1L)
+        val me = loginUnpledged(s, sid, "Bruiser")
+        s.fixture.items.loadSpawns(
+            listOf(ItemSpawn(instance = ItemInstance(ItemId("test:dust"), Item(keyword = "dust", displayName = "glittering dust")))),
+        )
+        s.fixture.mobs.upsert(wisp(xpReward = 100L, drops = listOf(MobDrop(ItemId("test:dust"), 1.0))))
 
         s.system.illuminate(sid, "wisp")
 
-        val errors = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendError>().map { it.text }
-        assertTrue(errors.any { it.contains("pledge") }, "got=$errors")
-        assertNotNull(s.fixture.mobs.get(MobId("test:w1")))
+        assertTrue(me.arcanum.mobs.containsKey("test:wisp"), "anyone may keep a field journal")
+        assertNotNull(s.fixture.mobs.get(MobId("test:w1")), "illumination must never remove the subject")
+        assertEquals(25L, me.xpTotal, "unpledged discovery XP is scaled by the multiplier")
+        assertTrue(credited.isEmpty(), "a sketch must not bypass the fight for kill credit")
+        assertTrue(me.arcanum.items.isEmpty(), "drop cataloguing belongs to the pledged")
+        assertTrue(s.fixture.items.inventory(sid).isEmpty(), "no quest rubbings for the unpledged")
+    }
+
+    @Test
+    fun `unpledged illumination cannot seal a world-first`() = runTest {
+        val s = setup(rng = ScriptedRandom(0, 0))
+        val bruiser = SessionId(1L)
+        loginUnpledged(s, bruiser, "Bruiser")
+        s.fixture.mobs.upsert(wisp(id = "w1"))
+
+        s.system.illuminate(bruiser, "wisp")
+
+        assertNull(s.worldState.getArcanumFirst("mob:test:wisp"), "only a pledged journal is accepted at the shrines")
+        val infos = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+        assertTrue(infos.any { it.contains("unsealed") }, "got=$infos")
+
+        // A pledged chronicler can still claim the page afterward.
+        val alice = SessionId(2L)
+        loginAkathavae(s, alice, "Alice")
+        s.clock.advance(10_000)
+        s.system.illuminate(alice, "wisp")
+        assertEquals("Alice", s.worldState.getArcanumFirst("mob:test:wisp")?.first)
+    }
+
+    @Test
+    fun `illuminationOddsFor scales down for the unpledged`() = runTest {
+        val s = setup()
+        val sid = SessionId(1L)
+        val me = loginUnpledged(s, sid, "Bruiser")
+        me.level = 5
+
+        assertEquals(35, s.system.illuminationOddsFor(me, wisp(level = 5)), "the base 70% halves for a field journal")
+
+        me.isAkathavae = true
+        assertEquals(70, s.system.illuminationOddsFor(me, wisp(level = 5)), "pledging restores the practiced hand")
+    }
+
+    @Test
+    fun `unpledged failure message carries no pledge language`() = runTest {
+        val s = setup(rng = ScriptedRandom(99, 99))
+        val sid = SessionId(1L)
+        loginUnpledged(s, sid, "Bruiser")
+        s.fixture.mobs.upsert(wisp())
+
+        s.system.illuminate(sid, "wisp")
+
+        assertTrue(s.combat.isInCombat(sid), "a failed sketch still angers the subject")
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("turns on you!") && !it.contains("pledge") }, "got=$texts")
+    }
+
+    // ── First slain ──────────────────────────────────────────────────────
+
+    @Test
+    fun `the first killer is stamped permanently and only once`() = runTest {
+        val s = setup()
+        val grog = SessionId(1L)
+        val mira = SessionId(2L)
+        loginUnpledged(s, grog, "Grog")
+        loginUnpledged(s, mira, "Mira")
+
+        s.system.onMobSlain(grog, wisp(id = "w1"))
+        val infos = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>().map { it.text }
+        assertTrue(infos.any { it.contains("First slain by Grog") }, "got=$infos")
+
+        s.clock.advance(10_000)
+        s.system.onMobSlain(mira, wisp(id = "w2"))
+
+        assertEquals("Grog", s.worldState.getArcanumFirst("slain:test:wisp")?.first, "slain firsts are immutable once written")
+    }
+
+    @Test
+    fun `first-slain records skip pets and non-combatants and bank no illumination firsts`() = runTest {
+        val s = setup()
+        val sid = SessionId(1L)
+        val me = loginUnpledged(s, sid, "Grog")
+
+        s.system.onMobSlain(sid, wisp(id = "w1").copy(ownerSessionId = SessionId(99L)))
+        s.system.onMobSlain(sid, wisp(id = "w2", role = MobRole.VENDOR, templateKey = "test:merchant"))
+
+        assertNull(s.worldState.getArcanumFirst("slain:test:wisp"), "pets never stamp a slain first")
+        assertNull(s.worldState.getArcanumFirst("slain:test:merchant"), "non-combatants never stamp a slain first")
+
+        s.system.onMobSlain(sid, wisp(id = "w3"))
+        assertNotNull(s.worldState.getArcanumFirst("slain:test:wisp"))
+        assertEquals(0, me.worldFirstsCount, "slain firsts do not bank illumination world-first achievements")
     }
 
     // ── Quest collect bridge (#1392) ─────────────────────────────────────

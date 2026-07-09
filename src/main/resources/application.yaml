@@ -2817,6 +2817,8 @@ ambonmud:
       itemDiscoveryXp: 25
       observeNpcXp: 10
       discoveryXpThrottleMs: 1500
+      unpledgedSuccessMultiplier: 0.5
+      unpledgedXpMultiplier: 0.25
     respec:
       enabled: true
       goldCost: 100

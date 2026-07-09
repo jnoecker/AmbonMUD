@@ -16,27 +16,32 @@ import java.time.Clock
 import java.util.Random
 
 /**
- * Illumination — the Akathavae's replacement for combat.
+ * Illumination — recording the world in an Arcanum, and the Akathavae's
+ * replacement for combat.
  *
- * A pledged player `illuminate`s a creature to record it in their Arcanum.
- * Illumination never harms the subject: it leaves the creature exactly where it
- * stands, so even quest-givers and unique mobs are safe — and free — to record.
- * Success is stat-driven (success stat raises the chance, the subject's level
- * above the player lowers it, the gap-relief stat softens that penalty) and pays
- * first-time-big / repeat-small XP scaled by the XP stat. The subject's possible
- * drops are catalogued into the Arcanum as templates — feeding the wardrobe —
- * without anything being taken from it. A recorded creature still counts as a
- * defeated one for quest/achievement credit (once per living instance), so the
- * pledged complete the same objectives as everyone else. Failure puts the subject
- * on a retry cooldown and turns it hostile unless the escape stat talks the player
- * out of it.
+ * Anyone may `illuminate` a creature to record it in their own Arcanum — a
+ * field journal any traveler can keep. Illumination never harms the subject: it
+ * leaves the creature exactly where it stands, so even quest-givers and unique
+ * mobs are safe — and free — to record. Success is stat-driven (success stat
+ * raises the chance, the subject's level above the player lowers it, the
+ * gap-relief stat softens that penalty) and pays first-time-big / repeat-small
+ * XP scaled by the XP stat.
  *
- * The system also records passive discoveries: rooms visited and items first
- * seen, each worth XP behind an anti-speedrun throttle. Non-combat NPCs can be
- * observed (recorded without removal) for a small award.
+ * The pledged get the full craft; the unpledged get field notes. Unpledged
+ * odds and XP are scaled down by config, and everything past the creature page
+ * itself is reserved for the pledged: drop cataloguing (which feeds the
+ * wardrobe), quest/achievement kill credit (once per living instance — the
+ * unpledged can simply fight), quest-item rubbings, and the passive discovery
+ * of rooms visited and items first seen. Failure puts the subject on a retry
+ * cooldown and turns it hostile unless the escape stat talks the player out
+ * of it.
  *
  * World-firsts: the first player ever to illuminate a subject is stamped
- * permanently into [WorldStateRegistry] — "First illuminated by Thalen."
+ * permanently into [WorldStateRegistry] — "First illuminated by Thalen" — but
+ * only a pledged Akathavae's journal is accepted at the shrines, so only the
+ * pledged can seal that page. Separately, the first player to *kill* a
+ * creature is stamped as "First slain by" (see [onMobSlain]) — the two records
+ * sit side by side in the Arcanum.
  */
 class AkathavaeSystem(
     private val players: PlayerRegistry,
@@ -110,15 +115,6 @@ class AkathavaeSystem(
         keywordRaw: String,
     ) {
         val me = players.get(sessionId) ?: return
-        if (!me.isAkathavae) {
-            outbound.send(
-                OutboundEvent.SendError(
-                    sessionId,
-                    "Only those who have taken the Akathavae pledge may illuminate. Seek a shrine.",
-                ),
-            )
-            return
-        }
         val keyword = keywordRaw.trim()
         if (keyword.isEmpty()) {
             outbound.send(OutboundEvent.SendError(sessionId, "Illuminate what?"))
@@ -154,11 +150,14 @@ class AkathavaeSystem(
         }
 
         val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
-        val successPct = illuminationSuccessPct(
-            statValue = stats[config.successStat],
-            reliefStatValue = stats[config.gapReliefStat],
-            playerLevel = me.level,
-            mobLevel = mob.level,
+        val successPct = pledgeScaledPct(
+            illuminationSuccessPct(
+                statValue = stats[config.successStat],
+                reliefStatValue = stats[config.gapReliefStat],
+                playerLevel = me.level,
+                mobLevel = mob.level,
+            ),
+            me.isAkathavae,
         )
         if (rng.nextInt(100) < successPct) {
             resolveSuccess(sessionId, me, mob, subjectKey, now)
@@ -170,21 +169,35 @@ class AkathavaeSystem(
     /**
      * Illumination success odds for [me] against [mob], resolving the player's
      * current effective stats (equipment + status effects included) — the same
-     * inputs [illuminate] rolls against. Surfaced to the player via `consider`
-     * and the `Room.MobInfo` GMCP payload so the pledged never gamble blind.
+     * inputs [illuminate] rolls against, including the unpledged scaling.
+     * Surfaced to the player via `consider` and the `Room.MobInfo` GMCP payload
+     * so nobody gambles blind.
      */
     fun illuminationOddsFor(
         me: PlayerState,
         mob: MobState,
     ): Int {
         val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
-        return illuminationSuccessPct(
-            statValue = stats[config.successStat],
-            reliefStatValue = stats[config.gapReliefStat],
-            playerLevel = me.level,
-            mobLevel = mob.level,
+        return pledgeScaledPct(
+            illuminationSuccessPct(
+                statValue = stats[config.successStat],
+                reliefStatValue = stats[config.gapReliefStat],
+                playerLevel = me.level,
+                mobLevel = mob.level,
+            ),
+            me.isAkathavae,
         )
     }
+
+    /**
+     * Scales success odds for the pledge state: the unpledged keep field notes,
+     * not a practiced chronicler's hand, so their odds are cut by
+     * [AkathavaeConfig.unpledgedSuccessMultiplier] (floored at 1%).
+     */
+    private fun pledgeScaledPct(
+        pct: Int,
+        pledged: Boolean,
+    ): Int = if (pledged) pct else (pct * config.unpledgedSuccessMultiplier).toInt().coerceAtLeast(1)
 
     /**
      * Success chance: base + per-point bonus above [PlayerState.BASE_STAT] on the
@@ -230,7 +243,7 @@ class AkathavaeSystem(
             "${me.name} studies ${mob.name} with quiet intensity, committing it to the Arcanum.",
             exclude = sessionId,
         )
-        announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now)
+        announceWorldFirst(sessionId, me, "mob:$subjectKey", mob.name, now, firstTimeForPlayer = firstTime)
         if (firstTime) onArcanumRecorded?.invoke(sessionId)
 
         val baseXp = progression.killXpReward(mob)
@@ -252,21 +265,25 @@ class AkathavaeSystem(
             }
         }
 
-        // Catalogue what the creature carries as Arcanum pages — this feeds the
-        // wardrobe — but take nothing: the subject is unharmed and stays put.
-        // The illumination XP above just armed the discovery-XP throttle, so these
-        // same-action item awards bypass it — otherwise the items get recorded with
-        // their XP silently and permanently swallowed.
-        for (drop in mob.drops) {
-            recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED, bypassThrottle = true)
-        }
+        if (me.isAkathavae) {
+            // Catalogue what the creature carries as Arcanum pages — this feeds the
+            // wardrobe — but take nothing: the subject is unharmed and stays put.
+            // The illumination XP above just armed the discovery-XP throttle, so these
+            // same-action item awards bypass it — otherwise the items get recorded with
+            // their XP silently and permanently swallowed.
+            for (drop in mob.drops) {
+                recordItemDiscovery(sessionId, drop.itemId, ArcanumSource.ILLUMINATED, bypassThrottle = true)
+            }
 
-        // A recorded creature counts as a defeated one for quests and achievements,
-        // so the pledged complete the same objectives as everyone else — but only
-        // once per living instance, since illumination no longer consumes it.
-        if (creditedIlluminations.getOrPut(sessionId) { mutableSetOf() }.add(mob.id.value)) {
-            combat.creditIlluminationKill(sessionId, mob)
-            grantNeededQuestItems(sessionId, mob)
+            // A recorded creature counts as a defeated one for quests and achievements,
+            // so the pledged complete the same objectives as everyone else — but only
+            // once per living instance, since illumination no longer consumes it. The
+            // unpledged get neither kill credit nor rubbings from a sketch: they can
+            // fight for their objectives, so the sketch must not bypass the fight.
+            if (creditedIlluminations.getOrPut(sessionId) { mutableSetOf() }.add(mob.id.value)) {
+                combat.creditIlluminationKill(sessionId, mob)
+                grantNeededQuestItems(sessionId, mob)
+            }
         }
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
@@ -341,7 +358,13 @@ class AkathavaeSystem(
         }
 
         combat.engageMobCombat(sessionId, mob)
-        outbound.send(OutboundEvent.SendText(sessionId, "${theCap(mob.name)} turns on you! Your pledge holds — flee!"))
+        val cry =
+            if (me.isAkathavae) {
+                "${theCap(mob.name)} turns on you! Your pledge holds — flee!"
+            } else {
+                "${theCap(mob.name)} turns on you!"
+            }
+        outbound.send(OutboundEvent.SendText(sessionId, cry))
     }
 
     private suspend fun observeNpc(
@@ -435,6 +458,36 @@ class AkathavaeSystem(
         emitStatus(sessionId)
     }
 
+    // ── First slain ──────────────────────────────────────────────────────
+
+    /**
+     * Stamps the permanent "First slain by" record when [sessionId]'s killing
+     * blow on [mob] is the first in the world's history — the combat-side
+     * sibling of the illumination world-first, sitting beside it in the
+     * Arcanum. Open to anyone (the pledged never land killing blows while
+     * their vow holds), and unlike illumination firsts it needs no shrine
+     * seal: a corpse is its own certification. Wired from [CombatSystem]'s
+     * mob-death path via GameEngine.
+     */
+    suspend fun onMobSlain(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        val ws = worldState ?: return
+        val me = players.get(sessionId) ?: return
+        if (mob.isPet || !mob.role.isCombatant || mob.templateKey.isEmpty()) return
+        if (ws.recordArcanumFirst("slain:${mobSubjectKey(mob)}", me.name, clock.millis())) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "★ ${theCap(mob.name)} falls for the first time in recorded history — " +
+                        "the Arcanum will forever read \"First slain by ${me.name}.\"",
+                ),
+            )
+            metrics.onGameEvent("akathavae", "world_first_slain")
+        }
+    }
+
     // ── Journal stats (for the arcanum command and, later, GMCP) ─────────
 
     data class ZoneCompletion(
@@ -502,6 +555,7 @@ class AkathavaeSystem(
             mobs = me.arcanum.mobs.entries.sortedBy { it.key }.map { (key, entry) ->
                 val template = world.mobTemplate(dev.ambon.domain.ids.MobId(key))
                 val first = worldFirstCredit("mob", key)
+                val slain = worldFirstCredit("slain", key)
                 GmcpEmitter.ArcanumMobPayload(
                     key = key,
                     name = template?.name ?: key.substringAfter(':').replace('_', ' '),
@@ -511,6 +565,8 @@ class AkathavaeSystem(
                     source = entry.source,
                     firstBy = first?.first,
                     firstAtMs = first?.second,
+                    firstSlainBy = slain?.first,
+                    firstSlainAtMs = slain?.second,
                 )
             },
             items = me.arcanum.items.entries.sortedBy { it.key }.map { (key, entry) ->
@@ -565,8 +621,24 @@ class AkathavaeSystem(
         firstKey: String,
         displayName: String,
         now: Long,
+        firstTimeForPlayer: Boolean = true,
     ) {
         val ws = worldState ?: return
+        if (!me.isAkathavae) {
+            // Only a pledged Akathavae's journal is accepted at the shrines: the
+            // unpledged see the unclaimed page, but cannot seal it. Noted only on
+            // the player's own first recording, so repeats stay quiet.
+            if (firstTimeForPlayer && ws.getArcanumFirst(firstKey) == null) {
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "No account of $displayName exists in the shrine records — but only a pledged " +
+                            "Akathavae's journal is accepted there. The page stays unsealed.",
+                    ),
+                )
+            }
+            return
+        }
         if (ws.recordArcanumFirst(firstKey, me.name, now)) {
             me.worldFirstsCount += 1
             outbound.send(
@@ -582,6 +654,8 @@ class AkathavaeSystem(
 
     /**
      * Grants discovery XP scaled by the XP stat, behind the anti-speedrun throttle.
+     * Unpledged awards are first scaled by [AkathavaeConfig.unpledgedXpMultiplier];
+     * a zero result awards nothing (and leaves the throttle unarmed).
      *
      * [bypassThrottle] is for intra-action awards only (e.g. cataloguing a mob's
      * drops in the same illumination that just awarded XP): it skips the throttle
@@ -596,13 +670,14 @@ class AkathavaeSystem(
         now: Long,
         bypassThrottle: Boolean = false,
     ) {
-        if (baseAmount <= 0L) return
+        val pledgeScaled = if (me.isAkathavae) baseAmount else (baseAmount * config.unpledgedXpMultiplier).toLong()
+        if (pledgeScaled <= 0L) return
         if (!bypassThrottle && now < (nextDiscoveryXpAt[sessionId] ?: 0L)) return
         nextDiscoveryXpAt[sessionId] = now + config.discoveryXpThrottleMs
 
         val stats = resolvePlayerStats(me, items, statusEffects, classRegistry)
         val bonus = (stats[config.xpStat] - PlayerState.BASE_STAT) * config.xpBonusPerStatPoint
-        val amount = (baseAmount * (1.0 + bonus.coerceAtLeast(-0.5))).toLong().coerceAtLeast(1L)
+        val amount = (pledgeScaled * (1.0 + bonus.coerceAtLeast(-0.5))).toLong().coerceAtLeast(1L)
 
         val result = players.grantXp(sessionId, amount, progression) ?: return
         metrics.onXpAwarded(amount, "illumination")

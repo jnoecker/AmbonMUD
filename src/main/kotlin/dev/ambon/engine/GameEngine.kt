@@ -654,7 +654,7 @@ class GameEngine(
             illuminationOdds = { sid, mobId ->
                 val viewer = players.get(sid)
                 val mob = mobs.get(MobId(mobId))
-                if (viewer != null && mob != null && viewer.isAkathavae && mob.role.isCombatant && !mob.isPet) {
+                if (viewer != null && mob != null && mob.role.isCombatant && !mob.isPet) {
                     akathavaeSystem.illuminationOddsFor(viewer, mob)
                 } else {
                     null
@@ -821,6 +821,9 @@ class GameEngine(
                 onLevelUp = ::onCombatLevelUp,
                 onMobKilledByPlayer = ::onCombatMobKilledByPlayer,
                 onRoomItemsChanged = ::syncRoomItemsForRoom,
+                // Deliberately lazy: akathavaeSystem is constructed after combatSystem,
+                // and this callback only fires once the engine is fully wired.
+                onMobSlain = { sid, mob -> akathavaeSystem.onMobSlain(sid, mob) },
             ),
             classRegistry = classRegistry,
             petSystem = petSystem,
