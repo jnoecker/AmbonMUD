@@ -56,6 +56,8 @@ data class PlayerState(
     var dialogueFlags: MutableSet<String> = mutableSetOf(),
     /** Zones whose intro cinematic this player has already watched (auto-plays once per zone). */
     var seenZoneCinematics: MutableSet<String> = mutableSetOf(),
+    /** Room ids (`zone:room`) this player has ever entered — permanent map exploration. */
+    var exploredRooms: MutableSet<String> = mutableSetOf(),
     var unlockedAchievementIds: Set<String> = emptySet(),
     var achievementProgress: Map<String, AchievementState> = emptyMap(),
     var activeTitle: String? = null,
@@ -311,6 +313,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         completedQuestIds = completedQuestIds,
         dialogueFlags = dialogueFlags.toMutableSet(),
         seenZoneCinematics = seenZoneCinematics.toMutableSet(),
+        exploredRooms = exploredRooms.toMutableSet(),
         unlockedAchievementIds = unlockedAchievementIds,
         achievementProgress = achievementProgress,
         activeTitle = activeTitle,
@@ -388,6 +391,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         completedQuestIds = completedQuestIds,
         dialogueFlags = dialogueFlags.toSet(),
         seenZoneCinematics = seenZoneCinematics.toSet(),
+        exploredRooms = exploredRooms.toSet(),
         unlockedAchievementIds = unlockedAchievementIds,
         achievementProgress = achievementProgress,
         activeTitle = activeTitle,

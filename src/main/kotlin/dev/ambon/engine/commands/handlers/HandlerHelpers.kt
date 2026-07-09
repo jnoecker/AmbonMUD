@@ -420,6 +420,10 @@ internal suspend fun sendLook(
     val roomId = me.roomId
     val room = world.rooms[roomId] ?: return
 
+    // Standing in a room explores it, permanently. Marked before the zone map is
+    // (possibly) sent below, so a first step into a zone already counts its entry room.
+    players.markRoomExplored(sessionId, roomId)
+
     outbound.send(OutboundEvent.SendText(sessionId, room.title))
     outbound.send(OutboundEvent.SendText(sessionId, room.description))
 

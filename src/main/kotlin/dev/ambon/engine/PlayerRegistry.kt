@@ -846,6 +846,20 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
+    /**
+     * Records that this player has stood in [roomId] — permanent map exploration.
+     * Fires on every room entry; the no-op fast path keeps already-explored moves free
+     * and the write-coalescing repository absorbs bursts while actually exploring.
+     */
+    suspend fun markRoomExplored(
+        sessionId: SessionId,
+        roomId: RoomId,
+    ) {
+        val ps = players[sessionId] ?: return
+        if (!ps.exploredRooms.add(roomId.value)) return
+        persistIfClaimed(ps)
+    }
+
     /** Sets the wimpy auto-flee HP-percent threshold. Caller is responsible for clamping to 0..95. */
     suspend fun setWimpyThresholdPct(
         sessionId: SessionId,
