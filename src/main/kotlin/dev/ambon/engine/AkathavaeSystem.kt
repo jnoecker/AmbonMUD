@@ -97,6 +97,13 @@ class AkathavaeSystem(
     private val nextDiscoveryXpAt = mutableMapOf<SessionId, Long>()
 
     /**
+     * Average mob-template level per zone — the zone-difficulty proxy that scales
+     * room-discovery XP. Cached lazily because [onRoomVisited] fires on every
+     * movement; zones without mob templates read as 0 (flat base XP).
+     */
+    private val zoneAvgMobLevel = mutableMapOf<String, Int>()
+
+    /**
      * Per-session set of mob *instance* ids already credited as illumination
      * kills. Mirrors the old capture path, where the subject was consumed: a given
      * living creature grants quest/achievement credit once, so a persistent
@@ -276,6 +283,9 @@ class AkathavaeSystem(
             grantNeededQuestItems(sessionId, mob)
             onIlluminated?.invoke(sessionId)
         }
+        if (firstTime) {
+            checkZoneCompletion(sessionId, me, subjectKey.substringBefore(':'), now)
+        }
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
         refreshRoomMobInfo?.invoke(sessionId)
@@ -374,6 +384,7 @@ class AkathavaeSystem(
             // First-time observations count toward illumination commissions —
             // recording a subject matters, not whether it was dangerous.
             onIlluminated?.invoke(sessionId)
+            checkZoneCompletion(sessionId, me, subjectKey.substringBefore(':'), now)
             markVitalsDirty?.invoke(sessionId)
             emitStatus(sessionId)
             refreshRoomMobInfo?.invoke(sessionId)
@@ -398,9 +409,24 @@ class AkathavaeSystem(
         outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You record $title."))
         announceWorldFirst(sessionId, me, "room:$key", title, now)
         onArcanumRecorded?.invoke(sessionId)
-        awardDiscoveryXp(sessionId, me, config.roomDiscoveryXp, "discovery", now)
+        awardDiscoveryXp(sessionId, me, roomDiscoveryXp(roomId.zone), "discovery", now)
+        checkZoneCompletion(sessionId, me, roomId.zone, now)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
+    }
+
+    /**
+     * Room-discovery XP for [zone]: the flat base plus a per-level bonus on the
+     * zone's average mob-template level, so high-level zones pay high-level rates.
+     */
+    internal fun roomDiscoveryXp(zone: String): Long =
+        config.roomDiscoveryXp + avgZoneMobLevel(zone) * config.roomDiscoveryXpPerZoneLevel
+
+    private fun avgZoneMobLevel(zone: String): Int = zoneAvgMobLevel.getOrPut(zone) {
+        val levels = world.mobTemplates
+            .filterKeys { it.value.substringBefore(':') == zone }
+            .values.map { it.level }
+        if (levels.isEmpty()) 0 else levels.average().toInt()
     }
 
     /**
@@ -444,6 +470,63 @@ class AkathavaeSystem(
         awardDiscoveryXp(sessionId, me, config.itemDiscoveryXp, "discovery", now, bypassThrottle)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
+    }
+
+    // ── Zone completion ──────────────────────────────────────────────────
+
+    /**
+     * Pays the one-time zone-completion bundle if this recording brought [zone]
+     * to 100% — every room visited and every mob template recorded, the same
+     * numerator/denominator [zoneCompletion] reports. Completed zones persist in
+     * the Arcanum blob, so the bundle never re-fires across relogs.
+     */
+    private suspend fun checkZoneCompletion(
+        sessionId: SessionId,
+        me: PlayerState,
+        zone: String,
+        now: Long,
+    ) {
+        if (zone in me.arcanum.completedZones) return
+        val completion = zoneCompletion(me, zone)
+        // A zone with nothing to record can't be "completed" — guards degenerate keys.
+        if (completion.roomsTotal == 0 && completion.mobsTotal == 0) return
+        if (completion.roomsRecorded < completion.roomsTotal || completion.mobsRecorded < completion.mobsTotal) return
+        me.arcanum.completedZones.add(zone)
+        metrics.onGameEvent("akathavae", "zone_completed")
+
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                "★ Your Arcanum's record of $zone is complete — every room walked, every creature illuminated.",
+            ),
+        )
+        awardDiscoveryXp(
+            sessionId,
+            me,
+            completion.roomsTotal * config.zoneCompletionXpPerRoom,
+            "zone completion",
+            now,
+            bypassThrottle = true,
+        )
+        if (config.zoneCompletionGold > 0) {
+            me.gold += config.zoneCompletionGold
+            outbound.send(
+                OutboundEvent.SendText(sessionId, "Collectors of the Arcanum pay ${config.zoneCompletionGold} gold for your record."),
+            )
+        }
+        broadcastToRoom(
+            players,
+            outbound,
+            me.roomId,
+            "${me.name}'s Arcanum flares with light — their record of $zone is complete.",
+            exclude = sessionId,
+        )
+        broadcastInfoToAll(
+            players,
+            outbound,
+            "★ ${me.name} has completed the Arcanum record of $zone.",
+            exclude = sessionId,
+        )
     }
 
     // ── Journal stats (for the arcanum command and, later, GMCP) ─────────
@@ -594,10 +677,11 @@ class AkathavaeSystem(
     /**
      * Grants discovery XP scaled by the XP stat, behind the anti-speedrun throttle.
      *
-     * [bypassThrottle] is for intra-action awards only (e.g. cataloguing a mob's
-     * drops in the same illumination that just awarded XP): it skips the throttle
-     * check but still updates the next-award window, so a bypassed award never
-     * opens a farming window.
+     * [bypassThrottle] serves both intra-action awards (e.g. cataloguing a mob's
+     * drops in the same illumination that just awarded XP) and one-off milestone
+     * awards (zone completion): it skips the throttle *check* so the award is never
+     * swallowed, but still advances the next-award window, so a bypassed award
+     * never opens a farming window.
      */
     private suspend fun awardDiscoveryXp(
         sessionId: SessionId,
