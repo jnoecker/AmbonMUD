@@ -118,7 +118,7 @@ import type {
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
-import type { AbilityVisualArchetype, SkillVisual } from "../types";
+import type { AbilityVisualArchetype, SkillVisual, ZoneMapRoomData } from "../types";
 
 const KNOWN_ARCHETYPES: ReadonlySet<AbilityVisualArchetype> = new Set([
   "RANGED_PROJECTILE",
@@ -172,7 +172,7 @@ interface GmcpContext {
   setPuzzleResult: Dispatch<SetStateAction<PuzzleResult | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, mapZ: number, housing?: boolean, terrain?: string | null) => void;
-  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>, border: BorderStub[]) => void;
+  loadZoneMap: (zone: string, rooms: ZoneMapRoomData[], border: BorderStub[]) => void;
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
@@ -559,12 +559,21 @@ export function applyGmcpPackage(
               for (const [dir, target] of Object.entries(rawExits)) {
                 if (typeof target === "string") exits[dir] = qualify(target);
               }
+              // Explored-room detail rides in abbreviated null-omitted fields
+              // (`e`/`t`/`tr`/`poi`) to keep large zones under the GMCP payload
+              // cap. An explored room without `tr` has the default "outside"
+              // terrain; fog rooms carry no detail at all.
+              const explored = r.e === 1;
               return {
                 id: qualify(typeof r.id === "string" ? r.id : ""),
                 x: typeof r.x === "number" ? r.x : 0,
                 y: typeof r.y === "number" ? r.y : 0,
                 z: typeof r.z === "number" ? r.z : 0,
                 exits,
+                explored,
+                title: typeof r.t === "string" ? r.t : undefined,
+                terrain: typeof r.tr === "string" ? r.tr : explored ? "outside" : undefined,
+                poi: Array.isArray(r.poi) ? r.poi.filter((p): p is string => typeof p === "string") : undefined,
               };
             })
         : [];

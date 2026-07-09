@@ -436,12 +436,31 @@ export interface MapRoom {
   /** Terrain key (forest, mountain, …) once the room has been visited. */
   terrain?: string;
   housing?: boolean;
+  /** Service tokens (bank, tavern, …) from Zone.Map — drives POI icons on explored rooms. */
+  poi?: string[];
   /**
    * Set only for a *foreign* room sitting just across a zone boundary (a border
    * stub). Names the neighbouring zone, so the renderer colour-codes it. Rooms in
    * the current zone leave this undefined.
    */
   zone?: string;
+}
+
+/** One room of a `Zone.Map` payload, after the client re-qualifies ids. */
+export interface ZoneMapRoomData {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  exits: Record<string, string>;
+  /** True when the player has permanently explored this room (server-remembered). */
+  explored?: boolean;
+  /** Room title — present only on explored rooms. */
+  title?: string;
+  /** Terrain key — present only on explored rooms ("outside" is implied when absent). */
+  terrain?: string;
+  /** Service tokens (bank, tavern, …) — present only on explored rooms that have any. */
+  poi?: string[];
 }
 
 /**

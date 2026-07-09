@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { MAP_OFFSETS, zoneColorCss } from "../constants";
 import { canvasCallbacks, gameStateRef } from "../canvas/GameStateBridge";
-import type { BorderStub, MapRoom } from "../types";
+import type { BorderStub, MapRoom, ZoneMapRoomData } from "../types";
 
 // Parchment / ink palette — matches the in-scene minimap. The canvas itself is
 // transparent: the parchment scroll (`map_background`) is the map drawer's
@@ -49,6 +49,30 @@ const EDGE_PAD = 0;
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
+}
+
+/**
+ * Fog-of-war visibility: only rooms the player has explored, plus the one-hop
+ * *frontier* just past them (targets of an explored room's exits — including
+ * border stubs into neighbouring zones), render at all. Everything further stays
+ * hidden until walked, so the chart physically grows with exploration.
+ * "Explored" is `title !== ""`: titles arrive only with the player's permanent
+ * exploration set (Zone.Map) or by standing in the room (Room.Info).
+ */
+function computeVisibility(visited: Map<string, MapRoom>): { explored: Set<string>; frontier: Set<string> } {
+  const explored = new Set<string>();
+  for (const [id, node] of visited) {
+    if (node.title !== "" && !node.zone) explored.add(id);
+  }
+  const frontier = new Set<string>();
+  for (const id of explored) {
+    const node = visited.get(id);
+    if (!node) continue;
+    for (const target of Object.values(node.exits)) {
+      if (!explored.has(target)) frontier.add(target);
+    }
+  }
+  return { explored, frontier };
 }
 
 /** Zone id → display name, e.g. "demo_ruins" → "Demo Ruins". */
@@ -318,9 +342,16 @@ function renderMap(
   ctx.rect(scrollLeft, scrollTop, scrollRight - scrollLeft, scrollBottom - scrollTop);
   ctx.clip();
 
-  // Connecting lines — only between two visible rooms; off-map exits get a tick.
-  for (const node of visited.values()) {
+  // Fog of war: hidden rooms (neither explored nor on the one-hop frontier)
+  // draw nothing — no node, no edge, no marker.
+  const { explored, frontier } = computeVisibility(visited);
+  const isRendered = (id: string) => explored.has(id) || frontier.has(id);
+
+  // Connecting lines — drawn outward from *explored* rooms only, so the chart
+  // never reveals a corridor between two rooms the player hasn't earned.
+  for (const [nodeId, node] of visited.entries()) {
     if (node.z !== floor) continue;
+    if (!explored.has(nodeId)) continue;
     const sx = nodeX(node);
     const sy = nodeY(node);
     const sIn = inScrollBounds(sx, sy);
@@ -371,6 +402,9 @@ function renderMap(
         if (!fromNode || !toNode) continue;
         if (fromNode.z === floor && toNode.z !== floor) stairHops.add(fromId);
         if (fromNode.z !== floor || toNode.z !== floor) continue;
+        // The trail routes through the full zone graph, but only its explored/
+        // frontier stretch draws — the edge chevron carries it onward from there.
+        if (!isRendered(fromId) || !isRendered(toId)) continue;
         const sx = nodeX(fromNode);
         const sy = nodeY(fromNode);
         const tx = nodeX(toNode);
@@ -404,6 +438,7 @@ function renderMap(
     : 0.45 + 0.4 * (0.5 + 0.5 * Math.sin(Date.now() / PATH_SHIMMER_PERIOD * Math.PI * 2));
   for (const [id, node] of visited.entries()) {
     if (node.z !== floor) continue;
+    if (!isRendered(id)) continue;
     const x = nodeX(node);
     const y = nodeY(node);
     if (!inScrollBounds(x, y)) continue;
@@ -411,7 +446,8 @@ function renderMap(
     // Border stub: a room in a neighbouring zone, one cell past the boundary.
     // Drawn as a small zone-tinted marker with the zone's name, never as a
     // regular room glyph — it shows the world continues without claiming to be
-    // explored ground in this zone.
+    // explored ground in this zone. Renders only once its boundary room is
+    // explored (it sits on the frontier), like any other unearned ground.
     if (node.zone) {
       drawBorderStub(ctx, x, y, nodeSize / 2, node.zone);
       continue;
@@ -433,10 +469,11 @@ function renderMap(
     if (!drew) drawProceduralRoom(ctx, x, y, size / 2, isCurrent, isVisited, isHousing);
 
     // Stair badges — ▲/▼ beside rooms with vertical exits; gold-pulsing when
-    // the quest trail wants the player to take these stairs.
+    // the quest trail wants the player to take these stairs. Explored rooms
+    // only: a frontier room shouldn't advertise stairs the player hasn't seen.
     const hasUp = "up" in node.exits;
     const hasDown = "down" in node.exits;
-    if (hasUp || hasDown) {
+    if (isVisited && (hasUp || hasDown)) {
       drawStairBadges(ctx, x, y, size / 2, hasUp, hasDown, stairHops.has(id) ? stairPulse : 0);
     }
 
@@ -477,7 +514,9 @@ function renderMap(
     if (targetNode.z !== floor) continue; // off-floor targets are routed via the stair badge
     const tx = nodeX(targetNode);
     const ty = nodeY(targetNode);
-    if (inScrollBounds(tx, ty)) continue; // already visible
+    // Skip only when the target actually renders on screen — a quest room in
+    // fog-hidden territory still needs its edge chevron even inside the bounds.
+    if (inScrollBounds(tx, ty) && isRendered(targetId)) continue;
     const ddx = tx - originX;
     const ddy = ty - originY;
     const dist = Math.sqrt(ddx * ddx + ddy * ddy);
@@ -614,13 +653,17 @@ export function useMiniMap() {
 
     // Fit and pan bounds consider only the player's current floor — rooms on
     // other floors aren't drawn, so they shouldn't stretch the zoom either.
+    // Fog-hidden rooms are excluded too: the "whole zone" fit is the *revealed*
+    // chart, so an unexplored zone doesn't open zoomed out onto empty parchment.
     const floor = current?.z ?? 0;
+    const { explored: exploredIds, frontier: frontierIds } = computeVisibility(visited);
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
-    for (const node of visited.values()) {
+    for (const [nodeId, node] of visited.entries()) {
       if (node.z !== floor) continue;
+      if (!exploredIds.has(nodeId) && !frontierIds.has(nodeId)) continue;
       if (node.x < minX) minX = node.x;
       if (node.x > maxX) maxX = node.x;
       if (node.y < minY) minY = node.y;
@@ -824,11 +867,15 @@ export function useMiniMap() {
     [drawMap],
   );
 
-  /** Pre-populate the map with all rooms in a zone as fog nodes. */
+  /**
+   * Pre-populate the map with all rooms in a zone. Rooms the player has
+   * permanently explored arrive with title/terrain/poi and render remembered;
+   * the rest are fog nodes that stay hidden until their neighbour is explored.
+   */
   const loadZoneMap = useCallback(
     (
       zone: string,
-      rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>,
+      rooms: ZoneMapRoomData[],
       border: BorderStub[],
     ) => {
       const map = visitedRef.current;
@@ -840,7 +887,16 @@ export function useMiniMap() {
       zoomRef.current = 0;
 
       for (const r of rooms) {
-        map.set(r.id, { x: r.x, y: r.y, z: r.z, exits: r.exits, title: "", image: null });
+        map.set(r.id, {
+          x: r.x,
+          y: r.y,
+          z: r.z,
+          exits: r.exits,
+          title: r.explored ? (r.title ?? "") : "",
+          image: null,
+          terrain: r.explored ? r.terrain : undefined,
+          poi: r.poi,
+        });
       }
       // Border stubs: foreign rooms just across a boundary, already positioned in
       // this zone's frame. Tagged with their zone so drawMap colour-codes them.
