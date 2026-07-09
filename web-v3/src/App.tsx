@@ -523,6 +523,7 @@ function App() {
         [...state.skills, ...state.petSkills].map((s) => [s.id, s]),
       ),
       musicBoxPlaying: state.musicBox?.nowPlaying != null,
+      activeSketch: state.activeSketch,
     };
   });
 

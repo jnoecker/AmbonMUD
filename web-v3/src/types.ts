@@ -1638,6 +1638,38 @@ export interface ArcanumRoomEntry {
   firstBy: string | null;
 }
 
+/**
+ * One `Arcanum.Sketch` lifecycle event: a `start` (with `durationMs`), then
+ * exactly one of `success`, `fail`, or `cancel`. Drives the sketch scene.
+ */
+export interface ArcanumSketchEvent {
+  phase: "start" | "success" | "fail" | "cancel";
+  mobId: string;
+  mobName: string;
+  subjectKey: string;
+  /** Non-combat observation — it cannot fail. */
+  observe: boolean;
+  durationMs: number | null;
+  xpGained: number | null;
+  firstTime: boolean | null;
+  worldFirst: boolean | null;
+  /** Fail only: the subject turned on the sketcher (combat follows). */
+  hostile: boolean | null;
+  /** Cancel only: display text for why the page was abandoned. */
+  reason: string | null;
+}
+
+/** The in-progress sketch, set on `start` and cleared on any terminal phase. */
+export interface ActiveSketch {
+  mobId: string;
+  mobName: string;
+  subjectKey: string;
+  observe: boolean;
+  durationMs: number;
+  /** Client receipt time — drives the progress bar. */
+  startedAtMs: number;
+}
+
 /** Full journal payload for the Arcanum panel (Arcanum.Journal). */
 export interface ArcanumJournal {
   pledged: boolean;

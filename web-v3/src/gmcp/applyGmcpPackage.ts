@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type {
   AchievementData,
   ArcanumJournal,
+  ArcanumSketchEvent,
   ArcanumStatus,
   AuctionListing,
   BorderStub,
@@ -225,6 +226,7 @@ interface GmcpContext {
   setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
   setArcanumStatus: Dispatch<SetStateAction<ArcanumStatus | null>>;
   setArcanumJournal: Dispatch<SetStateAction<ArcanumJournal | null>>;
+  pushArcanumSketch: (event: ArcanumSketchEvent) => void;
   setCurrencies: Dispatch<SetStateAction<CurrencyBalance[]>>;
   setTrainer: Dispatch<SetStateAction<TrainerData | null>>;
   setUnlockedClasses: Dispatch<SetStateAction<string[]>>;
@@ -2273,6 +2275,26 @@ export function applyGmcpPackage(
         items: safeNumber(packet.items, 0),
         renounceCostGold: safeNumber(packet.renounceCostGold, 0),
         repledgeAvailableAtMs: safeNumber(packet.repledgeAvailableAtMs, 0),
+      });
+      break;
+    }
+
+    case "Arcanum.Sketch": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const phase = typeof packet.phase === "string" ? packet.phase : "";
+      if (phase !== "start" && phase !== "success" && phase !== "fail" && phase !== "cancel") break;
+      ctx.pushArcanumSketch({
+        phase,
+        mobId: typeof packet.mobId === "string" ? packet.mobId : "",
+        mobName: typeof packet.mobName === "string" ? packet.mobName : "",
+        subjectKey: typeof packet.subjectKey === "string" ? packet.subjectKey : "",
+        observe: packet.observe === true,
+        durationMs: typeof packet.durationMs === "number" ? packet.durationMs : null,
+        xpGained: typeof packet.xpGained === "number" ? packet.xpGained : null,
+        firstTime: typeof packet.firstTime === "boolean" ? packet.firstTime : null,
+        worldFirst: typeof packet.worldFirst === "boolean" ? packet.worldFirst : null,
+        hostile: typeof packet.hostile === "boolean" ? packet.hostile : null,
+        reason: typeof packet.reason === "string" ? packet.reason : null,
       });
       break;
     }

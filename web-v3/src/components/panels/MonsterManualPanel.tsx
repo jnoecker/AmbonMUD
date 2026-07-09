@@ -202,6 +202,12 @@ export function MonsterManualPanel({
   else if (monster.canAttack) {
     actions.push({ key: "attack", label: "Attack", glyph: "⚔", assetKey: "action_attack", variant: "primary", run: () => { onCommand(`kill ${name}`); close(); } });
     actions.push(illuminateAction("ghost"));
+  } else if (info && info.combatant === false && typeof info.arcanumRecorded === "boolean" && !info.arcanumRecorded) {
+    // Non-combat flavor mobs can be observed into the journal — it always
+    // succeeds, so no odds ride the label. Pets carry no arcanum fields,
+    // which keeps them out of this branch, and an already-recorded subject
+    // hides the button (a repeat observation records nothing new).
+    actions.push(illuminateAction("primary"));
   }
   if (monster.video) actions.push({ key: "video", label: "Cinematic", glyph: "▶", assetKey: "action_cinematic", variant: "ghost", run: () => onVideo(monster.video!) });
   if (monster.isStaff) actions.push({ key: "possess", label: "Possess", glyph: "✦", assetKey: "action_possess", variant: "ghost", run: () => { onCommand(`possess ${name}`); close(); } });

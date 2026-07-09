@@ -1,4 +1,5 @@
 import type {
+  ActiveSketch,
   CharacterInfo,
   CombatTarget,
   ContainerContents,
@@ -66,6 +67,8 @@ export interface GameStateSnapshot {
    * them out of the room it started in.
    */
   musicBoxPlaying: boolean;
+  /** The in-progress Akathavae sketch — drives the sketch scene. */
+  activeSketch: ActiveSketch | null;
 }
 
 export interface PendingCast {
@@ -195,5 +198,6 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     zoneEnvironment: null,
     skillsById: new Map(),
     musicBoxPlaying: false,
+    activeSketch: null,
   },
 };
