@@ -151,7 +151,7 @@ class PersistenceFieldCoverageTest {
                 arcanumData =
                     """{"mobs":{"academy:wandering_wisp":{"firstRecordedAtMs":1700000333000,""" +
                         """"timesRecorded":2,"lastXpAtMs":1700000334000,"source":"illuminated"}},""" +
-                        """"items":{},"rooms":{}}""",
+                        """"items":{},"rooms":{},"completedZones":["academy"]}""",
                 racialAbilityCooldownUntilMs = 7_777_000L,
             )
 
