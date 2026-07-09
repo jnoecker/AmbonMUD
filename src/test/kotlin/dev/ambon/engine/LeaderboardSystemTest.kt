@@ -1,14 +1,19 @@
 package dev.ambon.engine
 
 import dev.ambon.config.LeaderboardConfig
+import dev.ambon.domain.arcanum.ArcanumEntry
+import dev.ambon.domain.arcanum.ArcanumJournal
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.persistence.PlayerId
 import dev.ambon.persistence.PlayerRecord
+import dev.ambon.persistence.jsonMapper
 import dev.ambon.test.MutableClock
 import dev.ambon.test.TEST_ROOM_ID
 import dev.ambon.test.buildTestPlayerRegistry
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -39,6 +44,7 @@ class LeaderboardSystemTest {
         dungeons: Int = 0,
         kills: Long = 0L,
         isStaff: Boolean = false,
+        arcanumData: String = "{}",
     ) {
         val record = PlayerRecord(
             id = PlayerId(id),
@@ -52,8 +58,22 @@ class LeaderboardSystemTest {
             dungeonsCompleted = dungeons,
             mobsKilledTotal = kills,
             isStaff = isStaff,
+            arcanumData = arcanumData,
         )
         repo.save(record)
+    }
+
+    private fun arcanumBlob(
+        mobs: Int,
+        items: Int = 0,
+        rooms: Int = 0,
+    ): String {
+        val journal = ArcanumJournal(
+            mobs = (1..mobs).associate { "zone:mob$it" to ArcanumEntry() }.toMutableMap(),
+            items = (1..items).associate { "item$it" to ArcanumEntry() }.toMutableMap(),
+            rooms = (1..rooms).associate { "zone:room$it" to ArcanumEntry() }.toMutableMap(),
+        )
+        return jsonMapper.writeValueAsString(journal)
     }
 
     @Test
@@ -165,6 +185,54 @@ class LeaderboardSystemTest {
         assertEquals(LeaderboardSystem.Category.LEVEL, LeaderboardSystem.Category.fromKey("level"))
         assertEquals(LeaderboardSystem.Category.KILLS, LeaderboardSystem.Category.fromKey("kills"))
         assertEquals(null, LeaderboardSystem.Category.fromKey("nonexistent"))
+    }
+
+    @Test
+    fun `chronicler leaderboard ranks by total arcanum pages with live overlay`() =
+        runTest {
+            savePlayer(101, "Scribe", arcanumData = arcanumBlob(mobs = 1, items = 1))
+            savePlayer(102, "Sage", arcanumData = arcanumBlob(mobs = 2, items = 2, rooms = 1))
+
+            // Online player: persisted journal is empty, but the live in-memory journal
+            // has unsaved recordings that should be reflected via the overlay.
+            registry.loginOrFail(SessionId(1), "Wanderer")
+            val live = registry.getByName("Wanderer")!!
+            repeat(4) { live.arcanum.mobs["zone:mob$it"] = ArcanumEntry() }
+            repeat(3) { live.arcanum.rooms["zone:room$it"] = ArcanumEntry() }
+
+            system.refresh()
+
+            val entries = system.getEntries(LeaderboardSystem.Category.CHRONICLER)
+            assertEquals(3, entries.size)
+            assertEquals("Wanderer", entries[0].playerName)
+            assertEquals(7L, entries[0].score)
+            assertEquals("Sage", entries[1].playerName)
+            assertEquals(5L, entries[1].score)
+            assertEquals("Scribe", entries[2].playerName)
+            assertEquals(2L, entries[2].score)
+        }
+
+    @Test
+    fun `chronicler scores 0 for blank or malformed arcanum data without errors`() =
+        runTest {
+            savePlayer(101, "Fresh", arcanumData = "")
+            savePlayer(102, "Corrupt", arcanumData = "not-json{{{")
+            savePlayer(103, "Keeper", arcanumData = arcanumBlob(mobs = 0, rooms = 1))
+
+            system.refresh()
+
+            val entries = system.getEntries(LeaderboardSystem.Category.CHRONICLER)
+            assertEquals(3, entries.size)
+            assertEquals("Keeper", entries[0].playerName)
+            assertEquals(1L, entries[0].score)
+            assertEquals(0L, entries[1].score)
+            assertEquals(0L, entries[2].score)
+        }
+
+    @Test
+    fun `Category fromKey resolves arcanum key`() {
+        assertEquals(LeaderboardSystem.Category.CHRONICLER, LeaderboardSystem.Category.fromKey("arcanum"))
+        assertEquals(LeaderboardSystem.Category.CHRONICLER, LeaderboardSystem.Category.fromKey("arc"))
     }
 
     @Test
