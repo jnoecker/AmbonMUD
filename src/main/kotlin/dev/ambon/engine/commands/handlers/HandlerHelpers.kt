@@ -600,7 +600,7 @@ internal suspend fun sendLook(
     val zone = room.id.zone
     if (gmcpEmitter != null && gmcpEmitter.trackZoneChange(sessionId, zone)) {
         val zoneRooms = world.rooms.values.filter { it.id.zone == zone }
-        gmcpEmitter.sendZoneMap(sessionId, zone, zoneRooms)
+        gmcpEmitter.sendZoneMap(sessionId, zone, zoneRooms, me.exploredRooms)
         gmcpEmitter.sendZoneEnvironment(sessionId, gmcpEmitter.buildZoneEnvironmentPayload(zone))
         // Zone intro cinematic: auto-plays on the player's first-ever entry,
         // then stays replayable from the expanded map.

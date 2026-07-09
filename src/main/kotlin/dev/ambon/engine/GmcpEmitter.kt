@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
@@ -337,11 +338,19 @@ class GmcpEmitter(
      * Cross-zone targets keep their full `<otherzone>:room` id (the prefix doesn't
      * match, so nothing is stripped), which both disambiguates them and lets the
      * client recognise them as foreign. Clients re-qualify the bare ids with [zone].
+     *
+     * [exploredRooms] is the player's permanent exploration set (full `zone:room`
+     * ids). Explored rooms additionally carry the abbreviated detail fields on
+     * [ZoneMapRoom] (`e`/`t`/`tr`/`poi`) so a returning player's map renders
+     * remembered rooms with names, terrain stamps and service icons; unexplored
+     * rooms omit them entirely, both to avoid leaking detail the player hasn't
+     * earned and to keep a fully-explored large zone under the payload cap.
      */
     suspend fun sendZoneMap(
         sessionId: SessionId,
         zone: String,
         rooms: Collection<Room>,
+        exploredRooms: Set<String> = emptySet(),
     ) {
         val prefix = "$zone:"
         val border = LinkedHashMap<String, BorderStub>()
@@ -359,6 +368,7 @@ class GmcpEmitter(
                     )
                 }
             }
+            val explored = r.id.value in exploredRooms
             ZoneMapRoom(
                 id = r.id.value.removePrefix(prefix),
                 x = r.mapX,
@@ -366,6 +376,12 @@ class GmcpEmitter(
                 z = r.mapZ,
                 exits = r.exits.entries
                     .associate { (dir, target) -> dir.name.lowercase() to target.value.removePrefix(prefix) },
+                e = if (explored) 1 else null,
+                t = if (explored) r.title else null,
+                // The default terrain is implied: an explored room without `tr`
+                // is "outside". Saves ~5 KB on a fully-explored 300-room zone.
+                tr = if (explored && r.terrain != "outside") r.terrain else null,
+                poi = if (explored) roomPoi(r).ifEmpty { null } else null,
             )
         }
         emit(
@@ -3089,13 +3105,43 @@ class GmcpEmitter(
         val border: List<BorderStub>,
     )
 
+    /**
+     * One room of a `Zone.Map` payload. The detail fields are deliberately
+     * abbreviated and null-omitted: they appear on every explored room of what is
+     * already the largest GMCP payload, and full names would push a fully-explored
+     * 300-room zone over [MAX_GMCP_PAYLOAD_BYTES] (see the payload-cap test).
+     * `e` = 1 when the player has explored this room (absent otherwise);
+     * `t` = room title, `tr` = terrain key, `poi` = service tokens matching the
+     * `Room.Info` flag names (bank, tavern, …) — all present only when explored.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private data class ZoneMapRoom(
         val id: String,
         val x: Int,
         val y: Int,
         val z: Int,
         val exits: Map<String, String>,
+        val e: Int? = null,
+        val t: String? = null,
+        val tr: String? = null,
+        val poi: List<String>? = null,
     )
+
+    /** Service tokens for a room's map icon — names match the `Room.Info` flags. */
+    private fun roomPoi(r: Room): List<String> =
+        buildList {
+            if (r.bank) add("bank")
+            if (r.tavern) add("tavern")
+            if (r.stylist) add("stylist")
+            if (r.dungeon) add("dungeon")
+            if (r.auction) add("auction")
+            if (r.housingBroker) add("housingBroker")
+            if (r.inn) add("inn")
+            if (r.akathavaeShrine) add("shrine")
+            if (r.flightMaster) add("flightMaster")
+            if (r.boatDock) add("boatDock")
+            if (r.station != null) add("station")
+        }
 
     /**
      * A ghost room just across a zone boundary: a single cell placed one step past
