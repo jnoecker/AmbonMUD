@@ -1,0 +1,18 @@
+package dev.ambon.config
+
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
+class ImagesConfigTest {
+    @Test
+    fun `arcanum folio assets have bundled fallbacks`() {
+        assertEquals(
+            "global_assets/arcanum_bg.png",
+            ImagesConfig.DEFAULT_GLOBAL_ASSETS["arcanum_bg"],
+        )
+        assertEquals(
+            "global_assets/arcanum_bg_portrait.png",
+            ImagesConfig.DEFAULT_GLOBAL_ASSETS["arcanum_bg_portrait"],
+        )
+    }
+}

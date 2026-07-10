@@ -3831,6 +3831,11 @@ data class ImagesConfig(
             "auction_bg" to "global_assets/auction_bg.png",
             "crafting_bg" to "global_assets/crafting_bg.png",
             "professions_bg" to "global_assets/professions_bg.png",
+            // The Arcanum's living field folio. Landscape is a 1448x1086
+            // two-page ledger; portrait is a 941x1672 phone recomposition.
+            // Both fall back to the matching CSS folio treatment when absent.
+            "arcanum_bg" to "global_assets/arcanum_bg.png",
+            "arcanum_bg_portrait" to "global_assets/arcanum_bg_portrait.png",
             "admin_bg" to "global_assets/admin_bg.png",
             // Pressed-flower parchment layered behind the full-screen terminal
             // overlay (under a dark legibility scrim) once the player commits to

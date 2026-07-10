@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import type {
   ArcanumItemEntry,
   ArcanumJournal,
@@ -6,9 +7,12 @@ import type {
   ArcanumRoomEntry,
   ArcanumStatus,
 } from "../../types";
+import { formatZoneName } from "../../utils";
 
 type ArcanumTab = "mobs" | "items" | "rooms";
 type ArcanumSort = "name" | "date";
+
+const ARCANUM_TABS: readonly ArcanumTab[] = ["mobs", "items", "rooms"];
 
 const SOURCE_LABEL: Record<string, string> = {
   illuminated: "Illuminated",
@@ -107,8 +111,12 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
 
   if (!journal) {
     return (
-      <div className="arcanum-panel">
-        <p className="arcanum-empty">Opening the Arcanum&hellip;</p>
+      <div className="arcanum-panel arcanum-panel-loading">
+        <div className="arcanum-loading" role="status" aria-live="polite">
+          <span className="arcanum-loading-sigil" aria-hidden="true">✦</span>
+          <h2 className="arcanum-heading">The Arcanum</h2>
+          <p className="arcanum-empty">Opening your field folio&hellip;</p>
+        </div>
       </div>
     );
   }
@@ -139,6 +147,7 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
   const showMore = (total: number) =>
     total > visible && (
       <button
+        type="button"
         className="arcanum-show-more"
         onClick={() => setShown({ lens, count: visible + PAGE_SIZE })}
       >
@@ -154,8 +163,10 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
   );
 
   const mobCard = (m: ArcanumMobEntry) => (
-    <div key={m.key} className="arcanum-card">
-      {m.image && <img className="arcanum-card-art" src={m.image} alt="" loading="lazy" />}
+    <article key={m.key} className="arcanum-card" aria-label={m.name}>
+      {m.image && (
+        <img className="arcanum-card-art" src={m.image} alt="" loading="lazy" decoding="async" />
+      )}
       <div className="arcanum-card-body">
         <span className="arcanum-card-name">{m.name}</span>
         <span className="arcanum-card-meta">
@@ -165,12 +176,14 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
         {firstLine(m.firstBy)}
         {firstLine(m.firstSlainBy, "slain")}
       </div>
-    </div>
+    </article>
   );
 
   const itemCard = (i: ArcanumItemEntry) => (
-    <div key={i.key} className="arcanum-card">
-      {i.image && <img className="arcanum-card-art" src={i.image} alt="" loading="lazy" />}
+    <article key={i.key} className="arcanum-card" aria-label={i.name}>
+      {i.image && (
+        <img className="arcanum-card-art" src={i.image} alt="" loading="lazy" decoding="async" />
+      )}
       <div className="arcanum-card-body">
         <span className="arcanum-card-name">{i.name}</span>
         <span className="arcanum-card-meta">
@@ -180,6 +193,7 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
         {firstLine(i.firstBy)}
         {pledged && i.wearable && (
           <button
+            type="button"
             className="arcanum-conjure-btn"
             disabled={!connected}
             onClick={() => onCommand(`wardrobe ${i.name}`)}
@@ -188,7 +202,7 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
           </button>
         )}
       </div>
-    </div>
+    </article>
   );
 
   /** Visible slice of places, grouped by zone with a labelled sticky header per zone. */
@@ -202,24 +216,52 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
     return groups;
   };
 
+  const moveTabFocus = (event: KeyboardEvent<HTMLButtonElement>, current: ArcanumTab) => {
+    const currentIndex = ARCANUM_TABS.indexOf(current);
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % ARCANUM_TABS.length;
+    if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + ARCANUM_TABS.length) % ARCANUM_TABS.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = ARCANUM_TABS.length - 1;
+    if (nextIndex === null) return;
+    event.preventDefault();
+    const nextTab = ARCANUM_TABS[nextIndex];
+    setTab(nextTab);
+    window.requestAnimationFrame(() => document.getElementById(`arcanum-tab-${nextTab}`)?.focus());
+  };
+
   return (
     <div className="arcanum-panel">
-      <p className="arcanum-pledge-line">
-        {pledged
-          ? "You are an Akathavae — a keeper of the Arcanum. The world is your subject."
-          : "A field journal of your own travels. Only a pledged Akathavae's record is accepted at the shrines."}
-      </p>
+      <header className="arcanum-intro">
+        <span className="arcanum-kicker">Living field folio</span>
+        <h2 className="arcanum-heading">The Arcanum</h2>
+        <p className="arcanum-pledge-line">
+          {pledged
+            ? "You are an Akathavae — a keeper of the Arcanum. The world is your subject."
+            : "A field journal of your own travels. Only a pledged Akathavae's record is accepted at the shrines."}
+        </p>
+      </header>
 
-      {journal.zones.length > 0 && (
-        <div className="arcanum-zones">
+      <aside className="arcanum-zones" aria-label="Journey completion by zone">
+        <div className="arcanum-zone-title">
+          <span>Journey ledger</span>
+          <span className="arcanum-zone-count">
+            {journal.zones.length} {journal.zones.length === 1 ? "realm" : "realms"}
+          </span>
+        </div>
+        <div className="arcanum-zone-list">
+          {journal.zones.length === 0 && (
+            <p className="arcanum-zone-empty">Your first journey has yet to be recorded.</p>
+          )}
           {journal.zones.map((z) => {
             const total = z.roomsTotal + z.mobsTotal + z.itemsTotal;
             const recorded = z.roomsRecorded + z.mobsRecorded + z.itemsRecorded;
             const pct = total > 0 ? Math.round((recorded / total) * 100) : 0;
+            const zoneName = formatZoneName(z.zone);
             return (
               <div key={z.zone} className="arcanum-zone">
                 <div className="arcanum-zone-head">
-                  <span className="arcanum-zone-name">{z.zone}</span>
+                  <span className="arcanum-zone-name" title={zoneName}>{zoneName}</span>
                   <span className="arcanum-zone-pct">{pct}%</span>
                 </div>
                 <div
@@ -228,7 +270,7 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
                   aria-valuenow={pct}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label={`${z.zone} completion`}
+                  aria-label={`${zoneName} completion`}
                 >
                   <div className="arcanum-zone-fill" style={{ width: `${pct}%` }} />
                 </div>
@@ -240,104 +282,141 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
             );
           })}
         </div>
-      )}
+      </aside>
 
-      <div className="arcanum-controls">
-        <input
-          type="search"
-          className="arcanum-search"
-          placeholder="Search these pages…"
-          aria-label="Search journal entries by name"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        {tab !== "rooms" && (
-          <select
-            className="arcanum-sort"
-            aria-label="Sort entries"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as ArcanumSort)}
-          >
-            <option value="name">By name</option>
-            <option value="date">Newest first</option>
-          </select>
-        )}
-        <div className="arcanum-chips">
-          <button
-            className={`arcanum-chip${firstsOnly ? " arcanum-chip-active" : ""}`}
-            aria-pressed={firstsOnly}
-            onClick={() => setFirstsOnly((v) => !v)}
-          >
-            ★ My firsts
-          </button>
-          {tab === "items" &&
-            presentSources.map((s) => (
-              <button
-                key={s}
-                className={`arcanum-chip${sourceFilter === s ? " arcanum-chip-active" : ""}`}
-                aria-pressed={sourceFilter === s}
-                onClick={() => setSourceFilter((cur) => (cur === s ? null : s))}
-              >
-                {SOURCE_LABEL[s]}
-              </button>
-            ))}
-        </div>
-      </div>
-
-      <div className="arcanum-tabs" role="tablist">
-        {(["mobs", "items", "rooms"] as const).map((t) => (
-          <button
-            key={t}
-            role="tab"
-            aria-selected={tab === t}
-            className={`arcanum-tab${tab === t ? " arcanum-tab-active" : ""}`}
-            onClick={() => setTab(t)}
-          >
-            {t === "mobs" ? "Creatures" : t === "items" ? "Items" : "Places"} ({counts[t]})
-          </button>
-        ))}
-      </div>
-
-      {filtersActive && (
-        <p className="arcanum-filter-note" aria-live="polite">
-          Showing {activeCount} of {counts[tab]}{" "}
-          {tab === "mobs" ? "creatures" : tab === "items" ? "items" : "places"}.
-        </p>
-      )}
-
-      {tab === "mobs" && (
-        <div className="arcanum-grid">
-          {mobs.length === 0 && emptyMessage("No creatures illuminated yet.")}
-          {mobs.slice(0, visible).map(mobCard)}
-        </div>
-      )}
-      {tab === "mobs" && showMore(mobs.length)}
-
-      {tab === "items" && (
-        <div className="arcanum-grid">
-          {items.length === 0 && emptyMessage("No items recorded yet.")}
-          {items.slice(0, visible).map(itemCard)}
-        </div>
-      )}
-      {tab === "items" && showMore(items.length)}
-
-      {tab === "rooms" && (
-        <div className="arcanum-rooms">
-          {rooms.length === 0 && emptyMessage("No places recorded yet.")}
-          {roomGroups().map((g) => (
-            <div key={g.zone} className="arcanum-room-group">
-              <div className="arcanum-room-group-head">{g.zone}</div>
-              {g.rooms.map((r) => (
-                <div key={r.key} className="arcanum-room-row">
-                  <span className="arcanum-room-title">{r.title}</span>
-                  {firstLine(r.firstBy)}
-                </div>
+      <section className="arcanum-catalog" aria-label="Recorded pages">
+        <div className="arcanum-controls">
+          <div className="arcanum-search-wrap">
+            <label className="sr-only" htmlFor="arcanum-search">Search the Arcanum</label>
+            <span className="arcanum-search-sigil" aria-hidden="true">⌕</span>
+            <input
+              id="arcanum-search"
+              type="search"
+              className="arcanum-search"
+              placeholder="Search these pages…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          {tab !== "rooms" && (
+            <select
+              className="arcanum-sort"
+              aria-label="Sort entries"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as ArcanumSort)}
+            >
+              <option value="name">By name</option>
+              <option value="date">Newest first</option>
+            </select>
+          )}
+          <div className="arcanum-chips" role="group" aria-label="Journal filters">
+            <button
+              type="button"
+              className={`arcanum-chip${firstsOnly ? " arcanum-chip-active" : ""}`}
+              aria-pressed={firstsOnly}
+              onClick={() => setFirstsOnly((v) => !v)}
+            >
+              ★ My firsts
+            </button>
+            {tab === "items" &&
+              presentSources.map((s) => (
+                <button
+                  type="button"
+                  key={s}
+                  className={`arcanum-chip${sourceFilter === s ? " arcanum-chip-active" : ""}`}
+                  aria-pressed={sourceFilter === s}
+                  onClick={() => setSourceFilter((cur) => (cur === s ? null : s))}
+                >
+                  {SOURCE_LABEL[s]}
+                </button>
               ))}
-            </div>
+          </div>
+        </div>
+
+        <div className="arcanum-tabs" role="tablist" aria-label="Arcanum sections">
+          {ARCANUM_TABS.map((t) => (
+            <button
+              type="button"
+              id={`arcanum-tab-${t}`}
+              key={t}
+              role="tab"
+              tabIndex={tab === t ? 0 : -1}
+              aria-selected={tab === t}
+              aria-controls={`arcanum-panel-${t}`}
+              className={`arcanum-tab${tab === t ? " arcanum-tab-active" : ""}`}
+              onClick={() => setTab(t)}
+              onKeyDown={(event) => moveTabFocus(event, t)}
+            >
+              <span>{t === "mobs" ? "Creatures" : t === "items" ? "Items" : "Places"}</span>
+              <span className="arcanum-tab-count">{counts[t]}</span>
+            </button>
           ))}
         </div>
-      )}
-      {tab === "rooms" && showMore(rooms.length)}
+
+        <div className="arcanum-results">
+          {filtersActive && (
+            <p className="arcanum-filter-note" aria-live="polite">
+              Showing {activeCount} of {counts[tab]}{" "}
+              {tab === "mobs" ? "creatures" : tab === "items" ? "items" : "places"}.
+            </p>
+          )}
+
+          {tab === "mobs" && (
+            <div
+              id="arcanum-panel-mobs"
+              role="tabpanel"
+              aria-labelledby="arcanum-tab-mobs"
+              className="arcanum-tab-panel"
+            >
+              <div className="arcanum-grid">
+                {mobs.length === 0 && emptyMessage("No creatures illuminated yet.")}
+                {mobs.slice(0, visible).map(mobCard)}
+              </div>
+              {showMore(mobs.length)}
+            </div>
+          )}
+
+          {tab === "items" && (
+            <div
+              id="arcanum-panel-items"
+              role="tabpanel"
+              aria-labelledby="arcanum-tab-items"
+              className="arcanum-tab-panel"
+            >
+              <div className="arcanum-grid">
+                {items.length === 0 && emptyMessage("No items recorded yet.")}
+                {items.slice(0, visible).map(itemCard)}
+              </div>
+              {showMore(items.length)}
+            </div>
+          )}
+
+          {tab === "rooms" && (
+            <div
+              id="arcanum-panel-rooms"
+              role="tabpanel"
+              aria-labelledby="arcanum-tab-rooms"
+              className="arcanum-tab-panel"
+            >
+              <div className="arcanum-rooms" role="list">
+                {rooms.length === 0 && emptyMessage("No places recorded yet.")}
+                {roomGroups().map((g) => (
+                  <section key={g.zone} className="arcanum-room-group">
+                    <h3 className="arcanum-room-group-head">{formatZoneName(g.zone)}</h3>
+                    {g.rooms.map((r) => (
+                      <div key={r.key} className="arcanum-room-row" role="listitem">
+                        <span className="arcanum-room-title">{r.title}</span>
+                        {firstLine(r.firstBy)}
+                      </div>
+                    ))}
+                  </section>
+                ))}
+              </div>
+              {showMore(rooms.length)}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
