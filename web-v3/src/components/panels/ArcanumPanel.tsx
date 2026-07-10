@@ -398,13 +398,13 @@ export function ArcanumPanel({ journal, status, playerName, connected, onCommand
               aria-labelledby="arcanum-tab-rooms"
               className="arcanum-tab-panel"
             >
-              <div className="arcanum-rooms" role="list">
+              <div className="arcanum-rooms">
                 {rooms.length === 0 && emptyMessage("No places recorded yet.")}
                 {roomGroups().map((g) => (
                   <section key={g.zone} className="arcanum-room-group">
                     <h3 className="arcanum-room-group-head">{formatZoneName(g.zone)}</h3>
                     {g.rooms.map((r) => (
-                      <div key={r.key} className="arcanum-room-row" role="listitem">
+                      <div key={r.key} className="arcanum-room-row">
                         <span className="arcanum-room-title">{r.title}</span>
                         {firstLine(r.firstBy)}
                       </div>

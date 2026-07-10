@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 class ImagesConfigTest {
     @Test
-    fun `arcanum folio assets have bundled fallbacks`() {
+    fun `arcanum folio assets are registered under the canonical keys`() {
         assertEquals(
             "global_assets/arcanum_bg.png",
             ImagesConfig.DEFAULT_GLOBAL_ASSETS["arcanum_bg"],
