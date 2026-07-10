@@ -85,6 +85,7 @@ import type {
 import { formatZoneName, sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
 import "./arcanum.css";
+import "./shrine.css";
 
 // ── Consider (threat assessment) helpers ────────────────────────────────────
 const CONSIDER_TIER_CLASS: Record<ConsiderRating, string> = {
@@ -1169,6 +1170,8 @@ function App() {
             ? "professions"
             : drawerPanel === "arcanum"
             ? "arcanum"
+            : drawerPanel === "shrine"
+            ? "shrine"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -1229,6 +1232,8 @@ function App() {
             ? state.serverAssets["professions_bg"]
             : drawerPanel === "arcanum"
             ? state.serverAssets["arcanum_bg"]
+            : drawerPanel === "shrine"
+            ? state.serverAssets["shrine_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1266,9 +1271,11 @@ function App() {
             ? state.serverAssets["musicbox_bg_portrait"]
             : drawerPanel === "arcanum"
             ? state.serverAssets["arcanum_bg_portrait"]
+            : drawerPanel === "shrine"
+            ? state.serverAssets["shrine_bg_portrait"]
             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "flight" || drawerPanel === "boat" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "musicbox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" || drawerPanel === "arcanum" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "flight" || drawerPanel === "boat" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "musicbox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" || drawerPanel === "arcanum" || drawerPanel === "shrine" ? 0.94 : undefined}
       >
         {/* Panels are lazy chunks; the drawer chrome shows while one loads. */}
         <Suspense fallback={null}>
