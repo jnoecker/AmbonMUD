@@ -163,7 +163,7 @@ export function Drawer({ open, title, onClose, children, variant = "default", sk
       />
       <div
         ref={sheetRef}
-        className={`drawer-sheet${variant !== "default" ? ` drawer-sheet-${variant}` : ""}`}
+        className={`drawer-sheet${variant !== "default" ? ` drawer-sheet-${variant}` : ""}${skinBg ? " drawer-sheet-skinned" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
