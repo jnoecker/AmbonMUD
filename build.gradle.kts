@@ -33,6 +33,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-compression-jvm:$ktorVersion")
 
     implementation("ch.qos.logback:logback-classic:1.5.37")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")

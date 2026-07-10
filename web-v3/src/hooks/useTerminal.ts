@@ -17,6 +17,11 @@ interface TerminalHosts {
   screenReaderMode?: boolean;
 }
 
+/** Keep the terminal bundle off the startup path unless UI or accessibility needs it. */
+export function shouldLoadTerminalBundle(loadRequested: boolean, screenReaderMode: boolean): boolean {
+  return loadRequested || screenReaderMode;
+}
+
 // Both themes keep the cell background transparent (allowTransparency) so the
 // scroll's CSS background — dark glass or the parchment art — shows through.
 const DARK_THEME = {
@@ -68,8 +73,9 @@ export function useTerminal({ hiddenHostRef, overlayHostRef, screenReaderMode = 
   const fitAddonRef = useRef<FitAddon | null>(null);
   // Server bytes that arrive before the lazy-loaded xterm module is ready.
   // xterm (~330 kB) is the entry chunk's second-largest dependency, so it is
-  // fetched with a dynamic import the moment the hook mounts; the buffer
-  // bridges the sub-second gap so no output is lost.
+  // fetched only when the player opens the terminal (or screen-reader mode
+  // needs its accessible buffer). This bounded queue preserves the session log
+  // until then without putting xterm on the login path.
   const pendingWritesRef = useRef<string[]>([]);
   // Theme requested before the instance exists (parchment art can arrive
   // via Server.Assets while xterm is still downloading).
@@ -78,6 +84,15 @@ export function useTerminal({ hiddenHostRef, overlayHostRef, screenReaderMode = 
   // before the lazy xterm module finishes loading).
   const srModeRef = useRef(screenReaderMode);
   const [open, setOpen] = useState(false);
+  const [loadRequested, setLoadRequested] = useState(false);
+  const [terminalReady, setTerminalReady] = useState(false);
+  const shouldLoadBundle = shouldLoadTerminalBundle(loadRequested, screenReaderMode);
+
+  // Once accessibility requests xterm, keep the instance alive even if the
+  // setting later changes so accumulated scrollback is never discarded.
+  useEffect(() => {
+    if (screenReaderMode) setLoadRequested(true);
+  }, [screenReaderMode]);
   // Translucent when first summoned (game stays visible behind the log);
   // turns opaque once the user starts typing and commits to terminal mode.
   const [opaque, setOpaque] = useState(false);
@@ -100,7 +115,7 @@ export function useTerminal({ hiddenHostRef, overlayHostRef, screenReaderMode = 
   }, [hiddenHostRef, overlayHostRef]);
 
   useEffect(() => {
-    if (!hiddenHostRef.current) return;
+    if (!shouldLoadBundle || !hiddenHostRef.current) return;
 
     let disposed = false;
     let term: Terminal | null = null;
@@ -136,6 +151,7 @@ export function useTerminal({ hiddenHostRef, overlayHostRef, screenReaderMode = 
       const pending = pendingWritesRef.current;
       pendingWritesRef.current = [];
       for (const chunk of pending) term.write(chunk);
+      setTerminalReady(true);
     })();
 
     return () => {
@@ -144,7 +160,7 @@ export function useTerminal({ hiddenHostRef, overlayHostRef, screenReaderMode = 
       fitAddonRef.current = null;
       terminalRef.current = null;
     };
-  }, [hiddenHostRef]);
+  }, [hiddenHostRef, shouldLoadBundle]);
 
   // Follow the server-persisted screen-reader flag at runtime (xterm builds or
   // tears down its accessibility tree when the option flips).
@@ -195,7 +211,7 @@ export function useTerminal({ hiddenHostRef, overlayHostRef, screenReaderMode = 
     } else if (hiddenHostRef.current && termEl.parentElement !== hiddenHostRef.current) {
       hiddenHostRef.current.appendChild(termEl);
     }
-  }, [open, fit, hiddenHostRef, overlayHostRef]);
+  }, [open, fit, hiddenHostRef, overlayHostRef, terminalReady]);
 
   /** Queue output until the lazily-imported xterm instance exists. */
   const writeOrBuffer = useCallback((text: string) => {
@@ -232,7 +248,10 @@ export function useTerminal({ hiddenHostRef, overlayHostRef, screenReaderMode = 
     if (term) term.options.theme = enabled ? INK_THEME : DARK_THEME;
   }, []);
 
-  const openTerminal = useCallback(() => setOpen(true), []);
+  const openTerminal = useCallback(() => {
+    setLoadRequested(true);
+    setOpen(true);
+  }, []);
 
   const closeTerminal = useCallback(() => {
     setOpen(false);

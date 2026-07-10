@@ -16,7 +16,12 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.compression.Compression
+import io.ktor.server.plugins.compression.gzip
+import io.ktor.server.plugins.compression.matchContentType
+import io.ktor.server.plugins.compression.minimumSize
 import io.ktor.server.plugins.origin
+import io.ktor.server.response.header
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -43,6 +48,18 @@ private val log = KotlinLogging.logger {}
 // Maximum number of extra frames to drain per write iteration before flushing the text batch.
 // Keeps latency bounded while amortising WebSocket frame overhead across bursts of text output.
 internal const val MAX_WS_FRAMES_PER_BATCH = 64
+internal const val IMMUTABLE_WEB_CACHE_CONTROL = "public, max-age=31536000, immutable"
+internal const val REVALIDATE_WEB_CACHE_CONTROL = "no-cache"
+internal const val MUTABLE_MEDIA_CACHE_CONTROL = "public, max-age=3600, stale-while-revalidate=86400"
+
+internal fun webResourceCacheControl(resourcePath: String): String {
+    val normalized = resourcePath.replace('\\', '/')
+    return when {
+        "/assets/" in normalized -> IMMUTABLE_WEB_CACHE_CONTROL
+        normalized.endsWith("/index.html") || normalized.endsWith("/sw.js") -> REVALIDATE_WEB_CACHE_CONTROL
+        else -> MUTABLE_MEDIA_CACHE_CONTROL
+    }
+}
 
 /**
  * Drain [outboundQueue] into [send], coalescing consecutive [OutboundFrame.Text] entries into
@@ -209,6 +226,18 @@ internal fun Application.ambonMUDWebModule(
         maxFrameSize = maxFrameBytes
     }
 
+    install(Compression) {
+        gzip {
+            priority = 1.0
+            minimumSize(1_024)
+            matchContentType(
+                ContentType.Text.Any,
+                ContentType.Application.JavaScript,
+                ContentType.Application.Json,
+            )
+        }
+    }
+
     install(securityHeadersPlugin())
 
     val connectionLimiter = WsConnectionLimiter(maxConnections, maxConnectionsPerIp)
@@ -266,23 +295,39 @@ internal fun Application.ambonMUDWebModule(
         staticResources(
             remotePath = "/images",
             basePackage = "world/images",
-        )
+        ) {
+            modify { _, call ->
+                call.response.header(HttpHeaders.CacheControl, MUTABLE_MEDIA_CACHE_CONTROL)
+            }
+        }
 
         staticResources(
             remotePath = "/audio",
             basePackage = "world/audio",
-        )
+        ) {
+            modify { _, call ->
+                call.response.header(HttpHeaders.CacheControl, MUTABLE_MEDIA_CACHE_CONTROL)
+            }
+        }
 
         staticResources(
             remotePath = "/videos",
             basePackage = "world/video",
-        )
+        ) {
+            modify { _, call ->
+                call.response.header(HttpHeaders.CacheControl, MUTABLE_MEDIA_CACHE_CONTROL)
+            }
+        }
 
         staticResources(
             remotePath = "/",
             basePackage = "web-v3",
             index = "index.html",
-        )
+        ) {
+            modify { resource, call ->
+                call.response.header(HttpHeaders.CacheControl, webResourceCacheControl(resource.path))
+            }
+        }
     }
 }
 

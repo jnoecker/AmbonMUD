@@ -94,4 +94,24 @@ class KtorWebSocketTransportParsingTest {
             tryParseGmcpEnvelope("""{"gmcp":"Char.Stats","data":{"str":18,"dex":14}}"""),
         )
     }
+
+    @Test
+    fun `web cache policy keeps hashed bundles immutable and shell files fresh`() {
+        assertEquals(
+            IMMUTABLE_WEB_CACHE_CONTROL,
+            webResourceCacheControl("jar:file:/app.jar!/web-v3/assets/index-abc123.js"),
+        )
+        assertEquals(
+            REVALIDATE_WEB_CACHE_CONTROL,
+            webResourceCacheControl("jar:file:/app.jar!/web-v3/index.html"),
+        )
+        assertEquals(
+            REVALIDATE_WEB_CACHE_CONTROL,
+            webResourceCacheControl("jar:file:/app.jar!/web-v3/sw.js"),
+        )
+        assertEquals(
+            MUTABLE_MEDIA_CACHE_CONTROL,
+            webResourceCacheControl("jar:file:/app.jar!/web-v3/icons/icon.svg"),
+        )
+    }
 }
