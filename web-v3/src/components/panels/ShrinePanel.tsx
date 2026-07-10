@@ -54,82 +54,106 @@ export function ShrinePanel({ status, room, gold, connected, onCommand }: Props)
   );
 
   return (
-    <div className="shrine-panel">
-      {pledged ? (
-        <>
+    <div className={`shrine-panel shrine-panel-${pledged ? "pledged" : "unpledged"}`}>
+      <header className="shrine-intro">
+        <span className="shrine-kicker">The peacebound chronicle</span>
+        <h2 className="shrine-heading">{pledged ? "Your vow endures" : "An invitation to illuminate"}</h2>
+        {pledged ? (
           <p className="shrine-state shrine-state-pledged">
             You are an Akathavae — a keeper of the Arcanum. Your pledge stays your hand; the world is your subject.
           </p>
+        ) : (
+          <p className="shrine-state">
+            The Akathavae are chroniclers sworn to peace: they set violence aside and level by illuminating the
+            world — creatures, places, and things — into their Arcanum.
+          </p>
+        )}
+      </header>
+
+      <section className="shrine-covenant" aria-labelledby="shrine-covenant-heading">
+        <h3 id="shrine-covenant-heading" className="shrine-section-heading">The covenant</h3>
+        {pledged ? (
           <ul className="shrine-terms">
             <li>Progression flows from illumination and discovery, never violence.</li>
             <li>Your Arcanum seals world-firsts at the shrines — "First illuminated by" is yours to claim.</li>
             <li>Renouncing costs {renounceCost.toLocaleString()} gold and the Akathavae will not hear a new pledge for a time.</li>
           </ul>
-          {!atShrine && seekShrine}
-          {atShrine && !confirmingRenounce && (
-            <button
-              className="shrine-btn shrine-btn-renounce"
-              disabled={!connected}
-              onClick={() => setConfirmingRenounce(true)}
-            >
-              Renounce the Vow…
-            </button>
-          )}
-          {atShrine && confirmingRenounce && (
-            <div className="shrine-confirm">
-              <p className="shrine-warning">
-                Lay {renounceCost.toLocaleString()} gold upon the shrine and unsay your vow? Your Arcanum is kept —
-                but it earns nothing while you bear arms, and the Akathavae will not accept a new pledge for a time.
-              </p>
-              {!canAffordRenounce && (
-                <p className="shrine-warning shrine-warning-gold">
-                  You carry {gold.toLocaleString()} gold — the offering demands {renounceCost.toLocaleString()}.
-                </p>
-              )}
-              <div className="shrine-confirm-row">
-                <button
-                  className="shrine-btn shrine-btn-renounce"
-                  disabled={!connected || !canAffordRenounce}
-                  onClick={() => { onCommand("renounce confirm"); setConfirmingRenounce(false); }}
-                >
-                  Pay {renounceCost.toLocaleString()} gold &amp; renounce
-                </button>
-                <button className="shrine-btn shrine-btn-ghost" onClick={() => setConfirmingRenounce(false)}>
-                  Keep the vow
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <p className="shrine-state">
-            The Akathavae are chroniclers sworn to peace: they set violence aside and level by illuminating the
-            world — creatures, places, and things — into their Arcanum.
-          </p>
+        ) : (
           <ul className="shrine-terms">
             <li>Pledging is free, but combat is forbidden while the vow holds.</li>
             <li>Your class is set aside and restored when you renounce.</li>
             <li>Full illumination odds, passive discovery, the wardrobe, and shrine-sealed world-firsts.</li>
           </ul>
-          {repledgeWaitMs > 0 ? (
-            <p className="shrine-hint">
-              The Arcanum remembers your renunciation. The Akathavae will hear your pledge again in about{" "}
-              {repledgeHours} hour{repledgeHours === 1 ? "" : "s"}.
-            </p>
-          ) : atShrine ? (
-            <button
-              className="shrine-btn shrine-btn-pledge"
-              disabled={!connected}
-              onClick={() => onCommand("pledge")}
-            >
-              Take the Pledge of the Akathavae
-            </button>
-          ) : (
-            seekShrine
-          )}
-        </>
-      )}
+        )}
+      </section>
+
+      <section className="shrine-action" aria-label={pledged ? "Renounce the Akathavae vow" : "Take the Akathavae pledge"}>
+        {pledged ? (
+          <>
+            {!atShrine && seekShrine}
+            {atShrine && !confirmingRenounce && (
+              <button
+                type="button"
+                className="shrine-btn shrine-btn-renounce"
+                disabled={!connected}
+                onClick={() => setConfirmingRenounce(true)}
+              >
+                Renounce the Vow…
+              </button>
+            )}
+            {atShrine && confirmingRenounce && (
+              <div className="shrine-confirm">
+                <p className="shrine-warning">
+                  Lay {renounceCost.toLocaleString()} gold upon the shrine and unsay your vow? Your Arcanum is kept —
+                  but it earns nothing while you bear arms, and the Akathavae will not accept a new pledge for a time.
+                </p>
+                {!canAffordRenounce && (
+                  <p className="shrine-warning shrine-warning-gold">
+                    You carry {gold.toLocaleString()} gold — the offering demands {renounceCost.toLocaleString()}.
+                  </p>
+                )}
+                <div className="shrine-confirm-row">
+                  <button
+                    type="button"
+                    className="shrine-btn shrine-btn-renounce"
+                    disabled={!connected || !canAffordRenounce}
+                    onClick={() => { onCommand("renounce confirm"); setConfirmingRenounce(false); }}
+                  >
+                    Pay {renounceCost.toLocaleString()} gold &amp; renounce
+                  </button>
+                  <button
+                    type="button"
+                    className="shrine-btn shrine-btn-ghost"
+                    onClick={() => setConfirmingRenounce(false)}
+                  >
+                    Keep the vow
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {repledgeWaitMs > 0 ? (
+              <p className="shrine-hint">
+                The Arcanum remembers your renunciation. The Akathavae will hear your pledge again in about{" "}
+                {repledgeHours} hour{repledgeHours === 1 ? "" : "s"}.
+              </p>
+            ) : atShrine ? (
+              <button
+                type="button"
+                className="shrine-btn shrine-btn-pledge"
+                disabled={!connected}
+                onClick={() => onCommand("pledge")}
+              >
+                Take the Pledge of the Akathavae
+              </button>
+            ) : (
+              seekShrine
+            )}
+          </>
+        )}
+      </section>
     </div>
   );
 }

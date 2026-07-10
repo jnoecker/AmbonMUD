@@ -3836,6 +3836,11 @@ data class ImagesConfig(
             // Both fall back to the matching CSS folio treatment when absent.
             "arcanum_bg" to "global_assets/arcanum_bg.png",
             "arcanum_bg_portrait" to "global_assets/arcanum_bg_portrait.png",
+            // The Akathavae Shrine's painted vow table. Landscape is a
+            // 1448x1086 ceremonial tablet; portrait is a 941x1672 phone
+            // recomposition. Both retain a parchment CSS fallback when absent.
+            "shrine_bg" to "global_assets/shrine_bg.png",
+            "shrine_bg_portrait" to "global_assets/shrine_bg_portrait.png",
             "admin_bg" to "global_assets/admin_bg.png",
             // Pressed-flower parchment layered behind the full-screen terminal
             // overlay (under a dark legibility scrim) once the player commits to

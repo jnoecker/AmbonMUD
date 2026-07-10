@@ -1,0 +1,440 @@
+/* ============================================================
+   Akathavae Shrine — painted `shrine_bg` vow table.
+
+   Landscape art: 1448×1086. Live-content regions for the painting:
+     invitation   x 20.5→79.5%, y 11.5→34.5%
+     covenant     x 20.5→79.5%, y 36.0→66.5%
+     action       x 20.5→79.5%, y 69.0→87.5%
+
+   Portrait art: 941×1672. Live-content regions:
+     invitation   x 10.5→89.5%, y 10.0→28.0%
+     covenant     x 10.5→89.5%, y 30.5→59.0%
+     action       x 10.5→89.5%, y 62.0→87.0%
+
+   The translucent parchment seats remain when either asset is absent or
+   404s, preserving the art contract's fully usable CSS-only fallback.
+   ============================================================ */
+.drawer-sheet.drawer-sheet-shrine {
+  --shrine-ink: #34291e;
+  --shrine-ink-soft: #66503d;
+  --shrine-ink-muted: #806a54;
+  --shrine-gold: #9b6e2d;
+  --shrine-gold-bright: #c79a4a;
+  --shrine-rose: #87505b;
+  --shrine-paper: rgb(248 235 205 / 88%);
+  --shrine-paper-strong: rgb(251 241 218 / 96%);
+  --shrine-paper-edge: rgb(113 79 40 / 24%);
+  background-image:
+    var(--skin-bg, none),
+    radial-gradient(circle at 50% 42%, rgb(203 178 113 / 28%), transparent 28%),
+    radial-gradient(ellipse at 50% 48%, rgb(94 110 82 / 38%), transparent 58%),
+    linear-gradient(145deg, #302f29, #1a1b17 68%, #11120f);
+  background-position: center, center, center, center;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 100% 100%, auto, auto, auto;
+  border: 1px solid rgb(194 159 93 / 38%);
+  border-radius: clamp(14px, 2vw, 24px);
+  box-shadow: 0 24px 68px rgb(7 6 15 / 76%), 0 8px 24px rgb(7 6 15 / 48%);
+  overflow: hidden;
+}
+
+.drawer-sheet-shrine .drawer-title,
+.drawer-sheet-shrine .drawer-handle-zone {
+  display: none;
+}
+
+.drawer-sheet-shrine .drawer-header {
+  position: absolute;
+  top: 2.2%;
+  right: 2.1%;
+  left: auto;
+  z-index: 8;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+}
+
+.drawer-sheet-shrine .drawer-close {
+  width: clamp(32px, 3vw, 40px);
+  height: clamp(32px, 3vw, 40px);
+  border-color: rgb(205 174 108 / 64%);
+  background: rgb(30 27 49 / 86%);
+  color: #ead7ad;
+  box-shadow: 0 2px 9px rgb(11 8 20 / 48%), inset 0 0 0 1px rgb(255 244 214 / 8%);
+}
+
+.drawer-sheet-shrine .drawer-close:hover {
+  background: rgb(51 45 78 / 94%);
+  color: #fff0cb;
+}
+
+.drawer-sheet-shrine .drawer-body {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+
+@media (orientation: landscape) {
+  .drawer-sheet.drawer-sheet-shrine {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: auto;
+    height: min(90dvh, 74vw);
+    max-height: 90dvh;
+    aspect-ratio: 1448 / 1086;
+    padding-bottom: 0;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.drawer-sheet-shrine .shrine-panel {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: auto;
+  max-width: none;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  color: var(--shrine-ink);
+  font-family: var(--font-body);
+}
+
+.drawer-sheet-shrine :is(.shrine-intro, .shrine-covenant, .shrine-action) {
+  position: absolute;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--shrine-paper-edge);
+  background:
+    linear-gradient(155deg, rgb(255 249 231 / 48%), rgb(223 193 139 / 22%)),
+    var(--shrine-paper);
+  box-shadow: inset 0 0 20px rgb(103 72 37 / 8%);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+}
+
+.drawer-sheet-shrine .shrine-intro {
+  top: 11.5%;
+  left: 20.5%;
+  width: 59%;
+  height: 23%;
+  padding: clamp(10px, 1.4vw, 20px) clamp(14px, 2vw, 28px);
+  border-radius: 10px 6px 13px 8px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.shrine-kicker {
+  display: block;
+  margin-bottom: 0.22em;
+  color: var(--shrine-gold);
+  font-size: clamp(0.58rem, 0.88vw, 0.76rem);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.drawer-sheet-shrine .shrine-heading {
+  margin: 0;
+  color: var(--shrine-ink);
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.2vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.drawer-sheet-shrine .shrine-state {
+  max-width: 62ch;
+  margin: 0.55em auto 0;
+  color: var(--shrine-ink-soft);
+  font-size: clamp(0.72rem, 1.08vw, 0.98rem);
+  font-style: italic;
+  line-height: 1.42;
+}
+
+.drawer-sheet-shrine .shrine-state-pledged {
+  color: #5d4a36;
+}
+
+.drawer-sheet-shrine .shrine-covenant {
+  top: 36%;
+  left: 20.5%;
+  width: 59%;
+  height: 30.5%;
+  padding: clamp(12px, 1.6vw, 24px) clamp(16px, 2.25vw, 32px);
+  border-radius: 8px 12px 7px 11px;
+  overflow-y: auto;
+}
+
+.shrine-section-heading {
+  margin: 0 0 0.55em;
+  color: var(--shrine-gold);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.55vw, 1.4rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.drawer-sheet-shrine .shrine-terms {
+  display: grid;
+  gap: clamp(7px, 1.05vh, 12px);
+  max-width: 62ch;
+  margin: 0 auto;
+  padding: 0;
+  color: var(--shrine-ink-soft);
+  font-size: clamp(0.75rem, 1.12vw, 1rem);
+  line-height: 1.42;
+  list-style: none;
+}
+
+.drawer-sheet-shrine .shrine-terms li {
+  position: relative;
+  padding-left: 1.45em;
+}
+
+.drawer-sheet-shrine .shrine-terms li::before {
+  position: absolute;
+  top: 0.02em;
+  left: 0;
+  color: var(--shrine-gold);
+  content: "✦";
+  font-size: 0.82em;
+}
+
+.drawer-sheet-shrine .shrine-action {
+  top: 69%;
+  left: 20.5%;
+  width: 59%;
+  height: 18.5%;
+  display: grid;
+  place-items: center;
+  padding: clamp(10px, 1.4vw, 20px) clamp(14px, 2vw, 28px);
+  border-radius: 12px 7px 10px 6px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.drawer-sheet-shrine .shrine-hint {
+  max-width: 54ch;
+  margin: 0;
+  padding: 0.6em 0.85em;
+  border: 1px dashed rgb(119 84 43 / 34%);
+  border-radius: 8px 11px 7px 10px;
+  background: rgb(255 249 231 / 34%);
+  color: var(--shrine-ink-muted);
+  font-size: clamp(0.72rem, 1.02vw, 0.9rem);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.drawer-sheet-shrine .shrine-btn {
+  min-height: 40px;
+  padding: 0.62em 1.35em;
+  border: 1px solid rgb(124 88 42 / 56%);
+  border-radius: 8px 12px 8px 11px;
+  background: linear-gradient(155deg, #73582f, #4a351d);
+  color: #f8e8c4;
+  font-family: var(--font-display);
+  font-size: clamp(0.82rem, 1.2vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 3px 9px rgb(76 48 21 / 24%), inset 0 0 0 1px rgb(255 240 198 / 12%);
+  cursor: pointer;
+  transition: transform 180ms var(--ease-out-soft), filter 180ms var(--ease-out-soft), box-shadow 180ms var(--ease-out-soft);
+}
+
+.drawer-sheet-shrine .shrine-btn-pledge {
+  border-color: rgb(160 112 46 / 66%);
+  background: linear-gradient(155deg, #9d7339, #684620);
+  color: #fff0c9;
+}
+
+.drawer-sheet-shrine .shrine-btn-renounce {
+  border-color: rgb(122 66 77 / 62%);
+  background: linear-gradient(155deg, #754854, #482d38);
+  color: #f5dee0;
+}
+
+.drawer-sheet-shrine .shrine-btn-ghost {
+  border-color: rgb(119 84 43 / 34%);
+  background: rgb(255 249 231 / 32%);
+  color: var(--shrine-ink-soft);
+  box-shadow: none;
+}
+
+.drawer-sheet-shrine .shrine-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.drawer-sheet-shrine .shrine-confirm {
+  display: flex;
+  width: min(100%, 62ch);
+  flex-direction: column;
+  gap: clamp(5px, 0.8vh, 9px);
+  align-items: center;
+}
+
+.drawer-sheet-shrine .shrine-warning {
+  margin: 0;
+  color: var(--shrine-ink-soft);
+  font-size: clamp(0.68rem, 0.95vw, 0.84rem);
+  line-height: 1.34;
+}
+
+.drawer-sheet-shrine .shrine-warning-gold {
+  color: var(--shrine-rose);
+  font-weight: 700;
+}
+
+.drawer-sheet-shrine .shrine-confirm-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.drawer-sheet-shrine :is(button):focus-visible {
+  outline: 2px solid #6555a0;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgb(255 244 211 / 72%);
+}
+
+@media (hover: hover) {
+  .drawer-sheet-shrine .shrine-btn:not(:disabled):hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+}
+
+@media (pointer: coarse) {
+  .drawer-sheet-shrine .shrine-btn {
+    min-height: 44px;
+  }
+}
+
+@media (orientation: portrait) {
+  .drawer-sheet.drawer-sheet-shrine {
+    top: auto;
+    right: auto;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: 50%;
+    width: min(122vw, 56.28dvh);
+    height: auto;
+    max-height: none;
+    aspect-ratio: 941 / 1672;
+    padding-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    background-image:
+      var(--skin-bg-portrait, var(--skin-bg, none)),
+      radial-gradient(circle at 50% 42%, rgb(203 178 113 / 28%), transparent 28%),
+      radial-gradient(ellipse at 50% 48%, rgb(94 110 82 / 38%), transparent 58%),
+      linear-gradient(145deg, #302f29, #1a1b17 68%, #11120f);
+    background-size: 100% 100%, auto, auto, auto;
+    transform: translateX(-50%);
+  }
+
+  .drawer-sheet-shrine .drawer-header {
+    top: 2.2%;
+    right: 11.5%;
+  }
+
+  .drawer-sheet-shrine .drawer-close {
+    width: 36px;
+    height: 36px;
+  }
+
+  .drawer-sheet-shrine .shrine-intro {
+    top: 10%;
+    left: 10.5%;
+    width: 79%;
+    height: 18%;
+    padding: clamp(9px, 2.8vw, 16px);
+  }
+
+  .shrine-kicker {
+    font-size: clamp(0.55rem, 2.3vw, 0.7rem);
+  }
+
+  .drawer-sheet-shrine .shrine-heading {
+    font-size: clamp(1.1rem, 5vw, 1.55rem);
+  }
+
+  .drawer-sheet-shrine .shrine-state {
+    margin-top: 0.42em;
+    font-size: clamp(0.68rem, 2.75vw, 0.84rem);
+    line-height: 1.32;
+  }
+
+  .drawer-sheet-shrine .shrine-covenant {
+    top: 30.5%;
+    left: 10.5%;
+    width: 79%;
+    height: 28.5%;
+    padding: clamp(11px, 3vw, 18px);
+  }
+
+  .shrine-section-heading {
+    font-size: clamp(0.95rem, 4vw, 1.25rem);
+  }
+
+  .drawer-sheet-shrine .shrine-terms {
+    gap: clamp(8px, 2.1vh, 14px);
+    font-size: clamp(0.7rem, 2.8vw, 0.86rem);
+    line-height: 1.36;
+  }
+
+  .drawer-sheet-shrine .shrine-action {
+    top: 62%;
+    left: 10.5%;
+    width: 79%;
+    height: 25%;
+    padding: clamp(10px, 3vw, 18px);
+  }
+
+  .drawer-sheet-shrine .shrine-hint {
+    font-size: clamp(0.7rem, 2.7vw, 0.84rem);
+  }
+
+  .drawer-sheet-shrine .shrine-btn {
+    font-size: clamp(0.8rem, 3.2vw, 0.96rem);
+  }
+
+  .drawer-sheet-shrine .shrine-warning {
+    font-size: clamp(0.66rem, 2.55vw, 0.8rem);
+  }
+}
+
+@media (orientation: portrait) and (max-width: 380px) {
+  .shrine-kicker {
+    display: none;
+  }
+
+  .drawer-sheet-shrine .shrine-intro {
+    top: 10.5%;
+    height: 17.5%;
+  }
+
+  .drawer-sheet-shrine .shrine-terms {
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-sheet-shrine .shrine-btn {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .drawer-sheet-shrine :is(.shrine-intro, .shrine-covenant, .shrine-action) {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+}
