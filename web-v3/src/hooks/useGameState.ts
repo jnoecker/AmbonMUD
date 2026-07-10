@@ -226,6 +226,10 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const [roomFeatures, setRoomFeatures] = useState<RoomFeature[]>([]);
   const [containerContents, setContainerContents] = useState<ContainerContents | null>(null);
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
+  // Last room id seen in Room.Info, tracked in a ref so the GMCP handler can
+  // detect a room change synchronously — while applying the packet, not later
+  // inside a React updater — and clear room-scoped state in packet order.
+  const lastRoomIdRef = useRef<string | null>(null);
 
   // ── Combat ────────────────────────────────────────
   const [effects, setEffects] = useState<StatusEffect[]>([]);
@@ -629,6 +633,23 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     pushUiFeedback({ type: "info", message: `New mail from ${notification.from}` });
   }, [pushUiFeedback]);
 
+  // Room-scoped state cleared when Room.Info reports a new room id, before the
+  // follow-up Room.Players/Mobs/Items/Features packets repopulate it (a bare
+  // Room.Info with no follow-up — mount fast travel mid-ride — leaves the room
+  // empty). Uses the raw setters, not the ctx-wrapped ones, so this transient
+  // clear doesn't trip side effects like the features panel auto-close.
+  const clearRoomScopedState = useCallback(() => {
+    setDialogue(null);
+    setQuestsAvailable([]);
+    setTrainer(null);
+    setPlayers([]);
+    setMobs([]);
+    setMobInfo([]);
+    setRoomItems([]);
+    setRoomFeatures([]);
+    setCraftingNodes([]);
+  }, []);
+
   // ── GMCP handler ──────────────────────────────────
   const handleGmcp = useCallback(
     (pkg: string, data: unknown) => {
@@ -699,6 +720,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setSavedCharacters,
         resumeTokenRef,
         pendingAuthCharRef,
+        lastRoomIdRef,
+        clearRoomScopedState,
         setServerAssets,
         setServerCommands,
         setWorldAreas,
@@ -763,7 +786,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         sendGmcp: (p: string, payload: unknown) => { sendGmcpRef.current(p, payload); return true; },
       });
     },
-    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushLevelUp, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, pushArcanumSketch, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef],
+    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushLevelUp, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, pushArcanumSketch, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef, clearRoomScopedState],
   );
 
   // ── Reset all HUD state on disconnect ─────────────
@@ -772,6 +795,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     setStatusVarLabels(DEFAULT_STATUS_VAR_LABELS);
     setCharacter(EMPTY_CHAR);
     setRoom(EMPTY_ROOM);
+    lastRoomIdRef.current = null;
     setPlayers([]);
     setMobs([]);
     setRoomItems([]);

@@ -216,6 +216,10 @@ interface GmcpContext {
   setSavedCharacters: Dispatch<SetStateAction<string[]>>;
   resumeTokenRef: { current: string | null };
   pendingAuthCharRef: { current: string | null };
+  /** Last room id seen in Room.Info — synchronous room-change detection. */
+  lastRoomIdRef: { current: string | null };
+  /** Clears occupants/interactables/dialogue when Room.Info reports a new room. */
+  clearRoomScopedState: () => void;
   sendGmcp: (pkg: string, payload: unknown) => boolean;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
@@ -547,29 +551,22 @@ export function applyGmcpPackage(
         }))
         .filter((p) => p.direction.length > 0 && p.title.length > 0);
 
-      // Detect actual room change (not just a look/refresh of the same room)
-      ctx.setRoom((prev) => {
-        if (prev.id !== id && prev.id !== null) {
-          // Moved to a different room — clear dialogue/quest offers and trainer data.
-          // Trainer state must be cleared or the panel will render stale data from the
-          // previous trainer (e.g. a single-class WARRIOR trainer) when the user opens
-          // it at a new multi-class trainer before `train list` has fetched fresh data.
-          ctx.setDialogue(null);
-          ctx.setQuestsAvailable([]);
-          ctx.setTrainer(null);
-          // Clear room occupants and interactables too. A normal move re-sends
-          // Room.Players/Mobs/Items/Features right after this packet, but mount
-          // fast travel streams bare Room.Info per hop — without this, the
-          // starting room's mobs appear to ride along for the whole journey.
-          ctx.setPlayers([]);
-          ctx.setMobs([]);
-          ctx.setMobInfo([]);
-          ctx.setRoomItems([]);
-          ctx.setRoomFeatures([]);
-          ctx.setCraftingNodes([]);
-        }
-        return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, shrine, flightMaster, boatDock, jukebox, musicBox, canDepart, peek };
-      });
+      // Detect an actual room change (not just a look/refresh of the same room)
+      // synchronously, while this packet is applied, and clear room-scoped
+      // state (occupants, interactables, dialogue/quest offers, trainer) in
+      // packet order. This must NOT happen inside the setRoom updater: React
+      // runs updaters later, so with Room.Info and Room.Mobs/Features in the
+      // same batch the deferred clear would land after the fresh data and wipe
+      // it (mobs/signs intermittently missing while walking). Every server
+      // flow sends Room.Info before the occupant packets, so clearing here is
+      // safe; a bare Room.Info with no follow-up (mount fast travel mid-ride)
+      // intentionally leaves the rooms ridden through empty.
+      const prevRoomId = ctx.lastRoomIdRef.current;
+      ctx.lastRoomIdRef.current = id;
+      if (prevRoomId !== null && prevRoomId !== id) {
+        ctx.clearRoomScopedState();
+      }
+      ctx.setRoom({ id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, shrine, flightMaster, boatDock, jukebox, musicBox, canDepart, peek });
 
       if (id) {
         ctx.updateMap(id, exits, title === "-" ? "" : title, image, mapX, mapY, mapZ, housing, terrain);
