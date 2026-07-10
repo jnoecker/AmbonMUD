@@ -84,6 +84,7 @@ import type {
 } from "./types";
 import { formatZoneName, sortExits, titleCaseWords } from "./utils";
 import "./styles.css";
+import "./arcanum.css";
 
 // ── Consider (threat assessment) helpers ────────────────────────────────────
 const CONSIDER_TIER_CLASS: Record<ConsiderRating, string> = {
@@ -535,6 +536,7 @@ function App() {
     canvasCallbacks.openJukebox = () => openPanel("jukebox");
     canvasCallbacks.openMusicBox = () => openPanel("musicbox");
     canvasCallbacks.openHousing = () => openPanel("housing");
+    canvasCallbacks.openShrine = () => openPanel("shrine");
     canvasCallbacks.openInn = () => setShowInn(true);
     canvasCallbacks.openAdminPanel = () => setShowAdminPanel(true);
     canvasCallbacks.toggleInvis = () => { sendCommand("invis"); setStaffInvisible((v) => !v); };
@@ -599,6 +601,7 @@ function App() {
       canvasCallbacks.openJukebox = null;
       canvasCallbacks.openMusicBox = null;
       canvasCallbacks.openHousing = null;
+      canvasCallbacks.openShrine = null;
       canvasCallbacks.openInn = null;
       canvasCallbacks.openAdminPanel = null;
       canvasCallbacks.toggleInvis = null;
@@ -1164,6 +1167,8 @@ function App() {
             ? "forge"
             : drawerPanel === "professions"
             ? "professions"
+            : drawerPanel === "arcanum"
+            ? "arcanum"
             : drawerPanel === "character"
             ? "cabinet"
             : drawerPanel === "bank"
@@ -1222,6 +1227,8 @@ function App() {
             ? state.serverAssets["crafting_bg"]
             : drawerPanel === "professions"
             ? state.serverAssets["professions_bg"]
+            : drawerPanel === "arcanum"
+            ? state.serverAssets["arcanum_bg"]
             : drawerPanel === "character"
             ? state.serverAssets["character_bg"]
             : drawerPanel === "bank"
@@ -1257,9 +1264,11 @@ function App() {
             ? state.serverAssets["jukebox_bg_portrait"]
             : drawerPanel === "musicbox"
             ? state.serverAssets["musicbox_bg_portrait"]
+            : drawerPanel === "arcanum"
+            ? state.serverAssets["arcanum_bg_portrait"]
             : undefined
         }
-        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "flight" || drawerPanel === "boat" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "musicbox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" ? 0.94 : undefined}
+        initialHeight={drawerPanel === "chatboard" || drawerPanel === "whoboard" || drawerPanel === "guildboard" || drawerPanel === "friendsboard" || drawerPanel === "groupboard" || drawerPanel === "help" || drawerPanel === "stylist" || drawerPanel === "flight" || drawerPanel === "boat" || drawerPanel === "housing" || drawerPanel === "lottery" || drawerPanel === "dice" || drawerPanel === "jukebox" || drawerPanel === "musicbox" || drawerPanel === "auction" || drawerPanel === "crafting" || drawerPanel === "professions" || drawerPanel === "arcanum" ? 0.94 : undefined}
       >
         {/* Panels are lazy chunks; the drawer chrome shows while one loads. */}
         <Suspense fallback={null}>

@@ -275,6 +275,13 @@ export class WorldScene {
   private innHitArea = new Graphics();
   private innVisible = false;
 
+  private shrineBadge: Container | null = null;
+  private shrineSprite: Sprite | null = null;
+  private shrineLabel: Text | null = null;
+  private shrineLabelBg = new Graphics();
+  private shrineHitArea = new Graphics();
+  private shrineVisible = false;
+
   private mailBadge: Container | null = null;
   private mailSprite: Sprite | null = null;
   private mailLabel: Text | null = null;
@@ -751,6 +758,36 @@ export class WorldScene {
     this.innBadge.addChild(this.innLabelBg);
     this.innBadge.addChild(this.innLabel);
 
+    // Shrine badge — floating icon when the current room is an Akathavae shrine.
+    // Room-contextual (like Inn), so pledge/renounce lives here, not in the dock.
+    this.shrineBadge = new Container();
+    this.shrineBadge.visible = false;
+    this.shrineBadge.eventMode = "static";
+    this.shrineBadge.cursor = "pointer";
+    this.shrineBadge.on("pointerdown", () => {
+      canvasCallbacks.openShrine?.();
+    });
+    this.shrineBadge.on("pointerover", () => {
+      if (this.shrineSprite) this.shrineSprite.alpha = 1;
+    });
+    this.shrineBadge.on("pointerout", () => {
+      if (this.shrineSprite) this.shrineSprite.alpha = 0.85;
+    });
+    this.shrineHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.shrineHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.shrineHitArea.eventMode = "auto";
+    this.shrineBadge.addChild(this.shrineHitArea);
+    this.shrineLabel = new Text({
+      text: "Shrine",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#e3c98a", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.shrineLabel.anchor.set(0.5, 0);
+    this.shrineLabel.y = hs / 2 + 2;
+    this.shrineLabel.eventMode = "none";
+    this.shrineLabelBg.eventMode = "none";
+    this.shrineBadge.addChild(this.shrineLabelBg);
+    this.shrineBadge.addChild(this.shrineLabel);
+
     // Mail badge — floating icon at inns / player homes
     this.mailBadge = new Container();
     this.mailBadge.visible = false;
@@ -1036,6 +1073,7 @@ export class WorldScene {
     this.container.addChild(this.dungeonBadge!);
     this.container.addChild(this.housingBadge!);
     this.container.addChild(this.innBadge!);
+    this.container.addChild(this.shrineBadge!);
     this.container.addChild(this.mailBadge!);
     this.container.addChild(this.duelBadge!);
     this.container.addChild(this.puzzleBadge!);
@@ -1087,6 +1125,7 @@ export class WorldScene {
       this.loadDungeonIcon();
       this.loadHousingBrokerIcon();
       this.loadInnIcon();
+      this.loadShrineIcon();
       this.loadMailIcon();
       this.loadDuelIcon();
       this.loadPuzzleIcon();
@@ -1340,6 +1379,12 @@ export class WorldScene {
       if (this.innBadge) this.innBadge.visible = hasInn;
     }
 
+    const hasShrine = !!state.room.shrine;
+    if (hasShrine !== this.shrineVisible) {
+      this.shrineVisible = hasShrine;
+      if (this.shrineBadge) this.shrineBadge.visible = hasShrine;
+    }
+
     // Mail badge removed pending a new home (GH #1189); the badge code is kept
     // dormant. Was: !!state.room.inn || !!state.room.housing.
     const hasMail = false;
@@ -1489,6 +1534,7 @@ export class WorldScene {
     if (this.dungeonBadge) this.dungeonBadge.visible = this.dungeonVisible && !stripMode;
     if (this.housingBadge) this.housingBadge.visible = this.housingVisible && !stripMode;
     if (this.innBadge) this.innBadge.visible = this.innVisible && !stripMode;
+    if (this.shrineBadge) this.shrineBadge.visible = this.shrineVisible && !stripMode;
     if (this.mailBadge) this.mailBadge.visible = this.mailVisible && !stripMode;
     if (this.duelBadge) this.duelBadge.visible = this.duelVisible && !stripMode;
     if (this.puzzleBadge) this.puzzleBadge.visible = this.puzzleVisible && !stripMode;
@@ -1767,6 +1813,7 @@ export class WorldScene {
       this.lotteryBadge?.visible, this.diceBadge?.visible, this.dungeonBadge?.visible,
       this.housingBadge?.visible,
       this.innBadge?.visible,
+      this.shrineBadge?.visible,
       this.mailBadge?.visible,
       this.duelBadge?.visible, this.puzzleBadge?.visible,
       this.doorBadge?.visible, this.containerBadge?.visible,
@@ -1884,6 +1931,13 @@ export class WorldScene {
       this.innBadge.x = badgeX;
       this.innBadge.y = badgeStartY + badgeSlot * badgeSpacing;
       drawLabelPill(this.innLabelBg, this.innLabel!);
+      badgeSlot++;
+    }
+
+    if (this.shrineBadge?.visible) {
+      this.shrineBadge.x = badgeX;
+      this.shrineBadge.y = badgeStartY + badgeSlot * badgeSpacing;
+      drawLabelPill(this.shrineLabelBg, this.shrineLabel!);
       badgeSlot++;
     }
 
@@ -2815,6 +2869,22 @@ export class WorldScene {
       sprite.eventMode = "none";
       this.innSprite = sprite;
       this.innBadge?.addChild(sprite);
+    } catch {
+      // Fallback: text-only label still works
+    }
+  }
+
+  private async loadShrineIcon() {
+    try {
+      const texture = await Assets.load(assetUrl("shrine_widget", "shrine_widget.png"));
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.shrineSprite = sprite;
+      this.shrineBadge?.addChild(sprite);
     } catch {
       // Fallback: text-only label still works
     }

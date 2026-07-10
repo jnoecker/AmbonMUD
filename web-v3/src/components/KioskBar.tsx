@@ -8,7 +8,6 @@ import {
   QuestsTabIcon,
   AttackIcon,
   MapScrollIcon,
-  ShrineIcon,
 } from "./Icons";
 
 interface KioskDef {
@@ -27,9 +26,9 @@ const KIOSKS: KioskDef[] = [
   { panel: "quests", label: "Quests", assetKey: "quests_widget", fallback: <QuestsTabIcon className="kiosk-icon-svg" /> },
   { panel: "combatlog", label: "Combat Log", assetKey: "combat_log_widget", fallback: <AttackIcon className="kiosk-icon-svg" /> },
   // Anyone keeps a field journal now, so the Arcanum rides for every player.
+  // (The Shrine is a room-based kiosk on the left of the room window — it only
+  // appears when standing in a shrine room, not permanently in this dock.)
   { panel: "arcanum", label: "Arcanum", assetKey: "arcanum_widget", fallback: <MapScrollIcon className="kiosk-icon-svg" /> },
-  // Pledge/renounce home — actions inside gate on standing in a shrine room.
-  { panel: "shrine", label: "Shrine", assetKey: "shrine_widget", fallback: <ShrineIcon className="kiosk-icon-svg" /> },
 ];
 
 interface KioskBarProps {
