@@ -399,6 +399,16 @@ function App() {
     };
   });
 
+  // Close the map drawer when a ride actually starts (Travel.Status flips to
+  // riding), so the journey plays out on the main canvas. Keyed on the riding
+  // transition — not the click — so a rejected request leaves the map open,
+  // and re-opening the map mid-ride keeps it open.
+  const isRiding = state.travelStatus?.riding === true;
+  useEffect(() => {
+    if (!isRiding) return;
+    state.setActivePopout((prev) => (prev === "map" ? null : prev));
+  }, [isRiding]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Accept a quest and surface an "accepted" toast (no server signal for accept,
   // so we fire it optimistically from the name we already have on the offer).
   const acceptQuest = (questId: string) => {

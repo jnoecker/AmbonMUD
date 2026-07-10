@@ -557,6 +557,16 @@ export function applyGmcpPackage(
           ctx.setDialogue(null);
           ctx.setQuestsAvailable([]);
           ctx.setTrainer(null);
+          // Clear room occupants and interactables too. A normal move re-sends
+          // Room.Players/Mobs/Items/Features right after this packet, but mount
+          // fast travel streams bare Room.Info per hop — without this, the
+          // starting room's mobs appear to ride along for the whole journey.
+          ctx.setPlayers([]);
+          ctx.setMobs([]);
+          ctx.setMobInfo([]);
+          ctx.setRoomItems([]);
+          ctx.setRoomFeatures([]);
+          ctx.setCraftingNodes([]);
         }
         return { id, title, description, exits, image, video, music, ambient, station, trainer, mapX, mapY, mapZ, housing, housingOwner, graphical, terrain, bank, stylist, tavern, dungeon, auction, housingBroker, inn, shrine, flightMaster, boatDock, jukebox, musicBox, canDepart, peek };
       });
