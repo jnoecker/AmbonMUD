@@ -55,6 +55,15 @@ const artImageStatus = new Map<string, "ready" | "failed">();
  */
 const ART_PENDING_GRACE_MS = 2500;
 
+type CriticalArtImage = Pick<HTMLImageElement, "decoding" | "fetchPriority" | "src">;
+
+/** Start only the currently-needed scene request and give it LCP priority. */
+export function loadCriticalArtImage(image: CriticalArtImage, url: string): void {
+  image.decoding = "async";
+  image.fetchPriority = "high";
+  image.src = url;
+}
+
 /**
  * Gate a painted-scene URL on the image actually loading. For full-scene art
  * the background is load-bearing — rendering the painted variant against a URL
@@ -83,7 +92,7 @@ export function useArtImageState(url: string | null): { url: string | null; pend
   // the async probe below instead.
   if (url && !artImageStatus.has(url)) {
     const probe = new Image();
-    probe.src = url;
+    loadCriticalArtImage(probe, url);
     if (probe.complete && probe.naturalWidth > 0) artImageStatus.set(url, "ready");
   }
   useEffect(() => {
@@ -96,7 +105,7 @@ export function useArtImageState(url: string | null): { url: string | null; pend
     };
     img.onload = () => settle("ready");
     img.onerror = () => settle("failed");
-    img.src = url;
+    loadCriticalArtImage(img, url);
     return () => { cancelled = true; };
   }, [url]);
   useEffect(() => {

@@ -9,7 +9,9 @@ import dev.ambon.engine.events.OutboundEvent
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
@@ -112,6 +114,44 @@ class KtorWebSocketTransportTest {
                 val response = client.get("/")
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertTrue(response.bodyAsText().contains("AmbonMUD"))
+            }
+
+            inbound.close()
+            engineOutbound.close()
+        }
+
+    @Test
+    fun `compresses and caches static web bundles while revalidating the shell`(): Unit =
+        runBlocking {
+            val inbound = LocalInboundBus()
+            val engineOutbound = LocalOutboundBus()
+            val outboundRouter = OutboundRouter(engineOutbound, this)
+
+            testApplication {
+                application {
+                    ambonMUDWebModule(
+                        inbound = inbound,
+                        outboundRouter = outboundRouter,
+                        sessionIdFactory = { SessionId(1) },
+                    )
+                }
+
+                val indexResponse = client.get("/")
+                assertEquals(REVALIDATE_WEB_CACHE_CONTROL, indexResponse.headers[HttpHeaders.CacheControl])
+                val stylesheetPath =
+                    Regex("""href="(/assets/[^"]+\.css)""")
+                        .find(indexResponse.bodyAsText())
+                        ?.groupValues
+                        ?.get(1)
+                assertTrue(stylesheetPath != null, "Built index must reference a hashed stylesheet")
+
+                val stylesheetResponse =
+                    client.get(stylesheetPath!!) {
+                        header(HttpHeaders.AcceptEncoding, "gzip")
+                    }
+                assertEquals(HttpStatusCode.OK, stylesheetResponse.status)
+                assertEquals(IMMUTABLE_WEB_CACHE_CONTROL, stylesheetResponse.headers[HttpHeaders.CacheControl])
+                assertEquals("gzip", stylesheetResponse.headers[HttpHeaders.ContentEncoding])
             }
 
             inbound.close()

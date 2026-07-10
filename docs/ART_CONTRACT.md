@@ -70,6 +70,19 @@ art yields a new URL, so stale images are never served and old files become GC-a
 image-side equivalent of the voice contract's `<sha8>` path segment. Bundled fallback art (under
 `global_assets/`/`defaults/` in the repo) is versioned by git instead.
 
+### Performance budget and loading policy
+
+- Publish full-scene and panel paintings as **WebP or AVIF** whenever transparency and quality
+  permit. Reserve PNG for small alpha-heavy overlays that do not compress acceptably otherwise.
+- Target **750 KiB or less** for a full login/panel scene (1.25 MiB hard ceiling) and **150 KiB or
+  less** for controls, indicators, and widget art. Arcanum should fail publication validation for
+  missing objects and warn when these budgets are exceeded.
+- `Server.Assets` is a registry, not a preload manifest. The client must never iterate the entire
+  map into `Image` requests. Only the active login scene receives high fetch priority; current
+  room/HUD art loads when rendered, and drawer/panel skins load on demand.
+- Content-hashed CDN art is immutable and cache-first. Stable bundled `/images/` fallbacks use
+  stale-while-revalidate so a new deployment can update them without changing their paths.
+
 ## GMCP delivery — `Server.Assets`
 
 On session init the engine emits the complete resolved map (`GmcpEmitter.sendServerAssets`):

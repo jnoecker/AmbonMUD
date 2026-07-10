@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { KioskBar } from "../src/components/KioskBar";
 import { TerminalOverlay } from "../src/components/TerminalOverlay";
+import { shouldLoadTerminalBundle } from "../src/hooks/useTerminal";
 
 describe("kiosk bar", () => {
   test("no longer offers a terminal kiosk — the overlay owns that entry point", () => {
@@ -62,5 +63,11 @@ describe("terminal overlay", () => {
       <TerminalOverlay {...baseProps} open={true} opaque={true} />,
     );
     expect(opaque).toContain("terminal-screen-opaque");
+  });
+
+  test("keeps xterm off the login path until UI or accessibility needs it", () => {
+    expect(shouldLoadTerminalBundle(false, false)).toBe(false);
+    expect(shouldLoadTerminalBundle(true, false)).toBe(true);
+    expect(shouldLoadTerminalBundle(false, true)).toBe(true);
   });
 });

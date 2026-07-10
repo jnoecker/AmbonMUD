@@ -30,16 +30,12 @@ export default defineConfig({
             if (path.includes("/@xterm/")) return "xterm";
             return undefined;
           }
-          // All drawer panels are React.lazy'd from App; bundle them as one
-          // on-demand chunk (single fetch on first drawer open), with the
-          // staff-only AdminPanel split out so players never download it.
-          if (path.includes("/src/components/panels/")) {
-            return path.includes("AdminPanel") ? "panel-admin" : "panels";
-          }
-          // Modules shared by the entry AND the panels must not be colocated
-          // into "panels" (rollup's default would do that, which turns the
-          // panels chunk into a static dependency of the entry and defeats
-          // the lazy split — every panel would execute at startup again).
+          // Drawer panels are React.lazy'd from App. Let Rollup keep their
+          // dynamic entry boundaries instead of forcing them into one manual
+          // chunk: grouping them caused that chunk to become a static entry
+          // dependency and put every panel back on the login path.
+          // Modules shared by the entry and lazy panels stay in a small,
+          // cache-stable shared chunk.
           if (
             /\/src\/(utils|constants|imageDefaults|types)\.ts/.test(path) ||
             path.includes("/src/canvas/GameStateBridge") ||

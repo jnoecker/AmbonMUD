@@ -182,10 +182,6 @@ function TrainerAutoLoad({ onCommand }: { onCommand: (cmd: string) => void }) {
   return <p className="empty-note">Loading trainer data&hellip;</p>;
 }
 
-// URLs already handed to the browser for prefetching, so the preload effect
-// never recreates an Image for art it has seen this session.
-const preloadedArt = new Set<string>();
-
 function App() {
   const resumeTokenRef = useRef<string | null>(null);
   const pendingAuthCharRef = useRef<string | null>(null);
@@ -374,45 +370,6 @@ function App() {
       disconnect();
     };
   }, [connect, disconnect, reconnect]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Warm the browser cache for painted panel art the moment Server.Assets lands.
-  // Skins are applied as CSS background-images, so a panel only starts fetching
-  // its PNG when it first paints — until the bytes arrive the element shows its
-  // fallback (the purple jewel-tone gradient for drawers/admin/etc.), which reads
-  // as a flash. Server.Assets arrives at login, well before any in-game panel
-  // opens, so a fire-and-forget preload here means those panels paint warm. Skip
-  // inline data: URIs (already resolved, nothing to fetch).
-  //
-  // A transient failure during the login burst (CDN cold edge, a dropped
-  // connection, an HTTP/2 stream reset) used to pin the art off for the whole
-  // session: the URL was marked seen before the load resolved and never
-  // re-attempted, so the panel stuck on its gradient fallback until a full page
-  // refresh. Now each preload retries with backoff, and a terminal failure
-  // drops the URL from the seen-set so a later Server.Assets emit tries again.
-  useEffect(() => {
-    let cancelled = false;
-    const warm = (url: string, attempt: number) => {
-      const img = new Image();
-      img.decoding = "async";
-      img.onerror = () => {
-        if (cancelled) return;
-        if (attempt < 4) {
-          const delay = 500 * 2 ** attempt; // 0.5s, 1s, 2s, 4s
-          window.setTimeout(() => { if (!cancelled) warm(url, attempt + 1); }, delay);
-        } else {
-          // Give up warming for now, but let a future Server.Assets emit retry.
-          preloadedArt.delete(url);
-        }
-      };
-      img.src = url;
-    };
-    for (const url of Object.values(state.serverAssets)) {
-      if (typeof url !== "string" || url.startsWith("data:") || preloadedArt.has(url)) continue;
-      preloadedArt.add(url);
-      warm(url, 0);
-    }
-    return () => { cancelled = true; };
-  }, [state.serverAssets]);
 
   const sendCommand = (raw: string) => {
     const command = raw.trim();

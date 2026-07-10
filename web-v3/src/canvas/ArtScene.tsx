@@ -22,9 +22,25 @@ export function ArtScene({ url, stageClass, label, children }: {
 }) {
   return (
     <div className="login-art-root" role="dialog" aria-modal="true" aria-label={label}>
-      <img className="login-art-underlay" src={url} alt="" aria-hidden="true" draggable={false} />
+      <img
+        className="login-art-underlay"
+        src={url}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        decoding="async"
+        fetchPriority="low"
+      />
       <main className={`login-art-stage ${stageClass}`}>
-        <img className="login-art-stage-img" src={url} alt="" aria-hidden="true" draggable={false} />
+        <img
+          className="login-art-stage-img"
+          src={url}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          decoding="async"
+          fetchPriority="high"
+        />
         {children}
       </main>
     </div>
