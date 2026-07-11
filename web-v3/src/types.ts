@@ -1051,6 +1051,15 @@ export interface WorldArea {
   zone: string;
   minLevel: number | null;
   maxLevel: number | null;
+  /**
+   * The zone's authored rectangle on the painted `world_map` art, in percent
+   * (0–100) of the image from its top-left corner. All four are null for zones
+   * not yet placed on the world map (the World Map tab lists them as uncharted).
+   */
+  mapX: number | null;
+  mapY: number | null;
+  mapW: number | null;
+  mapH: number | null;
 }
 
 /**
