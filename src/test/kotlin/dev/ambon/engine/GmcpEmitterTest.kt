@@ -2250,7 +2250,15 @@ class GmcpEmitterTest {
                 outbound = outbound,
                 supportsPackage = { _, _ -> true },
                 worldAreas = listOf(
-                    WorldAreaPayload(zone = "academy", minLevel = 1, maxLevel = 5),
+                    WorldAreaPayload(
+                        zone = "academy",
+                        minLevel = 1,
+                        maxLevel = 5,
+                        mapX = 12.5,
+                        mapY = 30.0,
+                        mapW = 22.0,
+                        mapH = 18.0,
+                    ),
                     WorldAreaPayload(zone = "social_hub", minLevel = null, maxLevel = null),
                 ),
             )
@@ -2263,6 +2271,8 @@ class GmcpEmitterTest {
             assertTrue(json.contains("\"social_hub\""), "should contain social_hub zone")
             assertTrue(json.contains("\"minLevel\":1"), "should include numeric bounds")
             assertTrue(json.contains("\"minLevel\":null"), "should serialize unknown bounds as null")
+            assertTrue(json.contains("\"mapX\":12.5"), "should include the world map placement")
+            assertTrue(json.contains("\"mapX\":null"), "should serialize unplaced zones with null placement")
         }
 
     @Test

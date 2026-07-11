@@ -57,6 +57,7 @@ import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.domain.world.TrainerDefinition
 import dev.ambon.domain.world.World
 import dev.ambon.domain.world.ZoneScaling
+import dev.ambon.domain.world.ZoneWorldMap
 import dev.ambon.domain.world.data.BoatRouteFile
 import dev.ambon.domain.world.data.ExitValue
 import dev.ambon.domain.world.data.ExitValueDeserializer
@@ -165,6 +166,7 @@ object WorldLoader {
         val pvpZones = mutableSetOf<String>()
         val zoneStartRooms = LinkedHashMap<String, RoomId>()
         val zoneScalings = LinkedHashMap<String, ZoneScaling>()
+        val zoneWorldMaps = LinkedHashMap<String, ZoneWorldMap>()
         val zoneVideos = LinkedHashMap<String, String>()
 
         // startRoomOverride wins; otherwise fall back to first file’s declared startRoom.
@@ -235,6 +237,28 @@ object WorldLoader {
                     throw WorldLoadException("Zone '$zone' declares conflicting scaling configs across files")
                 }
                 zoneScalings[zone] = parsed
+            }
+
+            file.worldMap?.let { wm ->
+                val x = wm.x
+                val y = wm.y
+                val w = wm.w
+                val h = wm.h
+                if (x == null || y == null || w == null || h == null) {
+                    throw WorldLoadException("Zone '$zone' worldMap requires all of x, y, w and h")
+                }
+                if (x < 0 || y < 0 || w <= 0.0 || h <= 0.0 || x + w > 100 || y + h > 100) {
+                    throw WorldLoadException(
+                        "Zone '$zone' worldMap must be a rectangle inside the map in percent " +
+                            "(x >= 0, y >= 0, w > 0, h > 0, x + w <= 100, y + h <= 100; got x=$x y=$y w=$w h=$h)",
+                    )
+                }
+                val parsed = ZoneWorldMap(x = x, y = y, w = w, h = h)
+                val existing = zoneWorldMaps[zone]
+                if (existing != null && existing != parsed) {
+                    throw WorldLoadException("Zone '$zone' declares conflicting worldMap placements across files")
+                }
+                zoneWorldMaps[zone] = parsed
             }
 
             // First pass per file: create room shells, detect collisions
@@ -1212,6 +1236,7 @@ object WorldLoader {
             pvpZones = pvpZones.toSet(),
             zoneStartRooms = zoneStartRooms.toMap(),
             zoneScaling = zoneScalings.toMap(),
+            zoneWorldMap = zoneWorldMaps.toMap(),
             zoneVideos = zoneVideos.toMap(),
             shopDefinitions = mergedShops.toList(),
             trainerDefinitions = mergedTrainers.toList(),

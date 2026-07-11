@@ -1,5 +1,12 @@
 zone: academy
 startRoom: academy_gates
+# Footprint on the painted world map (percent of the image) — the tutorial isle
+# sits mid-map so the World Map atlas tab has something to show in local dev.
+worldMap:
+  x: 40
+  y: 42
+  w: 20
+  h: 16
 rooms:
   academy_gates:
     title: The Academy Gates

@@ -14,6 +14,12 @@ data class WorldFile(
     val faction: String? = null,
     /** Dynamic level-scaling configuration. Null/missing = STATIC (use authored levels). */
     val scaling: ZoneScalingFile? = null,
+    /**
+     * The zone's rectangle on the painted world map, in percent (0–100) of the
+     * map image from its top-left corner. Published from Arcanum's Map overlay;
+     * drives the web client's World Map atlas tab.
+     */
+    val worldMap: ZoneWorldMapFile? = null,
     val image: ZoneImageDefaults? = null,
     val audio: ZoneAudioDefaults? = null,
     /** Zone cinematic video (relative path under /videos/). Auto-plays on a player's first entry; replayable from the map. */
@@ -34,6 +40,18 @@ data class ZoneScalingFile(
     val mode: String = "static",
     /** Inclusive [min, max] bounds. Required for BOUNDED mode. */
     val levelRange: List<Int>? = null,
+)
+
+/**
+ * Zone-level `worldMap` block: the zone's footprint on the painted world map.
+ * All four fields are required together; percentages of the map image (0–100)
+ * measured from the top-left corner.
+ */
+data class ZoneWorldMapFile(
+    val x: Double? = null,
+    val y: Double? = null,
+    val w: Double? = null,
+    val h: Double? = null,
 )
 
 data class TrainerFile(
