@@ -10466,6 +10466,255 @@ body {
   color: #5a4226;
 }
 
+/* --- World Map atlas tab --- */
+
+.world-map-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.world-map-frame {
+  position: relative;
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  border: 1px solid rgb(90 60 30 / 45%);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 0 24px rgb(60 40 20 / 18%);
+}
+
+/* Painted-art path: the frame hugs the image so zone-region percentages track
+   the art exactly; height is capped so the detail card stays above the fold. */
+.world-map-art {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(58vh, 640px);
+  user-select: none;
+}
+
+/* No art (null/404): an inked-parchment stand-in keeps regions usable. */
+.world-map-frame-fallback {
+  width: 100%;
+  max-width: min(100%, calc(58vh * (16 / 9)));
+  aspect-ratio: 16 / 9;
+  background:
+    radial-gradient(ellipse at 30% 25%, rgb(255 250 236 / 55%), transparent 60%),
+    radial-gradient(ellipse at 75% 70%, rgb(214 186 140 / 45%), transparent 55%),
+    linear-gradient(160deg, #e6d8b8, #d8c49a);
+}
+
+.world-map-regions {
+  position: absolute;
+  inset: 0;
+}
+
+.world-map-zone {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1.5px solid hsl(var(--wm-hue) 45% 32% / 75%);
+  border-radius: 10px;
+  background: hsl(var(--wm-hue) 55% 55% / 14%);
+  box-shadow: inset 0 0 14px hsl(var(--wm-hue) 55% 45% / 12%);
+  cursor: pointer;
+  transition: background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.world-map-zone:hover,
+.world-map-zone:focus-visible {
+  background: hsl(var(--wm-hue) 60% 55% / 24%);
+  border-color: hsl(var(--wm-hue) 50% 28% / 95%);
+  box-shadow:
+    inset 0 0 18px hsl(var(--wm-hue) 60% 45% / 18%),
+    0 0 12px hsl(var(--wm-hue) 60% 50% / 35%);
+}
+
+.world-map-zone:focus-visible {
+  outline: 2px solid #8a6a2e;
+  outline-offset: 1px;
+}
+
+.world-map-zone-selected {
+  background: hsl(var(--wm-hue) 60% 55% / 28%);
+  border-color: hsl(var(--wm-hue) 50% 26%);
+  box-shadow:
+    inset 0 0 18px hsl(var(--wm-hue) 60% 45% / 22%),
+    0 0 14px hsl(var(--wm-hue) 60% 50% / 45%);
+}
+
+.world-map-zone-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgb(255 250 236 / 82%);
+  border: 1px solid rgb(90 60 30 / 35%);
+  box-shadow: 0 1px 4px rgb(46 34 18 / 25%);
+  pointer-events: none;
+}
+
+.world-map-zone-name {
+  font-family: var(--font-display);
+  font-size: clamp(0.58rem, 1.4vw, 0.78rem);
+  line-height: 1.15;
+  color: #2e2212;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.world-map-zone-level {
+  font-size: clamp(0.52rem, 1.1vw, 0.66rem);
+  font-variant-numeric: tabular-nums;
+  color: #6a4a24;
+}
+
+/* Pulsing "you are here" beacon at the current zone's heart. */
+.world-map-here-dot {
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: #c9963c;
+  border: 1.5px solid #fff8e8;
+  box-shadow: 0 0 0 0 rgb(201 150 60 / 60%);
+  animation: world-map-here-pulse 2.2s ease-out infinite;
+}
+
+@keyframes world-map-here-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(201 150 60 / 55%); }
+  70% { box-shadow: 0 0 0 9px rgb(201 150 60 / 0%); }
+  100% { box-shadow: 0 0 0 0 rgb(201 150 60 / 0%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-map-here-dot {
+    animation: none;
+  }
+}
+
+.world-map-unplotted {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--space-4);
+  text-align: center;
+  color: #5a4226;
+  font-style: italic;
+}
+
+/* Solid parchment panel — the drawer sits over dark painted art, so the ink
+   text needs its own light ground to stay legible. */
+.world-map-detail {
+  padding: var(--space-2) var(--space-3);
+  background: rgb(240 226 196 / 94%);
+  border: 1px solid rgb(90 60 30 / 50%);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgb(20 14 8 / 35%);
+}
+
+.world-map-detail-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.world-map-detail-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #2e2212;
+}
+
+.world-map-detail-meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: #4a3014;
+}
+
+.world-map-detail-id {
+  font-size: 0.72rem;
+  color: #6a4a24;
+  opacity: 0.8;
+}
+
+.world-map-detail-hint {
+  margin: 4px 0 0;
+  font-size: 0.74rem;
+  font-style: italic;
+  color: #6a4a24;
+}
+
+.world-map-uncharted {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-2) var(--space-3);
+  background: rgb(240 226 196 / 94%);
+  border: 1px solid rgb(90 60 30 / 50%);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgb(20 14 8 / 35%);
+}
+
+.world-map-uncharted-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a4a24;
+  font-weight: 600;
+}
+
+.world-map-uncharted-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.world-map-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgb(255 250 236 / 60%);
+  border: 1px solid rgb(90 60 30 / 40%);
+  font-size: 0.76rem;
+  color: #3a2c1a;
+}
+
+.world-map-chip-here {
+  border-color: #8a6a2e;
+  box-shadow: 0 0 6px rgb(138 106 46 / 40%);
+}
+
+.world-map-chip-level {
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  color: #6a4a24;
+}
+
 /* --- Spellbook panel --- */
 
 .spellbook {

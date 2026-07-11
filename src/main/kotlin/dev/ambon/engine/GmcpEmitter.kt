@@ -73,11 +73,21 @@ data class PrestigePerkPayload(
  * level range. `minLevel`/`maxLevel` are null when the zone has no authored
  * BOUNDED scaling and no leveled mob templates (social/staff zones,
  * scaling-only dungeons), in which case the client renders an em-dash.
+ *
+ * `mapX`/`mapY`/`mapW`/`mapH` are the zone's authored rectangle on the painted
+ * `world_map` art, in percent (0–100) of the image from its top-left corner
+ * (zone YAML `worldMap`, published from Arcanum's Map overlay). All four are
+ * null for zones that have not been placed on the world map; the client's
+ * World Map tab lists those separately as uncharted.
  */
 data class WorldAreaPayload(
     val zone: String,
     val minLevel: Int? = null,
     val maxLevel: Int? = null,
+    val mapX: Double? = null,
+    val mapY: Double? = null,
+    val mapW: Double? = null,
+    val mapH: Double? = null,
 )
 
 /**

@@ -1376,6 +1376,41 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `parses zone worldMap placement`() {
+        val world = WorldLoader.loadFromResource("world/ok_world_map.yaml")
+        val placement = world.zoneWorldMap("mapped_zone")
+        assertNotNull(placement, "Expected mapped_zone to carry a worldMap placement")
+        assertEquals(12.5, placement!!.x)
+        assertEquals(30.0, placement.y)
+        assertEquals(22.0, placement.w)
+        assertEquals(18.25, placement.h)
+    }
+
+    @Test
+    fun `zone without worldMap has no placement`() {
+        val world = dev.ambon.test.TestWorlds.okSmall
+        assertNull(world.zoneWorldMap("ok_small"))
+    }
+
+    @Test
+    fun `fails when worldMap is missing a field`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_world_map_partial.yaml")
+            }
+        assertTrue(ex.message!!.contains("worldMap", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when worldMap extends past the map edge`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_world_map_bounds.yaml")
+            }
+        assertTrue(ex.message!!.contains("worldMap", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
     fun `loads puzzles from a zone file`() {
         val world = dev.ambon.test.TestWorlds.okPuzzles
         val puzzles = world.puzzleDefinitions

@@ -51,6 +51,7 @@ const CombatLogPanel = lazy(() => import("./components/panels/CombatLogPanel").t
 import { HelpContent } from "./components/HelpContent";
 import { TerminalOverlay } from "./components/TerminalOverlay";
 import { Atlas } from "./components/Atlas";
+import { WorldMap } from "./components/WorldMap";
 import { DemoBanner } from "./components/DemoBanner";
 import { LevelUpBanner } from "./components/LevelUpBanner";
 import { QuestCompleteToast } from "./components/QuestCompleteToast";
@@ -229,7 +230,7 @@ function App() {
   const [staffInvisible, setStaffInvisible] = useState(false);
   // Bumped by the canvas Claim button (demo characters); opens the claim modal.
   const [claimRequestId, setClaimRequestId] = useState(0);
-  const [mapTab, setMapTab] = useState<"map" | "atlas">("map");
+  const [mapTab, setMapTab] = useState<"map" | "world" | "atlas">("map");
 
   // Lifted command-input state — VitalsBar renders it controlled, palette/canvas can prefill
   const [inputValue, setInputValue] = useState("");
@@ -1747,6 +1748,15 @@ function App() {
                 <button
                   type="button"
                   role="tab"
+                  aria-selected={mapTab === "world"}
+                  className={`drawer-map-tab ${mapTab === "world" ? "drawer-map-tab-active" : ""}`}
+                  onClick={() => setMapTab("world")}
+                >
+                  World Map
+                </button>
+                <button
+                  type="button"
+                  role="tab"
                   aria-selected={mapTab === "atlas"}
                   className={`drawer-map-tab ${mapTab === "atlas" ? "drawer-map-tab-active" : ""}`}
                   onClick={() => setMapTab("atlas")}
@@ -1850,6 +1860,13 @@ function App() {
                 <button type="button" className="map-zoom-btn" onClick={mapRecenter} title="Re-center on you" aria-label="Re-center on you">⌖</button>
               </div>
             </div>
+            {mapTab === "world" && (
+              <WorldMap
+                areas={state.worldAreas}
+                currentZone={currentZone}
+                serverAssets={state.serverAssets}
+              />
+            )}
             {mapTab === "atlas" && (
               <Atlas areas={state.worldAreas} currentZone={currentZone} />
             )}

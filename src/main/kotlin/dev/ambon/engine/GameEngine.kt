@@ -3368,6 +3368,17 @@ class GameEngine(
 private fun buildWorldAreaPayloads(world: dev.ambon.domain.world.World): List<WorldAreaPayload> {
     val ranges = dev.ambon.engine.commands.handlers.computeWorldZoneLevelRanges(world)
     return ranges
-        .map { (zone, range) -> WorldAreaPayload(zone = zone, minLevel = range?.first, maxLevel = range?.last) }
+        .map { (zone, range) ->
+            val placement = world.zoneWorldMap(zone)
+            WorldAreaPayload(
+                zone = zone,
+                minLevel = range?.first,
+                maxLevel = range?.last,
+                mapX = placement?.x,
+                mapY = placement?.y,
+                mapW = placement?.w,
+                mapH = placement?.h,
+            )
+        }
         .sortedWith(compareBy({ it.minLevel ?: Int.MAX_VALUE }, { it.zone }))
 }

@@ -3863,6 +3863,12 @@ data class ImagesConfig(
             // flight kiosk), so harbor hotspots sit on the same coastline. Override this key alone
             // to give boats their own map. When absent, the kiosk degrades to its plain route list.
             "boat_map" to "global_assets/flight_map.png",
+            // Painted Ambon world map behind the atlas World Map tab. Zones publish their
+            // footprint rectangles from Arcanum's Map overlay (zone YAML `worldMap`) and are
+            // seated onto this art as glowing regions. Shares the flight kiosk art by default so
+            // the atlas and travel kiosks agree on one coastline; override to give the atlas its
+            // own map. When absent, the tab renders zones on a stylized parchment fallback.
+            "world_map" to "global_assets/flight_map.png",
             // Anchor/ship marker painted at each harbor hotspot — distinguishes boats from griffin
             // flight roosts. Optional — a CSS jewel-dot renders in its place when the art is missing.
             "boat_dock" to "global_assets/boat_dock.png",

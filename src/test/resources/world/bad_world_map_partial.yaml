@@ -1,0 +1,14 @@
+zone: mapped_zone
+startRoom: start
+worldMap:
+  x: 12.5
+  y: 30
+  w: 22
+
+rooms:
+  start:
+    title: "Trailhead"
+    description: "A trail leading into the mapped wilds."
+
+mobs: {}
+items: {}

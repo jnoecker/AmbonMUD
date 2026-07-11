@@ -19,6 +19,7 @@ class World(
     pvpZones: Set<String> = emptySet(),
     zoneStartRooms: Map<String, RoomId> = emptyMap(),
     zoneScaling: Map<String, ZoneScaling> = emptyMap(),
+    zoneWorldMap: Map<String, ZoneWorldMap> = emptyMap(),
     zoneVideos: Map<String, String> = emptyMap(),
     shopDefinitions: List<ShopDefinition> = emptyList(),
     trainerDefinitions: List<TrainerDefinition> = emptyList(),
@@ -66,6 +67,12 @@ class World(
 
     /** Returns the scaling config for a zone. Falls back to STATIC when unset. */
     fun zoneScaling(zoneId: String): ZoneScaling = _zoneScaling[zoneId] ?: ZoneScaling()
+
+    private val _zoneWorldMap = zoneWorldMap.toMutableMap()
+    val zoneWorldMap: Map<String, ZoneWorldMap> get() = _zoneWorldMap
+
+    /** Returns the zone's footprint on the painted world map, or null when unplaced. */
+    fun zoneWorldMap(zoneId: String): ZoneWorldMap? = _zoneWorldMap[zoneId]
 
     private val _zoneVideos = zoneVideos.toMutableMap()
     val zoneVideos: Map<String, String> get() = _zoneVideos
@@ -158,6 +165,9 @@ class World(
         source._zoneScaling[zone]?.let { _zoneScaling[zone] = it }
             ?: _zoneScaling.remove(zone)
 
+        source._zoneWorldMap[zone]?.let { _zoneWorldMap[zone] = it }
+            ?: _zoneWorldMap.remove(zone)
+
         source._zoneVideos[zone]?.let { _zoneVideos[zone] = it }
             ?: _zoneVideos.remove(zone)
 
@@ -195,6 +205,9 @@ class World(
 
         _zoneScaling.clear()
         _zoneScaling.putAll(source._zoneScaling)
+
+        _zoneWorldMap.clear()
+        _zoneWorldMap.putAll(source._zoneWorldMap)
 
         _zoneVideos.clear()
         _zoneVideos.putAll(source._zoneVideos)

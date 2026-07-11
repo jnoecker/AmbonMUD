@@ -1661,6 +1661,10 @@ export function applyGmcpPackage(
           zone: String(a.zone ?? ""),
           minLevel: typeof a.minLevel === "number" ? a.minLevel : null,
           maxLevel: typeof a.maxLevel === "number" ? a.maxLevel : null,
+          mapX: typeof a.mapX === "number" ? a.mapX : null,
+          mapY: typeof a.mapY === "number" ? a.mapY : null,
+          mapW: typeof a.mapW === "number" ? a.mapW : null,
+          mapH: typeof a.mapH === "number" ? a.mapH : null,
         }))
         .filter((a) => a.zone.length > 0);
       ctx.setWorldAreas(areas);
