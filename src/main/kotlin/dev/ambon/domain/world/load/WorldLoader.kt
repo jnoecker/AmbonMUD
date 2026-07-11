@@ -247,7 +247,10 @@ object WorldLoader {
                 if (x == null || y == null || w == null || h == null) {
                     throw WorldLoadException("Zone '$zone' worldMap requires all of x, y, w and h")
                 }
-                if (x < 0 || y < 0 || w <= 0.0 || h <= 0.0 || x + w > 100 || y + h > 100) {
+                // Small epsilon: authoring tools round to 2 decimals and double
+                // addition can overshoot the far edge by a few ulps.
+                val edge = 100.0 + 1e-6
+                if (x < 0 || y < 0 || w <= 0.0 || h <= 0.0 || x + w > edge || y + h > edge) {
                     throw WorldLoadException(
                         "Zone '$zone' worldMap must be a rectangle inside the map in percent " +
                             "(x >= 0, y >= 0, w > 0, h > 0, x + w <= 100, y + h <= 100; got x=$x y=$y w=$w h=$h)",

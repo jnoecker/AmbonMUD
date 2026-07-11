@@ -8,7 +8,7 @@ It is written for code generators that need to emit valid zone files.
 - One YAML document describes one zone file.
 - Multiple zone files can be merged into one world.
 - YAML files are deserialized into the DTOs in `src/main/kotlin/dev/ambon/domain/world/data/`:
-  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `graphical`, `pvpEnabled`, `terrain`, `faction`, `scaling`, `image`, `audio`, `video`, `rooms`, `mobs`, `items`, `shops`, `trainers`, `quests`, `gatheringNodes`, `recipes`, `dungeon`, `puzzles`)
+  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `graphical`, `pvpEnabled`, `terrain`, `faction`, `scaling`, `worldMap`, `image`, `audio`, `video`, `rooms`, `mobs`, `items`, `shops`, `trainers`, `quests`, `gatheringNodes`, `recipes`, `dungeon`, `puzzles`)
   - `RoomFile` (with `ExitValue`/`DoorFile` for exits and `FeatureFile` for containers/levers/signs)
   - `MobFile` (with `MobSpawnFile`, `MobDropFile`, `MobSpellFile`, `BehaviorFile`, `DialogueNodeFile`, `SpawnConditionFile`)
   - `ItemFile`
@@ -34,6 +34,11 @@ faction: <string, optional - controlling faction id; inherited by mobs that don'
 scaling:                # optional dynamic level-scaling config
   mode: <string, optional - one of static|bounded|player (case-insensitive); default static>
   levelRange: [<min>, <max>]  # required for bounded mode; min >= 1, max >= min
+worldMap:               # optional footprint on the painted world map (World Map atlas tab)
+  x: <double, 0-100 - left edge, percent of the map width>
+  y: <double, 0-100 - top edge, percent of the map height>
+  w: <double, > 0 - width in percent; x + w must be <= 100>
+  h: <double, > 0 - height in percent; y + h must be <= 100>
 image:                  # zone-wide image defaults
   room: <string, optional>
   mob: <string, optional>
@@ -79,10 +84,16 @@ puzzles: <map<string, Puzzle>, optional, default {}>
 - `player`: mobs and quests scale directly to the reference player's level with no bounds (tutorial zones, social hubs).
 - Declaring conflicting `scaling` blocks for the same zone across files is a load error.
 
+`worldMap` notes:
+- Positions the zone as a region on the painted `world_map` global asset in the web client's World Map atlas tab, labelled with the zone's name and level range. Percent coordinates are measured from the map image's top-left corner, so the same block works at any art resolution.
+- All four fields are required together; a partial block is a load error, as is a rectangle that extends past the map (`x + w > 100` or `y + h > 100`, small float tolerance).
+- Declaring conflicting `worldMap` blocks for the same zone across files is a load error.
+- Normally authored in Arcanum's Map overlay via **Publish to Game** rather than by hand.
+
 ### Required vs optional
 
 - Required top-level fields: `zone`, `startRoom`, `rooms`
-- Optional top-level fields: `lifespan`, `graphical`, `pvpEnabled`, `terrain`, `faction`, `scaling`, `image`, `audio`, `video`, `mobs`, `items`, `shops`, `trainers`, `quests`, `gatheringNodes`, `recipes`, `dungeon`, `puzzles`
+- Optional top-level fields: `lifespan`, `graphical`, `pvpEnabled`, `terrain`, `faction`, `scaling`, `worldMap`, `image`, `audio`, `video`, `mobs`, `items`, `shops`, `trainers`, `quests`, `gatheringNodes`, `recipes`, `dungeon`, `puzzles`
 
 ## Nested Schemas
 
