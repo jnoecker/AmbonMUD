@@ -10479,22 +10479,30 @@ body {
 .world-map-frame {
   position: relative;
   flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
   border: 1px solid rgb(90 60 30 / 45%);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: inset 0 0 24px rgb(60 40 20 / 18%);
 }
 
-/* Painted-art path: the image dictates the frame's aspect. */
+/* Painted-art path: the frame hugs the image so zone-region percentages track
+   the art exactly; height is capped so the detail card stays above the fold. */
 .world-map-art {
   display: block;
-  width: 100%;
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: min(58vh, 640px);
   user-select: none;
 }
 
 /* No art (null/404): an inked-parchment stand-in keeps regions usable. */
 .world-map-frame-fallback {
+  width: 100%;
+  max-width: min(100%, calc(58vh * (16 / 9)));
   aspect-ratio: 16 / 9;
   background:
     radial-gradient(ellipse at 30% 25%, rgb(255 250 236 / 55%), transparent 60%),
@@ -10615,11 +10623,14 @@ body {
   font-style: italic;
 }
 
+/* Solid parchment panel — the drawer sits over dark painted art, so the ink
+   text needs its own light ground to stay legible. */
 .world-map-detail {
   padding: var(--space-2) var(--space-3);
-  background: rgb(60 40 20 / 10%);
-  border: 1px solid rgb(90 60 30 / 40%);
+  background: rgb(240 226 196 / 94%);
+  border: 1px solid rgb(90 60 30 / 50%);
   border-radius: 10px;
+  box-shadow: 0 2px 8px rgb(20 14 8 / 35%);
 }
 
 .world-map-detail-title {
@@ -10660,6 +10671,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: var(--space-2) var(--space-3);
+  background: rgb(240 226 196 / 94%);
+  border: 1px solid rgb(90 60 30 / 50%);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgb(20 14 8 / 35%);
 }
 
 .world-map-uncharted-label {

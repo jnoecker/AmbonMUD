@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { WorldArea } from "../types";
 import { zoneHue } from "../constants";
 import { formatZoneName } from "../utils";
@@ -45,6 +45,13 @@ export function WorldMap({ areas, currentZone, serverAssets }: WorldMapProps) {
   const uncharted = useMemo(() => areas.filter((a) => !isPlaced(a)), [areas]);
 
   const selectedArea = selected != null ? areas.find((a) => a.zone === selected) ?? null : null;
+
+  // Keep the detail card in view when a zone is selected — on narrow drawers
+  // the map frame can push it below the fold.
+  const detailRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (selected != null) detailRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [selected]);
 
   if (areas.length === 0) {
     return (
@@ -112,7 +119,7 @@ export function WorldMap({ areas, currentZone, serverAssets }: WorldMapProps) {
       </div>
 
       {selectedArea && (
-        <div className="world-map-detail" role="status">
+        <div className="world-map-detail" role="status" ref={detailRef}>
           <div className="world-map-detail-title">
             <span className="world-map-detail-name">{formatZoneName(selectedArea.zone)}</span>
             {selectedArea.zone === currentZone && (
