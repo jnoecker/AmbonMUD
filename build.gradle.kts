@@ -38,7 +38,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.37")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.0")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.1")
     implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
     implementation("com.sksamuel.hoplite:hoplite-yaml:$hopliteVersion")
     implementation("org.mindrot:jbcrypt:0.4")
