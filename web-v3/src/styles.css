@@ -10281,6 +10281,9 @@ body {
   flex-direction: column;
   gap: var(--space-3);
   min-height: 0;
+  width: 100%;
+  max-width: 980px;
+  margin-inline: auto;
 }
 
 .atlas-empty {
@@ -10468,20 +10471,24 @@ body {
 
 /* --- World Map atlas tab --- */
 
+/* Map as the full-height centrepiece, ledger + uncharted list in a side
+   panel so the horizontal space beside portrait art earns its keep. */
 .world-map-body {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
   gap: var(--space-3);
+  flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .world-map-frame {
   position: relative;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   width: fit-content;
   max-width: 100%;
-  margin-inline: auto;
   border: 1px solid rgb(90 60 30 / 45%);
   border-radius: 12px;
   overflow: hidden;
@@ -10489,25 +10496,36 @@ body {
 }
 
 /* Painted-art path: the frame hugs the image so zone-region percentages track
-   the art exactly; height is capped so the detail card stays above the fold. */
+   the art exactly. The viewport cap (drawer minus its chrome) lets portrait
+   art fill the drawer's full height. */
 .world-map-art {
   display: block;
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: min(58vh, 640px);
+  max-height: calc(100vh - 230px);
   user-select: none;
 }
 
 /* No art (null/404): an inked-parchment stand-in keeps regions usable. */
 .world-map-frame-fallback {
-  width: 100%;
-  max-width: min(100%, calc(58vh * (16 / 9)));
-  aspect-ratio: 16 / 9;
+  height: calc(100vh - 230px);
+  max-width: 100%;
+  aspect-ratio: 3 / 4;
   background:
     radial-gradient(ellipse at 30% 25%, rgb(255 250 236 / 55%), transparent 60%),
     radial-gradient(ellipse at 75% 70%, rgb(214 186 140 / 45%), transparent 55%),
     linear-gradient(160deg, #e6d8b8, #d8c49a);
+}
+
+.world-map-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 0 1 300px;
+  min-width: 220px;
+  max-height: calc(100vh - 230px);
+  overflow-y: auto;
 }
 
 .world-map-regions {
@@ -10522,11 +10540,12 @@ body {
   justify-content: center;
   padding: 0;
   border: 1.5px solid hsl(var(--wm-hue) 45% 32% / 75%);
-  border-radius: 10px;
+  border-radius: 8px;
   background: hsl(var(--wm-hue) 55% 55% / 14%);
   box-shadow: inset 0 0 14px hsl(var(--wm-hue) 55% 45% / 12%);
   cursor: pointer;
   transition: background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  container-type: size;
 }
 
 .world-map-zone:hover,
@@ -10551,34 +10570,57 @@ body {
     0 0 14px hsl(var(--wm-hue) 60% 50% / 45%);
 }
 
-.world-map-zone-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  max-width: 100%;
-  padding: 3px 8px;
-  border-radius: 8px;
-  background: rgb(255 250 236 / 82%);
-  border: 1px solid rgb(90 60 30 / 35%);
-  box-shadow: 0 1px 4px rgb(46 34 18 / 25%);
+/* Always-on tag: just the level range, small enough to sit inside dense
+   clusters. Regions too small even for that go bare — hover carries the rest. */
+.world-map-zone-tag {
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: rgb(255 250 236 / 80%);
+  border: 1px solid rgb(90 60 30 / 30%);
+  font-size: 0.58rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #4a3014;
   pointer-events: none;
 }
 
-.world-map-zone-name {
-  font-family: var(--font-display);
-  font-size: clamp(0.58rem, 1.4vw, 0.78rem);
-  line-height: 1.15;
-  color: #2e2212;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
+@container (width < 44px) or (height < 22px) {
+  .world-map-zone-tag {
+    display: none;
+  }
 }
 
-.world-map-zone-level {
-  font-size: clamp(0.52rem, 1.1vw, 0.66rem);
+/* Shared hover tooltip: full zone name + level range on parchment, floated
+   above (or below, near the top edge) the hovered region. */
+.world-map-tip {
+  position: absolute;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: rgb(252 244 222 / 96%);
+  border: 1px solid rgb(90 60 30 / 55%);
+  box-shadow: 0 2px 8px rgb(20 14 8 / 40%);
+  transform: translate(-50%, calc(-100% - 6px));
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.world-map-tip-below {
+  transform: translate(-50%, 6px);
+}
+
+.world-map-tip-name {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: #2e2212;
+}
+
+.world-map-tip-level {
+  font-size: 0.66rem;
   font-variant-numeric: tabular-nums;
   color: #6a4a24;
 }
@@ -10608,6 +10650,15 @@ body {
   .world-map-here-dot {
     animation: none;
   }
+}
+
+/* Inline variant of the beacon for the side-panel legend line. */
+.world-map-legend-dot {
+  position: static;
+  display: inline-block;
+  transform: none;
+  vertical-align: -1px;
+  margin-right: 2px;
 }
 
 .world-map-unplotted {
@@ -10713,6 +10764,40 @@ body {
   font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
   color: #6a4a24;
+}
+
+.world-map-detail-empty .world-map-detail-hint {
+  margin-top: 0;
+}
+
+.world-map-legend-line {
+  margin-top: 6px;
+}
+
+/* Narrow windows: stack the side panel under a height-capped map. */
+@media (max-width: 900px) {
+  .world-map-body {
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+  }
+
+  .world-map-art,
+  .world-map-frame-fallback {
+    max-height: 56vh;
+    height: auto;
+  }
+
+  .world-map-frame-fallback {
+    height: 56vh;
+  }
+
+  .world-map-side {
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: none;
+    overflow-y: visible;
+  }
 }
 
 /* --- Spellbook panel --- */
