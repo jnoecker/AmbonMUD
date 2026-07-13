@@ -2,17 +2,23 @@ package dev.ambon.engine.commands
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.MountTravelConfig
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemType
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.sprite.SpriteCategory
 import dev.ambon.domain.sprite.SpriteDefinition
 import dev.ambon.domain.sprite.SpriteRequirement
 import dev.ambon.domain.sprite.SpriteVariant
 import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
+import dev.ambon.domain.world.ZoneWorldMap
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MountTravelSystem
@@ -81,10 +87,11 @@ class MountTravelTest {
         fun `refuses when the only route crosses unexplored rooms`() = runTest {
             val env = env()
             env.ownMount()
-            // Destination explored, but the middle of the only route is not.
+            // Destination explored, but the middle of the only route is not — only
+            // wings could reach it, and the pony has none.
             env.explored(listOf(stable, road1, gate))
             env.system.requestTravel(env.sid, gate.value)
-            env.assertError("route")
+            env.assertError("flying")
         }
 
         @Test
@@ -136,13 +143,13 @@ class MountTravelTest {
         }
 
         @Test
-        fun `rooms deeper in an adjacent zone are unreachable`() = runTest {
+        fun `rooms deeper in an adjacent zone need a flying mount`() = runTest {
             val env = env()
             env.ownMount()
             env.explored(listOf(stable, road1, road2, gate, border, deep))
 
             env.system.requestTravel(env.sid, deep.value)
-            env.assertError("route")
+            env.assertError("flying")
         }
 
         @Test
@@ -181,6 +188,173 @@ class MountTravelTest {
             env.tick()
             assertNull(env.me().ridingMountId)
             assertTrue(!env.system.isRiding(env.sid))
+        }
+    }
+
+    @Nested
+    inner class Speeds {
+        @Test
+        fun `a faster mount covers each room in msPerRoom over its speed`() = runTest {
+            val env = env()
+            env.ownFlyingMount() // storm_gryphon, speed 2.0 -> 150ms per hop
+            env.explored(listOf(stable, road1, road2, gate))
+
+            env.system.requestTravel(env.sid, gate.value)
+            env.advance(149)
+            assertEquals(stable, env.me().roomId, "not yet due at 149ms")
+            env.advance(1)
+            assertEquals(road1, env.me().roomId, "gryphon hops every 150ms")
+        }
+
+        @Test
+        fun `the fastest owned mount is picked by default`() = runTest {
+            val env = env()
+            env.ownMount()
+            env.ownFlyingMount()
+            env.explored(listOf(stable, road1, road2, gate))
+
+            env.system.requestTravel(env.sid, gate.value)
+            assertEquals("storm_gryphon", env.me().ridingMountId)
+        }
+
+        @Test
+        fun `an active mount sprite overrides the fastest pick`() = runTest {
+            val env = env(spriteRegistry = ponyRegistry())
+            env.ownMount()
+            env.ownFlyingMount()
+            env.explored(listOf(stable, road1, road2, gate))
+            env.me().activeSprite = "mount_dappled_pony"
+
+            env.system.requestTravel(env.sid, gate.value)
+            assertEquals("dappled_pony", env.me().ridingMountId, "rides the sprite's mount")
+            env.advance(150)
+            assertEquals(stable, env.me().roomId, "pony pace, not gryphon pace")
+            env.advance(150)
+            assertEquals(road1, env.me().roomId)
+        }
+    }
+
+    @Nested
+    inner class Flights {
+        @Test
+        fun `flies to an explored room deep in another zone`() = runTest {
+            val env = env()
+            env.ownFlyingMount()
+            env.explored(listOf(stable, deep))
+
+            env.system.requestTravel(env.sid, deep.value)
+            assertEquals("storm_gryphon", env.me().ridingMountId, "airborne on the gryphon")
+            assertEquals(stable, env.me().roomId, "takeoff is not arrival")
+            assertTrue(env.system.isRiding(env.sid))
+
+            env.advance(FALLBACK_FLIGHT_MS - 1)
+            assertEquals(stable, env.me().roomId, "still airborne")
+
+            env.advance(1)
+            assertEquals(deep, env.me().roomId, "landed at the destination")
+            assertNull(env.me().ridingMountId, "dismounted on landing")
+            assertTrue(!env.system.isRiding(env.sid))
+            val texts = env.texts()
+            assertTrue(texts.any { it.contains("alight", ignoreCase = true) }, "got=$texts")
+        }
+
+        @Test
+        fun `flight time scales with the zones' world-map distance`() = runTest {
+            // Centres: plains (10,10), hills (20,10) -> distance 10% -> 2000 + 80*10 = 2800ms.
+            val env = env(
+                zoneWorldMap = mapOf(
+                    "plains" to ZoneWorldMap(x = 0.0, y = 0.0, w = 20.0, h = 20.0),
+                    "hills" to ZoneWorldMap(x = 10.0, y = 0.0, w = 20.0, h = 20.0),
+                ),
+            )
+            env.ownFlyingMount()
+            env.explored(listOf(stable, deep))
+
+            env.system.requestTravel(env.sid, deep.value)
+            env.advance(2799)
+            assertEquals(stable, env.me().roomId, "still airborne at 2799ms")
+            env.advance(1)
+            assertEquals(deep, env.me().roomId, "landed at 2800ms")
+        }
+
+        @Test
+        fun `a ground route is preferred over flying when one is known`() = runTest {
+            val env = env()
+            env.ownFlyingMount()
+            env.explored(listOf(stable, road1, road2, gate))
+
+            env.system.requestTravel(env.sid, gate.value)
+            env.advance(150)
+            assertEquals(road1, env.me().roomId, "rode the first hop instead of taking off")
+        }
+
+        @Test
+        fun `a non-flying active sprite still flies on the owned flying mount`() = runTest {
+            val env = env(spriteRegistry = ponyRegistry())
+            env.ownMount()
+            env.ownFlyingMount()
+            env.explored(listOf(stable, deep))
+            env.me().activeSprite = "mount_dappled_pony"
+
+            env.system.requestTravel(env.sid, deep.value)
+            assertEquals("storm_gryphon", env.me().ridingMountId, "ponies cannot fly")
+        }
+
+        @Test
+        fun `an unexplored destination cannot be flown to`() = runTest {
+            val env = env()
+            env.ownFlyingMount()
+            env.explored(listOf(stable))
+
+            env.system.requestTravel(env.sid, deep.value)
+            env.assertError("explored")
+        }
+
+        @Test
+        fun `combat at landing time cancels the flight in place`() = runTest {
+            val env = env()
+            env.ownFlyingMount()
+            env.explored(listOf(stable, deep))
+
+            env.system.requestTravel(env.sid, deep.value)
+            env.mobs.upsert(MobState(MobId("plains:bandit"), "a bandit", stable, hp = 10, maxHp = 10))
+            assertNull(env.combat.startCombat(env.sid, "bandit"))
+            env.outbound.drainAll()
+
+            env.advance(FALLBACK_FLIGHT_MS)
+            assertEquals(stable, env.me().roomId, "never left the ground")
+            assertNull(env.me().ridingMountId)
+            val texts = env.texts()
+            assertTrue(texts.any { it.contains("cut short", ignoreCase = true) }, "got=$texts")
+        }
+
+        @Test
+        fun `moving by other means cancels the flight quietly`() = runTest {
+            val env = env()
+            env.ownFlyingMount()
+            env.explored(listOf(stable, road1, deep))
+
+            env.system.requestTravel(env.sid, deep.value)
+            env.players.moveTo(env.sid, road1)
+            env.outbound.drainAll()
+
+            env.advance(FALLBACK_FLIGHT_MS)
+            assertEquals(road1, env.me().roomId, "stays where they walked")
+            assertNull(env.me().ridingMountId)
+            assertTrue(!env.system.isRiding(env.sid))
+        }
+
+        @Test
+        fun `a new travel request supersedes the flight`() = runTest {
+            val env = env()
+            env.ownFlyingMount()
+            env.explored(listOf(stable, road1, road2, gate, deep))
+
+            env.system.requestTravel(env.sid, deep.value)
+            // Re-target to a ground destination before the landing fires.
+            env.system.requestTravel(env.sid, gate.value)
+            env.advance(FALLBACK_FLIGHT_MS)
+            assertTrue(env.me().roomId.zone == "plains", "old landing never fired; got=${env.me().roomId}")
         }
     }
 
@@ -268,6 +442,10 @@ class MountTravelTest {
             me().ownedMounts.add("dappled_pony")
         }
 
+        fun ownFlyingMount() {
+            me().ownedMounts.add("storm_gryphon")
+        }
+
         fun explored(rooms: List<RoomId>) {
             me().exploredRooms = rooms.map { it.value }.toMutableSet()
         }
@@ -278,14 +456,46 @@ class MountTravelTest {
             scheduler.runDue()
         }
 
+        /** Advances an arbitrary interval and runs due scheduler actions. */
+        suspend fun advance(ms: Long) {
+            clock.advance(ms)
+            scheduler.runDue()
+        }
+
         fun assertError(fragment: String) {
             val errors = outbound.drainAll().filterIsInstance<OutboundEvent.SendError>().map { it.text }
             assertTrue(errors.any { it.contains(fragment, ignoreCase = true) }, "expected error containing '$fragment', got=$errors")
         }
+
+        fun texts(): List<String> = outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
     }
 
-    private suspend fun env(): Env {
-        val world = travelWorld()
+    /** A registry holding just the (non-flying) pony's mount sprite. */
+    private fun ponyRegistry(): SpriteRegistry {
+        val reg = SpriteRegistry()
+        reg.register(
+            SpriteDefinition(
+                id = "dappled_pony",
+                displayName = "Dappled Pony",
+                category = SpriteCategory.MOUNT,
+                requirements = listOf(SpriteRequirement.Mount("dappled_pony")),
+                variants = listOf(
+                    SpriteVariant(
+                        imageId = "mount_dappled_pony",
+                        displayName = "Dappled Pony",
+                        imagePath = "player_sprites/mount_dappled_pony.png",
+                    ),
+                ),
+            ),
+        )
+        return reg
+    }
+
+    private suspend fun env(
+        zoneWorldMap: Map<String, ZoneWorldMap> = emptyMap(),
+        spriteRegistry: SpriteRegistry? = null,
+    ): Env {
+        val world = travelWorld(zoneWorldMap)
         val players = buildTestPlayerRegistry(world.startRoom)
         val mobs = MobRegistry()
         val items = ItemRegistry()
@@ -293,13 +503,20 @@ class MountTravelTest {
         val combat = CombatSystem(players, mobs, items, outbound)
         val clock = MutableClock(0L)
         val scheduler = Scheduler(clock)
-        val config = MountTravelConfig(msPerRoom = 300L)
+        val config = MountTravelConfig(
+            msPerRoom = 300L,
+            flightMsBase = 2000L,
+            flightMsPerMapPercent = 80L,
+            flightMsMin = 2000L,
+            flightMsMax = 10000L,
+        )
         val system = MountTravelSystem(
             players = players,
             world = world,
             outbound = outbound,
             combat = combat,
             scheduler = scheduler,
+            spriteRegistry = spriteRegistry,
             config = config,
         )
         val sid = SessionId(1)
@@ -316,12 +533,37 @@ class MountTravelTest {
         private val border = RoomId("hills:border")
         private val deep = RoomId("hills:deep")
 
+        /** With flightMsBase=2000 and no placements, flights fall back to (min+max)/2. */
+        private const val FALLBACK_FLIGHT_MS = 6000L
+
+        private fun mountItem(
+            id: String,
+            mountId: String,
+            speed: Double,
+            flying: Boolean,
+        ): ItemSpawn =
+            ItemSpawn(
+                instance = ItemInstance(
+                    id = ItemId(id),
+                    item = Item(
+                        keyword = mountId,
+                        displayName = mountId,
+                        itemType = ItemType.MOUNT,
+                        mountId = mountId,
+                        mountSpeed = speed,
+                        flying = flying,
+                        basePrice = 100,
+                    ),
+                ),
+            )
+
         /**
          * Linear chain stable =e= road1 =e= road2 =e= gate =e= hills:border =e= hills:deep.
-         * The border room is one hop into the adjacent zone (a valid destination); deep is
-         * two hops in (never routable from plains).
+         * The border room is one hop into the adjacent zone (a valid ground destination);
+         * deep is two hops in (only reachable on wings). The shop items define two mounts:
+         * a 1.0x ground pony and a 2.0x flying gryphon.
          */
-        private fun travelWorld(): World {
+        private fun travelWorld(zoneWorldMap: Map<String, ZoneWorldMap> = emptyMap()): World {
             val rooms = mapOf(
                 stable to Room(stable, "Stable", "A stable.", mapOf(Direction.EAST to road1)),
                 road1 to Room(road1, "Road West", "A road.", mapOf(Direction.WEST to stable, Direction.EAST to road2)),
@@ -330,7 +572,15 @@ class MountTravelTest {
                 border to Room(border, "Hills Border", "A border.", mapOf(Direction.WEST to gate, Direction.EAST to deep)),
                 deep to Room(deep, "Deep Hills", "Deep hills.", mapOf(Direction.WEST to border)),
             )
-            return World(rooms = rooms, startRoom = stable)
+            return World(
+                rooms = rooms,
+                startRoom = stable,
+                itemSpawns = listOf(
+                    mountItem("plains:pony_item", "dappled_pony", speed = 1.0, flying = false),
+                    mountItem("plains:gryphon_item", "storm_gryphon", speed = 2.0, flying = true),
+                ),
+                zoneWorldMap = zoneWorldMap,
+            )
         }
     }
 }

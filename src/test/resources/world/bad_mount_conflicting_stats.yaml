@@ -1,0 +1,21 @@
+zone: bad_mount_conflicting_stats
+startRoom: stable
+items:
+  pony_a:
+    displayName: "a dappled pony"
+    keyword: "pony"
+    itemType: mount
+    mountId: dappled_pony
+    mountSpeed: 1.0
+    basePrice: 100
+  pony_b:
+    displayName: "the same pony, faster somehow"
+    keyword: "pony"
+    itemType: mount
+    mountId: dappled_pony
+    mountSpeed: 2.0
+    basePrice: 100
+rooms:
+  stable:
+    title: "Stable"
+    description: "A stable."

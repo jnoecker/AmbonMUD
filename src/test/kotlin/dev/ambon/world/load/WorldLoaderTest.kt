@@ -1111,6 +1111,48 @@ class WorldLoaderTest {
                 }
             assertTrue(ex.message!!.contains("mountId", ignoreCase = true), "Got: ${ex.message}")
         }
+
+        @Test
+        fun `loads mount stats and resolves them by mount id`() {
+            val world = WorldLoader.loadFromResource("world/ok_mount_stats.yaml")
+
+            val pony = world.mountStats("dappled_pony")!!
+            assertEquals(1.0, pony.speed)
+            assertEquals(false, pony.flying)
+
+            val gryphon = world.mountStats("storm_gryphon")!!
+            assertEquals(2.0, gryphon.speed)
+            assertEquals(true, gryphon.flying)
+
+            assertEquals(null, world.mountStats("unknown_mount"))
+        }
+
+        @Test
+        fun `fails when a non-mount item sets mountSpeed`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_mount_speed_on_non_mount.yaml")
+                }
+            assertTrue(ex.message!!.contains("mountSpeed", ignoreCase = true), "Got: ${ex.message}")
+        }
+
+        @Test
+        fun `fails when mountSpeed is out of range`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_mount_speed_out_of_range.yaml")
+                }
+            assertTrue(ex.message!!.contains("mountSpeed", ignoreCase = true), "Got: ${ex.message}")
+        }
+
+        @Test
+        fun `fails when items selling the same mount disagree on stats`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_mount_conflicting_stats.yaml")
+                }
+            assertTrue(ex.message!!.contains("disagree", ignoreCase = true), "Got: ${ex.message}")
+        }
     }
 
     @Test

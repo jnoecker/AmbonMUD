@@ -1,0 +1,12 @@
+zone: bad_mount_speed_on_non_mount
+startRoom: stable
+items:
+  sword:
+    displayName: "a swift sword"
+    keyword: "sword"
+    mountSpeed: 2.0
+    basePrice: 100
+rooms:
+  stable:
+    title: "Stable"
+    description: "A stable."
