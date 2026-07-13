@@ -75,6 +75,16 @@ sealed interface Command {
         val maxLevel: Int?,
     ) : Command
 
+    /**
+     * Unfurls the charts of [zone] (the player's current zone when null):
+     * prints a one-line summary and re-sends the `Zone.Map` GMCP chart with the
+     * player's own exploration fog, letting the web client preview any realm's
+     * map from the World Map atlas tab.
+     */
+    data class ZoneChart(
+        val zone: String?,
+    ) : Command
+
     data class LookDir(
         val dir: Direction,
     ) : Command
@@ -1301,6 +1311,10 @@ object CommandParser {
 
         matchPrefix(line, listOf("areas", "area")) { rest ->
             parseAreasArgs(rest, line)
+        }?.let { return it }
+
+        matchPrefix(line, listOf("map", "chart")) { rest ->
+            Command.ZoneChart(zone = rest.trim().ifEmpty { null })
         }?.let { return it }
 
         matchPrefix(line, listOf("run")) { rest ->

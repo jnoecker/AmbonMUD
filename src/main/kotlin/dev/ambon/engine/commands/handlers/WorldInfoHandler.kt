@@ -22,10 +22,12 @@ class WorldInfoHandler(
     private val world = ctx.world
     private val players = ctx.players
     private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.Time> { sid, _ -> handleTime(sid) }
         router.on<Command.Areas> { sid, cmd -> handleAreas(sid, cmd) }
+        router.on<Command.ZoneChart> { sid, cmd -> handleZoneChart(sid, cmd) }
     }
 
     private suspend fun handleTime(sessionId: SessionId) {
@@ -93,6 +95,41 @@ class WorldInfoHandler(
             }
             outbound.send(OutboundEvent.SendInfo(sessionId, "  $zone  ($levelStr)"))
         }
+    }
+
+    private suspend fun handleZoneChart(sessionId: SessionId, cmd: Command.ZoneChart) {
+        val me = players.get(sessionId) ?: return
+        // Accept display-style names ("Fae Wood") as well as raw zone ids.
+        val zone = cmd.zone?.trim()?.lowercase()?.replace(Regex("\\s+"), "_") ?: me.roomId.zone
+        val zoneRooms = world.rooms.values.filter { it.id.zone == zone }
+        if (zoneRooms.isEmpty()) {
+            outbound.send(
+                OutboundEvent.SendError(sessionId, "No charts exist for '$zone'. Try 'areas' for the known realms."),
+            )
+            return
+        }
+        // Same fog rules as zone entry: staff see the whole chart, everyone
+        // else sees detail only on rooms they have personally explored.
+        val explored =
+            if (me.isStaff) zoneRooms.mapTo(mutableSetOf()) { it.id.value } else me.exploredRooms
+        val exploredCount = zoneRooms.count { it.id.value in explored }
+        val displayName = zone
+            .split('_')
+            .filter { it.isNotEmpty() }
+            .joinToString(" ") { part -> part.replaceFirstChar { it.uppercaseChar() } }
+        val range = computeWorldZoneLevelRanges(world)[zone]
+        val levelStr = when {
+            range == null -> ""
+            range.first == range.last -> " (level ${range.first})"
+            else -> " (levels ${range.first}-${range.last})"
+        }
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                "You unfurl the charts of $displayName$levelStr — $exploredCount of ${zoneRooms.size} rooms explored.",
+            ),
+        )
+        gmcpEmitter?.sendZoneMap(sessionId, zone, zoneRooms, explored)
     }
 }
 

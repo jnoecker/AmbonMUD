@@ -34,6 +34,7 @@ class WebClientParityTest {
         "Move" to "move",
         "Run" to "run",
         "Areas" to "areas",
+        "ZoneChart" to "map",
         "Exits" to "exits",
         "Recall" to "recall",
         "Rest" to "rest",

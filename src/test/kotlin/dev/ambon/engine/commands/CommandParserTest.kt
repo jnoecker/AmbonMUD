@@ -1192,6 +1192,21 @@ class CommandParserTest {
         assertTrue(CommandParser.parse("describe check") is Command.Invalid)
     }
 
+    // ---- Zone chart ----
+
+    @Test
+    fun `map with no args charts the current zone`() {
+        assertEquals(Command.ZoneChart(null), CommandParser.parse("map"))
+        assertEquals(Command.ZoneChart(null), CommandParser.parse("chart"))
+    }
+
+    @Test
+    fun `map with a zone name charts that zone`() {
+        assertEquals(Command.ZoneChart("fae_wood"), CommandParser.parse("map fae_wood"))
+        assertEquals(Command.ZoneChart("Fae Wood"), CommandParser.parse("map Fae Wood"))
+        assertEquals(Command.ZoneChart("sylvawood"), CommandParser.parse("chart sylvawood"))
+    }
+
     // ---- Areas ----
 
     @Test
