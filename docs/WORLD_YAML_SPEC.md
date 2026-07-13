@@ -567,9 +567,13 @@ matchByKey: <boolean, optional, default false>
 basePrice: <integer, optional, default 0, must be >= 0>
 image: <string, optional - relative path under /images/; falls back to zone image.item>
 video: <string, optional - relative path under /videos/, shown in context menu>
-itemType: <string, optional - one of equipment|consumable|quest|treasure|keepsake|misc; inferred when omitted>
+itemType: <string, optional - one of equipment|consumable|quest|treasure|keepsake|mount|misc; inferred when omitted>
 questItem: <boolean, optional, default false>
 takeable: <boolean, optional, default true>
+mountId: <string, required when itemType is mount, forbidden otherwise - the mount this purchase unlocks>
+mountSpeed: <number, optional, default 1.0, must be in (0, 10] - mount items only; ride-speed multiplier>
+flying: <boolean, optional, default false - mount items only; unlocks cross-zone flight>
+
 # Arcanum design-time metadata - accepted for round-trip preservation, ignored by the server:
 level: <integer, optional>
 tier: <string, optional>
@@ -593,6 +597,12 @@ tertiaryStat: <string, optional>
 
 `takeable` notes:
 - When `false`, players cannot `get` the item and auto-loot skips it. Useful for room scenery (statues, fountains, signs) that should appear in the `Items here:` line but stay put.
+
+Mount notes (`itemType: mount`):
+- Buying the item adds `mountId` to the player's permanent owned-mounts set (the item itself never enters the inventory). The id should match a `category: mount` sprite requirement in `sprites.yaml` so the mount shows while riding.
+- `mountSpeed` scales map click-to-ride travel: each hop takes `engine.mountTravel.msPerRoom / mountSpeed` ms.
+- `flying: true` mounts additionally cover explored destinations with **no known ground path** — e.g. a room in another zone picked from a world-map zone chart. The airborne time scales with the distance between the two zones' `worldMap` placements (see `engine.mountTravel.flight*` config).
+- Every item selling the same `mountId` (across all zones) must agree on `mountSpeed` and `flying`; conflicting values are a load error.
 
 `basePrice` notes:
 - Determines the item's value in the shop economy.
