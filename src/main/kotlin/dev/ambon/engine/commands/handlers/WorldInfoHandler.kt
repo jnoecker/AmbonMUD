@@ -99,15 +99,40 @@ class WorldInfoHandler(
 
     private suspend fun handleZoneChart(sessionId: SessionId, cmd: Command.ZoneChart) {
         val me = players.get(sessionId) ?: return
-        // Accept display-style names ("Fae Wood") as well as raw zone ids.
-        val zone = cmd.zone?.trim()?.lowercase()?.replace(Regex("\\s+"), "_") ?: me.roomId.zone
-        val zoneRooms = world.rooms.values.filter { it.id.zone == zone }
-        if (zoneRooms.isEmpty()) {
-            outbound.send(
-                OutboundEvent.SendError(sessionId, "No charts exist for '$zone'. Try 'areas' for the known realms."),
-            )
-            return
+        val knownZones = world.rooms.values.mapTo(sortedSetOf()) { it.id.zone }
+        // Accept display-style names ("Fae Wood") as well as raw zone ids, and
+        // resolve an unambiguous prefix ("fae" -> "fae_wood") the way `areas`
+        // lists realms, so telnet users can chart from what they see there.
+        val query = cmd.zone?.trim()?.lowercase()?.replace(Regex("\\s+"), "_")
+        val zone = when {
+            query == null -> me.roomId.zone
+            query in knownZones -> query
+            else -> {
+                val matches = knownZones.filter { it.startsWith(query) }
+                when (matches.size) {
+                    1 -> matches.first()
+                    0 -> {
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sessionId,
+                                "No charts exist for '$query'. Try 'areas' for the known realms.",
+                            ),
+                        )
+                        return
+                    }
+                    else -> {
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sessionId,
+                                "'$query' could be ${matches.joinToString(", ")} — name the realm more fully.",
+                            ),
+                        )
+                        return
+                    }
+                }
+            }
         }
+        val zoneRooms = world.rooms.values.filter { it.id.zone == zone }
         // Same fog rules as zone entry: staff see the whole chart, everyone
         // else sees detail only on rooms they have personally explored.
         val explored =

@@ -60,6 +60,19 @@ class ZoneChartCommandTest {
         }
 
     @Test
+    fun `map resolves an unambiguous zone prefix`() =
+        runTest {
+            val h = harness()
+            h.router.handle(h.sid, Command.ZoneChart("ok"))
+            val events = h.outbound.drainAll()
+            val gmcp = events.filterIsInstance<OutboundEvent.GmcpData>()
+            assertTrue(
+                gmcp.any { it.gmcpPackage == "Zone.Map" && it.jsonData.contains("\"ok_small\"") },
+                "Expected 'ok' to resolve to the ok_small chart: $gmcp",
+            )
+        }
+
+    @Test
     fun `map of an unknown zone errors without a chart`() =
         runTest {
             val h = harness()
