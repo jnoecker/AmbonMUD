@@ -10183,6 +10183,11 @@ body {
   color: #2e2212;
 }
 
+.map-preview-fly-hint {
+  opacity: 0.78;
+  font-style: italic;
+}
+
 .map-preview-return {
   appearance: none;
   border: 1px solid rgb(90 60 30 / 55%);

@@ -9,6 +9,8 @@ interface WorldMapProps {
   serverAssets: Record<string, string>;
   /** Open the named zone's chart (Local Map preview via the `map` command). */
   onViewCharts: (zone: string) => void;
+  /** True when the player owns a flying mount — zone charts become fly-to pickers. */
+  canFly: boolean;
 }
 
 /** An area whose worldMap placement is fully authored. */
@@ -46,7 +48,7 @@ const FALLBACK_ASPECT = 3 / 4;
  * zone's ledger in the side panel, where "unfurl the charts" opens that
  * zone's own map via the `map` command.
  */
-export function WorldMap({ areas, currentZone, serverAssets, onViewCharts }: WorldMapProps) {
+export function WorldMap({ areas, currentZone, serverAssets, onViewCharts, canFly }: WorldMapProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [artFailed, setArtFailed] = useState(false);
@@ -377,6 +379,12 @@ export function WorldMap({ areas, currentZone, serverAssets, onViewCharts }: Wor
             >
               Unfurl this realm&apos;s charts →
             </button>
+            {canFly && selectedArea.zone !== currentZone && (
+              <p className="world-map-detail-hint">
+                Your flying mount can carry you there — unfurl the charts and click any room
+                you&apos;ve explored.
+              </p>
+            )}
           </div>
         ) : (
           <div className="world-map-detail world-map-detail-empty">
