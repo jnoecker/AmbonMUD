@@ -47,6 +47,18 @@ class World(
     private val _itemSpawns = itemSpawns.toMutableList()
     val itemSpawns: List<ItemSpawn> get() = _itemSpawns
 
+    /**
+     * Stats of a purchasable mount, resolved from the first item selling
+     * [mountId]. Scans on call so zone hot reloads stay authoritative; the
+     * loader guarantees every item selling the same mountId agrees on these.
+     */
+    fun mountStats(mountId: String): MountStats? =
+        _itemSpawns
+            .firstOrNull { it.instance.item.mountId == mountId }
+            ?.instance
+            ?.item
+            ?.let { MountStats(speed = it.mountSpeed, flying = it.flying) }
+
     private val _zoneLifespansMinutes = zoneLifespansMinutes.toMutableMap()
     val zoneLifespansMinutes: Map<String, Long> get() = _zoneLifespansMinutes
 

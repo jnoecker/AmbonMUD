@@ -1021,6 +1021,10 @@ ambonmud:
     mountTravel:
       msPerRoom: 300
       maxPathLength: 300
+      flightMsBase: 2000
+      flightMsPerMapPercent: 80
+      flightMsMin: 2000
+      flightMsMax: 10000
     navigation:
       recall:
         cooldownMs: 60000

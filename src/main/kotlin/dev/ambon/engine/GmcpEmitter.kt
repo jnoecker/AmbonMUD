@@ -127,6 +127,8 @@ class GmcpEmitter(
     private val featureFlags: () -> ServerFeaturesPayload = { ServerFeaturesPayload() },
     private val sanctumRoomId: () -> RoomId? = { null },
     private val worldAreas: List<WorldAreaPayload> = emptyList(),
+    /** Mount stats by mount id (speed/flying), for `Travel.Status` capability flags. */
+    private val mountStats: (String) -> dev.ambon.domain.world.MountStats? = { null },
     /** Resolves a player's race so the racial passive can be folded into the spellbook. */
     private val raceRegistry: RaceRegistry? = null,
     /** Current engine time in millis, used to compute racial-ability cooldown remaining. */
@@ -2191,7 +2193,11 @@ class GmcpEmitter(
     private data class TravelStatusPayload(
         /** True when the player owns at least one mount and may click the map to ride. */
         val canTravel: Boolean,
+        /** True when the player owns a flying mount and may fly to explored rooms cross-zone. */
+        val canFly: Boolean,
         val riding: Boolean,
+        /** True while the current ride is a flight (airborne, awaiting landing). */
+        val flying: Boolean = false,
         /** Destination room id while riding, else null. */
         val destination: String? = null,
     )
@@ -2201,13 +2207,16 @@ class GmcpEmitter(
         sessionId: SessionId,
         player: PlayerState,
         destination: String? = null,
+        flying: Boolean = false,
     ) {
         emit(
             sessionId,
             "Travel.Status",
             TravelStatusPayload(
                 canTravel = player.ownedMounts.isNotEmpty(),
+                canFly = player.ownedMounts.any { mountStats(it)?.flying == true },
                 riding = player.ridingMountId != null,
+                flying = flying,
                 destination = destination,
             ),
             supportCheck = "Travel",
@@ -2812,6 +2821,8 @@ class GmcpEmitter(
                         video = item.video,
                         itemType = item.resolvedType().label(),
                         owned = item.mountId != null && item.mountId in ownedMounts,
+                        mountSpeed = if (item.mountId != null) item.mountSpeed else null,
+                        mountFlying = if (item.mountId != null) item.flying else null,
                     )
                 },
             ),
@@ -4202,6 +4213,10 @@ class GmcpEmitter(
         val itemType: String? = null,
         /** True for mount items the player has already purchased. */
         val owned: Boolean = false,
+        /** Mount items only: ride-speed multiplier over the base travel pace. */
+        val mountSpeed: Double? = null,
+        /** Mount items only: true when the mount can fly (cross-zone travel). */
+        val mountFlying: Boolean? = null,
     )
 
     // ---------- puzzle payloads ----------

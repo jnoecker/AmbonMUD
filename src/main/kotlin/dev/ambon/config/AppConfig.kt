@@ -339,6 +339,14 @@ data class AppConfig(
         engine.scheduler.maxActionsPerTick.requirePositive("ambonMUD.engine.scheduler.maxActionsPerTick")
         engine.mountTravel.msPerRoom.requirePositive("ambonMUD.engine.mountTravel.msPerRoom")
         engine.mountTravel.maxPathLength.requirePositive("ambonMUD.engine.mountTravel.maxPathLength")
+        engine.mountTravel.flightMsBase.requirePositive("ambonMUD.engine.mountTravel.flightMsBase")
+        require(engine.mountTravel.flightMsPerMapPercent >= 0) {
+            "ambonMUD.engine.mountTravel.flightMsPerMapPercent must be >= 0"
+        }
+        engine.mountTravel.flightMsMin.requirePositive("ambonMUD.engine.mountTravel.flightMsMin")
+        require(engine.mountTravel.flightMsMax >= engine.mountTravel.flightMsMin) {
+            "ambonMUD.engine.mountTravel.flightMsMax must be >= flightMsMin"
+        }
     }
 
     private fun validateEngineGroup() {
@@ -2159,15 +2167,30 @@ data class FlightMessagesConfig(
  * Tuning for mount fast travel — owning any shop-bought mount lets a player click an explored
  * room on the zone map (or use `travel <room-id>`) to auto-ride the shortest known path there.
  * The ride is free but not instant: the engine walks the path one room per [msPerRoom]
- * milliseconds. Routing is restricted to rooms the player has explored, the path stays inside
- * the current zone (the destination itself may sit one exit-hop into an adjacent zone), and
- * combat cancels the ride.
+ * milliseconds, divided by the mount's authored speed multiplier. Routing is restricted to
+ * rooms the player has explored, the path stays inside the current zone (the destination
+ * itself may sit one exit-hop into an adjacent zone), and combat cancels the ride.
+ *
+ * Flying mounts (items authored with `flying: true`) additionally unlock *flight*: when no
+ * known ground path reaches an explored destination — typically a room in another zone picked
+ * from the world map atlas — the rider takes off and lands there after an airborne delay of
+ * [flightMsBase] plus [flightMsPerMapPercent] per percentage point of distance between the two
+ * zones' world-map placements, clamped to [flightMsMin]..[flightMsMax]. Zones without a
+ * world-map placement fly at the midpoint fallback of that range.
  */
 data class MountTravelConfig(
-    /** Milliseconds spent riding through each room along the path. */
+    /** Milliseconds spent riding through each room along the path (at speed 1.0). */
     val msPerRoom: Long = 300L,
     /** Safety cap on path length (rooms); longer routes are refused. */
     val maxPathLength: Int = 300,
+    /** Base airborne milliseconds for any flight. */
+    val flightMsBase: Long = 2000L,
+    /** Additional airborne ms per percent of world-map distance between zone centres. */
+    val flightMsPerMapPercent: Long = 80L,
+    /** Lower clamp on total airborne time. */
+    val flightMsMin: Long = 2000L,
+    /** Upper clamp on total airborne time. */
+    val flightMsMax: Long = 10000L,
     val messages: MountTravelMessagesConfig = MountTravelMessagesConfig(),
 )
 
@@ -2178,11 +2201,18 @@ data class MountTravelMessagesConfig(
     val alreadyHere: String = "You're already there.",
     val notExplored: String = "You haven't explored that place yet.",
     val noPath: String = "You can't find a route you know to ride there.",
+    val noFlyingMount: String = "Only a flying mount could carry you there.",
     val mountUp: String = "You swing onto {mount} and ride for {dest}...",
     val arrival: String = "You arrive at {dest} and dismount.",
     val combatInterrupted: String = "Your ride is cut short — you're dragged into battle!",
     val mountUpNotice: String = "mounts up and rides off.",
     val arriveNotice: String = "rides in and dismounts.",
+    val takeOff: String = "You swing onto {mount} and take to the skies, bound for {dest}...",
+    val departNotice: String = "soars away into the distance.",
+    val landing: String = "{mount} descends and you alight at {dest}.",
+    val flightInterrupted: String = "Your flight is cut short — you're dragged back to the ground!",
+    val takeOffNotice: String = "mounts up and soars into the sky.",
+    val landNotice: String = "descends from the sky and dismounts.",
 )
 
 /**
