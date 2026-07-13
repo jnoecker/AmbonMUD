@@ -1108,6 +1108,11 @@ ambonmud:
           description: "List known areas. With one level, shows areas covering that level; with two, shows areas overlapping the range."
           category: "navigation"
           staff: false
+        map:
+          usage: "map [<zone>] (alias: chart)"
+          description: "Unfurl a zone's charts: a one-line summary, plus the zone map in the web client with your own exploration fog. Without a zone, re-sends your current zone's map."
+          category: "navigation"
+          staff: false
         say:
           usage: "say <msg> or '<msg>"
           description: "Speak to the room"

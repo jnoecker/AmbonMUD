@@ -10159,6 +10159,50 @@ body {
 
 /* Exploration header — ink-on-parchment strip above the chart: zone completion
    on the left, a glyph legend on the right. */
+/* Chart-preview banner: shown while the Local Map displays another realm's
+   charts (World Map ledger → View charts). Solid parchment so it reads over
+   the painted sheet. */
+.map-preview-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin: 2px 44px 0;
+  padding: 4px 12px;
+  background: rgb(240 226 196 / 94%);
+  border: 1px solid rgb(90 60 30 / 50%);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #4a3014;
+  box-shadow: 0 2px 8px rgb(20 14 8 / 30%);
+}
+
+.map-preview-label strong {
+  font-family: var(--font-display);
+  color: #2e2212;
+}
+
+.map-preview-return {
+  appearance: none;
+  border: 1px solid rgb(90 60 30 / 55%);
+  background: rgb(255 250 236 / 80%);
+  color: #4a3014;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.map-preview-return:hover,
+.map-preview-return:focus-visible {
+  background: rgb(255 250 236);
+  border-color: #8a6a2e;
+}
+
 .map-stats-bar {
   display: flex;
   align-items: center;
@@ -10484,38 +10528,62 @@ body {
   overflow: hidden;
 }
 
-.world-map-frame {
+/* Framed stage holding the scrolling viewport plus overlay chrome (zoom
+   cluster, empty-state note) that must not move while the map pans. */
+.world-map-stage {
   position: relative;
-  flex: 0 1 auto;
-  width: fit-content;
-  max-width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: calc(100vh - 230px);
+  max-width: 900px;
   border: 1px solid rgb(90 60 30 / 45%);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: inset 0 0 24px rgb(60 40 20 / 18%);
 }
 
-/* Painted-art path: the frame hugs the image so zone-region percentages track
-   the art exactly. The viewport cap (drawer minus its chrome) lets portrait
-   art fill the drawer's full height. */
+/* Pannable, zoomable viewport. Panning is native scroll (drag adjusts
+   scrollLeft/Top); the canvas inside is laid out at fit-size × zoom, so zone
+   regions genuinely grow and their container-query tags re-evaluate. */
+.world-map-viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.world-map-viewport:active {
+  cursor: grabbing;
+}
+
+/* margin:auto (not justify-content) centres the canvas while it's smaller
+   than the viewport WITHOUT clipping the leading edge once it overflows. */
+.world-map-canvas {
+  position: relative;
+  flex: 0 0 auto;
+  margin: auto;
+}
+
 .world-map-art {
   display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: calc(100vh - 230px);
+  width: 100%;
+  height: 100%;
   user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* No art (null/404): an inked-parchment stand-in keeps regions usable. */
-.world-map-frame-fallback {
-  height: calc(100vh - 230px);
-  max-width: 100%;
-  aspect-ratio: 3 / 4;
+.world-map-canvas-fallback {
   background:
     radial-gradient(ellipse at 30% 25%, rgb(255 250 236 / 55%), transparent 60%),
     radial-gradient(ellipse at 75% 70%, rgb(214 186 140 / 45%), transparent 55%),
     linear-gradient(160deg, #e6d8b8, #d8c49a);
+}
+
+/* Pin the zoom cluster to the viewport (not the scrolling canvas). */
+.world-map-zoom-controls {
+  position: absolute;
 }
 
 .world-map-side {
@@ -10744,6 +10812,7 @@ body {
 }
 
 .world-map-chip {
+  appearance: none;
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
@@ -10751,13 +10820,44 @@ body {
   border-radius: 999px;
   background: rgb(255 250 236 / 60%);
   border: 1px solid rgb(90 60 30 / 40%);
+  font: inherit;
   font-size: 0.76rem;
   color: #3a2c1a;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.world-map-chip:hover,
+.world-map-chip:focus-visible {
+  background: rgb(255 250 236 / 90%);
+  border-color: #8a6a2e;
 }
 
 .world-map-chip-here {
   border-color: #8a6a2e;
   box-shadow: 0 0 6px rgb(138 106 46 / 40%);
+}
+
+/* "Unfurl this realm's charts" — the ledger's primary action. */
+.world-map-view-charts {
+  appearance: none;
+  margin-top: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgb(90 60 30 / 55%);
+  background: rgb(255 250 236 / 80%);
+  color: #4a3014;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.world-map-view-charts:hover,
+.world-map-view-charts:focus-visible {
+  background: rgb(255 250 236);
+  border-color: #8a6a2e;
 }
 
 .world-map-chip-level {
@@ -10782,13 +10882,9 @@ body {
     overflow-y: auto;
   }
 
-  .world-map-art,
-  .world-map-frame-fallback {
-    max-height: 56vh;
-    height: auto;
-  }
-
-  .world-map-frame-fallback {
+  .world-map-stage {
+    flex: 0 0 auto;
+    width: 100%;
     height: 56vh;
   }
 

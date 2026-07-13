@@ -351,6 +351,7 @@ function renderMap(
   serverAssets: Record<string, string>,
   view: View,
   drawGlyph: (ctx: CanvasRenderingContext2D, key: string, cx: number, cy: number, size: number, alpha: number) => boolean,
+  chartMode = false,
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -370,11 +371,13 @@ function renderMap(
   // the scroll reads as one continuous surface behind toolbar and map alike.
   ctx.clearRect(0, 0, width, height);
 
-  if (!currentId) return;
+  // Chart previews have no current room — the player is elsewhere — but the
+  // borrowed chart still draws.
+  if (!currentId && !chartMode) return;
 
   // One floor at a time, following the player. Rooms on other floors stay off
   // the chart; stairs between floors render as ▲/▼ badges instead of edges.
-  const floor = visited.get(currentId)?.z ?? 0;
+  const floor = (currentId ? visited.get(currentId)?.z : 0) ?? 0;
   let multiFloor = false;
   for (const node of visited.values()) {
     if (node.z !== floor) {
@@ -414,8 +417,15 @@ function renderMap(
   ctx.clip();
 
   // Fog of war: hidden rooms (neither explored nor on the one-hop frontier)
-  // draw nothing — no node, no edge, no marker.
+  // draw nothing — no node, no edge, no marker. Chart previews (`map <zone>`)
+  // instead sketch the whole zone in fog ink — that's the point of unfurling a
+  // chart — while explored rooms keep their earned detail.
   const { explored, frontier } = computeVisibility(visited);
+  if (chartMode) {
+    for (const id of visited.keys()) {
+      if (!explored.has(id)) frontier.add(id);
+    }
+  }
   const isRendered = (id: string) => explored.has(id) || frontier.has(id);
 
   // Connecting lines — drawn outward from *explored* rooms only, so the chart
@@ -633,8 +643,10 @@ function renderMap(
   // so the ink reads on open parchment (the zoom cluster owns the bottom-right).
   drawCompassRose(ctx, scrollLeft + 104, scrollBottom - 100, 24);
 
-  // Zone name tag — top-left, derived from the current room id (`<zone>:<room>`).
-  const zoneId = currentId.split(":")[0];
+  // Zone name tag — top-left, derived from the current room id (`<zone>:<room>`),
+  // or — chart previews, where the player is elsewhere — from the first charted
+  // room (zone rooms precede border stubs in insertion order).
+  const zoneId = (currentId ?? visited.keys().next().value ?? "").split(":")[0];
   if (zoneId) {
     const label = formatZoneName(zoneId);
     ctx.font = "bold 13px 'JetBrains Mono', 'Cascadia Mono', monospace";
@@ -713,6 +725,11 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
   }, [onRoomClick]);
   const visitedRef = useRef<Map<string, MapRoom>>(new Map());
   const currentRoomIdRef = useRef<string | null>(null);
+  /** Zone of the last full `Zone.Map` load — what the graph currently shows. */
+  const loadedZoneRef = useRef<string | null>(null);
+  /** Chart-preview mode: draw the whole loaded zone in fog ink, not just the
+   *  explored-plus-frontier reveal. Toggled by the zone chart preview flow. */
+  const chartModeRef = useRef(false);
   // Glyph textures keyed by asset key (loaded once; global, not per-zone).
   const glyphCacheRef = useRef<Map<string, GlyphEntry>>(new Map());
   const pulseRafRef = useRef<number | null>(null);
@@ -756,6 +773,11 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
     // chart, so an unexplored zone doesn't open zoomed out onto empty parchment.
     const floor = current?.z ?? 0;
     const { explored: exploredIds, frontier: frontierIds } = computeVisibility(visited);
+    if (chartModeRef.current) {
+      for (const id of visited.keys()) {
+        if (!exploredIds.has(id)) frontierIds.add(id);
+      }
+    }
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
@@ -811,7 +833,9 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
       floor,
     };
     visibilityRef.current = { explored: exploredIds, frontier: frontierIds };
-    const zoneId = currentRoomIdRef.current?.split(":")[0] ?? "";
+    // Chart previews load a foreign zone's graph with no current room; fall
+    // back to the last-loaded zone so the stats bar names what's on screen.
+    const zoneId = currentRoomIdRef.current?.split(":")[0] ?? loadedZoneRef.current ?? "";
     if (zoneId) {
       let totalRooms = 0;
       let multiFloor = false;
@@ -879,6 +903,7 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
       assets,
       { cell: zoomRef.current, panGx: panRef.current.gx, panGy: panRef.current.gy },
       drawGlyph,
+      chartModeRef.current,
     );
   }, []);
 
@@ -1073,6 +1098,7 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
       const map = visitedRef.current;
       map.clear();
       currentRoomIdRef.current = null;
+      loadedZoneRef.current = zone;
       // New zone — reset the view so it re-centres at the default zoom.
       userAdjustedRef.current = false;
       panRef.current = null;
@@ -1104,6 +1130,15 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
       canvasCallbacks.loadZoneMap?.(zone, rooms, border);
     },
     [drawMap, clearHover],
+  );
+
+  const setChartMode = useCallback(
+    (on: boolean) => {
+      if (chartModeRef.current === on) return;
+      chartModeRef.current = on;
+      drawMap();
+    },
+    [drawMap],
   );
 
   const resetMap = useCallback(() => {
@@ -1143,6 +1178,7 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
     drawMap,
     updateMap,
     loadZoneMap,
+    setChartMode,
     resetMap,
     startPulse,
     stopPulse,

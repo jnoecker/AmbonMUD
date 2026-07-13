@@ -2359,6 +2359,12 @@ data class CommandsConfig(
                     "with two, shows areas overlapping the range.",
                 category = "navigation",
             ),
+            "map" to CommandMetadata(
+                usage = "map [<zone>] (alias: chart)",
+                description = "Unfurl a zone's charts: a one-line summary, plus the zone map in the " +
+                    "web client with your own exploration fog. Without a zone, re-sends your current zone's map.",
+                category = "navigation",
+            ),
             "say" to CommandMetadata("say <msg> or '<msg>", "Speak to the room", "communication", requiresTarget = true),
             "emote" to CommandMetadata("emote <msg>", "Perform an emote", "communication", requiresTarget = true),
             "pose" to CommandMetadata("pose <msg>", "Strike a pose", "communication", requiresTarget = true),
