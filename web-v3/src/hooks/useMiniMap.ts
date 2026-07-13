@@ -713,6 +713,8 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
   }, [onRoomClick]);
   const visitedRef = useRef<Map<string, MapRoom>>(new Map());
   const currentRoomIdRef = useRef<string | null>(null);
+  /** Zone of the last full `Zone.Map` load — what the graph currently shows. */
+  const loadedZoneRef = useRef<string | null>(null);
   // Glyph textures keyed by asset key (loaded once; global, not per-zone).
   const glyphCacheRef = useRef<Map<string, GlyphEntry>>(new Map());
   const pulseRafRef = useRef<number | null>(null);
@@ -811,7 +813,9 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
       floor,
     };
     visibilityRef.current = { explored: exploredIds, frontier: frontierIds };
-    const zoneId = currentRoomIdRef.current?.split(":")[0] ?? "";
+    // Chart previews load a foreign zone's graph with no current room; fall
+    // back to the last-loaded zone so the stats bar names what's on screen.
+    const zoneId = currentRoomIdRef.current?.split(":")[0] ?? loadedZoneRef.current ?? "";
     if (zoneId) {
       let totalRooms = 0;
       let multiFloor = false;
@@ -1073,6 +1077,7 @@ export function useMiniMap(onRoomClick?: (info: MapHoverInfo) => void) {
       const map = visitedRef.current;
       map.clear();
       currentRoomIdRef.current = null;
+      loadedZoneRef.current = zone;
       // New zone — reset the view so it re-centres at the default zoom.
       userAdjustedRef.current = false;
       panRef.current = null;

@@ -1010,6 +1010,16 @@ function App() {
     const colon = id.indexOf(":");
     return colon > 0 ? id.slice(0, colon) : null;
   }, [state.room.id]);
+
+  // World Map ledger → preview another realm's chart on the Local Map tab.
+  // Your own zone needs no round trip; just switch tabs.
+  const handleViewCharts = (zone: string) => {
+    if (zone !== currentZone) {
+      state.beginChartPreview(zone);
+      sendCommand(`map ${zone}`);
+    }
+    setMapTab("map");
+  };
   if (state.activePopout !== prevActivePopout) {
     setPrevActivePopout(state.activePopout);
     if (state.activePopout !== null) {
@@ -1776,6 +1786,20 @@ function App() {
                 </button>
               )}
             </div>
+            {mapTab === "map" && state.mapPreviewZone && (
+              <div className="map-preview-banner" role="status">
+                <span className="map-preview-label">
+                  Viewing the charts of <strong>{formatZoneName(state.mapPreviewZone)}</strong>
+                </span>
+                <button
+                  type="button"
+                  className="map-preview-return"
+                  onClick={() => state.endChartPreview()}
+                >
+                  ⌖ Back to {currentZone ? formatZoneName(currentZone) : "your realm"}
+                </button>
+              </div>
+            )}
             {mapTab === "map" && mapZoneStats && (
               <div className="map-stats-bar" role="status">
                 <span className="map-stats-explored">
@@ -1864,6 +1888,7 @@ function App() {
               <WorldMap
                 areas={state.worldAreas}
                 currentZone={currentZone}
+                onViewCharts={handleViewCharts}
                 serverAssets={state.serverAssets}
               />
             )}

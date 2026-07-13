@@ -231,6 +231,71 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   // inside a React updater — and clear room-scoped state in packet order.
   const lastRoomIdRef = useRef<string | null>(null);
 
+  // ── Zone chart preview (World Map → `map <zone>`) ─
+  // A requested foreign-zone chart temporarily replaces the Local Map graph.
+  // The player's own chart is stashed so backing out is local (no round trip),
+  // and any movement ends the preview so the step lands in the right graph.
+  const [mapPreviewZone, setMapPreviewZone] = useState<string | null>(null);
+  const mapPreviewZoneRef = useRef<string | null>(null);
+  const pendingChartPreviewRef = useRef<string | null>(null);
+  const ownZoneChartRef = useRef<Parameters<MiniMapBridge["loadZoneMap"]> | null>(null);
+  const lastMapUpdateRef = useRef<Parameters<MiniMapBridge["updateMap"]> | null>(null);
+
+  /** Arm the next incoming `Zone.Map` for [zone] to display as a preview. */
+  const beginChartPreview = useCallback((zone: string) => {
+    pendingChartPreviewRef.current = zone;
+  }, []);
+
+  /** Restore the player's own zone chart and clear the preview banner. */
+  const endChartPreview = useCallback(() => {
+    if (!mapPreviewZoneRef.current) return;
+    mapPreviewZoneRef.current = null;
+    setMapPreviewZone(null);
+    const own = ownZoneChartRef.current;
+    if (own) {
+      loadZoneMap(...own);
+      // loadZoneMap clears the current-room marker; replay the last room
+      // update so "you" reappears without waiting for the next Room.Info.
+      const last = lastMapUpdateRef.current;
+      if (last) updateMap(...last);
+    }
+  }, [loadZoneMap, updateMap]);
+
+  const routedUpdateMap = useCallback<MiniMapBridge["updateMap"]>(
+    (...args) => {
+      lastMapUpdateRef.current = args;
+      if (mapPreviewZoneRef.current) {
+        // Any room refresh ends a chart preview; endChartPreview replays the
+        // update just recorded above into the restored own-zone graph.
+        endChartPreview();
+        return;
+      }
+      updateMap(...args);
+    },
+    [updateMap, endChartPreview],
+  );
+
+  const routedLoadZoneMap = useCallback<MiniMapBridge["loadZoneMap"]>(
+    (zone, rooms, border) => {
+      if (pendingChartPreviewRef.current === zone) {
+        pendingChartPreviewRef.current = null;
+        mapPreviewZoneRef.current = zone;
+        setMapPreviewZone(zone);
+        loadZoneMap(zone, rooms, border);
+        return;
+      }
+      // The player's own chart (zone entry, or `map` with no argument): stash
+      // it for local preview back-out, and end any preview in progress.
+      ownZoneChartRef.current = [zone, rooms, border];
+      if (mapPreviewZoneRef.current) {
+        mapPreviewZoneRef.current = null;
+        setMapPreviewZone(null);
+      }
+      loadZoneMap(zone, rooms, border);
+    },
+    [loadZoneMap],
+  );
+
   // ── Combat ────────────────────────────────────────
   const [effects, setEffects] = useState<StatusEffect[]>([]);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
@@ -690,8 +755,8 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         setFriends,
         pushFriendNotification,
         setChatByChannel,
-        updateMap,
-        loadZoneMap,
+        updateMap: routedUpdateMap,
+        loadZoneMap: routedLoadZoneMap,
         pushCombatEvent,
         setCharStats,
         setQuests,
@@ -786,7 +851,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         sendGmcp: (p: string, payload: unknown) => { sendGmcpRef.current(p, payload); return true; },
       });
     },
-    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushLevelUp, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, pushArcanumSketch, updateMap, loadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef, clearRoomScopedState],
+    [applyCurrencies, applyFactions, pushFriendNotification, pushCombatEvent, pushGainEvent, pushLevelUp, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, pushArcanumSketch, routedUpdateMap, routedLoadZoneMap, resumeTokenRef, pendingAuthCharRef, sendGmcpRef, clearRoomScopedState],
   );
 
   // ── Reset all HUD state on disconnect ─────────────
@@ -934,6 +999,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     loginPrompt, loginError, reconnecting, setReconnecting, savedCharacters, setSavedCharacters,
     // Staff / meta
     serverAssets, serverCommands, worldAreas, emotePresets, serverFeatures, staffWorldInfo, staffMobTemplates,
+    mapPreviewZone, beginChartPreview, endChartPreview,
     lookTarget, setLookTarget, considerResult, setConsiderResult, spriteList,
     // UI
     activePopout, setActivePopout, broadcast, setBroadcast, possessing, toast, setToast, uiFeedbackFeed,
