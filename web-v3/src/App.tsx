@@ -264,13 +264,14 @@ function App() {
     zoomIn: mapZoomIn,
     zoomOut: mapZoomOut,
     recenter: mapRecenter,
+    setChartMode,
     zoneStats: mapZoneStats,
     hoverInfo: mapHoverInfo,
   } = useMiniMap((info) => mapRoomClickRef.current(info));
 
   const state = useGameState(
     { resumeTokenRef, pendingAuthCharRef, sendGmcpRef },
-    { updateMap, loadZoneMap, resetMap },
+    { updateMap, loadZoneMap, resetMap, setChartMode },
   );
   const audio = useAudioEngine();
   // Player abilities feed the quickbar and spellbook. Pet skills get their own auto-populated

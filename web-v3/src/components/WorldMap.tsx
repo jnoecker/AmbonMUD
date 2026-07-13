@@ -184,7 +184,11 @@ export function WorldMap({ areas, currentZone, serverAssets, onViewCharts }: Wor
     if (!drag.dragged && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
     if (!drag.dragged) {
       drag.dragged = true;
-      vp.setPointerCapture(drag.pointerId);
+      try {
+        vp.setPointerCapture(drag.pointerId);
+      } catch {
+        // Pointer already gone (or synthetic); the drag still tracks moves.
+      }
     }
     vp.scrollLeft = drag.scrollLeft - dx;
     vp.scrollTop = drag.scrollTop - dy;
@@ -192,10 +196,16 @@ export function WorldMap({ areas, currentZone, serverAssets, onViewCharts }: Wor
 
   const onPointerEnd = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
-    if (drag && e.pointerId === drag.pointerId && !drag.dragged) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    if (!drag.dragged) {
       dragRef.current = null;
+      return;
     }
-    // A completed drag stays in the ref until click-capture consumes it.
+    // The click that ends a real drag fires right after pointerup; clear on
+    // the next tick so a drag released without one can't eat a later click.
+    setTimeout(() => {
+      if (dragRef.current === drag) dragRef.current = null;
+    }, 0);
   }, []);
 
   const onClickCapture = useCallback((e: React.MouseEvent<HTMLDivElement>) => {

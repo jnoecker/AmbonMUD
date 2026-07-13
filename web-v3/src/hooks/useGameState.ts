@@ -202,6 +202,8 @@ export interface MiniMapBridge {
   ) => void;
   loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; z: number; exits: Record<string, string> }>, border: BorderStub[]) => void;
   resetMap: () => void;
+  /** Toggle chart-preview rendering: sketch the whole loaded zone in fog ink. */
+  setChartMode: (on: boolean) => void;
 }
 
 export interface AuthRefs {
@@ -212,7 +214,7 @@ export interface AuthRefs {
 
 export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
   const { resumeTokenRef, pendingAuthCharRef, sendGmcpRef } = authRefs;
-  const { updateMap, loadZoneMap, resetMap } = miniMap;
+  const { updateMap, loadZoneMap, resetMap, setChartMode } = miniMap;
   // ── Core identity ─────────────────────────────────
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
   const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
@@ -251,6 +253,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
     if (!mapPreviewZoneRef.current) return;
     mapPreviewZoneRef.current = null;
     setMapPreviewZone(null);
+    setChartMode(false);
     const own = ownZoneChartRef.current;
     if (own) {
       loadZoneMap(...own);
@@ -259,7 +262,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
       const last = lastMapUpdateRef.current;
       if (last) updateMap(...last);
     }
-  }, [loadZoneMap, updateMap]);
+  }, [loadZoneMap, updateMap, setChartMode]);
 
   const routedUpdateMap = useCallback<MiniMapBridge["updateMap"]>(
     (...args) => {
@@ -281,6 +284,7 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         pendingChartPreviewRef.current = null;
         mapPreviewZoneRef.current = zone;
         setMapPreviewZone(zone);
+        setChartMode(true);
         loadZoneMap(zone, rooms, border);
         return;
       }
@@ -291,9 +295,10 @@ export function useGameState(authRefs: AuthRefs, miniMap: MiniMapBridge) {
         mapPreviewZoneRef.current = null;
         setMapPreviewZone(null);
       }
+      setChartMode(false);
       loadZoneMap(zone, rooms, border);
     },
-    [loadZoneMap],
+    [loadZoneMap, setChartMode],
   );
 
   // ── Combat ────────────────────────────────────────
