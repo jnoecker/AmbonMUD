@@ -54,6 +54,16 @@ data class Item(
      * stored in the player's owned-mounts set.
      */
     val mountId: String? = null,
+    /**
+     * For [ItemType.MOUNT] items: ride-speed multiplier applied to the base
+     * travel pace (1.0 = base, 2.0 = twice as fast). Meaningless otherwise.
+     */
+    val mountSpeed: Double = 1.0,
+    /**
+     * For [ItemType.MOUNT] items: true when the mount can fly, unlocking
+     * cross-zone travel to any explored room. Meaningless otherwise.
+     */
+    val flying: Boolean = false,
 ) {
     /**
      * Effective item type for categorization. Uses [itemType] when set,

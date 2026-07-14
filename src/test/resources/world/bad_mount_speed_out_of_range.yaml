@@ -1,0 +1,14 @@
+zone: bad_mount_speed_out_of_range
+startRoom: stable
+items:
+  pony:
+    displayName: "a dappled pony"
+    keyword: "pony"
+    itemType: mount
+    mountId: dappled_pony
+    mountSpeed: 0.0
+    basePrice: 100
+rooms:
+  stable:
+    title: "Stable"
+    description: "A stable."

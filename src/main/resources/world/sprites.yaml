@@ -15,3 +15,12 @@ sprites:
       - type: mount
         mountId: academy_pony
     image: player_sprites/mount_academy_pony.png
+  academy_gryphon:
+    displayName: Stormfeather Gryphon
+    description: A storm-grey gryphon from the Academy aviary. Rides at twice the pace — and flies you to explored
+      rooms in any realm from the world map.
+    category: mount
+    requirements:
+      - type: mount
+        mountId: academy_gryphon
+    image: player_sprites/mount_academy_gryphon.png

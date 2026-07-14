@@ -389,18 +389,6 @@ function App() {
     resetComposerTraversal();
   };
 
-  // Map click-to-ride: owning a mount lets any explored, non-current room on the
-  // zone chart (including border stubs into adjacent zones) be a travel target.
-  // The server re-validates everything; this just gates the obvious no-ops.
-  useEffect(() => {
-    mapRoomClickRef.current = (info: MapHoverInfo) => {
-      if (!state.travelStatus?.canTravel) return;
-      if (info.id === state.room.id) return;
-      if (!info.explored && !info.zone) return; // fog-of-war frontier: nothing to ride to
-      sendCommand(`travel ${info.id}`);
-    };
-  });
-
   // Close the map drawer when a ride actually starts (Travel.Status flips to
   // riding), so the journey plays out on the main canvas. Keyed on the riding
   // transition — not the click — so a rejected request leaves the map open,
@@ -1011,6 +999,32 @@ function App() {
     const colon = id.indexOf(":");
     return colon > 0 ? id.slice(0, colon) : null;
   }, [state.room.id]);
+
+  // Map click-to-ride/fly: owning a mount lets any explored, non-current room on
+  // the zone chart (including border stubs into adjacent zones) be a travel
+  // target; a flying mount extends that to explored rooms on a previewed
+  // foreign-zone chart (World Map → unfurl charts). The server re-validates
+  // everything; this just gates the obvious no-ops and picks the hint verb.
+  const travelModeFor = (info: MapHoverInfo): "ride" | "fly" | null => {
+    const travel = state.travelStatus;
+    if (!travel?.canTravel) return null;
+    if (info.id === state.room.id) return null;
+    if (state.mapPreviewZone != null && state.mapPreviewZone !== currentZone) {
+      // Foreign charts have no rideable border stubs — explored rooms only,
+      // and reaching them takes wings.
+      return travel.canFly && info.explored ? "fly" : null;
+    }
+    if (!info.explored && !info.zone) return null; // fog-of-war frontier: nothing to ride to
+    return "ride";
+  };
+  const mapHoverTravelMode = mapHoverInfo ? travelModeFor(mapHoverInfo) : null;
+
+  useEffect(() => {
+    mapRoomClickRef.current = (info: MapHoverInfo) => {
+      if (travelModeFor(info) == null) return;
+      sendCommand(`travel ${info.id}`);
+    };
+  });
 
   // World Map ledger → preview another realm's chart on the Local Map tab.
   // Your own zone needs no round trip; just switch tabs.
@@ -1791,6 +1805,9 @@ function App() {
               <div className="map-preview-banner" role="status">
                 <span className="map-preview-label">
                   Viewing the charts of <strong>{formatZoneName(state.mapPreviewZone)}</strong>
+                  {state.travelStatus?.canFly && state.mapPreviewZone !== currentZone && (
+                    <span className="map-preview-fly-hint"> — click an explored room to fly there</span>
+                  )}
                 </span>
                 <button
                   type="button"
@@ -1830,12 +1847,7 @@ function App() {
                 height={760}
                 role="img"
                 style={{
-                  cursor: state.travelStatus?.canTravel &&
-                    mapHoverInfo &&
-                    mapHoverInfo.id !== state.room.id &&
-                    (mapHoverInfo.explored || mapHoverInfo.zone)
-                    ? "pointer"
-                    : undefined,
+                  cursor: mapHoverTravelMode != null ? "pointer" : undefined,
                 }}
                 onPointerDown={onMapPointerDown}
                 onPointerMove={onMapPointerMove}
@@ -1872,10 +1884,11 @@ function App() {
                   ) : (
                     <span className="map-tooltip-title map-tooltip-unknown">Unexplored</span>
                   )}
-                  {state.travelStatus?.canTravel &&
-                    mapHoverInfo.id !== state.room.id &&
-                    (mapHoverInfo.explored || mapHoverInfo.zone) && (
+                  {mapHoverTravelMode === "ride" && (
                     <span className="map-tooltip-ride">🐎 Click to ride here</span>
+                  )}
+                  {mapHoverTravelMode === "fly" && (
+                    <span className="map-tooltip-ride">🦅 Click to fly here</span>
                   )}
                 </div>
               )}
@@ -1891,6 +1904,7 @@ function App() {
                 currentZone={currentZone}
                 onViewCharts={handleViewCharts}
                 serverAssets={state.serverAssets}
+                canFly={state.travelStatus?.canFly === true}
               />
             )}
             {mapTab === "atlas" && (

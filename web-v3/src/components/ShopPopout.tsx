@@ -147,6 +147,20 @@ export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSell
                           {item.consumable && item.slot && (
                             <span className="shop-stat-slot">consumable</span>
                           )}
+                          {item.mountSpeed != null && (
+                            <span className="shop-stat-slot" title="Ride speed over the base travel pace">
+                              🐎 {item.mountSpeed}× speed
+                            </span>
+                          )}
+                          {item.mountFlying === true && (
+                            <span
+                              className="shop-stat-slot"
+                              title="Can fly — travel to explored rooms in any realm from the world map"
+                            >
+                              🦅 flying
+                            </span>
+                          )}
+                          {item.owned && <span className="shop-stat-slot">owned</span>}
                         </div>
                       </div>
                     </div>
@@ -157,10 +171,10 @@ export function ShopPopout({ shop, inventory, equipment, gold, onBuyItem, onSell
                       <button
                         type="button"
                         className="soft-button shop-popout-buy-btn"
-                        disabled={!canAfford}
+                        disabled={!canAfford || item.owned}
                         onClick={(e) => { e.stopPropagation(); onBuyItem(item.keyword); }}
                       >
-                        Buy
+                        {item.owned ? "Owned" : "Buy"}
                       </button>
                     </div>
                   </div>

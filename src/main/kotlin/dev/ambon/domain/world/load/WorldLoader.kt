@@ -595,6 +595,17 @@ object WorldLoader {
                 if (itemType != ItemType.MOUNT && mountId != null) {
                     throw WorldLoadException("Item '${itemId.value}' sets mountId but itemType is not 'mount'")
                 }
+                if (itemType != ItemType.MOUNT && (itemFile.mountSpeed != null || itemFile.flying != null)) {
+                    throw WorldLoadException(
+                        "Item '${itemId.value}' sets mountSpeed/flying but itemType is not 'mount'",
+                    )
+                }
+                val mountSpeed = itemFile.mountSpeed ?: 1.0
+                if (!mountSpeed.isFinite() || mountSpeed <= 0.0 || mountSpeed > 10.0) {
+                    throw WorldLoadException(
+                        "Item '${itemId.value}' mountSpeed must be in (0, 10] (got ${itemFile.mountSpeed})",
+                    )
+                }
 
                 val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
                 val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
@@ -648,6 +659,8 @@ object WorldLoader {
                                         questItem = itemFile.questItem,
                                         takeable = itemFile.takeable,
                                         mountId = mountId,
+                                        mountSpeed = mountSpeed,
+                                        flying = itemFile.flying ?: false,
                                     ),
                             ),
                         roomId = roomId,
@@ -1087,6 +1100,21 @@ object WorldLoader {
             if (roomId != null && !mergedRooms.containsKey(roomId)) {
                 throw WorldLoadException(
                     "Item '${itemId.value}' starts in missing room '${roomId.value}'",
+                )
+            }
+        }
+
+        // Mount stats must agree wherever the same mountId is sold: a player owns the
+        // mountId, not the item, so conflicting speed/flying values would be ambiguous.
+        val mountStatsById = HashMap<String, Pair<ItemId, Item>>()
+        for ((itemId, spawn) in mergedItems) {
+            val item = spawn.instance.item
+            val id = item.mountId ?: continue
+            val prior = mountStatsById.putIfAbsent(id, itemId to item)
+            if (prior != null && (prior.second.mountSpeed != item.mountSpeed || prior.second.flying != item.flying)) {
+                throw WorldLoadException(
+                    "Items '${prior.first.value}' and '${itemId.value}' both sell mount '$id' " +
+                        "but disagree on mountSpeed/flying",
                 )
             }
         }

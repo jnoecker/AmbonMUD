@@ -1761,7 +1761,19 @@ items:
       by clicking the zone map.
     itemType: mount
     mountId: academy_pony
+    mountSpeed: 1.0
     basePrice: 250
+  academy_gryphon:
+    displayName: a stormfeather gryphon
+    keyword: gryphon
+    description: A proud gryphon fledged in the Academy's high aviary, storm-grey feathers still crackling faintly. She
+      rides twice as fast as any pony — and she flies. Open the world map, unfurl the charts of any realm you've
+      visited, and click an explored room to soar there.
+    itemType: mount
+    mountId: academy_gryphon
+    mountSpeed: 2.0
+    flying: true
+    basePrice: 2500
 shops:
   academy_supply:
     name: Academy Armory Supplies
@@ -1775,6 +1787,7 @@ shops:
       - hearty_ration
       - elixir_of_clarity
       - academy_pony
+      - academy_gryphon
     image: a4ef3072c160a20d53e319f67d8d03498e889e391dd51d563525b82ec2383008.jpg
 trainers:
   valence_trainer:

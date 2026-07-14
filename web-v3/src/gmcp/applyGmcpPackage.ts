@@ -1582,6 +1582,9 @@ export function applyGmcpPackage(
               consumable: e.consumable === true,
               image: typeof e.image === "string" ? e.image : null,
               video: typeof e.video === "string" ? e.video : null,
+              owned: e.owned === true,
+              mountSpeed: typeof e.mountSpeed === "number" ? e.mountSpeed : null,
+              mountFlying: typeof e.mountFlying === "boolean" ? e.mountFlying : null,
             }))
         : [];
       ctx.setShop({ name, sellMultiplier, items });
@@ -2088,7 +2091,9 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       ctx.setTravelStatus({
         canTravel: packet.canTravel === true,
+        canFly: packet.canFly === true,
         riding: packet.riding === true,
+        flying: packet.flying === true,
         destination: typeof packet.destination === "string" ? packet.destination : null,
       });
       break;

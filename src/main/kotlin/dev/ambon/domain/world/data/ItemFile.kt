@@ -36,6 +36,16 @@ data class ItemFile(
      */
     val mountId: String? = null,
     /**
+     * Ride-speed multiplier for `itemType: mount` items (1.0 = the configured
+     * base pace, 2.0 = twice as fast). Defaults to 1.0; forbidden on non-mounts.
+     */
+    val mountSpeed: Double? = null,
+    /**
+     * True for `itemType: mount` items whose mount can fly: cross-zone travel
+     * to any explored room via the world map atlas. Forbidden on non-mounts.
+     */
+    val flying: Boolean? = null,
+    /**
      * Optional design-time metadata authored by the Arcanum creator. Accepted
      * for round-trip preservation; the server treats `damage`, `armor`, and
      * `stats` above as authoritative and does not recompute them from

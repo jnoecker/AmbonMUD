@@ -340,6 +340,12 @@ export interface ShopItem {
   consumable: boolean;
   image: string | null;
   video: string | null;
+  /** Mount items only: true when the player already owns this mount. */
+  owned: boolean;
+  /** Mount items only: ride-speed multiplier over the base travel pace. */
+  mountSpeed: number | null;
+  /** Mount items only: true when the mount can fly (cross-zone travel). */
+  mountFlying: boolean | null;
 }
 
 export interface ShopState {
@@ -1310,7 +1316,11 @@ export interface FlightState {
 export interface TravelStatus {
   /** True when the player owns at least one mount and may click the map to ride. */
   canTravel: boolean;
+  /** True when the player owns a flying mount — explored rooms in other zones become travel targets. */
+  canFly: boolean;
   riding: boolean;
+  /** True while the current ride is a flight (airborne, awaiting landing). */
+  flying: boolean;
   /** Destination room id while riding, else null. */
   destination: string | null;
 }

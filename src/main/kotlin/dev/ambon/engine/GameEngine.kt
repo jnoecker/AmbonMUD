@@ -650,6 +650,7 @@ class GameEngine(
             raceRegistry = raceRegistry,
             nowMs = { clock.millis() },
             worldAreas = buildWorldAreaPayloads(world),
+            mountStats = { id -> world.mountStats(id) },
             arcanumFirstBy = { key -> worldState.getArcanumFirst(key)?.first },
             illuminationOdds = { sid, mobId ->
                 val viewer = players.get(sid)
