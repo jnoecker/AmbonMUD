@@ -1,0 +1,6 @@
+Viewport set to 1280x800
+Navigated to http://localhost:8080 (200)
+demoClicked=true
+Element .bottom-stack appeared
+[browse] Starting server...
+[browse] Server failed to start within 15s

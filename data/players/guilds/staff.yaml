@@ -1,0 +1,11 @@
+---
+id: "staff"
+name: "STAFF"
+nameLower: "staff"
+tag: "STAFF"
+leaderId: 1
+motd: null
+members:
+  1: "leader"
+createdAtEpochMs: 1780961432814
+hallRooms: []

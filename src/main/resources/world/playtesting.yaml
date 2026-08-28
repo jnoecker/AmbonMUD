@@ -1,0 +1,1406 @@
+zone: playtesting
+startRoom: pixelated_void
+rooms:
+  pixelated_void:
+    title: The Pixelated Void
+    description: A featureless expanse of shimmering, glitched reality stretches in every direction, where fragments of
+      half-rendered geometry flicker in and out of existence like dying embers of a forgotten world. The air itself
+      seems to pulse with a faint digital static, casting everything in an eerie, pixelated twilight of corrupted blacks
+      and flickering whites.
+    exits:
+      s: inn_end_universe
+      w: cosmic_styling_salon
+      e: realtor_stars
+      n: auringold_academy:krioshaeu_cabin
+    image: 04432d3636a3a58d8912c123ee756ea1897eda0c26ba9bebc7ae12d9cc821a40.jpg
+  inn_end_universe:
+    title: An Inn at the End of the Universe
+    description: A cozy yet impossibly vast tavern where rough-hewn wooden beams dissolve into a star-flecked void overhead,
+      candlelit tables crowded with travelers of every imaginable shape and species murmuring over mugs of something
+      luminous. The worn floorboards creak underfoot, patched with mismatched planks from a dozen different worlds,
+      while through the frost-edged windows swirls an endless, breathtaking panorama of galaxies slowly turning in the
+      dark.
+    exits:
+      n: pixelated_void
+      w: jesters_gameroom
+      e: planetary_auction_house
+      s: celestial_plaza
+    inn: true
+    image: 16bcb0760cbf85a75528bab045a64dc0bdb9e467e36bc2a52d2164ee55c8358b.jpg
+  jesters_gameroom:
+    title: The Mad Jester's Gameroom
+    description: A chaotic chamber wallpapered floor-to-ceiling with faded playing cards and warped mirrors, the air thick
+      with the ghost of stale laughter, while a cracked roulette wheel spins lazily at the center of a scarred wooden
+      table surrounded by toppled, mismatched chairs.
+    exits:
+      e: inn_end_universe
+    tavern: true
+    image: ea401d630a1d19c4c068458a24c3ad25b8e55738f18f8742064e43e7cbff7356.jpg
+  cosmic_styling_salon:
+    title: A Cosmic Styling Salon
+    description: A glittering chamber suspended in the void between stars, its walls shimmering with swirling nebulae of
+      deep violet and gold, lined with floating mirrors that reflect infinite versions of the cosmos. Hovering styling
+      chairs crafted from crystallized stardust surround pedestals topped with arcane tools — scissors that snip threads
+      of fate, combs carved from moonstone, and bottles of luminescent dye that pulse with the colors of distant
+      galaxies.
+    exits:
+      e: pixelated_void
+    stylist: true
+    image: 9625e1a463f99422de2aaedf2c153a75beb6e869e8f3bafea827bac87eed9fff.jpg
+  realtor_stars:
+    title: Realtor to the (Literal) Stars
+    description: A sleek, otherworldly figure draped in robes that shimmer with the swirling patterns of distant nebulae,
+      their face obscured behind a smooth obsidian mask etched with golden constellation lines. They stand behind a
+      translucent desk that floats in midair, covered in glowing parchments and tiny holographic models of homes,
+      towers, and castles suspended like stars.
+    exits:
+      w: pixelated_void
+    housingBroker: true
+    image: 8f77eb5654e18622509aeb979fabe89e13d379658abf7f271b07fa13b0ca9eaf.jpg
+  planetary_auction_house:
+    title: Planetary Auction House
+    description: A grand circular hall stretches upward beneath a domed ceiling painted with swirling constellations and
+      planetary orbits, its tiered obsidian balconies lined with bidders draped in silks and strange armor from a dozen
+      worlds. At the center, a luminous auction stage rotates slowly, bathing each displayed artifact in shifting
+      prismatic light that refracts across the polished marble floor like scattered starfire.
+    exits:
+      w: inn_end_universe
+    auction: true
+    image: 583954216add5c6e2f9bc5e344c4d3d06db80c6d007e2c10e804ff07274cb185.jpg
+  celestial_plaza:
+    title: The Celestial Plaza
+    description: A vast open plaza paved with seamless slabs of white and gold marble that seem to radiate a soft inner
+      luminescence, its towering colonnades carved from pale celestial stone and draped with banners of deep indigo and
+      silver that ripple in a wind that carries no earthly scent. At its center, an enormous orrery of gilded rings and
+      glowing crystal spheres slowly rotates above a raised dais, casting shifting constellations of pale blue light
+      across every surface as the heavens themselves appear to breathe overhead.
+    exits:
+      n: inn_end_universe
+      w: shop_everything
+      e: trainer_everything
+      s: arena_gods
+      d: the_undercroft
+    image: 0516e0a12aa1b0cde7664a3bf184bb9472269e25b2c9ea402ab654a0ebf2845b.jpg
+  shop_everything:
+    title: The Shop That Sells Everything
+    description: A cluttered, dimly lit bazaar overflowing with mismatched shelves and precarious towers of goods — glinting
+      weapons, dusty potion bottles, bolts of strange fabric, and oddities of every shape crammed into every corner from
+      floor to rafters. A faint golden light filters through smudged windows, catching motes of dust drifting lazily
+      over a worn wooden counter at the center of the chaos.
+    exits:
+      e: celestial_plaza
+      w: shop_nothing
+    image: 5deab1a9c4b7b06a8fa39c956145c63ddf12d75c297aab290bda9e29349bded4.jpg
+  shop_nothing:
+    title: The Shop That Sells Nothing
+    description: A cramped, dust-choked room lined with empty shelves and bare display cases, their glass surfaces clouded
+      with age and neglect, casting faint prismatic reflections across the warped wooden floor. A single oil lamp
+      flickers on an unattended counter, illuminating nothing but the faint outlines of price tags dangling from hooks
+      where merchandise should be.
+    exits:
+      e: shop_everything
+      w: shop_one_item
+    image: 154351b60a30586b8eeb1622ccc9533733c8e32459b8fe5b6b86ea7f295b35f1.jpg
+  shop_one_item:
+    title: Shop That Only Sells One Item
+    description: "A cluttered wooden storefront crammed floor-to-ceiling with identical shelves, every single one displaying
+      the exact same unremarkable object repeated hundreds of times, bathed in the warm glow of a single hanging lantern
+      that illuminates a hand-painted sign behind the counter reading simply: *ONE.*"
+    exits:
+      e: shop_nothing
+    image: 0b1a5f97868823d2d63131b8643b291b0cae8ee83fe57c054c22d3f4c96714aa.jpg
+  trainer_everything:
+    title: The Trainer That Trains Every Class
+    description: A weathered figure stands at the center of a cluttered chamber, draped in a patchwork cloak bearing the
+      insignia of a dozen different guilds — warrior crests, mage runes, rogue daggers, and healer symbols all stitched
+      together in a riot of color and craft. Their eyes hold the calm, knowing depth of someone who has mastered every
+      weapon on the rack behind them, each blade, staff, and bow meticulously maintained and ready for the next eager
+      student.
+    exits:
+      w: celestial_plaza
+      e: trainer_noone
+    image: 6ed3a1e48c9436089158b6fd0c6798ee52217c28eaacfbf1b99d358be26fc429.jpg
+  trainer_noone:
+    title: The Trainer Who Trains No Classes
+    description: A vast, echoing hall lined with empty weapon racks and dusty practice dummies long since toppled, every
+      training mat rolled and stacked against the walls beneath a thick blanket of cobwebs. At its center slouches a
+      single overstuffed armchair where a perpetually retired instructor dozes beneath a hand-lettered sign that reads
+      'GONE FISHING — INDEFINITELY', having concluded long ago that the finest lesson is the one never taught.
+    exits:
+      w: trainer_everything
+      e: trainer_single_class
+    image: bdcdeb0fd973bd69766a30520c899293ab6cc206f32b047d4727f42fca75619f.jpg
+  trainer_single_class:
+    title: The Bulwark Trainer
+    description: A weathered veteran stands at rigid attention, clad in battered plate armor bearing the dents and scratches
+      of countless battles, a massive tower shield resting against one heavily muscled arm. Stern eyes peer out from
+      beneath a close-cropped silver hairline, and every scar on that iron-jawed face seems to tell a story of
+      punishment endured and survived.
+    exits:
+      w: trainer_noone
+    image: 67f9d3d60a5132a4a3cff6ef2713c2cd0c9a99d718032151c74cd47fbe9b09ae.jpg
+  arena_gods:
+    title: The Battle Arena of the Gods
+    description: A vast, circular colosseum of black obsidian and divine white marble stretches endlessly upward, its
+      towering walls etched with the carved likenesses of ancient deities locked in eternal combat. The floor is
+      scorched and cracked from millennia of celestial warfare, faintly glowing with residual golden energy that pulses
+      like a dying heartbeat beneath shattered stone.
+    exits:
+      n: celestial_plaza
+      e: onefive_pve
+    image: 85b1f6c2fea6d0d98730ae35967f4db52df077c462b5fc038011a778b702693b.jpg
+  onefive_pve:
+    title: A Monster Pit of Low Level Creatures
+    description: A damp stone pit crawls with scuttling, low-slung creatures — patchy-furred rodents, pale bloated grubs,
+      and hollow-eyed goblins barely knee-height, their tattered rags slick with mud. The air shimmers faintly with the
+      collective glow of beady eyes blinking in the dim torchlight, every shadow hiding something small, numerous, and
+      hungry.
+    exits:
+      w: arena_gods
+      e: tenfifteen_pve
+      s: twofour_pve
+    terrain: inside
+    image: 4aa40b2f5fa7c323772fc197b863270564febfcf61cb58a8273d4bf82248d96d.jpg
+  tenfifteen_pve:
+    title: A Forest of Mid-Level Monsters
+    description: A dense, twilight canopy filters dappled emerald and shadow across the forest floor, where gnarled roots
+      twist like clutching fingers between mossy boulders and patches of luminescent fungi. The air hangs thick with the
+      musk of predators, and the underbrush rustles with unseen movement — glinting eyes catching the pale light from
+      every direction.
+    exits:
+      w: onefive_pve
+      e: fifteentwenty_pve
+      s: twelve_pve
+    terrain: forest
+    image: c4af62019ce33aeadd52272e7bf7abbd16b05ce3c5704e7668f2a7e8914b7353.jpg
+  fifteentwenty_pve:
+    title: A Jungle of High Level Monsters
+    description: A dense, oppressive canopy of twisted black vines and luminescent amber foliage stretches endlessly
+      overhead, casting the undergrowth in a sickly golden haze where enormous silhouettes prowl between the gnarled,
+      moss-slicked trunks. The air itself seems to pulse with predatory intent, every shadow concealing glinting eyes
+      and the slow, deliberate movement of creatures far beyond mortal reckoning.
+    exits:
+      w: tenfifteen_pve
+      e: twentytwentyfive_pve
+      s: ocean_pve
+    terrain: outside
+    image: 166289f3e7949d1cd2bbd418e1811c7f91cbb071786eafb09bed8685f09590e8.jpg
+  twentytwentyfive_pve:
+    title: A Cavern of Epic Level Monsters
+    description: A vast underground chamber stretches into shadow-draped infinity, its jagged obsidian walls slick with
+      luminescent ichor and etched by the claws of titanic beasts, while the floor trembles beneath the weight of
+      colossal creatures whose silhouettes blot out the sickly green glow of bioluminescent fungi far above. The air
+      itself seems to recoil, thick with sulfur and ancient malice, every surface scarred and shattered as testament to
+      the catastrophic power of the horrors that dwell within.
+    exits:
+      w: fifteentwenty_pve
+      e: endgame_pve
+      s: city_pve
+    terrain: underground
+    image: c6ecdeef2c87b7eaa30c4390bedaabe334bc9000cad4c9691680ab43cd43c4c7.jpg
+  endgame_pve:
+    title: A Magma Chamber of End Game Monsters
+    description: A vast subterranean cavern where rivers of molten rock cast everything in pulsing orange and crimson light,
+      the obsidian walls streaked with veins of glowing magma and crusted with shards of volcanic glass that refract the
+      hellish glow in every direction. The air shimmers with oppressive heat haze, and massive stalagmites of cooled
+      basalt rise from the scorched floor like the teeth of some buried leviathan, silhouetted against the roiling lava
+      below.
+    exits:
+      w: twentytwentyfive_pve
+      s: sky_pve
+    terrain: mountain
+    image: be2584d2d424c9b2f6c1807cd949472080475687924f2e779b07e4297609fee3.jpg
+  twofour_pve:
+    title: A Marshy Bog of Low Level Monsters
+    description: A murky expanse of stagnant water and sucking mud stretches in all directions, choked with dead reeds and
+      patches of sickly pale moss that cling to rotting logs half-submerged beneath the surface. The air hangs heavy
+      with a greenish haze, and the occasional bubble rises from the dark depths, releasing the faint stench of decay.
+    exits:
+      n: onefive_pve
+      e: twelve_pve
+    terrain: swamp
+    image: 1d8fbfa5dec02e2a3576f183c8710b0dc11203257dabdd05528e109a05bde810.jpg
+  twelve_pve:
+    title: A Desert of Mid Level Monsters
+    description: A vast, sun-scorched expanse stretches endlessly in every direction, the cracked earth bleached pale gold
+      and riddled with jagged fissures that shimmer beneath a merciless midday sun. Twisted, desiccated shrubs and
+      bleached bones dot the landscape, while dust devils spiral lazily across the horizon, hinting at the restless,
+      dangerous life lurking just beneath the searing stillness.
+    exits:
+      n: tenfifteen_pve
+      w: twofour_pve
+      e: ocean_pve
+    terrain: desert
+    image: a52a1f93b78355b3435ec9c2b563f1aab644ca679d3ae9cb38cc778e549981cb.jpg
+  ocean_pve:
+    title: An Ocean of High Level Monsters
+    description: A vast, churning expanse stretches endlessly in every direction, the horizon broken only by the silhouettes
+      of colossal, shadowy forms moving with slow and terrible purpose beneath a sky stained deep crimson and violet,
+      crackling with arcs of dark energy. The ground itself seems to pulse and writhe underfoot, slick with an
+      iridescent sheen, as towering armored behemoths and winged horrors of every grotesque shape circle overhead and
+      lumber past, their eyes gleaming with ancient, predatory intelligence.
+    exits:
+      n: fifteentwenty_pve
+      w: twelve_pve
+      e: city_pve
+    terrain: underwater
+    image: e3d50b3f6585dabc3a85b2442c0a2a75e722514d2e428775ef5781e81735ed45.jpg
+  city_pve:
+    title: A City of Epic Level Movie Monsters
+    description: A sprawling metropolis of shattered skyscrapers and smoldering craters stretches endlessly in every
+      direction, its skyline perpetually obscured by the colossal silhouettes of titanic creatures — scaled, furred, and
+      mechanical — locked in catastrophic battle above the ruined streets. Neon signs flicker and shatter beneath
+      crushing footfalls, rivers of molten debris snake between toppled monuments, and the sky churns with a sickly
+      amber haze lit by the fires of a civilization being unmade in slow, magnificent devastation.
+    exits:
+      w: ocean_pve
+      n: twentytwentyfive_pve
+      e: sky_pve
+    terrain: urban
+    image: 05a4bed09eeb8a17e230b295fa856a0911ecd57947cfa76b33190e3e889642b1.jpg
+  sky_pve:
+    title: End Game Monsters in the Sky
+    description: A vast, churning vortex of storm clouds dominates the heavens above, crackling with eldritch lightning that
+      illuminates the silhouettes of colossal winged terrors circling endlessly in the bruised violet sky. The air
+      itself seems to buckle and warp under the weight of these ancient, sky-born titans, their scales and feathers
+      shimmering with an otherworldly luminescence that marks them as creatures far beyond mortal reckoning.
+    exits:
+      w: city_pve
+      n: endgame_pve
+    terrain: sky
+    image: def78e940bcab4bb478bc53f3bce87201533ec9e4e790177cdee06544917110d.jpg
+  the_undercroft:
+    title: The Undercroft of Sundry Affairs
+    description: "A low, vaulted chamber tucked beneath the plaza where polished marble gives way to honest flagstone, lit
+      by a chandelier of slowly orbiting lanterns that never quite agree on which way is down. Hand-painted signboards
+      crowd every wall, pointing toward the practical magics of the cosmos: a vault, a forge, a field of loose ends, a
+      curious cabinet, and a door that — the smallest placard warns — asks questions. The air smells of old ledgers, hot
+      metal, and possibility."
+    exits:
+      u: celestial_plaza
+      n: vault_borrowed_time
+      e: tinkers_singularity
+      w: field_of_loose_ends
+      s: cabinet_of_curiosities
+      d: the_door_that_asks
+    terrain: inside
+    image: cd213e7a154138eeffc29495672784601945970552f2d7ae9b01fb2261ec2b8b.jpg
+  vault_borrowed_time:
+    title: The Bank of Borrowed Time
+    description: A cathedral of polished brass and frosted glass where teller windows climb into a haze of drifting
+      receipts, each one drafting itself in midair before settling into an infinite filing cabinet that hums with quiet
+      arithmetic. Behind a counter worn smooth by centuries of deposits, an immaculately dressed clerk of no fixed face
+      counts coins that have not been minted yet. Your valuables, the engraving above the vault promises, are safe here
+      until the heat death of everything.
+    exits:
+      s: the_undercroft
+    bank: true
+    terrain: inside
+    image: f2118f99f8f693db58f646a646bb445a51dcc9001464d26eb500657549607d15.jpg
+  field_of_loose_ends:
+    title: A Field of Loose Ends
+    description: An impossible meadow unspooling beneath a sky the color of unfinished thoughts, where seams of raw star-ore
+      glitter through the topsoil and tangled drifts of dream-herb sway without any wind to move them. Threads of
+      half-remembered stories trail loose from the grass like dandelion silk, waiting to be gathered, and the whole
+      field gives the gentle impression of a workshop floor swept clean of everything except the useful bits.
+    exits:
+      e: the_undercroft
+    terrain: outside
+    image: 5120c1568d42811a70f038758e3fbfee2356dc8f27e9d54c5fbbe3472974d8e2.jpg
+  tinkers_singularity:
+    title: The Tinker's Singularity
+    description: A cramped, glorious workshop collapsed inward upon itself until every tool hangs within arm's reach no
+      matter where you stand, a forge at its heart burning with a captured ember of the first morning. Brass armatures
+      offer you hammers before you think to want them, anvils ring with the memory of blows not yet struck, and
+      blueprints flutter overhead, quietly rearranging themselves into better ideas. This is where loose ends become
+      things with edges.
+    exits:
+      w: the_undercroft
+      e: alchemists_alcove
+    station: forge
+    terrain: inside
+    image: 335108ca1cde912b592ead5c1c52439f744e080b969fec24029bd10b380f7df8.jpg
+  alchemists_alcove:
+    title: The Alchemist's Alcove at the End of Reason
+    description: A snug nook lined floor to ceiling with bottles that glow in colors no one has agreed to name, bubbling
+      retorts threaded together by spiraling glass that loops out through a dimension or two for no reason anyone can
+      defend. A great alchemy table dominates the center, its surface ringed with the faint scorch-marks of experiments
+      that mostly worked, and the air tastes faintly of lightning and crushed violets.
+    exits:
+      w: tinkers_singularity
+    station: alchemy_table
+    terrain: inside
+    image: 23dbabfdd7a6d549eb124674e25f448f24b803e317fc45c52e471fb45dc63f74.jpg
+  cabinet_of_curiosities:
+    title: The Cabinet of Curiosities
+    description: "A dim, wood-panelled study crowded with the sort of objects that exist mainly to be poked at: a heavy
+      lacquered chest with a stubborn lid, a single ostentatious brass lever bolted to the wall for no obvious purpose,
+      and a softly glowing placard that very much wants to be read. Dust motes hang frozen mid-fall, as though the room
+      is politely waiting for you to interact with something."
+    exits:
+      n: the_undercroft
+    terrain: inside
+    image: 51d5b7b31974797cf9a30553b5cd97b80c361ea3937f0c25f0a258ea35b2f97e.jpg
+    features:
+      curio_chest:
+        type: CONTAINER
+        displayName: a lacquered curio chest
+        keyword: chest
+        initialState: closed
+        items:
+          - cosmic_cocoa
+          - cosmic_scrap
+      brass_lever:
+        type: LEVER
+        displayName: an ostentatious brass lever
+        keyword: lever
+        initialState: up
+        plateImage: 2d8fdc41855bfd96272f8316ffea2f7261b6e20390266ad44f75e351694dbf97.png
+        handleImage: bf3ff7b9b44c99ae90bd3345a6bdee47baa2245f483776d5168c9170986f4384.png
+      curiosities_placard:
+        type: SIGN
+        displayName: a glowing instructions placard
+        keyword: placard
+        text: PLAYTESTER'S NOTICE. This cabinet exists to be fiddled with. Try 'open chest', then 'search chest', then 'get
+          cocoa from chest', then 'put cocoa in chest'. Give the lever a 'pull'. Read this placard as many times as
+          morale requires. Nothing in here is dangerous. Probably.
+  the_door_that_asks:
+    title: The Door That Asks
+    description: The passage dead-ends at an enormous door of star-flecked obsidian, its surface carved into the half-lidded
+      likeness of a sphinx who is, frankly, bored of being clever. A brass speaking-grille set where the mouth should be
+      exhales a riddle into the dark and waits with the infinite smugness of a thing that has never once had to guess.
+      East lies somewhere it would very much prefer you not go without answering first.
+    exits:
+      u: the_undercroft
+      e:
+        to: the_prize_closet
+        door:
+          initialState: locked
+          keyItemId: skeleton_star_key
+          hinge: right
+          openAngle: 60
+          leafScale: 0.76
+          leafOffsetY: 0.09
+        lockedMessage: The obsidian sphinx clears its throat. 'A key, or an answer. At the moment you appear to have neither.'
+    terrain: inside
+    image: 1f5cd064e4ce0155f8784fae73f9bb4a756d657b427a451883b9350d7b1c4345.jpg
+  the_prize_closet:
+    title: The Prize Closet at the End of Everything
+    description: A surprisingly modest broom-closet of a room, ringed with velvet ropes that guard precisely one pedestal,
+      above which a self-congratulatory hologram showers slow-motion confetti that never quite reaches the floor. For a
+      space hidden behind a riddling door at the bottom of the universe, it is gratifyingly anticlimactic — which is,
+      the confetti insists, the entire joke.
+    exits:
+      w: the_door_that_asks
+    terrain: inside
+    image: d99033e044d3a0ed4e6392b004ab84220e564e5904c5813250090b7d6dbd6fa2.jpg
+lifespan: 10
+terrain: sky
+levelBand:
+  min: 1
+  max: 30
+difficultyHint: standard
+audio:
+  music: dc67817887c8a4b7b3700b506ca88e1dc284bc856f43cb9de9b15b224d9382f1.mp3
+mobs:
+  helpful_glitch:
+    name: a stray subroutine
+    description: A knee-high tangle of glowing wireframe that never quite finishes rendering — one moment a helpful little
+      sprite, the next a polite cloud of error-messages, always resolving back into something with an eager, lopsided
+      smile. It hovers at the edge of the void like a museum docent who has had far too much coffee and far too few
+      visitors.
+    role: dialog
+    spawns:
+      - room: pixelated_void
+    image: 4ed2acc28572a05681b85a5e6671d476576a8086ce4fe26f76912f5fa7d3599d.png
+    dialogue:
+      root:
+        text: Oh — a live one! Welcome to the playtesting sandbox, the compact little pocket-universe where every system in
+          Ambon has been crammed into walking distance. I am a stray subroutine; mostly I point. What would you like to
+          poke at?
+        choices:
+          - text: Where do I fight things?
+            next: combat
+          - text: Where do I shop, train, and spend gold?
+            next: services
+          - text: What about crafting and odd jobs?
+            next: crafting
+          - text: I will wander on my own, thanks.
+      combat:
+        text: South of here is the Battle Arena of the Gods, where an Eternal Training Dummy stands ready to be hit and never
+          hits back — ideal for testing abilities. Past it, the monster rooms climb from a pit of low-level critters all
+          the way up to titans in the open sky. Everything scales to you, so step into whichever you like.
+        choices:
+          - text: Good to know. (back)
+            next: root
+      services:
+        text: This room borders the styling salon, the realtor, and the planetary auction house. South lies the Inn at the End
+          of the Universe for resting, and the Celestial Plaza with its shops and class trainers. Drop down from the
+          plaza and the Undercroft holds a bank, a forge, and other practical comforts.
+        choices:
+          - text: Anything else? (back)
+            next: root
+      crafting:
+        text: Head down through the plaza to the Undercroft. West is a field where you can mine star-ore and pick dream-herb;
+          east is a forge and an alchemy alcove for turning raw finds into gear and potions. And do mind the Door That
+          Asks — it is holding a prize hostage behind a riddle.
+        choices:
+          - text: Thanks, subroutine. (back)
+            next: root
+  innkeeper_barlow:
+    name: Barlow, the Eternal Innkeeper
+    description: A broad, unhurried figure in a star-dusted apron, forever drying the same glass with the same cloth, his
+      face creased into the easy smile of someone who has poured a drink for every soul that ever passed through and
+      still remembers most of their names. Behind him a hearth burns with a fire that asks for no wood.
+    role: dialog
+    spawns:
+      - room: inn_end_universe
+    image: 083efd30a150b9d8caa9310b0b8e1c3b24d9aef082f547f89cb8fd3508f89eff.png
+    dialogue:
+      root:
+        text: Rest your boots, traveler — the stars are not going anywhere. Type 'rest' here and the Inn becomes your recall
+          point; wherever you wander afterward, 'recall' will carry you home to this hearth. Mind the Jester next door,
+          by the way. He cheats.
+  mad_jester:
+    name: the Mad Jester
+    description: A whirl of patched motley and jangling bells perched atop an overturned roulette wheel, grinning a grin
+      with one too many teeth and juggling cards that occasionally vanish mid-air out of sheer mischief. Laughter trails
+      him like a perfume, and not all of it is his.
+    role: dialog
+    spawns:
+      - room: jesters_gameroom
+    image: 14bf294ceb9481578e23af4ab0fb91d758f156832881874c3be2653fb345fba3.png
+    dialogue:
+      root:
+        text: Ahaha! Welcome, welcome, pull up a crooked chair! The wheel spins, the cards lie, and the house — that would be me
+          — always wins. Or it would, if anyone had switched the games on yet. For now I simply laugh, and that part, at
+          least, is free.
+  cosmic_stylist:
+    name: Vega, the Cosmic Stylist
+    description: An impossibly poised figure wreathed in floating scissors, moonstone combs, and bottles of luminescent dye,
+      every gesture leaving a faint comet-trail of glitter in the air. They regard you the way a sculptor regards a
+      promising block of marble.
+    role: dialog
+    spawns:
+      - room: cosmic_styling_salon
+    image: 048b5aebe0378305d2dc144307c6f51746dc014520a584839e24a684ef66b7bc.png
+    dialogue:
+      root:
+        text: Darling. Sit. Let me see what the cosmos gave you to work with. For a modest fee I can resculpt your every feature
+          — simply use the 'stylist' here and we shall begin. Change is the only true constant, and I do bill for it.
+  obsidian_realtor:
+    name: the Obsidian-Masked Realtor
+    description: A sleek figure in robes that swirl with captured nebulae, face hidden behind a smooth obsidian mask etched
+      in golden constellation-lines, gesturing at tiny holographic homes that orbit their open palm like obedient
+      planets.
+    role: dialog
+    spawns:
+      - room: realtor_stars
+    image: 8ca1940baa605a2ba255b321021ad19d2053eb3d4dd780d7931076a82c40606a.png
+    dialogue:
+      root:
+        text: A discerning eye! Property is the one truly cosmic investment — they are not making any more universe, after all.
+          Use 'house list' to browse what is available, then 'house buy' to plant your flag. Carriage houses, hidden
+          vaults, even a castle, should your purse ever reach that far.
+  lost_auctioneer:
+    name: the Auctioneer of Lost Things
+    description: A rail-thin figure in a coat sewn from old auction-paddles, wielding a gavel carved from a single falling
+      star and speaking in a rapid-fire patter that seems to bid against itself. Around them, unclaimed prizes drift in
+      slow, hopeful orbits.
+    role: dialog
+    spawns:
+      - room: planetary_auction_house
+    image: b91dd46340cd029af9610f7641508eb8b227de2751ebbf33b7b50e2fd1ebeccc.png
+    dialogue:
+      root:
+        text: Going once — ah, a bidder, excellent! Everything here is for sale to the highest offer, and nothing here is ever
+          quite what it seems. Browse the listings, place your bids, and may you lose only what you can comfortably
+          afford to.
+  retired_trainer:
+    name: the Indefinitely Retired Instructor
+    description: A grizzled veteran sunk deep into an overstuffed armchair, boots up, eyes half-closed, a fishing rod
+      propped against one knee where a practice-sword used to hang. An aura of profound, hard-won laziness radiates from
+      them like warmth from a banked fire.
+    role: dialog
+    spawns:
+      - room: trainer_noone
+    image: 08a36bcd849bda697fd982b4fd5485aeb8cc667d419032efa02eb99f6f575f62.png
+    dialogue:
+      root:
+        text: Hm? Oh — no, no. I do not teach anymore. Trained a thousand heroes in my day; every last one of them marched off
+          and got eaten by something with too many legs. So now I train precisely no one, and my survival rate is
+          impeccable. The real trainers are to the west and the east, if you simply must.
+  bureau_clerk:
+    name: the Clerk of the Cosmic Bureau
+    description: A harried celestial functionary buried behind a rampart of self-stamping forms, three pairs of spectacles
+      pushed up onto a furrowed brow, quill scratching at a ledger that refills itself faster than it can be emptied.
+      They look up at you with the desperate hope of someone with far too much to delegate.
+    role: quest_giver
+    spawns:
+      - room: celestial_plaza
+    quests:
+      - cosmic_errand
+    image: f0faf1c6a7779a3c596d4905dc5734ae4620f159779acf6a4f934ae0bff00351.png
+    dialogue:
+      root:
+        text: "Stamp, stamp — ah, an adventurer, wonderful. The Bureau of Cosmic Errands has a backlog you would not believe.
+          Small job: scrape together three handfuls of cosmic scrap, and put down a couple of those glitching void-rats
+          in the monster pit. Manage that and there is coin and a trinket in it for you."
+        choices:
+          - text: I will take the job.
+            action: accept_quest:cosmic_errand
+          - text: How do I finish it again?
+            next: howto
+          - text: I have done what you asked.
+            action: turn_in_quest:cosmic_errand
+          - text: Maybe later.
+      howto:
+        text: Cosmic scrap shakes loose from the little glitching things in the monster pit east of the arena — the same place
+          the void-rats skitter about. Bring me three scraps and see off a couple of the rats, then come back and tell
+          me you are done.
+        choices:
+          - text: Understood. (back)
+            next: root
+  confetti_hologram:
+    name: a self-congratulatory hologram
+    description: A shimmering projection of a crowd that erupts into silent, looping applause the instant you enter,
+      showering you in confetti that politely dissolves before it can make any mess. A banner unfurls and re-furls
+      overhead reading 'YOU DID IT' — though it remains conspicuously vague about what, exactly, you did.
+    role: prop
+    spawns:
+      - room: the_prize_closet
+    image: 1c8fb70c24441f7a9d00cb813ac4e4260cb350297024d2fa70cf77598e62aea7.png
+  eternal_dummy:
+    name: an Eternal Training Dummy
+    description: A burlap-and-brass practice dummy mounted on a gyroscopic base that rights it the instant it is knocked
+      down, its painted-on face wearing an expression of serene, infinite patience. Scorch-marks, sword-notches, and the
+      faint glow of a thousand test-cast spells cover it from straw crown to weighted boots. It exists only to be hit,
+      and it is very good at its job.
+    spawns:
+      - room: arena_gods
+    tier: boss
+    level: 1
+    category: construct
+    minDamage: 1
+    maxDamage: 1
+    respawnSeconds: 5
+    image: 2b36267d4eb2dd599dd1b7cb22322153bcb5a53104cfbd07f4e6e12fa50eb9fe.png
+  void_rat:
+    name: a glitching void-rat
+    description: A scrawny rodent stitched together from corrupted pixels, its fur flickering between a dozen half-loaded
+      textures as it skitters in jittering, frame-dropped bursts. Where its eyes ought to be, two error-red dots blink
+      arrhythmically, and it trails a faint scatter of dropped data behind it like crumbs.
+    spawns:
+      - room: onefive_pve
+        count: 4
+    tier: weak
+    level: 2
+    category: beast
+    behavior:
+      template: wander
+      params:
+        maxWanderDistance: 4
+    drops:
+      - itemId: cosmic_scrap
+        chance: 0.8
+    respawnSeconds: 30
+    image: 2563ec6dcdefafc7e446f19ea2ef184c0281f40bf8af88ea32c33b1596ed4bad.png
+  pixel_goblin:
+    name: a half-rendered goblin
+    description: A knee-high goblin caught perpetually mid-load, half of it crisp and snarling, the other half a blocky
+      smear of placeholder grey. It brandishes a sword that has not finished downloading and shrieks in compressed,
+      stuttering audio that cuts out at the worst moments.
+    spawns:
+      - room: onefive_pve
+    tier: standard
+    level: 3
+    category: humanoid
+    drops:
+      - itemId: cosmic_scrap
+        chance: 0.7
+      - itemId: beast_hide
+        chance: 0.2
+    respawnSeconds: 45
+    image: da6ca22f6518a9ae47fe201b5c6973b2f686421f264bd740db806215d41b2bae.png
+  wandering_null:
+    name: a wandering null-pointer
+    description: A tall, faceless silhouette of pure absence that drifts where it should not, leaving a wake of
+      momentarily-deleted scenery that flickers back into place behind it. It seems less hostile than catastrophically
+      misplaced, doomed to walk the patrol route of something that was removed in a patch.
+    spawns:
+      - room: onefive_pve
+    tier: standard
+    level: 3
+    category: aberration
+    drops:
+      - itemId: cosmic_scrap
+        chance: 0.6
+    respawnSeconds: 90
+    image: c376dcce0debc3ef470b11735e4625ac6aebb44a72e8a0ac183f2306e404d211.png
+  bog_grub:
+    name: a bloated star-grub
+    description: A pale, translucent grub the size of a loaf, swollen with swallowed starlight that sloshes visibly inside
+      its segmented body. It recoils at the first sign of trouble, and when truly frightened it bursts into a panicked,
+      surprisingly fast wriggle for the nearest patch of mud.
+    spawns:
+      - room: twofour_pve
+        count: 2
+    tier: weak
+    level: 2
+    category: beast
+    drops:
+      - itemId: glow_ichor
+        chance: 0.7
+    respawnSeconds: 30
+    image: 03bad898edf091bb2472d92f4f3baee8e4d65d020967d8bd4781490ee7616200.png
+  mire_wisp:
+    name: a sullen mire-wisp
+    description: A guttering ball of marsh-light the color of a fresh bruise, hovering low over the stagnant water and
+      muttering to itself in pops and hisses. It drifts toward warmth with grudging, resentful intent, as though
+      attacking you is a chore it would honestly rather skip.
+    spawns:
+      - room: twofour_pve
+    tier: standard
+    level: 4
+    category: elemental
+    drops:
+      - itemId: glow_ichor
+        chance: 0.6
+      - itemId: void_essence
+        chance: 0.3
+    respawnSeconds: 60
+    image: 20b2e9144c5495a70bacf9651163207a9f0d897710904472909a78b7257d79ce.png
+  thornstalker:
+    name: a thornstalker
+    description: A lean, antlered predator woven from blackwood and bramble, moving through the mid-canopy gloom on six
+      silent legs tipped in hooked thorns. Luminescent sap weeps from the seams of its bark-plated hide, and it hunts
+      with the unhurried confidence of something that has never once been prey.
+    spawns:
+      - room: tenfifteen_pve
+    tier: standard
+    level: 12
+    category: beast
+    drops:
+      - itemId: beast_hide
+        chance: 0.6
+      - itemId: dream_herb
+        chance: 0.3
+    respawnSeconds: 60
+    image: e5abe2d264d5f4b2a67e619ba14012ea1129d1baebd8b8610d4efe13ca5e8900.png
+  canopy_shade:
+    name: a flickering canopy-shade
+    description: The lingering silhouette of something that died among these trees and never quite agreed to leave, a smear
+      of cold shadow that slips between the trunks just at the edge of sight. Where it passes, the dappled light dims
+      and the forest holds its breath.
+    spawns:
+      - room: tenfifteen_pve
+    tier: elite
+    level: 14
+    category: undead
+    drops:
+      - itemId: void_essence
+        chance: 0.4
+    respawnSeconds: 90
+    image: a368c1f223f3587b77dbb6b43b2004ec62e104c34e90268f136da32aa0c514dc.png
+  dune_serpent:
+    name: a chrome dune-serpent
+    description: A sinuous serpent sheathed in mirror-bright scales that throw the desert sun back in blinding shards,
+      surfacing from the cracked earth in a hiss of superheated sand. Its eyes are twin orbs of molten gold, and it
+      strikes faster than the heat-haze can hide it.
+    spawns:
+      - room: twelve_pve
+    tier: standard
+    level: 12
+    category: beast
+    drops:
+      - itemId: shimmer_scale
+        chance: 0.5
+      - itemId: star_ore
+        chance: 0.3
+    respawnSeconds: 60
+    image: 646927c9d968ee7e75c20454a0fb69f92daa49c4df544a0e132f48c286b8d26e.png
+  mirage_djinn:
+    name: a flickering mirage-djinn
+    description: A shimmering figure half-made of heat and rumor, robed in coiling desert wind, that splits into three
+      identical reflections whenever you look at it directly. Only one of them is real, and it changes its mind often
+      about which.
+    spawns:
+      - room: twelve_pve
+    tier: elite
+    level: 13
+    category: elemental
+    drops:
+      - itemId: void_essence
+        chance: 0.4
+      - itemId: radiant_gem
+        chance: 0.1
+    respawnSeconds: 90
+    image: a86b9eff9d80ae41944db2cd02dcb60ab7c7d1c00abcab7e8d9cd7e07bb6b65d.png
+  amber_stalker:
+    name: an amber-eyed stalker
+    description: A heavy-shouldered jungle hunter clad in moss-slicked hide, its enormous amber eyes glowing through the
+      perpetual twilight as it pads in absolute silence between the gnarled trunks. By the time you hear it, it has
+      already decided.
+    spawns:
+      - room: fifteentwenty_pve
+    tier: elite
+    level: 18
+    category: beast
+    drops:
+      - itemId: beast_hide
+        chance: 0.6
+      - itemId: star_ore
+        chance: 0.4
+    respawnSeconds: 75
+    image: e38da3ac8fbbe47d2d138382be87b04db05f658eb9537f9ceaaa187f77a889a8.png
+  vine_horror:
+    name: a vine-tangled horror
+    description: A writhing knot of black vine and amber foliage that has swallowed something large enough to give it a
+      vague, lurching shape, studded with unblinking flower-eyes that track you from every angle at once. It moves with
+      the slow inevitability of growing things.
+    spawns:
+      - room: fifteentwenty_pve
+    tier: standard
+    level: 16
+    category: aberration
+    drops:
+      - itemId: glow_ichor
+        chance: 0.6
+    respawnSeconds: 60
+    image: 7aa9ffd593e7c3d9641d2338acba346cb849fd41a65f525f0db499d065242b67.png
+  abyssal_juvenile:
+    name: a juvenile abyssal leviathan
+    description: A whale-sized shadow that is, alarmingly, only a child of its kind, gliding through the crushing dark on
+      fins edged in cold blue light. Rows of lantern-organs pulse along its flanks, and its mouth could fold a ship in
+      half without especially noticing.
+    spawns:
+      - room: ocean_pve
+    tier: elite
+    level: 19
+    category: beast
+    drops:
+      - itemId: shimmer_scale
+        chance: 0.7
+    respawnSeconds: 75
+    image: 4f49ae91eaa7681511c34427f16ae9b7fbe446cb2ca0d24a30ab9d4392441f44.png
+  drowned_colossus:
+    name: a drowned colossus
+    description: The barnacled, kelp-draped remains of some titan that walked into the sea long ago and never stopped,
+      lumbering across the abyssal floor with seawater pouring endlessly from the gaps in its ruined armor. Pale fish
+      school through its empty ribcage.
+    spawns:
+      - room: ocean_pve
+    tier: elite
+    level: 20
+    category: undead
+    drops:
+      - itemId: void_essence
+        chance: 0.5
+      - itemId: radiant_gem
+        chance: 0.15
+    respawnSeconds: 90
+    image: fdd02c390891237264ddfb8d098ee88a05e979ef2a96c3d27bb9c415a336aac2.png
+  crystal_titan:
+    name: a crystalline titan
+    description: A lumbering giant grown entirely from faceted cavern-crystal, each ponderous step ringing like a struck
+      bell and scattering refracted rainbows across the obsidian walls. Veins of trapped light pulse slowly through its
+      translucent limbs.
+    spawns:
+      - room: twentytwentyfive_pve
+    tier: elite
+    level: 23
+    category: construct
+    drops:
+      - itemId: star_ore
+        chance: 0.6
+      - itemId: radiant_gem
+        chance: 0.3
+    respawnSeconds: 90
+    image: 03bbf8688a08c92be911cda14895d4ac00b0e76f49644649494f0c76cf846f42.png
+  deep_horror:
+    name: a deep-cavern horror
+    description: A mountain of slick, eyeless flesh wedged into the deepest dark, its countless mouths murmuring the names
+      of things that have not been born yet. It does not move from its spot — it does not need to. The cavern has been
+      built around its hunger.
+    spawns:
+      - room: twentytwentyfive_pve
+    tier: boss
+    level: 25
+    category: aberration
+    drops:
+      - itemId: radiant_gem
+        chance: 0.5
+      - itemId: singularity_shard
+        chance: 0.05
+    respawnSeconds: 300
+    image: 126e621fba699d6dcf692510668a6450a644decd2970a807ef1c9b62b8855999.png
+  kaiju_juvenile:
+    name: a half-grown kaiju
+    description: A skyscraper-tall beast of scale and spite, roaring through the ruined streets on legs like toppling
+      towers, its every footfall a small earthquake that sends neon signs raining down. It is, the experts insist, still
+      only an adolescent.
+    spawns:
+      - room: city_pve
+    tier: boss
+    level: 24
+    category: beast
+    drops:
+      - itemId: shimmer_scale
+        chance: 0.7
+      - itemId: singularity_shard
+        chance: 0.05
+    respawnSeconds: 300
+    image: 95281f8940ac471e409c411003766ee49281a159b4471fde94b28f73c39d83b2.png
+  mecha_sentinel:
+    name: a toppled mecha-sentinel
+    description: A war-machine the size of a cathedral, fallen against a ruined skyscraper and still grimly operational,
+      sweeping the rubble with a flickering searchlight eye and firing the occasional defiant volley at nothing in
+      particular. Sparks fountain from its severed cabling.
+    spawns:
+      - room: city_pve
+    tier: elite
+    level: 22
+    category: construct
+    drops:
+      - itemId: broken_gears
+        chance: 0.7
+      - itemId: star_ore
+        chance: 0.4
+    respawnSeconds: 90
+    image: dee80ef77d5979cb23fc56ee4d8cc8cfeb1ba60d90ca3c7852d35d3e6a4bdab8.png
+  magma_wyrm:
+    name: a magma wyrm
+    description: A vast serpent of living molten rock that swims through the lava rivers as easily as water, its crusted
+      black hide cracking open with each movement to reveal the furnace-glow beneath. The air around it shimmers and
+      burns.
+    spawns:
+      - room: endgame_pve
+    tier: boss
+    level: 28
+    category: elemental
+    drops:
+      - itemId: radiant_gem
+        chance: 0.6
+      - itemId: singularity_shard
+        chance: 0.1
+    respawnSeconds: 300
+    image: fee4330b8ce8199586a3b1d06744fccf9f9e06f85e355097b5e15a4a84480c12.png
+  cinder_revenant:
+    name: a cinder revenant
+    description: The smoldering skeleton of something that burned to death and simply kept walking, wreathed in guttering
+      flame and leaking ash from every joint, its eye-sockets glowing the deep orange of dying coals. It drifts through
+      the heat haze leaving scorched footprints.
+    spawns:
+      - room: endgame_pve
+    tier: elite
+    level: 27
+    category: undead
+    drops:
+      - itemId: void_essence
+        chance: 0.6
+    respawnSeconds: 90
+    image: 57065d1c10dcd00181fe2f21bbd1a272f0457cf68f9e156e7c999bdb08d94102.png
+  storm_titan:
+    name: a storm-born titan
+    description: A colossus assembled from thunderhead and chain-lightning, its limbs dissolving into rain at the edges and
+      its heart a single blinding bolt that never fully discharges. It strides across the sky on legs of falling water,
+      dragging the storm behind it like a cloak.
+    spawns:
+      - room: sky_pve
+    tier: boss
+    level: 30
+    category: elemental
+    drops:
+      - itemId: radiant_gem
+        chance: 0.6
+      - itemId: singularity_shard
+        chance: 0.15
+    respawnSeconds: 300
+    image: 736b26c26b4804f24a687af5e0ebdab64b6865269f782b0543a7da3291e7932b.png
+  void_seraph:
+    name: a fallen void-seraph
+    description: A six-winged figure of unbearable, fractured radiance, beautiful in the way that staring into the sun is
+      beautiful, trailing too many arms and a halo that has cracked into slowly orbiting shards. It regards the world
+      below with serene, absolute indifference.
+    spawns:
+      - room: sky_pve
+    tier: elite
+    level: 29
+    category: aberration
+    drops:
+      - itemId: void_essence
+        chance: 0.6
+      - itemId: radiant_gem
+        chance: 0.2
+    respawnSeconds: 90
+    image: 8c9119bbd706be747288dac3b1098a6d16b144d891eef162810b6e6aac71ef99.png
+  trainer_all:
+    name: the Trainer of All Disciplines
+    spawns:
+      - room: trainer_everything
+    image: d90af3eda7a9d48d14b4bdb8006097bb2d7218e06792a7f2444cce633d2aa6f3.png
+  trainer_bulwark:
+    name: the Bulwark Drillmaster
+    spawns:
+      - room: trainer_single_class
+    image: cbc7710ed43e4e8bf3f360bd592e5d21b66f57052198c5698ee691ce027968a3.png
+items:
+  cosmic_scrap:
+    displayName: a handful of cosmic scrap
+    description: A loose fistful of glittering debris — half-melted coins, corrupted pixels gone solid, the odd cracked
+      tooth of something cosmic. Worthless on its own, but it adds up, and the Bureau is always buying.
+    keyword: scrap
+    itemType: treasure
+    basePrice: 4
+    image: 4813ed81e38ae42ccf1a121a8bed6982d86c1977c250cb15918d2e40d6603f40.png
+  glow_ichor:
+    displayName: a vial of glow-ichor
+    description: A stoppered vial of luminescent fluid wrung from swamp-things and wisps, glowing a soft and faintly
+      unwholesome green. A staple reagent for any alchemist willing to overlook the smell.
+    keyword: ichor
+    itemType: misc
+    basePrice: 6
+    image: ef75cf41f40f18bdf79e8aecb191592707c294c66f7a015751da2a9c4bcd3975.png
+  void_essence:
+    displayName: a mote of void-essence
+    description: A pinch of crystallized nothing held together by sheer reluctance, cold to the touch and faintly humming.
+      Prized by alchemists, feared by the superstitious, and surprisingly stable in a jar.
+    keyword: essence
+    itemType: misc
+    basePrice: 14
+    image: 0788f03738c3d0b30339a0df2c9307266c9be05bffb7348c8e6334596592e473.png
+  star_ore:
+    displayName: a chunk of raw star-ore
+    description: A heavy, rough-hewn nugget of silver-blue metal flecked with points of trapped light, still faintly warm
+      from whatever sky it fell out of. The forge loves it.
+    keyword: ore
+    itemType: misc
+    basePrice: 10
+    image: 99396a651b22f7e282bd3db36f8cd8c5ffb828d60a35db1bd0a345a3b6b1d7bd.png
+  dream_herb:
+    displayName: a sprig of dream-herb
+    description: A wilting sprig of pale, silver-veined leaves that smell faintly of half-remembered afternoons. Brewed
+      properly it soothes; brewed improperly it does considerably more.
+    keyword: herb
+    itemType: misc
+    basePrice: 7
+    image: d4e25ae0cd5ab93bb62a8ca7d73309552ed90cc043ad43006100c001545a5161.png
+  beast_hide:
+    displayName: a roll of beast-hide
+    description: A supple roll of cured hide peeled from one of the sandbox's many unfortunate fauna, tough enough to turn a
+      blade and just exotic enough to be worth the tanning.
+    keyword: hide
+    itemType: misc
+    basePrice: 9
+    image: 45565a3385e68bccb46b7d95f4c66dfe0010d798de7cb89b6a365f9d699f910e.png
+  shimmer_scale:
+    displayName: a handful of shimmer-scales
+    description: Iridescent scales shed by serpents and leviathans, shifting through every color of the deep as they catch
+      the light. Light, strong, and vain enough to make very fine armor.
+    keyword: scale
+    itemType: misc
+    basePrice: 12
+    image: 7f4e07d00c121972ab79bee831247bd9e0bb1229867f6f49f53e0e2f6e565bb4.png
+  broken_gears:
+    displayName: a pile of broken gears
+    description: A tangle of stripped brass cogs and snapped springs salvaged from fallen war-machines. Useless as a
+      mechanism, but excellent raw stock for anyone with a forge and a grudge against waste.
+    keyword: gears
+    itemType: misc
+    basePrice: 8
+    image: 9094d81ef2f32edbc705ff9a71462b81410d9996bb991310f957b97eb0714047.png
+  radiant_gem:
+    displayName: a radiant gem
+    description: A flawless gemstone that holds a slow, pulsing inner light, warm as a coal but cool to the touch. Valuable
+      on its own and coveted by every jeweler and titan in the sandbox.
+    keyword: gem
+    itemType: treasure
+    basePrice: 60
+    image: 5c56eff5d8391db83c94affa37dad0755963390d201febcf30a07ba827d2bb4f.png
+  singularity_shard:
+    displayName: a singularity shard
+    description: A sliver of something that should not exist at this scale — compressed spacetime that bends the light
+      around its edges and weighs far more than it has any right to. The rarest prize the deep places will ever cough
+      up.
+    keyword: shard
+    itemType: treasure
+    tier: legendary
+    basePrice: 250
+    image: 2c955f7197eab27045bbab8a71093ae94af628cb90b4e64b4026ce6202a6a5bb.png
+  cosmic_cocoa:
+    displayName: a mug of cosmic cocoa
+    description: A steaming mug of rich cocoa with a galaxy lazily swirling across its foam, warming you from the inside out
+      and mending small hurts with every sip. Comfort, bottled.
+    keyword: cocoa
+    consumable: true
+    itemType: consumable
+    onUse:
+      healHp: 50
+    basePrice: 8
+    image: 3460b5cbea46f04973b83cfed67334d237f9b97ad7875de62017a44242b0a498.png
+  bottled_starlight:
+    displayName: a flask of bottled starlight
+    description: A slender flask of cool, drinkable light that fizzes pleasantly and floods the mind with clarity, restoring
+      spent magic in a bright, restorative rush.
+    keyword: starlight
+    consumable: true
+    itemType: consumable
+    onUse:
+      healMana: 50
+    basePrice: 8
+    image: 425eb9d1da1bd07f4d307b1e26c44a98094af7861201b44e8474bed4bea4b532.png
+  void_cake:
+    displayName: a slice of void cake
+    description: A slice of impossibly dark cake that tastes of every dessert at once and somehow leaves you both fed and
+      mystically refreshed. The frosting contains at least one galaxy.
+    keyword: cake
+    consumable: true
+    itemType: consumable
+    onUse:
+      healHp: 80
+      healMana: 80
+    basePrice: 18
+    image: f47df3bf66cdeacafe5656268221414dc5ec9f92f2eb36114b6d938a2cf81375.png
+  dubious_elixir:
+    displayName: a dubious elixir
+    description: A swirling, faintly radioactive concoction in a bottle marked only with a hastily-drawn exclamation point.
+      Drinking it grants a sudden, suspicious jolt of insight. Probably fine.
+    keyword: elixir
+    consumable: true
+    itemType: consumable
+    onUse:
+      grantXp: 50
+    basePrice: 25
+    image: 2c6bfb8eb104d463a500e75e72382f176ebd67844b37ea983987c081cb3a64cb.png
+  astral_blade:
+    displayName: an astral blade
+    description: A leaf-shaped sword forged from cooled star-ore, its edge holding a thin line of captured starlight that
+      hums softly when swung. Balanced, bright, and just ornamental enough to show off with.
+    keyword: blade
+    slot: weapon
+    level: 1
+    tier: uncommon
+    archetype: damage
+    damage: 3
+    stats:
+      PRIMARY: 4
+      SECONDARY: 2
+      TERTIARY: 1
+    itemType: equipment
+    basePrice: 30
+    image: 6e75c80db9ed8f40ed30de64426faf3c180a4e4f353f23b10a5e3bb92fa5b936.png
+  voidsteel_helm:
+    displayName: a voidsteel helm
+    description: A close-fitting helm hammered from star-ore and reinforced with shimmer-scale, its visor a band of dark
+      glass that drinks the light. Lighter than it looks and reassuringly dent-resistant.
+    keyword: helm
+    slot: head
+    level: 1
+    tier: uncommon
+    archetype: armor
+    armor: 4
+    stats:
+      PRIMARY: 3
+      SECONDARY: 2
+      TERTIARY: 1
+    itemType: equipment
+    basePrice: 22
+    image: f5d26297ddba76f3c0031d5ef2f87285ca80d7c9dfdd035144dd7670ddaa6c73.png
+  nebula_mantle:
+    displayName: a nebula mantle
+    description: A flowing mantle woven from spun nebula-cloth, deep indigo shot through with slow-drifting motes of
+      starlight. It turns a blow as readily as it turns heads.
+    keyword: mantle
+    slot: body
+    level: 1
+    tier: rare
+    archetype: armor
+    armor: 7
+    stats:
+      PRIMARY: 5
+      SECONDARY: 3
+      TERTIARY: 2
+    itemType: equipment
+    basePrice: 28
+    image: 4d2b4afe5e318c15970b8a1f8ee420586b4f675483e73300461c1d3ef1e6abda.png
+  comet_grips:
+    displayName: a pair of comet-grips
+    description: Fingerless gauntlets wrapped in heat-resistant cometcloth, their knuckles set with tiny ember-stones that
+      leave faint glowing trails when you move quickly. Good for gripping, better for showing off.
+    keyword: grips
+    slot: hands
+    level: 1
+    tier: uncommon
+    archetype: balanced
+    armor: 2
+    damage: 1
+    stats:
+      PRIMARY: 3
+      SECONDARY: 2
+      TERTIARY: 1
+    itemType: equipment
+    basePrice: 18
+    image: 5235c2faace355d30e94233c408451efcd9396098121ca94ce2c7e7b0de2af27.png
+  gravity_treads:
+    displayName: a pair of gravity-treads
+    description: Heavy-soled boots that quietly negotiate with gravity on your behalf, letting you walk a little lighter and
+      land a little softer. The buckles are tiny stars; of course they are.
+    keyword: treads
+    slot: feet
+    level: 1
+    tier: uncommon
+    archetype: armor
+    armor: 3
+    stats:
+      PRIMARY: 3
+      SECONDARY: 2
+      TERTIARY: 1
+    itemType: equipment
+    basePrice: 18
+    image: 7494e76d8bddd7ee83f442de5ebad6733ee6c959be8100b8ffc9c1c1b4d2841f.png
+  singularity_locket:
+    displayName: a singularity locket
+    description: A small, dense locket worn close to the heart, holding a single trapped point of light that pulls luck —
+      and the occasional loose coin — gently toward its wearer. The Bureau hands these out for a job well done.
+    keyword: locket
+    slot: neck
+    level: 1
+    tier: rare
+    archetype: stat
+    stats:
+      PRIMARY: 4
+      SECONDARY: 3
+      TERTIARY: 2
+    itemType: equipment
+    basePrice: 40
+    image: daaf4f4eecbf3f6dd11757ddc3e7b82103a8fc345c933388c2d791e548fb689c.png
+  orbiting_familiar:
+    displayName: a tiny orbiting familiar
+    description: A thumb-sized clockwork moonlet that circles your head in a lazy orbit, humming to itself and occasionally
+      whispering helpful nonsense. It floats nearby rather than being worn, and it would like you to know it is doing
+      its best.
+    keyword: familiar
+    slot: floating
+    level: 1
+    tier: rare
+    archetype: stat
+    stats:
+      PRIMARY: 4
+      SECONDARY: 3
+      TERTIARY: 2
+    itemType: equipment
+    basePrice: 40
+    image: d96d772183ffbb005913e3f970f911742cb0ca21dc4a9c7f43c72b1d076bbe24.png
+  the_one:
+    displayName: ONE
+    description: A single, perfectly unremarkable grey cube of indeterminate material and no discernible purpose. It is the
+      only thing this shop sells, has ever sold, or will ever sell. The proprietor declines to elaborate.
+    keyword: one
+    itemType: misc
+    basePrice: 1
+    image: 811097a3b2e6b47ba3d117a6c38c3ae67966f5081403f65cb34dd5e0a8f03eb8.png
+  skeleton_star_key:
+    displayName: a star-shaped key
+    description: A slender key cut in the shape of a five-pointed star, still faintly warm from the speaking-grille that
+      coughed it up. It fits exactly one lock in the whole of creation, and you happen to be standing right next to it.
+    keyword: key
+    itemType: misc
+    basePrice: 0
+    image: e9275559c22e57720849d18889bb40b4c770381a17006684e249a3da05b96ec2.png
+  playtesters_medal:
+    displayName: the Playtester's Medal
+    description: A heavy, gaudy medal on a ribbon of pure starlight, stamped with the words 'I POKED EVERYTHING AND ALL I
+      GOT WAS THIS PROFOUND SENSE OF COMPLETION'. Wear it with the quiet pride of someone who has personally verified
+      that the universe works.
+    keyword: medal
+    room: the_prize_closet
+    itemType: treasure
+    tier: epic
+    basePrice: 100
+    image: 3988dffb7443739d4aa54dbc6a8e8be29bdc45b634627d0b19d9894f828ae76a.png
+shops:
+  shop_everything:
+    name: The Shop That Sells Everything
+    room: shop_everything
+    items:
+      - astral_blade
+      - voidsteel_helm
+      - nebula_mantle
+      - comet_grips
+      - gravity_treads
+      - singularity_locket
+      - orbiting_familiar
+      - cosmic_cocoa
+      - bottled_starlight
+      - void_cake
+      - dubious_elixir
+    image: 3ec42b79194ac0994bb005cfd514daa806a5406f994bcc8370d63112cae16f0f.jpg
+  shop_nothing:
+    name: The Shop That Sells Nothing
+    room: shop_nothing
+    image: fe6321178996ed174d3e7e4e97befaa46b7e86a107a314bb8b0a2d8b6b5cbc56.jpg
+  shop_one_item:
+    name: The Shop That Only Sells One Item
+    room: shop_one_item
+    items:
+      - the_one
+    image: 0f77f34500fbfeb2c08068e99a595e87b0e5da4aed5230da477a5c86e1475239.jpg
+trainers:
+  trainer_all:
+    name: the Trainer of All Disciplines
+    room: trainer_everything
+    classes:
+      - bulwark
+      - arcanist
+      - veil
+      - herald
+      - scrollwright
+      - songweaver
+    image: d90af3eda7a9d48d14b4bdb8006097bb2d7218e06792a7f2444cce633d2aa6f3.png
+  trainer_bulwark:
+    name: the Bulwark Drillmaster
+    room: trainer_single_class
+    class: bulwark
+    image: cbc7710ed43e4e8bf3f360bd592e5d21b66f57052198c5698ee691ce027968a3.png
+quests:
+  cosmic_errand:
+    name: A Cosmic Errand
+    giver: bureau_clerk
+    description: "The Clerk of the Cosmic Bureau is hopelessly behind on paperwork and would be ever so grateful if you
+      cleared a little of the backlog: gather three handfuls of cosmic scrap from the monster pit and put down a couple
+      of the glitching void-rats while you are at it."
+    turnInMob: bureau_clerk
+    completionType: npc_turn_in
+    level: 1
+    difficulty: standard
+    objectives:
+      - type: collect
+        targetKey: cosmic_scrap
+        count: 3
+        description: Gather handfuls of cosmic scrap
+      - type: kill
+        targetKey: void_rat
+        count: 2
+        description: Put down glitching void-rats
+    rewards:
+      gold: 150
+      items:
+        - itemId: singularity_locket
+          count: 1
+gatheringNodes:
+  star_ore_seam:
+    displayName: a seam of raw star-ore
+    keyword: seam
+    skill: mining
+    skillRequired: 1
+    room: field_of_loose_ends
+    respawnSeconds: 60
+    xpReward: 10
+    yields:
+      - itemId: star_ore
+        minQuantity: 1
+        maxQuantity: 3
+    rareYields:
+      - itemId: radiant_gem
+        quantity: 1
+        dropChance: 0.1
+    image: 4f94c86f7a5fb9dbe9bb7ac211aa77dd7b386d71214842b0b02c5cf66882c96f.png
+  dream_herb_tangle:
+    displayName: a tangle of dream-herb
+    keyword: tangle
+    skill: herbalism
+    skillRequired: 1
+    room: field_of_loose_ends
+    respawnSeconds: 60
+    xpReward: 10
+    yields:
+      - itemId: dream_herb
+        minQuantity: 1
+        maxQuantity: 3
+    rareYields:
+      - itemId: void_essence
+        quantity: 1
+        dropChance: 0.1
+    image: f76806175457c17dc285cf741e2632ca01721f4272e318958b00bad6880348b7.png
+recipes:
+  smith_astral_blade:
+    displayName: Astral Blade
+    skill: smithing
+    skillRequired: 1
+    levelRequired: 1
+    station: forge
+    stationBonus: 1
+    materials:
+      - itemId: star_ore
+        quantity: 2
+      - itemId: beast_hide
+        quantity: 1
+    outputItemId: astral_blade
+    outputQuantity: 1
+    xpReward: 25
+  smith_voidsteel_helm:
+    displayName: Voidsteel Helm
+    skill: smithing
+    skillRequired: 1
+    levelRequired: 1
+    station: forge
+    stationBonus: 1
+    materials:
+      - itemId: star_ore
+        quantity: 2
+      - itemId: shimmer_scale
+        quantity: 1
+    outputItemId: voidsteel_helm
+    outputQuantity: 1
+    xpReward: 25
+  brew_bottled_starlight:
+    displayName: Bottled Starlight
+    skill: alchemy
+    skillRequired: 1
+    levelRequired: 1
+    station: alchemy_table
+    stationBonus: 1
+    materials:
+      - itemId: dream_herb
+        quantity: 2
+      - itemId: glow_ichor
+        quantity: 1
+    outputItemId: bottled_starlight
+    outputQuantity: 1
+    xpReward: 20
+  brew_void_cake:
+    displayName: Void Cake
+    skill: alchemy
+    skillRequired: 1
+    levelRequired: 1
+    station: alchemy_table
+    stationBonus: 1
+    materials:
+      - itemId: void_essence
+        quantity: 1
+      - itemId: dream_herb
+        quantity: 1
+    outputItemId: void_cake
+    outputQuantity: 1
+    xpReward: 20
+puzzles:
+  riddle_of_the_door:
+    type: riddle
+    roomId: the_door_that_asks
+    question: "The obsidian sphinx exhales: 'The more of me you take, the more you leave behind — and in a place built for
+      the testing of things, I am very nearly all you will ever make. What am I?'"
+    answer: footsteps
+    acceptableAnswers:
+      - footsteps
+      - footstep
+      - steps
+      - foot steps
+      - my footsteps
+    reward:
+      type: give_item
+      itemId: skeleton_star_key
+    successMessage: The sphinx sighs, almost disappointed you managed it. With a grudging click, a star-shaped key drops
+      from the speaking-grille into your waiting hand.
+    failMessage: "'No,' says the sphinx, with relish. 'Do try again. I have nothing but time — and, apparently, neither do you.'"
+    cooldownMs: 3000
+    resetOnFail: false

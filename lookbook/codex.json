@@ -1,0 +1,282 @@
+{
+"classes": {
+"title": "The Six Classes of Ambon",
+"lead": "",
+"pages": [
+[
+[
+"entry",
+"class_bulwark.jpg",
+"Bulwark",
+"Immovable defender clad in heavy armor, holding the line against overwhelming odds."
+],
+[
+"entry",
+"class_arcanist.jpg",
+"Arcanist",
+"Master of advanced spellcraft who bends illusion and reality through communion with the Arcanum."
+],
+[
+"entry",
+"class_veil.jpg",
+"Veil",
+"Stealth assassins who strike from shadow and vanish before their enemies can react."
+],
+[
+"entry",
+"class_herald.jpg",
+"Herald",
+"Divine conduit who channels patron power to heal wounds, restore strength, and kindle hope amid darkness."
+],
+[
+"entry",
+"class_scrollwright.jpg",
+"Scrollwright",
+"Craftspeople who command enchanted clockwork constructs powered by captured starlight and celestial magic."
+],
+[
+"entry",
+"class_songweaver.jpg",
+"Songweaver",
+"Minstrels and bards who channel primal magic through melody, narrative, and performance, shaping reality itself."
+]
+]
+]
+},
+"races": {
+"title": "The Peoples of Ambon",
+"lead": "",
+"pages": [
+[
+[
+"origin",
+"The Children of the Creator",
+"Woven into being by the Creator at the dawn of creation."
+],
+[
+"entry",
+"race_archae.jpg",
+"Archae",
+"The first children of the Creator, adaptable and ambitious inheritors of divine legacy."
+],
+[
+"origin",
+"Shaped by Kvarcgagap",
+"The primordial god of bedrock, gems, and the glitter beneath the ground."
+],
+[
+"entry",
+"race_lithae.jpg",
+"Lithae",
+"Living beings of crystal and stone, their forms shimmering with the earth’s raw beauty."
+],
+[
+"origin",
+"Made by the Naraxian Akathavae",
+"Raised from animals who sought cultivation and enlightenment."
+],
+[
+"entry",
+"race_kitsarae.jpg",
+"Kitsarae",
+"Animal spirits who walk between animal and humanoid form, masters of deception and subtle enchantment."
+]
+],
+[
+[
+"origin",
+"The Children of Aineroia",
+"The goddess who rose from a mortal Archae healer."
+],
+[
+"entry",
+"race_lustriae.jpg",
+"Lustriae",
+"Eternally youthful fae who perceive time as a living current and flit between moments with curious playfulness."
+],
+[
+"entry",
+"race_aetherae.jpg",
+"Aetherae",
+"Beings of shadow and mist born from Aineroia’s own shadow — shapeshifters of the far north who tend the Luneqrae."
+],
+[
+"entry",
+"race_pyrae.jpg",
+"Pyrae",
+"Children of the Phoenix, beings of living flame born from stories of rebirth and resurrection."
+],
+[
+"entry",
+"race_ophirae.jpg",
+"Ophirae",
+"Serpentine abyssal dragons who rule the cold northern waters from underwater cities built of leviathan bone."
+],
+[
+"entry",
+"race_mycorae.jpg",
+"Mycorae",
+"Fungal people grown from living mycelium, embodying the natural cycle of decay and rebirth."
+],
+[
+"entry",
+"race_aureliae.jpg",
+"Aureliae",
+"Bioluminescent beings of the deep ocean, drifting like living constellations through Ambon’s darkest waters."
+]
+]
+]
+},
+"creatures": {
+"title": "Creatures of Ambon",
+"lead": "",
+"pages": [
+[
+[
+"entry",
+"creature_malukae.jpg",
+"Malukae",
+"Ambon's trolls, fashioned from the cooling malice of Malkuth's heart — stone-skinned and cold-blooded, walled onto a sun-baked peninsula and slowly dwindling. The one people no adventurer can play."
+],
+[
+"entry",
+"creature_sylflorae.jpg",
+"Sylflorae",
+"A people accidentally sown when the fading Alorae spent their light growing crops. Driven underground in the Kirot War, they thrive in cavern gardens fed by Astriel, their harvest-god, and lit by the diminished remnant of Kvarcgagap — the old gem-god worn down to a gleam in the crystal."
+],
+[
+"entry",
+"creature_animae.jpg",
+"Animae",
+"Fully clockwork folk wrought by Tessikar the Springwright — brass-and-light automatons of turning gears and glowing filigree, an itinerant tinker culture out of clockwork Tessikon."
+],
+[
+"entry",
+"creature_luneqrae.jpg",
+"Luneqrae",
+"Moonlight horses descended from Aineroia's youngest child, bound to run on moonlight across the northern plains in the care of the Aetherae."
+],
+[
+"entry",
+"creature_alorae.jpg",
+"Alorae",
+"The luminous Divine Heralds who descended with the Creator. Their angelic power all but spent, they endure as a scattered remnant, giving the last of their light to any who need it."
+]
+]
+]
+},
+"chars": {
+"title": "Figures of Ambon",
+"lead": "",
+"pages": [
+[
+[
+"entry",
+"char_aineroia.jpg",
+"Aineroia",
+"An Archae herbalist taken as bride by the tyrant Malkuth; when she found him draining the life of their children, she slew him with the obsidian dagger and ascended to godhood. The mother-goddess of many of Ambon’s peoples."
+],
+[
+"entry",
+"char_malkuth.jpg",
+"Malkuth",
+"A cruel battle-mage tyrant from beyond the veil who wed Aineroia only to secretly drain the power of their children. Slain by her hand, his death tore a caldera into the world."
+],
+[
+"entry",
+"char_krioshaeu.jpg",
+"Krioshaeu",
+"The kind face Aineroia gave to Death — a gentle woman who meets each soul and leads it onward, turning a formless terror into a comforting guide."
+],
+[
+"entry",
+"char_naraxian_akathavae.jpg",
+"Naraxian Akathavae",
+"Keeper of the divine history and one of the three primordial powers — the Word, in whose native universe Ambon was made. The many-faced god of scholars, musicians, and stories who records all that is into the Arcanum, gave music to the Archae, and cultivated the Kitsarae from seekers among the beasts."
+],
+[
+"entry",
+"char_kvarcgagap.jpg",
+"Kvarcgagap",
+"An ancient primordial being from beyond Ambon — god of bedrock, caverns, gems, and ore — who flows through solid stone as shimmering opal quicksilver. Shaper of the Lithae."
+]
+],
+[
+[
+"entry",
+"char_caemyr.jpg",
+"Caemyr",
+"A visiting scholar-god who helped to repair the arcane scar left by the ascension of Aineroia. Mentor to Ambuoroko."
+],
+[
+"entry",
+"char_verathaios.jpg",
+"Verathaios",
+"The World Healer, a gentle god of growth who arrived from beyond the veil after Aineroia’s ascension; his divinity is the quiet miracle of life taking root."
+],
+[
+"entry",
+"char_maelsang.jpg",
+"Maelsang",
+"A god of storms and seas from another world, heralded by lightning across cloudless skies and waves that sing with otherworldly voices."
+],
+[
+"entry",
+"char_ambuoroko.jpg",
+"Ambuoroko",
+"Ambuoroko Ambonien, King of Ambon — an Aetherae who mastered illusion across centuries in Caemyr’s timeless Athenaeum Unbound and came home a god of law and justice: the beggar at the gate whose judgment is final, who rewards the kind and curses the cruel."
+],
+[
+"entry",
+"char_elustriaine.jpg",
+"Elustriaine",
+"The Faerie Queen of the Lustriae, her crown woven of crystallized moments and captured dawns, bound to duties that stretch across the fabric of time."
+],
+[
+"entry",
+"char_tessikar.jpg",
+"Tessikar",
+"The Springwright, a clockwork artificer born beyond the veil who arrived through a temporal-mechanical gateway of his own making — patron of brass-and-starlight machinery."
+]
+],
+[
+[
+"entry",
+"char_astriel.jpg",
+"Astriel",
+"An Alorae Divine Herald turned god of the harvest — his cultivation-magic grew the crops that fed the struggling Archae, and from that same craft the Sylflorae were accidentally sown."
+],
+[
+"entry",
+"char_kirot_aethiryn.jpg",
+"Kirot Aethiryn",
+"An Alorae Divine Herald who turned from the light to dark necromancy — the sole master of death-magic in Ambon, walking a path no other dares."
+],
+[
+"entry",
+"char_sorayangriel.jpg",
+"Sorayangriel",
+"An Alorae who, when the Creator's light withdrew and the world fell cold and dark, burned away all her divine power at once to become the sun — ascending instead of dying. Ambon's goddess of light, fire, and warmth, robed in living flame and dwelling within the sun by day."
+],
+[
+"entry",
+"char_braelaatum.jpg",
+"Braelaatum",
+"One of the three primordial powers — the silence before creation. A goddess of nothing: pitch dark, freezing cold, the unraveller of looms, who judged the empty void already perfect and would pull all that her siblings made back into it. Sealed in her own realm, she touches Ambon only through cold, shadow, and the hands that would let her in."
+],
+[
+"entry",
+"char_kolksprut.jpg",
+"Kolksprut",
+"Trickster, traveler, and gambler — a cuttlefish who cultivated his way from beast to godhood on sheer thirst for knowledge, then won immortality from the Naraxian on a single coin-flip. A shapeshifting weaver of illusions and god of luck."
+],
+[
+"entry",
+"char_drengariae.jpg",
+"The Drengariae",
+"Alorae warriors who ringed the first settlement with flaming swords through the Long Dark, holding back the cold and the creatures until they froze where they stood. Sorayangriel's first dawn melted them away — and they answer the call to war now as a single multi-faced god of frost and fire, splitting into its fallen and merging again."
+]
+]
+]
+}
+}

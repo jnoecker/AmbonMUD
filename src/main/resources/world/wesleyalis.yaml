@@ -1,0 +1,524 @@
+zone: wesleyalis
+startRoom: gravel_road_2
+rooms:
+  gravel_road_2:
+    image: 1bf02521b1943c76a6a1423642a1a1639519ea0d62c3ffd27eff45d8933f7724.jpg
+    title: The Kingdom Road - Eastern Approach
+    description: A pale gravel road winds westward through the edge of a tropical rainforest, enormous ferns brushing the
+      verge and macaws arguing in the canopy above. The air is warm and alive with insects and birdcall. An archway of
+      intertwined jungle vines frames the eastern path — beyond it, dimensional light pulses faintly, the gateway back
+      to the wider world. A jewel-toned chameleon watches you from a branch, then vanishes. To the west, the road
+      continues deeper into the kingdom.
+    exits:
+      w: gravel_road_1
+      s: pixel_haven:portals
+  gravel_road_1:
+    image: a2b0e04eaee8409d75f636c287f827c35d06e26cd831eca04202f0670529f789.jpg
+    title: The Kingdom Road - Near the Treehouse
+    description: "The gravel road here is well-trodden and scattered with the evidence of an active household — a chalk
+      hopscotch grid, a lost sandal, a small pile of interesting rocks clearly being saved for a reason. Through the
+      canopy above, the underside of the treehouse is visible: a vast golden-timbered platform lashed to a tree so large
+      it defies explanation. A rope ladder dangles upward to a landing platform. The road continues east; a woodpile is
+      to the west; a smoky smell drifts from the south."
+    exits:
+      e: gravel_road_2
+      u: landing
+      w: wood_pile
+      s: smoky_clearing
+  wood_pile:
+    image: da169131ab00c872d0b15a08279b55a159faf1d191ee6de714cc6cdbca7904ed.jpg
+    title: The Royal Wood Pile
+    description: An impressive stack of split firewood, cut and stacked with evident pride. The logs are arranged in
+      interlocking layers that — if you look at the cut ends — spell out 'W+A' near the top. A smell of fresh-cut pine
+      and resin mingles with the humid jungle air. Butterflies and luminous tropical moths flutter between the logs. A
+      scarlet macaw has claimed the topmost piece as a throne. The gravel road is east; the smoker is south.
+    exits:
+      e: gravel_road_1
+      s: wood_smoker
+  wood_smoker:
+    image: 79c28891d262ccd8a9789c6a685e62df115b7825714628d8fd501c29185453ae.jpg
+    title: The Wood Smoker Station
+    description: "A large barrel smoker sits at the edge of a jungle clearing, tendrils of fragrant hardwood smoke curling
+      through the palm fronds. Someone has chalked a menu on a slab of bark propped against it: 'BBQ Ribs, Wings, Dino
+      Nuggets (the big kind).' The coals glow orange in the canopy-filtered light. The rich, layered smell of smoke and
+      slow-cooked everything is extremely persuasive. The wood pile is back to the north."
+    exits:
+      n: wood_pile
+      e: smoky_clearing
+      s: prehistoric_apiary
+  landing:
+    image: c46bf0599e85ac904b436cf799e119630b96f9acd6d3c3baf16f869844c2d44c.jpg
+    title: The Treehouse Landing Platform
+    description: "A wide wooden platform set at the first bough of the great tree, reached by a thick rope ladder from the
+      gravel road below. The platform is solid and well-worn, hung with wind chimes made of shells and old keys that
+      keep up a gentle music in every breeze. Painted arrows point in three directions with helpful labels: 'UP
+      (treehouse)', 'DOWN (road)', and 'IN (basement, servants only — do not knock before 7am).' A supply post on the
+      platform offers jungle provisions."
+    exits:
+      d: gravel_road_1
+      u: lower_deck
+      n: basement_main
+  smoky_clearing:
+    image: dcf29315a11cd6cdaae1cbad5887d9bbf318567cbccdc8b974fc8d23dcaa57da.jpg
+    title: A Smoky Clearing
+    description: A round clearing where the tree cover thins just enough to let shafts of hazy light through the perpetual
+      smoke. The smoke drifts in from the south, smelling of something ancient and sweet — flowers that haven't existed
+      for sixty-five million years. The ground is soft with centuries of leaf litter, and enormous tracks cross the
+      clearing in patterns too large for any modern animal. It is beautiful and faintly alarming. The gravel road lies
+      to the north; the smoke thickens to the south.
+    exits:
+      n: gravel_road_1
+      w: wood_smoker
+      s: jungle_floor
+  prehistoric_apiary:
+    image: f63a0f913088e04a169695404b58cf2701e5e14e6a3701d0603c30708094e2a1.jpg
+    title: The Prehistoric Apiary
+    description: "Nothing here is normal. The hives are enormous — each one the size of a small house — constructed from
+      golden comb the color of ancient amber. The bees themselves are prehistoric: each one wider than your arms spread
+      wide, their drone a bass note that resonates in your chest. In the center, on a platform of pure golden comb, the
+      Prehistoric Queen Bee tends her domain with the authority of sixty-five million years of unbroken succession. Jars
+      of luminous honey and a shed stinger the size of a sword lie near the entrance. The jungle extends east and west;
+      the smoky clearing is back to the north."
+    exits:
+      n: wood_smoker
+      e: jungle_floor
+  jungle_floor:
+    image: f33839c481f9b7f6dc488ab6af071f7f061d10a03d8a84da0c97d9f03545e40e.jpg
+    title: The Jungle Floor
+    description: The floor of the prehistoric jungle is a riot of giant ferns, fallen logs thick with moss, and pools of
+      standing water reflecting filtered green light from far above. The humidity is extreme. Every surface is alive —
+      insects, lizards, fungi, flowering plants in colors that do not quite correspond to the visible spectrum. Enormous
+      footprints press into the soft earth. The apiary is to the east; the canopy is reachable by climbing upward.
+    exits:
+      w: prehistoric_apiary
+      n: smoky_clearing
+      e: jungle_deep
+  jungle_deep:
+    image: ad94c0b777808ace583007a72c47f98a30c8dd30699b676f06b00c2a06578ec3.jpg
+    title: Deep Jungle - Dinosaur Territory
+    description: You have gone deep into the prehistoric jungle, where the trees are immense and the shadows between them
+      are full of motion. The sound of dinosaurs is all around you — distant roars, heavy footsteps, the crash of
+      something enormous through undergrowth. A hunting velociraptor pauses to assess you with unsettling intelligence.
+      A triceratops grazes at the far edge of a sunny clearing, deceptively peaceful. This is not a safe place, but it
+      is magnificent. The apiary is to the west; the high canopy is reachable by climbing upward.
+    exits:
+      u: jungle_canopy
+      w: jungle_floor
+  jungle_canopy:
+    image: 814b77d1065a92cccb45846d565ca7154bcba950748662cf1e5736bfd35e349c.jpg
+    title: The High Jungle Canopy
+    description: "You have climbed into the upper reaches of the prehistoric canopy, where ancient trees form a vaulted
+      ceiling of green over the entire world. Pterodactyls roost in the higher branches, leathery wings folded, watching
+      you with prehistoric patience. The air here is clearer, and the entire Kingdom of Wesleyalis is visible below: the
+      treehouse like a fortress, smoke rising from the clearing, the glimmer of the world-gate beyond the distant
+      horizon. It is spectacularly beautiful. The jungle floor is below."
+    exits:
+      d: jungle_deep
+  lower_deck:
+    image: 64b6707bc33920dd260698eb7835d560d65bd9d176ef876c8dc2fac4b296efb6.jpg
+    title: Treehouse Lower Deck
+    description: The lower deck wraps around the great trunk, its planks warm from the tropical sun filtering through the
+      canopy. Hammocks are strung between the railings and potted jungle plants in hand-painted pots crowd every corner.
+      The view from here is staggering — rainforest stretching to the horizon in every shade of green. Vines have been
+      trained into handrails. A rope ladder descends to the landing platform below; stairs wind upward to the main upper
+      deck.
+    exits:
+      d: landing
+      u: upper_deck
+  upper_deck:
+    image: 4779b73a9c0af98c457770780a2e91a26b4be0e6af25410c9ccf756a631054b3.jpg
+    title: Treehouse Upper Deck
+    description: "The upper deck is the social heart of the treehouse exterior — a broad platform with a table built around
+      the trunk, three mismatched chairs, and a spectacular view of the jungle canopy. Wind chimes keep up a gentle
+      bamboo music. Someone has painted a large sign on the trunk in careful letters: 'KINGDOM OF WESLEYALIS — WESLEY &
+      AURORA, RULERS OF EVERYTHING.' It is spelled correctly and underlined three times. Stairs lead down to the lower
+      deck; a sliding glass door opens east into the living room."
+    exits:
+      d: lower_deck
+      n: living_room
+  living_room:
+    image: d9749c35c123e3708a609940ad6d8338937f01c8f156da9d33940a9b62bc47ce.jpg
+    title: The Treehouse Living Room
+    description: "The living room is airy and open, its walls more window than wall — every pane frames a different view of
+      the jungle canopy. The furniture is the good kind: deep couches, a rug that has survived many years of indoor
+      camping forts, and a coffee table covered in at least six ongoing projects (Lego, drawing, a half-finished board
+      game, several rocks of importance). A massive TV is mounted to the trunk itself. The upper deck is through the
+      sliding door west; the kitchen is north; the dining room is east."
+    exits:
+      n: kitchen
+      s: upper_deck
+      e: dining_room
+  kitchen:
+    image: 21947c38dac0eac307dddc4629371883696c5137c9f33abac94ad2c2665be52c.jpg
+    title: The Treehouse Kitchen
+    description: A proper kitchen built into the treehouse's main platform, warm and smelling of something good. The
+      countertops are at two heights — one regular, one sized for small people who insist on helping. A magnetic knife
+      block, a jungle-themed fruit bowl, and a truly impressive spice rack line the walls. Finger paintings are stuck to
+      the fridge with souvenir magnets from everywhere the kingdom has ever traveled, real and imaginary. The living
+      room is south; the kitchen nook and art prep is east; the hallway is west.
+    exits:
+      s: living_room
+      e: kitchen_nook
+      w: hallway_east
+  kitchen_nook:
+    image: df6c778e3c0de4aa0d6fcaae79f8ca2ea2d1ab4e8f37a9c46827dce0bfc305d0.jpg
+    title: The Kitchen Nook and Art Prep Counter
+    description: Where the kitchen meets the creative side of the household. The breakfast nook's table is perpetually
+      covered in art supplies — colored pencils sorted by hue, half-dried watercolor palettes, stacks of drawing paper,
+      and reference books about dinosaurs and creatures. The nook's bench seat bears a mural of jungle animals painted
+      by a hand both skilled and enthusiastic. The main kitchen is to the west; the art workshop opens to the north.
+    exits:
+      s: dining_room
+      w: kitchen
+      n: wesleys_art_workshop
+  wesleys_art_workshop:
+    image: c09dc909817707888ba2148101379d45acadf62c8a11d6d9420b82cb810780a4.jpg
+    title: Wesley's Art Workshop
+    description: "Wesley's Art Workshop is a world unto itself, crammed into the northeast corner of the treehouse. Every
+      surface not covered in supplies is covered in artwork: detailed pencil studies of dinosaurs, vibrant pixel-art
+      printouts, Minecraft building plans in architectural isometric view, and character designs for games that exist
+      only in his head so far. An easel at the center holds something large, draped in a paint-stained cloth. The air
+      smells of paint, turpentine, and possibility. An enchanted art brush rests beside the palette. The kitchen nook is
+      south; the dining room is west."
+    exits:
+      s: kitchen_nook
+  dining_room:
+    image: a8d9d4a287b54cceed3f9cdc44a9e97598824aa00d1618d1c280196e15f998c5.jpg
+    title: The Treehouse Dining Room
+    description: The dining room always has chairs in slightly wrong positions, as if everyone just finished eating and
+      hasn't tidied yet. A long table dominates the room, its surface gently scarred with years of craft projects that
+      escaped their newspapers. The window over the table looks directly into the canopy — on windy days the leaves
+      brush the glass. The living room is west; the art workshop is east; the west hallway is through the connecting
+      passage to the north; a hatch in the floor leads down to the basement.
+    exits:
+      w: living_room
+      n: kitchen_nook
+  hallway_east:
+    image: 705a879d7f428f3868f13608f18955e105f8bb0affdac7a248b71c13887a641e.jpg
+    title: The East Hallway
+    description: "The east wing hallway connects the kitchen and dining area to the bedroom corridor. Framed drawings line
+      the walls in a rotating gallery curated with the seriousness due any major exhibition. A family calendar marks
+      every important date in different colors: birthdays, school days, 'MOVIE NIGHT' recurring every Friday. The
+      kitchen is east; the dining room is south; the west hallway continues ahead; the bathroom is north."
+    exits:
+      w: hallway_west
+      n: bathroom
+      e: kitchen
+      d: basement_main
+  bathroom:
+    image: 1961db18e5b8013a1d89cae132492dd7d3ce02a79e76f85aedda56973620157d.jpg
+    title: The Treehouse Bathroom
+    description: A cheerful bathroom with jungle-themed tiles — tiny painted frogs, leaves, and the occasional pixel-art
+      dinosaur on the backsplash. The mirror is ringed with stickers that have been accumulating for years. A
+      height-measurement chart on the door frame shows two sets of marks in different colors — 'W' in blue and 'A' in
+      pink — tracking years of growth. Everything smells faintly of bubblegum shampoo. The hallway is south.
+    exits:
+      s: hallway_east
+  hallway_west:
+    image: aca476a36da52056189abd5a4a804e5f86866bf65ba754e459c62ff4c6b02581.jpg
+    title: The West Hallway - The Royal Corridor
+    description: "The west wing hallway is the royal corridor, and it knows it. The carpet is slightly better here, the
+      lighting warmer, and the wall decorations more elaborate — royal proclamations in crayon on colored paper, framed
+      with what appears to be painted macaroni. A hand-lettered directory on the wall reads: 'NORTH — King Wesley's
+      Kingdom. SOUTH — Princess Aurora's Kingdom. EAST — Civilization.' The east hallway connects back to the main
+      house."
+    exits:
+      e: hallway_east
+      w: auroras_entrance
+      n: wesley:palace_entrance
+  auroras_entrance:
+    image: f718700848cd0fccb322aab75f5e7c06aaad91a0038d3d5d9972a36f363b9a60.jpg
+    title: Antechamber of Princess Aurora's Kingdom
+    description: "The entrance to Aurora's realm has been decorated with extreme thoroughness. Glitter has been applied to
+      the doorframe, the walls on both sides, the ceiling, the floor, and apparently also the air itself. A sign — each
+      letter a different color in a different font — reads: 'AURORA'S ROOM — WELCOME — PLEASE BE GENTLE WITH THE
+      STUFFIES.' A sparkly glitter crown sits on a small shelf by the door, available for qualifying visitors. The royal
+      corridor is north; the kingdom is south."
+    exits:
+      s: stuffie_wonderland
+      e: hallway_west
+      w: tantrum_wasteland
+  stuffie_wonderland:
+    image: dcb732e4d099d8d9670329f5bd8019918bdefd826674917119ffadbf5c348ed0.jpg
+    title: The Stuffie Wonderland
+    description: Aurora's room, in its resting state, is paradise. Every shelf, surface, window ledge, and corner is
+      occupied by stuffed animals of extraordinary variety and obvious biographical significance — each one has a name,
+      a place of honor, and an ongoing relationship with Aurora that you are not fully cleared to know about. The Great
+      Stuffed Dragon Guardian presides over the central stuffie congress from a throne of velvet and yarn. Fairy lights
+      in three colors keep everything warm and golden. It smells of lavender and something pink-colored. A rainbow
+      stuffed unicorn sits in the place of honor near the window. The antechamber is north; the wasteland is east.
+    exits:
+      n: auroras_entrance
+  tantrum_wasteland:
+    image: e05a30ea9255b1dcb0b046ce5abcab4b56803b25440263c51efd569bc8793535.jpg
+    title: The Tantrum Wasteland
+    description: This corner of Aurora's kingdom has borne the full weight of toddler displeasure, and it shows. Stuffed
+      animals lie strewn across the floor as if thrown by a tiny, furious god — which is accurate. The bookshelf is
+      empty, its contents scattered in a radius consistent with a toddler having Extremely Strong Opinions. Crayon marks
+      cover the wall in bold, righteous arcs. And yet — even in destruction there is artistry. The pattern follows the
+      logic of pure indignant feeling, and is, in its own way, beautiful and terrible. Small chaos toddler spirits dance
+      through the debris. The stuffie wonderland is west.
+    exits:
+      e: auroras_entrance
+  basement_main:
+    image: 14f2b17cc7908ab217f6d8dc058e0ba37b46d293a534e72d75d7fac0e775a403.jpg
+    title: The Basement - Servants' Quarters
+    description: "The basement of the Kingdom of Wesleyalis is the domain of the Royal Servant Parents, and they have tried
+      their best with it. One corner has a proper adult workspace: a laptop, paperwork of obscure but essential
+      importance, and a coffee mug that has not been fully empty since approximately the birth of Wesley. The walls bear
+      evidence of both kingdoms above — here a framed dinosaur drawing, there a stuffed bear keeping dignified watch
+      from a high shelf. A whiteboard reads: 'CURRENTLY RUNNING: 2 KINGDOMS, 1 TREEHOUSE, 1 PREHISTORIC APIARY, MISC.
+      DINOSAURS.' The dining room is above; the landing side door is south; the art archive is east; the stuffie nook is
+      west."
+    exits:
+      s: landing
+      w: basement_stuffie
+      u: hallway_east
+      n: basement_art
+  basement_art:
+    image: 64effeaac4f48763119aefc5d85491fba2b5eefc7485800b5faa2aa56bc3c063.jpg
+    title: The Basement Art Archive
+    description: "A section of the basement has been given over — voluntarily or otherwise — to the overflow of Wesley's art
+      production. Portfolios stand in labeled folders. Rolled canvases lean against the wall. A large flat-file cabinet
+      holds years of drawings organized by a system that makes complete sense to its creator. On the wall, framed and
+      labeled with hand-written museum placards, are the first three drawings Wesley ever made: abstract, energetic, and
+      signed in very large letters. The archive extends throughout this corner of the basement. The main basement is to
+      the west."
+    exits:
+      s: basement_main
+  basement_stuffie:
+    image: 33278087b511011fe8b5bb8f3984b7edbdfc8c29d6193329a8305a5cf717b53d.jpg
+    title: The Basement Stuffie Nook
+    description: "The western corner of the basement has been claimed by overflow stuffies — the ones that couldn't fit in
+      Aurora's room, a situation everyone considered mathematically impossible until it happened. They sit on shelves,
+      in baskets, and in a large bean bag designated 'THE STUFFIE CHAIR' by a hand-painted sign. A mural at child-height
+      on the wall shows the stuffie family tree: a genealogy of plush spanning a remarkable number of species. Several
+      stuffies watch you from the shelves with the dignified patience of things that are very, very loved. The main
+      basement is to the east."
+    exits:
+      e: basement_main
+levelBand:
+  min: 23
+  max: 24
+difficultyHint: casual
+image:
+  room: b3925c7174aa76dbd464e04868753ef40a8e1ed6be289810b15e93a41d3e3588.jpg
+  mob: 321ce0d85ec505b1dc5cf93378c00769232bff85aace76b93e1db346e810ca85.png
+  item: 1716320e08f2c23538250d04a3d994aa3e529c9137c4c3a969ac1cd75336dec8.png
+audio:
+  music: 27c24ab978dfbb2b0971120ff61c42a8f56c7f96735c08f0ae83bc8e2644c7ff.mp3
+mobs:
+  scarlet_macaw:
+    image: fa8c6b5fdef0756de2414b9f0baa075ccdc562a38f5424637b906d6354eab982.png
+    name: a scarlet macaw
+    spawns:
+      - room: gravel_road_1
+    tier: weak
+    level: 23
+    respawnSeconds: 120
+    behavior:
+      template: wander
+    description: A brilliantly plumed tropical bird perches with casual ease, its vivid scarlet feathers giving way to bands
+      of golden yellow and deep cobalt blue along its wings. Its hooked ivory beak and long, sweeping tail feathers
+      catch the light as it bobs its head and shuffles restlessly from foot to foot.
+  jewel_chameleon:
+    image: d63473804cf0e2086886ae5ed5a48fa463430d6396e0e3cbbc3cd6c10a96f58b.png
+    name: a jewel-toned chameleon
+    spawns:
+      - room: gravel_road_2
+    tier: weak
+    level: 23
+    respawnSeconds: 90
+    behavior:
+      template: wander
+  glowing_firefly:
+    image: 5b880222a020c091fb1d30a4b1989ae61adbf441f4e1a928a96d7cadb9f88e08.png
+    name: a glowing firefly
+    spawns:
+      - room: landing
+    tier: weak
+    level: 23
+    respawnSeconds: 60
+    behavior:
+      template: wander
+  worker_bee:
+    image: 6a835e2f01dee1a0dffd8241ed78eb5dfc593940d8eef772fa73edcd2097d052.png
+    name: a prehistoric giant worker bee
+    spawns:
+      - room: prehistoric_apiary
+    tier: standard
+    level: 23
+    respawnSeconds: 120
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: The prehistoric bee's wings thunder like a helicopter rotor! It fixes you with six enormous compound eyes
+          and charges!
+  queen_bee:
+    image: 7f7e46644fe1b6a262a3d88ec5342f721d6cbe91f0adf9ac2628f812fbe17ddd.png
+    name: the Prehistoric Queen Bee, Ancient Mother of the Swarm
+    spawns:
+      - room: prehistoric_apiary
+    tier: elite
+    level: 23
+    respawnSeconds: 600
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: The floor vibrates with a deep HUMMMMM. The Queen is larger than a horse. She is ancient. She is not
+          pleased to see you.
+  velociraptor:
+    image: 8752be91de9c19b6c297a85fd5a694555c7cfc8c5ad7efdb9e200499b677a917.png
+    name: a hunting velociraptor
+    spawns:
+      - room: jungle_deep
+    tier: standard
+    level: 23
+    respawnSeconds: 180
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: The velociraptor tilts its head sideways, makes a chittering sound, and charges with alarming speed!
+  triceratops:
+    image: bea11416aa558159c68ae7e2e3e723f93fe0832127b1a9121d82eba2ba79d67b.png
+    name: a massive triceratops
+    spawns:
+      - room: jungle_deep
+    tier: elite
+    level: 23
+    respawnSeconds: 300
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: The triceratops SNORTS and lowers its three-horned head. The ground shakes as it charges!
+  pterodactyl:
+    image: c859d6e9b0a78aca1e7c94c487d9198cd146404a8936963a672710fed90d71fd.png
+    name: a swooping pterodactyl
+    spawns:
+      - room: jungle_canopy
+    tier: standard
+    level: 23
+    respawnSeconds: 240
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: The pterodactyl shrieks and dives from the canopy with talons spread wide!
+  stuffed_dragon_guardian:
+    image: dab366c69055389ca1b5619149cd0c454233d30d5c477aad5ae567d77977163b.png
+    name: the Great Stuffed Dragon Guardian
+    spawns:
+      - room: stuffie_wonderland
+    tier: standard
+    level: 23
+    respawnSeconds: 180
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: The enormous stuffed dragon opens its plush jaws and makes the BEST roaring noise it can manage, which is
+          actually quite impressive!
+  chaos_toddler_spirit:
+    image: 7362054d145c090baf89b2fa9c96cfeebfd3c11b4686eef1034c3d6021ff637a.png
+    name: a tiny chaos toddler spirit
+    spawns:
+      - room: tantrum_wasteland
+    tier: standard
+    level: 23
+    respawnSeconds: 60
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: The tiny spirit SCREAMS with the force of a thousand denied crackers! It begins throwing stuffed animals
+          with uncanny accuracy!
+  royal_parent:
+    image: 118f9431f7cb41b0f72b82e18d0b8de58cbb8f69422d810282c3af4222ece528.png
+    name: a Royal Servant Parent
+    spawns:
+      - room: basement_main
+    tier: weak
+    level: 23
+    respawnSeconds: 300
+    behavior:
+      template: wander
+items:
+  prehistoric_honey:
+    image: 23253eb929b892faa566b77bc6b903aaea5ecd79e1adeed039ab5254a8dc3768.png
+    displayName: a jar of prehistoric honey
+    keyword: honey
+    description: A thick, luminous jar of honey harvested from the Prehistoric Apiary. It smells of ancient flowers and
+      sixty-five million years of rainforest rain. Incredibly sweet. Incredibly restorative.
+    consumable: true
+    onUse:
+      healHp: 35
+    room: prehistoric_apiary
+    basePrice: 40
+  bee_stinger_sword:
+    image: 23f79f073f97965c8659e0a99fff2a358854e250526cc4070eb7434fbcd79567.png
+    displayName: a prehistoric bee stinger sword
+    keyword: stinger
+    description: A massive stinger shed by the Prehistoric Queen Bee, honed to a razor edge and fitted with a grip of tough
+      vine. It hums faintly with ancient apiary power.
+    slot: weapon
+    damage: 3
+    room: prehistoric_apiary
+    basePrice: 120
+    level: 23
+    tier: common
+    archetype: damage
+  wesleys_art_brush:
+    image: 6b192843c86486c703abe096a7e18c77fe615e5adfee1b5d27f6a0f0a6be4aa0.png
+    displayName: Wesley's enchanted art brush
+    keyword: brush
+    description: A paint brush with bristles that shimmer with every color ever mixed. When you hold it, you feel an
+      overwhelming urge to create something magnificent.
+    slot: offhand
+    armor: 2
+    room: wesleys_art_workshop
+    basePrice: 60
+    level: 23
+    tier: common
+    archetype: balanced
+    damage: 1
+  aurora_rainbow_stuffie:
+    image: f06c4baade2c9a0c81baa796b68a8c97c64d00686c7ffc26b31d615631b5f7e5.png
+    displayName: a rainbow stuffed unicorn
+    keyword: unicorn
+    description: A plush stuffed unicorn with a sparkly rainbow mane and an expression of pure serenity. It has been
+      well-loved — one ear is slightly flattened from years of being hugged. It seems to radiate calm.
+    consumable: true
+    onUse:
+      healHp: 15
+    room: stuffie_wonderland
+    basePrice: 25
+  glitter_crown:
+    image: f7f7e13f5ee338dce44ae678245806db71642f0f88665b619d28698aa6b1d7e0.png
+    displayName: a glitter crown
+    keyword: crown
+    description: A cardboard crown dusted in silver and gold glitter that gets on everything it touches — but in a magical,
+      not annoying, way. Whoever wears it is clearly royalty.
+    slot: head
+    armor: 3
+    room: auroras_entrance
+    basePrice: 35
+    level: 23
+    tier: common
+    archetype: armor
+  jungle_orchid:
+    image: 0a6a5ac1e7513f5316566b7a2b4edc69177c08758c115eba06616dd8a17ee125.png
+    displayName: a luminous jungle orchid
+    keyword: orchid
+    description: An orchid of impossible purple and gold found deep in the prehistoric rainforest, its petals faintly
+      luminescent. Eating it carries some of the jungle's wild vitality.
+    consumable: true
+    onUse:
+      healHp: 20
+    room: jungle_deep
+    basePrice: 30
+shops:
+  landing_supply_post:
+    name: The Treehouse Landing Supply Post
+    room: landing
+    items:
+      - prehistoric_honey
+      - jungle_orchid
+      - aurora_rainbow_stuffie
+    image: 14ee79d5dd6144b4fee9c4fba4e3fa292ea2bb640f33046ca19836f851c215a3.jpg

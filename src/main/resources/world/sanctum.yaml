@@ -1,0 +1,40 @@
+zone: sanctum
+startRoom: cabin
+rooms:
+  cabin:
+    title: Krioshaeu's Hearth
+    description: >-
+      A cozy cabin materializes around you, its walls built from stones that somehow feel familiar, its windows framing
+      meadows half-remembered from dreams. A fire crackles in the hearth with driftwood that smells of distant shores,
+      and Krioshaeu sits in a weathered rocking chair, steam rising from two cups of tea that smell like every comfort
+      you've ever known. 
+
+
+      Rest here and recover. When you are ready to return to the living world, simply type 'depart'.
+    image: 8e958b1dfd995d16d1568ae0d57ba0ab9ef03cb5ff4c40c7e96f0b30d7dd1049.jpg
+lifespan: 30
+mobs:
+  krioshaeu:
+    name: Krioshaeu, the Kindly Death
+    description: A woman of indeterminate age sits before you, her features shifting like candlelight—sometimes appearing as
+      a grandmother, sometimes as a gentle stranger whose kindness saved a difficult day. Her presence transforms fear
+      into peace, and her eyes hold the warmth of someone who has walked countless souls home and still finds wonder in
+      each one.
+    tier: boss
+    spawns:
+      - room: cabin
+    role: prop
+    image: f9b3ec7abf1a8d42a1ff7c0885cd58997067983e3f191aa7b57a689ce4258ad3.png
+items:
+  cooling_cup:
+    displayName: Cup of Krioshaeu's Tea
+    description: A delicate ceramic cup still warm from Krioshaeu's hands, filled with a fragrant tea that tastes like every
+      comfort you've ever known. A single sip soothes aching hearts and weary souls.
+    room: cabin
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 1
+    itemType: consumable
+    image: a20bb042d947ab1503a5da28ab10eeb49bfc8576acbc0e9b9826e367c12e9d73.png
+    keyword: cooling_cup

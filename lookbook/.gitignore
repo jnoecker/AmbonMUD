@@ -1,0 +1,6 @@
+# Build intermediates emitted by the pipeline (the PDFs are committed).
+lookbook.html
+promo.html
+
+# Pipeline deps (bun install).
+pipeline/node_modules
