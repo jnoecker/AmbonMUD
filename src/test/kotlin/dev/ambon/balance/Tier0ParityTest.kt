@@ -2,7 +2,6 @@ package dev.ambon.balance
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-
 import dev.ambon.config.AppConfig
 import dev.ambon.config.AppConfigLoader
 import dev.ambon.config.MobTierConfig
@@ -53,7 +52,11 @@ import kotlin.math.min
 class Tier0ParityTest {
     private val mapper = ObjectMapper()
 
-    private data class Mismatch(val where: String, val fixture: Any?, val engine: Any?)
+    private data class Mismatch(
+        val where: String,
+        val fixture: Any?,
+        val engine: Any?,
+    )
 
     @Test
     fun tier0FixturesMatchEngine() {
@@ -116,6 +119,7 @@ class Tier0ParityTest {
             val tier = tierConfig(config, tierName)
             byLevel.fields().forEach { (levelStr, row) ->
                 val ms = resolveMobStats(tier, levelStr.toInt())
+
                 fun cmp(field: String, engine: Long) {
                     if (engine != row[field].asLong()) {
                         out += Mismatch("mobs.$tierName[$levelStr].$field", row[field].asLong(), engine)
@@ -196,7 +200,7 @@ class Tier0ParityTest {
             val tier = tierConfig(config, mob["tier"].asText())
             val mobLevel = mob["level"].asInt()
             val ms = resolveMobStats(tier, mobLevel)
-            val where = "cell[$i](${classId}/L$level/${player["gear"].asText()} vs ${mob["tier"].asText()}/L$mobLevel)"
+            val where = "cell[$i]($classId/L$level/${player["gear"].asText()} vs ${mob["tier"].asText()}/L$mobLevel)"
 
             // Vitals from BASE stats (the engine never merges equipment stats into pools).
             val def = config.engine.classes.definitions[classId]
