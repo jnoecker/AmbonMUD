@@ -259,7 +259,6 @@ data class AppConfig(
         validateMobTier("standard", engine.mob.tiers.standard)
         validateMobTier("elite", engine.mob.tiers.elite)
         validateMobTier("boss", engine.mob.tiers.boss)
-        validateEngineClasses()
 
         require(engine.season.cycleLengthMs > 0L) { "ambonMUD.engine.season.cycleLengthMs must be > 0" }
         require(engine.mobVariants.chance in 0.0..1.0) { "ambonMUD.engine.mobVariants.chance must be in 0.0..1.0" }
@@ -400,6 +399,12 @@ data class AppConfig(
             require(def.manaScalingRate >= 1.0) {
                 "ambonMUD.engine.classes.definitions.$key.manaScalingRate must be >= 1.0"
             }
+            require(def.baseHpMultiplier > 0.0) {
+                "ambonMUD.engine.classes.definitions.$key.baseHpMultiplier must be > 0"
+            }
+            require(def.baseManaMultiplier > 0.0) {
+                "ambonMUD.engine.classes.definitions.$key.baseManaMultiplier must be > 0"
+            }
             if (def.hpScalingRate > MAX_SCALING_RATE) {
                 warnConfig(
                     "engine.classes.definitions.$key.hpScalingRate is ${def.hpScalingRate}, " +
@@ -486,16 +491,6 @@ data class AppConfig(
         require(b.xpBonusCap >= 0.0) { "ambonMUD.engine.stats.bindings.xpBonusCap must be >= 0" }
     }
 
-    private fun validateEngineClasses() {
-        engine.classes.definitions.forEach { (key, def) ->
-            require(def.baseHpMultiplier > 0.0) {
-                "ambonMUD.engine.classes.definitions.$key.baseHpMultiplier must be > 0"
-            }
-            require(def.baseManaMultiplier > 0.0) {
-                "ambonMUD.engine.classes.definitions.$key.baseManaMultiplier must be > 0"
-            }
-        }
-    }
 
     private fun validateEngineAbilities() {
         engine.abilities.definitions.forEach { (key, def) ->
