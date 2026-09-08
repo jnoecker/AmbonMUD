@@ -491,7 +491,6 @@ data class AppConfig(
         require(b.xpBonusCap >= 0.0) { "ambonMUD.engine.stats.bindings.xpBonusCap must be >= 0" }
     }
 
-
     private fun validateEngineAbilities() {
         engine.abilities.definitions.forEach { (key, def) ->
             if (def.displayName.isBlank()) warnConfig("ability '$key' displayName is blank")
