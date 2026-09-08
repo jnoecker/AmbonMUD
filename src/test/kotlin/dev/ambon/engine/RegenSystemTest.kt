@@ -9,6 +9,7 @@ import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.util.Random
@@ -28,6 +29,8 @@ class RegenSystemTest {
         inCombat: (dev.ambon.domain.ids.SessionId) -> Boolean = { false },
         innMultiplier: Double = 2.0,
         inInn: (dev.ambon.domain.ids.SessionId) -> Boolean = { false },
+        manaInCombatMultiplier: Double? = null,
+        model: RegenModel = RegenModel.DISCRETE,
     ): RegenSystem =
         RegenSystem(
             players = players,
@@ -42,6 +45,8 @@ class RegenSystemTest {
             inCombat = inCombat,
             innMultiplier = innMultiplier,
             inInn = inInn,
+            manaInCombatMultiplier = manaInCombatMultiplier,
+            model = model,
         )
 
     private fun makeRegistry(): PlayerRegistry =
@@ -474,6 +479,167 @@ class RegenSystemTest {
             // Out of combat → full 50% of 100 = 50 HP regen.
             assertEquals(51, player.hp, "Out-of-combat player should regen at full percent")
         }
+
+    @Test
+    fun `mana in-combat multiplier overrides the shared one for mana only`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val sid = SessionId(1L)
+            val regen =
+                makeRegen(
+                    players,
+                    clock,
+                    hpRegenPercent = 0.50,
+                    manaRegenPercent = 0.50,
+                    inCombatMultiplier = 0.5,
+                    manaInCombatMultiplier = 0.0,
+                    inCombat = { it == sid },
+                )
+
+            players.loginOrFail(sid, "Split")
+
+            val player = players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 1
+            player.maxMana = 100
+            player.mana = 1
+
+            regen.tick() // seed
+            clock.advance(5_000L) // past both the 5000 ms HP and 3000 ms mana intervals
+            regen.tick()
+
+            assertEquals(26, player.hp, "HP keeps the shared in-combat multiplier (50% × 0.5)")
+            assertEquals(1, player.mana, "Mana uses its own in-combat multiplier (0.0)")
+        }
+
+    @Test
+    fun `rate model averages the same as discrete over a whole interval`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val regen = makeRegen(players, clock, hpRegenPercent = 0.10, model = RegenModel.RATE)
+
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Steady")
+
+            val player = players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 1
+
+            regen.tick() // seed at t=0
+            clock.advance(2_500L) // half the 5000 ms interval
+            regen.tick()
+            assertEquals(6, player.hp, "Half an interval credits half the 10% amount")
+
+            clock.advance(2_500L)
+            regen.tick()
+            assertEquals(11, player.hp, "A full interval totals the discrete amount")
+        }
+
+    @Test
+    fun `rate model pays out below the poll cadence and carries fractions`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            // 3000 ms interval polled every 2000 ms: discrete would fire once at 4000 ms (+10);
+            // rate credits 6.667 per poll -> 6 (carry .667), then 7 (carry .333) = 13 by 4000 ms.
+            val regen =
+                makeRegen(
+                    players,
+                    clock,
+                    baseIntervalMs = 3_000L,
+                    hpRegenPercent = 0.10,
+                    model = RegenModel.RATE,
+                )
+
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Trickle")
+
+            val player = players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 1
+
+            regen.tick() // seed
+            clock.advance(2_000L)
+            regen.tick()
+            assertEquals(7, player.hp, "First poll heals the integer part (6) and carries the fraction")
+
+            clock.advance(2_000L)
+            regen.tick()
+            assertEquals(14, player.hp, "Carried fraction rounds the second poll up to 7")
+        }
+
+    @Test
+    fun `rate model drops its carry once the pool is full`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val regen =
+                makeRegen(
+                    players,
+                    clock,
+                    baseIntervalMs = 3_000L,
+                    hpRegenPercent = 0.10,
+                    model = RegenModel.RATE,
+                )
+
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Topped")
+
+            val player = players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 99
+
+            regen.tick() // seed
+            clock.advance(2_000L)
+            regen.tick() // 6.667 accrued, +1 heals to full, .667 carried
+            assertEquals(100, player.hp)
+
+            clock.advance(2_000L)
+            regen.tick() // full: tracker re-pinned, carry cleared
+            player.hp = 50
+            clock.advance(2_000L)
+            regen.tick()
+
+            assertEquals(56, player.hp, "A fresh deficit starts from a zero carry (+6, not +7)")
+        }
+
+    @Test
+    fun `rate model with a zero multiplier credits nothing`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val sid = SessionId(1L)
+            val regen =
+                makeRegen(
+                    players,
+                    clock,
+                    hpRegenPercent = 0.50,
+                    inCombatMultiplier = 0.0,
+                    inCombat = { it == sid },
+                    model = RegenModel.RATE,
+                )
+
+            players.loginOrFail(sid, "Held")
+
+            val player = players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 1
+
+            regen.tick() // seed
+            clock.advance(10_000L)
+            regen.tick()
+
+            assertEquals(1, player.hp, "In combat with multiplier 0 the rate model heals nothing")
+        }
+
+    @Test
+    fun `regen model parses case-insensitively and rejects unknown values`() {
+        assertEquals(RegenModel.RATE, RegenModel.parse("rate"))
+        assertEquals(RegenModel.DISCRETE, RegenModel.parse(" Discrete "))
+        assertThrows(IllegalArgumentException::class.java) { RegenModel.parse("hybrid") }
+    }
 
     @Test
     fun `regen does not fire before interval elapses`() =

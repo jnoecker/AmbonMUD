@@ -887,6 +887,8 @@ class GameEngine(
             inCombat = { sid -> combatSystem.isInCombat(sid) },
             innMultiplier = engineConfig.regen.innMultiplier,
             inInn = { sid -> players.get(sid)?.roomId?.let { world.rooms[it]?.inn } == true },
+            manaInCombatMultiplier = engineConfig.regen.mana.inCombatMultiplier,
+            model = RegenModel.parse(engineConfig.regen.model),
             tickIntervalMs = tickMillis,
             cycleTargetMs = engineConfig.regen.cycleTargetMillis,
             minPlayersPerTick = engineConfig.regen.minPlayersPerTick,
