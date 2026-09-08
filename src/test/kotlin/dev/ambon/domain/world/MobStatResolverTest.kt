@@ -1,5 +1,6 @@
 package dev.ambon.domain.world
 
+import dev.ambon.config.MobTierAnchorConfig
 import dev.ambon.config.MobTierConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -77,5 +78,46 @@ class MobStatResolverTest {
     fun `level is clamped to 1 floor`() {
         val stats = resolveMobStats(standardTier, level = 0)
         assertEquals(20, stats.hp)
+    }
+
+    private val anchoredTier =
+        standardTier.copy(
+            levelAnchors =
+                mapOf(
+                    "1" to MobTierAnchorConfig(hp = 20, minDamage = 2, maxDamage = 4),
+                    "5" to MobTierAnchorConfig(hp = 40, minDamage = 4, maxDamage = 8),
+                ),
+        )
+
+    @Test
+    fun `level anchors are exact at anchor levels`() {
+        assertEquals(20, resolveMobStats(anchoredTier, level = 1).hp)
+        val at5 = resolveMobStats(anchoredTier, level = 5)
+        assertEquals(40, at5.hp)
+        assertEquals(4, at5.damage.min)
+        assertEquals(8, at5.damage.max)
+    }
+
+    @Test
+    fun `level anchors interpolate geometrically between anchors`() {
+        // 20 -> 40 over 4 levels: rate 2^(1/4); level 3 = floor(20 * 2^(2/4)) = 28
+        val at3 = resolveMobStats(anchoredTier, level = 3)
+        assertEquals(floor(20.0 * 2.0.pow(0.5)).toInt(), at3.hp)
+        assertEquals(28, at3.hp)
+    }
+
+    @Test
+    fun `level anchors extend the last segment above the highest anchor`() {
+        // segment 1->5 doubles; level 9 continues that growth: floor(40 * 2^(4/4)) = 80
+        assertEquals(80, resolveMobStats(anchoredTier, level = 9).hp)
+    }
+
+    @Test
+    fun `level anchors leave xp gold and armor on the formula and yield to overrides`() {
+        val at5 = resolveMobStats(anchoredTier, level = 5)
+        assertEquals(floor(30.0 * 1.08.pow(4)).toLong(), at5.xpReward)
+        assertEquals(1, at5.armor)
+        val overridden = resolveMobStats(anchoredTier, level = 5, overrides = MobStatOverrides(hp = 999))
+        assertEquals(999, overridden.hp)
     }
 }

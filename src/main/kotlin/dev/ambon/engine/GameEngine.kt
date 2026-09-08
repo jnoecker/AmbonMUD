@@ -2726,11 +2726,11 @@ class GameEngine(
         if (p != null) {
             val hpStat = p.stats[engineConfig.stats.bindings.hpScalingStat]
             val manaStat = p.stats[engineConfig.stats.bindings.manaScalingStat]
-            val (classHpPerLevel, classManaPerLevel) = progression.resolveClassScaling(p.playerClass)
-            val newMaxHp = progression.maxHpForLevel(level, hpStat, classHpPerLevel)
-            val oldMaxHp = progression.maxHpForLevel(result.previousLevel, hpStat, classHpPerLevel)
-            val newMaxMana = progression.maxManaForLevel(level, manaStat, classManaPerLevel)
-            val oldMaxMana = progression.maxManaForLevel(result.previousLevel, manaStat, classManaPerLevel)
+            val (classHpPerLevel, classManaPerLevel, classBaseHp, classBaseMana) = progression.resolveClassScaling(p.playerClass)
+            val newMaxHp = progression.maxHpForLevel(level, hpStat, classHpPerLevel, classBaseHp)
+            val oldMaxHp = progression.maxHpForLevel(result.previousLevel, hpStat, classHpPerLevel, classBaseHp)
+            val newMaxMana = progression.maxManaForLevel(level, manaStat, classManaPerLevel, classBaseMana)
+            val oldMaxMana = progression.maxManaForLevel(result.previousLevel, manaStat, classManaPerLevel, classBaseMana)
             val hpGained = (newMaxHp - oldMaxHp).coerceAtLeast(0)
             val manaGained = (newMaxMana - oldMaxMana).coerceAtLeast(0)
             gmcpEmitter.sendCharName(sessionId, p)

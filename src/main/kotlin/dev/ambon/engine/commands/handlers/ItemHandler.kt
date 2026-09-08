@@ -465,12 +465,12 @@ class ItemHandler(
             val levelUpMessage = progression.buildLevelUpMessage(result, hpStatValue, manaStatValue, player.playerClass)
             outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 
-            val (classHpPerLevel, classManaPerLevel) = progression.resolveClassScaling(player.playerClass)
-            val newMaxHp = progression.maxHpForLevel(result.newLevel, hpStatValue, classHpPerLevel)
-            val oldMaxHp = progression.maxHpForLevel(result.previousLevel, hpStatValue, classHpPerLevel)
+            val (classHpPerLevel, classManaPerLevel, classBaseHp, classBaseMana) = progression.resolveClassScaling(player.playerClass)
+            val newMaxHp = progression.maxHpForLevel(result.newLevel, hpStatValue, classHpPerLevel, classBaseHp)
+            val oldMaxHp = progression.maxHpForLevel(result.previousLevel, hpStatValue, classHpPerLevel, classBaseHp)
             val hpGained = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-            val newMaxMana = progression.maxManaForLevel(result.newLevel, manaStatValue, classManaPerLevel)
-            val oldMaxMana = progression.maxManaForLevel(result.previousLevel, manaStatValue, classManaPerLevel)
+            val newMaxMana = progression.maxManaForLevel(result.newLevel, manaStatValue, classManaPerLevel, classBaseMana)
+            val oldMaxMana = progression.maxManaForLevel(result.previousLevel, manaStatValue, classManaPerLevel, classBaseMana)
             val manaGained = (newMaxMana - oldMaxMana).coerceAtLeast(0)
 
             var autoLearnedNames: List<String> = emptyList()

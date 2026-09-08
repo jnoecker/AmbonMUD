@@ -9,6 +9,7 @@ import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.QuestBaselineConfig
 import dev.ambon.config.QuestDifficulty
 import dev.ambon.config.QuestXpConfig
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.config.UnderLevelXpBonusConfig
 import dev.ambon.config.XpCurveConfig
 import dev.ambon.domain.ids.RoomId
@@ -425,5 +426,50 @@ class PlayerProgressionTest {
                 ),
             )
         assertEquals(0L, progression.computeQuestXp(QuestDifficulty.EPIC, level = 5))
+    }
+
+    @Test
+    fun `class base multipliers scale the level-1 pools under a shared rate`() {
+        val registry =
+            PlayerClassRegistry().also { reg ->
+                PlayerClassRegistryLoader.load(
+                    ClassEngineConfig(
+                        definitions =
+                            mapOf(
+                                "TANK" to ClassDefinitionConfig(hpScalingRate = 1.10, baseHpMultiplier = 2.0),
+                                "CASTER" to
+                                    ClassDefinitionConfig(
+                                        manaScalingRate = 1.10,
+                                        baseHpMultiplier = 0.5,
+                                        baseManaMultiplier = 1.5,
+                                    ),
+                            ),
+                    ),
+                    reg,
+                )
+            }
+        val progression =
+            PlayerProgression(
+                config = ProgressionConfig(rewards = LevelRewardsConfig(baseHp = 100, baseMana = 40)),
+                classRegistry = registry,
+            )
+        val tank = progression.resolveClassScaling("TANK")
+        assertEquals(200, tank.baseHp)
+        assertEquals(40, tank.baseMana)
+        assertEquals(200, progression.maxHpForLevel(1, hpScalingRate = tank.hpRate, baseHp = tank.baseHp))
+        val caster = progression.resolveClassScaling("CASTER")
+        assertEquals(50, caster.baseHp)
+        assertEquals(60, caster.baseMana)
+        // Unknown class falls back to the unmultiplied global bases.
+        assertEquals(100, progression.resolveClassScaling("NOPE").baseHp)
+    }
+
+    @Test
+    fun `charisma xp bonus honours the cap and stays uncapped by default`() {
+        val uncapped = PlayerProgression(bindings = StatBindingsConfig(xpBonusPerPoint = 0.01))
+        assertEquals(1500L, uncapped.applyCharismaXpBonus(totalBonusStat = 60, baseXp = 1000L))
+        val capped = PlayerProgression(bindings = StatBindingsConfig(xpBonusPerPoint = 0.01, xpBonusCap = 0.25))
+        assertEquals(1250L, capped.applyCharismaXpBonus(totalBonusStat = 60, baseXp = 1000L))
+        assertEquals(1100L, capped.applyCharismaXpBonus(totalBonusStat = 20, baseXp = 1000L))
     }
 }

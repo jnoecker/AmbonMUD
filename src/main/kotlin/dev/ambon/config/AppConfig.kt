@@ -259,6 +259,7 @@ data class AppConfig(
         validateMobTier("standard", engine.mob.tiers.standard)
         validateMobTier("elite", engine.mob.tiers.elite)
         validateMobTier("boss", engine.mob.tiers.boss)
+        validateEngineClasses()
 
         require(engine.season.cycleLengthMs > 0L) { "ambonMUD.engine.season.cycleLengthMs must be > 0" }
         require(engine.mobVariants.chance in 0.0..1.0) { "ambonMUD.engine.mobVariants.chance must be in 0.0..1.0" }
@@ -482,6 +483,18 @@ data class AppConfig(
         require(b.hpRegenMsPerPoint >= 0L) { "ambonMUD.engine.stats.bindings.hpRegenMsPerPoint must be >= 0" }
         require(b.manaRegenMsPerPoint >= 0L) { "ambonMUD.engine.stats.bindings.manaRegenMsPerPoint must be >= 0" }
         require(b.xpBonusPerPoint >= 0.0) { "ambonMUD.engine.stats.bindings.xpBonusPerPoint must be >= 0" }
+        require(b.xpBonusCap >= 0.0) { "ambonMUD.engine.stats.bindings.xpBonusCap must be >= 0" }
+    }
+
+    private fun validateEngineClasses() {
+        engine.classes.definitions.forEach { (key, def) ->
+            require(def.baseHpMultiplier > 0.0) {
+                "ambonMUD.engine.classes.definitions.$key.baseHpMultiplier must be > 0"
+            }
+            require(def.baseManaMultiplier > 0.0) {
+                "ambonMUD.engine.classes.definitions.$key.baseManaMultiplier must be > 0"
+            }
+        }
     }
 
     private fun validateEngineAbilities() {
@@ -2806,6 +2819,14 @@ data class ClassDefinitionConfig(
     val displayName: String = "",
     val hpScalingRate: Double = 1.0,
     val manaScalingRate: Double = 1.0,
+    /**
+     * Level-1 pool multipliers applied to `progression.rewards.baseHp` /
+     * `baseMana` for this class, so class identity can live in bases while
+     * every class shares one scaling rate (balance programme D-06/D-07).
+     * 1.0 leaves the global base unchanged.
+     */
+    val baseHpMultiplier: Double = 1.0,
+    val baseManaMultiplier: Double = 1.0,
     val description: String = "",
     val backstory: String = "",
     val image: String = "",
@@ -2982,6 +3003,12 @@ data class StatBindingsConfig(
     val manaRegenMsPerPoint: Long = 200L,
     val xpBonusStat: String = "CHA",
     val xpBonusPerPoint: Double = 0.005,
+    /**
+     * Upper bound on the [xpBonusStat] XP multiplier bonus (0.25 = at most
+     * +25% XP regardless of stat). `<= 0` disables the cap, which is the
+     * historical behaviour.
+     */
+    val xpBonusCap: Double = 0.0,
 )
 
 data class StatsEngineConfig(
@@ -3149,6 +3176,21 @@ data class MobTierConfig(
     val baseGoldMin: Long = 0L,
     val baseGoldMax: Long = 0L,
     val goldScalingRate: Double = 1.0,
+    /**
+     * Optional piecewise HP/damage curve keyed by level (as a string, e.g.
+     * `"15"`). When non-empty it replaces the `base * rate^(level-1)` formula
+     * for hp/minDamage/maxDamage: exact at an anchor, geometric interpolation
+     * between neighbouring anchors, and the last segment's growth extended
+     * above the highest anchor. XP, gold, and armor keep the formula.
+     * Per-mob authored overrides still win.
+     */
+    val levelAnchors: Map<String, MobTierAnchorConfig> = emptyMap(),
+)
+
+data class MobTierAnchorConfig(
+    val hp: Int = 1,
+    val minDamage: Int = 1,
+    val maxDamage: Int = 1,
 )
 
 data class MobTiersConfig(
@@ -3986,6 +4028,19 @@ private fun validateMobTier(
         "ambonMUD.engine.mob.tiers.$name.damageScalingRate must be >= 1.0"
     }
     require(tier.baseArmor >= 0) { "ambonMUD.engine.mob.tiers.$name.baseArmor must be >= 0" }
+    tier.levelAnchors.forEach { (key, anchor) ->
+        val level = key.trim().toIntOrNull()
+        require(level != null && level >= 1) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors key '$key' must be an integer level >= 1"
+        }
+        require(anchor.hp > 0) { "ambonMUD.engine.mob.tiers.$name.levelAnchors[$key].hp must be > 0" }
+        require(anchor.minDamage > 0) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors[$key].minDamage must be > 0"
+        }
+        require(anchor.maxDamage >= anchor.minDamage) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors[$key].maxDamage must be >= minDamage"
+        }
+    }
     require(tier.baseXpReward >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseXpReward must be >= 0" }
     require(tier.xpScalingRate >= 1.0) { "ambonMUD.engine.mob.tiers.$name.xpScalingRate must be >= 1.0" }
     require(tier.baseGoldMin >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseGoldMin must be >= 0" }
