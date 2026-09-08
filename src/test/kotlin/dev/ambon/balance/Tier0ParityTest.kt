@@ -141,10 +141,12 @@ class Tier0ParityTest {
                 ?: config.engine.classes.definitions.entries.firstOrNull { it.key.equals(classId, ignoreCase = true) }?.value
             val hpRate = def?.hpScalingRate ?: config.progression.rewards.hpScalingRate
             val manaRate = def?.manaScalingRate ?: config.progression.rewards.manaScalingRate
+            val baseHp = classBase(config.progression.rewards.baseHp, def?.baseHpMultiplier)
+            val baseMana = classBase(config.progression.rewards.baseMana, def?.baseManaMultiplier)
             node["byLevel"].fields().forEach { (levelStr, row) ->
                 val level = levelStr.toInt()
-                val hp = progression.maxHpForLevel(level, PlayerState.BASE_STAT, hpRate)
-                val mana = progression.maxManaForLevel(level, PlayerState.BASE_STAT, manaRate)
+                val hp = progression.maxHpForLevel(level, PlayerState.BASE_STAT, hpRate, baseHp)
+                val mana = progression.maxManaForLevel(level, PlayerState.BASE_STAT, manaRate, baseMana)
                 if (hp.toLong() != row["maxHp"].asLong()) {
                     out += Mismatch("players.$classId[$levelStr].maxHp", row["maxHp"].asLong(), hp)
                 }
@@ -206,11 +208,13 @@ class Tier0ParityTest {
             val def = config.engine.classes.definitions[classId]
             val hpRate = def?.hpScalingRate ?: config.progression.rewards.hpScalingRate
             val manaRate = def?.manaScalingRate ?: config.progression.rewards.manaScalingRate
-            val maxHp = progression.maxHpForLevel(level, PlayerState.BASE_STAT, hpRate)
+            val baseHp = classBase(config.progression.rewards.baseHp, def?.baseHpMultiplier)
+            val baseMana = classBase(config.progression.rewards.baseMana, def?.baseManaMultiplier)
+            val maxHp = progression.maxHpForLevel(level, PlayerState.BASE_STAT, hpRate, baseHp)
             if (maxHp.toLong() != player["maxHp"].asLong()) {
                 out += Mismatch("$where.maxHp", player["maxHp"].asLong(), maxHp)
             }
-            val maxMana = progression.maxManaForLevel(level, PlayerState.BASE_STAT, manaRate)
+            val maxMana = progression.maxManaForLevel(level, PlayerState.BASE_STAT, manaRate, baseMana)
             if (maxMana.toLong() != player["maxMana"].asLong()) {
                 out += Mismatch("$where.maxMana", player["maxMana"].asLong(), maxMana)
             }
@@ -269,6 +273,12 @@ class Tier0ParityTest {
             "boss" -> config.engine.mob.tiers.boss
             else -> error("unknown tier $name")
         }
+
+    /** Mirrors PlayerProgression.scaledBase for classes read straight from config. */
+    private fun classBase(
+        base: Int,
+        multiplier: Double?,
+    ): Int = Math.round(base * (multiplier ?: 1.0)).toInt().coerceAtLeast(0)
 
     private fun cmpDouble(out: MutableList<Mismatch>, where: String, fixture: JsonNode, engine: Double) {
         if (abs(engine - fixture.asDouble()) > EPS) {

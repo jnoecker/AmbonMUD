@@ -917,8 +917,13 @@ class AbilitySystem(
      */
     fun computeManaCost(player: PlayerState, ability: AbilityDefinition): Int {
         if (ability.manaCostPct <= 0.0) return 0
-        val (_, classManaRate) = progression.resolveClassScaling(player.playerClass)
-        val basePool = progression.maxManaForLevel(player.level, manaScalingRate = classManaRate)
+        val scaling = progression.resolveClassScaling(player.playerClass)
+        val basePool =
+            progression.maxManaForLevel(
+                player.level,
+                manaScalingRate = scaling.manaRate,
+                baseMana = scaling.baseMana,
+            )
         return ((basePool.toDouble() * ability.manaCostPct) / 100.0).roundToInt().coerceAtLeast(0)
     }
 

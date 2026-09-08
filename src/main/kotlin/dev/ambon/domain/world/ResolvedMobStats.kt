@@ -1,5 +1,6 @@
 package dev.ambon.domain.world
 
+import dev.ambon.config.MobTierAnchorConfig
 import dev.ambon.config.MobTierConfig
 import dev.ambon.domain.DamageRange
 import kotlin.math.floor
@@ -31,10 +32,28 @@ fun resolveMobStats(
 ): ResolvedMobStats {
     val normalized = level.coerceAtLeast(1)
     val steps = normalized - 1
-    val minDamage = overrides.minDamage ?: scaleInt(tier.baseMinDamage, tier.damageScalingRate, steps)
-    val maxDamage = overrides.maxDamage ?: scaleInt(tier.baseMaxDamage, tier.damageScalingRate, steps)
+    val anchors = tier.anchorTable()
+
+    fun anchored(
+        select: (MobTierAnchorConfig) -> Int,
+        formula: () -> Int,
+    ): Int = if (anchors.isEmpty()) formula() else interpolateAnchors(anchors, normalized, select)
+
+    val minDamage =
+        overrides.minDamage
+            ?: anchored({ it.minDamage }) { scaleInt(tier.baseMinDamage, tier.damageScalingRate, steps) }
+    // Only the anchored path clamps: independently extrapolated bounds can cross
+    // above the top anchor. Authored overrides and the formula stay untouched so
+    // WorldLoader still rejects an authored maxDamage below minDamage.
+    val maxDamage =
+        overrides.maxDamage
+            ?: if (anchors.isEmpty()) {
+                scaleInt(tier.baseMaxDamage, tier.damageScalingRate, steps)
+            } else {
+                interpolateAnchors(anchors, normalized) { it.maxDamage }.coerceAtLeast(minDamage)
+            }
     return ResolvedMobStats(
-        hp = overrides.hp ?: scaleInt(tier.baseHp, tier.hpScalingRate, steps),
+        hp = overrides.hp ?: anchored({ it.hp }) { scaleInt(tier.baseHp, tier.hpScalingRate, steps) },
         damage = DamageRange(minDamage, maxDamage),
         armor = overrides.armor ?: tier.baseArmor,
         xpReward = overrides.xpReward ?: scaleLong(tier.baseXpReward, tier.xpScalingRate, steps),
@@ -64,3 +83,44 @@ private fun scaleLong(base: Long, rate: Double, steps: Int): Long {
         else -> scaled.toLong()
     }
 }
+
+/** Parsed, sorted `(level, anchor)` pairs; malformed keys are dropped (validation rejects them at load). */
+private fun MobTierConfig.anchorTable(): List<Pair<Int, MobTierAnchorConfig>> =
+    levelAnchors
+        .mapNotNull { (key, anchor) -> key.trim().toIntOrNull()?.takeIf { it >= 1 }?.let { it to anchor } }
+        .distinctBy { it.first }
+        .sortedBy { it.first }
+
+/**
+ * Piecewise value at [level]: exact on an anchor, geometric interpolation
+ * between the neighbouring anchors, last-segment growth extended above the
+ * highest anchor, and the first anchor's value below the lowest.
+ */
+private fun interpolateAnchors(
+    anchors: List<Pair<Int, MobTierAnchorConfig>>,
+    level: Int,
+    select: (MobTierAnchorConfig) -> Int,
+): Int {
+    anchors.firstOrNull { it.first == level }?.let { return select(it.second).coerceAtLeast(1) }
+    if (level < anchors.first().first || anchors.size == 1) return select(anchors.first().second).coerceAtLeast(1)
+    val (lo, hi) =
+        if (level > anchors.last().first) {
+            anchors[anchors.size - 2] to anchors.last()
+        } else {
+            anchors.zipWithNext().first { (a, b) -> a.first < level && level < b.first }
+        }
+    val vLo = select(lo.second).coerceAtLeast(1).toDouble()
+    val vHi = select(hi.second).coerceAtLeast(1).toDouble()
+    // Single pow keeps integer multiples of a representable ratio exact
+    // (20 * 2^(8/4) == 80.0); the epsilon covers products that still land a
+    // few ulps below a whole number.
+    val t = (level - lo.first).toDouble() / (hi.first - lo.first)
+    val scaled = floor(vLo * (vHi / vLo).pow(t) + INTERPOLATION_EPSILON)
+    return when {
+        !scaled.isFinite() -> Int.MAX_VALUE
+        scaled >= Int.MAX_VALUE.toDouble() -> Int.MAX_VALUE
+        else -> scaled.toInt().coerceAtLeast(1)
+    }
+}
+
+private const val INTERPOLATION_EPSILON = 1e-9

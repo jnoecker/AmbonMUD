@@ -16,6 +16,8 @@ object PlayerClassRegistryLoader {
                     displayName = defConfig.displayName.ifEmpty { key },
                     hpScalingRate = defConfig.hpScalingRate,
                     manaScalingRate = defConfig.manaScalingRate,
+                    baseHpMultiplier = defConfig.baseHpMultiplier,
+                    baseManaMultiplier = defConfig.baseManaMultiplier,
                     description = defConfig.description,
                     backstory = defConfig.backstory,
                     image = defConfig.image,

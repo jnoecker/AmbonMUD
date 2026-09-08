@@ -5,6 +5,8 @@ data class PlayerClassDef(
     val displayName: String,
     val hpScalingRate: Double,
     val manaScalingRate: Double,
+    val baseHpMultiplier: Double = 1.0,
+    val baseManaMultiplier: Double = 1.0,
     val description: String = "",
     val backstory: String = "",
     val image: String = "",
