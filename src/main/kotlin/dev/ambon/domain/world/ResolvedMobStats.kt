@@ -42,12 +42,16 @@ fun resolveMobStats(
     val minDamage =
         overrides.minDamage
             ?: anchored({ it.minDamage }) { scaleInt(tier.baseMinDamage, tier.damageScalingRate, steps) }
-    // Independently extrapolated bounds can cross above the top anchor; keep max >= min.
+    // Only the anchored path clamps: independently extrapolated bounds can cross
+    // above the top anchor. Authored overrides and the formula stay untouched so
+    // WorldLoader still rejects an authored maxDamage below minDamage.
     val maxDamage =
-        (
-            overrides.maxDamage
-                ?: anchored({ it.maxDamage }) { scaleInt(tier.baseMaxDamage, tier.damageScalingRate, steps) }
-        ).coerceAtLeast(minDamage)
+        overrides.maxDamage
+            ?: if (anchors.isEmpty()) {
+                scaleInt(tier.baseMaxDamage, tier.damageScalingRate, steps)
+            } else {
+                interpolateAnchors(anchors, normalized) { it.maxDamage }.coerceAtLeast(minDamage)
+            }
     return ResolvedMobStats(
         hp = overrides.hp ?: anchored({ it.hp }) { scaleInt(tier.baseHp, tier.hpScalingRate, steps) },
         damage = DamageRange(minDamage, maxDamage),
@@ -107,10 +111,11 @@ private fun interpolateAnchors(
         }
     val vLo = select(lo.second).coerceAtLeast(1).toDouble()
     val vHi = select(hi.second).coerceAtLeast(1).toDouble()
-    val rate = (vHi / vLo).pow(1.0 / (hi.first - lo.first))
-    // A whole-number target (e.g. 40 * 2^(4/4)) can land a hair below itself
-    // in floating point; the epsilon keeps floor() from turning 80 into 79.
-    val scaled = floor(vLo * rate.pow(level - lo.first) + INTERPOLATION_EPSILON)
+    // Single pow keeps integer multiples of a representable ratio exact
+    // (20 * 2^(8/4) == 80.0); the epsilon covers products that still land a
+    // few ulps below a whole number.
+    val t = (level - lo.first).toDouble() / (hi.first - lo.first)
+    val scaled = floor(vLo * (vHi / vLo).pow(t) + INTERPOLATION_EPSILON)
     return when {
         !scaled.isFinite() -> Int.MAX_VALUE
         scaled >= Int.MAX_VALUE.toDouble() -> Int.MAX_VALUE

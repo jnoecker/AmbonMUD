@@ -85,15 +85,18 @@ class PlayerProgression(
         return ClassScaling(
             hpRate = def?.hpScalingRate ?: config.rewards.hpScalingRate,
             manaRate = def?.manaScalingRate ?: config.rewards.manaScalingRate,
-            baseHp = scaledBase(config.rewards.baseHp, def?.baseHpMultiplier ?: 1.0),
-            baseMana = scaledBase(config.rewards.baseMana, def?.baseManaMultiplier ?: 1.0),
+            // HP floors at 1 (a 0-HP pool would make applyLevelStats' coerceIn(1, max)
+            // throw); mana may legitimately be 0, so it floors at 0.
+            baseHp = scaledBase(config.rewards.baseHp, def?.baseHpMultiplier ?: 1.0, floor = 1),
+            baseMana = scaledBase(config.rewards.baseMana, def?.baseManaMultiplier ?: 1.0, floor = 0),
         )
     }
 
     private fun scaledBase(
         base: Int,
         multiplier: Double,
-    ): Int = Math.round(base * multiplier).toInt().coerceAtLeast(0)
+        floor: Int,
+    ): Int = if (multiplier == 1.0) base else Math.round(base * multiplier).toInt().coerceAtLeast(floor)
 
     fun maxHpForLevel(
         level: Int,
