@@ -104,10 +104,14 @@ private fun interpolateAnchors(
     val vLo = select(lo.second).coerceAtLeast(1).toDouble()
     val vHi = select(hi.second).coerceAtLeast(1).toDouble()
     val rate = (vHi / vLo).pow(1.0 / (hi.first - lo.first))
-    val scaled = floor(vLo * rate.pow(level - lo.first))
+    // A whole-number target (e.g. 40 * 2^(4/4)) can land a hair below itself
+    // in floating point; the epsilon keeps floor() from turning 80 into 79.
+    val scaled = floor(vLo * rate.pow(level - lo.first) + INTERPOLATION_EPSILON)
     return when {
         !scaled.isFinite() -> Int.MAX_VALUE
         scaled >= Int.MAX_VALUE.toDouble() -> Int.MAX_VALUE
         else -> scaled.toInt().coerceAtLeast(1)
     }
 }
+
+private const val INTERPOLATION_EPSILON = 1e-9
