@@ -42,9 +42,12 @@ fun resolveMobStats(
     val minDamage =
         overrides.minDamage
             ?: anchored({ it.minDamage }) { scaleInt(tier.baseMinDamage, tier.damageScalingRate, steps) }
+    // Independently extrapolated bounds can cross above the top anchor; keep max >= min.
     val maxDamage =
-        overrides.maxDamage
-            ?: anchored({ it.maxDamage }) { scaleInt(tier.baseMaxDamage, tier.damageScalingRate, steps) }
+        (
+            overrides.maxDamage
+                ?: anchored({ it.maxDamage }) { scaleInt(tier.baseMaxDamage, tier.damageScalingRate, steps) }
+        ).coerceAtLeast(minDamage)
     return ResolvedMobStats(
         hp = overrides.hp ?: anchored({ it.hp }) { scaleInt(tier.baseHp, tier.hpScalingRate, steps) },
         damage = DamageRange(minDamage, maxDamage),
@@ -81,6 +84,7 @@ private fun scaleLong(base: Long, rate: Double, steps: Int): Long {
 private fun MobTierConfig.anchorTable(): List<Pair<Int, MobTierAnchorConfig>> =
     levelAnchors
         .mapNotNull { (key, anchor) -> key.trim().toIntOrNull()?.takeIf { it >= 1 }?.let { it to anchor } }
+        .distinctBy { it.first }
         .sortedBy { it.first }
 
 /**

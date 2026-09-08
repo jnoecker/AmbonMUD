@@ -93,7 +93,7 @@ class PlayerProgression(
     private fun scaledBase(
         base: Int,
         multiplier: Double,
-    ): Int = Math.round(base * multiplier).toInt().coerceAtLeast(1)
+    ): Int = Math.round(base * multiplier).toInt().coerceAtLeast(0)
 
     fun maxHpForLevel(
         level: Int,

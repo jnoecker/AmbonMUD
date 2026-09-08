@@ -113,6 +113,21 @@ class MobStatResolverTest {
     }
 
     @Test
+    fun `extrapolated damage bounds never cross`() {
+        // min grows 4x per segment, max only 1.25x: above the top anchor min would overtake max.
+        val crossing =
+            standardTier.copy(
+                levelAnchors =
+                    mapOf(
+                        "1" to MobTierAnchorConfig(hp = 20, minDamage = 2, maxDamage = 8),
+                        "2" to MobTierAnchorConfig(hp = 40, minDamage = 8, maxDamage = 10),
+                    ),
+            )
+        val far = resolveMobStats(crossing, level = 6)
+        assertEquals(far.damage.min, far.damage.max)
+    }
+
+    @Test
     fun `level anchors leave xp gold and armor on the formula and yield to overrides`() {
         val at5 = resolveMobStats(anchoredTier, level = 5)
         assertEquals(floor(30.0 * 1.08.pow(4)).toLong(), at5.xpReward)

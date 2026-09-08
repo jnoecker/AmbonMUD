@@ -3181,10 +3181,11 @@ data class MobTierConfig(
     val levelAnchors: Map<String, MobTierAnchorConfig> = emptyMap(),
 )
 
+/** All three fields are required; the 0 defaults exist only so a missing field fails validation. */
 data class MobTierAnchorConfig(
-    val hp: Int = 1,
-    val minDamage: Int = 1,
-    val maxDamage: Int = 1,
+    val hp: Int = 0,
+    val minDamage: Int = 0,
+    val maxDamage: Int = 0,
 )
 
 data class MobTiersConfig(
@@ -4022,6 +4023,15 @@ private fun validateMobTier(
         "ambonMUD.engine.mob.tiers.$name.damageScalingRate must be >= 1.0"
     }
     require(tier.baseArmor >= 0) { "ambonMUD.engine.mob.tiers.$name.baseArmor must be >= 0" }
+    if (tier.levelAnchors.isNotEmpty()) {
+        require(tier.levelAnchors.size >= 2) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors needs at least two anchors to define a curve"
+        }
+        val parsed = tier.levelAnchors.keys.map { it.trim().toIntOrNull() }
+        require(parsed.filterNotNull().toSet().size == parsed.size) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors keys must parse to distinct integer levels"
+        }
+    }
     tier.levelAnchors.forEach { (key, anchor) ->
         val level = key.trim().toIntOrNull()
         require(level != null && level >= 1) {
