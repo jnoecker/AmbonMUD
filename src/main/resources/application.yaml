@@ -1001,11 +1001,20 @@ ambonmud:
       # Multiplier applied to HP + mana regen while resting in an inn room
       # (2.0 = double regen). Stacks with inCombatMultiplier.
       innMultiplier: 2.0
+      # How regen is credited between the engine's polls (one per master tick):
+      # "discrete" = one fixed heal per elapsed interval (intervals shorter than
+      # the tick are unreachable); "rate" = every poll credits
+      # amount * elapsed / interval to a fractional accumulator, so stat-shortened
+      # intervals keep paying out below the poll cadence.
+      model: discrete
       mana:
         baseIntervalMillis: 4500
         minIntervalMillis: 1000
         # Fraction of max mana restored per regen tick.
         regenPercent: 0.05
+        # Optional in-combat multiplier for mana only; omitted = inherit
+        # regen.inCombatMultiplier.
+        # inCombatMultiplier: 0.1
     crafting:
       maxSkillLevel: 75
       baseXpPerLevel: 100

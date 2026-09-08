@@ -320,6 +320,14 @@ data class AppConfig(
         require(engine.regen.mana.regenPercent > 0.0 && engine.regen.mana.regenPercent <= 1.0) {
             "ambonMUD.engine.regen.mana.regenPercent must be in (0.0, 1.0]"
         }
+        require(engine.regen.model.trim().lowercase() in setOf("discrete", "rate")) {
+            "ambonMUD.engine.regen.model must be 'discrete' or 'rate' (got '${engine.regen.model}')"
+        }
+        engine.regen.mana.inCombatMultiplier?.let {
+            require(it in 0.0..1.0) {
+                "ambonMUD.engine.regen.mana.inCombatMultiplier must be in [0.0, 1.0]"
+            }
+        }
     }
 
     private fun validateEngineEquipment() {
@@ -3283,6 +3291,12 @@ data class RegenEngineConfig(
     val inCombatMultiplier: Double = 0.5,
     /** Regen multiplier while resting in a room flagged as an inn (HP + mana). */
     val innMultiplier: Double = 2.0,
+    /**
+     * "discrete": one fixed heal per elapsed interval, judged once per master tick (intervals below
+     * the tick are unreachable). "rate": each poll credits amount * elapsed / interval to a fractional
+     * accumulator, so stat-shortened intervals keep paying out below the poll cadence.
+     */
+    val model: String = "discrete",
     val mana: ManaRegenConfig = ManaRegenConfig(),
 )
 
@@ -3290,6 +3304,8 @@ data class ManaRegenConfig(
     val baseIntervalMillis: Long = 3_000L,
     val minIntervalMillis: Long = 1_000L,
     val regenPercent: Double = 0.05,
+    /** In-combat multiplier for mana only; omitted = inherit regen.inCombatMultiplier. */
+    val inCombatMultiplier: Double? = null,
 )
 
 data class SchedulerEngineConfig(

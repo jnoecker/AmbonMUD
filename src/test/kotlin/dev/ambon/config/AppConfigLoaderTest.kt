@@ -55,6 +55,39 @@ class AppConfigLoaderTest {
     }
 
     @Test
+    fun `validation rejects an unknown regen model`() {
+        val invalid =
+            AppConfig(
+                engine = EngineConfig(regen = RegenEngineConfig(model = "hybrid")),
+                world = validWorld,
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects a mana in-combat multiplier outside 0 to 1`() {
+        val invalid =
+            AppConfig(
+                engine = EngineConfig(regen = RegenEngineConfig(mana = ManaRegenConfig(inCombatMultiplier = 1.5))),
+                world = validWorld,
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation accepts the rate regen model with a mana in-combat override`() {
+        val valid =
+            AppConfig(
+                engine =
+                    EngineConfig(
+                        regen = RegenEngineConfig(model = "rate", mana = ManaRegenConfig(inCombatMultiplier = 0.1)),
+                    ),
+                world = validWorld,
+            )
+        assertEquals("rate", valid.validated().engine.regen.model)
+    }
+
+    @Test
     fun `validated rejects tier with baseHp 0`() {
         val badTier = MobTierConfig(baseHp = 0)
         val invalid =
