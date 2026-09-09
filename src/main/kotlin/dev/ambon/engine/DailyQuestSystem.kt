@@ -218,7 +218,9 @@ class DailyQuestSystem(
         for (quest in completions) {
             val bonusMultiplier = if (quest.isDaily) multiplier else 1.0
             val gold = (quest.goldReward * bonusMultiplier).toLong()
-            val xp = (quest.xpReward * bonusMultiplier).toLong()
+            val source = if (quest.isDaily) RepeatableXpSource.DAILY else RepeatableXpSource.WEEKLY
+            val baseXp = progression.repeatableXp(quest.xpReward, player.xpTotal, source)
+            val xp = (baseXp * bonusMultiplier).toLong()
 
             player.gold += gold
             if (xp > 0) {

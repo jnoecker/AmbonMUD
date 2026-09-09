@@ -1117,6 +1117,7 @@ class GameEngine(
                 world = world,
                 players = players,
                 clock = clock,
+                progression = progression,
             )
         } else {
             null
@@ -2927,9 +2928,13 @@ class GameEngine(
                 for (winner in result.winners) {
                     val ps = players.get(winner.sessionId) ?: continue
                     ps.gold += winner.goldReward
-                    val levelResult = progression.grantXp(ps, winner.xpReward)
+                    // Scaled here rather than in GlobalQuestSystem: the award depends on the winner's
+                    // own level, and the system ranks every participant before we know who they are.
+                    val xpAward =
+                        progression.repeatableXp(winner.xpReward, ps.xpTotal, globalQuestXpSource(winner.place))
+                    val levelResult = progression.grantXp(ps, xpAward)
                     markVitalsDirty(winner.sessionId)
-                    val rewardMsg = "You earned ${winner.goldReward} gold and ${winner.xpReward} XP " +
+                    val rewardMsg = "You earned ${winner.goldReward} gold and $xpAward XP " +
                         "for placing ${ordinalPlace(winner.place)} in the global quest!"
                     outbound.send(OutboundEvent.SendInfo(winner.sessionId, rewardMsg))
                     if (levelResult.levelsGained > 0) {
@@ -2939,6 +2944,12 @@ class GameEngine(
                 gmcpEmitter.broadcastGlobalQuestInactive(players)
             }
         }
+    }
+
+    private fun globalQuestXpSource(place: Int): RepeatableXpSource = when (place) {
+        1 -> RepeatableXpSource.GLOBAL_FIRST
+        2 -> RepeatableXpSource.GLOBAL_SECOND
+        else -> RepeatableXpSource.GLOBAL_THIRD
     }
 
     private fun ordinalPlace(n: Int): String = when (n) {
