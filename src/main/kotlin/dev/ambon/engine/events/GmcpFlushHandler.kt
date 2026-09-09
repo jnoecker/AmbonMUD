@@ -11,11 +11,12 @@ import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.PlayerState
+import dev.ambon.engine.dodgePercent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.resolvePlayerStats
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
+import kotlin.math.roundToInt
 
 class GmcpFlushHandler(
     private val gmcpDirtyVitals: MutableSet<SessionId>,
@@ -93,9 +94,7 @@ class GmcpFlushHandler(
             val classDef = classRegistry?.get(player.playerClass)
             val effectiveStats = resolvePlayerStats(player, items, statusEffectSystem, classRegistry)
             val equipBonuses = items.equipmentBonuses(sid, classDef)
-            val dodgeStat = effectiveStats[bindings.dodgeStat]
-            val dodgePct =
-                ((dodgeStat - PlayerState.BASE_STAT) * bindings.dodgePerPoint).coerceIn(0, bindings.maxDodgePercent)
+            val dodgePct = bindings.dodgePercent(effectiveStats).roundToInt()
             val dmgRange = combatSystem.damageRangeForDisplay(player, effectiveStats, equipBonuses.attack)
             gmcpEmitter.sendCharStats(
                 sessionId = sid,

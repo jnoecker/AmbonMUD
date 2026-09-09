@@ -23,6 +23,8 @@ object PlayerClassRegistryLoader {
                     image = defConfig.image,
                     selectable = defConfig.selectable,
                     primaryStat = defConfig.primaryStat.ifBlank { null },
+                    offensiveStat = defConfig.offensiveStat.trim().uppercase().ifBlank { null },
+                    offensiveStat = defConfig.offensiveStat.trim().uppercase().ifBlank { null },
                     statPriorities =
                         defConfig.statPriorities
                             .map { it.trim().uppercase() }

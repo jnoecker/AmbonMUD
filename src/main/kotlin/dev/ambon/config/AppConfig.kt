@@ -410,6 +410,16 @@ data class AppConfig(
             require(def.baseHpMultiplier > 0.0) {
                 "ambonMUD.engine.classes.definitions.$key.baseHpMultiplier must be > 0"
             }
+            if (def.offensiveStat.isNotBlank()) {
+                require(def.offensiveStat.trim().uppercase() in engine.stats.definitions.keys.map { it.uppercase() }) {
+                    "ambonMUD.engine.classes.definitions.$key.offensiveStat references unknown stat '${def.offensiveStat}'"
+                }
+            }
+            if (def.offensiveStat.isNotBlank()) {
+                require(def.offensiveStat.trim().uppercase() in engine.stats.definitions.keys.map { it.uppercase() }) {
+                    "ambonMUD.engine.classes.definitions.$key.offensiveStat references unknown stat '${def.offensiveStat}'"
+                }
+            }
             require(def.baseManaMultiplier > 0.0) {
                 "ambonMUD.engine.classes.definitions.$key.baseManaMultiplier must be > 0"
             }
@@ -465,7 +475,22 @@ data class AppConfig(
         require(b.meleeArmorMitigationK > 0.0) {
             "ambonMUD.engine.stats.bindings.meleeArmorMitigationK must be > 0"
         }
-        require(b.dodgePerPoint >= 0) { "ambonMUD.engine.stats.bindings.dodgePerPoint must be >= 0" }
+        require(b.dodgePerPoint >= 0.0) { "ambonMUD.engine.stats.bindings.dodgePerPoint must be >= 0" }
+        require(b.statScalingMode.trim().lowercase() in setOf("additive", "multiplicative")) {
+            "ambonMUD.engine.stats.bindings.statScalingMode must be 'additive' or 'multiplicative'"
+        }
+        require(b.poolStatMode.trim().lowercase() in setOf("additive", "multiplicative")) {
+            "ambonMUD.engine.stats.bindings.poolStatMode must be 'additive' or 'multiplicative'"
+        }
+        listOf(
+            b.meleePercentPerPoint to "meleePercentPerPoint",
+            b.spellPercentPerPoint to "spellPercentPerPoint",
+            b.healPercentPerPoint to "healPercentPerPoint",
+            b.shieldPercentPerPoint to "shieldPercentPerPoint",
+            b.poolPercentPerPoint to "poolPercentPerPoint",
+        ).forEach { (value, name) ->
+            require(value >= 0.0) { "ambonMUD.engine.stats.bindings.$name must be >= 0" }
+        }
         require(b.maxDodgePercent in 0..100) { "ambonMUD.engine.stats.bindings.maxDodgePercent must be in 0..100" }
         require(b.spellStatMultiplier >= 0.0) { "ambonMUD.engine.stats.bindings.spellStatMultiplier must be >= 0" }
         require(b.spellLevelScalingRate >= 1.0) {
@@ -2834,6 +2859,10 @@ data class ClassDefinitionConfig(
     val image: String = "",
     val selectable: Boolean = true,
     val primaryStat: String = "",
+    /** Stat that scales this class's ability damage and DoT ticks (D-20); blank = stats.bindings.spellDamageStat. */
+    val offensiveStat: String = "",
+    /** Stat that scales this class's ability damage and DoT ticks (D-20); blank = stats.bindings.spellDamageStat. */
+    val offensiveStat: String = "",
     val statPriorities: List<String> = emptyList(),
     val startRoom: String = "",
     val threatMultiplier: Double = 1.0,
@@ -2937,8 +2966,30 @@ data class StatBindingsConfig(
      */
     val meleeArmorMitigationK: Double = 20.0,
     val dodgeStat: String = "DEX",
-    val dodgePerPoint: Int = 2,
+    /** Dodge percentage points per stat point above base; may be fractional (D-20 sets 0.5). */
+    val dodgePerPoint: Double = 2.0,
     val maxDodgePercent: Int = 30,
+    /**
+     * How stats scale outputs (D-20). "additive" (default): (stat - basePoint) x the
+     * *StatMultiplier is added to the anchor before level scaling. "multiplicative": the
+     * anchor is multiplied by (1 + (stat - basePoint) x *PercentPerPoint), so a point is
+     * worth the same fraction of output at every level and gear tier.
+     */
+    val statScalingMode: String = "additive",
+    val meleePercentPerPoint: Double = 0.0,
+    val spellPercentPerPoint: Double = 0.0,
+    val healPercentPerPoint: Double = 0.0,
+    val shieldPercentPerPoint: Double = 0.0,
+    /**
+     * Pool stat model (D-20). "additive" (default): int((stat - basePoint) / divisor) x
+     * (level - 1) on the player's own stats. "multiplicative": pool x (1 + (stat -
+     * basePoint) x poolPercentPerPoint); with poolsUseEquipment the stat includes
+     * equipment bonuses and the caps follow every equipment change. Mana costs stay a
+     * percentage of the base pool either way.
+     */
+    val poolStatMode: String = "additive",
+    val poolPercentPerPoint: Double = 0.0,
+    val poolsUseEquipment: Boolean = false,
     val spellDamageStat: String = "INT",
     /**
      * Spell damage uses the same shape as basic melee — ability-authored damage

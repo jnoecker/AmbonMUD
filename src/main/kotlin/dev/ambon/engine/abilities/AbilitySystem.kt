@@ -26,6 +26,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.resolvePlayerStats
 import dev.ambon.engine.spendMana
+import dev.ambon.engine.statAdjustedCore
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.engine.takeDamage
 import java.time.Clock
@@ -244,12 +245,12 @@ class AbilitySystem(
     ) {
         when (effect) {
             is AbilityEffect.DirectDamage -> {
-                val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng, offensiveStatFor(player))
                 applySpellDamage(sessionId, mob, ability, damage)
             }
             is AbilityEffect.AreaDamage -> {
                 for (m in areaTargets.orEmpty()) {
-                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng, offensiveStatFor(player))
                     applySpellDamage(sessionId, m, ability, damage)
                 }
             }
@@ -275,6 +276,7 @@ class AbilitySystem(
                     sourceSessionId = sessionId,
                     casterLevel = player.level,
                     casterStats = playerStats,
+                    offensiveStat = offensiveStatFor(player),
                 )
                 outbound.send(
                     OutboundEvent.SendText(
@@ -361,6 +363,7 @@ class AbilitySystem(
                     sourceSessionId = sessionId,
                     casterLevel = player.level,
                     casterStats = playerStats,
+                    offensiveStat = offensiveStatFor(player),
                 )
                 dirtyNotifier.playerStatusDirty(sessionId)
                 outbound.send(
@@ -492,6 +495,7 @@ class AbilitySystem(
                     sourceSessionId = sessionId,
                     casterLevel = player.level,
                     casterStats = playerStats,
+                    offensiveStat = offensiveStatFor(player),
                 )
                 dirtyNotifier.playerStatusDirty(targetSid)
                 if (targetSid == sessionId) {
@@ -606,6 +610,7 @@ class AbilitySystem(
                     sourceSessionId = sessionId,
                     casterLevel = player.level,
                     casterStats = playerStats,
+                    offensiveStat = offensiveStatFor(player),
                 )
                 outbound.send(
                     OutboundEvent.SendText(
@@ -683,13 +688,13 @@ class AbilitySystem(
         when (effect) {
             is AbilityEffect.DirectDamage -> {
                 for (m in targetMobs) {
-                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng, offensiveStatFor(player))
                     applySpellDamage(sessionId, m, ability, damage)
                 }
             }
             is AbilityEffect.AreaDamage -> {
                 for (m in targetMobs) {
-                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng)
+                    val damage = computeSpellDamage(bindings, player.level, playerStats, effect.damage, rng, offensiveStatFor(player))
                     applySpellDamage(sessionId, m, ability, damage)
                 }
             }
@@ -701,6 +706,7 @@ class AbilitySystem(
                         sourceSessionId = sessionId,
                         casterLevel = player.level,
                         casterStats = playerStats,
+                        offensiveStat = offensiveStatFor(player),
                     )
                     emitAbilityCast(sessionId, ability, m.name, m.id.value, targetIsPlayer = false)
                 }
@@ -810,6 +816,7 @@ class AbilitySystem(
                         sourceSessionId = sessionId,
                         casterLevel = player.level,
                         casterStats = playerStats,
+                        offensiveStat = offensiveStatFor(player),
                     )
                     dirtyNotifier.playerStatusDirty(targetSid)
                     val targetPlayer = players.get(targetSid)
@@ -908,6 +915,14 @@ class AbilitySystem(
             onCooldownStarted(sessionId, ability.id.value, ability.cooldownMs)
         }
     }
+
+    /** Stat that scales [player]'s ability damage: the class's offensiveStat, else the global spellDamageStat (D-20). */
+    private fun offensiveStatFor(player: PlayerState): String =
+        classRegistry?.get(player.playerClass)?.offensiveStat ?: bindings.spellDamageStat
+
+    /** Stat that scales [player]'s ability damage: the class's offensiveStat, else the global spellDamageStat (D-20). */
+    private fun offensiveStatFor(player: PlayerState): String =
+        classRegistry?.get(player.playerClass)?.offensiveStat ?: bindings.spellDamageStat
 
     /**
      * Resolves the absolute mana cost of [ability] for [player]. Cost is computed
@@ -1252,12 +1267,11 @@ internal fun computeSpellDamage(
     stats: StatMap,
     damage: DamageRange,
     rng: Random,
+    statKey: String = bindings.spellDamageStat,
 ): Int {
     val anchor = (damage.min + damage.max) / 2.0
-    val statTotal = stats[bindings.spellDamageStat]
-    val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.spellStatMultiplier
     val levelScale = bindings.spellLevelScalingRate.pow((level - 1).coerceAtLeast(0))
-    val core = (anchor + statBonus) * levelScale
+    val core = bindings.statAdjustedCore(anchor, stats[statKey], bindings.spellStatMultiplier, bindings.spellPercentPerPoint) * levelScale
     val variance = rollVariance(bindings.spellVarianceMin, bindings.spellVarianceMax, rng)
     return (core * variance).roundToInt().coerceAtLeast(1)
 }
@@ -1275,10 +1289,8 @@ internal fun computeSpellHeal(
     rng: Random,
 ): Int {
     val anchor = (minHeal + maxHeal) / 2.0
-    val statTotal = stats[bindings.healStat]
-    val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.healStatMultiplier
     val levelScale = bindings.healLevelScalingRate.pow((level - 1).coerceAtLeast(0))
-    val core = (anchor + statBonus) * levelScale
+    val core = bindings.statAdjustedCore(anchor, stats[bindings.healStat], bindings.healStatMultiplier, bindings.healPercentPerPoint) * levelScale
     val variance = rollVariance(bindings.healVarianceMin, bindings.healVarianceMax, rng)
     return (core * variance).roundToInt().coerceAtLeast(1)
 }

@@ -513,6 +513,12 @@ class PlayerRegistry(
             val slot = ItemSlot.parse(slotName) ?: continue
             items.setEquippedItem(sessionId, slot, item)
         }
+        if (progression.poolsUseEquipment) {
+            // D-20: gear counts toward pools, so re-derive the caps now that equipment is on
+            progression.recomputeVitalCaps(ps, poolEquipStats(ps))
+            ps.hp = ps.maxHp
+            ps.mana = ps.maxMana
+        }
     }
 
     private suspend fun bindSession(
@@ -537,6 +543,12 @@ class PlayerRegistry(
         for ((slotName, item) in boundRecord.equippedItems) {
             val slot = ItemSlot.parse(slotName) ?: continue
             items.setEquippedItem(sessionId, slot, item)
+        }
+        if (progression.poolsUseEquipment) {
+            // D-20: gear counts toward pools, so re-derive the caps now that equipment is on
+            progression.recomputeVitalCaps(ps, poolEquipStats(ps))
+            ps.hp = ps.maxHp
+            ps.mana = ps.maxMana
         }
 
         repo.save(
@@ -762,6 +774,17 @@ class PlayerRegistry(
             ?: startRoom
     }
 
+    /** Equipment stat bonuses for gear-aware pools (D-20), or null when pools ignore equipment. */
+    private fun poolEquipStats(
+        ps: PlayerState,
+        prog: PlayerProgression = progression,
+    ): StatMap? =
+        if (prog.poolsUseEquipment) {
+            items.equipmentBonuses(ps.sessionId, classRegistry?.get(ps.playerClass)).stats
+        } else {
+            null
+        }
+
     suspend fun grantXp(
         sessionId: SessionId,
         amount: Long,
@@ -769,7 +792,7 @@ class PlayerRegistry(
     ): LevelUpResult? {
         val ps = players[sessionId] ?: return null
         val activeProgression = progressionOverride ?: progression
-        val result = activeProgression.grantXp(ps, amount)
+        val result = activeProgression.grantXp(ps, amount, poolEquipStats(ps, activeProgression))
         persistIfClaimed(ps)
         return result
     }
@@ -782,7 +805,7 @@ class PlayerRegistry(
         val clampedLevel = level.coerceIn(1, progression.maxLevel)
         ps.level = clampedLevel
         ps.xpTotal = progression.totalXpForLevel(clampedLevel)
-        progression.applyLevelStats(ps, clampedLevel)
+        progression.applyLevelStats(ps, clampedLevel, poolEquipStats(ps))
         persistIfClaimed(ps)
     }
 

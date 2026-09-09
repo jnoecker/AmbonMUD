@@ -153,9 +153,8 @@ class CombatSystem(
         val b = config.bindings
         val attackPower = b.meleeBaseAttackPower + equipAttack
         val statTotal = stats[b.meleeDamageStat]
-        val statBonus = (statTotal - PlayerState.BASE_STAT) * b.meleeStatMultiplier
         val levelScale = b.meleeLevelScalingRate.pow((player.level - 1).coerceAtLeast(0))
-        val core = (attackPower + statBonus) * levelScale
+        val core = b.statAdjustedCore(attackPower.toDouble(), statTotal, b.meleeStatMultiplier, b.meleePercentPerPoint) * levelScale
         val lo = (core * b.meleeVarianceMin).roundToInt().coerceAtLeast(1)
         val hi = (core * b.meleeVarianceMax).roundToInt().coerceAtLeast(lo)
         return lo..hi
@@ -329,9 +328,7 @@ class CombatSystem(
         val playerAvgDamage = avgPlayerMeleeDamage(player, stats, equip, mob.armor)
 
         val mobAvgRoll = (mob.damage.min + mob.damage.max) / 2.0
-        val dodgePct =
-            ((stats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
-                .coerceIn(0, config.bindings.maxDodgePercent)
+        val dodgePct = config.bindings.dodgePercent(stats)
         val effectiveMobDamage = (mobAvgRoll * (1.0 - dodgePct / 100.0)).coerceAtLeast(0.1)
 
         val hitsToKillMob = ceil(mob.maxHp.toDouble() / playerAvgDamage).toInt().coerceAtLeast(1)
@@ -1285,10 +1282,8 @@ class CombatSystem(
         // Dodge check for offensive spells
         if (isOffensive) {
             val targetStats = resolvePlayerStats(target, items, statusEffects, classRegistry)
-            val dodgePct =
-                ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
-                    .coerceIn(0, config.bindings.maxDodgePercent)
-            if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
+            val dodgePct = config.bindings.dodgePercent(targetStats)
+            if (rollDodge(dodgePct, rng)) {
                 val dodgeText = "You dodge ${mob.name}'s ${spell.displayName}!"
                 outbound.send(OutboundEvent.SendText(targetSid, dodgeText))
                 onCombatEvent(
@@ -1432,10 +1427,8 @@ class CombatSystem(
         targetSid: SessionId,
     ): Int {
         val targetStats = resolvePlayerStats(target, items, statusEffects, classRegistry)
-        val dodgePct =
-            ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
-                .coerceIn(0, config.bindings.maxDodgePercent)
-        if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
+        val dodgePct = config.bindings.dodgePercent(targetStats)
+        if (rollDodge(dodgePct, rng)) {
             val dodgeText = "You dodge ${mob.name}'s attack!"
             outbound.send(OutboundEvent.SendText(targetSid, dodgeText))
             onCombatEvent(
@@ -2158,9 +2151,10 @@ internal fun computePlayerMeleeSwing(
 ): MeleeSwingResult {
     val attackPower = bindings.meleeBaseAttackPower + equipAttack
     val statTotal = stats[bindings.meleeDamageStat]
-    val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.meleeStatMultiplier
     val levelScale = bindings.meleeLevelScalingRate.pow((level - 1).coerceAtLeast(0))
-    val core = (attackPower + statBonus) * levelScale
+    val core =
+        bindings.statAdjustedCore(attackPower.toDouble(), statTotal, bindings.meleeStatMultiplier, bindings.meleePercentPerPoint) *
+            levelScale
     val varianceSpan = bindings.meleeVarianceMax - bindings.meleeVarianceMin
     val variance =
         if (varianceSpan <= 0.0) bindings.meleeVarianceMin else bindings.meleeVarianceMin + rng.nextDouble() * varianceSpan
@@ -2194,9 +2188,10 @@ internal fun expectedPlayerMeleeDamage(
 ): Double {
     val attackPower = bindings.meleeBaseAttackPower + equipAttack
     val statTotal = stats[bindings.meleeDamageStat]
-    val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.meleeStatMultiplier
     val levelScale = bindings.meleeLevelScalingRate.pow((level - 1).coerceAtLeast(0))
-    val core = (attackPower + statBonus) * levelScale
+    val core =
+        bindings.statAdjustedCore(attackPower.toDouble(), statTotal, bindings.meleeStatMultiplier, bindings.meleePercentPerPoint) *
+            levelScale
     val avgVariance = (bindings.meleeVarianceMin + bindings.meleeVarianceMax) / 2.0
     val rawAvg = core * avgVariance
     val mitigation = enemyArmor / (enemyArmor + bindings.meleeArmorMitigationK)
