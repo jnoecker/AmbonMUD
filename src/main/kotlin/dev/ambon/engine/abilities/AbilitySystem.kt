@@ -1243,6 +1243,16 @@ class AbilitySystem(
 }
 
 /**
+ * TAUNT flatThreat is a level-1 anchor: it rides the ability level curve (spellLevelScalingRate) so a
+ * taunt buys the same number of ticks of lead at level 30 as at level 5 (D-23).
+ */
+internal fun scaledTauntThreat(
+    flatThreat: Double,
+    level: Int,
+    bindings: StatBindingsConfig,
+): Double = flatThreat * bindings.spellLevelScalingRate.pow((level - 1).coerceAtLeast(0))
+
+/**
  * Resolves a single spell-damage hit using the same shape as basic melee:
  *
  * ```
@@ -1261,16 +1271,6 @@ class AbilitySystem(
  * File-level for parity with `computePlayerMeleeSwing` — keeps the spell
  * formula in one place that tests can drive directly.
  */
-/**
- * TAUNT flatThreat is a level-1 anchor: it rides the ability level curve (spellLevelScalingRate) so a
- * taunt buys the same number of ticks of lead at level 30 as at level 5 (D-23).
- */
-internal fun scaledTauntThreat(
-    flatThreat: Double,
-    level: Int,
-    bindings: StatBindingsConfig,
-): Double = flatThreat * bindings.spellLevelScalingRate.pow((level - 1).coerceAtLeast(0))
-
 internal fun computeSpellDamage(
     bindings: StatBindingsConfig,
     level: Int,
