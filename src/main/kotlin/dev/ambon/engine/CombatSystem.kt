@@ -1295,6 +1295,25 @@ class CombatSystem(
     }
 
     /**
+     * D-25 floor for damaging mob spells: the mitigated roll the mob's own melee swing would have
+     * landed on this target. Authored spell numbers are absolute while the tier swing scales with
+     * level, so a default attack authored as a level-1 number would otherwise defang a level-30 boss.
+     * Returns 0 (no roll spent) when the spell's minimum already clears the mob's maximum swing,
+     * because the floor cannot bind there.
+     */
+    private fun mobSwingFloor(
+        mob: MobState,
+        spell: MobSpell,
+        targetSid: SessionId,
+    ): Int {
+        val spellDamage = spell.damage ?: return 0
+        if (spellDamage.min >= mob.damage.max) return 0
+        val swingRoll = rollRange(rng, mob.damage.min, mob.damage.max)
+        val targetArmor = items.equipmentBonuses(targetSid).armor
+        return applyArmorMitigation(swingRoll, targetArmor, config.bindings.meleeArmorMitigationK)
+    }
+
+    /**
      * Executes a mob spell against a target player (or as a self-heal/buff).
      * Handles dodge checks for offensive spells, damage, healing, and status effects.
      * Returns the damage dealt to the player (0 for dodges, heals, and pure-buff spells) so the
@@ -1335,9 +1354,11 @@ class CombatSystem(
             }
         }
 
-        // Apply damage
+        // Apply damage. A damaging spell never lands below the mob's own mitigated swing (D-25);
+        // the authored roll is used as-is whenever it is the larger of the two.
         if (spell.damage != null) {
-            val spellRoll = rollRange(rng, spell.damage.min, spell.damage.max)
+            val authoredRoll = rollRange(rng, spell.damage.min, spell.damage.max)
+            val spellRoll = maxOf(authoredRoll, mobSwingFloor(mob, spell, targetSid))
             var spellDamage = spellRoll
             if (statusEffects != null) {
                 spellDamage = statusEffects.absorbPlayerDamage(targetSid, spellDamage)
