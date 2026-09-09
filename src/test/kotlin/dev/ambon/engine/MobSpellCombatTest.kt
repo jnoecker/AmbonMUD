@@ -1,8 +1,12 @@
 package dev.ambon.engine
 
 import dev.ambon.domain.DamageRange
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobSpell
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.load.WorldLoadException
@@ -11,6 +15,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.test.CombatTestFixture
+import dev.ambon.test.deterministicMeleeBindings
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -253,6 +258,133 @@ class MobSpellCombatTest {
         val dodged = texts.any { it.contains("dodge") }
 
         assertTrue(hasBurn || dodged, "Expected burn effect applied or attack dodged")
+    }
+
+    // --- D-25: damaging spells are floored at the mob's own mitigated swing ---
+
+    /** Bindings with dodge disabled so the mob's blow always lands and the HP arithmetic is exact. */
+    private fun noDodgeBindings() = deterministicMeleeBindings(unarmedAttackPower = 1).copy(dodgePerPoint = 0.0)
+
+    private suspend fun loginAt100(fixture: CombatTestFixture, sid: SessionId, name: String) =
+        fixture.players.loginOrFail(sid, name).let {
+            val player = fixture.players.get(sid)!!
+            player.maxHp = 100
+            player.hp = 100
+            player
+        }
+
+    @Test
+    fun `default attack authored below the swing lands for the mitigated swing`() = runTest {
+        val fixture = CombatTestFixture()
+        val weakDefault = MobSpell(
+            id = "rusty_jab",
+            displayName = "Rusty Jab",
+            message = "The mage jabs at you",
+            damage = DamageRange(1, 1),
+            weight = 1,
+        )
+        // Swing 20 against armor 20 (K = 20) mitigates to 10; the authored 1 must not replace it.
+        val mob = spellMob(
+            spells = listOf(weakDefault),
+            defaultAttack = "rusty_jab",
+            damage = DamageRange(20, 20),
+        )
+        fixture.mobs.upsert(mob)
+
+        val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1, bindings = noDodgeBindings())
+        val sid = SessionId(1L)
+        val player = loginAt100(fixture, sid, "Player1")
+        fixture.equipItem(
+            sid,
+            ItemInstance(
+                ItemId("demo:plate"),
+                Item(keyword = "plate", displayName = "plate mail", slot = ItemSlot.BODY, armor = 20),
+            ),
+        )
+        fixture.outbound.drainAll()
+
+        assertNull(combat.startCombat(sid, "mage"))
+        fixture.outbound.drainAll()
+        fixture.tickCombat(combat)
+
+        val texts = fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertEquals(90, player.hp, "Expected the mitigated swing (10), not the authored 1 or the raw 20; got: $texts")
+        assertTrue(
+            texts.any { it.contains("jabs at you for 10 damage") },
+            "Expected the spell message carrying the floored damage, got: $texts",
+        )
+    }
+
+    @Test
+    fun `special authored above the swing keeps its authored roll`() = runTest {
+        val fixture = CombatTestFixture()
+        // Swing 1..1, Shadow Bolt 5..5 (no cooldown): the bolt is picked every phase and is the larger number.
+        val mob = spellMob(spells = listOf(shadowBolt), damage = DamageRange(1, 1))
+        fixture.mobs.upsert(mob)
+
+        val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1, bindings = noDodgeBindings())
+        val sid = SessionId(1L)
+        val player = loginAt100(fixture, sid, "Player1")
+        fixture.outbound.drainAll()
+
+        assertNull(combat.startCombat(sid, "mage"))
+        fixture.outbound.drainAll()
+        fixture.tickCombat(combat)
+
+        val texts = fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertEquals(95, player.hp, "Expected the authored 5 to land unchanged, got: $texts")
+    }
+
+    @Test
+    fun `special authored below the swing is floored at the unmitigated swing when unarmored`() = runTest {
+        val fixture = CombatTestFixture()
+        val weakSpecial = MobSpell(
+            id = "ember_flick",
+            displayName = "Ember Flick",
+            message = "The mage flicks an ember at you",
+            damage = DamageRange(3, 3),
+            weight = 100,
+        )
+        val mob = spellMob(spells = listOf(weakSpecial), damage = DamageRange(20, 20))
+        fixture.mobs.upsert(mob)
+
+        val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1, bindings = noDodgeBindings())
+        val sid = SessionId(1L)
+        val player = loginAt100(fixture, sid, "Player1")
+        fixture.outbound.drainAll()
+
+        assertNull(combat.startCombat(sid, "mage"))
+        fixture.outbound.drainAll()
+        fixture.tickCombat(combat)
+
+        // No armor: the floor is the raw swing of 20, not the authored 3.
+        assertEquals(80, player.hp, "Expected the unmitigated swing (20) to floor the authored 3")
+    }
+
+    @Test
+    fun `heal spells stay authored regardless of the swing`() = runTest {
+        val fixture = CombatTestFixture()
+        val healer = spellMob(
+            spells = listOf(heal.copy(cooldownMs = 0L, weight = 100)),
+            hp = 50,
+            damage = DamageRange(20, 20),
+        )
+        healer.takeDamage(20)
+        assertEquals(30, healer.hp)
+        fixture.mobs.upsert(healer)
+
+        val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1, bindings = noDodgeBindings())
+        val sid = SessionId(1L)
+        val player = loginAt100(fixture, sid, "Player1")
+        fixture.outbound.drainAll()
+
+        assertNull(combat.startCombat(sid, "mage"))
+        fixture.tickCombat(combat)
+
+        val healed = fixture.mobs.get(healer.id)!!
+        // 30 after the pre-damage, +10 authored heal, -1 for the player's swing = 39; the swing of 20 plays no part.
+        assertEquals(39, healed.hp, "Expected the authored heal of 10 (30 - 1 + 10)")
+        assertEquals(100, player.hp, "A heal phase deals no damage to the player")
     }
 
     // --- WorldLoader validation tests ---
