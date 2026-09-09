@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.config.PetConfig
+import dev.ambon.config.PetTemplateConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.RaceDef
 import dev.ambon.domain.RacialAbility
@@ -414,7 +416,7 @@ class RacialAbilitySystemTest {
     }
 
     @Test
-    fun `Lustriae timeslip still dies when the extra attack is not enough`() = runTest {
+    fun `Lustriae timeslip negates the blow and whiffs one round even when the extra attack does not kill`() = runTest {
         val fixture = CombatTestFixture()
         val racial = fixture.buildRacialAbilities(
             registryWith(
@@ -425,15 +427,129 @@ class RacialAbilitySystemTest {
                 ),
             ),
         )
-        // Mob too healthy for one extra swing to kill — the player dies, but the cooldown still burns.
-        val (sid, _, combat) =
+        // Mob too healthy for one extra swing to kill: the slip still saves the player (D-21).
+        val (sid, mob, combat) =
             fixture.engage(racial, playerMaxHp = 100, playerHp = 30, mob = enemyMob(damage = DamageRange(50, 50), hp = 200))
 
+        // Round 1: lethal blow negated, the extra swing lands on top of the normal one.
+        fixture.tickCombat(combat)
+        fixture.outbound.drainAll()
+        assertEquals(30, fixture.players.get(sid)!!.hp, "the negated blow leaves the player at pre-hit HP")
+        assertEquals(198, mob.hp, "normal swing plus the timeslip swing")
+        assertTrue(fixture.players.get(sid)!!.racialAbilityCooldownUntilMs > 0L, "timeslip burns its cooldown")
+        assertTrue(combat.isInCombat(sid), "Lustriae stays engaged")
+
+        // Round 2: the mob whiffs the phased player.
+        fixture.tickCombat(combat)
+        assertEquals(30, fixture.players.get(sid)!!.hp, "out-of-phase player takes no damage")
+        assertTrue(combat.isMobInCombat(mob.id), "mob stays in combat rather than disengaging")
+
+        // Round 3: the phase is over and the racial is on cooldown, so the next blow lands.
         fixture.tickCombat(combat)
         val texts = fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { it.contains("slain") }, "player should die once the phase ends, got: $texts")
+    }
 
-        assertTrue(texts.any { it.contains("slain") }, "player should die, got: $texts")
-        assertTrue(fixture.players.get(sid)!!.racialAbilityCooldownUntilMs > 0L, "timeslip still burns its cooldown")
+    @Test
+    fun `Kitsarae reversal restores at least regenPctOfMaxHp of max HP`() = runTest {
+        val fixture = CombatTestFixture()
+        val racial = fixture.buildRacialAbilities(
+            registryWith(
+                RacialAbility(
+                    kind = RacialAbilityKind.KITSARAE_REVERSAL,
+                    displayName = "Reversal",
+                    cooldownMs = 180_000L,
+                    regenPctOfMaxHp = 0.2,
+                ),
+            ),
+        )
+        // 5 HP, 6-damage killing blow -> 5 + 6 = 11 would be below the 20% floor of a 100 HP player.
+        val (sid, _, combat) =
+            fixture.engage(racial, playerMaxHp = 100, playerHp = 5, mob = enemyMob(damage = DamageRange(6, 6)))
+
+        fixture.tickCombat(combat)
+
+        assertEquals(20, fixture.players.get(sid)!!.hp, "reversal floors the result at 20% of max HP")
+        assertTrue(combat.isInCombat(sid), "Kitsarae keeps fighting")
+    }
+
+    @Test
+    fun `Mycorae spores inherit the owner's threat so the mob turns on the decoys`() = runTest {
+        val fixture = CombatTestFixture()
+        val pets =
+            PetSystem(
+                PetConfig(
+                    definitions =
+                        mapOf(
+                            "spore_mushroom" to
+                                PetTemplateConfig(
+                                    name = "a shrieking mushroom",
+                                    baseHp = 8,
+                                    baseMinDamage = 1,
+                                    baseMaxDamage = 1,
+                                    baseArmor = 0,
+                                    threatMultiplier = 6.0,
+                                ),
+                        ),
+                ),
+                fixture.mobs,
+                fixture.clock,
+            )
+        val racial = fixture.buildRacialAbilities(
+            registryWith(
+                RacialAbility(
+                    kind = RacialAbilityKind.MYCORAE_SPORES,
+                    displayName = "Spores",
+                    cooldownMs = 120_000L,
+                    triggerHealthPct = 25,
+                    petTemplateKey = "spore_mushroom",
+                    petCountMin = 2,
+                    petCountMax = 2,
+                    petDurationMs = 12_000L,
+                ),
+            ),
+        )
+        racial.summonRacialPet = { ownerSid, template, durationMs, replaceExisting ->
+            val owner = fixture.players.get(ownerSid)!!
+            val ownerStats = PetSystem.OwnerStats(maxHp = owner.maxHp, damageMin = 1, damageMax = 1, armor = 0)
+            pets.summon(ownerSid, template, owner.roomId, ownerStats, durationMs, owner.name, replaceExisting)
+        }
+        val combat = fixture.buildCombat(
+            rng = Random(42),
+            minDamage = 1,
+            maxDamage = 1,
+            petSystem = pets,
+            racialAbilitySystem = racial,
+        )
+        val sid = SessionId(1L)
+        fixture.players.loginOrFail(sid, "Hero")
+        fixture.players.get(sid)!!.apply {
+            race = raceId
+            maxHp = 100
+            baseMaxHp = 100
+            hp = 20
+        }
+        val mob = enemyMob(hp = 200)
+        fixture.mobs.upsert(mob)
+        combat.startCombat(sid, "goblin")
+        fixture.outbound.drainAll()
+
+        // Round 1: the player survives a 1-damage hit at 19/100 and the spores fire, seeded with threat.
+        fixture.tickCombat(combat)
+        val summoned = pets.getPets(sid)
+        assertEquals(2, summoned.size, "two mushrooms expected")
+        val ownerThreat = combat.threatTable.getThreat(mob.id, sid)
+        for (pet in summoned) {
+            val petSid = pets.getPetSessionId(pet.id)!!
+            assertTrue(combat.threatTable.getThreat(mob.id, petSid) > ownerThreat, "a mushroom should out-threat its owner")
+        }
+
+        // Round 2: the goblin swings at a mushroom, not the player.
+        val hpBefore = fixture.players.get(sid)!!.hp
+        fixture.tickCombat(combat)
+        assertEquals(hpBefore, fixture.players.get(sid)!!.hp, "the decoy should take the swing")
+        val after = pets.getPets(sid)
+        assertTrue(after.size < 2 || after.any { it.hp < it.maxHp }, "a mushroom should have been hit")
     }
 
     // ── Cooldown gate ────────────────────────────────────────────────────

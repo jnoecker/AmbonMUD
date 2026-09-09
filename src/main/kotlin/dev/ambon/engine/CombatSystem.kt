@@ -891,6 +891,21 @@ class CombatSystem(
         removePlayerFromCombat(sessionId)
     }
 
+    override fun seedPetThreatFromOwner(
+        ownerSid: SessionId,
+        pet: MobState,
+    ) {
+        // Only pets with a threat multiplier hold a synthetic session (PetSystem.summon); the rest
+        // are pure damage and can't be targeted, so there is nothing to seed.
+        val petSid = petSystem?.getPetSessionId(pet.id) ?: return
+        for (mobId in threatTable.mobsThreatenedBy(ownerSid)) {
+            val ownerThreat = threatTable.getThreat(mobId, ownerSid)
+            if (ownerThreat <= 0.0) continue
+            val seeded = maxOf(threatTable.getThreat(mobId, petSid), ownerThreat + 1.0)
+            threatTable.setThreat(mobId, petSid, seeded)
+        }
+    }
+
     override suspend fun broadcastToRoomExcept(
         sessionId: SessionId,
         text: String,

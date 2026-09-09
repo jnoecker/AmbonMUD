@@ -24,6 +24,7 @@ import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.outgoingDamageMultiplier
 import dev.ambon.engine.resolvePlayerStats
 import dev.ambon.engine.spendMana
 import dev.ambon.engine.statAdjustedCore
@@ -858,8 +859,11 @@ class AbilitySystem(
         sessionId: SessionId,
         mob: MobState,
         ability: AbilityDefinition,
-        damage: Int,
+        baseDamage: Int,
     ) {
+        // D-21: an active outgoing-damage buff (Ophirae wrath) multiplies ability hits like melee swings.
+        val multiplier = players.get(sessionId)?.outgoingDamageMultiplier(clock.millis()) ?: 1.0
+        val damage = if (multiplier != 1.0) (baseDamage * multiplier).roundToInt().coerceAtLeast(1) else baseDamage
         mob.takeDamage(damage)
         dirtyNotifier.mobHpDirty(mob.id)
         combat.addThreat(mob.id, sessionId, damage.toDouble())
