@@ -33,6 +33,7 @@ internal data class AchievementRewardsFile(
     val xp: Long = 0L,
     val gold: Long = 0L,
     val title: String? = null,
+    val skillPoints: Int = 0,
 )
 
 object AchievementLoader {
@@ -105,6 +106,7 @@ object AchievementLoader {
                             xp = entry.rewards.xp,
                             gold = entry.rewards.gold,
                             title = entry.rewards.title,
+                            skillPoints = entry.rewards.skillPoints,
                         ),
                     hidden = entry.hidden,
                 ),

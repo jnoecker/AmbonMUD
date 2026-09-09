@@ -35,6 +35,8 @@ class ItemHandler(
     private val progression: PlayerProgression = PlayerProgression(),
     private val housingSystem: HousingSystem? = null,
     private val skillPointsConfig: SkillPointsConfig = SkillPointsConfig(),
+    /** (prestigeLevel, unlockedAchievementIds) -> bonus skill points; wired by GameEngine. */
+    private val bonusSkillPoints: (Int, Set<String>) -> Int = { _, _ -> 0 },
 ) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
@@ -502,6 +504,7 @@ class ItemHandler(
                     level = result.newLevel,
                     spentPoints = abilitySystem.spentSkillPoints(player.learnedAbilityIds),
                     interval = skillPointsConfig.interval,
+                    prestigeBonus = bonusSkillPoints(player.prestigeLevel, player.unlockedAchievementIds),
                 )
                 if (availablePoints > 0) {
                     val pointWord = if (availablePoints == 1) "skill point" else "skill points"

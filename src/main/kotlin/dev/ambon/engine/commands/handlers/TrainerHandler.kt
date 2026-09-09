@@ -27,6 +27,8 @@ class TrainerHandler(
     private val clock: Clock = Clock.systemUTC(),
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val prestigeSkillPointBonus: (Int) -> Int = { 0 },
+    /** Bonus skill points from unlocked achievements (D-05 post-cap income); wired to AchievementRegistry. */
+    private val achievementSkillPointBonus: (Set<String>) -> Int = { 0 },
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
@@ -69,7 +71,7 @@ class TrainerHandler(
                 level = me.level,
                 spentPoints = abilitySystem.spentSkillPoints(me.learnedAbilityIds),
                 interval = skillPointsConfig.interval,
-                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel) + achievementSkillPointBonus(me.unlockedAchievementIds),
             )
 
             outbound.send(OutboundEvent.SendInfo(sessionId, trainerTitle(trainer)))
@@ -270,7 +272,7 @@ class TrainerHandler(
                 unlockedClasses = me.unlockedClasses,
                 skillPointInterval = skillPointsConfig.interval,
                 learnedIds = me.learnedAbilityIds,
-                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel) + achievementSkillPointBonus(me.unlockedAchievementIds),
             )
             if (error != null) {
                 outbound.send(OutboundEvent.SendError(sessionId, error))
@@ -286,7 +288,7 @@ class TrainerHandler(
                 level = me.level,
                 spentPoints = abilitySystem.spentSkillPoints(me.learnedAbilityIds),
                 interval = skillPointsConfig.interval,
-                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel) + achievementSkillPointBonus(me.unlockedAchievementIds),
             )
             val pointWord = if (ability.skillPointCost == 1) "skill point" else "skill points"
             outbound.send(
@@ -403,7 +405,7 @@ class TrainerHandler(
                 level = me.level,
                 spentPoints = abilitySystem.spentSkillPoints(me.learnedAbilityIds),
                 interval = skillPointsConfig.interval,
-                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel) + achievementSkillPointBonus(me.unlockedAchievementIds),
             )
             gmcpEmitter?.sendTrainerList(sessionId, trainer, me, available, abilitySystem, multiclassConfig)
         }
@@ -463,7 +465,7 @@ class TrainerHandler(
                 level = me.level,
                 spentPoints = 0,
                 interval = skillPointsConfig.interval,
-                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel) + achievementSkillPointBonus(me.unlockedAchievementIds),
             )
 
             outbound.send(

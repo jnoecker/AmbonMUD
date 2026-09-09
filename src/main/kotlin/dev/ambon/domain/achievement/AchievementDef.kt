@@ -26,4 +26,9 @@ data class AchievementRewards(
     override val gold: Long = 0L,
     /** Title string made available to the player on unlock. Null means no title reward. */
     val title: String? = null,
+    /**
+     * Bonus skill points added to the player's supply while the achievement is unlocked (D-05
+     * post-cap income). Counted on demand from the unlocked set, like prestige SKILL_POINT perks.
+     */
+    val skillPoints: Int = 0,
 ) : Rewards
