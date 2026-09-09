@@ -41,8 +41,10 @@ class CurrencySystem(
             return false
         }
         val current = player.currencies.getOrDefault(currencyId, 0L)
-        player.currencies[currencyId] = current + amount
-        log.debug { "Currency awarded: ${player.name} +$amount $currencyId (new balance: ${current + amount})" }
+        // Saturate instead of wrapping: a runaway award source must never flip a balance negative.
+        val next = if (amount > Long.MAX_VALUE - current) Long.MAX_VALUE else current + amount
+        player.currencies[currencyId] = next
+        log.debug { "Currency awarded: ${player.name} +$amount $currencyId (new balance: $next)" }
         return true
     }
 

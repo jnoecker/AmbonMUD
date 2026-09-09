@@ -66,6 +66,13 @@ class CurrencySystemTest {
     }
 
     @Test
+    fun `award saturates at Long MAX instead of overflowing`() {
+        assertTrue(system.award(player, "honor", Long.MAX_VALUE - 5))
+        assertTrue(system.award(player, "honor", 10))
+        assertEquals(Long.MAX_VALUE, system.balance(player, "honor"))
+    }
+
+    @Test
     fun `award with zero amount does nothing and reports failure`() {
         assertFalse(system.award(player, "quest_points", 0))
         assertEquals(0L, system.balance(player, "quest_points"))
