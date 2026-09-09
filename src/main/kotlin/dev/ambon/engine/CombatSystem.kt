@@ -798,6 +798,27 @@ class CombatSystem(
         threatTable.addThreat(mobId, sessionId, amount)
     }
 
+    /**
+     * Adds threat for [damage] that a player's ability hit or periodic tick dealt to [mobId], scaled
+     * by the class threatMultiplier exactly like a melee swing (D-23). A pet source uses the pet's own
+     * multiplier and adds nothing when it has none.
+     */
+    fun addDamageThreat(
+        mobId: MobId,
+        sessionId: SessionId,
+        damage: Double,
+    ) {
+        if (!activeMobs.containsKey(mobId) || damage <= 0.0) return
+        val pet = petSystem?.getPetBySession(sessionId)
+        val multiplier =
+            if (pet != null) {
+                pet.threatMultiplier.takeIf { it > 0.0 } ?: return
+            } else {
+                players.get(sessionId)?.let { threatMultiplier(it) } ?: 1.0
+            }
+        threatTable.addThreat(mobId, sessionId, damage * multiplier)
+    }
+
     fun addHealingThreat(
         sessionId: SessionId,
         healAmount: Int,
@@ -1955,7 +1976,7 @@ class CombatSystem(
         mob: MobState,
     ): Long {
         if (mob.goldMax <= 0L) return 0L
-        val player = players.get(sessionId) ?: return 0L
+        if (players.get(sessionId) == null) return 0L
         val goldDrop =
             if (mob.goldMin >= mob.goldMax) {
                 mob.goldMin
@@ -1963,11 +1984,41 @@ class CombatSystem(
                 mob.goldMin + rng.nextLong(mob.goldMax - mob.goldMin + 1)
             }
         if (goldDrop <= 0L) return 0L
-        player.gold += goldDrop
-        dirtyNotifier.playerVitalsDirty(sessionId)
-        outbound.send(OutboundEvent.SendText(sessionId, "You find $goldDrop gold."))
-        onGoldGained(sessionId, goldDrop, mob.name)
-        return goldDrop
+        // D-23: kill gold is split equally among the group members in the room, like kill XP; the
+        // killing blow keeps the remainder.
+        val recipients = goldRecipients(sessionId, mob)
+        val share = goldDrop / recipients.size
+        var remainder = goldDrop - share * recipients.size
+        var killerGold = 0L
+        for (sid in recipients) {
+            val recipient = players.get(sid) ?: continue
+            var amount = share
+            if (sid == sessionId) {
+                amount += remainder
+                remainder = 0L
+            }
+            if (amount <= 0L) continue
+            recipient.gold += amount
+            dirtyNotifier.playerVitalsDirty(sid)
+            val split = if (recipients.size > 1) " (your share of $goldDrop)" else ""
+            outbound.send(OutboundEvent.SendText(sid, "You find $amount gold$split."))
+            onGoldGained(sid, amount, mob.name)
+            if (sid == sessionId) killerGold = amount
+        }
+        return killerGold
+    }
+
+    /** Group members in the mob's room who share its kill gold: the same set that shares kill XP. */
+    private fun goldRecipients(
+        killerSessionId: SessionId,
+        mob: MobState,
+    ): List<SessionId> {
+        val group = groupSystem?.getGroup(killerSessionId) ?: return listOf(killerSessionId)
+        val eligible =
+            group.members.filter { sid ->
+                players.get(sid)?.let { it.roomId == mob.roomId && !it.isAkathavae } == true
+            }
+        return eligible.ifEmpty { listOf(killerSessionId) }
     }
 
     /**

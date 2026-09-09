@@ -260,7 +260,7 @@ class AbilitySystem(
                 combat.threatTable.setThreat(
                     mob.id,
                     sessionId,
-                    currentMax + effect.margin + effect.flatThreat,
+                    currentMax + effect.margin + scaledTauntThreat(effect.flatThreat, player.level, bindings),
                 )
                 outbound.send(
                     OutboundEvent.SendText(
@@ -866,7 +866,7 @@ class AbilitySystem(
         val damage = if (multiplier != 1.0) (baseDamage * multiplier).roundToInt().coerceAtLeast(1) else baseDamage
         mob.takeDamage(damage)
         dirtyNotifier.mobHpDirty(mob.id)
-        combat.addThreat(mob.id, sessionId, damage.toDouble())
+        combat.addDamageThreat(mob.id, sessionId, damage.toDouble())
         val hitText = "Your ${ability.displayName} hits ${mob.name} for $damage damage."
         outbound.send(OutboundEvent.SendText(sessionId, hitText))
         onCombatEvent(
@@ -1261,6 +1261,16 @@ class AbilitySystem(
  * File-level for parity with `computePlayerMeleeSwing` — keeps the spell
  * formula in one place that tests can drive directly.
  */
+/**
+ * TAUNT flatThreat is a level-1 anchor: it rides the ability level curve (spellLevelScalingRate) so a
+ * taunt buys the same number of ticks of lead at level 30 as at level 5 (D-23).
+ */
+internal fun scaledTauntThreat(
+    flatThreat: Double,
+    level: Int,
+    bindings: StatBindingsConfig,
+): Double = flatThreat * bindings.spellLevelScalingRate.pow((level - 1).coerceAtLeast(0))
+
 internal fun computeSpellDamage(
     bindings: StatBindingsConfig,
     level: Int,
