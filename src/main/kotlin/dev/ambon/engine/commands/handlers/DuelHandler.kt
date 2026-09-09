@@ -10,6 +10,10 @@ import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
 
+/** D-13 containment: PvP sits outside the balance programme; both duelists hear it when a duel starts. */
+internal const val DUEL_UNSUPPORTED_NOTICE =
+    "Duels are not balanced in this pass: they resolve on weapon swings and self-cast abilities only."
+
 class DuelHandler(
     private val ctx: EngineContext,
     private val duelSystem: DuelSystem? = null,
@@ -169,6 +173,9 @@ class DuelHandler(
         outbound.send(
             OutboundEvent.SendInfo(duel.player2, "** You accept the duel with ${challenger.name}! Fight! **"),
         )
+        for (sid in listOf(duel.player1, duel.player2)) {
+            outbound.send(OutboundEvent.SendInfo(sid, DUEL_UNSUPPORTED_NOTICE))
+        }
         sendScopedFeedback(
             duel.player1,
             gmcpEmitter,

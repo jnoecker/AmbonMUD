@@ -106,6 +106,24 @@ class DuelCommandTest {
     }
 
     @Test
+    fun `accept tells both players that duels are unsupported for balance`() = runTest {
+        val (h, _) = harness()
+        val alice = SessionId(1)
+        val bob = SessionId(2)
+        h.loginPlayer(alice, "Alice")
+        h.loginPlayer(bob, "Bob")
+        h.drain()
+
+        h.router.handle(alice, Command.Duel("Bob"))
+        h.drain()
+        h.router.handle(bob, Command.DuelAccept)
+
+        val events = h.drain()
+        assertTrue(events.infoMessages(alice).any { it.contains("not balanced") }, "challenger hears the notice")
+        assertTrue(events.infoMessages(bob).any { it.contains("not balanced") }, "acceptor hears the notice")
+    }
+
+    @Test
     fun `decline ends challenge and notifies both players`() = runTest {
         val (h, ds) = harness()
         val alice = SessionId(1)
