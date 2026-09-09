@@ -135,6 +135,33 @@ class AbilitySystemTest {
         }
 
     @Test
+    fun `an active damage buff multiplies ability damage like melee swings`() =
+        runTest {
+            val h = buildSystem()
+            h.players.loginOrFail(sid, "Caster")
+            h.abilitySystem.syncAbilities(sid, 1)
+            val player = h.players.get(sid)!!
+            player.mana = 20
+            // Ophirae wrath (D-21): the same buff that doubles melee swings doubles ability hits.
+            player.damageBoostMultiplier = 2.0
+            player.damageBoostUntilMs = h.clock.millis() + 60_000L
+
+            val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
+            h.mobs.upsert(mob)
+            h.outbound.drainAll()
+
+            assertNull(h.abilitySystem.cast(sid, "magic_missile", "rat"))
+            assertEquals(10, mob.hp, "a 5-damage missile doubled by the buff")
+
+            val messages =
+                h.outbound
+                    .drainAll()
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .map { it.text }
+            assertTrue(messages.any { it.contains("Magic Missile hits a rat for 10 damage") })
+        }
+
+    @Test
     fun `cast heal restores hp and deducts mana`() =
         runTest {
             val h = buildSystem()

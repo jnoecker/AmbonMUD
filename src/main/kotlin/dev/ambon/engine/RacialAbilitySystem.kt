@@ -13,6 +13,9 @@ import dev.ambon.engine.status.StatusEffectSystem
 import java.util.Random
 import kotlin.math.roundToInt
 
+/** Timeslip phases the player for one mob round: `now < until` on a 2-tick window skips exactly the next phase. */
+private const val TIMESLIP_PHASE_TICKS = 2
+
 /**
  * Combat-internal operations the [RacialAbilitySystem] can't perform on its own — they touch
  * threat tables, mob death/loot, and player attack rolls that live inside [CombatSystem].
@@ -39,6 +42,16 @@ interface RacialCombatBridge {
 
     /** Fully disengages [sessionId] from PvE combat (clears target + threat). */
     fun disengageFromCombat(sessionId: SessionId)
+
+    /**
+     * Gives [pet] (a racial summon that holds a threat entry) the owner's current threat on every
+     * mob the owner is fighting, plus a hair, so the mob turns on the decoy from its next phase
+     * instead of ignoring it until its own swings catch up (D-21).
+     */
+    fun seedPetThreatFromOwner(
+        ownerSid: SessionId,
+        pet: MobState,
+    )
 
     /** Broadcasts [text] to everyone in [sessionId]'s room except the player. */
     suspend fun broadcastToRoomExcept(
@@ -225,7 +238,9 @@ class RacialAbilitySystem(
         val span = (ability.petCountMax - ability.petCountMin).coerceAtLeast(0)
         val count = ability.petCountMin + if (span == 0) 0 else rng.nextInt(span + 1)
         repeat(count) {
-            summonRacialPet(sessionId, template, ability.petDurationMs, false)
+            summonRacialPet(sessionId, template, ability.petDurationMs, false)?.let { pet ->
+                combatBridge?.seedPetThreatFromOwner(sessionId, pet)
+            }
         }
     }
 
@@ -238,7 +253,9 @@ class RacialAbilitySystem(
         val template = ability.petTemplateKey ?: return
         startCooldown(player, ability, nowMs)
         announce(player, ability)
-        summonRacialPet(sessionId, template, ability.petDurationMs, false)
+        summonRacialPet(sessionId, template, ability.petDurationMs, false)?.let { pet ->
+            combatBridge?.seedPetThreatFromOwner(sessionId, pet)
+        }
     }
 
     private suspend fun fireWrath(
@@ -289,8 +306,11 @@ class RacialAbilitySystem(
         nowMs: Long,
     ): Boolean {
         startCooldown(player, ability, nowMs)
-        // The killing blow becomes a heal of equal magnitude: end at preHitHp + blowDamage.
-        player.hp = (preHitHp + blowDamage).coerceAtMost(player.maxHp).coerceAtLeast(1)
+        // The killing blow becomes a heal of equal magnitude (end at preHitHp + blowDamage), floored
+        // at regenPctOfMaxHp of max HP so a small blow on a near-dead player still restores something
+        // (D-21; the config text promises "at least 20%").
+        val floor = (player.maxHp * ability.regenPctOfMaxHp).roundToInt()
+        player.hp = maxOf(preHitHp + blowDamage, floor).coerceAtMost(player.maxHp).coerceAtLeast(1)
         dirtyNotifier.playerVitalsDirty(player.sessionId)
         announce(player, ability)
         return true
@@ -308,16 +328,20 @@ class RacialAbilitySystem(
         startCooldown(player, ability, nowMs)
         announce(player, ability)
         val killed = bridge.extraMeleeSwing(sessionId, attacker)
-        return if (killed) {
-            // The extra attack felled the foe before its blow could land — the player is unharmed.
-            player.hp = preHitHp.coerceAtLeast(1)
-            dirtyNotifier.playerVitalsDirty(sessionId)
-            emitProc(sessionId, ability, "Time snaps back into place — ${attacker.name} falls and you stand unscathed.", deathCheat = true)
-            true
-        } else {
-            emitProc(sessionId, ability, "...but it was not enough to fell ${attacker.name}.")
-            false
-        }
+        // D-21: the slip itself is the save - the blow finds only the air where the player stood.
+        // They keep their pre-hit HP and stay out of phase for one mob round (`now < until`, so two
+        // ticks cover exactly the next mob phase); the extra swing is a bonus on top.
+        player.hp = preHitHp.coerceAtLeast(1)
+        player.untargetableUntilMs = nowMs + TIMESLIP_PHASE_TICKS * tickMillis
+        dirtyNotifier.playerVitalsDirty(sessionId)
+        val text =
+            if (killed) {
+                "Time snaps back into place — ${attacker.name} falls and you stand unscathed."
+            } else {
+                "Time snaps back into place — ${attacker.name}'s blow finds only the air where you stood."
+            }
+        emitProc(sessionId, ability, text, deathCheat = true)
+        return true
     }
 
     private suspend fun fireStoneform(

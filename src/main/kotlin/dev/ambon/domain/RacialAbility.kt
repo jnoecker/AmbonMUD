@@ -67,7 +67,7 @@ data class RacialAbility(
     val triggerHealthPct: Int = 0,
     /** Pyrae: AoE damage dealt to each enemy, as a fraction of the player's max HP. */
     val aoeDamagePctOfMaxHp: Double = 0.0,
-    /** Ophirae: outgoing-damage multiplier while the wrath buff is active. */
+    /** Ophirae: outgoing-damage multiplier (melee swings and ability hits) while the wrath buff is active. */
     val damageMultiplier: Double = 1.0,
     /** Ophirae: how long the wrath buff lasts. */
     val buffDurationMs: Long = 0L,
@@ -81,7 +81,8 @@ data class RacialAbility(
     val petCountMax: Int = 1,
     /** Mycorae/Archae: how long the summoned pets live before despawning. */
     val petDurationMs: Long = 0L,
-    /** Lithae: HP restored on entering stone form, as a fraction of max HP. */
+    /** Lithae: HP restored on entering stone form, as a fraction of max HP. Kitsarae: the reversal
+     *  restores at least this fraction of max HP (D-21). */
     val regenPctOfMaxHp: Double = 0.0,
     /** Lithae: status-effect id (of effectType "root") applied to self so the player can't move. */
     val stoneStatusId: String? = null,
