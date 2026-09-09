@@ -14,6 +14,12 @@ private const val MAX_SESSION_OUTBOUND_QUEUE_CAPACITY = 100_000
  * indicate a likely typo (a rate of 2.0 already produces ~500M× growth over
  * 30 levels). Rates above this trigger a warning, not an error.
  */
+/**
+ * A repeatable award above five levels per claim is a configuration error rather than a design;
+ * the signed fractions are 0.05-0.375 (Ambon D-28).
+ */
+private const val MAX_REPEATABLE_XP_FRACTION = 5.0
+
 private const val MAX_SCALING_RATE = 2.0
 
 /** Selects the player persistence backend. */
@@ -789,6 +795,19 @@ data class AppConfig(
         }
         require(progression.xp.underLevelBonus.maxBonus >= 0.0) {
             "ambonMUD.progression.xp.underLevelBonus.maxBonus must be >= 0"
+        }
+        listOf(
+            "dailyFractionOfLevel" to progression.repeatableXp.dailyFractionOfLevel,
+            "weeklyFractionOfLevel" to progression.repeatableXp.weeklyFractionOfLevel,
+            "autoQuestFractionOfLevel" to progression.repeatableXp.autoQuestFractionOfLevel,
+            "globalFirstFractionOfLevel" to progression.repeatableXp.globalFirstFractionOfLevel,
+            "globalSecondFractionOfLevel" to progression.repeatableXp.globalSecondFractionOfLevel,
+            "globalThirdFractionOfLevel" to progression.repeatableXp.globalThirdFractionOfLevel,
+        ).forEach { (key, value) ->
+            require(value in 0.0..MAX_REPEATABLE_XP_FRACTION) {
+                "ambonMUD.progression.repeatableXp.$key must be in [0.0, $MAX_REPEATABLE_XP_FRACTION] " +
+                    "(0 keeps the authored flat award)"
+            }
         }
         require(progression.rewards.hpScalingRate >= 1.0) {
             "ambonMUD.progression.rewards.hpScalingRate must be >= 1.0"
@@ -3108,6 +3127,24 @@ data class ProgressionConfig(
     val xp: XpCurveConfig = XpCurveConfig(),
     val rewards: LevelRewardsConfig = LevelRewardsConfig(),
     val quests: QuestXpConfig = QuestXpConfig(),
+    val repeatableXp: RepeatableXpConfig = RepeatableXpConfig(),
+)
+
+/**
+ * Claim-time scaling for repeatable rewards. A positive fraction pays that share of the claimant's own
+ * remaining level cost in place of the authored flat award; 0 (the default for every source) keeps the
+ * flat number, so an untouched config behaves exactly as it did before.
+ *
+ * A flat repeatable award is worth a multiple of an early level and a rounding error of a late one: a
+ * 5,000 XP global first place is more than three level-1 levels and under a tenth of a level-29 one.
+ */
+data class RepeatableXpConfig(
+    val dailyFractionOfLevel: Double = 0.0,
+    val weeklyFractionOfLevel: Double = 0.0,
+    val autoQuestFractionOfLevel: Double = 0.0,
+    val globalFirstFractionOfLevel: Double = 0.0,
+    val globalSecondFractionOfLevel: Double = 0.0,
+    val globalThirdFractionOfLevel: Double = 0.0,
 )
 
 /**

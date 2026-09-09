@@ -33,6 +33,7 @@ class AutoQuestSystem(
     private val players: PlayerRegistry,
     private val clock: Clock,
     private val random: Random = Random.Default,
+    private val progression: PlayerProgression = PlayerProgression(),
 ) : GameSystem {
     private val scoped = SessionScoped()
 
@@ -89,7 +90,12 @@ class AutoQuestSystem(
         val killCount = random.nextInt(config.killCountMin, config.killCountMax + 1)
             .coerceAtMost(spawnCount.coerceAtLeast(1))
         val rewardGold = config.rewardGoldBase + config.rewardGoldPerLevel * player.level
-        val rewardXp = config.rewardXpBase + config.rewardXpPerLevel * player.level
+        val rewardXp =
+            progression.repeatableXp(
+                config.rewardXpBase + config.rewardXpPerLevel * player.level,
+                player.xpTotal,
+                RepeatableXpSource.AUTO_QUEST,
+            )
 
         val quest = AutoQuest(
             sessionId = sessionId,

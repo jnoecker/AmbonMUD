@@ -87,6 +87,41 @@ class PlayerProgression(
     }
 
     /**
+     * Claim-time XP for a repeatable reward.
+     *
+     * When the source's configured fraction is positive the award is that share of the claimant's own
+     * remaining level cost, so one daily slot is worth the same slice of progress at level 2 and at
+     * level 29; when it is 0 the authored [flat] number stands. At the cap, where there is no next
+     * level, the last level's cost stands in so a capped claimant still earns a sensible amount.
+     */
+    fun repeatableXp(
+        flat: Long,
+        xpTotal: Long,
+        source: RepeatableXpSource,
+    ): Long {
+        val fraction = fractionFor(source)
+        if (fraction <= 0.0) return flat
+        val levelCost = xpToNextLevel(xpTotal) ?: lastLevelCost()
+        val scaled = fraction * levelCost.toDouble()
+        if (!scaled.isFinite()) return flat
+        return scaled.roundToLong().coerceAtLeast(0L)
+    }
+
+    private fun fractionFor(source: RepeatableXpSource): Double = when (source) {
+        RepeatableXpSource.DAILY -> config.repeatableXp.dailyFractionOfLevel
+        RepeatableXpSource.WEEKLY -> config.repeatableXp.weeklyFractionOfLevel
+        RepeatableXpSource.AUTO_QUEST -> config.repeatableXp.autoQuestFractionOfLevel
+        RepeatableXpSource.GLOBAL_FIRST -> config.repeatableXp.globalFirstFractionOfLevel
+        RepeatableXpSource.GLOBAL_SECOND -> config.repeatableXp.globalSecondFractionOfLevel
+        RepeatableXpSource.GLOBAL_THIRD -> config.repeatableXp.globalThirdFractionOfLevel
+    }
+
+    private fun lastLevelCost(): Long {
+        val top = config.maxLevel.coerceAtLeast(2)
+        return (totalXpForLevel(top) - totalXpForLevel(top - 1)).coerceAtLeast(0L)
+    }
+
+    /**
      * Resolves the effective HP and mana scaling rates for [playerClass]. When
      * the class supplies a rate, the class rate overrides the global progression
      * rate (matches Arcanum's simulateEncounter behavior). Falls back to the
@@ -405,3 +440,13 @@ data class ClassScaling(
     val baseHp: Int,
     val baseMana: Int,
 )
+
+/** The repeatable reward sources that can be paid as a fraction of the claimant's level (D-28). */
+enum class RepeatableXpSource {
+    DAILY,
+    WEEKLY,
+    AUTO_QUEST,
+    GLOBAL_FIRST,
+    GLOBAL_SECOND,
+    GLOBAL_THIRD,
+}

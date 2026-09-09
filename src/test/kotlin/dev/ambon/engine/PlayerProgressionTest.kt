@@ -9,6 +9,7 @@ import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.QuestBaselineConfig
 import dev.ambon.config.QuestDifficulty
 import dev.ambon.config.QuestXpConfig
+import dev.ambon.config.RepeatableXpConfig
 import dev.ambon.config.StatBindingsConfig
 import dev.ambon.config.UnderLevelXpBonusConfig
 import dev.ambon.config.XpCurveConfig
@@ -16,7 +17,9 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.math.roundToLong
 
 class PlayerProgressionTest {
     private fun defaultClassRegistry(): PlayerClassRegistry =
@@ -471,5 +474,73 @@ class PlayerProgressionTest {
         val capped = PlayerProgression(bindings = StatBindingsConfig(xpBonusPerPoint = 0.01, xpBonusCap = 0.25))
         assertEquals(1250L, capped.applyCharismaXpBonus(totalBonusStat = 60, baseXp = 1000L))
         assertEquals(1100L, capped.applyCharismaXpBonus(totalBonusStat = 20, baseXp = 1000L))
+    }
+    @Test
+    fun `repeatable xp keeps the flat award when the source has no fraction`() {
+        val progression = PlayerProgression(ProgressionConfig(maxLevel = 30))
+        assertEquals(
+            5_000L,
+            progression.repeatableXp(flat = 5_000L, xpTotal = 0L, source = RepeatableXpSource.GLOBAL_FIRST),
+        )
+    }
+
+    @Test
+    fun `repeatable xp pays the same share of a level early and late`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 30,
+                    repeatableXp = RepeatableXpConfig(dailyFractionOfLevel = 0.25),
+                ),
+            )
+        val levelOneCost = progression.xpToNextLevel(0L)!!
+        assertEquals(
+            (0.25 * levelOneCost).roundToLong(),
+            progression.repeatableXp(flat = 5_000L, xpTotal = 0L, source = RepeatableXpSource.DAILY),
+        )
+        val deepXp = progression.totalXpForLevel(20)
+        val deepCost = progression.xpToNextLevel(deepXp)!!
+        assertEquals(
+            (0.25 * deepCost).roundToLong(),
+            progression.repeatableXp(flat = 5_000L, xpTotal = deepXp, source = RepeatableXpSource.DAILY),
+        )
+        assertTrue(deepCost > levelOneCost, "expected a later level to cost more than the first")
+    }
+
+    @Test
+    fun `each source reads its own fraction`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 30,
+                    repeatableXp =
+                        RepeatableXpConfig(
+                            dailyFractionOfLevel = 0.10,
+                            weeklyFractionOfLevel = 0.375,
+                            autoQuestFractionOfLevel = 0.05,
+                        ),
+                ),
+            )
+        val cost = progression.xpToNextLevel(0L)!!
+        assertEquals((0.10 * cost).roundToLong(), progression.repeatableXp(1L, 0L, RepeatableXpSource.DAILY))
+        assertEquals((0.375 * cost).roundToLong(), progression.repeatableXp(1L, 0L, RepeatableXpSource.WEEKLY))
+        assertEquals((0.05 * cost).roundToLong(), progression.repeatableXp(1L, 0L, RepeatableXpSource.AUTO_QUEST))
+        // An unconfigured source keeps its flat award even when its neighbours are scaled.
+        assertEquals(1L, progression.repeatableXp(1L, 0L, RepeatableXpSource.GLOBAL_THIRD))
+    }
+
+    @Test
+    fun `a capped claimant falls back to the last level's cost`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(maxLevel = 30, repeatableXp = RepeatableXpConfig(weeklyFractionOfLevel = 0.5)),
+            )
+        val cappedXp = progression.totalXpForLevel(30)
+        assertNull(progression.xpToNextLevel(cappedXp))
+        val lastCost = progression.totalXpForLevel(30) - progression.totalXpForLevel(29)
+        assertEquals(
+            (0.5 * lastCost).roundToLong(),
+            progression.repeatableXp(flat = 1L, xpTotal = cappedXp, source = RepeatableXpSource.WEEKLY),
+        )
     }
 }
