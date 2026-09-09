@@ -363,7 +363,7 @@ class CombatSystem(
                 mobAvgDamage = mobAvgRoll.toInt().coerceAtLeast(1),
                 hitsToKillMob = hitsToKillMob,
                 hitsToKillPlayer = hitsToKillPlayer,
-                dodgeChancePct = dodgePct,
+                dodgeChancePct = dodgePct.roundToInt(),
                 winChancePct = winChancePct,
                 rating = rating,
             ),

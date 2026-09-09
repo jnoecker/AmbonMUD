@@ -920,10 +920,6 @@ class AbilitySystem(
     private fun offensiveStatFor(player: PlayerState): String =
         classRegistry?.get(player.playerClass)?.offensiveStat ?: bindings.spellDamageStat
 
-    /** Stat that scales [player]'s ability damage: the class's offensiveStat, else the global spellDamageStat (D-20). */
-    private fun offensiveStatFor(player: PlayerState): String =
-        classRegistry?.get(player.playerClass)?.offensiveStat ?: bindings.spellDamageStat
-
     /**
      * Resolves the absolute mana cost of [ability] for [player]. Cost is computed
      * as a percentage of the player's level/class base mana pool, evaluated with

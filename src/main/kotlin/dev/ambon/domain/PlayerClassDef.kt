@@ -14,8 +14,6 @@ data class PlayerClassDef(
     val primaryStat: String? = null,
     /** Stat that scales this class's ability damage and DoT ticks (D-20); null = the global spellDamageStat. */
     val offensiveStat: String? = null,
-    /** Stat that scales this class's ability damage and DoT ticks (D-20); null = the global spellDamageStat. */
-    val offensiveStat: String? = null,
     val statPriorities: List<String> = emptyList(),
     val startRoom: String? = null,
     val threatMultiplier: Double = 1.0,

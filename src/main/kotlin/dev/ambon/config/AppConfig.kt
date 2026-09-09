@@ -415,11 +415,6 @@ data class AppConfig(
                     "ambonMUD.engine.classes.definitions.$key.offensiveStat references unknown stat '${def.offensiveStat}'"
                 }
             }
-            if (def.offensiveStat.isNotBlank()) {
-                require(def.offensiveStat.trim().uppercase() in engine.stats.definitions.keys.map { it.uppercase() }) {
-                    "ambonMUD.engine.classes.definitions.$key.offensiveStat references unknown stat '${def.offensiveStat}'"
-                }
-            }
             require(def.baseManaMultiplier > 0.0) {
                 "ambonMUD.engine.classes.definitions.$key.baseManaMultiplier must be > 0"
             }
@@ -2859,8 +2854,6 @@ data class ClassDefinitionConfig(
     val image: String = "",
     val selectable: Boolean = true,
     val primaryStat: String = "",
-    /** Stat that scales this class's ability damage and DoT ticks (D-20); blank = stats.bindings.spellDamageStat. */
-    val offensiveStat: String = "",
     /** Stat that scales this class's ability damage and DoT ticks (D-20); blank = stats.bindings.spellDamageStat. */
     val offensiveStat: String = "",
     val statPriorities: List<String> = emptyList(),

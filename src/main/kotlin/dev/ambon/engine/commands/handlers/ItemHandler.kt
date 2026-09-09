@@ -9,7 +9,6 @@ import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.engine.EquipmentSlotRegistry
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.PlayerProgression
-import dev.ambon.engine.PlayerState
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.abilities.AbilitySystem
@@ -180,7 +179,7 @@ class ItemHandler(
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
-                    syncPoolCaps(me)
+                    syncPoolCaps(sessionId)
                 }
                 is ItemRegistry.EquipResult.Swapped -> {
                     val previousNote =
@@ -196,7 +195,7 @@ class ItemHandler(
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
-                    syncPoolCaps(me)
+                    syncPoolCaps(sessionId)
                 }
                 is ItemRegistry.EquipResult.NotFound ->
                     outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
@@ -207,10 +206,11 @@ class ItemHandler(
     }
 
     /** D-20: with gear-aware pools, re-derive max HP/mana from the new equipment. */
-    private fun syncPoolCaps(me: PlayerState) {
+    private fun syncPoolCaps(sessionId: SessionId) {
         if (!progression.poolsUseEquipment) return
-        progression.recomputeVitalCaps(me, items.equipmentBonuses(me.sessionId, classRegistry?.get(me.playerClass)).stats)
-        markVitalsDirty(me.sessionId)
+        val me = players.get(sessionId) ?: return
+        progression.recomputeVitalCaps(me, items.equipmentBonuses(sessionId, classRegistry?.get(me.playerClass)).stats)
+        markVitalsDirty(sessionId)
     }
 
     private suspend fun handleRemove(
@@ -234,7 +234,7 @@ class ItemHandler(
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
-                    syncPoolCaps(me)
+                    syncPoolCaps(sessionId)
                 }
                 is ItemRegistry.UnequipResult.Dissolved -> {
                     outbound.send(
@@ -244,7 +244,7 @@ class ItemHandler(
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
-                    syncPoolCaps(me)
+                    syncPoolCaps(sessionId)
                 }
                 is ItemRegistry.UnequipResult.SlotEmpty ->
                     outbound.send(
@@ -391,7 +391,7 @@ class ItemHandler(
                 if (result.consumed) {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "${result.item.item.displayName} is consumed."))
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
-                    syncPoolCaps(me)
+                    syncPoolCaps(sessionId)
                 } else if (result.remainingCharges != null) {
                     outbound.send(
                         OutboundEvent.SendInfo(
@@ -442,7 +442,7 @@ class ItemHandler(
                     is ItemRegistry.GiveResult.Given -> {
                         if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
                             afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
-                    syncPoolCaps(me)
+                    syncPoolCaps(sessionId)
                         }
                         outbound.send(OutboundEvent.SendInfo(sessionId, "You give ${result.item.item.displayName} to ${target.name}."))
                         outbound.send(OutboundEvent.SendInfo(targetSid, "${me.name} gives you ${result.item.item.displayName}."))

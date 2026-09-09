@@ -101,7 +101,10 @@ class AppConfigLoaderTest {
     fun `validation rejects a class offensive stat that is not a defined stat`() {
         val invalid =
             AppConfig(
-                engine = EngineConfig(classes = ClassEngineConfig(definitions = mapOf("x" to ClassDefinitionConfig(offensiveStat = "NOPE")))),
+                engine =
+                    EngineConfig(
+                        classes = ClassEngineConfig(definitions = mapOf("x" to ClassDefinitionConfig(offensiveStat = "NOPE"))),
+                    ),
                 world = validWorld,
             )
         assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
