@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.QuestDifficulty
 import dev.ambon.config.StatBindingsConfig
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.mob.MobState
 import kotlin.math.floor
 import kotlin.math.pow
@@ -22,6 +23,17 @@ class PlayerProgression(
 ) {
     val maxLevel: Int
         get() = config.maxLevel
+
+    /** True when pools count equipment stats (D-20); callers then pass equipment bonuses to the vitals functions. */
+    val poolsUseEquipment: Boolean
+        get() = bindings.multiplicativePools && bindings.poolsUseEquipment
+
+    /** The stat a pool is computed from: the player's own stat plus equipment when [poolsUseEquipment]. */
+    fun poolStat(
+        ps: PlayerState,
+        statKey: String,
+        equipStats: StatMap?,
+    ): Int = ps.stats[statKey] + (if (poolsUseEquipment) (equipStats?.get(statKey) ?: 0) else 0)
 
     val hpScalingRate: Double
         get() = config.rewards.hpScalingRate
@@ -117,10 +129,14 @@ class PlayerProgression(
      * hp and mana to the new maximums. Callers are responsible for setting
      * [PlayerState.level] and [PlayerState.xpTotal] before or after this call.
      */
-    fun applyLevelStats(ps: PlayerState, level: Int) {
+    fun applyLevelStats(
+        ps: PlayerState,
+        level: Int,
+        equipStats: StatMap? = null,
+    ) {
         val (classHpRate, classManaRate, classBaseHp, classBaseMana) = resolveClassScaling(ps.playerClass)
-        val newMaxHp = maxHpForLevel(level, ps.stats[bindings.hpScalingStat], classHpRate, classBaseHp)
-        val newMaxMana = maxManaForLevel(level, ps.stats[bindings.manaScalingStat], classManaRate, classBaseMana)
+        val newMaxHp = maxHpForLevel(level, poolStat(ps, bindings.hpScalingStat, equipStats), classHpRate, classBaseHp)
+        val newMaxMana = maxManaForLevel(level, poolStat(ps, bindings.manaScalingStat, equipStats), classManaRate, classBaseMana)
         ps.baseMaxHp = newMaxHp
         ps.maxHp = newMaxHp
         ps.hp = ps.hp.coerceIn(1, newMaxHp)
@@ -136,12 +152,15 @@ class PlayerProgression(
      * new caps. Used when stats change outside of a level transition — for
      * example, when a player swaps race at a stylist.
      */
-    fun recomputeVitalCaps(ps: PlayerState) {
+    fun recomputeVitalCaps(
+        ps: PlayerState,
+        equipStats: StatMap? = null,
+    ) {
         val (classHpRate, classManaRate, classBaseHp, classBaseMana) = resolveClassScaling(ps.playerClass)
         val hpBonus = (ps.maxHp - ps.baseMaxHp).coerceAtLeast(0)
         val manaBonus = (ps.maxMana - ps.baseMana).coerceAtLeast(0)
-        val newBaseMaxHp = maxHpForLevel(ps.level, ps.stats[bindings.hpScalingStat], classHpRate, classBaseHp)
-        val newBaseMana = maxManaForLevel(ps.level, ps.stats[bindings.manaScalingStat], classManaRate, classBaseMana)
+        val newBaseMaxHp = maxHpForLevel(ps.level, poolStat(ps, bindings.hpScalingStat, equipStats), classHpRate, classBaseHp)
+        val newBaseMana = maxManaForLevel(ps.level, poolStat(ps, bindings.manaScalingStat, equipStats), classManaRate, classBaseMana)
         ps.baseMaxHp = newBaseMaxHp
         ps.maxHp = safeAddInt(newBaseMaxHp, hpBonus)
         ps.hp = ps.hp.coerceIn(1, ps.maxHp)
@@ -160,6 +179,14 @@ class PlayerProgression(
         }
         if (!scaledBase.isFinite() || scaledBase >= Int.MAX_VALUE.toDouble()) return Int.MAX_VALUE
         val scaledBaseLong = scaledBase.toLong().coerceAtLeast(baseValue.toLong())
+        if (bindings.multiplicativePools) {
+            // D-20: pool x (1 + points x poolPercentPerPoint); the stat passed in already
+            // includes equipment when poolsUseEquipment is on.
+            val factor = (1.0 + (stat - PlayerState.BASE_STAT) * bindings.poolPercentPerPoint).coerceAtLeast(0.0)
+            val scaledPool = floor(scaledBaseLong.toDouble() * factor)
+            if (!scaledPool.isFinite() || scaledPool >= Int.MAX_VALUE.toDouble()) return Int.MAX_VALUE
+            return scaledPool.toLong().coerceAtLeast(1L).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        }
         val statBonus = if (divisor > 0) ((stat - PlayerState.BASE_STAT) / divisor).toLong() * steps.toLong() else 0L
         return (scaledBaseLong + statBonus)
             .coerceAtLeast(baseValue.toLong())
@@ -283,9 +310,10 @@ class PlayerProgression(
     fun grantXp(
         player: PlayerState,
         amount: Long,
+        equipStats: StatMap? = null,
     ): LevelUpResult {
-        val hpStat = player.stats[bindings.hpScalingStat]
-        val manaStat = player.stats[bindings.manaScalingStat]
+        val hpStat = poolStat(player, bindings.hpScalingStat, equipStats)
+        val manaStat = poolStat(player, bindings.manaScalingStat, equipStats)
         val (classHpRate, classManaRate, classBaseHp, classBaseMana) = resolveClassScaling(player.playerClass)
         val currentXpTotal = player.xpTotal.coerceAtLeast(0L)
         val currentLevel = computeLevel(currentXpTotal)

@@ -164,6 +164,29 @@ class StatusEffectScalingTest {
         }
 
     @Test
+    fun `DOT tick uses the caster's offensive stat when one is given`() =
+        runTest {
+            val h = Fixture()
+            h.login()
+            val mob = h.spawnMob(id = mobId, name = "Dummy", hp = 5000)
+            h.registerDot(min = 10, max = 10)
+
+            // STR carries the bonus and INT sits at base, so a STR-bound class scales with STR.
+            val expected = (10.0 + 20 * 1.0).roundToInt()
+            h.system.applyToMob(
+                mobId = mobId,
+                effectId = StatusEffectId("ignite"),
+                casterLevel = 1,
+                casterStats = StatMap.of("STR" to PlayerState.BASE_STAT + 20, "INT" to PlayerState.BASE_STAT),
+                offensiveStat = "STR",
+            )
+            h.clock.advance(2000)
+            h.system.tick(h.clock.millis())
+
+            assertEquals(5000 - expected, mob.hp, "DOT tick should scale with the class offensive stat")
+        }
+
+    @Test
     fun `HOT tick scales with caster level and WIS`() =
         runTest {
             val h = Fixture()

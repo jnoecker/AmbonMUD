@@ -16,6 +16,7 @@ import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.remapKey
 import dev.ambon.engine.rollRange
+import dev.ambon.engine.statAdjustedCore
 import dev.ambon.engine.takeDamage
 import java.time.Clock
 import java.util.Random
@@ -46,7 +47,8 @@ class StatusEffectSystem(
         sourceSessionId: SessionId? = null,
         casterLevel: Int? = null,
         casterStats: StatMap? = null,
-    ): Boolean = applyTo(playerEffects, sessionId, effectId, sourceSessionId, casterLevel, casterStats)
+        offensiveStat: String? = null,
+    ): Boolean = applyTo(playerEffects, sessionId, effectId, sourceSessionId, casterLevel, casterStats, offensiveStat)
 
     fun applyToMob(
         mobId: MobId,
@@ -54,8 +56,9 @@ class StatusEffectSystem(
         sourceSessionId: SessionId? = null,
         casterLevel: Int? = null,
         casterStats: StatMap? = null,
+        offensiveStat: String? = null,
     ): Boolean {
-        val applied = applyTo(mobEffects, mobId, effectId, sourceSessionId, casterLevel, casterStats)
+        val applied = applyTo(mobEffects, mobId, effectId, sourceSessionId, casterLevel, casterStats, offensiveStat)
         if (applied) dirtyNotifier.mobHpDirty(mobId)
         return applied
     }
@@ -67,11 +70,12 @@ class StatusEffectSystem(
         sourceSessionId: SessionId?,
         casterLevel: Int?,
         casterStats: StatMap?,
+        offensiveStat: String?,
     ): Boolean {
         val def = registry.get(effectId) ?: return false
         val now = clock.millis()
         val list = map.getOrPut(key) { mutableListOf() }
-        return applyEffect(list, def, now, sourceSessionId, casterLevel, casterStats)
+        return applyEffect(list, def, now, sourceSessionId, casterLevel, casterStats, offensiveStat)
     }
 
     private fun applyEffect(
@@ -81,6 +85,7 @@ class StatusEffectSystem(
         sourceSessionId: SessionId?,
         casterLevel: Int?,
         casterStats: StatMap?,
+        offensiveStat: String?,
     ): Boolean {
         val existing = list.filter { it.definitionId == def.id }
         val effectiveMaxStacks = def.maxStacks.coerceAtLeast(1)
@@ -113,7 +118,7 @@ class StatusEffectSystem(
                 lastTickAtMs = now,
                 sourceSessionId = sourceSessionId,
                 shieldRemaining = computeShieldAmount(def, casterLevel, casterStats),
-                tickAnchor = computeTickAnchor(def, casterLevel, casterStats),
+                tickAnchor = computeTickAnchor(def, casterLevel, casterStats, offensiveStat),
             ),
         )
         return true
@@ -138,20 +143,34 @@ class StatusEffectSystem(
         def: StatusEffectDefinition,
         casterLevel: Int?,
         casterStats: StatMap?,
+        offensiveStat: String? = null,
     ): Double? {
         if (casterLevel == null) return null
         if (def.tickIntervalMs <= 0L) return null
         val typeConfig = effectTypes.get(def.effectType) ?: return null
-        val (statKey, statMul, rate) = when {
-            typeConfig.ticksDamage -> Triple(bindings.spellDamageStat, bindings.spellStatMultiplier, bindings.spellLevelScalingRate)
-            typeConfig.ticksHealing -> Triple(bindings.healStat, bindings.healStatMultiplier, bindings.healLevelScalingRate)
+        val statKey: String
+        val statMul: Double
+        val rate: Double
+        val pct: Double
+        when {
+            typeConfig.ticksDamage -> {
+                statKey = offensiveStat ?: bindings.spellDamageStat
+                statMul = bindings.spellStatMultiplier
+                rate = bindings.spellLevelScalingRate
+                pct = bindings.spellPercentPerPoint
+            }
+            typeConfig.ticksHealing -> {
+                statKey = bindings.healStat
+                statMul = bindings.healStatMultiplier
+                rate = bindings.healLevelScalingRate
+                pct = bindings.healPercentPerPoint
+            }
             else -> return null
         }
         val anchor = (def.tickMinValue + def.tickMaxValue) / 2.0
         val statTotal = casterStats?.get(statKey) ?: PlayerState.BASE_STAT
-        val statBonus = (statTotal - PlayerState.BASE_STAT) * statMul
         val levelScale = rate.pow((casterLevel - 1).coerceAtLeast(0))
-        return (anchor + statBonus) * levelScale
+        return bindings.statAdjustedCore(anchor, statTotal, statMul, pct) * levelScale
     }
 
     /**
@@ -176,9 +195,15 @@ class StatusEffectSystem(
         if (casterLevel == null) return def.shieldAmount
         if (effectTypes.get(def.effectType)?.absorbsDamage != true) return def.shieldAmount
         val statTotal = casterStats?.get(bindings.shieldStat) ?: PlayerState.BASE_STAT
-        val statBonus = (statTotal - PlayerState.BASE_STAT) * bindings.shieldStatMultiplier
         val levelScale = bindings.shieldLevelScalingRate.pow((casterLevel - 1).coerceAtLeast(0))
-        return ((def.shieldAmount + statBonus) * levelScale).roundToInt().coerceAtLeast(1)
+        val core =
+            bindings.statAdjustedCore(
+                def.shieldAmount.toDouble(),
+                statTotal,
+                bindings.shieldStatMultiplier,
+                bindings.shieldPercentPerPoint,
+            )
+        return (core * levelScale).roundToInt().coerceAtLeast(1)
     }
 
     private fun rollTickValue(

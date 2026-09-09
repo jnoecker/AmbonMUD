@@ -136,6 +136,22 @@ ambonmud:
         dodgeStat: DEX
         dodgePerPoint: 2
         maxDodgePercent: 30
+        # How stats scale outputs (D-20). additive: (stat - base) * *StatMultiplier is added
+        # to the anchor before level scaling. multiplicative: the anchor is multiplied by
+        # (1 + (stat - base) * *PercentPerPoint), so a point is worth the same fraction of
+        # output at every level and gear tier.
+        statScalingMode: additive
+        meleePercentPerPoint: 0.0
+        spellPercentPerPoint: 0.0
+        healPercentPerPoint: 0.0
+        shieldPercentPerPoint: 0.0
+        # Pool stat model. additive: int((stat - base) / divisor) * (level - 1) on the
+        # player's own stats. multiplicative: pool * (1 + (stat - base) * poolPercentPerPoint);
+        # with poolsUseEquipment the stat includes equipment and the caps follow gear changes.
+        # Mana costs stay a percentage of the base pool either way.
+        poolStatMode: additive
+        poolPercentPerPoint: 0.0
+        poolsUseEquipment: false
         spellDamageStat: INT
         # Spell damage uses the same shape as melee minus armor:
         #   anchor      = (effect.damage.min + effect.damage.max) / 2
@@ -2031,6 +2047,7 @@ ambonmud:
             station, a warrior's worth is measured in the battles they have survived and the comrades they brought home
             alive.
           primaryStat: STR
+          # offensiveStat: STR   # stat that scales this class's ability damage (default: bindings.spellDamageStat)
           image: 98169782bef9c4739ce982aba28b5022ddc0ad413e466031389a33778d3162c8.jpg
           outfitDescription: Full plate armor with a heavy steel breastplate, layered pauldrons, gauntlets, and greaves. A
             longsword hangs from a leather baldric at the hip, and a kite shield bearing a battle-worn heraldic crest is

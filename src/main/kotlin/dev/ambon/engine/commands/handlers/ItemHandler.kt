@@ -179,6 +179,7 @@ class ItemHandler(
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                    syncPoolCaps(sessionId)
                 }
                 is ItemRegistry.EquipResult.Swapped -> {
                     val previousNote =
@@ -194,6 +195,7 @@ class ItemHandler(
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                    syncPoolCaps(sessionId)
                 }
                 is ItemRegistry.EquipResult.NotFound ->
                     outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
@@ -201,6 +203,14 @@ class ItemHandler(
                     outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be worn."))
             }
         }
+    }
+
+    /** D-20: with gear-aware pools, re-derive max HP/mana from the new equipment. */
+    private fun syncPoolCaps(sessionId: SessionId) {
+        if (!progression.poolsUseEquipment) return
+        val me = players.get(sessionId) ?: return
+        progression.recomputeVitalCaps(me, items.equipmentBonuses(sessionId, classRegistry?.get(me.playerClass)).stats)
+        markVitalsDirty(sessionId)
     }
 
     private suspend fun handleRemove(
@@ -224,6 +234,7 @@ class ItemHandler(
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                    syncPoolCaps(sessionId)
                 }
                 is ItemRegistry.UnequipResult.Dissolved -> {
                     outbound.send(
@@ -233,6 +244,7 @@ class ItemHandler(
                         ),
                     )
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                    syncPoolCaps(sessionId)
                 }
                 is ItemRegistry.UnequipResult.SlotEmpty ->
                     outbound.send(
@@ -379,6 +391,7 @@ class ItemHandler(
                 if (result.consumed) {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "${result.item.item.displayName} is consumed."))
                     afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                    syncPoolCaps(sessionId)
                 } else if (result.remainingCharges != null) {
                     outbound.send(
                         OutboundEvent.SendInfo(
@@ -429,6 +442,7 @@ class ItemHandler(
                     is ItemRegistry.GiveResult.Given -> {
                         if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
                             afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
+                            syncPoolCaps(sessionId)
                         }
                         outbound.send(OutboundEvent.SendInfo(sessionId, "You give ${result.item.item.displayName} to ${target.name}."))
                         outbound.send(OutboundEvent.SendInfo(targetSid, "${me.name} gives you ${result.item.item.displayName}."))
@@ -460,8 +474,9 @@ class ItemHandler(
             if (result.levelsGained <= 0) return
             metrics.onLevelUp()
 
-            val hpStatValue = player.stats["CON"]
-            val manaStatValue = player.stats["INT"]
+            val equipStats = items.equipmentBonuses(sessionId, classRegistry?.get(player.playerClass)).stats
+            val hpStatValue = progression.poolStat(player, progression.bindings.hpScalingStat, equipStats)
+            val manaStatValue = progression.poolStat(player, progression.bindings.manaScalingStat, equipStats)
             val levelUpMessage = progression.buildLevelUpMessage(result, hpStatValue, manaStatValue, player.playerClass)
             outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 

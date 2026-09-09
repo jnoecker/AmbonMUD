@@ -10,6 +10,7 @@ import dev.ambon.domain.StatMap
 import dev.ambon.domain.world.resolveMobStats
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.dodgePercent
 import dev.ambon.engine.expectedPlayerMeleeDamage
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
@@ -226,8 +227,7 @@ class Tier0ParityTest {
             // Mob EV hit: midpoint roll, dodge EV, symmetric mitigation - composed
             // from the same bindings the real swing path uses (CombatSystem.kt:1456
             // applies mitigation; consider's EV omits it, a recorded quirk).
-            val dodge = ((statMap[bindings.dodgeStat] - PlayerState.BASE_STAT) * bindings.dodgePerPoint)
-                .coerceIn(0, bindings.maxDodgePercent)
+            val dodge = bindings.dodgePercent(statMap)
             val mid = (ms.damage.min + ms.damage.max) / 2.0
             val afterDodge = mid * (1.0 - dodge / 100.0)
             val mitigation =

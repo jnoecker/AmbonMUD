@@ -2726,8 +2726,9 @@ class GameEngine(
             )
         }
         if (p != null) {
-            val hpStat = p.stats[engineConfig.stats.bindings.hpScalingStat]
-            val manaStat = p.stats[engineConfig.stats.bindings.manaScalingStat]
+            val equipStats = items.equipmentBonuses(sessionId, classRegistry.get(p.playerClass)).stats
+            val hpStat = progression.poolStat(p, engineConfig.stats.bindings.hpScalingStat, equipStats)
+            val manaStat = progression.poolStat(p, engineConfig.stats.bindings.manaScalingStat, equipStats)
             val (classHpPerLevel, classManaPerLevel, classBaseHp, classBaseMana) = progression.resolveClassScaling(p.playerClass)
             val newMaxHp = progression.maxHpForLevel(level, hpStat, classHpPerLevel, classBaseHp)
             val oldMaxHp = progression.maxHpForLevel(result.previousLevel, hpStat, classHpPerLevel, classBaseHp)
@@ -3292,8 +3293,8 @@ class GameEngine(
         val defenderStats = defender.stats
 
         // Dodge check (same formula as mob combat)
-        val dodgePct = ((defenderStats["DEX"] - 10) * 2).coerceIn(0, 30)
-        if (dodgePct > 0 && duelRng.nextInt(100) < dodgePct) {
+        val dodgePct = engineConfig.stats.bindings.dodgePercent(defenderStats)
+        if (rollDodge(dodgePct, duelRng)) {
             outbound.send(OutboundEvent.SendText(attackerSid, "${defender.name} dodges your attack!"))
             outbound.send(OutboundEvent.SendText(defenderSid, "You dodge ${attacker.name}'s attack!"))
             return
