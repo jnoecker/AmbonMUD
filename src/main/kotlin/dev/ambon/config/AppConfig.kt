@@ -14,13 +14,13 @@ private const val MAX_SESSION_OUTBOUND_QUEUE_CAPACITY = 100_000
  * indicate a likely typo (a rate of 2.0 already produces ~500M× growth over
  * 30 levels). Rates above this trigger a warning, not an error.
  */
+private const val MAX_SCALING_RATE = 2.0
+
 /**
  * A repeatable award above five levels per claim is a configuration error rather than a design;
  * the signed fractions are 0.05-0.375 (Ambon D-28).
  */
 private const val MAX_REPEATABLE_XP_FRACTION = 5.0
-
-private const val MAX_SCALING_RATE = 2.0
 
 /** Selects the player persistence backend. */
 enum class PersistenceBackend { YAML, POSTGRES }
