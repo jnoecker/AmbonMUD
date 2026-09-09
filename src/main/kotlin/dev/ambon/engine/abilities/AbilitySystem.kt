@@ -991,7 +991,7 @@ class AbilitySystem(
     /**
      * Returns the number of skill points available to spend for a player at [level]
      * after spending [spentPoints], given the configured [interval].
-     * An optional [prestigeBonus] adds extra skill points from prestige perks.
+     * An optional [prestigeBonus] adds extra skill points from prestige perks and achievement rewards.
      */
     fun availableSkillPoints(
         level: Int,

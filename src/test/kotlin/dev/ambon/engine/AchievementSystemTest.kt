@@ -60,6 +60,37 @@ class AchievementSystemTest {
     // ── KILL criteria ─────────────────────────────────────────────────────────
 
     @Test
+    fun `a skillPoints reward announces the bonus and counts toward the supply once unlocked`() =
+        runTest {
+            val c = SystemTestComponents()
+            val registry = AchievementRegistry()
+            registry.register(
+                AchievementDef(
+                    id = "combat/challenger",
+                    displayName = "Challenger",
+                    description = "Fell the champion.",
+                    category = "combat",
+                    criteria = listOf(AchievementCriterion(type = "kill", targetId = "zone:champion", count = 1)),
+                    rewards = AchievementRewards(skillPoints = 2),
+                ),
+            )
+            val system = AchievementSystem(registry = registry, players = c.players, outbound = c.outbound)
+            val sid = SessionId(1L)
+            c.players.loginOrFail(sid, "Hero")
+            c.outbound.drainAll()
+            assertEquals(0, registry.skillPointBonus(c.players.get(sid)!!.unlockedAchievementIds))
+
+            system.onMobKilled(sid, "zone:champion")
+
+            val ps = c.players.get(sid)!!
+            assertTrue(ps.unlockedAchievementIds.contains("combat/challenger"))
+            assertEquals(2, registry.skillPointBonus(ps.unlockedAchievementIds))
+            assertEquals(0, registry.skillPointBonus(setOf("no/such/achievement")))
+            val texts = c.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(texts.any { it.contains("2 bonus skill points") }, "expected the bonus notice, got: $texts")
+        }
+
+    @Test
     fun `onMobKilled increments KILL criterion progress`() =
         runTest {
             val ach =

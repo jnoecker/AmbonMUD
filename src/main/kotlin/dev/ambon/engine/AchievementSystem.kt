@@ -346,6 +346,17 @@ class AchievementSystem(
                 ),
             )
         }
+        if (def.rewards.skillPoints > 0) {
+            // The supply is recomputed from the unlocked set (AchievementRegistry.skillPointBonus), so the
+            // points are already spendable; this is the player-facing notice.
+            val word = if (def.rewards.skillPoints == 1) "skill point" else "skill points"
+            outbound.send(
+                OutboundEvent.SendText(
+                    sessionId,
+                    "You gain ${def.rewards.skillPoints} bonus $word! Visit a class trainer to spend them.",
+                ),
+            )
+        }
 
         // Check if this achievement unlocks any sprites
         if (spriteRegistry != null) {

@@ -1567,6 +1567,9 @@ class GameEngine(
                 progression = progression,
                 housingSystem = housingSystem,
                 skillPointsConfig = engineConfig.skillPoints,
+                bonusSkillPoints = { rank, unlocked ->
+                    prestigeSystem.accumulatedSkillPointBonus(rank) + achievementRegistry.skillPointBonus(unlocked)
+                },
             ),
             ShopHandler(
                 ctx = ctx,
@@ -1763,6 +1766,7 @@ class GameEngine(
                 clock = clock,
                 markVitalsDirty = ::markVitalsDirty,
                 prestigeSkillPointBonus = { rank -> prestigeSystem.accumulatedSkillPointBonus(rank) },
+                achievementSkillPointBonus = { unlocked -> achievementRegistry.skillPointBonus(unlocked) },
             ),
             LeaderboardHandler(ctx = ctx),
             DailyQuestHandler(
@@ -2710,11 +2714,12 @@ class GameEngine(
         val autoLearned = p?.let { abilitySystem.recomputeKnownAbilities(sessionId, level, it.unlockedClasses) }.orEmpty()
         sendAutoLearnedAbilities(sessionId, autoLearned)
         val interval = engineConfig.skillPoints.interval
+        val achievementBonus = achievementRegistry.skillPointBonus(p?.unlockedAchievementIds.orEmpty())
         val available = abilitySystem.availableSkillPoints(
             level = level,
             spentPoints = p?.let { abilitySystem.spentSkillPoints(it.learnedAbilityIds) } ?: 0,
             interval = interval,
-            prestigeBonus = prestigeSystem.accumulatedSkillPointBonus(p?.prestigeLevel ?: 0),
+            prestigeBonus = prestigeSystem.accumulatedSkillPointBonus(p?.prestigeLevel ?: 0) + achievementBonus,
         )
         if (available > 0) {
             val pointWord = if (available == 1) "skill point" else "skill points"
