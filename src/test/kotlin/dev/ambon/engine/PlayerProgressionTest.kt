@@ -475,6 +475,7 @@ class PlayerProgressionTest {
         assertEquals(1250L, capped.applyCharismaXpBonus(totalBonusStat = 60, baseXp = 1000L))
         assertEquals(1100L, capped.applyCharismaXpBonus(totalBonusStat = 20, baseXp = 1000L))
     }
+
     @Test
     fun `repeatable xp keeps the flat award when the source has no fraction`() {
         val progression = PlayerProgression(ProgressionConfig(maxLevel = 30))
