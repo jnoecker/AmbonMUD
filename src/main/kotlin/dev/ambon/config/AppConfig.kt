@@ -3223,21 +3223,27 @@ data class MobTierConfig(
     val baseGoldMax: Long = 0L,
     val goldScalingRate: Double = 1.0,
     /**
-     * Optional piecewise HP/damage curve keyed by level (as a string, e.g.
+     * Optional piecewise HP/damage/XP curve keyed by level (as a string, e.g.
      * `"15"`). When non-empty it replaces the `base * rate^(level-1)` formula
      * for hp/minDamage/maxDamage: exact at an anchor, geometric interpolation
      * between neighbouring anchors, and the last segment's growth extended
-     * above the highest anchor. XP, gold, and armor keep the formula.
+     * above the highest anchor. `xpReward` is anchored the same way but only
+     * when every anchor declares it; gold and armor keep the formula.
      * Per-mob authored overrides still win.
      */
     val levelAnchors: Map<String, MobTierAnchorConfig> = emptyMap(),
 )
 
-/** All three fields are required; the 0 defaults exist only so a missing field fails validation. */
+/**
+ * hp/minDamage/maxDamage are required; the 0 defaults exist only so a missing field fails validation.
+ * `xpReward` is optional: 0 leaves XP on the `baseXpReward * xpScalingRate^(level-1)` formula, and a
+ * tier either declares it on every anchor or on none (validation rejects a partial XP curve).
+ */
 data class MobTierAnchorConfig(
     val hp: Int = 0,
     val minDamage: Int = 0,
     val maxDamage: Int = 0,
+    val xpReward: Long = 0L,
 )
 
 data class MobTiersConfig(
@@ -4103,6 +4109,17 @@ private fun validateMobTier(
         }
         require(anchor.maxDamage >= anchor.minDamage) {
             "ambonMUD.engine.mob.tiers.$name.levelAnchors[$key].maxDamage must be >= minDamage"
+        }
+        require(anchor.xpReward >= 0L) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors[$key].xpReward must be >= 0"
+        }
+    }
+    if (tier.levelAnchors.isNotEmpty()) {
+        val withXp = tier.levelAnchors.count { it.value.xpReward > 0L }
+        require(withXp == 0 || withXp == tier.levelAnchors.size) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors must declare xpReward on every anchor or on none " +
+                "(found $withXp of ${tier.levelAnchors.size}); a partial XP curve would silently mix the anchors " +
+                "with the xpScalingRate formula"
         }
     }
     require(tier.baseXpReward >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseXpReward must be >= 0" }
