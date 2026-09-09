@@ -36,6 +36,10 @@ class StatusEffectSystem(
 ) : GameSystem {
     /** Callback for combat events (DOT/HOT ticks); wired by GameEngine after construction. */
     var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
+
+    /** Periodic damage a mob took from a player's effect: (mobId, source session, damage). Wired by
+     *  GameEngine to CombatSystem.addDamageThreat so DoT ticks build threat like hits (D-23). */
+    var onMobPeriodicDamage: (MobId, SessionId, Int) -> Unit = { _, _, _ -> }
     private val playerEffects = mutableMapOf<SessionId, MutableList<ActiveEffect>>()
     private val mobEffects = mutableMapOf<MobId, MutableList<ActiveEffect>>()
 
@@ -346,6 +350,7 @@ class StatusEffectSystem(
                     dirtyNotifier.mobHpDirty(mobId)
                     val source = effect.sourceSessionId
                     if (source != null) {
+                        onMobPeriodicDamage(mobId, source, value)
                         val dotText = "${def.displayName} burns ${mob.name} for $value damage."
                         outbound.send(OutboundEvent.SendText(source, dotText))
                         onCombatEvent(

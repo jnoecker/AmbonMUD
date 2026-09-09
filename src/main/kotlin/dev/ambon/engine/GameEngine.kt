@@ -1150,6 +1150,8 @@ class GameEngine(
         // Racial procs surface their narrative lines through the same combat-event GMCP path as the
         // rest of combat, so the web client shows them in the combat log / canvas (not just telnet).
         racialAbilitySystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
+        // D-23: DoT ticks build threat for their source like ability hits do.
+        statusEffectSystem.onMobPeriodicDamage = { mobId, sid, damage -> combatSystem.addDamageThreat(mobId, sid, damage.toDouble()) }
         racialAbilitySystem.summonRacialPet = { sid, templateKey, durationMs, replaceExisting ->
             val player = players.get(sid)
             if (player == null) {
