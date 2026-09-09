@@ -3,6 +3,7 @@ package dev.ambon.domain.world
 import dev.ambon.config.MobTierAnchorConfig
 import dev.ambon.config.MobTierConfig
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.math.floor
 import kotlin.math.pow
@@ -127,8 +128,59 @@ class MobStatResolverTest {
         assertEquals(far.damage.min, far.damage.max)
     }
 
+    private val xpAnchoredTier =
+        standardTier.copy(
+            levelAnchors =
+                mapOf(
+                    "1" to MobTierAnchorConfig(hp = 20, minDamage = 2, maxDamage = 4, xpReward = 100L),
+                    "5" to MobTierAnchorConfig(hp = 40, minDamage = 4, maxDamage = 8, xpReward = 400L),
+                ),
+        )
+
     @Test
-    fun `level anchors leave xp gold and armor on the formula and yield to overrides`() {
+    fun `anchored xp is exact at anchor levels and interpolates between them`() {
+        assertEquals(100L, resolveMobStats(xpAnchoredTier, level = 1).xpReward)
+        assertEquals(400L, resolveMobStats(xpAnchoredTier, level = 5).xpReward)
+        // 100 -> 400 over 4 levels: rate 4^(1/4); level 3 = floor(100 * 4^(2/4)) = 200
+        assertEquals(200L, resolveMobStats(xpAnchoredTier, level = 3).xpReward)
+    }
+
+    @Test
+    fun `anchored xp extends the last segment above the highest anchor and holds below the lowest`() {
+        // 100 -> 400 doubles every two levels: level 7 = 400 * 2 = 800
+        assertEquals(800L, resolveMobStats(xpAnchoredTier, level = 7).xpReward)
+        assertEquals(100L, resolveMobStats(xpAnchoredTier, level = 1).xpReward)
+    }
+
+    @Test
+    fun `an authored xp override still wins over the anchored curve`() {
+        val overridden = resolveMobStats(xpAnchoredTier, level = 3, overrides = MobStatOverrides(xpReward = 7L))
+        assertEquals(7L, overridden.xpReward)
+    }
+
+    @Test
+    fun `a saturating xp curve is expressible where a geometric rate is not`() {
+        // The D-28 pacing target: fourfold from 1 to 5, then flat. No base x rate^(L-1) can do both.
+        val saturating =
+            standardTier.copy(
+                levelAnchors =
+                    mapOf(
+                        "1" to MobTierAnchorConfig(hp = 20, minDamage = 2, maxDamage = 4, xpReward = 86L),
+                        "5" to MobTierAnchorConfig(hp = 40, minDamage = 4, maxDamage = 8, xpReward = 374L),
+                        "10" to MobTierAnchorConfig(hp = 80, minDamage = 8, maxDamage = 16, xpReward = 554L),
+                        "30" to MobTierAnchorConfig(hp = 300, minDamage = 30, maxDamage = 60, xpReward = 857L),
+                    ),
+            )
+        assertEquals(86L, resolveMobStats(saturating, level = 1).xpReward)
+        assertEquals(374L, resolveMobStats(saturating, level = 5).xpReward)
+        assertEquals(857L, resolveMobStats(saturating, level = 30).xpReward)
+        // Monotone and inside the anchors between them: level 20 sits between the 10 and 30 anchors.
+        val at20 = resolveMobStats(saturating, level = 20).xpReward
+        assertTrue(at20 in 554L..857L, "expected the level-20 award inside its segment, got $at20")
+    }
+
+    @Test
+    fun `level anchors leave gold and armor on the formula, and xp too when no anchor declares it`() {
         val at5 = resolveMobStats(anchoredTier, level = 5)
         assertEquals(floor(30.0 * 1.08.pow(4)).toLong(), at5.xpReward)
         assertEquals(1, at5.armor)

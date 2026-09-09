@@ -52,11 +52,20 @@ fun resolveMobStats(
             } else {
                 interpolateAnchors(anchors, normalized) { it.maxDamage }.coerceAtLeast(minDamage)
             }
+    // XP is anchored only when every anchor declares it (validation enforces all-or-none); otherwise the
+    // tier's geometric formula stands. A pacing curve that saturates cannot be expressed as a rate.
+    val xpAnchored = anchors.isNotEmpty() && anchors.all { it.second.xpReward > 0L }
     return ResolvedMobStats(
         hp = overrides.hp ?: anchored({ it.hp }) { scaleInt(tier.baseHp, tier.hpScalingRate, steps) },
         damage = DamageRange(minDamage, maxDamage),
         armor = overrides.armor ?: tier.baseArmor,
-        xpReward = overrides.xpReward ?: scaleLong(tier.baseXpReward, tier.xpScalingRate, steps),
+        xpReward =
+            overrides.xpReward
+                ?: if (xpAnchored) {
+                    interpolateAnchorsLong(anchors, normalized) { it.xpReward }
+                } else {
+                    scaleLong(tier.baseXpReward, tier.xpScalingRate, steps)
+                },
         goldMin = overrides.goldMin ?: scaleLong(tier.baseGoldMin, tier.goldScalingRate, steps),
         goldMax = overrides.goldMax ?: scaleLong(tier.baseGoldMax, tier.goldScalingRate, steps),
     )
@@ -120,6 +129,34 @@ private fun interpolateAnchors(
         !scaled.isFinite() -> Int.MAX_VALUE
         scaled >= Int.MAX_VALUE.toDouble() -> Int.MAX_VALUE
         else -> scaled.toInt().coerceAtLeast(1)
+    }
+}
+
+/**
+ * [interpolateAnchors] for a Long field. Same piecewise shape; floors at 0 rather than 1, because an
+ * anchored XP curve may legitimately pay nothing (a trivial tier below its first anchor).
+ */
+private fun interpolateAnchorsLong(
+    anchors: List<Pair<Int, MobTierAnchorConfig>>,
+    level: Int,
+    select: (MobTierAnchorConfig) -> Long,
+): Long {
+    anchors.firstOrNull { it.first == level }?.let { return select(it.second).coerceAtLeast(0L) }
+    if (level < anchors.first().first || anchors.size == 1) return select(anchors.first().second).coerceAtLeast(0L)
+    val (lo, hi) =
+        if (level > anchors.last().first) {
+            anchors[anchors.size - 2] to anchors.last()
+        } else {
+            anchors.zipWithNext().first { (a, b) -> a.first < level && level < b.first }
+        }
+    val vLo = select(lo.second).coerceAtLeast(1L).toDouble()
+    val vHi = select(hi.second).coerceAtLeast(1L).toDouble()
+    val t = (level - lo.first).toDouble() / (hi.first - lo.first)
+    val scaled = floor(vLo * (vHi / vLo).pow(t) + INTERPOLATION_EPSILON)
+    return when {
+        !scaled.isFinite() -> Long.MAX_VALUE
+        scaled >= Long.MAX_VALUE.toDouble() -> Long.MAX_VALUE
+        else -> scaled.toLong().coerceAtLeast(0L)
     }
 }
 
