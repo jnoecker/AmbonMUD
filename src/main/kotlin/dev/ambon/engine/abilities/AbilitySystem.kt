@@ -1267,7 +1267,9 @@ internal fun computeSpellDamage(
 ): Int {
     val anchor = (damage.min + damage.max) / 2.0
     val levelScale = bindings.spellLevelScalingRate.pow((level - 1).coerceAtLeast(0))
-    val core = bindings.statAdjustedCore(anchor, stats[statKey], bindings.spellStatMultiplier, bindings.spellPercentPerPoint) * levelScale
+    val core =
+        bindings.statAdjustedCore(anchor, stats[statKey], bindings.spellStatMultiplier, bindings.spellPercentPerPoint) *
+            levelScale
     val variance = rollVariance(bindings.spellVarianceMin, bindings.spellVarianceMax, rng)
     return (core * variance).roundToInt().coerceAtLeast(1)
 }
@@ -1286,7 +1288,9 @@ internal fun computeSpellHeal(
 ): Int {
     val anchor = (minHeal + maxHeal) / 2.0
     val levelScale = bindings.healLevelScalingRate.pow((level - 1).coerceAtLeast(0))
-    val core = bindings.statAdjustedCore(anchor, stats[bindings.healStat], bindings.healStatMultiplier, bindings.healPercentPerPoint) * levelScale
+    val core =
+        bindings.statAdjustedCore(anchor, stats[bindings.healStat], bindings.healStatMultiplier, bindings.healPercentPerPoint) *
+            levelScale
     val variance = rollVariance(bindings.healVarianceMin, bindings.healVarianceMax, rng)
     return (core * variance).roundToInt().coerceAtLeast(1)
 }

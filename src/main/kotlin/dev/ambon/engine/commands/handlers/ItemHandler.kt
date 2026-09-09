@@ -442,7 +442,7 @@ class ItemHandler(
                     is ItemRegistry.GiveResult.Given -> {
                         if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
                             afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
-                    syncPoolCaps(sessionId)
+                            syncPoolCaps(sessionId)
                         }
                         outbound.send(OutboundEvent.SendInfo(sessionId, "You give ${result.item.item.displayName} to ${target.name}."))
                         outbound.send(OutboundEvent.SendInfo(targetSid, "${me.name} gives you ${result.item.item.displayName}."))

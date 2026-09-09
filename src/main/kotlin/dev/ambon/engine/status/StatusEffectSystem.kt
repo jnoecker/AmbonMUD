@@ -196,7 +196,13 @@ class StatusEffectSystem(
         if (effectTypes.get(def.effectType)?.absorbsDamage != true) return def.shieldAmount
         val statTotal = casterStats?.get(bindings.shieldStat) ?: PlayerState.BASE_STAT
         val levelScale = bindings.shieldLevelScalingRate.pow((casterLevel - 1).coerceAtLeast(0))
-        val core = bindings.statAdjustedCore(def.shieldAmount.toDouble(), statTotal, bindings.shieldStatMultiplier, bindings.shieldPercentPerPoint)
+        val core =
+            bindings.statAdjustedCore(
+                def.shieldAmount.toDouble(),
+                statTotal,
+                bindings.shieldStatMultiplier,
+                bindings.shieldPercentPerPoint,
+            )
         return (core * levelScale).roundToInt().coerceAtLeast(1)
     }
 
