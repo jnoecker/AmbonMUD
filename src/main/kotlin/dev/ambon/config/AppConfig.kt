@@ -599,6 +599,9 @@ data class AppConfig(
         require(a.roomDiscoveryXpPerZoneLevel >= 0) { "ambonMUD.engine.akathavae.roomDiscoveryXpPerZoneLevel must be >= 0" }
         require(a.zoneCompletionXpPerRoom >= 0) { "ambonMUD.engine.akathavae.zoneCompletionXpPerRoom must be >= 0" }
         require(a.zoneCompletionGold >= 0) { "ambonMUD.engine.akathavae.zoneCompletionGold must be >= 0" }
+        require(a.zoneCompletionGoldPerZoneLevel >= 0) {
+            "ambonMUD.engine.akathavae.zoneCompletionGoldPerZoneLevel must be >= 0"
+        }
         require(a.unpledgedSuccessMultiplier in 0.0..1.0) { "ambonMUD.engine.akathavae.unpledgedSuccessMultiplier must be 0..1" }
         require(a.unpledgedXpMultiplier in 0.0..1.0) { "ambonMUD.engine.akathavae.unpledgedXpMultiplier must be 0..1" }
         require(a.sketchMsPerEstimatedRound >= 0) { "ambonMUD.engine.akathavae.sketchMsPerEstimatedRound must be >= 0" }
@@ -829,6 +832,12 @@ data class AppConfig(
         }
         require(progression.rewards.baseHp >= 1) { "ambonMUD.progression.rewards.baseHp must be >= 1" }
         require(progression.rewards.baseMana >= 0) { "ambonMUD.progression.rewards.baseMana must be >= 0" }
+        require(progression.quests.baseline.goldBase >= 0L) {
+            "ambonMUD.progression.quests.baseline.goldBase must be >= 0"
+        }
+        require(progression.quests.baseline.goldPerLevel >= 0L) {
+            "ambonMUD.progression.quests.baseline.goldPerLevel must be >= 0"
+        }
         require(progression.quests.baseline.baseXp >= 0L) { "ambonMUD.progression.quests.baseline.baseXp must be >= 0" }
         require(progression.quests.baseline.xpPerLevel >= 0L) { "ambonMUD.progression.quests.baseline.xpPerLevel must be >= 0" }
         for ((difficulty, multiplier) in progression.quests.tiers) {
@@ -1338,6 +1347,12 @@ data class AkathavaeConfig(
     val zoneCompletionXpPerRoom: Long = 50,
     /** One-time gold paid on zone completion — the Akathavae's gold faucet (they earn no kill gold). */
     val zoneCompletionGold: Long = 500,
+    /**
+     * Added to [zoneCompletionGold] per level of the completed zone (its average mob level, the same
+     * notion [roomDiscoveryXpPerZoneLevel] uses), so the award tracks the curve
+     * instead of paying a beginner the same as a capped character. 0 keeps the flat award.
+     */
+    val zoneCompletionGoldPerZoneLevel: Long = 0,
     /**
      * [Unpledged journaling] Anyone may illuminate and keep a field journal, but
      * unpledged success odds are scaled by this multiplier (0..1) — the practiced
@@ -3169,6 +3184,13 @@ data class QuestXpConfig(
 data class QuestBaselineConfig(
     val baseXp: Long = 50L,
     val xpPerLevel: Long = 20L,
+    /**
+     * Engine-computed quest gold, the mirror of the XP baseline: a quest that authors no
+     * `rewards.gold` is paid `goldBase + goldPerLevel * (level - 1)` times its difficulty tier.
+     * Both default to 0, which leaves quests paying only what content authored.
+     */
+    val goldBase: Long = 0L,
+    val goldPerLevel: Long = 0L,
 )
 
 enum class QuestDifficulty {

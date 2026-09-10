@@ -544,4 +544,56 @@ class PlayerProgressionTest {
             progression.repeatableXp(flat = 1L, xpTotal = cappedXp, source = RepeatableXpSource.WEEKLY),
         )
     }
+
+    @Test
+    fun `quest gold is zero until a baseline is configured`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(maxLevel = 30, quests = QuestXpConfig(baseline = QuestBaselineConfig())),
+            )
+        assertEquals(0L, progression.computeQuestGold(QuestDifficulty.STANDARD, 10))
+    }
+
+    @Test
+    fun `quest gold mirrors the xp baseline: linear in level, scaled by the difficulty tier`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 30,
+                    quests =
+                        QuestXpConfig(
+                            baseline = QuestBaselineConfig(goldBase = 2L, goldPerLevel = 9L),
+                            tiers =
+                                mapOf(
+                                    QuestDifficulty.TRIVIAL to 0.5,
+                                    QuestDifficulty.STANDARD to 1.0,
+                                    QuestDifficulty.EPIC to 4.0,
+                                ),
+                        ),
+                ),
+            )
+        // level 1 pays the base; level 11 pays base + 10 steps
+        assertEquals(2L, progression.computeQuestGold(QuestDifficulty.STANDARD, 1))
+        assertEquals(92L, progression.computeQuestGold(QuestDifficulty.STANDARD, 11))
+        // tiers scale the same baseline
+        assertEquals(1L, progression.computeQuestGold(QuestDifficulty.TRIVIAL, 1))
+        assertEquals(368L, progression.computeQuestGold(QuestDifficulty.EPIC, 11))
+    }
+
+    @Test
+    fun `quest gold needs a difficulty and a known tier`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 30,
+                    quests =
+                        QuestXpConfig(
+                            baseline = QuestBaselineConfig(goldBase = 2L, goldPerLevel = 9L),
+                            tiers = mapOf(QuestDifficulty.STANDARD to 1.0),
+                        ),
+                ),
+            )
+        assertEquals(0L, progression.computeQuestGold(null, 10))
+        assertEquals(0L, progression.computeQuestGold(QuestDifficulty.EPIC, 10))
+    }
 }

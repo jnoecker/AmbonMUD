@@ -613,13 +613,19 @@ class QuestSystem(
             else -> zoneScaling.resolveLevel(ps.level, quest.level)
         }
 
-        val effectiveRewards =
-            if (rewards.xp == 0L && quest.difficulty != null && progression != null) {
-                val computed = progression.computeQuestXp(quest.difficulty, effectiveLevel)
-                if (computed > 0L) rewards.copy(xp = computed) else rewards
-            } else {
-                rewards
+        var effectiveRewards = rewards
+        if (quest.difficulty != null && progression != null) {
+            if (effectiveRewards.xp == 0L) {
+                val computedXp = progression.computeQuestXp(quest.difficulty, effectiveLevel)
+                if (computedXp > 0L) effectiveRewards = effectiveRewards.copy(xp = computedXp)
             }
+            // Same rule for gold (D-30): authored rewards.gold wins, and a quest that authors none is
+            // paid from the baseline so it tracks the curve instead of drifting with the content.
+            if (effectiveRewards.gold == 0L) {
+                val computedGold = progression.computeQuestGold(quest.difficulty, effectiveLevel)
+                if (computedGold > 0L) effectiveRewards = effectiveRewards.copy(gold = computedGold)
+            }
+        }
 
         consumeCollectedItems(sessionId, quest)
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest complete: ${quest.name}!"))

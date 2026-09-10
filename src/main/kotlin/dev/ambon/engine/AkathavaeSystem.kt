@@ -770,10 +770,12 @@ class AkathavaeSystem(
             now,
             bypassThrottle = true,
         )
-        if (config.zoneCompletionGold > 0) {
-            me.gold += config.zoneCompletionGold
+        val completionGold =
+            config.zoneCompletionGold + config.zoneCompletionGoldPerZoneLevel * avgZoneMobLevel(zone).toLong()
+        if (completionGold > 0) {
+            me.gold += completionGold
             outbound.send(
-                OutboundEvent.SendText(sessionId, "Collectors of the Arcanum pay ${config.zoneCompletionGold} gold for your record."),
+                OutboundEvent.SendText(sessionId, "Collectors of the Arcanum pay $completionGold gold for your record."),
             )
         }
         broadcastToRoom(
