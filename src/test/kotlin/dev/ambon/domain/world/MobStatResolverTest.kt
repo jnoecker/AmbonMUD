@@ -179,6 +179,49 @@ class MobStatResolverTest {
         assertTrue(at20 in 554L..857L, "expected the level-20 award inside its segment, got $at20")
     }
 
+    private val goldAnchoredTier =
+        standardTier.copy(
+            levelAnchors =
+                mapOf(
+                    "1" to MobTierAnchorConfig(hp = 20, minDamage = 2, maxDamage = 4, goldMin = 1, goldMax = 2),
+                    "5" to MobTierAnchorConfig(hp = 40, minDamage = 4, maxDamage = 8, goldMin = 4, goldMax = 8),
+                ),
+        )
+
+    @Test
+    fun `anchored gold is exact at anchor levels and interpolates between them`() {
+        val at1 = resolveMobStats(goldAnchoredTier, level = 1)
+        assertEquals(1L, at1.goldMin)
+        assertEquals(2L, at1.goldMax)
+        val at5 = resolveMobStats(goldAnchoredTier, level = 5)
+        assertEquals(4L, at5.goldMin)
+        assertEquals(8L, at5.goldMax)
+        // 2 -> 8 over four levels quadruples: level 3 = floor(2 * 4^(2/4)) = 4
+        assertEquals(4L, resolveMobStats(goldAnchoredTier, level = 3).goldMax)
+    }
+
+    @Test
+    fun `anchored gold never lets the maximum fall below the minimum`() {
+        val crossing =
+            standardTier.copy(
+                levelAnchors =
+                    mapOf(
+                        "1" to MobTierAnchorConfig(hp = 20, minDamage = 2, maxDamage = 4, goldMin = 2, goldMax = 8),
+                        "2" to MobTierAnchorConfig(hp = 40, minDamage = 4, maxDamage = 8, goldMin = 8, goldMax = 10),
+                    ),
+            )
+        val far = resolveMobStats(crossing, level = 6)
+        assertTrue(far.goldMax >= far.goldMin, "expected goldMax >= goldMin, got ${far.goldMin}..${far.goldMax}")
+    }
+
+    @Test
+    fun `an authored gold override still wins over the anchored curve`() {
+        val overridden =
+            resolveMobStats(goldAnchoredTier, level = 3, overrides = MobStatOverrides(goldMin = 100L, goldMax = 200L))
+        assertEquals(100L, overridden.goldMin)
+        assertEquals(200L, overridden.goldMax)
+    }
+
     @Test
     fun `level anchors leave gold and armor on the formula, and xp too when no anchor declares it`() {
         val at5 = resolveMobStats(anchoredTier, level = 5)
