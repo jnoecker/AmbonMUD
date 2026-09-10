@@ -55,6 +55,7 @@ fun resolveMobStats(
     // XP is anchored only when every anchor declares it (validation enforces all-or-none); otherwise the
     // tier's geometric formula stands. A pacing curve that saturates cannot be expressed as a rate.
     val xpAnchored = anchors.isNotEmpty() && anchors.all { it.second.xpReward > 0L }
+    val goldAnchored = anchors.isNotEmpty() && anchors.all { it.second.goldMax > 0L }
     return ResolvedMobStats(
         hp = overrides.hp ?: anchored({ it.hp }) { scaleInt(tier.baseHp, tier.hpScalingRate, steps) },
         damage = DamageRange(minDamage, maxDamage),
@@ -66,8 +67,22 @@ fun resolveMobStats(
                 } else {
                     scaleLong(tier.baseXpReward, tier.xpScalingRate, steps)
                 },
-        goldMin = overrides.goldMin ?: scaleLong(tier.baseGoldMin, tier.goldScalingRate, steps),
-        goldMax = overrides.goldMax ?: scaleLong(tier.baseGoldMax, tier.goldScalingRate, steps),
+        goldMin =
+            overrides.goldMin
+                ?: if (goldAnchored) {
+                    interpolateAnchorsLong(anchors, normalized) { it.goldMin }
+                } else {
+                    scaleLong(tier.baseGoldMin, tier.goldScalingRate, steps)
+                },
+        // Clamped like maxDamage: independently interpolated bounds can cross above the top anchor.
+        goldMax =
+            overrides.goldMax
+                ?: if (goldAnchored) {
+                    interpolateAnchorsLong(anchors, normalized) { it.goldMax }
+                        .coerceAtLeast(overrides.goldMin ?: interpolateAnchorsLong(anchors, normalized) { it.goldMin })
+                } else {
+                    scaleLong(tier.baseGoldMax, tier.goldScalingRate, steps)
+                },
     )
 }
 

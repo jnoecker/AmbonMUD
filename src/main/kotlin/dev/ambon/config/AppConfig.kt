@@ -3264,23 +3264,27 @@ data class MobTierConfig(
      * `"15"`). When non-empty it replaces the `base * rate^(level-1)` formula
      * for hp/minDamage/maxDamage: exact at an anchor, geometric interpolation
      * between neighbouring anchors, and the last segment's growth extended
-     * above the highest anchor. `xpReward` is anchored the same way but only
-     * when every anchor declares it; gold and armor keep the formula.
-     * Per-mob authored overrides still win.
+     * above the highest anchor. `xpReward` and the `goldMin`/`goldMax` pair are
+     * anchored the same way, each only when every anchor declares it; armor keeps
+     * the formula. Per-mob authored overrides still win.
      */
     val levelAnchors: Map<String, MobTierAnchorConfig> = emptyMap(),
 )
 
 /**
  * hp/minDamage/maxDamage are required; the 0 defaults exist only so a missing field fails validation.
- * `xpReward` is optional: 0 leaves XP on the `baseXpReward * xpScalingRate^(level-1)` formula, and a
- * tier either declares it on every anchor or on none (validation rejects a partial XP curve).
+ * `xpReward` and `goldMax` are optional: 0 leaves that reward on its
+ * `base * rate^(level-1)` formula, and a tier declares each on every anchor or on none (validation
+ * rejects a partial curve). `goldMin` rides along with `goldMax`, since a mob may legitimately drop
+ * nothing at its floor.
  */
 data class MobTierAnchorConfig(
     val hp: Int = 0,
     val minDamage: Int = 0,
     val maxDamage: Int = 0,
     val xpReward: Long = 0L,
+    val goldMin: Long = 0L,
+    val goldMax: Long = 0L,
 )
 
 data class MobTiersConfig(
@@ -4150,6 +4154,12 @@ private fun validateMobTier(
         require(anchor.xpReward >= 0L) {
             "ambonMUD.engine.mob.tiers.$name.levelAnchors[$key].xpReward must be >= 0"
         }
+        require(anchor.goldMin >= 0L) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors[$key].goldMin must be >= 0"
+        }
+        require(anchor.goldMax >= anchor.goldMin) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors[$key].goldMax must be >= goldMin"
+        }
     }
     if (tier.levelAnchors.isNotEmpty()) {
         val withXp = tier.levelAnchors.count { it.value.xpReward > 0L }
@@ -4157,6 +4167,12 @@ private fun validateMobTier(
             "ambonMUD.engine.mob.tiers.$name.levelAnchors must declare xpReward on every anchor or on none " +
                 "(found $withXp of ${tier.levelAnchors.size}); a partial XP curve would silently mix the anchors " +
                 "with the xpScalingRate formula"
+        }
+        val withGold = tier.levelAnchors.count { it.value.goldMax > 0L }
+        require(withGold == 0 || withGold == tier.levelAnchors.size) {
+            "ambonMUD.engine.mob.tiers.$name.levelAnchors must declare goldMax on every anchor or on none " +
+                "(found $withGold of ${tier.levelAnchors.size}); a partial gold curve would silently mix the " +
+                "anchors with the goldScalingRate formula"
         }
     }
     require(tier.baseXpReward >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseXpReward must be >= 0" }
