@@ -555,7 +555,7 @@ class PlayerProgressionTest {
     }
 
     @Test
-    fun `quest gold mirrors the xp baseline: linear in level, scaled by the difficulty tier`() {
+    fun `quest gold mirrors the xp baseline - linear in level, scaled by the difficulty tier`() {
         val progression =
             PlayerProgression(
                 ProgressionConfig(
