@@ -815,6 +815,7 @@ class GameEngine(
             config = CombatSystemConfig(
                 tickMillis = engineConfig.combat.tickMillis,
                 groupXpBonusPerMember = engineConfig.group.xpBonusPerMember,
+                groupXpBonusLevelGap = engineConfig.group.xpBonusLevelGap,
                 detailedFeedbackEnabled = engineConfig.combat.feedback.enabled,
                 detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
                 bindings = engineConfig.stats.bindings,

@@ -12,6 +12,8 @@ data class Group(
     var leader: SessionId,
     val members: MutableList<SessionId>,
     var lootRobinIndex: Int = 0,
+    /** Which eligible member takes the next kill-gold remainder (D-31); advances only when there is one. */
+    var goldRemainderIndex: Int = 0,
 )
 
 data class PendingInvite(

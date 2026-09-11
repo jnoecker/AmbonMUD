@@ -25,6 +25,8 @@ data class CombatSystemConfig(
     val tickMillis: Long = 1_000L,
     val healingThreatMultiplier: Double = 0.5,
     val groupXpBonusPerMember: Double = 0.10,
+    /** Members more than this many levels below the mob get their split share without the group bonus; 0 = no limit. */
+    val groupXpBonusLevelGap: Int = 0,
     val detailedFeedbackEnabled: Boolean = false,
     val detailedFeedbackRoomBroadcastEnabled: Boolean = false,
     val bindings: StatBindingsConfig = StatBindingsConfig(),
@@ -2005,19 +2007,31 @@ class CombatSystem(
                 mob.goldMin + rng.nextLong(mob.goldMax - mob.goldMin + 1)
             }
         if (goldDrop <= 0L) return 0L
-        // D-23: kill gold is split equally among the group members in the room, like kill XP; the
-        // killing blow keeps the remainder.
+        // D-23: kill gold is split equally among the group members in the room, like kill XP. The
+        // integer remainder rotates through the members (D-31): at the anchored gold values a
+        // low-level roll is mostly remainder, so handing it to the killing blow every time made the
+        // split killer-takes-most.
         val recipients = goldRecipients(sessionId, mob)
         val share = goldDrop / recipients.size
-        var remainder = goldDrop - share * recipients.size
+        val remainder = goldDrop - share * recipients.size
+        val remainderTo =
+            if (remainder <= 0L || recipients.size == 1) {
+                sessionId
+            } else {
+                val group = groupSystem?.getGroup(sessionId)
+                if (group == null) {
+                    sessionId
+                } else {
+                    val idx = group.goldRemainderIndex % recipients.size
+                    group.goldRemainderIndex = idx + 1
+                    recipients[idx]
+                }
+            }
         var killerGold = 0L
         for (sid in recipients) {
             val recipient = players.get(sid) ?: continue
             var amount = share
-            if (sid == sessionId) {
-                amount += remainder
-                remainder = 0L
-            }
+            if (sid == remainderTo) amount += remainder
             if (amount <= 0L) continue
             recipient.gold += amount
             dirtyNotifier.playerVitalsDirty(sid)
@@ -2104,11 +2118,17 @@ class CombatSystem(
             } else {
                 1.0
             }
-        val perPlayerXp = ((baseReward.toDouble() / memberCount) * groupBonus).toLong().coerceAtLeast(1L)
+        val splitShare = baseReward.toDouble() / memberCount
 
         var killerXp = 0L
         for (sid in recipients) {
             val player = players.get(sid) ?: continue
+            // D-31: a member too far below the mob still divides the pot but does not collect the
+            // group bonus on its share, so a carried passenger earns the plain split (plus the
+            // ordinary punch-up below) rather than both multipliers stacked.
+            val carried =
+                config.groupXpBonusLevelGap > 0 && mob.level - player.level > config.groupXpBonusLevelGap
+            val perPlayerXp = (splitShare * (if (carried) 1.0 else groupBonus)).toLong().coerceAtLeast(1L)
             val equipStats = items.equipmentBonuses(sid, classRegistry?.get(player.playerClass)).stats
             val totalBonusStat = player.stats[config.bindings.xpBonusStat] + equipStats[config.bindings.xpBonusStat]
             // Over-levelled kills are penalised; under-levelled kills are rewarded.

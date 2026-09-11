@@ -367,6 +367,7 @@ data class AppConfig(
         require(engine.group.maxSize in 2..20) { "ambonMUD.engine.group.maxSize must be in 2..20" }
         engine.group.inviteTimeoutMs.requirePositive("ambonMUD.engine.group.inviteTimeoutMs")
         require(engine.group.xpBonusPerMember >= 0.0) { "ambonMUD.engine.group.xpBonusPerMember must be >= 0" }
+        require(engine.group.xpBonusLevelGap >= 0) { "ambonMUD.engine.group.xpBonusLevelGap must be >= 0" }
     }
 
     private fun validateEngineEconomy() {
@@ -3429,6 +3430,12 @@ data class GroupConfig(
     val maxSize: Int = 5,
     val inviteTimeoutMs: Long = 60_000L,
     val xpBonusPerMember: Double = 0.10,
+    /**
+     * A group member more than this many levels below the mob receives its split share without the
+     * group bonus (D-31): the bonus pays for fighting alongside peers, not for standing in the room
+     * while a higher-level party carries you. 0 disables the limit, which is the pre-D-31 behaviour.
+     */
+    val xpBonusLevelGap: Int = 0,
 )
 
 data class GuildConfig(
