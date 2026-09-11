@@ -813,6 +813,12 @@ data class AppConfig(
                     "(0 keeps the authored flat award)"
             }
         }
+        if (progression.repeatableGold.any()) {
+            require(progression.quests.baseline.goldBase > 0L || progression.quests.baseline.goldPerLevel > 0L) {
+                "ambonMUD.progression.repeatableGold tiers pay from progression.quests.baseline.goldBase / goldPerLevel, " +
+                    "which are both 0; set the baseline or leave the tiers unset"
+            }
+        }
         require(progression.rewards.hpScalingRate >= 1.0) {
             "ambonMUD.progression.rewards.hpScalingRate must be >= 1.0"
         }
@@ -3144,6 +3150,7 @@ data class ProgressionConfig(
     val rewards: LevelRewardsConfig = LevelRewardsConfig(),
     val quests: QuestXpConfig = QuestXpConfig(),
     val repeatableXp: RepeatableXpConfig = RepeatableXpConfig(),
+    val repeatableGold: RepeatableGoldConfig = RepeatableGoldConfig(),
 )
 
 /**
@@ -3162,6 +3169,27 @@ data class RepeatableXpConfig(
     val globalSecondFractionOfLevel: Double = 0.0,
     val globalThirdFractionOfLevel: Double = 0.0,
 )
+
+/**
+ * Claim-time gold for repeatable rewards (D-32), the gold sibling of [RepeatableXpConfig]. A source with a
+ * tier is paid what an authored quest of that difficulty would pay at the claimant's level - the quest gold
+ * baseline times the tier's multiplier ([QuestXpConfig.tiers]) - in place of the authored flat award; null
+ * (the default for every source) keeps the flat number, so an untouched config behaves exactly as before.
+ *
+ * The flat awards are worth a fortune early and little late: a 2,000-gold global first place is seven hours
+ * of level-1 income and under an hour of level-29 income on the anchored curve.
+ */
+data class RepeatableGoldConfig(
+    val dailyTier: QuestDifficulty? = null,
+    val weeklyTier: QuestDifficulty? = null,
+    val autoQuestTier: QuestDifficulty? = null,
+    val globalFirstTier: QuestDifficulty? = null,
+    val globalSecondTier: QuestDifficulty? = null,
+    val globalThirdTier: QuestDifficulty? = null,
+) {
+    fun any(): Boolean =
+        listOf(dailyTier, weeklyTier, autoQuestTier, globalFirstTier, globalSecondTier, globalThirdTier).any { it != null }
+}
 
 /**
  * Engine-computed XP for quests. Quests with an explicit `rewards.xp` authored

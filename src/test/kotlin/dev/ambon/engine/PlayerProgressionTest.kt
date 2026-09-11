@@ -9,6 +9,7 @@ import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.QuestBaselineConfig
 import dev.ambon.config.QuestDifficulty
 import dev.ambon.config.QuestXpConfig
+import dev.ambon.config.RepeatableGoldConfig
 import dev.ambon.config.RepeatableXpConfig
 import dev.ambon.config.StatBindingsConfig
 import dev.ambon.config.UnderLevelXpBonusConfig
@@ -595,5 +596,54 @@ class PlayerProgressionTest {
             )
         assertEquals(0L, progression.computeQuestGold(null, 10))
         assertEquals(0L, progression.computeQuestGold(QuestDifficulty.EPIC, 10))
+    }
+
+    @Test
+    fun `repeatable gold keeps the flat award when the source has no tier`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 30,
+                    quests = QuestXpConfig(baseline = QuestBaselineConfig(goldBase = 2L, goldPerLevel = 9L)),
+                ),
+            )
+        assertEquals(2_000L, progression.repeatableGold(flat = 2_000L, level = 1, source = RepeatableXpSource.GLOBAL_FIRST))
+    }
+
+    @Test
+    fun `repeatable gold pays what a quest of the tier would pay at the claimant's level`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 30,
+                    quests =
+                        QuestXpConfig(
+                            baseline = QuestBaselineConfig(goldBase = 2L, goldPerLevel = 9L),
+                            tiers =
+                                mapOf(
+                                    QuestDifficulty.TRIVIAL to 0.333,
+                                    QuestDifficulty.STANDARD to 1.0,
+                                    QuestDifficulty.EPIC to 4.333,
+                                ),
+                        ),
+                    repeatableGold =
+                        RepeatableGoldConfig(
+                            dailyTier = QuestDifficulty.STANDARD,
+                            weeklyTier = QuestDifficulty.EPIC,
+                            autoQuestTier = QuestDifficulty.TRIVIAL,
+                        ),
+                ),
+            )
+        // a daily pays a standard quest: 2 at level 1, 2 + 9 x 28 = 254 at 29
+        assertEquals(2L, progression.repeatableGold(70L, 1, RepeatableXpSource.DAILY))
+        assertEquals(254L, progression.repeatableGold(70L, 29, RepeatableXpSource.DAILY))
+        // the weekly an epic, a bounty a trivial, both from the same baseline
+        assertEquals(
+            progression.computeQuestGold(QuestDifficulty.EPIC, 29),
+            progression.repeatableGold(500L, 29, RepeatableXpSource.WEEKLY),
+        )
+        assertEquals(1L, progression.repeatableGold(60L, 1, RepeatableXpSource.AUTO_QUEST))
+        // an unconfigured source keeps its flat award even when its neighbours are scaled
+        assertEquals(2_000L, progression.repeatableGold(2_000L, 29, RepeatableXpSource.GLOBAL_FIRST))
     }
 }

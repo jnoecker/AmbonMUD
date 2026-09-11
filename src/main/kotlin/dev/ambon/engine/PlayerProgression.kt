@@ -107,6 +107,30 @@ class PlayerProgression(
         return scaled.roundToLong().coerceAtLeast(0L)
     }
 
+    /**
+     * Claim-time gold for a repeatable reward (D-32). When the source has a tier the award is what an
+     * authored quest of that difficulty pays at the claimant's [level] ([computeQuestGold]), so a bounty is
+     * worth the same slice of the gold curve at level 2 and at level 29; without a tier the authored [flat]
+     * number stands.
+     */
+    fun repeatableGold(
+        flat: Long,
+        level: Int,
+        source: RepeatableXpSource,
+    ): Long {
+        val tier = tierFor(source) ?: return flat
+        return computeQuestGold(tier, level)
+    }
+
+    private fun tierFor(source: RepeatableXpSource): QuestDifficulty? = when (source) {
+        RepeatableXpSource.DAILY -> config.repeatableGold.dailyTier
+        RepeatableXpSource.WEEKLY -> config.repeatableGold.weeklyTier
+        RepeatableXpSource.AUTO_QUEST -> config.repeatableGold.autoQuestTier
+        RepeatableXpSource.GLOBAL_FIRST -> config.repeatableGold.globalFirstTier
+        RepeatableXpSource.GLOBAL_SECOND -> config.repeatableGold.globalSecondTier
+        RepeatableXpSource.GLOBAL_THIRD -> config.repeatableGold.globalThirdTier
+    }
+
     private fun fractionFor(source: RepeatableXpSource): Double = when (source) {
         RepeatableXpSource.DAILY -> config.repeatableXp.dailyFractionOfLevel
         RepeatableXpSource.WEEKLY -> config.repeatableXp.weeklyFractionOfLevel

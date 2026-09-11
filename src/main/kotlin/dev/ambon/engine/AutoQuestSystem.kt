@@ -89,7 +89,12 @@ class AutoQuestSystem(
         val spawnCount = spawnCounts[mob.id] ?: 1
         val killCount = random.nextInt(config.killCountMin, config.killCountMax + 1)
             .coerceAtMost(spawnCount.coerceAtLeast(1))
-        val rewardGold = config.rewardGoldBase + config.rewardGoldPerLevel * player.level
+        val rewardGold =
+            progression.repeatableGold(
+                config.rewardGoldBase + config.rewardGoldPerLevel * player.level,
+                player.level,
+                RepeatableXpSource.AUTO_QUEST,
+            )
         val rewardXp =
             progression.repeatableXp(
                 config.rewardXpBase + config.rewardXpPerLevel * player.level,

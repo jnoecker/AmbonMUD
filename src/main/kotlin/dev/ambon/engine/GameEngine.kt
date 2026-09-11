@@ -2928,14 +2928,15 @@ class GameEngine(
                 }
                 for (winner in result.winners) {
                     val ps = players.get(winner.sessionId) ?: continue
-                    ps.gold += winner.goldReward
-                    // Scaled here rather than in GlobalQuestSystem: the award depends on the winner's
+                    // Scaled here rather than in GlobalQuestSystem: the awards depend on the winner's
                     // own level, and the system ranks every participant before we know who they are.
-                    val xpAward =
-                        progression.repeatableXp(winner.xpReward, ps.xpTotal, globalQuestXpSource(winner.place))
+                    val source = globalQuestXpSource(winner.place)
+                    val goldAward = progression.repeatableGold(winner.goldReward, ps.level, source)
+                    ps.gold += goldAward
+                    val xpAward = progression.repeatableXp(winner.xpReward, ps.xpTotal, source)
                     val levelResult = progression.grantXp(ps, xpAward)
                     markVitalsDirty(winner.sessionId)
-                    val rewardMsg = "You earned ${winner.goldReward} gold and $xpAward XP " +
+                    val rewardMsg = "You earned $goldAward gold and $xpAward XP " +
                         "for placing ${ordinalPlace(winner.place)} in the global quest!"
                     outbound.send(OutboundEvent.SendInfo(winner.sessionId, rewardMsg))
                     if (levelResult.levelsGained > 0) {
