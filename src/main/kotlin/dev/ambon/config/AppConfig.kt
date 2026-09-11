@@ -839,6 +839,22 @@ data class AppConfig(
         }
         require(progression.rewards.baseHp >= 1) { "ambonMUD.progression.rewards.baseHp must be >= 1" }
         require(progression.rewards.baseMana >= 0) { "ambonMUD.progression.rewards.baseMana must be >= 0" }
+        if (progression.quests.xpAnchors.isNotEmpty()) {
+            require(progression.quests.xpAnchors.size >= 2) {
+                "ambonMUD.progression.quests.xpAnchors needs at least two anchors to define a curve"
+            }
+            val parsed = progression.quests.xpAnchors.keys.map { it.trim().toIntOrNull() }
+            require(parsed.filterNotNull().toSet().size == parsed.size) {
+                "ambonMUD.progression.quests.xpAnchors keys must parse to distinct integer levels"
+            }
+            progression.quests.xpAnchors.forEach { (key, xp) ->
+                val level = key.trim().toIntOrNull()
+                require(level != null && level >= 1) {
+                    "ambonMUD.progression.quests.xpAnchors key '$key' must be an integer level >= 1"
+                }
+                require(xp >= 0L) { "ambonMUD.progression.quests.xpAnchors[$key] must be >= 0" }
+            }
+        }
         require(progression.quests.baseline.goldBase >= 0L) {
             "ambonMUD.progression.quests.baseline.goldBase must be >= 0"
         }
@@ -3196,10 +3212,21 @@ data class RepeatableGoldConfig(
  * in the YAML keep that value as an override; quests that declare only a
  * `difficulty` (and optional `level`) get
  *   `(baseline.baseXp + baseline.xpPerLevel * (level - 1)) * tiers[difficulty]`
- * at completion time, with diminishing returns layered on top as usual.
+ * at completion time, with diminishing returns layered on top as usual - or, when
+ * [xpAnchors] are declared, `xpAnchors(level) * tiers[difficulty]`, the anchors
+ * interpolated like the mob tier anchors (D-33).
  */
 data class QuestXpConfig(
     val baseline: QuestBaselineConfig = QuestBaselineConfig(),
+    /**
+     * Quest XP anchors (D-33): the standard-tier award at anchor levels, keyed by level like
+     * `levelAnchors` and interpolated the same way (geometrically between anchors, the last
+     * segment's ratio beyond the ends), in place of the linear baseline. A quest is worth the
+     * minutes it costs, and the value of a minute follows the kill anchors, which rise steeply
+     * and then flatten; a linear baseline cannot track that, so the quest unit takes anchors of
+     * its own. Empty (the default) keeps the linear baseline. Quest gold is unaffected.
+     */
+    val xpAnchors: Map<String, Long> = emptyMap(),
     val tiers: Map<QuestDifficulty, Double> =
         mapOf(
             QuestDifficulty.TRIVIAL to 0.25,
