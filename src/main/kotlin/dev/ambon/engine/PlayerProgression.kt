@@ -274,11 +274,40 @@ class PlayerProgression(
     fun computeQuestXp(difficulty: QuestDifficulty?, level: Int): Long {
         if (difficulty == null) return 0L
         val multiplier = config.quests.tiers[difficulty] ?: return 0L
-        val steps = (level.coerceAtLeast(1) - 1).toLong()
-        val baseline = config.quests.baseline.baseXp + config.quests.baseline.xpPerLevel * steps
-        val scaled = baseline.toDouble() * multiplier
+        val scaled = questUnitXp(level.coerceAtLeast(1)) * multiplier
         if (!scaled.isFinite()) return Long.MAX_VALUE
         return scaled.roundToLong().coerceAtLeast(0L)
+    }
+
+    /**
+     * The standard-tier quest award at [level]: the linear baseline, or the quest XP anchors when
+     * declared (D-33), interpolated geometrically between anchors and along the last segment's ratio
+     * beyond the ends, as the mob tier anchors are.
+     */
+    private fun questUnitXp(level: Int): Double {
+        val anchors = questAnchors
+        if (anchors.isEmpty()) {
+            val steps = (level - 1).toLong()
+            return (config.quests.baseline.baseXp + config.quests.baseline.xpPerLevel * steps).toDouble()
+        }
+        anchors.firstOrNull { it.first == level }?.let { return it.second.toDouble() }
+        if (level < anchors.first().first || anchors.size == 1) return anchors.first().second.toDouble()
+        val (lo, hi) =
+            if (level > anchors.last().first) {
+                anchors[anchors.size - 2] to anchors.last()
+            } else {
+                anchors.zipWithNext().first { (a, b) -> a.first < level && level < b.first }
+            }
+        val vLo = lo.second.coerceAtLeast(1L).toDouble()
+        val vHi = hi.second.coerceAtLeast(1L).toDouble()
+        val t = (level - lo.first).toDouble() / (hi.first - lo.first)
+        return vLo * (vHi / vLo).pow(t)
+    }
+
+    private val questAnchors: List<Pair<Int, Long>> by lazy {
+        config.quests.xpAnchors
+            .mapNotNull { (key, xp) -> key.trim().toIntOrNull()?.let { it to xp } }
+            .sortedBy { it.first }
     }
 
     /**

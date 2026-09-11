@@ -646,4 +646,44 @@ class PlayerProgressionTest {
         // an unconfigured source keeps its flat award even when its neighbours are scaled
         assertEquals(2_000L, progression.repeatableGold(2_000L, 29, RepeatableXpSource.GLOBAL_FIRST))
     }
+
+    @Test
+    fun `quest xp anchors replace the linear baseline and interpolate geometrically`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 30,
+                    quests =
+                        QuestXpConfig(
+                            baseline = QuestBaselineConfig(baseXp = 338L, xpPerLevel = 450L),
+                            tiers = mapOf(QuestDifficulty.STANDARD to 1.0, QuestDifficulty.TRIVIAL to 0.5),
+                            xpAnchors = mapOf("1" to 100L, "5" to 1_600L, "10" to 3_200L),
+                        ),
+                ),
+            )
+        // on an anchor the unit is the anchor; a tier scales it
+        assertEquals(1_600L, progression.computeQuestXp(QuestDifficulty.STANDARD, 5))
+        assertEquals(800L, progression.computeQuestXp(QuestDifficulty.TRIVIAL, 5))
+        // between anchors geometrically: 100 x 16^(0.5) = 400 at level 3
+        assertEquals(400L, progression.computeQuestXp(QuestDifficulty.STANDARD, 3))
+        // below the first anchor the first holds; beyond the last the last segment's ratio continues
+        assertEquals(100L, progression.computeQuestXp(QuestDifficulty.STANDARD, 0))
+        assertEquals(6_400L, progression.computeQuestXp(QuestDifficulty.STANDARD, 15))
+    }
+
+    @Test
+    fun `without quest xp anchors the linear baseline stands`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 30,
+                    quests =
+                        QuestXpConfig(
+                            baseline = QuestBaselineConfig(baseXp = 338L, xpPerLevel = 450L),
+                            tiers = mapOf(QuestDifficulty.STANDARD to 1.0),
+                        ),
+                ),
+            )
+        assertEquals(338L + 450L * 9, progression.computeQuestXp(QuestDifficulty.STANDARD, 10))
+    }
 }
