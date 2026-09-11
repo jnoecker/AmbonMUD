@@ -258,6 +258,24 @@ class PlayerProgression(
     }
 
     /**
+     * Engine-computed quest gold, the mirror of [computeQuestXp]: the same difficulty tiers applied to a
+     * gold baseline. Returns 0 when the baseline is unset, so a quest then pays only what content authored.
+     */
+    fun computeQuestGold(
+        difficulty: QuestDifficulty?,
+        level: Int,
+    ): Long {
+        if (difficulty == null) return 0L
+        val baseline = config.quests.baseline
+        if (baseline.goldBase <= 0L && baseline.goldPerLevel <= 0L) return 0L
+        val multiplier = config.quests.tiers[difficulty] ?: return 0L
+        val steps = (level.coerceAtLeast(1) - 1).toLong()
+        val scaled = (baseline.goldBase + baseline.goldPerLevel * steps).toDouble() * multiplier
+        if (!scaled.isFinite()) return Long.MAX_VALUE
+        return scaled.roundToLong().coerceAtLeast(0L)
+    }
+
+    /**
      * Returns the XP multiplier for a kill given the player's level and the
      * mob's level. When the player out-levels the mob by enough to match a
      * configured diminishing-returns threshold, the corresponding multiplier is
