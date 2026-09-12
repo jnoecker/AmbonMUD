@@ -1360,6 +1360,13 @@ data class AkathavaeConfig(
      * templates fall back to the flat [roomDiscoveryXp] base.
      */
     val roomDiscoveryXpPerZoneLevel: Long = 5,
+    /**
+     * When true, the per-level part of a room's discovery XP uses the zone's average mob
+     * level or the visitor's level, whichever is lower, so a fresh pledge walking a deep zone
+     * is paid at their own level rather than the zone's (D-35: a room pays the kill rate for
+     * its seconds, and the kill rate is the visitor's). False keeps the zone's level.
+     */
+    val roomDiscoveryAtVisitorLevel: Boolean = false,
     /** XP for recording a never-before-seen item. */
     val itemDiscoveryXp: Long = 25,
     /** XP for observing a non-combat NPC (vendors, quest givers — recorded, never removed). */

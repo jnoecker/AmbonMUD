@@ -64,7 +64,10 @@ class AkathavaeZoneCompletionTest {
         val clock: MutableClock,
     )
 
-    private fun setup(world: World = testWorld()): Setup {
+    private fun setup(
+        world: World = testWorld(),
+        config: dev.ambon.config.AkathavaeConfig = this.config,
+    ): Setup {
         val clock = MutableClock(1_000_000L)
         val fixture = CombatTestFixture(roomId = lairDen, clock = clock)
         val combat = fixture.buildCombat(rng = Random(1))
@@ -124,6 +127,33 @@ class AkathavaeZoneCompletionTest {
         me.roomId = fieldMeadow
         s.system.onRoomVisited(sid)
         assertEquals(scaled + config.roomDiscoveryXp, me.xpTotal, "mobless zones fall back to the flat base")
+    }
+
+    @Test
+    fun `room discovery XP is capped at the visitor's level when configured`() = runTest {
+        val capped = config.copy(roomDiscoveryAtVisitorLevel = true)
+        val s = setup(config = capped)
+
+        // a level-1 pledge in the level-10 "lair" is paid at level 1: 15 + 1*5
+        val sid = SessionId(1L)
+        val me = loginAkathavae(s, sid, "Thalen")
+        s.system.onRoomVisited(sid)
+        assertEquals(
+            capped.roomDiscoveryXp + 1 * capped.roomDiscoveryXpPerZoneLevel,
+            me.xpTotal,
+            "the deep zone pays a beginner a beginner's rate",
+        )
+
+        // a visitor above the zone's level is paid the zone's: 15 + 10*5
+        val sid2 = SessionId(2L)
+        val other = loginAkathavae(s, sid2, "Maren")
+        other.level = 30
+        s.system.onRoomVisited(sid2)
+        assertEquals(
+            capped.roomDiscoveryXp + 10 * capped.roomDiscoveryXpPerZoneLevel,
+            other.xpTotal,
+            "the zone's level holds when it is the lower",
+        )
     }
 
     // ── Zone completion bundle ───────────────────────────────────────────

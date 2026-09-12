@@ -641,7 +641,7 @@ class AkathavaeSystem(
         outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You record $title."))
         announceWorldFirst(sessionId, me, "room:$key", title, now)
         onArcanumRecorded?.invoke(sessionId)
-        awardDiscoveryXp(sessionId, me, roomDiscoveryXp(roomId.zone), "discovery", now)
+        awardDiscoveryXp(sessionId, me, roomDiscoveryXp(roomId.zone, me.level), "discovery", now)
         checkZoneCompletion(sessionId, me, roomId.zone, now)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
@@ -649,10 +649,18 @@ class AkathavaeSystem(
 
     /**
      * Room-discovery XP for [zone]: the flat base plus a per-level bonus on the
-     * zone's average mob-template level, so high-level zones pay high-level rates.
+     * zone's average mob-template level, so high-level zones pay high-level rates -
+     * or, with [AkathavaeConfig.roomDiscoveryAtVisitorLevel], on the visitor's level
+     * when that is lower, so the deep zones pay a beginner a beginner's rate.
      */
-    internal fun roomDiscoveryXp(zone: String): Long =
-        config.roomDiscoveryXp + avgZoneMobLevel(zone) * config.roomDiscoveryXpPerZoneLevel
+    internal fun roomDiscoveryXp(
+        zone: String,
+        visitorLevel: Int,
+    ): Long {
+        val zoneLevel = avgZoneMobLevel(zone)
+        val level = if (config.roomDiscoveryAtVisitorLevel) minOf(zoneLevel, visitorLevel) else zoneLevel
+        return config.roomDiscoveryXp + level * config.roomDiscoveryXpPerZoneLevel
+    }
 
     private fun avgZoneMobLevel(zone: String): Int = zoneAvgMobLevel.getOrPut(zone) {
         val levels = world.mobTemplates
