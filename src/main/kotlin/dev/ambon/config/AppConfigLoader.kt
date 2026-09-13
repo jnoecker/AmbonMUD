@@ -68,6 +68,9 @@ object AppConfigLoader {
             ConfigLoaderBuilder
                 .default()
                 .withExplicitSealedTypes()
+                // Enums decode case-insensitively so the externally-authored overlay may spell
+                // them however it likes; see CaseInsensitiveEnumDecoder.
+                .addDecoder(CaseInsensitiveEnumDecoder())
 
         // Secrets overlay takes precedence over every other source (lowest
         // index = first checked). See SECRETS_FILENAME doc above for why.

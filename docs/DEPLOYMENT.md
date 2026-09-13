@@ -505,6 +505,15 @@ classpath resources.
 The docker run adds `-e AMBONMUD_DATA_DIR=/app/data` (and `--env-file
 /etc/ambonmud/secrets.env`) so all of the above reach the JVM. 
 
+**Overlay authoring note — enum spelling:** every enum in the overlay decodes
+case-insensitively, both as a value (`repeatableGold.dailyTier: epic`) and as a
+map key (`progression.quests.tiers: {standard: 1.0}`), so the overlay may use
+the lowercase spelling world YAML uses for `difficulty:`. Hoplite's built-in
+enum decoder matches constant names exactly, which crash-looped the demo on a
+lowercase `tiers` block; `CaseInsensitiveEnumDecoder` (registered in
+`AppConfigLoader`) removes that trap. An unrecognised constant is still a hard
+boot failure naming the offending value — case-insensitive, not permissive.
+
 **Required GitHub configuration:**
 
 | Name | Type | Value                                         | Notes |
