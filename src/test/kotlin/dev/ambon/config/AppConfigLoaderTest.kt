@@ -1,5 +1,6 @@
 package dev.ambon.config
 
+import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.PropertySource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -769,5 +770,72 @@ class AppConfigLoaderTest {
             extraSources = listOf(source),
         )
         assertEquals(jsMaxSafeInteger, config.engine.multiclass.maxClasses)
+    }
+
+    @Test
+    fun `lowercase quest difficulty names decode from the overlay`() {
+        // Regression: the demo instance crash-looped (systemd restart counter in the thousands)
+        // because the externally-authored overlay spelled the quest tiers the way world YAML does
+        // (`difficulty: easy`) while Hoplite's built-in enum decoder matches constant names exactly.
+        // CaseInsensitiveEnumDecoder makes config agree with world YAML.
+        val overlay =
+            PropertySource.string(
+                """
+                ambonmud:
+                  progression:
+                    quests:
+                      baseline:
+                        goldBase: 10
+                        goldPerLevel: 5
+                      tiers:
+                        trivial: 0.25
+                        easy: 0.5
+                        standard: 1.0
+                        hard: 1.75
+                        epic: 3.0
+                    repeatableGold:
+                      dailyTier: standard
+                      weeklyTier: Epic
+                      autoQuestTier: easy
+                """.trimIndent(),
+                "yml",
+            )
+        val config =
+            AppConfigLoader.load(
+                resourcePath = testResourcePath,
+                extraSources = listOf(overlay),
+            )
+        assertEquals(0.25, config.progression.quests.tiers[QuestDifficulty.TRIVIAL])
+        assertEquals(1.0, config.progression.quests.tiers[QuestDifficulty.STANDARD])
+        assertEquals(3.0, config.progression.quests.tiers[QuestDifficulty.EPIC])
+        assertEquals(QuestDifficulty.STANDARD, config.progression.repeatableGold.dailyTier)
+        assertEquals(QuestDifficulty.EPIC, config.progression.repeatableGold.weeklyTier)
+        assertEquals(QuestDifficulty.EASY, config.progression.repeatableGold.autoQuestTier)
+    }
+
+    @Test
+    fun `case-insensitive enum decoding is not limited to quest difficulty`() {
+        val source = PropertySource.map(mapOf("ambonmud.persistence.backend" to "postgres"))
+        val config =
+            AppConfigLoader.load(
+                resourcePath = testResourcePath,
+                extraSources = listOf(source),
+            )
+        assertEquals(PersistenceBackend.POSTGRES, config.persistence.backend)
+    }
+
+    @Test
+    fun `an unknown enum constant still fails loudly`() {
+        // Case-insensitivity must not become "accept anything": a typo in the overlay should still
+        // be a startup failure naming the offending value rather than a silently wrong default.
+        val source = PropertySource.map(mapOf("ambonmud.progression.repeatableGold.dailyTier" to "legendary"))
+        val failure =
+            assertThrows(ConfigException::class.java) {
+                AppConfigLoader.load(
+                    resourcePath = testResourcePath,
+                    extraSources = listOf(source),
+                )
+            }
+        assertTrue(failure.message!!.contains("legendary"))
     }
 }
