@@ -38,9 +38,10 @@ class CaseInsensitiveEnumDecoder : NullHandlingDecoder<Any> {
         type: KType,
         context: DecoderContext,
     ): ConfigResult<Any> {
-        val kclass = type.classifier as? KClass<*> ?: return ConfigFailure.DecodeError(node, type).invalid()
+        val constants =
+            (type.classifier as? KClass<*>)?.java?.enumConstants?.filterIsInstance<Enum<*>>()
+                ?: return ConfigFailure.DecodeError(node, type).invalid()
         val raw = (node as? PrimitiveNode)?.value?.toString() ?: return ConfigFailure.DecodeError(node, type).invalid()
-        val constants = kclass.java.enumConstants?.filterIsInstance<Enum<*>>().orEmpty()
         val match = constants.firstOrNull { it.name.equals(raw.trim(), ignoreCase = true) }
         return match?.valid() ?: ConfigFailure.InvalidEnumConstant(node, type, raw).invalid()
     }
