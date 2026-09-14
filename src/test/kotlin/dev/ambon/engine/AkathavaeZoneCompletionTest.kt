@@ -20,6 +20,7 @@ import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.util.Random
@@ -174,13 +175,19 @@ class AkathavaeZoneCompletionTest {
         assertEquals(100L, me.xpTotal)
         s.fixture.outbound.drainAll()
 
-        // … then its only room, immediately, still inside the throttle window:
-        // room XP is swallowed, but the completion bundle must not be.
+        // … its only room inside the window is declined (the zone is not complete yet) …
+        s.system.onRoomVisited(sid)
+        assertFalse("lair" in me.arcanum.completedZones, "a declined room does not complete the zone")
+        assertEquals(100L, me.xpTotal)
+
+        // … and at the pace the room's award re-arms the throttle: the completion bundle in the same action must not be swallowed.
+        s.clock.advance(config.discoveryXpThrottleMs + 1)
         s.system.onRoomVisited(sid)
 
         assertTrue("lair" in me.arcanum.completedZones)
+        val roomXp = config.roomDiscoveryXp + 10 * config.roomDiscoveryXpPerZoneLevel
         val completionXp = 1 * config.zoneCompletionXpPerRoom
-        assertEquals(100L + completionXp, me.xpTotal, "completion XP bypasses the anti-speedrun throttle")
+        assertEquals(100L + roomXp + completionXp, me.xpTotal, "completion XP bypasses the anti-speedrun throttle")
         assertEquals(goldBefore + config.zoneCompletionGold, me.gold, "completion pays the gold faucet")
 
         val myInfos = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendInfo>()

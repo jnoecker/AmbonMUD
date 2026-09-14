@@ -322,11 +322,11 @@ class AkathavaeIlluminateTest {
         val afterIllumination = 100L + AkathavaeConfig().itemDiscoveryXp
         assertEquals(afterIllumination, me.xpTotal)
 
-        // A separate discovery inside the throttle window: recorded, but no XP.
+        // A separate discovery inside the throttle window: declined - no XP, and the room stays unrecorded.
         me.roomId = roomB
         s.system.onRoomVisited(sid)
         assertEquals(afterIllumination, me.xpTotal, "the intra-action bypass must not open a farming window")
-        assertTrue(me.arcanum.rooms.containsKey(roomB.value), "the room is still recorded")
+        assertFalse(me.arcanum.rooms.containsKey(roomB.value), "a room inside the window is declined, not consumed")
 
         // Past the throttle, XP flows again.
         s.clock.advance(AkathavaeConfig().discoveryXpThrottleMs + 1)
@@ -995,23 +995,31 @@ class AkathavaeIlluminateTest {
     }
 
     @Test
-    fun `discovery XP is throttled against speedrunning but entries still record`() = runTest {
+    fun `a room inside the discovery throttle window is declined, not consumed`() = runTest {
         val s = setup()
         val sid = SessionId(1L)
         val me = loginAkathavae(s, sid, "Thalen")
         val perRoom = AkathavaeConfig().roomDiscoveryXp
 
         s.system.onRoomVisited(sid)
+        s.fixture.outbound.drainAll()
         me.roomId = roomB
-        s.system.onRoomVisited(sid) // inside the throttle window — recorded, no XP
+        s.system.onRoomVisited(sid) // inside the throttle window — declined: no XP, the room stays unrecorded
 
-        assertEquals(perRoom, me.xpTotal, "second discovery inside throttle pays nothing")
-        assertEquals(2, me.arcanum.rooms.size, "both rooms are still recorded")
+        assertEquals(perRoom, me.xpTotal, "second discovery inside the throttle pays nothing")
+        assertEquals(1, me.arcanum.rooms.size, "the declined room is not recorded")
+        val texts = s.fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+        assertTrue(texts.any { "too quickly" in it }, "the player is told the room went unrecorded for pace, got=$texts")
+
+        s.clock.advance(AkathavaeConfig().discoveryXpThrottleMs + 1)
+        s.system.onRoomVisited(sid) // the same room, re-entered at the pace: recorded and paid in full
+        assertEquals(perRoom * 2, me.xpTotal, "the declined room pays when re-entered past the window")
+        assertEquals(2, me.arcanum.rooms.size)
 
         s.clock.advance(AkathavaeConfig().discoveryXpThrottleMs + 1)
         me.roomId = roomC
         s.system.onRoomVisited(sid)
-        assertEquals(perRoom * 2, me.xpTotal, "throttle expiry restores XP flow")
+        assertEquals(perRoom * 3, me.xpTotal, "throttle expiry restores XP flow")
     }
 
     @Test

@@ -1371,7 +1371,11 @@ data class AkathavaeConfig(
     val itemDiscoveryXp: Long = 25,
     /** XP for observing a non-combat NPC (vendors, quest givers — recorded, never removed). */
     val observeNpcXp: Long = 10,
-    /** Minimum gap between discovery XP awards (ms) — anti-speedrun throttle. Entries still record. */
+    /**
+     * Minimum gap between discovery XP awards (ms) — anti-speedrun throttle. A room entered inside the
+     * window is declined (left unrecorded, to be recorded at the pace); illuminations, observations and
+     * items inside it record without XP; zone completion bypasses it.
+     */
     val discoveryXpThrottleMs: Long = 1_500,
     /** [Zone completion] One-time XP per room in a zone, paid when its record reaches 100% (bypasses the throttle). */
     val zoneCompletionXpPerRoom: Long = 50,
