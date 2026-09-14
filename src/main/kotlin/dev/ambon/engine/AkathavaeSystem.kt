@@ -667,7 +667,9 @@ class AkathavaeSystem(
         val last = lastPaceNoticeAt[sessionId] ?: Long.MIN_VALUE
         if (now - last < config.discoveryXpThrottleMs) return
         lastPaceNoticeAt[sessionId] = now
-        outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You pass through too quickly to record it - linger a moment, or return."))
+        outbound.send(
+            OutboundEvent.SendText(sessionId, "[Arcanum] You pass through too quickly to record it - linger a moment, or return."),
+        )
     }
 
     /**
