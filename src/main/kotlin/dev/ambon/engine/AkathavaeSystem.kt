@@ -104,6 +104,9 @@ class AkathavaeSystem(
     /** Per-session anti-speedrun throttle on discovery XP awards. Runtime-only. */
     private val nextDiscoveryXpAt = mutableMapOf<SessionId, Long>()
 
+    /** When each session was last told a room went unrecorded for pace; one notice per throttle window. Runtime-only. */
+    private val lastPaceNoticeAt = mutableMapOf<SessionId, Long>()
+
     /**
      * Average mob-template level per zone — the zone-difficulty proxy that scales
      * room-discovery XP. Cached lazily because [onRoomVisited] fires on every
@@ -623,7 +626,15 @@ class AkathavaeSystem(
 
     // ── Passive discovery ────────────────────────────────────────────────
 
-    /** Records the player's current room. Fires on every movement; no-op unless pledged and new. */
+    /**
+     * Records the player's current room. Fires on every movement; no-op unless pledged and new.
+     *
+     * Inside the discovery throttle window the room is declined, not consumed: it stays unrecorded and
+     * pays in full when re-entered at the pace, so a walker who outpaces the throttle loses nothing
+     * silently (the throttle used to record the room and swallow its XP). The window still caps the
+     * award rate - one room per [AkathavaeConfig.discoveryXpThrottleMs] - which is what holds the
+     * fastest pledged route above the exploit floor.
+     */
     suspend fun onRoomVisited(sessionId: SessionId) {
         val me = players.get(sessionId) ?: return
         // Movement is the primary sketch interrupt — you cannot draw and walk.
@@ -636,6 +647,10 @@ class AkathavaeSystem(
         val key = roomId.value
         if (me.arcanum.rooms.containsKey(key)) return
         val now = clock.millis()
+        if (now < (nextDiscoveryXpAt[sessionId] ?: 0L)) {
+            noticePace(sessionId, now)
+            return
+        }
         recordEntry(me.arcanum.rooms, key, now, ArcanumSource.VISITED)
         val title = world.rooms[roomId]?.title ?: roomId.value
         outbound.send(OutboundEvent.SendText(sessionId, "[Arcanum] You record $title."))
@@ -645,6 +660,16 @@ class AkathavaeSystem(
         checkZoneCompletion(sessionId, me, roomId.zone, now)
         markVitalsDirty?.invoke(sessionId)
         emitStatus(sessionId)
+    }
+
+    /** Tells the player a room went unrecorded for pace - at most once per throttle window, so a speedwalk is not a wall of text. */
+    private suspend fun noticePace(sessionId: SessionId, now: Long) {
+        val last = lastPaceNoticeAt[sessionId]
+        if (last != null && now - last < config.discoveryXpThrottleMs) return
+        lastPaceNoticeAt[sessionId] = now
+        outbound.send(
+            OutboundEvent.SendText(sessionId, "[Arcanum] You pass through too quickly to record it - linger a moment, or return."),
+        )
     }
 
     /**
