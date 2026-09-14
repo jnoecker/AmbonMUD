@@ -664,8 +664,8 @@ class AkathavaeSystem(
 
     /** Tells the player a room went unrecorded for pace - at most once per throttle window, so a speedwalk is not a wall of text. */
     private suspend fun noticePace(sessionId: SessionId, now: Long) {
-        val last = lastPaceNoticeAt[sessionId] ?: Long.MIN_VALUE
-        if (now - last < config.discoveryXpThrottleMs) return
+        val last = lastPaceNoticeAt[sessionId]
+        if (last != null && now - last < config.discoveryXpThrottleMs) return
         lastPaceNoticeAt[sessionId] = now
         outbound.send(
             OutboundEvent.SendText(sessionId, "[Arcanum] You pass through too quickly to record it - linger a moment, or return."),

@@ -208,7 +208,9 @@ class AkathavaeZoneCompletionTest {
         val me = loginAkathavae(s, sid, "Thalen")
         s.fixture.mobs.upsert(wisp())
         s.system.illuminate(sid, "wisp")
+        s.clock.advance(config.discoveryXpThrottleMs + 1) // the room at the pace, so it records and completes the zone
         s.system.onRoomVisited(sid)
+        assertEquals(setOf("lair"), me.arcanum.completedZones)
         val goldAfter = me.gold
         val xpAfter = me.xpTotal
 
