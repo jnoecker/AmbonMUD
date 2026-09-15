@@ -1,0 +1,489 @@
+zone: stuffiesburg
+startRoom: the_cobblestone_plaza
+rooms:
+  the_cobblestone_plaza:
+    title: The Cobblestone Plaza
+    description: A broad, sweeping plaza of perfectly fitted stone opens before you, lined with gas lamps that glow with
+      soft, ethereal light. In the center stands a fountain of crystallized dreamwater, where the town's stuffed
+      citizens gather to exchange pleasantries and news.
+    exits:
+      s: velvet_street
+      n: lamplight_crossing
+      w: pixel_haven:the_only_road_5
+    image: a87d0d937483b5e608a596daf1fde6dd83500bd2fbb4bf4a770c097d4dbb9406.jpg
+  velvet_street:
+    title: Velvet Street
+    description: A gentle lane lined with elegant townhouses of pale stone and darkwood, their windows warm with amber light
+      that seems to emanate from within the walls themselves. The street is immaculately swept, and the air carries the
+      scent of lavender and old paper.
+    exits:
+      n: the_cobblestone_plaza
+      s: the_general_store
+      e: memory_lane
+    image: 8e795fdac961ccc58ea5507dd885445abe93ec09bd8df8b0a0ab707496bd2973.jpg
+  the_general_store:
+    title: The General Store
+    description: A cozy establishment with brass fixtures and shelves of curiosities, presided over by a moose in a cardigan
+      with gentle button eyes. The scent of old wood and forgotten treasures fills the air.
+    exits:
+      n: velvet_street
+      e: the_silk_gardens
+      s: children_s_park
+    image: 65307fd6bf1f8b32020899639ea3f77cf225f12eee45f3d282bf44d4103e093c.jpg
+  memory_lane:
+    title: Memory Lane
+    description: A winding, tree-lined thoroughfare where vines of memory-bloom creep along wrought-iron fences, their
+      flowers glowing with soft iridescence. Each house seems to hold its own cherished moment suspended in time.
+    exits:
+      w: velvet_street
+      s: the_silk_gardens
+    image: 2ca56b593a776e7de3024044724d9dbfc072786fd03e726b356b8fbc111f8c42.jpg
+  the_silk_gardens:
+    title: The Silk Gardens
+    description: Verdant gardens overflow with dreamflowers and memory-bloom vines, their petals seeming woven from silk
+      threads of impossible colors. A rabbit family in complementary hues tends the beds with obvious care.
+    exits:
+      w: the_general_store
+      n: memory_lane
+      s: the_whimsy_district
+    image: 4cdeb81bb9b1d6d77369dcf24c2b482f8197b465cfd3003382f74f064ba27f59.jpg
+  children_s_park:
+    title: Children's Park
+    description: An enchanting green space where grass itself appears woven from emerald silk, and softly-stuffed children
+      play among delicate brass benches and flowering shrubs. The laughter here sounds like wind chimes made of spun
+      sugar.
+    exits:
+      n: the_general_store
+      s: the_millwright_s_quarter
+      e: the_whimsy_district
+    image: 381191ce45bdf7420533d0abac3659e3921c26c0a63c4f096b0b279028d3f898.jpg
+  the_millwright_s_quarter:
+    title: The Millwright's Quarter
+    description: Converted textile mills stand here, their brick facades softened by climbing ivy and ornate brass
+      detailing, now repurposed as homes and workshops. The quiet hum of creative industry lingers in the very stones.
+    exits:
+      n: children_s_park
+      s: the_moose_manor
+      e: gable_court
+    image: a235155fcff3b5b6dbc199e604dbda82e4b89fd217756eb585c59eabfc9a2647.jpg
+  lamplight_crossing:
+    title: Lamplight Crossing
+    description: A junction where multiple streets converge beneath a cluster of gas lamps that cast a warm, otherworldly
+      glow across the intersection. The pavement here is worn smooth from countless careful footsteps.
+    exits:
+      s: the_cobblestone_plaza
+      n: stitch_seam_cottage
+    image: 88b9fe017fad49061313780542e0fa1bbdbee020f6f51870e5f90bce6472a58d.jpg
+  the_moose_manor:
+    title: The Moose Manor
+    description: A grand Victorian structure with soaring gables and mullioned windows, its brass fixtures polished to a
+      mirror shine. This appears to be the residence of one of Stuffiesburg's most prominent citizens.
+    exits:
+      n: the_millwright_s_quarter
+      s: buttonhole_alley
+      e: the_brass_foundry
+    image: f35727442f4fcbaa859e908f77d72f127c7c2c6260636ed8afbcb79b6346e185.jpg
+  buttonhole_alley:
+    title: Buttonhole Alley
+    description: A narrow, intimate passage between buildings where the architecture leans inward as if sharing secrets,
+      lined with weathered doors of darkwood and tarnished brass nameplates. The air here smells distinctly of time and
+      memory.
+    exits:
+      n: the_moose_manor
+      e: the_velvet_parlor
+    image: 72371ba65edfdf99a92f94214097bf8e94bd9da838003f4cc868059ad43f3c56.jpg
+  the_velvet_parlor:
+    title: The Velvet Parlor
+    description: A warm interior space lit by countless candles, where cushioned furniture upholstered in silk and velvet
+      invites contemplation. The walls are lined with books whose pages whisper gently with dreamstuff.
+    exits:
+      w: buttonhole_alley
+      n: the_brass_foundry
+    image: 4190bbd595ee49b6ce7d9babc0ad0cb46266649eb97c81682d76ee704bc1d74c.jpg
+  stitch_seam_cottage:
+    title: Stitch & Seam Cottage
+    description: A small, well-appointed cottage with lace curtains and a garden gate painted a cheerful cream color.
+      Needles and thread can be glimpsed through the front window, alongside rolls of finest fabric.
+    exits:
+      s: lamplight_crossing
+      e: the_stuffing_warehouse
+      w: the_patchwork_tavern
+    image: d448acaf1b24040b0b69a5d71c569323ed1862809f07cb992073a1dda6e9aa70.jpg
+  the_stuffing_warehouse:
+    title: The Stuffing Warehouse
+    description: A large structure filled floor to ceiling with bolts of cotton batting, silk, velvet, and wool in every
+      conceivable hue. The scent of fresh material and careful preservation fills the air.
+    exits:
+      w: stitch_seam_cottage
+      n: dreamflower_arbor
+      e: the_beaver_sweep
+    image: 37d31dd72863694d42f8e20be47b05fc71194e349665d57bc29541c1616b6cfc.jpg
+  dreamflower_arbor:
+    title: Dreamflower Arbor
+    description: An arched passageway covered entirely in climbing dreamflower vines, their luminescent blooms casting
+      dancing shadows of impossible colors. Walking through feels like passing through someone's fondest memory.
+    exits:
+      s: the_stuffing_warehouse
+      e: teatime_square
+    image: 19eff745454c321ac67ce93f7ff6380e598e31efedd45beb294eb47745897686.jpg
+  the_brass_foundry:
+    title: The Brass Foundry
+    description: A workshop where intricate brass fittings and decorative hardware gleam in careful rows, awaiting
+      installation on Stuffiesburg's buildings. The smell of polish and metal work perfumes the air.
+    exits:
+      w: the_moose_manor
+      n: gable_court
+      s: the_velvet_parlor
+    image: 388f17402f75d974323766542f43992f169f0607225893680e3e1a56fb7af914.jpg
+  teatime_square:
+    title: Teatime Square
+    description: A modest square with wrought-iron benches and tables, surrounded by tea houses with steamed windows and the
+      faint sound of genteel conversation. The whole area seems infused with warmth and the aroma of chamomile.
+    exits:
+      w: dreamflower_arbor
+      n: silk_merchant_s_row
+    image: e03157ff63a95a1873d07b4ddd25f88577754bc192501a0255abf9476e23c944.jpg
+  the_beaver_sweep:
+    title: The Beaver Sweep
+    description: A thoroughfare so immaculately maintained that barely a speck of dust settles upon its surface, swept daily
+      by enthusiastic beaver-folk who take obvious pride in their work. Small broom-sized tools lean against lampposts.
+    exits:
+      w: the_stuffing_warehouse
+    image: 8c3be43eb21af527b01bcc5a9a3d6fa14c294e93fcc1c96fb54ac347bc275a03.jpg
+  silk_merchant_s_row:
+    title: Silk Merchant's Row
+    description: A series of elegant storefronts displaying bolts of fine fabrics, thread in every shade, and finished
+      garments made with meticulous care. Velvet cloaks and embroidered waistcoats hang in window displays lit by inner
+      luminescence.
+    exits:
+      s: teatime_square
+      e: the_dreamwater_fountain
+    image: 3bf4d7e64e150bdb6adb47b0d9bd1e3ceb34e6458841a25d0c6d7ede1f7400b6.jpg
+  the_patchwork_tavern:
+    title: The Patchwork Tavern
+    description: A cheery establishment with mismatched but perfectly complementary fabrics adorning its interior, warm
+      lighting casting everything in a golden hue. The bar is polished darkwood, and the air carries the scent of
+      non-alcoholic herbal drinks.
+    exits:
+      e: stitch_seam_cottage
+    image: 643ebaf9de4321871744a0be151898a8ae7e5163b3d4c3b35fc76e333b4935a7.jpg
+  gable_court:
+    title: Gable Court
+    description: A cluster of Victorian-styled townhouses with soaring, perfectly pitched roofs, their windows glowing with
+      amber light that seems internal to the glass itself. Each building is distinct yet harmonious with its neighbors.
+    exits:
+      s: the_brass_foundry
+      e: feline_silks_haberdashery
+      n: the_whimsy_district
+      w: the_millwright_s_quarter
+    image: eb8cb5767e7e58f3ece5c6ee5248fd895e75befbcbd093eca6cc190272d3c6ab.jpg
+  the_dreamwater_fountain:
+    title: The Dreamwater Fountain
+    description: A central gathering place where crystallized dreamwater cascades in an eternal, graceful arc, its surface
+      shimmering with colors that exist only in the realm of sleep. The water seems to flow backwards and forwards
+      simultaneously.
+    exits:
+      w: silk_merchant_s_row
+      e: rabbit_warren_cottage
+    image: 90d431c4448df2c538ffe717c064615e7aa72a0808138954956226e820544276.jpg
+  rabbit_warren_cottage:
+    title: Rabbit Warren Cottage
+    description: A charming residence where a family of cotton-batting rabbits in complementary hues tends to gardens and
+      maintains their home with evident joy. Pastel colors and gentle geometry define its architecture.
+    exits:
+      w: the_dreamwater_fountain
+      e: the_button_maker_s_workshop
+    image: d40d9fc3bb75aff880cd9561c6725df054dfb6ae58ad489fa6df2db08574266b.jpg
+  feline_silks_haberdashery:
+    title: Feline Silks Haberdashery
+    description: An elegant shop operated by cats of fine silk and velvet, their display windows showcasing accessories,
+      garments, and curiosities arranged with exquisite taste. Everything here seems designed for creatures of grace and
+      refinement.
+    exits:
+      w: gable_court
+    image: 04ada9c3b67509c618c4bea73a16c4c69ad7bd0d401bf49f55a133e25592b8d6.jpg
+  the_whimsy_district:
+    title: The Whimsy District
+    description: A charming neighborhood where architecture becomes playful—buildings with asymmetrical windows, benches
+      shaped like sleeping creatures, and decorative elements that blur the line between familiar and fantastical. It
+      feels alive with imagination.
+    exits:
+      s: gable_court
+      e: lantern_lane
+      n: the_silk_gardens
+      w: children_s_park
+    image: 852f53692cf00ca4220d41aa4a3f3a4645af92cbd1e71581f884f85595bfd112.jpg
+  lantern_lane:
+    title: Lantern Lane
+    description: A peaceful street where gas lamps cast their ethereal glow across carefully maintained facades and
+      flowering window boxes. Each lamp seems to hold a piece of someone's cherished memory within its glass.
+    exits:
+      w: the_whimsy_district
+      n: the_stitcher_s_guild_hall
+    image: dbcd05bbb3ea5d5aad8436b09e9b14695f5b7d08cf67d085c7ed8465348cbc0b.jpg
+  the_stitcher_s_guild_hall:
+    title: The Stitcher's Guild Hall
+    description: A purpose-built structure of pale stone with workshops visible through large windows, where the finest
+      embroidered artwork is created. Intricate tapestries hang within, each one a masterwork of thread and vision.
+    exits:
+      s: lantern_lane
+      n: nostalgia_house
+    image: 26e3479d0db59b4bf3dc947235d78973a77dfad47daac3a6c6c5c21f29e732e4.jpg
+  nostalgia_house:
+    title: Nostalgia House
+    description: A sprawling manor where the scent of lavender and old paper seems strongest, its interior a museum of
+      cherished items and beloved memories made tangible. Walking here feels like stepping into a favorite childhood
+      dream.
+    exits:
+      s: the_stitcher_s_guild_hall
+      e: the_dream_s_edge
+    image: 3c224de639e4e6dc147ff98d9a26eab44d731991e853dd29040ccaea324d0d79.jpg
+  the_button_maker_s_workshop:
+    title: The Button Maker's Workshop
+    description: A small, meticulous shop where buttons of every size, color, and material are crafted or collected,
+      displayed in neat compartments that catch the gaslight beautifully. Each button seems to hold a story.
+    exits:
+      w: rabbit_warren_cottage
+      n: evening_promenade
+    image: b4aa0ed02b76d5ef88d1edb1a45f07895c12d783116e487f014879d861abce75.jpg
+  evening_promenade:
+    title: Evening Promenade
+    description: A tree-lined thoroughfare where the streetlamps glow with particular intensity as dusk approaches, and the
+      stuffed citizens stroll at a leisurely pace, engaging in philosophical conversations. The air here seems thick
+      with the sweetness of meaningful moments.
+    exits:
+      s: the_button_maker_s_workshop
+    image: 3771c719cde479ea78cadf312f41b9f9e1dd3407d30c64b1fd5fd6d87c4a2a78.jpg
+  the_dream_s_edge:
+    title: The Dream's Edge
+    description: A liminal space where Stuffiesburg's carefully maintained perfection begins to fade at the periphery, where
+      the buildings seem slightly less defined and the atmosphere takes on an ephemeral, uncertain quality. This is
+      where the Dream begins to dissolve.
+    exits:
+      w: nostalgia_house
+    image: 700b39d3cdd9cd375561f8998d26e64fec870c0742dfa4972b9529ff79e20b39.jpg
+lifespan: 30
+levelBand:
+  min: 18
+  max: 19
+difficultyHint: casual
+image:
+  room: 39866c8dd5f132dea801b83862054c43f1e23b92de8198ca6eff20d63c30fbcf.jpg
+  mob: 8fc113149c3fb44786f2a276d509095aaa927f0ab2430ee4ed0b121c6620207e.png
+  item: 45412170f7082509d32c42c628fb15a05fedc80a8232ef897c5a82636923d588.png
+mobs:
+  moose_shopkeeper:
+    name: Mortimer the Moose
+    description: A stout moose with a pristine cardigan and genuine button eyes that hold deep sentiment, presiding over the
+      general store with unhurried grace.
+    tier: standard
+    spawns:
+      - room: the_general_store
+    level: 18
+    image: 481c5e96ae050bd8f548b0531a7d5ae5bb41ceec94ceddc02e8a5c709c96c6f2.png
+  rabbit_gardener_lead:
+    name: Clover the Rabbit
+    description: A soft, cotton-batting rabbit in a cream-colored dress, tending the memory-bloom vines with obvious
+      devotion and care.
+    tier: weak
+    spawns:
+      - room: the_silk_gardens
+    level: 18
+    image: d88e9cf149806ee1522c9f284020853d533d304f15ec2b3f73b1026a45c20c84.png
+  beaver_sweeper:
+    name: Bevin the Beaver
+    description: An industrious beaver-folk with genuine enthusiasm for cleanliness, wielding a broom-sized tool with
+      surprising expertise and obvious pride.
+    tier: weak
+    spawns:
+      - room: the_beaver_sweep
+    level: 18
+    image: 9e099b54e122231b136910dd24563e604347d9d7ac97a9725fb03fa46e6f6440.png
+  silk_cat_merchant:
+    name: Velveteen the Cat
+    description: An elegant feline of fine silk and velvet, moving with practiced grace through her haberdashery, dispensing
+      advice and goods with refined taste.
+    tier: standard
+    spawns:
+      - room: feline_silks_haberdashery
+    level: 18
+    image: 570a21ac6339a49dbf92334fa91ea602ffdc2d0162a714e4542d2f28bcba51c6.png
+  stitcher_master:
+    name: Needlework Natasha
+    description: A mysterious stuffed creature whose form seems woven from countless threads of different colors, her hands
+      never still as she works at the Guild Hall.
+    tier: elite
+    spawns:
+      - room: the_stitcher_s_guild_hall
+    level: 18
+    image: 93a295f1c61da7fc13f5e021154a9047843bc98b2c945f2c70cd9ac9eb41aa19.png
+  button_maker:
+    name: Thimble the Tinker
+    description: A small, precise creature focused on crafting perfect buttons, surrounded by his collection of materials
+      and works in progress.
+    tier: weak
+    spawns:
+      - room: the_button_maker_s_workshop
+    level: 18
+    image: c41c9e682989439de0d1a68637476c3e99b1c8c454842e6c757755b18f2950b6.png
+  dream_fragment_keeper:
+    name: The Fountain Guardian
+    description: A being of crystallized dreamwater given sentient form, tending the central fountain with reverent care,
+      its shape constantly shifting between familiar and alien.
+    tier: elite
+    spawns:
+      - room: the_dreamwater_fountain
+    level: 18
+    image: 52893004237225544db5d1d651317ad0b2228ba99c7267232bf6c3f217e7e3eb.png
+  parlor_host:
+    name: Lord Cushion the Bear
+    description: A stout bear with button eyes that hold genuine warmth, overseeing the Velvet Parlor where philosophical
+      conversations occur each evening.
+    tier: standard
+    spawns:
+      - room: the_velvet_parlor
+    level: 18
+    image: 7aaab9bc26b9e2268b029b9c7b222e1753aec0075f21b9ea4f4e70a24424f39e.png
+  whimsy_creature_minor:
+    name: Patchwork the Fantastical
+    description: A small creature that blurs the line between familiar and impossible, seeming to be made of mismatched
+      pieces that somehow form a coherent whole.
+    tier: weak
+    spawns:
+      - room: the_whimsy_district
+    level: 18
+    image: c4f5d91a87d6491e11ba8230fa9c6c090cb8a7f58537b84f991d4bf804da7153.png
+  tavern_keeper:
+    name: Snuggleworth the Hedgehog
+    description: A prickly but endearing hedgehog who runs the Patchwork Tavern with genuine hospitality, mixing herbal
+      drinks and listening to the town's stories.
+    tier: standard
+    spawns:
+      - room: the_patchwork_tavern
+    level: 18
+    image: 996b3466594d0cab1ea176e915e7e2add1a2c68c5bfa163e1080ef4df8e1e953.png
+  warehouse_custodian:
+    name: The Stuffing Warden
+    description: An imposing figure made entirely of compressed batting, responsible for the organization and preservation
+      of all materials within the warehouse.
+    tier: elite
+    spawns:
+      - room: the_stuffing_warehouse
+    level: 18
+    image: a9da05a6960eddd00fefabc20e1e817cac120b6fa07d742abe8fa20d11a82e62.png
+  dream_edge_specter:
+    name: The Fading One
+    description: A partially realized creature existing at the boundary of the Dream, its form inconsistent and its nature
+      uncertain, neither fully present nor entirely absent.
+    tier: boss
+    spawns:
+      - room: the_dream_s_edge
+    level: 19
+    image: be0027451759e6e1b7cbbcf81d78aab03edcedfa257e943519fc26e2150164d4.png
+items:
+  cardigan_of_comfort:
+    displayName: Mortimer's Cardigan
+    description: A perfectly-maintained cardigan of soft wool, smelling faintly of lavender and wisdom. Wearing it makes one
+      feel inexplicably content.
+    slot: body
+    armor: 6
+    level: 18
+    tier: common
+    archetype: armor
+    image: a84ca51b067e5f399eb414b798efe231f99ff704e5f86b28ee9bcbe762334067.png
+    keyword: cardigan_of_comfort
+  silk_waistcoat:
+    displayName: Silk Waistcoat of the Rabbits
+    description: An elegant waistcoat of the finest silk, embroidered with delicate patterns that seem to shift in
+      lamplight. It radiates gentle warmth.
+    slot: body
+    armor: 6
+    level: 18
+    tier: common
+    archetype: armor
+    image: dacc8a8f7dcb0817171832e827667c25dbae15141a4ff68964dadacfdfa0c65c.png
+    keyword: silk_waistcoat
+  button_eye_monocle:
+    displayName: Button-Eye Monocle
+    description: A brass monocle with a genuine button eye set at its center, granting clarity of vision and perception to
+      those who wear it.
+    slot: head
+    level: 18
+    tier: common
+    archetype: armor
+    armor: 3
+    image: 5d6bd462fbb9d520683d8aed6daf1fa84c7082498d6b9c4e12bde700c3f99bf8.png
+    keyword: button_eye_monocle
+  embroidered_gloves:
+    displayName: Embroidered Gloves of Fine Work
+    description: Delicate gloves of cotton batting embroidered with intricate patterns, allowing the wearer to handle
+      fragile items and perform detailed work with enhanced precision.
+    slot: hands
+    level: 18
+    tier: common
+    archetype: armor
+    armor: 3
+    image: f57ac904710dbcb79bd54d405ec37918c961f0796e9e4b539423ea93b5cf6679.png
+    keyword: embroidered_gloves
+  dreamwater_blade:
+    displayName: Crystallized Dreamwater Sword
+    description: A weapon formed from solidified dreamwater that shimmers with impossible colors, its edge never dulling
+      despite its ethereal composition.
+    slot: weapon
+    damage: 3
+    level: 18
+    tier: common
+    archetype: damage
+    image: 680efc2dd3ccc69ff1e88b8c3c1a3a72bb018f5253160d5d287cff1bae360fdc.png
+    keyword: dreamwater_blade
+  memory_bloom_crown:
+    displayName: Crown of Memory-Bloom
+    description: A delicate circlet woven from living memory-bloom vines, luminescent flowers still growing from its
+      structure. It imparts wisdom of the past.
+    slot: head
+    level: 18
+    tier: common
+    archetype: armor
+    armor: 3
+    image: 3886b8c193ca8774dd0ad606503c7dc0d43e4a90af7a4668bd509fd9bd911665.png
+    keyword: memory_bloom_crown
+  beaver_sweep_broom:
+    displayName: Beaver-Keeper's Broom
+    description: A perfectly balanced broom of diminutive size, somehow capable in the hands of one of normal stature. It
+      seems to understand the importance of order.
+    slot: weapon
+    damage: 3
+    level: 18
+    tier: common
+    archetype: damage
+    image: 9af276b730c785aeb1dd65daa7159c4c049d42906198d555d50f6a8715108985.png
+    keyword: beaver_sweep_broom
+  velvet_cloak_noble:
+    displayName: Noble's Velvet Cloak
+    description: A sweeping cloak of fine velvet in deep jewel tones, lined with silk that whispers with each movement. It
+      marks the wearer as one of refined taste.
+    slot: body
+    armor: 6
+    level: 18
+    tier: common
+    archetype: armor
+    image: 01ff0dd52c3c67134429845405166548b0c9d66876f460b68bb392b39b6d4563.png
+    keyword: velvet_cloak_noble
+  threadbare_journal:
+    displayName: Threadbare Dream Journal
+    description: A leather-bound journal whose pages seem to contain memories and moments from Stuffiesburg's cherished
+      existence. Reading from it brings strange comfort and clarity.
+    stats:
+      WIS: 1
+      INT: 2
+    image: 5e1d83db436f3c116d76bff367ff61117d96d9690ec3201b05e9f4d0634152fe.png
+    keyword: threadbare_journal
+  lavender_sachet:
+    displayName: Lavender Sachet of Nostalgia
+    description: A small sachet of finest linen filled with dried lavender and the essence of childhood memory. Its scent
+      carries the comfort of beloved things long cherished.
+    stats:
+      CHA: 1
+      WIS: 1
+    image: edd97ac074ff2d5e0a54e88692c681da62913e896c5ea69767fceaf9998869fe.png
+    keyword: lavender_sachet

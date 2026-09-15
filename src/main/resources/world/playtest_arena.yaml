@@ -1,0 +1,30 @@
+zone: playtest_arena
+startRoom: arena_entry
+rooms:
+  arena_entry:
+    title: PvP Checkpoint - Zone Boundary Test
+    description: A circular gatehouse of black stone and crimson pennants marks the exact point where polite disagreement
+      becomes mechanically meaningful. Painted footprints on the floor helpfully suggest where duelists ought to stand
+      for maximum drama.
+    exits:
+      n: duel_dust_bowl
+      w: auringold_academy:nightmare_cellar
+    features:
+      pvp_warning_sign:
+        type: SIGN
+        displayName: the PvP warning sign
+        keyword: sign
+        text: This zone has PvP enabled. Test open PvP stats, duels, and all the consequences of theatrical overconfidence.
+    image: c102758bf925337446f9fca3cc8b735fe37ecbf3bd0d519814f2de1fbf1ceac6.jpg
+  duel_dust_bowl:
+    title: Duel Dust Bowl - PvP and Duel Test
+    description: A sandy ring under tall red banners, with bleachers shaped like grinning skulls and a gong bigger than a
+      carriage wheel. Every gust of wind kicks up glittering dust that makes even nervous combatants look legendary.
+    exits:
+      s: arena_entry
+    image: 98c3ee3abfb74fcb918631c9c4c0c694a81ad3cf1873bc87023df132ae8cf97e.jpg
+pvpEnabled: true
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png

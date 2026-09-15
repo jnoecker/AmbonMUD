@@ -1,0 +1,487 @@
+zone: toybox_ocean
+startRoom: the_shallows_of_soft_awakening
+rooms:
+  the_shallows_of_soft_awakening:
+    title: The Shallows of Soft Awakening
+    description: Crystal-clear water laps gently against shores of pale sand, where the first toys of the Toybox Ocean drift
+      like memories made tangible. Above, the sky holds the perpetual twilight of a child's half-sleep, painted in
+      lavenders and soft golds.
+    exits:
+      e: rubber_duck_congregation
+      n: pixel_haven:sea_shore
+    image: fe75061b375db0a6f84bba4270fd63753337bd44ded16580c37c9a218d52e48e.jpg
+  rubber_duck_congregation:
+    title: Rubber Duck Congregation
+    description: Dozens of cheerful yellow ducks bob in an eternal, gentle circle, their fixed grins catching the
+      dream-silver light as bioluminescent fish dart beneath them. The air carries the faint squeak of rubber against
+      water, like a lullaby in miniature.
+    exits:
+      w: the_shallows_of_soft_awakening
+      e: the_painted_sailing_fleet
+    image: a892042d36e3b1f648698eea986bfa82249cc22dd2c28714a8f87b6980f5b825.jpg
+  the_painted_sailing_fleet:
+    title: The Painted Sailing Fleet
+    description: "Wooden ships with intricate painted sails—some bearing childish scrawls, others masterfully detailed—drift
+      in slow procession through luminous waters. Their tiny holds overflow with forgotten treasures: marbles, button
+      collections, and rolled parchment maps of imaginary lands."
+    exits:
+      w: rubber_duck_congregation
+      n: tin_soldier_s_orderly_march
+      s: the_yarn_ball_maelstrom
+    image: 9625af2da330c4cb333913c205cfcb8b87dbeddfcdcfa10b4f59a74742720f4a.jpg
+  tin_soldier_s_orderly_march:
+    title: Tin Soldier's Orderly March
+    description: Hundreds of lead soldiers stand perpetually at attention upon miniature rafts, their painted uniforms
+      immaculate despite centuries in these salt-touched waters. They face in perfect formation toward a horizon only
+      they seem to understand.
+    exits:
+      s: the_painted_sailing_fleet
+      e: the_music_box_cathedral
+    image: b59a137b185db0a9b13c1010727c4db77eb7ae8983dac6d60a4203ff0d2ede81.jpg
+  the_yarn_ball_maelstrom:
+    title: The Yarn Ball Maelstrom
+    description: Tangles of rainbow-colored yarn drift in slow, hypnotic spirals, their unwound ribbons trailing through the
+      water like the brushstrokes of a dreaming artist. The currents here seem guided by pure whimsy rather than
+      physics.
+    exits:
+      n: the_painted_sailing_fleet
+      w: bioluminescent_nursery
+    image: 1604a0f272cd5e97bc58f832fbc65fa1028e4636e0891ef4abee43de2573e61b.jpg
+  the_music_box_cathedral:
+    title: The Music Box Cathedral
+    description: A vast collection of ornate music boxes—their mechanisms impossibly unrusted—rests upon beds of coral and
+      pearl, playing overlapping melodies in minor keys that seem to synchronize with the ocean's breathing. The
+      combined lullabies create an almost hypnotic effect.
+    exits:
+      w: tin_soldier_s_orderly_march
+      e: the_dolphin_passage
+      s: the_toy_train_s_eternal_route
+    image: 9eee7d2734e22ea20d007a95a0fd34cdf26102434a70c35969fa1ed0074880c2.jpg
+  the_dolphin_passage:
+    title: The Dolphin Passage
+    description: Sleek, knowing dolphins with eyes far too intelligent for mere animals glide through shafts of luminous
+      light, weaving between floating toys as though partners in an ancient, unspoken dance. Their presence brings the
+      collected toys into synchrony.
+    exits:
+      w: the_music_box_cathedral
+      e: the_doll_house_district
+      s: the_toy_soldier_s_garrison
+    image: c0da0a9ab7708887bd2abf872bcca8c6bcc04e6204f13bee9d646702c9b9bc57.jpg
+  bioluminescent_nursery:
+    title: Bioluminescent Nursery
+    description: Schools of iridescent fish with mother-of-pearl scales create constellations of soft light as they nuzzle
+      against toy boats and wooden blocks, leaving trails of crystalline luminescence in the water. Here, toys and
+      creatures exist in perfect harmony.
+    exits:
+      e: the_yarn_ball_maelstrom
+    image: f95d1d46d925e7e4900b38b79d78e071c477328333d25c0215e87b132b82678a.jpg
+  the_doll_house_district:
+    title: The Doll House District
+    description: Countless miniature mansions and playhouses cluster together on the ocean floor, their windows glowing with
+      an inner light as though inhabited by the smallest dreams. Occasionally, a current shifts them into new
+      configurations, as though rearranging themselves in sleep.
+    exits:
+      w: the_dolphin_passage
+      n: building_block_towers
+    image: 5ebf557100747d30c77f0e01478a65de44385ee47ecad33448d48dbfeef7d67a.jpg
+  building_block_towers:
+    title: Building Block Towers
+    description: Monumental structures of oversized wooden and plastic blocks rise impossibly from the seafloor, some stable
+      and architecturally sound, others precariously balanced as though waiting for a gentle nudge. Bioluminescent
+      creatures circle them like moths around flame.
+    exits:
+      s: the_doll_house_district
+    image: c33414d1af87f4d0383a5c7a1c5a0139ea14824adfca2ae677672275805cfe1d.jpg
+  the_toy_soldier_s_garrison:
+    title: The Toy Soldier's Garrison
+    description: A fortified position of tin soldiers and miniature cannons guards a cache of painted treasures—lead horses,
+      gilded crowns, and ornamental shields—as though defending a kingdom made of dreams. Their painted eyes never
+      waver.
+    exits:
+      n: the_dolphin_passage
+      e: marble_gardens
+      w: the_toy_train_s_eternal_route
+    image: bc0d3ac83eafcd0892b982ee5c970e44784e60c3ffff03a83fa9bebbcb93e59c.jpg
+  marble_gardens:
+    title: Marble Gardens
+    description: Countless glass marbles in jewel tones rest in gentle drifts across the seafloor, their surfaces catching
+      and bending light into fractured rainbows. Occasionally one rolls with purpose, guided by currents that seem
+      almost sentient.
+    exits:
+      w: the_toy_soldier_s_garrison
+      e: the_puppet_theater
+      s: porcelain_doll_sanctuary
+    image: 5c165438183bf4311e96ae50bd9d0f1d034eb43000e944a4f865bbc3627c231b.jpg
+  the_puppet_theater:
+    title: The Puppet Theater
+    description: A grand puppet stage floats amidst the waters, its velvet curtains billowing like living things as
+      countless stringed puppets dance in the currents. Despite the salt and time, their wooden faces remain expressive,
+      almost watchful.
+    exits:
+      w: marble_gardens
+      s: the_leviathan_s_rest
+      n: the_board_game_archives
+    image: bbfcff512fd8bdd296d98c2d41b0f0cc3eaf8b91002afb1723ab5f20167576bf.jpg
+  the_toy_train_s_eternal_route:
+    title: The Toy Train's Eternal Route
+    description: An intricate network of miniature railroad tracks winds through the water, carrying a perpetually moving
+      toy train whose painted cars reflect the dream-silver light. It circles endlessly, its whistle a tinkling sound
+      that echoes through the depths.
+    exits:
+      e: the_toy_soldier_s_garrison
+      n: the_music_box_cathedral
+    image: 191c33022fe0de5265690c1e853a418ef406a0b79ccdde24ec419180057ee1a2.jpg
+  porcelain_doll_sanctuary:
+    title: Porcelain Doll Sanctuary
+    description: Delicate porcelain dolls drift in slow spirals, their painted eyes somehow both vacant and profoundly
+      aware, their lace dresses billowing like the gowns of underwater nobility. Each carries an aura of forgotten
+      affection.
+    exits:
+      n: marble_gardens
+      w: the_whistle_valley
+    image: 8f80c8e25d2a5e8e3c90ea6ce891c645a41449acd0dce8b15ec526a00023a8cf.jpg
+  the_leviathan_s_rest:
+    title: The Leviathan's Rest
+    description: In the deeper waters, a gentle giant of impossible size drifts through shafts of crystalline light, its
+      body encrusted with smaller toys and benign creatures. It seems less an animal than a living island, regarding all
+      with ancient, patient approval.
+    exits:
+      n: the_puppet_theater
+      s: carousel_of_wooden_horses
+      e: the_kite_field
+    image: bf263f0b7cf95f54c8d0e3872f9c51fbb85c4d0353d751b70e87a8374af5a28c.jpg
+  carousel_of_wooden_horses:
+    title: Carousel of Wooden Horses
+    description: A magnificent carousel, paint faded but still beautiful, spins in slow eternal rotation, its hand-carved
+      horses reaching forever toward unreachable heights. Smaller toys orbit it like satellites around a star.
+    exits:
+      n: the_leviathan_s_rest
+      s: the_rocking_horse_stables
+    image: 1b8fe7be32f04d1f628fdf114f288f53b290b46a3e883d7a4296dcc80e935be7.jpg
+  the_kite_field:
+    title: The Kite Field
+    description: Tattered kites and paper birds drift in graceful spirals through currents only childhood memories can
+      understand, their strings trailing colors that shouldn't exist underwater. They move as though still caught in
+      summer winds.
+    exits:
+      w: the_leviathan_s_rest
+      s: the_jackstone_labyrinth
+      e: crystal_ball_grove
+      n: spinning_top_cyclone
+    image: 4ee9fb89d0baf3d079c75223dc9fc91e0b007a8c72ed002599f36e7818c2f5df.jpg
+  the_jackstone_labyrinth:
+    title: The Jackstone Labyrinth
+    description: Tiny metal jacks are scattered across the seafloor in intricate patterns, arranged almost deliberately into
+      a vast maze that shifts subtly with each passing hour. Finding a path through them requires patience or intuition.
+    exits:
+      n: the_kite_field
+      s: button_beach
+    image: b7713d92abb939d89326e60ff7e23bc2400f7fa600ecd5201131b6dd1d6e9fe5.jpg
+  crystal_ball_grove:
+    title: Crystal Ball Grove
+    description: Smooth, spherical glass balls of all sizes rest among coral formations, each containing captured swirls of
+      color and light that shift like slow-motion galaxies. Some whisper secrets if one listens closely enough.
+    exits:
+      w: the_kite_field
+      s: the_tea_set_district
+      n: the_deep_dream_s_heart
+    image: 0091b194775d1da6879e89992a699895e3803e8e31f8ea10b16ef6b31eea5a37.jpg
+  the_whistle_valley:
+    title: The Whistle Valley
+    description: A collection of tin whistles and wind instruments creates an ever-changing melody as the ocean currents
+      pass through them, producing tones both haunting and comforting. The sound seems to guide lost souls toward
+      wonder.
+    exits:
+      e: porcelain_doll_sanctuary
+    image: 7929f6b8dab35417cda94769843bca6624bd1bd96037c6dcb04997fe08cb25eb.jpg
+  button_beach:
+    title: Button Beach
+    description: Miles of colorful buttons—bone, mother-of-pearl, glass, and wood—create a glittering floor that catches
+      light like a terrestrial constellation. They shift slowly with the tides, revealing new patterns each day.
+    exits:
+      n: the_jackstone_labyrinth
+      w: the_rocking_horse_stables
+    image: 776a4fcea4d0d88899b7a3056ff4ee469e274146369b05ae0484e86e87b33982.jpg
+  the_tea_set_district:
+    title: The Tea Set District
+    description: Delicate porcelain tea sets rest upon sunken tables, their cups and saucers arranged as though awaiting
+      guests who will never arrive. The sight carries a melancholy beauty, a frozen moment of childhood hospitality.
+    exits:
+      n: crystal_ball_grove
+    image: d5946b6e0720a23fc2a204efa00aadd1fb45327cb26841531cf199738141e1af.jpg
+  spinning_top_cyclone:
+    title: Spinning Top Cyclone
+    description: Dozens of colorful spinning tops whirl in an eternal vortex, their momentum never slowing, their patterns
+      hypnotic to observe. The water around them shimmers with residual energy.
+    exits:
+      s: the_kite_field
+      n: the_dice_cove
+    image: 632e8e6dae197ec31cf9566c791d9fcc885c3722141914ded5fafffecef3fc45.jpg
+  the_rocking_horse_stables:
+    title: The Rocking Horse Stables
+    description: Worn but lovingly crafted wooden rocking horses are mounted on posts along the seafloor, eternally posed in
+      mid-gallop, their manes and tails flowing with the current as though caught mid-stride. They seem almost alive.
+    exits:
+      e: button_beach
+      n: carousel_of_wooden_horses
+    image: a73cadf45bb1ed8ec882fea61dbce30956c65ad368c1f648ca5355bbf799f96b.jpg
+  the_dice_cove:
+    title: The Dice Cove
+    description: Countless dice and gaming tokens scatter across shallow banks, their numbers and symbols somehow still
+      crisp despite their submersion. Occasionally one catches a current and tumbles—always landing on a new face.
+    exits:
+      s: spinning_top_cyclone
+      n: the_balloon_ascension
+      w: the_board_game_archives
+    image: 226521c1773a8ccb15846bb9d5a98005efb3d4993b6f7ed06dccfba34513da22.jpg
+  the_balloon_ascension:
+    title: The Balloon Ascension
+    description: Helium-filled toy balloons, impossibly still inflated after centuries, float upward in defiance of the
+      ocean's weight, tethered to small toys below by weathered strings. They create a surreal forest reaching toward
+      the surface.
+    exits:
+      s: the_dice_cove
+      w: the_harmonica_cavern
+    image: c336162df126960c95b957413edf5ccea31677e328285451cf81b6520245c879.jpg
+  the_harmonica_cavern:
+    title: The Harmonica Cavern
+    description: A natural cavern resonates with the songs of countless tiny harmonicas, their melodies mingling into a
+      haunting symphony that seems to originate from the stone itself. The sound creates visible ripples in the water.
+    exits:
+      e: the_balloon_ascension
+      s: the_board_game_archives
+    image: 0b0a2c93168f3611ef4ff1e660718090a79fe285dbf4e3b1de629f896d4e47d3.jpg
+  the_board_game_archives:
+    title: The Board Game Archives
+    description: Waterlogged but still recognizable board games rest upon sediment floors, their pieces arranged mid-game as
+      though awaiting players from another age. Each board tells a different story of childhood imagination.
+    exits:
+      n: the_harmonica_cavern
+      e: the_dice_cove
+      s: the_puppet_theater
+    image: 9ea381f6184e5bba23f3d097b01bae008d67781b8e7838f37d2e29c3d8a968c3.jpg
+  the_deep_dream_s_heart:
+    title: The Deep Dream's Heart
+    description: At the very bottom of this realm lies a chamber where all the currents converge, where the toys seem to
+      glow brightest and move with the most obvious purpose. Here, the boundary between dream and reality feels
+      gossamer-thin.
+    exits:
+      s: crystal_ball_grove
+    image: 140368d57d1af054c0123a4ba2a7cc66824569ec71f44598903fcdf1e31a7e3d.jpg
+lifespan: 30
+levelBand:
+  min: 8
+  max: 9
+difficultyHint: casual
+image:
+  room: 785598dc3d02f4ef26b75dfa1dcfe6ac1e3089ed395528b2f975dfa371af18ae.jpg
+  mob: 5f8eb8cd346934dd10cb15f2ea4cb51d6e9addeb786e4f78d5fc5ebfde23e7c1.png
+  item: 549c83c92125bcb02d6258845d5be09ae6b6efe48aa938bb5d290989fd83f4f1.png
+mobs:
+  dream_dolphin:
+    name: Dream Dolphin
+    description: A sleek cetacean with eyes of impossible intelligence, its hide shimmering with bioluminescent patterns
+      that spell out half-forgotten memories. It moves with purpose through the toy-strewn waters.
+    tier: standard
+    spawns:
+      - room: the_dolphin_passage
+    level: 8
+    image: adad6fb03803823e0efc80d8ebea9c00e19f9dc5db39434f9470b6496199a9ce.png
+  pearl_fish_school:
+    name: School of Pearl Fish
+    description: A coordinated swarm of iridescent fish with mother-of-pearl scales, moving as a single luminous organism.
+      Their scales refract light into dreams made visible.
+    tier: weak
+    spawns:
+      - room: bioluminescent_nursery
+    level: 8
+    image: b42f10e704753a461a840cd735b0b48ecffb48e298e19f83538363989cc2f087.png
+  tin_soldier_captain:
+    name: Tin Soldier Captain
+    description: An animated lead soldier of impressive size, painted in regalia that gleams despite centuries underwater.
+      It commands the other toys with a presence that transcends its diminutive form.
+    tier: standard
+    spawns:
+      - room: the_toy_soldier_s_garrison
+    level: 8
+    image: 84254b153570e7108cc5765339407089f3f5a5bbe85e0e5dcf115bcf4b3bcd2d.png
+  gentle_leviathan:
+    name: Gentle Leviathan
+    description: A creature of impossible size drifting through the depths, its body an island unto itself, encrusted with
+      toys and smaller creatures. Its eyes hold the warmth of ancient approval.
+    tier: elite
+    spawns:
+      - room: the_leviathan_s_rest
+    level: 8
+    image: 0dc487c7404f894d4b64e515db807a201f020baf797068e16ff194c1b9452620.png
+  porcelain_guardian:
+    name: Porcelain Doll Guardian
+    description: A life-sized porcelain doll animated by dream-logic, its painted eyes watchful and knowing. Despite its
+      fragile appearance, it moves with unsettling grace and purpose.
+    tier: standard
+    spawns:
+      - room: porcelain_doll_sanctuary
+    level: 8
+    image: 1412bb2111f2983f8a468edcdf19389d99d8e316d3e75895f0d787390168ffad.png
+  carousel_spirit:
+    name: Spirit of the Carousel
+    description: An ethereal presence that manifests around the spinning carousel, its form indistinct but unmistakably
+      present. It spins with the horses in an eternal waltz.
+    tier: elite
+    spawns:
+      - room: carousel_of_wooden_horses
+    level: 8
+    image: 3c973cbb405d7c85e6c5d64fa6eae02861e3ea8335945ec736dae04828480794.png
+  music_box_choir:
+    name: Music Box Choir
+    description: A chorus of animated mechanisms that spring to life simultaneously, their melodies interweaving into
+      complex harmonies. They exist as both individual toys and a unified consciousness.
+    tier: weak
+    spawns:
+      - room: the_music_box_cathedral
+    level: 8
+    image: 98ce575565c52e81f9be44c483f008de14070dfbb89fcd9db06787ba0525590d.png
+  spinning_top_vortex:
+    name: Spinning Top Vortex
+    description: A sentient cyclone of wooden and metal tops, their combined spin creating a hypnotic maelstrom. To witness
+      it is to glimpse pure motion given form.
+    tier: standard
+    spawns:
+      - room: spinning_top_cyclone
+    level: 8
+    image: 820f04600264ed3a20e33a29c1313485f7b1679fcf13b1b5ab7f91e5b2261994.png
+  rocking_horse_phantom:
+    name: Rocking Horse Phantom
+    description: A worn wooden horse that moves with increasing animation, its painted eyes seeming to focus and its mane
+      flowing with purposeful grace. It rocks eternally, as though ridden by invisible hands.
+    tier: weak
+    spawns:
+      - room: the_rocking_horse_stables
+    level: 8
+    image: b88e7e054ff0c4164bd804fac9ef424e0878db2874cde72519e10907c74c2113.png
+  dream_architect:
+    name: Dream Architect
+    description: A presence that moves between the doll houses and block towers, rearranging them with unseen hands. Its
+      work is intricate and purposeful, creating new configurations of play.
+    tier: standard
+    spawns:
+      - room: the_doll_house_district
+    level: 8
+    image: 720e55fc6e8ac415a87f4130c2c3478680962dcb61e0ea07ceda94416b874426.png
+  harmonica_voice:
+    name: Harmonica's Voice
+    description: A melodious entity formed from the echoes of countless tiny harmonicas, its song both mournful and
+      comforting. It resonates from the stone itself.
+    tier: weak
+    spawns:
+      - room: the_harmonica_cavern
+    level: 8
+    image: 708653e94c201c74902492389eba0655b3815b1400a3b7e017e732fbf963b6c7.png
+  deep_dream_sentinel:
+    name: Deep Dream's Sentinel
+    description: A towering guardian composed of crystallized dream-matter and toy fragments, posted at the convergence of
+      all currents. Its presence both welcomes and warns.
+    tier: boss
+    spawns:
+      - room: the_deep_dream_s_heart
+    level: 9
+    image: 96629a80a924a16098ee42898ccd5426b457244883fccd5fa71f7d5e61dccbfc.png
+items:
+  rubber_duck_charm:
+    displayName: Cheerful Rubber Duck
+    description: A well-worn yellow duck with a fixed grin, somehow still soft and squeaky despite its time in saltwater.
+      Touching it fills the heart with inexplicable joy.
+    slot: head
+    room: rubber_duck_congregation
+    level: 8
+    tier: common
+    archetype: armor
+    armor: 3
+    image: d88df4355696b3ffaddeeb5125a5d91ba12f3055776eef7738a5a6397a0878af.png
+    keyword: rubber_duck_charm
+  painted_wooden_sword:
+    displayName: Painted Wooden Sword
+    description: A child's toy sword with faded but beautiful paint depicting noble battles. Though made of wood, it feels
+      surprisingly balanced and purposeful.
+    slot: weapon
+    damage: 3
+    room: the_painted_sailing_fleet
+    level: 8
+    tier: common
+    archetype: damage
+    image: 6311049c7f3a30e228c0f2fbfa84e45686a43f041c2fa1c500f7cc95e74fc4c7.png
+    keyword: painted_wooden_sword
+  tin_soldier_badge:
+    displayName: Tin Soldier's Badge
+    description: A small but pristine military insignia that somehow survived the ocean's corrosion. Wearing it makes one
+      feel stood taller and more resolute.
+    slot: body
+    room: tin_soldier_s_orderly_march
+    level: 8
+    tier: common
+    archetype: armor
+    armor: 6
+    image: ea127d5a35473e1d1e5cdf9a494dec8ad998c1ac0a9cc6824f02c3b4e498c6b5.png
+    keyword: tin_soldier_badge
+  rainbow_yarn_cord:
+    displayName: Rainbow Yarn Cord
+    description: A length of impossibly soft yarn in shifting colors that seem to change depending on the light. Perfect for
+      binding or adorning, it carries the essence of playful creation.
+    room: the_yarn_ball_maelstrom
+    image: d3184a5435423fa95f0b6ec445c99f5be9cc2a6b84839c333ae953c14fb12cc3.png
+    keyword: rainbow_yarn_cord
+  music_box_lullaby:
+    displayName: Crystallized Lullaby
+    description: A small music box mechanism that plays a haunting, beautiful melody when touched. The sound seems to calm
+      even the most turbulent mind.
+    stats:
+      WIS: 2
+    room: the_music_box_cathedral
+    image: 57550384bf9a0adc632a82ce818895d9e9e56243f29dd41b762ab9a1fba568cf.png
+    keyword: music_box_lullaby
+  mother_pearl_scale:
+    displayName: Mother-of-Pearl Fish Scale
+    description: An iridescent scale from a bioluminescent fish, smooth and cool to the touch. It catches light and refracts
+      it into patterns that tell stories.
+    stats:
+      INT: 1
+    room: bioluminescent_nursery
+    image: 40cf283fbb7d10e50a968f86d388f9a5ae66fa0b07f2e61f350555164812d64c.png
+    keyword: mother_pearl_scale
+  marble_of_wishes:
+    displayName: Wishing Marble
+    description: A perfectly spherical glass marble containing swirls of color that seem to move independently. Legend says
+      it grants clarity to those who hold it and contemplate their desires.
+    stats:
+      WIS: 3
+    room: marble_gardens
+    image: 9dd3a326c71c588c9716836834577942ac455165f9e3f25925ad3bba8d4894f6.png
+    keyword: marble_of_wishes
+  porcelain_doll_hand:
+    displayName: Delicate Porcelain Hand
+    description: A perfectly preserved tiny porcelain hand, painted with intricate detail and adorned with a small ring.
+      Holding it evokes memories of gentle affection.
+    slot: hands
+    room: porcelain_doll_sanctuary
+    level: 8
+    tier: common
+    archetype: armor
+    armor: 3
+    image: bfd60f220201cecbc1efb45986c3e26d7fe90c392bdf72bc9bca7ced2e1057be.png
+    keyword: porcelain_doll_hand
+  carousel_horse_figurine:
+    displayName: Miniature Carousel Horse
+    description: A hand-carved wooden horse from the eternal carousel, still bearing traces of gilt paint. It seems to want
+      to gallop, even in rest.
+    stats:
+      DEX: 2
+    room: carousel_of_wooden_horses
+    image: 7ff27153750e626a75d1521eaae03136f46227382a3a8348b561986f8ccf7259.png
+    keyword: carousel_horse_figurine
+  button_collection:
+    displayName: Collection of Precious Buttons
+    description: A small pouch containing the most beautiful buttons from the Button Beach—mother-of-pearl, bone, and glass
+      in jewel tones. Together they create something more than the sum of their parts.
+    room: button_beach
+    image: 03a1f675849b7f43f4d889ceac4527a5220d0159dd8145001aa4b5319237c155.png
+    keyword: button_collection

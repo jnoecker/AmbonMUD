@@ -1,0 +1,401 @@
+zone: wesley
+startRoom: palace_entrance
+rooms:
+  palace_entrance:
+    title: Grand Treehouse Palace Entrance
+    description: Massive wooden gates carved with intricate dinosaur reliefs stand before you, guarded by the scent of honey
+      and ancient wood. A rope bridge sways gently toward the palace proper, suspended between colossal trees that seem
+      to touch the clouds.
+    exits:
+      n: main_atrium
+      e: east_garden
+      w: west_garden
+      s: wesleyalis:hallway_west
+    image: d475a5137789911514eb2811d1d8eb0367516853244129991e0db3ae6977d716.jpg
+  main_atrium:
+    title: Palace Main Atrium
+    description: Sunlight filters through leaves above, illuminating a vast central chamber carved from living wood. The
+      walls are lined with magnificent paintings of dinosaurs and ancient beasts, some of which seem to move when you're
+      not looking directly at them.
+    exits:
+      s: palace_entrance
+      e: east_corridor
+      w: west_corridor
+      u: upper_gallery
+      n: throne_room
+    image: 8ec53d8c68ba9dee048c608a08b851d84b234cfd68c3af9e6fbee9e26b1c7625.jpg
+  throne_room:
+    title: King Wesley's Throne Room
+    description: A magnificent chamber crowned with a natural dome of interwoven branches. The throne itself is carved from
+      petrified wood, decorated with gemstones that glimmer like dinosaur eyes. Behind it, a massive painting of Wesley
+      as a great king hangs proudly.
+    exits:
+      s: main_atrium
+      n: art_museum_main
+      w: war_room
+    image: 8cd642789f13abfc3fa23097672bb34370ab0534a727d834b2980185b3a32537.jpg
+  royal_chambers:
+    title: Royal Sleeping Chambers
+    description: A cozy room suspended among the trees, with a bed of woven vines and soft moss. Sketches and drawings cover
+      the walls—some showing dinosaurs, others depicting fantastical creatures the young king has imagined into being.
+    exits:
+      s: zen_garden
+      u: observation_deck
+    image: 6fe7db19c16dabed28276374047a1430c7fb2bd57a9f7c77af0f5c0f01e60572.jpg
+  treasury_vault:
+    title: Hidden Treasury Vault
+    description: A secure chamber hidden beneath the royal chambers, filled with golden honey jars and gemstones. Ancient
+      lock mechanisms fashioned like dinosaur teeth guard the wealth of the kingdom.
+    exits:
+      n: sketch_chamber
+    image: 3468715be49b50e932723c1a80cbcd25953d286b96c657c59da5e72448f4af0f.jpg
+  art_museum_main:
+    title: Art Museum Grand Hall
+    description: The heart of Wesley's artistic legacy—walls lined with hundreds of enchanted paintings that shimmer with
+      life. Creatures depicted in oils and pigments sometimes step from their frames to walk the polished wooden floors.
+    exits:
+      n: portrait_wing
+      s: throne_room
+      e: library_tower
+    image: 689abbfc6a87fe2b4622ffd75476e8db314aed5b12ad3975b98dd501edeca7ce.jpg
+  upper_gallery:
+    title: Upper Gallery Overlook
+    description: A suspended walkway offering a bird's-eye view of the palace grounds. Paintings hang from invisible
+      threads, and you can hear the distant calls of dinosaurs echoing through the forest below.
+    exits:
+      d: main_atrium
+    image: 32e6ad525e2b70257f4e5018da0ca776c39a982edb1e3e8f9e931ae568b0b14f.jpg
+  portrait_wing:
+    title: Portrait Wing of Dreams
+    description: Gallery walls showcase enchanted portraits of legendary creatures—rex-headed titans, flying pterosaurs with
+      pearl-white wings, and creatures that exist only in dreams. Some paintings breathe softly as you pass.
+    exits:
+      s: art_museum_main
+      e: beast_corridor
+      w: sketch_chamber
+      n: zen_garden
+    image: 99ac6bb883ef18233a357e8e51457aa6c8d0d17029fadacfdbd326ef751a788e.jpg
+  beast_corridor:
+    title: Corridor of Living Beasts
+    description: A narrow hallway where painted kaiju and colossal dinosaurs seem to lean from their frames. The air tingles
+      with enchantment, and faint roars echo as if the creatures might break free at any moment.
+    exits:
+      w: portrait_wing
+      n: painted_lair
+    image: 50ac4fc6ddf0ce149b40a02024988693cbcfff22edbc902fe35e3339fe281c00.jpg
+  painted_lair:
+    title: The Painted Lair
+    description: A cavernous chamber where Wesley's most powerful artistic creations dwell. A massive painted T-Rex stands
+      in the center, its scales shimmering with magical pigment, while smaller painted creatures circle it respectfully.
+    exits:
+      s: beast_corridor
+    image: cf94f17175c7b1fbcbdfcddea11b387208a369ba86587ba2f8c5fcafe9ea8bd6.jpg
+  sculpture_garden:
+    title: Sculpture Garden of Stone
+    description: A serene garden where carved stone dinosaurs and fantastical beasts rest among living plants. Some statues
+      are so lifelike you have to remind yourself they're made of rock, not flesh and bone.
+    exits:
+      s: tea_garden
+      e: war_room
+    image: 038f73b871b910a142134bff7ff1b18a0957ab49611604b37ac5636dfe57b646.jpg
+  zen_garden:
+    title: Peaceful Zen Garden
+    description: A tranquil space with stone paths winding through moss and ferns. A small pond reflects the sky, and stone
+      carvings of peaceful creatures create an atmosphere of calm contemplation.
+    exits:
+      s: portrait_wing
+      n: royal_chambers
+    image: bb8a4ee4a60034ff2c6700bb5bc8064df200c1749754691b4f38f881b53ab875.jpg
+  sketch_chamber:
+    title: Chamber of Sketches
+    description: Walls covered floor to ceiling with charcoal and pencil drawings brought to life through magic. Simple
+      line-drawn creatures flutter about like living shadows, playful and curious.
+    exits:
+      w: artist_studio
+      e: portrait_wing
+      s: treasury_vault
+    image: 9f6492403e53d45283f1725189e187bf8794212dc9b6a48e0cb263a63c19da31.jpg
+  artist_studio:
+    title: The King's Art Studio
+    description: A sprawling workshop filled with easels, palettes, and stacks of canvas. The scent of paint and turpentine
+      mingles with honey. Brushes of every size stand in clay jars, waiting for Wesley's next masterpiece.
+    exits:
+      e: sketch_chamber
+      n: paint_storage
+    image: 7e819f365683ff39bd5773eb94a69e70e67e51fa23256b9bcb69f043756a68c8.jpg
+  paint_storage:
+    title: Paint Storage Chamber
+    description: Shelves overflow with glass jars of pigment in every hue imaginable. Some colors seem to glow with an inner
+      light, their sources drawn from rare flowers and gemstones found throughout the realm.
+    exits:
+      s: artist_studio
+    image: cbf8bc381aef371e49c8334bd1912101e9973551e55197af38de209fa05f9c69.jpg
+  east_corridor:
+    title: Eastern Palace Corridor
+    description: A long hallway with windows opening to the forest canopy. The occasional painted butterfly flutters past,
+      and you can smell the sweetness of nearby honey chambers.
+    exits:
+      w: main_atrium
+    image: 7e057122f0014c98a5806bfd6c1ad59857e17fe8efa29a5cd89248385ef34e14.jpg
+  library_tower:
+    title: Tower Library of Wonders
+    description: A spiraling chamber filled with books and scrolls detailing the kingdom's history, sketches of creatures,
+      and treatises on the art of bringing paintings to life. Soft sunlight illuminates everything with a golden glow.
+    exits:
+      w: art_museum_main
+    image: 4c0de01b1df0c7cf08957b923c255823bf3bf1c77a087f06d8795a2c06ecf684.jpg
+  observation_deck:
+    title: Observation Deck
+    description: The highest point of the palace, offering sweeping views of the prehistoric jungle below. Massive dinosaurs
+      move through the canopy, and enormous bees buzz past like golden airships.
+    exits:
+      d: royal_chambers
+    image: fea0dc8bf0674a38ccb0aac59f5daab653964ba9547bb6fbaa550f8dbc4c9649.jpg
+  tea_garden:
+    title: Peaceful Tea Garden
+    description: A serene courtyard sheltered by hanging vines and flowering trees. Stone benches overlook a trickling
+      fountain, perfect for contemplation and sipping honey-sweetened tea.
+    exits:
+      s: meditation_grove
+      n: sculpture_garden
+    image: e7cd9814cf5c86f6874f780e7eefbd07c536802a9050599599a998f242ce6fca.jpg
+  west_corridor:
+    title: Western Palace Corridor
+    description: A quieter hallway lined with smaller paintings and sketches. Skylights filter through the ornate ceiling,
+      creating moving patterns of light and shadow on the wooden floor.
+    exits:
+      e: main_atrium
+      n: war_room
+    image: f11cdf4ef7f458b62206864922477abf15ecc59d4f89d90acfe2fe6dd7990d0b.jpg
+  war_room:
+    title: The Strategic War Room
+    description: A chamber where maps of the realm and strategy boards depict the kingdom's defenses. Painted warriors stand
+      eternal guard, and a scale model of the palace demonstrates its architectural brilliance.
+    exits:
+      s: west_corridor
+      e: throne_room
+      w: sculpture_garden
+    image: 22f232d0341016836a068d029c6633441e85cb911d0884a0b3858ab0e056545a.jpg
+  east_garden:
+    title: Eastern Palace Gardens
+    description: A lush garden bursting with color, where flowers bloom in impossible shades. Peaceful minecraft creatures
+      graze among the plants, and painted butterflies dance through the air.
+    exits:
+      w: palace_entrance
+      e: dino_sanctuary
+    image: 2b0851f361620d871b7a16ec2e0c97c0f6335c2741339664b995770821a87744.jpg
+  dino_sanctuary:
+    title: Dinosaur Sanctuary
+    description: A spacious clearing where living dinosaurs roam freely, peacefully coexisting with the palace. Young
+      sauropods munch on tall plants while raptors rest in the shade, all content in this protected realm.
+    exits:
+      e: raptor_nests
+      w: east_garden
+    image: f869ecca203320e013861855b521929864326a147be0655ae5b8ecd523a76341.jpg
+  raptor_nests:
+    title: Raptor Nesting Grounds
+    description: A series of raised platforms where intelligent raptors have made their homes. The creatures watch you with
+      keen interest, their heads tilted curiously, but they mean no harm in Wesley's peaceful kingdom.
+    exits:
+      w: dino_sanctuary
+    image: 7da625eeba74eaf12cb5dbded9854b99bd1685cc41738525e90952371ac8dccd.jpg
+  west_garden:
+    title: Western Palace Gardens
+    description: A mirror to the eastern gardens, filled with different varieties of exotic plants and flowers. A small
+      stream winds through, and painted fish swim beneath its surface in defiance of logic.
+    exits:
+      e: palace_entrance
+      w: meditation_grove
+    image: 438e609bf4d22802edb2e0f986b6987991f4ce3c2034b39913f01b6982881df4.jpg
+  meditation_grove:
+    title: Sacred Meditation Grove
+    description: The westernmost sanctuary of the palace, where ancient trees create a cathedral of silence. Here, the
+      boundary between reality and dreams feels thinnest, and the air shimmers with enchantment.
+    exits:
+      e: west_garden
+      n: tea_garden
+    image: 05720f73f9a61be1be114f09340da86ba06f99ab71e1d5458bef8e562447502a.jpg
+lifespan: 30
+levelBand:
+  min: 30
+  max: 31
+difficultyHint: challenging
+image:
+  room: de58683189906db3a0cb88bd5e379f3ccd9a618718d76e1c5dfa8e1bebb8a896.jpg
+  mob: 70d8533dcad46eeecaf963f300c47dcec581da05e6586e7791e25f0130f810d4.png
+  item: 0942589da99ef6bd0fc8cbf2eef563bd302d35c46c7ebee433d4906d214b04c4.png
+mobs:
+  painted_trex:
+    name: Painted T-Rex
+    description: A massive dinosaur rendered in oils and pigment, standing twelve feet tall. Its scales shimmer with magical
+      paint, and its roar echoes with otherworldly resonance. Despite being a work of art, it moves with lifelike grace.
+    tier: elite
+    spawns:
+      - room: painted_lair
+    image: da751d8a81b81ac41dcb75266906e552f36d74cd0da78b07dd3932a76752f349.png
+    level: 31
+  sketch_sprite:
+    name: Sketch Sprite
+    description: A charcoal-drawn creature brought to life, flickering like a shadow with personality. It's small and
+      playful, made entirely of pencil lines that seem to move independently of each other.
+    tier: weak
+    spawns:
+      - room: sketch_chamber
+    image: ad13d2b238f25c97630257903dcc0f3130ec6d628f6179fe243b61a24799aea3.png
+    level: 30
+  stone_guardian:
+    name: Stone Guardian Statue
+    description: A carved dinosaur of impressive size, chiseled from gray stone with careful detail. Though technically not
+      alive, it radiates an air of watchful protection over the sculpture gardens.
+    tier: standard
+    spawns:
+      - room: sculpture_garden
+    image: 68b30d7c78c22fdc5fb9177f7231eacdf643c57dcc57e90ff99aabef930a3227.png
+    level: 31
+  clever_raptor:
+    name: Clever Velociraptor
+    description: A sleek green dinosaur with intelligent eyes and curved claws. It watches you with keen interest, tilting
+      its head as if assessing your worth. It's peaceful but clearly capable.
+    tier: standard
+    spawns:
+      - room: raptor_nests
+    image: 9a9d8f78e4bc7e7a843fd9ac99dafaadfbc42870caf88eeedec88a4db60aa10d.png
+    level: 31
+  sauropod_elder:
+    name: Ancient Sauropod
+    description: A towering herbivore with a neck that stretches impossibly high. Despite its massive size, it moves gently
+      through the sanctuary, a living monument to the age of dinosaurs.
+    tier: weak
+    spawns:
+      - room: dino_sanctuary
+    image: 60bf7e17cd203704df45aa545120e6272afa058fb470c0289953607b891b8b6f.png
+    level: 30
+  portrait_phantom:
+    name: Portrait Phantom
+    description: A creature that exists both in the painting and slightly beyond it, its form semi-translucent. It glides
+      through the portrait wing with an ethereal grace, leaving trails of shimmering paint.
+    tier: elite
+    spawns:
+      - room: portrait_wing
+    image: 13bc29f084ed2cf65bb887241cf33acaa3c84f4f68a1c879f15db1ca7e0051fc.png
+    level: 31
+  kaiju_painting:
+    name: Painted Kaiju Guardian
+    description: A colossal painted creature from Wesley's imagination, rendered in bold strokes of red and gold. It watches
+      the art museum with a protective presence, ensuring the king's creations remain safe.
+    tier: boss
+    spawns:
+      - room: art_museum_main
+    image: 363f8293e883e778618535301d2e6ff48a566572995dc314d43ddd295701fb76.png
+    level: 31
+  butterfly_swarm:
+    name: Enchanted Butterfly Swarm
+    description: Dozens of butterflies with wings of pure magic, painted into existence by the king's brush. They flutter
+      through the air in hypnotic patterns, their wings chiming softly as they fly.
+    tier: weak
+    spawns:
+      - room: east_garden
+    image: 56dabb5f3106676e7ec53d4c12c73057849aafa868e42cfdd3ed24a878d4266d.png
+    level: 30
+  warrior_painting:
+    name: Painted Warrior Spirit
+    description: A noble figure rendered in watercolor, standing with noble bearing and sword raised. Though made of pigment
+      and canvas, it radiates strength and honor, watching over the war room vigilantly.
+    tier: standard
+    spawns:
+      - room: war_room
+    image: 5ecff796bd13af504769f9d3623b2ed2c565323d46d4adbc70e685a7149c1ef1.png
+    level: 31
+  dream_echo:
+    name: Dream Echo Guardian
+    description: A shimmering presence that exists at the edge of perception, made of pure artistic imagination. It drifts
+      through the meditation grove, embodying the boundary between waking and dreaming.
+    tier: elite
+    spawns:
+      - room: meditation_grove
+    image: 6b7b04e211956d41e120b9258734a202ddb7e35dee7257338ef9c2304328bd0e.png
+    level: 31
+items:
+  crown_of_kingship:
+    displayName: Crown of Wesley's Kingship
+    description: A magnificent crown carved from petrified wood, inlaid with gemstones that gleam like dinosaur eyes. It
+      radiates an aura of natural leadership and artistic grace.
+    slot: head
+    image: 4bdcb9fa41bc100f816e24f61f7660988fc675491a71b4f9f0a23e496c775b43.png
+    keyword: crown_of_kingship
+    level: 30
+    tier: common
+    archetype: armor
+    armor: 3
+  artist_brush_sword:
+    displayName: Enchanted Artist's Brush (Sword Form)
+    description: A massive paintbrush that transforms into a elegant sword when required. Its blade is crafted from hardened
+      paint strokes, and it glows with creative energy.
+    slot: weapon
+    damage: 3
+    image: 0a69f37618c83e5d1d01a2f2ce5a3798731ea13b2934d78f7b38639081030a4b.png
+    keyword: artist_brush_sword
+    level: 30
+    tier: common
+    archetype: damage
+  honey_amber_robes:
+    displayName: Robes of Honey-Amber
+    description: Flowing robes woven from golden fabric infused with solidified honey essence. They shimmer with warmth and
+      smell faintly of sweet nectar. Wearing them fills you with contentment.
+    slot: body
+    armor: 6
+    image: 5e7e7eb5e0ede402641f8ffb4fab065510e3a98cc735c8458bbeb1102c8b5607.png
+    keyword: honey_amber_robes
+    level: 30
+    tier: common
+    archetype: armor
+  prehistoric_claw_gauntlets:
+    displayName: Dinosaur Claw Gauntlets
+    description: Gauntlets fashioned from fossilized raptor claws, bound in golden filigree. They grant impressive dexterity
+      and grip strength, as if channeling the power of prehistoric hunters.
+    slot: hands
+    image: a79455b84b03359f685372aace70ec7a29a22e11a6298052bdfb5990aadcf15b.png
+    keyword: prehistoric_claw_gauntlets
+    level: 30
+    tier: common
+    archetype: armor
+    armor: 3
+  palette_shield:
+    displayName: Artist's Palette Shield
+    description: A shield shaped like an artist's palette, with actual swirling paints moving across its surface. The colors
+      shift to deflect attacks, making it both beautiful and protective.
+    slot: weapon
+    image: 79bb0a46ddb7ca619df89ccf08d37329dcd2a1ec1257c01c43650fff7eba8753.png
+    keyword: palette_shield
+    level: 30
+    tier: common
+    archetype: damage
+    damage: 3
+  sketch_of_power:
+    displayName: Powerful Sketch (Ground Item)
+    description: A charcoal sketch on parchment depicting a mighty kaiju. Despite being merely drawn, it radiates magical
+      potential and weight, as if the creature might step off the page.
+    room: sketch_chamber
+    image: 6e70cb15ec9ceec282bcca104d839859be9a9b0d6aa5bc6bf3242e39e7f8d390.png
+    keyword: sketch_of_power
+  fossil_pendant:
+    displayName: Dinosaur Fossil Pendant
+    description: A small amber pendant containing the fossilized remains of a prehistoric creature. It's warm to the touch
+      and seems to hum with ancient wisdom.
+    room: treasury_vault
+    image: 5f11a28686f4345527ba966ea0f7e3d2d20e1442ec71bd08465cc0f97f3544fe.png
+    keyword: fossil_pendant
+  enchanted_canvas_scroll:
+    displayName: Enchanted Canvas Scroll
+    description: A scroll of magical canvas that crackles with creative energy. It's blank and waiting, ready to bring
+      whatever is painted upon it into vivid existence.
+    room: artist_studio
+    image: db62961f83588ca81981c8cd746681980f1c9bbf84aef6844d7a8d75f10403af.png
+    keyword: enchanted_canvas_scroll
+  crown_gemstone:
+    displayName: Gemstone from Wesley's Crown
+    description: A loose gemstone of impossible color, falling somewhere between emerald green and sapphire blue. It thrums
+      with power and seems to contain miniature worlds within its depths.
+    room: throne_room
+    image: c081f5b8df0196b0b5d78b98e7f2e0854f349d204975dbbb2e13290a78de2f69.png
+    keyword: crown_gemstone
