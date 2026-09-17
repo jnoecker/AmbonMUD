@@ -1131,8 +1131,12 @@ data class BundleConfig(
     val id: String? = null,
     /** Commit of the source repository the zones were exported from. */
     val worldRepoCommit: String? = null,
+    /** Whether that repository had uncommitted changes at export time. */
+    val worldRepoDirty: Boolean? = null,
     /** sha256 over the exported zone files, as the exporter computed it. */
     val worldSha256: String? = null,
+    /** sha256 over the exported config without this block, as the exporter computed it. */
+    val configSha256: String? = null,
     /** Version of the exporter that produced the bundle. */
     val arcanumVersion: String? = null,
     /** ISO-8601 export time. */
