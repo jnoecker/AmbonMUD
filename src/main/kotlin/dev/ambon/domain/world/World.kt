@@ -28,6 +28,10 @@ class World(
     recipes: List<RecipeDef> = emptyList(),
     dungeonTemplates: List<DungeonTemplateDef> = emptyList(),
     puzzleDefinitions: List<PuzzleDef> = emptyList(),
+    /** The bundle id every stamped zone file carried, or null when none was stamped. */
+    val bundleId: String? = null,
+    /** Zone files that carried no bundle id (an older export, or the bundled placeholder zones). */
+    val unstampedZones: List<String> = emptyList(),
 ) {
     private val _rooms = LinkedHashMap(rooms)
     val rooms: Map<RoomId, Room> get() = _rooms

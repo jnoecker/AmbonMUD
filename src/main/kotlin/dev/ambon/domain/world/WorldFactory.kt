@@ -20,6 +20,7 @@ object WorldFactory {
         videosBaseUrl: String = "/videos/",
         audioBaseUrl: String = "/audio/",
         factionIds: Set<String> = emptySet(),
+        expectedBundleId: String? = null,
     ): World {
         val paths = resources.ifEmpty { discoverClasspathZones() }
         if (paths.isEmpty()) throw WorldLoadException("No zone files found — classpath 'world/' directory is empty")
@@ -32,6 +33,7 @@ object WorldFactory {
             videosBaseUrl = videosBaseUrl,
             audioBaseUrl = audioBaseUrl,
             factionIds = factionIds,
+            expectedBundleId = expectedBundleId,
         )
     }
 

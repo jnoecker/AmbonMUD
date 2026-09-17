@@ -2,6 +2,11 @@ package dev.ambon.domain.world.data
 
 data class WorldFile(
     val zone: String,
+    /**
+     * Bundle id the exporter stamped on this file; null for an unstamped export. Must match the
+     * config's [dev.ambon.config.BundleConfig.id].
+     */
+    val bundle: String? = null,
     val lifespan: Long? = null,
     val startRoom: String,
     /** Whether this zone has custom graphical assets (rooms, mobs, items with real images). */

@@ -209,6 +209,7 @@ class MudServer(
             videosBaseUrl = config.videos.baseUrl,
             audioBaseUrl = config.audio.baseUrl,
             factionIds = config.engine.factions.definitions.keys,
+            expectedBundleId = config.bundle.id,
         )
     private val worldState = WorldStateRegistry(world)
     private val tickMillis: Long = config.server.tickMillis
@@ -310,6 +311,28 @@ class MudServer(
         gameMetrics.bindSchedulerPendingActions(scheduler::size)
         gameMetrics.bindSchedulerOverdueActions(scheduler::overdueSize)
         coalescingRepo?.let { gameMetrics.bindWriteCoalescerDirtyCount(it::dirtyCount) }
+        logBundle()
+    }
+
+    /**
+     * The release identity, once at boot: the bundle the config was stamped with, the bundle the zone
+     * files carry, and the engine build. Every deployment question starts here.
+     */
+    private fun logBundle() {
+        val b = config.bundle
+        val zonesBundle = world.bundleId ?: "unstamped"
+        log.info {
+            "Bundle ${b.id ?: "unstamped"}: zones $zonesBundle (${world.unstampedZones.size} unstamped)," +
+                " world ${b.worldRepoCommit ?: "-"} sha ${b.worldSha256?.take(12) ?: "-"}, arcanum ${b.arcanumVersion ?: "-"}," +
+                " exported ${b.exportedAt ?: "-"}; engine ${BuildInfo.sha}"
+        }
+        gameMetrics.bindBundleInfo(
+            bundle = b.id ?: "unstamped",
+            zones = zonesBundle,
+            world = b.worldRepoCommit ?: "unknown",
+            arcanum = b.arcanumVersion ?: "unknown",
+            engine = BuildInfo.sha,
+        )
     }
 
     private fun bindQueueMetrics() =
@@ -426,6 +449,7 @@ class MudServer(
                             videosBaseUrl = config.videos.baseUrl,
                             audioBaseUrl = config.audio.baseUrl,
                             factionIds = config.engine.factions.definitions.keys,
+                            expectedBundleId = config.bundle.id,
                         )
                     },
                     reloadChannel = reloadChannel,

@@ -39,6 +39,10 @@ RUN GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.daemon.jvmargs=-Xmx4g" \
 FROM eclipse-temurin:21-jre AS runtime
 WORKDIR /app
 
+# The build's commit, read by BuildInfo and logged beside the bundle at boot (CI passes the git SHA).
+ARG GIT_SHA=unknown
+ENV AMBONMUD_BUILD_SHA=$GIT_SHA
+
 # Non-root user for security — pin UID/GID 1001 so host volume mounts can be
 # chowned to a known ID without needing to inspect the running container.
 RUN groupadd -r -g 1001 ambonmud && useradd -r -u 1001 -g ambonmud ambonmud

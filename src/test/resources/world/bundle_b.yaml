@@ -1,0 +1,7 @@
+zone: bundle_b
+bundle: rc-2
+startRoom: hall
+rooms:
+  hall:
+    title: Hall
+    description: A hall.

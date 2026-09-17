@@ -96,6 +96,7 @@ jobs:
         run: |
           IMAGE="${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repo }}"
           docker build \
+            --build-arg GIT_SHA="${{ github.sha }}" \
             --tag "$IMAGE:${{ steps.meta.outputs.tag }}" \
             --tag "$IMAGE:latest" \
             .
