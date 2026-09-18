@@ -45,6 +45,7 @@ data class AppConfig(
     val mode: DeploymentMode = DeploymentMode.STANDALONE,
     val server: ServerConfig = ServerConfig(),
     val world: WorldConfig = WorldConfig(),
+    val bundle: BundleConfig = BundleConfig(),
     val persistence: PersistenceConfig = PersistenceConfig(),
     val login: LoginConfig = LoginConfig(),
     val engine: EngineConfig = EngineConfig(),
@@ -1118,6 +1119,31 @@ data class WorldConfig(
     val resources: List<String> = emptyList(),
     val startRoom: String? = null,
 )
+
+/**
+ * The identity of the published bundle this config belongs to, stamped by the exporter into the
+ * config and, as `bundle: <id>`, into every zone file it published alongside. All fields are
+ * optional so an unstamped export still boots; when [id] is set, every zone file that carries a
+ * bundle id must carry this one (see [dev.ambon.domain.world.load.WorldLoader]).
+ */
+data class BundleConfig(
+    /** Short identifier shared by the config and the zone files of one publish. */
+    val id: String? = null,
+    /** Commit of the source repository the zones were exported from. */
+    val worldRepoCommit: String? = null,
+    /** Whether that repository had uncommitted changes at export time. */
+    val worldRepoDirty: Boolean? = null,
+    /** sha256 over the exported zone files, as the exporter computed it. */
+    val worldSha256: String? = null,
+    /** sha256 over the exported config without this block, as the exporter computed it. */
+    val configSha256: String? = null,
+    /** Version of the exporter that produced the bundle. */
+    val arcanumVersion: String? = null,
+    /** ISO-8601 export time. */
+    val exportedAt: String? = null,
+) {
+    val isStamped: Boolean get() = !id.isNullOrBlank()
+}
 
 data class PersistenceConfig(
     val backend: PersistenceBackend = PersistenceBackend.YAML,

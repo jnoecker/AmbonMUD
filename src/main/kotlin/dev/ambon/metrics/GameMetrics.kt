@@ -499,6 +499,27 @@ class GameMetrics(
         Gauge.builder("mobs_alive") { supplier().toDouble() }.register(registry)
     }
 
+    /**
+     * `ambon_bundle_info{bundle,zones,world,arcanum,engine} 1`: the release identity as an info
+     * metric, so a scrape says which publish and which build a server runs.
+     */
+    fun bindBundleInfo(
+        bundle: String,
+        zones: String,
+        world: String,
+        arcanum: String,
+        engine: String,
+    ) {
+        Gauge
+            .builder("ambon_bundle_info") { 1.0 }
+            .tag("bundle", bundle)
+            .tag("zones", zones)
+            .tag("world", world)
+            .tag("arcanum", arcanum)
+            .tag("engine", engine)
+            .register(registry)
+    }
+
     fun bindRoomsOccupied(supplier: () -> Int) {
         Gauge.builder("rooms_occupied") { supplier().toDouble() }.register(registry)
     }

@@ -102,6 +102,7 @@ object WorldLoader {
         videosBaseUrl: String = "/videos/",
         audioBaseUrl: String = "/audio/",
         factionIds: Set<String> = emptySet(),
+        expectedBundleId: String? = null,
     ): World =
         loadFromResources(
             listOf(path),
@@ -110,6 +111,7 @@ object WorldLoader {
             videosBaseUrl = videosBaseUrl,
             audioBaseUrl = audioBaseUrl,
             factionIds = factionIds,
+            expectedBundleId = expectedBundleId,
         )
 
     fun loadFromResources(
@@ -126,6 +128,13 @@ object WorldLoader {
          * validation is skipped (tests and legacy worlds).
          */
         factionIds: Set<String> = emptySet(),
+        /**
+         * The bundle id the config was stamped with ([dev.ambon.config.BundleConfig.id]). When set,
+         * every zone file that carries a `bundle:` must carry this one; a mismatch is the skew of a
+         * config from one publish loaded with zones from another and fails the load. Null skips the
+         * comparison against the config; the zone files must still agree among themselves.
+         */
+        expectedBundleId: String? = null,
     ): World {
         val imagesBase = normalizeBaseUrl(imagesBaseUrl)
         val videosBase = normalizeBaseUrl(videosBaseUrl)
@@ -142,6 +151,7 @@ object WorldLoader {
         if (files.isEmpty()) {
             throw WorldLoadException("No zone files match the zone filter: $zoneFilter")
         }
+        val bundle = checkBundle(files, expectedBundleId)
 
         // Validate per-file basics (no cross-zone resolution yet)
         files.forEach { validateFileBasics(it) }
@@ -1276,7 +1286,48 @@ object WorldLoader {
             recipes = mergedRecipes.toList(),
             dungeonTemplates = mergedDungeonTemplates.toList(),
             puzzleDefinitions = mergedPuzzles.toList(),
+            bundleId = bundle.id,
+            unstampedZones = bundle.unstamped,
         )
+    }
+
+    private data class BundleCheck(
+        val id: String?,
+        val unstamped: List<String>,
+    )
+
+    /**
+     * The zone files of one publish carry one bundle id; the config published with them carries the
+     * same. Files without a stamp are tolerated (older exports, the bundled placeholder zones) and
+     * reported on the [World]; two different stamps, or a stamp that differs from the config's, fail
+     * the load before any room is merged.
+     */
+    private fun checkBundle(
+        files: List<WorldFile>,
+        expectedBundleId: String?,
+    ): BundleCheck {
+        val stamped = files.filter { !it.bundle.isNullOrBlank() }
+        val unstamped = files.filter { it.bundle.isNullOrBlank() }.map { it.zone.trim() }
+        val ids = stamped.map { it.bundle!!.trim() }.distinct()
+        if (ids.size > 1) {
+            val byId = stamped.groupBy({ it.bundle!!.trim() }, { it.zone.trim() })
+            throw WorldLoadException(
+                "Bundle skew: the zone files carry ${ids.size} different bundle ids - " +
+                    byId.entries.joinToString("; ") { (id, zones) -> "$id: ${zones.joinToString(", ")}" },
+            )
+        }
+        val expected = expectedBundleId?.trim()?.takeIf { it.isNotEmpty() }
+        val found = ids.singleOrNull()
+        if (expected != null && found != null && found != expected) {
+            throw WorldLoadException(
+                "Bundle skew: the config is bundle $expected but the zone files are bundle $found " +
+                    "(${stamped.size} stamped zone(s)); the config and the zones must come from the same publish",
+            )
+        }
+        if (unstamped.isNotEmpty() && (expected != null || found != null)) {
+            logger.warn("Bundle {}: {} zone file(s) carry no bundle id: {}", expected ?: found, unstamped.size, unstamped)
+        }
+        return BundleCheck(id = found, unstamped = unstamped)
     }
 
     private fun readWorldFile(path: String): WorldFile {
