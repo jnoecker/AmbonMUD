@@ -50,3 +50,58 @@ groups:
           summary: AmbonMUD metrics endpoint is down
           description: Prometheus cannot scrape the ambonmud metrics endpoint.
           runbook_url: https://github.com/jnoecker/AmbonMUD/blob/main/docs/onboarding.md#observability-runbook
+
+  # The Ambon balance programme's rollback triggers (jnoecker/Ambon balance/release/rollback-triggers.md, D-49).
+  # T3 and T4 read per player-hour: players_online integrated over the window at one-minute resolution, divided by 60.
+  # Each fires only once the window holds at least three player-hours, so a single tester's bad ten minutes is not a
+  # trigger; the warning threshold means investigate, the critical one means roll the bundle back.
+  - name: ambonmud-balance-triggers
+    rules:
+      - alert: AmbonBundleUnstamped
+        expr: absent(ambon_bundle_info) or ambon_bundle_info{bundle="unstamped"} == 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: The server runs without a publish stamp (T2)
+          description: No ambon_bundle_info, or the config was published without a bundle block; republish config and zones together before anyone plays.
+          runbook_url: https://github.com/jnoecker/Ambon/blob/main/balance/release/rollback-triggers.md
+
+      - alert: AmbonDeathsPerPlayerHourHigh
+        expr: >
+          (increase(player_deaths_total[3h]) / (sum_over_time(players_online[3h:1m]) / 60) > 2)
+          and ((sum_over_time(players_online[3h:1m]) / 60) >= 3)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: Deaths above 2 per player-hour over 3h (T3, investigate)
+          description: The signed death cost is at most 0.5 an hour on the reference route and 5 for the median class on the stress content; find the zone and level (lastDeathZone in the player records).
+          runbook_url: https://github.com/jnoecker/Ambon/blob/main/balance/release/rollback-triggers.md
+
+      - alert: AmbonDeathsPerPlayerHourCritical
+        expr: >
+          (increase(player_deaths_total[3h]) / (sum_over_time(players_online[3h:1m]) / 60) > 5)
+          and ((sum_over_time(players_online[3h:1m]) / 60) >= 3)
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: Deaths above 5 per player-hour over 3h (T3, roll back)
+          description: Above the stress-content ceiling for the median class; roll the bundle back per the wipe runbook and re-open D-24 / D-40.
+          runbook_url: https://github.com/jnoecker/Ambon/blob/main/balance/release/rollback-triggers.md
+
+      - alert: AmbonLevelCadenceOutOfBand
+        expr: >
+          (
+            (increase(level_ups_total[3h]) / (sum_over_time(players_online[3h:1m]) / 60) < 1)
+            or (increase(level_ups_total[3h]) / (sum_over_time(players_online[3h:1m]) / 60) > 12)
+          )
+          and ((sum_over_time(players_online[3h:1m]) / 60) >= 3)
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: Level-ups per player-hour outside 1-12 over 3h (T4, investigate)
+          description: The minute table pays a level every 8-23 minutes below the cap; a capped population reads zero, so read this beside the player records' levels before acting. Persistent factors of two re-open D-28 / D-38.
+          runbook_url: https://github.com/jnoecker/Ambon/blob/main/balance/release/rollback-triggers.md
