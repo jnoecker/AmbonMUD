@@ -3230,6 +3230,13 @@ class GmcpEmitter(
             variantName = mob.variantName,
             tint = mob.tint,
             overlay = mob.overlay,
+            info = RoomMobInfoStubPayload(
+                level = if (mob.level > 0) mob.level else estimateMobLevel(mob.xpReward),
+                questGiver = mob.questIds.isNotEmpty(),
+                dialogue = mob.dialogue != null,
+                aggressive = mob.aggressive,
+                combatant = mob.role.isCombatant,
+            ),
         )
     }
 
@@ -3496,6 +3503,23 @@ class GmcpEmitter(
         val tint: String? = null,
         /** Client particle/overlay hint: swirl|embers|sparkle|frost|mist. */
         val overlay: String? = null,
+        /**
+         * The mob's static `Room.MobInfo` facts. A mob that wanders in,
+         * respawns or is summoned arrives via `Room.AddMob` with no
+         * accompanying `Room.MobInfo`, and without this the client had no
+         * idea whether it could be attacked (it assumed yes — a prop goose
+         * got an Attack button). Per-viewer fields (quest flags, arcanum
+         * badges, shopkeeper) still only travel in `Room.MobInfo`.
+         */
+        val info: RoomMobInfoStubPayload? = null,
+    )
+
+    private data class RoomMobInfoStubPayload(
+        val level: Int,
+        val questGiver: Boolean,
+        val dialogue: Boolean,
+        val aggressive: Boolean,
+        val combatant: Boolean,
     )
 
     private data class MobEffectPayload(

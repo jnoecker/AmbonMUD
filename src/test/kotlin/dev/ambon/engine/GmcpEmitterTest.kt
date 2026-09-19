@@ -836,6 +836,18 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"maxHp\":20"))
         }
 
+    @Test
+    fun `sendRoomAddMob carries the static mob-info stub so a prop that wanders in is not attackable`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            val goose = mob(id = "zone:goose", name = "an umbrella goose").copy(role = dev.ambon.domain.mob.MobRole.PROP, level = 2)
+            e.sendRoomAddMob(sid, goose)
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"info\":{"), data.jsonData)
+            assertTrue(data.jsonData.contains("\"combatant\":false"), data.jsonData)
+            assertTrue(data.jsonData.contains("\"level\":2"), data.jsonData)
+        }
+
     // ── Room.UpdateMob ──
 
     @Test
