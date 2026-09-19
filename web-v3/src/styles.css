@@ -21376,6 +21376,27 @@ html:has(.game-shell),
   font-weight: 600;
 }
 
+.quest-complete-toast-objective {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  -webkit-line-clamp: unset;
+}
+
+.quest-complete-toast-objective-count {
+  flex: none;
+  font-family: var(--font-mono);
+  color: var(--c-soft-gold, #f0c674);
+}
+
+.quest-complete-toast-hint {
+  font-style: italic;
+}
+
+.quest-complete-toast-ready .quest-complete-toast-eyebrow {
+  color: var(--c-soft-gold, #f0c674);
+}
+
 .quest-complete-toast-name {
   font-size: 15px;
   font-weight: 700;

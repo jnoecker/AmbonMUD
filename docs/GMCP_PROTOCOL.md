@@ -995,9 +995,18 @@ Sent immediately when a single quest objective progresses.
   "questId": "find_the_relic",
   "objectiveIndex": 1,
   "current": 1,
-  "required": 1
+  "required": 1,
+  "readyToTurnIn": true,
+  "questName": "Find the Relic",
+  "objectiveDescription": "Recover the relic"
 }
 ```
+
+| Field                  | Type    | Description |
+|------------------------|---------|-------------|
+| `readyToTurnIn`        | bool    | True when this tick completed the last objective of an NPC turn-in quest |
+| `questName`            | string? | Quest display name, so the client can toast the tick without cross-referencing `Quest.List` |
+| `objectiveDescription` | string? | The objective's description text |
 
 ---
 

@@ -1455,6 +1455,11 @@ class GmcpEmitter(
         emit(sessionId, "Quest.List", payload)
     }
 
+    /**
+     * One objective ticked. [questName] and [objectiveDescription] ride along so
+     * the client can toast the progress ("Cups of tea 2/3", "Ready to turn in")
+     * without cross-referencing its quest list, which may not have arrived yet.
+     */
     suspend fun sendQuestUpdate(
         sessionId: SessionId,
         questId: String,
@@ -1462,6 +1467,8 @@ class GmcpEmitter(
         current: Int,
         required: Int,
         readyToTurnIn: Boolean,
+        questName: String? = null,
+        objectiveDescription: String? = null,
     ) {
         emit(
             sessionId,
@@ -1472,6 +1479,8 @@ class GmcpEmitter(
                 current = current,
                 required = required,
                 readyToTurnIn = readyToTurnIn,
+                questName = questName,
+                objectiveDescription = objectiveDescription,
             ),
             supportCheck = "Quest",
         )
@@ -3841,6 +3850,8 @@ class GmcpEmitter(
         val current: Int,
         val required: Int,
         val readyToTurnIn: Boolean,
+        val questName: String? = null,
+        val objectiveDescription: String? = null,
     )
 
     private data class QuestCompletePayload(

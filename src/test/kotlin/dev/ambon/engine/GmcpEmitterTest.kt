@@ -1521,6 +1521,27 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendQuestUpdate carries the quest name and objective description for the client toast`() =
+        runTest {
+            val e = emitter("Quest")
+            e.sendQuestUpdate(
+                sid,
+                "slay_goblins",
+                0,
+                5,
+                5,
+                readyToTurnIn = true,
+                questName = "Goblin Menace",
+                objectiveDescription = "Slay 5 goblins",
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"questName\":\"Goblin Menace\""))
+            assertTrue(events[0].jsonData.contains("\"objectiveDescription\":\"Slay 5 goblins\""))
+            assertTrue(events[0].jsonData.contains("\"readyToTurnIn\":true"))
+        }
+
+    @Test
     fun `sendQuestComplete emits correct JSON`() =
         runTest {
             val e = emitter("Quest")

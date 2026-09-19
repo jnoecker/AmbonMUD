@@ -485,7 +485,7 @@ class QuestSystem(
     ) {
         val ps = players.get(sessionId) ?: return
         val updatedQuests = ps.activeQuests.toMutableMap()
-        var changed = false
+        val updates = mutableListOf<ObjectiveUpdate>()
 
         for ((questId, state) in ps.activeQuests) {
             val quest = registry.get(questId) ?: continue
@@ -502,28 +502,40 @@ class QuestSystem(
                 sendObjectiveProgress(sessionId, objDef.description, updated)
                 val readyToTurnIn =
                     handler?.requiresNpcTurnIn == true && newObjectives.all { it.isComplete }
-                onQuestObjectiveUpdated?.invoke(
-                    sessionId,
-                    questId,
-                    index,
-                    updated.current,
-                    updated.required,
-                    readyToTurnIn,
-                )
+                updates += ObjectiveUpdate(questId, index, updated, readyToTurnIn)
             }
 
             if (questChanged) {
                 updatedQuests[questId] = state.copy(objectives = newObjectives)
-                changed = true
             }
         }
 
-        if (changed) {
-            ps.activeQuests = updatedQuests
-            players.persistPlayer(ps.sessionId)
-            checkAutoComplete(sessionId, ps.activeQuests)
+        if (updates.isEmpty()) return
+        // Commit the new progress *before* notifying listeners: the engine's
+        // objective-updated hook re-reads `activeQuests` (e.g. to flip the
+        // turn-in NPC's `questComplete` indicator for a player already standing
+        // in the room), and would otherwise see the pre-update state.
+        ps.activeQuests = updatedQuests
+        players.persistPlayer(ps.sessionId)
+        for (u in updates) {
+            onQuestObjectiveUpdated?.invoke(
+                sessionId,
+                u.questId,
+                u.objectiveIndex,
+                u.progress.current,
+                u.progress.required,
+                u.readyToTurnIn,
+            )
         }
+        checkAutoComplete(sessionId, ps.activeQuests)
     }
+
+    private data class ObjectiveUpdate(
+        val questId: String,
+        val objectiveIndex: Int,
+        val progress: ObjectiveProgress,
+        val readyToTurnIn: Boolean,
+    )
 
     /**
      * Format the quest log for a player.

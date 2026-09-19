@@ -1257,7 +1257,17 @@ class GameEngine(
             refreshRoomMobInfoForPlayer(sid)
         }
         questSystem.onQuestObjectiveUpdated = { sid, questId, objIndex, current, required, readyToTurnIn ->
-            gmcpEmitter.sendQuestUpdate(sid, questId, objIndex, current, required, readyToTurnIn)
+            val questDef = questRegistry.get(questId)
+            gmcpEmitter.sendQuestUpdate(
+                sid,
+                questId,
+                objIndex,
+                current,
+                required,
+                readyToTurnIn,
+                questName = questDef?.name,
+                objectiveDescription = questDef?.objectives?.getOrNull(objIndex)?.description,
+            )
             // When the final objective ticks over to complete, the resolved
             // turn-in NPC's `questComplete` flag flips — refresh so the popout
             // and canvas indicator pick it up without a room exit/enter.

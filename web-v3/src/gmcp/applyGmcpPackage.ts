@@ -1239,6 +1239,23 @@ export function applyGmcpPackage(
             : { ...q, objectives };
         }),
       );
+      // Surface the tick as a toast — the terminal line is hidden behind the
+      // canvas, so without this a collect objective completing (say, after
+      // buying the last cup of tea) gives no visible cue at all.
+      if (typeof packet.questName === "string" && typeof packet.objectiveDescription === "string") {
+        ctx.pushQuestNotification({
+          id: `${Date.now()}-${Math.random()}`,
+          questId,
+          questName: packet.questName,
+          event: packet.readyToTurnIn === true ? "ready" : "update",
+          receivedAt: Date.now(),
+          objective: {
+            description: packet.objectiveDescription,
+            current: safeNumber(packet.current),
+            required: safeNumber(packet.required),
+          },
+        });
+      }
       break;
     }
 
