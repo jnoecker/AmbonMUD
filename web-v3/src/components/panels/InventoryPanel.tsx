@@ -2,11 +2,14 @@ import { useMemo, useState } from "react";
 import type { ContainerContents, ItemSummary, ItemType, RoomFeature, RoomPlayer } from "../../types";
 import { DropItemIcon, GiveItemIcon, WearItemIcon } from "../Icons";
 import { resolveItemImage } from "../../imageDefaults";
+import { compareToWorn, formatDelta } from "./equipmentCompare";
 
 interface InventoryPanelProps {
   connected: boolean;
   hasCharacterProfile: boolean;
   inventory: ItemSummary[];
+  /** Currently worn items by slot, for the "vs. worn" comparison on wearables. */
+  equipment?: Record<string, ItemSummary>;
   players: RoomPlayer[];
   canManageItems: boolean;
   roomFeatures: RoomFeature[];
@@ -125,6 +128,7 @@ export function InventoryPanel({
   connected,
   hasCharacterProfile,
   inventory,
+  equipment = {},
   players,
   canManageItems,
   roomFeatures,
@@ -168,6 +172,30 @@ export function InventoryPanel({
       <img className="inventory-action-img" src={serverAssets[key]} alt="" aria-hidden="true" />
     ) : null;
 
+  // "+3 dmg / −1 armor" chips against what's worn in the item's slot, so a
+  // player can judge a drop without opening the equipment window.
+  const renderComparison = (item: ItemSummary) => {
+    const cmp = compareToWorn(item, equipment);
+    if (!cmp) return null;
+    const title = cmp.worn ? `Compared with ${cmp.worn.name} (worn)` : "Slot is empty";
+    if (cmp.deltas.length === 0) {
+      return (
+        <span className="inventory-item-compare inventory-item-compare-same" title={title}>
+          {cmp.worn ? "same as worn" : "slot empty"}
+        </span>
+      );
+    }
+    return (
+      <span className="inventory-item-compare" title={title} aria-label={`${title}: ${cmp.deltas.map(formatDelta).join(", ")}`}>
+        {cmp.deltas.map((d) => (
+          <span key={d.key} className={`inventory-item-delta ${d.delta > 0 ? "inventory-item-delta-up" : "inventory-item-delta-down"}`}>
+            {formatDelta(d)}
+          </span>
+        ))}
+      </span>
+    );
+  };
+
   const renderStack = (stack: ItemStack, type: ItemType) => {
     const item = stack.lead;
     const count = stack.instances.length;
@@ -203,6 +231,7 @@ export function InventoryPanel({
                   {categoryChipLabel(type)}
                 </span>
                 {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
+                {type === "equipment" && renderComparison(item)}
                 {!item.slot && item.consumable && item.useEffect && (
                   <span className="inventory-item-effect" title={item.useEffect}>
                     {item.useEffect}
