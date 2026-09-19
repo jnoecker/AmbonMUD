@@ -383,6 +383,25 @@ function parseMobPacket(raw: unknown, fallbackId: string): RoomMob {
   };
 }
 
+/** The static half of a MobInfo entry, as carried on Room.AddMob. */
+function parseMobInfoStub(raw: unknown, id: string): MobInfo | null {
+  if (!raw || typeof raw !== "object") return null;
+  const e = raw as Record<string, unknown>;
+  return {
+    id,
+    level: safeNumber(e.level, 1),
+    tier: "standard",
+    questGiver: e.questGiver === true,
+    questAvailable: false,
+    questComplete: false,
+    shopKeeper: false,
+    dialogue: e.dialogue === true,
+    aggressive: e.aggressive === true,
+    combatant: e.combatant !== false,
+    illuminationPct: null,
+  };
+}
+
 export function applyGmcpPackage(
   pkg: string,
   data: unknown,
@@ -806,6 +825,13 @@ export function applyGmcpPackage(
       const id = packet.id;
       if (typeof id !== "string") break;
       ctx.setMobs((prev) => [...prev, parseMobPacket(packet, id)]);
+      // A mob that walks in or respawns doesn't get a fresh Room.MobInfo, so
+      // seed its entry from the stub the packet carries. Never overwrite an
+      // existing entry — that one has the per-viewer quest flags.
+      const stub = parseMobInfoStub(packet.info, id);
+      if (stub) {
+        ctx.setMobInfo((prev) => (prev.some((m) => m.id === id) ? prev : [...prev, stub]));
+      }
       break;
     }
 

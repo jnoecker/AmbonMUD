@@ -703,7 +703,7 @@ Full snapshot of mobs currently in the room. Sent on login and after any mob ent
 
 ### `Room.AddMob`
 
-Sent immediately to all players in a room when a mob spawns or wanders in. Same field set as `Room.Mobs` entries.
+Sent immediately to all players in a room when a mob spawns or wanders in. Same field set as `Room.Mobs` entries, plus an `info` stub with the mob's static `Room.MobInfo` facts (`level`, `questGiver`, `dialogue`, `aggressive`, `combatant`) — no `Room.MobInfo` follows an `AddMob`, so this is how the client learns whether the newcomer can be attacked. Per-viewer fields (`questAvailable`, `questComplete`, arcanum badges, `shopKeeper`) still only travel in `Room.MobInfo`; the client keeps an existing entry rather than overwriting it with the stub.
 
 ```json
 {
@@ -712,7 +712,8 @@ Sent immediately to all players in a room when a mob spawns or wanders in. Same 
   "description": "A watchful guard in polished chainmail.",
   "hp": 40,
   "maxHp": 40,
-  "image": "/images/mobs/guard.png"
+  "image": "/images/mobs/guard.png",
+  "info": { "level": 4, "questGiver": false, "dialogue": true, "aggressive": false, "combatant": true }
 }
 ```
 
