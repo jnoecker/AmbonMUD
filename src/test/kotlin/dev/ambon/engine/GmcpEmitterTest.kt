@@ -1508,6 +1508,28 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendQuestList carries each objective's type and target so the client can mark targets in the room`() =
+        runTest {
+            val e = emitter("Quest")
+            e.sendQuestList(
+                sid,
+                listOf(
+                    QuestListEntry(
+                        id = "slay_goblins",
+                        name = "Goblin Menace",
+                        description = "Kill goblins.",
+                        objectives = listOf(
+                            QuestObjectiveEntry("Kill 5 goblins", 3, 5, type = "kill", targetId = "caves:goblin"),
+                        ),
+                    ),
+                ),
+            )
+            val json = drainGmcp()[0].jsonData
+            assertTrue(json.contains("\"type\":\"kill\""), json)
+            assertTrue(json.contains("\"targetId\":\"caves:goblin\""), json)
+        }
+
+    @Test
     fun `sendQuestUpdate emits correct JSON`() =
         runTest {
             val e = emitter("Quest")

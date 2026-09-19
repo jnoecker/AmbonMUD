@@ -73,6 +73,7 @@ import type { MapHoverInfo } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
+import { deriveQuestTargets } from "./canvas/questTargets";
 import type {
   ChatChannel,
   ConsiderRating,
@@ -445,6 +446,8 @@ function App() {
 
 
 
+  const questTargets = useMemo(() => deriveQuestTargets(state.quests), [state.quests]);
+
   // Sync state into canvas bridge for PixiJS
   useEffect(() => {
     gameStateRef.current = {
@@ -474,6 +477,7 @@ function App() {
           q.objectives.filter((o) => o.current < o.required).flatMap((o) => o.targetRoomIds ?? []),
         ),
       ),
+      questTargets: questTargets,
       serverAssets: state.serverAssets,
       worldTime: state.worldTime,
       worldWeather: state.worldWeather,

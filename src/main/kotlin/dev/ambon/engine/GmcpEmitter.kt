@@ -1446,6 +1446,8 @@ class GmcpEmitter(
                         current = o.current,
                         required = o.required,
                         targetRoomIds = o.targetRoomIds,
+                        type = o.type,
+                        targetId = o.targetId,
                     )
                 },
                 readyToTurnIn = q.readyToTurnIn,
@@ -3833,6 +3835,8 @@ class GmcpEmitter(
         val current: Int,
         val required: Int,
         val targetRoomIds: List<String> = emptyList(),
+        val type: String = "",
+        val targetId: String = "",
     )
 
     private data class QuestUpdatePayload(
@@ -4724,6 +4728,10 @@ data class QuestObjectiveEntry(
     val current: Int,
     val required: Int,
     val targetRoomIds: List<String> = emptyList(),
+    /** Objective handler type ("kill", "collect", …). */
+    val type: String = "",
+    /** Mob template key (kill) or item id (collect) the objective counts. */
+    val targetId: String = "",
 )
 
 data class QuestAvailableEntry(

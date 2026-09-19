@@ -2566,6 +2566,8 @@ class GameEngine(
                         current = prog?.current ?: 0,
                         required = prog?.required ?: objDef.count,
                         targetRoomIds = resolveObjectiveRoomIds(objDef.targetId),
+                        type = objDef.type,
+                        targetId = objDef.targetId,
                     )
                 },
                 readyToTurnIn = questSystem.isReadyToTurnIn(def, state),
