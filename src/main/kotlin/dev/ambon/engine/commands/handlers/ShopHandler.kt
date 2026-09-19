@@ -161,6 +161,7 @@ class ShopHandler(
             items.addToInventory(sessionId, newItem)
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You buy ${item.displayName} for $buyPrice gold."))
+            ctx.questSystem?.onItemAcquired(sessionId, newItem.id)
             // Buying an item counts as discovering it for an Akathavae's Arcanum.
             ctx.akathavaeSystem?.recordItemDiscovery(sessionId, newItem, ArcanumSource.PURCHASED)
             syncItemsGmcp(sessionId, items, gmcpEmitter)

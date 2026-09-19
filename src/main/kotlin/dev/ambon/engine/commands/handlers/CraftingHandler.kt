@@ -116,6 +116,7 @@ class CraftingHandler(
                     )
                     gmcpEmitter?.sendCraftingCooldown(sessionId, "gather", me.gatherCooldownUntilMs)
                     onItemGathered?.invoke(sessionId, r.node.skill)
+                    ctx.questSystem?.onItemsAcquired(sessionId, r.itemsGathered.keys + r.rareItemsGathered.keys)
                     // Gathered yields count as discoveries for an Akathavae's Arcanum.
                     for (gatheredId in r.itemsGathered.keys + r.rareItemsGathered.keys) {
                         ctx.akathavaeSystem?.recordItemDiscovery(sessionId, gatheredId, ArcanumSource.GATHERED)
@@ -215,6 +216,7 @@ class CraftingHandler(
                         quality = r.quality.name.lowercase(),
                     )
                     onItemCrafted?.invoke(sessionId)
+                    ctx.questSystem?.onItemAcquired(sessionId, r.recipe.outputItemId)
                     // A newly crafted item counts as a discovery for an Akathavae's Arcanum.
                     ctx.akathavaeSystem?.recordItemDiscovery(sessionId, r.recipe.outputItemId, ArcanumSource.CRAFTED)
                     notifyNewDiscoveries(sessionId, me, cs)

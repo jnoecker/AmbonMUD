@@ -450,6 +450,7 @@ class ItemHandler(
                         outbound.send(OutboundEvent.SendInfo(targetSid, "${me.name} gives you ${result.item.item.displayName}."))
                         gmcpEmitter?.sendCharItemsRemove(sessionId, result.item)
                         gmcpEmitter?.sendCharItemsAdd(targetSid, result.item)
+                        questSystem?.onItemAcquired(targetSid, result.item.id)
                     }
                     is ItemRegistry.GiveResult.NotFound ->
                         outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying or wearing '${cmd.keyword}'."))

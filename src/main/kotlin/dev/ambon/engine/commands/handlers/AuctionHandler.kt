@@ -222,6 +222,7 @@ class AuctionHandler(
             }
 
             ctx.metrics.onGameEvent("auction", "sold")
+            ctx.questSystem?.onItemAcquired(sessionId, purchased.item.id)
             val message = "You purchased ${purchased.item.item.displayName} for ${purchased.price} gold."
             outbound.send(OutboundEvent.SendInfo(sessionId, message))
             sendScopedFeedback(sessionId, gmcpEmitter, "success", message, "auction", code = "PURCHASE_COMPLETE", command = "buy")
