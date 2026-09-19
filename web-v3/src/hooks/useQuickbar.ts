@@ -16,6 +16,15 @@ function emptySlots(): SlotIds {
   return new Array(SLOT_COUNT).fill(null);
 }
 
+/**
+ * Whether a skill can sit in a quickbar slot. Racial passives (and any other
+ * passive) fire on their own from combat hooks — there's nothing to press, so
+ * they neither auto-fill an empty slot nor survive in a stored one.
+ */
+export function isSlottable(skill: SkillSummary): boolean {
+  return skill.source !== "racial" && skill.passive !== true;
+}
+
 function loadOrder(key: string): SlotIds {
   try {
     const raw = localStorage.getItem(key);
@@ -50,11 +59,12 @@ function saveOrder(key: string, order: SlotIds) {
  *    available empty slot in deterministic (stable) server order, so learning
  *    new skills fills from the left.
  */
-function mergeSlotIds(stored: SlotIds, skills: SkillSummary[]): SlotIds {
-  const known = new Set(skills.map((s) => s.id));
+export function mergeSlotIds(stored: SlotIds, skills: SkillSummary[]): SlotIds {
+  const slottable = skills.filter(isSlottable);
+  const known = new Set(slottable.map((s) => s.id));
   const next: SlotIds = stored.map((id) => (id && known.has(id) ? id : null));
   const assigned = new Set(next.filter((id): id is string => id !== null));
-  for (const skill of skills) {
+  for (const skill of slottable) {
     if (assigned.has(skill.id)) continue;
     const emptyIdx = next.indexOf(null);
     if (emptyIdx === -1) break;
@@ -144,6 +154,8 @@ export function useQuickbar(
 
   const assign = useCallback((slotIndex: number, skillId: string) => {
     if (slotIndex < 0 || slotIndex >= SLOT_COUNT) return;
+    const skill = skillMap.get(skillId);
+    if (skill && !isSlottable(skill)) return;
     setInternal((prev) => {
       const next = [...prev.slotIds];
       // Remove this skill from any other slot first so it only occupies one.
@@ -154,7 +166,7 @@ export function useQuickbar(
       saveOrder(prev.storageKey, next);
       return { ...prev, slotIds: next };
     });
-  }, []);
+  }, [skillMap]);
 
   const clear = useCallback((slotIndex: number) => {
     if (slotIndex < 0 || slotIndex >= SLOT_COUNT) return;

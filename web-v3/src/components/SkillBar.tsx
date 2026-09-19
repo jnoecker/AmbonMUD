@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import type { SkillSummary } from "../types";
-import { SkillCastIcon } from "./Icons";
+import { SkillIcon } from "./SkillIcon";
 
 function skillCategory(skill: SkillSummary): string {
   const t = skill.targetType.toUpperCase();
@@ -91,10 +91,7 @@ function SkillSlot({ skill, index, onCast, onDragStart, onDragOver, onDragLeave,
       onDrop={(e) => onDrop(e, index)}
       aria-label={`${skill.name}, ${skill.manaCost} mana, key ${index + 1}${onCooldown ? `, on cooldown, ${cooldownSeconds} seconds remaining` : ""}`}
     >
-      {skill.image
-        ? <img src={skill.image} alt="" className="vbar-skill-img" draggable={false} />
-        : <SkillCastIcon className="vbar-skill-icon" classRestriction={skill.classRestriction} targetType={skill.targetType} />
-      }
+      <SkillIcon skill={skill} imgClassName="vbar-skill-img" iconClassName="vbar-skill-icon" />
       {onCooldown && <span className="vbar-skill-sweep" style={{ height: `${fraction * 100}%` }} />}
       <span className="vbar-skill-key">{index + 1}</span>
     </button>
@@ -120,10 +117,7 @@ function PetSkillSlot({ skill, index, onCast }: { skill: SkillSummary; index: nu
       onClick={() => onCast(skill.id, skill.cooldownMs)}
       aria-label={`${skill.name} pet skill, Shift+${index + 1}${onCooldown ? `, on cooldown, ${cooldownSeconds} seconds remaining` : ""}`}
     >
-      {skill.image
-        ? <img src={skill.image} alt="" className="vbar-skill-img" draggable={false} />
-        : <SkillCastIcon className="vbar-skill-icon" classRestriction={null} targetType={skill.targetType} />
-      }
+      <SkillIcon skill={{ ...skill, classRestriction: null }} imgClassName="vbar-skill-img" iconClassName="vbar-skill-icon" />
       {onCooldown && <span className="vbar-skill-sweep" style={{ height: `${fraction * 100}%` }} />}
       <span className="vbar-skill-key">{`⇧${index + 1}`}</span>
     </button>
