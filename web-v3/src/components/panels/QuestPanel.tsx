@@ -52,6 +52,13 @@ function questTypeLabel(type: string): string {
   }
 }
 
+const NOTIFICATION_LABEL: Record<QuestNotification["event"], string> = {
+  accept: "Accepted: ",
+  update: "Updated: ",
+  ready: "Ready to turn in: ",
+  complete: "Completed: ",
+};
+
 export function QuestPanel({
   connected,
   hasCharacterProfile,
@@ -108,11 +115,17 @@ export function QuestPanel({
               role="status"
             >
               <span className="quest-notification-icon" aria-hidden="true">
-                {n.event === "complete" ? "\u2726" : "\u25B2"}
+                {n.event === "complete" ? "\u2726" : n.event === "ready" ? "\u2756" : "\u25B2"}
               </span>
               <span className="quest-notification-text">
-                {n.event === "complete" ? "Completed: " : "Updated: "}
+                {NOTIFICATION_LABEL[n.event]}
                 <strong>{n.questName}</strong>
+                {n.objective && (
+                  <span className="quest-notification-objective">
+                    {" \u2014 "}{n.objective.description}{" "}
+                    {n.objective.current >= n.objective.required ? "(done)" : `(${n.objective.current}/${n.objective.required})`}
+                  </span>
+                )}
               </span>
               <button
                 type="button"

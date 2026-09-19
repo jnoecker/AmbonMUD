@@ -920,10 +920,16 @@ export interface QuestNotification {
   id: string;
   questId: string;
   questName: string;
-  event: "complete" | "update" | "accept";
+  /**
+   * "update" — an objective ticked (progress shown in [objective]);
+   * "ready" — the last objective of a turn-in quest just completed.
+   */
+  event: "complete" | "update" | "accept" | "ready";
   receivedAt: number;
   // Populated for "complete" events; null/empty for "update".
   questDescription?: string;
+  /** Populated for "update" / "ready" events. */
+  objective?: { description: string; current: number; required: number };
   rewards?: {
     xp: number;
     gold: number;
