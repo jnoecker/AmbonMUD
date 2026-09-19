@@ -2393,7 +2393,10 @@ export class WorldScene {
 
       const nodeData = node;
       hitArea.on("pointerdown", () => {
-        canvasCallbacks.sendCommand?.(`gather ${nodeData.name}`);
+        // The card shows what the node gives before committing; gather from
+        // there. Fall back to gathering directly when no card is mounted.
+        if (canvasCallbacks.openGatheringNode) canvasCallbacks.openGatheringNode(nodeData.id);
+        else canvasCallbacks.sendCommand?.(`gather ${nodeData.name}`);
       });
 
       this.container.addChild(sprite);

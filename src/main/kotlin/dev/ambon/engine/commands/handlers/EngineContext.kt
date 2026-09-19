@@ -27,6 +27,7 @@ import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.StatRegistry
 import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.WorldStateRegistry
+import dev.ambon.engine.crafting.CraftingSystem
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
@@ -50,6 +51,8 @@ data class EngineContext(
     val gmcpEmitter: GmcpEmitter?,
     val worldState: WorldStateRegistry?,
     val gatheringRegistry: GatheringRegistry? = null,
+    /** Owns gathering-node depletion; lets the room's `Crafting.Nodes` carry respawn timers. */
+    val craftingSystem: CraftingSystem? = null,
     val shopRegistry: ShopRegistry? = null,
     val economyConfig: EconomyConfig = EconomyConfig(),
     val questSystem: QuestSystem? = null,

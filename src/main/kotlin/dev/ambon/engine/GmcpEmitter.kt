@@ -3993,6 +3993,31 @@ class GmcpEmitter(
         val skill: String,
         val skillRequired: Int,
         val image: String? = null,
+        /** What a gather always yields (quantity rolled in [minQuantity, maxQuantity]). */
+        val yields: List<NodeYieldPayload> = emptyList(),
+        /** Bonus rolls with their percent chance. */
+        val rareYields: List<NodeRareYieldPayload> = emptyList(),
+        val respawnSeconds: Int = 0,
+        val xpReward: Int = 0,
+        /** Time until a depleted node can be gathered again; 0 when available now. */
+        val respawnRemainingMs: Long = 0L,
+    )
+
+    data class NodeYieldPayload(
+        val itemId: String,
+        val name: String,
+        val image: String? = null,
+        val minQuantity: Int,
+        val maxQuantity: Int,
+    )
+
+    data class NodeRareYieldPayload(
+        val itemId: String,
+        val name: String,
+        val image: String? = null,
+        val quantity: Int,
+        /** 0–100. */
+        val chancePct: Int,
     )
 
     private data class CraftingCooldownPayload(

@@ -1553,7 +1553,7 @@ Every outbound package name currently emitted by `GmcpEmitter.kt`. Packages mark
 |---------|-------|
 | `Crafting.Recipes` | Known recipes |
 | `Crafting.Skills` | Skill levels per profession |
-| `Crafting.Nodes` | Visible gathering nodes |
+| `Crafting.Nodes` | Visible gathering nodes: `id`, `name`, `skill`, `skillRequired`, `image`, `yields[]` (`itemId`, `name`, `image`, `minQuantity`, `maxQuantity`), `rareYields[]` (`…`, `quantity`, `chancePct`), `respawnSeconds`, `xpReward`, `respawnRemainingMs` (0 when gatherable). Re-sent after a gather so the depleted timer reaches the node card |
 | `Crafting.Cooldown` | Active gather/craft cooldowns |
 | `Crafting.Result` | Outcome of a craft action |
 
