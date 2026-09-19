@@ -19,6 +19,7 @@ class WorldFeaturesHandler(
 ) : CommandHandler {
     private val world = ctx.world
     private val players = ctx.players
+    private val questSystem = ctx.questSystem
     private val items = ctx.items
     private val outbound = ctx.outbound
     private val worldState = ctx.worldState
@@ -153,6 +154,7 @@ class WorldFeaturesHandler(
         } else {
             items.addToInventory(sessionId, item)
             outbound.send(OutboundEvent.SendInfo(sessionId, "You take ${item.item.displayName} from ${the(feature.displayName)}."))
+            questSystem?.onItemAcquired(sessionId, item.id)
             broadcastToRoomExcept(
                 me.roomId,
                 sessionId,

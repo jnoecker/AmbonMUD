@@ -33,6 +33,7 @@ import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PrestigeSystem
 import dev.ambon.engine.PuzzleSystem
+import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.SpriteRegistry
@@ -125,6 +126,7 @@ internal fun buildTestRouter(
     dungeonRegistry: DungeonRegistry? = null,
     housingSystem: HousingSystem? = null,
     puzzleSystem: PuzzleSystem? = null,
+    questSystem: QuestSystem? = null,
     guildHallSystem: GuildHallSystem? = null,
     gmcpEmitter: GmcpEmitter? = null,
     abilitySystem: dev.ambon.engine.abilities.AbilitySystem? = null,
@@ -183,6 +185,7 @@ internal fun buildTestRouter(
         boatConfig = resolvedBoatConfig,
         akathavaeSystem = resolvedAkathavaeSystem,
         puzzleSystem = puzzleSystem,
+        questSystem = questSystem,
         jukeboxSystem = jukeboxSystem,
         musicBoxSystem = musicBoxSystem,
     )
@@ -212,7 +215,7 @@ internal fun buildTestRouter(
             groupSystem = groupSystem,
             akathavaeSystem = resolvedAkathavaeSystem,
         ),
-        ItemHandler(ctx = ctx),
+        ItemHandler(ctx = ctx, questSystem = questSystem),
         ShopHandler(ctx = ctx, shopRegistry = shopRegistry, economyConfig = economyConfig),
         DialogueQuestHandler(ctx = ctx),
         GroupHandler(ctx = ctx, groupSystem = groupSystem),

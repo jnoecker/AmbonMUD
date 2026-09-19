@@ -7,11 +7,16 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.quest.QuestDef
+import dev.ambon.domain.quest.QuestObjectiveDef
+import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.QuestRegistry
+import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -339,7 +344,46 @@ class CommandRouterShopTest {
         val router: CommandRouter,
         val sid: SessionId,
         val player: dev.ambon.engine.PlayerState,
+        val questSystem: QuestSystem? = null,
     )
+
+    @Test
+    fun `buying a quest item advances the collect objective without a drop and pickup`() =
+        runTest {
+            // Playtest: three cups bought from the vendor sat at 0/3 until one
+            // was dropped and picked back up — only room pickups fed the quest.
+            val questRegistry = QuestRegistry()
+            questRegistry.register(
+                QuestDef(
+                    id = "ok_shop:potions",
+                    name = "Stock the Infirmary",
+                    description = "Buy two potions.",
+                    giverMobId = "ok_shop:healer",
+                    objectives = listOf(
+                        QuestObjectiveDef(type = "collect", targetId = "ok_shop:potion", count = 2, description = "Collect 2 potions"),
+                    ),
+                    rewards = QuestRewards(xp = 10L),
+                    completionType = "npc_turn_in",
+                ),
+            )
+            val env = setup(questRegistry = questRegistry)
+            env.player.gold = 100L
+            env.questSystem!!.acceptQuest(env.sid, "ok_shop:potions")
+            env.outbound.drainAll()
+
+            env.router.handle(env.sid, Command.Buy("potion"))
+            assertEquals(1, env.player.activeQuests["ok_shop:potions"]!!.objectives[0].current)
+
+            env.router.handle(env.sid, Command.Buy("potion"))
+            val state = env.player.activeQuests["ok_shop:potions"]!!
+            assertEquals(2, state.objectives[0].current)
+            assertTrue(state.objectives[0].isComplete, "second purchase completes the objective")
+            val outs = env.outbound.drainAll()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text.contains("Collect 2 potions: complete!") },
+                "Expected quest completion line. got=$outs",
+            )
+        }
 
     private suspend fun setup(
         economyConfig: EconomyConfig =
@@ -347,6 +391,7 @@ class CommandRouterShopTest {
                 buyMultiplier = 1.0,
                 sellMultiplier = 0.5,
             ),
+        questRegistry: QuestRegistry? = null,
     ): TestEnv {
         val world = WorldLoader.loadFromResource("world/ok_shop.yaml")
         val items = ItemRegistry()
@@ -357,6 +402,9 @@ class CommandRouterShopTest {
         val shopRegistry = ShopRegistry(items)
         shopRegistry.register(world.shopDefinitions)
         val combat = CombatSystem(players, mobs, items, outbound)
+        val questSystem = questRegistry?.let {
+            QuestSystem(registry = it, players = players, items = items, outbound = outbound)
+        }
         val router = buildTestRouter(
             world = world,
             players = players,
@@ -366,6 +414,7 @@ class CommandRouterShopTest {
             outbound = outbound,
             shopRegistry = shopRegistry,
             economyConfig = economyConfig,
+            questSystem = questSystem,
         )
 
         val sid = SessionId(1L)
@@ -375,6 +424,6 @@ class CommandRouterShopTest {
         outbound.drainAll()
 
         val player = players.get(sid)!!
-        return TestEnv(world, items, players, mobs, outbound, router, sid, player)
+        return TestEnv(world, items, players, mobs, outbound, router, sid, player, questSystem)
     }
 }

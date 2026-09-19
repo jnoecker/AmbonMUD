@@ -19,6 +19,7 @@ class MailHandler(
     private val markVitalsDirty: (SessionId) -> Unit = {},
 ) : CommandHandler {
     private val players = ctx.players
+    private val questSystem = ctx.questSystem
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
     private val metrics = ctx.metrics
@@ -323,6 +324,7 @@ class MailHandler(
             msg.item?.let { instance ->
                 items.addToInventory(sessionId, instance)
                 gmcpEmitter?.sendCharItemsAdd(sessionId, instance)
+                questSystem?.onItemAcquired(sessionId, instance.id)
             }
             me.inbox[cmd.index - 1] = msg.copy(claimed = true)
             players.persistPlayer(sessionId)

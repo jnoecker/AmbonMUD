@@ -18,6 +18,7 @@ class TradeHandler(
     private val markVitalsDirty: (SessionId) -> Unit = {},
 ) : CommandHandler {
     private val players = ctx.players
+    private val questSystem = ctx.questSystem
     private val items = ctx.items
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
@@ -250,6 +251,8 @@ class TradeHandler(
         emitTradeClosed(initSid)
         emitTradeClosed(targetSid)
         syncBothPlayers(initSid, targetSid)
+        questSystem?.onItemsAcquired(targetSid, session.initiatorItems.map { it.id })
+        questSystem?.onItemsAcquired(initSid, session.targetItems.map { it.id })
     }
 
     private suspend fun handleTradeCancel(sessionId: SessionId) {

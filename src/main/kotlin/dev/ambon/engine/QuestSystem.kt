@@ -438,13 +438,37 @@ class QuestSystem(
     suspend fun onItemCollected(
         sessionId: SessionId,
         item: ItemInstance,
+    ) = onItemAcquired(sessionId, item.id)
+
+    /**
+     * Called when an item of [itemId] enters the player's inventory by any
+     * route — pickup, purchase, crafting, gathering, a container, a trade,
+     * mail, a bank withdrawal. COLLECT objectives count what the player
+     * holds, so it doesn't matter how the item got there; without this hook
+     * on every route a bought quest item sat at 0/N until it was dropped and
+     * picked back up.
+     */
+    suspend fun onItemAcquired(
+        sessionId: SessionId,
+        itemId: ItemId,
     ) {
         advanceObjectives(sessionId) { objDef, prog ->
             val handler = objectiveHandlers.collectHandler(objDef.type) ?: return@advanceObjectives null
-            val itemId = item.id.value
-            val currentCount = items.inventory(sessionId).count { inv -> inv.id.value == itemId }
-            handler.advance(objDef, prog, itemId, currentCount)
+            val currentCount = items.inventory(sessionId).count { inv -> inv.id == itemId }
+            handler.advance(objDef, prog, itemId.value, currentCount)
         }
+    }
+
+    /**
+     * [onItemAcquired] for a batch (a crafted stack, a trade, a gather). Each
+     * distinct id is checked once — the count comes from the inventory, not
+     * from how many arrived.
+     */
+    suspend fun onItemsAcquired(
+        sessionId: SessionId,
+        itemIds: Iterable<ItemId>,
+    ) {
+        for (itemId in itemIds.toSet()) onItemAcquired(sessionId, itemId)
     }
 
     /**
