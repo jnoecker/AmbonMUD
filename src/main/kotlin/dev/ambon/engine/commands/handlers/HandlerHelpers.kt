@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -26,11 +27,13 @@ import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.buildPeekExits
+import dev.ambon.engine.crafting.CraftingSystem
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.formatPeekLine
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.toGmcpPeek
+import kotlin.math.roundToInt
 
 /**
  * Resolves [sessionId] to a [PlayerState] and executes [block] with it.
@@ -210,6 +213,7 @@ internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
         trainerRegistry,
         puzzleSystem,
         jukeboxSystem,
+        craftingSystem,
     )
     emitShopGmcp(sessionId)
     emitBankGmcp(sessionId)
@@ -416,6 +420,7 @@ internal suspend fun sendLook(
     trainerRegistry: TrainerRegistry? = null,
     puzzleSystem: PuzzleSystem? = null,
     jukeboxSystem: JukeboxSystem? = null,
+    craftingSystem: CraftingSystem? = null,
 ) {
     val me = players.get(sessionId) ?: return
     val roomId = me.roomId
@@ -661,24 +666,8 @@ internal suspend fun sendLook(
     )
     gmcpEmitter?.sendRoomItems(sessionId, here)
 
-    // Send gathering nodes in this room
-    val roomNodes = gatheringRegistry?.nodesInRoom(roomId) ?: emptyList()
-    if (roomNodes.isNotEmpty()) {
-        gmcpEmitter?.sendCraftingNodes(
-            sessionId,
-            roomNodes.map { node ->
-                GmcpEmitter.CraftingNodePayload(
-                    id = node.id,
-                    name = node.displayName,
-                    skill = node.skill,
-                    skillRequired = node.skillRequired,
-                    image = node.image,
-                )
-            },
-        )
-    } else {
-        gmcpEmitter?.sendCraftingNodes(sessionId, emptyList())
-    }
+    // Send gathering nodes in this room (always, so a node-less room clears the list)
+    emitCraftingNodes(sessionId, roomId, gatheringRegistry, craftingSystem, items, gmcpEmitter)
 
     // Send interactive room features (doors, containers, levers, signs).
     // Always send — even when empty — so the client clears features from the previous room.
@@ -689,6 +678,63 @@ internal suspend fun sendLook(
         },
     )
 }
+
+/**
+ * Emits `Crafting.Nodes` for [roomId]: each node with its yields (named,
+ * with sprites, quantity ranges and rare-drop odds) and the time until a
+ * depleted node respawns, so the client can show a node card before the
+ * player commits to a gather.
+ */
+internal suspend fun emitCraftingNodes(
+    sessionId: SessionId,
+    roomId: RoomId,
+    gatheringRegistry: GatheringRegistry?,
+    craftingSystem: CraftingSystem?,
+    items: ItemRegistry,
+    gmcpEmitter: GmcpEmitter?,
+) {
+    val roomNodes = gatheringRegistry?.nodesInRoom(roomId) ?: emptyList()
+    gmcpEmitter?.sendCraftingNodes(
+        sessionId,
+        roomNodes.map { node -> buildCraftingNodePayload(node, craftingSystem, items) },
+    )
+}
+
+internal fun buildCraftingNodePayload(
+    node: GatheringNodeDef,
+    craftingSystem: CraftingSystem?,
+    items: ItemRegistry,
+): GmcpEmitter.CraftingNodePayload =
+    GmcpEmitter.CraftingNodePayload(
+        id = node.id,
+        name = node.displayName,
+        skill = node.skill,
+        skillRequired = node.skillRequired,
+        image = node.image,
+        yields = node.yields.map { y ->
+            val template = items.getTemplate(y.itemId)
+            GmcpEmitter.NodeYieldPayload(
+                itemId = y.itemId.value,
+                name = template?.displayName ?: y.itemId.value,
+                image = template?.image,
+                minQuantity = y.minQuantity,
+                maxQuantity = y.maxQuantity,
+            )
+        },
+        rareYields = node.rareYields.map { r ->
+            val template = items.getTemplate(r.itemId)
+            GmcpEmitter.NodeRareYieldPayload(
+                itemId = r.itemId.value,
+                name = template?.displayName ?: r.itemId.value,
+                image = template?.image,
+                quantity = r.quantity,
+                chancePct = (r.dropChance * 100).roundToInt().coerceIn(0, 100),
+            )
+        },
+        respawnSeconds = node.respawnSeconds,
+        xpReward = node.xpReward,
+        respawnRemainingMs = craftingSystem?.nodeRespawnRemainingMs(node.id) ?: 0L,
+    )
 
 internal fun buildFeaturePayload(
     feature: RoomFeature,

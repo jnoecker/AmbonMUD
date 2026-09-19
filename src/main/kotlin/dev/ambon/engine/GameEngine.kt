@@ -1398,6 +1398,7 @@ class GameEngine(
             players = players,
             mobs = mobs,
             world = world,
+            craftingSystem = craftingSystem,
             items = items,
             outbound = outbound,
             combat = combatSystem,

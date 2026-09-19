@@ -259,6 +259,12 @@ class CraftingSystem(
         return clock.millis() < until
     }
 
+    /** Milliseconds until a depleted node respawns; 0 when it can be gathered now. */
+    fun nodeRespawnRemainingMs(nodeId: String): Long {
+        val until = nodeDepletedUntil[nodeId] ?: return 0L
+        return (until - clock.millis()).coerceAtLeast(0L)
+    }
+
     /**
      * Determines crafting quality based on skill overshoot.
      * The more a player's skill exceeds the recipe requirement, the higher the quality chance.

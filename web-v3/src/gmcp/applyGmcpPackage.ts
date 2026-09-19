@@ -20,6 +20,8 @@ import type {
   CompletedAchievement,
   ContainerContents,
   CraftingNode,
+  CraftingNodeRareYield,
+  CraftingNodeYield,
   CraftingRecipe,
   CraftingResult,
   CraftingSkill,
@@ -354,6 +356,32 @@ function parseItemPacket(raw: unknown, fallbackId: string): ItemSummary {
     useEffect: typeof e.useEffect === "string" ? e.useEffect : undefined,
     onUse: parseOnUse(e.onUse),
   };
+}
+
+function parseNodeYields(raw: unknown): CraftingNodeYield[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((y): y is Record<string, unknown> => typeof y === "object" && y !== null)
+    .map((y) => ({
+      itemId: typeof y.itemId === "string" ? y.itemId : "",
+      name: typeof y.name === "string" ? y.name : "",
+      image: typeof y.image === "string" ? y.image : null,
+      minQuantity: safeNumber(y.minQuantity, 1),
+      maxQuantity: safeNumber(y.maxQuantity, 1),
+    }));
+}
+
+function parseNodeRareYields(raw: unknown): CraftingNodeRareYield[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((y): y is Record<string, unknown> => typeof y === "object" && y !== null)
+    .map((y) => ({
+      itemId: typeof y.itemId === "string" ? y.itemId : "",
+      name: typeof y.name === "string" ? y.name : "",
+      image: typeof y.image === "string" ? y.image : null,
+      quantity: safeNumber(y.quantity, 1),
+      chancePct: Math.max(0, Math.min(100, safeNumber(y.chancePct, 0))),
+    }));
 }
 
 /**
@@ -1927,6 +1955,11 @@ export function applyGmcpPackage(
             skill: typeof e.skill === "string" ? e.skill : "",
             skillRequired: safeNumber(e.skillRequired, 1),
             image: typeof e.image === "string" ? e.image : null,
+            yields: parseNodeYields(e.yields),
+            rareYields: parseNodeRareYields(e.rareYields),
+            respawnSeconds: safeNumber(e.respawnSeconds, 0),
+            xpReward: safeNumber(e.xpReward, 0),
+            respawnAtMs: safeNumber(e.respawnRemainingMs, 0) > 0 ? Date.now() + safeNumber(e.respawnRemainingMs, 0) : null,
           })),
       );
       break;

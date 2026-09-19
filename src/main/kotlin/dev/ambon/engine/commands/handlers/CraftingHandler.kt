@@ -115,6 +115,9 @@ class CraftingHandler(
                         rareFind = r.rareItemsGathered.isNotEmpty(),
                     )
                     gmcpEmitter?.sendCraftingCooldown(sessionId, "gather", me.gatherCooldownUntilMs)
+                    // The node is depleted now — re-send the room's nodes so the
+                    // card shows the respawn timer instead of a live Gather button.
+                    emitCraftingNodes(sessionId, me.roomId, gatheringRegistry ?: ctx.gatheringRegistry, cs, items, gmcpEmitter)
                     onItemGathered?.invoke(sessionId, r.node.skill)
                     // Gathered yields count as discoveries for an Akathavae's Arcanum.
                     for (gatheredId in r.itemsGathered.keys + r.rareItemsGathered.keys) {

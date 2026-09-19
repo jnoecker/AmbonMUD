@@ -22243,6 +22243,72 @@ html:has(.game-shell),
   background: rgb(58 44 26 / 85%);
 }
 
+/* Gathering-node card — the item manual's layout with a yields ledger. */
+.mm-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+.mm-action:disabled:hover { transform: none; }
+.mm-action:disabled .mm-action-icon { filter: none; }
+
+.node-skill-line-short { color: #9a2f24; }
+
+.node-section-title {
+  margin: 8px 0 4px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #5a4226;
+}
+
+.node-yield-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.node-yield {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #3a2c1a;
+}
+
+.node-yield-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: rgb(58 44 26 / 12%);
+}
+
+.node-yield-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.node-yield-qty {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #5a4226;
+}
+
+.node-yield-rare .node-yield-name::after {
+  content: " º6";
+  color: #b8860b;
+}
+
+.node-yield-chance { font-weight: 400; color: #8a6a2a; }
+
+.node-yield-unknown { font-style: italic; color: #6b5640; }
+
+.node-stats { margin-top: 8px; }
+
+.node-blocker { font-size: 0.9rem; font-style: italic; color: #6b5640; }
+
 /* Inline composer (Tell / Whisper) + Give picker on the player field-manual card. */
 .mm-compose {
   display: flex;

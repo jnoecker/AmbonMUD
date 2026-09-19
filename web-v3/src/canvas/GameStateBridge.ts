@@ -117,6 +117,8 @@ export const canvasCallbacks: {
   openPlayerCard: ((player: RoomPlayer) => void) | null;
   /** Open the parchment item card for a clicked room item. */
   openItemManual: ((entry: ItemEntry) => void) | null;
+  /** Open the gathering-node card (yields, skill, respawn) for a clicked node. */
+  openGatheringNode: ((nodeId: string) => void) | null;
   /** Staff: open the admin console (the canvas STAFF button). */
   openAdminPanel: (() => void) | null;
   /** Staff: toggle invisibility (the canvas eye button). */
@@ -162,6 +164,7 @@ export const canvasCallbacks: {
   openImagePreview: null,
   openMonsterManual: null,
   openItemManual: null,
+  openGatheringNode: null,
 };
 
 export const pendingCastRef: { current: PendingCast | null } = { current: null };
