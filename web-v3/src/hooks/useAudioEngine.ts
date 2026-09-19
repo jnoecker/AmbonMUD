@@ -8,6 +8,10 @@ const LOOP_TAIL_MS = 200;
 const COMBAT_RATE = 1.12;
 const NORMAL_RATE = 1.0;
 const COMBAT_RAMP_MS = 1500;
+// How long the combat treatment lingers after the last fight ends. Fights at
+// low level can be over in a couple of seconds — without this, the music
+// speeds up, ramps back down and speeds up again for each mob in a row.
+const COMBAT_LINGER_MS = 6000;
 const COMBAT_FILTER_FREQ = 180; // high-pass cutoff Hz — brightens/tightens the sound
 const NORMAL_FILTER_FREQ = 10; // effectively bypassed
 const LOW_HP_THRESHOLD = 0.25;
@@ -21,6 +25,13 @@ interface AudioPrefs {
   voiceVolume: number;
 }
 
+// Default volumes for a first visit. Deliberately quiet: the music and ambient
+// beds sit under the game rather than on top of it, and the player can always
+// turn them up. Only used when nothing is saved for a channel.
+export const DEFAULT_MUSIC_VOLUME = 0.25;
+export const DEFAULT_AMBIENT_VOLUME = 0.3;
+export const DEFAULT_VOICE_VOLUME = 0.6;
+
 function loadPrefs(): AudioPrefs {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -28,13 +39,18 @@ function loadPrefs(): AudioPrefs {
       const parsed = JSON.parse(raw) as Partial<AudioPrefs>;
       return {
         enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : false,
-        musicVolume: typeof parsed.musicVolume === "number" ? parsed.musicVolume : 0.5,
-        ambientVolume: typeof parsed.ambientVolume === "number" ? parsed.ambientVolume : 0.5,
-        voiceVolume: typeof parsed.voiceVolume === "number" ? parsed.voiceVolume : 0.7,
+        musicVolume: typeof parsed.musicVolume === "number" ? parsed.musicVolume : DEFAULT_MUSIC_VOLUME,
+        ambientVolume: typeof parsed.ambientVolume === "number" ? parsed.ambientVolume : DEFAULT_AMBIENT_VOLUME,
+        voiceVolume: typeof parsed.voiceVolume === "number" ? parsed.voiceVolume : DEFAULT_VOICE_VOLUME,
       };
     }
   } catch { /* ignore */ }
-  return { enabled: false, musicVolume: 0.5, ambientVolume: 0.5, voiceVolume: 0.7 };
+  return {
+    enabled: false,
+    musicVolume: DEFAULT_MUSIC_VOLUME,
+    ambientVolume: DEFAULT_AMBIENT_VOLUME,
+    voiceVolume: DEFAULT_VOICE_VOLUME,
+  };
 }
 
 function savePrefs(prefs: AudioPrefs) {
@@ -126,6 +142,9 @@ export function useAudioEngine(): AudioEngine {
   const voiceTokenRef = useRef(0);
   const combatFxRef = useRef<CombatFxState>(emptyCombatFx());
   const combatActiveRef = useRef(false);
+  // Pending "leave combat" restore, held back by COMBAT_LINGER_MS so a string
+  // of short fights keeps one continuous combat treatment.
+  const combatLingerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prefsRef = useRef(prefs);
   useEffect(() => { prefsRef.current = prefs; });
 
@@ -442,54 +461,79 @@ export function useAudioEngine(): AudioEngine {
     combatFxRef.current = { lfo, lfoGain };
   }, []);
 
+  const cancelCombatLinger = useCallback(() => {
+    if (combatLingerRef.current !== null) {
+      clearTimeout(combatLingerRef.current);
+      combatLingerRef.current = null;
+    }
+  }, []);
+
+  /** Restore the normal music treatment (rate + filter). */
+  const restoreNormalMusic = useCallback(() => {
+    combatActiveRef.current = false;
+    const ctx = ctxRef.current;
+    const music = musicRef.current;
+    if (ctx && music?.source) {
+      rampParam(ctx, music.source.playbackRate, NORMAL_RATE, COMBAT_RAMP_MS);
+    }
+    if (ctx && music?.filter) {
+      rampParam(ctx, music.filter.frequency, NORMAL_FILTER_FREQ, COMBAT_RAMP_MS);
+    }
+  }, []);
+
   const setCombatState = useCallback((inCombat: boolean, hpPercent: number) => {
     if (!prefsRef.current.enabled) return;
-
-    const wasInCombat = combatActiveRef.current;
-    combatActiveRef.current = inCombat;
 
     const ctx = ctxRef.current;
     const music = musicRef.current;
 
-    if (inCombat && !wasInCombat) {
-      // Entering combat — speed up + filter
-      if (ctx && music?.source) {
-        rampParam(ctx, music.source.playbackRate, COMBAT_RATE, COMBAT_RAMP_MS);
+    if (inCombat) {
+      // Re-entering combat inside the linger window: the treatment is still
+      // applied, so just cancel the pending restore and carry on.
+      cancelCombatLinger();
+      if (!combatActiveRef.current) {
+        combatActiveRef.current = true;
+        // Entering combat — speed up + filter
+        if (ctx && music?.source) {
+          rampParam(ctx, music.source.playbackRate, COMBAT_RATE, COMBAT_RAMP_MS);
+        }
+        if (ctx && music?.filter) {
+          rampParam(ctx, music.filter.frequency, COMBAT_FILTER_FREQ, COMBAT_RAMP_MS);
+        }
       }
-      if (ctx && music?.filter) {
-        rampParam(ctx, music.filter.frequency, COMBAT_FILTER_FREQ, COMBAT_RAMP_MS);
-      }
-    } else if (!inCombat && wasInCombat) {
-      // Leaving combat — restore normal
-      if (ctx && music?.source) {
-        rampParam(ctx, music.source.playbackRate, NORMAL_RATE, COMBAT_RAMP_MS);
-      }
-      if (ctx && music?.filter) {
-        rampParam(ctx, music.filter.frequency, NORMAL_FILTER_FREQ, COMBAT_RAMP_MS);
-      }
+    } else {
+      // Leaving combat — the low-HP pulse stops now, but the tempo/filter
+      // restore waits out the linger so back-to-back fights don't yo-yo.
       stopPulseLfo();
+      if (combatActiveRef.current && combatLingerRef.current === null) {
+        combatLingerRef.current = setTimeout(() => {
+          combatLingerRef.current = null;
+          restoreNormalMusic();
+        }, COMBAT_LINGER_MS);
+      }
       return;
     }
 
     // Low-HP pulse (only during combat)
-    if (inCombat && hpPercent <= LOW_HP_THRESHOLD) {
+    if (hpPercent <= LOW_HP_THRESHOLD) {
       startPulseLfo();
     } else {
       stopPulseLfo();
     }
-  }, [startPulseLfo, stopPulseLfo]);
+  }, [startPulseLfo, stopPulseLfo, cancelCombatLinger, restoreNormalMusic]);
 
   // ── Lifecycle ───────────────────────────────────────────────
 
   const stopAll = useCallback(() => {
     stopPulseLfo();
     stopVoice();
+    cancelCombatLinger();
     combatActiveRef.current = false;
     if (musicRef.current) stopTrack(musicRef.current, 500);
     if (ambientRef.current) stopTrack(ambientRef.current, 500);
     Object.assign(musicRef, { current: emptyTrack() });
     Object.assign(ambientRef, { current: emptyTrack() });
-  }, [stopTrack, stopPulseLfo, stopVoice]);
+  }, [stopTrack, stopPulseLfo, stopVoice, cancelCombatLinger]);
 
   const toggle = useCallback(() => {
     const next = !prefsRef.current.enabled;
@@ -502,9 +546,10 @@ export function useAudioEngine(): AudioEngine {
     } else {
       // If disabling, also kill combat effects
       stopPulseLfo();
+      cancelCombatLinger();
       combatActiveRef.current = false;
     }
-  }, [updatePrefs, stopPulseLfo, unlockCtx]);
+  }, [updatePrefs, stopPulseLfo, unlockCtx, cancelCombatLinger]);
 
   const setMusicVolume = useCallback((v: number) => {
     updatePrefs({ musicVolume: Math.max(0, Math.min(1, v)) });
@@ -539,8 +584,10 @@ export function useAudioEngine(): AudioEngine {
     const ambient = ambientRef;
     const ctx = ctxRef;
     const combatFx = combatFxRef;
+    const combatLinger = combatLingerRef;
     const voice = voiceRef;
     return () => {
+      if (combatLinger.current !== null) clearTimeout(combatLinger.current);
       if (combatFx.current.lfo) try { combatFx.current.lfo.stop(); } catch { /* ok */ }
       if (music.current?.source) try { music.current.source.stop(); } catch { /* ok */ }
       if (ambient.current?.source) try { ambient.current.source.stop(); } catch { /* ok */ }

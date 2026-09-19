@@ -175,6 +175,38 @@ class QuestSystemTest {
         }
 
     @Test
+    fun `objective-updated hook observes the committed progress and the turn-in mob is already flagged`() =
+        runTest {
+            // Regression: the hook used to fire before `activeQuests` was written,
+            // so an engine listener that re-read quest state (to refresh the
+            // turn-in NPC's `questComplete` indicator for a player already in the
+            // room) saw the stale, incomplete objectives and never flagged the mob.
+            val turnInQuestId = "zone:turnin_quest"
+            val turnInQuest = killQuest.copy(id = turnInQuestId, completionType = "npc_turn_in")
+            val (qs, players, _) = setup(turnInQuest)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            val observedCurrent = mutableListOf<Int>()
+            val observedCompleteMobs = mutableListOf<Set<String>>()
+            qs.onQuestObjectiveUpdated = { s, qid, index, _, _, _ ->
+                val prog = players.get(s)!!.activeQuests.getValue(qid).objectives[index]
+                observedCurrent += prog.current
+                observedCompleteMobs += qs.questCompleteMobIds(s, listOf(turnInQuest.giverMobId))
+            }
+
+            qs.acceptQuest(sid, turnInQuestId)
+            repeat(3) { qs.onMobKilled(sid, mobTemplateKey) }
+
+            assertEquals(listOf(1, 2, 3), observedCurrent, "hook must see the freshly committed progress")
+            assertEquals(
+                listOf(emptySet(), emptySet(), setOf(turnInQuest.giverMobId)),
+                observedCompleteMobs,
+                "the turn-in giver must already read as quest-complete inside the final update hook",
+            )
+        }
+
+    @Test
     fun `quest auto-completes and grants rewards when all objectives done`() =
         runTest {
             val (qs, players, outbound) = setup()

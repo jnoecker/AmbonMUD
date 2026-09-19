@@ -16,9 +16,9 @@ import {
   HelpIcon,
   SpellbookIcon,
   QuestsTabIcon,
-  SkillCastIcon,
   SendIcon,
 } from "./Icons";
+import { SkillIcon } from "./SkillIcon";
 
 function skillCategory(skill: SkillSummary): string {
   if (skill.source === "pet") return "skill-pet";
@@ -127,10 +127,7 @@ function SkillSlot({
       onDragLeave={onDragLeave}
       onDrop={(e) => onDrop(e, index)}
     >
-      {skill.image
-        ? <img src={skill.image} alt="" className="action-bar-skill-img" draggable={false} />
-        : <SkillCastIcon className="action-bar-skill-icon" classRestriction={skill.classRestriction} targetType={skill.targetType} />
-      }
+      <SkillIcon skill={skill} imgClassName="action-bar-skill-img" iconClassName="action-bar-skill-icon" />
       {onCooldown && (
         <span
           className="action-bar-skill-sweep"

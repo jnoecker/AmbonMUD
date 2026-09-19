@@ -205,6 +205,45 @@ class CraftingSystemTest {
         }
 
         @Test
+        fun `nodeRespawnRemainingMs counts down from a gather and reads zero once available`() {
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            assertEquals(0L, system.nodeRespawnRemainingMs(node.id))
+            system.gather(player, "copper", roomId, items)
+            assertEquals(60_000L, system.nodeRespawnRemainingMs(node.id))
+            clock.advance(15_000L)
+            assertEquals(45_000L, system.nodeRespawnRemainingMs(node.id))
+            clock.advance(50_000L)
+            assertEquals(0L, system.nodeRespawnRemainingMs(node.id))
+        }
+
+        @Test
+        fun `Crafting Nodes payload lists yields with names and rare odds plus the respawn timer`() {
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            val richNode = node.copy(
+                id = "test:silver_vein",
+                keyword = "silver",
+                yields = listOf(GatheringYield(itemId = copperOreId, minQuantity = 1, maxQuantity = 3)),
+                rareYields = listOf(RareGatheringYield(itemId = copperOreId, quantity = 1, dropChance = 0.15)),
+            )
+            gatheringRegistry.register(listOf(richNode))
+            system.gather(player, "silver", roomId, items)
+
+            val payload = dev.ambon.engine.commands.handlers.buildCraftingNodePayload(richNode, system, items)
+            assertEquals(1, payload.yields.size)
+            assertEquals("copper ore", payload.yields[0].name)
+            assertEquals(1, payload.yields[0].minQuantity)
+            assertEquals(3, payload.yields[0].maxQuantity)
+            assertEquals(15, payload.rareYields.single().chancePct)
+            assertEquals(60, payload.respawnSeconds)
+            assertEquals(10, payload.xpReward)
+            assertEquals(60_000L, payload.respawnRemainingMs)
+        }
+
+        @Test
         fun `gathering awards XP and can level up`() {
             val player = makePlayer(
                 skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),

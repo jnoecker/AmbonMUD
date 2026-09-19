@@ -30,6 +30,7 @@ const EquipmentPanel = lazy(() => import("./components/panels/EquipmentPanel").t
 const MailPanel = lazy(() => import("./components/panels/MailPanel").then((m) => ({ default: m.MailPanel })));
 const MonsterManualPanel = lazy(() => import("./components/panels/MonsterManualPanel").then((m) => ({ default: m.MonsterManualPanel })));
 const ItemManualPanel = lazy(() => import("./components/panels/ItemManualPanel").then((m) => ({ default: m.ItemManualPanel })));
+const GatheringNodePanel = lazy(() => import("./components/panels/GatheringNodePanel").then((m) => ({ default: m.GatheringNodePanel })));
 const ArcanumPanel = lazy(() => import("./components/panels/ArcanumPanel").then((m) => ({ default: m.ArcanumPanel })));
 const ShrinePanel = lazy(() => import("./components/panels/ShrinePanel").then((m) => ({ default: m.ShrinePanel })));
 const CraftingPanel = lazy(() => import("./components/panels/CraftingPanel").then((m) => ({ default: m.CraftingPanel })));
@@ -213,6 +214,9 @@ function App() {
   const [roomPlayer, setRoomPlayer] = useState<WhoPlayer | null>(null);
   // Item card (clicked room item)
   const [item, setItem] = useState<ItemEntry | null>(null);
+  // Id (not a snapshot) so the card follows Crafting.Nodes re-emits — e.g. the
+  // respawn timer that arrives right after a gather.
+  const [openNodeId, setOpenNodeId] = useState<string | null>(null);
   // When Examine is clicked we `look` the item and route the resulting
   // Room.LookTarget into the item card (so it carries the full description).
   const pendingExamineRef = useRef<{ image: string | null; equippedSlot?: string } | null>(null);
@@ -447,6 +451,10 @@ function App() {
 
 
   const questTargets = useMemo(() => deriveQuestTargets(state.quests), [state.quests]);
+  const openNode = useMemo(
+    () => (openNodeId ? state.craftingNodes.find((n) => n.id === openNodeId) ?? null : null),
+    [openNodeId, state.craftingNodes],
+  );
 
   // Sync state into canvas bridge for PixiJS
   useEffect(() => {
@@ -478,6 +486,7 @@ function App() {
         ),
       ),
       questTargets: questTargets,
+      recallCooldownUntilMs: state.recallState?.cooldownUntilMs ?? null,
       serverAssets: state.serverAssets,
       worldTime: state.worldTime,
       worldWeather: state.worldWeather,
@@ -570,6 +579,7 @@ function App() {
       setMonster(entry);
     };
     canvasCallbacks.openItemManual = (entry) => setItem(entry);
+    canvasCallbacks.openGatheringNode = (nodeId) => setOpenNodeId(nodeId);
     canvasCallbacks.openPlayerCard = (rp) => {
       // Enrich the sparse RoomPlayer with live Who data (title/description/class)
       // when available, so the card reads fully; otherwise show what we have.
@@ -623,6 +633,7 @@ function App() {
       canvasCallbacks.openMonsterManual = null;
       canvasCallbacks.openPlayerCard = null;
       canvasCallbacks.openItemManual = null;
+      canvasCallbacks.openGatheringNode = null;
       canvasCallbacks.openImagePreview = null;
       canvasCallbacks.prefillCommand = null;
     };
@@ -1372,6 +1383,7 @@ function App() {
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
             inventory={state.inventory}
+            equipment={state.equipment}
             players={state.players}
             canManageItems={connected && hasCharacterProfile}
             roomFeatures={state.roomFeatures}
@@ -2402,6 +2414,24 @@ function App() {
           onCommand={sendCommand}
           onZoomImage={(url) => setImagePreviewUrl(url)}
           onVideo={(url) => setVideoUrl(url)}
+        />
+        </Suspense>
+      )}
+
+      {/* Gathering node card — what a node yields, and Gather. Closes itself
+          when the node leaves the room list (room change). */}
+      {openNode && (
+        <Suspense fallback={null}>
+        <GatheringNodePanel
+          key={openNode.id}
+          node={openNode}
+          skills={state.craftingSkills}
+          gatherCooldownUntilMs={state.gatherCooldownUntilMs}
+          bg={state.serverAssets["node_manual_bg"] ?? state.serverAssets["item_manual_bg"] ?? state.serverAssets["monster_manual_bg"]}
+          serverAssets={state.serverAssets}
+          onClose={() => setOpenNodeId(null)}
+          onCommand={sendCommand}
+          onZoomImage={(url) => setImagePreviewUrl(url)}
         />
         </Suspense>
       )}

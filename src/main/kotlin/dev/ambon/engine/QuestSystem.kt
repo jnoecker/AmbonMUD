@@ -438,13 +438,37 @@ class QuestSystem(
     suspend fun onItemCollected(
         sessionId: SessionId,
         item: ItemInstance,
+    ) = onItemAcquired(sessionId, item.id)
+
+    /**
+     * Called when an item of [itemId] enters the player's inventory by any
+     * route — pickup, purchase, crafting, gathering, a container, a trade,
+     * mail, a bank withdrawal. COLLECT objectives count what the player
+     * holds, so it doesn't matter how the item got there; without this hook
+     * on every route a bought quest item sat at 0/N until it was dropped and
+     * picked back up.
+     */
+    suspend fun onItemAcquired(
+        sessionId: SessionId,
+        itemId: ItemId,
     ) {
         advanceObjectives(sessionId) { objDef, prog ->
             val handler = objectiveHandlers.collectHandler(objDef.type) ?: return@advanceObjectives null
-            val itemId = item.id.value
-            val currentCount = items.inventory(sessionId).count { inv -> inv.id.value == itemId }
-            handler.advance(objDef, prog, itemId, currentCount)
+            val currentCount = items.inventory(sessionId).count { inv -> inv.id == itemId }
+            handler.advance(objDef, prog, itemId.value, currentCount)
         }
+    }
+
+    /**
+     * [onItemAcquired] for a batch (a crafted stack, a trade, a gather). Each
+     * distinct id is checked once — the count comes from the inventory, not
+     * from how many arrived.
+     */
+    suspend fun onItemsAcquired(
+        sessionId: SessionId,
+        itemIds: Iterable<ItemId>,
+    ) {
+        for (itemId in itemIds.toSet()) onItemAcquired(sessionId, itemId)
     }
 
     /**
@@ -485,7 +509,7 @@ class QuestSystem(
     ) {
         val ps = players.get(sessionId) ?: return
         val updatedQuests = ps.activeQuests.toMutableMap()
-        var changed = false
+        val updates = mutableListOf<ObjectiveUpdate>()
 
         for ((questId, state) in ps.activeQuests) {
             val quest = registry.get(questId) ?: continue
@@ -502,28 +526,40 @@ class QuestSystem(
                 sendObjectiveProgress(sessionId, objDef.description, updated)
                 val readyToTurnIn =
                     handler?.requiresNpcTurnIn == true && newObjectives.all { it.isComplete }
-                onQuestObjectiveUpdated?.invoke(
-                    sessionId,
-                    questId,
-                    index,
-                    updated.current,
-                    updated.required,
-                    readyToTurnIn,
-                )
+                updates += ObjectiveUpdate(questId, index, updated, readyToTurnIn)
             }
 
             if (questChanged) {
                 updatedQuests[questId] = state.copy(objectives = newObjectives)
-                changed = true
             }
         }
 
-        if (changed) {
-            ps.activeQuests = updatedQuests
-            players.persistPlayer(ps.sessionId)
-            checkAutoComplete(sessionId, ps.activeQuests)
+        if (updates.isEmpty()) return
+        // Commit the new progress *before* notifying listeners: the engine's
+        // objective-updated hook re-reads `activeQuests` (e.g. to flip the
+        // turn-in NPC's `questComplete` indicator for a player already standing
+        // in the room), and would otherwise see the pre-update state.
+        ps.activeQuests = updatedQuests
+        players.persistPlayer(ps.sessionId)
+        for (u in updates) {
+            onQuestObjectiveUpdated?.invoke(
+                sessionId,
+                u.questId,
+                u.objectiveIndex,
+                u.progress.current,
+                u.progress.required,
+                u.readyToTurnIn,
+            )
         }
+        checkAutoComplete(sessionId, ps.activeQuests)
     }
+
+    private data class ObjectiveUpdate(
+        val questId: String,
+        val objectiveIndex: Int,
+        val progress: ObjectiveProgress,
+        val readyToTurnIn: Boolean,
+    )
 
     /**
      * Format the quest log for a player.

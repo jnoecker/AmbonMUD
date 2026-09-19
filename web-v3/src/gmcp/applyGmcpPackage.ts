@@ -20,6 +20,8 @@ import type {
   CompletedAchievement,
   ContainerContents,
   CraftingNode,
+  CraftingNodeRareYield,
+  CraftingNodeYield,
   CraftingRecipe,
   CraftingResult,
   CraftingSkill,
@@ -356,6 +358,32 @@ function parseItemPacket(raw: unknown, fallbackId: string): ItemSummary {
   };
 }
 
+function parseNodeYields(raw: unknown): CraftingNodeYield[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((y): y is Record<string, unknown> => typeof y === "object" && y !== null)
+    .map((y) => ({
+      itemId: typeof y.itemId === "string" ? y.itemId : "",
+      name: typeof y.name === "string" ? y.name : "",
+      image: typeof y.image === "string" ? y.image : null,
+      minQuantity: safeNumber(y.minQuantity, 1),
+      maxQuantity: safeNumber(y.maxQuantity, 1),
+    }));
+}
+
+function parseNodeRareYields(raw: unknown): CraftingNodeRareYield[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((y): y is Record<string, unknown> => typeof y === "object" && y !== null)
+    .map((y) => ({
+      itemId: typeof y.itemId === "string" ? y.itemId : "",
+      name: typeof y.name === "string" ? y.name : "",
+      image: typeof y.image === "string" ? y.image : null,
+      quantity: safeNumber(y.quantity, 1),
+      chancePct: Math.max(0, Math.min(100, safeNumber(y.chancePct, 0))),
+    }));
+}
+
 /**
  * Parse one wire mob object into a {@link RoomMob}. Shared by Room.Mobs (full
  * roster) and Room.AddMob. Room.UpdateMob is intentionally NOT routed through
@@ -380,6 +408,25 @@ function parseMobPacket(raw: unknown, fallbackId: string): RoomMob {
     variantName: typeof e.variantName === "string" ? e.variantName : null,
     tint: typeof e.tint === "string" ? e.tint : null,
     overlay: typeof e.overlay === "string" ? e.overlay : null,
+  };
+}
+
+/** The static half of a MobInfo entry, as carried on Room.AddMob. */
+function parseMobInfoStub(raw: unknown, id: string): MobInfo | null {
+  if (!raw || typeof raw !== "object") return null;
+  const e = raw as Record<string, unknown>;
+  return {
+    id,
+    level: safeNumber(e.level, 1),
+    tier: "standard",
+    questGiver: e.questGiver === true,
+    questAvailable: false,
+    questComplete: false,
+    shopKeeper: false,
+    dialogue: e.dialogue === true,
+    aggressive: e.aggressive === true,
+    combatant: e.combatant !== false,
+    illuminationPct: null,
   };
 }
 
@@ -806,6 +853,13 @@ export function applyGmcpPackage(
       const id = packet.id;
       if (typeof id !== "string") break;
       ctx.setMobs((prev) => [...prev, parseMobPacket(packet, id)]);
+      // A mob that walks in or respawns doesn't get a fresh Room.MobInfo, so
+      // seed its entry from the stub the packet carries. Never overwrite an
+      // existing entry — that one has the per-viewer quest flags.
+      const stub = parseMobInfoStub(packet.info, id);
+      if (stub) {
+        ctx.setMobInfo((prev) => (prev.some((m) => m.id === id) ? prev : [...prev, stub]));
+      }
       break;
     }
 
@@ -1241,6 +1295,23 @@ export function applyGmcpPackage(
             : { ...q, objectives };
         }),
       );
+      // Surface the tick as a toast — the terminal line is hidden behind the
+      // canvas, so without this a collect objective completing (say, after
+      // buying the last cup of tea) gives no visible cue at all.
+      if (typeof packet.questName === "string" && typeof packet.objectiveDescription === "string") {
+        ctx.pushQuestNotification({
+          id: `${Date.now()}-${Math.random()}`,
+          questId,
+          questName: packet.questName,
+          event: packet.readyToTurnIn === true ? "ready" : "update",
+          receivedAt: Date.now(),
+          objective: {
+            description: packet.objectiveDescription,
+            current: safeNumber(packet.current),
+            required: safeNumber(packet.required),
+          },
+        });
+      }
       break;
     }
 
@@ -1871,6 +1942,11 @@ export function applyGmcpPackage(
       if (packet.scope === "friends" && packet.message) {
         ctx.setToast(packet.message);
       }
+      // Recall is a canvas button with no panel; a refused early recall was
+      // a silent click without this.
+      if (packet.scope === "recall" && packet.message) {
+        ctx.setToast(packet.message);
+      }
       break;
     }
 
@@ -1929,6 +2005,11 @@ export function applyGmcpPackage(
             skill: typeof e.skill === "string" ? e.skill : "",
             skillRequired: safeNumber(e.skillRequired, 1),
             image: typeof e.image === "string" ? e.image : null,
+            yields: parseNodeYields(e.yields),
+            rareYields: parseNodeRareYields(e.rareYields),
+            respawnSeconds: safeNumber(e.respawnSeconds, 0),
+            xpReward: safeNumber(e.xpReward, 0),
+            respawnAtMs: safeNumber(e.respawnRemainingMs, 0) > 0 ? Date.now() + safeNumber(e.respawnRemainingMs, 0) : null,
           })),
       );
       break;
@@ -2135,7 +2216,15 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const roomId = typeof packet.roomId === "string" ? packet.roomId : null;
       const roomTitle = typeof packet.roomTitle === "string" ? packet.roomTitle : null;
-      ctx.setRecallState(roomId == null && roomTitle == null ? null : { roomId, roomTitle });
+      // Remaining ms rather than an absolute server instant, so the countdown
+      // is immune to clock skew between the engine and the browser.
+      const remaining = safeNumber(packet.cooldownRemainingMs, 0);
+      const cooldownUntilMs = remaining > 0 ? Date.now() + remaining : null;
+      ctx.setRecallState(
+        roomId == null && roomTitle == null && cooldownUntilMs == null
+          ? null
+          : { roomId, roomTitle, cooldownUntilMs },
+      );
       break;
     }
 

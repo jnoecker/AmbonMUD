@@ -703,7 +703,7 @@ Full snapshot of mobs currently in the room. Sent on login and after any mob ent
 
 ### `Room.AddMob`
 
-Sent immediately to all players in a room when a mob spawns or wanders in. Same field set as `Room.Mobs` entries.
+Sent immediately to all players in a room when a mob spawns or wanders in. Same field set as `Room.Mobs` entries, plus an `info` stub with the mob's static `Room.MobInfo` facts (`level`, `questGiver`, `dialogue`, `aggressive`, `combatant`) — no `Room.MobInfo` follows an `AddMob`, so this is how the client learns whether the newcomer can be attacked. Per-viewer fields (`questAvailable`, `questComplete`, arcanum badges, `shopKeeper`) still only travel in `Room.MobInfo`; the client keeps an existing entry rather than overwriting it with the stub.
 
 ```json
 {
@@ -712,7 +712,8 @@ Sent immediately to all players in a room when a mob spawns or wanders in. Same 
   "description": "A watchful guard in polished chainmail.",
   "hp": 40,
   "maxHp": 40,
-  "image": "/images/mobs/guard.png"
+  "image": "/images/mobs/guard.png",
+  "info": { "level": 4, "questGiver": false, "dialogue": true, "aggressive": false, "combatant": true }
 }
 ```
 
@@ -1002,9 +1003,18 @@ Sent immediately when a single quest objective progresses.
   "questId": "find_the_relic",
   "objectiveIndex": 1,
   "current": 1,
-  "required": 1
+  "required": 1,
+  "readyToTurnIn": true,
+  "questName": "Find the Relic",
+  "objectiveDescription": "Recover the relic"
 }
 ```
+
+| Field                  | Type    | Description |
+|------------------------|---------|-------------|
+| `readyToTurnIn`        | bool    | True when this tick completed the last objective of an NPC turn-in quest |
+| `questName`            | string? | Quest display name, so the client can toast the tick without cross-referencing `Quest.List` |
+| `objectiveDescription` | string? | The objective's description text |
 
 ---
 
@@ -1550,7 +1560,7 @@ Every outbound package name currently emitted by `GmcpEmitter.kt`. Packages mark
 |---------|-------|
 | `Crafting.Recipes` | Known recipes |
 | `Crafting.Skills` | Skill levels per profession |
-| `Crafting.Nodes` | Visible gathering nodes |
+| `Crafting.Nodes` | Visible gathering nodes: `id`, `name`, `skill`, `skillRequired`, `image`, `yields[]` (`itemId`, `name`, `image`, `minQuantity`, `maxQuantity`), `rareYields[]` (`…`, `quantity`, `chancePct`), `respawnSeconds`, `xpReward`, `respawnRemainingMs` (0 when gatherable). Re-sent after a gather so the depleted timer reaches the node card |
 | `Crafting.Cooldown` | Active gather/craft cooldowns |
 | `Crafting.Result` | Outcome of a craft action |
 

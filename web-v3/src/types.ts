@@ -279,6 +279,8 @@ export interface RoomState {
 export interface RecallState {
   roomId: string | null;
   roomTitle: string | null;
+  /** Client-clock instant when `recall` is usable again; null when ready. */
+  cooldownUntilMs: number | null;
 }
 
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */
@@ -770,12 +772,35 @@ export interface CraftingRecipe {
   outputQuantity: number;
 }
 
+export interface CraftingNodeYield {
+  itemId: string;
+  name: string;
+  image: string | null;
+  minQuantity: number;
+  maxQuantity: number;
+}
+
+export interface CraftingNodeRareYield {
+  itemId: string;
+  name: string;
+  image: string | null;
+  quantity: number;
+  /** 0–100. */
+  chancePct: number;
+}
+
 export interface CraftingNode {
   id: string;
   name: string;
   skill: string;
   skillRequired: number;
   image?: string | null;
+  yields: CraftingNodeYield[];
+  rareYields: CraftingNodeRareYield[];
+  respawnSeconds: number;
+  xpReward: number;
+  /** Client-clock instant when a depleted node respawns; null when available. */
+  respawnAtMs: number | null;
 }
 
 export interface CraftingResult {
@@ -924,10 +949,16 @@ export interface QuestNotification {
   id: string;
   questId: string;
   questName: string;
-  event: "complete" | "update" | "accept";
+  /**
+   * "update" — an objective ticked (progress shown in [objective]);
+   * "ready" — the last objective of a turn-in quest just completed.
+   */
+  event: "complete" | "update" | "accept" | "ready";
   receivedAt: number;
   // Populated for "complete" events; null/empty for "update".
   questDescription?: string;
+  /** Populated for "update" / "ready" events. */
+  objective?: { description: string; current: number; required: number };
   rewards?: {
     xp: number;
     gold: number;

@@ -836,6 +836,18 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"maxHp\":20"))
         }
 
+    @Test
+    fun `sendRoomAddMob carries the static mob-info stub so a prop that wanders in is not attackable`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            val goose = mob(id = "zone:goose", name = "an umbrella goose").copy(role = dev.ambon.domain.mob.MobRole.PROP, level = 2)
+            e.sendRoomAddMob(sid, goose)
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"info\":{"), data.jsonData)
+            assertTrue(data.jsonData.contains("\"combatant\":false"), data.jsonData)
+            assertTrue(data.jsonData.contains("\"level\":2"), data.jsonData)
+        }
+
     // ── Room.UpdateMob ──
 
     @Test
@@ -1540,6 +1552,27 @@ class GmcpEmitterTest {
             assertTrue(events[0].jsonData.contains("\"questId\":\"slay_goblins\""))
             assertTrue(events[0].jsonData.contains("\"objectiveIndex\":0"))
             assertTrue(events[0].jsonData.contains("\"current\":4"))
+        }
+
+    @Test
+    fun `sendQuestUpdate carries the quest name and objective description for the client toast`() =
+        runTest {
+            val e = emitter("Quest")
+            e.sendQuestUpdate(
+                sid,
+                "slay_goblins",
+                0,
+                5,
+                5,
+                readyToTurnIn = true,
+                questName = "Goblin Menace",
+                objectiveDescription = "Slay 5 goblins",
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"questName\":\"Goblin Menace\""))
+            assertTrue(events[0].jsonData.contains("\"objectiveDescription\":\"Slay 5 goblins\""))
+            assertTrue(events[0].jsonData.contains("\"readyToTurnIn\":true"))
         }
 
     @Test

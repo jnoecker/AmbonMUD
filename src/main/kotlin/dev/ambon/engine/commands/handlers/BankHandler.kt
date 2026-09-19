@@ -14,6 +14,7 @@ class BankHandler(
     private val markVitalsDirty: ((SessionId) -> Unit)? = null,
 ) : CommandHandler {
     private val players = ctx.players
+    private val questSystem = ctx.questSystem
     private val world = ctx.world
     private val items = ctx.items
     private val outbound = ctx.outbound
@@ -111,6 +112,7 @@ class BankHandler(
         val withdrawn = me.bankItems.removeAt(idx)
         items.addToInventory(sessionId, withdrawn)
         metrics.onGameEvent("bank", "withdraw_item")
+        questSystem?.onItemAcquired(sessionId, withdrawn.id)
         outbound.send(OutboundEvent.SendInfo(sessionId, "You withdraw ${withdrawn.item.displayName} from your bank vault."))
         syncItemsGmcp(sessionId, items, gmcpEmitter)
         emitBankState(sessionId, me)

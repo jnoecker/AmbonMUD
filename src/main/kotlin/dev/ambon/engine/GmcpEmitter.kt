@@ -667,18 +667,27 @@ class GmcpEmitter(
     }
 
     /**
-     * Sends `Char.Recall` with the player's current recall point so clients can
-     * display it (e.g. inn popout). Emits null fields when no recall is set.
+     * Sends `Char.Recall`: the player's recall point (null fields when none is
+     * set) plus how long until `recall` is usable again
+     * ([cooldownRemainingMs], 0 when ready). Sent on login, when the point is
+     * set, after a recall (cooldown just started) and when a recall is refused
+     * for cooldown — so the canvas Recall button can show a countdown instead
+     * of a silent no-op.
      */
     suspend fun sendCharRecall(
         sessionId: SessionId,
         roomId: RoomId?,
         roomTitle: String?,
+        cooldownRemainingMs: Long = 0L,
     ) {
         emit(
             sessionId,
             "Char.Recall",
-            CharRecallPayload(roomId = roomId?.value, roomTitle = roomTitle),
+            CharRecallPayload(
+                roomId = roomId?.value,
+                roomTitle = roomTitle,
+                cooldownRemainingMs = cooldownRemainingMs.coerceAtLeast(0L),
+            ),
             supportCheck = "Char.Recall",
         )
     }
@@ -1162,7 +1171,7 @@ class GmcpEmitter(
         if (world != null) {
             val recallId = players.recallTarget(sessionId)
             val recallTitle = recallId?.let { world.rooms[it]?.title }
-            sendCharRecall(sessionId, recallId, recallTitle)
+            sendCharRecall(sessionId, recallId, recallTitle, player.recallCooldownUntilMs - nowMs())
         }
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
@@ -1457,6 +1466,11 @@ class GmcpEmitter(
         emit(sessionId, "Quest.List", payload)
     }
 
+    /**
+     * One objective ticked. [questName] and [objectiveDescription] ride along so
+     * the client can toast the progress ("Cups of tea 2/3", "Ready to turn in")
+     * without cross-referencing its quest list, which may not have arrived yet.
+     */
     suspend fun sendQuestUpdate(
         sessionId: SessionId,
         questId: String,
@@ -1464,6 +1478,8 @@ class GmcpEmitter(
         current: Int,
         required: Int,
         readyToTurnIn: Boolean,
+        questName: String? = null,
+        objectiveDescription: String? = null,
     ) {
         emit(
             sessionId,
@@ -1474,6 +1490,8 @@ class GmcpEmitter(
                 current = current,
                 required = required,
                 readyToTurnIn = readyToTurnIn,
+                questName = questName,
+                objectiveDescription = objectiveDescription,
             ),
             supportCheck = "Quest",
         )
@@ -3232,6 +3250,13 @@ class GmcpEmitter(
             variantName = mob.variantName,
             tint = mob.tint,
             overlay = mob.overlay,
+            info = RoomMobInfoStubPayload(
+                level = if (mob.level > 0) mob.level else estimateMobLevel(mob.xpReward),
+                questGiver = mob.questIds.isNotEmpty(),
+                dialogue = mob.dialogue != null,
+                aggressive = mob.aggressive,
+                combatant = mob.role.isCombatant,
+            ),
         )
     }
 
@@ -3498,6 +3523,23 @@ class GmcpEmitter(
         val tint: String? = null,
         /** Client particle/overlay hint: swirl|embers|sparkle|frost|mist. */
         val overlay: String? = null,
+        /**
+         * The mob's static `Room.MobInfo` facts. A mob that wanders in,
+         * respawns or is summoned arrives via `Room.AddMob` with no
+         * accompanying `Room.MobInfo`, and without this the client had no
+         * idea whether it could be attacked (it assumed yes — a prop goose
+         * got an Attack button). Per-viewer fields (quest flags, arcanum
+         * badges, shopkeeper) still only travel in `Room.MobInfo`.
+         */
+        val info: RoomMobInfoStubPayload? = null,
+    )
+
+    private data class RoomMobInfoStubPayload(
+        val level: Int,
+        val questGiver: Boolean,
+        val dialogue: Boolean,
+        val aggressive: Boolean,
+        val combatant: Boolean,
     )
 
     private data class MobEffectPayload(
@@ -3602,6 +3644,7 @@ class GmcpEmitter(
     private data class CharRecallPayload(
         val roomId: String?,
         val roomTitle: String?,
+        val cooldownRemainingMs: Long = 0L,
     )
 
     private data class CharNamePayload(
@@ -3845,6 +3888,8 @@ class GmcpEmitter(
         val current: Int,
         val required: Int,
         val readyToTurnIn: Boolean,
+        val questName: String? = null,
+        val objectiveDescription: String? = null,
     )
 
     private data class QuestCompletePayload(
@@ -3952,6 +3997,31 @@ class GmcpEmitter(
         val skill: String,
         val skillRequired: Int,
         val image: String? = null,
+        /** What a gather always yields (quantity rolled in [minQuantity, maxQuantity]). */
+        val yields: List<NodeYieldPayload> = emptyList(),
+        /** Bonus rolls with their percent chance. */
+        val rareYields: List<NodeRareYieldPayload> = emptyList(),
+        val respawnSeconds: Int = 0,
+        val xpReward: Int = 0,
+        /** Time until a depleted node can be gathered again; 0 when available now. */
+        val respawnRemainingMs: Long = 0L,
+    )
+
+    data class NodeYieldPayload(
+        val itemId: String,
+        val name: String,
+        val image: String? = null,
+        val minQuantity: Int,
+        val maxQuantity: Int,
+    )
+
+    data class NodeRareYieldPayload(
+        val itemId: String,
+        val name: String,
+        val image: String? = null,
+        val quantity: Int,
+        /** 0–100. */
+        val chancePct: Int,
     )
 
     private data class CraftingCooldownPayload(
