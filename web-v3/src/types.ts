@@ -279,6 +279,8 @@ export interface RoomState {
 export interface RecallState {
   roomId: string | null;
   roomTitle: string | null;
+  /** Client-clock instant when `recall` is usable again; null when ready. */
+  cooldownUntilMs: number | null;
 }
 
 /** User layout preference: auto follows zone flag, text/canvas force a mode. */

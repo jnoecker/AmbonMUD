@@ -11,6 +11,7 @@ import dev.ambon.domain.world.Room
 import dev.ambon.engine.GuildHallSystem
 import dev.ambon.engine.HouseEntryResult
 import dev.ambon.engine.HousingSystem
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -261,11 +262,11 @@ class NavigationHandler(
 
             val now = clock.millis()
             if (now < me.recallCooldownUntilMs) {
-                val secondsLeft = (me.recallCooldownUntilMs - now).ceilSeconds()
-                outbound.send(OutboundEvent.SendText(sessionId, msgs.cooldownRemaining.replace("{seconds}", secondsLeft.toString())))
+                refuseRecallOnCooldown(sessionId, me, now)
                 return
             }
             me.recallCooldownUntilMs = now + recallConfig.cooldownMs
+            emitRecallState(sessionId, me, now)
 
             // Origin for the house exit is the player's recall inn (or start room)
             val recallInn = players.recallTarget(sessionId) ?: world.startRoom
@@ -299,12 +300,12 @@ class NavigationHandler(
         // Standard recall (no house)
         val now = clock.millis()
         if (now < me.recallCooldownUntilMs) {
-            val secondsLeft = (me.recallCooldownUntilMs - now).ceilSeconds()
-            outbound.send(OutboundEvent.SendText(sessionId, msgs.cooldownRemaining.replace("{seconds}", secondsLeft.toString())))
+            refuseRecallOnCooldown(sessionId, me, now)
             return
         }
         val target = players.recallTarget(sessionId) ?: return
         me.recallCooldownUntilMs = now + recallConfig.cooldownMs
+        emitRecallState(sessionId, me, now)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.castBegin))
         if (!world.rooms.containsKey(target)) {
             if (!attemptCrossZoneMove(sessionId, target, onCrossZoneMove, router::suppressAutoPrompt)) {
@@ -328,6 +329,33 @@ class NavigationHandler(
         onPlayerMoved?.invoke(sessionId, target)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.arrival))
         ctx.sendLook(sessionId)
+    }
+
+    /**
+     * The terminal line alone is invisible behind the canvas, so an early
+     * recall also gets a UI.Feedback toast and a Char.Recall with the remaining
+     * cooldown for the button countdown.
+     */
+    private suspend fun refuseRecallOnCooldown(
+        sessionId: SessionId,
+        me: PlayerState,
+        now: Long,
+    ) {
+        val secondsLeft = (me.recallCooldownUntilMs - now).ceilSeconds()
+        val message = recallConfig.messages.cooldownRemaining.replace("{seconds}", secondsLeft.toString())
+        outbound.send(OutboundEvent.SendText(sessionId, message))
+        gmcpEmitter?.sendUiFeedback(sessionId, "error", message, code = "RECALL_COOLDOWN", scope = "recall", command = "recall")
+        emitRecallState(sessionId, me, now)
+    }
+
+    private suspend fun emitRecallState(
+        sessionId: SessionId,
+        me: PlayerState,
+        now: Long,
+    ) {
+        val target = players.recallTarget(sessionId)
+        val title = target?.let { world.rooms[it]?.title }
+        gmcpEmitter?.sendCharRecall(sessionId, target, title, me.recallCooldownUntilMs - now)
     }
 
     private suspend fun handleRest(sessionId: SessionId) {

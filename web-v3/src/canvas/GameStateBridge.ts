@@ -55,6 +55,8 @@ export interface GameStateSnapshot {
   roomFeatures: RoomFeature[];
   containerContents: ContainerContents | null;
   questTargetRoomIds: Set<string>;
+  /** Client-clock instant when `recall` is off cooldown; null when ready. */
+  recallCooldownUntilMs: number | null;
   serverAssets: Record<string, string>;
   worldTime: WorldTime | null;
   worldWeather: WorldWeather | null;
@@ -194,6 +196,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     roomFeatures: [],
     containerContents: null,
     questTargetRoomIds: new Set(),
+    recallCooldownUntilMs: null,
     serverAssets: {},
     worldTime: null,
     worldWeather: null,

@@ -181,6 +181,9 @@ export class WorldScene {
 
   // Recall button (visible when logged in and not in combat)
   private recallBtn: Container;
+  /** Label + alpha of the Recall button, updated once per second while it counts down. */
+  private recallBtnLabel: Text | null = null;
+  private lastRecallLabel = "Recall";
   private lastLoggedIn = false;
   private claimBtn: Container;
   private lastDemoClaim = false;
@@ -1023,6 +1026,7 @@ export class WorldScene {
     this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
       canvasCallbacks.sendCommand?.("recall");
     });
+    this.recallBtnLabel = this.recallBtn.children.find((c): c is Text => c instanceof Text) ?? null;
     this.recallBtn.visible = false;
 
     // Depart button — only shown at the death sanctum when there is somewhere to return to
@@ -1448,6 +1452,17 @@ export class WorldScene {
     if (showRecall !== this.lastLoggedIn) {
       this.lastLoggedIn = showRecall;
       this.recallBtn.visible = showRecall;
+    }
+
+    // Recall cooldown countdown — the button stays clickable (the server
+    // answers an early press with a toast) but reads "Recall 42s" and dims.
+    const recallUntil = state.recallCooldownUntilMs;
+    const recallLeftS = recallUntil != null ? Math.ceil((recallUntil - Date.now()) / 1000) : 0;
+    const recallLabel = recallLeftS > 0 ? `Recall ${recallLeftS}s` : "Recall";
+    if (recallLabel !== this.lastRecallLabel) {
+      this.lastRecallLabel = recallLabel;
+      if (this.recallBtnLabel) this.recallBtnLabel.text = recallLabel;
+      this.recallBtn.alpha = recallLeftS > 0 ? 0.55 : 1;
     }
 
     // Claim button — demo characters only, alongside Recall

@@ -119,6 +119,41 @@ class RecallCommandTest {
         }
 
     @Test
+    fun `early recall is refused with a UI toast and a Char_Recall carrying the remaining cooldown`() =
+        runTest {
+            val clock = MutableClock(0L)
+            val outbound = dev.ambon.bus.LocalOutboundBus()
+            val gmcpEmitter =
+                dev.ambon.engine.GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg == "UI.Feedback" || pkg == "Char.Recall" },
+                )
+            val h = CommandRouterHarness.create(clock = clock, outbound = outbound, gmcpEmitter = gmcpEmitter)
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Hero")
+            h.drain()
+
+            // First recall succeeds; the Char.Recall it emits carries the full cooldown.
+            h.router.handle(sid, Command.Recall)
+            val firstGmcp = h.drain().filterIsInstance<OutboundEvent.GmcpData>()
+            val started = firstGmcp.single { it.gmcpPackage == "Char.Recall" }
+            assertTrue(started.jsonData.contains("\"cooldownRemainingMs\":${RecallConfig().cooldownMs}"), started.jsonData)
+
+            clock.advance(15_000L)
+            h.router.handle(sid, Command.Recall)
+            val outs = h.drain()
+            val gmcp = outs.filterIsInstance<OutboundEvent.GmcpData>()
+            val feedback = gmcp.single { it.gmcpPackage == "UI.Feedback" }
+            assertTrue(feedback.jsonData.contains("\"code\":\"RECALL_COOLDOWN\""), feedback.jsonData)
+            assertTrue(feedback.jsonData.contains("seconds remaining"), feedback.jsonData)
+            val refused = gmcp.single { it.gmcpPackage == "Char.Recall" }
+            assertTrue(
+                refused.jsonData.contains("\"cooldownRemainingMs\":${RecallConfig().cooldownMs - 15_000L}"),
+                refused.jsonData,
+            )
+        }
+
+    @Test
     fun `recall available again after cooldown expires`() =
         runTest {
             val clock = MutableClock(0L)

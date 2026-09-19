@@ -1912,6 +1912,11 @@ export function applyGmcpPackage(
       if (packet.scope === "friends" && packet.message) {
         ctx.setToast(packet.message);
       }
+      // Recall is a canvas button with no panel; a refused early recall was
+      // a silent click without this.
+      if (packet.scope === "recall" && packet.message) {
+        ctx.setToast(packet.message);
+      }
       break;
     }
 
@@ -2176,7 +2181,15 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const roomId = typeof packet.roomId === "string" ? packet.roomId : null;
       const roomTitle = typeof packet.roomTitle === "string" ? packet.roomTitle : null;
-      ctx.setRecallState(roomId == null && roomTitle == null ? null : { roomId, roomTitle });
+      // Remaining ms rather than an absolute server instant, so the countdown
+      // is immune to clock skew between the engine and the browser.
+      const remaining = safeNumber(packet.cooldownRemainingMs, 0);
+      const cooldownUntilMs = remaining > 0 ? Date.now() + remaining : null;
+      ctx.setRecallState(
+        roomId == null && roomTitle == null && cooldownUntilMs == null
+          ? null
+          : { roomId, roomTitle, cooldownUntilMs },
+      );
       break;
     }
 

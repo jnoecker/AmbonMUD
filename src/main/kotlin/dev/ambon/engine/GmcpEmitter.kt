@@ -667,18 +667,27 @@ class GmcpEmitter(
     }
 
     /**
-     * Sends `Char.Recall` with the player's current recall point so clients can
-     * display it (e.g. inn popout). Emits null fields when no recall is set.
+     * Sends `Char.Recall`: the player's recall point (null fields when none is
+     * set) plus how long until `recall` is usable again
+     * ([cooldownRemainingMs], 0 when ready). Sent on login, when the point is
+     * set, after a recall (cooldown just started) and when a recall is refused
+     * for cooldown — so the canvas Recall button can show a countdown instead
+     * of a silent no-op.
      */
     suspend fun sendCharRecall(
         sessionId: SessionId,
         roomId: RoomId?,
         roomTitle: String?,
+        cooldownRemainingMs: Long = 0L,
     ) {
         emit(
             sessionId,
             "Char.Recall",
-            CharRecallPayload(roomId = roomId?.value, roomTitle = roomTitle),
+            CharRecallPayload(
+                roomId = roomId?.value,
+                roomTitle = roomTitle,
+                cooldownRemainingMs = cooldownRemainingMs.coerceAtLeast(0L),
+            ),
             supportCheck = "Char.Recall",
         )
     }
@@ -1162,7 +1171,7 @@ class GmcpEmitter(
         if (world != null) {
             val recallId = players.recallTarget(sessionId)
             val recallTitle = recallId?.let { world.rooms[it]?.title }
-            sendCharRecall(sessionId, recallId, recallTitle)
+            sendCharRecall(sessionId, recallId, recallTitle, player.recallCooldownUntilMs - nowMs())
         }
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
@@ -3633,6 +3642,7 @@ class GmcpEmitter(
     private data class CharRecallPayload(
         val roomId: String?,
         val roomTitle: String?,
+        val cooldownRemainingMs: Long = 0L,
     )
 
     private data class CharNamePayload(
