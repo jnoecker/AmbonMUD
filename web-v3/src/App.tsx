@@ -474,6 +474,7 @@ function App() {
           q.objectives.filter((o) => o.current < o.required).flatMap((o) => o.targetRoomIds ?? []),
         ),
       ),
+      recallCooldownUntilMs: state.recallState?.cooldownUntilMs ?? null,
       serverAssets: state.serverAssets,
       worldTime: state.worldTime,
       worldWeather: state.worldWeather,
