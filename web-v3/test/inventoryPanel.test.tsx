@@ -86,4 +86,36 @@ describe("inventory panel", () => {
     // The give button renders the server-supplied image rather than the inline SVG fallback.
     expect(html).toContain('class="inventory-action-img" src="https://cdn/give.png"');
   });
+
+  test("wearables show stat deltas against the item worn in their slot", () => {
+    const html = renderToStaticMarkup(
+      <InventoryPanel
+        {...baseProps}
+        inventory={[{ ...baseProps.inventory[0], armor: 5, stats: { WIS: 2 } }]}
+        equipment={{ head: { id: "cap", name: "a linen cap", keyword: "cap", slot: "head", armor: 2, stats: { WIS: 3, STR: 1 } } }}
+      />,
+    );
+    expect(html).toContain("Compared with a linen cap (worn)");
+    expect(html).toContain("+3 armor");
+    expect(html).toContain("−1 STR");
+    expect(html).toContain("−1 WIS");
+    expect(html).toContain("inventory-item-delta-up");
+    expect(html).toContain("inventory-item-delta-down");
+  });
+
+  test("a wearable for an empty slot says so, and an identical one reads 'same as worn'", () => {
+    const empty = renderToStaticMarkup(
+      <InventoryPanel {...baseProps} inventory={[{ ...baseProps.inventory[0], armor: 0 }]} equipment={{}} />,
+    );
+    expect(empty).toContain("slot empty");
+
+    const same = renderToStaticMarkup(
+      <InventoryPanel
+        {...baseProps}
+        inventory={[{ ...baseProps.inventory[0], armor: 2 }]}
+        equipment={{ head: { id: "cap", name: "a linen cap", keyword: "cap", slot: "head", armor: 2 } }}
+      />,
+    );
+    expect(same).toContain("same as worn");
+  });
 });

@@ -1369,6 +1369,7 @@ function App() {
             connected={connected}
             hasCharacterProfile={hasCharacterProfile}
             inventory={state.inventory}
+            equipment={state.equipment}
             players={state.players}
             canManageItems={connected && hasCharacterProfile}
             roomFeatures={state.roomFeatures}

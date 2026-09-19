@@ -6563,6 +6563,40 @@ body {
   min-height: 18px;
 }
 
+.inventory-item-compare {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.inventory-item-compare-same {
+  font-size: 0.66rem;
+  color: #6b5a3e;
+  font-style: italic;
+}
+
+.inventory-item-delta {
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+/* Ink tones on the parchment surface, matching .inventory-item-slot. */
+.inventory-item-delta-up {
+  color: #2f6b2a;
+  background: rgb(47 107 42 / 14%);
+  border-color: rgb(47 107 42 / 45%);
+}
+
+.inventory-item-delta-down {
+  color: #9a2f24;
+  background: rgb(154 47 36 / 12%);
+  border-color: rgb(154 47 36 / 45%);
+}
+
 .inventory-item-thumb-wrap {
   position: relative;
   flex-shrink: 0;
