@@ -714,6 +714,10 @@ export interface QuestObjective {
   current: number;
   required: number;
   targetRoomIds?: string[];
+  /** Objective handler type ("kill", "collect", …). */
+  type?: string;
+  /** Mob template key (kill) or item id (collect) the objective counts. */
+  targetId?: string;
 }
 
 export interface QuestEntry {

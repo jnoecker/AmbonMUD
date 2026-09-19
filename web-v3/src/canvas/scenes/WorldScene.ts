@@ -10,6 +10,7 @@ import type { MobInfo } from "../../types";
 import { ROOM_SURFACE_WIDGETS } from "../../featureMetadata";
 import { loadTexture } from "../textureLoader";
 import { parseHexTint, makeVariantColorize } from "../variantTint";
+import { isQuestTargetItem, isQuestTargetMob } from "../questTargets";
 
 /** Resolves a global asset key to its server-provided URL, with a hardcoded fallback. */
 function assetUrl(key: string, fallbackFilename: string): string {
@@ -76,6 +77,27 @@ const ROLE_ICON_SIZE = 12;
 const ROLE_ICON_GAP = 4;
 // Role indicator colors
 const ROLE_SHOP_COLOR = 0x81a2be;
+// Quest-target marker (a mob to slay / an item to collect for an active objective)
+const QUEST_TARGET_COLOR = 0xf0c674;
+const QUEST_TARGET_OUTLINE = 0x2a2410;
+const QUEST_TARGET_PULSE_HZ = 1.1;
+
+/**
+ * A small gold diamond pinned to the top-right corner of a sprite, breathing
+ * gently so it reads as "wanted" rather than as part of the art. Drawn into
+ * a shared Graphics each frame, like the role dots.
+ */
+function drawQuestTargetMarker(g: Graphics, cx: number, cy: number, spriteSize: number, t: number) {
+  const r = clamp(spriteSize * 0.11, 5, 9);
+  const x = cx + spriteSize / 2 - r * 0.6;
+  const y = cy - spriteSize / 2 + r * 0.6;
+  const pulse = 0.75 + 0.25 * Math.sin(t * Math.PI * 2 * QUEST_TARGET_PULSE_HZ);
+  const rr = r * (0.9 + 0.1 * pulse);
+  g.poly([x, y - rr, x + rr, y, x, y + rr, x - rr, y]);
+  g.fill({ color: QUEST_TARGET_COLOR, alpha: pulse });
+  g.poly([x, y - rr, x + rr, y, x, y + rr, x - rr, y]);
+  g.stroke({ color: QUEST_TARGET_OUTLINE, width: 1.5, alpha: 0.9 });
+}
 
 /** Responsive size for a status indicator icon given the host mob's sprite size. */
 function statusIconSize(mobSize: number): number {
@@ -114,9 +136,12 @@ export class WorldScene {
   private playerVitalsBar = new Graphics();
   private mobSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics; name: string; count: number; ids: string[] }> = new Map();
   private petSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
-  private itemSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
+  private itemSprites: Array<{ id: string; sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private playerSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private roleGraphics = new Graphics();
+  /** Quest-target markers; re-added above sprites whenever the room is rebuilt. */
+  private questTargetGraphics = new Graphics();
+  private questTargetTime = 0;
   private statusEffects = new StatusEffectDisplay();
   private minimap = new Minimap();
   private ambientMotes = new AmbientMotes();
@@ -137,7 +162,7 @@ export class WorldScene {
   // Representative mob data (rep id → fields needed to open the field manual),
   // so a click on a floating dialogue/quest indicator can build the same panel
   // entry as a click on the mob sprite. Rebuilt alongside the mob sprites.
-  private mobDataById = new Map<string, { id: string; name: string; description?: string; image?: string | null; video?: string | null; variantName?: string | null; tint?: string | null }>();
+  private mobDataById = new Map<string, { id: string; templateKey?: string; name: string; description?: string; image?: string | null; video?: string | null; variantName?: string | null; tint?: string | null }>();
 
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
@@ -1057,6 +1082,8 @@ export class WorldScene {
     this.container.addChildAt(this.skyRenderer.graphics, 0);
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
+    this.questTargetGraphics.eventMode = "none";
+    this.container.addChild(this.questTargetGraphics);
     this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.playerLabelBg);
     this.container.addChild(this.playerLabel);
@@ -1491,6 +1518,7 @@ export class WorldScene {
       this.departBtn.visible = canDepart;
     }
 
+    this.questTargetTime += deltaMs / 1000;
     this.layoutAll();
     this.updateTargetingOverlay(deltaMs);
   }
@@ -2087,6 +2115,34 @@ export class WorldScene {
     this.pruneIcons(this.aggroIcons, activeAggroMobs);
     this.pruneIcons(this.questAvailableIcons, activeQuestAvail);
     this.pruneIcons(this.questCompleteIcons, activeQuestComplete);
+
+    this.drawQuestTargetMarkers();
+  }
+
+  /**
+   * Mark the mobs an unfinished kill objective wants and the items an
+   * unfinished collect objective wants, so a quest target in the room is
+   * recognisable without opening the quest log.
+   */
+  private drawQuestTargetMarkers() {
+    const g = this.questTargetGraphics;
+    g.clear();
+    const targets = gameStateRef.current.questTargets;
+    if (targets.mobKeys.size === 0 && targets.itemIds.size === 0) return;
+    const t = this.questTargetTime;
+    if (targets.mobKeys.size > 0) {
+      for (const entry of this.mobSprites.values()) {
+        const mob = this.mobDataById.get(entry.ids[0]);
+        if (!mob || !isQuestTargetMob(targets, mob.templateKey ?? "")) continue;
+        drawQuestTargetMarker(g, entry.sprite.x, entry.sprite.y, entry.sprite.height, t);
+      }
+    }
+    if (targets.itemIds.size > 0) {
+      for (const entry of this.itemSprites) {
+        if (!isQuestTargetItem(targets, entry.id)) continue;
+        drawQuestTargetMarker(g, entry.sprite.x, entry.sprite.y, entry.sprite.height, t);
+      }
+    }
   }
 
   private updateTargetingOverlay(deltaMs: number) {
@@ -2288,6 +2344,8 @@ export class WorldScene {
       this.mobSprites.set(groupKey, { sprite, label, labelBg, hitArea, name: mob.name, count, ids });
       this.mobDataById.set(mob.id, mob);
     }
+    // Keep the markers above the freshly added sprites.
+    this.container.addChild(this.questTargetGraphics);
   }
 
   private rebuildItems(items: Array<{ id: string; name: string; description?: string; image?: string | null; video?: string | null; takeable?: boolean }>) {
@@ -2347,8 +2405,10 @@ export class WorldScene {
       this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.itemSprites.push({ sprite, label, labelBg, hitArea });
+      this.itemSprites.push({ id: item.id, sprite, label, labelBg, hitArea });
     }
+    // Keep the markers above the freshly added sprites.
+    this.container.addChild(this.questTargetGraphics);
   }
 
   private rebuildNodes(nodes: Array<{ id: string; name: string; skill: string; skillRequired: number; image?: string | null }>) {

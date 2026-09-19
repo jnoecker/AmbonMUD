@@ -74,6 +74,7 @@ import type { MapHoverInfo } from "./hooks/useMiniMap";
 import { useQuickbar } from "./hooks/useQuickbar";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
+import { deriveQuestTargets } from "./canvas/questTargets";
 import type {
   ChatChannel,
   ConsiderRating,
@@ -449,6 +450,7 @@ function App() {
 
 
 
+  const questTargets = useMemo(() => deriveQuestTargets(state.quests), [state.quests]);
   const openNode = useMemo(
     () => (openNodeId ? state.craftingNodes.find((n) => n.id === openNodeId) ?? null : null),
     [openNodeId, state.craftingNodes],
@@ -483,6 +485,7 @@ function App() {
           q.objectives.filter((o) => o.current < o.required).flatMap((o) => o.targetRoomIds ?? []),
         ),
       ),
+      questTargets: questTargets,
       recallCooldownUntilMs: state.recallState?.cooldownUntilMs ?? null,
       serverAssets: state.serverAssets,
       worldTime: state.worldTime,

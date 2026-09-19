@@ -1259,6 +1259,8 @@ export function applyGmcpPackage(
                   ...(Array.isArray(o.targetRoomIds) && o.targetRoomIds.length > 0 && {
                     targetRoomIds: o.targetRoomIds.filter((r): r is string => typeof r === "string"),
                   }),
+                  ...(typeof o.type === "string" && o.type.length > 0 && { type: o.type }),
+                  ...(typeof o.targetId === "string" && o.targetId.length > 0 && { targetId: o.targetId }),
                 }))
             : [],
           readyToTurnIn: entry.readyToTurnIn === true,

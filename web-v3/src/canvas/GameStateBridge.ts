@@ -29,6 +29,7 @@ import type {
   ZoneMapRoomData,
   BorderStub,
 } from "../types";
+import { EMPTY_QUEST_TARGETS, type QuestTargets } from "./questTargets";
 
 export interface GameStateSnapshot {
   room: RoomState;
@@ -55,6 +56,8 @@ export interface GameStateSnapshot {
   roomFeatures: RoomFeature[];
   containerContents: ContainerContents | null;
   questTargetRoomIds: Set<string>;
+  /** Mobs/items the player's unfinished objectives are after, for in-room markers. */
+  questTargets: QuestTargets;
   /** Client-clock instant when `recall` is off cooldown; null when ready. */
   recallCooldownUntilMs: number | null;
   serverAssets: Record<string, string>;
@@ -199,6 +202,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     roomFeatures: [],
     containerContents: null,
     questTargetRoomIds: new Set(),
+    questTargets: EMPTY_QUEST_TARGETS,
     recallCooldownUntilMs: null,
     serverAssets: {},
     worldTime: null,

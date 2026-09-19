@@ -969,21 +969,28 @@ Full quest log snapshot. Sent on login and after quest accepted/updated/complete
     "name": "Find the Relic",
     "description": "Recover the lost relic from the ruins.",
     "objectives": [
-      { "description": "Enter the ruins", "current": 1, "required": 1 },
-      { "description": "Find the relic", "current": 0, "required": 1 }
-    ]
+      { "description": "Slay 3 ruin ghouls", "current": 1, "required": 3, "type": "kill", "targetId": "ruins:ghoul", "targetRoomIds": ["ruins:crypt"] },
+      { "description": "Find the relic", "current": 0, "required": 1, "type": "collect", "targetId": "ruins:relic" }
+    ],
+    "readyToTurnIn": false,
+    "giverMobId": "ruins:sage"
   }
 ]
 ```
 
-| Field                       | Type   | Notes |
-|-----------------------------|--------|-------|
-| `id`                        | string | Quest identifier |
-| `name`                      | string | Quest display name |
-| `description`               | string | Quest description |
-| `objectives[].description`  | string | Objective text |
-| `objectives[].current`      | int    | Current progress |
-| `objectives[].required`     | int    | Required to complete |
+| Field                       | Type     | Notes |
+|-----------------------------|----------|-------|
+| `id`                        | string   | Quest identifier |
+| `name`                      | string   | Quest display name |
+| `description`               | string   | Quest description |
+| `objectives[].description`  | string   | Objective text |
+| `objectives[].current`      | int      | Current progress |
+| `objectives[].required`     | int      | Required to complete |
+| `objectives[].type`         | string   | Objective handler type (`kill`, `collect`, …) |
+| `objectives[].targetId`     | string   | Mob template key (kill) or item id (collect); the web client marks matching mobs/items in the room while the objective is unfinished. Collect ids match exactly or by `:<localId>` suffix |
+| `objectives[].targetRoomIds`| string[] | Rooms where the target spawns, for minimap markers |
+| `readyToTurnIn`             | boolean  | All objectives done on an NPC turn-in quest |
+| `giverMobId`                | string   | Quest-giver mob id |
 
 ---
 
